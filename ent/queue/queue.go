@@ -29,6 +29,8 @@ const (
 	FieldTaskVodCreateFolder = "task_vod_create_folder"
 	// FieldTaskVodDownloadThumbnail holds the string denoting the task_vod_download_thumbnail field in the database.
 	FieldTaskVodDownloadThumbnail = "task_vod_download_thumbnail"
+	// FieldTaskVodSaveInfo holds the string denoting the task_vod_save_info field in the database.
+	FieldTaskVodSaveInfo = "task_vod_save_info"
 	// FieldTaskVideoDownload holds the string denoting the task_video_download field in the database.
 	FieldTaskVideoDownload = "task_video_download"
 	// FieldTaskVideoMove holds the string denoting the task_video_move field in the database.
@@ -66,6 +68,7 @@ var Columns = []string{
 	FieldProcessing,
 	FieldTaskVodCreateFolder,
 	FieldTaskVodDownloadThumbnail,
+	FieldTaskVodSaveInfo,
 	FieldTaskVideoDownload,
 	FieldTaskVideoMove,
 	FieldTaskChatDownload,
@@ -138,6 +141,18 @@ func TaskVodDownloadThumbnailValidator(tvdt utils.TaskStatus) error {
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_vod_download_thumbnail field: %q", tvdt)
+	}
+}
+
+const DefaultTaskVodSaveInfo utils.TaskStatus = "waiting"
+
+// TaskVodSaveInfoValidator is a validator for the "task_vod_save_info" field enum values. It is called by the builders before save.
+func TaskVodSaveInfoValidator(tvsi utils.TaskStatus) error {
+	switch tvsi {
+	case "success", "processing", "waiting", "Error":
+		return nil
+	default:
+		return fmt.Errorf("queue: invalid enum value for task_vod_save_info field: %q", tvsi)
 	}
 }
 

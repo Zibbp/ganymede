@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/utils"
 	"time"
 )
 
@@ -19,14 +20,22 @@ func NewService(store *database.Database) *Service {
 }
 
 type Queue struct {
-	ID              uuid.UUID `json:"id"`
-	LiveArchive     bool      `json:"live_archive"`
-	OnHold          bool      `json:"on_hold"`
-	VideoProcessing bool      `json:"video_processing"`
-	ChatProcessing  bool      `json:"chat_processing"`
-	Processing      bool      `json:"processing"`
-	UpdatedAt       time.Time `json:"updated_at"`
-	CreatedAt       time.Time `json:"created_at"`
+	ID                       uuid.UUID        `json:"id"`
+	LiveArchive              bool             `json:"live_archive"`
+	OnHold                   bool             `json:"on_hold"`
+	VideoProcessing          bool             `json:"video_processing"`
+	ChatProcessing           bool             `json:"chat_processing"`
+	Processing               bool             `json:"processing"`
+	TaskVodCreateFolder      utils.TaskStatus `json:"task_vod_create_folder"`
+	TaskVodDownloadThumbnail utils.TaskStatus `json:"task_vod_download_thumbnail"`
+	TaskVodSaveInfo          utils.TaskStatus `json:"task_vod_save_info"`
+	TaskVideoDownload        utils.TaskStatus `json:"task_video_download"`
+	TaskVideoMove            utils.TaskStatus `json:"task_video_move"`
+	TaskChatDownload         utils.TaskStatus `json:"task_chat_download"`
+	TaskChatRender           utils.TaskStatus `json:"task_chat_render"`
+	TaskChatMove             utils.TaskStatus `json:"task_chat_move"`
+	UpdatedAt                time.Time        `json:"updated_at"`
+	CreatedAt                time.Time        `json:"created_at"`
 }
 
 func (s *Service) CreateQueueItem(c echo.Context, queueDto Queue, vID uuid.UUID) (*ent.Queue, error) {
@@ -37,6 +46,14 @@ func (s *Service) CreateQueueItem(c echo.Context, queueDto Queue, vID uuid.UUID)
 		}
 		log.Debug().Err(err).Msg("error creating queue")
 		return nil, fmt.Errorf("error creating queue: %v", err)
+	}
+	return q, nil
+}
+
+func (s *Service) UpdateQueueItem(c echo.Context, queueDto Queue, qID uuid.UUID) (*ent.Queue, error) {
+	q, err := s.Store.Client.Queue.UpdateOneID(qID).SetLiveArchive(queueDto.LiveArchive).SetOnHold(queueDto.OnHold).SetVideoProcessing(queueDto.VideoProcessing).SetChatProcessing(queueDto.ChatProcessing).SetProcessing(queueDto.Processing).SetTaskVodCreateFolder(queueDto.TaskVodCreateFolder).SetTaskVodDownloadThumbnail(queueDto.TaskVodDownloadThumbnail).SetTaskVodSaveInfo(queueDto.TaskVodSaveInfo).SetTaskVideoDownload(queueDto.TaskVideoDownload).SetTaskVideoMove(queueDto.TaskVideoMove).SetTaskChatDownload(queueDto.TaskChatDownload).SetTaskChatRender(queueDto.TaskChatRender).SetTaskChatMove(queueDto.TaskChatMove).Save(c.Request().Context())
+	if err != nil {
+		return nil, fmt.Errorf("error updating queue: %v", err)
 	}
 	return q, nil
 }

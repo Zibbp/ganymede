@@ -33,6 +33,8 @@ type Queue struct {
 	TaskVodCreateFolder utils.TaskStatus `json:"task_vod_create_folder,omitempty"`
 	// TaskVodDownloadThumbnail holds the value of the "task_vod_download_thumbnail" field.
 	TaskVodDownloadThumbnail utils.TaskStatus `json:"task_vod_download_thumbnail,omitempty"`
+	// TaskVodSaveInfo holds the value of the "task_vod_save_info" field.
+	TaskVodSaveInfo utils.TaskStatus `json:"task_vod_save_info,omitempty"`
 	// TaskVideoDownload holds the value of the "task_video_download" field.
 	TaskVideoDownload utils.TaskStatus `json:"task_video_download,omitempty"`
 	// TaskVideoMove holds the value of the "task_video_move" field.
@@ -83,7 +85,7 @@ func (*Queue) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case queue.FieldLiveArchive, queue.FieldOnHold, queue.FieldVideoProcessing, queue.FieldChatProcessing, queue.FieldProcessing:
 			values[i] = new(sql.NullBool)
-		case queue.FieldTaskVodCreateFolder, queue.FieldTaskVodDownloadThumbnail, queue.FieldTaskVideoDownload, queue.FieldTaskVideoMove, queue.FieldTaskChatDownload, queue.FieldTaskChatRender, queue.FieldTaskChatMove:
+		case queue.FieldTaskVodCreateFolder, queue.FieldTaskVodDownloadThumbnail, queue.FieldTaskVodSaveInfo, queue.FieldTaskVideoDownload, queue.FieldTaskVideoMove, queue.FieldTaskChatDownload, queue.FieldTaskChatRender, queue.FieldTaskChatMove:
 			values[i] = new(sql.NullString)
 		case queue.FieldUpdatedAt, queue.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -153,6 +155,12 @@ func (q *Queue) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field task_vod_download_thumbnail", values[i])
 			} else if value.Valid {
 				q.TaskVodDownloadThumbnail = utils.TaskStatus(value.String)
+			}
+		case queue.FieldTaskVodSaveInfo:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field task_vod_save_info", values[i])
+			} else if value.Valid {
+				q.TaskVodSaveInfo = utils.TaskStatus(value.String)
 			}
 		case queue.FieldTaskVideoDownload:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -250,6 +258,8 @@ func (q *Queue) String() string {
 	builder.WriteString(fmt.Sprintf("%v", q.TaskVodCreateFolder))
 	builder.WriteString(", task_vod_download_thumbnail=")
 	builder.WriteString(fmt.Sprintf("%v", q.TaskVodDownloadThumbnail))
+	builder.WriteString(", task_vod_save_info=")
+	builder.WriteString(fmt.Sprintf("%v", q.TaskVodSaveInfo))
 	builder.WriteString(", task_video_download=")
 	builder.WriteString(fmt.Sprintf("%v", q.TaskVideoDownload))
 	builder.WriteString(", task_video_move=")

@@ -674,6 +674,7 @@ type QueueMutation struct {
 	processing                  *bool
 	task_vod_create_folder      *utils.TaskStatus
 	task_vod_download_thumbnail *utils.TaskStatus
+	task_vod_save_info          *utils.TaskStatus
 	task_video_download         *utils.TaskStatus
 	task_video_move             *utils.TaskStatus
 	task_chat_download          *utils.TaskStatus
@@ -1071,6 +1072,55 @@ func (m *QueueMutation) ResetTaskVodDownloadThumbnail() {
 	delete(m.clearedFields, queue.FieldTaskVodDownloadThumbnail)
 }
 
+// SetTaskVodSaveInfo sets the "task_vod_save_info" field.
+func (m *QueueMutation) SetTaskVodSaveInfo(us utils.TaskStatus) {
+	m.task_vod_save_info = &us
+}
+
+// TaskVodSaveInfo returns the value of the "task_vod_save_info" field in the mutation.
+func (m *QueueMutation) TaskVodSaveInfo() (r utils.TaskStatus, exists bool) {
+	v := m.task_vod_save_info
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTaskVodSaveInfo returns the old "task_vod_save_info" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldTaskVodSaveInfo(ctx context.Context) (v utils.TaskStatus, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTaskVodSaveInfo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTaskVodSaveInfo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTaskVodSaveInfo: %w", err)
+	}
+	return oldValue.TaskVodSaveInfo, nil
+}
+
+// ClearTaskVodSaveInfo clears the value of the "task_vod_save_info" field.
+func (m *QueueMutation) ClearTaskVodSaveInfo() {
+	m.task_vod_save_info = nil
+	m.clearedFields[queue.FieldTaskVodSaveInfo] = struct{}{}
+}
+
+// TaskVodSaveInfoCleared returns if the "task_vod_save_info" field was cleared in this mutation.
+func (m *QueueMutation) TaskVodSaveInfoCleared() bool {
+	_, ok := m.clearedFields[queue.FieldTaskVodSaveInfo]
+	return ok
+}
+
+// ResetTaskVodSaveInfo resets all changes to the "task_vod_save_info" field.
+func (m *QueueMutation) ResetTaskVodSaveInfo() {
+	m.task_vod_save_info = nil
+	delete(m.clearedFields, queue.FieldTaskVodSaveInfo)
+}
+
 // SetTaskVideoDownload sets the "task_video_download" field.
 func (m *QueueMutation) SetTaskVideoDownload(us utils.TaskStatus) {
 	m.task_video_download = &us
@@ -1446,7 +1496,7 @@ func (m *QueueMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QueueMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 15)
 	if m.live_archive != nil {
 		fields = append(fields, queue.FieldLiveArchive)
 	}
@@ -1467,6 +1517,9 @@ func (m *QueueMutation) Fields() []string {
 	}
 	if m.task_vod_download_thumbnail != nil {
 		fields = append(fields, queue.FieldTaskVodDownloadThumbnail)
+	}
+	if m.task_vod_save_info != nil {
+		fields = append(fields, queue.FieldTaskVodSaveInfo)
 	}
 	if m.task_video_download != nil {
 		fields = append(fields, queue.FieldTaskVideoDownload)
@@ -1511,6 +1564,8 @@ func (m *QueueMutation) Field(name string) (ent.Value, bool) {
 		return m.TaskVodCreateFolder()
 	case queue.FieldTaskVodDownloadThumbnail:
 		return m.TaskVodDownloadThumbnail()
+	case queue.FieldTaskVodSaveInfo:
+		return m.TaskVodSaveInfo()
 	case queue.FieldTaskVideoDownload:
 		return m.TaskVideoDownload()
 	case queue.FieldTaskVideoMove:
@@ -1548,6 +1603,8 @@ func (m *QueueMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldTaskVodCreateFolder(ctx)
 	case queue.FieldTaskVodDownloadThumbnail:
 		return m.OldTaskVodDownloadThumbnail(ctx)
+	case queue.FieldTaskVodSaveInfo:
+		return m.OldTaskVodSaveInfo(ctx)
 	case queue.FieldTaskVideoDownload:
 		return m.OldTaskVideoDownload(ctx)
 	case queue.FieldTaskVideoMove:
@@ -1619,6 +1676,13 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTaskVodDownloadThumbnail(v)
+		return nil
+	case queue.FieldTaskVodSaveInfo:
+		v, ok := value.(utils.TaskStatus)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTaskVodSaveInfo(v)
 		return nil
 	case queue.FieldTaskVideoDownload:
 		v, ok := value.(utils.TaskStatus)
@@ -1705,6 +1769,9 @@ func (m *QueueMutation) ClearedFields() []string {
 	if m.FieldCleared(queue.FieldTaskVodDownloadThumbnail) {
 		fields = append(fields, queue.FieldTaskVodDownloadThumbnail)
 	}
+	if m.FieldCleared(queue.FieldTaskVodSaveInfo) {
+		fields = append(fields, queue.FieldTaskVodSaveInfo)
+	}
 	if m.FieldCleared(queue.FieldTaskVideoDownload) {
 		fields = append(fields, queue.FieldTaskVideoDownload)
 	}
@@ -1739,6 +1806,9 @@ func (m *QueueMutation) ClearField(name string) error {
 		return nil
 	case queue.FieldTaskVodDownloadThumbnail:
 		m.ClearTaskVodDownloadThumbnail()
+		return nil
+	case queue.FieldTaskVodSaveInfo:
+		m.ClearTaskVodSaveInfo()
 		return nil
 	case queue.FieldTaskVideoDownload:
 		m.ClearTaskVideoDownload()
@@ -1783,6 +1853,9 @@ func (m *QueueMutation) ResetField(name string) error {
 		return nil
 	case queue.FieldTaskVodDownloadThumbnail:
 		m.ResetTaskVodDownloadThumbnail()
+		return nil
+	case queue.FieldTaskVodSaveInfo:
+		m.ResetTaskVodSaveInfo()
 		return nil
 	case queue.FieldTaskVideoDownload:
 		m.ResetTaskVideoDownload()

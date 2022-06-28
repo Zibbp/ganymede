@@ -66,6 +66,20 @@ func (s *Service) GetChannel(c echo.Context, channelID uuid.UUID) (*ent.Channel,
 	return cha, nil
 }
 
+func (s *Service) GetChannelByName(c echo.Context, cName string) (*ent.Channel, error) {
+	cha, err := s.Store.Client.Channel.Query().Where(channel.Name(cName)).Only(c.Request().Context())
+	if err != nil {
+		// if channel not found
+		if _, ok := err.(*ent.NotFoundError); ok {
+			return nil, fmt.Errorf("channel not found")
+		}
+		log.Debug().Err(err).Msg("error getting channel")
+		return nil, fmt.Errorf("error getting channel: %v", err)
+	}
+
+	return cha, nil
+}
+
 func (s *Service) DeleteChannel(c echo.Context, channelID uuid.UUID) error {
 	err := s.Store.Client.Channel.DeleteOneID(channelID).Exec(c.Request().Context())
 	if err != nil {
@@ -92,4 +106,18 @@ func (s *Service) UpdateChannel(c echo.Context, cId uuid.UUID, channelDto Channe
 	}
 
 	return cha, nil
+}
+
+func (s *Service) CheckChannelExists(c echo.Context, cName string) bool {
+	_, err := s.Store.Client.Channel.Query().Where(channel.Name(cName)).Only(c.Request().Context())
+	if err != nil {
+		// if channel not found
+		if _, ok := err.(*ent.NotFoundError); ok {
+			return false
+		}
+		log.Error().Err(err).Msg("error checking channel exists")
+		return false
+	}
+
+	return true
 }

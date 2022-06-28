@@ -53,11 +53,28 @@ const (
 	Success    TaskStatus = "success"
 	Processing TaskStatus = "processing"
 	Waiting    TaskStatus = "waiting"
-	Error      TaskStatus = "Error"
+	Error      TaskStatus = "error"
 )
 
 func (TaskStatus) Values() (kinds []string) {
 	for _, s := range []TaskStatus{Success, Processing, Waiting, Error} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}
+
+type VodQuality string
+
+const (
+	Source  VodQuality = "source"
+	R720P60 VodQuality = "720p60"
+	R480P30 VodQuality = "480p30"
+	R360P30 VodQuality = "360p30"
+	R160P30 VodQuality = "160p30"
+)
+
+func (VodQuality) Values() (kinds []string) {
+	for _, s := range []VodQuality{Source, R720P60, R480P30, R360P30, R160P30} {
 		kinds = append(kinds, string(s))
 	}
 	return

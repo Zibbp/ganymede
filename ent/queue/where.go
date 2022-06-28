@@ -342,6 +342,70 @@ func TaskVodDownloadThumbnailNotNil() predicate.Queue {
 	})
 }
 
+// TaskVodSaveInfoEQ applies the EQ predicate on the "task_vod_save_info" field.
+func TaskVodSaveInfoEQ(v utils.TaskStatus) predicate.Queue {
+	vc := v
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTaskVodSaveInfo), vc))
+	})
+}
+
+// TaskVodSaveInfoNEQ applies the NEQ predicate on the "task_vod_save_info" field.
+func TaskVodSaveInfoNEQ(v utils.TaskStatus) predicate.Queue {
+	vc := v
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldTaskVodSaveInfo), vc))
+	})
+}
+
+// TaskVodSaveInfoIn applies the In predicate on the "task_vod_save_info" field.
+func TaskVodSaveInfoIn(vs ...utils.TaskStatus) predicate.Queue {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Queue(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldTaskVodSaveInfo), v...))
+	})
+}
+
+// TaskVodSaveInfoNotIn applies the NotIn predicate on the "task_vod_save_info" field.
+func TaskVodSaveInfoNotIn(vs ...utils.TaskStatus) predicate.Queue {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Queue(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldTaskVodSaveInfo), v...))
+	})
+}
+
+// TaskVodSaveInfoIsNil applies the IsNil predicate on the "task_vod_save_info" field.
+func TaskVodSaveInfoIsNil() predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldTaskVodSaveInfo)))
+	})
+}
+
+// TaskVodSaveInfoNotNil applies the NotNil predicate on the "task_vod_save_info" field.
+func TaskVodSaveInfoNotNil() predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldTaskVodSaveInfo)))
+	})
+}
+
 // TaskVideoDownloadEQ applies the EQ predicate on the "task_video_download" field.
 func TaskVideoDownloadEQ(v utils.TaskStatus) predicate.Queue {
 	vc := v

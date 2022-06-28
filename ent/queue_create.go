@@ -121,6 +121,20 @@ func (qc *QueueCreate) SetNillableTaskVodDownloadThumbnail(us *utils.TaskStatus)
 	return qc
 }
 
+// SetTaskVodSaveInfo sets the "task_vod_save_info" field.
+func (qc *QueueCreate) SetTaskVodSaveInfo(us utils.TaskStatus) *QueueCreate {
+	qc.mutation.SetTaskVodSaveInfo(us)
+	return qc
+}
+
+// SetNillableTaskVodSaveInfo sets the "task_vod_save_info" field if the given value is not nil.
+func (qc *QueueCreate) SetNillableTaskVodSaveInfo(us *utils.TaskStatus) *QueueCreate {
+	if us != nil {
+		qc.SetTaskVodSaveInfo(*us)
+	}
+	return qc
+}
+
 // SetTaskVideoDownload sets the "task_video_download" field.
 func (qc *QueueCreate) SetTaskVideoDownload(us utils.TaskStatus) *QueueCreate {
 	qc.mutation.SetTaskVideoDownload(us)
@@ -343,6 +357,10 @@ func (qc *QueueCreate) defaults() {
 		v := queue.DefaultTaskVodDownloadThumbnail
 		qc.mutation.SetTaskVodDownloadThumbnail(v)
 	}
+	if _, ok := qc.mutation.TaskVodSaveInfo(); !ok {
+		v := queue.DefaultTaskVodSaveInfo
+		qc.mutation.SetTaskVodSaveInfo(v)
+	}
 	if _, ok := qc.mutation.TaskVideoDownload(); !ok {
 		v := queue.DefaultTaskVideoDownload
 		qc.mutation.SetTaskVideoDownload(v)
@@ -402,6 +420,11 @@ func (qc *QueueCreate) check() error {
 	if v, ok := qc.mutation.TaskVodDownloadThumbnail(); ok {
 		if err := queue.TaskVodDownloadThumbnailValidator(v); err != nil {
 			return &ValidationError{Name: "task_vod_download_thumbnail", err: fmt.Errorf(`ent: validator failed for field "Queue.task_vod_download_thumbnail": %w`, err)}
+		}
+	}
+	if v, ok := qc.mutation.TaskVodSaveInfo(); ok {
+		if err := queue.TaskVodSaveInfoValidator(v); err != nil {
+			return &ValidationError{Name: "task_vod_save_info", err: fmt.Errorf(`ent: validator failed for field "Queue.task_vod_save_info": %w`, err)}
 		}
 	}
 	if v, ok := qc.mutation.TaskVideoDownload(); ok {
@@ -529,6 +552,14 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 			Column: queue.FieldTaskVodDownloadThumbnail,
 		})
 		_node.TaskVodDownloadThumbnail = value
+	}
+	if value, ok := qc.mutation.TaskVodSaveInfo(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: queue.FieldTaskVodSaveInfo,
+		})
+		_node.TaskVodSaveInfo = value
 	}
 	if value, ok := qc.mutation.TaskVideoDownload(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

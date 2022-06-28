@@ -41,7 +41,7 @@ type Vod struct {
 }
 
 func (s *Service) CreateVod(c echo.Context, vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
-	vod, err := s.Store.Client.Vod.Create().SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).Save(c.Request().Context())
+	v, err := s.Store.Client.Vod.Create().SetID(vodDto.ID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).Save(c.Request().Context())
 	if err != nil {
 		if _, ok := err.(*ent.ConstraintError); ok {
 			return nil, fmt.Errorf("channel does not exist")
@@ -50,7 +50,7 @@ func (s *Service) CreateVod(c echo.Context, vodDto Vod, cUUID uuid.UUID) (*ent.V
 		return nil, fmt.Errorf("error creating vod: %v", err)
 	}
 
-	return vod, nil
+	return v, nil
 }
 
 func (s *Service) GetVods(c echo.Context) ([]*ent.Vod, error) {
@@ -102,4 +102,18 @@ func (s *Service) UpdateVod(c echo.Context, vodID uuid.UUID, vodDto Vod, cUUID u
 	}
 
 	return v, nil
+}
+
+func (s *Service) CheckVodExists(c echo.Context, extID string) (bool, error) {
+	_, err := s.Store.Client.Vod.Query().Where(vod.ExtID(extID)).Only(c.Request().Context())
+	if err != nil {
+		// if vod not found
+		if _, ok := err.(*ent.NotFoundError); ok {
+			return false, nil
+		}
+		log.Debug().Err(err).Msg("error checking vod exists")
+		return false, fmt.Errorf("error checking vod exists: %v", err)
+	}
+
+	return true, nil
 }

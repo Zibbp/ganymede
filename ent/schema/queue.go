@@ -25,6 +25,7 @@ func (Queue) Fields() []ent.Field {
 		field.Bool("processing").Default(true),
 		field.Enum("task_vod_create_folder").GoType(utils.TaskStatus("")).Default(string(utils.Waiting)).Optional(),
 		field.Enum("task_vod_download_thumbnail").GoType(utils.TaskStatus("")).Default(string(utils.Waiting)).Optional(),
+		field.Enum("task_vod_save_info").GoType(utils.TaskStatus("")).Default(string(utils.Waiting)).Optional(),
 		field.Enum("task_video_download").GoType(utils.TaskStatus("")).Default(string(utils.Waiting)).Optional(),
 		field.Enum("task_video_move").GoType(utils.TaskStatus("")).Default(string(utils.Waiting)).Optional(),
 		field.Enum("task_chat_download").GoType(utils.TaskStatus("")).Default(string(utils.Waiting)).Optional(),

@@ -141,6 +141,26 @@ func (qu *QueueUpdate) ClearTaskVodDownloadThumbnail() *QueueUpdate {
 	return qu
 }
 
+// SetTaskVodSaveInfo sets the "task_vod_save_info" field.
+func (qu *QueueUpdate) SetTaskVodSaveInfo(us utils.TaskStatus) *QueueUpdate {
+	qu.mutation.SetTaskVodSaveInfo(us)
+	return qu
+}
+
+// SetNillableTaskVodSaveInfo sets the "task_vod_save_info" field if the given value is not nil.
+func (qu *QueueUpdate) SetNillableTaskVodSaveInfo(us *utils.TaskStatus) *QueueUpdate {
+	if us != nil {
+		qu.SetTaskVodSaveInfo(*us)
+	}
+	return qu
+}
+
+// ClearTaskVodSaveInfo clears the value of the "task_vod_save_info" field.
+func (qu *QueueUpdate) ClearTaskVodSaveInfo() *QueueUpdate {
+	qu.mutation.ClearTaskVodSaveInfo()
+	return qu
+}
+
 // SetTaskVideoDownload sets the "task_video_download" field.
 func (qu *QueueUpdate) SetTaskVideoDownload(us utils.TaskStatus) *QueueUpdate {
 	qu.mutation.SetTaskVideoDownload(us)
@@ -350,6 +370,11 @@ func (qu *QueueUpdate) check() error {
 			return &ValidationError{Name: "task_vod_download_thumbnail", err: fmt.Errorf(`ent: validator failed for field "Queue.task_vod_download_thumbnail": %w`, err)}
 		}
 	}
+	if v, ok := qu.mutation.TaskVodSaveInfo(); ok {
+		if err := queue.TaskVodSaveInfoValidator(v); err != nil {
+			return &ValidationError{Name: "task_vod_save_info", err: fmt.Errorf(`ent: validator failed for field "Queue.task_vod_save_info": %w`, err)}
+		}
+	}
 	if v, ok := qu.mutation.TaskVideoDownload(); ok {
 		if err := queue.TaskVideoDownloadValidator(v); err != nil {
 			return &ValidationError{Name: "task_video_download", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_download": %w`, err)}
@@ -458,6 +483,19 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeEnum,
 			Column: queue.FieldTaskVodDownloadThumbnail,
+		})
+	}
+	if value, ok := qu.mutation.TaskVodSaveInfo(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: queue.FieldTaskVodSaveInfo,
+		})
+	}
+	if qu.mutation.TaskVodSaveInfoCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Column: queue.FieldTaskVodSaveInfo,
 		})
 	}
 	if value, ok := qu.mutation.TaskVideoDownload(); ok {
@@ -696,6 +734,26 @@ func (quo *QueueUpdateOne) ClearTaskVodDownloadThumbnail() *QueueUpdateOne {
 	return quo
 }
 
+// SetTaskVodSaveInfo sets the "task_vod_save_info" field.
+func (quo *QueueUpdateOne) SetTaskVodSaveInfo(us utils.TaskStatus) *QueueUpdateOne {
+	quo.mutation.SetTaskVodSaveInfo(us)
+	return quo
+}
+
+// SetNillableTaskVodSaveInfo sets the "task_vod_save_info" field if the given value is not nil.
+func (quo *QueueUpdateOne) SetNillableTaskVodSaveInfo(us *utils.TaskStatus) *QueueUpdateOne {
+	if us != nil {
+		quo.SetTaskVodSaveInfo(*us)
+	}
+	return quo
+}
+
+// ClearTaskVodSaveInfo clears the value of the "task_vod_save_info" field.
+func (quo *QueueUpdateOne) ClearTaskVodSaveInfo() *QueueUpdateOne {
+	quo.mutation.ClearTaskVodSaveInfo()
+	return quo
+}
+
 // SetTaskVideoDownload sets the "task_video_download" field.
 func (quo *QueueUpdateOne) SetTaskVideoDownload(us utils.TaskStatus) *QueueUpdateOne {
 	quo.mutation.SetTaskVideoDownload(us)
@@ -912,6 +970,11 @@ func (quo *QueueUpdateOne) check() error {
 			return &ValidationError{Name: "task_vod_download_thumbnail", err: fmt.Errorf(`ent: validator failed for field "Queue.task_vod_download_thumbnail": %w`, err)}
 		}
 	}
+	if v, ok := quo.mutation.TaskVodSaveInfo(); ok {
+		if err := queue.TaskVodSaveInfoValidator(v); err != nil {
+			return &ValidationError{Name: "task_vod_save_info", err: fmt.Errorf(`ent: validator failed for field "Queue.task_vod_save_info": %w`, err)}
+		}
+	}
 	if v, ok := quo.mutation.TaskVideoDownload(); ok {
 		if err := queue.TaskVideoDownloadValidator(v); err != nil {
 			return &ValidationError{Name: "task_video_download", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_download": %w`, err)}
@@ -1037,6 +1100,19 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeEnum,
 			Column: queue.FieldTaskVodDownloadThumbnail,
+		})
+	}
+	if value, ok := quo.mutation.TaskVodSaveInfo(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: queue.FieldTaskVodSaveInfo,
+		})
+	}
+	if quo.mutation.TaskVodSaveInfoCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Column: queue.FieldTaskVodSaveInfo,
 		})
 	}
 	if value, ok := quo.mutation.TaskVideoDownload(); ok {
