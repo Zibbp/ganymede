@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
 // CreateFolder - creates folder if it doesn't exist
@@ -86,4 +87,13 @@ func MoveFile(sourcePath, destPath string) error {
 		return fmt.Errorf("error removing file: %v", err)
 	}
 	return nil
+}
+
+func ReadLastLines(path string, lines string) ([]byte, error) {
+	c := exec.Command("tail", "-n", lines, path)
+	out, err := c.Output()
+	if err != nil {
+		return nil, fmt.Errorf("error reading last lines: %v - supplied path: %s", err, path)
+	}
+	return out, nil
 }

@@ -120,96 +120,96 @@ var (
 	DefaultID func() uuid.UUID
 )
 
-const DefaultTaskVodCreateFolder utils.TaskStatus = "waiting"
+const DefaultTaskVodCreateFolder utils.TaskStatus = "pending"
 
 // TaskVodCreateFolderValidator is a validator for the "task_vod_create_folder" field enum values. It is called by the builders before save.
 func TaskVodCreateFolderValidator(tvcf utils.TaskStatus) error {
 	switch tvcf {
-	case "success", "processing", "waiting", "Error":
+	case "success", "running", "pending", "failed":
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_vod_create_folder field: %q", tvcf)
 	}
 }
 
-const DefaultTaskVodDownloadThumbnail utils.TaskStatus = "waiting"
+const DefaultTaskVodDownloadThumbnail utils.TaskStatus = "pending"
 
 // TaskVodDownloadThumbnailValidator is a validator for the "task_vod_download_thumbnail" field enum values. It is called by the builders before save.
 func TaskVodDownloadThumbnailValidator(tvdt utils.TaskStatus) error {
 	switch tvdt {
-	case "success", "processing", "waiting", "Error":
+	case "success", "running", "pending", "failed":
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_vod_download_thumbnail field: %q", tvdt)
 	}
 }
 
-const DefaultTaskVodSaveInfo utils.TaskStatus = "waiting"
+const DefaultTaskVodSaveInfo utils.TaskStatus = "pending"
 
 // TaskVodSaveInfoValidator is a validator for the "task_vod_save_info" field enum values. It is called by the builders before save.
 func TaskVodSaveInfoValidator(tvsi utils.TaskStatus) error {
 	switch tvsi {
-	case "success", "processing", "waiting", "Error":
+	case "success", "running", "pending", "failed":
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_vod_save_info field: %q", tvsi)
 	}
 }
 
-const DefaultTaskVideoDownload utils.TaskStatus = "waiting"
+const DefaultTaskVideoDownload utils.TaskStatus = "pending"
 
 // TaskVideoDownloadValidator is a validator for the "task_video_download" field enum values. It is called by the builders before save.
 func TaskVideoDownloadValidator(tvd utils.TaskStatus) error {
 	switch tvd {
-	case "success", "processing", "waiting", "Error":
+	case "success", "running", "pending", "failed":
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_video_download field: %q", tvd)
 	}
 }
 
-const DefaultTaskVideoMove utils.TaskStatus = "waiting"
+const DefaultTaskVideoMove utils.TaskStatus = "pending"
 
 // TaskVideoMoveValidator is a validator for the "task_video_move" field enum values. It is called by the builders before save.
 func TaskVideoMoveValidator(tvm utils.TaskStatus) error {
 	switch tvm {
-	case "success", "processing", "waiting", "Error":
+	case "success", "running", "pending", "failed":
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_video_move field: %q", tvm)
 	}
 }
 
-const DefaultTaskChatDownload utils.TaskStatus = "waiting"
+const DefaultTaskChatDownload utils.TaskStatus = "pending"
 
 // TaskChatDownloadValidator is a validator for the "task_chat_download" field enum values. It is called by the builders before save.
 func TaskChatDownloadValidator(tcd utils.TaskStatus) error {
 	switch tcd {
-	case "success", "processing", "waiting", "Error":
+	case "success", "running", "pending", "failed":
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_chat_download field: %q", tcd)
 	}
 }
 
-const DefaultTaskChatRender utils.TaskStatus = "waiting"
+const DefaultTaskChatRender utils.TaskStatus = "pending"
 
 // TaskChatRenderValidator is a validator for the "task_chat_render" field enum values. It is called by the builders before save.
 func TaskChatRenderValidator(tcr utils.TaskStatus) error {
 	switch tcr {
-	case "success", "processing", "waiting", "Error":
+	case "success", "running", "pending", "failed":
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_chat_render field: %q", tcr)
 	}
 }
 
-const DefaultTaskChatMove utils.TaskStatus = "waiting"
+const DefaultTaskChatMove utils.TaskStatus = "pending"
 
 // TaskChatMoveValidator is a validator for the "task_chat_move" field enum values. It is called by the builders before save.
 func TaskChatMoveValidator(tcm utils.TaskStatus) error {
 	switch tcm {
-	case "success", "processing", "waiting", "Error":
+	case "success", "running", "pending", "failed":
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_chat_move field: %q", tcm)

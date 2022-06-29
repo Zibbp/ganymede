@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
 	"time"
@@ -64,4 +65,40 @@ func (s *Service) GetQueueItems(c echo.Context) ([]*ent.Queue, error) {
 		return nil, fmt.Errorf("error getting queue tasks: %v", err)
 	}
 	return q, nil
+}
+func (s *Service) GetQueueItemsFilter(c echo.Context, processing bool) ([]*ent.Queue, error) {
+	q, err := s.Store.Client.Queue.Query().Where(queue.Processing(processing)).WithVod().All(c.Request().Context())
+	if err != nil {
+		return nil, fmt.Errorf("error getting queue tasks: %v", err)
+	}
+	return q, nil
+}
+
+func (s *Service) DeleteQueueItem(c echo.Context, qID uuid.UUID) error {
+	err := s.Store.Client.Queue.DeleteOneID(qID).Exec(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("error deleting queue: %v", err)
+	}
+	return nil
+}
+
+func (s *Service) GetQueueItem(c echo.Context, qID uuid.UUID) (*ent.Queue, error) {
+	q, err := s.Store.Client.Queue.Query().Where(queue.ID(qID)).WithVod().Only(c.Request().Context())
+	if err != nil {
+		return nil, fmt.Errorf("error getting queue task: %v", err)
+	}
+	return q, nil
+}
+
+func (s *Service) ReadLogFile(c echo.Context, qID uuid.UUID, logType string) ([]byte, error) {
+	q, err := s.GetQueueItem(c, qID)
+	if err != nil {
+		return nil, err
+	}
+	path := fmt.Sprintf("/logs/%s_%s-%s.log", q.Edges.Vod.ExtID, q.Edges.Vod.ID, logType)
+	logLines, err := utils.ReadLastLines(path, "10")
+	if err != nil {
+		return nil, err
+	}
+	return []byte(logLines), nil
 }

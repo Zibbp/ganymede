@@ -50,14 +50,14 @@ func (VodType) Values() (kinds []string) {
 type TaskStatus string
 
 const (
-	Success    TaskStatus = "success"
-	Processing TaskStatus = "processing"
-	Waiting    TaskStatus = "waiting"
-	Error      TaskStatus = "error"
+	Success TaskStatus = "success"
+	Running TaskStatus = "running"
+	Pending TaskStatus = "pending"
+	Failed  TaskStatus = "failed"
 )
 
 func (TaskStatus) Values() (kinds []string) {
-	for _, s := range []TaskStatus{Success, Processing, Waiting, Error} {
+	for _, s := range []TaskStatus{Success, Running, Pending, Failed} {
 		kinds = append(kinds, string(s))
 	}
 	return
