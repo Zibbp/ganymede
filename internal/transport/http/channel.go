@@ -12,6 +12,7 @@ type ChannelService interface {
 	CreateChannel(c echo.Context, channelDto channel.Channel) (*ent.Channel, error)
 	GetChannels(c echo.Context) ([]*ent.Channel, error)
 	GetChannel(c echo.Context, channelID uuid.UUID) (*ent.Channel, error)
+	GetChannelByName(c echo.Context, channelName string) (*ent.Channel, error)
 	DeleteChannel(c echo.Context, channelID uuid.UUID) error
 	UpdateChannel(c echo.Context, channelID uuid.UUID, channelDto channel.Channel) (*ent.Channel, error)
 }
@@ -107,6 +108,18 @@ func (h *Handler) UpdateChannel(c echo.Context) error {
 	}
 
 	cha, err := h.Service.ChannelService.UpdateChannel(c, cUUID, ccDto)
+	if err != nil {
+		if err.Error() == "channel not found" {
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, cha)
+}
+
+func (h *Handler) GetChannelByName(c echo.Context) error {
+	name := c.Param("name")
+	cha, err := h.Service.ChannelService.GetChannelByName(c, name)
 	if err != nil {
 		if err.Error() == "channel not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())

@@ -28,7 +28,8 @@ type ChannelQuery struct {
 	fields     []string
 	predicates []predicate.Channel
 	// eager-loading edges.
-	withVods *VodQuery
+	withVods  *VodQuery
+	modifiers []func(s *sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -369,6 +370,9 @@ func (cq *ChannelQuery) sqlAll(ctx context.Context) ([]*Channel, error) {
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
+	if len(cq.modifiers) > 0 {
+		_spec.Modifiers = cq.modifiers
+	}
 	if err := sqlgraph.QueryNodes(ctx, cq.driver, _spec); err != nil {
 		return nil, err
 	}
@@ -410,6 +414,9 @@ func (cq *ChannelQuery) sqlAll(ctx context.Context) ([]*Channel, error) {
 
 func (cq *ChannelQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := cq.querySpec()
+	if len(cq.modifiers) > 0 {
+		_spec.Modifiers = cq.modifiers
+	}
 	_spec.Node.Columns = cq.fields
 	if len(cq.fields) > 0 {
 		_spec.Unique = cq.unique != nil && *cq.unique
@@ -488,6 +495,9 @@ func (cq *ChannelQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if cq.unique != nil && *cq.unique {
 		selector.Distinct()
 	}
+	for _, m := range cq.modifiers {
+		m(selector)
+	}
 	for _, p := range cq.predicates {
 		p(selector)
 	}
@@ -503,6 +513,12 @@ func (cq *ChannelQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (cq *ChannelQuery) Modify(modifiers ...func(s *sql.Selector)) *ChannelSelect {
+	cq.modifiers = append(cq.modifiers, modifiers...)
+	return cq.Select()
 }
 
 // ChannelGroupBy is the group-by builder for Channel entities.
@@ -991,4 +1007,10 @@ func (cs *ChannelSelect) sqlScan(ctx context.Context, v interface{}) error {
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (cs *ChannelSelect) Modify(modifiers ...func(s *sql.Selector)) *ChannelSelect {
+	cs.modifiers = append(cs.modifiers, modifiers...)
+	return cs
 }

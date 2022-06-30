@@ -46,6 +46,11 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	// Middleware
 	h.Server.Validator = &utils.CustomValidator{Validator: validator.New()}
 
+	h.Server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+	}))
+
 	h.mapRoutes()
 
 	return h
@@ -87,6 +92,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	channelGroup.POST("", h.CreateChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	channelGroup.GET("", h.GetChannels)
 	channelGroup.GET("/:id", h.GetChannel)
+	channelGroup.GET("/name/:name", h.GetChannelByName)
 	channelGroup.PUT("/:id", h.UpdateChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	channelGroup.DELETE("/:id", h.DeleteChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 

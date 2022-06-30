@@ -43,7 +43,7 @@ func (s *Service) CreateChannel(c echo.Context, channelDto Channel) (*ent.Channe
 }
 
 func (s *Service) GetChannels(c echo.Context) ([]*ent.Channel, error) {
-	channels, err := s.Store.Client.Channel.Query().All(c.Request().Context())
+	channels, err := s.Store.Client.Channel.Query().Order(ent.Desc(channel.FieldCreatedAt)).All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting channels")
 		return nil, fmt.Errorf("error getting channels: %v", err)
@@ -53,7 +53,7 @@ func (s *Service) GetChannels(c echo.Context) ([]*ent.Channel, error) {
 }
 
 func (s *Service) GetChannel(c echo.Context, channelID uuid.UUID) (*ent.Channel, error) {
-	cha, err := s.Store.Client.Channel.Query().Where(channel.ID(channelID)).Only(c.Request().Context())
+	cha, err := s.Store.Client.Channel.Query().Where(channel.ID(channelID)).WithVods().Only(c.Request().Context())
 	if err != nil {
 		// if channel not found
 		if _, ok := err.(*ent.NotFoundError); ok {

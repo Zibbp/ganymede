@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -43,10 +44,10 @@ type Vod struct {
 func (s *Service) CreateVod(c echo.Context, vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
 	v, err := s.Store.Client.Vod.Create().SetID(vodDto.ID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).Save(c.Request().Context())
 	if err != nil {
+		log.Debug().Err(err).Msg("error creating vod")
 		if _, ok := err.(*ent.ConstraintError); ok {
 			return nil, fmt.Errorf("channel does not exist")
 		}
-		log.Debug().Err(err).Msg("error creating vod")
 		return nil, fmt.Errorf("error creating vod: %v", err)
 	}
 
@@ -63,14 +64,24 @@ func (s *Service) GetVods(c echo.Context) ([]*ent.Vod, error) {
 	return v, nil
 }
 
+func (s *Service) GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(cUUID))).All(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vods by channel")
+		return nil, fmt.Errorf("error getting vods by channel: %v", err)
+	}
+
+	return v, nil
+}
+
 func (s *Service) GetVod(c echo.Context, vodID uuid.UUID) (*ent.Vod, error) {
 	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
 	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod")
 		// if vod not found
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return nil, fmt.Errorf("vod not found")
 		}
-		log.Debug().Err(err).Msg("error getting vod")
 		return nil, fmt.Errorf("error getting vod: %v", err)
 	}
 
@@ -80,11 +91,12 @@ func (s *Service) GetVod(c echo.Context, vodID uuid.UUID) (*ent.Vod, error) {
 func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID) error {
 	err := s.Store.Client.Vod.DeleteOneID(vodID).Exec(c.Request().Context())
 	if err != nil {
+		log.Debug().Err(err).Msg("error deleting vod")
+
 		// if vod not found
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return fmt.Errorf("vod not found")
 		}
-		log.Debug().Err(err).Msg("error deleting vod")
 		return fmt.Errorf("error deleting vod: %v", err)
 	}
 	return nil
@@ -93,11 +105,12 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID) error {
 func (s *Service) UpdateVod(c echo.Context, vodID uuid.UUID, vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
 	v, err := s.Store.Client.Vod.UpdateOneID(vodID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).Save(c.Request().Context())
 	if err != nil {
+		log.Debug().Err(err).Msg("error updating vod")
+
 		// if vod not found
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return nil, fmt.Errorf("vod not found")
 		}
-		log.Debug().Err(err).Msg("error updating vod")
 		return nil, fmt.Errorf("error updating vod: %v", err)
 	}
 
@@ -107,11 +120,12 @@ func (s *Service) UpdateVod(c echo.Context, vodID uuid.UUID, vodDto Vod, cUUID u
 func (s *Service) CheckVodExists(c echo.Context, extID string) (bool, error) {
 	_, err := s.Store.Client.Vod.Query().Where(vod.ExtID(extID)).Only(c.Request().Context())
 	if err != nil {
+		log.Debug().Err(err).Msg("error checking vod exists")
+
 		// if vod not found
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return false, nil
 		}
-		log.Debug().Err(err).Msg("error checking vod exists")
 		return false, fmt.Errorf("error checking vod exists: %v", err)
 	}
 

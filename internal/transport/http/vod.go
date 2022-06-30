@@ -12,6 +12,7 @@ import (
 type VodService interface {
 	CreateVod(c echo.Context, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	GetVods(c echo.Context) ([]*ent.Vod, error)
+	GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error)
 	GetVod(c echo.Context, vID uuid.UUID) (*ent.Vod, error)
 	DeleteVod(c echo.Context, vID uuid.UUID) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
@@ -48,6 +49,7 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	cvrDto := vod.Vod{
+		ID:               uuid.New(),
 		ExtID:            req.ExtID,
 		Platform:         req.Platform,
 		Type:             req.Type,
@@ -72,7 +74,19 @@ func (h *Handler) CreateVod(c echo.Context) error {
 }
 
 func (h *Handler) GetVods(c echo.Context) error {
-	v, err := h.Service.VodService.GetVods(c)
+	cID := c.QueryParam("channel_id")
+	if cID == "" {
+		v, err := h.Service.VodService.GetVods(c)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		return c.JSON(http.StatusOK, v)
+	}
+	cUUID, err := uuid.Parse(cID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid channel id")
+	}
+	v, err := h.Service.VodService.GetVodsByChannel(c, cUUID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
