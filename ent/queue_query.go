@@ -27,9 +27,8 @@ type QueueQuery struct {
 	fields     []string
 	predicates []predicate.Queue
 	// eager-loading edges.
-	withVod   *VodQuery
-	withFKs   bool
-	modifiers []func(s *sql.Selector)
+	withVod *VodQuery
+	withFKs bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -377,9 +376,6 @@ func (qq *QueueQuery) sqlAll(ctx context.Context) ([]*Queue, error) {
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
-	if len(qq.modifiers) > 0 {
-		_spec.Modifiers = qq.modifiers
-	}
 	if err := sqlgraph.QueryNodes(ctx, qq.driver, _spec); err != nil {
 		return nil, err
 	}
@@ -421,9 +417,6 @@ func (qq *QueueQuery) sqlAll(ctx context.Context) ([]*Queue, error) {
 
 func (qq *QueueQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := qq.querySpec()
-	if len(qq.modifiers) > 0 {
-		_spec.Modifiers = qq.modifiers
-	}
 	_spec.Node.Columns = qq.fields
 	if len(qq.fields) > 0 {
 		_spec.Unique = qq.unique != nil && *qq.unique
@@ -502,9 +495,6 @@ func (qq *QueueQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if qq.unique != nil && *qq.unique {
 		selector.Distinct()
 	}
-	for _, m := range qq.modifiers {
-		m(selector)
-	}
 	for _, p := range qq.predicates {
 		p(selector)
 	}
@@ -520,12 +510,6 @@ func (qq *QueueQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (qq *QueueQuery) Modify(modifiers ...func(s *sql.Selector)) *QueueSelect {
-	qq.modifiers = append(qq.modifiers, modifiers...)
-	return qq.Select()
 }
 
 // QueueGroupBy is the group-by builder for Queue entities.
@@ -1014,10 +998,4 @@ func (qs *QueueSelect) sqlScan(ctx context.Context, v interface{}) error {
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (qs *QueueSelect) Modify(modifiers ...func(s *sql.Selector)) *QueueSelect {
-	qs.modifiers = append(qs.modifiers, modifiers...)
-	return qs
 }

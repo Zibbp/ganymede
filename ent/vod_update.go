@@ -240,6 +240,20 @@ func (vu *VodUpdate) ClearInfoPath() *VodUpdate {
 	return vu
 }
 
+// SetStreamedAt sets the "streamed_at" field.
+func (vu *VodUpdate) SetStreamedAt(t time.Time) *VodUpdate {
+	vu.mutation.SetStreamedAt(t)
+	return vu
+}
+
+// SetNillableStreamedAt sets the "streamed_at" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableStreamedAt(t *time.Time) *VodUpdate {
+	if t != nil {
+		vu.SetStreamedAt(*t)
+	}
+	return vu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (vu *VodUpdate) SetUpdatedAt(t time.Time) *VodUpdate {
 	vu.mutation.SetUpdatedAt(t)
@@ -538,6 +552,13 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Column: vod.FieldInfoPath,
+		})
+	}
+	if value, ok := vu.mutation.StreamedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: vod.FieldStreamedAt,
 		})
 	}
 	if value, ok := vu.mutation.UpdatedAt(); ok {
@@ -841,6 +862,20 @@ func (vuo *VodUpdateOne) SetNillableInfoPath(s *string) *VodUpdateOne {
 // ClearInfoPath clears the value of the "info_path" field.
 func (vuo *VodUpdateOne) ClearInfoPath() *VodUpdateOne {
 	vuo.mutation.ClearInfoPath()
+	return vuo
+}
+
+// SetStreamedAt sets the "streamed_at" field.
+func (vuo *VodUpdateOne) SetStreamedAt(t time.Time) *VodUpdateOne {
+	vuo.mutation.SetStreamedAt(t)
+	return vuo
+}
+
+// SetNillableStreamedAt sets the "streamed_at" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableStreamedAt(t *time.Time) *VodUpdateOne {
+	if t != nil {
+		vuo.SetStreamedAt(*t)
+	}
 	return vuo
 }
 
@@ -1166,6 +1201,13 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Column: vod.FieldInfoPath,
+		})
+	}
+	if value, ok := vuo.mutation.StreamedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: vod.FieldStreamedAt,
 		})
 	}
 	if value, ok := vuo.mutation.UpdatedAt(); ok {

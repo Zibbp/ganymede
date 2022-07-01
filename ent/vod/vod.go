@@ -43,6 +43,8 @@ const (
 	FieldChatVideoPath = "chat_video_path"
 	// FieldInfoPath holds the string denoting the info_path field in the database.
 	FieldInfoPath = "info_path"
+	// FieldStreamedAt holds the string denoting the streamed_at field in the database.
+	FieldStreamedAt = "streamed_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -86,6 +88,7 @@ var Columns = []string{
 	FieldChatPath,
 	FieldChatVideoPath,
 	FieldInfoPath,
+	FieldStreamedAt,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -118,6 +121,8 @@ var (
 	DefaultViews int
 	// DefaultProcessing holds the default value on creation for the "processing" field.
 	DefaultProcessing bool
+	// DefaultStreamedAt holds the default value on creation for the "streamed_at" field.
+	DefaultStreamedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.

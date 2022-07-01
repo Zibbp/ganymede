@@ -179,6 +179,13 @@ func InfoPath(v string) predicate.Vod {
 	})
 }
 
+// StreamedAt applies equality check predicate on the "streamed_at" field. It's identical to StreamedAtEQ.
+func StreamedAt(v time.Time) predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldStreamedAt), v))
+	})
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Vod {
 	return predicate.Vod(func(s *sql.Selector) {
@@ -1525,6 +1532,82 @@ func InfoPathEqualFold(v string) predicate.Vod {
 func InfoPathContainsFold(v string) predicate.Vod {
 	return predicate.Vod(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldInfoPath), v))
+	})
+}
+
+// StreamedAtEQ applies the EQ predicate on the "streamed_at" field.
+func StreamedAtEQ(v time.Time) predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldStreamedAt), v))
+	})
+}
+
+// StreamedAtNEQ applies the NEQ predicate on the "streamed_at" field.
+func StreamedAtNEQ(v time.Time) predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldStreamedAt), v))
+	})
+}
+
+// StreamedAtIn applies the In predicate on the "streamed_at" field.
+func StreamedAtIn(vs ...time.Time) predicate.Vod {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Vod(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldStreamedAt), v...))
+	})
+}
+
+// StreamedAtNotIn applies the NotIn predicate on the "streamed_at" field.
+func StreamedAtNotIn(vs ...time.Time) predicate.Vod {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Vod(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldStreamedAt), v...))
+	})
+}
+
+// StreamedAtGT applies the GT predicate on the "streamed_at" field.
+func StreamedAtGT(v time.Time) predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldStreamedAt), v))
+	})
+}
+
+// StreamedAtGTE applies the GTE predicate on the "streamed_at" field.
+func StreamedAtGTE(v time.Time) predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldStreamedAt), v))
+	})
+}
+
+// StreamedAtLT applies the LT predicate on the "streamed_at" field.
+func StreamedAtLT(v time.Time) predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldStreamedAt), v))
+	})
+}
+
+// StreamedAtLTE applies the LTE predicate on the "streamed_at" field.
+func StreamedAtLTE(v time.Time) predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldStreamedAt), v))
 	})
 }
 

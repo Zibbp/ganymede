@@ -188,6 +188,20 @@ func (vc *VodCreate) SetNillableInfoPath(s *string) *VodCreate {
 	return vc
 }
 
+// SetStreamedAt sets the "streamed_at" field.
+func (vc *VodCreate) SetStreamedAt(t time.Time) *VodCreate {
+	vc.mutation.SetStreamedAt(t)
+	return vc
+}
+
+// SetNillableStreamedAt sets the "streamed_at" field if the given value is not nil.
+func (vc *VodCreate) SetNillableStreamedAt(t *time.Time) *VodCreate {
+	if t != nil {
+		vc.SetStreamedAt(*t)
+	}
+	return vc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (vc *VodCreate) SetUpdatedAt(t time.Time) *VodCreate {
 	vc.mutation.SetUpdatedAt(t)
@@ -351,6 +365,10 @@ func (vc *VodCreate) defaults() {
 		v := vod.DefaultProcessing
 		vc.mutation.SetProcessing(v)
 	}
+	if _, ok := vc.mutation.StreamedAt(); !ok {
+		v := vod.DefaultStreamedAt()
+		vc.mutation.SetStreamedAt(v)
+	}
 	if _, ok := vc.mutation.UpdatedAt(); !ok {
 		v := vod.DefaultUpdatedAt()
 		vc.mutation.SetUpdatedAt(v)
@@ -403,6 +421,9 @@ func (vc *VodCreate) check() error {
 	}
 	if _, ok := vc.mutation.VideoPath(); !ok {
 		return &ValidationError{Name: "video_path", err: errors.New(`ent: missing required field "Vod.video_path"`)}
+	}
+	if _, ok := vc.mutation.StreamedAt(); !ok {
+		return &ValidationError{Name: "streamed_at", err: errors.New(`ent: missing required field "Vod.streamed_at"`)}
 	}
 	if _, ok := vc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Vod.updated_at"`)}
@@ -560,6 +581,14 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 			Column: vod.FieldInfoPath,
 		})
 		_node.InfoPath = value
+	}
+	if value, ok := vc.mutation.StreamedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: vod.FieldStreamedAt,
+		})
+		_node.StreamedAt = value
 	}
 	if value, ok := vc.mutation.UpdatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

@@ -130,6 +130,12 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 		return nil, fmt.Errorf("error parsing duration: %v", err)
 	}
 
+	// Parse Twitch date to time.Time
+	parsedDate, err := time.Parse(time.RFC3339, tVod.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing date: %v", err)
+	}
+
 	// Create VOD in DB
 	vodDTO := vod.Vod{
 		ID:               vUUID,
@@ -147,6 +153,7 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 		ChatPath:         chatPath,
 		ChatVideoPath:    chatVideoPath,
 		InfoPath:         fmt.Sprintf("%s/%s-info.json", rootVodPath, tVod.ID),
+		StreamedAt:       parsedDate,
 	}
 	v, err := s.VodService.CreateVod(c, vodDTO, dbC.ID)
 	if err != nil {

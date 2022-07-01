@@ -51,6 +51,9 @@ type Vod struct {
 	ChatVideoPath string `json:"chat_video_path,omitempty"`
 	// InfoPath holds the value of the "info_path" field.
 	InfoPath string `json:"info_path,omitempty"`
+	// StreamedAt holds the value of the "streamed_at" field.
+	// The time the VOD was streamed.
+	StreamedAt time.Time `json:"streamed_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -111,7 +114,7 @@ func (*Vod) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldChatPath, vod.FieldChatVideoPath, vod.FieldInfoPath:
 			values[i] = new(sql.NullString)
-		case vod.FieldUpdatedAt, vod.FieldCreatedAt:
+		case vod.FieldStreamedAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case vod.FieldID:
 			values[i] = new(uuid.UUID)
@@ -222,6 +225,12 @@ func (v *Vod) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				v.InfoPath = value.String
 			}
+		case vod.FieldStreamedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field streamed_at", values[i])
+			} else if value.Valid {
+				v.StreamedAt = value.Time
+			}
 		case vod.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
@@ -307,6 +316,8 @@ func (v *Vod) String() string {
 	builder.WriteString(v.ChatVideoPath)
 	builder.WriteString(", info_path=")
 	builder.WriteString(v.InfoPath)
+	builder.WriteString(", streamed_at=")
+	builder.WriteString(v.StreamedAt.Format(time.ANSIC))
 	builder.WriteString(", updated_at=")
 	builder.WriteString(v.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", created_at=")

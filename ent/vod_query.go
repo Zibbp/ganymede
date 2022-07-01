@@ -32,7 +32,6 @@ type VodQuery struct {
 	withChannel *ChannelQuery
 	withQueue   *QueueQuery
 	withFKs     bool
-	modifiers   []func(s *sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -415,9 +414,6 @@ func (vq *VodQuery) sqlAll(ctx context.Context) ([]*Vod, error) {
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
-	if len(vq.modifiers) > 0 {
-		_spec.Modifiers = vq.modifiers
-	}
 	if err := sqlgraph.QueryNodes(ctx, vq.driver, _spec); err != nil {
 		return nil, err
 	}
@@ -487,9 +483,6 @@ func (vq *VodQuery) sqlAll(ctx context.Context) ([]*Vod, error) {
 
 func (vq *VodQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := vq.querySpec()
-	if len(vq.modifiers) > 0 {
-		_spec.Modifiers = vq.modifiers
-	}
 	_spec.Node.Columns = vq.fields
 	if len(vq.fields) > 0 {
 		_spec.Unique = vq.unique != nil && *vq.unique
@@ -568,9 +561,6 @@ func (vq *VodQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if vq.unique != nil && *vq.unique {
 		selector.Distinct()
 	}
-	for _, m := range vq.modifiers {
-		m(selector)
-	}
 	for _, p := range vq.predicates {
 		p(selector)
 	}
@@ -586,12 +576,6 @@ func (vq *VodQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (vq *VodQuery) Modify(modifiers ...func(s *sql.Selector)) *VodSelect {
-	vq.modifiers = append(vq.modifiers, modifiers...)
-	return vq.Select()
 }
 
 // VodGroupBy is the group-by builder for Vod entities.
@@ -1080,10 +1064,4 @@ func (vs *VodSelect) sqlScan(ctx context.Context, v interface{}) error {
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (vs *VodSelect) Modify(modifiers ...func(s *sql.Selector)) *VodSelect {
-	vs.modifiers = append(vs.modifiers, modifiers...)
-	return vs
 }

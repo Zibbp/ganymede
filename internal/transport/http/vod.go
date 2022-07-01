@@ -7,6 +7,7 @@ import (
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 	"net/http"
+	"time"
 )
 
 type VodService interface {
@@ -35,6 +36,7 @@ type CreateVodRequest struct {
 	ChatPath         string            `json:"chat_path"`
 	ChatVideoPath    string            `json:"chat_video_path"`
 	InfoPath         string            `json:"info_path"`
+	StreamedAt       string            `json:"streamed_at" validate:"required"`
 }
 
 func (h *Handler) CreateVod(c echo.Context) error {
@@ -46,6 +48,11 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	cUUID, err := uuid.Parse(req.ChannelID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	// Parse streamed at time
+	streamedAt, err := time.Parse(time.RFC3339, req.StreamedAt)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -65,6 +72,7 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		ChatPath:         req.ChatPath,
 		ChatVideoPath:    req.ChatVideoPath,
 		InfoPath:         req.InfoPath,
+		StreamedAt:       streamedAt,
 	}
 
 	v, err := h.Service.VodService.CreateVod(c, cvrDto, cUUID)
@@ -148,6 +156,11 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+	// Parse streamed at time
+	streamedAt, err := time.Parse(time.RFC3339, req.StreamedAt)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	cvrDto := vod.Vod{
 		ExtID:            req.ExtID,
 		Platform:         req.Platform,
@@ -163,6 +176,7 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 		ChatPath:         req.ChatPath,
 		ChatVideoPath:    req.ChatVideoPath,
 		InfoPath:         req.InfoPath,
+		StreamedAt:       streamedAt,
 	}
 
 	v, err := h.Service.VodService.UpdateVod(c, vID, cvrDto, cUUID)

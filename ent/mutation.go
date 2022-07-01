@@ -2589,6 +2589,7 @@ type VodMutation struct {
 	chat_path          *string
 	chat_video_path    *string
 	info_path          *string
+	streamed_at        *time.Time
 	updated_at         *time.Time
 	created_at         *time.Time
 	clearedFields      map[string]struct{}
@@ -3314,6 +3315,42 @@ func (m *VodMutation) ResetInfoPath() {
 	delete(m.clearedFields, vod.FieldInfoPath)
 }
 
+// SetStreamedAt sets the "streamed_at" field.
+func (m *VodMutation) SetStreamedAt(t time.Time) {
+	m.streamed_at = &t
+}
+
+// StreamedAt returns the value of the "streamed_at" field in the mutation.
+func (m *VodMutation) StreamedAt() (r time.Time, exists bool) {
+	v := m.streamed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStreamedAt returns the old "streamed_at" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldStreamedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStreamedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStreamedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStreamedAt: %w", err)
+	}
+	return oldValue.StreamedAt, nil
+}
+
+// ResetStreamedAt resets all changes to the "streamed_at" field.
+func (m *VodMutation) ResetStreamedAt() {
+	m.streamed_at = nil
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *VodMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -3483,7 +3520,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 17)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -3525,6 +3562,9 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.info_path != nil {
 		fields = append(fields, vod.FieldInfoPath)
+	}
+	if m.streamed_at != nil {
+		fields = append(fields, vod.FieldStreamedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, vod.FieldUpdatedAt)
@@ -3568,6 +3608,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.ChatVideoPath()
 	case vod.FieldInfoPath:
 		return m.InfoPath()
+	case vod.FieldStreamedAt:
+		return m.StreamedAt()
 	case vod.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case vod.FieldCreatedAt:
@@ -3609,6 +3651,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldChatVideoPath(ctx)
 	case vod.FieldInfoPath:
 		return m.OldInfoPath(ctx)
+	case vod.FieldStreamedAt:
+		return m.OldStreamedAt(ctx)
 	case vod.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case vod.FieldCreatedAt:
@@ -3719,6 +3763,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetInfoPath(v)
+		return nil
+	case vod.FieldStreamedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStreamedAt(v)
 		return nil
 	case vod.FieldUpdatedAt:
 		v, ok := value.(time.Time)
@@ -3884,6 +3935,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldInfoPath:
 		m.ResetInfoPath()
+		return nil
+	case vod.FieldStreamedAt:
+		m.ResetStreamedAt()
 		return nil
 	case vod.FieldUpdatedAt:
 		m.ResetUpdatedAt()
