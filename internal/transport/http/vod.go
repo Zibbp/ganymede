@@ -14,6 +14,7 @@ type VodService interface {
 	GetVods(c echo.Context) ([]*ent.Vod, error)
 	GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error)
 	GetVod(c echo.Context, vID uuid.UUID) (*ent.Vod, error)
+	GetVodWithChannel(c echo.Context, vID uuid.UUID) (*ent.Vod, error)
 	DeleteVod(c echo.Context, vID uuid.UUID) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 }
@@ -97,6 +98,14 @@ func (h *Handler) GetVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	wC := c.QueryParam("with_channel")
+	if wC == "true" {
+		v, err := h.Service.VodService.GetVodWithChannel(c, vID)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		return c.JSON(http.StatusOK, v)
 	}
 	v, err := h.Service.VodService.GetVod(c, vID)
 	if err != nil {

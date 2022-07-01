@@ -88,6 +88,20 @@ func (s *Service) GetVod(c echo.Context, vodID uuid.UUID) (*ent.Vod, error) {
 	return v, nil
 }
 
+func (s *Service) GetVodWithChannel(c echo.Context, vodID uuid.UUID) (*ent.Vod, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithChannel().Only(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod")
+		// if vod not found
+		if _, ok := err.(*ent.NotFoundError); ok {
+			return nil, fmt.Errorf("vod not found")
+		}
+		return nil, fmt.Errorf("error getting vod: %v", err)
+	}
+
+	return v, nil
+}
+
 func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID) error {
 	err := s.Store.Client.Vod.DeleteOneID(vodID).Exec(c.Request().Context())
 	if err != nil {
