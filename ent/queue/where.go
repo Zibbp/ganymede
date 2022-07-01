@@ -470,6 +470,70 @@ func TaskVideoDownloadNotNil() predicate.Queue {
 	})
 }
 
+// TaskVideoConvertEQ applies the EQ predicate on the "task_video_convert" field.
+func TaskVideoConvertEQ(v utils.TaskStatus) predicate.Queue {
+	vc := v
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTaskVideoConvert), vc))
+	})
+}
+
+// TaskVideoConvertNEQ applies the NEQ predicate on the "task_video_convert" field.
+func TaskVideoConvertNEQ(v utils.TaskStatus) predicate.Queue {
+	vc := v
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldTaskVideoConvert), vc))
+	})
+}
+
+// TaskVideoConvertIn applies the In predicate on the "task_video_convert" field.
+func TaskVideoConvertIn(vs ...utils.TaskStatus) predicate.Queue {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Queue(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldTaskVideoConvert), v...))
+	})
+}
+
+// TaskVideoConvertNotIn applies the NotIn predicate on the "task_video_convert" field.
+func TaskVideoConvertNotIn(vs ...utils.TaskStatus) predicate.Queue {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Queue(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldTaskVideoConvert), v...))
+	})
+}
+
+// TaskVideoConvertIsNil applies the IsNil predicate on the "task_video_convert" field.
+func TaskVideoConvertIsNil() predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldTaskVideoConvert)))
+	})
+}
+
+// TaskVideoConvertNotNil applies the NotNil predicate on the "task_video_convert" field.
+func TaskVideoConvertNotNil() predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldTaskVideoConvert)))
+	})
+}
+
 // TaskVideoMoveEQ applies the EQ predicate on the "task_video_move" field.
 func TaskVideoMoveEQ(v utils.TaskStatus) predicate.Queue {
 	vc := v

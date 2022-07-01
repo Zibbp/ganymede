@@ -71,3 +71,24 @@ func RenderTwitchVodChat(v *ent.Vod) error {
 	log.Debug().Msgf("finished vod chat render for %s", v.ExtID)
 	return nil
 }
+
+func ConvertTwitchVodVideo(v *ent.Vod) error {
+	cmd := osExec.Command("ffmpeg", "-y", "-hide_banner", "-i", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID), "-c:v", "copy", "-c:a", "copy", fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID))
+
+	videoConvertLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video-convert.log", v.ExtID, v.ID))
+	if err != nil {
+		log.Error().Err(err).Msg("error creating video convert logfile")
+		return err
+	}
+	defer videoConvertLogfile.Close()
+	cmd.Stdout = videoConvertLogfile
+	cmd.Stderr = videoConvertLogfile
+
+	if err := cmd.Run(); err != nil {
+		log.Error().Err(err).Msg("error running ffmpeg for vod video convert")
+		return err
+	}
+
+	log.Debug().Msgf("finished vod video convert for %s", v.ExtID)
+	return nil
+}

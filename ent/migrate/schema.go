@@ -35,6 +35,7 @@ var (
 		{Name: "task_vod_download_thumbnail", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "task_vod_save_info", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "task_video_download", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
+		{Name: "task_video_convert", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "task_video_move", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "task_chat_download", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "task_chat_render", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
@@ -51,7 +52,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "queues_vods_queue",
-				Columns:    []*schema.Column{QueuesColumns[16]},
+				Columns:    []*schema.Column{QueuesColumns[17]},
 				RefColumns: []*schema.Column{VodsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

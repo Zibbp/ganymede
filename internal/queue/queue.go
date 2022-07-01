@@ -31,6 +31,7 @@ type Queue struct {
 	TaskVodDownloadThumbnail utils.TaskStatus `json:"task_vod_download_thumbnail"`
 	TaskVodSaveInfo          utils.TaskStatus `json:"task_vod_save_info"`
 	TaskVideoDownload        utils.TaskStatus `json:"task_video_download"`
+	TaskVideoConvert         utils.TaskStatus `json:"task_video_convert"`
 	TaskVideoMove            utils.TaskStatus `json:"task_video_move"`
 	TaskChatDownload         utils.TaskStatus `json:"task_chat_download"`
 	TaskChatRender           utils.TaskStatus `json:"task_chat_render"`

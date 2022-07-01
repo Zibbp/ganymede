@@ -33,6 +33,8 @@ const (
 	FieldTaskVodSaveInfo = "task_vod_save_info"
 	// FieldTaskVideoDownload holds the string denoting the task_video_download field in the database.
 	FieldTaskVideoDownload = "task_video_download"
+	// FieldTaskVideoConvert holds the string denoting the task_video_convert field in the database.
+	FieldTaskVideoConvert = "task_video_convert"
 	// FieldTaskVideoMove holds the string denoting the task_video_move field in the database.
 	FieldTaskVideoMove = "task_video_move"
 	// FieldTaskChatDownload holds the string denoting the task_chat_download field in the database.
@@ -70,6 +72,7 @@ var Columns = []string{
 	FieldTaskVodDownloadThumbnail,
 	FieldTaskVodSaveInfo,
 	FieldTaskVideoDownload,
+	FieldTaskVideoConvert,
 	FieldTaskVideoMove,
 	FieldTaskChatDownload,
 	FieldTaskChatRender,
@@ -165,6 +168,18 @@ func TaskVideoDownloadValidator(tvd utils.TaskStatus) error {
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_video_download field: %q", tvd)
+	}
+}
+
+const DefaultTaskVideoConvert utils.TaskStatus = "pending"
+
+// TaskVideoConvertValidator is a validator for the "task_video_convert" field enum values. It is called by the builders before save.
+func TaskVideoConvertValidator(tvc utils.TaskStatus) error {
+	switch tvc {
+	case "success", "running", "pending", "failed":
+		return nil
+	default:
+		return fmt.Errorf("queue: invalid enum value for task_video_convert field: %q", tvc)
 	}
 }
 

@@ -89,6 +89,15 @@ func MoveFile(sourcePath, destPath string) error {
 	return nil
 }
 
+func DeleteFile(path string) error {
+	log.Debug().Msgf("deleting file: %s", path)
+	err := os.Remove(path)
+	if err != nil {
+		return fmt.Errorf("error deleting file: %v", err)
+	}
+	return nil
+}
+
 func ReadLastLines(path string, lines string) ([]byte, error) {
 	c := exec.Command("tail", "-n", lines, path)
 	out, err := c.Output()

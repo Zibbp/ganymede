@@ -149,6 +149,20 @@ func (qc *QueueCreate) SetNillableTaskVideoDownload(us *utils.TaskStatus) *Queue
 	return qc
 }
 
+// SetTaskVideoConvert sets the "task_video_convert" field.
+func (qc *QueueCreate) SetTaskVideoConvert(us utils.TaskStatus) *QueueCreate {
+	qc.mutation.SetTaskVideoConvert(us)
+	return qc
+}
+
+// SetNillableTaskVideoConvert sets the "task_video_convert" field if the given value is not nil.
+func (qc *QueueCreate) SetNillableTaskVideoConvert(us *utils.TaskStatus) *QueueCreate {
+	if us != nil {
+		qc.SetTaskVideoConvert(*us)
+	}
+	return qc
+}
+
 // SetTaskVideoMove sets the "task_video_move" field.
 func (qc *QueueCreate) SetTaskVideoMove(us utils.TaskStatus) *QueueCreate {
 	qc.mutation.SetTaskVideoMove(us)
@@ -365,6 +379,10 @@ func (qc *QueueCreate) defaults() {
 		v := queue.DefaultTaskVideoDownload
 		qc.mutation.SetTaskVideoDownload(v)
 	}
+	if _, ok := qc.mutation.TaskVideoConvert(); !ok {
+		v := queue.DefaultTaskVideoConvert
+		qc.mutation.SetTaskVideoConvert(v)
+	}
 	if _, ok := qc.mutation.TaskVideoMove(); !ok {
 		v := queue.DefaultTaskVideoMove
 		qc.mutation.SetTaskVideoMove(v)
@@ -430,6 +448,11 @@ func (qc *QueueCreate) check() error {
 	if v, ok := qc.mutation.TaskVideoDownload(); ok {
 		if err := queue.TaskVideoDownloadValidator(v); err != nil {
 			return &ValidationError{Name: "task_video_download", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_download": %w`, err)}
+		}
+	}
+	if v, ok := qc.mutation.TaskVideoConvert(); ok {
+		if err := queue.TaskVideoConvertValidator(v); err != nil {
+			return &ValidationError{Name: "task_video_convert", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_convert": %w`, err)}
 		}
 	}
 	if v, ok := qc.mutation.TaskVideoMove(); ok {
@@ -568,6 +591,14 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 			Column: queue.FieldTaskVideoDownload,
 		})
 		_node.TaskVideoDownload = value
+	}
+	if value, ok := qc.mutation.TaskVideoConvert(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: queue.FieldTaskVideoConvert,
+		})
+		_node.TaskVideoConvert = value
 	}
 	if value, ok := qc.mutation.TaskVideoMove(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

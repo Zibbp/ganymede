@@ -56,13 +56,13 @@ func init() {
 	// queue.DefaultProcessing holds the default value on creation for the processing field.
 	queue.DefaultProcessing = queueDescProcessing.Default.(bool)
 	// queueDescUpdatedAt is the schema descriptor for updated_at field.
-	queueDescUpdatedAt := queueFields[14].Descriptor()
+	queueDescUpdatedAt := queueFields[15].Descriptor()
 	// queue.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	queue.DefaultUpdatedAt = queueDescUpdatedAt.Default.(func() time.Time)
 	// queue.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	queue.UpdateDefaultUpdatedAt = queueDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// queueDescCreatedAt is the schema descriptor for created_at field.
-	queueDescCreatedAt := queueFields[15].Descriptor()
+	queueDescCreatedAt := queueFields[16].Descriptor()
 	// queue.DefaultCreatedAt holds the default value on creation for the created_at field.
 	queue.DefaultCreatedAt = queueDescCreatedAt.Default.(func() time.Time)
 	// queueDescID is the schema descriptor for id field.

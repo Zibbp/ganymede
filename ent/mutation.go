@@ -676,6 +676,7 @@ type QueueMutation struct {
 	task_vod_download_thumbnail *utils.TaskStatus
 	task_vod_save_info          *utils.TaskStatus
 	task_video_download         *utils.TaskStatus
+	task_video_convert          *utils.TaskStatus
 	task_video_move             *utils.TaskStatus
 	task_chat_download          *utils.TaskStatus
 	task_chat_render            *utils.TaskStatus
@@ -1170,6 +1171,55 @@ func (m *QueueMutation) ResetTaskVideoDownload() {
 	delete(m.clearedFields, queue.FieldTaskVideoDownload)
 }
 
+// SetTaskVideoConvert sets the "task_video_convert" field.
+func (m *QueueMutation) SetTaskVideoConvert(us utils.TaskStatus) {
+	m.task_video_convert = &us
+}
+
+// TaskVideoConvert returns the value of the "task_video_convert" field in the mutation.
+func (m *QueueMutation) TaskVideoConvert() (r utils.TaskStatus, exists bool) {
+	v := m.task_video_convert
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTaskVideoConvert returns the old "task_video_convert" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldTaskVideoConvert(ctx context.Context) (v utils.TaskStatus, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTaskVideoConvert is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTaskVideoConvert requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTaskVideoConvert: %w", err)
+	}
+	return oldValue.TaskVideoConvert, nil
+}
+
+// ClearTaskVideoConvert clears the value of the "task_video_convert" field.
+func (m *QueueMutation) ClearTaskVideoConvert() {
+	m.task_video_convert = nil
+	m.clearedFields[queue.FieldTaskVideoConvert] = struct{}{}
+}
+
+// TaskVideoConvertCleared returns if the "task_video_convert" field was cleared in this mutation.
+func (m *QueueMutation) TaskVideoConvertCleared() bool {
+	_, ok := m.clearedFields[queue.FieldTaskVideoConvert]
+	return ok
+}
+
+// ResetTaskVideoConvert resets all changes to the "task_video_convert" field.
+func (m *QueueMutation) ResetTaskVideoConvert() {
+	m.task_video_convert = nil
+	delete(m.clearedFields, queue.FieldTaskVideoConvert)
+}
+
 // SetTaskVideoMove sets the "task_video_move" field.
 func (m *QueueMutation) SetTaskVideoMove(us utils.TaskStatus) {
 	m.task_video_move = &us
@@ -1496,7 +1546,7 @@ func (m *QueueMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QueueMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 16)
 	if m.live_archive != nil {
 		fields = append(fields, queue.FieldLiveArchive)
 	}
@@ -1523,6 +1573,9 @@ func (m *QueueMutation) Fields() []string {
 	}
 	if m.task_video_download != nil {
 		fields = append(fields, queue.FieldTaskVideoDownload)
+	}
+	if m.task_video_convert != nil {
+		fields = append(fields, queue.FieldTaskVideoConvert)
 	}
 	if m.task_video_move != nil {
 		fields = append(fields, queue.FieldTaskVideoMove)
@@ -1568,6 +1621,8 @@ func (m *QueueMutation) Field(name string) (ent.Value, bool) {
 		return m.TaskVodSaveInfo()
 	case queue.FieldTaskVideoDownload:
 		return m.TaskVideoDownload()
+	case queue.FieldTaskVideoConvert:
+		return m.TaskVideoConvert()
 	case queue.FieldTaskVideoMove:
 		return m.TaskVideoMove()
 	case queue.FieldTaskChatDownload:
@@ -1607,6 +1662,8 @@ func (m *QueueMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldTaskVodSaveInfo(ctx)
 	case queue.FieldTaskVideoDownload:
 		return m.OldTaskVideoDownload(ctx)
+	case queue.FieldTaskVideoConvert:
+		return m.OldTaskVideoConvert(ctx)
 	case queue.FieldTaskVideoMove:
 		return m.OldTaskVideoMove(ctx)
 	case queue.FieldTaskChatDownload:
@@ -1690,6 +1747,13 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTaskVideoDownload(v)
+		return nil
+	case queue.FieldTaskVideoConvert:
+		v, ok := value.(utils.TaskStatus)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTaskVideoConvert(v)
 		return nil
 	case queue.FieldTaskVideoMove:
 		v, ok := value.(utils.TaskStatus)
@@ -1775,6 +1839,9 @@ func (m *QueueMutation) ClearedFields() []string {
 	if m.FieldCleared(queue.FieldTaskVideoDownload) {
 		fields = append(fields, queue.FieldTaskVideoDownload)
 	}
+	if m.FieldCleared(queue.FieldTaskVideoConvert) {
+		fields = append(fields, queue.FieldTaskVideoConvert)
+	}
 	if m.FieldCleared(queue.FieldTaskVideoMove) {
 		fields = append(fields, queue.FieldTaskVideoMove)
 	}
@@ -1812,6 +1879,9 @@ func (m *QueueMutation) ClearField(name string) error {
 		return nil
 	case queue.FieldTaskVideoDownload:
 		m.ClearTaskVideoDownload()
+		return nil
+	case queue.FieldTaskVideoConvert:
+		m.ClearTaskVideoConvert()
 		return nil
 	case queue.FieldTaskVideoMove:
 		m.ClearTaskVideoMove()
@@ -1859,6 +1929,9 @@ func (m *QueueMutation) ResetField(name string) error {
 		return nil
 	case queue.FieldTaskVideoDownload:
 		m.ResetTaskVideoDownload()
+		return nil
+	case queue.FieldTaskVideoConvert:
+		m.ResetTaskVideoConvert()
 		return nil
 	case queue.FieldTaskVideoMove:
 		m.ResetTaskVideoMove()

@@ -277,21 +277,46 @@ func (s *Service) TaskVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, c
 
 	q.Update().SetTaskVideoDownload(utils.Success).SaveX(context.Background())
 
-	// Always invoke task video move if video download was successful
-	go s.TaskVideoMove(ch, v, q, true)
+	// Always invoke task video convert if video download was successful
+	go s.TaskVideoConvert(ch, v, q, true)
 
+}
+
+func (s *Service) TaskVideoConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
+	log.Debug().Msgf("starting task video convert for vod %s", v.ID)
+	q.Update().SetTaskVideoConvert(utils.Running).SaveX(context.Background())
+
+	err := exec.ConvertTwitchVodVideo(v)
+	if err != nil {
+		log.Error().Err(err).Msg("error converting video")
+		q.Update().SetTaskVideoConvert(utils.Failed).SaveX(context.Background())
+		return
+	}
+
+	q.Update().SetTaskVideoConvert(utils.Success).SaveX(context.Background())
+
+	// Always invoke task video move if video convert was successful
+	go s.TaskVideoMove(ch, v, q, true)
 }
 
 func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
 	log.Debug().Msgf("starting task video move for vod %s", v.ID)
 	q.Update().SetTaskVideoMove(utils.Running).SaveX(context.Background())
 
-	sourcePath := fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID)
+	sourcePath := fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID)
 	destPath := fmt.Sprintf("/vods/%s/%s_%s/%s-video.mp4", ch.Name, v.ExtID, v.ID, v.ExtID)
 
 	err := utils.MoveFile(sourcePath, destPath)
 	if err != nil {
 		log.Error().Err(err).Msg("error moving video")
+		q.Update().SetTaskVideoMove(utils.Failed).SaveX(context.Background())
+		return
+	}
+
+	// Delete source file
+	err = utils.DeleteFile(fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+	if err != nil {
+		log.Error().Err(err).Msg("error deleting video")
 		q.Update().SetTaskVideoMove(utils.Failed).SaveX(context.Background())
 		return
 	}

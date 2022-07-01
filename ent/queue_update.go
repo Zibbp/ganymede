@@ -181,6 +181,26 @@ func (qu *QueueUpdate) ClearTaskVideoDownload() *QueueUpdate {
 	return qu
 }
 
+// SetTaskVideoConvert sets the "task_video_convert" field.
+func (qu *QueueUpdate) SetTaskVideoConvert(us utils.TaskStatus) *QueueUpdate {
+	qu.mutation.SetTaskVideoConvert(us)
+	return qu
+}
+
+// SetNillableTaskVideoConvert sets the "task_video_convert" field if the given value is not nil.
+func (qu *QueueUpdate) SetNillableTaskVideoConvert(us *utils.TaskStatus) *QueueUpdate {
+	if us != nil {
+		qu.SetTaskVideoConvert(*us)
+	}
+	return qu
+}
+
+// ClearTaskVideoConvert clears the value of the "task_video_convert" field.
+func (qu *QueueUpdate) ClearTaskVideoConvert() *QueueUpdate {
+	qu.mutation.ClearTaskVideoConvert()
+	return qu
+}
+
 // SetTaskVideoMove sets the "task_video_move" field.
 func (qu *QueueUpdate) SetTaskVideoMove(us utils.TaskStatus) *QueueUpdate {
 	qu.mutation.SetTaskVideoMove(us)
@@ -380,6 +400,11 @@ func (qu *QueueUpdate) check() error {
 			return &ValidationError{Name: "task_video_download", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_download": %w`, err)}
 		}
 	}
+	if v, ok := qu.mutation.TaskVideoConvert(); ok {
+		if err := queue.TaskVideoConvertValidator(v); err != nil {
+			return &ValidationError{Name: "task_video_convert", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_convert": %w`, err)}
+		}
+	}
 	if v, ok := qu.mutation.TaskVideoMove(); ok {
 		if err := queue.TaskVideoMoveValidator(v); err != nil {
 			return &ValidationError{Name: "task_video_move", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_move": %w`, err)}
@@ -509,6 +534,19 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeEnum,
 			Column: queue.FieldTaskVideoDownload,
+		})
+	}
+	if value, ok := qu.mutation.TaskVideoConvert(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: queue.FieldTaskVideoConvert,
+		})
+	}
+	if qu.mutation.TaskVideoConvertCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Column: queue.FieldTaskVideoConvert,
 		})
 	}
 	if value, ok := qu.mutation.TaskVideoMove(); ok {
@@ -774,6 +812,26 @@ func (quo *QueueUpdateOne) ClearTaskVideoDownload() *QueueUpdateOne {
 	return quo
 }
 
+// SetTaskVideoConvert sets the "task_video_convert" field.
+func (quo *QueueUpdateOne) SetTaskVideoConvert(us utils.TaskStatus) *QueueUpdateOne {
+	quo.mutation.SetTaskVideoConvert(us)
+	return quo
+}
+
+// SetNillableTaskVideoConvert sets the "task_video_convert" field if the given value is not nil.
+func (quo *QueueUpdateOne) SetNillableTaskVideoConvert(us *utils.TaskStatus) *QueueUpdateOne {
+	if us != nil {
+		quo.SetTaskVideoConvert(*us)
+	}
+	return quo
+}
+
+// ClearTaskVideoConvert clears the value of the "task_video_convert" field.
+func (quo *QueueUpdateOne) ClearTaskVideoConvert() *QueueUpdateOne {
+	quo.mutation.ClearTaskVideoConvert()
+	return quo
+}
+
 // SetTaskVideoMove sets the "task_video_move" field.
 func (quo *QueueUpdateOne) SetTaskVideoMove(us utils.TaskStatus) *QueueUpdateOne {
 	quo.mutation.SetTaskVideoMove(us)
@@ -980,6 +1038,11 @@ func (quo *QueueUpdateOne) check() error {
 			return &ValidationError{Name: "task_video_download", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_download": %w`, err)}
 		}
 	}
+	if v, ok := quo.mutation.TaskVideoConvert(); ok {
+		if err := queue.TaskVideoConvertValidator(v); err != nil {
+			return &ValidationError{Name: "task_video_convert", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_convert": %w`, err)}
+		}
+	}
 	if v, ok := quo.mutation.TaskVideoMove(); ok {
 		if err := queue.TaskVideoMoveValidator(v); err != nil {
 			return &ValidationError{Name: "task_video_move", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_move": %w`, err)}
@@ -1126,6 +1189,19 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeEnum,
 			Column: queue.FieldTaskVideoDownload,
+		})
+	}
+	if value, ok := quo.mutation.TaskVideoConvert(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: queue.FieldTaskVideoConvert,
+		})
+	}
+	if quo.mutation.TaskVideoConvertCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Column: queue.FieldTaskVideoConvert,
 		})
 	}
 	if value, ok := quo.mutation.TaskVideoMove(); ok {
