@@ -98,3 +98,32 @@ func (s *Service) Refresh(c echo.Context, refreshToken string) error {
 
 	return err
 }
+
+func (s *Service) Me(c echo.Context, accessToken string) (*ent.User, error) {
+	tkn, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(GetJWTSecret()), nil
+	})
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			return nil, fmt.Errorf("invalid access token")
+		}
+		return nil, fmt.Errorf("error parsing access token: %v", err)
+	}
+
+	if claims, ok := tkn.Claims.(jwt.MapClaims); ok && tkn.Valid {
+		uID := claims["user_id"].(string)
+		uUUID, err := uuid.Parse(uID)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing user id: %v", err)
+		}
+		u, err := s.Store.Client.User.Query().Where(entUser.ID(uUUID)).Only(c.Request().Context())
+		if err != nil {
+			return nil, fmt.Errorf("error getting user: %v", err)
+		}
+		return u, nil
+	}
+	return nil, fmt.Errorf("invalid access token")
+}

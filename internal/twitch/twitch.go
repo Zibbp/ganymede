@@ -191,7 +191,7 @@ func (s *Service) GetVodByID(vID string) (Vod, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return Vod{}, fmt.Errorf("failed to get vod: %v", resp)
+		return Vod{}, fmt.Errorf("vod not found")
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)

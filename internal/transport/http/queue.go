@@ -151,7 +151,7 @@ func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 	}
 	logType := c.QueryParam("type")
 	if len(logType) == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "type is required: video, chat, or chat-render")
+		return echo.NewHTTPError(http.StatusBadRequest, "type is required: video, video-convert, chat, or chat-render")
 	}
 	log, err := h.Service.QueueService.ReadLogFile(c, id, logType)
 	if err != nil {

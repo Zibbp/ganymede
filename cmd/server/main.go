@@ -27,7 +27,7 @@ func Run() error {
 	authService := auth.NewService(store)
 	channelService := channel.NewService(store)
 	vodService := vod.NewService(store)
-	queueService := queue.NewService(store)
+	queueService := queue.NewService(store, vodService, channelService)
 
 	twitchService := twitch.NewService(store)
 	archiveService := archive.NewService(store, twitchService, channelService, vodService, queueService)

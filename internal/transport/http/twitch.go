@@ -30,6 +30,9 @@ func (h *Handler) GetTwitchVod(c echo.Context) error {
 	}
 	vod, err := h.Service.TwitchService.GetVodByID(vodID)
 	if err != nil {
+		if err.Error() == "vod not found" {
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, vod)

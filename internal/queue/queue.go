@@ -7,17 +7,21 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
+	"github.com/zibbp/ganymede/internal/vod"
 	"time"
 )
 
 type Service struct {
-	Store *database.Database
+	Store          *database.Database
+	VodService     *vod.Service
+	ChannelService *channel.Service
 }
 
-func NewService(store *database.Database) *Service {
-	return &Service{Store: store}
+func NewService(store *database.Database, vodService *vod.Service, channelService *channel.Service) *Service {
+	return &Service{Store: store, VodService: vodService, ChannelService: channelService}
 }
 
 type Queue struct {

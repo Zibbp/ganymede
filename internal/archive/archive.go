@@ -179,6 +179,52 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 	}, nil
 }
 
+func (s *Service) RestartTask(c echo.Context, qID uuid.UUID, task string, cont bool) error {
+	fmt.Println("test 1")
+	q, err := s.QueueService.GetQueueItem(c, qID)
+	if err != nil {
+		return err
+	}
+	fmt.Println("test 2")
+	v, err := s.VodService.GetVodWithChannel(c, q.Edges.Vod.ID)
+	if err != nil {
+		return err
+	}
+	fmt.Println("test 3")
+	ch, err := s.ChannelService.GetChannel(c, v.Edges.Channel.ID)
+	if err != nil {
+		return err
+	}
+	fmt.Println("test 4")
+
+	fmt.Println("Restarting task: ", qID, task, cont)
+
+	switch task {
+	case "vod_create_folder":
+		go s.TaskVodCreateFolder(ch, v, q, cont)
+	case "vod_download_thumbnail":
+		go s.TaskVodDownloadThumbnail(ch, v, q, cont)
+	case "vod_save_info":
+		go s.TaskVodSaveInfo(ch, v, q, cont)
+	case "video_download":
+		go s.TaskVideoDownload(ch, v, q, cont)
+	case "video_convert":
+		go s.TaskVideoConvert(ch, v, q, cont)
+	case "video_move":
+		go s.TaskVideoMove(ch, v, q, cont)
+	case "chat_download":
+		go s.TaskChatDownload(ch, v, q, cont)
+	case "chat_render":
+		go s.TaskChatRender(ch, v, q, cont)
+	case "chat_move":
+		go s.TaskChatMove(ch, v, q, cont)
+	default:
+		return fmt.Errorf("task not found")
+	}
+
+	return nil
+}
+
 func (s *Service) TaskVodCreateFolder(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
 	log.Debug().Msgf("starting task vod create folder for vod %s", v.ID)
 	q.Update().SetTaskVodCreateFolder(utils.Running).SaveX(context.Background())
@@ -325,6 +371,9 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 
 	// Set video as complete
 	q.Update().SetVideoProcessing(false).SaveX(context.Background())
+
+	// Check if all tasks are done
+	go s.CheckIfTasksAreDone(ch, v, q)
 }
 
 func (s *Service) TaskChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
@@ -392,4 +441,19 @@ func (s *Service) TaskChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont b
 
 	// Set chat as complete
 	q.Update().SetChatProcessing(false).SaveX(context.Background())
+
+	// Check if all tasks are done
+	go s.CheckIfTasksAreDone(ch, v, q)
+}
+
+func (s *Service) CheckIfTasksAreDone(ch *ent.Channel, v *ent.Vod, q *ent.Queue) {
+	if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
+		log.Debug().Msgf("all tasks for vod %s are done", v.ID)
+		q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).SaveX(context.Background())
+		v.Update().SetProcessing(false).SaveX(context.Background())
+
+		// ToDo: Send webhook complete notification
+
+		// ToDo: Start next queue item if there is one
+	}
 }

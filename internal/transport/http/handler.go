@@ -47,8 +47,9 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	h.Server.Validator = &utils.CustomValidator{Validator: validator.New()}
 
 	h.Server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+		AllowCredentials: true,
 	}))
 
 	h.mapRoutes()
@@ -86,6 +87,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	authGroup.POST("/register", h.Register)
 	authGroup.POST("/login", h.Login)
 	authGroup.POST("/refresh", h.Refresh)
+	authGroup.GET("/me", h.Me, authMiddleware)
 
 	// Channel
 	channelGroup := e.Group("/channel")
@@ -111,7 +113,8 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	queueGroup.GET("/:id", h.GetQueueItem)
 	queueGroup.PUT("/:id", h.UpdateQueueItem, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	queueGroup.DELETE("/:id", h.DeleteQueueItem, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	queueGroup.GET("/:id/log", h.ReadQueueLogFile, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	queueGroup.GET("/:id/log", h.ReadQueueLogFile)
+	// queueGroup.GET("/:id/log", h.ReadQueueLogFile, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Twitch
 	twitchGroup := e.Group("/twitch")
@@ -122,6 +125,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	archiveGroup := e.Group("/archive")
 	archiveGroup.POST("/channel", h.ArchiveTwitchChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	archiveGroup.POST("/vod", h.ArchiveTwitchVod, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	archiveGroup.POST("/restart", h.RestartTask)
 }
 
 func (h *Handler) Serve() error {

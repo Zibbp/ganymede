@@ -11,6 +11,7 @@ type AuthService interface {
 	Register(c echo.Context, userDto user.User) (*ent.User, error)
 	Login(c echo.Context, userDto user.User) (*ent.User, error)
 	Refresh(c echo.Context, refreshToken string) error
+	Me(c echo.Context, accessToken string) (*ent.User, error)
 }
 
 type RegisterRequest struct {
@@ -79,4 +80,18 @@ func (h *Handler) Refresh(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, "tokens refreshed")
+}
+
+func (h *Handler) Me(c echo.Context) error {
+	accessCookie, err := c.Cookie("access-token")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	}
+	accessToken := accessCookie.Value
+
+	u, err := h.Service.AuthService.Me(c, accessToken)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	}
+	return c.JSON(http.StatusOK, u)
 }
