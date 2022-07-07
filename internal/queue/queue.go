@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -106,4 +107,12 @@ func (s *Service) ReadLogFile(c echo.Context, qID uuid.UUID, logType string) ([]
 		return nil, err
 	}
 	return []byte(logLines), nil
+}
+
+func (s *Service) ArchiveGetQueueItem(qID uuid.UUID) (*ent.Queue, error) {
+	q, err := s.Store.Client.Queue.Query().Where(queue.ID(qID)).WithVod().Only(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("error archiving queue: %v", err)
+	}
+	return q, nil
 }

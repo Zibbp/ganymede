@@ -161,7 +161,7 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 	}
 
 	// Create queue item
-	q, err := s.QueueService.CreateQueueItem(c, queue.Queue{}, v.ID)
+	q, err := s.QueueService.CreateQueueItem(c, queue.Queue{LiveArchive: false}, v.ID)
 	if err != nil {
 		return nil, fmt.Errorf("error creating queue item: %v", err)
 	}
@@ -169,6 +169,12 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 	// If chat is disabled update queue
 	if chat == false {
 		q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(c.Request().Context())
+	}
+
+	// Re-query queue from DB for updated values
+	q, err = s.QueueService.GetQueueItem(c, q.ID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching queue item: %v", err)
 	}
 
 	go s.TaskVodCreateFolder(dbC, v, q, true)
@@ -180,24 +186,20 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 }
 
 func (s *Service) RestartTask(c echo.Context, qID uuid.UUID, task string, cont bool) error {
-	fmt.Println("test 1")
 	q, err := s.QueueService.GetQueueItem(c, qID)
 	if err != nil {
 		return err
 	}
-	fmt.Println("test 2")
 	v, err := s.VodService.GetVodWithChannel(c, q.Edges.Vod.ID)
 	if err != nil {
 		return err
 	}
-	fmt.Println("test 3")
 	ch, err := s.ChannelService.GetChannel(c, v.Edges.Channel.ID)
 	if err != nil {
 		return err
 	}
-	fmt.Println("test 4")
 
-	fmt.Println("Restarting task: ", qID, task, cont)
+	log.Debug().Msgf("restarting task: %s for queue id: continue: ", task, qID, cont)
 
 	switch task {
 	case "vod_create_folder":
@@ -446,7 +448,12 @@ func (s *Service) TaskChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont b
 	go s.CheckIfTasksAreDone(ch, v, q)
 }
 
-func (s *Service) CheckIfTasksAreDone(ch *ent.Channel, v *ent.Vod, q *ent.Queue) {
+func (s *Service) CheckIfTasksAreDone(ch *ent.Channel, v *ent.Vod, qO *ent.Queue) {
+	q, err := s.QueueService.ArchiveGetQueueItem(qO.ID)
+	if err != nil {
+		log.Error().Err(err).Msg("error getting queue item")
+		return
+	}
 	if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
 		log.Debug().Msgf("all tasks for vod %s are done", v.ID)
 		q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).SaveX(context.Background())
