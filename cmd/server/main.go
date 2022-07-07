@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
+	"github.com/zibbp/ganymede/internal/admin"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/channel"
@@ -31,8 +32,9 @@ func Run() error {
 
 	twitchService := twitch.NewService(store)
 	archiveService := archive.NewService(store, twitchService, channelService, vodService, queueService)
+	adminService := admin.NewService(store)
 
-	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService)
+	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService)
 
 	if err := httpHandler.Serve(); err != nil {
 		return err

@@ -56,7 +56,7 @@ func (s *Service) CreateVod(c echo.Context, vodDto Vod, cUUID uuid.UUID) (*ent.V
 }
 
 func (s *Service) GetVods(c echo.Context) ([]*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Query().All(c.Request().Context())
+	v, err := s.Store.Client.Vod.Query().WithChannel().All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vods")
 		return nil, fmt.Errorf("error getting vods: %v", err)

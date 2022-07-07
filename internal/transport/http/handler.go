@@ -21,6 +21,7 @@ type Services struct {
 	QueueService   QueueService
 	TwitchService  TwitchService
 	ArchiveService ArchiveService
+	AdminService   AdminService
 }
 
 type Handler struct {
@@ -28,7 +29,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
@@ -40,6 +41,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			QueueService:   queueService,
 			TwitchService:  twitchService,
 			ArchiveService: archiveService,
+			AdminService:   adminService,
 		},
 	}
 
@@ -125,6 +127,10 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	archiveGroup.POST("/channel", h.ArchiveTwitchChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	archiveGroup.POST("/vod", h.ArchiveTwitchVod, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	archiveGroup.POST("/restart", h.RestartTask, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+
+	// Admin
+	adminGroup := e.Group("/admin")
+	adminGroup.GET("/stats", h.GetStats, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 }
 
 func (h *Handler) Serve() error {
