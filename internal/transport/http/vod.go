@@ -21,6 +21,7 @@ type VodService interface {
 }
 
 type CreateVodRequest struct {
+	ID               string            `json:"id"`
 	ChannelID        string            `json:"channel_id" validate:"required"`
 	ExtID            string            `json:"ext_id" validate:"min=1"`
 	Platform         utils.VodPlatform `json:"platform" validate:"required,oneof=twitch youtube"`
@@ -56,8 +57,23 @@ func (h *Handler) CreateVod(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+	var vodID uuid.UUID
+	if req.ID == "" {
+		vodID = uuid.New()
+	} else {
+		vID, err := uuid.Parse(req.ID)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		_, err = h.Service.VodService.GetVod(c, vID)
+		if err == nil {
+			return echo.NewHTTPError(http.StatusConflict, "vod already exists")
+		}
+		vodID = vID
+	}
+
 	cvrDto := vod.Vod{
-		ID:               uuid.New(),
+		ID:               vodID,
 		ExtID:            req.ExtID,
 		Platform:         req.Platform,
 		Type:             req.Type,
