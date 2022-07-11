@@ -49,7 +49,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	h.Server.Validator = &utils.CustomValidator{Validator: validator.New()}
 
 	h.Server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     []string{os.Getenv("FRONTEND_HOST")},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 		AllowCredentials: true,
 	}))
