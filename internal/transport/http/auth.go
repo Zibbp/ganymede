@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/user"
 	"net/http"
@@ -25,6 +26,10 @@ type LoginRequest struct {
 }
 
 func (h *Handler) Register(c echo.Context) error {
+	// Check if registration is enabled
+	if !viper.Get("registration_enabled").(bool) {
+		return echo.NewHTTPError(http.StatusForbidden, "registration is disabled")
+	}
 	rr := new(RegisterRequest)
 	if err := c.Bind(rr); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
