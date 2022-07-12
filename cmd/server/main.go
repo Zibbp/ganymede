@@ -8,6 +8,7 @@ import (
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/channel"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/queue"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
@@ -19,6 +20,8 @@ import (
 func Run() error {
 
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+
+	config.NewConfig()
 
 	store, err := database.NewDatabase()
 	if err != nil {
