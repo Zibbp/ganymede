@@ -12,6 +12,7 @@ import (
 	"github.com/zibbp/ganymede/internal/queue"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
 	"github.com/zibbp/ganymede/internal/twitch"
+	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/vod"
 )
 
@@ -33,8 +34,9 @@ func Run() error {
 	twitchService := twitch.NewService(store)
 	archiveService := archive.NewService(store, twitchService, channelService, vodService, queueService)
 	adminService := admin.NewService(store)
+	userService := user.NewService(store)
 
-	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService)
+	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService)
 
 	if err := httpHandler.Serve(); err != nil {
 		return err

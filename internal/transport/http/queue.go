@@ -34,6 +34,7 @@ type UpdateQueueRequest struct {
 	TaskVodDownloadThumbnail utils.TaskStatus `json:"task_vod_download_thumbnail" validate:"required,oneof=pending running success failed"`
 	TaskVodSaveInfo          utils.TaskStatus `json:"task_vod_save_info" validate:"required,oneof=pending running success failed"`
 	TaskVideoDownload        utils.TaskStatus `json:"task_video_download" validate:"required,oneof=pending running success failed"`
+	TaskVideoConvert         utils.TaskStatus `json:"task_video_convert" validate:"required,oneof=pending running success failed"`
 	TaskVideoMove            utils.TaskStatus `json:"task_video_move" validate:"required,oneof=pending running success failed"`
 	TaskChatDownload         utils.TaskStatus `json:"task_chat_download" validate:"required,oneof=pending running success failed"`
 	TaskChatRender           utils.TaskStatus `json:"task_chat_render" validate:"required,oneof=pending running success failed"`
@@ -119,6 +120,7 @@ func (h *Handler) UpdateQueueItem(c echo.Context) error {
 		TaskVodDownloadThumbnail: uqr.TaskVodDownloadThumbnail,
 		TaskVodSaveInfo:          uqr.TaskVodSaveInfo,
 		TaskVideoDownload:        uqr.TaskVideoDownload,
+		TaskVideoConvert:         uqr.TaskVideoConvert,
 		TaskVideoMove:            uqr.TaskVideoMove,
 		TaskChatDownload:         uqr.TaskChatDownload,
 		TaskChatRender:           uqr.TaskChatRender,

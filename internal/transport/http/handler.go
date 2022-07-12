@@ -22,6 +22,7 @@ type Services struct {
 	TwitchService  TwitchService
 	ArchiveService ArchiveService
 	AdminService   AdminService
+	UserService    UserService
 }
 
 type Handler struct {
@@ -29,7 +30,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
@@ -42,6 +43,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			TwitchService:  twitchService,
 			ArchiveService: archiveService,
 			AdminService:   adminService,
+			UserService:    userService,
 		},
 	}
 
@@ -131,6 +133,13 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// Admin
 	adminGroup := e.Group("/admin")
 	adminGroup.GET("/stats", h.GetStats, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+
+	// User
+	userGroup := e.Group("/user")
+	userGroup.GET("", h.GetUsers, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	userGroup.GET("/:id", h.GetUser, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	userGroup.PUT("/:id", h.UpdateUser, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	userGroup.DELETE("/:id", h.DeleteUser, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 }
 
 func (h *Handler) Serve() error {
