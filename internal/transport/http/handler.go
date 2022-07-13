@@ -23,6 +23,7 @@ type Services struct {
 	ArchiveService ArchiveService
 	AdminService   AdminService
 	UserService    UserService
+	ConfigService  ConfigService
 }
 
 type Handler struct {
@@ -30,7 +31,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
@@ -44,6 +45,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			ArchiveService: archiveService,
 			AdminService:   adminService,
 			UserService:    userService,
+			ConfigService:  configService,
 		},
 	}
 
@@ -140,6 +142,11 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	userGroup.GET("/:id", h.GetUser, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	userGroup.PUT("/:id", h.UpdateUser, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	userGroup.DELETE("/:id", h.DeleteUser, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+
+	// Config
+	configGroup := e.Group("/config")
+	configGroup.GET("", h.GetConfig, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	configGroup.PUT("", h.UpdateConfig, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 }
 
 func (h *Handler) Serve() error {

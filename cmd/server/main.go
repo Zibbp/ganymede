@@ -38,8 +38,9 @@ func Run() error {
 	archiveService := archive.NewService(store, twitchService, channelService, vodService, queueService)
 	adminService := admin.NewService(store)
 	userService := user.NewService(store)
+	configService := config.NewService(store)
 
-	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService)
+	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService)
 
 	if err := httpHandler.Serve(); err != nil {
 		return err
