@@ -3,9 +3,11 @@ package exec
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"os"
 	osExec "os/exec"
+	"strings"
 )
 
 func DownloadTwitchVodVideo(v *ent.Vod) error {
@@ -52,7 +54,21 @@ func DownloadTwitchVodChat(v *ent.Vod) error {
 }
 
 func RenderTwitchVodChat(v *ent.Vod) error {
-	cmd := osExec.Command("TwitchDownloaderCLI", "-m", "ChatRender", "-i", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID), "-h", "1440", "-w", "340", "--framerate", "30", "--font", "Inter", "--font-size", "13", "-o", fmt.Sprintf("/tmp/%s_%s-chat.mp4", v.ExtID, v.ID))
+	// Fetch config params
+	chatRenderParams := viper.GetString("parameters.chat_render")
+	// Split supplied params into array
+	arr := strings.Fields(chatRenderParams)
+	// Generate args for exec
+	argArr := []string{"-m", "ChatRender", "-i", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID)}
+	// add each config param to arg
+	for _, v := range arr {
+		argArr = append(argArr, v)
+	}
+	// add output file
+	argArr = append(argArr, "-o", fmt.Sprintf("/tmp/%s_%s-chat.mp4", v.ExtID, v.ID))
+	log.Debug().Msgf("chat render args: %v", argArr)
+	// Execute chat render
+	cmd := osExec.Command("TwitchDownloaderCLI", argArr...)
 
 	chatRenderLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat-render.log", v.ExtID, v.ID))
 	if err != nil {
@@ -73,7 +89,21 @@ func RenderTwitchVodChat(v *ent.Vod) error {
 }
 
 func ConvertTwitchVodVideo(v *ent.Vod) error {
-	cmd := osExec.Command("ffmpeg", "-y", "-hide_banner", "-i", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID), "-c:v", "copy", "-c:a", "copy", fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID))
+	// Fetch config params
+	ffmpegParams := viper.GetString("parameters.video_convert")
+	// Split supplied params into array
+	arr := strings.Fields(ffmpegParams)
+	// Generate args for exec
+	argArr := []string{"-y", "-hide_banner", "-i", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID)}
+	// add each config param to arg
+	for _, v := range arr {
+		argArr = append(argArr, v)
+	}
+	// add output file
+	argArr = append(argArr, fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID))
+	log.Debug().Msgf("video convert args: %v", argArr)
+	// Execute ffmpeg
+	cmd := osExec.Command("ffmpeg", argArr...)
 
 	videoConvertLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video-convert.log", v.ExtID, v.ID))
 	if err != nil {
