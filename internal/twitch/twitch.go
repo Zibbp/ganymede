@@ -65,6 +65,28 @@ type Vod struct {
 type Pagination struct {
 }
 
+type Stream struct {
+	Data       []Live     `json:"data"`
+	Pagination Pagination `json:"pagination"`
+}
+
+type Live struct {
+	ID           string   `json:"id"`
+	UserID       string   `json:"user_id"`
+	UserLogin    string   `json:"user_login"`
+	UserName     string   `json:"user_name"`
+	GameID       string   `json:"game_id"`
+	GameName     string   `json:"game_name"`
+	Type         string   `json:"type"`
+	Title        string   `json:"title"`
+	ViewerCount  int64    `json:"viewer_count"`
+	StartedAt    string   `json:"started_at"`
+	Language     string   `json:"language"`
+	ThumbnailURL string   `json:"thumbnail_url"`
+	TagIDS       []string `json:"tag_ids"`
+	IsMature     bool     `json:"is_mature"`
+}
+
 func NewService() *Service {
 	return &Service{}
 }
@@ -205,4 +227,39 @@ func (s *Service) GetVodByID(vID string) (Vod, error) {
 	}
 
 	return vodResponse.Data[0], nil
+}
+
+func (s *Service) GetStreams(queryParams string) (Stream, error) {
+	log.Debug().Msgf("getting live streams using the following query param: %s", queryParams)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/streams%s", queryParams), nil)
+	if err != nil {
+		return Stream{}, fmt.Errorf("failed to create request: %v", err)
+	}
+	req.Header.Set("Client-ID", os.Getenv("TWITCH_CLIENT_ID"))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("TWITCH_ACCESS_TOKEN")))
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return Stream{}, fmt.Errorf("failed to get twitch streams: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return Stream{}, fmt.Errorf("failed to get twitch streams: %v", resp)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return Stream{}, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	var streamResponse Stream
+	err = json.Unmarshal(body, &streamResponse)
+	if err != nil {
+		return Stream{}, fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+
+	return streamResponse, nil
 }

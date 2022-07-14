@@ -24,6 +24,7 @@ type Services struct {
 	AdminService   AdminService
 	UserService    UserService
 	ConfigService  ConfigService
+	LiveService    LiveService
 }
 
 type Handler struct {
@@ -31,7 +32,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
@@ -46,6 +47,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			AdminService:   adminService,
 			UserService:    userService,
 			ConfigService:  configService,
+			LiveService:    liveService,
 		},
 	}
 
@@ -150,6 +152,13 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	configGroup := e.Group("/config")
 	configGroup.GET("", h.GetConfig, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	configGroup.PUT("", h.UpdateConfig, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+
+	// Live
+	liveGroup := e.Group("/live")
+	liveGroup.GET("", h.GetLiveWatchedChannels, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.POST("", h.AddLiveWatchedChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.GET("/check", h.Check, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 }
 
 func (h *Handler) Serve() error {
