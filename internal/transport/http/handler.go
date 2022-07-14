@@ -60,6 +60,9 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 
 	h.mapRoutes()
 
+	// Start scheduler
+	utils.StartScheduler()
+
 	return h
 }
 

@@ -34,7 +34,7 @@ func Run() error {
 	vodService := vod.NewService(store)
 	queueService := queue.NewService(store, vodService, channelService)
 
-	twitchService := twitch.NewService(store)
+	twitchService := twitch.NewService()
 	archiveService := archive.NewService(store, twitchService, channelService, vodService, queueService)
 	adminService := admin.NewService(store)
 	userService := user.NewService(store)

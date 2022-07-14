@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
-	"github.com/zibbp/ganymede/internal/database"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -13,7 +12,6 @@ import (
 )
 
 type Service struct {
-	Store *database.Database
 }
 
 type AuthTokenResponse struct {
@@ -67,15 +65,11 @@ type Vod struct {
 type Pagination struct {
 }
 
-func NewService(store *database.Database) *Service {
-	err := authenticate()
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to authenticate with twitch")
-	}
-	return &Service{Store: store}
+func NewService() *Service {
+	return &Service{}
 }
 
-func authenticate() error {
+func Authenticate() error {
 	twitchClientID := os.Getenv("TWITCH_CLIENT_ID")
 	twitchClientSecret := os.Getenv("TWITCH_CLIENT_SECRET")
 	if twitchClientID == "" || twitchClientSecret == "" {
