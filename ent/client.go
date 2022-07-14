@@ -11,6 +11,7 @@ import (
 	"github.com/zibbp/ganymede/ent/migrate"
 
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -27,6 +28,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
+	// Live is the client for interacting with the Live builders.
+	Live *LiveClient
 	// Queue is the client for interacting with the Queue builders.
 	Queue *QueueClient
 	// User is the client for interacting with the User builders.
@@ -47,6 +50,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Channel = NewChannelClient(c.config)
+	c.Live = NewLiveClient(c.config)
 	c.Queue = NewQueueClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Vod = NewVodClient(c.config)
@@ -84,6 +88,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:     ctx,
 		config:  cfg,
 		Channel: NewChannelClient(cfg),
+		Live:    NewLiveClient(cfg),
 		Queue:   NewQueueClient(cfg),
 		User:    NewUserClient(cfg),
 		Vod:     NewVodClient(cfg),
@@ -107,6 +112,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:     ctx,
 		config:  cfg,
 		Channel: NewChannelClient(cfg),
+		Live:    NewLiveClient(cfg),
 		Queue:   NewQueueClient(cfg),
 		User:    NewUserClient(cfg),
 		Vod:     NewVodClient(cfg),
@@ -140,6 +146,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.Channel.Use(hooks...)
+	c.Live.Use(hooks...)
 	c.Queue.Use(hooks...)
 	c.User.Use(hooks...)
 	c.Vod.Use(hooks...)
@@ -246,9 +253,131 @@ func (c *ChannelClient) QueryVods(ch *Channel) *VodQuery {
 	return query
 }
 
+// QueryLive queries the live edge of a Channel.
+func (c *ChannelClient) QueryLive(ch *Channel) *LiveQuery {
+	query := &LiveQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := ch.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, id),
+			sqlgraph.To(live.Table, live.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.LiveTable, channel.LiveColumn),
+		)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ChannelClient) Hooks() []Hook {
 	return c.hooks.Channel
+}
+
+// LiveClient is a client for the Live schema.
+type LiveClient struct {
+	config
+}
+
+// NewLiveClient returns a client for the Live from the given config.
+func NewLiveClient(c config) *LiveClient {
+	return &LiveClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `live.Hooks(f(g(h())))`.
+func (c *LiveClient) Use(hooks ...Hook) {
+	c.hooks.Live = append(c.hooks.Live, hooks...)
+}
+
+// Create returns a create builder for Live.
+func (c *LiveClient) Create() *LiveCreate {
+	mutation := newLiveMutation(c.config, OpCreate)
+	return &LiveCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Live entities.
+func (c *LiveClient) CreateBulk(builders ...*LiveCreate) *LiveCreateBulk {
+	return &LiveCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Live.
+func (c *LiveClient) Update() *LiveUpdate {
+	mutation := newLiveMutation(c.config, OpUpdate)
+	return &LiveUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LiveClient) UpdateOne(l *Live) *LiveUpdateOne {
+	mutation := newLiveMutation(c.config, OpUpdateOne, withLive(l))
+	return &LiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LiveClient) UpdateOneID(id uuid.UUID) *LiveUpdateOne {
+	mutation := newLiveMutation(c.config, OpUpdateOne, withLiveID(id))
+	return &LiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Live.
+func (c *LiveClient) Delete() *LiveDelete {
+	mutation := newLiveMutation(c.config, OpDelete)
+	return &LiveDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *LiveClient) DeleteOne(l *Live) *LiveDeleteOne {
+	return c.DeleteOneID(l.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *LiveClient) DeleteOneID(id uuid.UUID) *LiveDeleteOne {
+	builder := c.Delete().Where(live.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LiveDeleteOne{builder}
+}
+
+// Query returns a query builder for Live.
+func (c *LiveClient) Query() *LiveQuery {
+	return &LiveQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Live entity by its id.
+func (c *LiveClient) Get(ctx context.Context, id uuid.UUID) (*Live, error) {
+	return c.Query().Where(live.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LiveClient) GetX(ctx context.Context, id uuid.UUID) *Live {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryChannel queries the channel edge of a Live.
+func (c *LiveClient) QueryChannel(l *Live) *ChannelQuery {
+	query := &ChannelQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := l.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(live.Table, live.FieldID, id),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, live.ChannelTable, live.ChannelColumn),
+		)
+		fromV = sqlgraph.Neighbors(l.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *LiveClient) Hooks() []Hook {
+	return c.hooks.Live
 }
 
 // QueueClient is a client for the Queue schema.

@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/vod"
 )
 
@@ -95,6 +96,21 @@ func (cc *ChannelCreate) AddVods(v ...*Vod) *ChannelCreate {
 		ids[i] = v[i].ID
 	}
 	return cc.AddVodIDs(ids...)
+}
+
+// AddLiveIDs adds the "live" edge to the Live entity by IDs.
+func (cc *ChannelCreate) AddLiveIDs(ids ...uuid.UUID) *ChannelCreate {
+	cc.mutation.AddLiveIDs(ids...)
+	return cc
+}
+
+// AddLive adds the "live" edges to the Live entity.
+func (cc *ChannelCreate) AddLive(l ...*Live) *ChannelCreate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return cc.AddLiveIDs(ids...)
 }
 
 // Mutation returns the ChannelMutation object of the builder.
@@ -286,6 +302,25 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
 					Column: vod.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.LiveIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.LiveTable,
+			Columns: []string{channel.LiveColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: live.FieldID,
 				},
 			},
 		}

@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
+	// Live is the client for interacting with the Live builders.
+	Live *LiveClient
 	// Queue is the client for interacting with the Queue builders.
 	Queue *QueueClient
 	// User is the client for interacting with the User builders.
@@ -156,6 +158,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Channel = NewChannelClient(tx.config)
+	tx.Live = NewLiveClient(tx.config)
 	tx.Queue = NewQueueClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.Vod = NewVodClient(tx.config)

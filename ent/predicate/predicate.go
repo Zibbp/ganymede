@@ -9,6 +9,9 @@ import (
 // Channel is the predicate function for channel builders.
 type Channel func(*sql.Selector)
 
+// Live is the predicate function for live builders.
+type Live func(*sql.Selector)
+
 // Queue is the predicate function for queue builders.
 type Queue func(*sql.Selector)
 

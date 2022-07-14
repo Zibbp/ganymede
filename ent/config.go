@@ -25,6 +25,7 @@ type config struct {
 // hooks per client, for fast access.
 type hooks struct {
 	Channel []ent.Hook
+	Live    []ent.Hook
 	Queue   []ent.Hook
 	User    []ent.Hook
 	Vod     []ent.Hook

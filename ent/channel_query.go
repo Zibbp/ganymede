@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/vod"
 )
@@ -29,6 +30,7 @@ type ChannelQuery struct {
 	predicates []predicate.Channel
 	// eager-loading edges.
 	withVods *VodQuery
+	withLive *LiveQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -80,6 +82,28 @@ func (cq *ChannelQuery) QueryVods() *VodQuery {
 			sqlgraph.From(channel.Table, channel.FieldID, selector),
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, channel.VodsTable, channel.VodsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryLive chains the current query on the "live" edge.
+func (cq *ChannelQuery) QueryLive() *LiveQuery {
+	query := &LiveQuery{config: cq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, selector),
+			sqlgraph.To(live.Table, live.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.LiveTable, channel.LiveColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
@@ -269,6 +293,7 @@ func (cq *ChannelQuery) Clone() *ChannelQuery {
 		order:      append([]OrderFunc{}, cq.order...),
 		predicates: append([]predicate.Channel{}, cq.predicates...),
 		withVods:   cq.withVods.Clone(),
+		withLive:   cq.withLive.Clone(),
 		// clone intermediate query.
 		sql:    cq.sql.Clone(),
 		path:   cq.path,
@@ -284,6 +309,17 @@ func (cq *ChannelQuery) WithVods(opts ...func(*VodQuery)) *ChannelQuery {
 		opt(query)
 	}
 	cq.withVods = query
+	return cq
+}
+
+// WithLive tells the query-builder to eager-load the nodes that are connected to
+// the "live" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *ChannelQuery) WithLive(opts ...func(*LiveQuery)) *ChannelQuery {
+	query := &LiveQuery{config: cq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withLive = query
 	return cq
 }
 
@@ -352,8 +388,9 @@ func (cq *ChannelQuery) sqlAll(ctx context.Context) ([]*Channel, error) {
 	var (
 		nodes       = []*Channel{}
 		_spec       = cq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			cq.withVods != nil,
+			cq.withLive != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -402,6 +439,35 @@ func (cq *ChannelQuery) sqlAll(ctx context.Context) ([]*Channel, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "channel_vods" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Vods = append(node.Edges.Vods, n)
+		}
+	}
+
+	if query := cq.withLive; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[uuid.UUID]*Channel)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Live = []*Live{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Live(func(s *sql.Selector) {
+			s.Where(sql.InValues(channel.LiveColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.channel_live
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "channel_live" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "channel_live" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Live = append(node.Edges.Live, n)
 		}
 	}
 

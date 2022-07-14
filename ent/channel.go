@@ -36,9 +36,11 @@ type Channel struct {
 type ChannelEdges struct {
 	// Vods holds the value of the vods edge.
 	Vods []*Vod `json:"vods,omitempty"`
+	// Live holds the value of the live edge.
+	Live []*Live `json:"live,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // VodsOrErr returns the Vods value or an error if the edge
@@ -48,6 +50,15 @@ func (e ChannelEdges) VodsOrErr() ([]*Vod, error) {
 		return e.Vods, nil
 	}
 	return nil, &NotLoadedError{edge: "vods"}
+}
+
+// LiveOrErr returns the Live value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChannelEdges) LiveOrErr() ([]*Live, error) {
+	if e.loadedTypes[1] {
+		return e.Live, nil
+	}
+	return nil, &NotLoadedError{edge: "live"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -120,6 +131,11 @@ func (c *Channel) assignValues(columns []string, values []interface{}) error {
 // QueryVods queries the "vods" edge of the Channel entity.
 func (c *Channel) QueryVods() *VodQuery {
 	return (&ChannelClient{config: c.config}).QueryVods(c)
+}
+
+// QueryLive queries the "live" edge of the Channel entity.
+func (c *Channel) QueryLive() *LiveQuery {
+	return (&ChannelClient{config: c.config}).QueryLive(c)
 }
 
 // Update returns a builder for updating this Channel.

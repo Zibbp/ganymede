@@ -29,5 +29,6 @@ func (Channel) Fields() []ent.Field {
 func (Channel) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("vods", Vod.Type),
+		edge.To("live", Live.Type),
 	}
 }

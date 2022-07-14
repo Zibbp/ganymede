@@ -642,6 +642,34 @@ func HasVodsWith(preds ...predicate.Vod) predicate.Channel {
 	})
 }
 
+// HasLive applies the HasEdge predicate on the "live" edge.
+func HasLive() predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(LiveTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, LiveTable, LiveColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasLiveWith applies the HasEdge predicate on the "live" edge with a given conditions (other predicates).
+func HasLiveWith(preds ...predicate.Live) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(LiveInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, LiveTable, LiveColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Channel) predicate.Channel {
 	return predicate.Channel(func(s *sql.Selector) {

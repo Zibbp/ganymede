@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/vod"
 )
@@ -69,6 +70,21 @@ func (cu *ChannelUpdate) AddVods(v ...*Vod) *ChannelUpdate {
 	return cu.AddVodIDs(ids...)
 }
 
+// AddLiveIDs adds the "live" edge to the Live entity by IDs.
+func (cu *ChannelUpdate) AddLiveIDs(ids ...uuid.UUID) *ChannelUpdate {
+	cu.mutation.AddLiveIDs(ids...)
+	return cu
+}
+
+// AddLive adds the "live" edges to the Live entity.
+func (cu *ChannelUpdate) AddLive(l ...*Live) *ChannelUpdate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return cu.AddLiveIDs(ids...)
+}
+
 // Mutation returns the ChannelMutation object of the builder.
 func (cu *ChannelUpdate) Mutation() *ChannelMutation {
 	return cu.mutation
@@ -93,6 +109,27 @@ func (cu *ChannelUpdate) RemoveVods(v ...*Vod) *ChannelUpdate {
 		ids[i] = v[i].ID
 	}
 	return cu.RemoveVodIDs(ids...)
+}
+
+// ClearLive clears all "live" edges to the Live entity.
+func (cu *ChannelUpdate) ClearLive() *ChannelUpdate {
+	cu.mutation.ClearLive()
+	return cu
+}
+
+// RemoveLiveIDs removes the "live" edge to Live entities by IDs.
+func (cu *ChannelUpdate) RemoveLiveIDs(ids ...uuid.UUID) *ChannelUpdate {
+	cu.mutation.RemoveLiveIDs(ids...)
+	return cu
+}
+
+// RemoveLive removes "live" edges to Live entities.
+func (cu *ChannelUpdate) RemoveLive(l ...*Live) *ChannelUpdate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return cu.RemoveLiveIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -258,6 +295,60 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if cu.mutation.LiveCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.LiveTable,
+			Columns: []string{channel.LiveColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: live.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.RemovedLiveIDs(); len(nodes) > 0 && !cu.mutation.LiveCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.LiveTable,
+			Columns: []string{channel.LiveColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: live.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.LiveIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.LiveTable,
+			Columns: []string{channel.LiveColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: live.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{channel.Label}
@@ -316,6 +407,21 @@ func (cuo *ChannelUpdateOne) AddVods(v ...*Vod) *ChannelUpdateOne {
 	return cuo.AddVodIDs(ids...)
 }
 
+// AddLiveIDs adds the "live" edge to the Live entity by IDs.
+func (cuo *ChannelUpdateOne) AddLiveIDs(ids ...uuid.UUID) *ChannelUpdateOne {
+	cuo.mutation.AddLiveIDs(ids...)
+	return cuo
+}
+
+// AddLive adds the "live" edges to the Live entity.
+func (cuo *ChannelUpdateOne) AddLive(l ...*Live) *ChannelUpdateOne {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return cuo.AddLiveIDs(ids...)
+}
+
 // Mutation returns the ChannelMutation object of the builder.
 func (cuo *ChannelUpdateOne) Mutation() *ChannelMutation {
 	return cuo.mutation
@@ -340,6 +446,27 @@ func (cuo *ChannelUpdateOne) RemoveVods(v ...*Vod) *ChannelUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return cuo.RemoveVodIDs(ids...)
+}
+
+// ClearLive clears all "live" edges to the Live entity.
+func (cuo *ChannelUpdateOne) ClearLive() *ChannelUpdateOne {
+	cuo.mutation.ClearLive()
+	return cuo
+}
+
+// RemoveLiveIDs removes the "live" edge to Live entities by IDs.
+func (cuo *ChannelUpdateOne) RemoveLiveIDs(ids ...uuid.UUID) *ChannelUpdateOne {
+	cuo.mutation.RemoveLiveIDs(ids...)
+	return cuo
+}
+
+// RemoveLive removes "live" edges to Live entities.
+func (cuo *ChannelUpdateOne) RemoveLive(l ...*Live) *ChannelUpdateOne {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return cuo.RemoveLiveIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -521,6 +648,60 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
 					Column: vod.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cuo.mutation.LiveCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.LiveTable,
+			Columns: []string{channel.LiveColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: live.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.RemovedLiveIDs(); len(nodes) > 0 && !cuo.mutation.LiveCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.LiveTable,
+			Columns: []string{channel.LiveColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: live.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.LiveIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.LiveTable,
+			Columns: []string{channel.LiveColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: live.FieldID,
 				},
 			},
 		}

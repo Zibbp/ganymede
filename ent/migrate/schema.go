@@ -23,6 +23,29 @@ var (
 		Columns:    ChannelsColumns,
 		PrimaryKey: []*schema.Column{ChannelsColumns[0]},
 	}
+	// LivesColumns holds the columns for the "lives" table.
+	LivesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "is_live", Type: field.TypeBool, Default: false},
+		{Name: "last_live", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "channel_live", Type: field.TypeUUID},
+	}
+	// LivesTable holds the schema information for the "lives" table.
+	LivesTable = &schema.Table{
+		Name:       "lives",
+		Columns:    LivesColumns,
+		PrimaryKey: []*schema.Column{LivesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "lives_channels_live",
+				Columns:    []*schema.Column{LivesColumns[5]},
+				RefColumns: []*schema.Column{ChannelsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// QueuesColumns holds the columns for the "queues" table.
 	QueuesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -113,6 +136,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ChannelsTable,
+		LivesTable,
 		QueuesTable,
 		UsersTable,
 		VodsTable,
@@ -120,6 +144,7 @@ var (
 )
 
 func init() {
+	LivesTable.ForeignKeys[0].RefTable = ChannelsTable
 	QueuesTable.ForeignKeys[0].RefTable = VodsTable
 	VodsTable.ForeignKeys[0].RefTable = ChannelsTable
 }

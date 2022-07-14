@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/schema"
 	"github.com/zibbp/ganymede/ent/user"
@@ -33,6 +34,30 @@ func init() {
 	channelDescID := channelFields[0].Descriptor()
 	// channel.DefaultID holds the default value on creation for the id field.
 	channel.DefaultID = channelDescID.Default.(func() uuid.UUID)
+	liveFields := schema.Live{}.Fields()
+	_ = liveFields
+	// liveDescIsLive is the schema descriptor for is_live field.
+	liveDescIsLive := liveFields[1].Descriptor()
+	// live.DefaultIsLive holds the default value on creation for the is_live field.
+	live.DefaultIsLive = liveDescIsLive.Default.(bool)
+	// liveDescLastLive is the schema descriptor for last_live field.
+	liveDescLastLive := liveFields[2].Descriptor()
+	// live.DefaultLastLive holds the default value on creation for the last_live field.
+	live.DefaultLastLive = liveDescLastLive.Default.(func() time.Time)
+	// liveDescUpdatedAt is the schema descriptor for updated_at field.
+	liveDescUpdatedAt := liveFields[3].Descriptor()
+	// live.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	live.DefaultUpdatedAt = liveDescUpdatedAt.Default.(func() time.Time)
+	// live.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	live.UpdateDefaultUpdatedAt = liveDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// liveDescCreatedAt is the schema descriptor for created_at field.
+	liveDescCreatedAt := liveFields[4].Descriptor()
+	// live.DefaultCreatedAt holds the default value on creation for the created_at field.
+	live.DefaultCreatedAt = liveDescCreatedAt.Default.(func() time.Time)
+	// liveDescID is the schema descriptor for id field.
+	liveDescID := liveFields[0].Descriptor()
+	// live.DefaultID holds the default value on creation for the id field.
+	live.DefaultID = liveDescID.Default.(func() uuid.UUID)
 	queueFields := schema.Queue{}.Fields()
 	_ = queueFields
 	// queueDescLiveArchive is the schema descriptor for live_archive field.

@@ -25,6 +25,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// EdgeVods holds the string denoting the vods edge name in mutations.
 	EdgeVods = "vods"
+	// EdgeLive holds the string denoting the live edge name in mutations.
+	EdgeLive = "live"
 	// Table holds the table name of the channel in the database.
 	Table = "channels"
 	// VodsTable is the table that holds the vods relation/edge.
@@ -34,6 +36,13 @@ const (
 	VodsInverseTable = "vods"
 	// VodsColumn is the table column denoting the vods relation/edge.
 	VodsColumn = "channel_vods"
+	// LiveTable is the table that holds the live relation/edge.
+	LiveTable = "lives"
+	// LiveInverseTable is the table name for the Live entity.
+	// It exists in this package in order to avoid circular dependency with the "live" package.
+	LiveInverseTable = "lives"
+	// LiveColumn is the table column denoting the live relation/edge.
+	LiveColumn = "channel_live"
 )
 
 // Columns holds all SQL columns for channel fields.

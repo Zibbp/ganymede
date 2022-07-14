@@ -22,6 +22,19 @@ func (f ChannelFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return f(ctx, mv)
 }
 
+// The LiveFunc type is an adapter to allow the use of ordinary
+// function as Live mutator.
+type LiveFunc func(context.Context, *ent.LiveMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LiveFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.LiveMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiveMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The QueueFunc type is an adapter to allow the use of ordinary
 // function as Queue mutator.
 type QueueFunc func(context.Context, *ent.QueueMutation) (ent.Value, error)
