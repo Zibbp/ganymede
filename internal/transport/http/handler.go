@@ -15,16 +15,17 @@ import (
 )
 
 type Services struct {
-	AuthService    AuthService
-	ChannelService ChannelService
-	VodService     VodService
-	QueueService   QueueService
-	TwitchService  TwitchService
-	ArchiveService ArchiveService
-	AdminService   AdminService
-	UserService    UserService
-	ConfigService  ConfigService
-	LiveService    LiveService
+	AuthService      AuthService
+	ChannelService   ChannelService
+	VodService       VodService
+	QueueService     QueueService
+	TwitchService    TwitchService
+	ArchiveService   ArchiveService
+	AdminService     AdminService
+	UserService      UserService
+	ConfigService    ConfigService
+	LiveService      LiveService
+	SchedulerService SchedulerService
 }
 
 type Handler struct {
@@ -32,22 +33,23 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
 		Server: echo.New(),
 		Service: Services{
-			AuthService:    authService,
-			ChannelService: channelService,
-			VodService:     vodService,
-			QueueService:   queueService,
-			TwitchService:  twitchService,
-			ArchiveService: archiveService,
-			AdminService:   adminService,
-			UserService:    userService,
-			ConfigService:  configService,
-			LiveService:    liveService,
+			AuthService:      authService,
+			ChannelService:   channelService,
+			VodService:       vodService,
+			QueueService:     queueService,
+			TwitchService:    twitchService,
+			ArchiveService:   archiveService,
+			AdminService:     adminService,
+			UserService:      userService,
+			ConfigService:    configService,
+			LiveService:      liveService,
+			SchedulerService: schedulerService,
 		},
 	}
 
@@ -63,7 +65,10 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	h.mapRoutes()
 
 	// Start scheduler
-	utils.StartScheduler()
+	h.Service.SchedulerService.StartAppScheduler()
+	// Start live scheduler as a goroutine
+	// to avoid blocking application start
+	go h.Service.SchedulerService.StartLiveScheduler()
 
 	return h
 }
