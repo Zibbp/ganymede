@@ -7,6 +7,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/twitch"
@@ -17,6 +19,14 @@ type Service struct {
 	Store          *database.Database
 	TwitchService  *twitch.Service
 	ArchiveService *archive.Service
+}
+
+type Live struct {
+	ID          uuid.UUID `json:"id"`
+	IsLive      bool      `json:"is_live"`
+	ArchiveChat bool      `json:"archive_chat"`
+	Resolution  string    `json:"resolution"`
+	LastLive    time.Time `json:"last_live"`
 }
 
 func NewService(store *database.Database, twitchService *twitch.Service, archiveService *archive.Service) *Service {
@@ -31,10 +41,26 @@ func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
 	return watchedChannels, nil
 }
 
-func (s *Service) AddLiveWatchedChannel(c echo.Context, cID uuid.UUID) (*ent.Live, error) {
-	l, err := s.Store.Client.Live.Create().SetChannelID(cID).Save(c.Request().Context())
+func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live, error) {
+	// Check if channel is already in database
+	liveWatchedChannel, err := s.Store.Client.Live.Query().WithChannel().Where(live.HasChannelWith(channel.ID(liveDto.ID))).All(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("error getting live watched channel")
+	}
+	if len(liveWatchedChannel) > 0 {
+		return nil, fmt.Errorf("channel already watched")
+	}
+	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).Save(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error adding watched channel: %v", err)
+	}
+	return l, nil
+}
+
+func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live, error) {
+	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).Save(c.Request().Context())
+	if err != nil {
+		return nil, fmt.Errorf("error updating watched channel: %v", err)
 	}
 	return l, nil
 }
