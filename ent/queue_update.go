@@ -241,6 +241,26 @@ func (qu *QueueUpdate) ClearTaskChatDownload() *QueueUpdate {
 	return qu
 }
 
+// SetTaskChatConvert sets the "task_chat_convert" field.
+func (qu *QueueUpdate) SetTaskChatConvert(us utils.TaskStatus) *QueueUpdate {
+	qu.mutation.SetTaskChatConvert(us)
+	return qu
+}
+
+// SetNillableTaskChatConvert sets the "task_chat_convert" field if the given value is not nil.
+func (qu *QueueUpdate) SetNillableTaskChatConvert(us *utils.TaskStatus) *QueueUpdate {
+	if us != nil {
+		qu.SetTaskChatConvert(*us)
+	}
+	return qu
+}
+
+// ClearTaskChatConvert clears the value of the "task_chat_convert" field.
+func (qu *QueueUpdate) ClearTaskChatConvert() *QueueUpdate {
+	qu.mutation.ClearTaskChatConvert()
+	return qu
+}
+
 // SetTaskChatRender sets the "task_chat_render" field.
 func (qu *QueueUpdate) SetTaskChatRender(us utils.TaskStatus) *QueueUpdate {
 	qu.mutation.SetTaskChatRender(us)
@@ -415,6 +435,11 @@ func (qu *QueueUpdate) check() error {
 			return &ValidationError{Name: "task_chat_download", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_download": %w`, err)}
 		}
 	}
+	if v, ok := qu.mutation.TaskChatConvert(); ok {
+		if err := queue.TaskChatConvertValidator(v); err != nil {
+			return &ValidationError{Name: "task_chat_convert", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_convert": %w`, err)}
+		}
+	}
 	if v, ok := qu.mutation.TaskChatRender(); ok {
 		if err := queue.TaskChatRenderValidator(v); err != nil {
 			return &ValidationError{Name: "task_chat_render", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_render": %w`, err)}
@@ -573,6 +598,19 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeEnum,
 			Column: queue.FieldTaskChatDownload,
+		})
+	}
+	if value, ok := qu.mutation.TaskChatConvert(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: queue.FieldTaskChatConvert,
+		})
+	}
+	if qu.mutation.TaskChatConvertCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Column: queue.FieldTaskChatConvert,
 		})
 	}
 	if value, ok := qu.mutation.TaskChatRender(); ok {
@@ -872,6 +910,26 @@ func (quo *QueueUpdateOne) ClearTaskChatDownload() *QueueUpdateOne {
 	return quo
 }
 
+// SetTaskChatConvert sets the "task_chat_convert" field.
+func (quo *QueueUpdateOne) SetTaskChatConvert(us utils.TaskStatus) *QueueUpdateOne {
+	quo.mutation.SetTaskChatConvert(us)
+	return quo
+}
+
+// SetNillableTaskChatConvert sets the "task_chat_convert" field if the given value is not nil.
+func (quo *QueueUpdateOne) SetNillableTaskChatConvert(us *utils.TaskStatus) *QueueUpdateOne {
+	if us != nil {
+		quo.SetTaskChatConvert(*us)
+	}
+	return quo
+}
+
+// ClearTaskChatConvert clears the value of the "task_chat_convert" field.
+func (quo *QueueUpdateOne) ClearTaskChatConvert() *QueueUpdateOne {
+	quo.mutation.ClearTaskChatConvert()
+	return quo
+}
+
 // SetTaskChatRender sets the "task_chat_render" field.
 func (quo *QueueUpdateOne) SetTaskChatRender(us utils.TaskStatus) *QueueUpdateOne {
 	quo.mutation.SetTaskChatRender(us)
@@ -1053,6 +1111,11 @@ func (quo *QueueUpdateOne) check() error {
 			return &ValidationError{Name: "task_chat_download", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_download": %w`, err)}
 		}
 	}
+	if v, ok := quo.mutation.TaskChatConvert(); ok {
+		if err := queue.TaskChatConvertValidator(v); err != nil {
+			return &ValidationError{Name: "task_chat_convert", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_convert": %w`, err)}
+		}
+	}
 	if v, ok := quo.mutation.TaskChatRender(); ok {
 		if err := queue.TaskChatRenderValidator(v); err != nil {
 			return &ValidationError{Name: "task_chat_render", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_render": %w`, err)}
@@ -1228,6 +1291,19 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeEnum,
 			Column: queue.FieldTaskChatDownload,
+		})
+	}
+	if value, ok := quo.mutation.TaskChatConvert(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: queue.FieldTaskChatConvert,
+		})
+	}
+	if quo.mutation.TaskChatConvertCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Column: queue.FieldTaskChatConvert,
 		})
 	}
 	if value, ok := quo.mutation.TaskChatRender(); ok {

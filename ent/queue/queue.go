@@ -39,6 +39,8 @@ const (
 	FieldTaskVideoMove = "task_video_move"
 	// FieldTaskChatDownload holds the string denoting the task_chat_download field in the database.
 	FieldTaskChatDownload = "task_chat_download"
+	// FieldTaskChatConvert holds the string denoting the task_chat_convert field in the database.
+	FieldTaskChatConvert = "task_chat_convert"
 	// FieldTaskChatRender holds the string denoting the task_chat_render field in the database.
 	FieldTaskChatRender = "task_chat_render"
 	// FieldTaskChatMove holds the string denoting the task_chat_move field in the database.
@@ -75,6 +77,7 @@ var Columns = []string{
 	FieldTaskVideoConvert,
 	FieldTaskVideoMove,
 	FieldTaskChatDownload,
+	FieldTaskChatConvert,
 	FieldTaskChatRender,
 	FieldTaskChatMove,
 	FieldUpdatedAt,
@@ -204,6 +207,18 @@ func TaskChatDownloadValidator(tcd utils.TaskStatus) error {
 		return nil
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_chat_download field: %q", tcd)
+	}
+}
+
+const DefaultTaskChatConvert utils.TaskStatus = "pending"
+
+// TaskChatConvertValidator is a validator for the "task_chat_convert" field enum values. It is called by the builders before save.
+func TaskChatConvertValidator(tcc utils.TaskStatus) error {
+	switch tcc {
+	case "success", "running", "pending", "failed":
+		return nil
+	default:
+		return fmt.Errorf("queue: invalid enum value for task_chat_convert field: %q", tcc)
 	}
 }
 

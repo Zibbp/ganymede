@@ -18,6 +18,8 @@ func (Live) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.Bool("is_live").Default(false).Comment("Whether the channel is currently live."),
+		field.Bool("archive_chat").Default(true).Comment("Whether the chat archive is enabled."),
+		field.String("resolution").Default("best").Optional(),
 		field.Time("last_live").Default(time.Now).Comment("The time the channel last went live."),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),

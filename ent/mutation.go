@@ -753,6 +753,8 @@ type LiveMutation struct {
 	typ            string
 	id             *uuid.UUID
 	is_live        *bool
+	archive_chat   *bool
+	resolution     *string
 	last_live      *time.Time
 	updated_at     *time.Time
 	created_at     *time.Time
@@ -902,6 +904,91 @@ func (m *LiveMutation) OldIsLive(ctx context.Context) (v bool, err error) {
 // ResetIsLive resets all changes to the "is_live" field.
 func (m *LiveMutation) ResetIsLive() {
 	m.is_live = nil
+}
+
+// SetArchiveChat sets the "archive_chat" field.
+func (m *LiveMutation) SetArchiveChat(b bool) {
+	m.archive_chat = &b
+}
+
+// ArchiveChat returns the value of the "archive_chat" field in the mutation.
+func (m *LiveMutation) ArchiveChat() (r bool, exists bool) {
+	v := m.archive_chat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldArchiveChat returns the old "archive_chat" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldArchiveChat(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldArchiveChat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldArchiveChat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldArchiveChat: %w", err)
+	}
+	return oldValue.ArchiveChat, nil
+}
+
+// ResetArchiveChat resets all changes to the "archive_chat" field.
+func (m *LiveMutation) ResetArchiveChat() {
+	m.archive_chat = nil
+}
+
+// SetResolution sets the "resolution" field.
+func (m *LiveMutation) SetResolution(s string) {
+	m.resolution = &s
+}
+
+// Resolution returns the value of the "resolution" field in the mutation.
+func (m *LiveMutation) Resolution() (r string, exists bool) {
+	v := m.resolution
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResolution returns the old "resolution" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldResolution(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResolution is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResolution requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResolution: %w", err)
+	}
+	return oldValue.Resolution, nil
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (m *LiveMutation) ClearResolution() {
+	m.resolution = nil
+	m.clearedFields[live.FieldResolution] = struct{}{}
+}
+
+// ResolutionCleared returns if the "resolution" field was cleared in this mutation.
+func (m *LiveMutation) ResolutionCleared() bool {
+	_, ok := m.clearedFields[live.FieldResolution]
+	return ok
+}
+
+// ResetResolution resets all changes to the "resolution" field.
+func (m *LiveMutation) ResetResolution() {
+	m.resolution = nil
+	delete(m.clearedFields, live.FieldResolution)
 }
 
 // SetLastLive sets the "last_live" field.
@@ -1070,9 +1157,15 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 6)
 	if m.is_live != nil {
 		fields = append(fields, live.FieldIsLive)
+	}
+	if m.archive_chat != nil {
+		fields = append(fields, live.FieldArchiveChat)
+	}
+	if m.resolution != nil {
+		fields = append(fields, live.FieldResolution)
 	}
 	if m.last_live != nil {
 		fields = append(fields, live.FieldLastLive)
@@ -1093,6 +1186,10 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case live.FieldIsLive:
 		return m.IsLive()
+	case live.FieldArchiveChat:
+		return m.ArchiveChat()
+	case live.FieldResolution:
+		return m.Resolution()
 	case live.FieldLastLive:
 		return m.LastLive()
 	case live.FieldUpdatedAt:
@@ -1110,6 +1207,10 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 	switch name {
 	case live.FieldIsLive:
 		return m.OldIsLive(ctx)
+	case live.FieldArchiveChat:
+		return m.OldArchiveChat(ctx)
+	case live.FieldResolution:
+		return m.OldResolution(ctx)
 	case live.FieldLastLive:
 		return m.OldLastLive(ctx)
 	case live.FieldUpdatedAt:
@@ -1131,6 +1232,20 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIsLive(v)
+		return nil
+	case live.FieldArchiveChat:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetArchiveChat(v)
+		return nil
+	case live.FieldResolution:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResolution(v)
 		return nil
 	case live.FieldLastLive:
 		v, ok := value.(time.Time)
@@ -1182,7 +1297,11 @@ func (m *LiveMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *LiveMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(live.FieldResolution) {
+		fields = append(fields, live.FieldResolution)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -1195,6 +1314,11 @@ func (m *LiveMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *LiveMutation) ClearField(name string) error {
+	switch name {
+	case live.FieldResolution:
+		m.ClearResolution()
+		return nil
+	}
 	return fmt.Errorf("unknown Live nullable field %s", name)
 }
 
@@ -1204,6 +1328,12 @@ func (m *LiveMutation) ResetField(name string) error {
 	switch name {
 	case live.FieldIsLive:
 		m.ResetIsLive()
+		return nil
+	case live.FieldArchiveChat:
+		m.ResetArchiveChat()
+		return nil
+	case live.FieldResolution:
+		m.ResetResolution()
 		return nil
 	case live.FieldLastLive:
 		m.ResetLastLive()
@@ -1312,6 +1442,7 @@ type QueueMutation struct {
 	task_video_convert          *utils.TaskStatus
 	task_video_move             *utils.TaskStatus
 	task_chat_download          *utils.TaskStatus
+	task_chat_convert           *utils.TaskStatus
 	task_chat_render            *utils.TaskStatus
 	task_chat_move              *utils.TaskStatus
 	updated_at                  *time.Time
@@ -1951,6 +2082,55 @@ func (m *QueueMutation) ResetTaskChatDownload() {
 	delete(m.clearedFields, queue.FieldTaskChatDownload)
 }
 
+// SetTaskChatConvert sets the "task_chat_convert" field.
+func (m *QueueMutation) SetTaskChatConvert(us utils.TaskStatus) {
+	m.task_chat_convert = &us
+}
+
+// TaskChatConvert returns the value of the "task_chat_convert" field in the mutation.
+func (m *QueueMutation) TaskChatConvert() (r utils.TaskStatus, exists bool) {
+	v := m.task_chat_convert
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTaskChatConvert returns the old "task_chat_convert" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldTaskChatConvert(ctx context.Context) (v utils.TaskStatus, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTaskChatConvert is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTaskChatConvert requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTaskChatConvert: %w", err)
+	}
+	return oldValue.TaskChatConvert, nil
+}
+
+// ClearTaskChatConvert clears the value of the "task_chat_convert" field.
+func (m *QueueMutation) ClearTaskChatConvert() {
+	m.task_chat_convert = nil
+	m.clearedFields[queue.FieldTaskChatConvert] = struct{}{}
+}
+
+// TaskChatConvertCleared returns if the "task_chat_convert" field was cleared in this mutation.
+func (m *QueueMutation) TaskChatConvertCleared() bool {
+	_, ok := m.clearedFields[queue.FieldTaskChatConvert]
+	return ok
+}
+
+// ResetTaskChatConvert resets all changes to the "task_chat_convert" field.
+func (m *QueueMutation) ResetTaskChatConvert() {
+	m.task_chat_convert = nil
+	delete(m.clearedFields, queue.FieldTaskChatConvert)
+}
+
 // SetTaskChatRender sets the "task_chat_render" field.
 func (m *QueueMutation) SetTaskChatRender(us utils.TaskStatus) {
 	m.task_chat_render = &us
@@ -2179,7 +2359,7 @@ func (m *QueueMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QueueMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 17)
 	if m.live_archive != nil {
 		fields = append(fields, queue.FieldLiveArchive)
 	}
@@ -2215,6 +2395,9 @@ func (m *QueueMutation) Fields() []string {
 	}
 	if m.task_chat_download != nil {
 		fields = append(fields, queue.FieldTaskChatDownload)
+	}
+	if m.task_chat_convert != nil {
+		fields = append(fields, queue.FieldTaskChatConvert)
 	}
 	if m.task_chat_render != nil {
 		fields = append(fields, queue.FieldTaskChatRender)
@@ -2260,6 +2443,8 @@ func (m *QueueMutation) Field(name string) (ent.Value, bool) {
 		return m.TaskVideoMove()
 	case queue.FieldTaskChatDownload:
 		return m.TaskChatDownload()
+	case queue.FieldTaskChatConvert:
+		return m.TaskChatConvert()
 	case queue.FieldTaskChatRender:
 		return m.TaskChatRender()
 	case queue.FieldTaskChatMove:
@@ -2301,6 +2486,8 @@ func (m *QueueMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldTaskVideoMove(ctx)
 	case queue.FieldTaskChatDownload:
 		return m.OldTaskChatDownload(ctx)
+	case queue.FieldTaskChatConvert:
+		return m.OldTaskChatConvert(ctx)
 	case queue.FieldTaskChatRender:
 		return m.OldTaskChatRender(ctx)
 	case queue.FieldTaskChatMove:
@@ -2402,6 +2589,13 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetTaskChatDownload(v)
 		return nil
+	case queue.FieldTaskChatConvert:
+		v, ok := value.(utils.TaskStatus)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTaskChatConvert(v)
+		return nil
 	case queue.FieldTaskChatRender:
 		v, ok := value.(utils.TaskStatus)
 		if !ok {
@@ -2481,6 +2675,9 @@ func (m *QueueMutation) ClearedFields() []string {
 	if m.FieldCleared(queue.FieldTaskChatDownload) {
 		fields = append(fields, queue.FieldTaskChatDownload)
 	}
+	if m.FieldCleared(queue.FieldTaskChatConvert) {
+		fields = append(fields, queue.FieldTaskChatConvert)
+	}
 	if m.FieldCleared(queue.FieldTaskChatRender) {
 		fields = append(fields, queue.FieldTaskChatRender)
 	}
@@ -2521,6 +2718,9 @@ func (m *QueueMutation) ClearField(name string) error {
 		return nil
 	case queue.FieldTaskChatDownload:
 		m.ClearTaskChatDownload()
+		return nil
+	case queue.FieldTaskChatConvert:
+		m.ClearTaskChatConvert()
 		return nil
 	case queue.FieldTaskChatRender:
 		m.ClearTaskChatRender()
@@ -2571,6 +2771,9 @@ func (m *QueueMutation) ResetField(name string) error {
 		return nil
 	case queue.FieldTaskChatDownload:
 		m.ResetTaskChatDownload()
+		return nil
+	case queue.FieldTaskChatConvert:
+		m.ResetTaskChatConvert()
 		return nil
 	case queue.FieldTaskChatRender:
 		m.ResetTaskChatRender()

@@ -21,6 +21,11 @@ type Live struct {
 	// IsLive holds the value of the "is_live" field.
 	// Whether the channel is currently live.
 	IsLive bool `json:"is_live,omitempty"`
+	// ArchiveChat holds the value of the "archive_chat" field.
+	// Whether the chat archive is enabled.
+	ArchiveChat bool `json:"archive_chat,omitempty"`
+	// Resolution holds the value of the "resolution" field.
+	Resolution string `json:"resolution,omitempty"`
 	// LastLive holds the value of the "last_live" field.
 	// The time the channel last went live.
 	LastLive time.Time `json:"last_live,omitempty"`
@@ -62,8 +67,10 @@ func (*Live) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case live.FieldIsLive:
+		case live.FieldIsLive, live.FieldArchiveChat:
 			values[i] = new(sql.NullBool)
+		case live.FieldResolution:
+			values[i] = new(sql.NullString)
 		case live.FieldLastLive, live.FieldUpdatedAt, live.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case live.FieldID:
@@ -96,6 +103,18 @@ func (l *Live) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field is_live", values[i])
 			} else if value.Valid {
 				l.IsLive = value.Bool
+			}
+		case live.FieldArchiveChat:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field archive_chat", values[i])
+			} else if value.Valid {
+				l.ArchiveChat = value.Bool
+			}
+		case live.FieldResolution:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resolution", values[i])
+			} else if value.Valid {
+				l.Resolution = value.String
 			}
 		case live.FieldLastLive:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -157,6 +176,10 @@ func (l *Live) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v", l.ID))
 	builder.WriteString(", is_live=")
 	builder.WriteString(fmt.Sprintf("%v", l.IsLive))
+	builder.WriteString(", archive_chat=")
+	builder.WriteString(fmt.Sprintf("%v", l.ArchiveChat))
+	builder.WriteString(", resolution=")
+	builder.WriteString(l.Resolution)
 	builder.WriteString(", last_live=")
 	builder.WriteString(l.LastLive.Format(time.ANSIC))
 	builder.WriteString(", updated_at=")

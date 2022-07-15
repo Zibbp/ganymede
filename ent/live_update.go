@@ -44,6 +44,40 @@ func (lu *LiveUpdate) SetNillableIsLive(b *bool) *LiveUpdate {
 	return lu
 }
 
+// SetArchiveChat sets the "archive_chat" field.
+func (lu *LiveUpdate) SetArchiveChat(b bool) *LiveUpdate {
+	lu.mutation.SetArchiveChat(b)
+	return lu
+}
+
+// SetNillableArchiveChat sets the "archive_chat" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableArchiveChat(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetArchiveChat(*b)
+	}
+	return lu
+}
+
+// SetResolution sets the "resolution" field.
+func (lu *LiveUpdate) SetResolution(s string) *LiveUpdate {
+	lu.mutation.SetResolution(s)
+	return lu
+}
+
+// SetNillableResolution sets the "resolution" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableResolution(s *string) *LiveUpdate {
+	if s != nil {
+		lu.SetResolution(*s)
+	}
+	return lu
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (lu *LiveUpdate) ClearResolution() *LiveUpdate {
+	lu.mutation.ClearResolution()
+	return lu
+}
+
 // SetLastLive sets the "last_live" field.
 func (lu *LiveUpdate) SetLastLive(t time.Time) *LiveUpdate {
 	lu.mutation.SetLastLive(t)
@@ -188,6 +222,26 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: live.FieldIsLive,
 		})
 	}
+	if value, ok := lu.mutation.ArchiveChat(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldArchiveChat,
+		})
+	}
+	if value, ok := lu.mutation.Resolution(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: live.FieldResolution,
+		})
+	}
+	if lu.mutation.ResolutionCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: live.FieldResolution,
+		})
+	}
 	if value, ok := lu.mutation.LastLive(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -267,6 +321,40 @@ func (luo *LiveUpdateOne) SetNillableIsLive(b *bool) *LiveUpdateOne {
 	if b != nil {
 		luo.SetIsLive(*b)
 	}
+	return luo
+}
+
+// SetArchiveChat sets the "archive_chat" field.
+func (luo *LiveUpdateOne) SetArchiveChat(b bool) *LiveUpdateOne {
+	luo.mutation.SetArchiveChat(b)
+	return luo
+}
+
+// SetNillableArchiveChat sets the "archive_chat" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableArchiveChat(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetArchiveChat(*b)
+	}
+	return luo
+}
+
+// SetResolution sets the "resolution" field.
+func (luo *LiveUpdateOne) SetResolution(s string) *LiveUpdateOne {
+	luo.mutation.SetResolution(s)
+	return luo
+}
+
+// SetNillableResolution sets the "resolution" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableResolution(s *string) *LiveUpdateOne {
+	if s != nil {
+		luo.SetResolution(*s)
+	}
+	return luo
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (luo *LiveUpdateOne) ClearResolution() *LiveUpdateOne {
+	luo.mutation.ClearResolution()
 	return luo
 }
 
@@ -436,6 +524,26 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 			Type:   field.TypeBool,
 			Value:  value,
 			Column: live.FieldIsLive,
+		})
+	}
+	if value, ok := luo.mutation.ArchiveChat(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldArchiveChat,
+		})
+	}
+	if value, ok := luo.mutation.Resolution(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: live.FieldResolution,
+		})
+	}
+	if luo.mutation.ResolutionCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: live.FieldResolution,
 		})
 	}
 	if value, ok := luo.mutation.LastLive(); ok {

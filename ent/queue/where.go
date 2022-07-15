@@ -662,6 +662,70 @@ func TaskChatDownloadNotNil() predicate.Queue {
 	})
 }
 
+// TaskChatConvertEQ applies the EQ predicate on the "task_chat_convert" field.
+func TaskChatConvertEQ(v utils.TaskStatus) predicate.Queue {
+	vc := v
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTaskChatConvert), vc))
+	})
+}
+
+// TaskChatConvertNEQ applies the NEQ predicate on the "task_chat_convert" field.
+func TaskChatConvertNEQ(v utils.TaskStatus) predicate.Queue {
+	vc := v
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldTaskChatConvert), vc))
+	})
+}
+
+// TaskChatConvertIn applies the In predicate on the "task_chat_convert" field.
+func TaskChatConvertIn(vs ...utils.TaskStatus) predicate.Queue {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Queue(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldTaskChatConvert), v...))
+	})
+}
+
+// TaskChatConvertNotIn applies the NotIn predicate on the "task_chat_convert" field.
+func TaskChatConvertNotIn(vs ...utils.TaskStatus) predicate.Queue {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Queue(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldTaskChatConvert), v...))
+	})
+}
+
+// TaskChatConvertIsNil applies the IsNil predicate on the "task_chat_convert" field.
+func TaskChatConvertIsNil() predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldTaskChatConvert)))
+	})
+}
+
+// TaskChatConvertNotNil applies the NotNil predicate on the "task_chat_convert" field.
+func TaskChatConvertNotNil() predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldTaskChatConvert)))
+	})
+}
+
 // TaskChatRenderEQ applies the EQ predicate on the "task_chat_render" field.
 func TaskChatRenderEQ(v utils.TaskStatus) predicate.Queue {
 	vc := v

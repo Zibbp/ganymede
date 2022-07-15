@@ -36,6 +36,34 @@ func (lc *LiveCreate) SetNillableIsLive(b *bool) *LiveCreate {
 	return lc
 }
 
+// SetArchiveChat sets the "archive_chat" field.
+func (lc *LiveCreate) SetArchiveChat(b bool) *LiveCreate {
+	lc.mutation.SetArchiveChat(b)
+	return lc
+}
+
+// SetNillableArchiveChat sets the "archive_chat" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableArchiveChat(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetArchiveChat(*b)
+	}
+	return lc
+}
+
+// SetResolution sets the "resolution" field.
+func (lc *LiveCreate) SetResolution(s string) *LiveCreate {
+	lc.mutation.SetResolution(s)
+	return lc
+}
+
+// SetNillableResolution sets the "resolution" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableResolution(s *string) *LiveCreate {
+	if s != nil {
+		lc.SetResolution(*s)
+	}
+	return lc
+}
+
 // SetLastLive sets the "last_live" field.
 func (lc *LiveCreate) SetLastLive(t time.Time) *LiveCreate {
 	lc.mutation.SetLastLive(t)
@@ -178,6 +206,14 @@ func (lc *LiveCreate) defaults() {
 		v := live.DefaultIsLive
 		lc.mutation.SetIsLive(v)
 	}
+	if _, ok := lc.mutation.ArchiveChat(); !ok {
+		v := live.DefaultArchiveChat
+		lc.mutation.SetArchiveChat(v)
+	}
+	if _, ok := lc.mutation.Resolution(); !ok {
+		v := live.DefaultResolution
+		lc.mutation.SetResolution(v)
+	}
 	if _, ok := lc.mutation.LastLive(); !ok {
 		v := live.DefaultLastLive()
 		lc.mutation.SetLastLive(v)
@@ -200,6 +236,9 @@ func (lc *LiveCreate) defaults() {
 func (lc *LiveCreate) check() error {
 	if _, ok := lc.mutation.IsLive(); !ok {
 		return &ValidationError{Name: "is_live", err: errors.New(`ent: missing required field "Live.is_live"`)}
+	}
+	if _, ok := lc.mutation.ArchiveChat(); !ok {
+		return &ValidationError{Name: "archive_chat", err: errors.New(`ent: missing required field "Live.archive_chat"`)}
 	}
 	if _, ok := lc.mutation.LastLive(); !ok {
 		return &ValidationError{Name: "last_live", err: errors.New(`ent: missing required field "Live.last_live"`)}
@@ -256,6 +295,22 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 			Column: live.FieldIsLive,
 		})
 		_node.IsLive = value
+	}
+	if value, ok := lc.mutation.ArchiveChat(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldArchiveChat,
+		})
+		_node.ArchiveChat = value
+	}
+	if value, ok := lc.mutation.Resolution(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: live.FieldResolution,
+		})
+		_node.Resolution = value
 	}
 	if value, ok := lc.mutation.LastLive(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

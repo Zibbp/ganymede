@@ -43,6 +43,8 @@ type Queue struct {
 	TaskVideoMove utils.TaskStatus `json:"task_video_move,omitempty"`
 	// TaskChatDownload holds the value of the "task_chat_download" field.
 	TaskChatDownload utils.TaskStatus `json:"task_chat_download,omitempty"`
+	// TaskChatConvert holds the value of the "task_chat_convert" field.
+	TaskChatConvert utils.TaskStatus `json:"task_chat_convert,omitempty"`
 	// TaskChatRender holds the value of the "task_chat_render" field.
 	TaskChatRender utils.TaskStatus `json:"task_chat_render,omitempty"`
 	// TaskChatMove holds the value of the "task_chat_move" field.
@@ -87,7 +89,7 @@ func (*Queue) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case queue.FieldLiveArchive, queue.FieldOnHold, queue.FieldVideoProcessing, queue.FieldChatProcessing, queue.FieldProcessing:
 			values[i] = new(sql.NullBool)
-		case queue.FieldTaskVodCreateFolder, queue.FieldTaskVodDownloadThumbnail, queue.FieldTaskVodSaveInfo, queue.FieldTaskVideoDownload, queue.FieldTaskVideoConvert, queue.FieldTaskVideoMove, queue.FieldTaskChatDownload, queue.FieldTaskChatRender, queue.FieldTaskChatMove:
+		case queue.FieldTaskVodCreateFolder, queue.FieldTaskVodDownloadThumbnail, queue.FieldTaskVodSaveInfo, queue.FieldTaskVideoDownload, queue.FieldTaskVideoConvert, queue.FieldTaskVideoMove, queue.FieldTaskChatDownload, queue.FieldTaskChatConvert, queue.FieldTaskChatRender, queue.FieldTaskChatMove:
 			values[i] = new(sql.NullString)
 		case queue.FieldUpdatedAt, queue.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -188,6 +190,12 @@ func (q *Queue) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				q.TaskChatDownload = utils.TaskStatus(value.String)
 			}
+		case queue.FieldTaskChatConvert:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field task_chat_convert", values[i])
+			} else if value.Valid {
+				q.TaskChatConvert = utils.TaskStatus(value.String)
+			}
 		case queue.FieldTaskChatRender:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_chat_render", values[i])
@@ -276,6 +284,8 @@ func (q *Queue) String() string {
 	builder.WriteString(fmt.Sprintf("%v", q.TaskVideoMove))
 	builder.WriteString(", task_chat_download=")
 	builder.WriteString(fmt.Sprintf("%v", q.TaskChatDownload))
+	builder.WriteString(", task_chat_convert=")
+	builder.WriteString(fmt.Sprintf("%v", q.TaskChatConvert))
 	builder.WriteString(", task_chat_render=")
 	builder.WriteString(fmt.Sprintf("%v", q.TaskChatRender))
 	builder.WriteString(", task_chat_move=")

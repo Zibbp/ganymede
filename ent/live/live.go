@@ -15,6 +15,10 @@ const (
 	FieldID = "id"
 	// FieldIsLive holds the string denoting the is_live field in the database.
 	FieldIsLive = "is_live"
+	// FieldArchiveChat holds the string denoting the archive_chat field in the database.
+	FieldArchiveChat = "archive_chat"
+	// FieldResolution holds the string denoting the resolution field in the database.
+	FieldResolution = "resolution"
 	// FieldLastLive holds the string denoting the last_live field in the database.
 	FieldLastLive = "last_live"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -38,6 +42,8 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldIsLive,
+	FieldArchiveChat,
+	FieldResolution,
 	FieldLastLive,
 	FieldUpdatedAt,
 	FieldCreatedAt,
@@ -67,6 +73,10 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultIsLive holds the default value on creation for the "is_live" field.
 	DefaultIsLive bool
+	// DefaultArchiveChat holds the default value on creation for the "archive_chat" field.
+	DefaultArchiveChat bool
+	// DefaultResolution holds the default value on creation for the "resolution" field.
+	DefaultResolution string
 	// DefaultLastLive holds the default value on creation for the "last_live" field.
 	DefaultLastLive func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.

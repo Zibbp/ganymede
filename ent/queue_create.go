@@ -191,6 +191,20 @@ func (qc *QueueCreate) SetNillableTaskChatDownload(us *utils.TaskStatus) *QueueC
 	return qc
 }
 
+// SetTaskChatConvert sets the "task_chat_convert" field.
+func (qc *QueueCreate) SetTaskChatConvert(us utils.TaskStatus) *QueueCreate {
+	qc.mutation.SetTaskChatConvert(us)
+	return qc
+}
+
+// SetNillableTaskChatConvert sets the "task_chat_convert" field if the given value is not nil.
+func (qc *QueueCreate) SetNillableTaskChatConvert(us *utils.TaskStatus) *QueueCreate {
+	if us != nil {
+		qc.SetTaskChatConvert(*us)
+	}
+	return qc
+}
+
 // SetTaskChatRender sets the "task_chat_render" field.
 func (qc *QueueCreate) SetTaskChatRender(us utils.TaskStatus) *QueueCreate {
 	qc.mutation.SetTaskChatRender(us)
@@ -391,6 +405,10 @@ func (qc *QueueCreate) defaults() {
 		v := queue.DefaultTaskChatDownload
 		qc.mutation.SetTaskChatDownload(v)
 	}
+	if _, ok := qc.mutation.TaskChatConvert(); !ok {
+		v := queue.DefaultTaskChatConvert
+		qc.mutation.SetTaskChatConvert(v)
+	}
 	if _, ok := qc.mutation.TaskChatRender(); !ok {
 		v := queue.DefaultTaskChatRender
 		qc.mutation.SetTaskChatRender(v)
@@ -463,6 +481,11 @@ func (qc *QueueCreate) check() error {
 	if v, ok := qc.mutation.TaskChatDownload(); ok {
 		if err := queue.TaskChatDownloadValidator(v); err != nil {
 			return &ValidationError{Name: "task_chat_download", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_download": %w`, err)}
+		}
+	}
+	if v, ok := qc.mutation.TaskChatConvert(); ok {
+		if err := queue.TaskChatConvertValidator(v); err != nil {
+			return &ValidationError{Name: "task_chat_convert", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_convert": %w`, err)}
 		}
 	}
 	if v, ok := qc.mutation.TaskChatRender(); ok {
@@ -615,6 +638,14 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 			Column: queue.FieldTaskChatDownload,
 		})
 		_node.TaskChatDownload = value
+	}
+	if value, ok := qc.mutation.TaskChatConvert(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: queue.FieldTaskChatConvert,
+		})
+		_node.TaskChatConvert = value
 	}
 	if value, ok := qc.mutation.TaskChatRender(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

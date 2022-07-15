@@ -101,6 +101,20 @@ func IsLive(v bool) predicate.Live {
 	})
 }
 
+// ArchiveChat applies equality check predicate on the "archive_chat" field. It's identical to ArchiveChatEQ.
+func ArchiveChat(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldArchiveChat), v))
+	})
+}
+
+// Resolution applies equality check predicate on the "resolution" field. It's identical to ResolutionEQ.
+func Resolution(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldResolution), v))
+	})
+}
+
 // LastLive applies equality check predicate on the "last_live" field. It's identical to LastLiveEQ.
 func LastLive(v time.Time) predicate.Live {
 	return predicate.Live(func(s *sql.Selector) {
@@ -133,6 +147,145 @@ func IsLiveEQ(v bool) predicate.Live {
 func IsLiveNEQ(v bool) predicate.Live {
 	return predicate.Live(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldIsLive), v))
+	})
+}
+
+// ArchiveChatEQ applies the EQ predicate on the "archive_chat" field.
+func ArchiveChatEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldArchiveChat), v))
+	})
+}
+
+// ArchiveChatNEQ applies the NEQ predicate on the "archive_chat" field.
+func ArchiveChatNEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldArchiveChat), v))
+	})
+}
+
+// ResolutionEQ applies the EQ predicate on the "resolution" field.
+func ResolutionEQ(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldResolution), v))
+	})
+}
+
+// ResolutionNEQ applies the NEQ predicate on the "resolution" field.
+func ResolutionNEQ(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldResolution), v))
+	})
+}
+
+// ResolutionIn applies the In predicate on the "resolution" field.
+func ResolutionIn(vs ...string) predicate.Live {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Live(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldResolution), v...))
+	})
+}
+
+// ResolutionNotIn applies the NotIn predicate on the "resolution" field.
+func ResolutionNotIn(vs ...string) predicate.Live {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Live(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldResolution), v...))
+	})
+}
+
+// ResolutionGT applies the GT predicate on the "resolution" field.
+func ResolutionGT(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldResolution), v))
+	})
+}
+
+// ResolutionGTE applies the GTE predicate on the "resolution" field.
+func ResolutionGTE(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldResolution), v))
+	})
+}
+
+// ResolutionLT applies the LT predicate on the "resolution" field.
+func ResolutionLT(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldResolution), v))
+	})
+}
+
+// ResolutionLTE applies the LTE predicate on the "resolution" field.
+func ResolutionLTE(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldResolution), v))
+	})
+}
+
+// ResolutionContains applies the Contains predicate on the "resolution" field.
+func ResolutionContains(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldResolution), v))
+	})
+}
+
+// ResolutionHasPrefix applies the HasPrefix predicate on the "resolution" field.
+func ResolutionHasPrefix(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldResolution), v))
+	})
+}
+
+// ResolutionHasSuffix applies the HasSuffix predicate on the "resolution" field.
+func ResolutionHasSuffix(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldResolution), v))
+	})
+}
+
+// ResolutionIsNil applies the IsNil predicate on the "resolution" field.
+func ResolutionIsNil() predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldResolution)))
+	})
+}
+
+// ResolutionNotNil applies the NotNil predicate on the "resolution" field.
+func ResolutionNotNil() predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldResolution)))
+	})
+}
+
+// ResolutionEqualFold applies the EqualFold predicate on the "resolution" field.
+func ResolutionEqualFold(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldResolution), v))
+	})
+}
+
+// ResolutionContainsFold applies the ContainsFold predicate on the "resolution" field.
+func ResolutionContainsFold(v string) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldResolution), v))
 	})
 }
 
