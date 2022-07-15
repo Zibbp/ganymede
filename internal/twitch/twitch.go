@@ -3,7 +3,6 @@ package twitch
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"net/http"
@@ -145,7 +144,7 @@ func Authenticate() error {
 	return nil
 }
 
-func (s *Service) GetUserByLogin(c echo.Context, cName string) (Channel, error) {
+func (s *Service) GetUserByLogin(cName string) (Channel, error) {
 	log.Debug().Msgf("getting user by login: %s", cName)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/users?login=%s", cName), nil)

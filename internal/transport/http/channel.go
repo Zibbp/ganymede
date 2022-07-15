@@ -9,12 +9,12 @@ import (
 )
 
 type ChannelService interface {
-	CreateChannel(c echo.Context, channelDto channel.Channel) (*ent.Channel, error)
-	GetChannels(c echo.Context) ([]*ent.Channel, error)
-	GetChannel(c echo.Context, channelID uuid.UUID) (*ent.Channel, error)
-	GetChannelByName(c echo.Context, channelName string) (*ent.Channel, error)
-	DeleteChannel(c echo.Context, channelID uuid.UUID) error
-	UpdateChannel(c echo.Context, channelID uuid.UUID, channelDto channel.Channel) (*ent.Channel, error)
+	CreateChannel(channelDto channel.Channel) (*ent.Channel, error)
+	GetChannels() ([]*ent.Channel, error)
+	GetChannel(channelID uuid.UUID) (*ent.Channel, error)
+	GetChannelByName(channelName string) (*ent.Channel, error)
+	DeleteChannel(channelID uuid.UUID) error
+	UpdateChannel(channelID uuid.UUID, channelDto channel.Channel) (*ent.Channel, error)
 }
 
 type CreateChannelRequest struct {
@@ -38,7 +38,7 @@ func (h *Handler) CreateChannel(c echo.Context) error {
 		ImagePath:   ccr.ImagePath,
 	}
 
-	cha, err := h.Service.ChannelService.CreateChannel(c, ccDto)
+	cha, err := h.Service.ChannelService.CreateChannel(ccDto)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -47,7 +47,7 @@ func (h *Handler) CreateChannel(c echo.Context) error {
 }
 
 func (h *Handler) GetChannels(c echo.Context) error {
-	channels, err := h.Service.ChannelService.GetChannels(c)
+	channels, err := h.Service.ChannelService.GetChannels()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -61,7 +61,7 @@ func (h *Handler) GetChannel(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	cha, err := h.Service.ChannelService.GetChannel(c, cUUID)
+	cha, err := h.Service.ChannelService.GetChannel(cUUID)
 	if err != nil {
 		if err.Error() == "channel not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
@@ -77,7 +77,7 @@ func (h *Handler) DeleteChannel(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	err = h.Service.ChannelService.DeleteChannel(c, cUUID)
+	err = h.Service.ChannelService.DeleteChannel(cUUID)
 	if err != nil {
 		if err.Error() == "channel not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
@@ -107,7 +107,7 @@ func (h *Handler) UpdateChannel(c echo.Context) error {
 		ImagePath:   ccr.ImagePath,
 	}
 
-	cha, err := h.Service.ChannelService.UpdateChannel(c, cUUID, ccDto)
+	cha, err := h.Service.ChannelService.UpdateChannel(cUUID, ccDto)
 	if err != nil {
 		if err.Error() == "channel not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
@@ -119,7 +119,7 @@ func (h *Handler) UpdateChannel(c echo.Context) error {
 
 func (h *Handler) GetChannelByName(c echo.Context) error {
 	name := c.Param("name")
-	cha, err := h.Service.ChannelService.GetChannelByName(c, name)
+	cha, err := h.Service.ChannelService.GetChannelByName(name)
 	if err != nil {
 		if err.Error() == "channel not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())

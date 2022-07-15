@@ -39,26 +39,40 @@ type Queue struct {
 	TaskVideoConvert         utils.TaskStatus `json:"task_video_convert"`
 	TaskVideoMove            utils.TaskStatus `json:"task_video_move"`
 	TaskChatDownload         utils.TaskStatus `json:"task_chat_download"`
+	TaskChatConvert          utils.TaskStatus `json:"task_chat_convert"`
 	TaskChatRender           utils.TaskStatus `json:"task_chat_render"`
 	TaskChatMove             utils.TaskStatus `json:"task_chat_move"`
 	UpdatedAt                time.Time        `json:"updated_at"`
 	CreatedAt                time.Time        `json:"created_at"`
 }
 
-func (s *Service) CreateQueueItem(c echo.Context, queueDto Queue, vID uuid.UUID) (*ent.Queue, error) {
-	q, err := s.Store.Client.Queue.Create().SetVodID(vID).Save(c.Request().Context())
-	if err != nil {
-		if _, ok := err.(*ent.ConstraintError); ok {
-			return nil, fmt.Errorf("queue item exists for vod or vod does not exist")
+func (s *Service) CreateQueueItem(queueDto Queue, vID uuid.UUID) (*ent.Queue, error) {
+	if queueDto.LiveArchive == true {
+		q, err := s.Store.Client.Queue.Create().SetVodID(vID).SetLiveArchive(true).Save(context.Background())
+		if err != nil {
+			if _, ok := err.(*ent.ConstraintError); ok {
+				return nil, fmt.Errorf("queue item exists for vod or vod does not exist")
+			}
+			log.Debug().Err(err).Msg("error creating queue")
+			return nil, fmt.Errorf("error creating queue: %v", err)
 		}
-		log.Debug().Err(err).Msg("error creating queue")
-		return nil, fmt.Errorf("error creating queue: %v", err)
+		return q, nil
+	} else {
+		q, err := s.Store.Client.Queue.Create().SetVodID(vID).Save(context.Background())
+		if err != nil {
+			if _, ok := err.(*ent.ConstraintError); ok {
+				return nil, fmt.Errorf("queue item exists for vod or vod does not exist")
+			}
+			log.Debug().Err(err).Msg("error creating queue")
+			return nil, fmt.Errorf("error creating queue: %v", err)
+		}
+		return q, nil
 	}
-	return q, nil
+
 }
 
-func (s *Service) UpdateQueueItem(c echo.Context, queueDto Queue, qID uuid.UUID) (*ent.Queue, error) {
-	q, err := s.Store.Client.Queue.UpdateOneID(qID).SetLiveArchive(queueDto.LiveArchive).SetOnHold(queueDto.OnHold).SetVideoProcessing(queueDto.VideoProcessing).SetChatProcessing(queueDto.ChatProcessing).SetProcessing(queueDto.Processing).SetTaskVodCreateFolder(queueDto.TaskVodCreateFolder).SetTaskVodDownloadThumbnail(queueDto.TaskVodDownloadThumbnail).SetTaskVodSaveInfo(queueDto.TaskVodSaveInfo).SetTaskVideoDownload(queueDto.TaskVideoDownload).SetTaskVideoConvert(queueDto.TaskVideoConvert).SetTaskVideoMove(queueDto.TaskVideoMove).SetTaskChatDownload(queueDto.TaskChatDownload).SetTaskChatRender(queueDto.TaskChatRender).SetTaskChatMove(queueDto.TaskChatMove).Save(c.Request().Context())
+func (s *Service) UpdateQueueItem(queueDto Queue, qID uuid.UUID) (*ent.Queue, error) {
+	q, err := s.Store.Client.Queue.UpdateOneID(qID).SetLiveArchive(queueDto.LiveArchive).SetOnHold(queueDto.OnHold).SetVideoProcessing(queueDto.VideoProcessing).SetChatProcessing(queueDto.ChatProcessing).SetProcessing(queueDto.Processing).SetTaskVodCreateFolder(queueDto.TaskVodCreateFolder).SetTaskVodDownloadThumbnail(queueDto.TaskVodDownloadThumbnail).SetTaskVodSaveInfo(queueDto.TaskVodSaveInfo).SetTaskVideoDownload(queueDto.TaskVideoDownload).SetTaskVideoConvert(queueDto.TaskVideoConvert).SetTaskVideoMove(queueDto.TaskVideoMove).SetTaskChatDownload(queueDto.TaskChatDownload).SetTaskChatConvert(queueDto.TaskChatConvert).SetTaskChatRender(queueDto.TaskChatRender).SetTaskChatMove(queueDto.TaskChatMove).Save(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("error updating queue: %v", err)
 	}
@@ -66,14 +80,14 @@ func (s *Service) UpdateQueueItem(c echo.Context, queueDto Queue, qID uuid.UUID)
 }
 
 func (s *Service) GetQueueItems(c echo.Context) ([]*ent.Queue, error) {
-	q, err := s.Store.Client.Queue.Query().WithVod().All(c.Request().Context())
+	q, err := s.Store.Client.Queue.Query().WithVod().Order(ent.Desc(queue.FieldCreatedAt)).All(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error getting queue tasks: %v", err)
 	}
 	return q, nil
 }
 func (s *Service) GetQueueItemsFilter(c echo.Context, processing bool) ([]*ent.Queue, error) {
-	q, err := s.Store.Client.Queue.Query().Where(queue.Processing(processing)).WithVod().All(c.Request().Context())
+	q, err := s.Store.Client.Queue.Query().Where(queue.Processing(processing)).WithVod().Order(ent.Desc(queue.FieldCreatedAt)).All(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error getting queue tasks: %v", err)
 	}
@@ -88,8 +102,8 @@ func (s *Service) DeleteQueueItem(c echo.Context, qID uuid.UUID) error {
 	return nil
 }
 
-func (s *Service) GetQueueItem(c echo.Context, qID uuid.UUID) (*ent.Queue, error) {
-	q, err := s.Store.Client.Queue.Query().Where(queue.ID(qID)).WithVod().Only(c.Request().Context())
+func (s *Service) GetQueueItem(qID uuid.UUID) (*ent.Queue, error) {
+	q, err := s.Store.Client.Queue.Query().Where(queue.ID(qID)).WithVod().Only(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("error getting queue task: %v", err)
 	}
@@ -97,7 +111,7 @@ func (s *Service) GetQueueItem(c echo.Context, qID uuid.UUID) (*ent.Queue, error
 }
 
 func (s *Service) ReadLogFile(c echo.Context, qID uuid.UUID, logType string) ([]byte, error) {
-	q, err := s.GetQueueItem(c, qID)
+	q, err := s.GetQueueItem(qID)
 	if err != nil {
 		return nil, err
 	}

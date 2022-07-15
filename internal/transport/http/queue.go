@@ -10,11 +10,11 @@ import (
 )
 
 type QueueService interface {
-	CreateQueueItem(c echo.Context, queueDto queue.Queue, vID uuid.UUID) (*ent.Queue, error)
+	CreateQueueItem(queueDto queue.Queue, vID uuid.UUID) (*ent.Queue, error)
 	GetQueueItems(c echo.Context) ([]*ent.Queue, error)
 	GetQueueItemsFilter(c echo.Context, pro bool) ([]*ent.Queue, error)
-	GetQueueItem(c echo.Context, id uuid.UUID) (*ent.Queue, error)
-	UpdateQueueItem(c echo.Context, queueDto queue.Queue, id uuid.UUID) (*ent.Queue, error)
+	GetQueueItem(id uuid.UUID) (*ent.Queue, error)
+	UpdateQueueItem(queueDto queue.Queue, id uuid.UUID) (*ent.Queue, error)
 	DeleteQueueItem(c echo.Context, id uuid.UUID) error
 	ReadLogFile(c echo.Context, id uuid.UUID, logType string) ([]byte, error)
 }
@@ -37,6 +37,7 @@ type UpdateQueueRequest struct {
 	TaskVideoConvert         utils.TaskStatus `json:"task_video_convert" validate:"required,oneof=pending running success failed"`
 	TaskVideoMove            utils.TaskStatus `json:"task_video_move" validate:"required,oneof=pending running success failed"`
 	TaskChatDownload         utils.TaskStatus `json:"task_chat_download" validate:"required,oneof=pending running success failed"`
+	TaskChatConvert          utils.TaskStatus `json:"task_chat_convert" validate:"required,oneof=pending running success failed"`
 	TaskChatRender           utils.TaskStatus `json:"task_chat_render" validate:"required,oneof=pending running success failed"`
 	TaskChatMove             utils.TaskStatus `json:"task_chat_move" validate:"required,oneof=pending running success failed"`
 }
@@ -56,7 +57,7 @@ func (h *Handler) CreateQueueItem(c echo.Context) error {
 
 	cqtDto := queue.Queue{}
 
-	que, err := h.Service.QueueService.CreateQueueItem(c, cqtDto, vID)
+	que, err := h.Service.QueueService.CreateQueueItem(cqtDto, vID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -90,7 +91,7 @@ func (h *Handler) GetQueueItem(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	q, err := h.Service.QueueService.GetQueueItem(c, id)
+	q, err := h.Service.QueueService.GetQueueItem(id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -123,11 +124,12 @@ func (h *Handler) UpdateQueueItem(c echo.Context) error {
 		TaskVideoConvert:         uqr.TaskVideoConvert,
 		TaskVideoMove:            uqr.TaskVideoMove,
 		TaskChatDownload:         uqr.TaskChatDownload,
+		TaskChatConvert:          uqr.TaskChatConvert,
 		TaskChatRender:           uqr.TaskChatRender,
 		TaskChatMove:             uqr.TaskChatMove,
 	}
 
-	que, err := h.Service.QueueService.UpdateQueueItem(c, queueDto, id)
+	que, err := h.Service.QueueService.UpdateQueueItem(queueDto, id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

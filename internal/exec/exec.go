@@ -8,6 +8,7 @@ import (
 	"os"
 	osExec "os/exec"
 	"strings"
+	"time"
 )
 
 func DownloadTwitchVodVideo(v *ent.Vod) error {
@@ -120,5 +121,75 @@ func ConvertTwitchVodVideo(v *ent.Vod) error {
 	}
 
 	log.Debug().Msgf("finished vod video convert for %s", v.ExtID)
+	return nil
+}
+
+func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
+
+	cmd := osExec.Command("streamlink", fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution), "--force-progress", "--force", "--twitch-low-latency", "--twitch-disable-ads", "--twitch-disable-hosting", "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+
+	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video.log", v.ExtID, v.ID))
+	if err != nil {
+		log.Error().Err(err).Msg("error creating video logfile")
+		return err
+	}
+	defer videoLogfile.Close()
+	cmd.Stdout = videoLogfile
+	cmd.Stderr = videoLogfile
+
+	if err := cmd.Run(); err != nil {
+		// Streamlink will error when the stream is offline - do not log this as an error
+		//log.Error().Err(err).Msg("error running streamlink for live video download")
+		//return err
+	}
+
+	log.Debug().Msgf("finished downloading live video for %s", v.ExtID)
+	return nil
+}
+
+func DownloadTwitchLiveChat(v *ent.Vod, ch *ent.Channel, busC chan bool) error {
+
+	log.Debug().Msg("sleeping 3 seconds for streamlink to start.")
+	time.Sleep(3 * time.Second)
+	log.Debug().Msgf("spawning chat_downloader for live stream %s", v.ID)
+
+	cmd := osExec.Command("chat_downloader", fmt.Sprintf("https://twitch.tv/%s", ch.Name), "--output", fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), "-q")
+
+	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat.log", v.ExtID, v.ID))
+	if err != nil {
+		log.Error().Err(err).Msg("error creating chat logfile")
+		return err
+	}
+	defer chatLogfile.Close()
+	cmd.Stdout = chatLogfile
+	cmd.Stderr = chatLogfile
+	// Append string to chatLogFile
+	_, err = chatLogfile.WriteString("Chat downloader started. It it unlikely that you will see further output in this log.")
+	if err != nil {
+		log.Error().Err(err).Msg("error writing to chat logfile")
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Error().Err(err).Msg("error starting chat_downloader for live chat download")
+		return err
+	}
+
+	// When video download is complete kill chat download
+	k := <-busC
+	if k {
+		log.Debug().Msg("streamlink detected the stream was down - killing chat_downloader")
+		err := cmd.Process.Signal(os.Interrupt)
+		if err != nil {
+			log.Error().Err(err).Msg("error killing chat_downloader")
+			return err
+		}
+	}
+
+	if err := cmd.Wait(); err != nil {
+		log.Error().Err(err).Msg("error waiting for chat_downloader for live chat download")
+		return err
+	}
+
+	log.Debug().Msgf("finished downloading live chat for %s", v.ExtID)
 	return nil
 }

@@ -1,6 +1,7 @@
 package vod
 
 import (
+	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -42,8 +43,8 @@ type Vod struct {
 	CreatedAt        time.Time         `json:"created_at"`
 }
 
-func (s *Service) CreateVod(c echo.Context, vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Create().SetID(vodDto.ID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).SetStreamedAt(vodDto.StreamedAt).Save(c.Request().Context())
+func (s *Service) CreateVod(vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
+	v, err := s.Store.Client.Vod.Create().SetID(vodDto.ID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).SetStreamedAt(vodDto.StreamedAt).Save(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error creating vod")
 		if _, ok := err.(*ent.ConstraintError); ok {
@@ -56,7 +57,7 @@ func (s *Service) CreateVod(c echo.Context, vodDto Vod, cUUID uuid.UUID) (*ent.V
 }
 
 func (s *Service) GetVods(c echo.Context) ([]*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Query().WithChannel().All(c.Request().Context())
+	v, err := s.Store.Client.Vod.Query().WithChannel().Order(ent.Desc(channel.FieldCreatedAt)).All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vods")
 		return nil, fmt.Errorf("error getting vods: %v", err)
@@ -66,7 +67,7 @@ func (s *Service) GetVods(c echo.Context) ([]*ent.Vod, error) {
 }
 
 func (s *Service) GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(cUUID))).All(c.Request().Context())
+	v, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(cUUID))).Order(ent.Desc(vod.FieldCreatedAt)).All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vods by channel")
 		return nil, fmt.Errorf("error getting vods by channel: %v", err)

@@ -7,18 +7,20 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"time"
 )
 
 type Service struct {
-	Store         *database.Database
-	TwitchService *twitch.Service
+	Store          *database.Database
+	TwitchService  *twitch.Service
+	ArchiveService *archive.Service
 }
 
-func NewService(store *database.Database, twitchService *twitch.Service) *Service {
-	return &Service{Store: store, TwitchService: twitchService}
+func NewService(store *database.Database, twitchService *twitch.Service, archiveService *archive.Service) *Service {
+	return &Service{Store: store, TwitchService: twitchService, ArchiveService: archiveService}
 }
 
 func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
@@ -46,6 +48,7 @@ func (s *Service) DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error 
 }
 
 func (s *Service) Check() error {
+	log.Debug().Msg("checking live channels")
 	// get live watched channels from database
 	liveWatchedChannels, err := s.Store.Client.Live.Query().WithChannel().All(context.Background())
 	if err != nil {
@@ -79,6 +82,12 @@ func (s *Service) Check() error {
 				if err != nil {
 					log.Error().Err(err).Msg("error updating live watched channel")
 				}
+				// Archive stream
+				_, err = s.ArchiveService.ArchiveTwitchLive(lwc, stream)
+				if err != nil {
+					log.Error().Err(err).Msg("error archiving twitch live")
+				}
+
 			}
 		} else {
 			if lwc.IsLive == true {

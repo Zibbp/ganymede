@@ -1,9 +1,9 @@
 package channel
 
 import (
+	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
@@ -28,9 +28,9 @@ type Channel struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
-func (s *Service) CreateChannel(c echo.Context, channelDto Channel) (*ent.Channel, error) {
+func (s *Service) CreateChannel(channelDto Channel) (*ent.Channel, error) {
 
-	cha, err := s.Store.Client.Channel.Create().SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).Save(c.Request().Context())
+	cha, err := s.Store.Client.Channel.Create().SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).Save(context.Background())
 	if err != nil {
 		if _, ok := err.(*ent.ConstraintError); ok {
 			return nil, fmt.Errorf("channel already exists")
@@ -42,8 +42,8 @@ func (s *Service) CreateChannel(c echo.Context, channelDto Channel) (*ent.Channe
 	return cha, nil
 }
 
-func (s *Service) GetChannels(c echo.Context) ([]*ent.Channel, error) {
-	channels, err := s.Store.Client.Channel.Query().Order(ent.Desc(channel.FieldCreatedAt)).All(c.Request().Context())
+func (s *Service) GetChannels() ([]*ent.Channel, error) {
+	channels, err := s.Store.Client.Channel.Query().Order(ent.Desc(channel.FieldCreatedAt)).All(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting channels")
 		return nil, fmt.Errorf("error getting channels: %v", err)
@@ -52,8 +52,8 @@ func (s *Service) GetChannels(c echo.Context) ([]*ent.Channel, error) {
 	return channels, nil
 }
 
-func (s *Service) GetChannel(c echo.Context, channelID uuid.UUID) (*ent.Channel, error) {
-	cha, err := s.Store.Client.Channel.Query().Where(channel.ID(channelID)).WithVods().Only(c.Request().Context())
+func (s *Service) GetChannel(channelID uuid.UUID) (*ent.Channel, error) {
+	cha, err := s.Store.Client.Channel.Query().Where(channel.ID(channelID)).WithVods().Only(context.Background())
 	if err != nil {
 		// if channel not found
 		if _, ok := err.(*ent.NotFoundError); ok {
@@ -66,8 +66,8 @@ func (s *Service) GetChannel(c echo.Context, channelID uuid.UUID) (*ent.Channel,
 	return cha, nil
 }
 
-func (s *Service) GetChannelByName(c echo.Context, cName string) (*ent.Channel, error) {
-	cha, err := s.Store.Client.Channel.Query().Where(channel.Name(cName)).Only(c.Request().Context())
+func (s *Service) GetChannelByName(cName string) (*ent.Channel, error) {
+	cha, err := s.Store.Client.Channel.Query().Where(channel.Name(cName)).Only(context.Background())
 	if err != nil {
 		// if channel not found
 		if _, ok := err.(*ent.NotFoundError); ok {
@@ -80,8 +80,8 @@ func (s *Service) GetChannelByName(c echo.Context, cName string) (*ent.Channel, 
 	return cha, nil
 }
 
-func (s *Service) DeleteChannel(c echo.Context, channelID uuid.UUID) error {
-	err := s.Store.Client.Channel.DeleteOneID(channelID).Exec(c.Request().Context())
+func (s *Service) DeleteChannel(channelID uuid.UUID) error {
+	err := s.Store.Client.Channel.DeleteOneID(channelID).Exec(context.Background())
 	if err != nil {
 		// if channel not found
 		if _, ok := err.(*ent.NotFoundError); ok {
@@ -94,8 +94,8 @@ func (s *Service) DeleteChannel(c echo.Context, channelID uuid.UUID) error {
 	return nil
 }
 
-func (s *Service) UpdateChannel(c echo.Context, cId uuid.UUID, channelDto Channel) (*ent.Channel, error) {
-	cha, err := s.Store.Client.Channel.UpdateOneID(cId).SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).Save(c.Request().Context())
+func (s *Service) UpdateChannel(cId uuid.UUID, channelDto Channel) (*ent.Channel, error) {
+	cha, err := s.Store.Client.Channel.UpdateOneID(cId).SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).Save(context.Background())
 	if err != nil {
 		// if channel not found
 		if _, ok := err.(*ent.NotFoundError); ok {
@@ -108,8 +108,22 @@ func (s *Service) UpdateChannel(c echo.Context, cId uuid.UUID, channelDto Channe
 	return cha, nil
 }
 
-func (s *Service) CheckChannelExists(c echo.Context, cName string) bool {
-	_, err := s.Store.Client.Channel.Query().Where(channel.Name(cName)).Only(c.Request().Context())
+func (s *Service) CheckChannelExists(cName string) bool {
+	_, err := s.Store.Client.Channel.Query().Where(channel.Name(cName)).Only(context.Background())
+	if err != nil {
+		// if channel not found
+		if _, ok := err.(*ent.NotFoundError); ok {
+			return false
+		}
+		log.Error().Err(err).Msg("error checking channel exists")
+		return false
+	}
+
+	return true
+}
+
+func (s *Service) CheckChannelExistsNoContext(cName string) bool {
+	_, err := s.Store.Client.Channel.Query().Where(channel.Name(cName)).Only(context.Background())
 	if err != nil {
 		// if channel not found
 		if _, ok := err.(*ent.NotFoundError); ok {

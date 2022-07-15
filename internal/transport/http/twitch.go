@@ -7,7 +7,7 @@ import (
 )
 
 type TwitchService interface {
-	GetUserByLogin(c echo.Context, login string) (twitch.Channel, error)
+	GetUserByLogin(login string) (twitch.Channel, error)
 	GetVodByID(id string) (twitch.Vod, error)
 }
 
@@ -16,7 +16,7 @@ func (h *Handler) GetTwitchUser(c echo.Context) error {
 	if name == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "channel name query param is required")
 	}
-	channel, err := h.Service.TwitchService.GetUserByLogin(c, name)
+	channel, err := h.Service.TwitchService.GetUserByLogin(name)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

@@ -40,7 +40,7 @@ func Run() error {
 	adminService := admin.NewService(store)
 	userService := user.NewService(store)
 	configService := config.NewService(store)
-	liveService := live.NewService(store, twitchService)
+	liveService := live.NewService(store, twitchService, archiveService)
 
 	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService, liveService)
 

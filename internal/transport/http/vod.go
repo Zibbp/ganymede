@@ -11,7 +11,7 @@ import (
 )
 
 type VodService interface {
-	CreateVod(c echo.Context, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
+	CreateVod(vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	GetVods(c echo.Context) ([]*ent.Vod, error)
 	GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error)
 	GetVod(c echo.Context, vID uuid.UUID) (*ent.Vod, error)
@@ -91,7 +91,7 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		StreamedAt:       streamedAt,
 	}
 
-	v, err := h.Service.VodService.CreateVod(c, cvrDto, cUUID)
+	v, err := h.Service.VodService.CreateVod(cvrDto, cUUID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

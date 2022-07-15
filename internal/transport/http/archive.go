@@ -10,7 +10,7 @@ import (
 )
 
 type ArchiveService interface {
-	ArchiveTwitchChannel(c echo.Context, cName string) (*ent.Channel, error)
+	ArchiveTwitchChannel(cName string) (*ent.Channel, error)
 	ArchiveTwitchVod(c echo.Context, vID string, quality string, chat bool) (*archive.TwitchVodResponse, error)
 	RestartTask(c echo.Context, qID uuid.UUID, task string, cont bool) error
 }
@@ -26,7 +26,7 @@ type ArchiveVodRequest struct {
 
 type RestartTaskRequest struct {
 	QueueID string `json:"queue_id" validate:"required"`
-	Task    string `json:"task" validate:"required,oneof=vod_create_folder vod_download_thumbnail vod_save_info video_download video_convert video_move chat_download chat_render chat_move"`
+	Task    string `json:"task" validate:"required,oneof=vod_create_folder vod_download_thumbnail vod_save_info video_download video_convert video_move chat_download chat_convert chat_render chat_move"`
 	Cont    bool   `json:"cont"`
 }
 
@@ -38,7 +38,7 @@ func (h *Handler) ArchiveTwitchChannel(c echo.Context) error {
 	if err := c.Validate(acr); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	channel, err := h.Service.ArchiveService.ArchiveTwitchChannel(c, acr.ChannelName)
+	channel, err := h.Service.ArchiveService.ArchiveTwitchChannel(acr.ChannelName)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
