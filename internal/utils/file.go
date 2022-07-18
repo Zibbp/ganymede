@@ -98,10 +98,12 @@ func DeleteFile(path string) error {
 	return nil
 }
 
-func ReadLastLines(path string, lines string) ([]byte, error) {
-	c := exec.Command("tail", "-n", lines, path)
+func ReadLastLines(path string, lines int) ([]byte, error) {
+	cmd := fmt.Sprintf("cat %s | tr '\\r' '\\n' | tail -n %d", path, lines)
+	c := exec.Command("bash", "-c", cmd)
 	out, err := c.Output()
 	if err != nil {
+		fmt.Println(err)
 		return nil, fmt.Errorf("error reading last lines: %v - supplied path: %s", err, path)
 	}
 	return out, nil
