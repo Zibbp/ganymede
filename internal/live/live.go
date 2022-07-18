@@ -92,17 +92,21 @@ func (s *Service) Check() error {
 	if err != nil {
 		log.Error().Err(err).Msg("error getting live watched channels")
 	}
+	if len(liveWatchedChannels) == 0 {
+		log.Debug().Msg("no live watched channels")
+		return nil
+	}
 	// Generate query string for Twitch API
 	var queryString string
-	if len(liveWatchedChannels) > 0 {
-		for i, lwc := range liveWatchedChannels {
-			if i == 0 {
-				queryString += "?user_login=" + lwc.Edges.Channel.Name
-			} else {
-				queryString += "&user_login=" + lwc.Edges.Channel.Name
-			}
+
+	for i, lwc := range liveWatchedChannels {
+		if i == 0 {
+			queryString += "?user_login=" + lwc.Edges.Channel.Name
+		} else {
+			queryString += "&user_login=" + lwc.Edges.Channel.Name
 		}
 	}
+
 	twitchStreams, err := s.TwitchService.GetStreams(queryString)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting twitch streams")
