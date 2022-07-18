@@ -658,7 +658,7 @@ func (s *Service) TaskLiveChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue
 	log.Debug().Msgf("starting task chat download for live stream %s", v.ID)
 	q.Update().SetTaskChatDownload(utils.Running).SaveX(context.Background())
 
-	err := exec.DownloadTwitchLiveChat(v, ch, busC)
+	err := exec.DownloadTwitchLiveChat(v, ch, q, busC)
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading live chat")
 		q.Update().SetTaskChatDownload(utils.Failed).SaveX(context.Background())
@@ -716,7 +716,16 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 		return
 	}
 
-	err = utils.ConvertTwitchLiveChatToVodChat(fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), ch.Name, fmt.Sprintf("%s", v.ID), v.ExtID, cID)
+	// Get queue item (refresh)
+	q, err = s.QueueService.GetQueueItem(q.ID)
+	if err != nil {
+		log.Error().Err(err).Msg("error getting queue item")
+		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
+		s.TaskError(v, q, "chat_convert")
+		return
+	}
+
+	err = utils.ConvertTwitchLiveChatToVodChat(fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), ch.Name, fmt.Sprintf("%s", v.ID), v.ExtID, cID, q.ChatStart)
 	if err != nil {
 		log.Error().Err(err).Msg("error converting chat")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())

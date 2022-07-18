@@ -139,7 +139,7 @@ func OpenChatFile(path string) ([]LiveComment, error) {
 	return liveComments, nil
 }
 
-func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string, vExtID string, cID int) error {
+func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string, vExtID string, cID int, chatStart time.Time) error {
 
 	log.Debug().Msg("Converting Twitch Live Chat to Vod Chat")
 
@@ -153,15 +153,40 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 	parsedChat.Streamer.Name = channelName
 	parsedChat.Streamer.ID = cID
 
-	// Use fisrt message as start of time
-	firstMessageUnix, err := microSecondToMillisecondUnix(liveComments[0].Timestamp)
-	if err != nil {
-		return fmt.Errorf("failed to convert first message timestamp: %v", err)
-	}
-
-	// Parse the millisecond-unix timestamp
-
 	var parsedComments []Comment
+
+	// Create an initial comment to mark the start of the chat session
+	initialComment := Comment{
+		ID:                   "546a5e6e-c820-4ad2-9421-9ba5b5bf37ea",
+		Source:               "chat",
+		ContentOffsetSeconds: 0,
+		Commenter: Commenter{
+			DisplayName:  "Ganymede",
+			ID:           "222777213",
+			IsModerator:  false,
+			IsSubscriber: false,
+			IsTurbo:      false,
+			Name:         "ganymede",
+		},
+		Message: Message{
+			Body:      "Initial chat message",
+			BitsSpent: 0,
+			Fragments: []Fragment{
+				Fragment{
+					Text:     "Initial chat message",
+					Emoticon: &Emoticon{},
+					Pos1:     0,
+					Pos2:     0,
+				},
+			},
+			UserBadges: []UserBadge{},
+			UserColor:  "#a65ee8",
+			UserNoticeParams: UserNoticParams{
+				MsgID: nil,
+			},
+		},
+	}
+	parsedComments = append(parsedComments, initialComment)
 
 	for _, liveComment := range liveComments {
 		// Check if comment is empty
@@ -176,7 +201,8 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 		if err != nil {
 			return fmt.Errorf("failed to convert live comment timestamp: %v", err)
 		}
-		diff := liveCommentUnix.Sub(firstMessageUnix)
+		// Use chat start time to get offset in seconds
+		diff := liveCommentUnix.Sub(chatStart)
 		parsedComment.ContentOffsetSeconds = diff.Seconds()
 
 		parsedComment.ID = liveComment.MessageID

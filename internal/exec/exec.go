@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"context"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -148,10 +149,15 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	return nil
 }
 
-func DownloadTwitchLiveChat(v *ent.Vod, ch *ent.Channel, busC chan bool) error {
+func DownloadTwitchLiveChat(v *ent.Vod, ch *ent.Channel, q *ent.Queue, busC chan bool) error {
 
 	log.Debug().Msg("sleeping 3 seconds for streamlink to start.")
 	time.Sleep(3 * time.Second)
+
+	log.Debug().Msg("setting chat start time")
+	chatStartTime := time.Now()
+	q.Update().SetChatStart(chatStartTime).SaveX(context.Background())
+
 	log.Debug().Msgf("spawning chat_downloader for live stream %s", v.ID)
 
 	cmd := osExec.Command("chat_downloader", fmt.Sprintf("https://twitch.tv/%s", ch.Name), "--output", fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), "-q")
