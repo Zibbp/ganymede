@@ -549,6 +549,13 @@ func (s *Service) TaskLiveVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queu
 	}
 	live.Update().SetIsLive(false).SaveX(context.Background())
 
+	// Update video duration with duration from video
+	duration, err := exec.GetVideoDuration(fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+	if err != nil {
+		log.Error().Err(err).Msg("error getting video duration")
+	}
+	v.Update().SetDuration(duration).SaveX(context.Background())
+
 	//Always invoke task video convert if video download was successful
 	go s.TaskVideoConvert(ch, v, q, true)
 
@@ -690,6 +697,7 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 
 		// Check if all tasks are done
 		go s.CheckIfLiveTasksAreDone(ch, v, q)
+		return
 	}
 
 	// Fetch streamer from Twitch API for their user ID
@@ -858,7 +866,7 @@ func (s *Service) CheckIfLiveTasksAreDone(ch *ent.Channel, v *ent.Vod, qO *ent.Q
 	if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatConvert == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
 		log.Debug().Msgf("all tasks for live stream %s are done", v.ID)
 		q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).SaveX(context.Background())
-		fmt.Println(v)
+
 		v.Update().SetProcessing(false).SaveX(context.Background())
 		// Send webhook
 		err := utils.SendWebhook(utils.WebhookRequestBody{Username: "Ganymede", Content: fmt.Sprintf(":white_check_mark: **Live Stream Archived**: %s", v.Title)})

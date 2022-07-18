@@ -7,6 +7,7 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"os"
 	osExec "os/exec"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -192,4 +193,23 @@ func DownloadTwitchLiveChat(v *ent.Vod, ch *ent.Channel, busC chan bool) error {
 
 	log.Debug().Msgf("finished downloading live chat for %s", v.ExtID)
 	return nil
+}
+
+func GetVideoDuration(path string) (int, error) {
+	log.Debug().Msg("getting video duration")
+	cmd := osExec.Command("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", path)
+	out, err := cmd.Output()
+	if err != nil {
+		log.Error().Err(err).Msg("error getting video duration")
+		return 1, err
+	}
+	durOut := strings.TrimSpace(string(out))
+	durFloat, err := strconv.ParseFloat(durOut, 8)
+	if err != nil {
+		log.Error().Err(err).Msg("error converting video duration")
+		return 1, err
+	}
+	duration := int(durFloat)
+	log.Debug().Msgf("video duration: %d", duration)
+	return duration, nil
 }
