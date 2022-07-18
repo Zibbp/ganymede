@@ -3,6 +3,7 @@ package scheduler
 import (
 	"github.com/go-co-op/gocron"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"time"
@@ -47,7 +48,9 @@ func (s *Service) twitchAuthSchedule(scheduler *gocron.Scheduler) {
 
 func (s *Service) checkLiveStreamSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up check live stream schedule")
-	scheduler.Every(5).Minutes().Do(func() {
+	configLiveCheckInterval := viper.GetInt("live_check_interval")
+	log.Debug().Msgf("setting live check interval to run every %d minutes", configLiveCheckInterval)
+	scheduler.Every(configLiveCheckInterval).Minutes().Do(func() {
 		log.Debug().Msg("running check live stream schedule")
 		err := s.LiveService.Check()
 		if err != nil {

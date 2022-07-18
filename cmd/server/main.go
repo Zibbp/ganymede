@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
+	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/admin"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/auth"
@@ -21,9 +22,16 @@ import (
 
 func Run() error {
 
-	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
-
 	config.NewConfig()
+
+	configDebug := viper.GetBool("debug")
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+	if configDebug {
+		log.Info().Msg("debug mode enabled")
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	} else {
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	}
 
 	store, err := database.NewDatabase()
 	if err != nil {
