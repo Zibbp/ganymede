@@ -130,6 +130,13 @@ func Processing(v bool) predicate.Queue {
 	})
 }
 
+// ChatStart applies equality check predicate on the "chat_start" field. It's identical to ChatStartEQ.
+func ChatStart(v time.Time) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldChatStart), v))
+	})
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
@@ -851,6 +858,96 @@ func TaskChatMoveIsNil() predicate.Queue {
 func TaskChatMoveNotNil() predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.NotNull(s.C(FieldTaskChatMove)))
+	})
+}
+
+// ChatStartEQ applies the EQ predicate on the "chat_start" field.
+func ChatStartEQ(v time.Time) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldChatStart), v))
+	})
+}
+
+// ChatStartNEQ applies the NEQ predicate on the "chat_start" field.
+func ChatStartNEQ(v time.Time) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldChatStart), v))
+	})
+}
+
+// ChatStartIn applies the In predicate on the "chat_start" field.
+func ChatStartIn(vs ...time.Time) predicate.Queue {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Queue(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldChatStart), v...))
+	})
+}
+
+// ChatStartNotIn applies the NotIn predicate on the "chat_start" field.
+func ChatStartNotIn(vs ...time.Time) predicate.Queue {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Queue(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldChatStart), v...))
+	})
+}
+
+// ChatStartGT applies the GT predicate on the "chat_start" field.
+func ChatStartGT(v time.Time) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldChatStart), v))
+	})
+}
+
+// ChatStartGTE applies the GTE predicate on the "chat_start" field.
+func ChatStartGTE(v time.Time) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldChatStart), v))
+	})
+}
+
+// ChatStartLT applies the LT predicate on the "chat_start" field.
+func ChatStartLT(v time.Time) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldChatStart), v))
+	})
+}
+
+// ChatStartLTE applies the LTE predicate on the "chat_start" field.
+func ChatStartLTE(v time.Time) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldChatStart), v))
+	})
+}
+
+// ChatStartIsNil applies the IsNil predicate on the "chat_start" field.
+func ChatStartIsNil() predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldChatStart)))
+	})
+}
+
+// ChatStartNotNil applies the NotNil predicate on the "chat_start" field.
+func ChatStartNotNil() predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldChatStart)))
 	})
 }
 

@@ -1445,6 +1445,7 @@ type QueueMutation struct {
 	task_chat_convert           *utils.TaskStatus
 	task_chat_render            *utils.TaskStatus
 	task_chat_move              *utils.TaskStatus
+	chat_start                  *time.Time
 	updated_at                  *time.Time
 	created_at                  *time.Time
 	clearedFields               map[string]struct{}
@@ -2229,6 +2230,55 @@ func (m *QueueMutation) ResetTaskChatMove() {
 	delete(m.clearedFields, queue.FieldTaskChatMove)
 }
 
+// SetChatStart sets the "chat_start" field.
+func (m *QueueMutation) SetChatStart(t time.Time) {
+	m.chat_start = &t
+}
+
+// ChatStart returns the value of the "chat_start" field in the mutation.
+func (m *QueueMutation) ChatStart() (r time.Time, exists bool) {
+	v := m.chat_start
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChatStart returns the old "chat_start" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldChatStart(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChatStart is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChatStart requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChatStart: %w", err)
+	}
+	return oldValue.ChatStart, nil
+}
+
+// ClearChatStart clears the value of the "chat_start" field.
+func (m *QueueMutation) ClearChatStart() {
+	m.chat_start = nil
+	m.clearedFields[queue.FieldChatStart] = struct{}{}
+}
+
+// ChatStartCleared returns if the "chat_start" field was cleared in this mutation.
+func (m *QueueMutation) ChatStartCleared() bool {
+	_, ok := m.clearedFields[queue.FieldChatStart]
+	return ok
+}
+
+// ResetChatStart resets all changes to the "chat_start" field.
+func (m *QueueMutation) ResetChatStart() {
+	m.chat_start = nil
+	delete(m.clearedFields, queue.FieldChatStart)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *QueueMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -2359,7 +2409,7 @@ func (m *QueueMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QueueMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 18)
 	if m.live_archive != nil {
 		fields = append(fields, queue.FieldLiveArchive)
 	}
@@ -2405,6 +2455,9 @@ func (m *QueueMutation) Fields() []string {
 	if m.task_chat_move != nil {
 		fields = append(fields, queue.FieldTaskChatMove)
 	}
+	if m.chat_start != nil {
+		fields = append(fields, queue.FieldChatStart)
+	}
 	if m.updated_at != nil {
 		fields = append(fields, queue.FieldUpdatedAt)
 	}
@@ -2449,6 +2502,8 @@ func (m *QueueMutation) Field(name string) (ent.Value, bool) {
 		return m.TaskChatRender()
 	case queue.FieldTaskChatMove:
 		return m.TaskChatMove()
+	case queue.FieldChatStart:
+		return m.ChatStart()
 	case queue.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case queue.FieldCreatedAt:
@@ -2492,6 +2547,8 @@ func (m *QueueMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldTaskChatRender(ctx)
 	case queue.FieldTaskChatMove:
 		return m.OldTaskChatMove(ctx)
+	case queue.FieldChatStart:
+		return m.OldChatStart(ctx)
 	case queue.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case queue.FieldCreatedAt:
@@ -2610,6 +2667,13 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetTaskChatMove(v)
 		return nil
+	case queue.FieldChatStart:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChatStart(v)
+		return nil
 	case queue.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -2684,6 +2748,9 @@ func (m *QueueMutation) ClearedFields() []string {
 	if m.FieldCleared(queue.FieldTaskChatMove) {
 		fields = append(fields, queue.FieldTaskChatMove)
 	}
+	if m.FieldCleared(queue.FieldChatStart) {
+		fields = append(fields, queue.FieldChatStart)
+	}
 	return fields
 }
 
@@ -2727,6 +2794,9 @@ func (m *QueueMutation) ClearField(name string) error {
 		return nil
 	case queue.FieldTaskChatMove:
 		m.ClearTaskChatMove()
+		return nil
+	case queue.FieldChatStart:
+		m.ClearChatStart()
 		return nil
 	}
 	return fmt.Errorf("unknown Queue nullable field %s", name)
@@ -2780,6 +2850,9 @@ func (m *QueueMutation) ResetField(name string) error {
 		return nil
 	case queue.FieldTaskChatMove:
 		m.ResetTaskChatMove()
+		return nil
+	case queue.FieldChatStart:
+		m.ResetChatStart()
 		return nil
 	case queue.FieldUpdatedAt:
 		m.ResetUpdatedAt()

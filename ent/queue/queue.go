@@ -45,6 +45,8 @@ const (
 	FieldTaskChatRender = "task_chat_render"
 	// FieldTaskChatMove holds the string denoting the task_chat_move field in the database.
 	FieldTaskChatMove = "task_chat_move"
+	// FieldChatStart holds the string denoting the chat_start field in the database.
+	FieldChatStart = "chat_start"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -80,6 +82,7 @@ var Columns = []string{
 	FieldTaskChatConvert,
 	FieldTaskChatRender,
 	FieldTaskChatMove,
+	FieldChatStart,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }

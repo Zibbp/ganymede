@@ -233,6 +233,20 @@ func (qc *QueueCreate) SetNillableTaskChatMove(us *utils.TaskStatus) *QueueCreat
 	return qc
 }
 
+// SetChatStart sets the "chat_start" field.
+func (qc *QueueCreate) SetChatStart(t time.Time) *QueueCreate {
+	qc.mutation.SetChatStart(t)
+	return qc
+}
+
+// SetNillableChatStart sets the "chat_start" field if the given value is not nil.
+func (qc *QueueCreate) SetNillableChatStart(t *time.Time) *QueueCreate {
+	if t != nil {
+		qc.SetChatStart(*t)
+	}
+	return qc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (qc *QueueCreate) SetUpdatedAt(t time.Time) *QueueCreate {
 	qc.mutation.SetUpdatedAt(t)
@@ -662,6 +676,14 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 			Column: queue.FieldTaskChatMove,
 		})
 		_node.TaskChatMove = value
+	}
+	if value, ok := qc.mutation.ChatStart(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: queue.FieldChatStart,
+		})
+		_node.ChatStart = value
 	}
 	if value, ok := qc.mutation.UpdatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

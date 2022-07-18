@@ -49,6 +49,8 @@ type Queue struct {
 	TaskChatRender utils.TaskStatus `json:"task_chat_render,omitempty"`
 	// TaskChatMove holds the value of the "task_chat_move" field.
 	TaskChatMove utils.TaskStatus `json:"task_chat_move,omitempty"`
+	// ChatStart holds the value of the "chat_start" field.
+	ChatStart time.Time `json:"chat_start,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -91,7 +93,7 @@ func (*Queue) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullBool)
 		case queue.FieldTaskVodCreateFolder, queue.FieldTaskVodDownloadThumbnail, queue.FieldTaskVodSaveInfo, queue.FieldTaskVideoDownload, queue.FieldTaskVideoConvert, queue.FieldTaskVideoMove, queue.FieldTaskChatDownload, queue.FieldTaskChatConvert, queue.FieldTaskChatRender, queue.FieldTaskChatMove:
 			values[i] = new(sql.NullString)
-		case queue.FieldUpdatedAt, queue.FieldCreatedAt:
+		case queue.FieldChatStart, queue.FieldUpdatedAt, queue.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case queue.FieldID:
 			values[i] = new(uuid.UUID)
@@ -208,6 +210,12 @@ func (q *Queue) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				q.TaskChatMove = utils.TaskStatus(value.String)
 			}
+		case queue.FieldChatStart:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field chat_start", values[i])
+			} else if value.Valid {
+				q.ChatStart = value.Time
+			}
 		case queue.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
@@ -290,6 +298,8 @@ func (q *Queue) String() string {
 	builder.WriteString(fmt.Sprintf("%v", q.TaskChatRender))
 	builder.WriteString(", task_chat_move=")
 	builder.WriteString(fmt.Sprintf("%v", q.TaskChatMove))
+	builder.WriteString(", chat_start=")
+	builder.WriteString(q.ChatStart.Format(time.ANSIC))
 	builder.WriteString(", updated_at=")
 	builder.WriteString(q.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", created_at=")

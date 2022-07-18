@@ -301,6 +301,26 @@ func (qu *QueueUpdate) ClearTaskChatMove() *QueueUpdate {
 	return qu
 }
 
+// SetChatStart sets the "chat_start" field.
+func (qu *QueueUpdate) SetChatStart(t time.Time) *QueueUpdate {
+	qu.mutation.SetChatStart(t)
+	return qu
+}
+
+// SetNillableChatStart sets the "chat_start" field if the given value is not nil.
+func (qu *QueueUpdate) SetNillableChatStart(t *time.Time) *QueueUpdate {
+	if t != nil {
+		qu.SetChatStart(*t)
+	}
+	return qu
+}
+
+// ClearChatStart clears the value of the "chat_start" field.
+func (qu *QueueUpdate) ClearChatStart() *QueueUpdate {
+	qu.mutation.ClearChatStart()
+	return qu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (qu *QueueUpdate) SetUpdatedAt(t time.Time) *QueueUpdate {
 	qu.mutation.SetUpdatedAt(t)
@@ -639,6 +659,19 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: queue.FieldTaskChatMove,
 		})
 	}
+	if value, ok := qu.mutation.ChatStart(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: queue.FieldChatStart,
+		})
+	}
+	if qu.mutation.ChatStartCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: queue.FieldChatStart,
+		})
+	}
 	if value, ok := qu.mutation.UpdatedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -967,6 +1000,26 @@ func (quo *QueueUpdateOne) SetNillableTaskChatMove(us *utils.TaskStatus) *QueueU
 // ClearTaskChatMove clears the value of the "task_chat_move" field.
 func (quo *QueueUpdateOne) ClearTaskChatMove() *QueueUpdateOne {
 	quo.mutation.ClearTaskChatMove()
+	return quo
+}
+
+// SetChatStart sets the "chat_start" field.
+func (quo *QueueUpdateOne) SetChatStart(t time.Time) *QueueUpdateOne {
+	quo.mutation.SetChatStart(t)
+	return quo
+}
+
+// SetNillableChatStart sets the "chat_start" field if the given value is not nil.
+func (quo *QueueUpdateOne) SetNillableChatStart(t *time.Time) *QueueUpdateOne {
+	if t != nil {
+		quo.SetChatStart(*t)
+	}
+	return quo
+}
+
+// ClearChatStart clears the value of the "chat_start" field.
+func (quo *QueueUpdateOne) ClearChatStart() *QueueUpdateOne {
+	quo.mutation.ClearChatStart()
 	return quo
 }
 
@@ -1330,6 +1383,19 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeEnum,
 			Column: queue.FieldTaskChatMove,
+		})
+	}
+	if value, ok := quo.mutation.ChatStart(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: queue.FieldChatStart,
+		})
+	}
+	if quo.mutation.ChatStartCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: queue.FieldChatStart,
 		})
 	}
 	if value, ok := quo.mutation.UpdatedAt(); ok {

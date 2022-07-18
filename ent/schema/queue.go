@@ -33,6 +33,7 @@ func (Queue) Fields() []ent.Field {
 		field.Enum("task_chat_convert").GoType(utils.TaskStatus("")).Default(string(utils.Pending)).Optional(),
 		field.Enum("task_chat_render").GoType(utils.TaskStatus("")).Default(string(utils.Pending)).Optional(),
 		field.Enum("task_chat_move").GoType(utils.TaskStatus("")).Default(string(utils.Pending)).Optional(),
+		field.Time("chat_start").Optional(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}
