@@ -16,7 +16,7 @@ RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.40.7/Twi
 
 FROM alpine:latest AS production
 
-RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg && ln -sf python3 /usr/bin/python
+RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg bash && ln -sf python3 /usr/bin/python
 RUN python3 -m ensurepip
 RUN pip3 install --no-cache --upgrade pip streamlink chat-downloader
 
