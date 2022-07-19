@@ -488,9 +488,19 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 
 	q.Update().SetTaskVodDownloadThumbnail(utils.Success).SaveX(context.Background())
 
+	// Refresh thumbnails for live stream after 30 minutes
+	go s.RefreshLiveThumbnails(ch, v, q)
+
 	if cont == true {
 		go s.TaskVodSaveLiveInfo(ch, v, q, true)
 	}
+}
+
+func (s *Service) RefreshLiveThumbnails(ch *ent.Channel, v *ent.Vod, q *ent.Queue) {
+	log.Debug().Msg("refresh live thumbnails called...sleeping for 30 minutes")
+	time.Sleep(30 * time.Minute)
+	log.Debug().Msg("refresh live thumbnails sleep done")
+	go s.TaskVodDownloadLiveThumbnail(ch, v, q, false)
 }
 
 func (s *Service) TaskVodDownloadThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
