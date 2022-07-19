@@ -4,17 +4,19 @@ import (
 	"github.com/go-co-op/gocron"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"time"
 )
 
 type Service struct {
-	LiveService *live.Service
+	LiveService    *live.Service
+	ArchiveService *archive.Service
 }
 
-func NewService(liveService *live.Service) *Service {
-	return &Service{LiveService: liveService}
+func NewService(liveService *live.Service, archiveService *archive.Service) *Service {
+	return &Service{LiveService: liveService, ArchiveService: archiveService}
 }
 
 func (s *Service) StartAppScheduler() {
@@ -30,6 +32,15 @@ func (s *Service) StartLiveScheduler() {
 	scheduler := gocron.NewScheduler(time.UTC)
 
 	s.checkLiveStreamSchedule(scheduler)
+
+	scheduler.StartAsync()
+}
+
+func (s *Service) StartQueueItemScheduler() {
+	time.Sleep(time.Second * 5)
+	scheduler := gocron.NewScheduler(time.UTC)
+
+	s.checkHeldQueueItems(scheduler)
 
 	scheduler.StartAsync()
 }
@@ -57,5 +68,13 @@ func (s *Service) checkLiveStreamSchedule(scheduler *gocron.Scheduler) {
 			log.Error().Err(err).Msg("failed to check live streams")
 		}
 
+	})
+}
+
+func (s *Service) checkHeldQueueItems(scheduler *gocron.Scheduler) {
+	log.Debug().Msg("setting up queue item schedule")
+	scheduler.Every(1).Hours().Do(func() {
+		log.Debug().Msg("running queue item schedule")
+		go s.ArchiveService.CheckOnHold()
 	})
 }
