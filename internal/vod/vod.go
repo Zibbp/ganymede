@@ -57,7 +57,7 @@ func (s *Service) CreateVod(vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
 }
 
 func (s *Service) GetVods(c echo.Context) ([]*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Query().WithChannel().Order(ent.Desc(channel.FieldCreatedAt)).All(c.Request().Context())
+	v, err := s.Store.Client.Vod.Query().WithChannel().Order(ent.Desc(vod.FieldStreamedAt)).All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vods")
 		return nil, fmt.Errorf("error getting vods: %v", err)
@@ -67,7 +67,7 @@ func (s *Service) GetVods(c echo.Context) ([]*ent.Vod, error) {
 }
 
 func (s *Service) GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(cUUID))).Order(ent.Desc(vod.FieldCreatedAt)).All(c.Request().Context())
+	v, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(cUUID))).Order(ent.Desc(vod.FieldStreamedAt)).All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vods by channel")
 		return nil, fmt.Errorf("error getting vods by channel: %v", err)
