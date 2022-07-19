@@ -76,8 +76,8 @@ func (s *Service) GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod,
 	return v, nil
 }
 
-func (s *Service) GetVod(c echo.Context, vodID uuid.UUID) (*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
+func (s *Service) GetVod(vodID uuid.UUID) (*ent.Vod, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod")
 		// if vod not found
@@ -90,8 +90,8 @@ func (s *Service) GetVod(c echo.Context, vodID uuid.UUID) (*ent.Vod, error) {
 	return v, nil
 }
 
-func (s *Service) GetVodWithChannel(c echo.Context, vodID uuid.UUID) (*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithChannel().Only(c.Request().Context())
+func (s *Service) GetVodWithChannel(vodID uuid.UUID) (*ent.Vod, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithChannel().Only(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod")
 		// if vod not found
