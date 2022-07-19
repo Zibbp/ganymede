@@ -20,6 +20,11 @@ func NewService(store *database.Database) *Service {
 	return &Service{Store: store}
 }
 
+type ChangePassword struct {
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
+}
+
 func (s *Service) Register(c echo.Context, user user.User) (*ent.User, error) {
 	// hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
@@ -126,4 +131,27 @@ func (s *Service) Me(c echo.Context, accessToken string) (*ent.User, error) {
 		return u, nil
 	}
 	return nil, fmt.Errorf("invalid access token")
+}
+
+func (s *Service) ChangePassword(c *CustomContext, passwordDto ChangePassword) error {
+	u, err := s.Store.Client.User.Query().Where(entUser.ID(c.UserClaims.UserID)).Only(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("error getting user: %v", err)
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(passwordDto.OldPassword))
+	if err != nil {
+		return fmt.Errorf("invalid credentials")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(passwordDto.NewPassword), 14)
+	if err != nil {
+		return fmt.Errorf("error hashing password: %v", err)
+	}
+
+	_, err = s.Store.Client.User.Update().Where(entUser.ID(c.UserClaims.UserID)).SetPassword(string(hashedPassword)).Save(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("error changing password: %v", err)
+	}
+
+	return nil
 }

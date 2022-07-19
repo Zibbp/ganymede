@@ -104,6 +104,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	authGroup.POST("/login", h.Login)
 	authGroup.POST("/refresh", h.Refresh)
 	authGroup.GET("/me", h.Me, authMiddleware)
+	authGroup.POST("/change-password", h.ChangePassword, authMiddleware, auth.GetUserMiddleware)
 
 	// Channel
 	channelGroup := e.Group("/channel")

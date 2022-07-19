@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/user"
 	"net/http"
 )
@@ -13,6 +14,7 @@ type AuthService interface {
 	Login(c echo.Context, userDto user.User) (*ent.User, error)
 	Refresh(c echo.Context, refreshToken string) error
 	Me(c echo.Context, accessToken string) (*ent.User, error)
+	ChangePassword(c *auth.CustomContext, passwordDto auth.ChangePassword) error
 }
 
 type RegisterRequest struct {
@@ -23,6 +25,12 @@ type RegisterRequest struct {
 type LoginRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
+}
+
+type ChangePasswordRequest struct {
+	OldPassword        string `json:"old_password" validate:"required"`
+	NewPassword        string `json:"new_password" validate:"required,min=8"`
+	ConfirmNewPassword string `json:"confirm_new_password" validate:"required,eqfield=NewPassword"`
 }
 
 func (h *Handler) Register(c echo.Context) error {
@@ -99,4 +107,30 @@ func (h *Handler) Me(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 	return c.JSON(http.StatusOK, u)
+}
+
+func (h *Handler) ChangePassword(c echo.Context) error {
+	cc := c.(*auth.CustomContext)
+	cp := new(ChangePasswordRequest)
+	if err := c.Bind(cp); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(cp); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if cp.OldPassword == cp.NewPassword {
+		return echo.NewHTTPError(http.StatusBadRequest, "new password must be different from old password")
+	}
+
+	passwordDto := auth.ChangePassword{
+		OldPassword: cp.OldPassword,
+		NewPassword: cp.NewPassword,
+	}
+
+	err := h.Service.AuthService.ChangePassword(cc, passwordDto)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "password changed")
 }
