@@ -66,9 +66,11 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 
 	// Start scheduler
 	h.Service.SchedulerService.StartAppScheduler()
-	// Start live scheduler as a goroutine
+	// Start schedules as a goroutine
 	// to avoid blocking application start
+	// and to wait for twitch api auth
 	go h.Service.SchedulerService.StartLiveScheduler()
+	go h.Service.SchedulerService.StartQueueItemScheduler()
 
 	return h
 }
