@@ -6,7 +6,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
+	queue2 "github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/exec"
@@ -178,12 +180,86 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 		return nil, fmt.Errorf("error fetching queue item: %v", err)
 	}
 
+	// Get max active queue items from config
+	maxActiveQueueItems := viper.GetInt("active_queue_items")
+
+	// Get all queue items that are not on hold
+	qItems, err := s.Store.Client.Queue.Query().Where(queue2.Processing(true)).Where(queue2.OnHold(false)).All(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("error fetching queue items: %v", err)
+	}
+	if len(qItems) >= maxActiveQueueItems {
+		// If there are more than X active items in queue set new queue item to on hold
+		log.Debug().Msgf("more than %d active items in queue. setting new queue item %s to on hold", maxActiveQueueItems, q.ID)
+		q.Update().SetOnHold(true).SaveX(c.Request().Context())
+
+		return &TwitchVodResponse{
+			VOD:   v,
+			Queue: q,
+		}, nil
+	}
+
 	go s.TaskVodCreateFolder(dbC, v, q, true)
 
 	return &TwitchVodResponse{
 		VOD:   v,
 		Queue: q,
 	}, nil
+}
+
+func (s *Service) CheckOnHold() {
+	// Get max active queue items from config
+	maxActiveQueueItems := viper.GetInt("active_queue_items")
+
+	// Get all queue items that are not on hold
+	qItems, err := s.Store.Client.Queue.Query().Where(queue2.Processing(true)).Where(queue2.OnHold(false)).All(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("error fetching queue items")
+		return
+	}
+	if len(qItems) >= maxActiveQueueItems {
+		// Do nothing as queue items are still working
+		log.Debug().Msgf("more than %d active items in queue. doing nothing", maxActiveQueueItems)
+		return
+	}
+	// Get all queue items that are on hold oldest to newest
+	qItems, err = s.Store.Client.Queue.Query().Where(queue2.Processing(true)).Where(queue2.OnHold(true)).WithVod().Order(ent.Asc(queue2.FieldCreatedAt)).All(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("error fetching queue items")
+		return
+	}
+	if len(qItems) == 0 {
+		// No queue items are on hold
+		log.Debug().Msg("no queue items are on hold")
+		return
+	}
+	// Get first queue item
+	qItem := qItems[0]
+
+	// Get VOD
+	v, err := s.VodService.GetVodWithChannel(qItem.Edges.Vod.ID)
+	if err != nil {
+		log.Error().Err(err).Msgf("error getting vod: %v", err)
+	}
+
+	// Get channel
+	dbC, err := s.ChannelService.GetChannelByName(v.Edges.Channel.Name)
+	if err != nil {
+		log.Error().Err(err).Msgf("error getting channel: %v", err)
+	}
+
+	// Get queue item
+	q, err := s.QueueService.GetQueueItem(qItem.ID)
+	if err != nil {
+		log.Error().Err(err).Msgf("error getting queue item: %v", err)
+	}
+
+	// Update queue item
+	q.Update().SetOnHold(false).SaveX(context.Background())
+
+	// Start queue item
+	go s.TaskVodCreateFolder(dbC, v, q, true)
+
 }
 
 func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodResponse, error) {
@@ -300,7 +376,7 @@ func (s *Service) RestartTask(c echo.Context, qID uuid.UUID, task string, cont b
 	if err != nil {
 		return err
 	}
-	v, err := s.VodService.GetVodWithChannel(c, q.Edges.Vod.ID)
+	v, err := s.VodService.GetVodWithChannel(q.Edges.Vod.ID)
 	if err != nil {
 		return err
 	}
@@ -743,7 +819,7 @@ func (s *Service) TaskChatRender(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont
 	log.Debug().Msgf("starting task chat render for vod %s", v.ID)
 	q.Update().SetTaskChatRender(utils.Running).SaveX(context.Background())
 
-	err := exec.RenderTwitchVodChat(v)
+	err, renderContinue := exec.RenderTwitchVodChat(v, q)
 	if err != nil {
 		log.Error().Err(err).Msg("error rendering chat")
 		q.Update().SetTaskChatRender(utils.Failed).SaveX(context.Background())
@@ -754,12 +830,16 @@ func (s *Service) TaskChatRender(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont
 	q.Update().SetTaskChatRender(utils.Success).SaveX(context.Background())
 
 	// Always move chat if render was successful
-	if q.LiveArchive == true {
-		go s.TaskLiveChatMove(ch, v, q, true)
+	if renderContinue == true {
+		if q.LiveArchive == true {
+			go s.TaskLiveChatMove(ch, v, q, true)
+		} else {
+			go s.TaskChatMove(ch, v, q, true)
+		}
 	} else {
-		go s.TaskChatMove(ch, v, q, true)
+		// Check if all tasks are done
+		go s.CheckIfTasksAreDone(ch, v, q)
 	}
-
 }
 
 func (s *Service) TaskChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
@@ -862,7 +942,9 @@ func (s *Service) CheckIfTasksAreDone(ch *ent.Channel, v *ent.Vod, qO *ent.Queue
 		if err != nil {
 			log.Error().Err(err).Msg("error sending webhook")
 		}
-		// ToDo: Start next queue item if there is one
+		// Start next queue item if there is one
+		go s.CheckOnHold()
+
 	}
 }
 

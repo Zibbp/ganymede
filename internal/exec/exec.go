@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/utils"
 	"os"
 	osExec "os/exec"
 	"strconv"
@@ -56,7 +57,7 @@ func DownloadTwitchVodChat(v *ent.Vod) error {
 	return nil
 }
 
-func RenderTwitchVodChat(v *ent.Vod) error {
+func RenderTwitchVodChat(v *ent.Vod, q *ent.Queue) (error, bool) {
 	// Fetch config params
 	chatRenderParams := viper.GetString("parameters.chat_render")
 	// Split supplied params into array
@@ -76,7 +77,7 @@ func RenderTwitchVodChat(v *ent.Vod) error {
 	chatRenderLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat-render.log", v.ExtID, v.ID))
 	if err != nil {
 		log.Error().Err(err).Msg("error creating chat render logfile")
-		return err
+		return err, true
 	}
 	defer chatRenderLogfile.Close()
 	cmd.Stdout = chatRenderLogfile
@@ -84,11 +85,23 @@ func RenderTwitchVodChat(v *ent.Vod) error {
 
 	if err := cmd.Run(); err != nil {
 		log.Error().Err(err).Msg("error running TwitchDownloaderCLI for vod chat render")
-		return err
+
+		// Check if error is because of no messages
+		checkCmd := fmt.Sprintf("cat /logs/%s_%s-chat-render.log | grep 'Sequence contains no elements'", v.ExtID, v.ID)
+		_, err := osExec.Command("bash", "-c", checkCmd).Output()
+		if err != nil {
+			log.Error().Err(err).Msg("error checking chat render logfile for no messages")
+			return err, true
+		}
+
+		log.Debug().Msg("no messages found in chat render logfile. setting vod and queue to reflect no chat.")
+		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
+		q.Update().SetChatProcessing(false).SetTaskChatMove(utils.Success).SaveX(context.Background())
+		return nil, false
 	}
 
 	log.Debug().Msgf("finished vod chat render for %s", v.ExtID)
-	return nil
+	return nil, true
 }
 
 func ConvertTwitchVodVideo(v *ent.Vod) error {

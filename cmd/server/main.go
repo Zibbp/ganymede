@@ -49,7 +49,7 @@ func Run() error {
 	userService := user.NewService(store)
 	configService := config.NewService(store)
 	liveService := live.NewService(store, twitchService, archiveService)
-	schedulerService := scheduler.NewService(liveService)
+	schedulerService := scheduler.NewService(liveService, archiveService)
 
 	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService, liveService, schedulerService)
 
