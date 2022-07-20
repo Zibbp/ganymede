@@ -105,14 +105,24 @@ func (s *Service) GetVodWithChannel(vodID uuid.UUID) (*ent.Vod, error) {
 }
 
 func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID) error {
-	err := s.Store.Client.Vod.DeleteOneID(vodID).Exec(c.Request().Context())
+	// delete vod and queue item
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithQueue().Only(c.Request().Context())
 	if err != nil {
-		log.Debug().Err(err).Msg("error deleting vod")
-
-		// if vod not found
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return fmt.Errorf("vod not found")
 		}
+		return fmt.Errorf("error deleting vod: %v", err)
+	}
+	if v.Edges.Queue != nil {
+		err = s.Store.Client.Queue.DeleteOneID(v.Edges.Queue.ID).Exec(c.Request().Context())
+		if err != nil {
+			return fmt.Errorf("error deleting queue item: %v", err)
+		}
+	}
+
+	err = s.Store.Client.Vod.DeleteOneID(vodID).Exec(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error deleting vod")
 		return fmt.Errorf("error deleting vod: %v", err)
 	}
 	return nil
@@ -146,4 +156,14 @@ func (s *Service) CheckVodExists(c echo.Context, extID string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (s *Service) SearchVods(c echo.Context, term string) ([]*ent.Vod, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term)).Order(ent.Desc(vod.FieldStreamedAt)).All(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error searching vods")
+		return nil, fmt.Errorf("error searching vods: %v", err)
+	}
+
+	return v, nil
 }

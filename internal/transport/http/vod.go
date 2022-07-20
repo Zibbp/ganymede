@@ -18,6 +18,7 @@ type VodService interface {
 	GetVodWithChannel(vID uuid.UUID) (*ent.Vod, error)
 	DeleteVod(c echo.Context, vID uuid.UUID) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
+	SearchVods(c echo.Context, query string) ([]*ent.Vod, error)
 }
 
 type CreateVodRequest struct {
@@ -200,6 +201,18 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 		if err.Error() == "vod not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
 		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) SearchVods(c echo.Context) error {
+	q := c.QueryParam("q")
+	if q == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "q is required")
+	}
+	v, err := h.Service.VodService.SearchVods(c, q)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, v)
