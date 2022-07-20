@@ -61,7 +61,7 @@ Ganymede consists of four docker containers:
 Feel free to use an existing Postgres database container and Nginx container if you don't want to spin new ones up.
 
 1. Download a copy of the `docker-compose.yml` file and `nginx.conf`.
-2. Edit the `docker-compose.yml` file modifying the enviornment variables, see [environment variables]().
+2. Edit the `docker-compose.yml` file modifying the enviornment variables, see [environment variables](https://github.com/Zibbp/ganymede#environment-variables).
 3. Run `docker compose up -d`.
 4. Visit the address and port you specified for the frontend and login with username: `admin` password: `ganymede`.
 5. Change the admin password *or* create a new user, grant admin permissions on that user, and delete the admin user.
