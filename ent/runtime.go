@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/schema"
 	"github.com/zibbp/ganymede/ent/user"
@@ -66,6 +67,26 @@ func init() {
 	liveDescID := liveFields[0].Descriptor()
 	// live.DefaultID holds the default value on creation for the id field.
 	live.DefaultID = liveDescID.Default.(func() uuid.UUID)
+	playbackFields := schema.Playback{}.Fields()
+	_ = playbackFields
+	// playbackDescTime is the schema descriptor for time field.
+	playbackDescTime := playbackFields[3].Descriptor()
+	// playback.DefaultTime holds the default value on creation for the time field.
+	playback.DefaultTime = playbackDescTime.Default.(int)
+	// playbackDescUpdatedAt is the schema descriptor for updated_at field.
+	playbackDescUpdatedAt := playbackFields[5].Descriptor()
+	// playback.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	playback.DefaultUpdatedAt = playbackDescUpdatedAt.Default.(func() time.Time)
+	// playback.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	playback.UpdateDefaultUpdatedAt = playbackDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// playbackDescCreatedAt is the schema descriptor for created_at field.
+	playbackDescCreatedAt := playbackFields[6].Descriptor()
+	// playback.DefaultCreatedAt holds the default value on creation for the created_at field.
+	playback.DefaultCreatedAt = playbackDescCreatedAt.Default.(func() time.Time)
+	// playbackDescID is the schema descriptor for id field.
+	playbackDescID := playbackFields[0].Descriptor()
+	// playback.DefaultID holds the default value on creation for the id field.
+	playback.DefaultID = playbackDescID.Default.(func() uuid.UUID)
 	queueFields := schema.Queue{}.Fields()
 	_ = queueFields
 	// queueDescLiveArchive is the schema descriptor for live_archive field.
