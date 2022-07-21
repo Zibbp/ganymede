@@ -786,8 +786,10 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	chatPath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
 	if !utils.FileExists(chatPath) {
 		log.Debug().Msgf("chat file does not exist %s - this means there were no chat messages - setting chat to complete", chatPath)
+		// Set queue chat tasks to complete
 		q.Update().SetChatProcessing(false).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
-
+		// Set VOD chat to empty
+		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
 		// Check if all tasks are done
 		go s.CheckIfLiveTasksAreDone(ch, v, q)
 		return
