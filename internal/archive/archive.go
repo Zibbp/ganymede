@@ -462,6 +462,12 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 		s.TaskError(v, q, "vod_download_thumbnail")
 		return
 	}
+	if len(stream.Data) == 0 {
+		log.Error().Msg("no stream found")
+		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
+		s.TaskError(v, q, "vod_download_thumbnail")
+		return
+	}
 	tVod := stream.Data[0]
 	fullResThumbnailUrl := strings.ReplaceAll(tVod.ThumbnailURL, "{width}", "1920")
 	fullResThumbnailUrl = strings.ReplaceAll(fullResThumbnailUrl, "{height}", "1080")
@@ -488,19 +494,20 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 
 	q.Update().SetTaskVodDownloadThumbnail(utils.Success).SaveX(context.Background())
 
-	// Refresh thumbnails for live stream after 30 minutes
-	go s.RefreshLiveThumbnails(ch, v, q)
-
 	if cont == true {
+		// Refresh thumbnails for live stream after 30 minutes
+		go s.RefreshLiveThumbnails(ch, v, q)
+		// Proceed with tasks
 		go s.TaskVodSaveLiveInfo(ch, v, q, true)
 	}
 }
 
 func (s *Service) RefreshLiveThumbnails(ch *ent.Channel, v *ent.Vod, q *ent.Queue) {
 	log.Debug().Msg("refresh live thumbnails called...sleeping for 30 minutes")
-	time.Sleep(30 * time.Minute)
+	time.Sleep(1 * time.Minute)
 	log.Debug().Msg("refresh live thumbnails sleep done")
 	go s.TaskVodDownloadLiveThumbnail(ch, v, q, false)
+	return
 }
 
 func (s *Service) TaskVodDownloadThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
