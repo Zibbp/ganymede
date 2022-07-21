@@ -25,6 +25,7 @@ type PlaybackQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Playback
+	modifiers  []func(s *sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -327,6 +328,9 @@ func (pq *PlaybackQuery) sqlAll(ctx context.Context) ([]*Playback, error) {
 		node := nodes[len(nodes)-1]
 		return node.assignValues(columns, values)
 	}
+	if len(pq.modifiers) > 0 {
+		_spec.Modifiers = pq.modifiers
+	}
 	if err := sqlgraph.QueryNodes(ctx, pq.driver, _spec); err != nil {
 		return nil, err
 	}
@@ -338,6 +342,9 @@ func (pq *PlaybackQuery) sqlAll(ctx context.Context) ([]*Playback, error) {
 
 func (pq *PlaybackQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := pq.querySpec()
+	if len(pq.modifiers) > 0 {
+		_spec.Modifiers = pq.modifiers
+	}
 	_spec.Node.Columns = pq.fields
 	if len(pq.fields) > 0 {
 		_spec.Unique = pq.unique != nil && *pq.unique
@@ -416,6 +423,9 @@ func (pq *PlaybackQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if pq.unique != nil && *pq.unique {
 		selector.Distinct()
 	}
+	for _, m := range pq.modifiers {
+		m(selector)
+	}
 	for _, p := range pq.predicates {
 		p(selector)
 	}
@@ -431,6 +441,12 @@ func (pq *PlaybackQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (pq *PlaybackQuery) Modify(modifiers ...func(s *sql.Selector)) *PlaybackSelect {
+	pq.modifiers = append(pq.modifiers, modifiers...)
+	return pq.Select()
 }
 
 // PlaybackGroupBy is the group-by builder for Playback entities.
@@ -919,4 +935,10 @@ func (ps *PlaybackSelect) sqlScan(ctx context.Context, v interface{}) error {
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (ps *PlaybackSelect) Modify(modifiers ...func(s *sql.Selector)) *PlaybackSelect {
+	ps.modifiers = append(ps.modifiers, modifiers...)
+	return ps
 }

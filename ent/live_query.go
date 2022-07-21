@@ -29,6 +29,7 @@ type LiveQuery struct {
 	// eager-loading edges.
 	withChannel *ChannelQuery
 	withFKs     bool
+	modifiers   []func(s *sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -376,6 +377,9 @@ func (lq *LiveQuery) sqlAll(ctx context.Context) ([]*Live, error) {
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
+	if len(lq.modifiers) > 0 {
+		_spec.Modifiers = lq.modifiers
+	}
 	if err := sqlgraph.QueryNodes(ctx, lq.driver, _spec); err != nil {
 		return nil, err
 	}
@@ -417,6 +421,9 @@ func (lq *LiveQuery) sqlAll(ctx context.Context) ([]*Live, error) {
 
 func (lq *LiveQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := lq.querySpec()
+	if len(lq.modifiers) > 0 {
+		_spec.Modifiers = lq.modifiers
+	}
 	_spec.Node.Columns = lq.fields
 	if len(lq.fields) > 0 {
 		_spec.Unique = lq.unique != nil && *lq.unique
@@ -495,6 +502,9 @@ func (lq *LiveQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if lq.unique != nil && *lq.unique {
 		selector.Distinct()
 	}
+	for _, m := range lq.modifiers {
+		m(selector)
+	}
 	for _, p := range lq.predicates {
 		p(selector)
 	}
@@ -510,6 +520,12 @@ func (lq *LiveQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (lq *LiveQuery) Modify(modifiers ...func(s *sql.Selector)) *LiveSelect {
+	lq.modifiers = append(lq.modifiers, modifiers...)
+	return lq.Select()
 }
 
 // LiveGroupBy is the group-by builder for Live entities.
@@ -998,4 +1014,10 @@ func (ls *LiveSelect) sqlScan(ctx context.Context, v interface{}) error {
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (ls *LiveSelect) Modify(modifiers ...func(s *sql.Selector)) *LiveSelect {
+	ls.modifiers = append(ls.modifiers, modifiers...)
+	return ls
 }
