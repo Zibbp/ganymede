@@ -1,0 +1,54 @@
+version: '3.3'
+services:
+  ganymede-api:
+    container_name: ganymede-api
+    image: ghcr.io/zibbp/ganymede:latest
+    restart: unless-stopped
+    environment:
+      - DB_HOST=ganymede-db
+      - DB_PORT=5432
+      - DB_USER=ganymede
+      - DB_PASS=PASSWORD
+      - DB_NAME=ganymede-prd
+      - DB_SSL=disable
+      - JWT_SECRET=SECRET
+      - JWT_REFRESH_SECRET=SECRET
+      - TWITCH_CLIENT_ID=
+      - TWITCH_CLIENT_SECRET=
+      - FRONTEND_HOST=http://IP:PORT
+    volumes:
+      - /path/to/vod/storage:/vods
+      - ./logs:/logs
+      - ./data:/data
+      # Uncomment below to persist temp files
+      #- ./tmp:/tmp
+    ports:
+      - 4800:4000
+  ganymede-frontend:
+    container_name: ganymede-frontend
+    image: ghcr.io/zibbp/ganymede-frontend:latest
+    restart: unless-stopped
+    environment:
+      - NUXT_PUBLIC_API_URL=http://IP:PORT
+      - NUXT_PUBLIC_CDN_URL=http://IP:PORT
+    ports:
+      - 4801:3000
+  ganymede-db:
+    container_name: ganymede-db
+    image: postgres:14
+    volumes:
+      - ./ganymede-db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=PASSWORD
+      - POSTGRES_USER=ganymede
+      - POSTGRES_DB=ganymede-prd
+    ports:
+      - 4803:5432
+  ganymede-nginx:
+    container_name: ganymede-nginx
+    image: nginx
+    volumes:
+      - /path/to/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /pah/to/vod/stoage:/mnt/vods
+    ports:
+      - 4802:8080
