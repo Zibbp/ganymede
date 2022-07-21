@@ -504,7 +504,7 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 
 func (s *Service) RefreshLiveThumbnails(ch *ent.Channel, v *ent.Vod, q *ent.Queue) {
 	log.Debug().Msg("refresh live thumbnails called...sleeping for 30 minutes")
-	time.Sleep(1 * time.Minute)
+	time.Sleep(30 * time.Minute)
 	log.Debug().Msg("refresh live thumbnails sleep done")
 	go s.TaskVodDownloadLiveThumbnail(ch, v, q, false)
 	return
