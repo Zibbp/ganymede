@@ -177,6 +177,8 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	playbackGroup.GET("", h.GetAllProgress, authMiddleware, auth.GetUserMiddleware)
 	playbackGroup.GET("/:id", h.GetProgress, authMiddleware, auth.GetUserMiddleware)
 	playbackGroup.POST("/progress", h.UpdateProgress, authMiddleware, auth.GetUserMiddleware)
+	playbackGroup.POST("/status", h.UpdateStatus, authMiddleware, auth.GetUserMiddleware)
+	playbackGroup.DELETE("/:id", h.DeleteProgress, authMiddleware, auth.GetUserMiddleware)
 }
 
 func (h *Handler) Serve() error {
