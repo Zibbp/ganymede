@@ -80,3 +80,17 @@ func (VodQuality) Values() (kinds []string) {
 	}
 	return
 }
+
+type PlaybackStatus string
+
+const (
+	InProgress PlaybackStatus = "in_progress"
+	Finished   PlaybackStatus = "finished"
+)
+
+func (PlaybackStatus) Values() (kinds []string) {
+	for _, s := range []PlaybackStatus{InProgress, Finished} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}

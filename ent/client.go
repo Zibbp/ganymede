@@ -12,6 +12,7 @@ import (
 
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -30,6 +31,8 @@ type Client struct {
 	Channel *ChannelClient
 	// Live is the client for interacting with the Live builders.
 	Live *LiveClient
+	// Playback is the client for interacting with the Playback builders.
+	Playback *PlaybackClient
 	// Queue is the client for interacting with the Queue builders.
 	Queue *QueueClient
 	// User is the client for interacting with the User builders.
@@ -51,6 +54,7 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Channel = NewChannelClient(c.config)
 	c.Live = NewLiveClient(c.config)
+	c.Playback = NewPlaybackClient(c.config)
 	c.Queue = NewQueueClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Vod = NewVodClient(c.config)
@@ -85,13 +89,14 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:     ctx,
-		config:  cfg,
-		Channel: NewChannelClient(cfg),
-		Live:    NewLiveClient(cfg),
-		Queue:   NewQueueClient(cfg),
-		User:    NewUserClient(cfg),
-		Vod:     NewVodClient(cfg),
+		ctx:      ctx,
+		config:   cfg,
+		Channel:  NewChannelClient(cfg),
+		Live:     NewLiveClient(cfg),
+		Playback: NewPlaybackClient(cfg),
+		Queue:    NewQueueClient(cfg),
+		User:     NewUserClient(cfg),
+		Vod:      NewVodClient(cfg),
 	}, nil
 }
 
@@ -109,13 +114,14 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:     ctx,
-		config:  cfg,
-		Channel: NewChannelClient(cfg),
-		Live:    NewLiveClient(cfg),
-		Queue:   NewQueueClient(cfg),
-		User:    NewUserClient(cfg),
-		Vod:     NewVodClient(cfg),
+		ctx:      ctx,
+		config:   cfg,
+		Channel:  NewChannelClient(cfg),
+		Live:     NewLiveClient(cfg),
+		Playback: NewPlaybackClient(cfg),
+		Queue:    NewQueueClient(cfg),
+		User:     NewUserClient(cfg),
+		Vod:      NewVodClient(cfg),
 	}, nil
 }
 
@@ -147,6 +153,7 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Channel.Use(hooks...)
 	c.Live.Use(hooks...)
+	c.Playback.Use(hooks...)
 	c.Queue.Use(hooks...)
 	c.User.Use(hooks...)
 	c.Vod.Use(hooks...)
@@ -378,6 +385,96 @@ func (c *LiveClient) QueryChannel(l *Live) *ChannelQuery {
 // Hooks returns the client hooks.
 func (c *LiveClient) Hooks() []Hook {
 	return c.hooks.Live
+}
+
+// PlaybackClient is a client for the Playback schema.
+type PlaybackClient struct {
+	config
+}
+
+// NewPlaybackClient returns a client for the Playback from the given config.
+func NewPlaybackClient(c config) *PlaybackClient {
+	return &PlaybackClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `playback.Hooks(f(g(h())))`.
+func (c *PlaybackClient) Use(hooks ...Hook) {
+	c.hooks.Playback = append(c.hooks.Playback, hooks...)
+}
+
+// Create returns a create builder for Playback.
+func (c *PlaybackClient) Create() *PlaybackCreate {
+	mutation := newPlaybackMutation(c.config, OpCreate)
+	return &PlaybackCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Playback entities.
+func (c *PlaybackClient) CreateBulk(builders ...*PlaybackCreate) *PlaybackCreateBulk {
+	return &PlaybackCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Playback.
+func (c *PlaybackClient) Update() *PlaybackUpdate {
+	mutation := newPlaybackMutation(c.config, OpUpdate)
+	return &PlaybackUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PlaybackClient) UpdateOne(pl *Playback) *PlaybackUpdateOne {
+	mutation := newPlaybackMutation(c.config, OpUpdateOne, withPlayback(pl))
+	return &PlaybackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PlaybackClient) UpdateOneID(id uuid.UUID) *PlaybackUpdateOne {
+	mutation := newPlaybackMutation(c.config, OpUpdateOne, withPlaybackID(id))
+	return &PlaybackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Playback.
+func (c *PlaybackClient) Delete() *PlaybackDelete {
+	mutation := newPlaybackMutation(c.config, OpDelete)
+	return &PlaybackDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *PlaybackClient) DeleteOne(pl *Playback) *PlaybackDeleteOne {
+	return c.DeleteOneID(pl.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *PlaybackClient) DeleteOneID(id uuid.UUID) *PlaybackDeleteOne {
+	builder := c.Delete().Where(playback.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PlaybackDeleteOne{builder}
+}
+
+// Query returns a query builder for Playback.
+func (c *PlaybackClient) Query() *PlaybackQuery {
+	return &PlaybackQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Playback entity by its id.
+func (c *PlaybackClient) Get(ctx context.Context, id uuid.UUID) (*Playback, error) {
+	return c.Query().Where(playback.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PlaybackClient) GetX(ctx context.Context, id uuid.UUID) *Playback {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PlaybackClient) Hooks() []Hook {
+	return c.hooks.Playback
 }
 
 // QueueClient is a client for the Queue schema.

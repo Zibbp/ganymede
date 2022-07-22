@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
@@ -21,6 +23,7 @@ type QueueCreate struct {
 	config
 	mutation *QueueMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetLiveArchive sets the "live_archive" field.
@@ -553,6 +556,7 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	_spec.OnConflict = qc.conflict
 	if id, ok := qc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
@@ -724,10 +728,764 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Queue.Create().
+//		SetLiveArchive(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.QueueUpsert) {
+//			SetLiveArchive(v+v).
+//		}).
+//		Exec(ctx)
+//
+func (qc *QueueCreate) OnConflict(opts ...sql.ConflictOption) *QueueUpsertOne {
+	qc.conflict = opts
+	return &QueueUpsertOne{
+		create: qc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Queue.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+//
+func (qc *QueueCreate) OnConflictColumns(columns ...string) *QueueUpsertOne {
+	qc.conflict = append(qc.conflict, sql.ConflictColumns(columns...))
+	return &QueueUpsertOne{
+		create: qc,
+	}
+}
+
+type (
+	// QueueUpsertOne is the builder for "upsert"-ing
+	//  one Queue node.
+	QueueUpsertOne struct {
+		create *QueueCreate
+	}
+
+	// QueueUpsert is the "OnConflict" setter.
+	QueueUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetLiveArchive sets the "live_archive" field.
+func (u *QueueUpsert) SetLiveArchive(v bool) *QueueUpsert {
+	u.Set(queue.FieldLiveArchive, v)
+	return u
+}
+
+// UpdateLiveArchive sets the "live_archive" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateLiveArchive() *QueueUpsert {
+	u.SetExcluded(queue.FieldLiveArchive)
+	return u
+}
+
+// SetOnHold sets the "on_hold" field.
+func (u *QueueUpsert) SetOnHold(v bool) *QueueUpsert {
+	u.Set(queue.FieldOnHold, v)
+	return u
+}
+
+// UpdateOnHold sets the "on_hold" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateOnHold() *QueueUpsert {
+	u.SetExcluded(queue.FieldOnHold)
+	return u
+}
+
+// SetVideoProcessing sets the "video_processing" field.
+func (u *QueueUpsert) SetVideoProcessing(v bool) *QueueUpsert {
+	u.Set(queue.FieldVideoProcessing, v)
+	return u
+}
+
+// UpdateVideoProcessing sets the "video_processing" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateVideoProcessing() *QueueUpsert {
+	u.SetExcluded(queue.FieldVideoProcessing)
+	return u
+}
+
+// SetChatProcessing sets the "chat_processing" field.
+func (u *QueueUpsert) SetChatProcessing(v bool) *QueueUpsert {
+	u.Set(queue.FieldChatProcessing, v)
+	return u
+}
+
+// UpdateChatProcessing sets the "chat_processing" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateChatProcessing() *QueueUpsert {
+	u.SetExcluded(queue.FieldChatProcessing)
+	return u
+}
+
+// SetProcessing sets the "processing" field.
+func (u *QueueUpsert) SetProcessing(v bool) *QueueUpsert {
+	u.Set(queue.FieldProcessing, v)
+	return u
+}
+
+// UpdateProcessing sets the "processing" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateProcessing() *QueueUpsert {
+	u.SetExcluded(queue.FieldProcessing)
+	return u
+}
+
+// SetTaskVodCreateFolder sets the "task_vod_create_folder" field.
+func (u *QueueUpsert) SetTaskVodCreateFolder(v utils.TaskStatus) *QueueUpsert {
+	u.Set(queue.FieldTaskVodCreateFolder, v)
+	return u
+}
+
+// UpdateTaskVodCreateFolder sets the "task_vod_create_folder" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateTaskVodCreateFolder() *QueueUpsert {
+	u.SetExcluded(queue.FieldTaskVodCreateFolder)
+	return u
+}
+
+// ClearTaskVodCreateFolder clears the value of the "task_vod_create_folder" field.
+func (u *QueueUpsert) ClearTaskVodCreateFolder() *QueueUpsert {
+	u.SetNull(queue.FieldTaskVodCreateFolder)
+	return u
+}
+
+// SetTaskVodDownloadThumbnail sets the "task_vod_download_thumbnail" field.
+func (u *QueueUpsert) SetTaskVodDownloadThumbnail(v utils.TaskStatus) *QueueUpsert {
+	u.Set(queue.FieldTaskVodDownloadThumbnail, v)
+	return u
+}
+
+// UpdateTaskVodDownloadThumbnail sets the "task_vod_download_thumbnail" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateTaskVodDownloadThumbnail() *QueueUpsert {
+	u.SetExcluded(queue.FieldTaskVodDownloadThumbnail)
+	return u
+}
+
+// ClearTaskVodDownloadThumbnail clears the value of the "task_vod_download_thumbnail" field.
+func (u *QueueUpsert) ClearTaskVodDownloadThumbnail() *QueueUpsert {
+	u.SetNull(queue.FieldTaskVodDownloadThumbnail)
+	return u
+}
+
+// SetTaskVodSaveInfo sets the "task_vod_save_info" field.
+func (u *QueueUpsert) SetTaskVodSaveInfo(v utils.TaskStatus) *QueueUpsert {
+	u.Set(queue.FieldTaskVodSaveInfo, v)
+	return u
+}
+
+// UpdateTaskVodSaveInfo sets the "task_vod_save_info" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateTaskVodSaveInfo() *QueueUpsert {
+	u.SetExcluded(queue.FieldTaskVodSaveInfo)
+	return u
+}
+
+// ClearTaskVodSaveInfo clears the value of the "task_vod_save_info" field.
+func (u *QueueUpsert) ClearTaskVodSaveInfo() *QueueUpsert {
+	u.SetNull(queue.FieldTaskVodSaveInfo)
+	return u
+}
+
+// SetTaskVideoDownload sets the "task_video_download" field.
+func (u *QueueUpsert) SetTaskVideoDownload(v utils.TaskStatus) *QueueUpsert {
+	u.Set(queue.FieldTaskVideoDownload, v)
+	return u
+}
+
+// UpdateTaskVideoDownload sets the "task_video_download" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateTaskVideoDownload() *QueueUpsert {
+	u.SetExcluded(queue.FieldTaskVideoDownload)
+	return u
+}
+
+// ClearTaskVideoDownload clears the value of the "task_video_download" field.
+func (u *QueueUpsert) ClearTaskVideoDownload() *QueueUpsert {
+	u.SetNull(queue.FieldTaskVideoDownload)
+	return u
+}
+
+// SetTaskVideoConvert sets the "task_video_convert" field.
+func (u *QueueUpsert) SetTaskVideoConvert(v utils.TaskStatus) *QueueUpsert {
+	u.Set(queue.FieldTaskVideoConvert, v)
+	return u
+}
+
+// UpdateTaskVideoConvert sets the "task_video_convert" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateTaskVideoConvert() *QueueUpsert {
+	u.SetExcluded(queue.FieldTaskVideoConvert)
+	return u
+}
+
+// ClearTaskVideoConvert clears the value of the "task_video_convert" field.
+func (u *QueueUpsert) ClearTaskVideoConvert() *QueueUpsert {
+	u.SetNull(queue.FieldTaskVideoConvert)
+	return u
+}
+
+// SetTaskVideoMove sets the "task_video_move" field.
+func (u *QueueUpsert) SetTaskVideoMove(v utils.TaskStatus) *QueueUpsert {
+	u.Set(queue.FieldTaskVideoMove, v)
+	return u
+}
+
+// UpdateTaskVideoMove sets the "task_video_move" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateTaskVideoMove() *QueueUpsert {
+	u.SetExcluded(queue.FieldTaskVideoMove)
+	return u
+}
+
+// ClearTaskVideoMove clears the value of the "task_video_move" field.
+func (u *QueueUpsert) ClearTaskVideoMove() *QueueUpsert {
+	u.SetNull(queue.FieldTaskVideoMove)
+	return u
+}
+
+// SetTaskChatDownload sets the "task_chat_download" field.
+func (u *QueueUpsert) SetTaskChatDownload(v utils.TaskStatus) *QueueUpsert {
+	u.Set(queue.FieldTaskChatDownload, v)
+	return u
+}
+
+// UpdateTaskChatDownload sets the "task_chat_download" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateTaskChatDownload() *QueueUpsert {
+	u.SetExcluded(queue.FieldTaskChatDownload)
+	return u
+}
+
+// ClearTaskChatDownload clears the value of the "task_chat_download" field.
+func (u *QueueUpsert) ClearTaskChatDownload() *QueueUpsert {
+	u.SetNull(queue.FieldTaskChatDownload)
+	return u
+}
+
+// SetTaskChatConvert sets the "task_chat_convert" field.
+func (u *QueueUpsert) SetTaskChatConvert(v utils.TaskStatus) *QueueUpsert {
+	u.Set(queue.FieldTaskChatConvert, v)
+	return u
+}
+
+// UpdateTaskChatConvert sets the "task_chat_convert" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateTaskChatConvert() *QueueUpsert {
+	u.SetExcluded(queue.FieldTaskChatConvert)
+	return u
+}
+
+// ClearTaskChatConvert clears the value of the "task_chat_convert" field.
+func (u *QueueUpsert) ClearTaskChatConvert() *QueueUpsert {
+	u.SetNull(queue.FieldTaskChatConvert)
+	return u
+}
+
+// SetTaskChatRender sets the "task_chat_render" field.
+func (u *QueueUpsert) SetTaskChatRender(v utils.TaskStatus) *QueueUpsert {
+	u.Set(queue.FieldTaskChatRender, v)
+	return u
+}
+
+// UpdateTaskChatRender sets the "task_chat_render" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateTaskChatRender() *QueueUpsert {
+	u.SetExcluded(queue.FieldTaskChatRender)
+	return u
+}
+
+// ClearTaskChatRender clears the value of the "task_chat_render" field.
+func (u *QueueUpsert) ClearTaskChatRender() *QueueUpsert {
+	u.SetNull(queue.FieldTaskChatRender)
+	return u
+}
+
+// SetTaskChatMove sets the "task_chat_move" field.
+func (u *QueueUpsert) SetTaskChatMove(v utils.TaskStatus) *QueueUpsert {
+	u.Set(queue.FieldTaskChatMove, v)
+	return u
+}
+
+// UpdateTaskChatMove sets the "task_chat_move" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateTaskChatMove() *QueueUpsert {
+	u.SetExcluded(queue.FieldTaskChatMove)
+	return u
+}
+
+// ClearTaskChatMove clears the value of the "task_chat_move" field.
+func (u *QueueUpsert) ClearTaskChatMove() *QueueUpsert {
+	u.SetNull(queue.FieldTaskChatMove)
+	return u
+}
+
+// SetChatStart sets the "chat_start" field.
+func (u *QueueUpsert) SetChatStart(v time.Time) *QueueUpsert {
+	u.Set(queue.FieldChatStart, v)
+	return u
+}
+
+// UpdateChatStart sets the "chat_start" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateChatStart() *QueueUpsert {
+	u.SetExcluded(queue.FieldChatStart)
+	return u
+}
+
+// ClearChatStart clears the value of the "chat_start" field.
+func (u *QueueUpsert) ClearChatStart() *QueueUpsert {
+	u.SetNull(queue.FieldChatStart)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *QueueUpsert) SetUpdatedAt(v time.Time) *QueueUpsert {
+	u.Set(queue.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateUpdatedAt() *QueueUpsert {
+	u.SetExcluded(queue.FieldUpdatedAt)
+	return u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *QueueUpsert) SetCreatedAt(v time.Time) *QueueUpsert {
+	u.Set(queue.FieldCreatedAt, v)
+	return u
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateCreatedAt() *QueueUpsert {
+	u.SetExcluded(queue.FieldCreatedAt)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Queue.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(queue.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+//
+func (u *QueueUpsertOne) UpdateNewValues() *QueueUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(queue.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(queue.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//  client.Queue.Create().
+//      OnConflict(sql.ResolveWithIgnore()).
+//      Exec(ctx)
+//
+func (u *QueueUpsertOne) Ignore() *QueueUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *QueueUpsertOne) DoNothing() *QueueUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the QueueCreate.OnConflict
+// documentation for more info.
+func (u *QueueUpsertOne) Update(set func(*QueueUpsert)) *QueueUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&QueueUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetLiveArchive sets the "live_archive" field.
+func (u *QueueUpsertOne) SetLiveArchive(v bool) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetLiveArchive(v)
+	})
+}
+
+// UpdateLiveArchive sets the "live_archive" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateLiveArchive() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateLiveArchive()
+	})
+}
+
+// SetOnHold sets the "on_hold" field.
+func (u *QueueUpsertOne) SetOnHold(v bool) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetOnHold(v)
+	})
+}
+
+// UpdateOnHold sets the "on_hold" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateOnHold() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateOnHold()
+	})
+}
+
+// SetVideoProcessing sets the "video_processing" field.
+func (u *QueueUpsertOne) SetVideoProcessing(v bool) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetVideoProcessing(v)
+	})
+}
+
+// UpdateVideoProcessing sets the "video_processing" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateVideoProcessing() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateVideoProcessing()
+	})
+}
+
+// SetChatProcessing sets the "chat_processing" field.
+func (u *QueueUpsertOne) SetChatProcessing(v bool) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetChatProcessing(v)
+	})
+}
+
+// UpdateChatProcessing sets the "chat_processing" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateChatProcessing() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateChatProcessing()
+	})
+}
+
+// SetProcessing sets the "processing" field.
+func (u *QueueUpsertOne) SetProcessing(v bool) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetProcessing(v)
+	})
+}
+
+// UpdateProcessing sets the "processing" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateProcessing() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateProcessing()
+	})
+}
+
+// SetTaskVodCreateFolder sets the "task_vod_create_folder" field.
+func (u *QueueUpsertOne) SetTaskVodCreateFolder(v utils.TaskStatus) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVodCreateFolder(v)
+	})
+}
+
+// UpdateTaskVodCreateFolder sets the "task_vod_create_folder" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateTaskVodCreateFolder() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVodCreateFolder()
+	})
+}
+
+// ClearTaskVodCreateFolder clears the value of the "task_vod_create_folder" field.
+func (u *QueueUpsertOne) ClearTaskVodCreateFolder() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVodCreateFolder()
+	})
+}
+
+// SetTaskVodDownloadThumbnail sets the "task_vod_download_thumbnail" field.
+func (u *QueueUpsertOne) SetTaskVodDownloadThumbnail(v utils.TaskStatus) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVodDownloadThumbnail(v)
+	})
+}
+
+// UpdateTaskVodDownloadThumbnail sets the "task_vod_download_thumbnail" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateTaskVodDownloadThumbnail() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVodDownloadThumbnail()
+	})
+}
+
+// ClearTaskVodDownloadThumbnail clears the value of the "task_vod_download_thumbnail" field.
+func (u *QueueUpsertOne) ClearTaskVodDownloadThumbnail() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVodDownloadThumbnail()
+	})
+}
+
+// SetTaskVodSaveInfo sets the "task_vod_save_info" field.
+func (u *QueueUpsertOne) SetTaskVodSaveInfo(v utils.TaskStatus) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVodSaveInfo(v)
+	})
+}
+
+// UpdateTaskVodSaveInfo sets the "task_vod_save_info" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateTaskVodSaveInfo() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVodSaveInfo()
+	})
+}
+
+// ClearTaskVodSaveInfo clears the value of the "task_vod_save_info" field.
+func (u *QueueUpsertOne) ClearTaskVodSaveInfo() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVodSaveInfo()
+	})
+}
+
+// SetTaskVideoDownload sets the "task_video_download" field.
+func (u *QueueUpsertOne) SetTaskVideoDownload(v utils.TaskStatus) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVideoDownload(v)
+	})
+}
+
+// UpdateTaskVideoDownload sets the "task_video_download" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateTaskVideoDownload() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVideoDownload()
+	})
+}
+
+// ClearTaskVideoDownload clears the value of the "task_video_download" field.
+func (u *QueueUpsertOne) ClearTaskVideoDownload() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVideoDownload()
+	})
+}
+
+// SetTaskVideoConvert sets the "task_video_convert" field.
+func (u *QueueUpsertOne) SetTaskVideoConvert(v utils.TaskStatus) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVideoConvert(v)
+	})
+}
+
+// UpdateTaskVideoConvert sets the "task_video_convert" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateTaskVideoConvert() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVideoConvert()
+	})
+}
+
+// ClearTaskVideoConvert clears the value of the "task_video_convert" field.
+func (u *QueueUpsertOne) ClearTaskVideoConvert() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVideoConvert()
+	})
+}
+
+// SetTaskVideoMove sets the "task_video_move" field.
+func (u *QueueUpsertOne) SetTaskVideoMove(v utils.TaskStatus) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVideoMove(v)
+	})
+}
+
+// UpdateTaskVideoMove sets the "task_video_move" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateTaskVideoMove() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVideoMove()
+	})
+}
+
+// ClearTaskVideoMove clears the value of the "task_video_move" field.
+func (u *QueueUpsertOne) ClearTaskVideoMove() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVideoMove()
+	})
+}
+
+// SetTaskChatDownload sets the "task_chat_download" field.
+func (u *QueueUpsertOne) SetTaskChatDownload(v utils.TaskStatus) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskChatDownload(v)
+	})
+}
+
+// UpdateTaskChatDownload sets the "task_chat_download" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateTaskChatDownload() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskChatDownload()
+	})
+}
+
+// ClearTaskChatDownload clears the value of the "task_chat_download" field.
+func (u *QueueUpsertOne) ClearTaskChatDownload() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskChatDownload()
+	})
+}
+
+// SetTaskChatConvert sets the "task_chat_convert" field.
+func (u *QueueUpsertOne) SetTaskChatConvert(v utils.TaskStatus) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskChatConvert(v)
+	})
+}
+
+// UpdateTaskChatConvert sets the "task_chat_convert" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateTaskChatConvert() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskChatConvert()
+	})
+}
+
+// ClearTaskChatConvert clears the value of the "task_chat_convert" field.
+func (u *QueueUpsertOne) ClearTaskChatConvert() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskChatConvert()
+	})
+}
+
+// SetTaskChatRender sets the "task_chat_render" field.
+func (u *QueueUpsertOne) SetTaskChatRender(v utils.TaskStatus) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskChatRender(v)
+	})
+}
+
+// UpdateTaskChatRender sets the "task_chat_render" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateTaskChatRender() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskChatRender()
+	})
+}
+
+// ClearTaskChatRender clears the value of the "task_chat_render" field.
+func (u *QueueUpsertOne) ClearTaskChatRender() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskChatRender()
+	})
+}
+
+// SetTaskChatMove sets the "task_chat_move" field.
+func (u *QueueUpsertOne) SetTaskChatMove(v utils.TaskStatus) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskChatMove(v)
+	})
+}
+
+// UpdateTaskChatMove sets the "task_chat_move" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateTaskChatMove() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskChatMove()
+	})
+}
+
+// ClearTaskChatMove clears the value of the "task_chat_move" field.
+func (u *QueueUpsertOne) ClearTaskChatMove() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskChatMove()
+	})
+}
+
+// SetChatStart sets the "chat_start" field.
+func (u *QueueUpsertOne) SetChatStart(v time.Time) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetChatStart(v)
+	})
+}
+
+// UpdateChatStart sets the "chat_start" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateChatStart() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateChatStart()
+	})
+}
+
+// ClearChatStart clears the value of the "chat_start" field.
+func (u *QueueUpsertOne) ClearChatStart() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearChatStart()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *QueueUpsertOne) SetUpdatedAt(v time.Time) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateUpdatedAt() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *QueueUpsertOne) SetCreatedAt(v time.Time) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateCreatedAt() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *QueueUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for QueueCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *QueueUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *QueueUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: QueueUpsertOne.ID is not supported by MySQL driver. Use QueueUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *QueueUpsertOne) IDX(ctx context.Context) uuid.UUID {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // QueueCreateBulk is the builder for creating many Queue entities in bulk.
 type QueueCreateBulk struct {
 	config
 	builders []*QueueCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Queue entities in the database.
@@ -754,6 +1512,7 @@ func (qcb *QueueCreateBulk) Save(ctx context.Context) ([]*Queue, error) {
 					_, err = mutators[i+1].Mutate(root, qcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = qcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, qcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -800,6 +1559,454 @@ func (qcb *QueueCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (qcb *QueueCreateBulk) ExecX(ctx context.Context) {
 	if err := qcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Queue.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.QueueUpsert) {
+//			SetLiveArchive(v+v).
+//		}).
+//		Exec(ctx)
+//
+func (qcb *QueueCreateBulk) OnConflict(opts ...sql.ConflictOption) *QueueUpsertBulk {
+	qcb.conflict = opts
+	return &QueueUpsertBulk{
+		create: qcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Queue.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+//
+func (qcb *QueueCreateBulk) OnConflictColumns(columns ...string) *QueueUpsertBulk {
+	qcb.conflict = append(qcb.conflict, sql.ConflictColumns(columns...))
+	return &QueueUpsertBulk{
+		create: qcb,
+	}
+}
+
+// QueueUpsertBulk is the builder for "upsert"-ing
+// a bulk of Queue nodes.
+type QueueUpsertBulk struct {
+	create *QueueCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Queue.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(queue.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+//
+func (u *QueueUpsertBulk) UpdateNewValues() *QueueUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(queue.FieldID)
+				return
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(queue.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Queue.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+//
+func (u *QueueUpsertBulk) Ignore() *QueueUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *QueueUpsertBulk) DoNothing() *QueueUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the QueueCreateBulk.OnConflict
+// documentation for more info.
+func (u *QueueUpsertBulk) Update(set func(*QueueUpsert)) *QueueUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&QueueUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetLiveArchive sets the "live_archive" field.
+func (u *QueueUpsertBulk) SetLiveArchive(v bool) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetLiveArchive(v)
+	})
+}
+
+// UpdateLiveArchive sets the "live_archive" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateLiveArchive() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateLiveArchive()
+	})
+}
+
+// SetOnHold sets the "on_hold" field.
+func (u *QueueUpsertBulk) SetOnHold(v bool) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetOnHold(v)
+	})
+}
+
+// UpdateOnHold sets the "on_hold" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateOnHold() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateOnHold()
+	})
+}
+
+// SetVideoProcessing sets the "video_processing" field.
+func (u *QueueUpsertBulk) SetVideoProcessing(v bool) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetVideoProcessing(v)
+	})
+}
+
+// UpdateVideoProcessing sets the "video_processing" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateVideoProcessing() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateVideoProcessing()
+	})
+}
+
+// SetChatProcessing sets the "chat_processing" field.
+func (u *QueueUpsertBulk) SetChatProcessing(v bool) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetChatProcessing(v)
+	})
+}
+
+// UpdateChatProcessing sets the "chat_processing" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateChatProcessing() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateChatProcessing()
+	})
+}
+
+// SetProcessing sets the "processing" field.
+func (u *QueueUpsertBulk) SetProcessing(v bool) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetProcessing(v)
+	})
+}
+
+// UpdateProcessing sets the "processing" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateProcessing() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateProcessing()
+	})
+}
+
+// SetTaskVodCreateFolder sets the "task_vod_create_folder" field.
+func (u *QueueUpsertBulk) SetTaskVodCreateFolder(v utils.TaskStatus) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVodCreateFolder(v)
+	})
+}
+
+// UpdateTaskVodCreateFolder sets the "task_vod_create_folder" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateTaskVodCreateFolder() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVodCreateFolder()
+	})
+}
+
+// ClearTaskVodCreateFolder clears the value of the "task_vod_create_folder" field.
+func (u *QueueUpsertBulk) ClearTaskVodCreateFolder() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVodCreateFolder()
+	})
+}
+
+// SetTaskVodDownloadThumbnail sets the "task_vod_download_thumbnail" field.
+func (u *QueueUpsertBulk) SetTaskVodDownloadThumbnail(v utils.TaskStatus) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVodDownloadThumbnail(v)
+	})
+}
+
+// UpdateTaskVodDownloadThumbnail sets the "task_vod_download_thumbnail" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateTaskVodDownloadThumbnail() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVodDownloadThumbnail()
+	})
+}
+
+// ClearTaskVodDownloadThumbnail clears the value of the "task_vod_download_thumbnail" field.
+func (u *QueueUpsertBulk) ClearTaskVodDownloadThumbnail() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVodDownloadThumbnail()
+	})
+}
+
+// SetTaskVodSaveInfo sets the "task_vod_save_info" field.
+func (u *QueueUpsertBulk) SetTaskVodSaveInfo(v utils.TaskStatus) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVodSaveInfo(v)
+	})
+}
+
+// UpdateTaskVodSaveInfo sets the "task_vod_save_info" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateTaskVodSaveInfo() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVodSaveInfo()
+	})
+}
+
+// ClearTaskVodSaveInfo clears the value of the "task_vod_save_info" field.
+func (u *QueueUpsertBulk) ClearTaskVodSaveInfo() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVodSaveInfo()
+	})
+}
+
+// SetTaskVideoDownload sets the "task_video_download" field.
+func (u *QueueUpsertBulk) SetTaskVideoDownload(v utils.TaskStatus) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVideoDownload(v)
+	})
+}
+
+// UpdateTaskVideoDownload sets the "task_video_download" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateTaskVideoDownload() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVideoDownload()
+	})
+}
+
+// ClearTaskVideoDownload clears the value of the "task_video_download" field.
+func (u *QueueUpsertBulk) ClearTaskVideoDownload() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVideoDownload()
+	})
+}
+
+// SetTaskVideoConvert sets the "task_video_convert" field.
+func (u *QueueUpsertBulk) SetTaskVideoConvert(v utils.TaskStatus) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVideoConvert(v)
+	})
+}
+
+// UpdateTaskVideoConvert sets the "task_video_convert" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateTaskVideoConvert() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVideoConvert()
+	})
+}
+
+// ClearTaskVideoConvert clears the value of the "task_video_convert" field.
+func (u *QueueUpsertBulk) ClearTaskVideoConvert() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVideoConvert()
+	})
+}
+
+// SetTaskVideoMove sets the "task_video_move" field.
+func (u *QueueUpsertBulk) SetTaskVideoMove(v utils.TaskStatus) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskVideoMove(v)
+	})
+}
+
+// UpdateTaskVideoMove sets the "task_video_move" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateTaskVideoMove() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskVideoMove()
+	})
+}
+
+// ClearTaskVideoMove clears the value of the "task_video_move" field.
+func (u *QueueUpsertBulk) ClearTaskVideoMove() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskVideoMove()
+	})
+}
+
+// SetTaskChatDownload sets the "task_chat_download" field.
+func (u *QueueUpsertBulk) SetTaskChatDownload(v utils.TaskStatus) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskChatDownload(v)
+	})
+}
+
+// UpdateTaskChatDownload sets the "task_chat_download" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateTaskChatDownload() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskChatDownload()
+	})
+}
+
+// ClearTaskChatDownload clears the value of the "task_chat_download" field.
+func (u *QueueUpsertBulk) ClearTaskChatDownload() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskChatDownload()
+	})
+}
+
+// SetTaskChatConvert sets the "task_chat_convert" field.
+func (u *QueueUpsertBulk) SetTaskChatConvert(v utils.TaskStatus) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskChatConvert(v)
+	})
+}
+
+// UpdateTaskChatConvert sets the "task_chat_convert" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateTaskChatConvert() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskChatConvert()
+	})
+}
+
+// ClearTaskChatConvert clears the value of the "task_chat_convert" field.
+func (u *QueueUpsertBulk) ClearTaskChatConvert() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskChatConvert()
+	})
+}
+
+// SetTaskChatRender sets the "task_chat_render" field.
+func (u *QueueUpsertBulk) SetTaskChatRender(v utils.TaskStatus) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskChatRender(v)
+	})
+}
+
+// UpdateTaskChatRender sets the "task_chat_render" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateTaskChatRender() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskChatRender()
+	})
+}
+
+// ClearTaskChatRender clears the value of the "task_chat_render" field.
+func (u *QueueUpsertBulk) ClearTaskChatRender() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskChatRender()
+	})
+}
+
+// SetTaskChatMove sets the "task_chat_move" field.
+func (u *QueueUpsertBulk) SetTaskChatMove(v utils.TaskStatus) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetTaskChatMove(v)
+	})
+}
+
+// UpdateTaskChatMove sets the "task_chat_move" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateTaskChatMove() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateTaskChatMove()
+	})
+}
+
+// ClearTaskChatMove clears the value of the "task_chat_move" field.
+func (u *QueueUpsertBulk) ClearTaskChatMove() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearTaskChatMove()
+	})
+}
+
+// SetChatStart sets the "chat_start" field.
+func (u *QueueUpsertBulk) SetChatStart(v time.Time) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetChatStart(v)
+	})
+}
+
+// UpdateChatStart sets the "chat_start" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateChatStart() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateChatStart()
+	})
+}
+
+// ClearChatStart clears the value of the "chat_start" field.
+func (u *QueueUpsertBulk) ClearChatStart() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearChatStart()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *QueueUpsertBulk) SetUpdatedAt(v time.Time) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateUpdatedAt() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *QueueUpsertBulk) SetCreatedAt(v time.Time) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateCreatedAt() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *QueueUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the QueueCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for QueueCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *QueueUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

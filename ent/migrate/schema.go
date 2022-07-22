@@ -48,6 +48,22 @@ var (
 			},
 		},
 	}
+	// PlaybacksColumns holds the columns for the "playbacks" table.
+	PlaybacksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "vod_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "time", Type: field.TypeInt, Default: 0},
+		{Name: "status", Type: field.TypeEnum, Nullable: true, Enums: []string{"in_progress", "finished"}, Default: "in_progress"},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// PlaybacksTable holds the schema information for the "playbacks" table.
+	PlaybacksTable = &schema.Table{
+		Name:       "playbacks",
+		Columns:    PlaybacksColumns,
+		PrimaryKey: []*schema.Column{PlaybacksColumns[0]},
+	}
 	// QueuesColumns holds the columns for the "queues" table.
 	QueuesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -141,6 +157,7 @@ var (
 	Tables = []*schema.Table{
 		ChannelsTable,
 		LivesTable,
+		PlaybacksTable,
 		QueuesTable,
 		UsersTable,
 		VodsTable,

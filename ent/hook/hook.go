@@ -35,6 +35,19 @@ func (f LiveFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	return f(ctx, mv)
 }
 
+// The PlaybackFunc type is an adapter to allow the use of ordinary
+// function as Playback mutator.
+type PlaybackFunc func(context.Context, *ent.PlaybackMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PlaybackFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.PlaybackMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlaybackMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The QueueFunc type is an adapter to allow the use of ordinary
 // function as Queue mutator.
 type QueueFunc func(context.Context, *ent.QueueMutation) (ent.Value, error)

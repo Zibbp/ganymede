@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -33,11 +34,12 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
-		channel.Table: channel.ValidColumn,
-		live.Table:    live.ValidColumn,
-		queue.Table:   queue.ValidColumn,
-		user.Table:    user.ValidColumn,
-		vod.Table:     vod.ValidColumn,
+		channel.Table:  channel.ValidColumn,
+		live.Table:     live.ValidColumn,
+		playback.Table: playback.ValidColumn,
+		queue.Table:    queue.ValidColumn,
+		user.Table:     user.ValidColumn,
+		vod.Table:      vod.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

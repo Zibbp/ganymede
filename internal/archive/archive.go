@@ -188,7 +188,7 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 	if err != nil {
 		return nil, fmt.Errorf("error fetching queue items: %v", err)
 	}
-	if len(qItems) >= maxActiveQueueItems {
+	if len(qItems)-1 >= maxActiveQueueItems {
 		// If there are more than X active items in queue set new queue item to on hold
 		log.Debug().Msgf("more than %d active items in queue. setting new queue item %s to on hold", maxActiveQueueItems, q.ID)
 		q.Update().SetOnHold(true).SaveX(c.Request().Context())

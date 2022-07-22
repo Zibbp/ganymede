@@ -12,6 +12,9 @@ type Channel func(*sql.Selector)
 // Live is the predicate function for live builders.
 type Live func(*sql.Selector)
 
+// Playback is the predicate function for playback builders.
+type Playback func(*sql.Selector)
+
 // Queue is the predicate function for queue builders.
 type Queue func(*sql.Selector)
 

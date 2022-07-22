@@ -26,6 +26,7 @@ type Services struct {
 	ConfigService    ConfigService
 	LiveService      LiveService
 	SchedulerService SchedulerService
+	PlaybackService  PlaybackService
 }
 
 type Handler struct {
@@ -33,7 +34,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
@@ -50,6 +51,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			ConfigService:    configService,
 			LiveService:      liveService,
 			SchedulerService: schedulerService,
+			PlaybackService:  playbackService,
 		},
 	}
 
@@ -169,6 +171,14 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.GET("/check", h.Check, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+
+	// Playback
+	playbackGroup := e.Group("/playback")
+	playbackGroup.GET("", h.GetAllProgress, authMiddleware, auth.GetUserMiddleware)
+	playbackGroup.GET("/:id", h.GetProgress, authMiddleware, auth.GetUserMiddleware)
+	playbackGroup.POST("/progress", h.UpdateProgress, authMiddleware, auth.GetUserMiddleware)
+	playbackGroup.POST("/status", h.UpdateStatus, authMiddleware, auth.GetUserMiddleware)
+	playbackGroup.DELETE("/:id", h.DeleteProgress, authMiddleware, auth.GetUserMiddleware)
 }
 
 func (h *Handler) Serve() error {
