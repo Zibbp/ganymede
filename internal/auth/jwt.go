@@ -69,7 +69,7 @@ func generateAccessToken(user *user.User) (string, time.Time, error) {
 
 func generateRefreshToken(user *user.User) (string, time.Time, error) {
 	// Declare the expiration time of the token - 24 hours.
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(30 * 24 * time.Hour)
 
 	return generateToken(user, expirationTime, []byte(GetJWTRefreshSecret()))
 }
