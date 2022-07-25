@@ -135,7 +135,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	queueGroup.GET("/:id", h.GetQueueItem, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	queueGroup.PUT("/:id", h.UpdateQueueItem, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	queueGroup.DELETE("/:id", h.DeleteQueueItem, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	queueGroup.GET("/:id/log", h.ReadQueueLogFile, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	queueGroup.GET("/:id/tail", h.ReadQueueLogFile, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Twitch
 	twitchGroup := e.Group("/twitch")
