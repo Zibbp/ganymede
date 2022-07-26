@@ -12,6 +12,7 @@ import (
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
+	"github.com/zibbp/ganymede/internal/metrics"
 	"github.com/zibbp/ganymede/internal/playback"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/scheduler"
@@ -52,8 +53,9 @@ func Run() error {
 	liveService := live.NewService(store, twitchService, archiveService)
 	schedulerService := scheduler.NewService(liveService, archiveService)
 	playbackService := playback.NewService(store)
+	metricsService := metrics.NewService(store)
 
-	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService)
+	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService)
 
 	if err := httpHandler.Serve(); err != nil {
 		return err

@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -27,6 +28,7 @@ type Services struct {
 	LiveService      LiveService
 	SchedulerService SchedulerService
 	PlaybackService  PlaybackService
+	MetricsService   MetricsService
 }
 
 type Handler struct {
@@ -34,7 +36,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
@@ -52,6 +54,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			LiveService:      liveService,
 			SchedulerService: schedulerService,
 			PlaybackService:  playbackService,
+			MetricsService:   metricsService,
 		},
 	}
 
@@ -82,6 +85,15 @@ func (h *Handler) mapRoutes() {
 
 	h.Server.GET("/", func(c echo.Context) error {
 		return c.String(200, "Hello, World!")
+	})
+
+	// Metrics
+	h.Server.GET("/metrics", func(c echo.Context) error {
+		r := h.GatherMetrics()
+
+		handler := promhttp.HandlerFor(r, promhttp.HandlerOpts{})
+		handler.ServeHTTP(c.Response(), c.Request())
+		return nil
 	})
 
 	v1 := h.Server.Group("/api/v1")
