@@ -39,6 +39,10 @@ Ganymede allows archiving of past streams (VODs) and livestreams both with a ren
 
 For in-depth documentation on features visit the [wiki](https://github.com/Zibbp/ganymede/wiki).
 
+## API
+
+Visit the [docs](https://github.com/Zibbp/ganymede/tree/master/docs) folder for the API docs.
+
 ## Installation
 
 ### Requirements
