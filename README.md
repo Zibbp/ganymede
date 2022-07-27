@@ -21,7 +21,7 @@ https://user-images.githubusercontent.com/21207065/180067579-674af497-090f-4e07-
 
 ## About
 
-Ganymede allows archiving of past streams (VODs) and livestreams both with a rendered chat. All files are saved in a friendly way that doesn't require Ganymede to view them (see [file structure](https://github.com/Zibbp/ganymede/wiki/File-Structure)).
+Ganymede allows archiving of past streams (VODs) and livestreams both with a rendered chat. All files are saved in a friendly way that doesn't require Ganymede to view them (see [file structure](https://github.com/Zibbp/ganymede/wiki/File-Structure)). Ganymede is the successor of [Ceres](https://github.com/Zibbp/Ceres).
 
 ## Features
 
@@ -37,7 +37,7 @@ Ganymede allows archiving of past streams (VODs) and livestreams both with a ren
 
 ## Documentation
 
-For in-depth documention on features visit the [wiki](https://github.com/Zibbp/ganymede/wiki).
+For in-depth documentation on features visit the [wiki](https://github.com/Zibbp/ganymede/wiki).
 
 ## Installation
 
@@ -61,7 +61,7 @@ Ganymede consists of four docker containers:
 Feel free to use an existing Postgres database container and Nginx container if you don't want to spin new ones up.
 
 1. Download a copy of the `docker-compose.yml` file and `nginx.conf`.
-2. Edit the `docker-compose.yml` file modifying the enviornment variables, see [environment variables](https://github.com/Zibbp/ganymede#environment-variables).
+2. Edit the `docker-compose.yml` file modifying the environment variables, see [environment variables](https://github.com/Zibbp/ganymede#environment-variables).
 3. Run `docker compose up -d`.
 4. Visit the address and port you specified for the frontend and login with username: `admin` password: `ganymede`.
 5. Change the admin password *or* create a new user, grant admin permissions on that user, and delete the admin user.
@@ -70,53 +70,46 @@ Feel free to use an existing Postgres database container and Nginx container if 
 
 ##### API
 
-`DB_HOST` Host of the database
-
-`DB_PORT` Port of the database
-
-`DB_USER` Username for the database
-
-`DB_PASS` Password for the database
-
-`DB_NAME` Name for the database
-
-`DB_SSL` Whether SSL should be used for the DB connection. `enable/disable`
-
-`JWT_SECRET` String for signing JWT tokens.
-
-`JWT_REFRESH_SECRET` String for signing JWT refresh tokens.
-
-`TWITCH_CLIENT_ID` Twitch application client ID.
-
-`TWITCH_CLIENT_SECRET` Twitch application client secret.
-
-`FRONTEND_HOST` Host for the frontend, used for CORS. Example: `http://192.168.1.2:4801`
+| ENV Name               | Description                                                             |
+|------------------------|-------------------------------------------------------------------------|
+| `DB_HOST`              | Host of the database.                                                   |
+| `DB_PORT`              | Port of the database.                                                   |
+| `DB_USER`              | Username for the database.                                              |
+| `DB_PASS`              | Password for the database.                                              |
+  | `DB_NAME`              | Name of the database.                                                   |
+| `DB_SSL`               | Whether to use SSL or not `enable/disable`.                             |
+| `JWT_SECRET`           | Secret for JWT tokens.                                                  |
+| `JWT_REFRESH_SECRET`   | Secret for JWT refresh tokens.                                          |
+| `TWITCH_CLIENT_ID`     | Twitch application client ID.                                           |
+| `TWITCH_CLIENT_SECRET` | Twitch application client secret.                                       |
+| `FRONTEND_HOST`        | Host of the frontend, used for CORS. Example: `http://192.168.1.2:4801` |
 
 ##### Frontend
 
-`NUXT_PUBLIC_API_URL` Host for the API. Example: `http://192.168.1.2:4800`
-
-`NUXT_PUBLIC_CDN_URL` Host for the Nginx serivce. Example: `http://197.148.1.2:4802`
+| ENV Name              | Description                                                     |
+|-----------------------|-----------------------------------------------------------------|
+| `NUXT_PUBLIC_API_URL` | Host for the API. Example: `http://192.168.1.2:4800`.           |
+| `NUXT_PUBLIC_CDN_URL` | Host for the Nginx serivce. Example: `http://197.148.1.2:4802`. |
 
 ##### DB
 
 **Ensure these are the same in the API environment variables.**
 
-`POSTGRES_PASSWORD` Database password.
-
-`POSTGRES_USER` Database username.
-
-`POSTGRES_DB` Database name.
+| ENV Name            | Description           |
+|---------------------|-----------------------|
+| `POSTGRES_PASSWORD` | Database password     |
+| `POSTGRES_USER`     | Database username.    |
+| `POSTGRES_DB`       | Name of the database. |
 
 ### Volumes
 
 ##### API
 
-`/mnt/vault/vods:/vods` Mount for VOD storage. This example I have my NAS mounted to `/mnt/vault/vods`.
-
-`./logs:/logs` Queue log folder.
-
-`./data:/data` Config folder
+| Volume  | Description                                                                     | Example                 |
+|---------|---------------------------------------------------------------------------------|-------------------------|
+| `/vods` | Mount for VOD storage. This example I have my NAS mounted to `/mnt/vault/vods`. | `/mnt/vault/vods:/vods` |
+| `/logs` | Queue log folder.                                                               | `./logs:/logs`          |
+| `/data` | Config folder.                                                                  | `./data:/data`          |
 
 **Optional**
 
@@ -124,8 +117,10 @@ Feel free to use an existing Postgres database container and Nginx container if 
 
 ##### Nginx
 
-`/mnt/vault/vods:/mnt/vods` Same as the API volume.
-`/path/to/nginx.conf:/etc/nginx/nginx.conf:ro` Path to the Nginx conf file.
+| Volume                     | Description                                    | Example                                        |
+|----------------------------|------------------------------------------------|------------------------------------------------|
+| `/mnt/vods`                | VOD storage, same as the API container volume. | `/mnt/vault/vods:/mnt/vods`                    |
+| `/etc/nginx/nginx.conf:ro` | Path to the Nginx conf file.                   | `/path/to/nginx.conf:/etc/nginx/nginx.conf:ro` |
 
 
 ## Acknowledgements
