@@ -84,7 +84,7 @@ func (h *Handler) mapRoutes() {
 	log.Debug().Msg("mapping routes")
 
 	h.Server.GET("/", func(c echo.Context) error {
-		return c.String(200, "Hello, World!")
+		return c.String(200, "Ganymede API")
 	})
 
 	// Metrics
