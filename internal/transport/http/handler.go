@@ -29,6 +29,7 @@ type Services struct {
 	SchedulerService SchedulerService
 	PlaybackService  PlaybackService
 	MetricsService   MetricsService
+	PlaylistService  PlaylistService
 }
 
 type Handler struct {
@@ -36,7 +37,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
@@ -55,6 +56,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			SchedulerService: schedulerService,
 			PlaybackService:  playbackService,
 			MetricsService:   metricsService,
+			PlaylistService:  playlistService,
 		},
 	}
 
@@ -191,6 +193,15 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	playbackGroup.POST("/progress", h.UpdateProgress, authMiddleware, auth.GetUserMiddleware)
 	playbackGroup.POST("/status", h.UpdateStatus, authMiddleware, auth.GetUserMiddleware)
 	playbackGroup.DELETE("/:id", h.DeleteProgress, authMiddleware, auth.GetUserMiddleware)
+
+	// Playlist
+	playlistGroup := e.Group("/playlist")
+	playlistGroup.GET("/:id", h.GetPlaylist)
+	playlistGroup.GET("", h.GetPlaylists)
+	playlistGroup.POST("", h.CreatePlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	playlistGroup.POST("/:id", h.AddVodToPlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	playlistGroup.DELETE("/:id", h.DeletePlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	playlistGroup.PUT("/:id", h.UpdatePlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 }
 
 func (h *Handler) Serve() error {
