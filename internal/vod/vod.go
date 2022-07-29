@@ -167,3 +167,13 @@ func (s *Service) SearchVods(c echo.Context, term string) ([]*ent.Vod, error) {
 
 	return v, nil
 }
+
+func (s *Service) GetVodPlaylists(c echo.Context, vodID uuid.UUID) ([]*ent.Playlist, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithPlaylists().Only(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod playlists")
+		return nil, fmt.Errorf("error getting vod playlists: %v", err)
+	}
+
+	return v.Edges.Playlists, nil
+}

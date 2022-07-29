@@ -9,49 +9,49 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
-	"github.com/zibbp/ganymede/ent/user"
 )
 
-// UserDelete is the builder for deleting a User entity.
-type UserDelete struct {
+// PlaylistDelete is the builder for deleting a Playlist entity.
+type PlaylistDelete struct {
 	config
 	hooks    []Hook
-	mutation *UserMutation
+	mutation *PlaylistMutation
 }
 
-// Where appends a list predicates to the UserDelete builder.
-func (ud *UserDelete) Where(ps ...predicate.User) *UserDelete {
-	ud.mutation.Where(ps...)
-	return ud
+// Where appends a list predicates to the PlaylistDelete builder.
+func (pd *PlaylistDelete) Where(ps ...predicate.Playlist) *PlaylistDelete {
+	pd.mutation.Where(ps...)
+	return pd
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ud *UserDelete) Exec(ctx context.Context) (int, error) {
+func (pd *PlaylistDelete) Exec(ctx context.Context) (int, error) {
 	var (
 		err      error
 		affected int
 	)
-	if len(ud.hooks) == 0 {
-		affected, err = ud.sqlExec(ctx)
+	if len(pd.hooks) == 0 {
+		affected, err = pd.sqlExec(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*UserMutation)
+			mutation, ok := m.(*PlaylistMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
 			}
-			ud.mutation = mutation
-			affected, err = ud.sqlExec(ctx)
+			pd.mutation = mutation
+			affected, err = pd.sqlExec(ctx)
 			mutation.done = true
 			return affected, err
 		})
-		for i := len(ud.hooks) - 1; i >= 0; i-- {
-			if ud.hooks[i] == nil {
+		for i := len(pd.hooks) - 1; i >= 0; i-- {
+			if pd.hooks[i] == nil {
 				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
 			}
-			mut = ud.hooks[i](mut)
+			mut = pd.hooks[i](mut)
 		}
-		if _, err := mut.Mutate(ctx, ud.mutation); err != nil {
+		if _, err := mut.Mutate(ctx, pd.mutation); err != nil {
 			return 0, err
 		}
 	}
@@ -59,57 +59,57 @@ func (ud *UserDelete) Exec(ctx context.Context) (int, error) {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ud *UserDelete) ExecX(ctx context.Context) int {
-	n, err := ud.Exec(ctx)
+func (pd *PlaylistDelete) ExecX(ctx context.Context) int {
+	n, err := pd.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ud *UserDelete) sqlExec(ctx context.Context) (int, error) {
+func (pd *PlaylistDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := &sqlgraph.DeleteSpec{
 		Node: &sqlgraph.NodeSpec{
-			Table: user.Table,
+			Table: playlist.Table,
 			ID: &sqlgraph.FieldSpec{
 				Type:   field.TypeUUID,
-				Column: user.FieldID,
+				Column: playlist.FieldID,
 			},
 		},
 	}
-	if ps := ud.mutation.predicates; len(ps) > 0 {
+	if ps := pd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ud.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, pd.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
 	return affected, err
 }
 
-// UserDeleteOne is the builder for deleting a single User entity.
-type UserDeleteOne struct {
-	ud *UserDelete
+// PlaylistDeleteOne is the builder for deleting a single Playlist entity.
+type PlaylistDeleteOne struct {
+	pd *PlaylistDelete
 }
 
 // Exec executes the deletion query.
-func (udo *UserDeleteOne) Exec(ctx context.Context) error {
-	n, err := udo.ud.Exec(ctx)
+func (pdo *PlaylistDeleteOne) Exec(ctx context.Context) error {
+	n, err := pdo.pd.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{user.Label}
+		return &NotFoundError{playlist.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (udo *UserDeleteOne) ExecX(ctx context.Context) {
-	udo.ud.ExecX(ctx)
+func (pdo *PlaylistDeleteOne) ExecX(ctx context.Context) {
+	pdo.pd.ExecX(ctx)
 }
