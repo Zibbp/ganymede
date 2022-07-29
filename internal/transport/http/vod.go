@@ -19,6 +19,7 @@ type VodService interface {
 	DeleteVod(c echo.Context, vID uuid.UUID) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	SearchVods(c echo.Context, query string) ([]*ent.Vod, error)
+	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
 }
 
 type CreateVodRequest struct {
@@ -212,6 +213,18 @@ func (h *Handler) SearchVods(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "q is required")
 	}
 	v, err := h.Service.VodService.SearchVods(c, q)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) GetVodPlaylists(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	v, err := h.Service.VodService.GetVodPlaylists(c, vID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
