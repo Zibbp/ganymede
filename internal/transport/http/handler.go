@@ -141,6 +141,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.GET("/search", h.SearchVods)
 	vodGroup.PUT("/:id", h.UpdateVod, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	vodGroup.DELETE("/:id", h.DeleteVod, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	vodGroup.GET("/:id/playlist", h.GetVodPlaylists)
 
 	// Queue
 	queueGroup := e.Group("/queue")
@@ -200,6 +201,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	playlistGroup.GET("", h.GetPlaylists)
 	playlistGroup.POST("", h.CreatePlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	playlistGroup.POST("/:id", h.AddVodToPlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	playlistGroup.DELETE("/:id/vod", h.DeleteVodFromPlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	playlistGroup.DELETE("/:id", h.DeletePlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	playlistGroup.PUT("/:id", h.UpdatePlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 }

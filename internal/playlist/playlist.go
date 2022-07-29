@@ -100,3 +100,17 @@ func (s *Service) DeletePlaylist(c echo.Context, playlistID uuid.UUID) error {
 
 	return nil
 }
+
+func (s *Service) DeleteVodFromPlaylist(c echo.Context, playlistID uuid.UUID, vodID uuid.UUID) error {
+	_, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).Only(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("playlist not found")
+	}
+
+	_, err = s.Store.Client.Playlist.UpdateOneID(playlistID).RemoveVodIDs(vodID).Save(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("error deleting vod from playlist: %v", err)
+	}
+
+	return nil
+}

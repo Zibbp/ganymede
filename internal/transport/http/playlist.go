@@ -15,6 +15,7 @@ type PlaylistService interface {
 	GetPlaylist(c echo.Context, playlistID uuid.UUID) (*ent.Playlist, error)
 	UpdatePlaylist(c echo.Context, playlistID uuid.UUID, playlistDto playlist.Playlist) (*ent.Playlist, error)
 	DeletePlaylist(c echo.Context, playlistID uuid.UUID) error
+	DeleteVodFromPlaylist(c echo.Context, playlistID uuid.UUID, vodID uuid.UUID) error
 }
 
 type CreatePlaylistRequest struct {
@@ -118,6 +119,29 @@ func (h *Handler) DeletePlaylist(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
 	}
 	err = h.Service.PlaylistService.DeletePlaylist(c, pID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "ok")
+}
+
+func (h *Handler) DeleteVodFromPlaylist(c echo.Context) error {
+	pID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
+	}
+	avtpr := new(AddVodToPlaylistRequest)
+	if err := c.Bind(avtpr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(avtpr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	vID, err := uuid.Parse(avtpr.VodID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
+	}
+	err = h.Service.PlaylistService.DeleteVodFromPlaylist(c, pID, vID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
