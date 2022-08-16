@@ -82,13 +82,13 @@ Feel free to use an existing Postgres database container and Nginx container if 
 | `DB_PASS`              | Password for the database.                                              |
   | `DB_NAME`              | Name of the database.                                                   |
 | `DB_SSL`               | Whether to use SSL. Default: `disable`. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information. |
-| `DB_SSL_ROOT_CERT` | Path to DB SSL root certificate. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.
+| `DB_SSL_ROOT_CERT` | *Optional* Path to DB SSL root certificate. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.
 | `JWT_SECRET`           | Secret for JWT tokens.                                                  |
 | `JWT_REFRESH_SECRET`   | Secret for JWT refresh tokens.                                          |
 | `TWITCH_CLIENT_ID`     | Twitch application client ID.                                           |
 | `TWITCH_CLIENT_SECRET` | Twitch application client secret.                                       |
 | `FRONTEND_HOST`        | Host of the frontend, used for CORS. Example: `http://192.168.1.2:4801` |
-| `COOKIE_DOMAIN` | Base domain for cookies. Used when reverse proxying. See [reverse proxy](https://github.com/Zibbp/ganymede/wiki/Reverse-Proxy) for more information.
+| `COOKIE_DOMAIN` | *Optional* Base domain for cookies. Used when reverse proxying. See [reverse proxy](https://github.com/Zibbp/ganymede/wiki/Reverse-Proxy) for more information.
 
 ##### Frontend
 
