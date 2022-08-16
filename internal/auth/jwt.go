@@ -101,7 +101,7 @@ func generateToken(user *user.User, expirationTime time.Time, secret []byte) (st
 // Here we are creating a new cookie, which will store the valid JWT token.
 func setTokenCookie(name, token string, expiration time.Time, c echo.Context) {
 	// Get optional cookie domain name
-	cookieDomain := os.Getenv("FRONTEND_HOST")
+	cookieDomain := os.Getenv("COOKIE_DOMAIN")
 	cookie := new(http.Cookie)
 	cookie.Name = name
 	cookie.Value = token
