@@ -639,6 +639,7 @@ func (s *Service) TaskLiveVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queu
 	live, err := ch.QueryLive().Only(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("error getting live")
+		return
 	}
 	live.Update().SetIsLive(false).SaveX(context.Background())
 
@@ -646,6 +647,7 @@ func (s *Service) TaskLiveVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queu
 	duration, err := exec.GetVideoDuration(fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
 	if err != nil {
 		log.Error().Err(err).Msg("error getting video duration")
+		return
 	}
 	v.Update().SetDuration(duration).SaveX(context.Background())
 
