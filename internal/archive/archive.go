@@ -631,7 +631,9 @@ func (s *Service) TaskLiveVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queu
 	}
 
 	// Send kill command to chat download
-	busC <- true
+	if q.TaskChatDownload != utils.Success {
+		busC <- true
+	}
 
 	q.Update().SetTaskVideoDownload(utils.Success).SaveX(context.Background())
 
