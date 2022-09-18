@@ -60,8 +60,8 @@ func (s *Service) twitchAuthSchedule(scheduler *gocron.Scheduler) {
 func (s *Service) checkLiveStreamSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up check live stream schedule")
 	configLiveCheckInterval := viper.GetInt("live_check_interval")
-	log.Debug().Msgf("setting live check interval to run every %d minutes", configLiveCheckInterval)
-	scheduler.Every(configLiveCheckInterval).Minutes().Do(func() {
+	log.Debug().Msgf("setting live check interval to run every %d seconds", configLiveCheckInterval)
+	scheduler.Every(configLiveCheckInterval).Seconds().Do(func() {
 		log.Debug().Msg("running check live stream schedule")
 		err := s.LiveService.Check()
 		if err != nil {
