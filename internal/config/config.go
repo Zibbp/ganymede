@@ -21,7 +21,7 @@ func NewService(store *database.Database) *Service {
 
 type Conf struct {
 	Debug               bool   `json:"debug"`
-	LiveCheckInterval   int    `json:"live_check_interval"`
+	LiveCheckInterval   int    `json:"live_check_interval_seconds"`
 	ActiveQueueItems    int    `json:"active_queue_items"`
 	RegistrationEnabled bool   `json:"registration_enabled"`
 	WebhookURL          string `json:"webhook_url"`
@@ -43,7 +43,7 @@ func NewConfig() {
 	viper.SetConfigType(configType)
 
 	viper.SetDefault("debug", false)
-	viper.SetDefault("live_check_interval", 5)
+	viper.SetDefault("live_check_interval_seconds", 300)
 	viper.SetDefault("active_queue_items", 2)
 	viper.SetDefault("registration_enabled", true)
 	viper.SetDefault("webhook_url", "")
