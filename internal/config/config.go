@@ -1,12 +1,15 @@
 package config
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/database"
 	"os"
+	"strings"
 )
 
 type Service struct {
@@ -58,7 +61,11 @@ func NewConfig() {
 			log.Panic().Err(err).Msg("error creating config file")
 		}
 	} else {
+		log.Info().Msgf("config file found at %s, loading", configPath)
 		err := viper.ReadInConfig()
+		// Rewrite config file to apply new variables and remove old values
+		refreshConfig(configPath)
+		log.Debug().Msgf("config file loaded: %s", viper.ConfigFileUsed())
 		if err != nil {
 			log.Panic().Err(err).Msg("error reading config file")
 		}
@@ -94,4 +101,57 @@ func (s *Service) UpdateConfig(c echo.Context, cDto *Conf) error {
 		return fmt.Errorf("error writing config file: %w", err)
 	}
 	return nil
+}
+
+// refreshConfig: rewrites config file applying variable changes and removing old ones
+func refreshConfig(configPath string) {
+	err := unset("live_check_interval")
+	if err != nil {
+		log.Error().Err(err).Msg("error unsetting config value")
+	}
+	err = viper.WriteConfigAs(configPath)
+	if err != nil {
+		log.Panic().Err(err).Msg("error writing config file")
+	}
+}
+
+// unset: removes variable from config file
+// https://github.com/spf13/viper/issues/632#issuecomment-869668629
+func unset(vars ...string) error {
+	cfg := viper.AllSettings()
+	vals := cfg
+
+	for _, v := range vars {
+		parts := strings.Split(v, ".")
+		for i, k := range parts {
+			v, ok := vals[k]
+			if !ok {
+				// Doesn't exist no action needed
+				break
+			}
+
+			switch len(parts) {
+			case i + 1:
+				// Last part so delete.
+				delete(vals, k)
+			default:
+				m, ok := v.(map[string]interface{})
+				if !ok {
+					return fmt.Errorf("unsupported type: %T for %q", v, strings.Join(parts[0:i], "."))
+				}
+				vals = m
+			}
+		}
+	}
+
+	b, err := json.MarshalIndent(cfg, "", " ")
+	if err != nil {
+		return err
+	}
+
+	if err = viper.ReadConfig(bytes.NewReader(b)); err != nil {
+		return err
+	}
+
+	return viper.WriteConfig()
 }
