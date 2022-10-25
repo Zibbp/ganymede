@@ -12,7 +12,7 @@ RUN apk add --update --no-cache unzip
 
 WORKDIR /tmp
 RUN wget https://github.com/rsms/inter/releases/download/v3.19/Inter-3.19.zip && unzip Inter-3.19.zip
-RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.40.7/TwitchDownloaderCLI-LinuxAlpine-x64.zip && unzip TwitchDownloaderCLI-LinuxAlpine-x64.zip
+RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.50.4/TwitchDownloaderCLI-LinuxAlpine-x64.zip && unzip TwitchDownloaderCLI-LinuxAlpine-x64.zip
 
 FROM alpine:latest AS production
 
