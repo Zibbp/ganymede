@@ -12,6 +12,8 @@ import (
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/twitch"
+	"github.com/zibbp/ganymede/internal/utils"
+	"strconv"
 	"time"
 )
 
@@ -27,6 +29,15 @@ type Live struct {
 	ArchiveChat bool      `json:"archive_chat"`
 	Resolution  string    `json:"resolution"`
 	LastLive    time.Time `json:"last_live"`
+}
+
+type ConvertChat struct {
+	FileName      string `json:"file_name"`
+	ChannelName   string `json:"channel_name"`
+	VodID         string `json:"vod_id"`
+	ChannelID     int    `json:"channel_id"`
+	VodExternalID string `json:"vod_external_id"`
+	ChatStart     string `json:"chat_start"`
 }
 
 func NewService(store *database.Database, twitchService *twitch.Service, archiveService *archive.Service) *Service {
@@ -143,6 +154,26 @@ func (s *Service) Check() error {
 		}
 	}
 
+	return nil
+}
+
+func (s *Service) ConvertChat(c echo.Context, convertChatDto ConvertChat) error {
+	i, err := strconv.ParseInt(convertChatDto.ChatStart, 10, 64)
+	if err != nil {
+		return fmt.Errorf("error parsing chat start: %v", err)
+	}
+	tm := time.Unix(i, 0)
+	err = utils.ConvertTwitchLiveChatToVodChat(
+		fmt.Sprintf("/tmp/%s", convertChatDto.FileName),
+		convertChatDto.ChannelName,
+		convertChatDto.VodID,
+		convertChatDto.VodExternalID,
+		convertChatDto.ChannelID,
+		tm,
+	)
+	if err != nil {
+		return fmt.Errorf("error converting chat: %v", err)
+	}
 	return nil
 }
 
