@@ -174,7 +174,7 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 			Fragments: []Fragment{
 				Fragment{
 					Text:     "Initial chat message",
-					Emoticon: &Emoticon{},
+					Emoticon: nil,
 					Pos1:     0,
 					Pos2:     0,
 				},
@@ -281,7 +281,7 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 				fragmentText := parsedComment.Message.Body[:emoteFragment.Pos1]
 				fragment := Fragment{
 					Text:     fragmentText,
-					Emoticon: &Emoticon{},
+					Emoticon: nil,
 				}
 				formattedEmoteFragments = append(formattedEmoteFragments, fragment)
 				formattedEmoteFragments = append(formattedEmoteFragments, emoteFragment)
@@ -289,7 +289,7 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 				fragmentText := parsedComment.Message.Body[emoteFragments[i-1].Pos2:emoteFragment.Pos1]
 				fragment := Fragment{
 					Text:     fragmentText,
-					Emoticon: &Emoticon{},
+					Emoticon: nil,
 				}
 				formattedEmoteFragments = append(formattedEmoteFragments, fragment)
 				formattedEmoteFragments = append(formattedEmoteFragments, emoteFragment)
@@ -303,7 +303,7 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 				fragmentText := parsedComment.Message.Body[formattedEmoteFragments[lastItem].Pos2:]
 				fragment := Fragment{
 					Text:     fragmentText,
-					Emoticon: &Emoticon{},
+					Emoticon: nil,
 				}
 				formattedEmoteFragments = append(formattedEmoteFragments, fragment)
 			}
@@ -320,7 +320,7 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 			for _, liveBadge := range liveComment.Author.Badges {
 				userBadge := UserBadge{
 					ID:      liveBadge.Name,
-					Version: liveBadge.Version,
+					Version: string(rune(liveBadge.Version)),
 				}
 				parsedComment.Message.UserBadges = append(parsedComment.Message.UserBadges, userBadge)
 			}
