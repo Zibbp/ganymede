@@ -57,7 +57,7 @@ type Fragment struct {
 
 type UserBadge struct {
 	ID      string `json:"_id"`
-	Version int    `json:"version"`
+	Version string `json:"version"`
 }
 
 type UserNoticParams struct {
