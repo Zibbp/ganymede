@@ -186,6 +186,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.GET("/check", h.Check, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.POST("/chat-convert", h.ConvertChat, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 
 	// Playback
 	playbackGroup := e.Group("/playback")

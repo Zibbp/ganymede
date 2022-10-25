@@ -14,6 +14,7 @@ type LiveService interface {
 	DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error
 	UpdateLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
 	Check() error
+	ConvertChat(c echo.Context, convertDto live.ConvertChat) error
 }
 
 type AddWatchedChannelRequest struct {
@@ -25,6 +26,15 @@ type AddWatchedChannelRequest struct {
 type UpdateWatchedChannelRequest struct {
 	Resolution  string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
 	ArchiveChat bool   `json:"archive_chat"`
+}
+
+type ConvertChatRequest struct {
+	FileName      string `json:"file_name" validate:"required"`
+	ChannelName   string `json:"channel_name" validate:"required"`
+	VodID         string `json:"vod_id" validate:"required"`
+	ChannelID     int    `json:"channel_id" validate:"required"`
+	VodExternalID string `json:"vod_external_id" validate:"required"`
+	ChatStart     string `json:"chat_start" validate:"required"`
 }
 
 func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
@@ -109,4 +119,29 @@ func (h *Handler) Check(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, "ok")
+}
+
+// ConvertChat Adhoc convert live chat to TD chat format
+func (h *Handler) ConvertChat(c echo.Context) error {
+	ccr := new(ConvertChatRequest)
+	if err := c.Bind(ccr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(ccr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	convertDto := live.ConvertChat{
+		FileName:      ccr.FileName,
+		ChannelName:   ccr.ChannelName,
+		VodID:         ccr.VodID,
+		ChannelID:     ccr.ChannelID,
+		VodExternalID: ccr.VodExternalID,
+		ChatStart:     ccr.ChatStart,
+	}
+	err := h.Service.LiveService.ConvertChat(c, convertDto)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "ok - converted chat found in /tmp/")
 }
