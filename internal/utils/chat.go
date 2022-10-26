@@ -320,7 +320,7 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 			for _, liveBadge := range liveComment.Author.Badges {
 				userBadge := UserBadge{
 					ID:      liveBadge.Name,
-					Version: string(rune(liveBadge.Version)),
+					Version: strconv.Itoa(liveBadge.Version),
 				}
 				parsedComment.Message.UserBadges = append(parsedComment.Message.UserBadges, userBadge)
 			}
