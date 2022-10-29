@@ -16,9 +16,15 @@ RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.50.5/Twi
 
 FROM alpine:latest AS production
 
+ENV CHAT_DOWNLOADER_VER=0.2.1
+
 RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg bash && ln -sf python3 /usr/bin/python
 RUN python3 -m ensurepip
-RUN pip3 install --no-cache --upgrade pip streamlink chat-downloader
+RUN pip3 install --no-cache --upgrade pip streamlink
+
+# Install forked version of chat-downloader
+RUN wget https://github.com/Zibbp/chat-downloader/archive/refs/tags/v${CHAT_DOWNLOADER_VER}.tar.gz
+RUN tar -xvf v${CHAT_DOWNLOADER_VER}.tar.gz && cd chat-downloader-${CHAT_DOWNLOADER_VER} && python3 setup.py install && cd .. && rm -f v${CHAT_DOWNLOADER_VER}.tar.gz && rm -rf chat-downloader-${CHAT_DOWNLOADER_VER}
 
 # Inter font install
 ENV INTER_PATH "/tmp/Inter Desktop/Inter-Regular.otf"
@@ -29,6 +35,6 @@ RUN mkdir -p /usr/share/fonts/opentype/ && install -m644 /tmp/Inter-Regular.otf 
 COPY --from=build-stage-02 /tmp/TwitchDownloaderCLI /usr/local/bin/
 RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
 
-COPY --from=build-stage-01 /app .
+COPY --from=build-stage-01 /app/ganymede-api .
 
 CMD ["./ganymede-api"]
