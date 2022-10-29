@@ -86,10 +86,10 @@ type LiveComment struct {
 				URL    string `json:"url"`
 				Width  int    `json:"width"`
 			} `json:"icons"`
-			ID      string `json:"id"`
-			Name    string `json:"name"`
-			Title   string `json:"title"`
-			Version int    `json:"version"`
+			ID      string      `json:"id"`
+			Name    string      `json:"name"`
+			Title   string      `json:"title"`
+			Version interface{} `json:"version"`
 		} `json:"badges"`
 		DisplayName  string `json:"display_name"`
 		ID           string `json:"id"`
@@ -320,7 +320,7 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 			for _, liveBadge := range liveComment.Author.Badges {
 				userBadge := UserBadge{
 					ID:      liveBadge.Name,
-					Version: strconv.Itoa(liveBadge.Version),
+					Version: fmt.Sprintf("%v", liveBadge.Version),
 				}
 				parsedComment.Message.UserBadges = append(parsedComment.Message.UserBadges, userBadge)
 			}
