@@ -1,12 +1,14 @@
 package http
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -20,6 +22,7 @@ type VodService interface {
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	SearchVods(c echo.Context, query string) ([]*ent.Vod, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
+	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID) (vod.Pagination, error)
 }
 
 type CreateVodRequest struct {
@@ -225,6 +228,33 @@ func (h *Handler) GetVodPlaylists(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	v, err := h.Service.VodService.GetVodPlaylists(c, vID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) GetVodsPagination(c echo.Context) error {
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid limit: %w", err).Error())
+	}
+	offset, err := strconv.Atoi(c.QueryParam("offset"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid offset: %w", err).Error())
+	}
+
+	cID := c.QueryParam("channel_id")
+	cUUID := uuid.Nil
+
+	if cID != "" {
+		cUUID, err = uuid.Parse(cID)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

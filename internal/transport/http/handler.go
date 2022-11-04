@@ -142,6 +142,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.PUT("/:id", h.UpdateVod, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	vodGroup.DELETE("/:id", h.DeleteVod, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	vodGroup.GET("/:id/playlist", h.GetVodPlaylists)
+	vodGroup.GET("/paginate", h.GetVodsPagination)
 
 	// Queue
 	queueGroup := e.Group("/queue")

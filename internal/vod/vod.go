@@ -11,6 +11,7 @@ import (
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
+	"math"
 	"time"
 )
 
@@ -41,6 +42,14 @@ type Vod struct {
 	StreamedAt       time.Time         `json:"streamed_at"`
 	UpdatedAt        time.Time         `json:"updated_at"`
 	CreatedAt        time.Time         `json:"created_at"`
+}
+
+type Pagination struct {
+	Offset     int        `json:"offset"`
+	Limit      int        `json:"limit"`
+	TotalCount int        `json:"total_count"`
+	Pages      int        `json:"pages"`
+	Data       []*ent.Vod `json:"data"`
 }
 
 func (s *Service) CreateVod(vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
@@ -176,4 +185,55 @@ func (s *Service) GetVodPlaylists(c echo.Context, vodID uuid.UUID) ([]*ent.Playl
 	}
 
 	return v.Edges.Playlists, nil
+}
+
+func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID) (Pagination, error) {
+
+	if channelId == uuid.Nil {
+		var pagination Pagination
+
+		v, err := s.Store.Client.Vod.Query().Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).All(c.Request().Context())
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting vods")
+			return pagination, fmt.Errorf("error getting vods: %v", err)
+		}
+
+		totalCount, err := s.Store.Client.Vod.Query().Count(c.Request().Context())
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting vods count")
+			return pagination, fmt.Errorf("error getting vods count: %v", err)
+		}
+
+		pagination.Limit = limit
+		pagination.Offset = offset
+		pagination.TotalCount = totalCount
+		pagination.Pages = int(math.Ceil(float64(totalCount) / float64(limit)))
+		pagination.Data = v
+
+		return pagination, nil
+
+	} else {
+		var pagination Pagination
+
+		v, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(channelId))).Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).All(c.Request().Context())
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting vods")
+			return pagination, fmt.Errorf("error getting vods: %v", err)
+		}
+
+		totalCount, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(channelId))).Count(c.Request().Context())
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting vods count")
+			return pagination, fmt.Errorf("error getting vods count: %v", err)
+		}
+
+		pagination.Limit = limit
+		pagination.Offset = offset
+		pagination.TotalCount = totalCount
+		pagination.Pages = int(math.Ceil(float64(totalCount) / float64(limit)))
+		pagination.Data = v
+
+		return pagination, nil
+	}
+
 }
