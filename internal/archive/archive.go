@@ -481,7 +481,6 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 		log.Error().Err(err).Msg("error downloading thumbnail")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
 		s.TaskError(v, q, "vod_download_thumbnail")
-		return
 	}
 	// Download web resolution thumbnail
 	err = utils.DownloadFile(webResThumbnailUrl, fmt.Sprintf("%s/%s_%s", ch.Name, v.ExtID, v.ID), fmt.Sprintf("%s-web_thumbnail.jpg", v.ExtID))
@@ -489,10 +488,11 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 		log.Error().Err(err).Msg("error downloading thumbnail")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
 		s.TaskError(v, q, "vod_download_thumbnail")
-		return
 	}
 
-	q.Update().SetTaskVodDownloadThumbnail(utils.Success).SaveX(context.Background())
+	if err == nil {
+		q.Update().SetTaskVodDownloadThumbnail(utils.Success).SaveX(context.Background())
+	}
 
 	if cont == true {
 		// Refresh thumbnails for live stream after 30 minutes
