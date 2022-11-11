@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/utils"
 	"net/http"
@@ -78,7 +79,9 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	// and to wait for twitch api auth
 	go h.Service.SchedulerService.StartLiveScheduler()
 	go h.Service.SchedulerService.StartQueueItemScheduler()
-	go h.Service.SchedulerService.StartJwksScheduler()
+	if viper.GetBool("oauth_enabled") {
+		go h.Service.SchedulerService.StartJwksScheduler()
+	}
 
 	return h
 }
