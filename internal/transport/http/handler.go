@@ -78,6 +78,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	// and to wait for twitch api auth
 	go h.Service.SchedulerService.StartLiveScheduler()
 	go h.Service.SchedulerService.StartQueueItemScheduler()
+	go h.Service.SchedulerService.StartJwksScheduler()
 
 	return h
 }
@@ -104,54 +105,58 @@ func (h *Handler) mapRoutes() {
 
 func groupV1Routes(e *echo.Group, h *Handler) {
 
-	authMiddleware := middleware.JWTWithConfig(middleware.JWTConfig{
-		Claims:                  &auth.Claims{},
-		SigningKey:              []byte(auth.GetJWTSecret()),
-		TokenLookup:             "cookie:access-token",
-		ErrorHandlerWithContext: auth.JWTErrorChecker,
-	})
+	//auth.GuardMiddleware := middleware.JWTWithConfig(middleware.JWTConfig{
+	//	Claims:                  &auth.Claims{},
+	//	SigningKey:              []byte(auth.GetJWTSecret()),
+	//	TokenLookup:             "cookie:access-token",
+	//	ErrorHandlerWithContext: auth.JWTErrorChecker,
+	//})
 
 	// Demo route for testing JWT and roles
 	e.GET("/demo", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, "Demo Route")
-	}, authMiddleware)
+	}, auth.GuardMiddleware)
 
 	// Auth
 	authGroup := e.Group("/auth")
 	authGroup.POST("/register", h.Register)
 	authGroup.POST("/login", h.Login)
 	authGroup.POST("/refresh", h.Refresh)
-	authGroup.GET("/me", h.Me, authMiddleware)
-	authGroup.POST("/change-password", h.ChangePassword, authMiddleware, auth.GetUserMiddleware)
+	authGroup.GET("/me", h.Me, auth.GuardMiddleware, auth.GetUserMiddleware)
+	authGroup.POST("/change-password", h.ChangePassword, auth.GuardMiddleware, auth.GetUserMiddleware)
+	authGroup.GET("/oauth/login", h.OAuthLogin)
+	authGroup.GET("/oauth/callback", h.OAuthCallback)
+	authGroup.GET("/oauth/refresh", h.OAuthTokenRefresh)
+	authGroup.GET("/oauth/test", h.OAuthTest, auth.GuardMiddleware)
 
 	// Channel
 	channelGroup := e.Group("/channel")
-	channelGroup.POST("", h.CreateChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	channelGroup.POST("", h.CreateChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	channelGroup.GET("", h.GetChannels)
 	channelGroup.GET("/:id", h.GetChannel)
 	channelGroup.GET("/name/:name", h.GetChannelByName)
-	channelGroup.PUT("/:id", h.UpdateChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	channelGroup.DELETE("/:id", h.DeleteChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	channelGroup.PUT("/:id", h.UpdateChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	channelGroup.DELETE("/:id", h.DeleteChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// VOD
 	vodGroup := e.Group("/vod")
-	vodGroup.POST("", h.CreateVod, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	vodGroup.POST("", h.CreateVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	vodGroup.GET("", h.GetVods)
 	vodGroup.GET("/:id", h.GetVod)
 	vodGroup.GET("/search", h.SearchVods)
-	vodGroup.PUT("/:id", h.UpdateVod, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	vodGroup.DELETE("/:id", h.DeleteVod, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	vodGroup.PUT("/:id", h.UpdateVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	vodGroup.DELETE("/:id", h.DeleteVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	vodGroup.GET("/:id/playlist", h.GetVodPlaylists)
 	vodGroup.GET("/paginate", h.GetVodsPagination)
 
 	// Queue
 	queueGroup := e.Group("/queue")
-	queueGroup.POST("", h.CreateQueueItem, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	queueGroup.GET("", h.GetQueueItems, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	queueGroup.GET("/:id", h.GetQueueItem, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	queueGroup.PUT("/:id", h.UpdateQueueItem, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	queueGroup.DELETE("/:id", h.DeleteQueueItem, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	queueGroup.GET("/:id/tail", h.ReadQueueLogFile, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	queueGroup.POST("", h.CreateQueueItem, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	queueGroup.GET("", h.GetQueueItems, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	queueGroup.GET("/:id", h.GetQueueItem, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	queueGroup.PUT("/:id", h.UpdateQueueItem, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	queueGroup.DELETE("/:id", h.DeleteQueueItem, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	queueGroup.GET("/:id/tail", h.ReadQueueLogFile, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Twitch
 	twitchGroup := e.Group("/twitch")
@@ -160,52 +165,56 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 
 	// Archive
 	archiveGroup := e.Group("/archive")
-	archiveGroup.POST("/channel", h.ArchiveTwitchChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	archiveGroup.POST("/vod", h.ArchiveTwitchVod, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	archiveGroup.POST("/restart", h.RestartTask, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	archiveGroup.POST("/channel", h.ArchiveTwitchChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	archiveGroup.POST("/vod", h.ArchiveTwitchVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	archiveGroup.POST("/restart", h.RestartTask, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Admin
 	adminGroup := e.Group("/admin")
-	adminGroup.GET("/stats", h.GetStats, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	adminGroup.GET("/stats", h.GetStats, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// User
 	userGroup := e.Group("/user")
-	userGroup.GET("", h.GetUsers, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	userGroup.GET("/:id", h.GetUser, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	userGroup.PUT("/:id", h.UpdateUser, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	userGroup.DELETE("/:id", h.DeleteUser, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	userGroup.GET("", h.GetUsers, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	userGroup.GET("/:id", h.GetUser, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	userGroup.PUT("/:id", h.UpdateUser, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	userGroup.DELETE("/:id", h.DeleteUser, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// Config
 	configGroup := e.Group("/config")
-	configGroup.GET("", h.GetConfig, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	configGroup.PUT("", h.UpdateConfig, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	configGroup.GET("", h.GetConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	configGroup.PUT("", h.UpdateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// Live
 	liveGroup := e.Group("/live")
-	liveGroup.GET("", h.GetLiveWatchedChannels, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	liveGroup.POST("", h.AddLiveWatchedChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	liveGroup.GET("/check", h.Check, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	liveGroup.POST("/chat-convert", h.ConvertChat, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.GET("", h.GetLiveWatchedChannels, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.POST("", h.AddLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.GET("/check", h.Check, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.POST("/chat-convert", h.ConvertChat, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 
 	// Playback
 	playbackGroup := e.Group("/playback")
-	playbackGroup.GET("", h.GetAllProgress, authMiddleware, auth.GetUserMiddleware)
-	playbackGroup.GET("/:id", h.GetProgress, authMiddleware, auth.GetUserMiddleware)
-	playbackGroup.POST("/progress", h.UpdateProgress, authMiddleware, auth.GetUserMiddleware)
-	playbackGroup.POST("/status", h.UpdateStatus, authMiddleware, auth.GetUserMiddleware)
-	playbackGroup.DELETE("/:id", h.DeleteProgress, authMiddleware, auth.GetUserMiddleware)
+	playbackGroup.GET("", h.GetAllProgress, auth.GuardMiddleware, auth.GetUserMiddleware)
+	playbackGroup.GET("/:id", h.GetProgress, auth.GuardMiddleware, auth.GetUserMiddleware)
+	playbackGroup.POST("/progress", h.UpdateProgress, auth.GuardMiddleware, auth.GetUserMiddleware)
+	playbackGroup.POST("/status", h.UpdateStatus, auth.GuardMiddleware, auth.GetUserMiddleware)
+	playbackGroup.DELETE("/:id", h.DeleteProgress, auth.GuardMiddleware, auth.GetUserMiddleware)
 
 	// Playlist
 	playlistGroup := e.Group("/playlist")
 	playlistGroup.GET("/:id", h.GetPlaylist)
 	playlistGroup.GET("", h.GetPlaylists)
-	playlistGroup.POST("", h.CreatePlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	playlistGroup.POST("/:id", h.AddVodToPlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	playlistGroup.DELETE("/:id/vod", h.DeleteVodFromPlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	playlistGroup.DELETE("/:id", h.DeletePlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	playlistGroup.PUT("/:id", h.UpdatePlaylist, authMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	playlistGroup.POST("", h.CreatePlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	playlistGroup.POST("/:id", h.AddVodToPlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	playlistGroup.DELETE("/:id/vod", h.DeleteVodFromPlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	playlistGroup.DELETE("/:id", h.DeletePlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	playlistGroup.PUT("/:id", h.UpdatePlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+
+	// Exec
+	execGroup := e.Group("/exec")
+	execGroup.POST("/ffprobe", h.GetFfprobeData, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.UserRole))
 }
 
 func (h *Handler) Serve() error {
