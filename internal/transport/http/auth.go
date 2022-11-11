@@ -170,9 +170,3 @@ func (h *Handler) OAuthTokenRefresh(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, "tokens refreshed")
 }
-
-func (h *Handler) OAuthTest(c echo.Context) error {
-	// Get params from query string
-
-	return c.JSON(http.StatusOK, "cool")
-}

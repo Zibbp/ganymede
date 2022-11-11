@@ -127,7 +127,6 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	authGroup.GET("/oauth/login", h.OAuthLogin)
 	authGroup.GET("/oauth/callback", h.OAuthCallback)
 	authGroup.GET("/oauth/refresh", h.OAuthTokenRefresh)
-	authGroup.GET("/oauth/test", h.OAuthTest, auth.GuardMiddleware)
 
 	// Channel
 	channelGroup := e.Group("/channel")
