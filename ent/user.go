@@ -18,10 +18,14 @@ type User struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// Sub holds the value of the "sub" field.
+	Sub string `json:"sub,omitempty"`
 	// Username holds the value of the "username" field.
 	Username string `json:"username,omitempty"`
 	// Password holds the value of the "password" field.
 	Password string `json:"-"`
+	// Oauth holds the value of the "oauth" field.
+	Oauth bool `json:"oauth,omitempty"`
 	// Role holds the value of the "role" field.
 	Role utils.Role `json:"role,omitempty"`
 	// Webhook holds the value of the "webhook" field.
@@ -37,7 +41,9 @@ func (*User) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldUsername, user.FieldPassword, user.FieldRole, user.FieldWebhook:
+		case user.FieldOauth:
+			values[i] = new(sql.NullBool)
+		case user.FieldSub, user.FieldUsername, user.FieldPassword, user.FieldRole, user.FieldWebhook:
 			values[i] = new(sql.NullString)
 		case user.FieldUpdatedAt, user.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -64,6 +70,12 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 			} else if value != nil {
 				u.ID = *value
 			}
+		case user.FieldSub:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sub", values[i])
+			} else if value.Valid {
+				u.Sub = value.String
+			}
 		case user.FieldUsername:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field username", values[i])
@@ -75,6 +87,12 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field password", values[i])
 			} else if value.Valid {
 				u.Password = value.String
+			}
+		case user.FieldOauth:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field oauth", values[i])
+			} else if value.Valid {
+				u.Oauth = value.Bool
 			}
 		case user.FieldRole:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -128,10 +146,16 @@ func (u *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", u.ID))
+	builder.WriteString("sub=")
+	builder.WriteString(u.Sub)
+	builder.WriteString(", ")
 	builder.WriteString("username=")
 	builder.WriteString(u.Username)
 	builder.WriteString(", ")
 	builder.WriteString("password=<sensitive>")
+	builder.WriteString(", ")
+	builder.WriteString("oauth=")
+	builder.WriteString(fmt.Sprintf("%v", u.Oauth))
 	builder.WriteString(", ")
 	builder.WriteString("role=")
 	builder.WriteString(fmt.Sprintf("%v", u.Role))

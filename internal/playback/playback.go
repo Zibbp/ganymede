@@ -19,7 +19,7 @@ func NewService(store *database.Database) *Service {
 }
 
 func (s *Service) UpdateProgress(c *auth.CustomContext, vID uuid.UUID, time int) error {
-	uID := c.UserClaims.UserID
+	uID := c.User.ID
 
 	check, err := s.Store.Client.Playback.Query().Where(playback.UserID(uID)).Where(playback.VodID(vID)).Only(c.Request().Context())
 	if err != nil {
@@ -45,7 +45,7 @@ func (s *Service) UpdateProgress(c *auth.CustomContext, vID uuid.UUID, time int)
 }
 
 func (s *Service) GetProgress(c *auth.CustomContext, vID uuid.UUID) (*ent.Playback, error) {
-	uID := c.UserClaims.UserID
+	uID := c.User.ID
 
 	playbackEntry, err := s.Store.Client.Playback.Query().Where(playback.UserID(uID)).Where(playback.VodID(vID)).Only(c.Request().Context())
 	if err != nil {
@@ -59,7 +59,7 @@ func (s *Service) GetProgress(c *auth.CustomContext, vID uuid.UUID) (*ent.Playba
 }
 
 func (s *Service) GetAllProgress(c *auth.CustomContext) ([]*ent.Playback, error) {
-	uID := c.UserClaims.UserID
+	uID := c.User.ID
 
 	playbackEntries, err := s.Store.Client.Playback.Query().Where(playback.UserID(uID)).All(c.Request().Context())
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *Service) GetAllProgress(c *auth.CustomContext) ([]*ent.Playback, error)
 }
 
 func (s *Service) UpdateStatus(c *auth.CustomContext, vID uuid.UUID, status string) error {
-	uID := c.UserClaims.UserID
+	uID := c.User.ID
 
 	_, err := s.Store.Client.Playback.Query().Where(playback.UserID(uID)).Where(playback.VodID(vID)).Only(c.Request().Context())
 	if err != nil {
@@ -98,7 +98,7 @@ func (s *Service) UpdateStatus(c *auth.CustomContext, vID uuid.UUID, status stri
 }
 
 func (s *Service) DeleteProgress(c *auth.CustomContext, vID uuid.UUID) error {
-	uID := c.UserClaims.UserID
+	uID := c.User.ID
 
 	_, err := s.Store.Client.Playback.Delete().Where(playback.UserID(uID)).Where(playback.VodID(vID)).Exec(c.Request().Context())
 	if err != nil {

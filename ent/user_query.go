@@ -254,15 +254,14 @@ func (uq *UserQuery) Clone() *UserQuery {
 // Example:
 //
 //	var v []struct {
-//		Username string `json:"username,omitempty"`
+//		Sub string `json:"sub,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.User.Query().
-//		GroupBy(user.FieldUsername).
+//		GroupBy(user.FieldSub).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-//
 func (uq *UserQuery) GroupBy(field string, fields ...string) *UserGroupBy {
 	grbuild := &UserGroupBy{config: uq.config}
 	grbuild.fields = append([]string{field}, fields...)
@@ -283,13 +282,12 @@ func (uq *UserQuery) GroupBy(field string, fields ...string) *UserGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Username string `json:"username,omitempty"`
+//		Sub string `json:"sub,omitempty"`
 //	}
 //
 //	client.User.Query().
-//		Select(user.FieldUsername).
+//		Select(user.FieldSub).
 //		Scan(ctx, &v)
-//
 func (uq *UserQuery) Select(fields ...string) *UserSelect {
 	uq.fields = append(uq.fields, fields...)
 	selbuild := &UserSelect{UserQuery: uq}

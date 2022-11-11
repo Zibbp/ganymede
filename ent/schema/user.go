@@ -17,8 +17,10 @@ type User struct {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
+		field.String("sub").Unique().Optional(),
 		field.String("username").Unique(),
-		field.String("password").Sensitive(),
+		field.String("password").Sensitive().Optional(),
+		field.Bool("oauth").Default(false),
 		field.Enum("role").GoType(utils.Role("")).Default(string(utils.UserRole)),
 		field.String("webhook").Optional(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),

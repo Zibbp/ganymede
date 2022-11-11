@@ -25,6 +25,7 @@ Ganymede allows archiving of past streams (VODs) and livestreams both with a ren
 
 ## Features
 
+- SSO / OAuth authentication ([wiki](https://github.com/Zibbp/ganymede/wiki/SSO---OpenID-Connect))
 - Light/dark mode toggle.
 - Twitch VOD/Livestream support.
 - Queue holds.
@@ -74,21 +75,25 @@ Feel free to use an existing Postgres database container and Nginx container if 
 
 ##### API
 
-| ENV Name               | Description                                                             |
-|------------------------|-------------------------------------------------------------------------|
-| `DB_HOST`              | Host of the database.                                                   |
-| `DB_PORT`              | Port of the database.                                                   |
-| `DB_USER`              | Username for the database.                                              |
-| `DB_PASS`              | Password for the database.                                              |
-  | `DB_NAME`              | Name of the database.                                                   |
-| `DB_SSL`               | Whether to use SSL. Default: `disable`. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information. |
-| `DB_SSL_ROOT_CERT` | *Optional* Path to DB SSL root certificate. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.
-| `JWT_SECRET`           | Secret for JWT tokens.                                                  |
-| `JWT_REFRESH_SECRET`   | Secret for JWT refresh tokens.                                          |
-| `TWITCH_CLIENT_ID`     | Twitch application client ID.                                           |
-| `TWITCH_CLIENT_SECRET` | Twitch application client secret.                                       |
-| `FRONTEND_HOST`        | Host of the frontend, used for CORS. Example: `http://192.168.1.2:4801` |
-| `COOKIE_DOMAIN` | *Optional* Base domain for cookies. Used when reverse proxying. See [reverse proxy](https://github.com/Zibbp/ganymede/wiki/Reverse-Proxy) for more information.
+| ENV Name               | Description                                                                                                                                                     |
+|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `DB_HOST`              | Host of the database.                                                                                                                                           |
+| `DB_PORT`              | Port of the database.                                                                                                                                           |
+| `DB_USER`              | Username for the database.                                                                                                                                      |
+| `DB_PASS`              | Password for the database.                                                                                                                                      |
+  | `DB_NAME`              | Name of the database.                                                                                                                                           |
+| `DB_SSL`               | Whether to use SSL. Default: `disable`. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.                                       |
+| `DB_SSL_ROOT_CERT`     | *Optional* Path to DB SSL root certificate. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.                                   
+| `JWT_SECRET`           | Secret for JWT tokens.                                                                                                                                          |
+| `JWT_REFRESH_SECRET`   | Secret for JWT refresh tokens.                                                                                                                                  |
+| `TWITCH_CLIENT_ID`     | Twitch application client ID.                                                                                                                                   |
+| `TWITCH_CLIENT_SECRET` | Twitch application client secret.                                                                                                                               |
+| `FRONTEND_HOST`        | Host of the frontend, used for CORS. Example: `http://192.168.1.2:4801`                                                                                         |
+| `COOKIE_DOMAIN`        | *Optional* Base domain for cookies. Used when reverse proxying. See [reverse proxy](https://github.com/Zibbp/ganymede/wiki/Reverse-Proxy) for more information. 
+| `OAUTH_PROVIDER_URL`   | *Optional* OAuth provider URL. See https://github.com/Zibbp/ganymede/wiki/SSO---OpenID-Connect                                                                                                                             |
+| `OAUTH_CLIENT_ID`      | *Optional* OAuth client ID.                                                                                                                                     |
+| `OAUTH_CLIENT_SECRET`  | *Optional* OAuth client secret.                                                                                                                                 |
+| `OAUTH_REDIRECT_URL`   | *Optional* OAuth redirect URL, points to the API. Example: `http://localhost:4000/api/v1/auth/oauth/callback`.                                                  |                                                                    |
 
 ##### Frontend
 

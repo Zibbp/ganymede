@@ -26,6 +26,7 @@ type Conf struct {
 	Debug               bool   `json:"debug"`
 	LiveCheckInterval   int    `json:"live_check_interval_seconds"`
 	ActiveQueueItems    int    `json:"active_queue_items"`
+	OAuthEnabled        bool   `json:"oauth_enabled"`
 	RegistrationEnabled bool   `json:"registration_enabled"`
 	WebhookURL          string `json:"webhook_url"`
 	DBSeeded            bool   `json:"db_seeded"`
@@ -48,6 +49,7 @@ func NewConfig() {
 	viper.SetDefault("debug", false)
 	viper.SetDefault("live_check_interval_seconds", 300)
 	viper.SetDefault("active_queue_items", 2)
+	viper.SetDefault("oauth_enabled", false)
 	viper.SetDefault("registration_enabled", true)
 	viper.SetDefault("webhook_url", "")
 	viper.SetDefault("db_seeded", false)
@@ -108,6 +110,10 @@ func refreshConfig(configPath string) {
 	err := unset("live_check_interval")
 	if err != nil {
 		log.Error().Err(err).Msg("error unsetting config value")
+	}
+	// Add authentication method
+	if !viper.IsSet("oauth_enabled") {
+		viper.Set("oauth_enabled", false)
 	}
 	err = viper.WriteConfigAs(configPath)
 	if err != nil {

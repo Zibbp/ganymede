@@ -12,8 +12,54 @@ import (
 	"os"
 )
 
+var db *Database
+
 type Database struct {
 	Client *ent.Client
+}
+
+func InitializeDatabase() {
+	log.Debug().Msg("setting up database connection")
+
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPass := os.Getenv("DB_PASS")
+	dbName := os.Getenv("DB_NAME")
+	dbSSL := os.Getenv("DB_SSL")
+	dbSSLTRootCert := os.Getenv("DB_SSL_ROOT_CERT")
+
+	connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s sslrootcert=%s",
+		dbHost, dbPort, dbUser, dbPass, dbName, dbSSL, dbSSLTRootCert)
+
+	client, err := ent.Open("postgres", connectionString)
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("error connecting to database")
+	}
+
+	// Run auto migration
+	if err := client.Schema.Create(context.Background()); err != nil {
+		log.Fatal().Err(err).Msg("error running auto migration")
+	}
+
+	isSeeded := viper.Get("db_seeded").(bool)
+	if !isSeeded {
+		log.Debug().Msg("seeding database")
+		if err := seedDatabase(client); err != nil {
+			log.Fatal().Err(err).Msg("error seeding database")
+		}
+		viper.Set("db_seeded", true)
+		err := viper.WriteConfig()
+		if err != nil {
+			log.Fatal().Err(err).Msg("error writing config")
+		}
+	}
+	db = &Database{Client: client}
+}
+
+func DB() *Database {
+	return db
 }
 
 func NewDatabase() (*Database, error) {

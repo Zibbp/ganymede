@@ -82,6 +82,13 @@ func IDLTE(id uuid.UUID) predicate.User {
 	})
 }
 
+// Sub applies equality check predicate on the "sub" field. It's identical to SubEQ.
+func Sub(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSub), v))
+	})
+}
+
 // Username applies equality check predicate on the "username" field. It's identical to UsernameEQ.
 func Username(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -93,6 +100,13 @@ func Username(v string) predicate.User {
 func Password(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPassword), v))
+	})
+}
+
+// Oauth applies equality check predicate on the "oauth" field. It's identical to OauthEQ.
+func Oauth(v bool) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldOauth), v))
 	})
 }
 
@@ -114,6 +128,131 @@ func UpdatedAt(v time.Time) predicate.User {
 func CreatedAt(v time.Time) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// SubEQ applies the EQ predicate on the "sub" field.
+func SubEQ(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSub), v))
+	})
+}
+
+// SubNEQ applies the NEQ predicate on the "sub" field.
+func SubNEQ(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldSub), v))
+	})
+}
+
+// SubIn applies the In predicate on the "sub" field.
+func SubIn(vs ...string) predicate.User {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldSub), v...))
+	})
+}
+
+// SubNotIn applies the NotIn predicate on the "sub" field.
+func SubNotIn(vs ...string) predicate.User {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldSub), v...))
+	})
+}
+
+// SubGT applies the GT predicate on the "sub" field.
+func SubGT(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldSub), v))
+	})
+}
+
+// SubGTE applies the GTE predicate on the "sub" field.
+func SubGTE(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldSub), v))
+	})
+}
+
+// SubLT applies the LT predicate on the "sub" field.
+func SubLT(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldSub), v))
+	})
+}
+
+// SubLTE applies the LTE predicate on the "sub" field.
+func SubLTE(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldSub), v))
+	})
+}
+
+// SubContains applies the Contains predicate on the "sub" field.
+func SubContains(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldSub), v))
+	})
+}
+
+// SubHasPrefix applies the HasPrefix predicate on the "sub" field.
+func SubHasPrefix(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldSub), v))
+	})
+}
+
+// SubHasSuffix applies the HasSuffix predicate on the "sub" field.
+func SubHasSuffix(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldSub), v))
+	})
+}
+
+// SubIsNil applies the IsNil predicate on the "sub" field.
+func SubIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldSub)))
+	})
+}
+
+// SubNotNil applies the NotNil predicate on the "sub" field.
+func SubNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldSub)))
+	})
+}
+
+// SubEqualFold applies the EqualFold predicate on the "sub" field.
+func SubEqualFold(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldSub), v))
+	})
+}
+
+// SubContainsFold applies the ContainsFold predicate on the "sub" field.
+func SubContainsFold(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldSub), v))
 	})
 }
 
@@ -325,6 +464,20 @@ func PasswordHasSuffix(v string) predicate.User {
 	})
 }
 
+// PasswordIsNil applies the IsNil predicate on the "password" field.
+func PasswordIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldPassword)))
+	})
+}
+
+// PasswordNotNil applies the NotNil predicate on the "password" field.
+func PasswordNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldPassword)))
+	})
+}
+
 // PasswordEqualFold applies the EqualFold predicate on the "password" field.
 func PasswordEqualFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -336,6 +489,20 @@ func PasswordEqualFold(v string) predicate.User {
 func PasswordContainsFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldPassword), v))
+	})
+}
+
+// OauthEQ applies the EQ predicate on the "oauth" field.
+func OauthEQ(v bool) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldOauth), v))
+	})
+}
+
+// OauthNEQ applies the NEQ predicate on the "oauth" field.
+func OauthNEQ(v bool) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldOauth), v))
 	})
 }
 

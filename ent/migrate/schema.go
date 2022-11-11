@@ -119,8 +119,10 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "sub", Type: field.TypeString, Unique: true, Nullable: true},
 		{Name: "username", Type: field.TypeString, Unique: true},
-		{Name: "password", Type: field.TypeString},
+		{Name: "password", Type: field.TypeString, Nullable: true},
+		{Name: "oauth", Type: field.TypeBool, Default: false},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "editor", "archiver", "user"}, Default: "user"},
 		{Name: "webhook", Type: field.TypeString, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},

@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"time"
@@ -45,6 +46,15 @@ func (s *Service) StartQueueItemScheduler() {
 	scheduler.StartAsync()
 }
 
+func (s *Service) StartJwksScheduler() {
+	time.Sleep(time.Second * 5)
+	scheduler := gocron.NewScheduler(time.UTC)
+
+	s.fetchJwksSchedule(scheduler)
+
+	scheduler.StartAsync()
+}
+
 func (s *Service) twitchAuthSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up twitch auth schedule")
 	scheduler.Every(7).Days().Do(func() {
@@ -76,5 +86,16 @@ func (s *Service) checkHeldQueueItems(scheduler *gocron.Scheduler) {
 	scheduler.Every(1).Hours().Do(func() {
 		log.Debug().Msg("running queue item schedule")
 		go s.ArchiveService.CheckOnHold()
+	})
+}
+
+func (s *Service) fetchJwksSchedule(scheduler *gocron.Scheduler) {
+	log.Debug().Msg("setting up fetch jwks schedule")
+	scheduler.Every(1).Days().Do(func() {
+		log.Debug().Msg("running fetch jwks schedule")
+		err := auth.FetchJWKS()
+		if err != nil {
+			log.Error().Err(err).Msg("failed to fetch jwks")
+		}
 	})
 }
