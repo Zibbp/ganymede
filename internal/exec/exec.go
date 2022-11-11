@@ -2,6 +2,7 @@ package exec
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -231,4 +232,19 @@ func GetVideoDuration(path string) (int, error) {
 	duration := int(durFloat)
 	log.Debug().Msgf("video duration: %d", duration)
 	return duration, nil
+}
+
+func GetFfprobeData(path string) (map[string]interface{}, error) {
+	cmd := osExec.Command("ffprobe", "-hide_banner", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", path)
+	out, err := cmd.Output()
+	if err != nil {
+		log.Error().Err(err).Msgf("error getting ffprobe data for %s - err: %w", path, err)
+		return nil, fmt.Errorf("error getting ffprobe data for %s - err: %w ", path, err)
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(out, &data); err != nil {
+		log.Error().Err(err).Msg("error unmarshalling ffprobe data")
+		return nil, err
+	}
+	return data, nil
 }
