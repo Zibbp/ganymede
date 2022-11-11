@@ -11,6 +11,7 @@ import (
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
+	_ "github.com/zibbp/ganymede/internal/kv"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/metrics"
 	"github.com/zibbp/ganymede/internal/playback"
@@ -36,11 +37,13 @@ func Run() error {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	store, err := database.NewDatabase()
-	if err != nil {
-		log.Error().Err(err).Msg("failed to create database connection")
-		return err
-	}
+	//store, err := database.NewDatabase()
+	//if err != nil {
+	//	log.Error().Err(err).Msg("failed to create database connection")
+	//	return err
+	//}
+	database.InitializeDatabase()
+	store := database.DB()
 
 	authService := auth.NewService(store)
 	channelService := channel.NewService(store)
