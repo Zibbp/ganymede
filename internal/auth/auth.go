@@ -35,7 +35,7 @@ func NewService(store *database.Database) *Service {
 		providerURL := os.Getenv("OAUTH_PROVIDER_URL")
 		oauthClientID := os.Getenv("OAUTH_CLIENT_ID")
 		oauthClientSecret := os.Getenv("OAUTH_CLIENT_SECRET")
-		oauthRedirectURL := os.Getenv("OAUTH_CALLBACK_URL")
+		oauthRedirectURL := os.Getenv("OAUTH_REDIRECT_URL")
 		if providerURL == "" || oauthClientID == "" || oauthClientSecret == "" || oauthRedirectURL == "" {
 			log.Fatal().Msg("missing environment variables for oauth authentication")
 		}
