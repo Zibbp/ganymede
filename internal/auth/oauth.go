@@ -124,9 +124,6 @@ func (s *Service) OAuthCallback(c echo.Context) error {
 		return fmt.Errorf("failed to check user: %w", err)
 	}
 
-	fmt.Println(oauth2Token.Expiry)
-	fmt.Println(oauth2Token.Expiry.Unix())
-	fmt.Println(time.Now().Unix())
 	// Get access token expiry
 	accessTokenExpire := time.Now().Add(time.Duration(oauth2Token.Expiry.Unix()-time.Now().Unix()) * time.Second)
 	// Get refresh token expiry
@@ -173,7 +170,6 @@ func CheckOAuthAccessToken(c echo.Context, accessToken string) (*UserInfo, error
 	// Parse token - this will also verify the signature
 	token, err := jwt.Parse(newAccessToken, jwks.Keyfunc)
 	if err != nil {
-		fmt.Println(err)
 		return nil, fmt.Errorf("failed to parse access token: %w", err)
 	}
 
@@ -198,46 +194,6 @@ func CheckOAuthAccessToken(c echo.Context, accessToken string) (*UserInfo, error
 	}
 
 	return &userInfo, nil
-}
-
-func getOAuthUserClaims(c, accessToken string) (UserInfo, error) {
-	clientID := os.Getenv("OAUTH_CLIENT_ID")
-
-	// Get JWKS from KV store
-	jwksString := kv.DB().Get("jwks")
-	if jwksString == "" {
-		return UserInfo{}, fmt.Errorf("jwks not found")
-	}
-	// Parse JWKS
-	jwks, err := keyfunc.NewJSON(json.RawMessage(jwksString))
-	if err != nil {
-		return UserInfo{}, fmt.Errorf("failed to parse jwks: %w", err)
-	}
-	// Remove new line characters from access token
-	newAccessToken := strings.Replace(accessToken, "\n", "", -1)
-
-	var oauthClaims OAuthClaims
-	// Parse token - this will also verify the signature
-	token, err := jwt.ParseWithClaims(newAccessToken, &oauthClaims, jwks.Keyfunc)
-	if err != nil {
-		fmt.Println(err)
-		return UserInfo{}, fmt.Errorf("failed to parse access token: %w", err)
-	}
-
-	if !token.Valid {
-		return UserInfo{}, fmt.Errorf("invalid access token")
-	}
-
-	// Check aud
-	aud := token.Claims.(jwt.MapClaims)["aud"]
-	if aud != clientID {
-		return UserInfo{}, fmt.Errorf("invalid aud claim")
-	}
-
-	// Get user info
-	fmt.Println(oauthClaims.userInfo)
-
-	return UserInfo{}, nil
 }
 
 func randString(nByte int) (string, error) {
