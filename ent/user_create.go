@@ -22,6 +22,20 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
+// SetSub sets the "sub" field.
+func (uc *UserCreate) SetSub(s string) *UserCreate {
+	uc.mutation.SetSub(s)
+	return uc
+}
+
+// SetNillableSub sets the "sub" field if the given value is not nil.
+func (uc *UserCreate) SetNillableSub(s *string) *UserCreate {
+	if s != nil {
+		uc.SetSub(*s)
+	}
+	return uc
+}
+
 // SetUsername sets the "username" field.
 func (uc *UserCreate) SetUsername(s string) *UserCreate {
 	uc.mutation.SetUsername(s)
@@ -31,6 +45,28 @@ func (uc *UserCreate) SetUsername(s string) *UserCreate {
 // SetPassword sets the "password" field.
 func (uc *UserCreate) SetPassword(s string) *UserCreate {
 	uc.mutation.SetPassword(s)
+	return uc
+}
+
+// SetNillablePassword sets the "password" field if the given value is not nil.
+func (uc *UserCreate) SetNillablePassword(s *string) *UserCreate {
+	if s != nil {
+		uc.SetPassword(*s)
+	}
+	return uc
+}
+
+// SetOauth sets the "oauth" field.
+func (uc *UserCreate) SetOauth(b bool) *UserCreate {
+	uc.mutation.SetOauth(b)
+	return uc
+}
+
+// SetNillableOauth sets the "oauth" field if the given value is not nil.
+func (uc *UserCreate) SetNillableOauth(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetOauth(*b)
+	}
 	return uc
 }
 
@@ -181,6 +217,10 @@ func (uc *UserCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (uc *UserCreate) defaults() {
+	if _, ok := uc.mutation.Oauth(); !ok {
+		v := user.DefaultOauth
+		uc.mutation.SetOauth(v)
+	}
 	if _, ok := uc.mutation.Role(); !ok {
 		v := user.DefaultRole
 		uc.mutation.SetRole(v)
@@ -204,8 +244,8 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Username(); !ok {
 		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "User.username"`)}
 	}
-	if _, ok := uc.mutation.Password(); !ok {
-		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "User.password"`)}
+	if _, ok := uc.mutation.Oauth(); !ok {
+		return &ValidationError{Name: "oauth", err: errors.New(`ent: missing required field "User.oauth"`)}
 	}
 	if _, ok := uc.mutation.Role(); !ok {
 		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "User.role"`)}
@@ -257,6 +297,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := uc.mutation.Sub(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldSub,
+		})
+		_node.Sub = value
+	}
 	if value, ok := uc.mutation.Username(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -272,6 +320,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Column: user.FieldPassword,
 		})
 		_node.Password = value
+	}
+	if value, ok := uc.mutation.Oauth(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: user.FieldOauth,
+		})
+		_node.Oauth = value
 	}
 	if value, ok := uc.mutation.Role(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

@@ -15,10 +15,14 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldSub holds the string denoting the sub field in the database.
+	FieldSub = "sub"
 	// FieldUsername holds the string denoting the username field in the database.
 	FieldUsername = "username"
 	// FieldPassword holds the string denoting the password field in the database.
 	FieldPassword = "password"
+	// FieldOauth holds the string denoting the oauth field in the database.
+	FieldOauth = "oauth"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
 	// FieldWebhook holds the string denoting the webhook field in the database.
@@ -34,8 +38,10 @@ const (
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
+	FieldSub,
 	FieldUsername,
 	FieldPassword,
+	FieldOauth,
 	FieldRole,
 	FieldWebhook,
 	FieldUpdatedAt,
@@ -53,6 +59,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultOauth holds the default value on creation for the "oauth" field.
+	DefaultOauth bool
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.

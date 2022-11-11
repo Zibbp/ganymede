@@ -300,7 +300,6 @@ func (qq *QueueQuery) WithVod(opts ...func(*VodQuery)) *QueueQuery {
 //		GroupBy(queue.FieldLiveArchive).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-//
 func (qq *QueueQuery) GroupBy(field string, fields ...string) *QueueGroupBy {
 	grbuild := &QueueGroupBy{config: qq.config}
 	grbuild.fields = append([]string{field}, fields...)
@@ -327,7 +326,6 @@ func (qq *QueueQuery) GroupBy(field string, fields ...string) *QueueGroupBy {
 //	client.Queue.Query().
 //		Select(queue.FieldLiveArchive).
 //		Scan(ctx, &v)
-//
 func (qq *QueueQuery) Select(fields ...string) *QueueSelect {
 	qq.fields = append(qq.fields, fields...)
 	selbuild := &QueueSelect{QueueQuery: qq}

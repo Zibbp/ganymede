@@ -300,7 +300,6 @@ func (pq *PlaylistQuery) WithVods(opts ...func(*VodQuery)) *PlaylistQuery {
 //		GroupBy(playlist.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-//
 func (pq *PlaylistQuery) GroupBy(field string, fields ...string) *PlaylistGroupBy {
 	grbuild := &PlaylistGroupBy{config: pq.config}
 	grbuild.fields = append([]string{field}, fields...)
@@ -327,7 +326,6 @@ func (pq *PlaylistQuery) GroupBy(field string, fields ...string) *PlaylistGroupB
 //	client.Playlist.Query().
 //		Select(playlist.FieldName).
 //		Scan(ctx, &v)
-//
 func (pq *PlaylistQuery) Select(fields ...string) *PlaylistSelect {
 	pq.fields = append(pq.fields, fields...)
 	selbuild := &PlaylistSelect{PlaylistQuery: pq}

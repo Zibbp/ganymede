@@ -300,7 +300,6 @@ func (lq *LiveQuery) WithChannel(opts ...func(*ChannelQuery)) *LiveQuery {
 //		GroupBy(live.FieldIsLive).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-//
 func (lq *LiveQuery) GroupBy(field string, fields ...string) *LiveGroupBy {
 	grbuild := &LiveGroupBy{config: lq.config}
 	grbuild.fields = append([]string{field}, fields...)
@@ -327,7 +326,6 @@ func (lq *LiveQuery) GroupBy(field string, fields ...string) *LiveGroupBy {
 //	client.Live.Query().
 //		Select(live.FieldIsLive).
 //		Scan(ctx, &v)
-//
 func (lq *LiveQuery) Select(fields ...string) *LiveSelect {
 	lq.fields = append(lq.fields, fields...)
 	selbuild := &LiveSelect{LiveQuery: lq}

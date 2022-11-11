@@ -29,6 +29,26 @@ func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	return uu
 }
 
+// SetSub sets the "sub" field.
+func (uu *UserUpdate) SetSub(s string) *UserUpdate {
+	uu.mutation.SetSub(s)
+	return uu
+}
+
+// SetNillableSub sets the "sub" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableSub(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetSub(*s)
+	}
+	return uu
+}
+
+// ClearSub clears the value of the "sub" field.
+func (uu *UserUpdate) ClearSub() *UserUpdate {
+	uu.mutation.ClearSub()
+	return uu
+}
+
 // SetUsername sets the "username" field.
 func (uu *UserUpdate) SetUsername(s string) *UserUpdate {
 	uu.mutation.SetUsername(s)
@@ -38,6 +58,34 @@ func (uu *UserUpdate) SetUsername(s string) *UserUpdate {
 // SetPassword sets the "password" field.
 func (uu *UserUpdate) SetPassword(s string) *UserUpdate {
 	uu.mutation.SetPassword(s)
+	return uu
+}
+
+// SetNillablePassword sets the "password" field if the given value is not nil.
+func (uu *UserUpdate) SetNillablePassword(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetPassword(*s)
+	}
+	return uu
+}
+
+// ClearPassword clears the value of the "password" field.
+func (uu *UserUpdate) ClearPassword() *UserUpdate {
+	uu.mutation.ClearPassword()
+	return uu
+}
+
+// SetOauth sets the "oauth" field.
+func (uu *UserUpdate) SetOauth(b bool) *UserUpdate {
+	uu.mutation.SetOauth(b)
+	return uu
+}
+
+// SetNillableOauth sets the "oauth" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableOauth(b *bool) *UserUpdate {
+	if b != nil {
+		uu.SetOauth(*b)
+	}
 	return uu
 }
 
@@ -183,6 +231,19 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := uu.mutation.Sub(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldSub,
+		})
+	}
+	if uu.mutation.SubCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldSub,
+		})
+	}
 	if value, ok := uu.mutation.Username(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -195,6 +256,19 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Type:   field.TypeString,
 			Value:  value,
 			Column: user.FieldPassword,
+		})
+	}
+	if uu.mutation.PasswordCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldPassword,
+		})
+	}
+	if value, ok := uu.mutation.Oauth(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: user.FieldOauth,
 		})
 	}
 	if value, ok := uu.mutation.Role(); ok {
@@ -243,6 +317,26 @@ type UserUpdateOne struct {
 	mutation *UserMutation
 }
 
+// SetSub sets the "sub" field.
+func (uuo *UserUpdateOne) SetSub(s string) *UserUpdateOne {
+	uuo.mutation.SetSub(s)
+	return uuo
+}
+
+// SetNillableSub sets the "sub" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableSub(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetSub(*s)
+	}
+	return uuo
+}
+
+// ClearSub clears the value of the "sub" field.
+func (uuo *UserUpdateOne) ClearSub() *UserUpdateOne {
+	uuo.mutation.ClearSub()
+	return uuo
+}
+
 // SetUsername sets the "username" field.
 func (uuo *UserUpdateOne) SetUsername(s string) *UserUpdateOne {
 	uuo.mutation.SetUsername(s)
@@ -252,6 +346,34 @@ func (uuo *UserUpdateOne) SetUsername(s string) *UserUpdateOne {
 // SetPassword sets the "password" field.
 func (uuo *UserUpdateOne) SetPassword(s string) *UserUpdateOne {
 	uuo.mutation.SetPassword(s)
+	return uuo
+}
+
+// SetNillablePassword sets the "password" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillablePassword(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetPassword(*s)
+	}
+	return uuo
+}
+
+// ClearPassword clears the value of the "password" field.
+func (uuo *UserUpdateOne) ClearPassword() *UserUpdateOne {
+	uuo.mutation.ClearPassword()
+	return uuo
+}
+
+// SetOauth sets the "oauth" field.
+func (uuo *UserUpdateOne) SetOauth(b bool) *UserUpdateOne {
+	uuo.mutation.SetOauth(b)
+	return uuo
+}
+
+// SetNillableOauth sets the "oauth" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableOauth(b *bool) *UserUpdateOne {
+	if b != nil {
+		uuo.SetOauth(*b)
+	}
 	return uuo
 }
 
@@ -427,6 +549,19 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			}
 		}
 	}
+	if value, ok := uuo.mutation.Sub(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldSub,
+		})
+	}
+	if uuo.mutation.SubCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldSub,
+		})
+	}
 	if value, ok := uuo.mutation.Username(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -439,6 +574,19 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Type:   field.TypeString,
 			Value:  value,
 			Column: user.FieldPassword,
+		})
+	}
+	if uuo.mutation.PasswordCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldPassword,
+		})
+	}
+	if value, ok := uuo.mutation.Oauth(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: user.FieldOauth,
 		})
 	}
 	if value, ok := uuo.mutation.Role(); ok {

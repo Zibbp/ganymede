@@ -262,7 +262,6 @@ func (pq *PlaybackQuery) Clone() *PlaybackQuery {
 //		GroupBy(playback.FieldVodID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-//
 func (pq *PlaybackQuery) GroupBy(field string, fields ...string) *PlaybackGroupBy {
 	grbuild := &PlaybackGroupBy{config: pq.config}
 	grbuild.fields = append([]string{field}, fields...)
@@ -289,7 +288,6 @@ func (pq *PlaybackQuery) GroupBy(field string, fields ...string) *PlaybackGroupB
 //	client.Playback.Query().
 //		Select(playback.FieldVodID).
 //		Scan(ctx, &v)
-//
 func (pq *PlaybackQuery) Select(fields ...string) *PlaybackSelect {
 	pq.fields = append(pq.fields, fields...)
 	selbuild := &PlaybackSelect{PlaybackQuery: pq}

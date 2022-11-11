@@ -373,7 +373,6 @@ func (vq *VodQuery) WithPlaylists(opts ...func(*PlaylistQuery)) *VodQuery {
 //		GroupBy(vod.FieldExtID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-//
 func (vq *VodQuery) GroupBy(field string, fields ...string) *VodGroupBy {
 	grbuild := &VodGroupBy{config: vq.config}
 	grbuild.fields = append([]string{field}, fields...)
@@ -400,7 +399,6 @@ func (vq *VodQuery) GroupBy(field string, fields ...string) *VodGroupBy {
 //	client.Vod.Query().
 //		Select(vod.FieldExtID).
 //		Scan(ctx, &v)
-//
 func (vq *VodQuery) Select(fields ...string) *VodSelect {
 	vq.fields = append(vq.fields, fields...)
 	selbuild := &VodSelect{VodQuery: vq}

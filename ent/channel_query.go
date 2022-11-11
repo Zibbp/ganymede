@@ -336,7 +336,6 @@ func (cq *ChannelQuery) WithLive(opts ...func(*LiveQuery)) *ChannelQuery {
 //		GroupBy(channel.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-//
 func (cq *ChannelQuery) GroupBy(field string, fields ...string) *ChannelGroupBy {
 	grbuild := &ChannelGroupBy{config: cq.config}
 	grbuild.fields = append([]string{field}, fields...)
@@ -363,7 +362,6 @@ func (cq *ChannelQuery) GroupBy(field string, fields ...string) *ChannelGroupBy 
 //	client.Channel.Query().
 //		Select(channel.FieldName).
 //		Scan(ctx, &v)
-//
 func (cq *ChannelQuery) Select(fields ...string) *ChannelSelect {
 	cq.fields = append(cq.fields, fields...)
 	selbuild := &ChannelSelect{ChannelQuery: cq}
