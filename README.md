@@ -25,7 +25,7 @@ Ganymede allows archiving of past streams (VODs) and livestreams both with a ren
 
 ## Features
 
-- SSO / OAuth authentication
+- SSO / OAuth authentication ([wiki](https://github.com/Zibbp/ganymede/wiki/SSO---OpenID-Connect))
 - Light/dark mode toggle.
 - Twitch VOD/Livestream support.
 - Queue holds.
