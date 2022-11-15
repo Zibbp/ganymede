@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -278,7 +279,10 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 		return nil, fmt.Errorf("error getting vod chat: %v", err)
 	}
 	var chatData chat.Chat
-	err = json.Unmarshal(data, &chatData)
+	// Use sonic to unmarshal the chat data
+	// https://github.com/bytedance/sonic
+	// It's actually 🔥 blazing fast
+	err = sonic.Unmarshal(data, &chatData)
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat")
 		return nil, fmt.Errorf("error getting vod chat: %v", err)
@@ -294,6 +298,41 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 	return filteredComments, nil
 }
 
+func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) ([]chat.Comment, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat")
+		return nil, fmt.Errorf("error getting vod chat: %v", err)
+	}
+	data, err := utils.ReadChatFile(v.ChatPath)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat")
+		return nil, fmt.Errorf("error getting vod chat: %v", err)
+	}
+	var chatData chat.Chat
+	// Use sonic to unmarshal the chat data
+	// https://github.com/bytedance/sonic
+	// It's actually 🔥 blazing fast
+	err = sonic.Unmarshal(data, &chatData)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat")
+		return nil, fmt.Errorf("error getting vod chat: %v", err)
+	}
+
+	var filteredComments []chat.Comment
+	for _, message := range chatData.Comments {
+		if message.ContentOffsetSeconds <= start {
+			filteredComments = append(filteredComments, message)
+		}
+	}
+	count := len(filteredComments)
+	// Count to int64
+	var i int64
+	i = int64(count)
+	comments := filteredComments[i-commentCount : i]
+	return comments, nil
+}
+
 func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error) {
 	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
 	if err != nil {
@@ -306,7 +345,10 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
 	var chatData chat.Chat
-	err = json.Unmarshal(data, &chatData)
+	// Use sonic to unmarshal the chat data
+	// https://github.com/bytedance/sonic
+	// It's actually 🔥 blazing fast
+	err = sonic.Unmarshal(data, &chatData)
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat emotes")
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
