@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/chat"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 	"net/http"
@@ -23,6 +24,9 @@ type VodService interface {
 	SearchVods(c echo.Context, query string) ([]*ent.Vod, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
 	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID) (vod.Pagination, error)
+	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) ([]chat.Comment, error)
+	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (string, error)
+	GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error)
 }
 
 type CreateVodRequest struct {
@@ -259,4 +263,54 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) GetUserIdFromChat(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	v, err := h.Service.VodService.GetUserIdFromChat(c, vID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) GetVodChatComments(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	start := c.QueryParam("start")
+	end := c.QueryParam("end")
+	startFloat, err := strconv.ParseFloat(start, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid start: %w", err).Error())
+	}
+	endFloat, err := strconv.ParseFloat(end, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid end: %w", err).Error())
+	}
+
+	v, err := h.Service.VodService.GetVodChatComments(c, vID, startFloat, endFloat)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) GetVodChatEmotes(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	emotes, err := h.Service.VodService.GetVodChatEmotes(c, vID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, emotes)
 }

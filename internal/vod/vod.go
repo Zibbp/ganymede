@@ -2,6 +2,7 @@ package vod
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -9,9 +10,11 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/vod"
+	"github.com/zibbp/ganymede/internal/chat"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
 	"math"
+	"strconv"
 	"time"
 )
 
@@ -236,4 +239,183 @@ func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, chann
 		return pagination, nil
 	}
 
+}
+
+func (s *Service) GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (string, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod")
+		return "", fmt.Errorf("error getting vod: %v", err)
+	}
+	data, err := utils.ReadChatFile(v.ChatPath)
+	if err != nil {
+		log.Debug().Err(err).Msg("error reading chat file")
+		return "", fmt.Errorf("error reading chat file: %v", err)
+	}
+	var chatData chat.Chat
+	err = json.Unmarshal(data, &chatData)
+	if err != nil {
+		log.Debug().Err(err).Msg("error unmarshalling chat data")
+		return "", fmt.Errorf("error unmarshalling chat data: %v", err)
+	}
+	if chatData.Streamer.ID == 0 {
+		return "", fmt.Errorf("error getting streamer id from chat")
+	}
+
+	return strconv.Itoa(int(chatData.Streamer.ID)), nil
+
+}
+
+func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) ([]chat.Comment, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat")
+		return nil, fmt.Errorf("error getting vod chat: %v", err)
+	}
+	data, err := utils.ReadChatFile(v.ChatPath)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat")
+		return nil, fmt.Errorf("error getting vod chat: %v", err)
+	}
+	var chatData chat.Chat
+	err = json.Unmarshal(data, &chatData)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat")
+		return nil, fmt.Errorf("error getting vod chat: %v", err)
+	}
+
+	var filteredComments []chat.Comment
+	for _, message := range chatData.Comments {
+		if message.ContentOffsetSeconds >= start && message.ContentOffsetSeconds <= end {
+			filteredComments = append(filteredComments, message)
+		}
+	}
+
+	return filteredComments, nil
+}
+
+func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat emotes")
+		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
+	}
+	data, err := utils.ReadChatFile(v.ChatPath)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat emotes")
+		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
+	}
+	var chatData chat.Chat
+	err = json.Unmarshal(data, &chatData)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat emotes")
+		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
+	}
+
+	if len(chatData.Emotes.FirstParty) > 0 && len(chatData.Emotes.ThirdParty) > 0 {
+		log.Debug().Msgf("detected embedded emotes for vod %s", vodID)
+		var ganymedeEmotes chat.GanymedeEmotes
+		// Loop through first party emotes
+		for _, emote := range chatData.Emotes.FirstParty {
+			var ganymedeEmote chat.GanymedeEmote
+			ganymedeEmote.Name = fmt.Sprint(emote.Name)
+			ganymedeEmote.ID = emote.ID
+			ganymedeEmote.URL = emote.Data
+			ganymedeEmote.Type = "embed"
+			ganymedeEmote.Width = emote.Width
+			ganymedeEmote.Height = emote.Height
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, ganymedeEmote)
+		}
+		// Loop through third party emotes
+		for _, emote := range chatData.Emotes.ThirdParty {
+			var ganymedeEmote chat.GanymedeEmote
+			ganymedeEmote.Name = fmt.Sprint(emote.Name)
+			ganymedeEmote.ID = emote.ID
+			ganymedeEmote.URL = emote.Data
+			ganymedeEmote.Type = "embed"
+			ganymedeEmote.Width = emote.Width
+			ganymedeEmote.Height = emote.Height
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, ganymedeEmote)
+		}
+		return &ganymedeEmotes, nil
+	} else {
+		// Embedded emotes not found, fetch emotes from the providers
+		var ganymedeEmotes chat.GanymedeEmotes
+		twitchGlobalEmotes, err := chat.GetTwitchGlobalEmotes()
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting twitch global emotes")
+			return nil, fmt.Errorf("error getting twitch global emotes: %v", err)
+		}
+		twitchChannelEmotes, err := chat.GetTwitchChannelEmotes(chatData.Streamer.ID)
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting twitch channel emotes")
+			return nil, fmt.Errorf("error getting twitch channel emotes: %v", err)
+		}
+		sevenTVGlobalEmotes, err := chat.Get7TVGlobalEmotes()
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting 7tv global emotes")
+			return nil, fmt.Errorf("error getting 7tv global emotes: %v", err)
+		}
+		sevenTVChannelEmotes, err := chat.Get7TVChannelEmotes(chatData.Streamer.ID)
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting 7tv channel emotes")
+			return nil, fmt.Errorf("error getting 7tv channel emotes: %v", err)
+		}
+		bttvGlobalEmotes, err := chat.GetBTTVGlobalEmotes()
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting bttv global emotes")
+			return nil, fmt.Errorf("error getting bttv global emotes: %v", err)
+		}
+		bttvChannelEmotes, err := chat.GetBTTVChannelEmotes(chatData.Streamer.ID)
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting bttv channel emotes")
+			return nil, fmt.Errorf("error getting bttv channel emotes: %v", err)
+		}
+		ffzGlobalEmotes, err := chat.GetFFZGlobalEmotes()
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting ffz global emotes")
+			return nil, fmt.Errorf("error getting ffz global emotes: %v", err)
+		}
+		ffzChannelEmotes, err := chat.GetFFZChannelEmotes(chatData.Streamer.ID)
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting ffz channel emotes")
+			return nil, fmt.Errorf("error getting ffz channel emotes: %v", err)
+		}
+
+		// Loop through twitch global emotes
+		for _, emote := range twitchGlobalEmotes {
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
+		}
+		// Loop through twitch channel emotes
+		for _, emote := range twitchChannelEmotes {
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
+		}
+		// Loop through 7tv global emotes
+		for _, emote := range sevenTVGlobalEmotes {
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
+		}
+		// Loop through 7tv channel emotes
+		for _, emote := range sevenTVChannelEmotes {
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
+		}
+		// Loop through bttv global emotes
+		for _, emote := range bttvGlobalEmotes {
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
+		}
+		// Loop through bttv channel emotes
+		for _, emote := range bttvChannelEmotes {
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
+		}
+		// Loop through ffz global emotes
+		for _, emote := range ffzGlobalEmotes {
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
+		}
+		// Loop through ffz channel emotes
+		for _, emote := range ffzChannelEmotes {
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
+		}
+		return &ganymedeEmotes, nil
+	}
+
+	return nil, nil
 }

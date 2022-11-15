@@ -117,3 +117,11 @@ func FileExists(path string) bool {
 	}
 	return true
 }
+
+func ReadChatFile(path string) ([]byte, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("error reading chat file: %v", err)
+	}
+	return data, nil
+}
