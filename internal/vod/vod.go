@@ -329,6 +329,9 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 	// Count to int64
 	var i int64
 	i = int64(count)
+	if i < commentCount {
+		return nil, nil
+	}
 	comments := filteredComments[i-commentCount : i]
 	return comments, nil
 }
