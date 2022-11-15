@@ -19,6 +19,7 @@ type AuthService interface {
 	OAuthRedirect(c echo.Context) error
 	OAuthCallback(c echo.Context) error
 	OAuthTokenRefresh(c echo.Context, refreshToken string) error
+	OAuthLogout(c echo.Context) error
 }
 
 type RegisterRequest struct {
@@ -169,4 +170,13 @@ func (h *Handler) OAuthTokenRefresh(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, "tokens refreshed")
+}
+
+func (h *Handler) OAuthLogout(c echo.Context) error {
+
+	err := h.Service.AuthService.OAuthLogout(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.Redirect(http.StatusFound, os.Getenv("FRONTEND_HOST"))
 }
