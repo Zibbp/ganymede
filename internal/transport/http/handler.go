@@ -151,6 +151,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.GET("/:id/playlist", h.GetVodPlaylists)
 	vodGroup.GET("/paginate", h.GetVodsPagination)
 	vodGroup.GET("/:id/chat", h.GetVodChatComments)
+	vodGroup.GET("/:id/chat/seek", h.GetNumberOfVodChatCommentsFromTime)
 	vodGroup.GET("/:id/chat/userid", h.GetUserIdFromChat)
 	vodGroup.GET("/:id/chat/emotes", h.GetVodChatEmotes)
 

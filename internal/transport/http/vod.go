@@ -27,6 +27,7 @@ type VodService interface {
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) ([]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (string, error)
 	GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error)
+	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) ([]chat.Comment, error)
 }
 
 type CreateVodRequest struct {
@@ -313,4 +314,30 @@ func (h *Handler) GetVodChatEmotes(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, emotes)
+}
+func (h *Handler) GetNumberOfVodChatCommentsFromTime(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	start := c.QueryParam("start")
+	count := c.QueryParam("count")
+	startFloat, err := strconv.ParseFloat(start, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid start: %w", err).Error())
+	}
+	countInt, err := strconv.Atoi(count)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid count: %w", err).Error())
+	}
+	if countInt < 1 {
+		return echo.NewHTTPError(http.StatusBadRequest, "count must be greater than 0")
+	}
+
+	v, err := h.Service.VodService.GetNumberOfVodChatCommentsFromTime(c, vID, startFloat, int64(countInt))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, v)
 }
