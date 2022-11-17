@@ -31,8 +31,9 @@ type Conf struct {
 	WebhookURL          string `json:"webhook_url"`
 	DBSeeded            bool   `json:"db_seeded"`
 	Parameters          struct {
-		VideoConvert string `json:"video_convert"`
-		ChatRender   string `json:"chat_render"`
+		VideoConvert   string `json:"video_convert"`
+		ChatRender     string `json:"chat_render"`
+		StreamlinkLive string `json:"streamlink_live"`
 	} `json:"parameters"`
 }
 
@@ -55,6 +56,7 @@ func NewConfig() {
 	viper.SetDefault("db_seeded", false)
 	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a copy")
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
+	viper.SetDefault("parameters.streamlink_live", "--force-progress --force --twitch-low-latency --twitch-disable-hosting")
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Info().Msgf("config file not found at %s, creating new one", configPath)
@@ -80,14 +82,17 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 		WebhookURL:          viper.GetString("webhook_url"),
 		DBSeeded:            viper.GetBool("db_seeded"),
 		Parameters: struct {
-			VideoConvert string `json:"video_convert"`
-			ChatRender   string `json:"chat_render"`
+			VideoConvert   string `json:"video_convert"`
+			ChatRender     string `json:"chat_render"`
+			StreamlinkLive string `json:"streamlink_live"`
 		}(struct {
-			VideoConvert string
-			ChatRender   string
+			VideoConvert   string
+			ChatRender     string
+			StreamlinkLive string
 		}{
-			VideoConvert: viper.GetString("parameters.video_convert"),
-			ChatRender:   viper.GetString("parameters.chat_render"),
+			VideoConvert:   viper.GetString("parameters.video_convert"),
+			ChatRender:     viper.GetString("parameters.chat_render"),
+			StreamlinkLive: viper.GetString("parameters.streamlink_live"),
 		}),
 	}, nil
 }
@@ -98,6 +103,7 @@ func (s *Service) UpdateConfig(c echo.Context, cDto *Conf) error {
 	viper.Set("db_seeded", cDto.DBSeeded)
 	viper.Set("parameters.video_convert", cDto.Parameters.VideoConvert)
 	viper.Set("parameters.chat_render", cDto.Parameters.ChatRender)
+	viper.Set("parameters.streamlink_live", cDto.Parameters.StreamlinkLive)
 	err := viper.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("error writing config file: %w", err)
@@ -114,6 +120,10 @@ func refreshConfig(configPath string) {
 	// Add authentication method
 	if !viper.IsSet("oauth_enabled") {
 		viper.Set("oauth_enabled", false)
+	}
+	// streamlink params
+	if !viper.IsSet("parameters.streamlink_live") {
+		viper.Set("parameters.streamlink_live", "--force-progress --force --twitch-low-latency --twitch-disable-hosting")
 	}
 	err = viper.WriteConfigAs(configPath)
 	if err != nil {
