@@ -152,6 +152,36 @@ func (s *Service) OAuthTokenRefresh(c echo.Context, refreshToken string) error {
 	return nil
 }
 
+func (s *Service) OAuthLogout(c echo.Context) error {
+	// Session end
+	// https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
+
+	var endpoints struct {
+		RevocationEndpoint string `json:"revocation_endpoint"`
+		EndSessionEndpoint string `json:"end_session_endpoint"`
+	}
+	err := s.OAuth.Provider.Claims(&endpoints)
+	if err != nil {
+		return fmt.Errorf("failed to get endpoints: %w", err)
+	}
+
+	clearCookie(c, "oauth_access_token")
+	clearCookie(c, "oauth_refresh_token")
+	clearCookie(c, "oauth_state")
+	clearCookie(c, "oauth_nonce")
+
+	return nil
+}
+
+func clearCookie(c echo.Context, name string) {
+	cookie := new(http.Cookie)
+	cookie.Name = name
+	cookie.Value = ""
+	cookie.Expires = time.Now().Add(-1 * time.Hour)
+	cookie.Path = "/"
+	c.SetCookie(cookie)
+}
+
 func CheckOAuthAccessToken(c echo.Context, accessToken string) (*UserInfo, error) {
 	clientID := os.Getenv("OAUTH_CLIENT_ID")
 	// Get JWKS from KV store
