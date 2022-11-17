@@ -16,8 +16,9 @@ type UpdateConfigRequest struct {
 	WebhookURL          string `json:"webhook_url"`
 	DBSeeded            bool   `json:"db_seeded"`
 	Parameters          struct {
-		VideoConvert string `json:"video_convert" validate:"required"`
-		ChatRender   string `json:"chat_render" validate:"required"`
+		VideoConvert   string `json:"video_convert" validate:"required"`
+		ChatRender     string `json:"chat_render" validate:"required"`
+		StreamlinkLive string `json:"streamlink_live"`
 	} `json:"parameters"`
 }
 
@@ -42,8 +43,9 @@ func (h *Handler) UpdateConfig(c echo.Context) error {
 		WebhookURL:          conf.WebhookURL,
 		DBSeeded:            conf.DBSeeded,
 		Parameters: struct {
-			VideoConvert string `json:"video_convert"`
-			ChatRender   string `json:"chat_render"`
+			VideoConvert   string `json:"video_convert"`
+			ChatRender     string `json:"chat_render"`
+			StreamlinkLive string `json:"streamlink_live"`
 		}(conf.Parameters),
 	}
 	if err := h.Service.ConfigService.UpdateConfig(c, &cDto); err != nil {
