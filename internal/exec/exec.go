@@ -141,8 +141,21 @@ func ConvertTwitchVodVideo(v *ent.Vod) error {
 }
 
 func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
-
-	cmd := osExec.Command("streamlink", fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution), "--force-progress", "--force", "--twitch-low-latency", "--twitch-disable-ads", "--twitch-disable-hosting", "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+	// Fetch config params
+	liveStreamlinkParams := viper.GetString("parameters.streamlink_live")
+	// Split supplied params into array
+	arr := strings.Fields(liveStreamlinkParams)
+	// Generate args for exec
+	argArr := []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
+	// add each config param to arg
+	for _, v := range arr {
+		argArr = append(argArr, v)
+	}
+	// add output file
+	argArr = append(argArr, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+	log.Debug().Msgf("streamlink live args: %v", argArr)
+	// Execute streamlink
+	cmd := osExec.Command("streamlink", argArr...)
 
 	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video.log", v.ExtID, v.ID))
 	if err != nil {
