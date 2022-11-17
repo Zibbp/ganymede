@@ -211,14 +211,20 @@ func Get7TVChannelEmotes(channelId int64) ([]*GanymedeEmote, error) {
 
 	var ganymedeEmotes []*GanymedeEmote
 	for _, emote := range emotes.EmoteSet.Emotes {
+		var width int64
+		var height int64
+		if len(emote.Data.Host.Files) > 0 {
+			width = emote.Data.Host.Files[0].Width
+			height = emote.Data.Host.Files[0].Height
+		}
 		ganymedeEmotes = append(ganymedeEmotes, &GanymedeEmote{
 			ID:     emote.ID,
 			Name:   emote.Name,
 			URL:    fmt.Sprintf("https:%s/1x.webp", emote.Data.Host.URL),
 			Type:   "third_party",
 			Source: "7tv",
-			Width:  emote.Data.Host.Files[0].Width,
-			Height: emote.Data.Host.Files[0].Height,
+			Width:  width,
+			Height: height,
 		})
 	}
 
