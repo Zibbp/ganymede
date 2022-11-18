@@ -145,31 +145,32 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	// Fetch config params
 	liveStreamlinkParams := viper.GetString("parameters.streamlink_live")
 	// Split supplied params into array
-	arr := strings.Fields(liveStreamlinkParams)
-	// Generate args for exec
-	twitchUserAccessToken := viper.GetString("twitch.user_access_token")
-	var argArr []string
-	if twitchUserAccessToken != "" {
-		// Check if access token is valid
-		err := twitch.CheckUserAccessToken(twitchUserAccessToken)
-		if err != nil {
-			log.Error().Err(err).Msg("[streamlink] twitch user access token invalid - defaulting to none")
-			// Fallback to no access token if invalid
-			argArr = []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
+	splitParams := strings.Split(liveStreamlinkParams, ",")
+
+	for i, arg := range splitParams {
+		// Attempt to find access token
+		if strings.Contains(arg, "twitch-api-header") {
+			log.Debug().Msg("found twitch-api-header in streamlink args")
+			// Extract access token
+			accessToken := strings.Split(arg, "=OAuth ")[1]
+			// Check access token
+			err := twitch.CheckUserAccessToken(accessToken)
+			if err != nil {
+				log.Error().Err(err).Msg("error checking access token")
+				// Remove arg from array if token is bad
+				splitParams = append(splitParams[:i], splitParams[i+1:]...)
+			}
 		}
-		argArr = []string{fmt.Sprintf("--twitch-api-header=Authorization=OAuth %s", twitchUserAccessToken), fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
-	} else {
-		argArr = []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
 	}
-	// add each config param to arg
-	for _, v := range arr {
-		argArr = append(argArr, v)
-	}
-	// add output file
-	argArr = append(argArr, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
-	log.Debug().Msgf("streamlink live args: %v", argArr)
+	// Generate args for exec
+
+	newArgs := []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
+	newArgs = append(splitParams, newArgs...)
+	newArgs = append(newArgs, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+
+	log.Debug().Msgf("streamlink live args: %v", newArgs)
 	// Execute streamlink
-	cmd := osExec.Command("streamlink", argArr...)
+	cmd := osExec.Command("streamlink", newArgs...)
 
 	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video.log", v.ExtID, v.ID))
 	if err != nil {
