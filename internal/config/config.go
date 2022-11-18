@@ -56,7 +56,7 @@ func NewConfig() {
 	viper.SetDefault("db_seeded", false)
 	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a copy")
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
-	viper.SetDefault("parameters.streamlink_live", "--force-progress --force --twitch-low-latency --twitch-disable-hosting")
+	viper.SetDefault("parameters.streamlink_live", "--force-progress,--force,--twitch-low-latency,--twitch-disable-hosting")
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Info().Msgf("config file not found at %s, creating new one", configPath)
@@ -123,7 +123,7 @@ func refreshConfig(configPath string) {
 	}
 	// streamlink params
 	if !viper.IsSet("parameters.streamlink_live") {
-		viper.Set("parameters.streamlink_live", "--force-progress --force --twitch-low-latency --twitch-disable-hosting")
+		viper.Set("parameters.streamlink_live", "--force-progress,--force,--twitch-low-latency,--twitch-disable-hosting")
 	}
 	err = viper.WriteConfigAs(configPath)
 	if err != nil {
