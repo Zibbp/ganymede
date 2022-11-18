@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 	"os"
 	osExec "os/exec"
@@ -146,7 +147,23 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	// Split supplied params into array
 	arr := strings.Fields(liveStreamlinkParams)
 	// Generate args for exec
-	argArr := []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
+	twitchUserAccessToken := viper.GetString("twitch.user_access_token")
+	var argArr []string
+	if twitchUserAccessToken != "" {
+		// Check if access token is valid
+		err := twitch.CheckUserAccessToken(twitchUserAccessToken)
+		if err != nil {
+			log.Error().Err(err).Msg("twitch user access token invalid")
+			// Fallback to no access token if invalid
+			argArr = []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
+		}
+		tokenArg := fmt.Sprintf("--twitch-api-header=Authorization=OAuth %s", twitchUserAccessToken)
+		argArr = []string{fmt.Sprintf("%s", tokenArg), fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
+		fmt.Println(tokenArg)
+		fmt.Printf("%q", tokenArg)
+	} else {
+		argArr = []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
+	}
 	// add each config param to arg
 	for _, v := range arr {
 		argArr = append(argArr, v)
