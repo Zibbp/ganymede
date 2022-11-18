@@ -153,12 +153,11 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 		// Check if access token is valid
 		err := twitch.CheckUserAccessToken(twitchUserAccessToken)
 		if err != nil {
-			log.Error().Err(err).Msg("twitch user access token invalid")
+			log.Error().Err(err).Msg("[streamlink] twitch user access token invalid - defaulting to none")
 			// Fallback to no access token if invalid
 			argArr = []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
 		}
-		tokenArg := fmt.Sprintf("--twitch-api-header=Authorization=OAuth %s", twitchUserAccessToken)
-		argArr = []string{fmt.Sprintf("%q", tokenArg), fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
+		argArr = []string{fmt.Sprintf("--twitch-api-header=Authorization=OAuth %s", twitchUserAccessToken), fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
 	} else {
 		argArr = []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
 	}
