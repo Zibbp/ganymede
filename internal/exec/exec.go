@@ -158,9 +158,7 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 			argArr = []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
 		}
 		tokenArg := fmt.Sprintf("--twitch-api-header=Authorization=OAuth %s", twitchUserAccessToken)
-		argArr = []string{fmt.Sprintf("%s", tokenArg), fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
-		fmt.Println(tokenArg)
-		fmt.Printf("%q", tokenArg)
+		argArr = []string{fmt.Sprintf("%q", tokenArg), fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
 	} else {
 		argArr = []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
 	}
