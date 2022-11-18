@@ -35,9 +35,6 @@ type Conf struct {
 		ChatRender     string `json:"chat_render"`
 		StreamlinkLive string `json:"streamlink_live"`
 	} `json:"parameters"`
-	Twitch struct {
-		UserAccessToken string `json:"user_access_token"`
-	} `json:"twitch"`
 }
 
 func NewConfig() {
@@ -60,7 +57,6 @@ func NewConfig() {
 	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a copy")
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
 	viper.SetDefault("parameters.streamlink_live", "--force-progress --force --twitch-low-latency --twitch-disable-hosting")
-	viper.SetDefault("twitch.user_access_token", "")
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Info().Msgf("config file not found at %s, creating new one", configPath)
@@ -98,13 +94,6 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 			ChatRender:     viper.GetString("parameters.chat_render"),
 			StreamlinkLive: viper.GetString("parameters.streamlink_live"),
 		}),
-		Twitch: struct {
-			UserAccessToken string `json:"user_access_token"`
-		}(struct {
-			UserAccessToken string
-		}{
-			UserAccessToken: viper.GetString("twitch.user_access_token"),
-		}),
 	}, nil
 }
 
@@ -115,7 +104,6 @@ func (s *Service) UpdateConfig(c echo.Context, cDto *Conf) error {
 	viper.Set("parameters.video_convert", cDto.Parameters.VideoConvert)
 	viper.Set("parameters.chat_render", cDto.Parameters.ChatRender)
 	viper.Set("parameters.streamlink_live", cDto.Parameters.StreamlinkLive)
-	viper.Set("twitch.user_access_token", cDto.Twitch.UserAccessToken)
 	err := viper.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("error writing config file: %w", err)
@@ -136,10 +124,6 @@ func refreshConfig(configPath string) {
 	// streamlink params
 	if !viper.IsSet("parameters.streamlink_live") {
 		viper.Set("parameters.streamlink_live", "--force-progress --force --twitch-low-latency --twitch-disable-hosting")
-	}
-	// twitch
-	if !viper.IsSet("twitch.user_access_token") {
-		viper.Set("twitch.user_access_token", "")
 	}
 	err = viper.WriteConfigAs(configPath)
 	if err != nil {
