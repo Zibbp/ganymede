@@ -20,6 +20,9 @@ type UpdateConfigRequest struct {
 		ChatRender     string `json:"chat_render" validate:"required"`
 		StreamlinkLive string `json:"streamlink_live"`
 	} `json:"parameters"`
+	Twitch struct {
+		UserAccessToken string `json:"user_access_token"`
+	} `json:"twitch"`
 }
 
 func (h *Handler) GetConfig(c echo.Context) error {
@@ -47,6 +50,9 @@ func (h *Handler) UpdateConfig(c echo.Context) error {
 			ChatRender     string `json:"chat_render"`
 			StreamlinkLive string `json:"streamlink_live"`
 		}(conf.Parameters),
+		Twitch: struct {
+			UserAccessToken string `json:"user_access_token"`
+		}(conf.Twitch),
 	}
 	if err := h.Service.ConfigService.UpdateConfig(c, &cDto); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
