@@ -503,7 +503,7 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 	if cont == true {
 		// Refresh thumbnails for live stream after 30 minutes
 		go s.RefreshLiveThumbnails(ch, v, q)
-		// Proceed with tasks
+		// Proceed with task
 		go s.TaskVodSaveLiveInfo(ch, v, q, true)
 	}
 }
@@ -733,7 +733,7 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 	// Set video as complete
 	q.Update().SetVideoProcessing(false).SaveX(context.Background())
 
-	// Check if all tasks are done
+	// Check if all task are done
 	if q.LiveArchive == true {
 		go s.CheckIfLiveTasksAreDone(ch, v, q)
 	} else {
@@ -799,11 +799,11 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	chatPath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
 	if !utils.FileExists(chatPath) {
 		log.Debug().Msgf("chat file does not exist %s - this means there were no chat messages - setting chat to complete", chatPath)
-		// Set queue chat tasks to complete
+		// Set queue chat task to complete
 		q.Update().SetChatProcessing(false).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
 		// Set VOD chat to empty
 		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
-		// Check if all tasks are done
+		// Check if all task are done
 		go s.CheckIfLiveTasksAreDone(ch, v, q)
 		return
 	}
@@ -869,7 +869,7 @@ func (s *Service) TaskChatRender(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont
 			go s.TaskChatMove(ch, v, q, true)
 		}
 	} else {
-		// Check if all tasks are done
+		// Check if all task are done
 		go s.CheckIfTasksAreDone(ch, v, q)
 	}
 }
@@ -906,7 +906,7 @@ func (s *Service) TaskChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont b
 	// Set chat as complete
 	q.Update().SetChatProcessing(false).SaveX(context.Background())
 
-	// Check if all tasks are done
+	// Check if all task are done
 	go s.CheckIfTasksAreDone(ch, v, q)
 }
 
@@ -955,7 +955,7 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 	// Set chat as complete
 	q.Update().SetChatProcessing(false).SaveX(context.Background())
 
-	// Check if all tasks are done
+	// Check if all task are done
 	go s.CheckIfLiveTasksAreDone(ch, v, q)
 }
 
@@ -966,7 +966,7 @@ func (s *Service) CheckIfTasksAreDone(ch *ent.Channel, v *ent.Vod, qO *ent.Queue
 		return
 	}
 	if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
-		log.Debug().Msgf("all tasks for vod %s are done", v.ID)
+		log.Debug().Msgf("all task for vod %s are done", v.ID)
 		q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).SaveX(context.Background())
 		v.Update().SetProcessing(false).SaveX(context.Background())
 		// Send webhook
@@ -987,7 +987,7 @@ func (s *Service) CheckIfLiveTasksAreDone(ch *ent.Channel, v *ent.Vod, qO *ent.Q
 		return
 	}
 	if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatConvert == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
-		log.Debug().Msgf("all tasks for live stream %s are done", v.ID)
+		log.Debug().Msgf("all task for live stream %s are done", v.ID)
 		q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).SaveX(context.Background())
 
 		v.Update().SetProcessing(false).SaveX(context.Background())

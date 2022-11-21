@@ -32,6 +32,7 @@ type Services struct {
 	PlaybackService  PlaybackService
 	MetricsService   MetricsService
 	PlaylistService  PlaylistService
+	TaskService      TaskService
 }
 
 type Handler struct {
@@ -39,7 +40,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
@@ -59,6 +60,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			PlaybackService:  playbackService,
 			MetricsService:   metricsService,
 			PlaylistService:  playlistService,
+			TaskService:      taskService,
 		},
 	}
 
@@ -232,6 +234,10 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// Exec
 	execGroup := e.Group("/exec")
 	execGroup.POST("/ffprobe", h.GetFfprobeData, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.UserRole))
+
+	// Task
+	taskGroup := e.Group("/task")
+	taskGroup.POST("/start", h.StartTask, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 }
 
 func (h *Handler) Serve() error {
