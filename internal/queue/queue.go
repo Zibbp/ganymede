@@ -87,7 +87,7 @@ func (s *Service) GetQueueItems(c echo.Context) ([]*ent.Queue, error) {
 	return q, nil
 }
 func (s *Service) GetQueueItemsFilter(c echo.Context, processing bool) ([]*ent.Queue, error) {
-	q, err := s.Store.Client.Queue.Query().Where(queue.Processing(processing)).WithVod().Order(ent.Desc(queue.FieldCreatedAt)).All(c.Request().Context())
+	q, err := s.Store.Client.Queue.Query().Where(queue.Processing(processing)).WithVod().Order(ent.Asc(queue.FieldCreatedAt)).All(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error getting queue tasks: %v", err)
 	}
