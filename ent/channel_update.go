@@ -31,6 +31,26 @@ func (cu *ChannelUpdate) Where(ps ...predicate.Channel) *ChannelUpdate {
 	return cu
 }
 
+// SetExtID sets the "ext_id" field.
+func (cu *ChannelUpdate) SetExtID(s string) *ChannelUpdate {
+	cu.mutation.SetExtID(s)
+	return cu
+}
+
+// SetNillableExtID sets the "ext_id" field if the given value is not nil.
+func (cu *ChannelUpdate) SetNillableExtID(s *string) *ChannelUpdate {
+	if s != nil {
+		cu.SetExtID(*s)
+	}
+	return cu
+}
+
+// ClearExtID clears the value of the "ext_id" field.
+func (cu *ChannelUpdate) ClearExtID() *ChannelUpdate {
+	cu.mutation.ClearExtID()
+	return cu
+}
+
 // SetName sets the "name" field.
 func (cu *ChannelUpdate) SetName(s string) *ChannelUpdate {
 	cu.mutation.SetName(s)
@@ -213,6 +233,19 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := cu.mutation.ExtID(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: channel.FieldExtID,
+		})
+	}
+	if cu.mutation.ExtIDCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: channel.FieldExtID,
+		})
+	}
 	if value, ok := cu.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -366,6 +399,26 @@ type ChannelUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *ChannelMutation
+}
+
+// SetExtID sets the "ext_id" field.
+func (cuo *ChannelUpdateOne) SetExtID(s string) *ChannelUpdateOne {
+	cuo.mutation.SetExtID(s)
+	return cuo
+}
+
+// SetNillableExtID sets the "ext_id" field if the given value is not nil.
+func (cuo *ChannelUpdateOne) SetNillableExtID(s *string) *ChannelUpdateOne {
+	if s != nil {
+		cuo.SetExtID(*s)
+	}
+	return cuo
+}
+
+// ClearExtID clears the value of the "ext_id" field.
+func (cuo *ChannelUpdateOne) ClearExtID() *ChannelUpdateOne {
+	cuo.mutation.ClearExtID()
+	return cuo
 }
 
 // SetName sets the "name" field.
@@ -579,6 +632,19 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := cuo.mutation.ExtID(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: channel.FieldExtID,
+		})
+	}
+	if cuo.mutation.ExtIDCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: channel.FieldExtID,
+		})
 	}
 	if value, ok := cuo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

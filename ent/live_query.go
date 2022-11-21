@@ -292,12 +292,12 @@ func (lq *LiveQuery) WithChannel(opts ...func(*ChannelQuery)) *LiveQuery {
 // Example:
 //
 //	var v []struct {
-//		IsLive bool `json:"is_live,omitempty"`
+//		WatchLive bool `json:"watch_live,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Live.Query().
-//		GroupBy(live.FieldIsLive).
+//		GroupBy(live.FieldWatchLive).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (lq *LiveQuery) GroupBy(field string, fields ...string) *LiveGroupBy {
@@ -320,11 +320,11 @@ func (lq *LiveQuery) GroupBy(field string, fields ...string) *LiveGroupBy {
 // Example:
 //
 //	var v []struct {
-//		IsLive bool `json:"is_live,omitempty"`
+//		WatchLive bool `json:"watch_live,omitempty"`
 //	}
 //
 //	client.Live.Query().
-//		Select(live.FieldIsLive).
+//		Select(live.FieldWatchLive).
 //		Scan(ctx, &v)
 func (lq *LiveQuery) Select(fields ...string) *LiveSelect {
 	lq.fields = append(lq.fields, fields...)

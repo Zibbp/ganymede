@@ -30,6 +30,76 @@ func (lu *LiveUpdate) Where(ps ...predicate.Live) *LiveUpdate {
 	return lu
 }
 
+// SetWatchLive sets the "watch_live" field.
+func (lu *LiveUpdate) SetWatchLive(b bool) *LiveUpdate {
+	lu.mutation.SetWatchLive(b)
+	return lu
+}
+
+// SetNillableWatchLive sets the "watch_live" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableWatchLive(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetWatchLive(*b)
+	}
+	return lu
+}
+
+// SetWatchVod sets the "watch_vod" field.
+func (lu *LiveUpdate) SetWatchVod(b bool) *LiveUpdate {
+	lu.mutation.SetWatchVod(b)
+	return lu
+}
+
+// SetNillableWatchVod sets the "watch_vod" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableWatchVod(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetWatchVod(*b)
+	}
+	return lu
+}
+
+// SetDownloadArchives sets the "download_archives" field.
+func (lu *LiveUpdate) SetDownloadArchives(b bool) *LiveUpdate {
+	lu.mutation.SetDownloadArchives(b)
+	return lu
+}
+
+// SetNillableDownloadArchives sets the "download_archives" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableDownloadArchives(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetDownloadArchives(*b)
+	}
+	return lu
+}
+
+// SetDownloadHighlights sets the "download_highlights" field.
+func (lu *LiveUpdate) SetDownloadHighlights(b bool) *LiveUpdate {
+	lu.mutation.SetDownloadHighlights(b)
+	return lu
+}
+
+// SetNillableDownloadHighlights sets the "download_highlights" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableDownloadHighlights(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetDownloadHighlights(*b)
+	}
+	return lu
+}
+
+// SetDownloadUploads sets the "download_uploads" field.
+func (lu *LiveUpdate) SetDownloadUploads(b bool) *LiveUpdate {
+	lu.mutation.SetDownloadUploads(b)
+	return lu
+}
+
+// SetNillableDownloadUploads sets the "download_uploads" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableDownloadUploads(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetDownloadUploads(*b)
+	}
+	return lu
+}
+
 // SetIsLive sets the "is_live" field.
 func (lu *LiveUpdate) SetIsLive(b bool) *LiveUpdate {
 	lu.mutation.SetIsLive(b)
@@ -215,6 +285,41 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := lu.mutation.WatchLive(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldWatchLive,
+		})
+	}
+	if value, ok := lu.mutation.WatchVod(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldWatchVod,
+		})
+	}
+	if value, ok := lu.mutation.DownloadArchives(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldDownloadArchives,
+		})
+	}
+	if value, ok := lu.mutation.DownloadHighlights(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldDownloadHighlights,
+		})
+	}
+	if value, ok := lu.mutation.DownloadUploads(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldDownloadUploads,
+		})
+	}
 	if value, ok := lu.mutation.IsLive(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
@@ -308,6 +413,76 @@ type LiveUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *LiveMutation
+}
+
+// SetWatchLive sets the "watch_live" field.
+func (luo *LiveUpdateOne) SetWatchLive(b bool) *LiveUpdateOne {
+	luo.mutation.SetWatchLive(b)
+	return luo
+}
+
+// SetNillableWatchLive sets the "watch_live" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableWatchLive(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetWatchLive(*b)
+	}
+	return luo
+}
+
+// SetWatchVod sets the "watch_vod" field.
+func (luo *LiveUpdateOne) SetWatchVod(b bool) *LiveUpdateOne {
+	luo.mutation.SetWatchVod(b)
+	return luo
+}
+
+// SetNillableWatchVod sets the "watch_vod" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableWatchVod(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetWatchVod(*b)
+	}
+	return luo
+}
+
+// SetDownloadArchives sets the "download_archives" field.
+func (luo *LiveUpdateOne) SetDownloadArchives(b bool) *LiveUpdateOne {
+	luo.mutation.SetDownloadArchives(b)
+	return luo
+}
+
+// SetNillableDownloadArchives sets the "download_archives" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableDownloadArchives(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetDownloadArchives(*b)
+	}
+	return luo
+}
+
+// SetDownloadHighlights sets the "download_highlights" field.
+func (luo *LiveUpdateOne) SetDownloadHighlights(b bool) *LiveUpdateOne {
+	luo.mutation.SetDownloadHighlights(b)
+	return luo
+}
+
+// SetNillableDownloadHighlights sets the "download_highlights" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableDownloadHighlights(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetDownloadHighlights(*b)
+	}
+	return luo
+}
+
+// SetDownloadUploads sets the "download_uploads" field.
+func (luo *LiveUpdateOne) SetDownloadUploads(b bool) *LiveUpdateOne {
+	luo.mutation.SetDownloadUploads(b)
+	return luo
+}
+
+// SetNillableDownloadUploads sets the "download_uploads" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableDownloadUploads(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetDownloadUploads(*b)
+	}
+	return luo
 }
 
 // SetIsLive sets the "is_live" field.
@@ -524,6 +699,41 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := luo.mutation.WatchLive(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldWatchLive,
+		})
+	}
+	if value, ok := luo.mutation.WatchVod(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldWatchVod,
+		})
+	}
+	if value, ok := luo.mutation.DownloadArchives(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldDownloadArchives,
+		})
+	}
+	if value, ok := luo.mutation.DownloadHighlights(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldDownloadHighlights,
+		})
+	}
+	if value, ok := luo.mutation.DownloadUploads(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldDownloadUploads,
+		})
 	}
 	if value, ok := luo.mutation.IsLive(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

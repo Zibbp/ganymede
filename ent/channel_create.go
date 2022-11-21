@@ -23,6 +23,20 @@ type ChannelCreate struct {
 	hooks    []Hook
 }
 
+// SetExtID sets the "ext_id" field.
+func (cc *ChannelCreate) SetExtID(s string) *ChannelCreate {
+	cc.mutation.SetExtID(s)
+	return cc
+}
+
+// SetNillableExtID sets the "ext_id" field if the given value is not nil.
+func (cc *ChannelCreate) SetNillableExtID(s *string) *ChannelCreate {
+	if s != nil {
+		cc.SetExtID(*s)
+	}
+	return cc
+}
+
 // SetName sets the "name" field.
 func (cc *ChannelCreate) SetName(s string) *ChannelCreate {
 	cc.mutation.SetName(s)
@@ -256,6 +270,14 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 	if id, ok := cc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
+	}
+	if value, ok := cc.mutation.ExtID(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: channel.FieldExtID,
+		})
+		_node.ExtID = value
 	}
 	if value, ok := cc.mutation.Name(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

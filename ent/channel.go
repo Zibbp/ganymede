@@ -17,6 +17,8 @@ type Channel struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// The external ID of the channel.
+	ExtID string `json:"ext_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// DisplayName holds the value of the "display_name" field.
@@ -66,7 +68,7 @@ func (*Channel) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case channel.FieldName, channel.FieldDisplayName, channel.FieldImagePath:
+		case channel.FieldExtID, channel.FieldName, channel.FieldDisplayName, channel.FieldImagePath:
 			values[i] = new(sql.NullString)
 		case channel.FieldUpdatedAt, channel.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -92,6 +94,12 @@ func (c *Channel) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				c.ID = *value
+			}
+		case channel.FieldExtID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ext_id", values[i])
+			} else if value.Valid {
+				c.ExtID = value.String
 			}
 		case channel.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -161,6 +169,9 @@ func (c *Channel) String() string {
 	var builder strings.Builder
 	builder.WriteString("Channel(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", c.ID))
+	builder.WriteString("ext_id=")
+	builder.WriteString(c.ExtID)
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(c.Name)
 	builder.WriteString(", ")

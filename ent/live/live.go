@@ -13,6 +13,16 @@ const (
 	Label = "live"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldWatchLive holds the string denoting the watch_live field in the database.
+	FieldWatchLive = "watch_live"
+	// FieldWatchVod holds the string denoting the watch_vod field in the database.
+	FieldWatchVod = "watch_vod"
+	// FieldDownloadArchives holds the string denoting the download_archives field in the database.
+	FieldDownloadArchives = "download_archives"
+	// FieldDownloadHighlights holds the string denoting the download_highlights field in the database.
+	FieldDownloadHighlights = "download_highlights"
+	// FieldDownloadUploads holds the string denoting the download_uploads field in the database.
+	FieldDownloadUploads = "download_uploads"
 	// FieldIsLive holds the string denoting the is_live field in the database.
 	FieldIsLive = "is_live"
 	// FieldArchiveChat holds the string denoting the archive_chat field in the database.
@@ -41,6 +51,11 @@ const (
 // Columns holds all SQL columns for live fields.
 var Columns = []string{
 	FieldID,
+	FieldWatchLive,
+	FieldWatchVod,
+	FieldDownloadArchives,
+	FieldDownloadHighlights,
+	FieldDownloadUploads,
 	FieldIsLive,
 	FieldArchiveChat,
 	FieldResolution,
@@ -71,6 +86,16 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultWatchLive holds the default value on creation for the "watch_live" field.
+	DefaultWatchLive bool
+	// DefaultWatchVod holds the default value on creation for the "watch_vod" field.
+	DefaultWatchVod bool
+	// DefaultDownloadArchives holds the default value on creation for the "download_archives" field.
+	DefaultDownloadArchives bool
+	// DefaultDownloadHighlights holds the default value on creation for the "download_highlights" field.
+	DefaultDownloadHighlights bool
+	// DefaultDownloadUploads holds the default value on creation for the "download_uploads" field.
+	DefaultDownloadUploads bool
 	// DefaultIsLive holds the default value on creation for the "is_live" field.
 	DefaultIsLive bool
 	// DefaultArchiveChat holds the default value on creation for the "archive_chat" field.

@@ -17,6 +17,11 @@ type Live struct {
 func (Live) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
+		field.Bool("watch_live").Default(true).Comment("Watch live streams"),
+		field.Bool("watch_vod").Default(false).Comment("Watch new VODs"),
+		field.Bool("download_archives").Default(false).Comment("Download archives"),
+		field.Bool("download_highlights").Default(false).Comment("Download highlights"),
+		field.Bool("download_uploads").Default(false).Comment("Download uploads"),
 		field.Bool("is_live").Default(false).Comment("Whether the channel is currently live."),
 		field.Bool("archive_chat").Default(true).Comment("Whether the chat archive is enabled."),
 		field.String("resolution").Default("best").Optional(),

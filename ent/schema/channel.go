@@ -17,6 +17,7 @@ type Channel struct {
 func (Channel) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
+		field.String("ext_id").Unique().Comment("The external ID of the channel.").Optional(),
 		field.String("name").Unique(),
 		field.String("display_name").Unique(),
 		field.String("image_path"),

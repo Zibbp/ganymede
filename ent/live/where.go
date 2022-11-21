@@ -82,6 +82,41 @@ func IDLTE(id uuid.UUID) predicate.Live {
 	})
 }
 
+// WatchLive applies equality check predicate on the "watch_live" field. It's identical to WatchLiveEQ.
+func WatchLive(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldWatchLive), v))
+	})
+}
+
+// WatchVod applies equality check predicate on the "watch_vod" field. It's identical to WatchVodEQ.
+func WatchVod(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldWatchVod), v))
+	})
+}
+
+// DownloadArchives applies equality check predicate on the "download_archives" field. It's identical to DownloadArchivesEQ.
+func DownloadArchives(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDownloadArchives), v))
+	})
+}
+
+// DownloadHighlights applies equality check predicate on the "download_highlights" field. It's identical to DownloadHighlightsEQ.
+func DownloadHighlights(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDownloadHighlights), v))
+	})
+}
+
+// DownloadUploads applies equality check predicate on the "download_uploads" field. It's identical to DownloadUploadsEQ.
+func DownloadUploads(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDownloadUploads), v))
+	})
+}
+
 // IsLive applies equality check predicate on the "is_live" field. It's identical to IsLiveEQ.
 func IsLive(v bool) predicate.Live {
 	return predicate.Live(func(s *sql.Selector) {
@@ -121,6 +156,76 @@ func UpdatedAt(v time.Time) predicate.Live {
 func CreatedAt(v time.Time) predicate.Live {
 	return predicate.Live(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// WatchLiveEQ applies the EQ predicate on the "watch_live" field.
+func WatchLiveEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldWatchLive), v))
+	})
+}
+
+// WatchLiveNEQ applies the NEQ predicate on the "watch_live" field.
+func WatchLiveNEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldWatchLive), v))
+	})
+}
+
+// WatchVodEQ applies the EQ predicate on the "watch_vod" field.
+func WatchVodEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldWatchVod), v))
+	})
+}
+
+// WatchVodNEQ applies the NEQ predicate on the "watch_vod" field.
+func WatchVodNEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldWatchVod), v))
+	})
+}
+
+// DownloadArchivesEQ applies the EQ predicate on the "download_archives" field.
+func DownloadArchivesEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDownloadArchives), v))
+	})
+}
+
+// DownloadArchivesNEQ applies the NEQ predicate on the "download_archives" field.
+func DownloadArchivesNEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldDownloadArchives), v))
+	})
+}
+
+// DownloadHighlightsEQ applies the EQ predicate on the "download_highlights" field.
+func DownloadHighlightsEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDownloadHighlights), v))
+	})
+}
+
+// DownloadHighlightsNEQ applies the NEQ predicate on the "download_highlights" field.
+func DownloadHighlightsNEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldDownloadHighlights), v))
+	})
+}
+
+// DownloadUploadsEQ applies the EQ predicate on the "download_uploads" field.
+func DownloadUploadsEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDownloadUploads), v))
+	})
+}
+
+// DownloadUploadsNEQ applies the NEQ predicate on the "download_uploads" field.
+func DownloadUploadsNEQ(v bool) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldDownloadUploads), v))
 	})
 }
 

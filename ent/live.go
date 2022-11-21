@@ -18,6 +18,16 @@ type Live struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// Watch live streams
+	WatchLive bool `json:"watch_live,omitempty"`
+	// Watch new VODs
+	WatchVod bool `json:"watch_vod,omitempty"`
+	// Download archives
+	DownloadArchives bool `json:"download_archives,omitempty"`
+	// Download highlights
+	DownloadHighlights bool `json:"download_highlights,omitempty"`
+	// Download uploads
+	DownloadUploads bool `json:"download_uploads,omitempty"`
 	// Whether the channel is currently live.
 	IsLive bool `json:"is_live,omitempty"`
 	// Whether the chat archive is enabled.
@@ -64,7 +74,7 @@ func (*Live) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case live.FieldIsLive, live.FieldArchiveChat:
+		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldIsLive, live.FieldArchiveChat:
 			values[i] = new(sql.NullBool)
 		case live.FieldResolution:
 			values[i] = new(sql.NullString)
@@ -94,6 +104,36 @@ func (l *Live) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				l.ID = *value
+			}
+		case live.FieldWatchLive:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field watch_live", values[i])
+			} else if value.Valid {
+				l.WatchLive = value.Bool
+			}
+		case live.FieldWatchVod:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field watch_vod", values[i])
+			} else if value.Valid {
+				l.WatchVod = value.Bool
+			}
+		case live.FieldDownloadArchives:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field download_archives", values[i])
+			} else if value.Valid {
+				l.DownloadArchives = value.Bool
+			}
+		case live.FieldDownloadHighlights:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field download_highlights", values[i])
+			} else if value.Valid {
+				l.DownloadHighlights = value.Bool
+			}
+		case live.FieldDownloadUploads:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field download_uploads", values[i])
+			} else if value.Valid {
+				l.DownloadUploads = value.Bool
 			}
 		case live.FieldIsLive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -171,6 +211,21 @@ func (l *Live) String() string {
 	var builder strings.Builder
 	builder.WriteString("Live(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", l.ID))
+	builder.WriteString("watch_live=")
+	builder.WriteString(fmt.Sprintf("%v", l.WatchLive))
+	builder.WriteString(", ")
+	builder.WriteString("watch_vod=")
+	builder.WriteString(fmt.Sprintf("%v", l.WatchVod))
+	builder.WriteString(", ")
+	builder.WriteString("download_archives=")
+	builder.WriteString(fmt.Sprintf("%v", l.DownloadArchives))
+	builder.WriteString(", ")
+	builder.WriteString("download_highlights=")
+	builder.WriteString(fmt.Sprintf("%v", l.DownloadHighlights))
+	builder.WriteString(", ")
+	builder.WriteString("download_uploads=")
+	builder.WriteString(fmt.Sprintf("%v", l.DownloadUploads))
+	builder.WriteString(", ")
 	builder.WriteString("is_live=")
 	builder.WriteString(fmt.Sprintf("%v", l.IsLive))
 	builder.WriteString(", ")

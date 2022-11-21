@@ -11,6 +11,7 @@ var (
 	// ChannelsColumns holds the columns for the "channels" table.
 	ChannelsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "ext_id", Type: field.TypeString, Unique: true, Nullable: true},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "display_name", Type: field.TypeString, Unique: true},
 		{Name: "image_path", Type: field.TypeString},
@@ -26,6 +27,11 @@ var (
 	// LivesColumns holds the columns for the "lives" table.
 	LivesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "watch_live", Type: field.TypeBool, Default: true},
+		{Name: "watch_vod", Type: field.TypeBool, Default: false},
+		{Name: "download_archives", Type: field.TypeBool, Default: false},
+		{Name: "download_highlights", Type: field.TypeBool, Default: false},
+		{Name: "download_uploads", Type: field.TypeBool, Default: false},
 		{Name: "is_live", Type: field.TypeBool, Default: false},
 		{Name: "archive_chat", Type: field.TypeBool, Default: true},
 		{Name: "resolution", Type: field.TypeString, Nullable: true, Default: "best"},
@@ -42,7 +48,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[7]},
+				Columns:    []*schema.Column{LivesColumns[12]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

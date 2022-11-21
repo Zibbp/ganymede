@@ -23,13 +23,13 @@ func init() {
 	channelFields := schema.Channel{}.Fields()
 	_ = channelFields
 	// channelDescUpdatedAt is the schema descriptor for updated_at field.
-	channelDescUpdatedAt := channelFields[4].Descriptor()
+	channelDescUpdatedAt := channelFields[5].Descriptor()
 	// channel.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	channel.DefaultUpdatedAt = channelDescUpdatedAt.Default.(func() time.Time)
 	// channel.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	channel.UpdateDefaultUpdatedAt = channelDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// channelDescCreatedAt is the schema descriptor for created_at field.
-	channelDescCreatedAt := channelFields[5].Descriptor()
+	channelDescCreatedAt := channelFields[6].Descriptor()
 	// channel.DefaultCreatedAt holds the default value on creation for the created_at field.
 	channel.DefaultCreatedAt = channelDescCreatedAt.Default.(func() time.Time)
 	// channelDescID is the schema descriptor for id field.
@@ -38,30 +38,50 @@ func init() {
 	channel.DefaultID = channelDescID.Default.(func() uuid.UUID)
 	liveFields := schema.Live{}.Fields()
 	_ = liveFields
+	// liveDescWatchLive is the schema descriptor for watch_live field.
+	liveDescWatchLive := liveFields[1].Descriptor()
+	// live.DefaultWatchLive holds the default value on creation for the watch_live field.
+	live.DefaultWatchLive = liveDescWatchLive.Default.(bool)
+	// liveDescWatchVod is the schema descriptor for watch_vod field.
+	liveDescWatchVod := liveFields[2].Descriptor()
+	// live.DefaultWatchVod holds the default value on creation for the watch_vod field.
+	live.DefaultWatchVod = liveDescWatchVod.Default.(bool)
+	// liveDescDownloadArchives is the schema descriptor for download_archives field.
+	liveDescDownloadArchives := liveFields[3].Descriptor()
+	// live.DefaultDownloadArchives holds the default value on creation for the download_archives field.
+	live.DefaultDownloadArchives = liveDescDownloadArchives.Default.(bool)
+	// liveDescDownloadHighlights is the schema descriptor for download_highlights field.
+	liveDescDownloadHighlights := liveFields[4].Descriptor()
+	// live.DefaultDownloadHighlights holds the default value on creation for the download_highlights field.
+	live.DefaultDownloadHighlights = liveDescDownloadHighlights.Default.(bool)
+	// liveDescDownloadUploads is the schema descriptor for download_uploads field.
+	liveDescDownloadUploads := liveFields[5].Descriptor()
+	// live.DefaultDownloadUploads holds the default value on creation for the download_uploads field.
+	live.DefaultDownloadUploads = liveDescDownloadUploads.Default.(bool)
 	// liveDescIsLive is the schema descriptor for is_live field.
-	liveDescIsLive := liveFields[1].Descriptor()
+	liveDescIsLive := liveFields[6].Descriptor()
 	// live.DefaultIsLive holds the default value on creation for the is_live field.
 	live.DefaultIsLive = liveDescIsLive.Default.(bool)
 	// liveDescArchiveChat is the schema descriptor for archive_chat field.
-	liveDescArchiveChat := liveFields[2].Descriptor()
+	liveDescArchiveChat := liveFields[7].Descriptor()
 	// live.DefaultArchiveChat holds the default value on creation for the archive_chat field.
 	live.DefaultArchiveChat = liveDescArchiveChat.Default.(bool)
 	// liveDescResolution is the schema descriptor for resolution field.
-	liveDescResolution := liveFields[3].Descriptor()
+	liveDescResolution := liveFields[8].Descriptor()
 	// live.DefaultResolution holds the default value on creation for the resolution field.
 	live.DefaultResolution = liveDescResolution.Default.(string)
 	// liveDescLastLive is the schema descriptor for last_live field.
-	liveDescLastLive := liveFields[4].Descriptor()
+	liveDescLastLive := liveFields[9].Descriptor()
 	// live.DefaultLastLive holds the default value on creation for the last_live field.
 	live.DefaultLastLive = liveDescLastLive.Default.(func() time.Time)
 	// liveDescUpdatedAt is the schema descriptor for updated_at field.
-	liveDescUpdatedAt := liveFields[5].Descriptor()
+	liveDescUpdatedAt := liveFields[10].Descriptor()
 	// live.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	live.DefaultUpdatedAt = liveDescUpdatedAt.Default.(func() time.Time)
 	// live.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	live.UpdateDefaultUpdatedAt = liveDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// liveDescCreatedAt is the schema descriptor for created_at field.
-	liveDescCreatedAt := liveFields[6].Descriptor()
+	liveDescCreatedAt := liveFields[11].Descriptor()
 	// live.DefaultCreatedAt holds the default value on creation for the created_at field.
 	live.DefaultCreatedAt = liveDescCreatedAt.Default.(func() time.Time)
 	// liveDescID is the schema descriptor for id field.

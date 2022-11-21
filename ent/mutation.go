@@ -47,6 +47,7 @@ type ChannelMutation struct {
 	op            Op
 	typ           string
 	id            *uuid.UUID
+	ext_id        *string
 	name          *string
 	display_name  *string
 	image_path    *string
@@ -166,6 +167,55 @@ func (m *ChannelMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetExtID sets the "ext_id" field.
+func (m *ChannelMutation) SetExtID(s string) {
+	m.ext_id = &s
+}
+
+// ExtID returns the value of the "ext_id" field in the mutation.
+func (m *ChannelMutation) ExtID() (r string, exists bool) {
+	v := m.ext_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExtID returns the old "ext_id" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldExtID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExtID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExtID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExtID: %w", err)
+	}
+	return oldValue.ExtID, nil
+}
+
+// ClearExtID clears the value of the "ext_id" field.
+func (m *ChannelMutation) ClearExtID() {
+	m.ext_id = nil
+	m.clearedFields[channel.FieldExtID] = struct{}{}
+}
+
+// ExtIDCleared returns if the "ext_id" field was cleared in this mutation.
+func (m *ChannelMutation) ExtIDCleared() bool {
+	_, ok := m.clearedFields[channel.FieldExtID]
+	return ok
+}
+
+// ResetExtID resets all changes to the "ext_id" field.
+func (m *ChannelMutation) ResetExtID() {
+	m.ext_id = nil
+	delete(m.clearedFields, channel.FieldExtID)
 }
 
 // SetName sets the "name" field.
@@ -475,7 +525,10 @@ func (m *ChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
+	if m.ext_id != nil {
+		fields = append(fields, channel.FieldExtID)
+	}
 	if m.name != nil {
 		fields = append(fields, channel.FieldName)
 	}
@@ -499,6 +552,8 @@ func (m *ChannelMutation) Fields() []string {
 // schema.
 func (m *ChannelMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case channel.FieldExtID:
+		return m.ExtID()
 	case channel.FieldName:
 		return m.Name()
 	case channel.FieldDisplayName:
@@ -518,6 +573,8 @@ func (m *ChannelMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *ChannelMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case channel.FieldExtID:
+		return m.OldExtID(ctx)
 	case channel.FieldName:
 		return m.OldName(ctx)
 	case channel.FieldDisplayName:
@@ -537,6 +594,13 @@ func (m *ChannelMutation) OldField(ctx context.Context, name string) (ent.Value,
 // type.
 func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case channel.FieldExtID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExtID(v)
+		return nil
 	case channel.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -601,7 +665,11 @@ func (m *ChannelMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *ChannelMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(channel.FieldExtID) {
+		fields = append(fields, channel.FieldExtID)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -614,6 +682,11 @@ func (m *ChannelMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *ChannelMutation) ClearField(name string) error {
+	switch name {
+	case channel.FieldExtID:
+		m.ClearExtID()
+		return nil
+	}
 	return fmt.Errorf("unknown Channel nullable field %s", name)
 }
 
@@ -621,6 +694,9 @@ func (m *ChannelMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *ChannelMutation) ResetField(name string) error {
 	switch name {
+	case channel.FieldExtID:
+		m.ResetExtID()
+		return nil
 	case channel.FieldName:
 		m.ResetName()
 		return nil
@@ -753,21 +829,26 @@ func (m *ChannelMutation) ResetEdge(name string) error {
 // LiveMutation represents an operation that mutates the Live nodes in the graph.
 type LiveMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	is_live        *bool
-	archive_chat   *bool
-	resolution     *string
-	last_live      *time.Time
-	updated_at     *time.Time
-	created_at     *time.Time
-	clearedFields  map[string]struct{}
-	channel        *uuid.UUID
-	clearedchannel bool
-	done           bool
-	oldValue       func(context.Context) (*Live, error)
-	predicates     []predicate.Live
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	watch_live          *bool
+	watch_vod           *bool
+	download_archives   *bool
+	download_highlights *bool
+	download_uploads    *bool
+	is_live             *bool
+	archive_chat        *bool
+	resolution          *string
+	last_live           *time.Time
+	updated_at          *time.Time
+	created_at          *time.Time
+	clearedFields       map[string]struct{}
+	channel             *uuid.UUID
+	clearedchannel      bool
+	done                bool
+	oldValue            func(context.Context) (*Live, error)
+	predicates          []predicate.Live
 }
 
 var _ ent.Mutation = (*LiveMutation)(nil)
@@ -872,6 +953,186 @@ func (m *LiveMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetWatchLive sets the "watch_live" field.
+func (m *LiveMutation) SetWatchLive(b bool) {
+	m.watch_live = &b
+}
+
+// WatchLive returns the value of the "watch_live" field in the mutation.
+func (m *LiveMutation) WatchLive() (r bool, exists bool) {
+	v := m.watch_live
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWatchLive returns the old "watch_live" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldWatchLive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWatchLive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWatchLive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWatchLive: %w", err)
+	}
+	return oldValue.WatchLive, nil
+}
+
+// ResetWatchLive resets all changes to the "watch_live" field.
+func (m *LiveMutation) ResetWatchLive() {
+	m.watch_live = nil
+}
+
+// SetWatchVod sets the "watch_vod" field.
+func (m *LiveMutation) SetWatchVod(b bool) {
+	m.watch_vod = &b
+}
+
+// WatchVod returns the value of the "watch_vod" field in the mutation.
+func (m *LiveMutation) WatchVod() (r bool, exists bool) {
+	v := m.watch_vod
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWatchVod returns the old "watch_vod" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldWatchVod(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWatchVod is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWatchVod requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWatchVod: %w", err)
+	}
+	return oldValue.WatchVod, nil
+}
+
+// ResetWatchVod resets all changes to the "watch_vod" field.
+func (m *LiveMutation) ResetWatchVod() {
+	m.watch_vod = nil
+}
+
+// SetDownloadArchives sets the "download_archives" field.
+func (m *LiveMutation) SetDownloadArchives(b bool) {
+	m.download_archives = &b
+}
+
+// DownloadArchives returns the value of the "download_archives" field in the mutation.
+func (m *LiveMutation) DownloadArchives() (r bool, exists bool) {
+	v := m.download_archives
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDownloadArchives returns the old "download_archives" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldDownloadArchives(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDownloadArchives is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDownloadArchives requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDownloadArchives: %w", err)
+	}
+	return oldValue.DownloadArchives, nil
+}
+
+// ResetDownloadArchives resets all changes to the "download_archives" field.
+func (m *LiveMutation) ResetDownloadArchives() {
+	m.download_archives = nil
+}
+
+// SetDownloadHighlights sets the "download_highlights" field.
+func (m *LiveMutation) SetDownloadHighlights(b bool) {
+	m.download_highlights = &b
+}
+
+// DownloadHighlights returns the value of the "download_highlights" field in the mutation.
+func (m *LiveMutation) DownloadHighlights() (r bool, exists bool) {
+	v := m.download_highlights
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDownloadHighlights returns the old "download_highlights" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldDownloadHighlights(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDownloadHighlights is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDownloadHighlights requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDownloadHighlights: %w", err)
+	}
+	return oldValue.DownloadHighlights, nil
+}
+
+// ResetDownloadHighlights resets all changes to the "download_highlights" field.
+func (m *LiveMutation) ResetDownloadHighlights() {
+	m.download_highlights = nil
+}
+
+// SetDownloadUploads sets the "download_uploads" field.
+func (m *LiveMutation) SetDownloadUploads(b bool) {
+	m.download_uploads = &b
+}
+
+// DownloadUploads returns the value of the "download_uploads" field in the mutation.
+func (m *LiveMutation) DownloadUploads() (r bool, exists bool) {
+	v := m.download_uploads
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDownloadUploads returns the old "download_uploads" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldDownloadUploads(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDownloadUploads is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDownloadUploads requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDownloadUploads: %w", err)
+	}
+	return oldValue.DownloadUploads, nil
+}
+
+// ResetDownloadUploads resets all changes to the "download_uploads" field.
+func (m *LiveMutation) ResetDownloadUploads() {
+	m.download_uploads = nil
 }
 
 // SetIsLive sets the "is_live" field.
@@ -1161,7 +1422,22 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 11)
+	if m.watch_live != nil {
+		fields = append(fields, live.FieldWatchLive)
+	}
+	if m.watch_vod != nil {
+		fields = append(fields, live.FieldWatchVod)
+	}
+	if m.download_archives != nil {
+		fields = append(fields, live.FieldDownloadArchives)
+	}
+	if m.download_highlights != nil {
+		fields = append(fields, live.FieldDownloadHighlights)
+	}
+	if m.download_uploads != nil {
+		fields = append(fields, live.FieldDownloadUploads)
+	}
 	if m.is_live != nil {
 		fields = append(fields, live.FieldIsLive)
 	}
@@ -1188,6 +1464,16 @@ func (m *LiveMutation) Fields() []string {
 // schema.
 func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case live.FieldWatchLive:
+		return m.WatchLive()
+	case live.FieldWatchVod:
+		return m.WatchVod()
+	case live.FieldDownloadArchives:
+		return m.DownloadArchives()
+	case live.FieldDownloadHighlights:
+		return m.DownloadHighlights()
+	case live.FieldDownloadUploads:
+		return m.DownloadUploads()
 	case live.FieldIsLive:
 		return m.IsLive()
 	case live.FieldArchiveChat:
@@ -1209,6 +1495,16 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case live.FieldWatchLive:
+		return m.OldWatchLive(ctx)
+	case live.FieldWatchVod:
+		return m.OldWatchVod(ctx)
+	case live.FieldDownloadArchives:
+		return m.OldDownloadArchives(ctx)
+	case live.FieldDownloadHighlights:
+		return m.OldDownloadHighlights(ctx)
+	case live.FieldDownloadUploads:
+		return m.OldDownloadUploads(ctx)
 	case live.FieldIsLive:
 		return m.OldIsLive(ctx)
 	case live.FieldArchiveChat:
@@ -1230,6 +1526,41 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 // type.
 func (m *LiveMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case live.FieldWatchLive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWatchLive(v)
+		return nil
+	case live.FieldWatchVod:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWatchVod(v)
+		return nil
+	case live.FieldDownloadArchives:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDownloadArchives(v)
+		return nil
+	case live.FieldDownloadHighlights:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDownloadHighlights(v)
+		return nil
+	case live.FieldDownloadUploads:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDownloadUploads(v)
+		return nil
 	case live.FieldIsLive:
 		v, ok := value.(bool)
 		if !ok {
@@ -1330,6 +1661,21 @@ func (m *LiveMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *LiveMutation) ResetField(name string) error {
 	switch name {
+	case live.FieldWatchLive:
+		m.ResetWatchLive()
+		return nil
+	case live.FieldWatchVod:
+		m.ResetWatchVod()
+		return nil
+	case live.FieldDownloadArchives:
+		m.ResetDownloadArchives()
+		return nil
+	case live.FieldDownloadHighlights:
+		m.ResetDownloadHighlights()
+		return nil
+	case live.FieldDownloadUploads:
+		m.ResetDownloadUploads()
+		return nil
 	case live.FieldIsLive:
 		m.ResetIsLive()
 		return nil
