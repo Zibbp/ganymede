@@ -155,8 +155,8 @@ func (s *Service) UpdateVod(c echo.Context, vodID uuid.UUID, vodDto Vod, cUUID u
 	return v, nil
 }
 
-func (s *Service) CheckVodExists(c echo.Context, extID string) (bool, error) {
-	_, err := s.Store.Client.Vod.Query().Where(vod.ExtID(extID)).Only(c.Request().Context())
+func (s *Service) CheckVodExists(extID string) (bool, error) {
+	_, err := s.Store.Client.Vod.Query().Where(vod.ExtID(extID)).Only(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error checking vod exists")
 
