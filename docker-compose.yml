@@ -5,6 +5,7 @@ services:
     image: ghcr.io/zibbp/ganymede:latest
     restart: unless-stopped
     environment:
+      - TZ=America/Chicago
       - DB_HOST=ganymede-db
       - DB_PORT=5432
       - DB_USER=ganymede
