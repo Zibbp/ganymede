@@ -14,7 +14,6 @@ type ConfigService interface {
 type UpdateConfigRequest struct {
 	RegistrationEnabled bool   `json:"registration_enabled"`
 	WebhookURL          string `json:"webhook_url"`
-	DBSeeded            bool   `json:"db_seeded"`
 	Parameters          struct {
 		VideoConvert   string `json:"video_convert" validate:"required"`
 		ChatRender     string `json:"chat_render" validate:"required"`
@@ -41,7 +40,6 @@ func (h *Handler) UpdateConfig(c echo.Context) error {
 	cDto := config.Conf{
 		RegistrationEnabled: conf.RegistrationEnabled,
 		WebhookURL:          conf.WebhookURL,
-		DBSeeded:            conf.DBSeeded,
 		Parameters: struct {
 			VideoConvert   string `json:"video_convert"`
 			ChatRender     string `json:"chat_render"`

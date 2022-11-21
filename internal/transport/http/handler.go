@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/auth"
+	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/utils"
 	"net/http"
 	"os"
@@ -82,6 +83,13 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	if viper.GetBool("oauth_enabled") {
 		go h.Service.SchedulerService.StartJwksScheduler()
 	}
+	go h.Service.SchedulerService.StartWatchVideoScheduler()
+
+	// Populate channel external ids
+	go func() {
+		time.Sleep(5 * time.Second)
+		channel.PopulateExternalChannelID()
+	}()
 
 	return h
 }
@@ -179,6 +187,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// Admin
 	adminGroup := e.Group("/admin")
 	adminGroup.GET("/stats", h.GetStats, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	adminGroup.GET("/info", h.GetInfo, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// User
 	userGroup := e.Group("/user")
@@ -200,6 +209,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.GET("/check", h.Check, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.POST("/chat-convert", h.ConvertChat, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.GET("/vod", h.CheckVodWatchedChannels, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 
 	// Playback
 	playbackGroup := e.Group("/playback")

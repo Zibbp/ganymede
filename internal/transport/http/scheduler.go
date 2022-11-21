@@ -5,4 +5,5 @@ type SchedulerService interface {
 	StartLiveScheduler()
 	StartQueueItemScheduler()
 	StartJwksScheduler()
+	StartWatchVideoScheduler()
 }

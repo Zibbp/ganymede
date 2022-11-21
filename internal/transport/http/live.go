@@ -15,17 +15,28 @@ type LiveService interface {
 	UpdateLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
 	Check() error
 	ConvertChat(c echo.Context, convertDto live.ConvertChat) error
+	CheckVodWatchedChannels()
 }
 
 type AddWatchedChannelRequest struct {
-	ChannelID   string `json:"channel_id" validate:"required"`
-	Resolution  string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
-	ArchiveChat bool   `json:"archive_chat"`
+	WatchLive          bool   `json:"watch_live" `
+	WatchVod           bool   `json:"watch_vod" `
+	DownloadArchives   bool   `json:"download_archives" `
+	DownloadHighlights bool   `json:"download_highlights" `
+	DownloadUploads    bool   `json:"download_uploads"`
+	ChannelID          string `json:"channel_id" validate:"required"`
+	Resolution         string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
+	ArchiveChat        bool   `json:"archive_chat"`
 }
 
 type UpdateWatchedChannelRequest struct {
-	Resolution  string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
-	ArchiveChat bool   `json:"archive_chat"`
+	WatchLive          bool   `json:"watch_live"`
+	WatchVod           bool   `json:"watch_vod" `
+	DownloadArchives   bool   `json:"download_archives" `
+	DownloadHighlights bool   `json:"download_highlights" `
+	DownloadUploads    bool   `json:"download_uploads"`
+	Resolution         string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
+	ArchiveChat        bool   `json:"archive_chat"`
 }
 
 type ConvertChatRequest struct {
@@ -59,10 +70,15 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	liveDto := live.Live{
-		ID:          cUUID,
-		IsLive:      false,
-		ArchiveChat: ccr.ArchiveChat,
-		Resolution:  ccr.Resolution,
+		ID:                 cUUID,
+		WatchLive:          ccr.WatchLive,
+		WatchVod:           ccr.WatchVod,
+		DownloadArchives:   ccr.DownloadArchives,
+		DownloadHighlights: ccr.DownloadHighlights,
+		DownloadUploads:    ccr.DownloadUploads,
+		IsLive:             false,
+		ArchiveChat:        ccr.ArchiveChat,
+		Resolution:         ccr.Resolution,
 	}
 	l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 	if err != nil {
@@ -86,9 +102,14 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	liveDto := live.Live{
-		ID:          lID,
-		ArchiveChat: ccr.ArchiveChat,
-		Resolution:  ccr.Resolution,
+		ID:                 lID,
+		WatchLive:          ccr.WatchLive,
+		WatchVod:           ccr.WatchVod,
+		DownloadArchives:   ccr.DownloadArchives,
+		DownloadHighlights: ccr.DownloadHighlights,
+		DownloadUploads:    ccr.DownloadUploads,
+		ArchiveChat:        ccr.ArchiveChat,
+		Resolution:         ccr.Resolution,
 	}
 	l, err := h.Service.LiveService.UpdateLiveWatchedChannel(c, liveDto)
 	if err != nil {
@@ -144,4 +165,10 @@ func (h *Handler) ConvertChat(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, "ok - converted chat found in /tmp/")
+}
+
+func (h *Handler) CheckVodWatchedChannels(c echo.Context) error {
+	go h.Service.LiveService.CheckVodWatchedChannels()
+
+	return c.JSON(http.StatusOK, "ok")
 }
