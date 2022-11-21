@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -12,6 +13,45 @@ import (
 
 type Service struct {
 }
+
+type TwitchVideoResponse struct {
+	Data       []Video    `json:"data"`
+	Pagination Pagination `json:"pagination"`
+}
+
+type Video struct {
+	ID            string      `json:"id"`
+	StreamID      string      `json:"stream_id"`
+	UserID        string      `json:"user_id"`
+	UserLogin     UserLogin   `json:"user_login"`
+	UserName      UserName    `json:"user_name"`
+	Title         string      `json:"title"`
+	Description   string      `json:"description"`
+	CreatedAt     string      `json:"created_at"`
+	PublishedAt   string      `json:"published_at"`
+	URL           string      `json:"url"`
+	ThumbnailURL  string      `json:"thumbnail_url"`
+	Viewable      Viewable    `json:"viewable"`
+	ViewCount     int64       `json:"view_count"`
+	Language      Language    `json:"language"`
+	Type          Type        `json:"type"`
+	Duration      string      `json:"duration"`
+	MutedSegments interface{} `json:"muted_segments"`
+}
+
+type Pagination struct {
+	Cursor string `json:"cursor"`
+}
+
+type Language string
+
+type Type string
+
+type UserLogin string
+
+type UserName string
+
+type Viewable string
 
 type AuthTokenResponse struct {
 	AccessToken string `json:"access_token"`
@@ -59,9 +99,6 @@ type Vod struct {
 	Type          string      `json:"type"`
 	Duration      string      `json:"duration"`
 	MutedSegments interface{} `json:"muted_segments"`
-}
-
-type Pagination struct {
 }
 
 type Stream struct {
@@ -144,7 +181,7 @@ func Authenticate() error {
 	return nil
 }
 
-func (s *Service) GetUserByLogin(cName string) (Channel, error) {
+func GetUserByLogin(cName string) (Channel, error) {
 	log.Debug().Msgf("getting user by login: %s", cName)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/users?login=%s", cName), nil)
@@ -283,4 +320,91 @@ func CheckUserAccessToken(accessToken string) error {
 	}
 
 	return nil
+}
+
+func GetVideosByUser(userID string, videoType string) ([]Video, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/videos?user_id=%s&type=%s&first=100", userID, videoType), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+	req.Header.Set("Client-ID", os.Getenv("TWITCH_CLIENT_ID"))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("TWITCH_ACCESS_TOKEN")))
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get twitch videos: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Error().Err(err).Msgf("failed to get twitch videos: %v", string(body))
+		return nil, fmt.Errorf("failed to get twitch videos: %v", resp)
+	}
+
+	var videoResponse TwitchVideoResponse
+	err = json.Unmarshal(body, &videoResponse)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+
+	var videos []Video
+	for _, v := range videoResponse.Data {
+		videos = append(videos, v)
+	}
+
+	// pagination
+	var cursor string
+	cursor = videoResponse.Pagination.Cursor
+	for cursor != "" {
+		response, err := getVideosByUserWithCursor(userID, videoType, videoResponse.Pagination.Cursor)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get twitch videos: %v", err)
+		}
+		for _, v := range response.Data {
+			videos = append(videos, v)
+		}
+		cursor = response.Pagination.Cursor
+	}
+
+	return videos, nil
+}
+
+func getVideosByUserWithCursor(userID string, videoType string, cursor string) (*TwitchVideoResponse, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/videos?user_id=%s&type=%s&first=100&after=%s", userID, videoType, cursor), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+	req.Header.Set("Client-ID", os.Getenv("TWITCH_CLIENT_ID"))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("TWITCH_ACCESS_TOKEN")))
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get twitch videos: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get twitch videos: %v", resp)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	var videoResponse TwitchVideoResponse
+	err = json.Unmarshal(body, &videoResponse)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+
+	return &videoResponse, nil
+
 }
