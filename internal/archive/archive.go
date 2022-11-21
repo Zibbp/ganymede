@@ -41,7 +41,7 @@ func NewService(store *database.Database, twitchService *twitch.Service, channel
 // ArchiveTwitchChannel - Create Twitch channel folder, profile image, and database entry.
 func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 	// Fetch channel from Twitch API
-	tChannel, err := s.TwitchService.GetUserByLogin(cName)
+	tChannel, err := twitch.GetUserByLogin(cName)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching twitch channel: %v", err)
 	}
@@ -66,6 +66,7 @@ func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 
 	// Create channel in DB
 	channelDTO := channel.Channel{
+		ExtID:       tChannel.ID,
 		Name:        tChannel.Login,
 		DisplayName: tChannel.DisplayName,
 		ImagePath:   fmt.Sprintf("/vods/%s/profile.png", tChannel.Login),
@@ -80,14 +81,19 @@ func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 
 }
 
-func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, chat bool) (*TwitchVodResponse, error) {
+func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool) (*TwitchVodResponse, error) {
 	// Fetch VOD from Twitch API
 	tVod, err := s.TwitchService.GetVodByID(vID)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching twitch vod: %v", err)
 	}
+	// check if vod is processing
+	// the best way I know to check if a vod is processing / still being streamed
+	if strings.Contains(tVod.ThumbnailURL, "processing") {
+		return nil, fmt.Errorf("vod is still processing")
+	}
 	// Check if vod is already archived
-	vCheck, err := s.VodService.CheckVodExists(c, tVod.ID)
+	vCheck, err := s.VodService.CheckVodExists(tVod.ID)
 	if err != nil {
 		return nil, fmt.Errorf("error checking if vod exists: %v", err)
 	}
@@ -171,7 +177,7 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 
 	// If chat is disabled update queue
 	if chat == false {
-		q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(c.Request().Context())
+		q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
 	}
 
 	// Re-query queue from DB for updated values
@@ -191,7 +197,7 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 	if len(qItems)-1 >= maxActiveQueueItems {
 		// If there are more than X active items in queue set new queue item to on hold
 		log.Debug().Msgf("more than %d active items in queue. setting new queue item %s to on hold", maxActiveQueueItems, q.ID)
-		q.Update().SetOnHold(true).SaveX(c.Request().Context())
+		q.Update().SetOnHold(true).SaveX(context.Background())
 
 		return &TwitchVodResponse{
 			VOD:   v,
@@ -803,7 +809,7 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	}
 
 	// Fetch streamer from Twitch API for their user ID
-	streamer, err := s.TwitchService.GetUserByLogin(ch.Name)
+	streamer, err := twitch.GetUserByLogin(ch.Name)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting streamer from Twitch API")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
