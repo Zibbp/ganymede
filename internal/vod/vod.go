@@ -305,6 +305,7 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 			filteredComments = append(filteredComments, message)
 		}
 	}
+	chatData = chat.Chat{}
 
 	return filteredComments, nil
 }
@@ -333,6 +334,7 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 			filteredComments = append(filteredComments, message)
 		}
 	}
+	chatData = chat.Chat{}
 	count := len(filteredComments)
 	// Count to int64
 	var i int64
@@ -340,8 +342,7 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 	if i < commentCount {
 		return nil, nil
 	}
-	comments := filteredComments[i-commentCount : i]
-	return comments, nil
+	return filteredComments[i-commentCount : i], nil
 }
 
 func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error) {
