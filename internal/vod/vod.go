@@ -170,14 +170,29 @@ func (s *Service) CheckVodExists(extID string) (bool, error) {
 	return true, nil
 }
 
-func (s *Service) SearchVods(c echo.Context, term string) ([]*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term)).Order(ent.Desc(vod.FieldStreamedAt)).All(c.Request().Context())
+func (s *Service) SearchVods(c echo.Context, term string, limit int, offset int) (Pagination, error) {
+
+	var pagination Pagination
+
+	v, err := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term)).Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error searching vods")
-		return nil, fmt.Errorf("error searching vods: %v", err)
+		return pagination, fmt.Errorf("error searching vods: %v", err)
 	}
 
-	return v, nil
+	totalCount, err := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term)).Count(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting total vod count")
+		return pagination, fmt.Errorf("error getting total vod count: %v", err)
+	}
+
+	pagination.TotalCount = totalCount
+	pagination.Limit = limit
+	pagination.Offset = offset
+	pagination.Pages = int(math.Ceil(float64(totalCount) / float64(limit)))
+	pagination.Data = v
+
+	return pagination, nil
 }
 
 func (s *Service) GetVodPlaylists(c echo.Context, vodID uuid.UUID) ([]*ent.Playlist, error) {
@@ -453,4 +468,46 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 	}
 
 	return nil, nil
+}
+
+func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.BadgeResp, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat emotes")
+		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
+	}
+	data, err := utils.ReadChatFile(v.ChatPath)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat emotes")
+		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
+	}
+	var chatData chat.Chat
+	err = gojson.Unmarshal(data, &chatData)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat emotes")
+		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
+	}
+
+	var badgeResp chat.BadgeResp
+	twitchBadges, err := chat.GetTwitchGlobalBadges()
+	if err != nil {
+		log.Error().Err(err).Msg("error getting twitch global badges")
+		return nil, fmt.Errorf("error getting twitch global badges: %v", err)
+	}
+	channelBadges, err := chat.GetTwitchChannelBadges(strconv.FormatInt(chatData.Streamer.ID, 10))
+	if err != nil {
+		log.Error().Err(err).Msg("error getting twitch channel badges")
+		return nil, fmt.Errorf("error getting twitch channel badges: %v", err)
+	}
+
+	// Loop through twitch global badges
+	for _, badge := range twitchBadges.Badges {
+		badgeResp.Badges = append(badgeResp.Badges, badge)
+	}
+	// Loop through twitch channel badges
+	for _, badge := range channelBadges.Badges {
+		badgeResp.Badges = append(badgeResp.Badges, badge)
+	}
+
+	return &badgeResp, nil
 }

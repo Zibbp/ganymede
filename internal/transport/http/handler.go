@@ -165,6 +165,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.GET("/:id/chat/seek", h.GetNumberOfVodChatCommentsFromTime)
 	vodGroup.GET("/:id/chat/userid", h.GetUserIdFromChat)
 	vodGroup.GET("/:id/chat/emotes", h.GetVodChatEmotes)
+	vodGroup.GET("/:id/chat/badges", h.GetVodChatBadges)
 
 	// Queue
 	queueGroup := e.Group("/queue")
@@ -233,7 +234,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 
 	// Exec
 	execGroup := e.Group("/exec")
-	execGroup.POST("/ffprobe", h.GetFfprobeData, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.UserRole))
+	execGroup.POST("/ffprobe", h.GetFfprobeData, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Task
 	taskGroup := e.Group("/task")

@@ -21,12 +21,13 @@ type VodService interface {
 	GetVodWithChannel(vID uuid.UUID) (*ent.Vod, error)
 	DeleteVod(c echo.Context, vID uuid.UUID) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
-	SearchVods(c echo.Context, query string) ([]*ent.Vod, error)
+	SearchVods(c echo.Context, query string, limit int, offset int) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
 	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) ([]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (string, error)
 	GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error)
+	GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.BadgeResp, error)
 	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) ([]chat.Comment, error)
 }
 
@@ -220,7 +221,15 @@ func (h *Handler) SearchVods(c echo.Context) error {
 	if q == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "q is required")
 	}
-	v, err := h.Service.VodService.SearchVods(c, q)
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid limit: %w", err).Error())
+	}
+	offset, err := strconv.Atoi(c.QueryParam("offset"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid offset: %w", err).Error())
+	}
+	v, err := h.Service.VodService.SearchVods(c, q, limit, offset)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -314,6 +323,20 @@ func (h *Handler) GetVodChatEmotes(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, emotes)
+}
+
+func (h *Handler) GetVodChatBadges(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	badges, err := h.Service.VodService.GetVodChatBadges(c, vID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, badges)
 }
 func (h *Handler) GetNumberOfVodChatCommentsFromTime(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
