@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/zibbp/ganymede/internal/cache"
-	"time"
-
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -124,11 +121,11 @@ func FileExists(path string) bool {
 func ReadChatFile(path string) ([]byte, error) {
 
 	// Check if file is cached
-	cached, found := cache.Cache().Get(path)
-	if found {
-		log.Debug().Msgf("using cached file: %s", path)
-		return cached.([]byte), nil
-	}
+	//cached, found := cache.Cache().Get(path)
+	//if found {
+	//	log.Debug().Msgf("using cached file: %s", path)
+	//	return cached.([]byte), nil
+	//}
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -136,12 +133,12 @@ func ReadChatFile(path string) ([]byte, error) {
 	}
 
 	// Cache file
-	err = cache.Cache().Set(path, data, 5*time.Minute)
-	if err != nil {
-
-		return nil, err
-	}
-	log.Debug().Msgf("set cache for file: %s", path)
+	//err = cache.Cache().Set(path, data, 5*time.Minute)
+	//if err != nil {
+	//
+	//	return nil, err
+	//}
+	//log.Debug().Msgf("set cache for file: %s", path)
 
 	return data, nil
 }
