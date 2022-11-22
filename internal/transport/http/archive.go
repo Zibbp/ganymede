@@ -11,7 +11,7 @@ import (
 
 type ArchiveService interface {
 	ArchiveTwitchChannel(cName string) (*ent.Channel, error)
-	ArchiveTwitchVod(c echo.Context, vID string, quality string, chat bool) (*archive.TwitchVodResponse, error)
+	ArchiveTwitchVod(vID string, quality string, chat bool) (*archive.TwitchVodResponse, error)
 	RestartTask(c echo.Context, qID uuid.UUID, task string, cont bool) error
 }
 
@@ -53,7 +53,7 @@ func (h *Handler) ArchiveTwitchVod(c echo.Context) error {
 	if err := c.Validate(avr); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	vod, err := h.Service.ArchiveService.ArchiveTwitchVod(c, avr.VodID, string(avr.Quality), avr.Chat)
+	vod, err := h.Service.ArchiveService.ArchiveTwitchVod(avr.VodID, string(avr.Quality), avr.Chat)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

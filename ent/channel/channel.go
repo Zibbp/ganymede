@@ -13,6 +13,8 @@ const (
 	Label = "channel"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldExtID holds the string denoting the ext_id field in the database.
+	FieldExtID = "ext_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldDisplayName holds the string denoting the display_name field in the database.
@@ -48,6 +50,7 @@ const (
 // Columns holds all SQL columns for channel fields.
 var Columns = []string{
 	FieldID,
+	FieldExtID,
 	FieldName,
 	FieldDisplayName,
 	FieldImagePath,

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
@@ -11,6 +12,7 @@ import (
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/kv"
 	_ "github.com/zibbp/ganymede/internal/kv"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/metrics"
@@ -18,10 +20,19 @@ import (
 	"github.com/zibbp/ganymede/internal/playlist"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/scheduler"
+	"github.com/zibbp/ganymede/internal/task"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/vod"
+	"strconv"
+	"time"
+)
+
+var (
+	Version   = "undefined"
+	BuildTime = "undefined"
+	GitHash   = "undefined"
 )
 
 func Run() error {
@@ -59,8 +70,9 @@ func Run() error {
 	playbackService := playback.NewService(store)
 	metricsService := metrics.NewService(store)
 	playlistService := playlist.NewService(store)
+	taskService := task.NewService(store, liveService, archiveService)
 
-	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService)
+	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService)
 
 	if err := httpHandler.Serve(); err != nil {
 		return err
@@ -70,6 +82,13 @@ func Run() error {
 }
 
 func main() {
+	kv.DB().Set("version", Version)
+	kv.DB().Set("build_time", BuildTime)
+	kv.DB().Set("git_hash", GitHash)
+	kv.DB().Set("start_time_unix", strconv.FormatInt(time.Now().Unix(), 10))
+	fmt.Printf("Version    : %s\n", Version)
+	fmt.Printf("Git Hash   : %s\n", GitHash)
+	fmt.Printf("Build Time : %s\n", BuildTime)
 	if err := Run(); err != nil {
 		log.Fatal().Err(err).Msg("failed to run")
 	}

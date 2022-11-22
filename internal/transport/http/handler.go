@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/auth"
+	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/utils"
 	"net/http"
 	"os"
@@ -31,6 +32,7 @@ type Services struct {
 	PlaybackService  PlaybackService
 	MetricsService   MetricsService
 	PlaylistService  PlaylistService
+	TaskService      TaskService
 }
 
 type Handler struct {
@@ -38,7 +40,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
@@ -58,6 +60,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			PlaybackService:  playbackService,
 			MetricsService:   metricsService,
 			PlaylistService:  playlistService,
+			TaskService:      taskService,
 		},
 	}
 
@@ -82,6 +85,13 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	if viper.GetBool("oauth_enabled") {
 		go h.Service.SchedulerService.StartJwksScheduler()
 	}
+	go h.Service.SchedulerService.StartWatchVideoScheduler()
+
+	// Populate channel external ids
+	go func() {
+		time.Sleep(5 * time.Second)
+		channel.PopulateExternalChannelID()
+	}()
 
 	return h
 }
@@ -151,6 +161,11 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.DELETE("/:id", h.DeleteVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	vodGroup.GET("/:id/playlist", h.GetVodPlaylists)
 	vodGroup.GET("/paginate", h.GetVodsPagination)
+	vodGroup.GET("/:id/chat", h.GetVodChatComments)
+	vodGroup.GET("/:id/chat/seek", h.GetNumberOfVodChatCommentsFromTime)
+	vodGroup.GET("/:id/chat/userid", h.GetUserIdFromChat)
+	vodGroup.GET("/:id/chat/emotes", h.GetVodChatEmotes)
+	vodGroup.GET("/:id/chat/badges", h.GetVodChatBadges)
 
 	// Queue
 	queueGroup := e.Group("/queue")
@@ -175,6 +190,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// Admin
 	adminGroup := e.Group("/admin")
 	adminGroup.GET("/stats", h.GetStats, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	adminGroup.GET("/info", h.GetInfo, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// User
 	userGroup := e.Group("/user")
@@ -196,6 +212,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.GET("/check", h.Check, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.POST("/chat-convert", h.ConvertChat, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	liveGroup.GET("/vod", h.CheckVodWatchedChannels, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 
 	// Playback
 	playbackGroup := e.Group("/playback")
@@ -217,7 +234,11 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 
 	// Exec
 	execGroup := e.Group("/exec")
-	execGroup.POST("/ffprobe", h.GetFfprobeData, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.UserRole))
+	execGroup.POST("/ffprobe", h.GetFfprobeData, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+
+	// Task
+	taskGroup := e.Group("/task")
+	taskGroup.POST("/start", h.StartTask, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 }
 
 func (h *Handler) Serve() error {

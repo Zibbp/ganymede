@@ -8,6 +8,7 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/twitch"
 	"time"
 )
 
@@ -21,6 +22,7 @@ func NewService(store *database.Database) *Service {
 
 type Channel struct {
 	ID          uuid.UUID `json:"id"`
+	ExtID       string    `json:"ext_id"`
 	Name        string    `json:"name"`
 	DisplayName string    `json:"display_name"`
 	ImagePath   string    `json:"image_path"`
@@ -30,7 +32,7 @@ type Channel struct {
 
 func (s *Service) CreateChannel(channelDto Channel) (*ent.Channel, error) {
 
-	cha, err := s.Store.Client.Channel.Create().SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).Save(context.Background())
+	cha, err := s.Store.Client.Channel.Create().SetExtID(channelDto.ExtID).SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).Save(context.Background())
 	if err != nil {
 		if _, ok := err.(*ent.ConstraintError); ok {
 			return nil, fmt.Errorf("channel already exists")
@@ -134,4 +136,28 @@ func (s *Service) CheckChannelExistsNoContext(cName string) bool {
 	}
 
 	return true
+}
+
+func PopulateExternalChannelID() {
+	channels, err := database.DB().Client.Channel.Query().All(context.Background())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting channels")
+	}
+
+	for _, c := range channels {
+		if c.ExtID != "" {
+			continue
+		}
+		twitchC, err := twitch.GetUserByLogin(c.Name)
+		if err != nil {
+			log.Error().Msg("error getting twitch channel")
+			continue
+		}
+		_, err = database.DB().Client.Channel.UpdateOneID(c.ID).SetExtID(twitchC.ID).Save(context.Background())
+		if err != nil {
+			log.Error().Err(err).Msg("error updating channel")
+			continue
+		}
+		log.Debug().Msgf("updated channel %s", c.Name)
+	}
 }

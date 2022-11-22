@@ -82,6 +82,13 @@ func IDLTE(id uuid.UUID) predicate.Channel {
 	})
 }
 
+// ExtID applies equality check predicate on the "ext_id" field. It's identical to ExtIDEQ.
+func ExtID(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldExtID), v))
+	})
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Channel {
 	return predicate.Channel(func(s *sql.Selector) {
@@ -114,6 +121,131 @@ func UpdatedAt(v time.Time) predicate.Channel {
 func CreatedAt(v time.Time) predicate.Channel {
 	return predicate.Channel(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// ExtIDEQ applies the EQ predicate on the "ext_id" field.
+func ExtIDEQ(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldExtID), v))
+	})
+}
+
+// ExtIDNEQ applies the NEQ predicate on the "ext_id" field.
+func ExtIDNEQ(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldExtID), v))
+	})
+}
+
+// ExtIDIn applies the In predicate on the "ext_id" field.
+func ExtIDIn(vs ...string) predicate.Channel {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Channel(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldExtID), v...))
+	})
+}
+
+// ExtIDNotIn applies the NotIn predicate on the "ext_id" field.
+func ExtIDNotIn(vs ...string) predicate.Channel {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Channel(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldExtID), v...))
+	})
+}
+
+// ExtIDGT applies the GT predicate on the "ext_id" field.
+func ExtIDGT(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldExtID), v))
+	})
+}
+
+// ExtIDGTE applies the GTE predicate on the "ext_id" field.
+func ExtIDGTE(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldExtID), v))
+	})
+}
+
+// ExtIDLT applies the LT predicate on the "ext_id" field.
+func ExtIDLT(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldExtID), v))
+	})
+}
+
+// ExtIDLTE applies the LTE predicate on the "ext_id" field.
+func ExtIDLTE(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldExtID), v))
+	})
+}
+
+// ExtIDContains applies the Contains predicate on the "ext_id" field.
+func ExtIDContains(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldExtID), v))
+	})
+}
+
+// ExtIDHasPrefix applies the HasPrefix predicate on the "ext_id" field.
+func ExtIDHasPrefix(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldExtID), v))
+	})
+}
+
+// ExtIDHasSuffix applies the HasSuffix predicate on the "ext_id" field.
+func ExtIDHasSuffix(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldExtID), v))
+	})
+}
+
+// ExtIDIsNil applies the IsNil predicate on the "ext_id" field.
+func ExtIDIsNil() predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldExtID)))
+	})
+}
+
+// ExtIDNotNil applies the NotNil predicate on the "ext_id" field.
+func ExtIDNotNil() predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldExtID)))
+	})
+}
+
+// ExtIDEqualFold applies the EqualFold predicate on the "ext_id" field.
+func ExtIDEqualFold(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldExtID), v))
+	})
+}
+
+// ExtIDContainsFold applies the ContainsFold predicate on the "ext_id" field.
+func ExtIDContainsFold(v string) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldExtID), v))
 	})
 }
 

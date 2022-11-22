@@ -8,6 +8,7 @@ import (
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/twitch"
+	"os"
 	"time"
 )
 
@@ -33,6 +34,25 @@ func (s *Service) StartLiveScheduler() {
 	scheduler := gocron.NewScheduler(time.UTC)
 
 	s.checkLiveStreamSchedule(scheduler)
+
+	scheduler.StartAsync()
+}
+
+func (s *Service) StartWatchVideoScheduler() {
+	time.Sleep(time.Second * 5)
+	// get tz
+	var tz string
+	tz = os.Getenv("TZ")
+	if tz == "" {
+		tz = "UTC"
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to load location")
+	}
+	scheduler := gocron.NewScheduler(loc)
+
+	s.checkWatchedChannelVideos(scheduler)
 
 	scheduler.StartAsync()
 }
@@ -78,6 +98,14 @@ func (s *Service) checkLiveStreamSchedule(scheduler *gocron.Scheduler) {
 			log.Error().Err(err).Msg("failed to check live streams")
 		}
 
+	})
+}
+
+func (s *Service) checkWatchedChannelVideos(schedule *gocron.Scheduler) {
+	log.Info().Msg("setting up check watched channel videos schedule")
+	schedule.Every(1).Day().At("01:00").Do(func() {
+		log.Info().Msg("running check watched channel videos schedule")
+		s.LiveService.CheckVodWatchedChannels()
 	})
 }
 

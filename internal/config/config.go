@@ -100,7 +100,6 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 func (s *Service) UpdateConfig(c echo.Context, cDto *Conf) error {
 	viper.Set("registration_enabled", cDto.RegistrationEnabled)
 	viper.Set("webhook_url", cDto.WebhookURL)
-	viper.Set("db_seeded", cDto.DBSeeded)
 	viper.Set("parameters.video_convert", cDto.Parameters.VideoConvert)
 	viper.Set("parameters.chat_render", cDto.Parameters.ChatRender)
 	viper.Set("parameters.streamlink_live", cDto.Parameters.StreamlinkLive)

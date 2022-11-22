@@ -41,7 +41,7 @@ func NewService(store *database.Database, twitchService *twitch.Service, channel
 // ArchiveTwitchChannel - Create Twitch channel folder, profile image, and database entry.
 func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 	// Fetch channel from Twitch API
-	tChannel, err := s.TwitchService.GetUserByLogin(cName)
+	tChannel, err := twitch.GetUserByLogin(cName)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching twitch channel: %v", err)
 	}
@@ -66,6 +66,7 @@ func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 
 	// Create channel in DB
 	channelDTO := channel.Channel{
+		ExtID:       tChannel.ID,
 		Name:        tChannel.Login,
 		DisplayName: tChannel.DisplayName,
 		ImagePath:   fmt.Sprintf("/vods/%s/profile.png", tChannel.Login),
@@ -80,14 +81,19 @@ func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 
 }
 
-func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, chat bool) (*TwitchVodResponse, error) {
+func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool) (*TwitchVodResponse, error) {
 	// Fetch VOD from Twitch API
 	tVod, err := s.TwitchService.GetVodByID(vID)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching twitch vod: %v", err)
 	}
+	// check if vod is processing
+	// the best way I know to check if a vod is processing / still being streamed
+	if strings.Contains(tVod.ThumbnailURL, "processing") {
+		return nil, fmt.Errorf("vod is still processing")
+	}
 	// Check if vod is already archived
-	vCheck, err := s.VodService.CheckVodExists(c, tVod.ID)
+	vCheck, err := s.VodService.CheckVodExists(tVod.ID)
 	if err != nil {
 		return nil, fmt.Errorf("error checking if vod exists: %v", err)
 	}
@@ -171,7 +177,7 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 
 	// If chat is disabled update queue
 	if chat == false {
-		q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(c.Request().Context())
+		q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
 	}
 
 	// Re-query queue from DB for updated values
@@ -191,7 +197,7 @@ func (s *Service) ArchiveTwitchVod(c echo.Context, vID string, quality string, c
 	if len(qItems)-1 >= maxActiveQueueItems {
 		// If there are more than X active items in queue set new queue item to on hold
 		log.Debug().Msgf("more than %d active items in queue. setting new queue item %s to on hold", maxActiveQueueItems, q.ID)
-		q.Update().SetOnHold(true).SaveX(c.Request().Context())
+		q.Update().SetOnHold(true).SaveX(context.Background())
 
 		return &TwitchVodResponse{
 			VOD:   v,
@@ -497,7 +503,7 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 	if cont == true {
 		// Refresh thumbnails for live stream after 30 minutes
 		go s.RefreshLiveThumbnails(ch, v, q)
-		// Proceed with tasks
+		// Proceed with task
 		go s.TaskVodSaveLiveInfo(ch, v, q, true)
 	}
 }
@@ -727,7 +733,7 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 	// Set video as complete
 	q.Update().SetVideoProcessing(false).SaveX(context.Background())
 
-	// Check if all tasks are done
+	// Check if all task are done
 	if q.LiveArchive == true {
 		go s.CheckIfLiveTasksAreDone(ch, v, q)
 	} else {
@@ -793,17 +799,17 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	chatPath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
 	if !utils.FileExists(chatPath) {
 		log.Debug().Msgf("chat file does not exist %s - this means there were no chat messages - setting chat to complete", chatPath)
-		// Set queue chat tasks to complete
+		// Set queue chat task to complete
 		q.Update().SetChatProcessing(false).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
 		// Set VOD chat to empty
 		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
-		// Check if all tasks are done
+		// Check if all task are done
 		go s.CheckIfLiveTasksAreDone(ch, v, q)
 		return
 	}
 
 	// Fetch streamer from Twitch API for their user ID
-	streamer, err := s.TwitchService.GetUserByLogin(ch.Name)
+	streamer, err := twitch.GetUserByLogin(ch.Name)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting streamer from Twitch API")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
@@ -863,7 +869,7 @@ func (s *Service) TaskChatRender(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont
 			go s.TaskChatMove(ch, v, q, true)
 		}
 	} else {
-		// Check if all tasks are done
+		// Check if all task are done
 		go s.CheckIfTasksAreDone(ch, v, q)
 	}
 }
@@ -900,7 +906,7 @@ func (s *Service) TaskChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont b
 	// Set chat as complete
 	q.Update().SetChatProcessing(false).SaveX(context.Background())
 
-	// Check if all tasks are done
+	// Check if all task are done
 	go s.CheckIfTasksAreDone(ch, v, q)
 }
 
@@ -949,7 +955,7 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 	// Set chat as complete
 	q.Update().SetChatProcessing(false).SaveX(context.Background())
 
-	// Check if all tasks are done
+	// Check if all task are done
 	go s.CheckIfLiveTasksAreDone(ch, v, q)
 }
 
@@ -960,7 +966,7 @@ func (s *Service) CheckIfTasksAreDone(ch *ent.Channel, v *ent.Vod, qO *ent.Queue
 		return
 	}
 	if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
-		log.Debug().Msgf("all tasks for vod %s are done", v.ID)
+		log.Debug().Msgf("all task for vod %s are done", v.ID)
 		q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).SaveX(context.Background())
 		v.Update().SetProcessing(false).SaveX(context.Background())
 		// Send webhook
@@ -981,7 +987,7 @@ func (s *Service) CheckIfLiveTasksAreDone(ch *ent.Channel, v *ent.Vod, qO *ent.Q
 		return
 	}
 	if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatConvert == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
-		log.Debug().Msgf("all tasks for live stream %s are done", v.ID)
+		log.Debug().Msgf("all task for live stream %s are done", v.ID)
 		q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).SaveX(context.Background())
 
 		v.Update().SetProcessing(false).SaveX(context.Background())

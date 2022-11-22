@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/chat"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 	"net/http"
@@ -20,9 +21,14 @@ type VodService interface {
 	GetVodWithChannel(vID uuid.UUID) (*ent.Vod, error)
 	DeleteVod(c echo.Context, vID uuid.UUID) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
-	SearchVods(c echo.Context, query string) ([]*ent.Vod, error)
+	SearchVods(c echo.Context, query string, limit int, offset int) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
 	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID) (vod.Pagination, error)
+	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) ([]chat.Comment, error)
+	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (string, error)
+	GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error)
+	GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.BadgeResp, error)
+	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) ([]chat.Comment, error)
 }
 
 type CreateVodRequest struct {
@@ -215,7 +221,15 @@ func (h *Handler) SearchVods(c echo.Context) error {
 	if q == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "q is required")
 	}
-	v, err := h.Service.VodService.SearchVods(c, q)
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid limit: %w", err).Error())
+	}
+	offset, err := strconv.Atoi(c.QueryParam("offset"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid offset: %w", err).Error())
+	}
+	v, err := h.Service.VodService.SearchVods(c, q, limit, offset)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -255,6 +269,96 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 	}
 
 	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) GetUserIdFromChat(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	v, err := h.Service.VodService.GetUserIdFromChat(c, vID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) GetVodChatComments(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	start := c.QueryParam("start")
+	end := c.QueryParam("end")
+	startFloat, err := strconv.ParseFloat(start, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid start: %w", err).Error())
+	}
+	endFloat, err := strconv.ParseFloat(end, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid end: %w", err).Error())
+	}
+
+	v, err := h.Service.VodService.GetVodChatComments(c, vID, startFloat, endFloat)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) GetVodChatEmotes(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	emotes, err := h.Service.VodService.GetVodChatEmotes(c, vID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, emotes)
+}
+
+func (h *Handler) GetVodChatBadges(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	badges, err := h.Service.VodService.GetVodChatBadges(c, vID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, badges)
+}
+func (h *Handler) GetNumberOfVodChatCommentsFromTime(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	start := c.QueryParam("start")
+	count := c.QueryParam("count")
+	startFloat, err := strconv.ParseFloat(start, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid start: %w", err).Error())
+	}
+	countInt, err := strconv.Atoi(count)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid count: %w", err).Error())
+	}
+	if countInt < 1 {
+		return echo.NewHTTPError(http.StatusBadRequest, "count must be greater than 0")
+	}
+
+	v, err := h.Service.VodService.GetNumberOfVodChatCommentsFromTime(c, vID, startFloat, int64(countInt))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

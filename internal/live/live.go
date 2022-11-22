@@ -24,11 +24,16 @@ type Service struct {
 }
 
 type Live struct {
-	ID          uuid.UUID `json:"id"`
-	IsLive      bool      `json:"is_live"`
-	ArchiveChat bool      `json:"archive_chat"`
-	Resolution  string    `json:"resolution"`
-	LastLive    time.Time `json:"last_live"`
+	ID                 uuid.UUID `json:"id"`
+	WatchLive          bool      `json:"watch_live"`
+	WatchVod           bool      `json:"watch_vod"`
+	DownloadArchives   bool      `json:"download_archives"`
+	DownloadHighlights bool      `json:"download_highlights"`
+	DownloadUploads    bool      `json:"download_uploads"`
+	IsLive             bool      `json:"is_live"`
+	ArchiveChat        bool      `json:"archive_chat"`
+	Resolution         string    `json:"resolution"`
+	LastLive           time.Time `json:"last_live"`
 }
 
 type ConvertChat struct {
@@ -61,7 +66,7 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 	if len(liveWatchedChannel) > 0 {
 		return nil, fmt.Errorf("channel already watched")
 	}
-	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).Save(c.Request().Context())
+	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).Save(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error adding watched channel: %v", err)
 	}
@@ -69,7 +74,7 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 }
 
 func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live, error) {
-	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).Save(c.Request().Context())
+	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).Save(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error updating watched channel: %v", err)
 	}
@@ -99,7 +104,7 @@ func (s *Service) DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error 
 func (s *Service) Check() error {
 	log.Debug().Msg("checking live channels")
 	// get live watched channels from database
-	liveWatchedChannels, err := s.Store.Client.Live.Query().WithChannel().All(context.Background())
+	liveWatchedChannels, err := s.Store.Client.Live.Query().Where(live.WatchLive(true)).WithChannel().All(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("error getting live watched channels")
 	}

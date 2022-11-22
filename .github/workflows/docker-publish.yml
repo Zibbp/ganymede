@@ -76,6 +76,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            VERSION=${{ steps.meta.outputs.version }}
 
 #       # Sign the resulting Docker image digest except on PRs.
 #       # This will only write to the public Rekor transparency log when the Docker

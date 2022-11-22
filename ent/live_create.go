@@ -22,6 +22,76 @@ type LiveCreate struct {
 	hooks    []Hook
 }
 
+// SetWatchLive sets the "watch_live" field.
+func (lc *LiveCreate) SetWatchLive(b bool) *LiveCreate {
+	lc.mutation.SetWatchLive(b)
+	return lc
+}
+
+// SetNillableWatchLive sets the "watch_live" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableWatchLive(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetWatchLive(*b)
+	}
+	return lc
+}
+
+// SetWatchVod sets the "watch_vod" field.
+func (lc *LiveCreate) SetWatchVod(b bool) *LiveCreate {
+	lc.mutation.SetWatchVod(b)
+	return lc
+}
+
+// SetNillableWatchVod sets the "watch_vod" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableWatchVod(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetWatchVod(*b)
+	}
+	return lc
+}
+
+// SetDownloadArchives sets the "download_archives" field.
+func (lc *LiveCreate) SetDownloadArchives(b bool) *LiveCreate {
+	lc.mutation.SetDownloadArchives(b)
+	return lc
+}
+
+// SetNillableDownloadArchives sets the "download_archives" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableDownloadArchives(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetDownloadArchives(*b)
+	}
+	return lc
+}
+
+// SetDownloadHighlights sets the "download_highlights" field.
+func (lc *LiveCreate) SetDownloadHighlights(b bool) *LiveCreate {
+	lc.mutation.SetDownloadHighlights(b)
+	return lc
+}
+
+// SetNillableDownloadHighlights sets the "download_highlights" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableDownloadHighlights(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetDownloadHighlights(*b)
+	}
+	return lc
+}
+
+// SetDownloadUploads sets the "download_uploads" field.
+func (lc *LiveCreate) SetDownloadUploads(b bool) *LiveCreate {
+	lc.mutation.SetDownloadUploads(b)
+	return lc
+}
+
+// SetNillableDownloadUploads sets the "download_uploads" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableDownloadUploads(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetDownloadUploads(*b)
+	}
+	return lc
+}
+
 // SetIsLive sets the "is_live" field.
 func (lc *LiveCreate) SetIsLive(b bool) *LiveCreate {
 	lc.mutation.SetIsLive(b)
@@ -208,6 +278,26 @@ func (lc *LiveCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (lc *LiveCreate) defaults() {
+	if _, ok := lc.mutation.WatchLive(); !ok {
+		v := live.DefaultWatchLive
+		lc.mutation.SetWatchLive(v)
+	}
+	if _, ok := lc.mutation.WatchVod(); !ok {
+		v := live.DefaultWatchVod
+		lc.mutation.SetWatchVod(v)
+	}
+	if _, ok := lc.mutation.DownloadArchives(); !ok {
+		v := live.DefaultDownloadArchives
+		lc.mutation.SetDownloadArchives(v)
+	}
+	if _, ok := lc.mutation.DownloadHighlights(); !ok {
+		v := live.DefaultDownloadHighlights
+		lc.mutation.SetDownloadHighlights(v)
+	}
+	if _, ok := lc.mutation.DownloadUploads(); !ok {
+		v := live.DefaultDownloadUploads
+		lc.mutation.SetDownloadUploads(v)
+	}
 	if _, ok := lc.mutation.IsLive(); !ok {
 		v := live.DefaultIsLive
 		lc.mutation.SetIsLive(v)
@@ -240,6 +330,21 @@ func (lc *LiveCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (lc *LiveCreate) check() error {
+	if _, ok := lc.mutation.WatchLive(); !ok {
+		return &ValidationError{Name: "watch_live", err: errors.New(`ent: missing required field "Live.watch_live"`)}
+	}
+	if _, ok := lc.mutation.WatchVod(); !ok {
+		return &ValidationError{Name: "watch_vod", err: errors.New(`ent: missing required field "Live.watch_vod"`)}
+	}
+	if _, ok := lc.mutation.DownloadArchives(); !ok {
+		return &ValidationError{Name: "download_archives", err: errors.New(`ent: missing required field "Live.download_archives"`)}
+	}
+	if _, ok := lc.mutation.DownloadHighlights(); !ok {
+		return &ValidationError{Name: "download_highlights", err: errors.New(`ent: missing required field "Live.download_highlights"`)}
+	}
+	if _, ok := lc.mutation.DownloadUploads(); !ok {
+		return &ValidationError{Name: "download_uploads", err: errors.New(`ent: missing required field "Live.download_uploads"`)}
+	}
 	if _, ok := lc.mutation.IsLive(); !ok {
 		return &ValidationError{Name: "is_live", err: errors.New(`ent: missing required field "Live.is_live"`)}
 	}
@@ -293,6 +398,46 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if id, ok := lc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
+	}
+	if value, ok := lc.mutation.WatchLive(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldWatchLive,
+		})
+		_node.WatchLive = value
+	}
+	if value, ok := lc.mutation.WatchVod(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldWatchVod,
+		})
+		_node.WatchVod = value
+	}
+	if value, ok := lc.mutation.DownloadArchives(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldDownloadArchives,
+		})
+		_node.DownloadArchives = value
+	}
+	if value, ok := lc.mutation.DownloadHighlights(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldDownloadHighlights,
+		})
+		_node.DownloadHighlights = value
+	}
+	if value, ok := lc.mutation.DownloadUploads(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: live.FieldDownloadUploads,
+		})
+		_node.DownloadUploads = value
 	}
 	if value, ok := lc.mutation.IsLive(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
