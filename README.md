@@ -15,9 +15,9 @@
 
 ## Demo
 
-![landing-demo](.github/landing-demo.jpg)
+![ganymede-readme_landing](https://user-images.githubusercontent.com/21207065/203620886-f40b82f6-317c-4ded-afdc-733d1658f6ca.jpg)
 
-https://user-images.githubusercontent.com/21207065/180067579-674af497-090f-4e07-9c81-0314c6361a87.mp4
+https://user-images.githubusercontent.com/21207065/203620893-41a6a3a0-339a-4c62-8df8-0f66ec68327d.mp4
 
 ## About
 
@@ -25,8 +25,10 @@ Ganymede allows archiving of past streams (VODs) and livestreams both with a ren
 
 ## Features
 
+- Realtime Chat Playback
 - SSO / OAuth authentication ([wiki](https://github.com/Zibbp/ganymede/wiki/SSO---OpenID-Connect))
 - Light/dark mode toggle.
+- Watch channels for new videos and streams.
 - Twitch VOD/Livestream support.
 - Queue holds.
 - Queue task restarts.
@@ -77,6 +79,7 @@ Feel free to use an existing Postgres database container and Nginx container if 
 
 | ENV Name               | Description                                                                                                                                                     |
 |------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `TZ`                   | Timezone.                                                                                                                                                       |
 | `DB_HOST`              | Host of the database.                                                                                                                                           |
 | `DB_PORT`              | Port of the database.                                                                                                                                           |
 | `DB_USER`              | Username for the database.                                                                                                                                      |
@@ -97,10 +100,12 @@ Feel free to use an existing Postgres database container and Nginx container if 
 
 ##### Frontend
 
-| ENV Name              | Description                                                     |
-|-----------------------|-----------------------------------------------------------------|
-| `NUXT_PUBLIC_API_URL` | Host for the API. Example: `http://192.168.1.2:4800`.           |
-| `NUXT_PUBLIC_CDN_URL` | Host for the Nginx serivce. Example: `http://197.148.1.2:4802`. |
+| ENV Name              | Description                                                            |
+|-----------------------|------------------------------------------------------------------------|
+| `API_URL` | Host for the API. Example: `http://192.168.1.2:4800`.                  |
+| `CDN_URL` | Host for the Nginx serivce. Example: `http://197.148.1.2:4802`.        |
+| `SHOW_SSO_LOGIN_BUTTON`                      | `true/false` Show a "login via sso" button on the login page.          |
+ | `FORCE_SSO_AUTH`                      | `true/false` Force users to login via SSO by bypassing the login page. |
 
 ##### DB
 

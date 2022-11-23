@@ -5,7 +5,7 @@ services:
     image: ghcr.io/zibbp/ganymede:latest
     restart: unless-stopped
     environment:
-      - TZ=America/Chicago
+      - TZ=America/Chicago # Set to your timezone
       - DB_HOST=ganymede-db
       - DB_PORT=5432
       - DB_USER=ganymede
@@ -35,8 +35,10 @@ services:
     image: ghcr.io/zibbp/ganymede-frontend:latest
     restart: unless-stopped
     environment:
-      - NUXT_PUBLIC_API_URL=http://IP:PORT
-      - NUXT_PUBLIC_CDN_URL=http://IP:PORT
+      - API_URL=http://IP:PORT # Points to the API service
+      - CDN_URL=http://IP:PORT # Points to the CDN service
+      - SHOW_SSO_LOGIN_BUTTON=true # show/hide SSO login button on login page
+      - FORCE_SSO_AUTH=false # force SSO auth for all users (bypasses login page and redirects to SSO)
     ports:
       - 4801:3000
   ganymede-db:
