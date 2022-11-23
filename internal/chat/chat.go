@@ -84,8 +84,8 @@ type FragmentEmoticon struct {
 }
 
 type UserBadge struct {
-	ID      ID     `json:"_id"`
-	Version string `json:"version"`
+	ID      ID          `json:"_id"`
+	Version interface{} `json:"version"`
 }
 
 type UserNoticeParams struct {
