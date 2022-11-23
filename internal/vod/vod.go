@@ -10,6 +10,7 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/vod"
+	"github.com/zibbp/ganymede/internal/cache"
 	"github.com/zibbp/ganymede/internal/chat"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -277,8 +278,6 @@ func (s *Service) GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (string, er
 		return "", fmt.Errorf("error getting streamer id from chat")
 	}
 
-	chatData = nil
-
 	return strconv.Itoa(int(chatData.Streamer.ID)), nil
 
 }
@@ -291,16 +290,38 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 	}
 
 	var chatData *chat.ChatNoEmotes
+	cacheData, exists := cache.Cache().Get(fmt.Sprintf("%s", v.ID))
+	if exists {
+		err := gojson.Unmarshal(cacheData.([]byte), &chatData)
+		if err != nil {
+			log.Debug().Err(err).Msg("error unmarshalling chat data")
+			return nil, fmt.Errorf("error unmarshalling chat data: %v", err)
+		}
+		log.Debug().Msgf("Using chat cache for VOD %s", v.ID)
+	} else {
+		data, err := utils.ReadChatFile(v.ChatPath)
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting vod chat")
+			return nil, fmt.Errorf("error getting vod chat: %v", err)
+		}
+		err = gojson.Unmarshal(data, &chatData)
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting vod chat")
+			return nil, fmt.Errorf("error getting vod chat: %v", err)
+		}
 
-	data, err := utils.ReadChatFile(v.ChatPath)
-	if err != nil {
-		log.Debug().Err(err).Msg("error getting vod chat")
-		return nil, fmt.Errorf("error getting vod chat: %v", err)
-	}
-	err = gojson.Unmarshal(data, &chatData)
-	if err != nil {
-		log.Debug().Err(err).Msg("error getting vod chat")
-		return nil, fmt.Errorf("error getting vod chat: %v", err)
+		data, err = gojson.Marshal(chatData)
+		if err != nil {
+			log.Debug().Err(err).Msg("error marshalling chat data")
+			return nil, fmt.Errorf("error marshalling chat data: %v", err)
+		}
+		err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), data, 30*time.Minute)
+		if err != nil {
+			log.Debug().Err(err).Msg("error setting cache")
+			return nil, fmt.Errorf("error setting cache: %v", err)
+		}
+		log.Debug().Msgf("Set chat cache for VOD %s", v.ID)
+		data = nil
 	}
 
 	var filteredComments []chat.Comment
@@ -311,7 +332,7 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 	}
 
 	chatData = nil
-	data = nil
+	cacheData = nil
 
 	return &filteredComments, nil
 }
@@ -322,16 +343,40 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 		log.Debug().Err(err).Msg("error getting vod chat")
 		return nil, fmt.Errorf("error getting vod chat: %v", err)
 	}
-	data, err := utils.ReadChatFile(v.ChatPath)
-	if err != nil {
-		log.Debug().Err(err).Msg("error getting vod chat")
-		return nil, fmt.Errorf("error getting vod chat: %v", err)
-	}
+
 	var chatData *chat.ChatNoEmotes
-	err = gojson.Unmarshal(data, &chatData)
-	if err != nil {
-		log.Debug().Err(err).Msg("error getting vod chat")
-		return nil, fmt.Errorf("error getting vod chat: %v", err)
+	cacheData, exists := cache.Cache().Get(fmt.Sprintf("%s", v.ID))
+	if exists {
+		err := gojson.Unmarshal(cacheData.([]byte), &chatData)
+		if err != nil {
+			log.Debug().Err(err).Msg("error unmarshalling chat data")
+			return nil, fmt.Errorf("error unmarshalling chat data: %v", err)
+		}
+		log.Debug().Msgf("Using chat cache for VOD %s", v.ID)
+	} else {
+		data, err := utils.ReadChatFile(v.ChatPath)
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting vod chat")
+			return nil, fmt.Errorf("error getting vod chat: %v", err)
+		}
+		err = gojson.Unmarshal(data, &chatData)
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting vod chat")
+			return nil, fmt.Errorf("error getting vod chat: %v", err)
+		}
+
+		data, err = gojson.Marshal(chatData)
+		if err != nil {
+			log.Debug().Err(err).Msg("error marshalling chat data")
+			return nil, fmt.Errorf("error marshalling chat data: %v", err)
+		}
+		err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), data, 30*time.Minute)
+		if err != nil {
+			log.Debug().Err(err).Msg("error setting cache")
+			return nil, fmt.Errorf("error setting cache: %v", err)
+		}
+		log.Debug().Msgf("Set chat cache for VOD %s", v.ID)
+		data = nil
 	}
 
 	var filteredComments []chat.Comment
@@ -350,6 +395,7 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 	}
 
 	chatData = nil
+	cacheData = nil
 
 	filteredComments = filteredComments[i-commentCount : i]
 
@@ -367,7 +413,7 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		log.Debug().Err(err).Msg("error getting vod chat emotes")
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
-	var chatData *chat.Chat
+	var chatData *chat.ChatOnlyEmotes
 	err = gojson.Unmarshal(data, &chatData)
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat emotes")
@@ -400,6 +446,7 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, ganymedeEmote)
 		}
 		chatData = nil
+		data = nil
 		return &ganymedeEmotes, nil
 	} else {
 		// Embedded emotes not found, fetch emotes from the providers
@@ -493,7 +540,7 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 		log.Debug().Err(err).Msg("error getting vod chat emotes")
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
-	var chatData *chat.Chat
+	var chatData *chat.ChatNoEmotes
 	err = gojson.Unmarshal(data, &chatData)
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat emotes")
@@ -522,6 +569,7 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 	}
 
 	chatData = nil
+	data = nil
 
 	return &badgeResp, nil
 }
