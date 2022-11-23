@@ -48,7 +48,8 @@ func (s *Service) StartWatchVideoScheduler() {
 	}
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to load location")
+		log.Info().Err(err).Msg("failed to load location, defaulting to UTC")
+		loc = time.UTC
 	}
 	scheduler := gocron.NewScheduler(loc)
 
