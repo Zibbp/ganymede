@@ -18,7 +18,7 @@ FROM alpine:latest AS production
 
 ENV CHAT_DOWNLOADER_VER=0.2.1
 
-RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg bash && ln -sf python3 /usr/bin/python
+RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg bash tzdata && ln -sf python3 /usr/bin/python
 RUN python3 -m ensurepip
 RUN pip3 install --no-cache --upgrade pip streamlink
 
