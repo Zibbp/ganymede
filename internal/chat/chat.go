@@ -24,6 +24,11 @@ type ChatNoEmotes struct {
 	Comments []Comment  `json:"comments"`
 	Video    VideoClass `json:"video"`
 }
+type ChatOnlyEmotes struct {
+	Streamer Streamer   `json:"streamer"`
+	Video    VideoClass `json:"video"`
+	Emotes   Emotes     `json:"emotes"`
+}
 
 type Comment struct {
 	ID                   string      `json:"_id"`
