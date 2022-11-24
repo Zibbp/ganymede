@@ -1,0 +1,42 @@
+{
+  "build": { "dockerfile": "Dockerfile" },
+  "features": {
+    // "ghcr.io/devcontainers/features/node:1": {
+    //   "version": "latest"
+    // },
+    // "ghcr.io/devcontainers/features/python:1": {
+    //   "version": "latest"
+    // }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "github.copilot"
+      ]
+    }
+  },
+  // "forwardPorts": [4000],
+  "appPort": ["0.0.0.0:4000:4000"],
+  "mounts": [
+    {
+      "source": "/vods",
+      "target": "/vods",
+      "type": "bind"
+    },
+    {
+      "source": "/data",
+      "target": "/data",
+      "type": "bind"
+    },
+    {
+      "source": "/logs",
+      "target": "/logs",
+      "type": "bind"
+    }
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "workspaceFolder": "/workspace"
+}
