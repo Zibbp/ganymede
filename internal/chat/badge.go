@@ -93,9 +93,9 @@ func GetTwitchGlobalBadges() (*BadgeResp, error) {
 	return &badgeResp, nil
 }
 
-func GetTwitchChannelBadges(channelId string) (*BadgeResp, error) {
+func GetTwitchChannelBadges(channelId int64) (*BadgeResp, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://badges.twitch.tv/v1/badges/channels/%s/display", channelId), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://badges.twitch.tv/v1/badges/channels/%d/display", channelId), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

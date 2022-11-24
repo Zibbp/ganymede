@@ -257,28 +257,40 @@ func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, chann
 
 }
 
-func (s *Service) GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (string, error) {
+func (s *Service) GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error) {
 	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod")
-		return "", fmt.Errorf("error getting vod: %v", err)
+		return nil, fmt.Errorf("error getting vod: %v", err)
 	}
 	data, err := utils.ReadChatFile(v.ChatPath)
 	if err != nil {
 		log.Debug().Err(err).Msg("error reading chat file")
-		return "", fmt.Errorf("error reading chat file: %v", err)
+		return nil, fmt.Errorf("error reading chat file: %v", err)
 	}
 	var chatData *chat.ChatNoEmotes
 	err = gojson.Unmarshal(data, &chatData)
 	if err != nil {
 		log.Debug().Err(err).Msg("error unmarshalling chat data")
-		return "", fmt.Errorf("error unmarshalling chat data: %v", err)
+		return nil, fmt.Errorf("error unmarshalling chat data: %v", err)
 	}
-	if chatData.Streamer.ID == 0 {
-		return "", fmt.Errorf("error getting streamer id from chat")
+	// Older chat files have the streamer ID stored as a string, need to convert to an int64
+	var sID int64
+	switch streamerChatId := chatData.Streamer.ID.(type) {
+	case string:
+		sID, err = strconv.ParseInt(streamerChatId, 10, 64)
+		if err != nil {
+			log.Debug().Err(err).Msg("error parsing streamer chat id")
+			return nil, fmt.Errorf("error parsing streamer chat id: %v", err)
+		}
+	case float64:
+		sID = int64(streamerChatId)
+	}
+	if sID == 0 {
+		return nil, fmt.Errorf("error getting streamer id from chat")
 	}
 
-	return strconv.Itoa(int(chatData.Streamer.ID)), nil
+	return &sID, nil
 
 }
 
@@ -456,7 +468,21 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 			log.Debug().Err(err).Msg("error getting twitch global emotes")
 			return nil, fmt.Errorf("error getting twitch global emotes: %v", err)
 		}
-		twitchChannelEmotes, err := chat.GetTwitchChannelEmotes(chatData.Streamer.ID)
+
+		// Older chat files have the streamer ID stored as a string, need to convert to an int64
+		var sID int64
+		switch streamerChatId := chatData.Streamer.ID.(type) {
+		case string:
+			sID, err = strconv.ParseInt(streamerChatId, 10, 64)
+			if err != nil {
+				log.Debug().Err(err).Msg("error parsing streamer chat id")
+				return nil, fmt.Errorf("error parsing streamer chat id: %v", err)
+			}
+		case float64:
+			sID = int64(streamerChatId)
+		}
+
+		twitchChannelEmotes, err := chat.GetTwitchChannelEmotes(sID)
 		if err != nil {
 			log.Debug().Err(err).Msg("error getting twitch channel emotes")
 			return nil, fmt.Errorf("error getting twitch channel emotes: %v", err)
@@ -466,7 +492,7 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 			log.Debug().Err(err).Msg("error getting 7tv global emotes")
 			return nil, fmt.Errorf("error getting 7tv global emotes: %v", err)
 		}
-		sevenTVChannelEmotes, err := chat.Get7TVChannelEmotes(chatData.Streamer.ID)
+		sevenTVChannelEmotes, err := chat.Get7TVChannelEmotes(sID)
 		if err != nil {
 			log.Debug().Err(err).Msg("error getting 7tv channel emotes")
 			return nil, fmt.Errorf("error getting 7tv channel emotes: %v", err)
@@ -476,7 +502,7 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 			log.Debug().Err(err).Msg("error getting bttv global emotes")
 			return nil, fmt.Errorf("error getting bttv global emotes: %v", err)
 		}
-		bttvChannelEmotes, err := chat.GetBTTVChannelEmotes(chatData.Streamer.ID)
+		bttvChannelEmotes, err := chat.GetBTTVChannelEmotes(sID)
 		if err != nil {
 			log.Debug().Err(err).Msg("error getting bttv channel emotes")
 			return nil, fmt.Errorf("error getting bttv channel emotes: %v", err)
@@ -486,7 +512,7 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 			log.Debug().Err(err).Msg("error getting ffz global emotes")
 			return nil, fmt.Errorf("error getting ffz global emotes: %v", err)
 		}
-		ffzChannelEmotes, err := chat.GetFFZChannelEmotes(chatData.Streamer.ID)
+		ffzChannelEmotes, err := chat.GetFFZChannelEmotes(sID)
 		if err != nil {
 			log.Debug().Err(err).Msg("error getting ffz channel emotes")
 			return nil, fmt.Errorf("error getting ffz channel emotes: %v", err)
@@ -546,6 +572,18 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 		log.Debug().Err(err).Msg("error getting vod chat emotes")
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
+	// Older chat files have the streamer ID stored as a string, need to convert to an int64
+	var sID int64
+	switch streamerChatId := chatData.Streamer.ID.(type) {
+	case string:
+		sID, err = strconv.ParseInt(streamerChatId, 10, 64)
+		if err != nil {
+			log.Debug().Err(err).Msg("error parsing streamer chat id")
+			return nil, fmt.Errorf("error parsing streamer chat id: %v", err)
+		}
+	case float64:
+		sID = int64(streamerChatId)
+	}
 
 	var badgeResp chat.BadgeResp
 	twitchBadges, err := chat.GetTwitchGlobalBadges()
@@ -553,7 +591,7 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 		log.Error().Err(err).Msg("error getting twitch global badges")
 		return nil, fmt.Errorf("error getting twitch global badges: %v", err)
 	}
-	channelBadges, err := chat.GetTwitchChannelBadges(strconv.FormatInt(chatData.Streamer.ID, 10))
+	channelBadges, err := chat.GetTwitchChannelBadges(sID)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting twitch channel badges")
 		return nil, fmt.Errorf("error getting twitch channel badges: %v", err)

@@ -93,8 +93,8 @@ type UserNoticeParams struct {
 }
 
 type Streamer struct {
-	Name string `json:"name"`
-	ID   int64  `json:"id"`
+	Name string      `json:"name"`
+	ID   interface{} `json:"id"`
 }
 
 type VideoClass struct {
