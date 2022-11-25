@@ -2,6 +2,11 @@ package http
 
 import (
 	"context"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -11,10 +16,6 @@ import (
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/utils"
-	"net/http"
-	"os"
-	"os/signal"
-	"time"
 )
 
 type Services struct {
@@ -203,6 +204,8 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	configGroup := e.Group("/config")
 	configGroup.GET("", h.GetConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	configGroup.PUT("", h.UpdateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	configGroup.GET("/notification", h.GetNotificationConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	configGroup.PUT("/notification", h.UpdateNotificationConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// Live
 	liveGroup := e.Group("/live")
@@ -239,6 +242,10 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// Task
 	taskGroup := e.Group("/task")
 	taskGroup.POST("/start", h.StartTask, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+
+	// Notification
+	notificationGroup := e.Group("/notification")
+	notificationGroup.POST("/test", h.TestNotification, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 }
 
 func (h *Handler) Serve() error {
