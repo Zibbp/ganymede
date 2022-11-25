@@ -3,6 +3,9 @@ package live
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -11,10 +14,9 @@ import (
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
-	"strconv"
-	"time"
 )
 
 type Service struct {
@@ -141,11 +143,13 @@ func (s *Service) Check() error {
 					log.Error().Err(err).Msg("error updating live watched channel")
 				}
 				// Archive stream
-				_, err = s.ArchiveService.ArchiveTwitchLive(lwc, stream)
+				archiveResp, err := s.ArchiveService.ArchiveTwitchLive(lwc, stream)
 				if err != nil {
 					log.Error().Err(err).Msg("error archiving twitch live")
 				}
-
+				// Notification
+				// Fetch channel for notification
+				go notification.SendLiveNotification(lwc.Edges.Channel, archiveResp.VOD, archiveResp.Queue)
 			}
 		} else {
 			if lwc.IsLive == true {

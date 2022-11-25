@@ -3,6 +3,10 @@ package archive
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -12,13 +16,11 @@ import (
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/exec"
+	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type Service struct {
@@ -441,7 +443,7 @@ func (s *Service) TaskVodCreateFolder(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	if err != nil {
 		log.Error().Err(err).Msg("error creating vod folder")
 		q.Update().SetTaskVodCreateFolder(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_create_folder")
+		s.TaskError(ch, v, q, "vod_create_folder")
 		return
 	}
 	q.Update().SetTaskVodCreateFolder(utils.Success).SaveX(context.Background())
@@ -465,13 +467,13 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 	if err != nil {
 		log.Error().Err(err).Msg("error fetching twitch stream")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_download_thumbnail")
+		s.TaskError(ch, v, q, "vod_download_thumbnail")
 		return
 	}
 	if len(stream.Data) == 0 {
 		log.Error().Msg("no stream found")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_download_thumbnail")
+		s.TaskError(ch, v, q, "vod_download_thumbnail")
 		return
 	}
 	tVod := stream.Data[0]
@@ -486,14 +488,14 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading thumbnail")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_download_thumbnail")
+		s.TaskError(ch, v, q, "vod_download_thumbnail")
 	}
 	// Download web resolution thumbnail
 	err = utils.DownloadFile(webResThumbnailUrl, fmt.Sprintf("%s/%s_%s", ch.Name, v.ExtID, v.ID), fmt.Sprintf("%s-web_thumbnail.jpg", v.ExtID))
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading thumbnail")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_download_thumbnail")
+		s.TaskError(ch, v, q, "vod_download_thumbnail")
 	}
 
 	if err == nil {
@@ -525,7 +527,7 @@ func (s *Service) TaskVodDownloadThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Q
 	if err != nil {
 		log.Error().Err(err).Msg("error fetching twitch vod")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_download_thumbnail")
+		s.TaskError(ch, v, q, "vod_download_thumbnail")
 		return
 	}
 
@@ -540,7 +542,7 @@ func (s *Service) TaskVodDownloadThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Q
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading thumbnail")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_download_thumbnail")
+		s.TaskError(ch, v, q, "vod_download_thumbnail")
 		return
 	}
 	// Download web resolution thumbnail
@@ -548,7 +550,7 @@ func (s *Service) TaskVodDownloadThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Q
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading thumbnail")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_download_thumbnail")
+		s.TaskError(ch, v, q, "vod_download_thumbnail")
 		return
 	}
 
@@ -569,7 +571,7 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	if err != nil {
 		log.Error().Err(err).Msg("error fetching twitch vod")
 		q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_save_info")
+		s.TaskError(ch, v, q, "vod_save_info")
 		return
 	}
 	tVod := stream.Data[0]
@@ -578,7 +580,7 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	if err != nil {
 		log.Error().Err(err).Msg("error saving info")
 		q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_save_info")
+		s.TaskError(ch, v, q, "vod_save_info")
 		return
 	}
 	q.Update().SetTaskVodSaveInfo(utils.Success).SaveX(context.Background())
@@ -603,7 +605,7 @@ func (s *Service) TaskVodSaveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue, con
 	if err != nil {
 		log.Error().Err(err).Msg("error fetching twitch vod")
 		q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_save_info")
+		s.TaskError(ch, v, q, "vod_save_info")
 		return
 	}
 
@@ -611,7 +613,7 @@ func (s *Service) TaskVodSaveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue, con
 	if err != nil {
 		log.Error().Err(err).Msg("error saving info")
 		q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "vod_save_info")
+		s.TaskError(ch, v, q, "vod_save_info")
 		return
 	}
 	q.Update().SetTaskVodSaveInfo(utils.Success).SaveX(context.Background())
@@ -632,7 +634,7 @@ func (s *Service) TaskLiveVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queu
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading live video")
 		q.Update().SetTaskVideoDownload(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "video_download")
+		s.TaskError(ch, v, q, "video_download")
 		return
 	}
 
@@ -675,7 +677,7 @@ func (s *Service) TaskVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, c
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading video")
 		q.Update().SetTaskVideoDownload(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "video_download")
+		s.TaskError(ch, v, q, "video_download")
 		return
 	}
 
@@ -694,7 +696,7 @@ func (s *Service) TaskVideoConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 	if err != nil {
 		log.Error().Err(err).Msg("error converting video")
 		q.Update().SetTaskVideoConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "video_convert")
+		s.TaskError(ch, v, q, "video_convert")
 		return
 	}
 
@@ -715,7 +717,7 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 	if err != nil {
 		log.Error().Err(err).Msg("error moving video")
 		q.Update().SetTaskVideoMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "video_move")
+		s.TaskError(ch, v, q, "video_move")
 		return
 	}
 
@@ -724,7 +726,7 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 	if err != nil {
 		log.Error().Err(err).Msg("error deleting video")
 		q.Update().SetTaskVideoMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "video_move")
+		s.TaskError(ch, v, q, "video_move")
 		return
 	}
 
@@ -749,7 +751,7 @@ func (s *Service) TaskChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading chat")
 		q.Update().SetTaskChatDownload(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_download")
+		s.TaskError(ch, v, q, "chat_download")
 		return
 	}
 
@@ -768,7 +770,7 @@ func (s *Service) TaskLiveChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading live chat")
 		q.Update().SetTaskChatDownload(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_download")
+		s.TaskError(ch, v, q, "chat_download")
 		return
 	}
 
@@ -785,7 +787,7 @@ func (s *Service) TaskChatConvertRestart(ch *ent.Channel, v *ent.Vod, q *ent.Que
 	if !utils.FileExists(chatPath) {
 		log.Error().Msgf("chat file does not exist %s", chatPath)
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_convert")
+		s.TaskError(ch, v, q, "chat_convert")
 		return
 	}
 	go s.TaskLiveChatConvert(ch, v, q, cont)
@@ -813,14 +815,14 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	if err != nil {
 		log.Error().Err(err).Msg("error getting streamer from Twitch API")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_convert")
+		s.TaskError(ch, v, q, "chat_convert")
 		return
 	}
 	cID, err := strconv.Atoi(streamer.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("error converting streamer ID to int")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_convert")
+		s.TaskError(ch, v, q, "chat_convert")
 		return
 	}
 
@@ -829,7 +831,7 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	if err != nil {
 		log.Error().Err(err).Msg("error getting queue item")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_convert")
+		s.TaskError(ch, v, q, "chat_convert")
 		return
 	}
 
@@ -837,7 +839,7 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	if err != nil {
 		log.Error().Err(err).Msg("error converting chat")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_convert")
+		s.TaskError(ch, v, q, "chat_convert")
 		return
 	}
 
@@ -855,7 +857,7 @@ func (s *Service) TaskChatRender(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont
 	if err != nil {
 		log.Error().Err(err).Msg("error rendering chat")
 		q.Update().SetTaskChatRender(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_render")
+		s.TaskError(ch, v, q, "chat_render")
 		return
 	}
 
@@ -886,7 +888,7 @@ func (s *Service) TaskChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont b
 	if err != nil {
 		log.Error().Err(err).Msg("error moving chat")
 		q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_move")
+		s.TaskError(ch, v, q, "chat_move")
 		return
 	}
 	// Chat Video
@@ -897,7 +899,7 @@ func (s *Service) TaskChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont b
 	if err != nil {
 		log.Error().Err(err).Msg("error moving chat")
 		q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_move")
+		s.TaskError(ch, v, q, "chat_move")
 		return
 	}
 
@@ -922,7 +924,7 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 	if err != nil {
 		log.Error().Err(err).Msg("error moving live chat")
 		q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_move")
+		s.TaskError(ch, v, q, "chat_move")
 		return
 	}
 
@@ -934,7 +936,7 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 	if err != nil {
 		log.Error().Err(err).Msg("error moving live parsed chat")
 		q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_move")
+		s.TaskError(ch, v, q, "chat_move")
 		return
 	}
 
@@ -946,7 +948,7 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 	if err != nil {
 		log.Error().Err(err).Msg("error moving chat")
 		q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(v, q, "chat_move")
+		s.TaskError(ch, v, q, "chat_move")
 		return
 	}
 
@@ -970,10 +972,7 @@ func (s *Service) CheckIfTasksAreDone(ch *ent.Channel, v *ent.Vod, qO *ent.Queue
 		q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).SaveX(context.Background())
 		v.Update().SetProcessing(false).SaveX(context.Background())
 		// Send webhook
-		err := utils.SendWebhook(utils.WebhookRequestBody{Username: "Ganymede", Content: fmt.Sprintf(":white_check_mark: **VOD Archived**: %s", v.Title)})
-		if err != nil {
-			log.Error().Err(err).Msg("error sending webhook")
-		}
+		go notification.SendVideoArchiveSuccessNotification(ch, v, q)
 		// Start next queue item if there is one
 		go s.CheckOnHold()
 
@@ -992,16 +991,10 @@ func (s *Service) CheckIfLiveTasksAreDone(ch *ent.Channel, v *ent.Vod, qO *ent.Q
 
 		v.Update().SetProcessing(false).SaveX(context.Background())
 		// Send webhook
-		err := utils.SendWebhook(utils.WebhookRequestBody{Username: "Ganymede", Content: fmt.Sprintf(":white_check_mark: **Live Stream Archived**: %s", v.Title)})
-		if err != nil {
-			log.Error().Err(err).Msg("error sending webhook")
-		}
+		go notification.SendLiveArchiveSuccessNotification(ch, v, q)
 	}
 }
 
-func (s *Service) TaskError(v *ent.Vod, q *ent.Queue, task string) {
-	err := utils.SendWebhook(utils.WebhookRequestBody{Username: "Ganymede", Content: fmt.Sprintf(":warning: **Error**: Queue ID `%s` failed at task `%s`.", q.ID, task)})
-	if err != nil {
-		log.Error().Err(err).Msg("error sending webhook")
-	}
+func (s *Service) TaskError(ch *ent.Channel, v *ent.Vod, q *ent.Queue, task string) {
+	go notification.SendErrorNotification(ch, v, q, task)
 }
