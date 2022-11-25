@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/database"
-	"os"
-	"strings"
 )
 
 type Service struct {
@@ -23,18 +24,33 @@ func NewService(store *database.Database) *Service {
 }
 
 type Conf struct {
-	Debug               bool   `json:"debug"`
-	LiveCheckInterval   int    `json:"live_check_interval_seconds"`
-	ActiveQueueItems    int    `json:"active_queue_items"`
-	OAuthEnabled        bool   `json:"oauth_enabled"`
-	RegistrationEnabled bool   `json:"registration_enabled"`
-	WebhookURL          string `json:"webhook_url"`
-	DBSeeded            bool   `json:"db_seeded"`
+	Debug               bool `json:"debug"`
+	LiveCheckInterval   int  `json:"live_check_interval_seconds"`
+	ActiveQueueItems    int  `json:"active_queue_items"`
+	OAuthEnabled        bool `json:"oauth_enabled"`
+	RegistrationEnabled bool `json:"registration_enabled"`
+	DBSeeded            bool `json:"db_seeded"`
 	Parameters          struct {
 		VideoConvert   string `json:"video_convert"`
 		ChatRender     string `json:"chat_render"`
 		StreamlinkLive string `json:"streamlink_live"`
 	} `json:"parameters"`
+	Notifications Notification `json:"notifications"`
+}
+
+type Notification struct {
+	VideoSuccessWebhookUrl string `json:"video_success_webhook_url"`
+	VideoSuccessTemplate   string `json:"video_success_template"`
+	VideoSuccessEnabled    bool   `json:"video_success_enabled"`
+	LiveSuccessWebhookUrl  string `json:"live_success_webhook_url"`
+	LiveSuccessTemplate    string `json:"live_success_template"`
+	LiveSuccessEnabled     bool   `json:"live_success_enabled"`
+	ErrorWebhookUrl        string `json:"error_webhook_url"`
+	ErrorTemplate          string `json:"error_template"`
+	ErrorEnabled           bool   `json:"error_enabled"`
+	IsLiveWebhookUrl       string `json:"is_live_webhook_url"`
+	IsLiveTemplate         string `json:"is_live_template"`
+	IsLiveEnabled          bool   `json:"is_live_enabled"`
 }
 
 func NewConfig() {
@@ -52,11 +68,23 @@ func NewConfig() {
 	viper.SetDefault("active_queue_items", 2)
 	viper.SetDefault("oauth_enabled", false)
 	viper.SetDefault("registration_enabled", true)
-	viper.SetDefault("webhook_url", "")
 	viper.SetDefault("db_seeded", false)
 	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a copy")
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
 	viper.SetDefault("parameters.streamlink_live", "--force-progress,--force,--twitch-low-latency,--twitch-disable-hosting")
+	// Notifications
+	viper.SetDefault("notifications.video_success_webhook_url", "")
+	viper.SetDefault("notifications.video_success_template", "✅ Video Archived: {{vod_title}} by {{channel_display_name}}.")
+	viper.SetDefault("notifications.video_success_enabled", true)
+	viper.SetDefault("notifications.live_success_webhook_url", "")
+	viper.SetDefault("notifications.live_success_template", "✅ Live Stream Archived: {{vod_title}} by {{channel_display_name}}.")
+	viper.SetDefault("notifications.live_success_enabled", true)
+	viper.SetDefault("notifications.error_webhook_url", "")
+	viper.SetDefault("notifications.error_template", "⚠️ Error: Queue ID {{queue_id}} for {{channel_display_name}} failed at task {{failed_task}}.")
+	viper.SetDefault("notifications.error_enabled", true)
+	viper.SetDefault("notifications.is_live_webhook_url", "")
+	viper.SetDefault("notifications.is_live_template", "🔴 {{channel_display_name}} is live!")
+	viper.SetDefault("notifications.is_live_enabled", true)
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Info().Msgf("config file not found at %s, creating new one", configPath)
@@ -79,7 +107,6 @@ func NewConfig() {
 func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 	return &Conf{
 		RegistrationEnabled: viper.GetBool("registration_enabled"),
-		WebhookURL:          viper.GetString("webhook_url"),
 		DBSeeded:            viper.GetBool("db_seeded"),
 		Parameters: struct {
 			VideoConvert   string `json:"video_convert"`
@@ -99,10 +126,46 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 
 func (s *Service) UpdateConfig(c echo.Context, cDto *Conf) error {
 	viper.Set("registration_enabled", cDto.RegistrationEnabled)
-	viper.Set("webhook_url", cDto.WebhookURL)
 	viper.Set("parameters.video_convert", cDto.Parameters.VideoConvert)
 	viper.Set("parameters.chat_render", cDto.Parameters.ChatRender)
 	viper.Set("parameters.streamlink_live", cDto.Parameters.StreamlinkLive)
+	err := viper.WriteConfig()
+	if err != nil {
+		return fmt.Errorf("error writing config file: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) GetNotificationConfig(c echo.Context) (*Notification, error) {
+	return &Notification{
+		VideoSuccessWebhookUrl: viper.GetString("notifications.video_success_webhook_url"),
+		VideoSuccessTemplate:   viper.GetString("notifications.video_success_template"),
+		VideoSuccessEnabled:    viper.GetBool("notifications.video_success_enabled"),
+		LiveSuccessWebhookUrl:  viper.GetString("notifications.live_success_webhook_url"),
+		LiveSuccessTemplate:    viper.GetString("notifications.live_success_template"),
+		LiveSuccessEnabled:     viper.GetBool("notifications.live_success_enabled"),
+		ErrorWebhookUrl:        viper.GetString("notifications.error_webhook_url"),
+		ErrorTemplate:          viper.GetString("notifications.error_template"),
+		ErrorEnabled:           viper.GetBool("notifications.error_enabled"),
+		IsLiveWebhookUrl:       viper.GetString("notifications.is_live_webhook_url"),
+		IsLiveTemplate:         viper.GetString("notifications.is_live_template"),
+		IsLiveEnabled:          viper.GetBool("notifications.is_live_enabled"),
+	}, nil
+}
+
+func (s *Service) UpdateNotificationConfig(c echo.Context, nDto *Notification) error {
+	viper.Set("notifications.video_success_webhook_url", nDto.VideoSuccessWebhookUrl)
+	viper.Set("notifications.video_success_template", nDto.VideoSuccessTemplate)
+	viper.Set("notifications.video_success_enabled", nDto.VideoSuccessEnabled)
+	viper.Set("notifications.live_success_webhook_url", nDto.LiveSuccessWebhookUrl)
+	viper.Set("notifications.live_success_template", nDto.LiveSuccessTemplate)
+	viper.Set("notifications.live_success_enabled", nDto.LiveSuccessEnabled)
+	viper.Set("notifications.error_webhook_url", nDto.ErrorWebhookUrl)
+	viper.Set("notifications.error_template", nDto.ErrorTemplate)
+	viper.Set("notifications.error_enabled", nDto.ErrorEnabled)
+	viper.Set("notifications.is_live_webhook_url", nDto.IsLiveWebhookUrl)
+	viper.Set("notifications.is_live_template", nDto.IsLiveTemplate)
+	viper.Set("notifications.is_live_enabled", nDto.IsLiveEnabled)
 	err := viper.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("error writing config file: %w", err)
@@ -128,6 +191,27 @@ func refreshConfig(configPath string) {
 	if err != nil {
 		log.Panic().Err(err).Msg("error writing config file")
 	}
+	if viper.IsSet("webhook_url") && viper.GetString("webhook_url") != "" {
+		oldWebhookUrl := viper.GetString("webhook_url")
+		viper.Set("notifications.video_success_webhook_url", oldWebhookUrl)
+		viper.Set("notifications.live_success_webhook_url", oldWebhookUrl)
+		viper.Set("notifications.error_webhook_url", oldWebhookUrl)
+		viper.Set("notifications.is_live_webhook_url", oldWebhookUrl)
+		err = viper.WriteConfigAs(configPath)
+		if err != nil {
+			log.Panic().Err(err).Msg("error writing config file")
+		}
+		err = unset("webhook_url")
+		if err != nil {
+			log.Error().Err(err).Msg("error unsetting config value")
+		}
+	} else {
+		err = unset("webhook_url")
+		if err != nil {
+			log.Error().Err(err).Msg("error unsetting config value")
+		}
+	}
+
 }
 
 // unset: removes variable from config file

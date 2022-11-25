@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
@@ -25,8 +28,6 @@ import (
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/vod"
-	"strconv"
-	"time"
 )
 
 var (
