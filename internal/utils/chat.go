@@ -3,13 +3,14 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 type ParsedChat struct {
@@ -349,7 +350,7 @@ func writeParsedChat(parsedChat ParsedChat, vID string, vExtID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal parsed comments: %v", err)
 	}
-	err = ioutil.WriteFile(fmt.Sprintf("/tmp/%s_%s-chat.json", vExtID, vID), data, 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("/tmp/%s_%s-chat-convert.json", vExtID, vID), data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write parsed comments: %v", err)
 	}

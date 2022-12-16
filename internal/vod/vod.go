@@ -3,6 +3,10 @@ package vod
 import (
 	"context"
 	"fmt"
+	"math"
+	"strconv"
+	"time"
+
 	gojson "github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -14,9 +18,6 @@ import (
 	"github.com/zibbp/ganymede/internal/chat"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
-	"math"
-	"strconv"
-	"time"
 )
 
 type Service struct {
@@ -431,9 +432,11 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		log.Debug().Err(err).Msg("error getting vod chat emotes")
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
+	// fmt.Println(chatData.Emotes)
+	// fmt.Println(chatData.EmbeddedData)
 
 	if len(chatData.Emotes.FirstParty) > 0 && len(chatData.Emotes.ThirdParty) > 0 {
-		log.Debug().Msgf("detected embedded emotes for vod %s", vodID)
+		log.Debug().Msgf("detected embedded emotes using old 'emotes' for vod %s", vodID)
 		var ganymedeEmotes chat.GanymedeEmotes
 		// Loop through first party emotes
 		for _, emote := range chatData.Emotes.FirstParty {
@@ -448,6 +451,34 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		}
 		// Loop through third party emotes
 		for _, emote := range chatData.Emotes.ThirdParty {
+			var ganymedeEmote chat.GanymedeEmote
+			ganymedeEmote.Name = fmt.Sprint(emote.Name)
+			ganymedeEmote.ID = emote.ID
+			ganymedeEmote.URL = emote.Data
+			ganymedeEmote.Type = "embed"
+			ganymedeEmote.Width = emote.Width
+			ganymedeEmote.Height = emote.Height
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, ganymedeEmote)
+		}
+		chatData = nil
+		data = nil
+		return &ganymedeEmotes, nil
+	} else if len(chatData.EmbeddedData.FirstParty) > 0 && len(chatData.EmbeddedData.ThirdParty) > 0 {
+		log.Debug().Msgf("detected embedded emotes using new 'embeddedData' for vod %s", vodID)
+		var ganymedeEmotes chat.GanymedeEmotes
+		// Loop through first party emotes
+		for _, emote := range chatData.EmbeddedData.FirstParty {
+			var ganymedeEmote chat.GanymedeEmote
+			ganymedeEmote.Name = fmt.Sprint(emote.Name)
+			ganymedeEmote.ID = emote.ID
+			ganymedeEmote.URL = emote.Data
+			ganymedeEmote.Type = "embed"
+			ganymedeEmote.Width = emote.Width
+			ganymedeEmote.Height = emote.Height
+			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, ganymedeEmote)
+		}
+		// Loop through third party emotes
+		for _, emote := range chatData.EmbeddedData.ThirdParty {
 			var ganymedeEmote chat.GanymedeEmote
 			ganymedeEmote.Name = fmt.Sprint(emote.Name)
 			ganymedeEmote.ID = emote.ID

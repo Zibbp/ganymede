@@ -25,9 +25,10 @@ type ChatNoEmotes struct {
 	Video    VideoClass `json:"video"`
 }
 type ChatOnlyEmotes struct {
-	Streamer Streamer   `json:"streamer"`
-	Video    VideoClass `json:"video"`
-	Emotes   Emotes     `json:"emotes"`
+	Streamer     Streamer   `json:"streamer"`
+	Video        VideoClass `json:"video"`
+	Emotes       Emotes     `json:"emotes"`
+	EmbeddedData Emotes     `json:"embeddedData"`
 }
 
 type Comment struct {
