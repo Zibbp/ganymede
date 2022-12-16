@@ -843,6 +843,16 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 		return
 	}
 
+	// TwitchDownloader "chatupdate"
+	// Embeds emotes and badges into the chat file
+	err = exec.TwitchChatUpdate(v)
+	if err != nil {
+		log.Error().Err(err).Msg("error updating chat")
+		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
+		s.TaskError(ch, v, q, "chat_convert")
+		return
+	}
+
 	q.Update().SetTaskChatConvert(utils.Success).SaveX(context.Background())
 
 	// Always render chat
@@ -923,6 +933,18 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 	err := utils.MoveFile(sourcePath, destPath)
 	if err != nil {
 		log.Error().Err(err).Msg("error moving live chat")
+		q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
+		s.TaskError(ch, v, q, "chat_move")
+		return
+	}
+
+	// converted chat JSON
+	sourcePath = fmt.Sprintf("/tmp/%s_%s-chat-convert.json", v.ExtID, v.ID)
+	destPath = fmt.Sprintf("/vods/%s/%s_%s/%s-chat-convert.json", ch.Name, v.ExtID, v.ID, v.ExtID)
+
+	err = utils.MoveFile(sourcePath, destPath)
+	if err != nil {
+		log.Error().Err(err).Msg("error moving chat convert")
 		q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
 		s.TaskError(ch, v, q, "chat_move")
 		return

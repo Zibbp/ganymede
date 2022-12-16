@@ -277,3 +277,25 @@ func GetFfprobeData(path string) (map[string]interface{}, error) {
 	}
 	return data, nil
 }
+
+func TwitchChatUpdate(v *ent.Vod) error {
+
+	cmd := osExec.Command("TwitchDownloaderCLI", "chatupdate", "-i", fmt.Sprintf("/tmp/%s_%s-chat-convert.json", v.ExtID, v.ID), "--embed-missing", "-o", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID))
+
+	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat-convert.log", v.ExtID, v.ID))
+	if err != nil {
+		log.Error().Err(err).Msg("error creating chat convert logfile")
+		return err
+	}
+	defer chatLogfile.Close()
+	cmd.Stdout = chatLogfile
+	cmd.Stderr = chatLogfile
+
+	if err := cmd.Run(); err != nil {
+		log.Error().Err(err).Msg("error running TwitchDownloaderCLI for chat update")
+		return err
+	}
+
+	log.Debug().Msgf("finished updating chat for %s", v.ExtID)
+	return nil
+}
