@@ -4,16 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
-	"github.com/zibbp/ganymede/ent"
-	"github.com/zibbp/ganymede/internal/twitch"
-	"github.com/zibbp/ganymede/internal/utils"
 	"os"
 	osExec "os/exec"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
+	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/twitch"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 func DownloadTwitchVodVideo(v *ent.Vod) error {
@@ -39,7 +40,7 @@ func DownloadTwitchVodVideo(v *ent.Vod) error {
 }
 
 func DownloadTwitchVodChat(v *ent.Vod) error {
-	cmd := osExec.Command("TwitchDownloaderCLI", "-m", "ChatDownload", "--id", v.ExtID, "--embed-emotes", "-o", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID))
+	cmd := osExec.Command("TwitchDownloaderCLI", "chatdownload", "--id", v.ExtID, "--embed-images", "-o", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID))
 
 	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat.log", v.ExtID, v.ID))
 	if err != nil {
@@ -65,7 +66,7 @@ func RenderTwitchVodChat(v *ent.Vod, q *ent.Queue) (error, bool) {
 	// Split supplied params into array
 	arr := strings.Fields(chatRenderParams)
 	// Generate args for exec
-	argArr := []string{"-m", "ChatRender", "-i", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID)}
+	argArr := []string{"chatrender", "-i", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID)}
 	// add each config param to arg
 	for _, v := range arr {
 		argArr = append(argArr, v)
