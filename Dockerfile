@@ -31,6 +31,10 @@ ENV INTER_PATH "/tmp/Inter Desktop/Inter-Regular.otf"
 COPY --from=build-stage-02 ${INTER_PATH} /tmp/
 RUN mkdir -p /usr/share/fonts/opentype/ && install -m644 /tmp/Inter-Regular.otf /usr/share/fonts/opentype/Inter.otf && rm ./tmp/Inter-Regular.otf && fc-cache -fv
 
+# Install fallback fonts, specifically "noto" for unicode support
+# List could probabvlly be trimmed down in the future
+RUN apk add font-noto font-noto-extra terminus-font ttf-inconsolata ttf-dejavu font-noto-cjk ttf-font-awesome font-noto-extra font-vollkorn font-misc-cyrillic font-mutt-misc font-screen-cyrillic font-winitzki-cyrillic font-cronyx-cyrillic terminus-font font-noto font-noto-thai font-noto-tibetan font-ipa font-sony-misc font-daewoo-misc font-jis-misc font-isas-misc terminus-font font-noto font-noto-extra font-arabic-misc font-misc-cyrillic font-mutt-misc font-screen-cyrillic font-winitzki-cyrillic font-cronyx-cyrillic font-noto-arabic font-noto-armenian font-noto-cherokee font-noto-devanagari font-noto-ethiopic font-noto-georgian font-noto-hebrew font-noto-lao font-noto-malayalam font-noto-tamil font-noto-thaana font-noto-thai
+
 # TwitchDownloaderCLI
 COPY --from=build-stage-02 /tmp/TwitchDownloaderCLI /usr/local/bin/
 RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
