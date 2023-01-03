@@ -113,6 +113,9 @@ func (h *Handler) mapRoutes() {
 		return nil
 	})
 
+	// Static files
+	h.Server.Static("/static/vods", "/vods")
+
 	v1 := h.Server.Group("/api/v1")
 	groupV1Routes(v1, h)
 }
