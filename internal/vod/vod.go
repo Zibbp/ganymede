@@ -597,48 +597,121 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 		log.Debug().Err(err).Msg("error getting vod chat emotes")
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
-	var chatData *chat.ChatNoEmotes
+
+	var chatData *chat.ChatOnlyBadges
 	err = gojson.Unmarshal(data, &chatData)
 	if err != nil {
-		log.Debug().Err(err).Msg("error getting vod chat emotes")
-		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
+		log.Debug().Err(err).Msg("error getting vod chat badges")
+		return nil, fmt.Errorf("error getting vod chat badges: %v", err)
 	}
-	// Older chat files have the streamer ID stored as a string, need to convert to an int64
-	var sID int64
-	switch streamerChatId := chatData.Streamer.ID.(type) {
-	case string:
-		sID, err = strconv.ParseInt(streamerChatId, 10, 64)
-		if err != nil {
-			log.Debug().Err(err).Msg("error parsing streamer chat id")
-			return nil, fmt.Errorf("error parsing streamer chat id: %v", err)
+
+	if len(chatData.EmbeddedData.TwitchBadges) != 0 {
+
+		var badgeResp chat.BadgeResp
+
+		var subscriberBadgesSet bool
+
+		for _, badge := range chatData.EmbeddedData.TwitchBadges {
+
+			// Some chat files have duplicate subscriber arrays, so we only want to add the first one (the streamer's vs twitch's)
+			if badge.Name == "subscriber" && !subscriberBadgesSet {
+				for v, imgData := range badge.Versions {
+					badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+						Name:       badge.Name,
+						Version:    v,
+						Title:      fmt.Sprintf("%s %s", badge.Name, v),
+						ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData),
+					})
+				}
+				subscriberBadgesSet = true
+				continue
+			}
+			if badge.Name == "bits" {
+				for v, imgData := range badge.Versions {
+					badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+						Name:       badge.Name,
+						Version:    v,
+						Title:      fmt.Sprintf("%s %s", badge.Name, v),
+						ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData),
+					})
+				}
+
+				continue
+			}
+			if badge.Name == "sub-gifter" {
+				for v, imgData := range badge.Versions {
+					badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+						Name:       badge.Name,
+						Version:    v,
+						Title:      fmt.Sprintf("%s %s", badge.Name, v),
+						ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData),
+					})
+				}
+
+				continue
+			}
+
+			for v, imgData := range badge.Versions {
+				badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+					Name:       badge.Name,
+					Version:    v,
+					Title:      fmt.Sprintf("%s %s", badge.Name, v),
+					ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData),
+				})
+				break
+			}
+
 		}
-	case float64:
-		sID = int64(streamerChatId)
+
+		return &badgeResp, nil
+
+	} else {
+
+		var chatData *chat.ChatNoEmotes
+		err = gojson.Unmarshal(data, &chatData)
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting vod chat emotes")
+			return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
+		}
+		// Older chat files have the streamer ID stored as a string, need to convert to an int64
+		var sID int64
+		switch streamerChatId := chatData.Streamer.ID.(type) {
+		case string:
+			sID, err = strconv.ParseInt(streamerChatId, 10, 64)
+			if err != nil {
+				log.Debug().Err(err).Msg("error parsing streamer chat id")
+				return nil, fmt.Errorf("error parsing streamer chat id: %v", err)
+			}
+		case float64:
+			sID = int64(streamerChatId)
+		}
+
+		var badgeResp chat.BadgeResp
+		twitchBadges, err := chat.GetTwitchGlobalBadges()
+		if err != nil {
+			log.Error().Err(err).Msg("error getting twitch global badges")
+			return nil, fmt.Errorf("error getting twitch global badges: %v", err)
+		}
+		channelBadges, err := chat.GetTwitchChannelBadges(sID)
+		if err != nil {
+			log.Error().Err(err).Msg("error getting twitch channel badges")
+			return nil, fmt.Errorf("error getting twitch channel badges: %v", err)
+		}
+
+		// Loop through twitch global badges
+		for _, badge := range twitchBadges.Badges {
+			badgeResp.Badges = append(badgeResp.Badges, badge)
+		}
+		// Loop through twitch channel badges
+		for _, badge := range channelBadges.Badges {
+			badgeResp.Badges = append(badgeResp.Badges, badge)
+		}
+
+		chatData = nil
+		data = nil
+
+		return &badgeResp, nil
+
 	}
 
-	var badgeResp chat.BadgeResp
-	twitchBadges, err := chat.GetTwitchGlobalBadges()
-	if err != nil {
-		log.Error().Err(err).Msg("error getting twitch global badges")
-		return nil, fmt.Errorf("error getting twitch global badges: %v", err)
-	}
-	channelBadges, err := chat.GetTwitchChannelBadges(sID)
-	if err != nil {
-		log.Error().Err(err).Msg("error getting twitch channel badges")
-		return nil, fmt.Errorf("error getting twitch channel badges: %v", err)
-	}
-
-	// Loop through twitch global badges
-	for _, badge := range twitchBadges.Badges {
-		badgeResp.Badges = append(badgeResp.Badges, badge)
-	}
-	// Loop through twitch channel badges
-	for _, badge := range channelBadges.Badges {
-		badgeResp.Badges = append(badgeResp.Badges, badge)
-	}
-
-	chatData = nil
-	data = nil
-
-	return &badgeResp, nil
 }

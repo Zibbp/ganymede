@@ -31,6 +31,36 @@ type ChatOnlyEmotes struct {
 	EmbeddedData Emotes     `json:"embeddedData"`
 }
 
+type ChatOnlyBadges struct {
+	Streamer     Streamer           `json:"streamer"`
+	EmbeddedData EmbeddedDataBadges `json:"embeddedData"`
+}
+
+type EmbeddedDataBadges struct {
+	TwitchBadges []ChatTwitchBadge `json:"twitchBadges"`
+	TwitchBits   []ChatTwitchBit   `json:"twitchBits"`
+}
+
+type ChatTwitchBadge struct {
+	Name     string            `json:"name"`
+	Versions map[string]string `json:"versions"`
+}
+
+type ChatTwitchBit struct {
+	Prefix   string                `json:"prefix"`
+	TierList map[string]FirstParty `json:"tierList"`
+}
+
+type FirstParty struct {
+	ID         string      `json:"id"`
+	ImageScale int64       `json:"imageScale"`
+	Data       string      `json:"data"`
+	Name       *string     `json:"name"`
+	URL        interface{} `json:"url"`
+	Width      int64       `json:"width"`
+	Height     int64       `json:"height"`
+}
+
 type Comment struct {
 	ID                   string      `json:"_id"`
 	CreatedAt            string      `json:"created_at"`
