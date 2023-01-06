@@ -700,6 +700,17 @@ func (s *Service) TaskVideoConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 		return
 	}
 
+	// Check if video should be saved as hls
+	if viper.GetBool("archive.save_as_hls") {
+		err = exec.ConvertToHLS(v)
+		if err != nil {
+			log.Error().Err(err).Msg("error converting video to hls")
+			q.Update().SetTaskVideoConvert(utils.Failed).SaveX(context.Background())
+			s.TaskError(ch, v, q, "video_convert")
+			return
+		}
+	}
+
 	q.Update().SetTaskVideoConvert(utils.Success).SaveX(context.Background())
 
 	// Always invoke task video move if video convert was successful
@@ -710,24 +721,43 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 	log.Debug().Msgf("starting task video move for vod %s", v.ID)
 	q.Update().SetTaskVideoMove(utils.Running).SaveX(context.Background())
 
-	sourcePath := fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID)
-	destPath := fmt.Sprintf("/vods/%s/%s_%s/%s-video.mp4", ch.Name, v.ExtID, v.ID, v.ExtID)
+	// Check if video is saved as HLS
+	if viper.GetBool("archive.save_as_hls") {
+		// Move HLS folder to vod folder
+		sourcePath := fmt.Sprintf("/tmp/%s_%s-video_hls0", v.ExtID, v.ID)
+		destPath := fmt.Sprintf("/vods/%s/%s_%s/%s-video_hls", ch.Name, v.ExtID, v.ID, v.ExtID)
+		err := utils.MoveFolder(sourcePath, destPath)
+		if err != nil {
+			log.Error().Err(err).Msg("error moving video hls directory")
+			q.Update().SetTaskVideoMove(utils.Failed).SaveX(context.Background())
+			s.TaskError(ch, v, q, "video_move")
+			return
+		}
+		// Update video path to hls path
+		v.Update().SetVideoPath(fmt.Sprintf("/vods/%s/%s_%s/%s-video_hls/%s-video.m3u8", ch.Name, v.ExtID, v.ID, v.ExtID, v.ExtID)).SaveX(context.Background())
+	} else {
+		sourcePath := fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID)
+		destPath := fmt.Sprintf("/vods/%s/%s_%s/%s-video.mp4", ch.Name, v.ExtID, v.ID, v.ExtID)
 
-	err := utils.MoveFile(sourcePath, destPath)
-	if err != nil {
-		log.Error().Err(err).Msg("error moving video")
-		q.Update().SetTaskVideoMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "video_move")
-		return
+		err := utils.MoveFile(sourcePath, destPath)
+		if err != nil {
+			log.Error().Err(err).Msg("error moving video")
+			q.Update().SetTaskVideoMove(utils.Failed).SaveX(context.Background())
+			s.TaskError(ch, v, q, "video_move")
+			return
+		}
 	}
 
+	// Clean up files
 	// Delete source file
-	err = utils.DeleteFile(fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+	err := utils.DeleteFile(fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
 	if err != nil {
-		log.Error().Err(err).Msg("error deleting video")
-		q.Update().SetTaskVideoMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "video_move")
-		return
+		log.Info().Err(err).Msgf("error deleting source file for vod %s", v.ID)
+	}
+	// Delete converted file
+	err = utils.DeleteFile(fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID))
+	if err != nil {
+		log.Info().Err(err).Msgf("error deleting converted file for vod %s", v.ID)
 	}
 
 	q.Update().SetTaskVideoMove(utils.Success).SaveX(context.Background())

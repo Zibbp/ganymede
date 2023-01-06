@@ -35,6 +35,9 @@ type Conf struct {
 		ChatRender     string `json:"chat_render"`
 		StreamlinkLive string `json:"streamlink_live"`
 	} `json:"parameters"`
+	Archive struct {
+		SaveAsHls bool `json:"save_as_hls"`
+	} `json:"archive"`
 	Notifications Notification `json:"notifications"`
 }
 
@@ -72,6 +75,7 @@ func NewConfig() {
 	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a copy")
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
 	viper.SetDefault("parameters.streamlink_live", "--force-progress,--force,--twitch-low-latency,--twitch-disable-hosting")
+	viper.SetDefault("archive.save_as_hls", false)
 	// Notifications
 	viper.SetDefault("notifications.video_success_webhook_url", "")
 	viper.SetDefault("notifications.video_success_template", "✅ Video Archived: {{vod_title}} by {{channel_display_name}}.")
@@ -108,6 +112,13 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 	return &Conf{
 		RegistrationEnabled: viper.GetBool("registration_enabled"),
 		DBSeeded:            viper.GetBool("db_seeded"),
+		Archive: struct {
+			SaveAsHls bool `json:"save_as_hls"`
+		}(struct {
+			SaveAsHls bool
+		}{
+			SaveAsHls: viper.GetBool("archive.save_as_hls"),
+		}),
 		Parameters: struct {
 			VideoConvert   string `json:"video_convert"`
 			ChatRender     string `json:"chat_render"`
@@ -129,6 +140,7 @@ func (s *Service) UpdateConfig(c echo.Context, cDto *Conf) error {
 	viper.Set("parameters.video_convert", cDto.Parameters.VideoConvert)
 	viper.Set("parameters.chat_render", cDto.Parameters.ChatRender)
 	viper.Set("parameters.streamlink_live", cDto.Parameters.StreamlinkLive)
+	viper.Set("archive.save_as_hls", cDto.Archive.SaveAsHls)
 	err := viper.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("error writing config file: %w", err)
@@ -210,6 +222,10 @@ func refreshConfig(configPath string) {
 		if err != nil {
 			log.Error().Err(err).Msg("error unsetting config value")
 		}
+	}
+	// Archive
+	if !viper.IsSet("archive.save_as_hls") {
+		viper.Set("archive.save_as_hls", false)
 	}
 
 }

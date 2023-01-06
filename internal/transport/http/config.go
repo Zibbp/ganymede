@@ -21,6 +21,9 @@ type UpdateConfigRequest struct {
 		ChatRender     string `json:"chat_render" validate:"required"`
 		StreamlinkLive string `json:"streamlink_live"`
 	} `json:"parameters"`
+	Archive struct {
+		SaveAsHls bool `json:"save_as_hls"`
+	} `json:"archive"`
 }
 
 type UpdateNotificationRequest struct {
@@ -56,6 +59,9 @@ func (h *Handler) UpdateConfig(c echo.Context) error {
 	}
 	cDto := config.Conf{
 		RegistrationEnabled: conf.RegistrationEnabled,
+		Archive: struct {
+			SaveAsHls bool `json:"save_as_hls"`
+		}(conf.Archive),
 		Parameters: struct {
 			VideoConvert   string `json:"video_convert"`
 			ChatRender     string `json:"chat_render"`
