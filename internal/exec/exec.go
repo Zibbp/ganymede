@@ -142,6 +142,35 @@ func ConvertTwitchVodVideo(v *ent.Vod) error {
 	return nil
 }
 
+func ConvertToHLS(v *ent.Vod) error {
+	// Delete original video file to save space
+	log.Debug().Msgf("deleting original video file for %s to save space", v.ExtID)
+	if err := os.Remove(fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID)); err != nil {
+		log.Error().Err(err).Msg("error deleting original video file")
+		return err
+	}
+
+	cmd := osExec.Command("ffmpeg", "-y", "-hide_banner", "-i", fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID), "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("/tmp/%s_%s-video_hls%s/%s_segment%s.ts", v.ExtID, v.ID, "%v", v.ExtID, "%d"), "-f", "hls", fmt.Sprintf("/tmp/%s_%s-video_hls%s/%s-video.m3u8", v.ExtID, v.ID, "%v", v.ExtID))
+
+	videoConverLogFile, err := os.Open(fmt.Sprintf("/logs/%s_%s-video-convert.log", v.ExtID, v.ID))
+	if err != nil {
+		log.Error().Err(err).Msg("error opening video convert logfile")
+		return err
+	}
+	defer videoConverLogFile.Close()
+	cmd.Stdout = videoConverLogFile
+	cmd.Stderr = videoConverLogFile
+
+	if err := cmd.Run(); err != nil {
+		log.Error().Err(err).Msg("error running ffmpeg for vod video convert - hls")
+		return err
+	}
+
+	log.Debug().Msgf("finished vod video convert - hls for %s", v.ExtID)
+	return nil
+
+}
+
 func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	// Fetch config params
 	liveStreamlinkParams := viper.GetString("parameters.streamlink_live")

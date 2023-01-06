@@ -3,12 +3,14 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
+
+	"github.com/rs/zerolog/log"
 )
 
 // CreateFolder - creates folder if it doesn't exist
@@ -84,9 +86,68 @@ func MoveFile(sourcePath, destPath string) error {
 	// Copy was successful - delete source file
 	err = os.Remove(sourcePath)
 	if err != nil {
-		return fmt.Errorf("error removing file: %v", err)
+		log.Info().Msgf("error deleting source file: %v", err)
 	}
 	return nil
+}
+
+func MoveFolder(src string, dst string) error {
+	// Check if the source path exists
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		return err
+	}
+
+	// Create the destination directory
+	err := os.MkdirAll(dst, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	// Walk through the source directory and copy each file and directory
+	// to the destination
+	err = filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Compute the relative path of the file/directory
+		relPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+
+		// Create the destination path
+		dstPath := filepath.Join(dst, relPath)
+
+		// If the source path is a directory, create it in the destination
+		if info.IsDir() {
+			return os.MkdirAll(dstPath, os.ModePerm)
+		}
+
+		// Otherwise, it's a file. Open the file for reading
+		srcFile, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+
+		// Open the destination file for writing
+		dstFile, err := os.Create(dstPath)
+		if err != nil {
+			return err
+		}
+		defer dstFile.Close()
+
+		// Copy the contents of the file
+		_, err = io.Copy(dstFile, srcFile)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+
+	// Finally, remove the source directory
+	return os.RemoveAll(src)
 }
 
 func DeleteFile(path string) error {
