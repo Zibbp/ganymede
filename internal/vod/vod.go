@@ -501,7 +501,7 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 
 	switch {
 	case len(chatData.Emotes.FirstParty) > 0 && len(chatData.Emotes.ThirdParty) > 0:
-		log.Debug().Msgf("VOD %s chat playback using embedded emotes 'emotes'", vodID)
+		log.Debug().Msgf("VOD %s chat playback embedded emotes found in 'emotes'", vodID)
 		for _, emote := range chatData.Emotes.FirstParty {
 			var ganymedeEmote chat.GanymedeEmote
 			ganymedeEmote.Name = fmt.Sprint(emote.Name)
@@ -524,7 +524,7 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, ganymedeEmote)
 		}
 	case len(chatData.EmbeddedData.FirstParty) > 0 && len(chatData.EmbeddedData.ThirdParty) > 0:
-		log.Debug().Msgf("VOD %s chat playback using embedded emotes 'emebeddedData'", vodID)
+		log.Debug().Msgf("VOD %s chat playback embedded emotes found in 'emebeddedData'", vodID)
 		for _, emote := range chatData.EmbeddedData.FirstParty {
 			var ganymedeEmote chat.GanymedeEmote
 			ganymedeEmote.Name = fmt.Sprint(emote.Name)
