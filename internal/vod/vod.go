@@ -681,6 +681,8 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 		return nil, fmt.Errorf("error getting vod chat badges: %v", err)
 	}
 
+	data = nil
+
 	var badgeResp chat.BadgeResp
 
 	// If emebedded badges
@@ -746,11 +748,6 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 
 		}
 
-		chatData = nil
-		data = nil
-
-		defer runtime.GC()
-
 	} else {
 		log.Debug().Msgf("VOD %s chat playback embedded badges not found, fetching badges from providers", vodID)
 		// Older chat files have the streamer ID stored as a string, need to convert to an int64
@@ -784,14 +781,13 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 
 		badgeResp.Badges = append(badgeResp.Badges, channelBadges.Badges...)
 
-		chatData = nil
-		data = nil
 		twitchBadges = nil
 		channelBadges = nil
 
-		defer runtime.GC()
-
 	}
+
+	chatData = nil
+	defer runtime.GC()
 
 	if envDeployment == "development" {
 		utils.PrintMemUsage()
