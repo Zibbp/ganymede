@@ -1,8 +1,9 @@
 package cache
 
 import (
-	goCache "github.com/patrickmn/go-cache"
 	"time"
+
+	goCache "github.com/patrickmn/go-cache"
 )
 
 var cache *Store
@@ -24,7 +25,7 @@ func (c Store) Get(key string) (interface{}, bool) {
 	return c.cache.Get(key)
 }
 
-func (c Store) Set(key string, value []byte, expiration time.Duration) error {
+func (c Store) Set(key string, value interface{}, expiration time.Duration) error {
 	c.cache.Set(key, value, expiration)
 
 	return nil
