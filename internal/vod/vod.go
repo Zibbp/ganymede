@@ -2,12 +2,15 @@ package vod
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
+	"os"
+	"runtime"
+	"sort"
 	"strconv"
 	"time"
 
-	gojson "github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -270,7 +273,7 @@ func (s *Service) GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, er
 		return nil, fmt.Errorf("error reading chat file: %v", err)
 	}
 	var chatData *chat.ChatNoEmotes
-	err = gojson.Unmarshal(data, &chatData)
+	err = json.Unmarshal(data, &chatData)
 	if err != nil {
 		log.Debug().Err(err).Msg("error unmarshalling chat data")
 		return nil, fmt.Errorf("error unmarshalling chat data: %v", err)
@@ -296,6 +299,12 @@ func (s *Service) GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, er
 }
 
 func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error) {
+	envDeployment := os.Getenv("ENV")
+
+	if envDeployment == "development" {
+		utils.PrintMemUsage()
+	}
+
 	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat")
@@ -303,54 +312,84 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 	}
 
 	var chatData *chat.ChatNoEmotes
+	var comments []chat.Comment
 	cacheData, exists := cache.Cache().Get(fmt.Sprintf("%s", v.ID))
 	if exists {
-		err := gojson.Unmarshal(cacheData.([]byte), &chatData)
-		if err != nil {
-			log.Debug().Err(err).Msg("error unmarshalling chat data")
-			return nil, fmt.Errorf("error unmarshalling chat data: %v", err)
-		}
-		log.Debug().Msgf("Using chat cache for VOD %s", v.ID)
+		comments = cacheData.([]chat.Comment)
 	} else {
 		data, err := utils.ReadChatFile(v.ChatPath)
 		if err != nil {
 			log.Debug().Err(err).Msg("error getting vod chat")
 			return nil, fmt.Errorf("error getting vod chat: %v", err)
 		}
-		err = gojson.Unmarshal(data, &chatData)
+		err = json.Unmarshal(data, &chatData)
 		if err != nil {
 			log.Debug().Err(err).Msg("error getting vod chat")
 			return nil, fmt.Errorf("error getting vod chat: %v", err)
 		}
 
-		data, err = gojson.Marshal(chatData)
-		if err != nil {
-			log.Debug().Err(err).Msg("error marshalling chat data")
-			return nil, fmt.Errorf("error marshalling chat data: %v", err)
-		}
-		err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), data, 30*time.Minute)
+		comments = chatData.Comments
+		chatData = nil
+		data = nil
+		runtime.GC()
+
+		// Sort the comments by their content offset seconds
+		sort.Slice(comments, func(i, j int) bool {
+			return comments[i].ContentOffsetSeconds < comments[j].ContentOffsetSeconds
+		})
+
+		// Set cache
+		err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), comments, 15*time.Minute)
 		if err != nil {
 			log.Debug().Err(err).Msg("error setting cache")
 			return nil, fmt.Errorf("error setting cache: %v", err)
 		}
-		log.Debug().Msgf("Set chat cache for VOD %s", v.ID)
-		data = nil
+
+		runtime.GC()
+
+	}
+
+	// Reset the cache
+	err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), comments, 15*time.Minute)
+	if err != nil {
+		log.Debug().Err(err).Msg("error setting cache")
+		return nil, fmt.Errorf("error setting cache: %v", err)
 	}
 
 	var filteredComments []chat.Comment
-	for _, message := range chatData.Comments {
-		if message.ContentOffsetSeconds >= start && message.ContentOffsetSeconds <= end {
-			filteredComments = append(filteredComments, message)
-		}
+
+	// Use binary search to find the index of the first comment with an offset greater than the specified offset
+	// This is much faster than iterating through the entire slice
+	i := sort.Search(len(comments), func(i int) bool { return comments[i].ContentOffsetSeconds >= start })
+
+	// Iterate through the comments starting at the index found above
+	// Stop when we reach the end of the slice or the offset is greater than the specified end offset
+	for i < len(comments) && comments[i].ContentOffsetSeconds <= end {
+		filteredComments = append(filteredComments, comments[i])
+		i++
 	}
 
+	// Cleanup
 	chatData = nil
 	cacheData = nil
+	comments = nil
+
+	defer runtime.GC()
+
+	if envDeployment == "development" {
+		utils.PrintMemUsage()
+	}
 
 	return &filteredComments, nil
 }
 
 func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error) {
+	envDeployment := os.Getenv("ENV")
+
+	if envDeployment == "development" {
+		utils.PrintMemUsage()
+	}
+
 	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat")
@@ -358,61 +397,83 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 	}
 
 	var chatData *chat.ChatNoEmotes
+	var comments []chat.Comment
+
 	cacheData, exists := cache.Cache().Get(fmt.Sprintf("%s", v.ID))
+
 	if exists {
-		err := gojson.Unmarshal(cacheData.([]byte), &chatData)
-		if err != nil {
-			log.Debug().Err(err).Msg("error unmarshalling chat data")
-			return nil, fmt.Errorf("error unmarshalling chat data: %v", err)
-		}
-		log.Debug().Msgf("Using chat cache for VOD %s", v.ID)
+		comments = cacheData.([]chat.Comment)
 	} else {
 		data, err := utils.ReadChatFile(v.ChatPath)
 		if err != nil {
 			log.Debug().Err(err).Msg("error getting vod chat")
 			return nil, fmt.Errorf("error getting vod chat: %v", err)
 		}
-		err = gojson.Unmarshal(data, &chatData)
+		err = json.Unmarshal(data, &chatData)
 		if err != nil {
 			log.Debug().Err(err).Msg("error getting vod chat")
 			return nil, fmt.Errorf("error getting vod chat: %v", err)
 		}
 
-		data, err = gojson.Marshal(chatData)
-		if err != nil {
-			log.Debug().Err(err).Msg("error marshalling chat data")
-			return nil, fmt.Errorf("error marshalling chat data: %v", err)
-		}
-		err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), data, 30*time.Minute)
+		comments = chatData.Comments
+		chatData = nil
+		data = nil
+		runtime.GC()
+
+		// Sort the comments by their content offset seconds
+		sort.Slice(comments, func(i, j int) bool {
+			return comments[i].ContentOffsetSeconds < comments[j].ContentOffsetSeconds
+		})
+
+		err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), comments, 15*time.Minute)
 		if err != nil {
 			log.Debug().Err(err).Msg("error setting cache")
 			return nil, fmt.Errorf("error setting cache: %v", err)
 		}
-		log.Debug().Msgf("Set chat cache for VOD %s", v.ID)
-		data = nil
+
+		runtime.GC()
+
+	}
+
+	// Reset the cache
+	err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), comments, 15*time.Minute)
+	if err != nil {
+		log.Debug().Err(err).Msg("error setting cache")
+		return nil, fmt.Errorf("error setting cache: %v", err)
 	}
 
 	var filteredComments []chat.Comment
-	for _, message := range chatData.Comments {
-		if message.ContentOffsetSeconds <= start {
-			filteredComments = append(filteredComments, message)
+
+	// Use binary search to find the index of the first comment with an offset greater than the specified offset
+	// This is much faster than iterating through the entire slice
+	i := sort.Search(len(comments), func(i int) bool { return comments[i].ContentOffsetSeconds >= start })
+
+	// Iterate backwards from the index found above to get the last commentCount comments before the start time
+	for j := i; len(filteredComments) < int(commentCount); j-- {
+		if j < 0 {
+			break
 		}
+		comment := comments[j]
+		filteredComments = append(filteredComments, comment)
 	}
 
-	count := len(filteredComments)
-	// Count to int64
-	var i int64
-	i = int64(count)
-	if i < commentCount {
-		return nil, nil
+	// Check if the index is less than the number of comments we want to return
+	if i-int(commentCount) >= 0 {
+		filteredComments = comments[i-int(commentCount) : i]
 	}
 
+	// Cleanup
 	chatData = nil
 	cacheData = nil
+	comments = nil
+	defer runtime.GC()
 
-	filteredComments = filteredComments[i-commentCount : i]
+	if envDeployment == "development" {
+		utils.PrintMemUsage()
+	}
 
 	return &filteredComments, nil
+
 }
 
 func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error) {
@@ -427,18 +488,20 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
 	var chatData *chat.ChatOnlyEmotes
-	err = gojson.Unmarshal(data, &chatData)
+	err = json.Unmarshal(data, &chatData)
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat emotes")
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
-	// fmt.Println(chatData.Emotes)
-	// fmt.Println(chatData.EmbeddedData)
 
-	if len(chatData.Emotes.FirstParty) > 0 && len(chatData.Emotes.ThirdParty) > 0 {
-		log.Debug().Msgf("detected embedded emotes using old 'emotes' for vod %s", vodID)
-		var ganymedeEmotes chat.GanymedeEmotes
-		// Loop through first party emotes
+	data = nil
+	defer runtime.GC()
+
+	var ganymedeEmotes chat.GanymedeEmotes
+
+	switch {
+	case len(chatData.Emotes.FirstParty) > 0 && len(chatData.Emotes.ThirdParty) > 0:
+		log.Debug().Msgf("VOD %s chat playback using embedded emotes 'emotes'", vodID)
 		for _, emote := range chatData.Emotes.FirstParty {
 			var ganymedeEmote chat.GanymedeEmote
 			ganymedeEmote.Name = fmt.Sprint(emote.Name)
@@ -460,13 +523,8 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 			ganymedeEmote.Height = emote.Height
 			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, ganymedeEmote)
 		}
-		chatData = nil
-		data = nil
-		return &ganymedeEmotes, nil
-	} else if len(chatData.EmbeddedData.FirstParty) > 0 && len(chatData.EmbeddedData.ThirdParty) > 0 {
-		log.Debug().Msgf("detected embedded emotes using new 'embeddedData' for vod %s", vodID)
-		var ganymedeEmotes chat.GanymedeEmotes
-		// Loop through first party emotes
+	case len(chatData.EmbeddedData.FirstParty) > 0 && len(chatData.EmbeddedData.ThirdParty) > 0:
+		log.Debug().Msgf("VOD %s chat playback using embedded emotes 'emebeddedData'", vodID)
 		for _, emote := range chatData.EmbeddedData.FirstParty {
 			var ganymedeEmote chat.GanymedeEmote
 			ganymedeEmote.Name = fmt.Sprint(emote.Name)
@@ -488,12 +546,9 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 			ganymedeEmote.Height = emote.Height
 			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, ganymedeEmote)
 		}
-		chatData = nil
-		data = nil
-		return &ganymedeEmotes, nil
-	} else {
-		// Embedded emotes not found, fetch emotes from the providers
-		var ganymedeEmotes chat.GanymedeEmotes
+	default:
+		log.Debug().Msgf("VOD %s chat playback embedded emotes not found, fetching emotes from providers", vodID)
+
 		twitchGlobalEmotes, err := chat.GetTwitchGlobalEmotes()
 		if err != nil {
 			log.Debug().Err(err).Msg("error getting twitch global emotes")
@@ -581,12 +636,33 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		for _, emote := range ffzChannelEmotes {
 			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
 		}
-		chatData = nil
-		return &ganymedeEmotes, nil
+
+		twitchGlobalEmotes = nil
+		twitchChannelEmotes = nil
+		sevenTVGlobalEmotes = nil
+		sevenTVChannelEmotes = nil
+		bttvGlobalEmotes = nil
+		bttvChannelEmotes = nil
+		ffzGlobalEmotes = nil
+		ffzChannelEmotes = nil
+
 	}
+
+	chatData = nil
+	data = nil
+
+	defer runtime.GC()
+	return &ganymedeEmotes, nil
+
 }
 
 func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.BadgeResp, error) {
+	envDeployment := os.Getenv("ENV")
+
+	if envDeployment == "development" {
+		utils.PrintMemUsage()
+	}
+
 	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat emotes")
@@ -599,17 +675,17 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 	}
 
 	var chatData *chat.ChatOnlyBadges
-	err = gojson.Unmarshal(data, &chatData)
+	err = json.Unmarshal(data, &chatData)
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat badges")
 		return nil, fmt.Errorf("error getting vod chat badges: %v", err)
 	}
 
+	var badgeResp chat.BadgeResp
+
 	// If emebedded badges
 	if len(chatData.EmbeddedData.TwitchBadges) != 0 {
-
-		var badgeResp chat.BadgeResp
-
+		log.Debug().Msgf("VOD %s chat playback embedded badges found", vodID)
 		// Emebedded badges have duplicate arrays for each of the below
 		// So we need to check if we have already added the badge to the response
 		// To ensure we use the channel's badge and not the global one
@@ -670,16 +746,13 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 
 		}
 
-		return &badgeResp, nil
+		chatData = nil
+		data = nil
+
+		defer runtime.GC()
 
 	} else {
-
-		var chatData *chat.ChatNoEmotes
-		err = gojson.Unmarshal(data, &chatData)
-		if err != nil {
-			log.Debug().Err(err).Msg("error getting vod chat emotes")
-			return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
-		}
+		log.Debug().Msgf("VOD %s chat playback embedded badges not found, fetching badges from providers", vodID)
 		// Older chat files have the streamer ID stored as a string, need to convert to an int64
 		var sID int64
 		switch streamerChatId := chatData.Streamer.ID.(type) {
@@ -693,7 +766,6 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 			sID = int64(streamerChatId)
 		}
 
-		var badgeResp chat.BadgeResp
 		twitchBadges, err := chat.GetTwitchGlobalBadges()
 		if err != nil {
 			log.Error().Err(err).Msg("error getting twitch global badges")
@@ -706,19 +778,25 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 		}
 
 		// Loop through twitch global badges
-		for _, badge := range twitchBadges.Badges {
-			badgeResp.Badges = append(badgeResp.Badges, badge)
-		}
+		badgeResp.Badges = append(badgeResp.Badges, twitchBadges.Badges...)
+
 		// Loop through twitch channel badges
-		for _, badge := range channelBadges.Badges {
-			badgeResp.Badges = append(badgeResp.Badges, badge)
-		}
+
+		badgeResp.Badges = append(badgeResp.Badges, channelBadges.Badges...)
 
 		chatData = nil
 		data = nil
+		twitchBadges = nil
+		channelBadges = nil
 
-		return &badgeResp, nil
+		defer runtime.GC()
 
 	}
+
+	if envDeployment == "development" {
+		utils.PrintMemUsage()
+	}
+
+	return &badgeResp, nil
 
 }
