@@ -452,7 +452,7 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 
 	// Iterate backwards from the index found above to get the last commentCount comments before the start time
 	for j := i; len(filteredComments) < int(commentCount); j-- {
-		if j < 0 {
+		if j < 0 || j >= len(comments) {
 			break
 		}
 		comment := comments[j]
