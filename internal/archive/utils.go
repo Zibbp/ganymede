@@ -89,12 +89,12 @@ func getVariableMap(uuid uuid.UUID, tVideoItem *twitch.Vod) (map[string]interfac
 	}
 
 	variables := map[string]interface{}{
-		"uuid":       uuid.String(),
-		"id":         tVideoItem.ID,
-		"channel":    tVideoItem.UserLogin,
-		"title":      safeTitle,
-		"created_at": parsedDate,
-		"type":       tVideoItem.Type,
+		"uuid":    uuid.String(),
+		"id":      tVideoItem.ID,
+		"channel": tVideoItem.UserLogin,
+		"title":   safeTitle,
+		"date":    parsedDate,
+		"type":    tVideoItem.Type,
 	}
 	return variables, nil
 }
