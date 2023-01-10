@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"runtime"
+	"strings"
 )
 
 func PrintMemUsage() {
@@ -17,4 +18,22 @@ func PrintMemUsage() {
 
 func bToMb(b uint64) uint64 {
 	return b / 1024 / 1024
+}
+
+func SanitizeFileName(fileName string) string {
+	// Use ReplaceAll instead of regex for easier updating
+	// Replace the unwanted characters with _
+	fileName = strings.ReplaceAll(fileName, "/", "_")
+	fileName = strings.ReplaceAll(fileName, ":", "_")
+	fileName = strings.ReplaceAll(fileName, "*", "_")
+	fileName = strings.ReplaceAll(fileName, "?", "_")
+	fileName = strings.ReplaceAll(fileName, "\"", "_")
+	fileName = strings.ReplaceAll(fileName, "<", "_")
+	fileName = strings.ReplaceAll(fileName, ">", "_")
+	fileName = strings.ReplaceAll(fileName, "|", "_")
+
+	//Replace any whitespace
+	fileName = strings.ReplaceAll(fileName, " ", "_")
+
+	return fileName
 }
