@@ -791,7 +791,7 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 	// Delete converted file
 	err = utils.DeleteFile(fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID))
 	if err != nil {
-		log.Info().Err(err).Msgf("error deleting converted file for vod %s", v.ID)
+		log.Debug().Err(err).Msgf("error deleting converted file for vod %s", v.ID)
 	}
 
 	q.Update().SetTaskVideoMove(utils.Success).SaveX(context.Background())
