@@ -124,12 +124,12 @@ func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool) (*Twit
 	}
 
 	// Storage templates
-	folderName, err := getFolderName(vUUID, tVod)
+	folderName, err := GetFolderName(vUUID, tVod)
 	if err != nil {
 		log.Error().Err(err).Msg("error using template to create folder name, falling back to default")
 		folderName = fmt.Sprintf("%s-%s", tVod.ID, vUUID.String())
 	}
-	fileName, err := getFileName(vUUID, tVod)
+	fileName, err := GetFileName(vUUID, tVod)
 	if err != nil {
 		log.Error().Err(err).Msg("error using template to create file name, falling back to default")
 		fileName = fmt.Sprintf("%s", tVod.ID)
@@ -184,8 +184,6 @@ func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool) (*Twit
 	if err != nil {
 		return nil, fmt.Errorf("error creating vod: %v", err)
 	}
-
-	fmt.Println(v)
 
 	// Create queue item
 	q, err := s.QueueService.CreateQueueItem(queue.Queue{LiveArchive: false}, v.ID)
@@ -330,12 +328,12 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 		Type:      "live",
 		CreatedAt: ts.StartedAt,
 	}
-	folderName, err := getFolderName(vUUID, tVodDto)
+	folderName, err := GetFolderName(vUUID, tVodDto)
 	if err != nil {
 		log.Error().Err(err).Msg("error using template to create folder name, falling back to default")
 		folderName = fmt.Sprintf("%s-%s", tVodDto.ID, vUUID.String())
 	}
-	fileName, err := getFileName(vUUID, tVodDto)
+	fileName, err := GetFileName(vUUID, tVodDto)
 	if err != nil {
 		log.Error().Err(err).Msg("error using template to create file name, falling back to default")
 		fileName = fmt.Sprintf("%s", tVodDto.ID)
