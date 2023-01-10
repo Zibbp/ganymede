@@ -17,7 +17,7 @@ var (
 	storageTemplateVariableRegex = regexp.MustCompile(`\{{([^}]+)\}}`)
 )
 
-func getFolderName(uuid uuid.UUID, tVideoItem twitch.Vod) (string, error) {
+func GetFolderName(uuid uuid.UUID, tVideoItem twitch.Vod) (string, error) {
 
 	variableMap, err := getVariableMap(uuid, &tVideoItem)
 	if err != nil {
@@ -49,7 +49,7 @@ func getFolderName(uuid uuid.UUID, tVideoItem twitch.Vod) (string, error) {
 	return folderTemplate, nil
 }
 
-func getFileName(uuid uuid.UUID, tVideoItem twitch.Vod) (string, error) {
+func GetFileName(uuid uuid.UUID, tVideoItem twitch.Vod) (string, error) {
 
 	variableMap, err := getVariableMap(uuid, &tVideoItem)
 	if err != nil {
