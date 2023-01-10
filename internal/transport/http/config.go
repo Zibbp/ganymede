@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/internal/config"
@@ -44,8 +45,8 @@ type UpdateNotificationRequest struct {
 }
 
 type UpdateStorageTemplateRequest struct {
-	FolderTemplate string `json:"folder_template"`
-	FileTemplate   string `json:"file_template"`
+	FolderTemplate string `json:"folder_template" validate:"required"`
+	FileTemplate   string `json:"file_template" validate:"required"`
 }
 
 func (h *Handler) GetConfig(c echo.Context) error {
@@ -128,6 +129,21 @@ func (h *Handler) UpdateStorageTemplateConfig(c echo.Context) error {
 	if err := c.Bind(conf); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	if err := c.Validate(conf); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if len(conf.FolderTemplate) == 0 || len(conf.FileTemplate) == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Folder template and file template can't be empty")
+	}
+
+	// Check if folder template contains {{uuid}}
+
+	if !strings.Contains(conf.FolderTemplate, "{{uuid}}") {
+		return echo.NewHTTPError(http.StatusBadRequest, "Folder template must contain {{uuid}}")
+	}
+
 	cDto := config.StorageTemplate{
 		FolderTemplate: conf.FolderTemplate,
 		FileTemplate:   conf.FileTemplate,
