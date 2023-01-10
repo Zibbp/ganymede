@@ -97,7 +97,7 @@ func NewConfig() {
 	viper.SetDefault("notifications.is_live_enabled", true)
 
 	// Storage Templates
-	viper.SetDefault("storage_templates.folder_template", "{{date}}-{{id}}-{{type}}-{{ganymede-uuid}}")
+	viper.SetDefault("storage_templates.folder_template", "{{date}}-{{id}}-{{type}}-{{uuid}}")
 	viper.SetDefault("storage_templates.file_template", "{{id}}")
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
@@ -266,7 +266,7 @@ func refreshConfig(configPath string) {
 	}
 	// Storage template
 	if !viper.IsSet("storage_templates.folder_template") {
-		viper.Set("storage_templates.folder_template", "{{date}}-{{id}}-{{type}}-{{ganymede-uuid}}")
+		viper.Set("storage_templates.folder_template", "{{date}}-{{id}}-{{type}}-{{uuid}}")
 	}
 	if !viper.IsSet("storage_templates.file_template") {
 		viper.Set("storage_templates.file_template", "{{id}}")
