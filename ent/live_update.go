@@ -192,41 +192,8 @@ func (lu *LiveUpdate) ClearChannel() *LiveUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (lu *LiveUpdate) Save(ctx context.Context) (int, error) {
-	var (
-		err      error
-		affected int
-	)
 	lu.defaults()
-	if len(lu.hooks) == 0 {
-		if err = lu.check(); err != nil {
-			return 0, err
-		}
-		affected, err = lu.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*LiveMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = lu.check(); err != nil {
-				return 0, err
-			}
-			lu.mutation = mutation
-			affected, err = lu.sqlSave(ctx)
-			mutation.done = true
-			return affected, err
-		})
-		for i := len(lu.hooks) - 1; i >= 0; i-- {
-			if lu.hooks[i] == nil {
-				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = lu.hooks[i](mut)
-		}
-		if _, err := mut.Mutate(ctx, lu.mutation); err != nil {
-			return 0, err
-		}
-	}
-	return affected, err
+	return withHooks[int, LiveMutation](ctx, lu.sqlSave, lu.mutation, lu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -268,6 +235,9 @@ func (lu *LiveUpdate) check() error {
 }
 
 func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := lu.check(); err != nil {
+		return n, err
+	}
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   live.Table,
@@ -286,80 +256,37 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := lu.mutation.WatchLive(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldWatchLive,
-		})
+		_spec.SetField(live.FieldWatchLive, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.WatchVod(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldWatchVod,
-		})
+		_spec.SetField(live.FieldWatchVod, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.DownloadArchives(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldDownloadArchives,
-		})
+		_spec.SetField(live.FieldDownloadArchives, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.DownloadHighlights(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldDownloadHighlights,
-		})
+		_spec.SetField(live.FieldDownloadHighlights, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.DownloadUploads(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldDownloadUploads,
-		})
+		_spec.SetField(live.FieldDownloadUploads, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.IsLive(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldIsLive,
-		})
+		_spec.SetField(live.FieldIsLive, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.ArchiveChat(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldArchiveChat,
-		})
+		_spec.SetField(live.FieldArchiveChat, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.Resolution(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: live.FieldResolution,
-		})
+		_spec.SetField(live.FieldResolution, field.TypeString, value)
 	}
 	if lu.mutation.ResolutionCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: live.FieldResolution,
-		})
+		_spec.ClearField(live.FieldResolution, field.TypeString)
 	}
 	if value, ok := lu.mutation.LastLive(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: live.FieldLastLive,
-		})
+		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
 	}
 	if value, ok := lu.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: live.FieldUpdatedAt,
-		})
+		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if lu.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -404,6 +331,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
+	lu.mutation.done = true
 	return n, nil
 }
 
@@ -584,47 +512,8 @@ func (luo *LiveUpdateOne) Select(field string, fields ...string) *LiveUpdateOne 
 
 // Save executes the query and returns the updated Live entity.
 func (luo *LiveUpdateOne) Save(ctx context.Context) (*Live, error) {
-	var (
-		err  error
-		node *Live
-	)
 	luo.defaults()
-	if len(luo.hooks) == 0 {
-		if err = luo.check(); err != nil {
-			return nil, err
-		}
-		node, err = luo.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*LiveMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = luo.check(); err != nil {
-				return nil, err
-			}
-			luo.mutation = mutation
-			node, err = luo.sqlSave(ctx)
-			mutation.done = true
-			return node, err
-		})
-		for i := len(luo.hooks) - 1; i >= 0; i-- {
-			if luo.hooks[i] == nil {
-				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = luo.hooks[i](mut)
-		}
-		v, err := mut.Mutate(ctx, luo.mutation)
-		if err != nil {
-			return nil, err
-		}
-		nv, ok := v.(*Live)
-		if !ok {
-			return nil, fmt.Errorf("unexpected node type %T returned from LiveMutation", v)
-		}
-		node = nv
-	}
-	return node, err
+	return withHooks[*Live, LiveMutation](ctx, luo.sqlSave, luo.mutation, luo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -666,6 +555,9 @@ func (luo *LiveUpdateOne) check() error {
 }
 
 func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) {
+	if err := luo.check(); err != nil {
+		return _node, err
+	}
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   live.Table,
@@ -701,80 +593,37 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 	}
 	if value, ok := luo.mutation.WatchLive(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldWatchLive,
-		})
+		_spec.SetField(live.FieldWatchLive, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.WatchVod(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldWatchVod,
-		})
+		_spec.SetField(live.FieldWatchVod, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.DownloadArchives(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldDownloadArchives,
-		})
+		_spec.SetField(live.FieldDownloadArchives, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.DownloadHighlights(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldDownloadHighlights,
-		})
+		_spec.SetField(live.FieldDownloadHighlights, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.DownloadUploads(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldDownloadUploads,
-		})
+		_spec.SetField(live.FieldDownloadUploads, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.IsLive(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldIsLive,
-		})
+		_spec.SetField(live.FieldIsLive, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.ArchiveChat(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldArchiveChat,
-		})
+		_spec.SetField(live.FieldArchiveChat, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.Resolution(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: live.FieldResolution,
-		})
+		_spec.SetField(live.FieldResolution, field.TypeString, value)
 	}
 	if luo.mutation.ResolutionCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: live.FieldResolution,
-		})
+		_spec.ClearField(live.FieldResolution, field.TypeString)
 	}
 	if value, ok := luo.mutation.LastLive(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: live.FieldLastLive,
-		})
+		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
 	}
 	if value, ok := luo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: live.FieldUpdatedAt,
-		})
+		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if luo.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -822,5 +671,6 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 		return nil, err
 	}
+	luo.mutation.done = true
 	return _node, nil
 }

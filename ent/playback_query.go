@@ -23,6 +23,7 @@ type PlaybackQuery struct {
 	unique     *bool
 	order      []OrderFunc
 	fields     []string
+	inters     []Interceptor
 	predicates []predicate.Playback
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -35,13 +36,13 @@ func (pq *PlaybackQuery) Where(ps ...predicate.Playback) *PlaybackQuery {
 	return pq
 }
 
-// Limit adds a limit step to the query.
+// Limit the number of records to be returned by this query.
 func (pq *PlaybackQuery) Limit(limit int) *PlaybackQuery {
 	pq.limit = &limit
 	return pq
 }
 
-// Offset adds an offset step to the query.
+// Offset to start from.
 func (pq *PlaybackQuery) Offset(offset int) *PlaybackQuery {
 	pq.offset = &offset
 	return pq
@@ -54,7 +55,7 @@ func (pq *PlaybackQuery) Unique(unique bool) *PlaybackQuery {
 	return pq
 }
 
-// Order adds an order step to the query.
+// Order specifies how the records should be ordered.
 func (pq *PlaybackQuery) Order(o ...OrderFunc) *PlaybackQuery {
 	pq.order = append(pq.order, o...)
 	return pq
@@ -63,7 +64,7 @@ func (pq *PlaybackQuery) Order(o ...OrderFunc) *PlaybackQuery {
 // First returns the first Playback entity from the query.
 // Returns a *NotFoundError when no Playback was found.
 func (pq *PlaybackQuery) First(ctx context.Context) (*Playback, error) {
-	nodes, err := pq.Limit(1).All(ctx)
+	nodes, err := pq.Limit(1).All(newQueryContext(ctx, TypePlayback, "First"))
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +87,7 @@ func (pq *PlaybackQuery) FirstX(ctx context.Context) *Playback {
 // Returns a *NotFoundError when no Playback ID was found.
 func (pq *PlaybackQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = pq.Limit(1).IDs(ctx); err != nil {
+	if ids, err = pq.Limit(1).IDs(newQueryContext(ctx, TypePlayback, "FirstID")); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -109,7 +110,7 @@ func (pq *PlaybackQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one Playback entity is found.
 // Returns a *NotFoundError when no Playback entities are found.
 func (pq *PlaybackQuery) Only(ctx context.Context) (*Playback, error) {
-	nodes, err := pq.Limit(2).All(ctx)
+	nodes, err := pq.Limit(2).All(newQueryContext(ctx, TypePlayback, "Only"))
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +138,7 @@ func (pq *PlaybackQuery) OnlyX(ctx context.Context) *Playback {
 // Returns a *NotFoundError when no entities are found.
 func (pq *PlaybackQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = pq.Limit(2).IDs(ctx); err != nil {
+	if ids, err = pq.Limit(2).IDs(newQueryContext(ctx, TypePlayback, "OnlyID")); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -162,10 +163,12 @@ func (pq *PlaybackQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of Playbacks.
 func (pq *PlaybackQuery) All(ctx context.Context) ([]*Playback, error) {
+	ctx = newQueryContext(ctx, TypePlayback, "All")
 	if err := pq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	return pq.sqlAll(ctx)
+	qr := querierAll[[]*Playback, *PlaybackQuery]()
+	return withInterceptors[[]*Playback](ctx, pq, qr, pq.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
@@ -180,6 +183,7 @@ func (pq *PlaybackQuery) AllX(ctx context.Context) []*Playback {
 // IDs executes the query and returns a list of Playback IDs.
 func (pq *PlaybackQuery) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	var ids []uuid.UUID
+	ctx = newQueryContext(ctx, TypePlayback, "IDs")
 	if err := pq.Select(playback.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -197,10 +201,11 @@ func (pq *PlaybackQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (pq *PlaybackQuery) Count(ctx context.Context) (int, error) {
+	ctx = newQueryContext(ctx, TypePlayback, "Count")
 	if err := pq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return pq.sqlCount(ctx)
+	return withInterceptors[int](ctx, pq, querierCount[*PlaybackQuery](), pq.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
@@ -214,10 +219,15 @@ func (pq *PlaybackQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (pq *PlaybackQuery) Exist(ctx context.Context) (bool, error) {
-	if err := pq.prepareQuery(ctx); err != nil {
-		return false, err
+	ctx = newQueryContext(ctx, TypePlayback, "Exist")
+	switch _, err := pq.FirstID(ctx); {
+	case IsNotFound(err):
+		return false, nil
+	case err != nil:
+		return false, fmt.Errorf("ent: check existence: %w", err)
+	default:
+		return true, nil
 	}
-	return pq.sqlExist(ctx)
 }
 
 // ExistX is like Exist, but panics if an error occurs.
@@ -240,6 +250,7 @@ func (pq *PlaybackQuery) Clone() *PlaybackQuery {
 		limit:      pq.limit,
 		offset:     pq.offset,
 		order:      append([]OrderFunc{}, pq.order...),
+		inters:     append([]Interceptor{}, pq.inters...),
 		predicates: append([]predicate.Playback{}, pq.predicates...),
 		// clone intermediate query.
 		sql:    pq.sql.Clone(),
@@ -263,16 +274,11 @@ func (pq *PlaybackQuery) Clone() *PlaybackQuery {
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (pq *PlaybackQuery) GroupBy(field string, fields ...string) *PlaybackGroupBy {
-	grbuild := &PlaybackGroupBy{config: pq.config}
-	grbuild.fields = append([]string{field}, fields...)
-	grbuild.path = func(ctx context.Context) (prev *sql.Selector, err error) {
-		if err := pq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		return pq.sqlQuery(ctx), nil
-	}
+	pq.fields = append([]string{field}, fields...)
+	grbuild := &PlaybackGroupBy{build: pq}
+	grbuild.flds = &pq.fields
 	grbuild.label = playback.Label
-	grbuild.flds, grbuild.scan = &grbuild.fields, grbuild.Scan
+	grbuild.scan = grbuild.Scan
 	return grbuild
 }
 
@@ -290,13 +296,28 @@ func (pq *PlaybackQuery) GroupBy(field string, fields ...string) *PlaybackGroupB
 //		Scan(ctx, &v)
 func (pq *PlaybackQuery) Select(fields ...string) *PlaybackSelect {
 	pq.fields = append(pq.fields, fields...)
-	selbuild := &PlaybackSelect{PlaybackQuery: pq}
-	selbuild.label = playback.Label
-	selbuild.flds, selbuild.scan = &pq.fields, selbuild.Scan
-	return selbuild
+	sbuild := &PlaybackSelect{PlaybackQuery: pq}
+	sbuild.label = playback.Label
+	sbuild.flds, sbuild.scan = &pq.fields, sbuild.Scan
+	return sbuild
+}
+
+// Aggregate returns a PlaybackSelect configured with the given aggregations.
+func (pq *PlaybackQuery) Aggregate(fns ...AggregateFunc) *PlaybackSelect {
+	return pq.Select().Aggregate(fns...)
 }
 
 func (pq *PlaybackQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range pq.inters {
+		if inter == nil {
+			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
+		}
+		if trv, ok := inter.(Traverser); ok {
+			if err := trv.Traverse(ctx, pq); err != nil {
+				return err
+			}
+		}
+	}
 	for _, f := range pq.fields {
 		if !playback.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
@@ -317,10 +338,10 @@ func (pq *PlaybackQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pla
 		nodes = []*Playback{}
 		_spec = pq.querySpec()
 	)
-	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
+	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Playback).scanValues(nil, columns)
 	}
-	_spec.Assign = func(columns []string, values []interface{}) error {
+	_spec.Assign = func(columns []string, values []any) error {
 		node := &Playback{config: pq.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
@@ -344,14 +365,6 @@ func (pq *PlaybackQuery) sqlCount(ctx context.Context) (int, error) {
 		_spec.Unique = pq.unique != nil && *pq.unique
 	}
 	return sqlgraph.CountNodes(ctx, pq.driver, _spec)
-}
-
-func (pq *PlaybackQuery) sqlExist(ctx context.Context) (bool, error) {
-	n, err := pq.sqlCount(ctx)
-	if err != nil {
-		return false, fmt.Errorf("ent: check existence: %w", err)
-	}
-	return n > 0, nil
 }
 
 func (pq *PlaybackQuery) querySpec() *sqlgraph.QuerySpec {
@@ -436,13 +449,8 @@ func (pq *PlaybackQuery) sqlQuery(ctx context.Context) *sql.Selector {
 
 // PlaybackGroupBy is the group-by builder for Playback entities.
 type PlaybackGroupBy struct {
-	config
 	selector
-	fields []string
-	fns    []AggregateFunc
-	// intermediate query (i.e. traversal path).
-	sql  *sql.Selector
-	path func(context.Context) (*sql.Selector, error)
+	build *PlaybackQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
@@ -451,74 +459,77 @@ func (pgb *PlaybackGroupBy) Aggregate(fns ...AggregateFunc) *PlaybackGroupBy {
 	return pgb
 }
 
-// Scan applies the group-by query and scans the result into the given value.
-func (pgb *PlaybackGroupBy) Scan(ctx context.Context, v interface{}) error {
-	query, err := pgb.path(ctx)
-	if err != nil {
+// Scan applies the selector query and scans the result into the given value.
+func (pgb *PlaybackGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = newQueryContext(ctx, TypePlayback, "GroupBy")
+	if err := pgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	pgb.sql = query
-	return pgb.sqlScan(ctx, v)
+	return scanWithInterceptors[*PlaybackQuery, *PlaybackGroupBy](ctx, pgb.build, pgb, pgb.build.inters, v)
 }
 
-func (pgb *PlaybackGroupBy) sqlScan(ctx context.Context, v interface{}) error {
-	for _, f := range pgb.fields {
-		if !playback.ValidColumn(f) {
-			return &ValidationError{Name: f, err: fmt.Errorf("invalid field %q for group-by", f)}
-		}
+func (pgb *PlaybackGroupBy) sqlScan(ctx context.Context, root *PlaybackQuery, v any) error {
+	selector := root.sqlQuery(ctx).Select()
+	aggregation := make([]string, 0, len(pgb.fns))
+	for _, fn := range pgb.fns {
+		aggregation = append(aggregation, fn(selector))
 	}
-	selector := pgb.sqlQuery()
+	if len(selector.SelectedColumns()) == 0 {
+		columns := make([]string, 0, len(*pgb.flds)+len(pgb.fns))
+		for _, f := range *pgb.flds {
+			columns = append(columns, selector.C(f))
+		}
+		columns = append(columns, aggregation...)
+		selector.Select(columns...)
+	}
+	selector.GroupBy(selector.Columns(*pgb.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := pgb.driver.Query(ctx, query, args, rows); err != nil {
+	if err := pgb.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
 }
 
-func (pgb *PlaybackGroupBy) sqlQuery() *sql.Selector {
-	selector := pgb.sql.Select()
-	aggregation := make([]string, 0, len(pgb.fns))
-	for _, fn := range pgb.fns {
-		aggregation = append(aggregation, fn(selector))
-	}
-	// If no columns were selected in a custom aggregation function, the default
-	// selection is the fields used for "group-by", and the aggregation functions.
-	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(pgb.fields)+len(pgb.fns))
-		for _, f := range pgb.fields {
-			columns = append(columns, selector.C(f))
-		}
-		columns = append(columns, aggregation...)
-		selector.Select(columns...)
-	}
-	return selector.GroupBy(selector.Columns(pgb.fields...)...)
-}
-
 // PlaybackSelect is the builder for selecting fields of Playback entities.
 type PlaybackSelect struct {
 	*PlaybackQuery
 	selector
-	// intermediate query (i.e. traversal path).
-	sql *sql.Selector
+}
+
+// Aggregate adds the given aggregation functions to the selector query.
+func (ps *PlaybackSelect) Aggregate(fns ...AggregateFunc) *PlaybackSelect {
+	ps.fns = append(ps.fns, fns...)
+	return ps
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ps *PlaybackSelect) Scan(ctx context.Context, v interface{}) error {
+func (ps *PlaybackSelect) Scan(ctx context.Context, v any) error {
+	ctx = newQueryContext(ctx, TypePlayback, "Select")
 	if err := ps.prepareQuery(ctx); err != nil {
 		return err
 	}
-	ps.sql = ps.PlaybackQuery.sqlQuery(ctx)
-	return ps.sqlScan(ctx, v)
+	return scanWithInterceptors[*PlaybackQuery, *PlaybackSelect](ctx, ps.PlaybackQuery, ps, ps.inters, v)
 }
 
-func (ps *PlaybackSelect) sqlScan(ctx context.Context, v interface{}) error {
+func (ps *PlaybackSelect) sqlScan(ctx context.Context, root *PlaybackQuery, v any) error {
+	selector := root.sqlQuery(ctx)
+	aggregation := make([]string, 0, len(ps.fns))
+	for _, fn := range ps.fns {
+		aggregation = append(aggregation, fn(selector))
+	}
+	switch n := len(*ps.selector.flds); {
+	case n == 0 && len(aggregation) > 0:
+		selector.Select(aggregation...)
+	case n != 0 && len(aggregation) > 0:
+		selector.AppendSelect(aggregation...)
+	}
 	rows := &sql.Rows{}
-	query, args := ps.sql.Query()
+	query, args := selector.Query()
 	if err := ps.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}

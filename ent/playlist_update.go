@@ -125,35 +125,8 @@ func (pu *PlaylistUpdate) RemoveVods(v ...*Vod) *PlaylistUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (pu *PlaylistUpdate) Save(ctx context.Context) (int, error) {
-	var (
-		err      error
-		affected int
-	)
 	pu.defaults()
-	if len(pu.hooks) == 0 {
-		affected, err = pu.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*PlaylistMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			pu.mutation = mutation
-			affected, err = pu.sqlSave(ctx)
-			mutation.done = true
-			return affected, err
-		})
-		for i := len(pu.hooks) - 1; i >= 0; i-- {
-			if pu.hooks[i] == nil {
-				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = pu.hooks[i](mut)
-		}
-		if _, err := mut.Mutate(ctx, pu.mutation); err != nil {
-			return 0, err
-		}
-	}
-	return affected, err
+	return withHooks[int, PlaylistMutation](ctx, pu.sqlSave, pu.mutation, pu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -205,44 +178,22 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := pu.mutation.Name(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: playlist.FieldName,
-		})
+		_spec.SetField(playlist.FieldName, field.TypeString, value)
 	}
 	if value, ok := pu.mutation.Description(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: playlist.FieldDescription,
-		})
+		_spec.SetField(playlist.FieldDescription, field.TypeString, value)
 	}
 	if pu.mutation.DescriptionCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: playlist.FieldDescription,
-		})
+		_spec.ClearField(playlist.FieldDescription, field.TypeString)
 	}
 	if value, ok := pu.mutation.ThumbnailPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: playlist.FieldThumbnailPath,
-		})
+		_spec.SetField(playlist.FieldThumbnailPath, field.TypeString, value)
 	}
 	if pu.mutation.ThumbnailPathCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: playlist.FieldThumbnailPath,
-		})
+		_spec.ClearField(playlist.FieldThumbnailPath, field.TypeString)
 	}
 	if value, ok := pu.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: playlist.FieldUpdatedAt,
-		})
+		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if pu.mutation.VodsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -306,6 +257,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
+	pu.mutation.done = true
 	return n, nil
 }
 
@@ -419,41 +371,8 @@ func (puo *PlaylistUpdateOne) Select(field string, fields ...string) *PlaylistUp
 
 // Save executes the query and returns the updated Playlist entity.
 func (puo *PlaylistUpdateOne) Save(ctx context.Context) (*Playlist, error) {
-	var (
-		err  error
-		node *Playlist
-	)
 	puo.defaults()
-	if len(puo.hooks) == 0 {
-		node, err = puo.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*PlaylistMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			puo.mutation = mutation
-			node, err = puo.sqlSave(ctx)
-			mutation.done = true
-			return node, err
-		})
-		for i := len(puo.hooks) - 1; i >= 0; i-- {
-			if puo.hooks[i] == nil {
-				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = puo.hooks[i](mut)
-		}
-		v, err := mut.Mutate(ctx, puo.mutation)
-		if err != nil {
-			return nil, err
-		}
-		nv, ok := v.(*Playlist)
-		if !ok {
-			return nil, fmt.Errorf("unexpected node type %T returned from PlaylistMutation", v)
-		}
-		node = nv
-	}
-	return node, err
+	return withHooks[*Playlist, PlaylistMutation](ctx, puo.sqlSave, puo.mutation, puo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -522,44 +441,22 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 	}
 	if value, ok := puo.mutation.Name(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: playlist.FieldName,
-		})
+		_spec.SetField(playlist.FieldName, field.TypeString, value)
 	}
 	if value, ok := puo.mutation.Description(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: playlist.FieldDescription,
-		})
+		_spec.SetField(playlist.FieldDescription, field.TypeString, value)
 	}
 	if puo.mutation.DescriptionCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: playlist.FieldDescription,
-		})
+		_spec.ClearField(playlist.FieldDescription, field.TypeString)
 	}
 	if value, ok := puo.mutation.ThumbnailPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: playlist.FieldThumbnailPath,
-		})
+		_spec.SetField(playlist.FieldThumbnailPath, field.TypeString, value)
 	}
 	if puo.mutation.ThumbnailPathCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: playlist.FieldThumbnailPath,
-		})
+		_spec.ClearField(playlist.FieldThumbnailPath, field.TypeString)
 	}
 	if value, ok := puo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: playlist.FieldUpdatedAt,
-		})
+		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if puo.mutation.VodsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -626,5 +523,6 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		return nil, err
 	}
+	puo.mutation.done = true
 	return _node, nil
 }

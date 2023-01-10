@@ -96,41 +96,8 @@ func (pu *PlaybackUpdate) Mutation() *PlaybackMutation {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (pu *PlaybackUpdate) Save(ctx context.Context) (int, error) {
-	var (
-		err      error
-		affected int
-	)
 	pu.defaults()
-	if len(pu.hooks) == 0 {
-		if err = pu.check(); err != nil {
-			return 0, err
-		}
-		affected, err = pu.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*PlaybackMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = pu.check(); err != nil {
-				return 0, err
-			}
-			pu.mutation = mutation
-			affected, err = pu.sqlSave(ctx)
-			mutation.done = true
-			return affected, err
-		})
-		for i := len(pu.hooks) - 1; i >= 0; i-- {
-			if pu.hooks[i] == nil {
-				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = pu.hooks[i](mut)
-		}
-		if _, err := mut.Mutate(ctx, pu.mutation); err != nil {
-			return 0, err
-		}
-	}
-	return affected, err
+	return withHooks[int, PlaybackMutation](ctx, pu.sqlSave, pu.mutation, pu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -174,6 +141,9 @@ func (pu *PlaybackUpdate) check() error {
 }
 
 func (pu *PlaybackUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := pu.check(); err != nil {
+		return n, err
+	}
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   playback.Table,
@@ -192,52 +162,25 @@ func (pu *PlaybackUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := pu.mutation.VodID(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: playback.FieldVodID,
-		})
+		_spec.SetField(playback.FieldVodID, field.TypeUUID, value)
 	}
 	if value, ok := pu.mutation.UserID(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: playback.FieldUserID,
-		})
+		_spec.SetField(playback.FieldUserID, field.TypeUUID, value)
 	}
 	if value, ok := pu.mutation.Time(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: playback.FieldTime,
-		})
+		_spec.SetField(playback.FieldTime, field.TypeInt, value)
 	}
 	if value, ok := pu.mutation.AddedTime(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: playback.FieldTime,
-		})
+		_spec.AddField(playback.FieldTime, field.TypeInt, value)
 	}
 	if value, ok := pu.mutation.Status(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: playback.FieldStatus,
-		})
+		_spec.SetField(playback.FieldStatus, field.TypeEnum, value)
 	}
 	if pu.mutation.StatusCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: playback.FieldStatus,
-		})
+		_spec.ClearField(playback.FieldStatus, field.TypeEnum)
 	}
 	if value, ok := pu.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: playback.FieldUpdatedAt,
-		})
+		_spec.SetField(playback.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -247,6 +190,7 @@ func (pu *PlaybackUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
+	pu.mutation.done = true
 	return n, nil
 }
 
@@ -331,47 +275,8 @@ func (puo *PlaybackUpdateOne) Select(field string, fields ...string) *PlaybackUp
 
 // Save executes the query and returns the updated Playback entity.
 func (puo *PlaybackUpdateOne) Save(ctx context.Context) (*Playback, error) {
-	var (
-		err  error
-		node *Playback
-	)
 	puo.defaults()
-	if len(puo.hooks) == 0 {
-		if err = puo.check(); err != nil {
-			return nil, err
-		}
-		node, err = puo.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*PlaybackMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = puo.check(); err != nil {
-				return nil, err
-			}
-			puo.mutation = mutation
-			node, err = puo.sqlSave(ctx)
-			mutation.done = true
-			return node, err
-		})
-		for i := len(puo.hooks) - 1; i >= 0; i-- {
-			if puo.hooks[i] == nil {
-				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = puo.hooks[i](mut)
-		}
-		v, err := mut.Mutate(ctx, puo.mutation)
-		if err != nil {
-			return nil, err
-		}
-		nv, ok := v.(*Playback)
-		if !ok {
-			return nil, fmt.Errorf("unexpected node type %T returned from PlaybackMutation", v)
-		}
-		node = nv
-	}
-	return node, err
+	return withHooks[*Playback, PlaybackMutation](ctx, puo.sqlSave, puo.mutation, puo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -415,6 +320,9 @@ func (puo *PlaybackUpdateOne) check() error {
 }
 
 func (puo *PlaybackUpdateOne) sqlSave(ctx context.Context) (_node *Playback, err error) {
+	if err := puo.check(); err != nil {
+		return _node, err
+	}
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   playback.Table,
@@ -450,52 +358,25 @@ func (puo *PlaybackUpdateOne) sqlSave(ctx context.Context) (_node *Playback, err
 		}
 	}
 	if value, ok := puo.mutation.VodID(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: playback.FieldVodID,
-		})
+		_spec.SetField(playback.FieldVodID, field.TypeUUID, value)
 	}
 	if value, ok := puo.mutation.UserID(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: playback.FieldUserID,
-		})
+		_spec.SetField(playback.FieldUserID, field.TypeUUID, value)
 	}
 	if value, ok := puo.mutation.Time(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: playback.FieldTime,
-		})
+		_spec.SetField(playback.FieldTime, field.TypeInt, value)
 	}
 	if value, ok := puo.mutation.AddedTime(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: playback.FieldTime,
-		})
+		_spec.AddField(playback.FieldTime, field.TypeInt, value)
 	}
 	if value, ok := puo.mutation.Status(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: playback.FieldStatus,
-		})
+		_spec.SetField(playback.FieldStatus, field.TypeEnum, value)
 	}
 	if puo.mutation.StatusCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: playback.FieldStatus,
-		})
+		_spec.ClearField(playback.FieldStatus, field.TypeEnum)
 	}
 	if value, ok := puo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: playback.FieldUpdatedAt,
-		})
+		_spec.SetField(playback.FieldUpdatedAt, field.TypeTime, value)
 	}
 	_node = &Playback{config: puo.config}
 	_spec.Assign = _node.assignValues
@@ -508,5 +389,6 @@ func (puo *PlaybackUpdateOne) sqlSave(ctx context.Context) (_node *Playback, err
 		}
 		return nil, err
 	}
+	puo.mutation.done = true
 	return _node, nil
 }

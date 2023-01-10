@@ -75,8 +75,7 @@ type QueueEdges struct {
 func (e QueueEdges) VodOrErr() (*Vod, error) {
 	if e.loadedTypes[0] {
 		if e.Vod == nil {
-			// The edge vod was loaded in eager-loading,
-			// but was not found.
+			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: vod.Label}
 		}
 		return e.Vod, nil
@@ -85,8 +84,8 @@ func (e QueueEdges) VodOrErr() (*Vod, error) {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Queue) scanValues(columns []string) ([]interface{}, error) {
-	values := make([]interface{}, len(columns))
+func (*Queue) scanValues(columns []string) ([]any, error) {
+	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
 		case queue.FieldLiveArchive, queue.FieldOnHold, queue.FieldVideoProcessing, queue.FieldChatProcessing, queue.FieldProcessing:
@@ -108,7 +107,7 @@ func (*Queue) scanValues(columns []string) ([]interface{}, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Queue fields.
-func (q *Queue) assignValues(columns []string, values []interface{}) error {
+func (q *Queue) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}

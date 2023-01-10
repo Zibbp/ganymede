@@ -14,1741 +14,1187 @@ import (
 
 // ID filters vertices based on their ID field.
 func ID(id uuid.UUID) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldID), id))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
 func IDEQ(id uuid.UUID) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldID), id))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
 func IDNEQ(id uuid.UUID) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldID), id))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
 func IDIn(ids ...uuid.UUID) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		v := make([]interface{}, len(ids))
-		for i := range v {
-			v[i] = ids[i]
-		}
-		s.Where(sql.In(s.C(FieldID), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
 func IDNotIn(ids ...uuid.UUID) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		v := make([]interface{}, len(ids))
-		for i := range v {
-			v[i] = ids[i]
-		}
-		s.Where(sql.NotIn(s.C(FieldID), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
 func IDGT(id uuid.UUID) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldID), id))
-	})
+	return predicate.Vod(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
 func IDGTE(id uuid.UUID) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldID), id))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
 func IDLT(id uuid.UUID) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldID), id))
-	})
+	return predicate.Vod(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
 func IDLTE(id uuid.UUID) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldID), id))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldID, id))
 }
 
 // ExtID applies equality check predicate on the "ext_id" field. It's identical to ExtIDEQ.
 func ExtID(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldExtID, v))
 }
 
 // Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
 func Title(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldTitle, v))
 }
 
 // Duration applies equality check predicate on the "duration" field. It's identical to DurationEQ.
 func Duration(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDuration), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldDuration, v))
 }
 
 // Views applies equality check predicate on the "views" field. It's identical to ViewsEQ.
 func Views(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldViews), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldViews, v))
 }
 
 // Resolution applies equality check predicate on the "resolution" field. It's identical to ResolutionEQ.
 func Resolution(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldResolution, v))
 }
 
 // Processing applies equality check predicate on the "processing" field. It's identical to ProcessingEQ.
 func Processing(v bool) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldProcessing), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldProcessing, v))
 }
 
 // ThumbnailPath applies equality check predicate on the "thumbnail_path" field. It's identical to ThumbnailPathEQ.
 func ThumbnailPath(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldThumbnailPath, v))
 }
 
 // WebThumbnailPath applies equality check predicate on the "web_thumbnail_path" field. It's identical to WebThumbnailPathEQ.
 func WebThumbnailPath(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldWebThumbnailPath, v))
 }
 
 // VideoPath applies equality check predicate on the "video_path" field. It's identical to VideoPathEQ.
 func VideoPath(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldVideoPath, v))
 }
 
 // ChatPath applies equality check predicate on the "chat_path" field. It's identical to ChatPathEQ.
 func ChatPath(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldChatPath, v))
 }
 
 // ChatVideoPath applies equality check predicate on the "chat_video_path" field. It's identical to ChatVideoPathEQ.
 func ChatVideoPath(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldChatVideoPath, v))
 }
 
 // InfoPath applies equality check predicate on the "info_path" field. It's identical to InfoPathEQ.
 func InfoPath(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldInfoPath, v))
+}
+
+// FolderName applies equality check predicate on the "folder_name" field. It's identical to FolderNameEQ.
+func FolderName(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldFolderName, v))
+}
+
+// FileName applies equality check predicate on the "file_name" field. It's identical to FileNameEQ.
+func FileName(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldFileName, v))
 }
 
 // StreamedAt applies equality check predicate on the "streamed_at" field. It's identical to StreamedAtEQ.
 func StreamedAt(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldStreamedAt), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldStreamedAt, v))
 }
 
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldCreatedAt, v))
 }
 
 // ExtIDEQ applies the EQ predicate on the "ext_id" field.
 func ExtIDEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldExtID, v))
 }
 
 // ExtIDNEQ applies the NEQ predicate on the "ext_id" field.
 func ExtIDNEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldExtID, v))
 }
 
 // ExtIDIn applies the In predicate on the "ext_id" field.
 func ExtIDIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldExtID), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldExtID, vs...))
 }
 
 // ExtIDNotIn applies the NotIn predicate on the "ext_id" field.
 func ExtIDNotIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldExtID), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldExtID, vs...))
 }
 
 // ExtIDGT applies the GT predicate on the "ext_id" field.
 func ExtIDGT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldExtID, v))
 }
 
 // ExtIDGTE applies the GTE predicate on the "ext_id" field.
 func ExtIDGTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldExtID, v))
 }
 
 // ExtIDLT applies the LT predicate on the "ext_id" field.
 func ExtIDLT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldExtID, v))
 }
 
 // ExtIDLTE applies the LTE predicate on the "ext_id" field.
 func ExtIDLTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldExtID, v))
 }
 
 // ExtIDContains applies the Contains predicate on the "ext_id" field.
 func ExtIDContains(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldContains(FieldExtID, v))
 }
 
 // ExtIDHasPrefix applies the HasPrefix predicate on the "ext_id" field.
 func ExtIDHasPrefix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldHasPrefix(FieldExtID, v))
 }
 
 // ExtIDHasSuffix applies the HasSuffix predicate on the "ext_id" field.
 func ExtIDHasSuffix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldHasSuffix(FieldExtID, v))
 }
 
 // ExtIDEqualFold applies the EqualFold predicate on the "ext_id" field.
 func ExtIDEqualFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldEqualFold(FieldExtID, v))
 }
 
 // ExtIDContainsFold applies the ContainsFold predicate on the "ext_id" field.
 func ExtIDContainsFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldExtID), v))
-	})
+	return predicate.Vod(sql.FieldContainsFold(FieldExtID, v))
 }
 
 // PlatformEQ applies the EQ predicate on the "platform" field.
 func PlatformEQ(v utils.VodPlatform) predicate.Vod {
 	vc := v
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldPlatform), vc))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldPlatform, vc))
 }
 
 // PlatformNEQ applies the NEQ predicate on the "platform" field.
 func PlatformNEQ(v utils.VodPlatform) predicate.Vod {
 	vc := v
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldPlatform), vc))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldPlatform, vc))
 }
 
 // PlatformIn applies the In predicate on the "platform" field.
 func PlatformIn(vs ...utils.VodPlatform) predicate.Vod {
-	v := make([]interface{}, len(vs))
+	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldPlatform), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldPlatform, v...))
 }
 
 // PlatformNotIn applies the NotIn predicate on the "platform" field.
 func PlatformNotIn(vs ...utils.VodPlatform) predicate.Vod {
-	v := make([]interface{}, len(vs))
+	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldPlatform), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldPlatform, v...))
 }
 
 // TypeEQ applies the EQ predicate on the "type" field.
 func TypeEQ(v utils.VodType) predicate.Vod {
 	vc := v
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldType), vc))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldType, vc))
 }
 
 // TypeNEQ applies the NEQ predicate on the "type" field.
 func TypeNEQ(v utils.VodType) predicate.Vod {
 	vc := v
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldType), vc))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldType, vc))
 }
 
 // TypeIn applies the In predicate on the "type" field.
 func TypeIn(vs ...utils.VodType) predicate.Vod {
-	v := make([]interface{}, len(vs))
+	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldType), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldType, v...))
 }
 
 // TypeNotIn applies the NotIn predicate on the "type" field.
 func TypeNotIn(vs ...utils.VodType) predicate.Vod {
-	v := make([]interface{}, len(vs))
+	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldType), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldType, v...))
 }
 
 // TitleEQ applies the EQ predicate on the "title" field.
 func TitleEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldTitle, v))
 }
 
 // TitleNEQ applies the NEQ predicate on the "title" field.
 func TitleNEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldTitle, v))
 }
 
 // TitleIn applies the In predicate on the "title" field.
 func TitleIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldTitle), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldTitle, vs...))
 }
 
 // TitleNotIn applies the NotIn predicate on the "title" field.
 func TitleNotIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldTitle), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldTitle, vs...))
 }
 
 // TitleGT applies the GT predicate on the "title" field.
 func TitleGT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldTitle, v))
 }
 
 // TitleGTE applies the GTE predicate on the "title" field.
 func TitleGTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldTitle, v))
 }
 
 // TitleLT applies the LT predicate on the "title" field.
 func TitleLT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldTitle, v))
 }
 
 // TitleLTE applies the LTE predicate on the "title" field.
 func TitleLTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldTitle, v))
 }
 
 // TitleContains applies the Contains predicate on the "title" field.
 func TitleContains(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldContains(FieldTitle, v))
 }
 
 // TitleHasPrefix applies the HasPrefix predicate on the "title" field.
 func TitleHasPrefix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldHasPrefix(FieldTitle, v))
 }
 
 // TitleHasSuffix applies the HasSuffix predicate on the "title" field.
 func TitleHasSuffix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldHasSuffix(FieldTitle, v))
 }
 
 // TitleEqualFold applies the EqualFold predicate on the "title" field.
 func TitleEqualFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldEqualFold(FieldTitle, v))
 }
 
 // TitleContainsFold applies the ContainsFold predicate on the "title" field.
 func TitleContainsFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldTitle), v))
-	})
+	return predicate.Vod(sql.FieldContainsFold(FieldTitle, v))
 }
 
 // DurationEQ applies the EQ predicate on the "duration" field.
 func DurationEQ(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDuration), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldDuration, v))
 }
 
 // DurationNEQ applies the NEQ predicate on the "duration" field.
 func DurationNEQ(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldDuration), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldDuration, v))
 }
 
 // DurationIn applies the In predicate on the "duration" field.
 func DurationIn(vs ...int) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldDuration), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldDuration, vs...))
 }
 
 // DurationNotIn applies the NotIn predicate on the "duration" field.
 func DurationNotIn(vs ...int) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldDuration), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldDuration, vs...))
 }
 
 // DurationGT applies the GT predicate on the "duration" field.
 func DurationGT(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldDuration), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldDuration, v))
 }
 
 // DurationGTE applies the GTE predicate on the "duration" field.
 func DurationGTE(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldDuration), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldDuration, v))
 }
 
 // DurationLT applies the LT predicate on the "duration" field.
 func DurationLT(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldDuration), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldDuration, v))
 }
 
 // DurationLTE applies the LTE predicate on the "duration" field.
 func DurationLTE(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldDuration), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldDuration, v))
 }
 
 // ViewsEQ applies the EQ predicate on the "views" field.
 func ViewsEQ(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldViews), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldViews, v))
 }
 
 // ViewsNEQ applies the NEQ predicate on the "views" field.
 func ViewsNEQ(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldViews), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldViews, v))
 }
 
 // ViewsIn applies the In predicate on the "views" field.
 func ViewsIn(vs ...int) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldViews), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldViews, vs...))
 }
 
 // ViewsNotIn applies the NotIn predicate on the "views" field.
 func ViewsNotIn(vs ...int) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldViews), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldViews, vs...))
 }
 
 // ViewsGT applies the GT predicate on the "views" field.
 func ViewsGT(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldViews), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldViews, v))
 }
 
 // ViewsGTE applies the GTE predicate on the "views" field.
 func ViewsGTE(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldViews), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldViews, v))
 }
 
 // ViewsLT applies the LT predicate on the "views" field.
 func ViewsLT(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldViews), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldViews, v))
 }
 
 // ViewsLTE applies the LTE predicate on the "views" field.
 func ViewsLTE(v int) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldViews), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldViews, v))
 }
 
 // ResolutionEQ applies the EQ predicate on the "resolution" field.
 func ResolutionEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldResolution, v))
 }
 
 // ResolutionNEQ applies the NEQ predicate on the "resolution" field.
 func ResolutionNEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldResolution, v))
 }
 
 // ResolutionIn applies the In predicate on the "resolution" field.
 func ResolutionIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldResolution), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldResolution, vs...))
 }
 
 // ResolutionNotIn applies the NotIn predicate on the "resolution" field.
 func ResolutionNotIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldResolution), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldResolution, vs...))
 }
 
 // ResolutionGT applies the GT predicate on the "resolution" field.
 func ResolutionGT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldResolution, v))
 }
 
 // ResolutionGTE applies the GTE predicate on the "resolution" field.
 func ResolutionGTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldResolution, v))
 }
 
 // ResolutionLT applies the LT predicate on the "resolution" field.
 func ResolutionLT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldResolution, v))
 }
 
 // ResolutionLTE applies the LTE predicate on the "resolution" field.
 func ResolutionLTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldResolution, v))
 }
 
 // ResolutionContains applies the Contains predicate on the "resolution" field.
 func ResolutionContains(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldContains(FieldResolution, v))
 }
 
 // ResolutionHasPrefix applies the HasPrefix predicate on the "resolution" field.
 func ResolutionHasPrefix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldHasPrefix(FieldResolution, v))
 }
 
 // ResolutionHasSuffix applies the HasSuffix predicate on the "resolution" field.
 func ResolutionHasSuffix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldHasSuffix(FieldResolution, v))
 }
 
 // ResolutionIsNil applies the IsNil predicate on the "resolution" field.
 func ResolutionIsNil() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldResolution)))
-	})
+	return predicate.Vod(sql.FieldIsNull(FieldResolution))
 }
 
 // ResolutionNotNil applies the NotNil predicate on the "resolution" field.
 func ResolutionNotNil() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldResolution)))
-	})
+	return predicate.Vod(sql.FieldNotNull(FieldResolution))
 }
 
 // ResolutionEqualFold applies the EqualFold predicate on the "resolution" field.
 func ResolutionEqualFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldEqualFold(FieldResolution, v))
 }
 
 // ResolutionContainsFold applies the ContainsFold predicate on the "resolution" field.
 func ResolutionContainsFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldResolution), v))
-	})
+	return predicate.Vod(sql.FieldContainsFold(FieldResolution, v))
 }
 
 // ProcessingEQ applies the EQ predicate on the "processing" field.
 func ProcessingEQ(v bool) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldProcessing), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldProcessing, v))
 }
 
 // ProcessingNEQ applies the NEQ predicate on the "processing" field.
 func ProcessingNEQ(v bool) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldProcessing), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldProcessing, v))
 }
 
 // ThumbnailPathEQ applies the EQ predicate on the "thumbnail_path" field.
 func ThumbnailPathEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldThumbnailPath, v))
 }
 
 // ThumbnailPathNEQ applies the NEQ predicate on the "thumbnail_path" field.
 func ThumbnailPathNEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldThumbnailPath, v))
 }
 
 // ThumbnailPathIn applies the In predicate on the "thumbnail_path" field.
 func ThumbnailPathIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldThumbnailPath), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldThumbnailPath, vs...))
 }
 
 // ThumbnailPathNotIn applies the NotIn predicate on the "thumbnail_path" field.
 func ThumbnailPathNotIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldThumbnailPath), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldThumbnailPath, vs...))
 }
 
 // ThumbnailPathGT applies the GT predicate on the "thumbnail_path" field.
 func ThumbnailPathGT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldThumbnailPath, v))
 }
 
 // ThumbnailPathGTE applies the GTE predicate on the "thumbnail_path" field.
 func ThumbnailPathGTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldThumbnailPath, v))
 }
 
 // ThumbnailPathLT applies the LT predicate on the "thumbnail_path" field.
 func ThumbnailPathLT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldThumbnailPath, v))
 }
 
 // ThumbnailPathLTE applies the LTE predicate on the "thumbnail_path" field.
 func ThumbnailPathLTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldThumbnailPath, v))
 }
 
 // ThumbnailPathContains applies the Contains predicate on the "thumbnail_path" field.
 func ThumbnailPathContains(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldContains(FieldThumbnailPath, v))
 }
 
 // ThumbnailPathHasPrefix applies the HasPrefix predicate on the "thumbnail_path" field.
 func ThumbnailPathHasPrefix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldHasPrefix(FieldThumbnailPath, v))
 }
 
 // ThumbnailPathHasSuffix applies the HasSuffix predicate on the "thumbnail_path" field.
 func ThumbnailPathHasSuffix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldHasSuffix(FieldThumbnailPath, v))
 }
 
 // ThumbnailPathIsNil applies the IsNil predicate on the "thumbnail_path" field.
 func ThumbnailPathIsNil() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldThumbnailPath)))
-	})
+	return predicate.Vod(sql.FieldIsNull(FieldThumbnailPath))
 }
 
 // ThumbnailPathNotNil applies the NotNil predicate on the "thumbnail_path" field.
 func ThumbnailPathNotNil() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldThumbnailPath)))
-	})
+	return predicate.Vod(sql.FieldNotNull(FieldThumbnailPath))
 }
 
 // ThumbnailPathEqualFold applies the EqualFold predicate on the "thumbnail_path" field.
 func ThumbnailPathEqualFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldEqualFold(FieldThumbnailPath, v))
 }
 
 // ThumbnailPathContainsFold applies the ContainsFold predicate on the "thumbnail_path" field.
 func ThumbnailPathContainsFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldContainsFold(FieldThumbnailPath, v))
 }
 
 // WebThumbnailPathEQ applies the EQ predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldWebThumbnailPath, v))
 }
 
 // WebThumbnailPathNEQ applies the NEQ predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathNEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldWebThumbnailPath, v))
 }
 
 // WebThumbnailPathIn applies the In predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldWebThumbnailPath), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldWebThumbnailPath, vs...))
 }
 
 // WebThumbnailPathNotIn applies the NotIn predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathNotIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldWebThumbnailPath), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldWebThumbnailPath, vs...))
 }
 
 // WebThumbnailPathGT applies the GT predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathGT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldWebThumbnailPath, v))
 }
 
 // WebThumbnailPathGTE applies the GTE predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathGTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldWebThumbnailPath, v))
 }
 
 // WebThumbnailPathLT applies the LT predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathLT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldWebThumbnailPath, v))
 }
 
 // WebThumbnailPathLTE applies the LTE predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathLTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldWebThumbnailPath, v))
 }
 
 // WebThumbnailPathContains applies the Contains predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathContains(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldContains(FieldWebThumbnailPath, v))
 }
 
 // WebThumbnailPathHasPrefix applies the HasPrefix predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathHasPrefix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldHasPrefix(FieldWebThumbnailPath, v))
 }
 
 // WebThumbnailPathHasSuffix applies the HasSuffix predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathHasSuffix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldHasSuffix(FieldWebThumbnailPath, v))
 }
 
 // WebThumbnailPathEqualFold applies the EqualFold predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathEqualFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldEqualFold(FieldWebThumbnailPath, v))
 }
 
 // WebThumbnailPathContainsFold applies the ContainsFold predicate on the "web_thumbnail_path" field.
 func WebThumbnailPathContainsFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldWebThumbnailPath), v))
-	})
+	return predicate.Vod(sql.FieldContainsFold(FieldWebThumbnailPath, v))
 }
 
 // VideoPathEQ applies the EQ predicate on the "video_path" field.
 func VideoPathEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldVideoPath, v))
 }
 
 // VideoPathNEQ applies the NEQ predicate on the "video_path" field.
 func VideoPathNEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldVideoPath, v))
 }
 
 // VideoPathIn applies the In predicate on the "video_path" field.
 func VideoPathIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldVideoPath), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldVideoPath, vs...))
 }
 
 // VideoPathNotIn applies the NotIn predicate on the "video_path" field.
 func VideoPathNotIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldVideoPath), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldVideoPath, vs...))
 }
 
 // VideoPathGT applies the GT predicate on the "video_path" field.
 func VideoPathGT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldVideoPath, v))
 }
 
 // VideoPathGTE applies the GTE predicate on the "video_path" field.
 func VideoPathGTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldVideoPath, v))
 }
 
 // VideoPathLT applies the LT predicate on the "video_path" field.
 func VideoPathLT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldVideoPath, v))
 }
 
 // VideoPathLTE applies the LTE predicate on the "video_path" field.
 func VideoPathLTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldVideoPath, v))
 }
 
 // VideoPathContains applies the Contains predicate on the "video_path" field.
 func VideoPathContains(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldContains(FieldVideoPath, v))
 }
 
 // VideoPathHasPrefix applies the HasPrefix predicate on the "video_path" field.
 func VideoPathHasPrefix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldHasPrefix(FieldVideoPath, v))
 }
 
 // VideoPathHasSuffix applies the HasSuffix predicate on the "video_path" field.
 func VideoPathHasSuffix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldHasSuffix(FieldVideoPath, v))
 }
 
 // VideoPathEqualFold applies the EqualFold predicate on the "video_path" field.
 func VideoPathEqualFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldEqualFold(FieldVideoPath, v))
 }
 
 // VideoPathContainsFold applies the ContainsFold predicate on the "video_path" field.
 func VideoPathContainsFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldContainsFold(FieldVideoPath, v))
 }
 
 // ChatPathEQ applies the EQ predicate on the "chat_path" field.
 func ChatPathEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldChatPath, v))
 }
 
 // ChatPathNEQ applies the NEQ predicate on the "chat_path" field.
 func ChatPathNEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldChatPath, v))
 }
 
 // ChatPathIn applies the In predicate on the "chat_path" field.
 func ChatPathIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldChatPath), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldChatPath, vs...))
 }
 
 // ChatPathNotIn applies the NotIn predicate on the "chat_path" field.
 func ChatPathNotIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldChatPath), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldChatPath, vs...))
 }
 
 // ChatPathGT applies the GT predicate on the "chat_path" field.
 func ChatPathGT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldChatPath, v))
 }
 
 // ChatPathGTE applies the GTE predicate on the "chat_path" field.
 func ChatPathGTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldChatPath, v))
 }
 
 // ChatPathLT applies the LT predicate on the "chat_path" field.
 func ChatPathLT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldChatPath, v))
 }
 
 // ChatPathLTE applies the LTE predicate on the "chat_path" field.
 func ChatPathLTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldChatPath, v))
 }
 
 // ChatPathContains applies the Contains predicate on the "chat_path" field.
 func ChatPathContains(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldContains(FieldChatPath, v))
 }
 
 // ChatPathHasPrefix applies the HasPrefix predicate on the "chat_path" field.
 func ChatPathHasPrefix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldHasPrefix(FieldChatPath, v))
 }
 
 // ChatPathHasSuffix applies the HasSuffix predicate on the "chat_path" field.
 func ChatPathHasSuffix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldHasSuffix(FieldChatPath, v))
 }
 
 // ChatPathIsNil applies the IsNil predicate on the "chat_path" field.
 func ChatPathIsNil() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldChatPath)))
-	})
+	return predicate.Vod(sql.FieldIsNull(FieldChatPath))
 }
 
 // ChatPathNotNil applies the NotNil predicate on the "chat_path" field.
 func ChatPathNotNil() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldChatPath)))
-	})
+	return predicate.Vod(sql.FieldNotNull(FieldChatPath))
 }
 
 // ChatPathEqualFold applies the EqualFold predicate on the "chat_path" field.
 func ChatPathEqualFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldEqualFold(FieldChatPath, v))
 }
 
 // ChatPathContainsFold applies the ContainsFold predicate on the "chat_path" field.
 func ChatPathContainsFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldChatPath), v))
-	})
+	return predicate.Vod(sql.FieldContainsFold(FieldChatPath, v))
 }
 
 // ChatVideoPathEQ applies the EQ predicate on the "chat_video_path" field.
 func ChatVideoPathEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldChatVideoPath, v))
 }
 
 // ChatVideoPathNEQ applies the NEQ predicate on the "chat_video_path" field.
 func ChatVideoPathNEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldChatVideoPath, v))
 }
 
 // ChatVideoPathIn applies the In predicate on the "chat_video_path" field.
 func ChatVideoPathIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldChatVideoPath), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldChatVideoPath, vs...))
 }
 
 // ChatVideoPathNotIn applies the NotIn predicate on the "chat_video_path" field.
 func ChatVideoPathNotIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldChatVideoPath), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldChatVideoPath, vs...))
 }
 
 // ChatVideoPathGT applies the GT predicate on the "chat_video_path" field.
 func ChatVideoPathGT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldChatVideoPath, v))
 }
 
 // ChatVideoPathGTE applies the GTE predicate on the "chat_video_path" field.
 func ChatVideoPathGTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldChatVideoPath, v))
 }
 
 // ChatVideoPathLT applies the LT predicate on the "chat_video_path" field.
 func ChatVideoPathLT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldChatVideoPath, v))
 }
 
 // ChatVideoPathLTE applies the LTE predicate on the "chat_video_path" field.
 func ChatVideoPathLTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldChatVideoPath, v))
 }
 
 // ChatVideoPathContains applies the Contains predicate on the "chat_video_path" field.
 func ChatVideoPathContains(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldContains(FieldChatVideoPath, v))
 }
 
 // ChatVideoPathHasPrefix applies the HasPrefix predicate on the "chat_video_path" field.
 func ChatVideoPathHasPrefix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldHasPrefix(FieldChatVideoPath, v))
 }
 
 // ChatVideoPathHasSuffix applies the HasSuffix predicate on the "chat_video_path" field.
 func ChatVideoPathHasSuffix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldHasSuffix(FieldChatVideoPath, v))
 }
 
 // ChatVideoPathIsNil applies the IsNil predicate on the "chat_video_path" field.
 func ChatVideoPathIsNil() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldChatVideoPath)))
-	})
+	return predicate.Vod(sql.FieldIsNull(FieldChatVideoPath))
 }
 
 // ChatVideoPathNotNil applies the NotNil predicate on the "chat_video_path" field.
 func ChatVideoPathNotNil() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldChatVideoPath)))
-	})
+	return predicate.Vod(sql.FieldNotNull(FieldChatVideoPath))
 }
 
 // ChatVideoPathEqualFold applies the EqualFold predicate on the "chat_video_path" field.
 func ChatVideoPathEqualFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldEqualFold(FieldChatVideoPath, v))
 }
 
 // ChatVideoPathContainsFold applies the ContainsFold predicate on the "chat_video_path" field.
 func ChatVideoPathContainsFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldChatVideoPath), v))
-	})
+	return predicate.Vod(sql.FieldContainsFold(FieldChatVideoPath, v))
 }
 
 // InfoPathEQ applies the EQ predicate on the "info_path" field.
 func InfoPathEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldInfoPath, v))
 }
 
 // InfoPathNEQ applies the NEQ predicate on the "info_path" field.
 func InfoPathNEQ(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldInfoPath, v))
 }
 
 // InfoPathIn applies the In predicate on the "info_path" field.
 func InfoPathIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldInfoPath), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldInfoPath, vs...))
 }
 
 // InfoPathNotIn applies the NotIn predicate on the "info_path" field.
 func InfoPathNotIn(vs ...string) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldInfoPath), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldInfoPath, vs...))
 }
 
 // InfoPathGT applies the GT predicate on the "info_path" field.
 func InfoPathGT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldInfoPath, v))
 }
 
 // InfoPathGTE applies the GTE predicate on the "info_path" field.
 func InfoPathGTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldInfoPath, v))
 }
 
 // InfoPathLT applies the LT predicate on the "info_path" field.
 func InfoPathLT(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldInfoPath, v))
 }
 
 // InfoPathLTE applies the LTE predicate on the "info_path" field.
 func InfoPathLTE(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldInfoPath, v))
 }
 
 // InfoPathContains applies the Contains predicate on the "info_path" field.
 func InfoPathContains(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldContains(FieldInfoPath, v))
 }
 
 // InfoPathHasPrefix applies the HasPrefix predicate on the "info_path" field.
 func InfoPathHasPrefix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldHasPrefix(FieldInfoPath, v))
 }
 
 // InfoPathHasSuffix applies the HasSuffix predicate on the "info_path" field.
 func InfoPathHasSuffix(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldHasSuffix(FieldInfoPath, v))
 }
 
 // InfoPathIsNil applies the IsNil predicate on the "info_path" field.
 func InfoPathIsNil() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldInfoPath)))
-	})
+	return predicate.Vod(sql.FieldIsNull(FieldInfoPath))
 }
 
 // InfoPathNotNil applies the NotNil predicate on the "info_path" field.
 func InfoPathNotNil() predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldInfoPath)))
-	})
+	return predicate.Vod(sql.FieldNotNull(FieldInfoPath))
 }
 
 // InfoPathEqualFold applies the EqualFold predicate on the "info_path" field.
 func InfoPathEqualFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldEqualFold(FieldInfoPath, v))
 }
 
 // InfoPathContainsFold applies the ContainsFold predicate on the "info_path" field.
 func InfoPathContainsFold(v string) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldInfoPath), v))
-	})
+	return predicate.Vod(sql.FieldContainsFold(FieldInfoPath, v))
+}
+
+// FolderNameEQ applies the EQ predicate on the "folder_name" field.
+func FolderNameEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldFolderName, v))
+}
+
+// FolderNameNEQ applies the NEQ predicate on the "folder_name" field.
+func FolderNameNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldFolderName, v))
+}
+
+// FolderNameIn applies the In predicate on the "folder_name" field.
+func FolderNameIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldFolderName, vs...))
+}
+
+// FolderNameNotIn applies the NotIn predicate on the "folder_name" field.
+func FolderNameNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldFolderName, vs...))
+}
+
+// FolderNameGT applies the GT predicate on the "folder_name" field.
+func FolderNameGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldFolderName, v))
+}
+
+// FolderNameGTE applies the GTE predicate on the "folder_name" field.
+func FolderNameGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldFolderName, v))
+}
+
+// FolderNameLT applies the LT predicate on the "folder_name" field.
+func FolderNameLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldFolderName, v))
+}
+
+// FolderNameLTE applies the LTE predicate on the "folder_name" field.
+func FolderNameLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldFolderName, v))
+}
+
+// FolderNameContains applies the Contains predicate on the "folder_name" field.
+func FolderNameContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldFolderName, v))
+}
+
+// FolderNameHasPrefix applies the HasPrefix predicate on the "folder_name" field.
+func FolderNameHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldFolderName, v))
+}
+
+// FolderNameHasSuffix applies the HasSuffix predicate on the "folder_name" field.
+func FolderNameHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldFolderName, v))
+}
+
+// FolderNameIsNil applies the IsNil predicate on the "folder_name" field.
+func FolderNameIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldFolderName))
+}
+
+// FolderNameNotNil applies the NotNil predicate on the "folder_name" field.
+func FolderNameNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldFolderName))
+}
+
+// FolderNameEqualFold applies the EqualFold predicate on the "folder_name" field.
+func FolderNameEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldFolderName, v))
+}
+
+// FolderNameContainsFold applies the ContainsFold predicate on the "folder_name" field.
+func FolderNameContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldFolderName, v))
+}
+
+// FileNameEQ applies the EQ predicate on the "file_name" field.
+func FileNameEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldFileName, v))
+}
+
+// FileNameNEQ applies the NEQ predicate on the "file_name" field.
+func FileNameNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldFileName, v))
+}
+
+// FileNameIn applies the In predicate on the "file_name" field.
+func FileNameIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldFileName, vs...))
+}
+
+// FileNameNotIn applies the NotIn predicate on the "file_name" field.
+func FileNameNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldFileName, vs...))
+}
+
+// FileNameGT applies the GT predicate on the "file_name" field.
+func FileNameGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldFileName, v))
+}
+
+// FileNameGTE applies the GTE predicate on the "file_name" field.
+func FileNameGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldFileName, v))
+}
+
+// FileNameLT applies the LT predicate on the "file_name" field.
+func FileNameLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldFileName, v))
+}
+
+// FileNameLTE applies the LTE predicate on the "file_name" field.
+func FileNameLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldFileName, v))
+}
+
+// FileNameContains applies the Contains predicate on the "file_name" field.
+func FileNameContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldFileName, v))
+}
+
+// FileNameHasPrefix applies the HasPrefix predicate on the "file_name" field.
+func FileNameHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldFileName, v))
+}
+
+// FileNameHasSuffix applies the HasSuffix predicate on the "file_name" field.
+func FileNameHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldFileName, v))
+}
+
+// FileNameIsNil applies the IsNil predicate on the "file_name" field.
+func FileNameIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldFileName))
+}
+
+// FileNameNotNil applies the NotNil predicate on the "file_name" field.
+func FileNameNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldFileName))
+}
+
+// FileNameEqualFold applies the EqualFold predicate on the "file_name" field.
+func FileNameEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldFileName, v))
+}
+
+// FileNameContainsFold applies the ContainsFold predicate on the "file_name" field.
+func FileNameContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldFileName, v))
 }
 
 // StreamedAtEQ applies the EQ predicate on the "streamed_at" field.
 func StreamedAtEQ(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldStreamedAt), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldStreamedAt, v))
 }
 
 // StreamedAtNEQ applies the NEQ predicate on the "streamed_at" field.
 func StreamedAtNEQ(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldStreamedAt), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldStreamedAt, v))
 }
 
 // StreamedAtIn applies the In predicate on the "streamed_at" field.
 func StreamedAtIn(vs ...time.Time) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldStreamedAt), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldStreamedAt, vs...))
 }
 
 // StreamedAtNotIn applies the NotIn predicate on the "streamed_at" field.
 func StreamedAtNotIn(vs ...time.Time) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldStreamedAt), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldStreamedAt, vs...))
 }
 
 // StreamedAtGT applies the GT predicate on the "streamed_at" field.
 func StreamedAtGT(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldStreamedAt), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldStreamedAt, v))
 }
 
 // StreamedAtGTE applies the GTE predicate on the "streamed_at" field.
 func StreamedAtGTE(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldStreamedAt), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldStreamedAt, v))
 }
 
 // StreamedAtLT applies the LT predicate on the "streamed_at" field.
 func StreamedAtLT(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldStreamedAt), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldStreamedAt, v))
 }
 
 // StreamedAtLTE applies the LTE predicate on the "streamed_at" field.
 func StreamedAtLTE(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldStreamedAt), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldStreamedAt, v))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
 func UpdatedAtEQ(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
 // UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
 func UpdatedAtNEQ(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldUpdatedAt, v))
 }
 
 // UpdatedAtIn applies the In predicate on the "updated_at" field.
 func UpdatedAtIn(vs ...time.Time) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldUpdatedAt), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldUpdatedAt, vs...))
 }
 
 // UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
 func UpdatedAtNotIn(vs ...time.Time) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldUpdatedAt), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldUpdatedAt, vs...))
 }
 
 // UpdatedAtGT applies the GT predicate on the "updated_at" field.
 func UpdatedAtGT(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldUpdatedAt, v))
 }
 
 // UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
 func UpdatedAtGTE(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldUpdatedAt, v))
 }
 
 // UpdatedAtLT applies the LT predicate on the "updated_at" field.
 func UpdatedAtLT(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldUpdatedAt, v))
 }
 
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Vod(sql.FieldEQ(FieldCreatedAt, v))
 }
 
 // CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
 func CreatedAtNEQ(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Vod(sql.FieldNEQ(FieldCreatedAt, v))
 }
 
 // CreatedAtIn applies the In predicate on the "created_at" field.
 func CreatedAtIn(vs ...time.Time) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldCreatedAt), v...))
-	})
+	return predicate.Vod(sql.FieldIn(FieldCreatedAt, vs...))
 }
 
 // CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
 func CreatedAtNotIn(vs ...time.Time) predicate.Vod {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Vod(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldCreatedAt), v...))
-	})
+	return predicate.Vod(sql.FieldNotIn(FieldCreatedAt, vs...))
 }
 
 // CreatedAtGT applies the GT predicate on the "created_at" field.
 func CreatedAtGT(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Vod(sql.FieldGT(FieldCreatedAt, v))
 }
 
 // CreatedAtGTE applies the GTE predicate on the "created_at" field.
 func CreatedAtGTE(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Vod(sql.FieldGTE(FieldCreatedAt, v))
 }
 
 // CreatedAtLT applies the LT predicate on the "created_at" field.
 func CreatedAtLT(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Vod(sql.FieldLT(FieldCreatedAt, v))
 }
 
 // CreatedAtLTE applies the LTE predicate on the "created_at" field.
 func CreatedAtLTE(v time.Time) predicate.Vod {
-	return predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Vod(sql.FieldLTE(FieldCreatedAt, v))
 }
 
 // HasChannel applies the HasEdge predicate on the "channel" edge.
@@ -1756,7 +1202,6 @@ func HasChannel() predicate.Vod {
 	return predicate.Vod(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ChannelTable, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, ChannelTable, ChannelColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
@@ -1784,7 +1229,6 @@ func HasQueue() predicate.Vod {
 	return predicate.Vod(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(QueueTable, FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, QueueTable, QueueColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
@@ -1812,7 +1256,6 @@ func HasPlaylists() predicate.Vod {
 	return predicate.Vod(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(PlaylistsTable, FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, PlaylistsTable, PlaylistsPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)

@@ -241,6 +241,46 @@ func (vu *VodUpdate) ClearInfoPath() *VodUpdate {
 	return vu
 }
 
+// SetFolderName sets the "folder_name" field.
+func (vu *VodUpdate) SetFolderName(s string) *VodUpdate {
+	vu.mutation.SetFolderName(s)
+	return vu
+}
+
+// SetNillableFolderName sets the "folder_name" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableFolderName(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetFolderName(*s)
+	}
+	return vu
+}
+
+// ClearFolderName clears the value of the "folder_name" field.
+func (vu *VodUpdate) ClearFolderName() *VodUpdate {
+	vu.mutation.ClearFolderName()
+	return vu
+}
+
+// SetFileName sets the "file_name" field.
+func (vu *VodUpdate) SetFileName(s string) *VodUpdate {
+	vu.mutation.SetFileName(s)
+	return vu
+}
+
+// SetNillableFileName sets the "file_name" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableFileName(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetFileName(*s)
+	}
+	return vu
+}
+
+// ClearFileName clears the value of the "file_name" field.
+func (vu *VodUpdate) ClearFileName() *VodUpdate {
+	vu.mutation.ClearFileName()
+	return vu
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vu *VodUpdate) SetStreamedAt(t time.Time) *VodUpdate {
 	vu.mutation.SetStreamedAt(t)
@@ -346,41 +386,8 @@ func (vu *VodUpdate) RemovePlaylists(p ...*Playlist) *VodUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (vu *VodUpdate) Save(ctx context.Context) (int, error) {
-	var (
-		err      error
-		affected int
-	)
 	vu.defaults()
-	if len(vu.hooks) == 0 {
-		if err = vu.check(); err != nil {
-			return 0, err
-		}
-		affected, err = vu.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*VodMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = vu.check(); err != nil {
-				return 0, err
-			}
-			vu.mutation = mutation
-			affected, err = vu.sqlSave(ctx)
-			mutation.done = true
-			return affected, err
-		})
-		for i := len(vu.hooks) - 1; i >= 0; i-- {
-			if vu.hooks[i] == nil {
-				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = vu.hooks[i](mut)
-		}
-		if _, err := mut.Mutate(ctx, vu.mutation); err != nil {
-			return 0, err
-		}
-	}
-	return affected, err
+	return withHooks[int, VodMutation](ctx, vu.sqlSave, vu.mutation, vu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -432,6 +439,9 @@ func (vu *VodUpdate) check() error {
 }
 
 func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := vu.check(); err != nil {
+		return n, err
+	}
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   vod.Table,
@@ -450,160 +460,85 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := vu.mutation.ExtID(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldExtID,
-		})
+		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 	}
 	if value, ok := vu.mutation.Platform(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: vod.FieldPlatform,
-		})
+		_spec.SetField(vod.FieldPlatform, field.TypeEnum, value)
 	}
 	if value, ok := vu.mutation.GetType(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: vod.FieldType,
-		})
+		_spec.SetField(vod.FieldType, field.TypeEnum, value)
 	}
 	if value, ok := vu.mutation.Title(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldTitle,
-		})
+		_spec.SetField(vod.FieldTitle, field.TypeString, value)
 	}
 	if value, ok := vu.mutation.Duration(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: vod.FieldDuration,
-		})
+		_spec.SetField(vod.FieldDuration, field.TypeInt, value)
 	}
 	if value, ok := vu.mutation.AddedDuration(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: vod.FieldDuration,
-		})
+		_spec.AddField(vod.FieldDuration, field.TypeInt, value)
 	}
 	if value, ok := vu.mutation.Views(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: vod.FieldViews,
-		})
+		_spec.SetField(vod.FieldViews, field.TypeInt, value)
 	}
 	if value, ok := vu.mutation.AddedViews(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: vod.FieldViews,
-		})
+		_spec.AddField(vod.FieldViews, field.TypeInt, value)
 	}
 	if value, ok := vu.mutation.Resolution(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldResolution,
-		})
+		_spec.SetField(vod.FieldResolution, field.TypeString, value)
 	}
 	if vu.mutation.ResolutionCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: vod.FieldResolution,
-		})
+		_spec.ClearField(vod.FieldResolution, field.TypeString)
 	}
 	if value, ok := vu.mutation.Processing(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: vod.FieldProcessing,
-		})
+		_spec.SetField(vod.FieldProcessing, field.TypeBool, value)
 	}
 	if value, ok := vu.mutation.ThumbnailPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldThumbnailPath,
-		})
+		_spec.SetField(vod.FieldThumbnailPath, field.TypeString, value)
 	}
 	if vu.mutation.ThumbnailPathCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: vod.FieldThumbnailPath,
-		})
+		_spec.ClearField(vod.FieldThumbnailPath, field.TypeString)
 	}
 	if value, ok := vu.mutation.WebThumbnailPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldWebThumbnailPath,
-		})
+		_spec.SetField(vod.FieldWebThumbnailPath, field.TypeString, value)
 	}
 	if value, ok := vu.mutation.VideoPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldVideoPath,
-		})
+		_spec.SetField(vod.FieldVideoPath, field.TypeString, value)
 	}
 	if value, ok := vu.mutation.ChatPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldChatPath,
-		})
+		_spec.SetField(vod.FieldChatPath, field.TypeString, value)
 	}
 	if vu.mutation.ChatPathCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: vod.FieldChatPath,
-		})
+		_spec.ClearField(vod.FieldChatPath, field.TypeString)
 	}
 	if value, ok := vu.mutation.ChatVideoPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldChatVideoPath,
-		})
+		_spec.SetField(vod.FieldChatVideoPath, field.TypeString, value)
 	}
 	if vu.mutation.ChatVideoPathCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: vod.FieldChatVideoPath,
-		})
+		_spec.ClearField(vod.FieldChatVideoPath, field.TypeString)
 	}
 	if value, ok := vu.mutation.InfoPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldInfoPath,
-		})
+		_spec.SetField(vod.FieldInfoPath, field.TypeString, value)
 	}
 	if vu.mutation.InfoPathCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: vod.FieldInfoPath,
-		})
+		_spec.ClearField(vod.FieldInfoPath, field.TypeString)
+	}
+	if value, ok := vu.mutation.FolderName(); ok {
+		_spec.SetField(vod.FieldFolderName, field.TypeString, value)
+	}
+	if vu.mutation.FolderNameCleared() {
+		_spec.ClearField(vod.FieldFolderName, field.TypeString)
+	}
+	if value, ok := vu.mutation.FileName(); ok {
+		_spec.SetField(vod.FieldFileName, field.TypeString, value)
+	}
+	if vu.mutation.FileNameCleared() {
+		_spec.ClearField(vod.FieldFileName, field.TypeString)
 	}
 	if value, ok := vu.mutation.StreamedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: vod.FieldStreamedAt,
-		})
+		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
 	}
 	if value, ok := vu.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: vod.FieldUpdatedAt,
-		})
+		_spec.SetField(vod.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if vu.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -737,6 +672,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
+	vu.mutation.done = true
 	return n, nil
 }
 
@@ -956,6 +892,46 @@ func (vuo *VodUpdateOne) ClearInfoPath() *VodUpdateOne {
 	return vuo
 }
 
+// SetFolderName sets the "folder_name" field.
+func (vuo *VodUpdateOne) SetFolderName(s string) *VodUpdateOne {
+	vuo.mutation.SetFolderName(s)
+	return vuo
+}
+
+// SetNillableFolderName sets the "folder_name" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableFolderName(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetFolderName(*s)
+	}
+	return vuo
+}
+
+// ClearFolderName clears the value of the "folder_name" field.
+func (vuo *VodUpdateOne) ClearFolderName() *VodUpdateOne {
+	vuo.mutation.ClearFolderName()
+	return vuo
+}
+
+// SetFileName sets the "file_name" field.
+func (vuo *VodUpdateOne) SetFileName(s string) *VodUpdateOne {
+	vuo.mutation.SetFileName(s)
+	return vuo
+}
+
+// SetNillableFileName sets the "file_name" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableFileName(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetFileName(*s)
+	}
+	return vuo
+}
+
+// ClearFileName clears the value of the "file_name" field.
+func (vuo *VodUpdateOne) ClearFileName() *VodUpdateOne {
+	vuo.mutation.ClearFileName()
+	return vuo
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vuo *VodUpdateOne) SetStreamedAt(t time.Time) *VodUpdateOne {
 	vuo.mutation.SetStreamedAt(t)
@@ -1068,47 +1044,8 @@ func (vuo *VodUpdateOne) Select(field string, fields ...string) *VodUpdateOne {
 
 // Save executes the query and returns the updated Vod entity.
 func (vuo *VodUpdateOne) Save(ctx context.Context) (*Vod, error) {
-	var (
-		err  error
-		node *Vod
-	)
 	vuo.defaults()
-	if len(vuo.hooks) == 0 {
-		if err = vuo.check(); err != nil {
-			return nil, err
-		}
-		node, err = vuo.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*VodMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = vuo.check(); err != nil {
-				return nil, err
-			}
-			vuo.mutation = mutation
-			node, err = vuo.sqlSave(ctx)
-			mutation.done = true
-			return node, err
-		})
-		for i := len(vuo.hooks) - 1; i >= 0; i-- {
-			if vuo.hooks[i] == nil {
-				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = vuo.hooks[i](mut)
-		}
-		v, err := mut.Mutate(ctx, vuo.mutation)
-		if err != nil {
-			return nil, err
-		}
-		nv, ok := v.(*Vod)
-		if !ok {
-			return nil, fmt.Errorf("unexpected node type %T returned from VodMutation", v)
-		}
-		node = nv
-	}
-	return node, err
+	return withHooks[*Vod, VodMutation](ctx, vuo.sqlSave, vuo.mutation, vuo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -1160,6 +1097,9 @@ func (vuo *VodUpdateOne) check() error {
 }
 
 func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
+	if err := vuo.check(); err != nil {
+		return _node, err
+	}
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   vod.Table,
@@ -1195,160 +1135,85 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 	}
 	if value, ok := vuo.mutation.ExtID(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldExtID,
-		})
+		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 	}
 	if value, ok := vuo.mutation.Platform(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: vod.FieldPlatform,
-		})
+		_spec.SetField(vod.FieldPlatform, field.TypeEnum, value)
 	}
 	if value, ok := vuo.mutation.GetType(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: vod.FieldType,
-		})
+		_spec.SetField(vod.FieldType, field.TypeEnum, value)
 	}
 	if value, ok := vuo.mutation.Title(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldTitle,
-		})
+		_spec.SetField(vod.FieldTitle, field.TypeString, value)
 	}
 	if value, ok := vuo.mutation.Duration(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: vod.FieldDuration,
-		})
+		_spec.SetField(vod.FieldDuration, field.TypeInt, value)
 	}
 	if value, ok := vuo.mutation.AddedDuration(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: vod.FieldDuration,
-		})
+		_spec.AddField(vod.FieldDuration, field.TypeInt, value)
 	}
 	if value, ok := vuo.mutation.Views(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: vod.FieldViews,
-		})
+		_spec.SetField(vod.FieldViews, field.TypeInt, value)
 	}
 	if value, ok := vuo.mutation.AddedViews(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: vod.FieldViews,
-		})
+		_spec.AddField(vod.FieldViews, field.TypeInt, value)
 	}
 	if value, ok := vuo.mutation.Resolution(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldResolution,
-		})
+		_spec.SetField(vod.FieldResolution, field.TypeString, value)
 	}
 	if vuo.mutation.ResolutionCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: vod.FieldResolution,
-		})
+		_spec.ClearField(vod.FieldResolution, field.TypeString)
 	}
 	if value, ok := vuo.mutation.Processing(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: vod.FieldProcessing,
-		})
+		_spec.SetField(vod.FieldProcessing, field.TypeBool, value)
 	}
 	if value, ok := vuo.mutation.ThumbnailPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldThumbnailPath,
-		})
+		_spec.SetField(vod.FieldThumbnailPath, field.TypeString, value)
 	}
 	if vuo.mutation.ThumbnailPathCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: vod.FieldThumbnailPath,
-		})
+		_spec.ClearField(vod.FieldThumbnailPath, field.TypeString)
 	}
 	if value, ok := vuo.mutation.WebThumbnailPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldWebThumbnailPath,
-		})
+		_spec.SetField(vod.FieldWebThumbnailPath, field.TypeString, value)
 	}
 	if value, ok := vuo.mutation.VideoPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldVideoPath,
-		})
+		_spec.SetField(vod.FieldVideoPath, field.TypeString, value)
 	}
 	if value, ok := vuo.mutation.ChatPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldChatPath,
-		})
+		_spec.SetField(vod.FieldChatPath, field.TypeString, value)
 	}
 	if vuo.mutation.ChatPathCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: vod.FieldChatPath,
-		})
+		_spec.ClearField(vod.FieldChatPath, field.TypeString)
 	}
 	if value, ok := vuo.mutation.ChatVideoPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldChatVideoPath,
-		})
+		_spec.SetField(vod.FieldChatVideoPath, field.TypeString, value)
 	}
 	if vuo.mutation.ChatVideoPathCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: vod.FieldChatVideoPath,
-		})
+		_spec.ClearField(vod.FieldChatVideoPath, field.TypeString)
 	}
 	if value, ok := vuo.mutation.InfoPath(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldInfoPath,
-		})
+		_spec.SetField(vod.FieldInfoPath, field.TypeString, value)
 	}
 	if vuo.mutation.InfoPathCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: vod.FieldInfoPath,
-		})
+		_spec.ClearField(vod.FieldInfoPath, field.TypeString)
+	}
+	if value, ok := vuo.mutation.FolderName(); ok {
+		_spec.SetField(vod.FieldFolderName, field.TypeString, value)
+	}
+	if vuo.mutation.FolderNameCleared() {
+		_spec.ClearField(vod.FieldFolderName, field.TypeString)
+	}
+	if value, ok := vuo.mutation.FileName(); ok {
+		_spec.SetField(vod.FieldFileName, field.TypeString, value)
+	}
+	if vuo.mutation.FileNameCleared() {
+		_spec.ClearField(vod.FieldFileName, field.TypeString)
 	}
 	if value, ok := vuo.mutation.StreamedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: vod.FieldStreamedAt,
-		})
+		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
 	}
 	if value, ok := vuo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: vod.FieldUpdatedAt,
-		})
+		_spec.SetField(vod.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if vuo.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1485,5 +1350,6 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		return nil, err
 	}
+	vuo.mutation.done = true
 	return _node, nil
 }

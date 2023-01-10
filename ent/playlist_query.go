@@ -25,9 +25,9 @@ type PlaylistQuery struct {
 	unique     *bool
 	order      []OrderFunc
 	fields     []string
+	inters     []Interceptor
 	predicates []predicate.Playlist
-	// eager-loading edges.
-	withVods *VodQuery
+	withVods   *VodQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -39,13 +39,13 @@ func (pq *PlaylistQuery) Where(ps ...predicate.Playlist) *PlaylistQuery {
 	return pq
 }
 
-// Limit adds a limit step to the query.
+// Limit the number of records to be returned by this query.
 func (pq *PlaylistQuery) Limit(limit int) *PlaylistQuery {
 	pq.limit = &limit
 	return pq
 }
 
-// Offset adds an offset step to the query.
+// Offset to start from.
 func (pq *PlaylistQuery) Offset(offset int) *PlaylistQuery {
 	pq.offset = &offset
 	return pq
@@ -58,7 +58,7 @@ func (pq *PlaylistQuery) Unique(unique bool) *PlaylistQuery {
 	return pq
 }
 
-// Order adds an order step to the query.
+// Order specifies how the records should be ordered.
 func (pq *PlaylistQuery) Order(o ...OrderFunc) *PlaylistQuery {
 	pq.order = append(pq.order, o...)
 	return pq
@@ -66,7 +66,7 @@ func (pq *PlaylistQuery) Order(o ...OrderFunc) *PlaylistQuery {
 
 // QueryVods chains the current query on the "vods" edge.
 func (pq *PlaylistQuery) QueryVods() *VodQuery {
-	query := &VodQuery{config: pq.config}
+	query := (&VodClient{config: pq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := pq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -89,7 +89,7 @@ func (pq *PlaylistQuery) QueryVods() *VodQuery {
 // First returns the first Playlist entity from the query.
 // Returns a *NotFoundError when no Playlist was found.
 func (pq *PlaylistQuery) First(ctx context.Context) (*Playlist, error) {
-	nodes, err := pq.Limit(1).All(ctx)
+	nodes, err := pq.Limit(1).All(newQueryContext(ctx, TypePlaylist, "First"))
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (pq *PlaylistQuery) FirstX(ctx context.Context) *Playlist {
 // Returns a *NotFoundError when no Playlist ID was found.
 func (pq *PlaylistQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = pq.Limit(1).IDs(ctx); err != nil {
+	if ids, err = pq.Limit(1).IDs(newQueryContext(ctx, TypePlaylist, "FirstID")); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -135,7 +135,7 @@ func (pq *PlaylistQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one Playlist entity is found.
 // Returns a *NotFoundError when no Playlist entities are found.
 func (pq *PlaylistQuery) Only(ctx context.Context) (*Playlist, error) {
-	nodes, err := pq.Limit(2).All(ctx)
+	nodes, err := pq.Limit(2).All(newQueryContext(ctx, TypePlaylist, "Only"))
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func (pq *PlaylistQuery) OnlyX(ctx context.Context) *Playlist {
 // Returns a *NotFoundError when no entities are found.
 func (pq *PlaylistQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = pq.Limit(2).IDs(ctx); err != nil {
+	if ids, err = pq.Limit(2).IDs(newQueryContext(ctx, TypePlaylist, "OnlyID")); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -188,10 +188,12 @@ func (pq *PlaylistQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of Playlists.
 func (pq *PlaylistQuery) All(ctx context.Context) ([]*Playlist, error) {
+	ctx = newQueryContext(ctx, TypePlaylist, "All")
 	if err := pq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	return pq.sqlAll(ctx)
+	qr := querierAll[[]*Playlist, *PlaylistQuery]()
+	return withInterceptors[[]*Playlist](ctx, pq, qr, pq.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
@@ -206,6 +208,7 @@ func (pq *PlaylistQuery) AllX(ctx context.Context) []*Playlist {
 // IDs executes the query and returns a list of Playlist IDs.
 func (pq *PlaylistQuery) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	var ids []uuid.UUID
+	ctx = newQueryContext(ctx, TypePlaylist, "IDs")
 	if err := pq.Select(playlist.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -223,10 +226,11 @@ func (pq *PlaylistQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (pq *PlaylistQuery) Count(ctx context.Context) (int, error) {
+	ctx = newQueryContext(ctx, TypePlaylist, "Count")
 	if err := pq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return pq.sqlCount(ctx)
+	return withInterceptors[int](ctx, pq, querierCount[*PlaylistQuery](), pq.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
@@ -240,10 +244,15 @@ func (pq *PlaylistQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (pq *PlaylistQuery) Exist(ctx context.Context) (bool, error) {
-	if err := pq.prepareQuery(ctx); err != nil {
-		return false, err
+	ctx = newQueryContext(ctx, TypePlaylist, "Exist")
+	switch _, err := pq.FirstID(ctx); {
+	case IsNotFound(err):
+		return false, nil
+	case err != nil:
+		return false, fmt.Errorf("ent: check existence: %w", err)
+	default:
+		return true, nil
 	}
-	return pq.sqlExist(ctx)
 }
 
 // ExistX is like Exist, but panics if an error occurs.
@@ -266,6 +275,7 @@ func (pq *PlaylistQuery) Clone() *PlaylistQuery {
 		limit:      pq.limit,
 		offset:     pq.offset,
 		order:      append([]OrderFunc{}, pq.order...),
+		inters:     append([]Interceptor{}, pq.inters...),
 		predicates: append([]predicate.Playlist{}, pq.predicates...),
 		withVods:   pq.withVods.Clone(),
 		// clone intermediate query.
@@ -278,7 +288,7 @@ func (pq *PlaylistQuery) Clone() *PlaylistQuery {
 // WithVods tells the query-builder to eager-load the nodes that are connected to
 // the "vods" edge. The optional arguments are used to configure the query builder of the edge.
 func (pq *PlaylistQuery) WithVods(opts ...func(*VodQuery)) *PlaylistQuery {
-	query := &VodQuery{config: pq.config}
+	query := (&VodClient{config: pq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
@@ -301,16 +311,11 @@ func (pq *PlaylistQuery) WithVods(opts ...func(*VodQuery)) *PlaylistQuery {
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (pq *PlaylistQuery) GroupBy(field string, fields ...string) *PlaylistGroupBy {
-	grbuild := &PlaylistGroupBy{config: pq.config}
-	grbuild.fields = append([]string{field}, fields...)
-	grbuild.path = func(ctx context.Context) (prev *sql.Selector, err error) {
-		if err := pq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		return pq.sqlQuery(ctx), nil
-	}
+	pq.fields = append([]string{field}, fields...)
+	grbuild := &PlaylistGroupBy{build: pq}
+	grbuild.flds = &pq.fields
 	grbuild.label = playlist.Label
-	grbuild.flds, grbuild.scan = &grbuild.fields, grbuild.Scan
+	grbuild.scan = grbuild.Scan
 	return grbuild
 }
 
@@ -328,13 +333,28 @@ func (pq *PlaylistQuery) GroupBy(field string, fields ...string) *PlaylistGroupB
 //		Scan(ctx, &v)
 func (pq *PlaylistQuery) Select(fields ...string) *PlaylistSelect {
 	pq.fields = append(pq.fields, fields...)
-	selbuild := &PlaylistSelect{PlaylistQuery: pq}
-	selbuild.label = playlist.Label
-	selbuild.flds, selbuild.scan = &pq.fields, selbuild.Scan
-	return selbuild
+	sbuild := &PlaylistSelect{PlaylistQuery: pq}
+	sbuild.label = playlist.Label
+	sbuild.flds, sbuild.scan = &pq.fields, sbuild.Scan
+	return sbuild
+}
+
+// Aggregate returns a PlaylistSelect configured with the given aggregations.
+func (pq *PlaylistQuery) Aggregate(fns ...AggregateFunc) *PlaylistSelect {
+	return pq.Select().Aggregate(fns...)
 }
 
 func (pq *PlaylistQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range pq.inters {
+		if inter == nil {
+			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
+		}
+		if trv, ok := inter.(Traverser); ok {
+			if err := trv.Traverse(ctx, pq); err != nil {
+				return err
+			}
+		}
+	}
 	for _, f := range pq.fields {
 		if !playlist.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
@@ -358,10 +378,10 @@ func (pq *PlaylistQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pla
 			pq.withVods != nil,
 		}
 	)
-	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
+	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Playlist).scanValues(nil, columns)
 	}
-	_spec.Assign = func(columns []string, values []interface{}) error {
+	_spec.Assign = func(columns []string, values []any) error {
 		node := &Playlist{config: pq.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
@@ -376,61 +396,73 @@ func (pq *PlaylistQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pla
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-
 	if query := pq.withVods; query != nil {
-		edgeids := make([]driver.Value, len(nodes))
-		byid := make(map[uuid.UUID]*Playlist)
-		nids := make(map[uuid.UUID]map[*Playlist]struct{})
-		for i, node := range nodes {
-			edgeids[i] = node.ID
-			byid[node.ID] = node
-			node.Edges.Vods = []*Vod{}
-		}
-		query.Where(func(s *sql.Selector) {
-			joinT := sql.Table(playlist.VodsTable)
-			s.Join(joinT).On(s.C(vod.FieldID), joinT.C(playlist.VodsPrimaryKey[1]))
-			s.Where(sql.InValues(joinT.C(playlist.VodsPrimaryKey[0]), edgeids...))
-			columns := s.SelectedColumns()
-			s.Select(joinT.C(playlist.VodsPrimaryKey[0]))
-			s.AppendSelect(columns...)
-			s.SetDistinct(false)
-		})
-		neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]interface{}, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]interface{}{new(uuid.UUID)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []interface{}) error {
-				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Playlist]struct{}{byid[outValue]: struct{}{}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byid[outValue]] = struct{}{}
-				return nil
-			}
-		})
-		if err != nil {
+		if err := pq.loadVods(ctx, query, nodes,
+			func(n *Playlist) { n.Edges.Vods = []*Vod{} },
+			func(n *Playlist, e *Vod) { n.Edges.Vods = append(n.Edges.Vods, e) }); err != nil {
 			return nil, err
 		}
-		for _, n := range neighbors {
-			nodes, ok := nids[n.ID]
-			if !ok {
-				return nil, fmt.Errorf(`unexpected "vods" node returned %v`, n.ID)
-			}
-			for kn := range nodes {
-				kn.Edges.Vods = append(kn.Edges.Vods, n)
-			}
+	}
+	return nodes, nil
+}
+
+func (pq *PlaylistQuery) loadVods(ctx context.Context, query *VodQuery, nodes []*Playlist, init func(*Playlist), assign func(*Playlist, *Vod)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*Playlist)
+	nids := make(map[uuid.UUID]map[*Playlist]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
 		}
 	}
-
-	return nodes, nil
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(playlist.VodsTable)
+		s.Join(joinT).On(s.C(vod.FieldID), joinT.C(playlist.VodsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(playlist.VodsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(playlist.VodsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+		assign := spec.Assign
+		values := spec.ScanValues
+		spec.ScanValues = func(columns []string) ([]any, error) {
+			values, err := values(columns[1:])
+			if err != nil {
+				return nil, err
+			}
+			return append([]any{new(uuid.UUID)}, values...), nil
+		}
+		spec.Assign = func(columns []string, values []any) error {
+			outValue := *values[0].(*uuid.UUID)
+			inValue := *values[1].(*uuid.UUID)
+			if nids[inValue] == nil {
+				nids[inValue] = map[*Playlist]struct{}{byID[outValue]: {}}
+				return assign(columns[1:], values[1:])
+			}
+			nids[inValue][byID[outValue]] = struct{}{}
+			return nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "vods" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
 }
 
 func (pq *PlaylistQuery) sqlCount(ctx context.Context) (int, error) {
@@ -440,14 +472,6 @@ func (pq *PlaylistQuery) sqlCount(ctx context.Context) (int, error) {
 		_spec.Unique = pq.unique != nil && *pq.unique
 	}
 	return sqlgraph.CountNodes(ctx, pq.driver, _spec)
-}
-
-func (pq *PlaylistQuery) sqlExist(ctx context.Context) (bool, error) {
-	n, err := pq.sqlCount(ctx)
-	if err != nil {
-		return false, fmt.Errorf("ent: check existence: %w", err)
-	}
-	return n > 0, nil
 }
 
 func (pq *PlaylistQuery) querySpec() *sqlgraph.QuerySpec {
@@ -532,13 +556,8 @@ func (pq *PlaylistQuery) sqlQuery(ctx context.Context) *sql.Selector {
 
 // PlaylistGroupBy is the group-by builder for Playlist entities.
 type PlaylistGroupBy struct {
-	config
 	selector
-	fields []string
-	fns    []AggregateFunc
-	// intermediate query (i.e. traversal path).
-	sql  *sql.Selector
-	path func(context.Context) (*sql.Selector, error)
+	build *PlaylistQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
@@ -547,74 +566,77 @@ func (pgb *PlaylistGroupBy) Aggregate(fns ...AggregateFunc) *PlaylistGroupBy {
 	return pgb
 }
 
-// Scan applies the group-by query and scans the result into the given value.
-func (pgb *PlaylistGroupBy) Scan(ctx context.Context, v interface{}) error {
-	query, err := pgb.path(ctx)
-	if err != nil {
+// Scan applies the selector query and scans the result into the given value.
+func (pgb *PlaylistGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = newQueryContext(ctx, TypePlaylist, "GroupBy")
+	if err := pgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	pgb.sql = query
-	return pgb.sqlScan(ctx, v)
+	return scanWithInterceptors[*PlaylistQuery, *PlaylistGroupBy](ctx, pgb.build, pgb, pgb.build.inters, v)
 }
 
-func (pgb *PlaylistGroupBy) sqlScan(ctx context.Context, v interface{}) error {
-	for _, f := range pgb.fields {
-		if !playlist.ValidColumn(f) {
-			return &ValidationError{Name: f, err: fmt.Errorf("invalid field %q for group-by", f)}
-		}
+func (pgb *PlaylistGroupBy) sqlScan(ctx context.Context, root *PlaylistQuery, v any) error {
+	selector := root.sqlQuery(ctx).Select()
+	aggregation := make([]string, 0, len(pgb.fns))
+	for _, fn := range pgb.fns {
+		aggregation = append(aggregation, fn(selector))
 	}
-	selector := pgb.sqlQuery()
+	if len(selector.SelectedColumns()) == 0 {
+		columns := make([]string, 0, len(*pgb.flds)+len(pgb.fns))
+		for _, f := range *pgb.flds {
+			columns = append(columns, selector.C(f))
+		}
+		columns = append(columns, aggregation...)
+		selector.Select(columns...)
+	}
+	selector.GroupBy(selector.Columns(*pgb.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := pgb.driver.Query(ctx, query, args, rows); err != nil {
+	if err := pgb.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
 }
 
-func (pgb *PlaylistGroupBy) sqlQuery() *sql.Selector {
-	selector := pgb.sql.Select()
-	aggregation := make([]string, 0, len(pgb.fns))
-	for _, fn := range pgb.fns {
-		aggregation = append(aggregation, fn(selector))
-	}
-	// If no columns were selected in a custom aggregation function, the default
-	// selection is the fields used for "group-by", and the aggregation functions.
-	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(pgb.fields)+len(pgb.fns))
-		for _, f := range pgb.fields {
-			columns = append(columns, selector.C(f))
-		}
-		columns = append(columns, aggregation...)
-		selector.Select(columns...)
-	}
-	return selector.GroupBy(selector.Columns(pgb.fields...)...)
-}
-
 // PlaylistSelect is the builder for selecting fields of Playlist entities.
 type PlaylistSelect struct {
 	*PlaylistQuery
 	selector
-	// intermediate query (i.e. traversal path).
-	sql *sql.Selector
+}
+
+// Aggregate adds the given aggregation functions to the selector query.
+func (ps *PlaylistSelect) Aggregate(fns ...AggregateFunc) *PlaylistSelect {
+	ps.fns = append(ps.fns, fns...)
+	return ps
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ps *PlaylistSelect) Scan(ctx context.Context, v interface{}) error {
+func (ps *PlaylistSelect) Scan(ctx context.Context, v any) error {
+	ctx = newQueryContext(ctx, TypePlaylist, "Select")
 	if err := ps.prepareQuery(ctx); err != nil {
 		return err
 	}
-	ps.sql = ps.PlaylistQuery.sqlQuery(ctx)
-	return ps.sqlScan(ctx, v)
+	return scanWithInterceptors[*PlaylistQuery, *PlaylistSelect](ctx, ps.PlaylistQuery, ps, ps.inters, v)
 }
 
-func (ps *PlaylistSelect) sqlScan(ctx context.Context, v interface{}) error {
+func (ps *PlaylistSelect) sqlScan(ctx context.Context, root *PlaylistQuery, v any) error {
+	selector := root.sqlQuery(ctx)
+	aggregation := make([]string, 0, len(ps.fns))
+	for _, fn := range ps.fns {
+		aggregation = append(aggregation, fn(selector))
+	}
+	switch n := len(*ps.selector.flds); {
+	case n == 0 && len(aggregation) > 0:
+		selector.Select(aggregation...)
+	case n != 0 && len(aggregation) > 0:
+		selector.AppendSelect(aggregation...)
+	}
 	rows := &sql.Rows{}
-	query, args := ps.sql.Query()
+	query, args := selector.Query()
 	if err := ps.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}

@@ -120,50 +120,8 @@ func (pc *PlaylistCreate) Mutation() *PlaylistMutation {
 
 // Save creates the Playlist in the database.
 func (pc *PlaylistCreate) Save(ctx context.Context) (*Playlist, error) {
-	var (
-		err  error
-		node *Playlist
-	)
 	pc.defaults()
-	if len(pc.hooks) == 0 {
-		if err = pc.check(); err != nil {
-			return nil, err
-		}
-		node, err = pc.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*PlaylistMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = pc.check(); err != nil {
-				return nil, err
-			}
-			pc.mutation = mutation
-			if node, err = pc.sqlSave(ctx); err != nil {
-				return nil, err
-			}
-			mutation.id = &node.ID
-			mutation.done = true
-			return node, err
-		})
-		for i := len(pc.hooks) - 1; i >= 0; i-- {
-			if pc.hooks[i] == nil {
-				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = pc.hooks[i](mut)
-		}
-		v, err := mut.Mutate(ctx, pc.mutation)
-		if err != nil {
-			return nil, err
-		}
-		nv, ok := v.(*Playlist)
-		if !ok {
-			return nil, fmt.Errorf("unexpected node type %T returned from PlaylistMutation", v)
-		}
-		node = nv
-	}
-	return node, err
+	return withHooks[*Playlist, PlaylistMutation](ctx, pc.sqlSave, pc.mutation, pc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -219,6 +177,9 @@ func (pc *PlaylistCreate) check() error {
 }
 
 func (pc *PlaylistCreate) sqlSave(ctx context.Context) (*Playlist, error) {
+	if err := pc.check(); err != nil {
+		return nil, err
+	}
 	_node, _spec := pc.createSpec()
 	if err := sqlgraph.CreateNode(ctx, pc.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
@@ -233,6 +194,8 @@ func (pc *PlaylistCreate) sqlSave(ctx context.Context) (*Playlist, error) {
 			return nil, err
 		}
 	}
+	pc.mutation.id = &_node.ID
+	pc.mutation.done = true
 	return _node, nil
 }
 
@@ -252,43 +215,23 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 		_spec.ID.Value = &id
 	}
 	if value, ok := pc.mutation.Name(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: playlist.FieldName,
-		})
+		_spec.SetField(playlist.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
 	if value, ok := pc.mutation.Description(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: playlist.FieldDescription,
-		})
+		_spec.SetField(playlist.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
 	if value, ok := pc.mutation.ThumbnailPath(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: playlist.FieldThumbnailPath,
-		})
+		_spec.SetField(playlist.FieldThumbnailPath, field.TypeString, value)
 		_node.ThumbnailPath = value
 	}
 	if value, ok := pc.mutation.UpdatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: playlist.FieldUpdatedAt,
-		})
+		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := pc.mutation.CreatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: playlist.FieldCreatedAt,
-		})
+		_spec.SetField(playlist.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if nodes := pc.mutation.VodsIDs(); len(nodes) > 0 {

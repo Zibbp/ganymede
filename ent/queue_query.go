@@ -24,10 +24,10 @@ type QueueQuery struct {
 	unique     *bool
 	order      []OrderFunc
 	fields     []string
+	inters     []Interceptor
 	predicates []predicate.Queue
-	// eager-loading edges.
-	withVod *VodQuery
-	withFKs bool
+	withVod    *VodQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -39,13 +39,13 @@ func (qq *QueueQuery) Where(ps ...predicate.Queue) *QueueQuery {
 	return qq
 }
 
-// Limit adds a limit step to the query.
+// Limit the number of records to be returned by this query.
 func (qq *QueueQuery) Limit(limit int) *QueueQuery {
 	qq.limit = &limit
 	return qq
 }
 
-// Offset adds an offset step to the query.
+// Offset to start from.
 func (qq *QueueQuery) Offset(offset int) *QueueQuery {
 	qq.offset = &offset
 	return qq
@@ -58,7 +58,7 @@ func (qq *QueueQuery) Unique(unique bool) *QueueQuery {
 	return qq
 }
 
-// Order adds an order step to the query.
+// Order specifies how the records should be ordered.
 func (qq *QueueQuery) Order(o ...OrderFunc) *QueueQuery {
 	qq.order = append(qq.order, o...)
 	return qq
@@ -66,7 +66,7 @@ func (qq *QueueQuery) Order(o ...OrderFunc) *QueueQuery {
 
 // QueryVod chains the current query on the "vod" edge.
 func (qq *QueueQuery) QueryVod() *VodQuery {
-	query := &VodQuery{config: qq.config}
+	query := (&VodClient{config: qq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := qq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -89,7 +89,7 @@ func (qq *QueueQuery) QueryVod() *VodQuery {
 // First returns the first Queue entity from the query.
 // Returns a *NotFoundError when no Queue was found.
 func (qq *QueueQuery) First(ctx context.Context) (*Queue, error) {
-	nodes, err := qq.Limit(1).All(ctx)
+	nodes, err := qq.Limit(1).All(newQueryContext(ctx, TypeQueue, "First"))
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (qq *QueueQuery) FirstX(ctx context.Context) *Queue {
 // Returns a *NotFoundError when no Queue ID was found.
 func (qq *QueueQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = qq.Limit(1).IDs(ctx); err != nil {
+	if ids, err = qq.Limit(1).IDs(newQueryContext(ctx, TypeQueue, "FirstID")); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -135,7 +135,7 @@ func (qq *QueueQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one Queue entity is found.
 // Returns a *NotFoundError when no Queue entities are found.
 func (qq *QueueQuery) Only(ctx context.Context) (*Queue, error) {
-	nodes, err := qq.Limit(2).All(ctx)
+	nodes, err := qq.Limit(2).All(newQueryContext(ctx, TypeQueue, "Only"))
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func (qq *QueueQuery) OnlyX(ctx context.Context) *Queue {
 // Returns a *NotFoundError when no entities are found.
 func (qq *QueueQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = qq.Limit(2).IDs(ctx); err != nil {
+	if ids, err = qq.Limit(2).IDs(newQueryContext(ctx, TypeQueue, "OnlyID")); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -188,10 +188,12 @@ func (qq *QueueQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of Queues.
 func (qq *QueueQuery) All(ctx context.Context) ([]*Queue, error) {
+	ctx = newQueryContext(ctx, TypeQueue, "All")
 	if err := qq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	return qq.sqlAll(ctx)
+	qr := querierAll[[]*Queue, *QueueQuery]()
+	return withInterceptors[[]*Queue](ctx, qq, qr, qq.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
@@ -206,6 +208,7 @@ func (qq *QueueQuery) AllX(ctx context.Context) []*Queue {
 // IDs executes the query and returns a list of Queue IDs.
 func (qq *QueueQuery) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	var ids []uuid.UUID
+	ctx = newQueryContext(ctx, TypeQueue, "IDs")
 	if err := qq.Select(queue.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -223,10 +226,11 @@ func (qq *QueueQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (qq *QueueQuery) Count(ctx context.Context) (int, error) {
+	ctx = newQueryContext(ctx, TypeQueue, "Count")
 	if err := qq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return qq.sqlCount(ctx)
+	return withInterceptors[int](ctx, qq, querierCount[*QueueQuery](), qq.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
@@ -240,10 +244,15 @@ func (qq *QueueQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (qq *QueueQuery) Exist(ctx context.Context) (bool, error) {
-	if err := qq.prepareQuery(ctx); err != nil {
-		return false, err
+	ctx = newQueryContext(ctx, TypeQueue, "Exist")
+	switch _, err := qq.FirstID(ctx); {
+	case IsNotFound(err):
+		return false, nil
+	case err != nil:
+		return false, fmt.Errorf("ent: check existence: %w", err)
+	default:
+		return true, nil
 	}
-	return qq.sqlExist(ctx)
 }
 
 // ExistX is like Exist, but panics if an error occurs.
@@ -266,6 +275,7 @@ func (qq *QueueQuery) Clone() *QueueQuery {
 		limit:      qq.limit,
 		offset:     qq.offset,
 		order:      append([]OrderFunc{}, qq.order...),
+		inters:     append([]Interceptor{}, qq.inters...),
 		predicates: append([]predicate.Queue{}, qq.predicates...),
 		withVod:    qq.withVod.Clone(),
 		// clone intermediate query.
@@ -278,7 +288,7 @@ func (qq *QueueQuery) Clone() *QueueQuery {
 // WithVod tells the query-builder to eager-load the nodes that are connected to
 // the "vod" edge. The optional arguments are used to configure the query builder of the edge.
 func (qq *QueueQuery) WithVod(opts ...func(*VodQuery)) *QueueQuery {
-	query := &VodQuery{config: qq.config}
+	query := (&VodClient{config: qq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
@@ -301,16 +311,11 @@ func (qq *QueueQuery) WithVod(opts ...func(*VodQuery)) *QueueQuery {
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (qq *QueueQuery) GroupBy(field string, fields ...string) *QueueGroupBy {
-	grbuild := &QueueGroupBy{config: qq.config}
-	grbuild.fields = append([]string{field}, fields...)
-	grbuild.path = func(ctx context.Context) (prev *sql.Selector, err error) {
-		if err := qq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		return qq.sqlQuery(ctx), nil
-	}
+	qq.fields = append([]string{field}, fields...)
+	grbuild := &QueueGroupBy{build: qq}
+	grbuild.flds = &qq.fields
 	grbuild.label = queue.Label
-	grbuild.flds, grbuild.scan = &grbuild.fields, grbuild.Scan
+	grbuild.scan = grbuild.Scan
 	return grbuild
 }
 
@@ -328,13 +333,28 @@ func (qq *QueueQuery) GroupBy(field string, fields ...string) *QueueGroupBy {
 //		Scan(ctx, &v)
 func (qq *QueueQuery) Select(fields ...string) *QueueSelect {
 	qq.fields = append(qq.fields, fields...)
-	selbuild := &QueueSelect{QueueQuery: qq}
-	selbuild.label = queue.Label
-	selbuild.flds, selbuild.scan = &qq.fields, selbuild.Scan
-	return selbuild
+	sbuild := &QueueSelect{QueueQuery: qq}
+	sbuild.label = queue.Label
+	sbuild.flds, sbuild.scan = &qq.fields, sbuild.Scan
+	return sbuild
+}
+
+// Aggregate returns a QueueSelect configured with the given aggregations.
+func (qq *QueueQuery) Aggregate(fns ...AggregateFunc) *QueueSelect {
+	return qq.Select().Aggregate(fns...)
 }
 
 func (qq *QueueQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range qq.inters {
+		if inter == nil {
+			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
+		}
+		if trv, ok := inter.(Traverser); ok {
+			if err := trv.Traverse(ctx, qq); err != nil {
+				return err
+			}
+		}
+	}
 	for _, f := range qq.fields {
 		if !queue.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
@@ -365,10 +385,10 @@ func (qq *QueueQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Queue,
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, queue.ForeignKeys...)
 	}
-	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
+	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Queue).scanValues(nil, columns)
 	}
-	_spec.Assign = func(columns []string, values []interface{}) error {
+	_spec.Assign = func(columns []string, values []any) error {
 		node := &Queue{config: qq.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
@@ -383,37 +403,43 @@ func (qq *QueueQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Queue,
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-
 	if query := qq.withVod; query != nil {
-		ids := make([]uuid.UUID, 0, len(nodes))
-		nodeids := make(map[uuid.UUID][]*Queue)
-		for i := range nodes {
-			if nodes[i].vod_queue == nil {
-				continue
-			}
-			fk := *nodes[i].vod_queue
-			if _, ok := nodeids[fk]; !ok {
-				ids = append(ids, fk)
-			}
-			nodeids[fk] = append(nodeids[fk], nodes[i])
-		}
-		query.Where(vod.IDIn(ids...))
-		neighbors, err := query.All(ctx)
-		if err != nil {
+		if err := qq.loadVod(ctx, query, nodes, nil,
+			func(n *Queue, e *Vod) { n.Edges.Vod = e }); err != nil {
 			return nil, err
 		}
-		for _, n := range neighbors {
-			nodes, ok := nodeids[n.ID]
-			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "vod_queue" returned %v`, n.ID)
-			}
-			for i := range nodes {
-				nodes[i].Edges.Vod = n
-			}
+	}
+	return nodes, nil
+}
+
+func (qq *QueueQuery) loadVod(ctx context.Context, query *VodQuery, nodes []*Queue, init func(*Queue), assign func(*Queue, *Vod)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Queue)
+	for i := range nodes {
+		if nodes[i].vod_queue == nil {
+			continue
+		}
+		fk := *nodes[i].vod_queue
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	query.Where(vod.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "vod_queue" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
-
-	return nodes, nil
+	return nil
 }
 
 func (qq *QueueQuery) sqlCount(ctx context.Context) (int, error) {
@@ -423,14 +449,6 @@ func (qq *QueueQuery) sqlCount(ctx context.Context) (int, error) {
 		_spec.Unique = qq.unique != nil && *qq.unique
 	}
 	return sqlgraph.CountNodes(ctx, qq.driver, _spec)
-}
-
-func (qq *QueueQuery) sqlExist(ctx context.Context) (bool, error) {
-	n, err := qq.sqlCount(ctx)
-	if err != nil {
-		return false, fmt.Errorf("ent: check existence: %w", err)
-	}
-	return n > 0, nil
 }
 
 func (qq *QueueQuery) querySpec() *sqlgraph.QuerySpec {
@@ -515,13 +533,8 @@ func (qq *QueueQuery) sqlQuery(ctx context.Context) *sql.Selector {
 
 // QueueGroupBy is the group-by builder for Queue entities.
 type QueueGroupBy struct {
-	config
 	selector
-	fields []string
-	fns    []AggregateFunc
-	// intermediate query (i.e. traversal path).
-	sql  *sql.Selector
-	path func(context.Context) (*sql.Selector, error)
+	build *QueueQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
@@ -530,74 +543,77 @@ func (qgb *QueueGroupBy) Aggregate(fns ...AggregateFunc) *QueueGroupBy {
 	return qgb
 }
 
-// Scan applies the group-by query and scans the result into the given value.
-func (qgb *QueueGroupBy) Scan(ctx context.Context, v interface{}) error {
-	query, err := qgb.path(ctx)
-	if err != nil {
+// Scan applies the selector query and scans the result into the given value.
+func (qgb *QueueGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = newQueryContext(ctx, TypeQueue, "GroupBy")
+	if err := qgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	qgb.sql = query
-	return qgb.sqlScan(ctx, v)
+	return scanWithInterceptors[*QueueQuery, *QueueGroupBy](ctx, qgb.build, qgb, qgb.build.inters, v)
 }
 
-func (qgb *QueueGroupBy) sqlScan(ctx context.Context, v interface{}) error {
-	for _, f := range qgb.fields {
-		if !queue.ValidColumn(f) {
-			return &ValidationError{Name: f, err: fmt.Errorf("invalid field %q for group-by", f)}
-		}
+func (qgb *QueueGroupBy) sqlScan(ctx context.Context, root *QueueQuery, v any) error {
+	selector := root.sqlQuery(ctx).Select()
+	aggregation := make([]string, 0, len(qgb.fns))
+	for _, fn := range qgb.fns {
+		aggregation = append(aggregation, fn(selector))
 	}
-	selector := qgb.sqlQuery()
+	if len(selector.SelectedColumns()) == 0 {
+		columns := make([]string, 0, len(*qgb.flds)+len(qgb.fns))
+		for _, f := range *qgb.flds {
+			columns = append(columns, selector.C(f))
+		}
+		columns = append(columns, aggregation...)
+		selector.Select(columns...)
+	}
+	selector.GroupBy(selector.Columns(*qgb.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := qgb.driver.Query(ctx, query, args, rows); err != nil {
+	if err := qgb.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
 }
 
-func (qgb *QueueGroupBy) sqlQuery() *sql.Selector {
-	selector := qgb.sql.Select()
-	aggregation := make([]string, 0, len(qgb.fns))
-	for _, fn := range qgb.fns {
-		aggregation = append(aggregation, fn(selector))
-	}
-	// If no columns were selected in a custom aggregation function, the default
-	// selection is the fields used for "group-by", and the aggregation functions.
-	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(qgb.fields)+len(qgb.fns))
-		for _, f := range qgb.fields {
-			columns = append(columns, selector.C(f))
-		}
-		columns = append(columns, aggregation...)
-		selector.Select(columns...)
-	}
-	return selector.GroupBy(selector.Columns(qgb.fields...)...)
-}
-
 // QueueSelect is the builder for selecting fields of Queue entities.
 type QueueSelect struct {
 	*QueueQuery
 	selector
-	// intermediate query (i.e. traversal path).
-	sql *sql.Selector
+}
+
+// Aggregate adds the given aggregation functions to the selector query.
+func (qs *QueueSelect) Aggregate(fns ...AggregateFunc) *QueueSelect {
+	qs.fns = append(qs.fns, fns...)
+	return qs
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (qs *QueueSelect) Scan(ctx context.Context, v interface{}) error {
+func (qs *QueueSelect) Scan(ctx context.Context, v any) error {
+	ctx = newQueryContext(ctx, TypeQueue, "Select")
 	if err := qs.prepareQuery(ctx); err != nil {
 		return err
 	}
-	qs.sql = qs.QueueQuery.sqlQuery(ctx)
-	return qs.sqlScan(ctx, v)
+	return scanWithInterceptors[*QueueQuery, *QueueSelect](ctx, qs.QueueQuery, qs, qs.inters, v)
 }
 
-func (qs *QueueSelect) sqlScan(ctx context.Context, v interface{}) error {
+func (qs *QueueSelect) sqlScan(ctx context.Context, root *QueueQuery, v any) error {
+	selector := root.sqlQuery(ctx)
+	aggregation := make([]string, 0, len(qs.fns))
+	for _, fn := range qs.fns {
+		aggregation = append(aggregation, fn(selector))
+	}
+	switch n := len(*qs.selector.flds); {
+	case n == 0 && len(aggregation) > 0:
+		selector.Select(aggregation...)
+	case n != 0 && len(aggregation) > 0:
+		selector.AppendSelect(aggregation...)
+	}
 	rows := &sql.Rows{}
-	query, args := qs.sql.Query()
+	query, args := selector.Query()
 	if err := qs.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}

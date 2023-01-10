@@ -111,50 +111,8 @@ func (pc *PlaybackCreate) Mutation() *PlaybackMutation {
 
 // Save creates the Playback in the database.
 func (pc *PlaybackCreate) Save(ctx context.Context) (*Playback, error) {
-	var (
-		err  error
-		node *Playback
-	)
 	pc.defaults()
-	if len(pc.hooks) == 0 {
-		if err = pc.check(); err != nil {
-			return nil, err
-		}
-		node, err = pc.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*PlaybackMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = pc.check(); err != nil {
-				return nil, err
-			}
-			pc.mutation = mutation
-			if node, err = pc.sqlSave(ctx); err != nil {
-				return nil, err
-			}
-			mutation.id = &node.ID
-			mutation.done = true
-			return node, err
-		})
-		for i := len(pc.hooks) - 1; i >= 0; i-- {
-			if pc.hooks[i] == nil {
-				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = pc.hooks[i](mut)
-		}
-		v, err := mut.Mutate(ctx, pc.mutation)
-		if err != nil {
-			return nil, err
-		}
-		nv, ok := v.(*Playback)
-		if !ok {
-			return nil, fmt.Errorf("unexpected node type %T returned from PlaybackMutation", v)
-		}
-		node = nv
-	}
-	return node, err
+	return withHooks[*Playback, PlaybackMutation](ctx, pc.sqlSave, pc.mutation, pc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -229,6 +187,9 @@ func (pc *PlaybackCreate) check() error {
 }
 
 func (pc *PlaybackCreate) sqlSave(ctx context.Context) (*Playback, error) {
+	if err := pc.check(); err != nil {
+		return nil, err
+	}
 	_node, _spec := pc.createSpec()
 	if err := sqlgraph.CreateNode(ctx, pc.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
@@ -243,6 +204,8 @@ func (pc *PlaybackCreate) sqlSave(ctx context.Context) (*Playback, error) {
 			return nil, err
 		}
 	}
+	pc.mutation.id = &_node.ID
+	pc.mutation.done = true
 	return _node, nil
 }
 
@@ -262,51 +225,27 @@ func (pc *PlaybackCreate) createSpec() (*Playback, *sqlgraph.CreateSpec) {
 		_spec.ID.Value = &id
 	}
 	if value, ok := pc.mutation.VodID(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: playback.FieldVodID,
-		})
+		_spec.SetField(playback.FieldVodID, field.TypeUUID, value)
 		_node.VodID = value
 	}
 	if value, ok := pc.mutation.UserID(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: playback.FieldUserID,
-		})
+		_spec.SetField(playback.FieldUserID, field.TypeUUID, value)
 		_node.UserID = value
 	}
 	if value, ok := pc.mutation.Time(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: playback.FieldTime,
-		})
+		_spec.SetField(playback.FieldTime, field.TypeInt, value)
 		_node.Time = value
 	}
 	if value, ok := pc.mutation.Status(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: playback.FieldStatus,
-		})
+		_spec.SetField(playback.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
 	}
 	if value, ok := pc.mutation.UpdatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: playback.FieldUpdatedAt,
-		})
+		_spec.SetField(playback.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := pc.mutation.CreatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: playback.FieldCreatedAt,
-		})
+		_spec.SetField(playback.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	return _node, _spec

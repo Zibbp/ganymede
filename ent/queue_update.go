@@ -351,41 +351,8 @@ func (qu *QueueUpdate) ClearVod() *QueueUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (qu *QueueUpdate) Save(ctx context.Context) (int, error) {
-	var (
-		err      error
-		affected int
-	)
 	qu.defaults()
-	if len(qu.hooks) == 0 {
-		if err = qu.check(); err != nil {
-			return 0, err
-		}
-		affected, err = qu.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*QueueMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = qu.check(); err != nil {
-				return 0, err
-			}
-			qu.mutation = mutation
-			affected, err = qu.sqlSave(ctx)
-			mutation.done = true
-			return affected, err
-		})
-		for i := len(qu.hooks) - 1; i >= 0; i-- {
-			if qu.hooks[i] == nil {
-				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = qu.hooks[i](mut)
-		}
-		if _, err := mut.Mutate(ctx, qu.mutation); err != nil {
-			return 0, err
-		}
-	}
-	return affected, err
+	return withHooks[int, QueueMutation](ctx, qu.sqlSave, qu.mutation, qu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -477,6 +444,9 @@ func (qu *QueueUpdate) check() error {
 }
 
 func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := qu.check(); err != nil {
+		return n, err
+	}
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   queue.Table,
@@ -495,189 +465,88 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := qu.mutation.LiveArchive(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldLiveArchive,
-		})
+		_spec.SetField(queue.FieldLiveArchive, field.TypeBool, value)
 	}
 	if value, ok := qu.mutation.OnHold(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldOnHold,
-		})
+		_spec.SetField(queue.FieldOnHold, field.TypeBool, value)
 	}
 	if value, ok := qu.mutation.VideoProcessing(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldVideoProcessing,
-		})
+		_spec.SetField(queue.FieldVideoProcessing, field.TypeBool, value)
 	}
 	if value, ok := qu.mutation.ChatProcessing(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldChatProcessing,
-		})
+		_spec.SetField(queue.FieldChatProcessing, field.TypeBool, value)
 	}
 	if value, ok := qu.mutation.Processing(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldProcessing,
-		})
+		_spec.SetField(queue.FieldProcessing, field.TypeBool, value)
 	}
 	if value, ok := qu.mutation.TaskVodCreateFolder(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVodCreateFolder,
-		})
+		_spec.SetField(queue.FieldTaskVodCreateFolder, field.TypeEnum, value)
 	}
 	if qu.mutation.TaskVodCreateFolderCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVodCreateFolder,
-		})
+		_spec.ClearField(queue.FieldTaskVodCreateFolder, field.TypeEnum)
 	}
 	if value, ok := qu.mutation.TaskVodDownloadThumbnail(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVodDownloadThumbnail,
-		})
+		_spec.SetField(queue.FieldTaskVodDownloadThumbnail, field.TypeEnum, value)
 	}
 	if qu.mutation.TaskVodDownloadThumbnailCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVodDownloadThumbnail,
-		})
+		_spec.ClearField(queue.FieldTaskVodDownloadThumbnail, field.TypeEnum)
 	}
 	if value, ok := qu.mutation.TaskVodSaveInfo(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVodSaveInfo,
-		})
+		_spec.SetField(queue.FieldTaskVodSaveInfo, field.TypeEnum, value)
 	}
 	if qu.mutation.TaskVodSaveInfoCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVodSaveInfo,
-		})
+		_spec.ClearField(queue.FieldTaskVodSaveInfo, field.TypeEnum)
 	}
 	if value, ok := qu.mutation.TaskVideoDownload(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVideoDownload,
-		})
+		_spec.SetField(queue.FieldTaskVideoDownload, field.TypeEnum, value)
 	}
 	if qu.mutation.TaskVideoDownloadCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVideoDownload,
-		})
+		_spec.ClearField(queue.FieldTaskVideoDownload, field.TypeEnum)
 	}
 	if value, ok := qu.mutation.TaskVideoConvert(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVideoConvert,
-		})
+		_spec.SetField(queue.FieldTaskVideoConvert, field.TypeEnum, value)
 	}
 	if qu.mutation.TaskVideoConvertCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVideoConvert,
-		})
+		_spec.ClearField(queue.FieldTaskVideoConvert, field.TypeEnum)
 	}
 	if value, ok := qu.mutation.TaskVideoMove(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVideoMove,
-		})
+		_spec.SetField(queue.FieldTaskVideoMove, field.TypeEnum, value)
 	}
 	if qu.mutation.TaskVideoMoveCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVideoMove,
-		})
+		_spec.ClearField(queue.FieldTaskVideoMove, field.TypeEnum)
 	}
 	if value, ok := qu.mutation.TaskChatDownload(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatDownload,
-		})
+		_spec.SetField(queue.FieldTaskChatDownload, field.TypeEnum, value)
 	}
 	if qu.mutation.TaskChatDownloadCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskChatDownload,
-		})
+		_spec.ClearField(queue.FieldTaskChatDownload, field.TypeEnum)
 	}
 	if value, ok := qu.mutation.TaskChatConvert(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatConvert,
-		})
+		_spec.SetField(queue.FieldTaskChatConvert, field.TypeEnum, value)
 	}
 	if qu.mutation.TaskChatConvertCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskChatConvert,
-		})
+		_spec.ClearField(queue.FieldTaskChatConvert, field.TypeEnum)
 	}
 	if value, ok := qu.mutation.TaskChatRender(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatRender,
-		})
+		_spec.SetField(queue.FieldTaskChatRender, field.TypeEnum, value)
 	}
 	if qu.mutation.TaskChatRenderCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskChatRender,
-		})
+		_spec.ClearField(queue.FieldTaskChatRender, field.TypeEnum)
 	}
 	if value, ok := qu.mutation.TaskChatMove(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatMove,
-		})
+		_spec.SetField(queue.FieldTaskChatMove, field.TypeEnum, value)
 	}
 	if qu.mutation.TaskChatMoveCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskChatMove,
-		})
+		_spec.ClearField(queue.FieldTaskChatMove, field.TypeEnum)
 	}
 	if value, ok := qu.mutation.ChatStart(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: queue.FieldChatStart,
-		})
+		_spec.SetField(queue.FieldChatStart, field.TypeTime, value)
 	}
 	if qu.mutation.ChatStartCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Column: queue.FieldChatStart,
-		})
+		_spec.ClearField(queue.FieldChatStart, field.TypeTime)
 	}
 	if value, ok := qu.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: queue.FieldUpdatedAt,
-		})
+		_spec.SetField(queue.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if qu.mutation.VodCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -722,6 +591,7 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
+	qu.mutation.done = true
 	return n, nil
 }
 
@@ -1060,47 +930,8 @@ func (quo *QueueUpdateOne) Select(field string, fields ...string) *QueueUpdateOn
 
 // Save executes the query and returns the updated Queue entity.
 func (quo *QueueUpdateOne) Save(ctx context.Context) (*Queue, error) {
-	var (
-		err  error
-		node *Queue
-	)
 	quo.defaults()
-	if len(quo.hooks) == 0 {
-		if err = quo.check(); err != nil {
-			return nil, err
-		}
-		node, err = quo.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*QueueMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = quo.check(); err != nil {
-				return nil, err
-			}
-			quo.mutation = mutation
-			node, err = quo.sqlSave(ctx)
-			mutation.done = true
-			return node, err
-		})
-		for i := len(quo.hooks) - 1; i >= 0; i-- {
-			if quo.hooks[i] == nil {
-				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = quo.hooks[i](mut)
-		}
-		v, err := mut.Mutate(ctx, quo.mutation)
-		if err != nil {
-			return nil, err
-		}
-		nv, ok := v.(*Queue)
-		if !ok {
-			return nil, fmt.Errorf("unexpected node type %T returned from QueueMutation", v)
-		}
-		node = nv
-	}
-	return node, err
+	return withHooks[*Queue, QueueMutation](ctx, quo.sqlSave, quo.mutation, quo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -1192,6 +1023,9 @@ func (quo *QueueUpdateOne) check() error {
 }
 
 func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error) {
+	if err := quo.check(); err != nil {
+		return _node, err
+	}
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   queue.Table,
@@ -1227,189 +1061,88 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 		}
 	}
 	if value, ok := quo.mutation.LiveArchive(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldLiveArchive,
-		})
+		_spec.SetField(queue.FieldLiveArchive, field.TypeBool, value)
 	}
 	if value, ok := quo.mutation.OnHold(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldOnHold,
-		})
+		_spec.SetField(queue.FieldOnHold, field.TypeBool, value)
 	}
 	if value, ok := quo.mutation.VideoProcessing(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldVideoProcessing,
-		})
+		_spec.SetField(queue.FieldVideoProcessing, field.TypeBool, value)
 	}
 	if value, ok := quo.mutation.ChatProcessing(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldChatProcessing,
-		})
+		_spec.SetField(queue.FieldChatProcessing, field.TypeBool, value)
 	}
 	if value, ok := quo.mutation.Processing(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldProcessing,
-		})
+		_spec.SetField(queue.FieldProcessing, field.TypeBool, value)
 	}
 	if value, ok := quo.mutation.TaskVodCreateFolder(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVodCreateFolder,
-		})
+		_spec.SetField(queue.FieldTaskVodCreateFolder, field.TypeEnum, value)
 	}
 	if quo.mutation.TaskVodCreateFolderCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVodCreateFolder,
-		})
+		_spec.ClearField(queue.FieldTaskVodCreateFolder, field.TypeEnum)
 	}
 	if value, ok := quo.mutation.TaskVodDownloadThumbnail(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVodDownloadThumbnail,
-		})
+		_spec.SetField(queue.FieldTaskVodDownloadThumbnail, field.TypeEnum, value)
 	}
 	if quo.mutation.TaskVodDownloadThumbnailCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVodDownloadThumbnail,
-		})
+		_spec.ClearField(queue.FieldTaskVodDownloadThumbnail, field.TypeEnum)
 	}
 	if value, ok := quo.mutation.TaskVodSaveInfo(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVodSaveInfo,
-		})
+		_spec.SetField(queue.FieldTaskVodSaveInfo, field.TypeEnum, value)
 	}
 	if quo.mutation.TaskVodSaveInfoCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVodSaveInfo,
-		})
+		_spec.ClearField(queue.FieldTaskVodSaveInfo, field.TypeEnum)
 	}
 	if value, ok := quo.mutation.TaskVideoDownload(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVideoDownload,
-		})
+		_spec.SetField(queue.FieldTaskVideoDownload, field.TypeEnum, value)
 	}
 	if quo.mutation.TaskVideoDownloadCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVideoDownload,
-		})
+		_spec.ClearField(queue.FieldTaskVideoDownload, field.TypeEnum)
 	}
 	if value, ok := quo.mutation.TaskVideoConvert(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVideoConvert,
-		})
+		_spec.SetField(queue.FieldTaskVideoConvert, field.TypeEnum, value)
 	}
 	if quo.mutation.TaskVideoConvertCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVideoConvert,
-		})
+		_spec.ClearField(queue.FieldTaskVideoConvert, field.TypeEnum)
 	}
 	if value, ok := quo.mutation.TaskVideoMove(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVideoMove,
-		})
+		_spec.SetField(queue.FieldTaskVideoMove, field.TypeEnum, value)
 	}
 	if quo.mutation.TaskVideoMoveCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskVideoMove,
-		})
+		_spec.ClearField(queue.FieldTaskVideoMove, field.TypeEnum)
 	}
 	if value, ok := quo.mutation.TaskChatDownload(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatDownload,
-		})
+		_spec.SetField(queue.FieldTaskChatDownload, field.TypeEnum, value)
 	}
 	if quo.mutation.TaskChatDownloadCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskChatDownload,
-		})
+		_spec.ClearField(queue.FieldTaskChatDownload, field.TypeEnum)
 	}
 	if value, ok := quo.mutation.TaskChatConvert(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatConvert,
-		})
+		_spec.SetField(queue.FieldTaskChatConvert, field.TypeEnum, value)
 	}
 	if quo.mutation.TaskChatConvertCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskChatConvert,
-		})
+		_spec.ClearField(queue.FieldTaskChatConvert, field.TypeEnum)
 	}
 	if value, ok := quo.mutation.TaskChatRender(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatRender,
-		})
+		_spec.SetField(queue.FieldTaskChatRender, field.TypeEnum, value)
 	}
 	if quo.mutation.TaskChatRenderCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskChatRender,
-		})
+		_spec.ClearField(queue.FieldTaskChatRender, field.TypeEnum)
 	}
 	if value, ok := quo.mutation.TaskChatMove(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatMove,
-		})
+		_spec.SetField(queue.FieldTaskChatMove, field.TypeEnum, value)
 	}
 	if quo.mutation.TaskChatMoveCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: queue.FieldTaskChatMove,
-		})
+		_spec.ClearField(queue.FieldTaskChatMove, field.TypeEnum)
 	}
 	if value, ok := quo.mutation.ChatStart(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: queue.FieldChatStart,
-		})
+		_spec.SetField(queue.FieldChatStart, field.TypeTime, value)
 	}
 	if quo.mutation.ChatStartCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Column: queue.FieldChatStart,
-		})
+		_spec.ClearField(queue.FieldChatStart, field.TypeTime)
 	}
 	if value, ok := quo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: queue.FieldUpdatedAt,
-		})
+		_spec.SetField(queue.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if quo.mutation.VodCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1457,5 +1190,6 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 		}
 		return nil, err
 	}
+	quo.mutation.done = true
 	return _node, nil
 }

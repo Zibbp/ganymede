@@ -60,8 +60,7 @@ type LiveEdges struct {
 func (e LiveEdges) ChannelOrErr() (*Channel, error) {
 	if e.loadedTypes[0] {
 		if e.Channel == nil {
-			// The edge channel was loaded in eager-loading,
-			// but was not found.
+			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: channel.Label}
 		}
 		return e.Channel, nil
@@ -70,8 +69,8 @@ func (e LiveEdges) ChannelOrErr() (*Channel, error) {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Live) scanValues(columns []string) ([]interface{}, error) {
-	values := make([]interface{}, len(columns))
+func (*Live) scanValues(columns []string) ([]any, error) {
+	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
 		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldIsLive, live.FieldArchiveChat:
@@ -93,7 +92,7 @@ func (*Live) scanValues(columns []string) ([]interface{}, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Live fields.
-func (l *Live) assignValues(columns []string, values []interface{}) error {
+func (l *Live) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}

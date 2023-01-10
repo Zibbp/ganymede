@@ -48,6 +48,10 @@ type Vod struct {
 	ChatVideoPath string `json:"chat_video_path,omitempty"`
 	// InfoPath holds the value of the "info_path" field.
 	InfoPath string `json:"info_path,omitempty"`
+	// FolderName holds the value of the "folder_name" field.
+	FolderName string `json:"folder_name,omitempty"`
+	// FileName holds the value of the "file_name" field.
+	FileName string `json:"file_name,omitempty"`
 	// The time the VOD was streamed.
 	StreamedAt time.Time `json:"streamed_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -78,8 +82,7 @@ type VodEdges struct {
 func (e VodEdges) ChannelOrErr() (*Channel, error) {
 	if e.loadedTypes[0] {
 		if e.Channel == nil {
-			// The edge channel was loaded in eager-loading,
-			// but was not found.
+			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: channel.Label}
 		}
 		return e.Channel, nil
@@ -92,8 +95,7 @@ func (e VodEdges) ChannelOrErr() (*Channel, error) {
 func (e VodEdges) QueueOrErr() (*Queue, error) {
 	if e.loadedTypes[1] {
 		if e.Queue == nil {
-			// The edge queue was loaded in eager-loading,
-			// but was not found.
+			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: queue.Label}
 		}
 		return e.Queue, nil
@@ -111,15 +113,15 @@ func (e VodEdges) PlaylistsOrErr() ([]*Playlist, error) {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Vod) scanValues(columns []string) ([]interface{}, error) {
-	values := make([]interface{}, len(columns))
+func (*Vod) scanValues(columns []string) ([]any, error) {
+	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
 		case vod.FieldProcessing:
 			values[i] = new(sql.NullBool)
 		case vod.FieldDuration, vod.FieldViews:
 			values[i] = new(sql.NullInt64)
-		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldChatPath, vod.FieldChatVideoPath, vod.FieldInfoPath:
+		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldChatPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldFolderName, vod.FieldFileName:
 			values[i] = new(sql.NullString)
 		case vod.FieldStreamedAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -136,7 +138,7 @@ func (*Vod) scanValues(columns []string) ([]interface{}, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Vod fields.
-func (v *Vod) assignValues(columns []string, values []interface{}) error {
+func (v *Vod) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -231,6 +233,18 @@ func (v *Vod) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field info_path", values[i])
 			} else if value.Valid {
 				v.InfoPath = value.String
+			}
+		case vod.FieldFolderName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field folder_name", values[i])
+			} else if value.Valid {
+				v.FolderName = value.String
+			}
+		case vod.FieldFileName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field file_name", values[i])
+			} else if value.Valid {
+				v.FileName = value.String
 			}
 		case vod.FieldStreamedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -341,6 +355,12 @@ func (v *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("info_path=")
 	builder.WriteString(v.InfoPath)
+	builder.WriteString(", ")
+	builder.WriteString("folder_name=")
+	builder.WriteString(v.FolderName)
+	builder.WriteString(", ")
+	builder.WriteString("file_name=")
+	builder.WriteString(v.FileName)
 	builder.WriteString(", ")
 	builder.WriteString("streamed_at=")
 	builder.WriteString(v.StreamedAt.Format(time.ANSIC))

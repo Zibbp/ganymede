@@ -13,601 +13,367 @@ import (
 
 // ID filters vertices based on their ID field.
 func ID(id uuid.UUID) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldID), id))
-	})
+	return predicate.Live(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
 func IDEQ(id uuid.UUID) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldID), id))
-	})
+	return predicate.Live(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
 func IDNEQ(id uuid.UUID) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldID), id))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
 func IDIn(ids ...uuid.UUID) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		v := make([]interface{}, len(ids))
-		for i := range v {
-			v[i] = ids[i]
-		}
-		s.Where(sql.In(s.C(FieldID), v...))
-	})
+	return predicate.Live(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
 func IDNotIn(ids ...uuid.UUID) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		v := make([]interface{}, len(ids))
-		for i := range v {
-			v[i] = ids[i]
-		}
-		s.Where(sql.NotIn(s.C(FieldID), v...))
-	})
+	return predicate.Live(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
 func IDGT(id uuid.UUID) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldID), id))
-	})
+	return predicate.Live(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
 func IDGTE(id uuid.UUID) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldID), id))
-	})
+	return predicate.Live(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
 func IDLT(id uuid.UUID) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldID), id))
-	})
+	return predicate.Live(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
 func IDLTE(id uuid.UUID) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldID), id))
-	})
+	return predicate.Live(sql.FieldLTE(FieldID, id))
 }
 
 // WatchLive applies equality check predicate on the "watch_live" field. It's identical to WatchLiveEQ.
 func WatchLive(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldWatchLive), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldWatchLive, v))
 }
 
 // WatchVod applies equality check predicate on the "watch_vod" field. It's identical to WatchVodEQ.
 func WatchVod(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldWatchVod), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldWatchVod, v))
 }
 
 // DownloadArchives applies equality check predicate on the "download_archives" field. It's identical to DownloadArchivesEQ.
 func DownloadArchives(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDownloadArchives), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldDownloadArchives, v))
 }
 
 // DownloadHighlights applies equality check predicate on the "download_highlights" field. It's identical to DownloadHighlightsEQ.
 func DownloadHighlights(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDownloadHighlights), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldDownloadHighlights, v))
 }
 
 // DownloadUploads applies equality check predicate on the "download_uploads" field. It's identical to DownloadUploadsEQ.
 func DownloadUploads(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDownloadUploads), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldDownloadUploads, v))
 }
 
 // IsLive applies equality check predicate on the "is_live" field. It's identical to IsLiveEQ.
 func IsLive(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldIsLive), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldIsLive, v))
 }
 
 // ArchiveChat applies equality check predicate on the "archive_chat" field. It's identical to ArchiveChatEQ.
 func ArchiveChat(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldArchiveChat), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldArchiveChat, v))
 }
 
 // Resolution applies equality check predicate on the "resolution" field. It's identical to ResolutionEQ.
 func Resolution(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldResolution, v))
 }
 
 // LastLive applies equality check predicate on the "last_live" field. It's identical to LastLiveEQ.
 func LastLive(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldLastLive), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldLastLive, v))
 }
 
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldCreatedAt, v))
 }
 
 // WatchLiveEQ applies the EQ predicate on the "watch_live" field.
 func WatchLiveEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldWatchLive), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldWatchLive, v))
 }
 
 // WatchLiveNEQ applies the NEQ predicate on the "watch_live" field.
 func WatchLiveNEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldWatchLive), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldWatchLive, v))
 }
 
 // WatchVodEQ applies the EQ predicate on the "watch_vod" field.
 func WatchVodEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldWatchVod), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldWatchVod, v))
 }
 
 // WatchVodNEQ applies the NEQ predicate on the "watch_vod" field.
 func WatchVodNEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldWatchVod), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldWatchVod, v))
 }
 
 // DownloadArchivesEQ applies the EQ predicate on the "download_archives" field.
 func DownloadArchivesEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDownloadArchives), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldDownloadArchives, v))
 }
 
 // DownloadArchivesNEQ applies the NEQ predicate on the "download_archives" field.
 func DownloadArchivesNEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldDownloadArchives), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldDownloadArchives, v))
 }
 
 // DownloadHighlightsEQ applies the EQ predicate on the "download_highlights" field.
 func DownloadHighlightsEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDownloadHighlights), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldDownloadHighlights, v))
 }
 
 // DownloadHighlightsNEQ applies the NEQ predicate on the "download_highlights" field.
 func DownloadHighlightsNEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldDownloadHighlights), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldDownloadHighlights, v))
 }
 
 // DownloadUploadsEQ applies the EQ predicate on the "download_uploads" field.
 func DownloadUploadsEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDownloadUploads), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldDownloadUploads, v))
 }
 
 // DownloadUploadsNEQ applies the NEQ predicate on the "download_uploads" field.
 func DownloadUploadsNEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldDownloadUploads), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldDownloadUploads, v))
 }
 
 // IsLiveEQ applies the EQ predicate on the "is_live" field.
 func IsLiveEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldIsLive), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldIsLive, v))
 }
 
 // IsLiveNEQ applies the NEQ predicate on the "is_live" field.
 func IsLiveNEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldIsLive), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldIsLive, v))
 }
 
 // ArchiveChatEQ applies the EQ predicate on the "archive_chat" field.
 func ArchiveChatEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldArchiveChat), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldArchiveChat, v))
 }
 
 // ArchiveChatNEQ applies the NEQ predicate on the "archive_chat" field.
 func ArchiveChatNEQ(v bool) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldArchiveChat), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldArchiveChat, v))
 }
 
 // ResolutionEQ applies the EQ predicate on the "resolution" field.
 func ResolutionEQ(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldResolution, v))
 }
 
 // ResolutionNEQ applies the NEQ predicate on the "resolution" field.
 func ResolutionNEQ(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldResolution, v))
 }
 
 // ResolutionIn applies the In predicate on the "resolution" field.
 func ResolutionIn(vs ...string) predicate.Live {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Live(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldResolution), v...))
-	})
+	return predicate.Live(sql.FieldIn(FieldResolution, vs...))
 }
 
 // ResolutionNotIn applies the NotIn predicate on the "resolution" field.
 func ResolutionNotIn(vs ...string) predicate.Live {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Live(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldResolution), v...))
-	})
+	return predicate.Live(sql.FieldNotIn(FieldResolution, vs...))
 }
 
 // ResolutionGT applies the GT predicate on the "resolution" field.
 func ResolutionGT(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldGT(FieldResolution, v))
 }
 
 // ResolutionGTE applies the GTE predicate on the "resolution" field.
 func ResolutionGTE(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldGTE(FieldResolution, v))
 }
 
 // ResolutionLT applies the LT predicate on the "resolution" field.
 func ResolutionLT(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldLT(FieldResolution, v))
 }
 
 // ResolutionLTE applies the LTE predicate on the "resolution" field.
 func ResolutionLTE(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldLTE(FieldResolution, v))
 }
 
 // ResolutionContains applies the Contains predicate on the "resolution" field.
 func ResolutionContains(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldContains(FieldResolution, v))
 }
 
 // ResolutionHasPrefix applies the HasPrefix predicate on the "resolution" field.
 func ResolutionHasPrefix(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldHasPrefix(FieldResolution, v))
 }
 
 // ResolutionHasSuffix applies the HasSuffix predicate on the "resolution" field.
 func ResolutionHasSuffix(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldHasSuffix(FieldResolution, v))
 }
 
 // ResolutionIsNil applies the IsNil predicate on the "resolution" field.
 func ResolutionIsNil() predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldResolution)))
-	})
+	return predicate.Live(sql.FieldIsNull(FieldResolution))
 }
 
 // ResolutionNotNil applies the NotNil predicate on the "resolution" field.
 func ResolutionNotNil() predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldResolution)))
-	})
+	return predicate.Live(sql.FieldNotNull(FieldResolution))
 }
 
 // ResolutionEqualFold applies the EqualFold predicate on the "resolution" field.
 func ResolutionEqualFold(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldEqualFold(FieldResolution, v))
 }
 
 // ResolutionContainsFold applies the ContainsFold predicate on the "resolution" field.
 func ResolutionContainsFold(v string) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldResolution), v))
-	})
+	return predicate.Live(sql.FieldContainsFold(FieldResolution, v))
 }
 
 // LastLiveEQ applies the EQ predicate on the "last_live" field.
 func LastLiveEQ(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldLastLive), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldLastLive, v))
 }
 
 // LastLiveNEQ applies the NEQ predicate on the "last_live" field.
 func LastLiveNEQ(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldLastLive), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldLastLive, v))
 }
 
 // LastLiveIn applies the In predicate on the "last_live" field.
 func LastLiveIn(vs ...time.Time) predicate.Live {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Live(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldLastLive), v...))
-	})
+	return predicate.Live(sql.FieldIn(FieldLastLive, vs...))
 }
 
 // LastLiveNotIn applies the NotIn predicate on the "last_live" field.
 func LastLiveNotIn(vs ...time.Time) predicate.Live {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Live(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldLastLive), v...))
-	})
+	return predicate.Live(sql.FieldNotIn(FieldLastLive, vs...))
 }
 
 // LastLiveGT applies the GT predicate on the "last_live" field.
 func LastLiveGT(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldLastLive), v))
-	})
+	return predicate.Live(sql.FieldGT(FieldLastLive, v))
 }
 
 // LastLiveGTE applies the GTE predicate on the "last_live" field.
 func LastLiveGTE(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldLastLive), v))
-	})
+	return predicate.Live(sql.FieldGTE(FieldLastLive, v))
 }
 
 // LastLiveLT applies the LT predicate on the "last_live" field.
 func LastLiveLT(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldLastLive), v))
-	})
+	return predicate.Live(sql.FieldLT(FieldLastLive, v))
 }
 
 // LastLiveLTE applies the LTE predicate on the "last_live" field.
 func LastLiveLTE(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldLastLive), v))
-	})
+	return predicate.Live(sql.FieldLTE(FieldLastLive, v))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
 func UpdatedAtEQ(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
 // UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
 func UpdatedAtNEQ(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldUpdatedAt, v))
 }
 
 // UpdatedAtIn applies the In predicate on the "updated_at" field.
 func UpdatedAtIn(vs ...time.Time) predicate.Live {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Live(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldUpdatedAt), v...))
-	})
+	return predicate.Live(sql.FieldIn(FieldUpdatedAt, vs...))
 }
 
 // UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
 func UpdatedAtNotIn(vs ...time.Time) predicate.Live {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Live(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldUpdatedAt), v...))
-	})
+	return predicate.Live(sql.FieldNotIn(FieldUpdatedAt, vs...))
 }
 
 // UpdatedAtGT applies the GT predicate on the "updated_at" field.
 func UpdatedAtGT(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Live(sql.FieldGT(FieldUpdatedAt, v))
 }
 
 // UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
 func UpdatedAtGTE(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Live(sql.FieldGTE(FieldUpdatedAt, v))
 }
 
 // UpdatedAtLT applies the LT predicate on the "updated_at" field.
 func UpdatedAtLT(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Live(sql.FieldLT(FieldUpdatedAt, v))
 }
 
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldUpdatedAt), v))
-	})
+	return predicate.Live(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Live(sql.FieldEQ(FieldCreatedAt, v))
 }
 
 // CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
 func CreatedAtNEQ(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Live(sql.FieldNEQ(FieldCreatedAt, v))
 }
 
 // CreatedAtIn applies the In predicate on the "created_at" field.
 func CreatedAtIn(vs ...time.Time) predicate.Live {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Live(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldCreatedAt), v...))
-	})
+	return predicate.Live(sql.FieldIn(FieldCreatedAt, vs...))
 }
 
 // CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
 func CreatedAtNotIn(vs ...time.Time) predicate.Live {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Live(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldCreatedAt), v...))
-	})
+	return predicate.Live(sql.FieldNotIn(FieldCreatedAt, vs...))
 }
 
 // CreatedAtGT applies the GT predicate on the "created_at" field.
 func CreatedAtGT(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Live(sql.FieldGT(FieldCreatedAt, v))
 }
 
 // CreatedAtGTE applies the GTE predicate on the "created_at" field.
 func CreatedAtGTE(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Live(sql.FieldGTE(FieldCreatedAt, v))
 }
 
 // CreatedAtLT applies the LT predicate on the "created_at" field.
 func CreatedAtLT(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Live(sql.FieldLT(FieldCreatedAt, v))
 }
 
 // CreatedAtLTE applies the LTE predicate on the "created_at" field.
 func CreatedAtLTE(v time.Time) predicate.Live {
-	return predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldCreatedAt), v))
-	})
+	return predicate.Live(sql.FieldLTE(FieldCreatedAt, v))
 }
 
 // HasChannel applies the HasEdge predicate on the "channel" edge.
@@ -615,7 +381,6 @@ func HasChannel() predicate.Live {
 	return predicate.Live(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ChannelTable, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, ChannelTable, ChannelColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
