@@ -123,13 +123,25 @@ func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool) (*Twit
 		return nil, fmt.Errorf("error creating vod uuid: %v", err)
 	}
 
+	// Storage templates
+	folderName, err := getFolderName(vUUID, tVod)
+	if err != nil {
+		log.Error().Err(err).Msg("error using template to create folder name, falling back to default")
+		folderName = fmt.Sprintf("%s-%s", tVod.ID, vUUID.String())
+	}
+	fileName, err := getFileName(vUUID, tVod)
+	if err != nil {
+		log.Error().Err(err).Msg("error using template to create file name, falling back to default")
+		fileName = fmt.Sprintf("%s", tVod.ID)
+	}
+
 	// Sets
-	rootVodPath := fmt.Sprintf("/vods/%s/%s_%s", tVod.UserLogin, tVod.ID, vUUID.String())
+	rootVodPath := fmt.Sprintf("/vods/%s/%s", tVod.UserLogin, folderName)
 	var chatPath string
 	var chatVideoPath string
 	if chat == true {
-		chatPath = fmt.Sprintf("%s/%s-chat.json", rootVodPath, tVod.ID)
-		chatVideoPath = fmt.Sprintf("%s/%s-chat.mp4", rootVodPath, tVod.ID)
+		chatPath = fmt.Sprintf("%s/%s-chat.json", rootVodPath, fileName)
+		chatVideoPath = fmt.Sprintf("%s/%s-chat.mp4", rootVodPath, fileName)
 	} else {
 		chatPath = ""
 		chatVideoPath = ""
@@ -158,18 +170,22 @@ func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool) (*Twit
 		Views:            int(tVod.ViewCount),
 		Resolution:       quality,
 		Processing:       true,
-		ThumbnailPath:    fmt.Sprintf("%s/%s-thumbnail.jpg", rootVodPath, tVod.ID),
-		WebThumbnailPath: fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVodPath, tVod.ID),
-		VideoPath:        fmt.Sprintf("%s/%s-video.mp4", rootVodPath, tVod.ID),
+		ThumbnailPath:    fmt.Sprintf("%s/%s-thumbnail.jpg", rootVodPath, fileName),
+		WebThumbnailPath: fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVodPath, fileName),
+		VideoPath:        fmt.Sprintf("%s/%s-video.mp4", rootVodPath, fileName),
 		ChatPath:         chatPath,
 		ChatVideoPath:    chatVideoPath,
-		InfoPath:         fmt.Sprintf("%s/%s-info.json", rootVodPath, tVod.ID),
+		InfoPath:         fmt.Sprintf("%s/%s-info.json", rootVodPath, fileName),
 		StreamedAt:       parsedDate,
+		FolderName:       folderName,
+		FileName:         fileName,
 	}
 	v, err := s.VodService.CreateVod(vodDTO, dbC.ID)
 	if err != nil {
 		return nil, fmt.Errorf("error creating vod: %v", err)
 	}
+
+	fmt.Println(v)
 
 	// Create queue item
 	q, err := s.QueueService.CreateQueueItem(queue.Queue{LiveArchive: false}, v.ID)
@@ -306,13 +322,32 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 		return nil, fmt.Errorf("error creating vod uuid: %v", err)
 	}
 
+	// Create vodDto for storage templates
+	tVodDto := twitch.Vod{
+		ID:        ts.ID,
+		UserLogin: ts.UserLogin,
+		Title:     ts.Title,
+		Type:      "live",
+		CreatedAt: ts.StartedAt,
+	}
+	folderName, err := getFolderName(vUUID, tVodDto)
+	if err != nil {
+		log.Error().Err(err).Msg("error using template to create folder name, falling back to default")
+		folderName = fmt.Sprintf("%s-%s", tVodDto.ID, vUUID.String())
+	}
+	fileName, err := getFileName(vUUID, tVodDto)
+	if err != nil {
+		log.Error().Err(err).Msg("error using template to create file name, falling back to default")
+		fileName = fmt.Sprintf("%s", tVodDto.ID)
+	}
+
 	// Sets
-	rootVodPath := fmt.Sprintf("/vods/%s/%s_%s", ts.UserLogin, ts.ID, vUUID.String())
+	rootVodPath := fmt.Sprintf("/vods/%s/%s", ts.UserLogin, folderName)
 	var chatPath string
 	var chatVideoPath string
 	if lwc.ArchiveChat == true {
-		chatPath = fmt.Sprintf("%s/%s-chat.json", rootVodPath, ts.ID)
-		chatVideoPath = fmt.Sprintf("%s/%s-chat.mp4", rootVodPath, ts.ID)
+		chatPath = fmt.Sprintf("%s/%s-chat.json", rootVodPath, fileName)
+		chatVideoPath = fmt.Sprintf("%s/%s-chat.mp4", rootVodPath, fileName)
 	} else {
 		chatPath = ""
 		chatVideoPath = ""
@@ -341,13 +376,15 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 		Views:            1,
 		Resolution:       lwc.Resolution,
 		Processing:       true,
-		ThumbnailPath:    fmt.Sprintf("%s/%s-thumbnail.jpg", rootVodPath, ts.ID),
-		WebThumbnailPath: fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVodPath, ts.ID),
-		VideoPath:        fmt.Sprintf("%s/%s-video.mp4", rootVodPath, ts.ID),
+		ThumbnailPath:    fmt.Sprintf("%s/%s-thumbnail.jpg", rootVodPath, fileName),
+		WebThumbnailPath: fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVodPath, fileName),
+		VideoPath:        fmt.Sprintf("%s/%s-video.mp4", rootVodPath, fileName),
 		ChatPath:         chatPath,
 		ChatVideoPath:    chatVideoPath,
-		InfoPath:         fmt.Sprintf("%s/%s-info.json", rootVodPath, ts.ID),
+		InfoPath:         fmt.Sprintf("%s/%s-info.json", rootVodPath, fileName),
 		StreamedAt:       time.Now(),
+		FolderName:       folderName,
+		FileName:         fileName,
 	}
 	v, err := s.VodService.CreateVod(vodDTO, dbC.ID)
 	if err != nil {
@@ -439,7 +476,7 @@ func (s *Service) TaskVodCreateFolder(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	log.Debug().Msgf("starting task vod create folder for vod %s", v.ID)
 	q.Update().SetTaskVodCreateFolder(utils.Running).SaveX(context.Background())
 	// Create folder
-	err := utils.CreateFolder(fmt.Sprintf("%s/%s_%s", ch.Name, v.ExtID, v.ID))
+	err := utils.CreateFolder(fmt.Sprintf("%s/%s", ch.Name, v.FolderName))
 	if err != nil {
 		log.Error().Err(err).Msg("error creating vod folder")
 		q.Update().SetTaskVodCreateFolder(utils.Failed).SaveX(context.Background())
@@ -484,14 +521,14 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 	webResThumbnailUrl = strings.ReplaceAll(webResThumbnailUrl, "{height}", "360")
 
 	// Download full resolution thumbnail
-	err = utils.DownloadFile(fullResThumbnailUrl, fmt.Sprintf("%s/%s_%s", ch.Name, v.ExtID, v.ID), fmt.Sprintf("%s-thumbnail.jpg", v.ExtID))
+	err = utils.DownloadFile(fullResThumbnailUrl, fmt.Sprintf("%s/%s", ch.Name, v.FolderName), fmt.Sprintf("%s-thumbnail.jpg", v.FileName))
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading thumbnail")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
 		s.TaskError(ch, v, q, "vod_download_thumbnail")
 	}
 	// Download web resolution thumbnail
-	err = utils.DownloadFile(webResThumbnailUrl, fmt.Sprintf("%s/%s_%s", ch.Name, v.ExtID, v.ID), fmt.Sprintf("%s-web_thumbnail.jpg", v.ExtID))
+	err = utils.DownloadFile(webResThumbnailUrl, fmt.Sprintf("%s/%s", ch.Name, v.FolderName), fmt.Sprintf("%s-web_thumbnail.jpg", v.FileName))
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading thumbnail")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
@@ -511,11 +548,10 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 }
 
 func (s *Service) RefreshLiveThumbnails(ch *ent.Channel, v *ent.Vod, q *ent.Queue) {
-	log.Debug().Msg("refresh live thumbnails called...sleeping for 30 minutes")
-	time.Sleep(30 * time.Minute)
+	log.Debug().Msg("refresh live thumbnails called...sleeping for 20 minutes")
+	time.Sleep(20 * time.Minute)
 	log.Debug().Msg("refresh live thumbnails sleep done")
 	go s.TaskVodDownloadLiveThumbnail(ch, v, q, false)
-	return
 }
 
 func (s *Service) TaskVodDownloadThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
@@ -538,7 +574,7 @@ func (s *Service) TaskVodDownloadThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Q
 	webResThumbnailUrl = strings.ReplaceAll(webResThumbnailUrl, "%{height}", "360")
 
 	// Download full resolution thumbnail
-	err = utils.DownloadFile(fullResThumbnailUrl, fmt.Sprintf("%s/%s_%s", ch.Name, v.ExtID, v.ID), fmt.Sprintf("%s-thumbnail.jpg", v.ExtID))
+	err = utils.DownloadFile(fullResThumbnailUrl, fmt.Sprintf("%s/%s", ch.Name, v.FolderName), fmt.Sprintf("%s-thumbnail.jpg", v.FileName))
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading thumbnail")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
@@ -546,7 +582,7 @@ func (s *Service) TaskVodDownloadThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Q
 		return
 	}
 	// Download web resolution thumbnail
-	err = utils.DownloadFile(webResThumbnailUrl, fmt.Sprintf("%s/%s_%s", ch.Name, v.ExtID, v.ID), fmt.Sprintf("%s-web_thumbnail.jpg", v.ExtID))
+	err = utils.DownloadFile(webResThumbnailUrl, fmt.Sprintf("%s/%s", ch.Name, v.FolderName), fmt.Sprintf("%s-web_thumbnail.jpg", v.FileName))
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading thumbnail")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
@@ -576,7 +612,7 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	}
 	tVod := stream.Data[0]
 
-	err = utils.WriteJson(tVod, fmt.Sprintf("%s/%s_%s", ch.Name, v.ExtID, v.ID), fmt.Sprintf("%s-info.json", v.ExtID))
+	err = utils.WriteJson(tVod, fmt.Sprintf("%s/%s", ch.Name, v.FolderName), fmt.Sprintf("%s-info.json", v.FileName))
 	if err != nil {
 		log.Error().Err(err).Msg("error saving info")
 		q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
@@ -609,7 +645,7 @@ func (s *Service) TaskVodSaveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue, con
 		return
 	}
 
-	err = utils.WriteJson(tVod, fmt.Sprintf("%s/%s_%s", ch.Name, v.ExtID, v.ID), fmt.Sprintf("%s-info.json", v.ExtID))
+	err = utils.WriteJson(tVod, fmt.Sprintf("%s/%s", ch.Name, v.FolderName), fmt.Sprintf("%s-info.json", v.FileName))
 	if err != nil {
 		log.Error().Err(err).Msg("error saving info")
 		q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
@@ -725,7 +761,7 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 	if viper.GetBool("archive.save_as_hls") {
 		// Move HLS folder to vod folder
 		sourcePath := fmt.Sprintf("/tmp/%s_%s-video_hls0", v.ExtID, v.ID)
-		destPath := fmt.Sprintf("/vods/%s/%s_%s/%s-video_hls", ch.Name, v.ExtID, v.ID, v.ExtID)
+		destPath := fmt.Sprintf("/vods/%s/%s/%s-video_hls", ch.Name, v.FolderName, v.FileName)
 		err := utils.MoveFolder(sourcePath, destPath)
 		if err != nil {
 			log.Error().Err(err).Msg("error moving video hls directory")
@@ -734,10 +770,10 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 			return
 		}
 		// Update video path to hls path
-		v.Update().SetVideoPath(fmt.Sprintf("/vods/%s/%s_%s/%s-video_hls/%s-video.m3u8", ch.Name, v.ExtID, v.ID, v.ExtID, v.ExtID)).SaveX(context.Background())
+		v.Update().SetVideoPath(fmt.Sprintf("/vods/%s/%s/%s-video_hls/%s-video.m3u8", ch.Name, v.FolderName, v.FileName, v.ExtID)).SaveX(context.Background())
 	} else {
 		sourcePath := fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID)
-		destPath := fmt.Sprintf("/vods/%s/%s_%s/%s-video.mp4", ch.Name, v.ExtID, v.ID, v.ExtID)
+		destPath := fmt.Sprintf("/vods/%s/%s/%s-video.mp4", ch.Name, v.FolderName, v.FileName)
 
 		err := utils.MoveFile(sourcePath, destPath)
 		if err != nil {
@@ -922,7 +958,7 @@ func (s *Service) TaskChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont b
 
 	// Chat JSON
 	sourcePath := fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID)
-	destPath := fmt.Sprintf("/vods/%s/%s_%s/%s-chat.json", ch.Name, v.ExtID, v.ID, v.ExtID)
+	destPath := fmt.Sprintf("/vods/%s/%s/%s-chat.json", ch.Name, v.FolderName, v.FileName)
 
 	err := utils.MoveFile(sourcePath, destPath)
 	if err != nil {
@@ -933,7 +969,7 @@ func (s *Service) TaskChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont b
 	}
 	// Chat Video
 	sourcePath = fmt.Sprintf("/tmp/%s_%s-chat.mp4", v.ExtID, v.ID)
-	destPath = fmt.Sprintf("/vods/%s/%s_%s/%s-chat.mp4", ch.Name, v.ExtID, v.ID, v.ExtID)
+	destPath = fmt.Sprintf("/vods/%s/%s/%s-chat.mp4", ch.Name, v.FolderName, v.FileName)
 
 	err = utils.MoveFile(sourcePath, destPath)
 	if err != nil {
@@ -958,7 +994,7 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 
 	// live chat JSON
 	sourcePath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
-	destPath := fmt.Sprintf("/vods/%s/%s_%s/%s-live-chat.json", ch.Name, v.ExtID, v.ID, v.ExtID)
+	destPath := fmt.Sprintf("/vods/%s/%s/%s-live-chat.json", ch.Name, v.FolderName, v.FileName)
 
 	err := utils.MoveFile(sourcePath, destPath)
 	if err != nil {
@@ -970,7 +1006,7 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 
 	// converted chat JSON
 	sourcePath = fmt.Sprintf("/tmp/%s_%s-chat-convert.json", v.ExtID, v.ID)
-	destPath = fmt.Sprintf("/vods/%s/%s_%s/%s-chat-convert.json", ch.Name, v.ExtID, v.ID, v.ExtID)
+	destPath = fmt.Sprintf("/vods/%s/%s/%s-chat-convert.json", ch.Name, v.FolderName, v.FileName)
 
 	err = utils.MoveFile(sourcePath, destPath)
 	if err != nil {
@@ -982,7 +1018,7 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 
 	// parsed chat JSON
 	sourcePath = fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID)
-	destPath = fmt.Sprintf("/vods/%s/%s_%s/%s-chat.json", ch.Name, v.ExtID, v.ID, v.ExtID)
+	destPath = fmt.Sprintf("/vods/%s/%s/%s-chat.json", ch.Name, v.FolderName, v.FileName)
 
 	err = utils.MoveFile(sourcePath, destPath)
 	if err != nil {
@@ -994,7 +1030,7 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 
 	// Chat Video
 	sourcePath = fmt.Sprintf("/tmp/%s_%s-chat.mp4", v.ExtID, v.ID)
-	destPath = fmt.Sprintf("/vods/%s/%s_%s/%s-chat.mp4", ch.Name, v.ExtID, v.ID, v.ExtID)
+	destPath = fmt.Sprintf("/vods/%s/%s/%s-chat.mp4", ch.Name, v.FolderName, v.FileName)
 
 	err = utils.MoveFile(sourcePath, destPath)
 	if err != nil {
