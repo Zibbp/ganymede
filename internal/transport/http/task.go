@@ -1,8 +1,9 @@
 package http
 
 import (
-	"github.com/labstack/echo/v4"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 type TaskService interface {
@@ -10,7 +11,7 @@ type TaskService interface {
 }
 
 type StartTaskRequest struct {
-	Task string `json:"task" validate:"required,oneof=check_live check_vod get_jwks twitch_auth queue_hold_check"`
+	Task string `json:"task" validate:"required,oneof=check_live check_vod get_jwks twitch_auth queue_hold_check storage_migration"`
 }
 
 func (h *Handler) StartTask(c echo.Context) error {
