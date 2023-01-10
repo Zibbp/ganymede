@@ -12,6 +12,8 @@ type ConfigService interface {
 	UpdateConfig(c echo.Context, conf *config.Conf) error
 	GetNotificationConfig(c echo.Context) (*config.Notification, error)
 	UpdateNotificationConfig(c echo.Context, conf *config.Notification) error
+	GetStorageTemplateConfig(c echo.Context) (*config.StorageTemplate, error)
+	UpdateStorageTemplateConfig(c echo.Context, conf *config.StorageTemplate) error
 }
 
 type UpdateConfigRequest struct {
@@ -39,6 +41,11 @@ type UpdateNotificationRequest struct {
 	IsLiveWebhookUrl       string `json:"is_live_webhook_url"`
 	IsLiveTemplate         string `json:"is_live_template"`
 	IsLiveEnabled          bool   `json:"is_live_enabled"`
+}
+
+type UpdateStorageTemplateRequest struct {
+	FolderTemplate string `json:"folder_template"`
+	FileTemplate   string `json:"file_template"`
 }
 
 func (h *Handler) GetConfig(c echo.Context) error {
@@ -103,6 +110,30 @@ func (h *Handler) UpdateNotificationConfig(c echo.Context) error {
 	}
 
 	if err := h.Service.ConfigService.UpdateNotificationConfig(c, &cDto); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, conf)
+}
+
+func (h *Handler) GetStorageTemplateConfig(c echo.Context) error {
+	conf, err := h.Service.ConfigService.GetStorageTemplateConfig(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, conf)
+}
+
+func (h *Handler) UpdateStorageTemplateConfig(c echo.Context) error {
+	conf := new(UpdateStorageTemplateRequest)
+	if err := c.Bind(conf); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	cDto := config.StorageTemplate{
+		FolderTemplate: conf.FolderTemplate,
+		FileTemplate:   conf.FileTemplate,
+	}
+
+	if err := h.Service.ConfigService.UpdateStorageTemplateConfig(c, &cDto); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, conf)
