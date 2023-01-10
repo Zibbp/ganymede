@@ -161,8 +161,6 @@ func (s *Service) UpdateConfig(c echo.Context, cDto *Conf) error {
 	viper.Set("parameters.chat_render", cDto.Parameters.ChatRender)
 	viper.Set("parameters.streamlink_live", cDto.Parameters.StreamlinkLive)
 	viper.Set("archive.save_as_hls", cDto.Archive.SaveAsHls)
-	viper.Set("storage_templates.folder_template", cDto.StorageTemplates.FolderTemplate)
-	viper.Set("storage_templates.file_template", cDto.StorageTemplates.FileTemplate)
 	err := viper.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("error writing config file: %w", err)
