@@ -83,7 +83,8 @@ func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 
 }
 
-func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool) (*TwitchVodResponse, error) {
+func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool, renderChat bool) (*TwitchVodResponse, error) {
+	log.Debug().Msgf("Archiving video %s quality: %s chat: %s render chat: %s", vID, quality, chat, renderChat)
 	// Fetch VOD from Twitch API
 	tVod, err := s.TwitchService.GetVodByID(vID)
 	if err != nil {
@@ -192,8 +193,15 @@ func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool) (*Twit
 	}
 
 	// If chat is disabled update queue
-	if chat == false {
+	if !chat {
 		q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
+		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
+	}
+
+	// If render chat is disabled update queue
+	if !renderChat {
+		q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).SaveX(context.Background())
+		v.Update().SetChatVideoPath("").SaveX(context.Background())
 	}
 
 	// Re-query queue from DB for updated values
@@ -396,8 +404,14 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 	}
 
 	// If chat is disabled update queue
-	if lwc.ArchiveChat == false {
+	if !lwc.ArchiveChat {
 		q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
+		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
+	}
+
+	if !lwc.RenderChat {
+		q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).SaveX(context.Background())
+		v.Update().SetChatVideoPath("").SaveX(context.Background())
 	}
 
 	// Re-query queue from DB for updated values
@@ -788,10 +802,10 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 	if err != nil {
 		log.Info().Err(err).Msgf("error deleting source file for vod %s", v.ID)
 	}
-	// Delete converted file
+	// Ensure the converted file is deleted
 	err = utils.DeleteFile(fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID))
 	if err != nil {
-		log.Debug().Err(err).Msgf("error deleting converted file for vod %s", v.ID)
+		log.Debug().Msgf("error deleting converted file for vod %s", v.ID)
 	}
 
 	q.Update().SetTaskVideoMove(utils.Success).SaveX(context.Background())
@@ -924,22 +938,29 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 }
 
 func (s *Service) TaskChatRender(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
-	log.Debug().Msgf("starting task chat render for vod %s", v.ID)
-	q.Update().SetTaskChatRender(utils.Running).SaveX(context.Background())
+	var renderContinue bool
+	if !q.RenderChat {
+		log.Debug().Msgf("skipping chat render for vod %s as it is disabled", v.ID)
+		renderContinue = true
+	} else {
+		log.Debug().Msgf("starting task chat render for vod %s", v.ID)
+		q.Update().SetTaskChatRender(utils.Running).SaveX(context.Background())
 
-	err, renderContinue := exec.RenderTwitchVodChat(v, q)
-	if err != nil {
-		log.Error().Err(err).Msg("error rendering chat")
-		q.Update().SetTaskChatRender(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "chat_render")
-		return
+		err, rCont := exec.RenderTwitchVodChat(v, q)
+		if err != nil {
+			log.Error().Err(err).Msg("error rendering chat")
+			q.Update().SetTaskChatRender(utils.Failed).SaveX(context.Background())
+			s.TaskError(ch, v, q, "chat_render")
+			return
+		}
+		renderContinue = rCont
+
+		q.Update().SetTaskChatRender(utils.Success).SaveX(context.Background())
 	}
 
-	q.Update().SetTaskChatRender(utils.Success).SaveX(context.Background())
-
 	// Always move chat if render was successful
-	if renderContinue == true {
-		if q.LiveArchive == true {
+	if renderContinue {
+		if q.LiveArchive {
 			go s.TaskLiveChatMove(ch, v, q, true)
 		} else {
 			go s.TaskChatMove(ch, v, q, true)
@@ -965,16 +986,18 @@ func (s *Service) TaskChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont b
 		s.TaskError(ch, v, q, "chat_move")
 		return
 	}
-	// Chat Video
-	sourcePath = fmt.Sprintf("/tmp/%s_%s-chat.mp4", v.ExtID, v.ID)
-	destPath = fmt.Sprintf("/vods/%s/%s/%s-chat.mp4", ch.Name, v.FolderName, v.FileName)
+	if q.RenderChat {
+		// Chat Video
+		sourcePath = fmt.Sprintf("/tmp/%s_%s-chat.mp4", v.ExtID, v.ID)
+		destPath = fmt.Sprintf("/vods/%s/%s/%s-chat.mp4", ch.Name, v.FolderName, v.FileName)
 
-	err = utils.MoveFile(sourcePath, destPath)
-	if err != nil {
-		log.Error().Err(err).Msg("error moving chat")
-		q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "chat_move")
-		return
+		err = utils.MoveFile(sourcePath, destPath)
+		if err != nil {
+			log.Error().Err(err).Msg("error moving chat")
+			q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
+			s.TaskError(ch, v, q, "chat_move")
+			return
+		}
 	}
 
 	q.Update().SetTaskChatMove(utils.Success).SaveX(context.Background())
@@ -1026,16 +1049,18 @@ func (s *Service) TaskLiveChatMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 		return
 	}
 
-	// Chat Video
-	sourcePath = fmt.Sprintf("/tmp/%s_%s-chat.mp4", v.ExtID, v.ID)
-	destPath = fmt.Sprintf("/vods/%s/%s/%s-chat.mp4", ch.Name, v.FolderName, v.FileName)
+	if q.RenderChat {
+		// Chat Video
+		sourcePath = fmt.Sprintf("/tmp/%s_%s-chat.mp4", v.ExtID, v.ID)
+		destPath = fmt.Sprintf("/vods/%s/%s/%s-chat.mp4", ch.Name, v.FolderName, v.FileName)
 
-	err = utils.MoveFile(sourcePath, destPath)
-	if err != nil {
-		log.Error().Err(err).Msg("error moving chat")
-		q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "chat_move")
-		return
+		err = utils.MoveFile(sourcePath, destPath)
+		if err != nil {
+			log.Error().Err(err).Msg("error moving chat")
+			q.Update().SetTaskChatMove(utils.Failed).SaveX(context.Background())
+			s.TaskError(ch, v, q, "chat_move")
+			return
+		}
 	}
 
 	q.Update().SetTaskChatMove(utils.Success).SaveX(context.Background())

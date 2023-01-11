@@ -1,11 +1,12 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/live"
-	"net/http"
 )
 
 type LiveService interface {
@@ -27,6 +28,7 @@ type AddWatchedChannelRequest struct {
 	ChannelID          string `json:"channel_id" validate:"required"`
 	Resolution         string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
 	ArchiveChat        bool   `json:"archive_chat"`
+	RenderChat         bool   `json:"render_chat"`
 }
 
 type UpdateWatchedChannelRequest struct {
@@ -37,6 +39,7 @@ type UpdateWatchedChannelRequest struct {
 	DownloadUploads    bool   `json:"download_uploads"`
 	Resolution         string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
 	ArchiveChat        bool   `json:"archive_chat"`
+	RenderChat         bool   `json:"render_chat"`
 }
 
 type ConvertChatRequest struct {
@@ -79,6 +82,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		IsLive:             false,
 		ArchiveChat:        ccr.ArchiveChat,
 		Resolution:         ccr.Resolution,
+		RenderChat:         ccr.RenderChat,
 	}
 	l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 	if err != nil {
@@ -110,6 +114,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		DownloadUploads:    ccr.DownloadUploads,
 		ArchiveChat:        ccr.ArchiveChat,
 		Resolution:         ccr.Resolution,
+		RenderChat:         ccr.RenderChat,
 	}
 	l, err := h.Service.LiveService.UpdateLiveWatchedChannel(c, liveDto)
 	if err != nil {

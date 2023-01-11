@@ -2,6 +2,7 @@ package live
 
 import (
 	"context"
+
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
@@ -101,7 +102,7 @@ func (s *Service) CheckVodWatchedChannels() {
 		for _, video := range videos {
 			if !contains(dbVideos, video.ID) {
 				// archive the video
-				_, err := s.ArchiveService.ArchiveTwitchVod(video.ID, watch.Resolution, watch.ArchiveChat)
+				_, err := s.ArchiveService.ArchiveTwitchVod(video.ID, watch.Resolution, watch.ArchiveChat, true)
 				if err != nil {
 					log.Error().Err(err).Msgf("Error archiving video %s", video.ID)
 					continue

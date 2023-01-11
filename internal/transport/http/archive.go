@@ -1,17 +1,18 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/utils"
-	"net/http"
 )
 
 type ArchiveService interface {
 	ArchiveTwitchChannel(cName string) (*ent.Channel, error)
-	ArchiveTwitchVod(vID string, quality string, chat bool) (*archive.TwitchVodResponse, error)
+	ArchiveTwitchVod(vID string, quality string, chat bool, renderChat bool) (*archive.TwitchVodResponse, error)
 	RestartTask(c echo.Context, qID uuid.UUID, task string, cont bool) error
 }
 
@@ -19,9 +20,10 @@ type ArchiveChannelRequest struct {
 	ChannelName string `json:"channel_name" validate:"required"`
 }
 type ArchiveVodRequest struct {
-	VodID   string           `json:"vod_id" validate:"required"`
-	Quality utils.VodQuality `json:"quality" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
-	Chat    bool             `json:"chat"`
+	VodID      string           `json:"vod_id" validate:"required"`
+	Quality    utils.VodQuality `json:"quality" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
+	Chat       bool             `json:"chat"`
+	RenderChat bool             `json:"render_chat"`
 }
 
 type RestartTaskRequest struct {
@@ -53,7 +55,7 @@ func (h *Handler) ArchiveTwitchVod(c echo.Context) error {
 	if err := c.Validate(avr); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	vod, err := h.Service.ArchiveService.ArchiveTwitchVod(avr.VodID, string(avr.Quality), avr.Chat)
+	vod, err := h.Service.ArchiveService.ArchiveTwitchVod(avr.VodID, string(avr.Quality), avr.Chat, avr.RenderChat)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
