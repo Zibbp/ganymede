@@ -1,12 +1,13 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/internal/utils"
-	"time"
 )
 
 // Queue holds the schema definition for the Queue entity.
@@ -34,6 +35,7 @@ func (Queue) Fields() []ent.Field {
 		field.Enum("task_chat_render").GoType(utils.TaskStatus("")).Default(string(utils.Pending)).Optional(),
 		field.Enum("task_chat_move").GoType(utils.TaskStatus("")).Default(string(utils.Pending)).Optional(),
 		field.Time("chat_start").Optional(),
+		field.Bool("render_chat").Optional().Default(true),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}

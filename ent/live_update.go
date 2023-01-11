@@ -162,6 +162,20 @@ func (lu *LiveUpdate) SetNillableLastLive(t *time.Time) *LiveUpdate {
 	return lu
 }
 
+// SetRenderChat sets the "render_chat" field.
+func (lu *LiveUpdate) SetRenderChat(b bool) *LiveUpdate {
+	lu.mutation.SetRenderChat(b)
+	return lu
+}
+
+// SetNillableRenderChat sets the "render_chat" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableRenderChat(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetRenderChat(*b)
+	}
+	return lu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lu *LiveUpdate) SetUpdatedAt(t time.Time) *LiveUpdate {
 	lu.mutation.SetUpdatedAt(t)
@@ -284,6 +298,9 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := lu.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
+	}
+	if value, ok := lu.mutation.RenderChat(); ok {
+		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -475,6 +492,20 @@ func (luo *LiveUpdateOne) SetNillableLastLive(t *time.Time) *LiveUpdateOne {
 	return luo
 }
 
+// SetRenderChat sets the "render_chat" field.
+func (luo *LiveUpdateOne) SetRenderChat(b bool) *LiveUpdateOne {
+	luo.mutation.SetRenderChat(b)
+	return luo
+}
+
+// SetNillableRenderChat sets the "render_chat" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableRenderChat(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetRenderChat(*b)
+	}
+	return luo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (luo *LiveUpdateOne) SetUpdatedAt(t time.Time) *LiveUpdateOne {
 	luo.mutation.SetUpdatedAt(t)
@@ -621,6 +652,9 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 	}
 	if value, ok := luo.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
+	}
+	if value, ok := luo.mutation.RenderChat(); ok {
+		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)

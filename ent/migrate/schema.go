@@ -36,6 +36,7 @@ var (
 		{Name: "archive_chat", Type: field.TypeBool, Default: true},
 		{Name: "resolution", Type: field.TypeString, Nullable: true, Default: "best"},
 		{Name: "last_live", Type: field.TypeTime},
+		{Name: "render_chat", Type: field.TypeBool, Default: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "channel_live", Type: field.TypeUUID},
@@ -48,7 +49,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[12]},
+				Columns:    []*schema.Column{LivesColumns[13]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -104,6 +105,7 @@ var (
 		{Name: "task_chat_render", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "task_chat_move", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "chat_start", Type: field.TypeTime, Nullable: true},
+		{Name: "render_chat", Type: field.TypeBool, Nullable: true, Default: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "vod_queue", Type: field.TypeUUID, Unique: true},
@@ -116,7 +118,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "queues_vods_queue",
-				Columns:    []*schema.Column{QueuesColumns[19]},
+				Columns:    []*schema.Column{QueuesColumns[20]},
 				RefColumns: []*schema.Column{VodsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

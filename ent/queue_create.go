@@ -247,6 +247,20 @@ func (qc *QueueCreate) SetNillableChatStart(t *time.Time) *QueueCreate {
 	return qc
 }
 
+// SetRenderChat sets the "render_chat" field.
+func (qc *QueueCreate) SetRenderChat(b bool) *QueueCreate {
+	qc.mutation.SetRenderChat(b)
+	return qc
+}
+
+// SetNillableRenderChat sets the "render_chat" field if the given value is not nil.
+func (qc *QueueCreate) SetNillableRenderChat(b *bool) *QueueCreate {
+	if b != nil {
+		qc.SetRenderChat(*b)
+	}
+	return qc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (qc *QueueCreate) SetUpdatedAt(t time.Time) *QueueCreate {
 	qc.mutation.SetUpdatedAt(t)
@@ -394,6 +408,10 @@ func (qc *QueueCreate) defaults() {
 	if _, ok := qc.mutation.TaskChatMove(); !ok {
 		v := queue.DefaultTaskChatMove
 		qc.mutation.SetTaskChatMove(v)
+	}
+	if _, ok := qc.mutation.RenderChat(); !ok {
+		v := queue.DefaultRenderChat
+		qc.mutation.SetRenderChat(v)
 	}
 	if _, ok := qc.mutation.UpdatedAt(); !ok {
 		v := queue.DefaultUpdatedAt()
@@ -589,6 +607,10 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 	if value, ok := qc.mutation.ChatStart(); ok {
 		_spec.SetField(queue.FieldChatStart, field.TypeTime, value)
 		_node.ChatStart = value
+	}
+	if value, ok := qc.mutation.RenderChat(); ok {
+		_spec.SetField(queue.FieldRenderChat, field.TypeBool, value)
+		_node.RenderChat = value
 	}
 	if value, ok := qc.mutation.UpdatedAt(); ok {
 		_spec.SetField(queue.FieldUpdatedAt, field.TypeTime, value)

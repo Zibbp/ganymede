@@ -857,6 +857,7 @@ type LiveMutation struct {
 	archive_chat        *bool
 	resolution          *string
 	last_live           *time.Time
+	render_chat         *bool
 	updated_at          *time.Time
 	created_at          *time.Time
 	clearedFields       map[string]struct{}
@@ -1308,6 +1309,42 @@ func (m *LiveMutation) ResetLastLive() {
 	m.last_live = nil
 }
 
+// SetRenderChat sets the "render_chat" field.
+func (m *LiveMutation) SetRenderChat(b bool) {
+	m.render_chat = &b
+}
+
+// RenderChat returns the value of the "render_chat" field in the mutation.
+func (m *LiveMutation) RenderChat() (r bool, exists bool) {
+	v := m.render_chat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRenderChat returns the old "render_chat" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldRenderChat(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRenderChat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRenderChat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRenderChat: %w", err)
+	}
+	return oldValue.RenderChat, nil
+}
+
+// ResetRenderChat resets all changes to the "render_chat" field.
+func (m *LiveMutation) ResetRenderChat() {
+	m.render_chat = nil
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *LiveMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -1453,7 +1490,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -1480,6 +1517,9 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.last_live != nil {
 		fields = append(fields, live.FieldLastLive)
+	}
+	if m.render_chat != nil {
+		fields = append(fields, live.FieldRenderChat)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, live.FieldUpdatedAt)
@@ -1513,6 +1553,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.Resolution()
 	case live.FieldLastLive:
 		return m.LastLive()
+	case live.FieldRenderChat:
+		return m.RenderChat()
 	case live.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case live.FieldCreatedAt:
@@ -1544,6 +1586,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldResolution(ctx)
 	case live.FieldLastLive:
 		return m.OldLastLive(ctx)
+	case live.FieldRenderChat:
+		return m.OldRenderChat(ctx)
 	case live.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case live.FieldCreatedAt:
@@ -1619,6 +1663,13 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetLastLive(v)
+		return nil
+	case live.FieldRenderChat:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRenderChat(v)
 		return nil
 	case live.FieldUpdatedAt:
 		v, ok := value.(time.Time)
@@ -1718,6 +1769,9 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldLastLive:
 		m.ResetLastLive()
+		return nil
+	case live.FieldRenderChat:
+		m.ResetRenderChat()
 		return nil
 	case live.FieldUpdatedAt:
 		m.ResetUpdatedAt()
@@ -3167,6 +3221,7 @@ type QueueMutation struct {
 	task_chat_render            *utils.TaskStatus
 	task_chat_move              *utils.TaskStatus
 	chat_start                  *time.Time
+	render_chat                 *bool
 	updated_at                  *time.Time
 	created_at                  *time.Time
 	clearedFields               map[string]struct{}
@@ -4000,6 +4055,55 @@ func (m *QueueMutation) ResetChatStart() {
 	delete(m.clearedFields, queue.FieldChatStart)
 }
 
+// SetRenderChat sets the "render_chat" field.
+func (m *QueueMutation) SetRenderChat(b bool) {
+	m.render_chat = &b
+}
+
+// RenderChat returns the value of the "render_chat" field in the mutation.
+func (m *QueueMutation) RenderChat() (r bool, exists bool) {
+	v := m.render_chat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRenderChat returns the old "render_chat" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldRenderChat(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRenderChat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRenderChat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRenderChat: %w", err)
+	}
+	return oldValue.RenderChat, nil
+}
+
+// ClearRenderChat clears the value of the "render_chat" field.
+func (m *QueueMutation) ClearRenderChat() {
+	m.render_chat = nil
+	m.clearedFields[queue.FieldRenderChat] = struct{}{}
+}
+
+// RenderChatCleared returns if the "render_chat" field was cleared in this mutation.
+func (m *QueueMutation) RenderChatCleared() bool {
+	_, ok := m.clearedFields[queue.FieldRenderChat]
+	return ok
+}
+
+// ResetRenderChat resets all changes to the "render_chat" field.
+func (m *QueueMutation) ResetRenderChat() {
+	m.render_chat = nil
+	delete(m.clearedFields, queue.FieldRenderChat)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *QueueMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -4145,7 +4249,7 @@ func (m *QueueMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QueueMutation) Fields() []string {
-	fields := make([]string, 0, 18)
+	fields := make([]string, 0, 19)
 	if m.live_archive != nil {
 		fields = append(fields, queue.FieldLiveArchive)
 	}
@@ -4194,6 +4298,9 @@ func (m *QueueMutation) Fields() []string {
 	if m.chat_start != nil {
 		fields = append(fields, queue.FieldChatStart)
 	}
+	if m.render_chat != nil {
+		fields = append(fields, queue.FieldRenderChat)
+	}
 	if m.updated_at != nil {
 		fields = append(fields, queue.FieldUpdatedAt)
 	}
@@ -4240,6 +4347,8 @@ func (m *QueueMutation) Field(name string) (ent.Value, bool) {
 		return m.TaskChatMove()
 	case queue.FieldChatStart:
 		return m.ChatStart()
+	case queue.FieldRenderChat:
+		return m.RenderChat()
 	case queue.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case queue.FieldCreatedAt:
@@ -4285,6 +4394,8 @@ func (m *QueueMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldTaskChatMove(ctx)
 	case queue.FieldChatStart:
 		return m.OldChatStart(ctx)
+	case queue.FieldRenderChat:
+		return m.OldRenderChat(ctx)
 	case queue.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case queue.FieldCreatedAt:
@@ -4410,6 +4521,13 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetChatStart(v)
 		return nil
+	case queue.FieldRenderChat:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRenderChat(v)
+		return nil
 	case queue.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -4487,6 +4605,9 @@ func (m *QueueMutation) ClearedFields() []string {
 	if m.FieldCleared(queue.FieldChatStart) {
 		fields = append(fields, queue.FieldChatStart)
 	}
+	if m.FieldCleared(queue.FieldRenderChat) {
+		fields = append(fields, queue.FieldRenderChat)
+	}
 	return fields
 }
 
@@ -4533,6 +4654,9 @@ func (m *QueueMutation) ClearField(name string) error {
 		return nil
 	case queue.FieldChatStart:
 		m.ClearChatStart()
+		return nil
+	case queue.FieldRenderChat:
+		m.ClearRenderChat()
 		return nil
 	}
 	return fmt.Errorf("unknown Queue nullable field %s", name)
@@ -4589,6 +4713,9 @@ func (m *QueueMutation) ResetField(name string) error {
 		return nil
 	case queue.FieldChatStart:
 		m.ResetChatStart()
+		return nil
+	case queue.FieldRenderChat:
+		m.ResetRenderChat()
 		return nil
 	case queue.FieldUpdatedAt:
 		m.ResetUpdatedAt()

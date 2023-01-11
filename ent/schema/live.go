@@ -1,11 +1,12 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"time"
 )
 
 // Live holds the schema definition for the Live entity.
@@ -26,6 +27,7 @@ func (Live) Fields() []ent.Field {
 		field.Bool("archive_chat").Default(true).Comment("Whether the chat archive is enabled."),
 		field.String("resolution").Default("best").Optional(),
 		field.Time("last_live").Default(time.Now).Comment("The time the channel last went live."),
+		field.Bool("render_chat").Default(true).Comment("Whether the chat should be rendered."),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}
