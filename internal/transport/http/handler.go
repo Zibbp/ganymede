@@ -209,6 +209,8 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	configGroup.PUT("", h.UpdateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	configGroup.GET("/notification", h.GetNotificationConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	configGroup.PUT("/notification", h.UpdateNotificationConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	configGroup.GET("/storage", h.GetStorageTemplateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	configGroup.PUT("/storage", h.UpdateStorageTemplateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// Live
 	liveGroup := e.Group("/live")

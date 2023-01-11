@@ -189,6 +189,34 @@ func (vc *VodCreate) SetNillableInfoPath(s *string) *VodCreate {
 	return vc
 }
 
+// SetFolderName sets the "folder_name" field.
+func (vc *VodCreate) SetFolderName(s string) *VodCreate {
+	vc.mutation.SetFolderName(s)
+	return vc
+}
+
+// SetNillableFolderName sets the "folder_name" field if the given value is not nil.
+func (vc *VodCreate) SetNillableFolderName(s *string) *VodCreate {
+	if s != nil {
+		vc.SetFolderName(*s)
+	}
+	return vc
+}
+
+// SetFileName sets the "file_name" field.
+func (vc *VodCreate) SetFileName(s string) *VodCreate {
+	vc.mutation.SetFileName(s)
+	return vc
+}
+
+// SetNillableFileName sets the "file_name" field if the given value is not nil.
+func (vc *VodCreate) SetNillableFileName(s *string) *VodCreate {
+	if s != nil {
+		vc.SetFileName(*s)
+	}
+	return vc
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vc *VodCreate) SetStreamedAt(t time.Time) *VodCreate {
 	vc.mutation.SetStreamedAt(t)
@@ -297,50 +325,8 @@ func (vc *VodCreate) Mutation() *VodMutation {
 
 // Save creates the Vod in the database.
 func (vc *VodCreate) Save(ctx context.Context) (*Vod, error) {
-	var (
-		err  error
-		node *Vod
-	)
 	vc.defaults()
-	if len(vc.hooks) == 0 {
-		if err = vc.check(); err != nil {
-			return nil, err
-		}
-		node, err = vc.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*VodMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = vc.check(); err != nil {
-				return nil, err
-			}
-			vc.mutation = mutation
-			if node, err = vc.sqlSave(ctx); err != nil {
-				return nil, err
-			}
-			mutation.id = &node.ID
-			mutation.done = true
-			return node, err
-		})
-		for i := len(vc.hooks) - 1; i >= 0; i-- {
-			if vc.hooks[i] == nil {
-				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = vc.hooks[i](mut)
-		}
-		v, err := mut.Mutate(ctx, vc.mutation)
-		if err != nil {
-			return nil, err
-		}
-		nv, ok := v.(*Vod)
-		if !ok {
-			return nil, fmt.Errorf("unexpected node type %T returned from VodMutation", v)
-		}
-		node = nv
-	}
-	return node, err
+	return withHooks[*Vod, VodMutation](ctx, vc.sqlSave, vc.mutation, vc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -460,6 +446,9 @@ func (vc *VodCreate) check() error {
 }
 
 func (vc *VodCreate) sqlSave(ctx context.Context) (*Vod, error) {
+	if err := vc.check(); err != nil {
+		return nil, err
+	}
 	_node, _spec := vc.createSpec()
 	if err := sqlgraph.CreateNode(ctx, vc.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
@@ -474,6 +463,8 @@ func (vc *VodCreate) sqlSave(ctx context.Context) (*Vod, error) {
 			return nil, err
 		}
 	}
+	vc.mutation.id = &_node.ID
+	vc.mutation.done = true
 	return _node, nil
 }
 
@@ -493,139 +484,79 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		_spec.ID.Value = &id
 	}
 	if value, ok := vc.mutation.ExtID(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldExtID,
-		})
+		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 		_node.ExtID = value
 	}
 	if value, ok := vc.mutation.Platform(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: vod.FieldPlatform,
-		})
+		_spec.SetField(vod.FieldPlatform, field.TypeEnum, value)
 		_node.Platform = value
 	}
 	if value, ok := vc.mutation.GetType(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: vod.FieldType,
-		})
+		_spec.SetField(vod.FieldType, field.TypeEnum, value)
 		_node.Type = value
 	}
 	if value, ok := vc.mutation.Title(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldTitle,
-		})
+		_spec.SetField(vod.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
 	if value, ok := vc.mutation.Duration(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: vod.FieldDuration,
-		})
+		_spec.SetField(vod.FieldDuration, field.TypeInt, value)
 		_node.Duration = value
 	}
 	if value, ok := vc.mutation.Views(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: vod.FieldViews,
-		})
+		_spec.SetField(vod.FieldViews, field.TypeInt, value)
 		_node.Views = value
 	}
 	if value, ok := vc.mutation.Resolution(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldResolution,
-		})
+		_spec.SetField(vod.FieldResolution, field.TypeString, value)
 		_node.Resolution = value
 	}
 	if value, ok := vc.mutation.Processing(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: vod.FieldProcessing,
-		})
+		_spec.SetField(vod.FieldProcessing, field.TypeBool, value)
 		_node.Processing = value
 	}
 	if value, ok := vc.mutation.ThumbnailPath(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldThumbnailPath,
-		})
+		_spec.SetField(vod.FieldThumbnailPath, field.TypeString, value)
 		_node.ThumbnailPath = value
 	}
 	if value, ok := vc.mutation.WebThumbnailPath(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldWebThumbnailPath,
-		})
+		_spec.SetField(vod.FieldWebThumbnailPath, field.TypeString, value)
 		_node.WebThumbnailPath = value
 	}
 	if value, ok := vc.mutation.VideoPath(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldVideoPath,
-		})
+		_spec.SetField(vod.FieldVideoPath, field.TypeString, value)
 		_node.VideoPath = value
 	}
 	if value, ok := vc.mutation.ChatPath(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldChatPath,
-		})
+		_spec.SetField(vod.FieldChatPath, field.TypeString, value)
 		_node.ChatPath = value
 	}
 	if value, ok := vc.mutation.ChatVideoPath(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldChatVideoPath,
-		})
+		_spec.SetField(vod.FieldChatVideoPath, field.TypeString, value)
 		_node.ChatVideoPath = value
 	}
 	if value, ok := vc.mutation.InfoPath(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: vod.FieldInfoPath,
-		})
+		_spec.SetField(vod.FieldInfoPath, field.TypeString, value)
 		_node.InfoPath = value
 	}
+	if value, ok := vc.mutation.FolderName(); ok {
+		_spec.SetField(vod.FieldFolderName, field.TypeString, value)
+		_node.FolderName = value
+	}
+	if value, ok := vc.mutation.FileName(); ok {
+		_spec.SetField(vod.FieldFileName, field.TypeString, value)
+		_node.FileName = value
+	}
 	if value, ok := vc.mutation.StreamedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: vod.FieldStreamedAt,
-		})
+		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
 		_node.StreamedAt = value
 	}
 	if value, ok := vc.mutation.UpdatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: vod.FieldUpdatedAt,
-		})
+		_spec.SetField(vod.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := vc.mutation.CreatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: vod.FieldCreatedAt,
-		})
+		_spec.SetField(vod.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if nodes := vc.mutation.ChannelIDs(); len(nodes) > 0 {

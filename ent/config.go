@@ -17,21 +17,34 @@ type config struct {
 	// debug enable a debug logging.
 	debug bool
 	// log used for logging on debug mode.
-	log func(...interface{})
+	log func(...any)
 	// hooks to execute on mutations.
 	hooks *hooks
+	// interceptors to execute on queries.
+	inters *inters
 }
 
-// hooks per client, for fast access.
-type hooks struct {
-	Channel  []ent.Hook
-	Live     []ent.Hook
-	Playback []ent.Hook
-	Playlist []ent.Hook
-	Queue    []ent.Hook
-	User     []ent.Hook
-	Vod      []ent.Hook
-}
+// hooks and interceptors per client, for fast access.
+type (
+	hooks struct {
+		Channel  []ent.Hook
+		Live     []ent.Hook
+		Playback []ent.Hook
+		Playlist []ent.Hook
+		Queue    []ent.Hook
+		User     []ent.Hook
+		Vod      []ent.Hook
+	}
+	inters struct {
+		Channel  []ent.Interceptor
+		Live     []ent.Interceptor
+		Playback []ent.Interceptor
+		Playlist []ent.Interceptor
+		Queue    []ent.Interceptor
+		User     []ent.Interceptor
+		Vod      []ent.Interceptor
+	}
+)
 
 // Options applies the options on the config object.
 func (c *config) options(opts ...Option) {
@@ -51,7 +64,7 @@ func Debug() Option {
 }
 
 // Log sets the logging function for debug mode.
-func Log(fn func(...interface{})) Option {
+func Log(fn func(...any)) Option {
 	return func(c *config) {
 		c.log = fn
 	}

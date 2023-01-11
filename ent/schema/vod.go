@@ -1,12 +1,13 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/internal/utils"
-	"time"
 )
 
 // Vod holds the schema definition for the Vod entity.
@@ -32,6 +33,8 @@ func (Vod) Fields() []ent.Field {
 		field.String("chat_path").Optional(),
 		field.String("chat_video_path").Optional(),
 		field.String("info_path").Optional(),
+		field.String("folder_name").Optional(),
+		field.String("file_name").Optional(),
 		field.Time("streamed_at").Default(time.Now).Comment("The time the VOD was streamed."),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),

@@ -15,11 +15,10 @@ type ChannelFunc func(context.Context, *ent.ChannelMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
 func (f ChannelFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.ChannelMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChannelMutation", m)
+	if mv, ok := m.(*ent.ChannelMutation); ok {
+		return f(ctx, mv)
 	}
-	return f(ctx, mv)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChannelMutation", m)
 }
 
 // The LiveFunc type is an adapter to allow the use of ordinary
@@ -28,11 +27,10 @@ type LiveFunc func(context.Context, *ent.LiveMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
 func (f LiveFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.LiveMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiveMutation", m)
+	if mv, ok := m.(*ent.LiveMutation); ok {
+		return f(ctx, mv)
 	}
-	return f(ctx, mv)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiveMutation", m)
 }
 
 // The PlaybackFunc type is an adapter to allow the use of ordinary
@@ -41,11 +39,10 @@ type PlaybackFunc func(context.Context, *ent.PlaybackMutation) (ent.Value, error
 
 // Mutate calls f(ctx, m).
 func (f PlaybackFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.PlaybackMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlaybackMutation", m)
+	if mv, ok := m.(*ent.PlaybackMutation); ok {
+		return f(ctx, mv)
 	}
-	return f(ctx, mv)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlaybackMutation", m)
 }
 
 // The PlaylistFunc type is an adapter to allow the use of ordinary
@@ -54,11 +51,10 @@ type PlaylistFunc func(context.Context, *ent.PlaylistMutation) (ent.Value, error
 
 // Mutate calls f(ctx, m).
 func (f PlaylistFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.PlaylistMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlaylistMutation", m)
+	if mv, ok := m.(*ent.PlaylistMutation); ok {
+		return f(ctx, mv)
 	}
-	return f(ctx, mv)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlaylistMutation", m)
 }
 
 // The QueueFunc type is an adapter to allow the use of ordinary
@@ -67,11 +63,10 @@ type QueueFunc func(context.Context, *ent.QueueMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
 func (f QueueFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.QueueMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QueueMutation", m)
+	if mv, ok := m.(*ent.QueueMutation); ok {
+		return f(ctx, mv)
 	}
-	return f(ctx, mv)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QueueMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary
@@ -80,11 +75,10 @@ type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
 func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.UserMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+	if mv, ok := m.(*ent.UserMutation); ok {
+		return f(ctx, mv)
 	}
-	return f(ctx, mv)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
 }
 
 // The VodFunc type is an adapter to allow the use of ordinary
@@ -93,11 +87,10 @@ type VodFunc func(context.Context, *ent.VodMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
 func (f VodFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.VodMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VodMutation", m)
+	if mv, ok := m.(*ent.VodMutation); ok {
+		return f(ctx, mv)
 	}
-	return f(ctx, mv)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VodMutation", m)
 }
 
 // Condition is a hook condition function.

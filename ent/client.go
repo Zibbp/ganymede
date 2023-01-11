@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -46,7 +47,7 @@ type Client struct {
 
 // NewClient creates a new client configured with the given options.
 func NewClient(opts ...Option) *Client {
-	cfg := config{log: log.Println, hooks: &hooks{}}
+	cfg := config{log: log.Println, hooks: &hooks{}, inters: &inters{}}
 	cfg.options(opts...)
 	client := &Client{config: cfg}
 	client.init()
@@ -84,7 +85,7 @@ func Open(driverName, dataSourceName string, options ...Option) (*Client, error)
 // is used until the transaction is committed or rolled back.
 func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	if _, ok := c.driver.(*txDriver); ok {
-		return nil, fmt.Errorf("ent: cannot start a transaction within a transaction")
+		return nil, errors.New("ent: cannot start a transaction within a transaction")
 	}
 	tx, err := newTx(ctx, c.driver)
 	if err != nil {
@@ -108,7 +109,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 // BeginTx returns a transactional client with specified options.
 func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	if _, ok := c.driver.(*txDriver); ok {
-		return nil, fmt.Errorf("ent: cannot start a transaction within a transaction")
+		return nil, errors.New("ent: cannot start a transaction within a transaction")
 	}
 	tx, err := c.driver.(interface {
 		BeginTx(context.Context, *sql.TxOptions) (dialect.Tx, error)
@@ -165,6 +166,40 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Vod.Use(hooks...)
 }
 
+// Intercept adds the query interceptors to all the entity clients.
+// In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
+func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.Channel.Intercept(interceptors...)
+	c.Live.Intercept(interceptors...)
+	c.Playback.Intercept(interceptors...)
+	c.Playlist.Intercept(interceptors...)
+	c.Queue.Intercept(interceptors...)
+	c.User.Intercept(interceptors...)
+	c.Vod.Intercept(interceptors...)
+}
+
+// Mutate implements the ent.Mutator interface.
+func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
+	switch m := m.(type) {
+	case *ChannelMutation:
+		return c.Channel.mutate(ctx, m)
+	case *LiveMutation:
+		return c.Live.mutate(ctx, m)
+	case *PlaybackMutation:
+		return c.Playback.mutate(ctx, m)
+	case *PlaylistMutation:
+		return c.Playlist.mutate(ctx, m)
+	case *QueueMutation:
+		return c.Queue.mutate(ctx, m)
+	case *UserMutation:
+		return c.User.mutate(ctx, m)
+	case *VodMutation:
+		return c.Vod.mutate(ctx, m)
+	default:
+		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
 // ChannelClient is a client for the Channel schema.
 type ChannelClient struct {
 	config
@@ -179,6 +214,12 @@ func NewChannelClient(c config) *ChannelClient {
 // A call to `Use(f, g, h)` equals to `channel.Hooks(f(g(h())))`.
 func (c *ChannelClient) Use(hooks ...Hook) {
 	c.hooks.Channel = append(c.hooks.Channel, hooks...)
+}
+
+// Use adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `channel.Intercept(f(g(h())))`.
+func (c *ChannelClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Channel = append(c.inters.Channel, interceptors...)
 }
 
 // Create returns a builder for creating a Channel entity.
@@ -221,7 +262,7 @@ func (c *ChannelClient) DeleteOne(ch *Channel) *ChannelDeleteOne {
 	return c.DeleteOneID(ch.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *ChannelClient) DeleteOneID(id uuid.UUID) *ChannelDeleteOne {
 	builder := c.Delete().Where(channel.ID(id))
 	builder.mutation.id = &id
@@ -233,6 +274,7 @@ func (c *ChannelClient) DeleteOneID(id uuid.UUID) *ChannelDeleteOne {
 func (c *ChannelClient) Query() *ChannelQuery {
 	return &ChannelQuery{
 		config: c.config,
+		inters: c.Interceptors(),
 	}
 }
 
@@ -252,8 +294,8 @@ func (c *ChannelClient) GetX(ctx context.Context, id uuid.UUID) *Channel {
 
 // QueryVods queries the vods edge of a Channel.
 func (c *ChannelClient) QueryVods(ch *Channel) *VodQuery {
-	query := &VodQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query := (&VodClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ch.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(channel.Table, channel.FieldID, id),
@@ -268,8 +310,8 @@ func (c *ChannelClient) QueryVods(ch *Channel) *VodQuery {
 
 // QueryLive queries the live edge of a Channel.
 func (c *ChannelClient) QueryLive(ch *Channel) *LiveQuery {
-	query := &LiveQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query := (&LiveClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ch.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(channel.Table, channel.FieldID, id),
@@ -287,6 +329,26 @@ func (c *ChannelClient) Hooks() []Hook {
 	return c.hooks.Channel
 }
 
+// Interceptors returns the client interceptors.
+func (c *ChannelClient) Interceptors() []Interceptor {
+	return c.inters.Channel
+}
+
+func (c *ChannelClient) mutate(ctx context.Context, m *ChannelMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ChannelCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ChannelUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ChannelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ChannelDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Channel mutation op: %q", m.Op())
+	}
+}
+
 // LiveClient is a client for the Live schema.
 type LiveClient struct {
 	config
@@ -301,6 +363,12 @@ func NewLiveClient(c config) *LiveClient {
 // A call to `Use(f, g, h)` equals to `live.Hooks(f(g(h())))`.
 func (c *LiveClient) Use(hooks ...Hook) {
 	c.hooks.Live = append(c.hooks.Live, hooks...)
+}
+
+// Use adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `live.Intercept(f(g(h())))`.
+func (c *LiveClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Live = append(c.inters.Live, interceptors...)
 }
 
 // Create returns a builder for creating a Live entity.
@@ -343,7 +411,7 @@ func (c *LiveClient) DeleteOne(l *Live) *LiveDeleteOne {
 	return c.DeleteOneID(l.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *LiveClient) DeleteOneID(id uuid.UUID) *LiveDeleteOne {
 	builder := c.Delete().Where(live.ID(id))
 	builder.mutation.id = &id
@@ -355,6 +423,7 @@ func (c *LiveClient) DeleteOneID(id uuid.UUID) *LiveDeleteOne {
 func (c *LiveClient) Query() *LiveQuery {
 	return &LiveQuery{
 		config: c.config,
+		inters: c.Interceptors(),
 	}
 }
 
@@ -374,8 +443,8 @@ func (c *LiveClient) GetX(ctx context.Context, id uuid.UUID) *Live {
 
 // QueryChannel queries the channel edge of a Live.
 func (c *LiveClient) QueryChannel(l *Live) *ChannelQuery {
-	query := &ChannelQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query := (&ChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := l.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(live.Table, live.FieldID, id),
@@ -393,6 +462,26 @@ func (c *LiveClient) Hooks() []Hook {
 	return c.hooks.Live
 }
 
+// Interceptors returns the client interceptors.
+func (c *LiveClient) Interceptors() []Interceptor {
+	return c.inters.Live
+}
+
+func (c *LiveClient) mutate(ctx context.Context, m *LiveMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LiveCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LiveUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LiveDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Live mutation op: %q", m.Op())
+	}
+}
+
 // PlaybackClient is a client for the Playback schema.
 type PlaybackClient struct {
 	config
@@ -407,6 +496,12 @@ func NewPlaybackClient(c config) *PlaybackClient {
 // A call to `Use(f, g, h)` equals to `playback.Hooks(f(g(h())))`.
 func (c *PlaybackClient) Use(hooks ...Hook) {
 	c.hooks.Playback = append(c.hooks.Playback, hooks...)
+}
+
+// Use adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `playback.Intercept(f(g(h())))`.
+func (c *PlaybackClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Playback = append(c.inters.Playback, interceptors...)
 }
 
 // Create returns a builder for creating a Playback entity.
@@ -449,7 +544,7 @@ func (c *PlaybackClient) DeleteOne(pl *Playback) *PlaybackDeleteOne {
 	return c.DeleteOneID(pl.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *PlaybackClient) DeleteOneID(id uuid.UUID) *PlaybackDeleteOne {
 	builder := c.Delete().Where(playback.ID(id))
 	builder.mutation.id = &id
@@ -461,6 +556,7 @@ func (c *PlaybackClient) DeleteOneID(id uuid.UUID) *PlaybackDeleteOne {
 func (c *PlaybackClient) Query() *PlaybackQuery {
 	return &PlaybackQuery{
 		config: c.config,
+		inters: c.Interceptors(),
 	}
 }
 
@@ -483,6 +579,26 @@ func (c *PlaybackClient) Hooks() []Hook {
 	return c.hooks.Playback
 }
 
+// Interceptors returns the client interceptors.
+func (c *PlaybackClient) Interceptors() []Interceptor {
+	return c.inters.Playback
+}
+
+func (c *PlaybackClient) mutate(ctx context.Context, m *PlaybackMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PlaybackCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PlaybackUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PlaybackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PlaybackDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Playback mutation op: %q", m.Op())
+	}
+}
+
 // PlaylistClient is a client for the Playlist schema.
 type PlaylistClient struct {
 	config
@@ -497,6 +613,12 @@ func NewPlaylistClient(c config) *PlaylistClient {
 // A call to `Use(f, g, h)` equals to `playlist.Hooks(f(g(h())))`.
 func (c *PlaylistClient) Use(hooks ...Hook) {
 	c.hooks.Playlist = append(c.hooks.Playlist, hooks...)
+}
+
+// Use adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `playlist.Intercept(f(g(h())))`.
+func (c *PlaylistClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Playlist = append(c.inters.Playlist, interceptors...)
 }
 
 // Create returns a builder for creating a Playlist entity.
@@ -539,7 +661,7 @@ func (c *PlaylistClient) DeleteOne(pl *Playlist) *PlaylistDeleteOne {
 	return c.DeleteOneID(pl.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *PlaylistClient) DeleteOneID(id uuid.UUID) *PlaylistDeleteOne {
 	builder := c.Delete().Where(playlist.ID(id))
 	builder.mutation.id = &id
@@ -551,6 +673,7 @@ func (c *PlaylistClient) DeleteOneID(id uuid.UUID) *PlaylistDeleteOne {
 func (c *PlaylistClient) Query() *PlaylistQuery {
 	return &PlaylistQuery{
 		config: c.config,
+		inters: c.Interceptors(),
 	}
 }
 
@@ -570,8 +693,8 @@ func (c *PlaylistClient) GetX(ctx context.Context, id uuid.UUID) *Playlist {
 
 // QueryVods queries the vods edge of a Playlist.
 func (c *PlaylistClient) QueryVods(pl *Playlist) *VodQuery {
-	query := &VodQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query := (&VodClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := pl.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(playlist.Table, playlist.FieldID, id),
@@ -589,6 +712,26 @@ func (c *PlaylistClient) Hooks() []Hook {
 	return c.hooks.Playlist
 }
 
+// Interceptors returns the client interceptors.
+func (c *PlaylistClient) Interceptors() []Interceptor {
+	return c.inters.Playlist
+}
+
+func (c *PlaylistClient) mutate(ctx context.Context, m *PlaylistMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PlaylistCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PlaylistUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PlaylistUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PlaylistDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Playlist mutation op: %q", m.Op())
+	}
+}
+
 // QueueClient is a client for the Queue schema.
 type QueueClient struct {
 	config
@@ -603,6 +746,12 @@ func NewQueueClient(c config) *QueueClient {
 // A call to `Use(f, g, h)` equals to `queue.Hooks(f(g(h())))`.
 func (c *QueueClient) Use(hooks ...Hook) {
 	c.hooks.Queue = append(c.hooks.Queue, hooks...)
+}
+
+// Use adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `queue.Intercept(f(g(h())))`.
+func (c *QueueClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Queue = append(c.inters.Queue, interceptors...)
 }
 
 // Create returns a builder for creating a Queue entity.
@@ -645,7 +794,7 @@ func (c *QueueClient) DeleteOne(q *Queue) *QueueDeleteOne {
 	return c.DeleteOneID(q.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *QueueClient) DeleteOneID(id uuid.UUID) *QueueDeleteOne {
 	builder := c.Delete().Where(queue.ID(id))
 	builder.mutation.id = &id
@@ -657,6 +806,7 @@ func (c *QueueClient) DeleteOneID(id uuid.UUID) *QueueDeleteOne {
 func (c *QueueClient) Query() *QueueQuery {
 	return &QueueQuery{
 		config: c.config,
+		inters: c.Interceptors(),
 	}
 }
 
@@ -676,8 +826,8 @@ func (c *QueueClient) GetX(ctx context.Context, id uuid.UUID) *Queue {
 
 // QueryVod queries the vod edge of a Queue.
 func (c *QueueClient) QueryVod(q *Queue) *VodQuery {
-	query := &VodQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query := (&VodClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := q.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(queue.Table, queue.FieldID, id),
@@ -695,6 +845,26 @@ func (c *QueueClient) Hooks() []Hook {
 	return c.hooks.Queue
 }
 
+// Interceptors returns the client interceptors.
+func (c *QueueClient) Interceptors() []Interceptor {
+	return c.inters.Queue
+}
+
+func (c *QueueClient) mutate(ctx context.Context, m *QueueMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&QueueCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&QueueUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&QueueUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&QueueDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Queue mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -709,6 +879,12 @@ func NewUserClient(c config) *UserClient {
 // A call to `Use(f, g, h)` equals to `user.Hooks(f(g(h())))`.
 func (c *UserClient) Use(hooks ...Hook) {
 	c.hooks.User = append(c.hooks.User, hooks...)
+}
+
+// Use adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `user.Intercept(f(g(h())))`.
+func (c *UserClient) Intercept(interceptors ...Interceptor) {
+	c.inters.User = append(c.inters.User, interceptors...)
 }
 
 // Create returns a builder for creating a User entity.
@@ -751,7 +927,7 @@ func (c *UserClient) DeleteOne(u *User) *UserDeleteOne {
 	return c.DeleteOneID(u.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *UserClient) DeleteOneID(id uuid.UUID) *UserDeleteOne {
 	builder := c.Delete().Where(user.ID(id))
 	builder.mutation.id = &id
@@ -763,6 +939,7 @@ func (c *UserClient) DeleteOneID(id uuid.UUID) *UserDeleteOne {
 func (c *UserClient) Query() *UserQuery {
 	return &UserQuery{
 		config: c.config,
+		inters: c.Interceptors(),
 	}
 }
 
@@ -785,6 +962,26 @@ func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
 }
 
+// Interceptors returns the client interceptors.
+func (c *UserClient) Interceptors() []Interceptor {
+	return c.inters.User
+}
+
+func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown User mutation op: %q", m.Op())
+	}
+}
+
 // VodClient is a client for the Vod schema.
 type VodClient struct {
 	config
@@ -799,6 +996,12 @@ func NewVodClient(c config) *VodClient {
 // A call to `Use(f, g, h)` equals to `vod.Hooks(f(g(h())))`.
 func (c *VodClient) Use(hooks ...Hook) {
 	c.hooks.Vod = append(c.hooks.Vod, hooks...)
+}
+
+// Use adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `vod.Intercept(f(g(h())))`.
+func (c *VodClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Vod = append(c.inters.Vod, interceptors...)
 }
 
 // Create returns a builder for creating a Vod entity.
@@ -841,7 +1044,7 @@ func (c *VodClient) DeleteOne(v *Vod) *VodDeleteOne {
 	return c.DeleteOneID(v.ID)
 }
 
-// DeleteOne returns a builder for deleting the given entity by its id.
+// DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *VodClient) DeleteOneID(id uuid.UUID) *VodDeleteOne {
 	builder := c.Delete().Where(vod.ID(id))
 	builder.mutation.id = &id
@@ -853,6 +1056,7 @@ func (c *VodClient) DeleteOneID(id uuid.UUID) *VodDeleteOne {
 func (c *VodClient) Query() *VodQuery {
 	return &VodQuery{
 		config: c.config,
+		inters: c.Interceptors(),
 	}
 }
 
@@ -872,8 +1076,8 @@ func (c *VodClient) GetX(ctx context.Context, id uuid.UUID) *Vod {
 
 // QueryChannel queries the channel edge of a Vod.
 func (c *VodClient) QueryChannel(v *Vod) *ChannelQuery {
-	query := &ChannelQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query := (&ChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := v.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(vod.Table, vod.FieldID, id),
@@ -888,8 +1092,8 @@ func (c *VodClient) QueryChannel(v *Vod) *ChannelQuery {
 
 // QueryQueue queries the queue edge of a Vod.
 func (c *VodClient) QueryQueue(v *Vod) *QueueQuery {
-	query := &QueueQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query := (&QueueClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := v.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(vod.Table, vod.FieldID, id),
@@ -904,8 +1108,8 @@ func (c *VodClient) QueryQueue(v *Vod) *QueueQuery {
 
 // QueryPlaylists queries the playlists edge of a Vod.
 func (c *VodClient) QueryPlaylists(v *Vod) *PlaylistQuery {
-	query := &PlaylistQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+	query := (&PlaylistClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := v.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(vod.Table, vod.FieldID, id),
@@ -921,4 +1125,24 @@ func (c *VodClient) QueryPlaylists(v *Vod) *PlaylistQuery {
 // Hooks returns the client hooks.
 func (c *VodClient) Hooks() []Hook {
 	return c.hooks.Vod
+}
+
+// Interceptors returns the client interceptors.
+func (c *VodClient) Interceptors() []Interceptor {
+	return c.inters.Vod
+}
+
+func (c *VodClient) mutate(ctx context.Context, m *VodMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&VodCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&VodUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&VodUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&VodDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Vod mutation op: %q", m.Op())
+	}
 }

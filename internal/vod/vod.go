@@ -50,6 +50,8 @@ type Vod struct {
 	StreamedAt       time.Time         `json:"streamed_at"`
 	UpdatedAt        time.Time         `json:"updated_at"`
 	CreatedAt        time.Time         `json:"created_at"`
+	FolderName       string            `json:"folder_name"`
+	FileName         string            `json:"file_name"`
 }
 
 type Pagination struct {
@@ -61,7 +63,7 @@ type Pagination struct {
 }
 
 func (s *Service) CreateVod(vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Create().SetID(vodDto.ID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).SetStreamedAt(vodDto.StreamedAt).Save(context.Background())
+	v, err := s.Store.Client.Vod.Create().SetID(vodDto.ID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).SetStreamedAt(vodDto.StreamedAt).SetFolderName(vodDto.FolderName).SetFileName(vodDto.FileName).Save(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error creating vod")
 		if _, ok := err.(*ent.ConstraintError); ok {
@@ -450,7 +452,7 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 
 	// Iterate backwards from the index found above to get the last commentCount comments before the start time
 	for j := i; len(filteredComments) < int(commentCount); j-- {
-		if j < 0 {
+		if j < 0 || j >= len(comments) {
 			break
 		}
 		comment := comments[j]

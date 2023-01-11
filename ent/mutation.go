@@ -21,6 +21,7 @@ import (
 	"github.com/zibbp/ganymede/internal/utils"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/sql"
 )
 
 const (
@@ -511,9 +512,24 @@ func (m *ChannelMutation) Where(ps ...predicate.Channel) {
 	m.predicates = append(m.predicates, ps...)
 }
 
+// WhereP appends storage-level predicates to the ChannelMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ChannelMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Channel, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
 // Op returns the operation name.
 func (m *ChannelMutation) Op() Op {
 	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ChannelMutation) SetOp(op Op) {
+	m.op = op
 }
 
 // Type returns the node type of this mutation (Channel).
@@ -1408,9 +1424,24 @@ func (m *LiveMutation) Where(ps ...predicate.Live) {
 	m.predicates = append(m.predicates, ps...)
 }
 
+// WhereP appends storage-level predicates to the LiveMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *LiveMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Live, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
 // Op returns the operation name.
 func (m *LiveMutation) Op() Op {
 	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *LiveMutation) SetOp(op Op) {
+	m.op = op
 }
 
 // Type returns the node type of this mutation (Live).
@@ -1728,8 +1759,6 @@ func (m *LiveMutation) RemovedEdges() []string {
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *LiveMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	}
 	return nil
 }
 
@@ -2151,9 +2180,24 @@ func (m *PlaybackMutation) Where(ps ...predicate.Playback) {
 	m.predicates = append(m.predicates, ps...)
 }
 
+// WhereP appends storage-level predicates to the PlaybackMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PlaybackMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Playback, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
 // Op returns the operation name.
 func (m *PlaybackMutation) Op() Op {
 	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PlaybackMutation) SetOp(op Op) {
+	m.op = op
 }
 
 // Type returns the node type of this mutation (Playback).
@@ -2808,9 +2852,24 @@ func (m *PlaylistMutation) Where(ps ...predicate.Playlist) {
 	m.predicates = append(m.predicates, ps...)
 }
 
+// WhereP appends storage-level predicates to the PlaylistMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PlaylistMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Playlist, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
 // Op returns the operation name.
 func (m *PlaylistMutation) Op() Op {
 	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PlaylistMutation) SetOp(op Op) {
+	m.op = op
 }
 
 // Type returns the node type of this mutation (Playlist).
@@ -4057,9 +4116,24 @@ func (m *QueueMutation) Where(ps ...predicate.Queue) {
 	m.predicates = append(m.predicates, ps...)
 }
 
+// WhereP appends storage-level predicates to the QueueMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *QueueMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Queue, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
 // Op returns the operation name.
 func (m *QueueMutation) Op() Op {
 	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *QueueMutation) SetOp(op Op) {
+	m.op = op
 }
 
 // Type returns the node type of this mutation (Queue).
@@ -4556,8 +4630,6 @@ func (m *QueueMutation) RemovedEdges() []string {
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *QueueMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	}
 	return nil
 }
 
@@ -5058,9 +5130,24 @@ func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
 }
 
+// WhereP appends storage-level predicates to the UserMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UserMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.User, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
 // Op returns the operation name.
 func (m *UserMutation) Op() Op {
 	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UserMutation) SetOp(op Op) {
+	m.op = op
 }
 
 // Type returns the node type of this mutation (User).
@@ -5379,6 +5466,8 @@ type VodMutation struct {
 	chat_path          *string
 	chat_video_path    *string
 	info_path          *string
+	folder_name        *string
+	file_name          *string
 	streamed_at        *time.Time
 	updated_at         *time.Time
 	created_at         *time.Time
@@ -6108,6 +6197,104 @@ func (m *VodMutation) ResetInfoPath() {
 	delete(m.clearedFields, vod.FieldInfoPath)
 }
 
+// SetFolderName sets the "folder_name" field.
+func (m *VodMutation) SetFolderName(s string) {
+	m.folder_name = &s
+}
+
+// FolderName returns the value of the "folder_name" field in the mutation.
+func (m *VodMutation) FolderName() (r string, exists bool) {
+	v := m.folder_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFolderName returns the old "folder_name" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldFolderName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFolderName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFolderName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFolderName: %w", err)
+	}
+	return oldValue.FolderName, nil
+}
+
+// ClearFolderName clears the value of the "folder_name" field.
+func (m *VodMutation) ClearFolderName() {
+	m.folder_name = nil
+	m.clearedFields[vod.FieldFolderName] = struct{}{}
+}
+
+// FolderNameCleared returns if the "folder_name" field was cleared in this mutation.
+func (m *VodMutation) FolderNameCleared() bool {
+	_, ok := m.clearedFields[vod.FieldFolderName]
+	return ok
+}
+
+// ResetFolderName resets all changes to the "folder_name" field.
+func (m *VodMutation) ResetFolderName() {
+	m.folder_name = nil
+	delete(m.clearedFields, vod.FieldFolderName)
+}
+
+// SetFileName sets the "file_name" field.
+func (m *VodMutation) SetFileName(s string) {
+	m.file_name = &s
+}
+
+// FileName returns the value of the "file_name" field in the mutation.
+func (m *VodMutation) FileName() (r string, exists bool) {
+	v := m.file_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFileName returns the old "file_name" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldFileName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFileName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFileName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFileName: %w", err)
+	}
+	return oldValue.FileName, nil
+}
+
+// ClearFileName clears the value of the "file_name" field.
+func (m *VodMutation) ClearFileName() {
+	m.file_name = nil
+	m.clearedFields[vod.FieldFileName] = struct{}{}
+}
+
+// FileNameCleared returns if the "file_name" field was cleared in this mutation.
+func (m *VodMutation) FileNameCleared() bool {
+	_, ok := m.clearedFields[vod.FieldFileName]
+	return ok
+}
+
+// ResetFileName resets all changes to the "file_name" field.
+func (m *VodMutation) ResetFileName() {
+	m.file_name = nil
+	delete(m.clearedFields, vod.FieldFileName)
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (m *VodMutation) SetStreamedAt(t time.Time) {
 	m.streamed_at = &t
@@ -6353,9 +6540,24 @@ func (m *VodMutation) Where(ps ...predicate.Vod) {
 	m.predicates = append(m.predicates, ps...)
 }
 
+// WhereP appends storage-level predicates to the VodMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *VodMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Vod, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
 // Op returns the operation name.
 func (m *VodMutation) Op() Op {
 	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *VodMutation) SetOp(op Op) {
+	m.op = op
 }
 
 // Type returns the node type of this mutation (Vod).
@@ -6367,7 +6569,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 19)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -6409,6 +6611,12 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.info_path != nil {
 		fields = append(fields, vod.FieldInfoPath)
+	}
+	if m.folder_name != nil {
+		fields = append(fields, vod.FieldFolderName)
+	}
+	if m.file_name != nil {
+		fields = append(fields, vod.FieldFileName)
 	}
 	if m.streamed_at != nil {
 		fields = append(fields, vod.FieldStreamedAt)
@@ -6455,6 +6663,10 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.ChatVideoPath()
 	case vod.FieldInfoPath:
 		return m.InfoPath()
+	case vod.FieldFolderName:
+		return m.FolderName()
+	case vod.FieldFileName:
+		return m.FileName()
 	case vod.FieldStreamedAt:
 		return m.StreamedAt()
 	case vod.FieldUpdatedAt:
@@ -6498,6 +6710,10 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldChatVideoPath(ctx)
 	case vod.FieldInfoPath:
 		return m.OldInfoPath(ctx)
+	case vod.FieldFolderName:
+		return m.OldFolderName(ctx)
+	case vod.FieldFileName:
+		return m.OldFileName(ctx)
 	case vod.FieldStreamedAt:
 		return m.OldStreamedAt(ctx)
 	case vod.FieldUpdatedAt:
@@ -6611,6 +6827,20 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetInfoPath(v)
 		return nil
+	case vod.FieldFolderName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFolderName(v)
+		return nil
+	case vod.FieldFileName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFileName(v)
+		return nil
 	case vod.FieldStreamedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -6704,6 +6934,12 @@ func (m *VodMutation) ClearedFields() []string {
 	if m.FieldCleared(vod.FieldInfoPath) {
 		fields = append(fields, vod.FieldInfoPath)
 	}
+	if m.FieldCleared(vod.FieldFolderName) {
+		fields = append(fields, vod.FieldFolderName)
+	}
+	if m.FieldCleared(vod.FieldFileName) {
+		fields = append(fields, vod.FieldFileName)
+	}
 	return fields
 }
 
@@ -6732,6 +6968,12 @@ func (m *VodMutation) ClearField(name string) error {
 		return nil
 	case vod.FieldInfoPath:
 		m.ClearInfoPath()
+		return nil
+	case vod.FieldFolderName:
+		m.ClearFolderName()
+		return nil
+	case vod.FieldFileName:
+		m.ClearFileName()
 		return nil
 	}
 	return fmt.Errorf("unknown Vod nullable field %s", name)
@@ -6782,6 +7024,12 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldInfoPath:
 		m.ResetInfoPath()
+		return nil
+	case vod.FieldFolderName:
+		m.ResetFolderName()
+		return nil
+	case vod.FieldFileName:
+		m.ResetFileName()
 		return nil
 	case vod.FieldStreamedAt:
 		m.ResetStreamedAt()

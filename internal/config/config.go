@@ -38,7 +38,8 @@ type Conf struct {
 	Archive struct {
 		SaveAsHls bool `json:"save_as_hls"`
 	} `json:"archive"`
-	Notifications Notification `json:"notifications"`
+	Notifications    Notification    `json:"notifications"`
+	StorageTemplates StorageTemplate `json:"storage_templates"`
 }
 
 type Notification struct {
@@ -54,6 +55,11 @@ type Notification struct {
 	IsLiveWebhookUrl       string `json:"is_live_webhook_url"`
 	IsLiveTemplate         string `json:"is_live_template"`
 	IsLiveEnabled          bool   `json:"is_live_enabled"`
+}
+
+type StorageTemplate struct {
+	FolderTemplate string `json:"folder_template"`
+	FileTemplate   string `json:"file_template"`
 }
 
 func NewConfig() {
@@ -89,6 +95,10 @@ func NewConfig() {
 	viper.SetDefault("notifications.is_live_webhook_url", "")
 	viper.SetDefault("notifications.is_live_template", "🔴 {{channel_display_name}} is live!")
 	viper.SetDefault("notifications.is_live_enabled", true)
+
+	// Storage Templates
+	viper.SetDefault("storage_templates.folder_template", "{{date}}-{{id}}-{{type}}-{{uuid}}")
+	viper.SetDefault("storage_templates.file_template", "{{id}}")
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Info().Msgf("config file not found at %s, creating new one", configPath)
@@ -132,6 +142,16 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 			ChatRender:     viper.GetString("parameters.chat_render"),
 			StreamlinkLive: viper.GetString("parameters.streamlink_live"),
 		}),
+		StorageTemplates: struct {
+			FolderTemplate string `json:"folder_template"`
+			FileTemplate   string `json:"file_template"`
+		}(struct {
+			FolderTemplate string
+			FileTemplate   string
+		}{
+			FolderTemplate: viper.GetString("storage_templates.folder_template"),
+			FileTemplate:   viper.GetString("storage_templates.file_template"),
+		}),
 	}, nil
 }
 
@@ -165,6 +185,13 @@ func (s *Service) GetNotificationConfig(c echo.Context) (*Notification, error) {
 	}, nil
 }
 
+func (s *Service) GetStorageTemplateConfig(c echo.Context) (*StorageTemplate, error) {
+	return &StorageTemplate{
+		FolderTemplate: viper.GetString("storage_templates.folder_template"),
+		FileTemplate:   viper.GetString("storage_templates.file_template"),
+	}, nil
+}
+
 func (s *Service) UpdateNotificationConfig(c echo.Context, nDto *Notification) error {
 	viper.Set("notifications.video_success_webhook_url", nDto.VideoSuccessWebhookUrl)
 	viper.Set("notifications.video_success_template", nDto.VideoSuccessTemplate)
@@ -178,6 +205,16 @@ func (s *Service) UpdateNotificationConfig(c echo.Context, nDto *Notification) e
 	viper.Set("notifications.is_live_webhook_url", nDto.IsLiveWebhookUrl)
 	viper.Set("notifications.is_live_template", nDto.IsLiveTemplate)
 	viper.Set("notifications.is_live_enabled", nDto.IsLiveEnabled)
+	err := viper.WriteConfig()
+	if err != nil {
+		return fmt.Errorf("error writing config file: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) UpdateStorageTemplateConfig(c echo.Context, stDto *StorageTemplate) error {
+	viper.Set("storage_templates.folder_template", stDto.FolderTemplate)
+	viper.Set("storage_templates.file_template", stDto.FileTemplate)
 	err := viper.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("error writing config file: %w", err)
@@ -226,6 +263,13 @@ func refreshConfig(configPath string) {
 	// Archive
 	if !viper.IsSet("archive.save_as_hls") {
 		viper.Set("archive.save_as_hls", false)
+	}
+	// Storage template
+	if !viper.IsSet("storage_templates.folder_template") {
+		viper.Set("storage_templates.folder_template", "{{date}}-{{id}}-{{type}}-{{uuid}}")
+	}
+	if !viper.IsSet("storage_templates.file_template") {
+		viper.Set("storage_templates.file_template", "{{id}}")
 	}
 
 }

@@ -307,50 +307,8 @@ func (qc *QueueCreate) Mutation() *QueueMutation {
 
 // Save creates the Queue in the database.
 func (qc *QueueCreate) Save(ctx context.Context) (*Queue, error) {
-	var (
-		err  error
-		node *Queue
-	)
 	qc.defaults()
-	if len(qc.hooks) == 0 {
-		if err = qc.check(); err != nil {
-			return nil, err
-		}
-		node, err = qc.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*QueueMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = qc.check(); err != nil {
-				return nil, err
-			}
-			qc.mutation = mutation
-			if node, err = qc.sqlSave(ctx); err != nil {
-				return nil, err
-			}
-			mutation.id = &node.ID
-			mutation.done = true
-			return node, err
-		})
-		for i := len(qc.hooks) - 1; i >= 0; i-- {
-			if qc.hooks[i] == nil {
-				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = qc.hooks[i](mut)
-		}
-		v, err := mut.Mutate(ctx, qc.mutation)
-		if err != nil {
-			return nil, err
-		}
-		nv, ok := v.(*Queue)
-		if !ok {
-			return nil, fmt.Errorf("unexpected node type %T returned from QueueMutation", v)
-		}
-		node = nv
-	}
-	return node, err
+	return withHooks[*Queue, QueueMutation](ctx, qc.sqlSave, qc.mutation, qc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -531,6 +489,9 @@ func (qc *QueueCreate) check() error {
 }
 
 func (qc *QueueCreate) sqlSave(ctx context.Context) (*Queue, error) {
+	if err := qc.check(); err != nil {
+		return nil, err
+	}
 	_node, _spec := qc.createSpec()
 	if err := sqlgraph.CreateNode(ctx, qc.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
@@ -545,6 +506,8 @@ func (qc *QueueCreate) sqlSave(ctx context.Context) (*Queue, error) {
 			return nil, err
 		}
 	}
+	qc.mutation.id = &_node.ID
+	qc.mutation.done = true
 	return _node, nil
 }
 
@@ -564,147 +527,75 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 		_spec.ID.Value = &id
 	}
 	if value, ok := qc.mutation.LiveArchive(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldLiveArchive,
-		})
+		_spec.SetField(queue.FieldLiveArchive, field.TypeBool, value)
 		_node.LiveArchive = value
 	}
 	if value, ok := qc.mutation.OnHold(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldOnHold,
-		})
+		_spec.SetField(queue.FieldOnHold, field.TypeBool, value)
 		_node.OnHold = value
 	}
 	if value, ok := qc.mutation.VideoProcessing(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldVideoProcessing,
-		})
+		_spec.SetField(queue.FieldVideoProcessing, field.TypeBool, value)
 		_node.VideoProcessing = value
 	}
 	if value, ok := qc.mutation.ChatProcessing(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldChatProcessing,
-		})
+		_spec.SetField(queue.FieldChatProcessing, field.TypeBool, value)
 		_node.ChatProcessing = value
 	}
 	if value, ok := qc.mutation.Processing(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: queue.FieldProcessing,
-		})
+		_spec.SetField(queue.FieldProcessing, field.TypeBool, value)
 		_node.Processing = value
 	}
 	if value, ok := qc.mutation.TaskVodCreateFolder(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVodCreateFolder,
-		})
+		_spec.SetField(queue.FieldTaskVodCreateFolder, field.TypeEnum, value)
 		_node.TaskVodCreateFolder = value
 	}
 	if value, ok := qc.mutation.TaskVodDownloadThumbnail(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVodDownloadThumbnail,
-		})
+		_spec.SetField(queue.FieldTaskVodDownloadThumbnail, field.TypeEnum, value)
 		_node.TaskVodDownloadThumbnail = value
 	}
 	if value, ok := qc.mutation.TaskVodSaveInfo(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVodSaveInfo,
-		})
+		_spec.SetField(queue.FieldTaskVodSaveInfo, field.TypeEnum, value)
 		_node.TaskVodSaveInfo = value
 	}
 	if value, ok := qc.mutation.TaskVideoDownload(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVideoDownload,
-		})
+		_spec.SetField(queue.FieldTaskVideoDownload, field.TypeEnum, value)
 		_node.TaskVideoDownload = value
 	}
 	if value, ok := qc.mutation.TaskVideoConvert(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVideoConvert,
-		})
+		_spec.SetField(queue.FieldTaskVideoConvert, field.TypeEnum, value)
 		_node.TaskVideoConvert = value
 	}
 	if value, ok := qc.mutation.TaskVideoMove(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskVideoMove,
-		})
+		_spec.SetField(queue.FieldTaskVideoMove, field.TypeEnum, value)
 		_node.TaskVideoMove = value
 	}
 	if value, ok := qc.mutation.TaskChatDownload(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatDownload,
-		})
+		_spec.SetField(queue.FieldTaskChatDownload, field.TypeEnum, value)
 		_node.TaskChatDownload = value
 	}
 	if value, ok := qc.mutation.TaskChatConvert(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatConvert,
-		})
+		_spec.SetField(queue.FieldTaskChatConvert, field.TypeEnum, value)
 		_node.TaskChatConvert = value
 	}
 	if value, ok := qc.mutation.TaskChatRender(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatRender,
-		})
+		_spec.SetField(queue.FieldTaskChatRender, field.TypeEnum, value)
 		_node.TaskChatRender = value
 	}
 	if value, ok := qc.mutation.TaskChatMove(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: queue.FieldTaskChatMove,
-		})
+		_spec.SetField(queue.FieldTaskChatMove, field.TypeEnum, value)
 		_node.TaskChatMove = value
 	}
 	if value, ok := qc.mutation.ChatStart(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: queue.FieldChatStart,
-		})
+		_spec.SetField(queue.FieldChatStart, field.TypeTime, value)
 		_node.ChatStart = value
 	}
 	if value, ok := qc.mutation.UpdatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: queue.FieldUpdatedAt,
-		})
+		_spec.SetField(queue.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := qc.mutation.CreatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: queue.FieldCreatedAt,
-		})
+		_spec.SetField(queue.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if nodes := qc.mutation.VodIDs(); len(nodes) > 0 {

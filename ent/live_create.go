@@ -208,50 +208,8 @@ func (lc *LiveCreate) Mutation() *LiveMutation {
 
 // Save creates the Live in the database.
 func (lc *LiveCreate) Save(ctx context.Context) (*Live, error) {
-	var (
-		err  error
-		node *Live
-	)
 	lc.defaults()
-	if len(lc.hooks) == 0 {
-		if err = lc.check(); err != nil {
-			return nil, err
-		}
-		node, err = lc.sqlSave(ctx)
-	} else {
-		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*LiveMutation)
-			if !ok {
-				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = lc.check(); err != nil {
-				return nil, err
-			}
-			lc.mutation = mutation
-			if node, err = lc.sqlSave(ctx); err != nil {
-				return nil, err
-			}
-			mutation.id = &node.ID
-			mutation.done = true
-			return node, err
-		})
-		for i := len(lc.hooks) - 1; i >= 0; i-- {
-			if lc.hooks[i] == nil {
-				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
-			}
-			mut = lc.hooks[i](mut)
-		}
-		v, err := mut.Mutate(ctx, lc.mutation)
-		if err != nil {
-			return nil, err
-		}
-		nv, ok := v.(*Live)
-		if !ok {
-			return nil, fmt.Errorf("unexpected node type %T returned from LiveMutation", v)
-		}
-		node = nv
-	}
-	return node, err
+	return withHooks[*Live, LiveMutation](ctx, lc.sqlSave, lc.mutation, lc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -367,6 +325,9 @@ func (lc *LiveCreate) check() error {
 }
 
 func (lc *LiveCreate) sqlSave(ctx context.Context) (*Live, error) {
+	if err := lc.check(); err != nil {
+		return nil, err
+	}
 	_node, _spec := lc.createSpec()
 	if err := sqlgraph.CreateNode(ctx, lc.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
@@ -381,6 +342,8 @@ func (lc *LiveCreate) sqlSave(ctx context.Context) (*Live, error) {
 			return nil, err
 		}
 	}
+	lc.mutation.id = &_node.ID
+	lc.mutation.done = true
 	return _node, nil
 }
 
@@ -400,91 +363,47 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 		_spec.ID.Value = &id
 	}
 	if value, ok := lc.mutation.WatchLive(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldWatchLive,
-		})
+		_spec.SetField(live.FieldWatchLive, field.TypeBool, value)
 		_node.WatchLive = value
 	}
 	if value, ok := lc.mutation.WatchVod(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldWatchVod,
-		})
+		_spec.SetField(live.FieldWatchVod, field.TypeBool, value)
 		_node.WatchVod = value
 	}
 	if value, ok := lc.mutation.DownloadArchives(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldDownloadArchives,
-		})
+		_spec.SetField(live.FieldDownloadArchives, field.TypeBool, value)
 		_node.DownloadArchives = value
 	}
 	if value, ok := lc.mutation.DownloadHighlights(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldDownloadHighlights,
-		})
+		_spec.SetField(live.FieldDownloadHighlights, field.TypeBool, value)
 		_node.DownloadHighlights = value
 	}
 	if value, ok := lc.mutation.DownloadUploads(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldDownloadUploads,
-		})
+		_spec.SetField(live.FieldDownloadUploads, field.TypeBool, value)
 		_node.DownloadUploads = value
 	}
 	if value, ok := lc.mutation.IsLive(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldIsLive,
-		})
+		_spec.SetField(live.FieldIsLive, field.TypeBool, value)
 		_node.IsLive = value
 	}
 	if value, ok := lc.mutation.ArchiveChat(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: live.FieldArchiveChat,
-		})
+		_spec.SetField(live.FieldArchiveChat, field.TypeBool, value)
 		_node.ArchiveChat = value
 	}
 	if value, ok := lc.mutation.Resolution(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: live.FieldResolution,
-		})
+		_spec.SetField(live.FieldResolution, field.TypeString, value)
 		_node.Resolution = value
 	}
 	if value, ok := lc.mutation.LastLive(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: live.FieldLastLive,
-		})
+		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
 		_node.LastLive = value
 	}
 	if value, ok := lc.mutation.UpdatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: live.FieldUpdatedAt,
-		})
+		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := lc.mutation.CreatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: live.FieldCreatedAt,
-		})
+		_spec.SetField(live.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if nodes := lc.mutation.ChannelIDs(); len(nodes) > 0 {
