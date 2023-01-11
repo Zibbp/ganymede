@@ -101,6 +101,11 @@ func LastLive(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldLastLive, v))
 }
 
+// RenderChat applies equality check predicate on the "render_chat" field. It's identical to RenderChatEQ.
+func RenderChat(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldRenderChat, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldUpdatedAt, v))
@@ -294,6 +299,16 @@ func LastLiveLT(v time.Time) predicate.Live {
 // LastLiveLTE applies the LTE predicate on the "last_live" field.
 func LastLiveLTE(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldLTE(FieldLastLive, v))
+}
+
+// RenderChatEQ applies the EQ predicate on the "render_chat" field.
+func RenderChatEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldRenderChat, v))
+}
+
+// RenderChatNEQ applies the NEQ predicate on the "render_chat" field.
+func RenderChatNEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldRenderChat, v))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

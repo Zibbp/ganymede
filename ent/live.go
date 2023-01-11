@@ -36,6 +36,8 @@ type Live struct {
 	Resolution string `json:"resolution,omitempty"`
 	// The time the channel last went live.
 	LastLive time.Time `json:"last_live,omitempty"`
+	// Whether the chat should be rendered.
+	RenderChat bool `json:"render_chat,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -73,7 +75,7 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldIsLive, live.FieldArchiveChat:
+		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat:
 			values[i] = new(sql.NullBool)
 		case live.FieldResolution:
 			values[i] = new(sql.NullString)
@@ -158,6 +160,12 @@ func (l *Live) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				l.LastLive = value.Time
 			}
+		case live.FieldRenderChat:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field render_chat", values[i])
+			} else if value.Valid {
+				l.RenderChat = value.Bool
+			}
 		case live.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
@@ -236,6 +244,9 @@ func (l *Live) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("last_live=")
 	builder.WriteString(l.LastLive.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("render_chat=")
+	builder.WriteString(fmt.Sprintf("%v", l.RenderChat))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(l.UpdatedAt.Format(time.ANSIC))

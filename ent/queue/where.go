@@ -87,6 +87,11 @@ func ChatStart(v time.Time) predicate.Queue {
 	return predicate.Queue(sql.FieldEQ(FieldChatStart, v))
 }
 
+// RenderChat applies equality check predicate on the "render_chat" field. It's identical to RenderChatEQ.
+func RenderChat(v bool) predicate.Queue {
+	return predicate.Queue(sql.FieldEQ(FieldRenderChat, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Queue {
 	return predicate.Queue(sql.FieldEQ(FieldUpdatedAt, v))
@@ -595,6 +600,26 @@ func ChatStartIsNil() predicate.Queue {
 // ChatStartNotNil applies the NotNil predicate on the "chat_start" field.
 func ChatStartNotNil() predicate.Queue {
 	return predicate.Queue(sql.FieldNotNull(FieldChatStart))
+}
+
+// RenderChatEQ applies the EQ predicate on the "render_chat" field.
+func RenderChatEQ(v bool) predicate.Queue {
+	return predicate.Queue(sql.FieldEQ(FieldRenderChat, v))
+}
+
+// RenderChatNEQ applies the NEQ predicate on the "render_chat" field.
+func RenderChatNEQ(v bool) predicate.Queue {
+	return predicate.Queue(sql.FieldNEQ(FieldRenderChat, v))
+}
+
+// RenderChatIsNil applies the IsNil predicate on the "render_chat" field.
+func RenderChatIsNil() predicate.Queue {
+	return predicate.Queue(sql.FieldIsNull(FieldRenderChat))
+}
+
+// RenderChatNotNil applies the NotNil predicate on the "render_chat" field.
+func RenderChatNotNil() predicate.Queue {
+	return predicate.Queue(sql.FieldNotNull(FieldRenderChat))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

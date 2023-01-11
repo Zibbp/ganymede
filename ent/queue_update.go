@@ -321,6 +321,26 @@ func (qu *QueueUpdate) ClearChatStart() *QueueUpdate {
 	return qu
 }
 
+// SetRenderChat sets the "render_chat" field.
+func (qu *QueueUpdate) SetRenderChat(b bool) *QueueUpdate {
+	qu.mutation.SetRenderChat(b)
+	return qu
+}
+
+// SetNillableRenderChat sets the "render_chat" field if the given value is not nil.
+func (qu *QueueUpdate) SetNillableRenderChat(b *bool) *QueueUpdate {
+	if b != nil {
+		qu.SetRenderChat(*b)
+	}
+	return qu
+}
+
+// ClearRenderChat clears the value of the "render_chat" field.
+func (qu *QueueUpdate) ClearRenderChat() *QueueUpdate {
+	qu.mutation.ClearRenderChat()
+	return qu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (qu *QueueUpdate) SetUpdatedAt(t time.Time) *QueueUpdate {
 	qu.mutation.SetUpdatedAt(t)
@@ -544,6 +564,12 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if qu.mutation.ChatStartCleared() {
 		_spec.ClearField(queue.FieldChatStart, field.TypeTime)
+	}
+	if value, ok := qu.mutation.RenderChat(); ok {
+		_spec.SetField(queue.FieldRenderChat, field.TypeBool, value)
+	}
+	if qu.mutation.RenderChatCleared() {
+		_spec.ClearField(queue.FieldRenderChat, field.TypeBool)
 	}
 	if value, ok := qu.mutation.UpdatedAt(); ok {
 		_spec.SetField(queue.FieldUpdatedAt, field.TypeTime, value)
@@ -893,6 +919,26 @@ func (quo *QueueUpdateOne) ClearChatStart() *QueueUpdateOne {
 	return quo
 }
 
+// SetRenderChat sets the "render_chat" field.
+func (quo *QueueUpdateOne) SetRenderChat(b bool) *QueueUpdateOne {
+	quo.mutation.SetRenderChat(b)
+	return quo
+}
+
+// SetNillableRenderChat sets the "render_chat" field if the given value is not nil.
+func (quo *QueueUpdateOne) SetNillableRenderChat(b *bool) *QueueUpdateOne {
+	if b != nil {
+		quo.SetRenderChat(*b)
+	}
+	return quo
+}
+
+// ClearRenderChat clears the value of the "render_chat" field.
+func (quo *QueueUpdateOne) ClearRenderChat() *QueueUpdateOne {
+	quo.mutation.ClearRenderChat()
+	return quo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (quo *QueueUpdateOne) SetUpdatedAt(t time.Time) *QueueUpdateOne {
 	quo.mutation.SetUpdatedAt(t)
@@ -1140,6 +1186,12 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 	}
 	if quo.mutation.ChatStartCleared() {
 		_spec.ClearField(queue.FieldChatStart, field.TypeTime)
+	}
+	if value, ok := quo.mutation.RenderChat(); ok {
+		_spec.SetField(queue.FieldRenderChat, field.TypeBool, value)
+	}
+	if quo.mutation.RenderChatCleared() {
+		_spec.ClearField(queue.FieldRenderChat, field.TypeBool)
 	}
 	if value, ok := quo.mutation.UpdatedAt(); ok {
 		_spec.SetField(queue.FieldUpdatedAt, field.TypeTime, value)

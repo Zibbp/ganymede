@@ -148,6 +148,20 @@ func (lc *LiveCreate) SetNillableLastLive(t *time.Time) *LiveCreate {
 	return lc
 }
 
+// SetRenderChat sets the "render_chat" field.
+func (lc *LiveCreate) SetRenderChat(b bool) *LiveCreate {
+	lc.mutation.SetRenderChat(b)
+	return lc
+}
+
+// SetNillableRenderChat sets the "render_chat" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableRenderChat(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetRenderChat(*b)
+	}
+	return lc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lc *LiveCreate) SetUpdatedAt(t time.Time) *LiveCreate {
 	lc.mutation.SetUpdatedAt(t)
@@ -272,6 +286,10 @@ func (lc *LiveCreate) defaults() {
 		v := live.DefaultLastLive()
 		lc.mutation.SetLastLive(v)
 	}
+	if _, ok := lc.mutation.RenderChat(); !ok {
+		v := live.DefaultRenderChat
+		lc.mutation.SetRenderChat(v)
+	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		v := live.DefaultUpdatedAt()
 		lc.mutation.SetUpdatedAt(v)
@@ -311,6 +329,9 @@ func (lc *LiveCreate) check() error {
 	}
 	if _, ok := lc.mutation.LastLive(); !ok {
 		return &ValidationError{Name: "last_live", err: errors.New(`ent: missing required field "Live.last_live"`)}
+	}
+	if _, ok := lc.mutation.RenderChat(); !ok {
+		return &ValidationError{Name: "render_chat", err: errors.New(`ent: missing required field "Live.render_chat"`)}
 	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Live.updated_at"`)}
@@ -397,6 +418,10 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := lc.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
 		_node.LastLive = value
+	}
+	if value, ok := lc.mutation.RenderChat(); ok {
+		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
+		_node.RenderChat = value
 	}
 	if value, ok := lc.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)

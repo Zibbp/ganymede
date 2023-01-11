@@ -47,6 +47,8 @@ const (
 	FieldTaskChatMove = "task_chat_move"
 	// FieldChatStart holds the string denoting the chat_start field in the database.
 	FieldChatStart = "chat_start"
+	// FieldRenderChat holds the string denoting the render_chat field in the database.
+	FieldRenderChat = "render_chat"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -83,6 +85,7 @@ var Columns = []string{
 	FieldTaskChatRender,
 	FieldTaskChatMove,
 	FieldChatStart,
+	FieldRenderChat,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -119,6 +122,8 @@ var (
 	DefaultChatProcessing bool
 	// DefaultProcessing holds the default value on creation for the "processing" field.
 	DefaultProcessing bool
+	// DefaultRenderChat holds the default value on creation for the "render_chat" field.
+	DefaultRenderChat bool
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
