@@ -19,7 +19,21 @@ import (
 
 func DownloadTwitchVodVideo(v *ent.Vod) error {
 
-	cmd := osExec.Command("streamlink", fmt.Sprintf("https://twitch.tv/videos/%s", v.ExtID), fmt.Sprintf("%s,best", v.Resolution), "--force-progress", "--force", "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+	var argArr []string
+	// Check if twitch token is set
+	argArr = append(argArr, fmt.Sprintf("https://twitch.tv/videos/%s", v.ExtID), fmt.Sprintf("%s,best", v.Resolution), "--force-progress", "--force")
+
+	twitchToken := viper.GetString("parameters.twitch_token")
+	if twitchToken != "" {
+		// Note: if the token is invalid, streamlink will exit with "no playable streams found on this URL"
+		argArr = append(argArr, fmt.Sprintf("--twitch-api-header=Authorization=OAuth %s", twitchToken))
+	}
+
+	argArr = append(argArr, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+
+	log.Debug().Msgf("running streamlink for vod video download: %s", strings.Join(argArr, " "))
+
+	cmd := osExec.Command("streamlink", argArr...)
 
 	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video.log", v.ExtID, v.ID))
 	if err != nil {
