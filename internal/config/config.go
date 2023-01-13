@@ -31,6 +31,7 @@ type Conf struct {
 	RegistrationEnabled bool `json:"registration_enabled"`
 	DBSeeded            bool `json:"db_seeded"`
 	Parameters          struct {
+		TwitchToken    string `json:"twitch_token"`
 		VideoConvert   string `json:"video_convert"`
 		ChatRender     string `json:"chat_render"`
 		StreamlinkLive string `json:"streamlink_live"`
@@ -82,6 +83,7 @@ func NewConfig() {
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
 	viper.SetDefault("parameters.streamlink_live", "--force-progress,--force,--twitch-low-latency,--twitch-disable-hosting")
 	viper.SetDefault("archive.save_as_hls", false)
+	viper.SetDefault("parameters.twitch_token", "")
 	// Notifications
 	viper.SetDefault("notifications.video_success_webhook_url", "")
 	viper.SetDefault("notifications.video_success_template", "✅ Video Archived: {{vod_title}} by {{channel_display_name}}.")
@@ -130,14 +132,17 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 			SaveAsHls: viper.GetBool("archive.save_as_hls"),
 		}),
 		Parameters: struct {
+			TwitchToken    string `json:"twitch_token"`
 			VideoConvert   string `json:"video_convert"`
 			ChatRender     string `json:"chat_render"`
 			StreamlinkLive string `json:"streamlink_live"`
 		}(struct {
+			TwitchToken    string
 			VideoConvert   string
 			ChatRender     string
 			StreamlinkLive string
 		}{
+			TwitchToken:    viper.GetString("parameters.twitch_token"),
 			VideoConvert:   viper.GetString("parameters.video_convert"),
 			ChatRender:     viper.GetString("parameters.chat_render"),
 			StreamlinkLive: viper.GetString("parameters.streamlink_live"),
@@ -160,6 +165,7 @@ func (s *Service) UpdateConfig(c echo.Context, cDto *Conf) error {
 	viper.Set("parameters.video_convert", cDto.Parameters.VideoConvert)
 	viper.Set("parameters.chat_render", cDto.Parameters.ChatRender)
 	viper.Set("parameters.streamlink_live", cDto.Parameters.StreamlinkLive)
+	viper.Set("parameters.twitch_token", cDto.Parameters.TwitchToken)
 	viper.Set("archive.save_as_hls", cDto.Archive.SaveAsHls)
 	err := viper.WriteConfig()
 	if err != nil {
@@ -270,6 +276,10 @@ func refreshConfig(configPath string) {
 	}
 	if !viper.IsSet("storage_templates.file_template") {
 		viper.Set("storage_templates.file_template", "{{id}}")
+	}
+	// Twitch Token
+	if !viper.IsSet("parameters.twitch_token") {
+		viper.Set("parameters.twitch_token", "")
 	}
 
 }
