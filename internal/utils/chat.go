@@ -253,7 +253,7 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 					emoteFragment.Pos1 = pos1
 					emoteFragment.Pos2 = pos2 + 1
 
-					if pos2 > len(liveComment.Message) {
+					if pos2+1 > len(liveComment.Message) {
 						log.Debug().Msgf("Message: %s -- has an out-of-bounds emote position, skipping.", liveComment.Message)
 					} else {
 						slicedEmote := liveComment.Message[pos1 : pos2+1]
