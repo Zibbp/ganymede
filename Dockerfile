@@ -31,9 +31,8 @@ ENV INTER_PATH "/tmp/Inter Desktop/Inter-Regular.otf"
 COPY --from=build-stage-02 ${INTER_PATH} /tmp/
 RUN mkdir -p /usr/share/fonts/opentype/ && install -m644 /tmp/Inter-Regular.otf /usr/share/fonts/opentype/Inter.otf && rm ./tmp/Inter-Regular.otf && fc-cache -fv
 
-# Install fallback fonts, specifically "noto" for unicode support
-# List could probabvlly be trimmed down in the future
-RUN apk add font-noto font-noto-extra
+# Install fallback fonts for chat rendering
+RUN apk add terminus-font ttf-inconsolata ttf-dejavu font-noto font-noto-cjk ttf-font-awesome font-noto-extra
 
 RUN chmod 644 /usr/share/fonts/*
 
