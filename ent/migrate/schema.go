@@ -159,6 +159,7 @@ var (
 		{Name: "chat_path", Type: field.TypeString, Nullable: true},
 		{Name: "chat_video_path", Type: field.TypeString, Nullable: true},
 		{Name: "info_path", Type: field.TypeString, Nullable: true},
+		{Name: "caption_path", Type: field.TypeString, Nullable: true},
 		{Name: "folder_name", Type: field.TypeString, Nullable: true},
 		{Name: "file_name", Type: field.TypeString, Nullable: true},
 		{Name: "streamed_at", Type: field.TypeTime},
@@ -174,7 +175,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[20]},
+				Columns:    []*schema.Column{VodsColumns[21]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

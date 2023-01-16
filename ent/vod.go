@@ -48,6 +48,8 @@ type Vod struct {
 	ChatVideoPath string `json:"chat_video_path,omitempty"`
 	// InfoPath holds the value of the "info_path" field.
 	InfoPath string `json:"info_path,omitempty"`
+	// CaptionPath holds the value of the "caption_path" field.
+	CaptionPath string `json:"caption_path,omitempty"`
 	// FolderName holds the value of the "folder_name" field.
 	FolderName string `json:"folder_name,omitempty"`
 	// FileName holds the value of the "file_name" field.
@@ -121,7 +123,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case vod.FieldDuration, vod.FieldViews:
 			values[i] = new(sql.NullInt64)
-		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldChatPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldFolderName, vod.FieldFileName:
+		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldChatPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName:
 			values[i] = new(sql.NullString)
 		case vod.FieldStreamedAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -233,6 +235,12 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field info_path", values[i])
 			} else if value.Valid {
 				v.InfoPath = value.String
+			}
+		case vod.FieldCaptionPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field caption_path", values[i])
+			} else if value.Valid {
+				v.CaptionPath = value.String
 			}
 		case vod.FieldFolderName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -355,6 +363,9 @@ func (v *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("info_path=")
 	builder.WriteString(v.InfoPath)
+	builder.WriteString(", ")
+	builder.WriteString("caption_path=")
+	builder.WriteString(v.CaptionPath)
 	builder.WriteString(", ")
 	builder.WriteString("folder_name=")
 	builder.WriteString(v.FolderName)

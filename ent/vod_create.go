@@ -189,6 +189,20 @@ func (vc *VodCreate) SetNillableInfoPath(s *string) *VodCreate {
 	return vc
 }
 
+// SetCaptionPath sets the "caption_path" field.
+func (vc *VodCreate) SetCaptionPath(s string) *VodCreate {
+	vc.mutation.SetCaptionPath(s)
+	return vc
+}
+
+// SetNillableCaptionPath sets the "caption_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableCaptionPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetCaptionPath(*s)
+	}
+	return vc
+}
+
 // SetFolderName sets the "folder_name" field.
 func (vc *VodCreate) SetFolderName(s string) *VodCreate {
 	vc.mutation.SetFolderName(s)
@@ -538,6 +552,10 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 	if value, ok := vc.mutation.InfoPath(); ok {
 		_spec.SetField(vod.FieldInfoPath, field.TypeString, value)
 		_node.InfoPath = value
+	}
+	if value, ok := vc.mutation.CaptionPath(); ok {
+		_spec.SetField(vod.FieldCaptionPath, field.TypeString, value)
+		_node.CaptionPath = value
 	}
 	if value, ok := vc.mutation.FolderName(); ok {
 		_spec.SetField(vod.FieldFolderName, field.TypeString, value)

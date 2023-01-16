@@ -43,6 +43,8 @@ const (
 	FieldChatVideoPath = "chat_video_path"
 	// FieldInfoPath holds the string denoting the info_path field in the database.
 	FieldInfoPath = "info_path"
+	// FieldCaptionPath holds the string denoting the caption_path field in the database.
+	FieldCaptionPath = "caption_path"
 	// FieldFolderName holds the string denoting the folder_name field in the database.
 	FieldFolderName = "folder_name"
 	// FieldFileName holds the string denoting the file_name field in the database.
@@ -99,6 +101,7 @@ var Columns = []string{
 	FieldChatPath,
 	FieldChatVideoPath,
 	FieldInfoPath,
+	FieldCaptionPath,
 	FieldFolderName,
 	FieldFileName,
 	FieldStreamedAt,

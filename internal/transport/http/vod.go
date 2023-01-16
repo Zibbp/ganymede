@@ -50,6 +50,7 @@ type CreateVodRequest struct {
 	ChatPath         string            `json:"chat_path"`
 	ChatVideoPath    string            `json:"chat_video_path"`
 	InfoPath         string            `json:"info_path"`
+	CaptionPath      string            `json:"caption_path"`
 	StreamedAt       string            `json:"streamed_at" validate:"required"`
 }
 
@@ -101,6 +102,7 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		ChatPath:         req.ChatPath,
 		ChatVideoPath:    req.ChatVideoPath,
 		InfoPath:         req.InfoPath,
+		CaptionPath:      req.CaptionPath,
 		StreamedAt:       streamedAt,
 	}
 
@@ -205,6 +207,7 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 		ChatPath:         req.ChatPath,
 		ChatVideoPath:    req.ChatVideoPath,
 		InfoPath:         req.InfoPath,
+		CaptionPath:      req.CaptionPath,
 		StreamedAt:       streamedAt,
 	}
 

@@ -5593,6 +5593,7 @@ type VodMutation struct {
 	chat_path          *string
 	chat_video_path    *string
 	info_path          *string
+	caption_path       *string
 	folder_name        *string
 	file_name          *string
 	streamed_at        *time.Time
@@ -6324,6 +6325,55 @@ func (m *VodMutation) ResetInfoPath() {
 	delete(m.clearedFields, vod.FieldInfoPath)
 }
 
+// SetCaptionPath sets the "caption_path" field.
+func (m *VodMutation) SetCaptionPath(s string) {
+	m.caption_path = &s
+}
+
+// CaptionPath returns the value of the "caption_path" field in the mutation.
+func (m *VodMutation) CaptionPath() (r string, exists bool) {
+	v := m.caption_path
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCaptionPath returns the old "caption_path" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldCaptionPath(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCaptionPath is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCaptionPath requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCaptionPath: %w", err)
+	}
+	return oldValue.CaptionPath, nil
+}
+
+// ClearCaptionPath clears the value of the "caption_path" field.
+func (m *VodMutation) ClearCaptionPath() {
+	m.caption_path = nil
+	m.clearedFields[vod.FieldCaptionPath] = struct{}{}
+}
+
+// CaptionPathCleared returns if the "caption_path" field was cleared in this mutation.
+func (m *VodMutation) CaptionPathCleared() bool {
+	_, ok := m.clearedFields[vod.FieldCaptionPath]
+	return ok
+}
+
+// ResetCaptionPath resets all changes to the "caption_path" field.
+func (m *VodMutation) ResetCaptionPath() {
+	m.caption_path = nil
+	delete(m.clearedFields, vod.FieldCaptionPath)
+}
+
 // SetFolderName sets the "folder_name" field.
 func (m *VodMutation) SetFolderName(s string) {
 	m.folder_name = &s
@@ -6696,7 +6746,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 20)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -6738,6 +6788,9 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.info_path != nil {
 		fields = append(fields, vod.FieldInfoPath)
+	}
+	if m.caption_path != nil {
+		fields = append(fields, vod.FieldCaptionPath)
 	}
 	if m.folder_name != nil {
 		fields = append(fields, vod.FieldFolderName)
@@ -6790,6 +6843,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.ChatVideoPath()
 	case vod.FieldInfoPath:
 		return m.InfoPath()
+	case vod.FieldCaptionPath:
+		return m.CaptionPath()
 	case vod.FieldFolderName:
 		return m.FolderName()
 	case vod.FieldFileName:
@@ -6837,6 +6892,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldChatVideoPath(ctx)
 	case vod.FieldInfoPath:
 		return m.OldInfoPath(ctx)
+	case vod.FieldCaptionPath:
+		return m.OldCaptionPath(ctx)
 	case vod.FieldFolderName:
 		return m.OldFolderName(ctx)
 	case vod.FieldFileName:
@@ -6954,6 +7011,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetInfoPath(v)
 		return nil
+	case vod.FieldCaptionPath:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCaptionPath(v)
+		return nil
 	case vod.FieldFolderName:
 		v, ok := value.(string)
 		if !ok {
@@ -7061,6 +7125,9 @@ func (m *VodMutation) ClearedFields() []string {
 	if m.FieldCleared(vod.FieldInfoPath) {
 		fields = append(fields, vod.FieldInfoPath)
 	}
+	if m.FieldCleared(vod.FieldCaptionPath) {
+		fields = append(fields, vod.FieldCaptionPath)
+	}
 	if m.FieldCleared(vod.FieldFolderName) {
 		fields = append(fields, vod.FieldFolderName)
 	}
@@ -7095,6 +7162,9 @@ func (m *VodMutation) ClearField(name string) error {
 		return nil
 	case vod.FieldInfoPath:
 		m.ClearInfoPath()
+		return nil
+	case vod.FieldCaptionPath:
+		m.ClearCaptionPath()
 		return nil
 	case vod.FieldFolderName:
 		m.ClearFolderName()
@@ -7151,6 +7221,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldInfoPath:
 		m.ResetInfoPath()
+		return nil
+	case vod.FieldCaptionPath:
+		m.ResetCaptionPath()
 		return nil
 	case vod.FieldFolderName:
 		m.ResetFolderName()

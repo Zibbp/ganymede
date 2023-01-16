@@ -241,6 +241,26 @@ func (vu *VodUpdate) ClearInfoPath() *VodUpdate {
 	return vu
 }
 
+// SetCaptionPath sets the "caption_path" field.
+func (vu *VodUpdate) SetCaptionPath(s string) *VodUpdate {
+	vu.mutation.SetCaptionPath(s)
+	return vu
+}
+
+// SetNillableCaptionPath sets the "caption_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableCaptionPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetCaptionPath(*s)
+	}
+	return vu
+}
+
+// ClearCaptionPath clears the value of the "caption_path" field.
+func (vu *VodUpdate) ClearCaptionPath() *VodUpdate {
+	vu.mutation.ClearCaptionPath()
+	return vu
+}
+
 // SetFolderName sets the "folder_name" field.
 func (vu *VodUpdate) SetFolderName(s string) *VodUpdate {
 	vu.mutation.SetFolderName(s)
@@ -521,6 +541,12 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if vu.mutation.InfoPathCleared() {
 		_spec.ClearField(vod.FieldInfoPath, field.TypeString)
+	}
+	if value, ok := vu.mutation.CaptionPath(); ok {
+		_spec.SetField(vod.FieldCaptionPath, field.TypeString, value)
+	}
+	if vu.mutation.CaptionPathCleared() {
+		_spec.ClearField(vod.FieldCaptionPath, field.TypeString)
 	}
 	if value, ok := vu.mutation.FolderName(); ok {
 		_spec.SetField(vod.FieldFolderName, field.TypeString, value)
@@ -892,6 +918,26 @@ func (vuo *VodUpdateOne) ClearInfoPath() *VodUpdateOne {
 	return vuo
 }
 
+// SetCaptionPath sets the "caption_path" field.
+func (vuo *VodUpdateOne) SetCaptionPath(s string) *VodUpdateOne {
+	vuo.mutation.SetCaptionPath(s)
+	return vuo
+}
+
+// SetNillableCaptionPath sets the "caption_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableCaptionPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetCaptionPath(*s)
+	}
+	return vuo
+}
+
+// ClearCaptionPath clears the value of the "caption_path" field.
+func (vuo *VodUpdateOne) ClearCaptionPath() *VodUpdateOne {
+	vuo.mutation.ClearCaptionPath()
+	return vuo
+}
+
 // SetFolderName sets the "folder_name" field.
 func (vuo *VodUpdateOne) SetFolderName(s string) *VodUpdateOne {
 	vuo.mutation.SetFolderName(s)
@@ -1196,6 +1242,12 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if vuo.mutation.InfoPathCleared() {
 		_spec.ClearField(vod.FieldInfoPath, field.TypeString)
+	}
+	if value, ok := vuo.mutation.CaptionPath(); ok {
+		_spec.SetField(vod.FieldCaptionPath, field.TypeString, value)
+	}
+	if vuo.mutation.CaptionPathCleared() {
+		_spec.ClearField(vod.FieldCaptionPath, field.TypeString)
 	}
 	if value, ok := vuo.mutation.FolderName(); ok {
 		_spec.SetField(vod.FieldFolderName, field.TypeString, value)

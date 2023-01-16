@@ -117,6 +117,11 @@ func InfoPath(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldInfoPath, v))
 }
 
+// CaptionPath applies equality check predicate on the "caption_path" field. It's identical to CaptionPathEQ.
+func CaptionPath(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldCaptionPath, v))
+}
+
 // FolderName applies equality check predicate on the "folder_name" field. It's identical to FolderNameEQ.
 func FolderName(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldFolderName, v))
@@ -925,6 +930,81 @@ func InfoPathEqualFold(v string) predicate.Vod {
 // InfoPathContainsFold applies the ContainsFold predicate on the "info_path" field.
 func InfoPathContainsFold(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldContainsFold(FieldInfoPath, v))
+}
+
+// CaptionPathEQ applies the EQ predicate on the "caption_path" field.
+func CaptionPathEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldCaptionPath, v))
+}
+
+// CaptionPathNEQ applies the NEQ predicate on the "caption_path" field.
+func CaptionPathNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldCaptionPath, v))
+}
+
+// CaptionPathIn applies the In predicate on the "caption_path" field.
+func CaptionPathIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldCaptionPath, vs...))
+}
+
+// CaptionPathNotIn applies the NotIn predicate on the "caption_path" field.
+func CaptionPathNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldCaptionPath, vs...))
+}
+
+// CaptionPathGT applies the GT predicate on the "caption_path" field.
+func CaptionPathGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldCaptionPath, v))
+}
+
+// CaptionPathGTE applies the GTE predicate on the "caption_path" field.
+func CaptionPathGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldCaptionPath, v))
+}
+
+// CaptionPathLT applies the LT predicate on the "caption_path" field.
+func CaptionPathLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldCaptionPath, v))
+}
+
+// CaptionPathLTE applies the LTE predicate on the "caption_path" field.
+func CaptionPathLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldCaptionPath, v))
+}
+
+// CaptionPathContains applies the Contains predicate on the "caption_path" field.
+func CaptionPathContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldCaptionPath, v))
+}
+
+// CaptionPathHasPrefix applies the HasPrefix predicate on the "caption_path" field.
+func CaptionPathHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldCaptionPath, v))
+}
+
+// CaptionPathHasSuffix applies the HasSuffix predicate on the "caption_path" field.
+func CaptionPathHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldCaptionPath, v))
+}
+
+// CaptionPathIsNil applies the IsNil predicate on the "caption_path" field.
+func CaptionPathIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldCaptionPath))
+}
+
+// CaptionPathNotNil applies the NotNil predicate on the "caption_path" field.
+func CaptionPathNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldCaptionPath))
+}
+
+// CaptionPathEqualFold applies the EqualFold predicate on the "caption_path" field.
+func CaptionPathEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldCaptionPath, v))
+}
+
+// CaptionPathContainsFold applies the ContainsFold predicate on the "caption_path" field.
+func CaptionPathContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldCaptionPath, v))
 }
 
 // FolderNameEQ applies the EQ predicate on the "folder_name" field.
