@@ -234,10 +234,24 @@ func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, chann
 		return pagination, fmt.Errorf("error getting vods: %v", err)
 	}
 
-	totalCount, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(channelId))).Count(c.Request().Context())
+	// Get total count
+	// Amount will differ depending on types supplied
+	totalCountQuery := s.Store.Client.Vod.Query()
+
+	// If channel id is not nil
+	if channelId != uuid.Nil {
+		totalCountQuery = totalCountQuery.Where(vod.HasChannelWith(channel.ID(channelId)))
+	}
+
+	// If types is not nil
+	if len(types) > 0 {
+		totalCountQuery = totalCountQuery.Where(vod.TypeIn(types...))
+	}
+
+	totalCount, err := totalCountQuery.Count(c.Request().Context())
 	if err != nil {
-		log.Debug().Err(err).Msg("error getting vods count")
-		return pagination, fmt.Errorf("error getting vods count: %v", err)
+		log.Debug().Err(err).Msg("error getting total vod count")
+		return pagination, fmt.Errorf("error getting total vod count: %v", err)
 	}
 
 	pagination.Limit = limit
