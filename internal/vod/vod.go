@@ -212,55 +212,41 @@ func (s *Service) GetVodPlaylists(c echo.Context, vodID uuid.UUID) ([]*ent.Playl
 	return v.Edges.Playlists, nil
 }
 
-func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID) (Pagination, error) {
+func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType) (Pagination, error) {
+	var pagination Pagination
 
-	if channelId == uuid.Nil {
-		var pagination Pagination
+	// Query builder
+	vodQuery := s.Store.Client.Vod.Query()
 
-		v, err := s.Store.Client.Vod.Query().Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).All(c.Request().Context())
-		if err != nil {
-			log.Debug().Err(err).Msg("error getting vods")
-			return pagination, fmt.Errorf("error getting vods: %v", err)
-		}
-
-		totalCount, err := s.Store.Client.Vod.Query().Count(c.Request().Context())
-		if err != nil {
-			log.Debug().Err(err).Msg("error getting vods count")
-			return pagination, fmt.Errorf("error getting vods count: %v", err)
-		}
-
-		pagination.Limit = limit
-		pagination.Offset = offset
-		pagination.TotalCount = totalCount
-		pagination.Pages = int(math.Ceil(float64(totalCount) / float64(limit)))
-		pagination.Data = v
-
-		return pagination, nil
-
-	} else {
-		var pagination Pagination
-
-		v, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(channelId))).Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).All(c.Request().Context())
-		if err != nil {
-			log.Debug().Err(err).Msg("error getting vods")
-			return pagination, fmt.Errorf("error getting vods: %v", err)
-		}
-
-		totalCount, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(channelId))).Count(c.Request().Context())
-		if err != nil {
-			log.Debug().Err(err).Msg("error getting vods count")
-			return pagination, fmt.Errorf("error getting vods count: %v", err)
-		}
-
-		pagination.Limit = limit
-		pagination.Offset = offset
-		pagination.TotalCount = totalCount
-		pagination.Pages = int(math.Ceil(float64(totalCount) / float64(limit)))
-		pagination.Data = v
-
-		return pagination, nil
+	// If channel id is not nil
+	if channelId != uuid.Nil {
+		vodQuery = vodQuery.Where(vod.HasChannelWith(channel.ID(channelId)))
 	}
 
+	// If types is not nil
+	if len(types) > 0 {
+		vodQuery = vodQuery.Where(vod.TypeIn(types...))
+	}
+
+	v, err := vodQuery.Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).All(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vods")
+		return pagination, fmt.Errorf("error getting vods: %v", err)
+	}
+
+	totalCount, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(channelId))).Count(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vods count")
+		return pagination, fmt.Errorf("error getting vods count: %v", err)
+	}
+
+	pagination.Limit = limit
+	pagination.Offset = offset
+	pagination.TotalCount = totalCount
+	pagination.Pages = int(math.Ceil(float64(totalCount) / float64(limit)))
+	pagination.Data = v
+
+	return pagination, nil
 }
 
 func (s *Service) GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error) {

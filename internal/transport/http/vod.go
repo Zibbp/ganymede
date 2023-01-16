@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,7 +25,7 @@ type VodService interface {
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	SearchVods(c echo.Context, query string, limit int, offset int) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
-	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID) (vod.Pagination, error)
+	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error)
 	GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error)
@@ -269,7 +270,15 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 		}
 	}
 
-	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID)
+	vTypes := c.QueryParam("types")
+	var types []utils.VodType
+	if vTypes != "" {
+		for _, vType := range strings.Split(vTypes, ",") {
+			types = append(types, utils.VodType(vType))
+		}
+	}
+
+	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
