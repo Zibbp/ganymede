@@ -32,7 +32,7 @@ COPY --from=build-stage-02 ${INTER_PATH} /tmp/
 RUN mkdir -p /usr/share/fonts/opentype/ && install -m644 /tmp/Inter-Regular.otf /usr/share/fonts/opentype/Inter.otf && rm ./tmp/Inter-Regular.otf && fc-cache -fv
 
 # Install fallback fonts for chat rendering
-RUN apk add terminus-font ttf-inconsolata ttf-dejavu font-noto font-noto-cjk ttf-font-awesome font-noto-extra
+RUN apk add terminus-font ttf-inconsolata ttf-dejavu font-noto font-noto-cjk ttf-font-awesome font-noto-extra font-noto-arabic
 
 RUN chmod 644 /usr/share/fonts/*
 
