@@ -2,8 +2,10 @@ package live
 
 import (
 	"context"
+	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
@@ -101,8 +103,30 @@ func (s *Service) CheckVodWatchedChannels() {
 		// Check if video is already in DB
 		for _, video := range videos {
 			if !contains(dbVideos, video.ID) {
+				// Video is not in DB
+
+				// Query the video using Twitch's GraphQL API to check for restrictions
+				gqlVideo, err := twitch.GQLGetVideo(video.ID)
+				if err != nil {
+					log.Error().Err(err).Msgf("error getting video %s from GraphQL API", video.ID)
+					continue
+				}
+				// Check if video is sub only restricted
+				if strings.Contains(gqlVideo.Data.Video.ResourceRestriction.Type, "SUB") {
+					// Skip if sub only is disabled
+					if !watch.DownloadSubOnly {
+						log.Info().Msgf("skipping sub only video %s.", video.ID)
+						continue
+					}
+					// Skip if Twitch token is not set
+					if viper.GetString("parameters.twitch_token") == "" {
+						log.Info().Msgf("skipping sub only video %s. Twitch token is not set.", video.ID)
+						continue
+					}
+				}
+
 				// archive the video
-				_, err := s.ArchiveService.ArchiveTwitchVod(video.ID, watch.Resolution, watch.ArchiveChat, true)
+				_, err = s.ArchiveService.ArchiveTwitchVod(video.ID, watch.Resolution, watch.ArchiveChat, true)
 				if err != nil {
 					log.Error().Err(err).Msgf("Error archiving video %s", video.ID)
 					continue
