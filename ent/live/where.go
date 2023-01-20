@@ -81,6 +81,11 @@ func DownloadUploads(v bool) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldDownloadUploads, v))
 }
 
+// DownloadSubOnly applies equality check predicate on the "download_sub_only" field. It's identical to DownloadSubOnlyEQ.
+func DownloadSubOnly(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldDownloadSubOnly, v))
+}
+
 // IsLive applies equality check predicate on the "is_live" field. It's identical to IsLiveEQ.
 func IsLive(v bool) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldIsLive, v))
@@ -164,6 +169,16 @@ func DownloadUploadsEQ(v bool) predicate.Live {
 // DownloadUploadsNEQ applies the NEQ predicate on the "download_uploads" field.
 func DownloadUploadsNEQ(v bool) predicate.Live {
 	return predicate.Live(sql.FieldNEQ(FieldDownloadUploads, v))
+}
+
+// DownloadSubOnlyEQ applies the EQ predicate on the "download_sub_only" field.
+func DownloadSubOnlyEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldDownloadSubOnly, v))
+}
+
+// DownloadSubOnlyNEQ applies the NEQ predicate on the "download_sub_only" field.
+func DownloadSubOnlyNEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldDownloadSubOnly, v))
 }
 
 // IsLiveEQ applies the EQ predicate on the "is_live" field.

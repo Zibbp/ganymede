@@ -28,6 +28,8 @@ type Live struct {
 	DownloadHighlights bool `json:"download_highlights,omitempty"`
 	// Download uploads
 	DownloadUploads bool `json:"download_uploads,omitempty"`
+	// Download sub only VODs
+	DownloadSubOnly bool `json:"download_sub_only,omitempty"`
 	// Whether the channel is currently live.
 	IsLive bool `json:"is_live,omitempty"`
 	// Whether the chat archive is enabled.
@@ -75,7 +77,7 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat:
+		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat:
 			values[i] = new(sql.NullBool)
 		case live.FieldResolution:
 			values[i] = new(sql.NullString)
@@ -135,6 +137,12 @@ func (l *Live) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field download_uploads", values[i])
 			} else if value.Valid {
 				l.DownloadUploads = value.Bool
+			}
+		case live.FieldDownloadSubOnly:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field download_sub_only", values[i])
+			} else if value.Valid {
+				l.DownloadSubOnly = value.Bool
 			}
 		case live.FieldIsLive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -232,6 +240,9 @@ func (l *Live) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("download_uploads=")
 	builder.WriteString(fmt.Sprintf("%v", l.DownloadUploads))
+	builder.WriteString(", ")
+	builder.WriteString("download_sub_only=")
+	builder.WriteString(fmt.Sprintf("%v", l.DownloadSubOnly))
 	builder.WriteString(", ")
 	builder.WriteString("is_live=")
 	builder.WriteString(fmt.Sprintf("%v", l.IsLive))

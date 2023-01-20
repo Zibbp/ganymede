@@ -23,6 +23,8 @@ const (
 	FieldDownloadHighlights = "download_highlights"
 	// FieldDownloadUploads holds the string denoting the download_uploads field in the database.
 	FieldDownloadUploads = "download_uploads"
+	// FieldDownloadSubOnly holds the string denoting the download_sub_only field in the database.
+	FieldDownloadSubOnly = "download_sub_only"
 	// FieldIsLive holds the string denoting the is_live field in the database.
 	FieldIsLive = "is_live"
 	// FieldArchiveChat holds the string denoting the archive_chat field in the database.
@@ -58,6 +60,7 @@ var Columns = []string{
 	FieldDownloadArchives,
 	FieldDownloadHighlights,
 	FieldDownloadUploads,
+	FieldDownloadSubOnly,
 	FieldIsLive,
 	FieldArchiveChat,
 	FieldResolution,
@@ -99,6 +102,8 @@ var (
 	DefaultDownloadHighlights bool
 	// DefaultDownloadUploads holds the default value on creation for the "download_uploads" field.
 	DefaultDownloadUploads bool
+	// DefaultDownloadSubOnly holds the default value on creation for the "download_sub_only" field.
+	DefaultDownloadSubOnly bool
 	// DefaultIsLive holds the default value on creation for the "is_live" field.
 	DefaultIsLive bool
 	// DefaultArchiveChat holds the default value on creation for the "archive_chat" field.

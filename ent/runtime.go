@@ -58,34 +58,38 @@ func init() {
 	liveDescDownloadUploads := liveFields[5].Descriptor()
 	// live.DefaultDownloadUploads holds the default value on creation for the download_uploads field.
 	live.DefaultDownloadUploads = liveDescDownloadUploads.Default.(bool)
+	// liveDescDownloadSubOnly is the schema descriptor for download_sub_only field.
+	liveDescDownloadSubOnly := liveFields[6].Descriptor()
+	// live.DefaultDownloadSubOnly holds the default value on creation for the download_sub_only field.
+	live.DefaultDownloadSubOnly = liveDescDownloadSubOnly.Default.(bool)
 	// liveDescIsLive is the schema descriptor for is_live field.
-	liveDescIsLive := liveFields[6].Descriptor()
+	liveDescIsLive := liveFields[7].Descriptor()
 	// live.DefaultIsLive holds the default value on creation for the is_live field.
 	live.DefaultIsLive = liveDescIsLive.Default.(bool)
 	// liveDescArchiveChat is the schema descriptor for archive_chat field.
-	liveDescArchiveChat := liveFields[7].Descriptor()
+	liveDescArchiveChat := liveFields[8].Descriptor()
 	// live.DefaultArchiveChat holds the default value on creation for the archive_chat field.
 	live.DefaultArchiveChat = liveDescArchiveChat.Default.(bool)
 	// liveDescResolution is the schema descriptor for resolution field.
-	liveDescResolution := liveFields[8].Descriptor()
+	liveDescResolution := liveFields[9].Descriptor()
 	// live.DefaultResolution holds the default value on creation for the resolution field.
 	live.DefaultResolution = liveDescResolution.Default.(string)
 	// liveDescLastLive is the schema descriptor for last_live field.
-	liveDescLastLive := liveFields[9].Descriptor()
+	liveDescLastLive := liveFields[10].Descriptor()
 	// live.DefaultLastLive holds the default value on creation for the last_live field.
 	live.DefaultLastLive = liveDescLastLive.Default.(func() time.Time)
 	// liveDescRenderChat is the schema descriptor for render_chat field.
-	liveDescRenderChat := liveFields[10].Descriptor()
+	liveDescRenderChat := liveFields[11].Descriptor()
 	// live.DefaultRenderChat holds the default value on creation for the render_chat field.
 	live.DefaultRenderChat = liveDescRenderChat.Default.(bool)
 	// liveDescUpdatedAt is the schema descriptor for updated_at field.
-	liveDescUpdatedAt := liveFields[11].Descriptor()
+	liveDescUpdatedAt := liveFields[12].Descriptor()
 	// live.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	live.DefaultUpdatedAt = liveDescUpdatedAt.Default.(func() time.Time)
 	// live.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	live.UpdateDefaultUpdatedAt = liveDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// liveDescCreatedAt is the schema descriptor for created_at field.
-	liveDescCreatedAt := liveFields[12].Descriptor()
+	liveDescCreatedAt := liveFields[13].Descriptor()
 	// live.DefaultCreatedAt holds the default value on creation for the created_at field.
 	live.DefaultCreatedAt = liveDescCreatedAt.Default.(func() time.Time)
 	// liveDescID is the schema descriptor for id field.
