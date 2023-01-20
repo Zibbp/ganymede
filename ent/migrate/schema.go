@@ -32,6 +32,7 @@ var (
 		{Name: "download_archives", Type: field.TypeBool, Default: false},
 		{Name: "download_highlights", Type: field.TypeBool, Default: false},
 		{Name: "download_uploads", Type: field.TypeBool, Default: false},
+		{Name: "download_sub_only", Type: field.TypeBool, Default: false},
 		{Name: "is_live", Type: field.TypeBool, Default: false},
 		{Name: "archive_chat", Type: field.TypeBool, Default: true},
 		{Name: "resolution", Type: field.TypeString, Nullable: true, Default: "best"},
@@ -49,7 +50,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[13]},
+				Columns:    []*schema.Column{LivesColumns[14]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

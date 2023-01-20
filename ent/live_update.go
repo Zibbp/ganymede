@@ -100,6 +100,20 @@ func (lu *LiveUpdate) SetNillableDownloadUploads(b *bool) *LiveUpdate {
 	return lu
 }
 
+// SetDownloadSubOnly sets the "download_sub_only" field.
+func (lu *LiveUpdate) SetDownloadSubOnly(b bool) *LiveUpdate {
+	lu.mutation.SetDownloadSubOnly(b)
+	return lu
+}
+
+// SetNillableDownloadSubOnly sets the "download_sub_only" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableDownloadSubOnly(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetDownloadSubOnly(*b)
+	}
+	return lu
+}
+
 // SetIsLive sets the "is_live" field.
 func (lu *LiveUpdate) SetIsLive(b bool) *LiveUpdate {
 	lu.mutation.SetIsLive(b)
@@ -284,6 +298,9 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := lu.mutation.DownloadUploads(); ok {
 		_spec.SetField(live.FieldDownloadUploads, field.TypeBool, value)
 	}
+	if value, ok := lu.mutation.DownloadSubOnly(); ok {
+		_spec.SetField(live.FieldDownloadSubOnly, field.TypeBool, value)
+	}
 	if value, ok := lu.mutation.IsLive(); ok {
 		_spec.SetField(live.FieldIsLive, field.TypeBool, value)
 	}
@@ -426,6 +443,20 @@ func (luo *LiveUpdateOne) SetDownloadUploads(b bool) *LiveUpdateOne {
 func (luo *LiveUpdateOne) SetNillableDownloadUploads(b *bool) *LiveUpdateOne {
 	if b != nil {
 		luo.SetDownloadUploads(*b)
+	}
+	return luo
+}
+
+// SetDownloadSubOnly sets the "download_sub_only" field.
+func (luo *LiveUpdateOne) SetDownloadSubOnly(b bool) *LiveUpdateOne {
+	luo.mutation.SetDownloadSubOnly(b)
+	return luo
+}
+
+// SetNillableDownloadSubOnly sets the "download_sub_only" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableDownloadSubOnly(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetDownloadSubOnly(*b)
 	}
 	return luo
 }
@@ -637,6 +668,9 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 	}
 	if value, ok := luo.mutation.DownloadUploads(); ok {
 		_spec.SetField(live.FieldDownloadUploads, field.TypeBool, value)
+	}
+	if value, ok := luo.mutation.DownloadSubOnly(); ok {
+		_spec.SetField(live.FieldDownloadSubOnly, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.IsLive(); ok {
 		_spec.SetField(live.FieldIsLive, field.TypeBool, value)

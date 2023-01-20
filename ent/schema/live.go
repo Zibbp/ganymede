@@ -23,6 +23,7 @@ func (Live) Fields() []ent.Field {
 		field.Bool("download_archives").Default(false).Comment("Download archives"),
 		field.Bool("download_highlights").Default(false).Comment("Download highlights"),
 		field.Bool("download_uploads").Default(false).Comment("Download uploads"),
+		field.Bool("download_sub_only").Default(false).Comment("Download sub only VODs"),
 		field.Bool("is_live").Default(false).Comment("Whether the channel is currently live."),
 		field.Bool("archive_chat").Default(true).Comment("Whether the chat archive is enabled."),
 		field.String("resolution").Default("best").Optional(),

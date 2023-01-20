@@ -853,6 +853,7 @@ type LiveMutation struct {
 	download_archives   *bool
 	download_highlights *bool
 	download_uploads    *bool
+	download_sub_only   *bool
 	is_live             *bool
 	archive_chat        *bool
 	resolution          *string
@@ -1150,6 +1151,42 @@ func (m *LiveMutation) OldDownloadUploads(ctx context.Context) (v bool, err erro
 // ResetDownloadUploads resets all changes to the "download_uploads" field.
 func (m *LiveMutation) ResetDownloadUploads() {
 	m.download_uploads = nil
+}
+
+// SetDownloadSubOnly sets the "download_sub_only" field.
+func (m *LiveMutation) SetDownloadSubOnly(b bool) {
+	m.download_sub_only = &b
+}
+
+// DownloadSubOnly returns the value of the "download_sub_only" field in the mutation.
+func (m *LiveMutation) DownloadSubOnly() (r bool, exists bool) {
+	v := m.download_sub_only
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDownloadSubOnly returns the old "download_sub_only" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldDownloadSubOnly(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDownloadSubOnly is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDownloadSubOnly requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDownloadSubOnly: %w", err)
+	}
+	return oldValue.DownloadSubOnly, nil
+}
+
+// ResetDownloadSubOnly resets all changes to the "download_sub_only" field.
+func (m *LiveMutation) ResetDownloadSubOnly() {
+	m.download_sub_only = nil
 }
 
 // SetIsLive sets the "is_live" field.
@@ -1490,7 +1527,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 13)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -1505,6 +1542,9 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.download_uploads != nil {
 		fields = append(fields, live.FieldDownloadUploads)
+	}
+	if m.download_sub_only != nil {
+		fields = append(fields, live.FieldDownloadSubOnly)
 	}
 	if m.is_live != nil {
 		fields = append(fields, live.FieldIsLive)
@@ -1545,6 +1585,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.DownloadHighlights()
 	case live.FieldDownloadUploads:
 		return m.DownloadUploads()
+	case live.FieldDownloadSubOnly:
+		return m.DownloadSubOnly()
 	case live.FieldIsLive:
 		return m.IsLive()
 	case live.FieldArchiveChat:
@@ -1578,6 +1620,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldDownloadHighlights(ctx)
 	case live.FieldDownloadUploads:
 		return m.OldDownloadUploads(ctx)
+	case live.FieldDownloadSubOnly:
+		return m.OldDownloadSubOnly(ctx)
 	case live.FieldIsLive:
 		return m.OldIsLive(ctx)
 	case live.FieldArchiveChat:
@@ -1635,6 +1679,13 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDownloadUploads(v)
+		return nil
+	case live.FieldDownloadSubOnly:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDownloadSubOnly(v)
 		return nil
 	case live.FieldIsLive:
 		v, ok := value.(bool)
@@ -1757,6 +1808,9 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldDownloadUploads:
 		m.ResetDownloadUploads()
+		return nil
+	case live.FieldDownloadSubOnly:
+		m.ResetDownloadSubOnly()
 		return nil
 	case live.FieldIsLive:
 		m.ResetIsLive()

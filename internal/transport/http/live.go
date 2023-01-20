@@ -29,6 +29,7 @@ type AddWatchedChannelRequest struct {
 	Resolution         string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
 	ArchiveChat        bool   `json:"archive_chat"`
 	RenderChat         bool   `json:"render_chat"`
+	DownloadSubOnly    bool   `json:"download_sub_only"`
 }
 
 type UpdateWatchedChannelRequest struct {
@@ -40,6 +41,7 @@ type UpdateWatchedChannelRequest struct {
 	Resolution         string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
 	ArchiveChat        bool   `json:"archive_chat"`
 	RenderChat         bool   `json:"render_chat"`
+	DownloadSubOnly    bool   `json:"download_sub_only"`
 }
 
 type ConvertChatRequest struct {
@@ -83,6 +85,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		ArchiveChat:        ccr.ArchiveChat,
 		Resolution:         ccr.Resolution,
 		RenderChat:         ccr.RenderChat,
+		DownloadSubOnly:    ccr.DownloadSubOnly,
 	}
 	l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 	if err != nil {
@@ -115,6 +118,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		ArchiveChat:        ccr.ArchiveChat,
 		Resolution:         ccr.Resolution,
 		RenderChat:         ccr.RenderChat,
+		DownloadSubOnly:    ccr.DownloadSubOnly,
 	}
 	l, err := h.Service.LiveService.UpdateLiveWatchedChannel(c, liveDto)
 	if err != nil {

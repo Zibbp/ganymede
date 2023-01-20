@@ -92,6 +92,20 @@ func (lc *LiveCreate) SetNillableDownloadUploads(b *bool) *LiveCreate {
 	return lc
 }
 
+// SetDownloadSubOnly sets the "download_sub_only" field.
+func (lc *LiveCreate) SetDownloadSubOnly(b bool) *LiveCreate {
+	lc.mutation.SetDownloadSubOnly(b)
+	return lc
+}
+
+// SetNillableDownloadSubOnly sets the "download_sub_only" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableDownloadSubOnly(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetDownloadSubOnly(*b)
+	}
+	return lc
+}
+
 // SetIsLive sets the "is_live" field.
 func (lc *LiveCreate) SetIsLive(b bool) *LiveCreate {
 	lc.mutation.SetIsLive(b)
@@ -270,6 +284,10 @@ func (lc *LiveCreate) defaults() {
 		v := live.DefaultDownloadUploads
 		lc.mutation.SetDownloadUploads(v)
 	}
+	if _, ok := lc.mutation.DownloadSubOnly(); !ok {
+		v := live.DefaultDownloadSubOnly
+		lc.mutation.SetDownloadSubOnly(v)
+	}
 	if _, ok := lc.mutation.IsLive(); !ok {
 		v := live.DefaultIsLive
 		lc.mutation.SetIsLive(v)
@@ -320,6 +338,9 @@ func (lc *LiveCreate) check() error {
 	}
 	if _, ok := lc.mutation.DownloadUploads(); !ok {
 		return &ValidationError{Name: "download_uploads", err: errors.New(`ent: missing required field "Live.download_uploads"`)}
+	}
+	if _, ok := lc.mutation.DownloadSubOnly(); !ok {
+		return &ValidationError{Name: "download_sub_only", err: errors.New(`ent: missing required field "Live.download_sub_only"`)}
 	}
 	if _, ok := lc.mutation.IsLive(); !ok {
 		return &ValidationError{Name: "is_live", err: errors.New(`ent: missing required field "Live.is_live"`)}
@@ -402,6 +423,10 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := lc.mutation.DownloadUploads(); ok {
 		_spec.SetField(live.FieldDownloadUploads, field.TypeBool, value)
 		_node.DownloadUploads = value
+	}
+	if value, ok := lc.mutation.DownloadSubOnly(); ok {
+		_spec.SetField(live.FieldDownloadSubOnly, field.TypeBool, value)
+		_node.DownloadSubOnly = value
 	}
 	if value, ok := lc.mutation.IsLive(); ok {
 		_spec.SetField(live.FieldIsLive, field.TypeBool, value)

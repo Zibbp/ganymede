@@ -1,9 +1,10 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/internal/twitch"
-	"net/http"
 )
 
 type TwitchService interface {
@@ -35,4 +36,17 @@ func (h *Handler) GetTwitchVod(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, vod)
+}
+
+func (h *Handler) GQLGetTwitchVideo(c echo.Context) error {
+	videoID := c.QueryParam("id")
+	if videoID == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "id query param is required")
+	}
+	video, err := twitch.GQLGetVideo(videoID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, video)
 }
