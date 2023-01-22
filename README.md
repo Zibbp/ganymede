@@ -77,7 +77,7 @@ Feel free to use an existing Postgres database container and Nginx container if 
 ##### API
 
 | ENV Name               | Description                                                                                                                                                     |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `TZ`                   | Timezone.                                                                                                                                                       |
 | `DB_HOST`              | Host of the database.                                                                                                                                           |
 | `DB_PORT`              | Port of the database.                                                                                                                                           |
@@ -95,7 +95,7 @@ Feel free to use an existing Postgres database container and Nginx container if 
 | `OAUTH_PROVIDER_URL`   | _Optional_ OAuth provider URL. See https://github.com/Zibbp/ganymede/wiki/SSO---OpenID-Connect                                                                  |
 | `OAUTH_CLIENT_ID`      | _Optional_ OAuth client ID.                                                                                                                                     |
 | `OAUTH_CLIENT_SECRET`  | _Optional_ OAuth client secret.                                                                                                                                 |
-| `OAUTH_REDIRECT_URL`   | _Optional_ OAuth redirect URL, points to the API. Example: `http://localhost:4000/api/v1/auth/oauth/callback`.                                                  |     |
+| `OAUTH_REDIRECT_URL`   | _Optional_ OAuth redirect URL, points to the API. Example: `http://localhost:4000/api/v1/auth/oauth/callback`.                                                  |
 
 ##### Frontend
 
