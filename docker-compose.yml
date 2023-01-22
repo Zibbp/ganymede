@@ -1,4 +1,4 @@
-version: '3.3'
+version: "3.3"
 services:
   ganymede-api:
     container_name: ganymede-api
@@ -39,6 +39,7 @@ services:
       - CDN_URL=http://IP:PORT # Points to the CDN service
       - SHOW_SSO_LOGIN_BUTTON=true # show/hide SSO login button on login page
       - FORCE_SSO_AUTH=false # force SSO auth for all users (bypasses login page and redirects to SSO)
+      - REQUIRE_LOGIN=false # require login to view videos
     ports:
       - 4801:3000
   ganymede-db:
