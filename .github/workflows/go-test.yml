@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3.5.0
         with:
           go-version: 1.x
 
@@ -23,7 +23,7 @@ jobs:
         run: go mod download
 
       - name: Run Tests
+        run: go test -v ./...
         env:
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
-        run: go test -v ./...
