@@ -20,7 +20,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-docker-amd64:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -72,58 +72,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
             VERSION=${{ steps.meta.outputs.version }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           file: Dockerfile
-
-  build-docker-arm64:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3.3.0
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2.1.0
-        with:
-          platforms: all
-
-      # Workaround: https://github.com/docker/build-push-action/issues/461
-      - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@v2.2.1
-
-      # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
-      - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v2.1.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v4.3.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Build and push Docker image for arm64
-        id: build-and-push-arm64
-        uses: docker/build-push-action@v3.3.0
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          secrets: |
-            VERSION=${{ steps.meta.outputs.version }}
-          platforms: linux/arm64
-          file: Dockerfile.aarch64
