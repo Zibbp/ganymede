@@ -23,7 +23,7 @@ jobs:
         run: go mod download
 
       - name: Create vods directory
-        run: mkdir -p /vods && chmod 755 /vods
+        run: sudo mkdir -p /vods && sudo chmod 755 /vods
 
       - name: Run Tests
         run: go test -v ./...
