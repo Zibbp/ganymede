@@ -46,7 +46,10 @@ func TestArchiveTwitchChannel(t *testing.T) {
 	queueService := queue.NewService(&database.Database{Client: client}, vodService, channelService)
 
 	// Authenticate with Twitch
-	twitch.Authenticate()
+	err := twitch.Authenticate()
+	if err != nil {
+		t.Error(err)
+	}
 
 	h := &Handler{
 		Server: echo.New(),
