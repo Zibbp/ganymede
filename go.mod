@@ -21,6 +21,8 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
+require github.com/joho/godotenv v1.4.0 // indirect
+
 require (
 	ariga.io/atlas v0.9.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
