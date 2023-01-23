@@ -1,0 +1,52 @@
+FROM arm64v8/golang:1.18 AS build-stage-01
+
+RUN mkdir /app
+ADD . /app
+WORKDIR /app
+
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -X main.Version=${VERSION} -X main.BuildTime=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X main.GitHash=`git rev-parse HEAD`" -o ganymede-api cmd/server/main.go
+
+FROM arm64v8/debian AS build-stage-02
+
+RUN apt-get update
+RUN apt-get install unzip wget git -y
+
+WORKDIR /tmp
+RUN wget https://github.com/rsms/inter/releases/download/v3.19/Inter-3.19.zip && unzip Inter-3.19.zip
+RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.51.1/TwitchDownloaderCLI-1.51.1-LinuxArm.zip && unzip TwitchDownloaderCLI-1.51.1-LinuxArm.zip
+
+RUN git clone https://github.com/xenova/chat-downloader.git
+
+FROM arm64v8/debian AS production
+
+## Add armhf support.
+RUN dpkg --add-architecture armhf
+
+RUN apt-get update
+RUN apt-get install python3 python3-pip fontconfig icu-devtools python3-dev gcc g++ ffmpeg bash tzdata -y
+RUN pip3 install --no-cache --upgrade pip streamlink
+
+## Add debian armhf/32bit libs for TwitchDownloaderCLI to work.
+RUN apt-get install libc6:armhf zlib1g:armhf gcc:armhf libicu-dev:armhf libfontconfig1:armhf -y
+
+# Install chat-downloader
+COPY --from=build-stage-02 /tmp/chat-downloader /tmp/chat-downloader
+RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
+
+# Inter font install
+ENV INTER_PATH "/tmp/Inter Desktop/Inter-Regular.otf"
+COPY --from=build-stage-02 ${INTER_PATH} /tmp/
+RUN mkdir -p /usr/share/fonts/opentype/ && install -m644 /tmp/Inter-Regular.otf /usr/share/fonts/opentype/Inter.otf && rm ./tmp/Inter-Regular.otf && fc-cache -fv
+
+# Install fallback fonts for chat rendering
+RUN apt-get install xfonts-terminus fonts-inconsolata fonts-dejavu fonts-dejavu-extra fonts-noto fonts-noto-cjk fonts-font-awesome fonts-noto-extra fonts-noto-core -y
+
+RUN chmod 644 /usr/share/fonts/*
+
+# TwitchDownloaderCLI
+COPY --from=build-stage-02 /tmp/TwitchDownloaderCLI /usr/local/bin/
+RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
+
+COPY --from=build-stage-01 /app/ganymede-api .
+
+CMD ["./ganymede-api"]
