@@ -102,15 +102,8 @@ func (s *Service) CheckVodWatchedChannels() {
 		}
 		// Check if video is already in DB
 		for _, video := range videos {
-
-			renderChat := false
-			if watch.RenderChat {
-				renderChat = true
-			}
-
+			// Video is not in DB
 			if !contains(dbVideos, video.ID) {
-				// Video is not in DB
-
 				// Query the video using Twitch's GraphQL API to check for restrictions
 				gqlVideo, err := twitch.GQLGetVideo(video.ID)
 				if err != nil {
@@ -132,7 +125,7 @@ func (s *Service) CheckVodWatchedChannels() {
 				}
 
 				// archive the video
-				_, err = s.ArchiveService.ArchiveTwitchVod(video.ID, watch.Resolution, watch.ArchiveChat, renderChat)
+				_, err = s.ArchiveService.ArchiveTwitchVod(video.ID, watch.Resolution, watch.ArchiveChat, watch.RenderChat)
 				if err != nil {
 					log.Error().Err(err).Msgf("Error archiving video %s", video.ID)
 					continue
