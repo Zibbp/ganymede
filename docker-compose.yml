@@ -2,6 +2,7 @@ version: "3.3"
 services:
   ganymede-api:
     container_name: ganymede-api
+    # add "-arm64" for an arm64 image
     image: ghcr.io/zibbp/ganymede:latest
     restart: unless-stopped
     environment:
@@ -32,6 +33,7 @@ services:
       - 4800:4000
   ganymede-frontend:
     container_name: ganymede-frontend
+    # add "-arm64" for an arm64 image
     image: ghcr.io/zibbp/ganymede-frontend:latest
     restart: unless-stopped
     environment:

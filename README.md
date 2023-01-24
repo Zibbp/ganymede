@@ -68,6 +68,9 @@ Feel free to use an existing Postgres database container and Nginx container if 
 
 1. Download a copy of the `docker-compose.yml` file and `nginx.conf`.
 2. Edit the `docker-compose.yml` file modifying the environment variables, see [environment variables](https://github.com/Zibbp/ganymede#environment-variables).
+
+   - Add `-arm64` to the API and Frontend container images for an arm64 image.
+
 3. Run `docker compose up -d`.
 4. Visit the address and port you specified for the frontend and login with username: `admin` password: `ganymede`.
 5. Change the admin password _or_ create a new user, grant admin permissions on that user, and delete the admin user.
