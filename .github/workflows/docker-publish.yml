@@ -78,6 +78,8 @@ jobs:
           cache-to: type=gha,scope=${{ env.IMAGE_NAME }},mode=max
 
   build-push-arm64:
+    # Only run on release tags
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
