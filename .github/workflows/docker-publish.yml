@@ -74,8 +74,6 @@ jobs:
             VERSION=${{ steps.meta.outputs.version }}
           platforms: linux/amd64
           file: Dockerfile
-          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
-          cache-to: type=gha,scope=${{ env.IMAGE_NAME }},mode=max
 
   build-push-arm64:
     # Only run on release tags
@@ -133,5 +131,3 @@ jobs:
             VERSION=${{ steps.meta.outputs.version }}
           platforms: linux/arm64
           file: Dockerfile.aarch64
-          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-arm64
-          cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-arm64,mode=max
