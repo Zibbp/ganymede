@@ -310,7 +310,7 @@ func GetFfprobeData(path string) (map[string]interface{}, error) {
 	cmd := osExec.Command("ffprobe", "-hide_banner", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", path)
 	out, err := cmd.Output()
 	if err != nil {
-		log.Error().Err(err).Msgf("error getting ffprobe data for %s - err: %w", path, err)
+		log.Error().Err(err).Msgf("error getting ffprobe data for %s - err: %v", path, err)
 		return nil, fmt.Errorf("error getting ffprobe data for %s - err: %w ", path, err)
 	}
 	var data map[string]interface{}

@@ -84,7 +84,7 @@ func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 }
 
 func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool, renderChat bool) (*TwitchVodResponse, error) {
-	log.Debug().Msgf("Archiving video %s quality: %s chat: %s render chat: %s", vID, quality, chat, renderChat)
+	log.Debug().Msgf("Archiving video %s quality: %s chat: %t render chat: %t", vID, quality, chat, renderChat)
 	// Fetch VOD from Twitch API
 	tVod, err := s.TwitchService.GetVodByID(vID)
 	if err != nil {
@@ -442,7 +442,7 @@ func (s *Service) RestartTask(c echo.Context, qID uuid.UUID, task string, cont b
 		return err
 	}
 
-	log.Debug().Msgf("restarting task: %s for queue id: continue: ", task, qID, cont)
+	log.Debug().Msgf("restarting task: %s for queue id: continue: ", task)
 
 	switch task {
 	case "vod_create_folder":

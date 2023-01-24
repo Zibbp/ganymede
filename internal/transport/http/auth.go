@@ -1,13 +1,14 @@
 package http
 
 import (
+	"net/http"
+	"os"
+
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/user"
-	"net/http"
-	"os"
 )
 
 type AuthService interface {

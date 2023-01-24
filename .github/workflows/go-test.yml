@@ -1,0 +1,32 @@
+name: Go Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3.5.0
+        with:
+          go-version: 1.x
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Create vods directory
+        run: sudo mkdir -p /vods && sudo chmod 777 /vods
+
+      - name: Run Tests
+        run: go test -v ./...
+        env:
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}

@@ -1,11 +1,12 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/channel"
-	"net/http"
 )
 
 type ChannelService interface {
