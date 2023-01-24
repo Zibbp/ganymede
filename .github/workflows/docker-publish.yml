@@ -130,6 +130,6 @@ jobs:
           secrets: |
             VERSION=${{ steps.meta.outputs.version }}
           platforms: linux/arm64
-          file: Dockerfile
+          file: Dockerfile.aarch64
           cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-arm64
           cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-arm64,mode=max
