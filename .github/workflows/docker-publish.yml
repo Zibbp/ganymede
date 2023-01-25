@@ -1,17 +1,12 @@
 name: Docker
 
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 on:
   push:
-    branches: ["master"]
+    branches: ["main"]
     # Publish semver tags as releases.
     tags: ["v*.*.*"]
   pull_request:
-    branches: ["master"]
+    branches: ["main"]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -32,11 +27,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3.3.0
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2.1.0
-        with:
-          platforms: all
 
       # Workaround: https://github.com/docker/build-push-action/issues/461
       - name: Setup Docker buildx
@@ -69,15 +59,16 @@ jobs:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          # labels: ${{ steps.meta.outputs.labels }}
           secrets: |
             VERSION=${{ steps.meta.outputs.version }}
           platforms: linux/amd64
           file: Dockerfile
+          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
+          cache-to: type=gha,scope=${{ env.IMAGE_NAME }},mode=max
 
   build-push-arm64:
-    # Only run on release tags
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -93,7 +84,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2.1.0
         with:
-          platforms: all
+          platforms: arm64
 
       # Workaround: https://github.com/docker/build-push-action/issues/461
       - name: Setup Docker buildx
@@ -126,8 +117,76 @@ jobs:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}-arm64
-          labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          # labels: ${{ steps.meta.outputs.labels }}
           secrets: |
             VERSION=${{ steps.meta.outputs.version }}
           platforms: linux/arm64
           file: Dockerfile.aarch64
+          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
+          cache-to: type=gha,scope=${{ env.IMAGE_NAME }},mode=max
+
+  create-manifests:
+    # Do not run on PRs
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: [build-push-amd64, build-push-arm64]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3.3.0
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4.3.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set repo name
+        run: |
+          echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      # Create v* tag manifests and push
+      - name: Create ref tag manifest and push
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "Creating manifest for: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}"
+          docker manifest create \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-arm64
+          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+
+      # Create latest tag manifests and push
+      - name: Create latest tag manifest and push
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "Creating manifest for: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}"
+          docker manifest create \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-arm64
+          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      # Create manifest and push
+      - name: Create manifest and push
+        # Run only on main branch push
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker manifest create \
+            ${{ steps.meta.outputs.tags }} \
+            --amend ${{ steps.meta.outputs.tags }} \
+            --amend ${{ steps.meta.outputs.tags }}-arm64
+          docker manifest push ${{ steps.meta.outputs.tags }}
