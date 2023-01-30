@@ -333,7 +333,6 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 
 		comments = chatData.Comments
 		chatData = nil
-		data = nil
 		runtime.GC()
 
 		// Sort the comments by their content offset seconds
@@ -374,7 +373,6 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 
 	// Cleanup
 	chatData = nil
-	cacheData = nil
 	comments = nil
 
 	defer runtime.GC()
@@ -420,7 +418,6 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 
 		comments = chatData.Comments
 		chatData = nil
-		data = nil
 		runtime.GC()
 
 		// Sort the comments by their content offset seconds
@@ -467,7 +464,6 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 
 	// Cleanup
 	chatData = nil
-	cacheData = nil
 	comments = nil
 	defer runtime.GC()
 
@@ -497,7 +493,6 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
 
-	data = nil
 	defer runtime.GC()
 
 	var ganymedeEmotes chat.GanymedeEmotes
@@ -640,19 +635,9 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 			ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
 		}
 
-		twitchGlobalEmotes = nil
-		twitchChannelEmotes = nil
-		sevenTVGlobalEmotes = nil
-		sevenTVChannelEmotes = nil
-		bttvGlobalEmotes = nil
-		bttvChannelEmotes = nil
-		ffzGlobalEmotes = nil
-		ffzChannelEmotes = nil
-
 	}
 
 	chatData = nil
-	data = nil
 
 	defer runtime.GC()
 	return &ganymedeEmotes, nil
@@ -683,8 +668,6 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 		log.Debug().Err(err).Msg("error getting vod chat badges")
 		return nil, fmt.Errorf("error getting vod chat badges: %v", err)
 	}
-
-	data = nil
 
 	var badgeResp chat.BadgeResp
 
