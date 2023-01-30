@@ -63,7 +63,8 @@ func TestCreateChannel(t *testing.T) {
 
 		// Check response body
 		var response map[string]interface{}
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		err := json.Unmarshal(rec.Body.Bytes(), &response)
+		assert.NoError(t, err)
 		assert.Equal(t, "test_channel", response["name"])
 	}
 }
@@ -130,7 +131,8 @@ func TestGetChannels(t *testing.T) {
 
 		// Check response body
 		var response []map[string]interface{}
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		err := json.Unmarshal(rec.Body.Bytes(), &response)
+		assert.NoError(t, err)
 		assert.Equal(t, 1, len(response))
 	}
 }
@@ -171,7 +173,8 @@ func TestGetChannel(t *testing.T) {
 
 		// Check response body
 		var response map[string]interface{}
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		err := json.Unmarshal(rec.Body.Bytes(), &response)
+		assert.NoError(t, err)
 		assert.Equal(t, "test_channel", response["name"])
 	}
 }
@@ -260,7 +263,8 @@ func TestUpdateChannel(t *testing.T) {
 
 		// Check response body
 		var response map[string]interface{}
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		err := json.Unmarshal(rec.Body.Bytes(), &response)
+		assert.NoError(t, err)
 		assert.Equal(t, "updated", response["name"])
 		assert.Equal(t, "updated", response["display_name"])
 		assert.Equal(t, "/vods/updated/updated.jpg", response["image_path"])
@@ -303,7 +307,8 @@ func TestGetChannelByName(t *testing.T) {
 
 		// Check response body
 		var response map[string]interface{}
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		err := json.Unmarshal(rec.Body.Bytes(), &response)
+		assert.NoError(t, err)
 		assert.Equal(t, "test_channel", response["name"])
 	}
 }

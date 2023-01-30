@@ -194,9 +194,7 @@ func (s *Service) OAuthUserCheck(c echo.Context, idTokenClaims UserInfo) error {
 			role := utils.Role("user")
 			// Check what groups the user is in
 			var groups []string
-			for _, group := range idTokenClaims.Groups {
-				groups = append(groups, group)
-			}
+			groups = append(groups, idTokenClaims.Groups...)
 			// If groups contain ganymede-*
 			if len(groups) > 0 {
 				for _, group := range groups {

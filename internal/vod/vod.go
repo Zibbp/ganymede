@@ -316,7 +316,7 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 
 	var chatData *chat.ChatNoEmotes
 	var comments []chat.Comment
-	cacheData, exists := cache.Cache().Get(fmt.Sprintf("%s", v.ID))
+	cacheData, exists := cache.Cache().Get(v.ID.String())
 	if exists {
 		comments = cacheData.([]chat.Comment)
 	} else {
@@ -341,7 +341,7 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 		})
 
 		// Set cache
-		err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), comments, 10*time.Minute)
+		err = cache.Cache().Set(v.ID.String(), comments, 10*time.Minute)
 		if err != nil {
 			log.Debug().Err(err).Msg("error setting cache")
 			return nil, fmt.Errorf("error setting cache: %v", err)
@@ -352,7 +352,7 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 	}
 
 	// Reset the cache
-	err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), comments, 10*time.Minute)
+	err = cache.Cache().Set(v.ID.String(), comments, 10*time.Minute)
 	if err != nil {
 		log.Debug().Err(err).Msg("error setting cache")
 		return nil, fmt.Errorf("error setting cache: %v", err)
@@ -400,7 +400,7 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 	var chatData *chat.ChatNoEmotes
 	var comments []chat.Comment
 
-	cacheData, exists := cache.Cache().Get(fmt.Sprintf("%s", v.ID))
+	cacheData, exists := cache.Cache().Get(v.ID.String())
 
 	if exists {
 		comments = cacheData.([]chat.Comment)
@@ -425,7 +425,7 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 			return comments[i].ContentOffsetSeconds < comments[j].ContentOffsetSeconds
 		})
 
-		err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), comments, 10*time.Minute)
+		err = cache.Cache().Set(v.ID.String(), comments, 10*time.Minute)
 		if err != nil {
 			log.Debug().Err(err).Msg("error setting cache")
 			return nil, fmt.Errorf("error setting cache: %v", err)
@@ -436,7 +436,7 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 	}
 
 	// Reset the cache
-	err = cache.Cache().Set(fmt.Sprintf("%s", v.ID), comments, 10*time.Minute)
+	err = cache.Cache().Set(v.ID.String(), comments, 10*time.Minute)
 	if err != nil {
 		log.Debug().Err(err).Msg("error setting cache")
 		return nil, fmt.Errorf("error setting cache: %v", err)

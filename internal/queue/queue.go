@@ -3,6 +3,8 @@ package queue
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -12,7 +14,6 @@ import (
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
-	"time"
 )
 
 type Service struct {
@@ -47,7 +48,7 @@ type Queue struct {
 }
 
 func (s *Service) CreateQueueItem(queueDto Queue, vID uuid.UUID) (*ent.Queue, error) {
-	if queueDto.LiveArchive == true {
+	if queueDto.LiveArchive {
 		q, err := s.Store.Client.Queue.Create().SetVodID(vID).SetLiveArchive(true).Save(context.Background())
 		if err != nil {
 			if _, ok := err.(*ent.ConstraintError); ok {

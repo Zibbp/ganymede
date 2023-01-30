@@ -56,8 +56,12 @@ func (s *Service) StartTask(c echo.Context, task string) error {
 		go s.ArchiveService.CheckOnHold()
 
 	case "storage_migration":
-		go s.StorageMigration()
-
+		go func() {
+			err := s.StorageMigration()
+			if err != nil {
+				log.Error().Err(err).Msg("Error migrating storage")
+			}
+		}()
 	}
 
 	return nil
@@ -115,7 +119,11 @@ func (s *Service) StorageMigration() error {
 						continue
 					}
 				}
-				video.Update().SetVideoPath(fmt.Sprintf("%s/%s-video_hls/%s-video.m3u8", newRootFolderPath, fileName, video.ExtID)).Save(context.Background())
+				_, err = video.Update().SetVideoPath(fmt.Sprintf("%s/%s-video_hls/%s-video.m3u8", newRootFolderPath, fileName, video.ExtID)).Save(context.Background())
+				if err != nil {
+					log.Error().Err(err).Msgf("Error updating video path for video %s", video.ID)
+					continue
+				}
 			} else {
 				err := os.Rename(video.VideoPath, fmt.Sprintf("%s/%s-video%s", oldRootFolderPath, fileName, ext))
 				if err != nil {
@@ -125,7 +133,11 @@ func (s *Service) StorageMigration() error {
 						continue
 					}
 				}
-				video.Update().SetVideoPath(fmt.Sprintf("%s/%s-video%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+				_, err = video.Update().SetVideoPath(fmt.Sprintf("%s/%s-video%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+				if err != nil {
+					log.Error().Err(err).Msgf("Error updating video path for video %s", video.ID)
+					continue
+				}
 			}
 		}
 		// Thumbnail
@@ -139,7 +151,11 @@ func (s *Service) StorageMigration() error {
 				}
 
 			}
-			video.Update().SetThumbnailPath(fmt.Sprintf("%s/%s-thumbnail%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+			_, err = video.Update().SetThumbnailPath(fmt.Sprintf("%s/%s-thumbnail%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+			if err != nil {
+				log.Error().Err(err).Msgf("Error updating thumbnail path for video %s", video.ID)
+				continue
+			}
 		}
 		// Web Thumbnail
 		if video.WebThumbnailPath != "" {
@@ -152,7 +168,11 @@ func (s *Service) StorageMigration() error {
 				}
 
 			}
-			video.Update().SetWebThumbnailPath(fmt.Sprintf("%s/%s-web_thumbnail%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+			_, err = video.Update().SetWebThumbnailPath(fmt.Sprintf("%s/%s-web_thumbnail%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+			if err != nil {
+				log.Error().Err(err).Msgf("Error updating web thumbnail path for video %s", video.ID)
+				continue
+			}
 		}
 		// Chat Path
 		if video.ChatPath != "" {
@@ -165,7 +185,11 @@ func (s *Service) StorageMigration() error {
 				}
 
 			}
-			video.Update().SetChatPath(fmt.Sprintf("%s/%s-chat%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+			_, err = video.Update().SetChatPath(fmt.Sprintf("%s/%s-chat%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+			if err != nil {
+				log.Error().Err(err).Msgf("Error updating chat path for video %s", video.ID)
+				continue
+			}
 		}
 		// Chat Video Path
 		if video.ChatVideoPath != "" {
@@ -178,7 +202,11 @@ func (s *Service) StorageMigration() error {
 				}
 
 			}
-			video.Update().SetChatVideoPath(fmt.Sprintf("%s/%s-chat%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+			_, err = video.Update().SetChatVideoPath(fmt.Sprintf("%s/%s-chat%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+			if err != nil {
+				log.Error().Err(err).Msgf("Error updating chat video path for video %s", video.ID)
+				continue
+			}
 		}
 		// Info Path
 		if video.InfoPath != "" {
@@ -191,7 +219,11 @@ func (s *Service) StorageMigration() error {
 				}
 
 			}
-			video.Update().SetInfoPath(fmt.Sprintf("%s/%s-info%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+			_, err = video.Update().SetInfoPath(fmt.Sprintf("%s/%s-info%s", newRootFolderPath, fileName, ext)).Save(context.Background())
+			if err != nil {
+				log.Error().Err(err).Msgf("Error updating info path for video %s", video.ID)
+				continue
+			}
 		}
 
 		// Rename root video folder

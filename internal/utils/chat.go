@@ -3,7 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"sort"
 	"strconv"
@@ -130,7 +130,7 @@ func OpenChatFile(path string) ([]LiveComment, error) {
 		return nil, fmt.Errorf("failed to open chat file: %v", err)
 	}
 	defer liveChatJsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(liveChatJsonFile)
+	byteValue, _ := io.ReadAll(liveChatJsonFile)
 
 	var liveComments []LiveComment
 	err = json.Unmarshal(byteValue, &liveComments)
@@ -173,7 +173,7 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 			Body:      "Initial chat message",
 			BitsSpent: 0,
 			Fragments: []Fragment{
-				Fragment{
+				{
 					Text:     "Initial chat message",
 					Emoticon: nil,
 					Pos1:     0,
@@ -350,7 +350,7 @@ func writeParsedChat(parsedChat ParsedChat, vID string, vExtID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal parsed comments: %v", err)
 	}
-	err = ioutil.WriteFile(fmt.Sprintf("/tmp/%s_%s-chat-convert.json", vExtID, vID), data, 0644)
+	err = os.WriteFile(fmt.Sprintf("/tmp/%s_%s-chat-convert.json", vExtID, vID), data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write parsed comments: %v", err)
 	}

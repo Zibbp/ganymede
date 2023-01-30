@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -59,7 +58,7 @@ func WriteJson(j interface{}, path string, filename string) error {
 	if err != nil {
 		log.Error().Msgf("error marshalling json: %v", err)
 	}
-	err = ioutil.WriteFile(fmt.Sprintf("/vods/%s/%s", path, filename), data, 0644)
+	err = os.WriteFile(fmt.Sprintf("/vods/%s/%s", path, filename), data, 0644)
 	if err != nil {
 		log.Error().Msgf("error writing json: %v", err)
 	}

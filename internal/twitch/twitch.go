@@ -3,12 +3,12 @@ package twitch
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Service struct {
@@ -159,7 +159,7 @@ func Authenticate() error {
 		return fmt.Errorf("failed to authenticate: %v", resp)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %v", err)
 	}
@@ -202,7 +202,7 @@ func GetUserByLogin(cName string) (Channel, error) {
 		return Channel{}, fmt.Errorf("failed to get user: %v", resp)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Channel{}, fmt.Errorf("failed to read response body: %v", err)
 	}
@@ -246,7 +246,7 @@ func (s *Service) GetVodByID(vID string) (Vod, error) {
 		return Vod{}, fmt.Errorf("vod not found")
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Vod{}, fmt.Errorf("failed to read response body: %v", err)
 	}
@@ -286,7 +286,7 @@ func (s *Service) GetStreams(queryParams string) (Stream, error) {
 		return Stream{}, fmt.Errorf("failed to get twitch streams: %v", resp)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Stream{}, fmt.Errorf("failed to read response body: %v", err)
 	}
@@ -354,9 +354,7 @@ func GetVideosByUser(userID string, videoType string) ([]Video, error) {
 	}
 
 	var videos []Video
-	for _, v := range videoResponse.Data {
-		videos = append(videos, v)
-	}
+	videos = append(videos, videoResponse.Data...)
 
 	// pagination
 	var cursor string
@@ -366,9 +364,7 @@ func GetVideosByUser(userID string, videoType string) ([]Video, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get twitch videos: %v", err)
 		}
-		for _, v := range response.Data {
-			videos = append(videos, v)
-		}
+		videos = append(videos, response.Data...)
 		cursor = response.Pagination.Cursor
 	}
 

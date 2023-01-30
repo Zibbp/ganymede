@@ -137,7 +137,7 @@ func (s *Service) Check() error {
 		// Check if LWC is in twitchStreams.Data
 		stream := stringInSlice(lwc.Edges.Channel.Name, twitchStreams.Data)
 		if len(stream.ID) > 0 {
-			if lwc.IsLive == false {
+			if !lwc.IsLive {
 				log.Debug().Msgf("%s is now live", lwc.Edges.Channel.Name)
 				// Stream is online, update database
 				_, err := s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(true).Save(context.Background())
@@ -154,7 +154,7 @@ func (s *Service) Check() error {
 				go notification.SendLiveNotification(lwc.Edges.Channel, archiveResp.VOD, archiveResp.Queue)
 			}
 		} else {
-			if lwc.IsLive == true {
+			if lwc.IsLive {
 				log.Debug().Msgf("%s is now offline", lwc.Edges.Channel.Name)
 				// Stream is offline, update database
 				_, err := s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(false).SetLastLive(time.Now()).Save(context.Background())

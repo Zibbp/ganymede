@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 )
@@ -112,7 +111,7 @@ func GetTwitchChannelEmotes(channelId int64) ([]*GanymedeEmote, error) {
 		return nil, fmt.Errorf("failed to get channel emotes: %v", resp)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
