@@ -162,11 +162,12 @@ func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "type is required: video, video-convert, chat, chat-render, or chat-convert")
 	}
 	// Validate logType
-	if !utils.IsValidLogType(logType) {
-		return echo.NewHTTPError(http.StatusBadRequest, "type is required: video, video-convert, chat, chat-render, or chat-convert")
+	validLogType, err := utils.ValidateLogType(logType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	log, err := h.Service.QueueService.ReadLogFile(c, uuid, logType)
+	log, err := h.Service.QueueService.ReadLogFile(c, uuid, validLogType)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

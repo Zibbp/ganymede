@@ -26,6 +26,13 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return cv.Validator.Struct(i)
 }
 
+func ValidateLogType(logType string) (string, error) {
+	if !IsValidLogType(logType) {
+		return "", fmt.Errorf("invalid log type: %s", logType)
+	}
+	return logType, nil
+}
+
 func IsValidLogType(logType string) bool {
 	for _, t := range allowedLogTypes {
 		if t == logType {
