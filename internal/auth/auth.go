@@ -3,6 +3,9 @@ package auth
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -16,8 +19,6 @@ import (
 	"github.com/zibbp/ganymede/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
-	"os"
-	"strings"
 )
 
 type Service struct {
@@ -214,7 +215,7 @@ func (s *Service) OAuthUserCheck(c echo.Context, idTokenClaims UserInfo) error {
 			}
 
 			// Create user
-			u, err = s.Store.Client.User.Create().SetSub(idTokenClaims.Sub).SetUsername(idTokenClaims.NickName).SetRole(utils.Role(role)).SetOauth(true).Save(c.Request().Context())
+			_, err = s.Store.Client.User.Create().SetSub(idTokenClaims.Sub).SetUsername(idTokenClaims.NickName).SetRole(utils.Role(role)).SetOauth(true).Save(c.Request().Context())
 			if err != nil {
 				return fmt.Errorf("failed to create user: %w", err)
 			}
@@ -223,7 +224,7 @@ func (s *Service) OAuthUserCheck(c echo.Context, idTokenClaims UserInfo) error {
 		}
 	} else {
 		// Update user
-		u, err = s.Store.Client.User.UpdateOne(u).SetUsername(idTokenClaims.NickName).Save(c.Request().Context())
+		_, err = s.Store.Client.User.UpdateOne(u).SetUsername(idTokenClaims.NickName).Save(c.Request().Context())
 		if err != nil {
 			return fmt.Errorf("failed to update user: %w", err)
 		}
