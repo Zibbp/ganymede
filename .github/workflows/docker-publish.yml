@@ -69,6 +69,8 @@ jobs:
           cache-to: type=gha,scope=${{ env.IMAGE_NAME }},mode=max
 
   build-push-arm64:
+    # Do not run on PRs
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
