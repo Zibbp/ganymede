@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/live"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type LiveService interface {
@@ -160,15 +161,29 @@ func (h *Handler) ConvertChat(c echo.Context) error {
 	if err := c.Validate(ccr); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+	// Validate user input that is used for file name
+	validVodID, err := utils.ValidateFileNameInput(ccr.VodID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	validVodExternalID, err := utils.ValidateFileNameInput(ccr.VodExternalID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	validFileName, err := utils.ValidateFileName(ccr.FileName)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
 	convertDto := live.ConvertChat{
-		FileName:      ccr.FileName,
+		FileName:      validFileName,
 		ChannelName:   ccr.ChannelName,
-		VodID:         ccr.VodID,
+		VodID:         validVodID,
 		ChannelID:     ccr.ChannelID,
-		VodExternalID: ccr.VodExternalID,
+		VodExternalID: validVodExternalID,
 		ChatStart:     ccr.ChatStart,
 	}
-	err := h.Service.LiveService.ConvertChat(c, convertDto)
+	err = h.Service.LiveService.ConvertChat(c, convertDto)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

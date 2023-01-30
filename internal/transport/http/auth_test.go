@@ -59,7 +59,8 @@ func TestRegister(t *testing.T) {
 
 		// Check response body
 		var response map[string]interface{}
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		err := json.Unmarshal(rec.Body.Bytes(), &response)
+		assert.NoError(t, err)
 		assert.Equal(t, "test", response["username"])
 	}
 }
@@ -92,7 +93,8 @@ func TestLogin(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := h.Server.NewContext(req, rec)
-	h.Register(c)
+	err := h.Register(c)
+	assert.NoError(t, err)
 
 	// Login the user
 	req = httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(testUserJson))
@@ -105,7 +107,8 @@ func TestLogin(t *testing.T) {
 
 		// Check response body
 		var response map[string]interface{}
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		err := json.Unmarshal(rec.Body.Bytes(), &response)
+		assert.NoError(t, err)
 		assert.Equal(t, "test", response["username"])
 	}
 }
@@ -138,14 +141,16 @@ func TestRefresh(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := h.Server.NewContext(req, rec)
-	h.Register(c)
+	err := h.Register(c)
+	assert.NoError(t, err)
 
 	// Login the user
 	req = httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(testUserJson))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec = httptest.NewRecorder()
 	c = h.Server.NewContext(req, rec)
-	h.Login(c)
+	err = h.Login(c)
+	assert.NoError(t, err)
 
 	// Refresh the user's access token
 

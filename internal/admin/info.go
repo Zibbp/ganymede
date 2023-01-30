@@ -2,11 +2,12 @@ package admin
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/zibbp/ganymede/internal/kv"
 	"os/exec"
 	"strconv"
 	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/zibbp/ganymede/internal/kv"
 )
 
 type InfoResp struct {
@@ -81,6 +82,8 @@ func getTwitchDownloaderVersion() (string, error) {
 	out, err := run.CombinedOutput()
 	if err != nil {
 		// TwitchDownloaderCLI throws exit status 1 on --version
+		// so we ignore the error
+		return string(out), nil
 	}
 	return string(out), nil
 }

@@ -82,9 +82,7 @@ func RenderTwitchVodChat(v *ent.Vod, q *ent.Queue) (error, bool) {
 	// Generate args for exec
 	argArr := []string{"chatrender", "-i", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID)}
 	// add each config param to arg
-	for _, v := range arr {
-		argArr = append(argArr, v)
-	}
+	argArr = append(argArr, arr...)
 	// add output file
 	argArr = append(argArr, "-o", fmt.Sprintf("/tmp/%s_%s-chat.mp4", v.ExtID, v.ID))
 	log.Debug().Msgf("chat render args: %v", argArr)
@@ -129,9 +127,7 @@ func ConvertTwitchVodVideo(v *ent.Vod) error {
 	// Generate args for exec
 	argArr := []string{"-y", "-hide_banner", "-i", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID)}
 	// add each config param to arg
-	for _, v := range arr {
-		argArr = append(argArr, v)
-	}
+	argArr = append(argArr, arr...)
 	// add output file
 	argArr = append(argArr, fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID))
 	log.Debug().Msgf("video convert args: %v", argArr)
@@ -227,8 +223,8 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 
 	if err := cmd.Run(); err != nil {
 		// Streamlink will error when the stream is offline - do not log this as an error
-		//log.Error().Err(err).Msg("error running streamlink for live video download")
-		//return err
+		log.Debug().Msgf("finished downloading live video for %s", v.ExtID)
+		return nil
 	}
 
 	log.Debug().Msgf("finished downloading live video for %s", v.ExtID)
@@ -296,7 +292,7 @@ func GetVideoDuration(path string) (int, error) {
 		return 1, err
 	}
 	durOut := strings.TrimSpace(string(out))
-	durFloat, err := strconv.ParseFloat(durOut, 8)
+	durFloat, err := strconv.ParseFloat(durOut, 64)
 	if err != nil {
 		log.Error().Err(err).Msg("error converting video duration")
 		return 1, err

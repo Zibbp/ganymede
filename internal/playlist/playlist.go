@@ -2,12 +2,13 @@ package playlist
 
 import (
 	"fmt"
+	"sort"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/internal/database"
-	"sort"
 )
 
 type Service struct {
@@ -68,8 +69,7 @@ func (s *Service) GetPlaylists(c echo.Context) ([]*ent.Playlist, error) {
 func (s *Service) GetPlaylist(c echo.Context, playlistID uuid.UUID) (*ent.Playlist, error) {
 	rPlaylist, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).WithVods().Order(ent.Desc(playlist.FieldCreatedAt)).Only(c.Request().Context())
 	// Order VODs by date streamed
-	var tmpVods []*ent.Vod
-	tmpVods = rPlaylist.Edges.Vods
+	tmpVods := rPlaylist.Edges.Vods
 	sort.Slice(tmpVods, func(i, j int) bool {
 		return tmpVods[i].StreamedAt.After(tmpVods[j].StreamedAt)
 	})

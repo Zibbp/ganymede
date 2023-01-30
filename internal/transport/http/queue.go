@@ -1,12 +1,13 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/utils"
-	"net/http"
 )
 
 type QueueService interface {
@@ -149,15 +150,24 @@ func (h *Handler) DeleteQueueItem(c echo.Context) error {
 }
 
 func (h *Handler) ReadQueueLogFile(c echo.Context) error {
-	id, err := uuid.Parse(c.Param("id"))
+	id := c.Param("id")
+
+	uuid, err := utils.IsValidUUID(id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid id")
+	}
+
+	logType := c.QueryParam("type")
+	if len(logType) == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "type is required: video, video-convert, chat, chat-render, or chat-convert")
+	}
+	// Validate logType
+	validLogType, err := utils.ValidateLogType(logType)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	logType := c.QueryParam("type")
-	if len(logType) == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "type is required: video, video-convert, chat, or chat-render")
-	}
-	log, err := h.Service.QueueService.ReadLogFile(c, id, logType)
+
+	log, err := h.Service.QueueService.ReadLogFile(c, uuid, validLogType)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

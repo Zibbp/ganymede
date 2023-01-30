@@ -50,7 +50,7 @@ func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 
 	// Check if channel exists in DB
 	cCheck := s.ChannelService.CheckChannelExists(tChannel.Login)
-	if cCheck == true {
+	if cCheck {
 		return nil, fmt.Errorf("channel already exists")
 	}
 
@@ -100,12 +100,12 @@ func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool, render
 	if err != nil {
 		return nil, fmt.Errorf("error checking if vod exists: %v", err)
 	}
-	if vCheck == true {
+	if vCheck {
 		return nil, fmt.Errorf("vod already exists")
 	}
 	// Check if channel exists
 	cCheck := s.ChannelService.CheckChannelExists(tVod.UserLogin)
-	if cCheck == false {
+	if !cCheck {
 		log.Debug().Msgf("channel does not exist: %s while archiving vod. creating now.", tVod.UserLogin)
 		_, err := s.ArchiveTwitchChannel(tVod.UserLogin)
 		if err != nil {
@@ -133,14 +133,14 @@ func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool, render
 	fileName, err := GetFileName(vUUID, tVod)
 	if err != nil {
 		log.Error().Err(err).Msg("error using template to create file name, falling back to default")
-		fileName = fmt.Sprintf("%s", tVod.ID)
+		fileName = tVod.ID
 	}
 
 	// Sets
 	rootVodPath := fmt.Sprintf("/vods/%s/%s", tVod.UserLogin, folderName)
 	var chatPath string
 	var chatVideoPath string
-	if chat == true {
+	if chat {
 		chatPath = fmt.Sprintf("%s/%s-chat.json", rootVodPath, fileName)
 		chatVideoPath = fmt.Sprintf("%s/%s-chat.mp4", rootVodPath, fileName)
 	} else {
@@ -309,7 +309,7 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 
 	// Check if channel exists
 	cCheck := s.ChannelService.CheckChannelExists(ts.UserLogin)
-	if cCheck == false {
+	if !cCheck {
 		log.Debug().Msgf("channel does not exist: %s while archiving live stream. creating now.", ts.UserLogin)
 		_, err := s.ArchiveTwitchChannel(ts.UserLogin)
 		if err != nil {
@@ -344,14 +344,14 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 	fileName, err := GetFileName(vUUID, tVodDto)
 	if err != nil {
 		log.Error().Err(err).Msg("error using template to create file name, falling back to default")
-		fileName = fmt.Sprintf("%s", tVodDto.ID)
+		fileName = tVodDto.ID
 	}
 
 	// Sets
 	rootVodPath := fmt.Sprintf("/vods/%s/%s", ts.UserLogin, folderName)
 	var chatPath string
 	var chatVideoPath string
-	if lwc.ArchiveChat == true {
+	if lwc.ArchiveChat {
 		chatPath = fmt.Sprintf("%s/%s-chat.json", rootVodPath, fileName)
 		chatVideoPath = fmt.Sprintf("%s/%s-chat.mp4", rootVodPath, fileName)
 	} else {
@@ -448,13 +448,13 @@ func (s *Service) RestartTask(c echo.Context, qID uuid.UUID, task string, cont b
 	case "vod_create_folder":
 		go s.TaskVodCreateFolder(ch, v, q, cont)
 	case "vod_download_thumbnail":
-		if q.LiveArchive == true {
+		if q.LiveArchive {
 			go s.TaskVodDownloadLiveThumbnail(ch, v, q, cont)
 		} else {
 			go s.TaskVodDownloadThumbnail(ch, v, q, cont)
 		}
 	case "vod_save_info":
-		if q.LiveArchive == true {
+		if q.LiveArchive {
 			go s.TaskVodSaveLiveInfo(ch, v, q, cont)
 		} else {
 			go s.TaskVodSaveInfo(ch, v, q, cont)
@@ -472,7 +472,7 @@ func (s *Service) RestartTask(c echo.Context, qID uuid.UUID, task string, cont b
 	case "chat_render":
 		go s.TaskChatRender(ch, v, q, cont)
 	case "chat_move":
-		if q.LiveArchive == true {
+		if q.LiveArchive {
 			go s.TaskLiveChatMove(ch, v, q, cont)
 		} else {
 			go s.TaskChatMove(ch, v, q, cont)
@@ -497,8 +497,8 @@ func (s *Service) TaskVodCreateFolder(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	}
 	q.Update().SetTaskVodCreateFolder(utils.Success).SaveX(context.Background())
 
-	if cont == true {
-		if q.LiveArchive == true {
+	if cont {
+		if q.LiveArchive {
 			go s.TaskVodDownloadLiveThumbnail(ch, v, q, true)
 		} else {
 			go s.TaskVodDownloadThumbnail(ch, v, q, true)
@@ -551,7 +551,7 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 		q.Update().SetTaskVodDownloadThumbnail(utils.Success).SaveX(context.Background())
 	}
 
-	if cont == true {
+	if cont {
 		// Refresh thumbnails for live stream after 30 minutes
 		go s.RefreshLiveThumbnails(ch, v, q)
 		// Proceed with task
@@ -604,7 +604,7 @@ func (s *Service) TaskVodDownloadThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Q
 
 	q.Update().SetTaskVodDownloadThumbnail(utils.Success).SaveX(context.Background())
 
-	if cont == true {
+	if cont {
 		go s.TaskVodSaveInfo(ch, v, q, true)
 	}
 }
@@ -632,7 +632,7 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 		return
 	}
 	q.Update().SetTaskVodSaveInfo(utils.Success).SaveX(context.Background())
-	if cont == true {
+	if cont {
 
 		busC := make(chan bool)
 
@@ -665,7 +665,7 @@ func (s *Service) TaskVodSaveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue, con
 		return
 	}
 	q.Update().SetTaskVodSaveInfo(utils.Success).SaveX(context.Background())
-	if cont == true {
+	if cont {
 		go s.TaskVideoDownload(ch, v, q, true)
 		//	Check if chat download task is set to success
 		if q.TaskChatDownload == utils.Pending {
@@ -814,7 +814,7 @@ func (s *Service) TaskVideoMove(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont 
 	q.Update().SetVideoProcessing(false).SaveX(context.Background())
 
 	// Check if all task are done
-	if q.LiveArchive == true {
+	if q.LiveArchive {
 		go s.CheckIfLiveTasksAreDone(ch, v, q)
 	} else {
 		go s.CheckIfTasksAreDone(ch, v, q)
@@ -835,7 +835,7 @@ func (s *Service) TaskChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 
 	q.Update().SetTaskChatDownload(utils.Success).SaveX(context.Background())
 
-	if cont == true {
+	if cont {
 		go s.TaskChatRender(ch, v, q, true)
 	}
 }
@@ -913,7 +913,7 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 		return
 	}
 
-	err = utils.ConvertTwitchLiveChatToVodChat(fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), ch.Name, fmt.Sprintf("%s", v.ID), v.ExtID, cID, q.ChatStart)
+	err = utils.ConvertTwitchLiveChatToVodChat(fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), ch.Name, v.ID.String(), v.ExtID, cID, q.ChatStart)
 	if err != nil {
 		log.Error().Err(err).Msg("error converting chat")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())

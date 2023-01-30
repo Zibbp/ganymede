@@ -1,0 +1,5 @@
+{
+  "go.diagnostic.vulncheck": "Imports",
+  "go.lintTool": "golangci-lint"
+  // "go.lintFlags": ["--fast"]
+}

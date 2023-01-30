@@ -1,6 +1,9 @@
 package scheduler
 
 import (
+	"os"
+	"time"
+
 	"github.com/go-co-op/gocron"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -8,8 +11,6 @@ import (
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/twitch"
-	"os"
-	"time"
 )
 
 type Service struct {
@@ -78,53 +79,66 @@ func (s *Service) StartJwksScheduler() {
 
 func (s *Service) twitchAuthSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up twitch auth schedule")
-	scheduler.Every(7).Days().Do(func() {
+	_, err := scheduler.Every(7).Days().Do(func() {
 		log.Debug().Msg("running twitch auth schedule")
 		err := twitch.Authenticate()
 		if err != nil {
 			log.Error().Err(err).Msg("failed to authenticate with twitch")
 		}
-
 	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to set up twitch auth schedule")
+	}
 }
 
 func (s *Service) checkLiveStreamSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up check live stream schedule")
 	configLiveCheckInterval := viper.GetInt("live_check_interval_seconds")
 	log.Debug().Msgf("setting live check interval to run every %d seconds", configLiveCheckInterval)
-	scheduler.Every(configLiveCheckInterval).Seconds().Do(func() {
+	_, err := scheduler.Every(configLiveCheckInterval).Seconds().Do(func() {
 		log.Debug().Msg("running check live stream schedule")
 		err := s.LiveService.Check()
 		if err != nil {
 			log.Error().Err(err).Msg("failed to check live streams")
 		}
-
 	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to set up check live stream schedule")
+	}
 }
 
 func (s *Service) checkWatchedChannelVideos(schedule *gocron.Scheduler) {
 	log.Info().Msg("setting up check watched channel videos schedule")
-	schedule.Every(1).Day().At("01:00").Do(func() {
+	_, err := schedule.Every(1).Day().At("01:00").Do(func() {
 		log.Info().Msg("running check watched channel videos schedule")
 		s.LiveService.CheckVodWatchedChannels()
 	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to set up check watched channel videos schedule")
+	}
 }
 
 func (s *Service) checkHeldQueueItems(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up queue item schedule")
-	scheduler.Every(1).Hours().Do(func() {
+	_, err := scheduler.Every(1).Hours().Do(func() {
 		log.Debug().Msg("running queue item schedule")
 		go s.ArchiveService.CheckOnHold()
 	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to set up queue item schedule")
+	}
 }
 
 func (s *Service) fetchJwksSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up fetch jwks schedule")
-	scheduler.Every(1).Days().Do(func() {
+	_, err := scheduler.Every(1).Days().Do(func() {
 		log.Debug().Msg("running fetch jwks schedule")
 		err := auth.FetchJWKS()
 		if err != nil {
 			log.Error().Err(err).Msg("failed to fetch jwks")
 		}
 	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to set up fetch jwks schedule")
+	}
 }
