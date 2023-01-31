@@ -149,7 +149,7 @@ func PopulateExternalChannelID() {
 		if c.ExtID != "" {
 			continue
 		}
-		twitchC, err := twitch.GetUserByLogin(c.Name)
+		twitchC, err := twitch.API.GetUserByLogin(c.Name)
 		if err != nil {
 			log.Error().Msg("error getting twitch channel")
 			continue

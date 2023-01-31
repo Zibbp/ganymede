@@ -16,7 +16,7 @@ func (h *Handler) GetTwitchUser(c echo.Context) error {
 	if name == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "channel name query param is required")
 	}
-	channel, err := twitch.GetUserByLogin(name)
+	channel, err := twitch.API.GetUserByLogin(name)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

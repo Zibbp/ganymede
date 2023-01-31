@@ -43,7 +43,7 @@ func NewService(store *database.Database, twitchService *twitch.Service, channel
 // ArchiveTwitchChannel - Create Twitch channel folder, profile image, and database entry.
 func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 	// Fetch channel from Twitch API
-	tChannel, err := twitch.GetUserByLogin(cName)
+	tChannel, err := twitch.API.GetUserByLogin(cName)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching twitch channel: %v", err)
 	}
@@ -889,7 +889,7 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	}
 
 	// Fetch streamer from Twitch API for their user ID
-	streamer, err := twitch.GetUserByLogin(ch.Name)
+	streamer, err := twitch.API.GetUserByLogin(ch.Name)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting streamer from Twitch API")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
