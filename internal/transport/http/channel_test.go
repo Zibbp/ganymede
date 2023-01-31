@@ -1,4 +1,4 @@
-package http
+package http_test
 
 import (
 	"context"
@@ -18,6 +18,7 @@ import (
 	"github.com/zibbp/ganymede/ent/enttest"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/database"
+	httpHandler "github.com/zibbp/ganymede/internal/transport/http"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -44,9 +45,9 @@ func TestCreateChannel(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
 	defer client.Close()
 
-	h := &Handler{
+	h := &httpHandler.Handler{
 		Server: echo.New(),
-		Service: Services{
+		Service: httpHandler.Services{
 			ChannelService: channel.NewService(&database.Database{Client: client}),
 		},
 	}
@@ -79,9 +80,9 @@ func TestCreateInvalidChannel(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
 	defer client.Close()
 
-	h := &Handler{
+	h := &httpHandler.Handler{
 		Server: echo.New(),
-		Service: Services{
+		Service: httpHandler.Services{
 			ChannelService: channel.NewService(&database.Database{Client: client}),
 		},
 	}
@@ -109,9 +110,9 @@ func TestGetChannels(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
 	defer client.Close()
 
-	h := &Handler{
+	h := &httpHandler.Handler{
 		Server: echo.New(),
-		Service: Services{
+		Service: httpHandler.Services{
 			ChannelService: channel.NewService(&database.Database{Client: client}),
 		},
 	}
@@ -147,9 +148,9 @@ func TestGetChannel(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
 	defer client.Close()
 
-	h := &Handler{
+	h := &httpHandler.Handler{
 		Server: echo.New(),
-		Service: Services{
+		Service: httpHandler.Services{
 			ChannelService: channel.NewService(&database.Database{Client: client}),
 		},
 	}
@@ -189,9 +190,9 @@ func TestDeleteChannel(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
 	defer client.Close()
 
-	h := &Handler{
+	h := &httpHandler.Handler{
 		Server: echo.New(),
-		Service: Services{
+		Service: httpHandler.Services{
 			ChannelService: channel.NewService(&database.Database{Client: client}),
 		},
 	}
@@ -230,9 +231,9 @@ func TestUpdateChannel(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
 	defer client.Close()
 
-	h := &Handler{
+	h := &httpHandler.Handler{
 		Server: echo.New(),
-		Service: Services{
+		Service: httpHandler.Services{
 			ChannelService: channel.NewService(&database.Database{Client: client}),
 		},
 	}
@@ -281,9 +282,9 @@ func TestGetChannelByName(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
 	defer client.Close()
 
-	h := &Handler{
+	h := &httpHandler.Handler{
 		Server: echo.New(),
-		Service: Services{
+		Service: httpHandler.Services{
 			ChannelService: channel.NewService(&database.Database{Client: client}),
 		},
 	}
