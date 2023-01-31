@@ -21,6 +21,8 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
+require github.com/stretchr/objx v0.5.0 // indirect
+
 require (
 	ariga.io/atlas v0.9.1-0.20230119145809-92243f7c55cb // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
