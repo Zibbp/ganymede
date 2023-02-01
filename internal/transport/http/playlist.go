@@ -1,11 +1,12 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/playlist"
-	"net/http"
 )
 
 type PlaylistService interface {
@@ -27,6 +28,19 @@ type AddVodToPlaylistRequest struct {
 	VodID string `json:"vod_id" validate:"required"`
 }
 
+// CreatePlaylist godoc
+//
+//	@Summary		Create playlist
+//	@Description	Create playlist
+//	@Tags			Playlist
+//	@Accept			json
+//	@Produce		json
+//	@Param			playlist	body		CreatePlaylistRequest	true	"playlist"
+//	@Success		200			{object}	ent.Playlist
+//	@Failure		400			{object}	utils.ErrorResponse
+//	@Failure		500			{object}	utils.ErrorResponse
+//	@Router			/playlist [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) CreatePlaylist(c echo.Context) error {
 	cpr := new(CreatePlaylistRequest)
 	if err := c.Bind(cpr); err != nil {
@@ -47,6 +61,20 @@ func (h *Handler) CreatePlaylist(c echo.Context) error {
 
 }
 
+// AddVodToPlaylist godoc
+//
+//	@Summary		Add vod to playlist
+//	@Description	Add vod to playlist
+//	@Tags			Playlist
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string					true	"playlist id"
+//	@Param			vod	body		AddVodToPlaylistRequest	true	"vod"
+//	@Success		200	{object}	string
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/playlist/{id} [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) AddVodToPlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -70,6 +98,16 @@ func (h *Handler) AddVodToPlaylist(c echo.Context) error {
 	return c.JSON(http.StatusOK, "ok")
 }
 
+// GetPlaylists godoc
+//
+//	@Summary		Get playlists
+//	@Description	Get playlists
+//	@Tags			Playlist
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	[]ent.Playlist
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/playlist [get]
 func (h *Handler) GetPlaylists(c echo.Context) error {
 	playlists, err := h.Service.PlaylistService.GetPlaylists(c)
 	if err != nil {
@@ -78,6 +116,18 @@ func (h *Handler) GetPlaylists(c echo.Context) error {
 	return c.JSON(http.StatusOK, playlists)
 }
 
+// GetPlaylist godoc
+//
+//	@Summary		Get playlist
+//	@Description	Get playlist
+//	@Tags			Playlist
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"playlist id"
+//	@Success		200	{object}	ent.Playlist
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/playlist/{id} [get]
 func (h *Handler) GetPlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -90,6 +140,20 @@ func (h *Handler) GetPlaylist(c echo.Context) error {
 	return c.JSON(http.StatusOK, rPlaylist)
 }
 
+// UpdatePlaylist godoc
+//
+//	@Summary		Update playlist
+//	@Description	Update playlist
+//	@Tags			Playlist
+//	@Accept			json
+//	@Produce		json
+//	@Param			id			path		string					true	"playlist id"
+//	@Param			playlist	body		CreatePlaylistRequest	true	"playlist"
+//	@Success		200			{object}	ent.Playlist
+//	@Failure		400			{object}	utils.ErrorResponse
+//	@Failure		500			{object}	utils.ErrorResponse
+//	@Router			/playlist/{id} [put]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdatePlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -113,6 +177,19 @@ func (h *Handler) UpdatePlaylist(c echo.Context) error {
 	return c.JSON(http.StatusOK, updatedPlaylist)
 }
 
+// DeletePlaylist godoc
+//
+//	@Summary		Delete playlist
+//	@Description	Delete playlist
+//	@Tags			Playlist
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"playlist id"
+//	@Success		200	{object}	string
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/playlist/{id} [delete]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) DeletePlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -125,6 +202,20 @@ func (h *Handler) DeletePlaylist(c echo.Context) error {
 	return c.JSON(http.StatusOK, "ok")
 }
 
+// DeleteVodFromPlaylist godoc
+//
+//	@Summary		Delete vod from playlist
+//	@Description	Delete vod from playlist
+//	@Tags			Playlist
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string					true	"playlist id"
+//	@Param			vod	body		AddVodToPlaylistRequest	true	"vod"
+//	@Success		200	{object}	string
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/playlist/{id}/vod [delete]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) DeleteVodFromPlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

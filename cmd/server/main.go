@@ -36,6 +36,27 @@ var (
 	GitHash   = "undefined"
 )
 
+//	@title			Ganymede API
+//	@version		1.0
+//	@description	Authentication is handled using JWT tokens. The tokens are set as access-token and refresh-token cookies.
+//	@description	For information regarding which role is authorized for which endpoint, see the http handler https://github.com/Zibbp/ganymede/blob/main/internal/transport/http/handler.go.
+
+//	@contact.name	Zibbp
+//	@contact.url	https://github.com/zibbp/ganymede
+
+//	@license.name	GPL-3.0
+
+//	@host		localhost:4000
+//	@BasePath	/api/v1
+
+//	@securityDefinitions.apikey	ApiKeyCookieAuth
+//	@in							cookie
+//	@name						access-token
+
+//	@securityDefinitions.refreshToken	ApiKeyCookieRefresh
+//	@in									cookie
+//	@name								refresh-token
+
 func Run() error {
 
 	config.NewConfig()

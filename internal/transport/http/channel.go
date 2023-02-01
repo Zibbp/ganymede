@@ -24,6 +24,19 @@ type CreateChannelRequest struct {
 	ImagePath   string `json:"image_path" validate:"required,min=3"`
 }
 
+// CreateChannel godoc
+//
+//	@Summary		Create a channel
+//	@Description	Create a channel
+//	@Tags			channel
+//	@Accept			json
+//	@Produce		json
+//	@Param			channel	body		CreateChannelRequest	true	"Channel"
+//	@Success		200		{object}	ent.Channel
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/channel [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) CreateChannel(c echo.Context) error {
 	ccr := new(CreateChannelRequest)
 	if err := c.Bind(ccr); err != nil {
@@ -47,6 +60,17 @@ func (h *Handler) CreateChannel(c echo.Context) error {
 	return c.JSON(http.StatusOK, cha)
 }
 
+// GetChannels godoc
+//
+//	@Summary		Get all channels
+//	@Description	Returns all channels
+//	@Tags			channel
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	[]ent.Channel
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/channel [get]
 func (h *Handler) GetChannels(c echo.Context) error {
 	channels, err := h.Service.ChannelService.GetChannels()
 	if err != nil {
@@ -56,6 +80,19 @@ func (h *Handler) GetChannels(c echo.Context) error {
 	return c.JSON(http.StatusOK, channels)
 }
 
+// GetChannel godoc
+//
+//	@Summary		Get a channel
+//	@Description	Returns a channel
+//	@Tags			channel
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Channel ID"
+//	@Success		200	{object}	ent.Channel
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/channel/{id} [get]
 func (h *Handler) GetChannel(c echo.Context) error {
 	id := c.Param("id")
 	cUUID, err := uuid.Parse(id)
@@ -72,6 +109,20 @@ func (h *Handler) GetChannel(c echo.Context) error {
 	return c.JSON(http.StatusOK, cha)
 }
 
+// DeleteChannel godoc
+//
+//	@Summary		Delete a channel
+//	@Description	Delete a channel
+//	@Tags			channel
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path	string	true	"Channel ID"
+//	@Success		200
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/channel/{id} [delete]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) DeleteChannel(c echo.Context) error {
 	id := c.Param("id")
 	cUUID, err := uuid.Parse(id)
@@ -88,6 +139,21 @@ func (h *Handler) DeleteChannel(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// UpdateChannel godoc
+//
+//	@Summary		Update a channel
+//	@Description	Update a channel
+//	@Tags			channel
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string					true	"Channel ID"
+//	@Param			channel	body		CreateChannelRequest	true	"Channel"
+//	@Success		200		{object}	ent.Channel
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		404		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/channel/{id} [put]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateChannel(c echo.Context) error {
 	id := c.Param("id")
 	cUUID, err := uuid.Parse(id)
@@ -118,6 +184,19 @@ func (h *Handler) UpdateChannel(c echo.Context) error {
 	return c.JSON(http.StatusOK, cha)
 }
 
+// GetChannelByName godoc
+//
+//	@Summary		Get a channel by name
+//	@Description	Returns a channel by name
+//	@Tags			channel
+//	@Accept			json
+//	@Produce		json
+//	@Param			name	path		string	true	"Channel name"
+//	@Success		200		{object}	ent.Channel
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		404		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/channel/name/{name} [get]
 func (h *Handler) GetChannelByName(c echo.Context) error {
 	name := c.Param("name")
 	cha, err := h.Service.ChannelService.GetChannelByName(name)

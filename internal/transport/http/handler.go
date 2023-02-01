@@ -13,6 +13,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	echoSwagger "github.com/swaggo/echo-swagger"
+	_ "github.com/zibbp/ganymede/docs"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -104,7 +106,6 @@ func (h *Handler) mapRoutes() {
 		return c.String(200, "Ganymede API")
 	})
 
-	// Metrics
 	h.Server.GET("/metrics", func(c echo.Context) error {
 		r := h.GatherMetrics()
 
@@ -115,6 +116,9 @@ func (h *Handler) mapRoutes() {
 
 	// Static files
 	h.Server.Static("/static/vods", "/vods")
+
+	// Swagger
+	h.Server.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	v1 := h.Server.Group("/api/v1")
 	groupV1Routes(v1, h)

@@ -11,6 +11,18 @@ type TwitchService interface {
 	GetVodByID(id string) (twitch.Vod, error)
 }
 
+// GetTwitchUser godoc
+//
+//	@Summary		Get a twitch channel
+//	@Description	Get a twitch user/channel by name (uses twitch api)
+//	@Tags			twitch
+//	@Accept			json
+//	@Produce		json
+//	@Param			name	query		string	true	"Twitch user login name"
+//	@Success		200		{object}	twitch.Channel
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/twitch/channel [get]
 func (h *Handler) GetTwitchUser(c echo.Context) error {
 	name := c.QueryParam("name")
 	if name == "" {
@@ -23,6 +35,18 @@ func (h *Handler) GetTwitchUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, channel)
 }
 
+// GetTwitchVod godoc
+//
+//	@Summary		Get a twitch vod
+//	@Description	Get a twitch vod by id (uses twitch api)
+//	@Tags			twitch
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	query		string	true	"Twitch vod id"
+//	@Success		200	{object}	twitch.Vod
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/twitch/vod [get]
 func (h *Handler) GetTwitchVod(c echo.Context) error {
 	vodID := c.QueryParam("id")
 	if vodID == "" {
@@ -38,6 +62,18 @@ func (h *Handler) GetTwitchVod(c echo.Context) error {
 	return c.JSON(http.StatusOK, vod)
 }
 
+// GQLGetTwitchVideo godoc
+//
+//	@Summary		Get a twitch video
+//	@Description	Get a twitch video by id (uses twitch graphql api)
+//	@Tags				twitch
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	query		string	true	"Twitch video id"
+//	@Success		200	{object}	twitch.Video
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/twitch/gql/video [get]
 func (h *Handler) GQLGetTwitchVideo(c echo.Context) error {
 	videoID := c.QueryParam("id")
 	if videoID == "" {

@@ -25,7 +25,7 @@ type TwitchItem struct {
 	ClickUrl    string `json:"click_url"`
 }
 
-type BadgeResp struct {
+type GanymedeBadges struct {
 	Badges []GanymedeBadge `json:"badges"`
 }
 
@@ -41,7 +41,7 @@ type GanymedeBadge struct {
 	ClickUrl    string `json:"click_url"`
 }
 
-func GetTwitchGlobalBadges() (*BadgeResp, error) {
+func GetTwitchGlobalBadges() (*GanymedeBadges, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "https://badges.twitch.tv/v1/badges/global/display", nil)
 	if err != nil {
@@ -69,7 +69,7 @@ func GetTwitchGlobalBadges() (*BadgeResp, error) {
 		return nil, fmt.Errorf("failed to unmarshal response body: %w", err)
 	}
 
-	var badgeResp BadgeResp
+	var badgeResp GanymedeBadges
 
 	for k, v := range twitchBadgeResp.BadgeSets {
 		for _, v := range v {
@@ -93,7 +93,7 @@ func GetTwitchGlobalBadges() (*BadgeResp, error) {
 	return &badgeResp, nil
 }
 
-func GetTwitchChannelBadges(channelId int64) (*BadgeResp, error) {
+func GetTwitchChannelBadges(channelId int64) (*GanymedeBadges, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://badges.twitch.tv/v1/badges/channels/%d/display", channelId), nil)
 	if err != nil {
@@ -121,7 +121,7 @@ func GetTwitchChannelBadges(channelId int64) (*BadgeResp, error) {
 		return nil, fmt.Errorf("failed to unmarshal response body: %w", err)
 	}
 
-	var badgeResp BadgeResp
+	var badgeResp GanymedeBadges
 
 	for k, v := range twitchBadgeResp.BadgeSets {
 		for _, v := range v {

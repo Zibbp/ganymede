@@ -50,6 +50,17 @@ type UpdateStorageTemplateRequest struct {
 	FileTemplate   string `json:"file_template" validate:"required"`
 }
 
+// GetConfig godoc
+//
+//	@Summary		Get config
+//	@Description	Get config
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	config.Conf
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/config [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) GetConfig(c echo.Context) error {
 	conf, err := h.Service.ConfigService.GetConfig(c)
 	if err != nil {
@@ -58,6 +69,19 @@ func (h *Handler) GetConfig(c echo.Context) error {
 	return c.JSON(http.StatusOK, conf)
 }
 
+// UpdateConfig godoc
+//
+//	@Summary		Update config
+//	@Description	Update config
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		UpdateConfigRequest	true	"Config"
+//	@Success		200		{object}	UpdateConfigRequest
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/config [put]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateConfig(c echo.Context) error {
 	conf := new(UpdateConfigRequest)
 	if err := c.Bind(conf); err != nil {
@@ -84,6 +108,17 @@ func (h *Handler) UpdateConfig(c echo.Context) error {
 	return c.JSON(http.StatusOK, conf)
 }
 
+// GetNotificationConfig godoc
+//
+//	@Summary		Get notification config
+//	@Description	Get notification config
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	config.Notification
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/config/notification [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) GetNotificationConfig(c echo.Context) error {
 	conf, err := h.Service.ConfigService.GetNotificationConfig(c)
 	if err != nil {
@@ -92,6 +127,19 @@ func (h *Handler) GetNotificationConfig(c echo.Context) error {
 	return c.JSON(http.StatusOK, conf)
 }
 
+// UpdateNotificationConfig godoc
+//
+//	@Summary		Update notification config
+//	@Description	Update notification config
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		UpdateNotificationRequest	true	"Config"
+//	@Success		200		{object}	UpdateNotificationRequest
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/config/notification [put]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateNotificationConfig(c echo.Context) error {
 	conf := new(UpdateNotificationRequest)
 	if err := c.Bind(conf); err != nil {
@@ -118,6 +166,17 @@ func (h *Handler) UpdateNotificationConfig(c echo.Context) error {
 	return c.JSON(http.StatusOK, conf)
 }
 
+// GetStorageTemplateConfig godoc
+//
+//	@Summary		Get storage template config
+//	@Description	Get storage template config
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	config.StorageTemplate
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/config/storage [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) GetStorageTemplateConfig(c echo.Context) error {
 	conf, err := h.Service.ConfigService.GetStorageTemplateConfig(c)
 	if err != nil {
@@ -126,6 +185,19 @@ func (h *Handler) GetStorageTemplateConfig(c echo.Context) error {
 	return c.JSON(http.StatusOK, conf)
 }
 
+// UpdateStorageTemplateConfig godoc
+//
+//	@Summary		Update storage template config
+//	@Description	Update storage template config
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		UpdateStorageTemplateRequest	true	"Config"
+//	@Success		200		{object}	UpdateStorageTemplateRequest
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/config/storage [put]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateStorageTemplateConfig(c echo.Context) error {
 	conf := new(UpdateStorageTemplateRequest)
 	if err := c.Bind(conf); err != nil {

@@ -10,6 +10,18 @@ import (
 	"github.com/zibbp/ganymede/internal/notification"
 )
 
+// TestNotification godoc
+//
+//	@Summary		Test notification
+//	@Description	Test notification
+//	@Tags			notification
+//	@Accept			json
+//	@Produce		json
+//	@Param			type	query		string	true	"Type of notification to test"
+//	@Success		200		{object}	string
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/notification/test [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) TestNotification(c echo.Context) error {
 
 	notificationType := c.QueryParam("type")
