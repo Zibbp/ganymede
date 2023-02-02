@@ -644,7 +644,7 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 
 }
 
-func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.BadgeResp, error) {
+func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.GanymedeBadges, error) {
 	envDeployment := os.Getenv("ENV")
 
 	if envDeployment == "development" {
@@ -669,7 +669,7 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Badge
 		return nil, fmt.Errorf("error getting vod chat badges: %v", err)
 	}
 
-	var badgeResp chat.BadgeResp
+	var badgeResp chat.GanymedeBadges
 
 	// If emebedded badges
 	if len(chatData.EmbeddedData.TwitchBadges) != 0 {

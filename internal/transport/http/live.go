@@ -54,6 +54,17 @@ type ConvertChatRequest struct {
 	ChatStart     string `json:"chat_start" validate:"required"`
 }
 
+// GetLiveWatchedChannels godoc
+//
+//	@Summary		Get all watched channels
+//	@Description	Get all watched channels
+//	@Tags			Live
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	[]ent.Live
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/live [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
 	channels, err := h.Service.LiveService.GetLiveWatchedChannels(c)
 	if err != nil {
@@ -63,6 +74,19 @@ func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
 	return c.JSON(http.StatusOK, channels)
 }
 
+// AddLiveWatchedChannel godoc
+//
+//	@Summary		Add watched channel
+//	@Description	Add watched channel
+//	@Tags			Live
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		AddWatchedChannelRequest	true	"Add watched channel"
+//	@Success		200		{object}	ent.Live
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/live [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 	ccr := new(AddWatchedChannelRequest)
 	if err := c.Bind(ccr); err != nil {
@@ -96,6 +120,20 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 	return c.JSON(http.StatusOK, l)
 }
 
+// UpdateLiveWatchedChannel godoc
+//
+//	@Summary		Update watched channel
+//	@Description	Update watched channel
+//	@Tags			Live
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string						true	"Channel ID"
+//	@Param			body	body		UpdateWatchedChannelRequest	true	"Update watched channel"
+//	@Success		200		{object}	ent.Live
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/live/{id} [put]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 	id := c.Param("id")
 	lID, err := uuid.Parse(id)
@@ -129,6 +167,19 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 	return c.JSON(http.StatusOK, l)
 }
 
+// DeleteLiveWatchedChannel godoc
+//
+//	@Summary		Delete watched channel
+//	@Description	Delete watched channel
+//	@Tags			Live
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Channel ID"
+//	@Success		200	{object}	ent.Live
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/live/{id} [delete]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) DeleteLiveWatchedChannel(c echo.Context) error {
 	id := c.Param("id")
 	lID, err := uuid.Parse(id)
@@ -152,7 +203,19 @@ func (h *Handler) Check(c echo.Context) error {
 	return c.JSON(http.StatusOK, "ok")
 }
 
-// ConvertChat Adhoc convert live chat to TD chat format
+// ConvertChat godoc
+//
+//	@Summary		Convert chat
+//	@Description	Adhoc convert chat endpoint. This is what happens when a live stream chat is converted to a "vod" chat.
+//	@Tags			Live
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		ConvertChatRequest	true	"Convert chat"
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/live/chat-convert [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) ConvertChat(c echo.Context) error {
 	ccr := new(ConvertChatRequest)
 	if err := c.Bind(ccr); err != nil {
@@ -191,6 +254,18 @@ func (h *Handler) ConvertChat(c echo.Context) error {
 	return c.JSON(http.StatusOK, "ok - converted chat found in /tmp/")
 }
 
+// CheckVodWatchedChannels godoc
+//
+//	@Summary		Check watched channels
+//	@Description	Check watched channels if they are live. This is what runs every X seconds in the config.
+//	@Tags			Live
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	string
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/live/check [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) CheckVodWatchedChannels(c echo.Context) error {
 	go h.Service.LiveService.CheckVodWatchedChannels()
 

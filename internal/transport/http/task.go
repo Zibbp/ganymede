@@ -14,6 +14,18 @@ type StartTaskRequest struct {
 	Task string `json:"task" validate:"required,oneof=check_live check_vod get_jwks twitch_auth queue_hold_check storage_migration"`
 }
 
+// StartTask godoc
+//
+//	@Summary		Start a task
+//	@Description	Start a task
+//	@Tags			task
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body	StartTaskRequest	true	"StartTaskRequest"
+//	@Success		200
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/task/start [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) StartTask(c echo.Context) error {
 	str := new(StartTaskRequest)
 	if err := c.Bind(str); err != nil {

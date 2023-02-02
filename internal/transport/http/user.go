@@ -1,12 +1,13 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/utils"
-	"net/http"
 )
 
 type UserService interface {
@@ -21,6 +22,18 @@ type UpdateChannelRequest struct {
 	Role     string `json:"role" validate:"required,oneof=admin editor archiver user"`
 }
 
+// GetUsers godoc
+//
+//	@Summary		Get all users
+//	@Description	Get all users
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	[]ent.User
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/user [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) GetUsers(c echo.Context) error {
 	users, err := h.Service.UserService.AdminGetUsers(c)
 	if err != nil {
@@ -29,6 +42,19 @@ func (h *Handler) GetUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
+// GetUser godoc
+//
+//	@Summary		Get user by id
+//	@Description	Get user by id
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"User ID"
+//	@Success		200	{object}	ent.User
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/user/{id} [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) GetUser(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -41,6 +67,20 @@ func (h *Handler) GetUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, u)
 }
 
+// UpdateUser godoc
+//
+//	@Summary		Update user
+//	@Description	Update user
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string					true	"User ID"
+//	@Param			body	body		UpdateChannelRequest	true	"User data"
+//	@Success		200		{object}	ent.User
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/user/{id} [put]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateUser(c echo.Context) error {
 	uID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -65,6 +105,19 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, u)
 }
 
+// DeleteUser godoc
+//
+//	@Summary		Delete user
+//	@Description	Delete user
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path	string	true	"User ID"
+//	@Success		200
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/user/{id} [delete]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) DeleteUser(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

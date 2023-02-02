@@ -1,4 +1,4 @@
-package http
+package http_test
 
 import (
 	"encoding/json"
@@ -17,6 +17,7 @@ import (
 	"github.com/zibbp/ganymede/ent/enttest"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/database"
+	httpTransport "github.com/zibbp/ganymede/internal/transport/http"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -40,9 +41,9 @@ func TestRegister(t *testing.T) {
 
 	viper.Set("registration_enabled", true)
 
-	h := &Handler{
+	h := &httpTransport.Handler{
 		Server: echo.New(),
-		Service: Services{
+		Service: httpTransport.Services{
 			AuthService: auth.NewService(&database.Database{Client: client}),
 		},
 	}
@@ -79,9 +80,9 @@ func TestLogin(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test")
 	os.Setenv("JWT_REFRESH_SECRET", "test")
 
-	h := &Handler{
+	h := &httpTransport.Handler{
 		Server: echo.New(),
-		Service: Services{
+		Service: httpTransport.Services{
 			AuthService: auth.NewService(&database.Database{Client: client}),
 		},
 	}
@@ -127,9 +128,9 @@ func TestRefresh(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test")
 	os.Setenv("JWT_REFRESH", "test")
 
-	h := &Handler{
+	h := &httpTransport.Handler{
 		Server: echo.New(),
-		Service: Services{
+		Service: httpTransport.Services{
 			AuthService: auth.NewService(&database.Database{Client: client}),
 		},
 	}

@@ -1,9 +1,10 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/internal/exec"
-	"net/http"
 )
 
 type ExecService interface {
@@ -14,6 +15,18 @@ type GetFfprobeDataRequest struct {
 	Path string `json:"path" validate:"required"`
 }
 
+// GetFfprobeData godoc
+//
+//	@Summary		Get ffprobe data
+//	@Description	Get ffprobe data
+//	@Tags			exec
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		GetFfprobeDataRequest	true	"GetFfprobeDataRequest"
+//	@Success		200		{object}	map[string]interface{}
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/exec/ffprobe [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) GetFfprobeData(c echo.Context) error {
 	gfd := new(GetFfprobeDataRequest)
 	if err := c.Bind(gfd); err != nil {

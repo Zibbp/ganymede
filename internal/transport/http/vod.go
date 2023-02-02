@@ -29,7 +29,7 @@ type VodService interface {
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error)
 	GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error)
-	GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.BadgeResp, error)
+	GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.GanymedeBadges, error)
 	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error)
 }
 
@@ -54,6 +54,19 @@ type CreateVodRequest struct {
 	StreamedAt       string            `json:"streamed_at" validate:"required"`
 }
 
+// CreateVod godoc
+//
+//	@Summary		Create a vod
+//	@Description	Create a vod
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		CreateVodRequest	true	"Create vod request"
+//	@Success		201		{object}	ent.Vod
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		409		{object}	utils.ErrorResponse
+//	@Router			/vod [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) CreateVod(c echo.Context) error {
 	var req CreateVodRequest
 	if err := c.Bind(&req); err != nil {
@@ -113,6 +126,18 @@ func (h *Handler) CreateVod(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
+// GetVods godoc
+//
+//	@Summary		Get vods
+//	@Description	Get vods
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			channel_id	query		string	false	"Channel ID"
+//	@Success		200			{object}	[]ent.Vod
+//	@Failure		400			{object}	utils.ErrorResponse
+//	@Failure		500			{object}	utils.ErrorResponse
+//	@Router			/vod [get]
 func (h *Handler) GetVods(c echo.Context) error {
 	cID := c.QueryParam("channel_id")
 	if cID == "" {
@@ -133,6 +158,20 @@ func (h *Handler) GetVods(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
+// GetVod godoc
+//
+//	@Summary		Get a vod
+//	@Description	Get a vod
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id				path		string	true	"Vod ID"
+//	@Param			with_channel	query		string	false	"With channel"
+//	@Success		200				{object}	ent.Vod
+//	@Failure		400				{object}	utils.ErrorResponse
+//	@Failure		404				{object}	utils.ErrorResponse
+//	@Failure		500				{object}	utils.ErrorResponse
+//	@Router			/vod/{id} [get]
 func (h *Handler) GetVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -156,6 +195,20 @@ func (h *Handler) GetVod(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
+// DeleteVod godoc
+//
+//	@Summary		Delete a vod
+//	@Description	Delete a vod
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path	string	true	"Vod ID"
+//	@Success		200
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id} [delete]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) DeleteVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -171,6 +224,21 @@ func (h *Handler) DeleteVod(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// UpdateVod godoc
+//
+//	@Summary		Update a vod
+//	@Description	Update a vod
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string				true	"Vod ID"
+//	@Param			body	body		CreateVodRequest	true	"Vod"
+//	@Success		200		{object}	ent.Vod
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		404		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/vod/{id} [put]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -221,6 +289,20 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
+// SearchVods godoc
+//
+//	@Summary		Search vods
+//	@Description	Search vods
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			q		query		string	true	"Search query"
+//	@Param			limit	query		integer	false	"Limit"		default(10)
+//	@Param			offset	query		integer	false	"Offset"	default(0)
+//	@Success		200		{array}		ent.Vod
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/vod/search [get]
 func (h *Handler) SearchVods(c echo.Context) error {
 	q := c.QueryParam("q")
 	if q == "" {
@@ -241,6 +323,19 @@ func (h *Handler) SearchVods(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
+// GetVodPlaylists godoc
+//
+//	@Summary		Get vod playlists
+//	@Description	Get vod playlists
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Vod ID"
+//	@Success		200	{array}		[]ent.Playlist
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/playlist [get]
 func (h *Handler) GetVodPlaylists(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -253,6 +348,20 @@ func (h *Handler) GetVodPlaylists(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
+// GetVodsPagination godoc
+//
+//	@Summary		Get vods pagination
+//	@Description	Get vods pagination
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			limit		query		integer	false	"Limit"		default(10)
+//	@Param			offset		query		integer	false	"Offset"	default(0)
+//	@Param			channel_id	query		string	false	"Channel ID"
+//	@Success		200			{object}	vod.Pagination
+//	@Failure		400			{object}	utils.ErrorResponse
+//	@Failure		500			{object}	utils.ErrorResponse
+//	@Router			/vod/pagination [get]
 func (h *Handler) GetVodsPagination(c echo.Context) error {
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil {
@@ -288,6 +397,19 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
+// GetUserIdFromChat godoc
+//
+//	@Summary		Get user id from chat
+//	@Description	Get user id from chat json file
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Vod ID"
+//	@Success		200	{object}	int64
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/chat/userid [get]
 func (h *Handler) GetUserIdFromChat(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -300,6 +422,21 @@ func (h *Handler) GetUserIdFromChat(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
+// GetVodChatComments godoc
+//
+//	@Summary		Get vod chat comments
+//	@Description	Get vod chat comments
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string	true	"Vod ID"
+//	@Param			start	query		string	false	"Start time"
+//	@Param			end		query		string	false	"End time"
+//	@Success		200		{array}		[]chat.Comment
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		404		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/chat [get]
 func (h *Handler) GetVodChatComments(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -324,6 +461,19 @@ func (h *Handler) GetVodChatComments(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
+// GetVodChatEmotes godoc
+//
+//	@Summary		Get vod chat emotes
+//	@Description	Get vod chat emotes
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Vod ID"
+//	@Success		200	{array}		chat.GanymedeEmotes
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/chat/emotes [get]
 func (h *Handler) GetVodChatEmotes(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -338,6 +488,19 @@ func (h *Handler) GetVodChatEmotes(c echo.Context) error {
 	return c.JSON(http.StatusOK, emotes)
 }
 
+// GetVodChatBadges godoc
+//
+//	@Summary		Get vod chat badges
+//	@Description	Get vod chat badges
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Vod ID"
+//	@Success		200	{array}		chat.GanymedeBadges
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/chat/badges [get]
 func (h *Handler) GetVodChatBadges(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -351,6 +514,22 @@ func (h *Handler) GetVodChatBadges(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, badges)
 }
+
+// GetNumberOfVodChatComments godoc
+//
+//	@Summary		Get number of vod chat comments
+//	@Description	Get N number of vod chat comments before the start time (used for seeking)
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string	true	"Vod ID"
+//	@Param			start	query		string	false	"Start time"
+//	@Param			count	query		string	false	"Count"
+//	@Success		200		{object}	[]chat.Comment
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		404		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/chat/seek [get]
 func (h *Handler) GetNumberOfVodChatCommentsFromTime(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

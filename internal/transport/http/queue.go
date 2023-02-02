@@ -43,6 +43,19 @@ type UpdateQueueRequest struct {
 	TaskChatMove             utils.TaskStatus `json:"task_chat_move" validate:"required,oneof=pending running success failed"`
 }
 
+// CreateQueueItem godoc
+//
+//	@Summary		Create a queue item
+//	@Description	Create a queue item
+//	@Tags			queue
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		CreateQueueRequest	true	"Create queue item"
+//	@Success		201		{object}	ent.Queue
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/queue [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) CreateQueueItem(c echo.Context) error {
 	cqt := new(CreateQueueRequest)
 	if err := c.Bind(cqt); err != nil {
@@ -65,6 +78,19 @@ func (h *Handler) CreateQueueItem(c echo.Context) error {
 	return c.JSON(http.StatusCreated, que)
 }
 
+// GetQueueItems godoc
+//
+//	@Summary		Get queue items
+//	@Description	Get queue items
+//	@Tags			queue
+//	@Accept			json
+//	@Produce		json
+//	@Param			processing	query		string	false	"Get processing queue items"
+//	@Success		200			{object}	[]ent.Queue
+//	@Failure		400			{object}	utils.ErrorResponse
+//	@Failure		500			{object}	utils.ErrorResponse
+//	@Router			/queue [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) GetQueueItems(c echo.Context) error {
 	var pro bool
 	processing := c.QueryParam("processing")
@@ -87,6 +113,19 @@ func (h *Handler) GetQueueItems(c echo.Context) error {
 	return c.JSON(http.StatusOK, q)
 }
 
+// GetQueueItem godoc
+//
+//	@Summary		Get queue item
+//	@Description	Get queue item
+//	@Tags			queue
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Queue item id"
+//	@Success		200	{object}	ent.Queue
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/queue/{id} [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) GetQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -99,6 +138,20 @@ func (h *Handler) GetQueueItem(c echo.Context) error {
 	return c.JSON(http.StatusOK, q)
 }
 
+// UpdateQueueItem godoc
+//
+//	@Summary		Update queue item
+//	@Description	Update queue item
+//	@Tags			queue
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string				true	"Queue item id"
+//	@Param			body	body		UpdateQueueRequest	true	"Update queue item"
+//	@Success		200		{object}	ent.Queue
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/queue/{id} [put]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -137,6 +190,19 @@ func (h *Handler) UpdateQueueItem(c echo.Context) error {
 	return c.JSON(http.StatusOK, que)
 }
 
+// DeleteQueueItem godoc
+//
+//	@Summary		Delete queue item
+//	@Description	Delete queue item
+//	@Tags			queue
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path	string	true	"Queue item id"
+//	@Success		204
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/queue/{id} [delete]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) DeleteQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -149,6 +215,20 @@ func (h *Handler) DeleteQueueItem(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
+// ReadQueueLogFile godoc
+//
+//	@Summary		Read queue log file
+//	@Description	Read queue log file
+//	@Tags			queue
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string	true	"Queue item id"
+//	@Param			type	query		string	true	"Log type: video, video-convert, chat, chat-render, or chat-convert"
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/queue/{id}/tail [get]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 	id := c.Param("id")
 
