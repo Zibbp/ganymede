@@ -18,3 +18,5 @@ RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.51.1/Twi
 
 RUN wget https://github.com/xenova/chat-downloader/archive/refs/tags/v${CHAT_DOWNLOADER_VER}.tar.gz
 RUN tar -xvf v${CHAT_DOWNLOADER_VER}.tar.gz && cd chat-downloader-${CHAT_DOWNLOADER_VER} && python3 setup.py install && cd .. && rm -f v${CHAT_DOWNLOADER_VER}.tar.gz && rm -rf chat-downloader-${CHAT_DOWNLOADER_VER}
+
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
