@@ -325,8 +325,9 @@ func TestDeleteQueueItem(t *testing.T) {
 		assert.Equal(t, http.StatusNoContent, rec.Code)
 
 		// Check if queue item was deleted
-		_, err = client.Queue.Get(context.Background(), dbQueue.ID)
+		queueItem, err := client.Queue.Get(context.Background(), dbQueue.ID)
 		assert.Error(t, err)
+		assert.Nil(t, queueItem)
 
 	}
 }
