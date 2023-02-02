@@ -100,7 +100,7 @@ func TestCreateInvalidChannel(t *testing.T) {
 	}
 }
 
-// * TestGetChannel tests the GetChannel function
+// * TestGetChannels tests the GetChannel function
 // Test creates a new channel and checks if the response contains 1 channel
 func TestGetChannels(t *testing.T) {
 	opts := []enttest.Option{
