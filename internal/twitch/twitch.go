@@ -408,7 +408,7 @@ func GetVideosByUser(userID string, videoType string) ([]Video, error) {
 	var cursor string
 	cursor = videoResponse.Pagination.Cursor
 	for cursor != "" {
-		response, err := getVideosByUserWithCursor(userID, videoType, videoResponse.Pagination.Cursor)
+		response, err := getVideosByUserWithCursor(userID, videoType, cursor)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get twitch videos: %v", err)
 		}
@@ -420,6 +420,7 @@ func GetVideosByUser(userID string, videoType string) ([]Video, error) {
 }
 
 func getVideosByUserWithCursor(userID string, videoType string, cursor string) (*TwitchVideoResponse, error) {
+	log.Debug().Msgf("getting twitch videos for user: %s with type %s and cursor %s", userID, videoType, cursor)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/videos?user_id=%s&type=%s&first=100&after=%s", userID, videoType, cursor), nil)
 	if err != nil {
