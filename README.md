@@ -86,8 +86,8 @@ Feel free to use an existing Postgres database container and Nginx container if 
 | `DB_NAME`              | Name of the database.                                                                                                                                           |
 | `DB_SSL`               | Whether to use SSL. Default: `disable`. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.                                       |
 | `DB_SSL_ROOT_CERT`     | _Optional_ Path to DB SSL root certificate. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.                                   |
-| `JWT_SECRET`           | Secret for JWT tokens.                                                                                                                                          |
-| `JWT_REFRESH_SECRET`   | Secret for JWT refresh tokens.                                                                                                                                  |
+| `JWT_SECRET`           | Secret for JWT tokens. This should be a long random string.                                                                                                     |
+| `JWT_REFRESH_SECRET`   | Secret for JWT refresh tokens. This should be a long random string.                                                                                             |
 | `TWITCH_CLIENT_ID`     | Twitch application client ID.                                                                                                                                   |
 | `TWITCH_CLIENT_SECRET` | Twitch application client secret.                                                                                                                               |
 | `FRONTEND_HOST`        | Host of the frontend, used for CORS. Example: `http://192.168.1.2:4801`                                                                                         |
