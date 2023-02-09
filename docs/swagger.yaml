@@ -2901,25 +2901,6 @@ paths:
       summary: Read queue log file
       tags:
       - queue
-  /queue/active:
-    get:
-      consumes:
-      - application/json
-      description: Returns true if queue is active
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: boolean
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      summary: Returns true if queue is active
-      tags:
-      - queue
   /task/start:
     post:
       consumes:
