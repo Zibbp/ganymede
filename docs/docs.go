@@ -2256,6 +2256,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/queue/active": {
+            "get": {
+                "description": "Returns true if queue is active",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "queue"
+                ],
+                "summary": "Returns true if queue is active",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/queue/{id}": {
             "get": {
                 "security": [

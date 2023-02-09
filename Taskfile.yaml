@@ -1,0 +1,8 @@
+version: "3"
+
+tasks:
+  swag:
+    preconditions:
+      - go install github.com/swaggo/swag/cmd/swag@latest
+    cmds:
+      - swag init -g cmd/server/main.go
