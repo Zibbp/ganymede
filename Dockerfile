@@ -42,4 +42,6 @@ RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
 
 COPY --from=build-stage-01 /app/ganymede-api .
 
+EXPOSE 4000
+
 CMD ["./ganymede-api"]
