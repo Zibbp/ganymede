@@ -106,6 +106,10 @@ func (h *Handler) mapRoutes() {
 		return c.String(200, "Ganymede API")
 	})
 
+	h.Server.GET("/health", func(c echo.Context) error {
+		return c.String(200, "OK")
+	})
+
 	h.Server.GET("/metrics", func(c echo.Context) error {
 		r := h.GatherMetrics()
 
