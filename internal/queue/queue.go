@@ -131,14 +131,3 @@ func (s *Service) ArchiveGetQueueItem(qID uuid.UUID) (*ent.Queue, error) {
 	}
 	return q, nil
 }
-
-func (s *Service) GetIsQueueActive(c echo.Context) (bool, error) {
-	q, err := s.Store.Client.Queue.Query().Where(queue.Processing(true)).Count(c.Request().Context())
-	if err != nil {
-		return false, fmt.Errorf("error getting queue task: %v", err)
-	}
-	if q > 0 {
-		return true, nil
-	}
-	return false, nil
-}

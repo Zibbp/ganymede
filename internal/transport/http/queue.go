@@ -18,7 +18,6 @@ type QueueService interface {
 	UpdateQueueItem(queueDto queue.Queue, id uuid.UUID) (*ent.Queue, error)
 	DeleteQueueItem(c echo.Context, id uuid.UUID) error
 	ReadLogFile(c echo.Context, id uuid.UUID, logType string) ([]byte, error)
-	GetIsQueueActive(c echo.Context) (bool, error)
 }
 
 type CreateQueueRequest struct {
@@ -253,21 +252,4 @@ func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, string(log))
-}
-
-// GetIsQueueActive godoc
-// @Summary		Returns true if queue is active
-// @Description	Returns true if queue is active
-// @Tags			queue
-// @Accept			json
-// @Produce		json
-// @Success		200		{object}	bool
-// @Failure		500		{object}	utils.ErrorResponse
-// @Router			/queue/active [get]
-func (h *Handler) GetIsQueueActive(c echo.Context) error {
-	active, err := h.Service.QueueService.GetIsQueueActive(c)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	return c.JSON(http.StatusOK, active)
 }
