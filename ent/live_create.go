@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 )
 
 // LiveCreate is the builder for creating a Live entity.
@@ -230,6 +231,21 @@ func (lc *LiveCreate) SetChannelID(id uuid.UUID) *LiveCreate {
 // SetChannel sets the "channel" edge to the Channel entity.
 func (lc *LiveCreate) SetChannel(c *Channel) *LiveCreate {
 	return lc.SetChannelID(c.ID)
+}
+
+// AddCategoryIDs adds the "categories" edge to the LiveCategory entity by IDs.
+func (lc *LiveCreate) AddCategoryIDs(ids ...uuid.UUID) *LiveCreate {
+	lc.mutation.AddCategoryIDs(ids...)
+	return lc
+}
+
+// AddCategories adds the "categories" edges to the LiveCategory entity.
+func (lc *LiveCreate) AddCategories(l ...*LiveCategory) *LiveCreate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return lc.AddCategoryIDs(ids...)
 }
 
 // Mutation returns the LiveMutation object of the builder.
@@ -472,6 +488,25 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.channel_live = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := lc.mutation.CategoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.CategoriesTable,
+			Columns: []string{live.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: livecategory.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

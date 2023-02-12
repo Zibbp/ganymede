@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/predicate"
 )
 
@@ -207,6 +208,21 @@ func (lu *LiveUpdate) SetChannel(c *Channel) *LiveUpdate {
 	return lu.SetChannelID(c.ID)
 }
 
+// AddCategoryIDs adds the "categories" edge to the LiveCategory entity by IDs.
+func (lu *LiveUpdate) AddCategoryIDs(ids ...uuid.UUID) *LiveUpdate {
+	lu.mutation.AddCategoryIDs(ids...)
+	return lu
+}
+
+// AddCategories adds the "categories" edges to the LiveCategory entity.
+func (lu *LiveUpdate) AddCategories(l ...*LiveCategory) *LiveUpdate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return lu.AddCategoryIDs(ids...)
+}
+
 // Mutation returns the LiveMutation object of the builder.
 func (lu *LiveUpdate) Mutation() *LiveMutation {
 	return lu.mutation
@@ -216,6 +232,27 @@ func (lu *LiveUpdate) Mutation() *LiveMutation {
 func (lu *LiveUpdate) ClearChannel() *LiveUpdate {
 	lu.mutation.ClearChannel()
 	return lu
+}
+
+// ClearCategories clears all "categories" edges to the LiveCategory entity.
+func (lu *LiveUpdate) ClearCategories() *LiveUpdate {
+	lu.mutation.ClearCategories()
+	return lu
+}
+
+// RemoveCategoryIDs removes the "categories" edge to LiveCategory entities by IDs.
+func (lu *LiveUpdate) RemoveCategoryIDs(ids ...uuid.UUID) *LiveUpdate {
+	lu.mutation.RemoveCategoryIDs(ids...)
+	return lu
+}
+
+// RemoveCategories removes "categories" edges to LiveCategory entities.
+func (lu *LiveUpdate) RemoveCategories(l ...*LiveCategory) *LiveUpdate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return lu.RemoveCategoryIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -340,6 +377,60 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
 					Column: channel.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if lu.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.CategoriesTable,
+			Columns: []string{live.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: livecategory.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := lu.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !lu.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.CategoriesTable,
+			Columns: []string{live.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: livecategory.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := lu.mutation.CategoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.CategoriesTable,
+			Columns: []string{live.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: livecategory.FieldID,
 				},
 			},
 		}
@@ -545,6 +636,21 @@ func (luo *LiveUpdateOne) SetChannel(c *Channel) *LiveUpdateOne {
 	return luo.SetChannelID(c.ID)
 }
 
+// AddCategoryIDs adds the "categories" edge to the LiveCategory entity by IDs.
+func (luo *LiveUpdateOne) AddCategoryIDs(ids ...uuid.UUID) *LiveUpdateOne {
+	luo.mutation.AddCategoryIDs(ids...)
+	return luo
+}
+
+// AddCategories adds the "categories" edges to the LiveCategory entity.
+func (luo *LiveUpdateOne) AddCategories(l ...*LiveCategory) *LiveUpdateOne {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return luo.AddCategoryIDs(ids...)
+}
+
 // Mutation returns the LiveMutation object of the builder.
 func (luo *LiveUpdateOne) Mutation() *LiveMutation {
 	return luo.mutation
@@ -554,6 +660,27 @@ func (luo *LiveUpdateOne) Mutation() *LiveMutation {
 func (luo *LiveUpdateOne) ClearChannel() *LiveUpdateOne {
 	luo.mutation.ClearChannel()
 	return luo
+}
+
+// ClearCategories clears all "categories" edges to the LiveCategory entity.
+func (luo *LiveUpdateOne) ClearCategories() *LiveUpdateOne {
+	luo.mutation.ClearCategories()
+	return luo
+}
+
+// RemoveCategoryIDs removes the "categories" edge to LiveCategory entities by IDs.
+func (luo *LiveUpdateOne) RemoveCategoryIDs(ids ...uuid.UUID) *LiveUpdateOne {
+	luo.mutation.RemoveCategoryIDs(ids...)
+	return luo
+}
+
+// RemoveCategories removes "categories" edges to LiveCategory entities.
+func (luo *LiveUpdateOne) RemoveCategories(l ...*LiveCategory) *LiveUpdateOne {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return luo.RemoveCategoryIDs(ids...)
 }
 
 // Where appends a list predicates to the LiveUpdate builder.
@@ -708,6 +835,60 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
 					Column: channel.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if luo.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.CategoriesTable,
+			Columns: []string{live.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: livecategory.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := luo.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !luo.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.CategoriesTable,
+			Columns: []string{live.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: livecategory.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := luo.mutation.CategoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.CategoriesTable,
+			Columns: []string{live.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: livecategory.FieldID,
 				},
 			},
 		}

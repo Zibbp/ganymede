@@ -41,6 +41,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// EdgeChannel holds the string denoting the channel edge name in mutations.
 	EdgeChannel = "channel"
+	// EdgeCategories holds the string denoting the categories edge name in mutations.
+	EdgeCategories = "categories"
 	// Table holds the table name of the live in the database.
 	Table = "lives"
 	// ChannelTable is the table that holds the channel relation/edge.
@@ -50,6 +52,13 @@ const (
 	ChannelInverseTable = "channels"
 	// ChannelColumn is the table column denoting the channel relation/edge.
 	ChannelColumn = "channel_live"
+	// CategoriesTable is the table that holds the categories relation/edge.
+	CategoriesTable = "live_categories"
+	// CategoriesInverseTable is the table name for the LiveCategory entity.
+	// It exists in this package in order to avoid circular dependency with the "livecategory" package.
+	CategoriesInverseTable = "live_categories"
+	// CategoriesColumn is the table column denoting the categories relation/edge.
+	CategoriesColumn = "live_id"
 )
 
 // Columns holds all SQL columns for live fields.

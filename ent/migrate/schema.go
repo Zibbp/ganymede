@@ -56,6 +56,26 @@ var (
 			},
 		},
 	}
+	// LiveCategoriesColumns holds the columns for the "live_categories" table.
+	LiveCategoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString},
+		{Name: "live_id", Type: field.TypeUUID},
+	}
+	// LiveCategoriesTable holds the schema information for the "live_categories" table.
+	LiveCategoriesTable = &schema.Table{
+		Name:       "live_categories",
+		Columns:    LiveCategoriesColumns,
+		PrimaryKey: []*schema.Column{LiveCategoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "live_categories_lives_categories",
+				Columns:    []*schema.Column{LiveCategoriesColumns[2]},
+				RefColumns: []*schema.Column{LivesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// PlaybacksColumns holds the columns for the "playbacks" table.
 	PlaybacksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -226,6 +246,7 @@ var (
 	Tables = []*schema.Table{
 		ChannelsTable,
 		LivesTable,
+		LiveCategoriesTable,
 		PlaybacksTable,
 		PlaylistsTable,
 		QueuesTable,
@@ -238,6 +259,7 @@ var (
 
 func init() {
 	LivesTable.ForeignKeys[0].RefTable = ChannelsTable
+	LiveCategoriesTable.ForeignKeys[0].RefTable = LivesTable
 	QueuesTable.ForeignKeys[0].RefTable = VodsTable
 	VodsTable.ForeignKeys[0].RefTable = ChannelsTable
 	PlaylistVodsTable.ForeignKeys[0].RefTable = PlaylistsTable

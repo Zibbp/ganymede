@@ -38,5 +38,6 @@ func (Live) Fields() []ent.Field {
 func (Live) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("channel", Channel.Type).Ref("live").Unique().Required(),
+		edge.To("categories", LiveCategory.Type).StorageKey(edge.Column("live_id")),
 	}
 }

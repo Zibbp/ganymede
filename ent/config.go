@@ -29,6 +29,7 @@ type (
 	hooks struct {
 		Channel        []ent.Hook
 		Live           []ent.Hook
+		LiveCategory   []ent.Hook
 		Playback       []ent.Hook
 		Playlist       []ent.Hook
 		Queue          []ent.Hook
@@ -39,6 +40,7 @@ type (
 	inters struct {
 		Channel        []ent.Interceptor
 		Live           []ent.Interceptor
+		LiveCategory   []ent.Interceptor
 		Playback       []ent.Interceptor
 		Playlist       []ent.Interceptor
 		Queue          []ent.Interceptor

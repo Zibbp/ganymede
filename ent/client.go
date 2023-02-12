@@ -13,6 +13,7 @@ import (
 
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -34,6 +35,8 @@ type Client struct {
 	Channel *ChannelClient
 	// Live is the client for interacting with the Live builders.
 	Live *LiveClient
+	// LiveCategory is the client for interacting with the LiveCategory builders.
+	LiveCategory *LiveCategoryClient
 	// Playback is the client for interacting with the Playback builders.
 	Playback *PlaybackClient
 	// Playlist is the client for interacting with the Playlist builders.
@@ -61,6 +64,7 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Channel = NewChannelClient(c.config)
 	c.Live = NewLiveClient(c.config)
+	c.LiveCategory = NewLiveCategoryClient(c.config)
 	c.Playback = NewPlaybackClient(c.config)
 	c.Playlist = NewPlaylistClient(c.config)
 	c.Queue = NewQueueClient(c.config)
@@ -102,6 +106,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config:         cfg,
 		Channel:        NewChannelClient(cfg),
 		Live:           NewLiveClient(cfg),
+		LiveCategory:   NewLiveCategoryClient(cfg),
 		Playback:       NewPlaybackClient(cfg),
 		Playlist:       NewPlaylistClient(cfg),
 		Queue:          NewQueueClient(cfg),
@@ -129,6 +134,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config:         cfg,
 		Channel:        NewChannelClient(cfg),
 		Live:           NewLiveClient(cfg),
+		LiveCategory:   NewLiveCategoryClient(cfg),
 		Playback:       NewPlaybackClient(cfg),
 		Playlist:       NewPlaylistClient(cfg),
 		Queue:          NewQueueClient(cfg),
@@ -165,6 +171,7 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Channel.Use(hooks...)
 	c.Live.Use(hooks...)
+	c.LiveCategory.Use(hooks...)
 	c.Playback.Use(hooks...)
 	c.Playlist.Use(hooks...)
 	c.Queue.Use(hooks...)
@@ -178,6 +185,7 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Channel.Intercept(interceptors...)
 	c.Live.Intercept(interceptors...)
+	c.LiveCategory.Intercept(interceptors...)
 	c.Playback.Intercept(interceptors...)
 	c.Playlist.Intercept(interceptors...)
 	c.Queue.Intercept(interceptors...)
@@ -193,6 +201,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Channel.mutate(ctx, m)
 	case *LiveMutation:
 		return c.Live.mutate(ctx, m)
+	case *LiveCategoryMutation:
+		return c.LiveCategory.mutate(ctx, m)
 	case *PlaybackMutation:
 		return c.Playback.mutate(ctx, m)
 	case *PlaylistMutation:
@@ -469,6 +479,22 @@ func (c *LiveClient) QueryChannel(l *Live) *ChannelQuery {
 	return query
 }
 
+// QueryCategories queries the categories edge of a Live.
+func (c *LiveClient) QueryCategories(l *Live) *LiveCategoryQuery {
+	query := (&LiveCategoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := l.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(live.Table, live.FieldID, id),
+			sqlgraph.To(livecategory.Table, livecategory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, live.CategoriesTable, live.CategoriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(l.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *LiveClient) Hooks() []Hook {
 	return c.hooks.Live
@@ -491,6 +517,140 @@ func (c *LiveClient) mutate(ctx context.Context, m *LiveMutation) (Value, error)
 		return (&LiveDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Live mutation op: %q", m.Op())
+	}
+}
+
+// LiveCategoryClient is a client for the LiveCategory schema.
+type LiveCategoryClient struct {
+	config
+}
+
+// NewLiveCategoryClient returns a client for the LiveCategory from the given config.
+func NewLiveCategoryClient(c config) *LiveCategoryClient {
+	return &LiveCategoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `livecategory.Hooks(f(g(h())))`.
+func (c *LiveCategoryClient) Use(hooks ...Hook) {
+	c.hooks.LiveCategory = append(c.hooks.LiveCategory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `livecategory.Intercept(f(g(h())))`.
+func (c *LiveCategoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LiveCategory = append(c.inters.LiveCategory, interceptors...)
+}
+
+// Create returns a builder for creating a LiveCategory entity.
+func (c *LiveCategoryClient) Create() *LiveCategoryCreate {
+	mutation := newLiveCategoryMutation(c.config, OpCreate)
+	return &LiveCategoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LiveCategory entities.
+func (c *LiveCategoryClient) CreateBulk(builders ...*LiveCategoryCreate) *LiveCategoryCreateBulk {
+	return &LiveCategoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LiveCategory.
+func (c *LiveCategoryClient) Update() *LiveCategoryUpdate {
+	mutation := newLiveCategoryMutation(c.config, OpUpdate)
+	return &LiveCategoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LiveCategoryClient) UpdateOne(lc *LiveCategory) *LiveCategoryUpdateOne {
+	mutation := newLiveCategoryMutation(c.config, OpUpdateOne, withLiveCategory(lc))
+	return &LiveCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LiveCategoryClient) UpdateOneID(id uuid.UUID) *LiveCategoryUpdateOne {
+	mutation := newLiveCategoryMutation(c.config, OpUpdateOne, withLiveCategoryID(id))
+	return &LiveCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LiveCategory.
+func (c *LiveCategoryClient) Delete() *LiveCategoryDelete {
+	mutation := newLiveCategoryMutation(c.config, OpDelete)
+	return &LiveCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LiveCategoryClient) DeleteOne(lc *LiveCategory) *LiveCategoryDeleteOne {
+	return c.DeleteOneID(lc.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LiveCategoryClient) DeleteOneID(id uuid.UUID) *LiveCategoryDeleteOne {
+	builder := c.Delete().Where(livecategory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LiveCategoryDeleteOne{builder}
+}
+
+// Query returns a query builder for LiveCategory.
+func (c *LiveCategoryClient) Query() *LiveCategoryQuery {
+	return &LiveCategoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLiveCategory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LiveCategory entity by its id.
+func (c *LiveCategoryClient) Get(ctx context.Context, id uuid.UUID) (*LiveCategory, error) {
+	return c.Query().Where(livecategory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LiveCategoryClient) GetX(ctx context.Context, id uuid.UUID) *LiveCategory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryLive queries the live edge of a LiveCategory.
+func (c *LiveCategoryClient) QueryLive(lc *LiveCategory) *LiveQuery {
+	query := (&LiveClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := lc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(livecategory.Table, livecategory.FieldID, id),
+			sqlgraph.To(live.Table, live.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, livecategory.LiveTable, livecategory.LiveColumn),
+		)
+		fromV = sqlgraph.Neighbors(lc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *LiveCategoryClient) Hooks() []Hook {
+	return c.hooks.LiveCategory
+}
+
+// Interceptors returns the client interceptors.
+func (c *LiveCategoryClient) Interceptors() []Interceptor {
+	return c.inters.LiveCategory
+}
+
+func (c *LiveCategoryClient) mutate(ctx context.Context, m *LiveCategoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LiveCategoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LiveCategoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LiveCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LiveCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LiveCategory mutation op: %q", m.Op())
 	}
 }
 

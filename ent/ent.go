@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -48,6 +49,7 @@ func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
 		channel.Table:        channel.ValidColumn,
 		live.Table:           live.ValidColumn,
+		livecategory.Table:   livecategory.ValidColumn,
 		playback.Table:       playback.ValidColumn,
 		playlist.Table:       playlist.ValidColumn,
 		queue.Table:          queue.ValidColumn,

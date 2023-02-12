@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -13,18 +14,20 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/predicate"
 )
 
 // LiveQuery is the builder for querying Live entities.
 type LiveQuery struct {
 	config
-	ctx         *QueryContext
-	order       []OrderFunc
-	inters      []Interceptor
-	predicates  []predicate.Live
-	withChannel *ChannelQuery
-	withFKs     bool
+	ctx            *QueryContext
+	order          []OrderFunc
+	inters         []Interceptor
+	predicates     []predicate.Live
+	withChannel    *ChannelQuery
+	withCategories *LiveCategoryQuery
+	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +79,28 @@ func (lq *LiveQuery) QueryChannel() *ChannelQuery {
 			sqlgraph.From(live.Table, live.FieldID, selector),
 			sqlgraph.To(channel.Table, channel.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, live.ChannelTable, live.ChannelColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(lq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCategories chains the current query on the "categories" edge.
+func (lq *LiveQuery) QueryCategories() *LiveCategoryQuery {
+	query := (&LiveCategoryClient{config: lq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := lq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := lq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(live.Table, live.FieldID, selector),
+			sqlgraph.To(livecategory.Table, livecategory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, live.CategoriesTable, live.CategoriesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(lq.driver.Dialect(), step)
 		return fromU, nil
@@ -270,12 +295,13 @@ func (lq *LiveQuery) Clone() *LiveQuery {
 		return nil
 	}
 	return &LiveQuery{
-		config:      lq.config,
-		ctx:         lq.ctx.Clone(),
-		order:       append([]OrderFunc{}, lq.order...),
-		inters:      append([]Interceptor{}, lq.inters...),
-		predicates:  append([]predicate.Live{}, lq.predicates...),
-		withChannel: lq.withChannel.Clone(),
+		config:         lq.config,
+		ctx:            lq.ctx.Clone(),
+		order:          append([]OrderFunc{}, lq.order...),
+		inters:         append([]Interceptor{}, lq.inters...),
+		predicates:     append([]predicate.Live{}, lq.predicates...),
+		withChannel:    lq.withChannel.Clone(),
+		withCategories: lq.withCategories.Clone(),
 		// clone intermediate query.
 		sql:  lq.sql.Clone(),
 		path: lq.path,
@@ -290,6 +316,17 @@ func (lq *LiveQuery) WithChannel(opts ...func(*ChannelQuery)) *LiveQuery {
 		opt(query)
 	}
 	lq.withChannel = query
+	return lq
+}
+
+// WithCategories tells the query-builder to eager-load the nodes that are connected to
+// the "categories" edge. The optional arguments are used to configure the query builder of the edge.
+func (lq *LiveQuery) WithCategories(opts ...func(*LiveCategoryQuery)) *LiveQuery {
+	query := (&LiveCategoryClient{config: lq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	lq.withCategories = query
 	return lq
 }
 
@@ -372,8 +409,9 @@ func (lq *LiveQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Live, e
 		nodes       = []*Live{}
 		withFKs     = lq.withFKs
 		_spec       = lq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			lq.withChannel != nil,
+			lq.withCategories != nil,
 		}
 	)
 	if lq.withChannel != nil {
@@ -403,6 +441,13 @@ func (lq *LiveQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Live, e
 	if query := lq.withChannel; query != nil {
 		if err := lq.loadChannel(ctx, query, nodes, nil,
 			func(n *Live, e *Channel) { n.Edges.Channel = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := lq.withCategories; query != nil {
+		if err := lq.loadCategories(ctx, query, nodes,
+			func(n *Live) { n.Edges.Categories = []*LiveCategory{} },
+			func(n *Live, e *LiveCategory) { n.Edges.Categories = append(n.Edges.Categories, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -438,6 +483,37 @@ func (lq *LiveQuery) loadChannel(ctx context.Context, query *ChannelQuery, nodes
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (lq *LiveQuery) loadCategories(ctx context.Context, query *LiveCategoryQuery, nodes []*Live, init func(*Live), assign func(*Live, *LiveCategory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Live)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.LiveCategory(func(s *sql.Selector) {
+		s.Where(sql.InValues(live.CategoriesColumn, fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.live_id
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "live_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "live_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

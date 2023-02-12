@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -97,6 +98,12 @@ func init() {
 	liveDescID := liveFields[0].Descriptor()
 	// live.DefaultID holds the default value on creation for the id field.
 	live.DefaultID = liveDescID.Default.(func() uuid.UUID)
+	livecategoryFields := schema.LiveCategory{}.Fields()
+	_ = livecategoryFields
+	// livecategoryDescID is the schema descriptor for id field.
+	livecategoryDescID := livecategoryFields[0].Descriptor()
+	// livecategory.DefaultID holds the default value on creation for the id field.
+	livecategory.DefaultID = livecategoryDescID.Default.(func() uuid.UUID)
 	playbackFields := schema.Playback{}.Fields()
 	_ = playbackFields
 	// playbackDescTime is the schema descriptor for time field.
