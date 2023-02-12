@@ -194,6 +194,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	twitchGroup.GET("/channel", h.GetTwitchUser)
 	twitchGroup.GET("/vod", h.GetTwitchVod)
 	twitchGroup.GET("/gql/video", h.GQLGetTwitchVideo)
+	twitchGroup.GET("/categories", h.GetTwitchCategories)
 
 	// Archive
 	archiveGroup := e.Group("/archive")

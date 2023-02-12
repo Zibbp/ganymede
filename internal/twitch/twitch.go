@@ -1,6 +1,7 @@
 package twitch
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,6 +10,8 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/database"
 )
 
 type Service struct {
@@ -121,6 +124,11 @@ type Live struct {
 	ThumbnailURL string   `json:"thumbnail_url"`
 	TagIDS       []string `json:"tag_ids"`
 	IsMature     bool     `json:"is_mature"`
+}
+
+type Category struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type twitchAPI struct{}
@@ -412,4 +420,13 @@ func getVideosByUserWithCursor(userID string, videoType string, cursor string) (
 
 	return &videoResponse, nil
 
+}
+
+func (s *Service) GetCategories() ([]*ent.TwitchCategory, error) {
+	categories, err := database.DB().Client.TwitchCategory.Query().All(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get categories: %v", err)
+	}
+
+	return categories, nil
 }
