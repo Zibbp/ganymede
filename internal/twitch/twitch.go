@@ -229,46 +229,6 @@ func (t *twitchAPI) GetUserByLogin(cName string) (Channel, error) {
 	return channelResponse.Data[0], nil
 }
 
-// func GetUserByLogin(cName string) (Channel, error) {
-// 	log.Debug().Msgf("getting user by login: %s", cName)
-// 	client := &http.Client{}
-// 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/users?login=%s", cName), nil)
-// 	if err != nil {
-// 		return Channel{}, fmt.Errorf("failed to create request: %v", err)
-// 	}
-// 	req.Header.Set("Client-ID", os.Getenv("TWITCH_CLIENT_ID"))
-// 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("TWITCH_ACCESS_TOKEN")))
-
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		return Channel{}, fmt.Errorf("failed to get user: %v", err)
-// 	}
-
-// 	defer resp.Body.Close()
-
-// 	if resp.StatusCode != http.StatusOK {
-// 		return Channel{}, fmt.Errorf("failed to get user: %v", resp)
-// 	}
-
-// 	body, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		return Channel{}, fmt.Errorf("failed to read response body: %v", err)
-// 	}
-
-// 	var channelResponse ChannelResponse
-// 	err = json.Unmarshal(body, &channelResponse)
-// 	if err != nil {
-// 		return Channel{}, fmt.Errorf("failed to unmarshal response: %v", err)
-// 	}
-
-// 	// Check if channel is populated
-// 	if len(channelResponse.Data) == 0 {
-// 		return Channel{}, fmt.Errorf("channel not found")
-// 	}
-
-// 	return channelResponse.Data[0], nil
-// }
-
 func (s *Service) GetVodByID(vID string) (Vod, error) {
 	log.Debug().Msgf("getting twitch vod by id: %s", vID)
 	client := &http.Client{}
