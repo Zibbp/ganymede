@@ -54,7 +54,7 @@ type Viewable string
 
 func (s *Service) CheckVodWatchedChannels() {
 	// Get channels from DB
-	channels, err := s.Store.Client.Live.Query().Where(live.WatchVod(true)).WithChannel().All(context.Background())
+	channels, err := s.Store.Client.Live.Query().Where(live.WatchVod(true)).WithChannel().WithCategories().All(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting channels")
 		return
@@ -65,6 +65,15 @@ func (s *Service) CheckVodWatchedChannels() {
 	}
 	log.Info().Msgf("Checking %d channels for new videos", len(channels))
 	for _, watch := range channels {
+		// Check if channel has category restrictions
+		var channelVideoCategories []string
+		if len(watch.Edges.Categories) > 0 {
+			for _, category := range watch.Edges.Categories {
+				channelVideoCategories = append(channelVideoCategories, category.Name)
+			}
+			log.Debug().Msgf("Channel %s has category restrictions: %s", watch.Edges.Channel.Name, strings.Join(channelVideoCategories, ", "))
+		}
+
 		var videos []twitch.Video
 		// If archives is enabled, fetch all videos
 		if watch.DownloadArchives {
@@ -110,6 +119,26 @@ func (s *Service) CheckVodWatchedChannels() {
 					log.Error().Err(err).Msgf("error getting video %s from GraphQL API", video.ID)
 					continue
 				}
+				// Get video chapters
+				gqlVideoChapters, err := twitch.GQLGetChapters(video.ID)
+				if err != nil {
+					log.Error().Err(err).Msgf("error getting video %s chapters from GraphQL API", video.ID)
+					continue
+				}
+				var videoChapters []string
+
+				if len(gqlVideoChapters.Data.Video.Moments.Edges) > 0 {
+					for _, chapter := range gqlVideoChapters.Data.Video.Moments.Edges {
+						videoChapters = append(videoChapters, chapter.Node.Details.Game.DisplayName)
+					}
+					log.Debug().Msgf("Video %s has chapters: %s", video.ID, strings.Join(videoChapters, ", "))
+				}
+
+				// Append chapters and video category to video categories
+				var videoCategories []string
+				videoCategories = append(videoCategories, videoChapters...)
+				videoCategories = append(videoCategories, gqlVideo.Data.Video.Game.Name)
+
 				// Check if video is sub only restricted
 				if strings.Contains(gqlVideo.Data.Video.ResourceRestriction.Type, "SUB") {
 					// Skip if sub only is disabled
@@ -120,6 +149,23 @@ func (s *Service) CheckVodWatchedChannels() {
 					// Skip if Twitch token is not set
 					if viper.GetString("parameters.twitch_token") == "" {
 						log.Info().Msgf("skipping sub only video %s. Twitch token is not set.", video.ID)
+						continue
+					}
+				}
+
+				// Check if video is in category restrictions, continue if not
+				if len(channelVideoCategories) > 0 {
+					var found bool
+					for _, category := range videoCategories {
+						for _, channelCategory := range channelVideoCategories {
+							if strings.EqualFold(category, channelCategory) {
+								found = true
+								break
+							}
+						}
+					}
+					if !found {
+						log.Info().Msgf("skipping video %s. video has categories of %s when the restriction requires %s.", video.ID, strings.Join(videoCategories, ", "), strings.Join(channelVideoCategories, ", "))
 						continue
 					}
 				}
