@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
@@ -20,6 +22,7 @@ type PlaylistCreate struct {
 	config
 	mutation *PlaylistMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetName sets the "name" field.
@@ -204,6 +207,7 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 		_node = &Playlist{config: pc.config}
 		_spec = sqlgraph.NewCreateSpec(playlist.Table, sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID))
 	)
+	_spec.OnConflict = pc.conflict
 	if id, ok := pc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
@@ -250,10 +254,279 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Playlist.Create().
+//		SetName(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.PlaylistUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (pc *PlaylistCreate) OnConflict(opts ...sql.ConflictOption) *PlaylistUpsertOne {
+	pc.conflict = opts
+	return &PlaylistUpsertOne{
+		create: pc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Playlist.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (pc *PlaylistCreate) OnConflictColumns(columns ...string) *PlaylistUpsertOne {
+	pc.conflict = append(pc.conflict, sql.ConflictColumns(columns...))
+	return &PlaylistUpsertOne{
+		create: pc,
+	}
+}
+
+type (
+	// PlaylistUpsertOne is the builder for "upsert"-ing
+	//  one Playlist node.
+	PlaylistUpsertOne struct {
+		create *PlaylistCreate
+	}
+
+	// PlaylistUpsert is the "OnConflict" setter.
+	PlaylistUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetName sets the "name" field.
+func (u *PlaylistUpsert) SetName(v string) *PlaylistUpsert {
+	u.Set(playlist.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *PlaylistUpsert) UpdateName() *PlaylistUpsert {
+	u.SetExcluded(playlist.FieldName)
+	return u
+}
+
+// SetDescription sets the "description" field.
+func (u *PlaylistUpsert) SetDescription(v string) *PlaylistUpsert {
+	u.Set(playlist.FieldDescription, v)
+	return u
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *PlaylistUpsert) UpdateDescription() *PlaylistUpsert {
+	u.SetExcluded(playlist.FieldDescription)
+	return u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *PlaylistUpsert) ClearDescription() *PlaylistUpsert {
+	u.SetNull(playlist.FieldDescription)
+	return u
+}
+
+// SetThumbnailPath sets the "thumbnail_path" field.
+func (u *PlaylistUpsert) SetThumbnailPath(v string) *PlaylistUpsert {
+	u.Set(playlist.FieldThumbnailPath, v)
+	return u
+}
+
+// UpdateThumbnailPath sets the "thumbnail_path" field to the value that was provided on create.
+func (u *PlaylistUpsert) UpdateThumbnailPath() *PlaylistUpsert {
+	u.SetExcluded(playlist.FieldThumbnailPath)
+	return u
+}
+
+// ClearThumbnailPath clears the value of the "thumbnail_path" field.
+func (u *PlaylistUpsert) ClearThumbnailPath() *PlaylistUpsert {
+	u.SetNull(playlist.FieldThumbnailPath)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *PlaylistUpsert) SetUpdatedAt(v time.Time) *PlaylistUpsert {
+	u.Set(playlist.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *PlaylistUpsert) UpdateUpdatedAt() *PlaylistUpsert {
+	u.SetExcluded(playlist.FieldUpdatedAt)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Playlist.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(playlist.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *PlaylistUpsertOne) UpdateNewValues() *PlaylistUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(playlist.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(playlist.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Playlist.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *PlaylistUpsertOne) Ignore() *PlaylistUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *PlaylistUpsertOne) DoNothing() *PlaylistUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the PlaylistCreate.OnConflict
+// documentation for more info.
+func (u *PlaylistUpsertOne) Update(set func(*PlaylistUpsert)) *PlaylistUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&PlaylistUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *PlaylistUpsertOne) SetName(v string) *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *PlaylistUpsertOne) UpdateName() *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *PlaylistUpsertOne) SetDescription(v string) *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *PlaylistUpsertOne) UpdateDescription() *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *PlaylistUpsertOne) ClearDescription() *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.ClearDescription()
+	})
+}
+
+// SetThumbnailPath sets the "thumbnail_path" field.
+func (u *PlaylistUpsertOne) SetThumbnailPath(v string) *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.SetThumbnailPath(v)
+	})
+}
+
+// UpdateThumbnailPath sets the "thumbnail_path" field to the value that was provided on create.
+func (u *PlaylistUpsertOne) UpdateThumbnailPath() *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.UpdateThumbnailPath()
+	})
+}
+
+// ClearThumbnailPath clears the value of the "thumbnail_path" field.
+func (u *PlaylistUpsertOne) ClearThumbnailPath() *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.ClearThumbnailPath()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *PlaylistUpsertOne) SetUpdatedAt(v time.Time) *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *PlaylistUpsertOne) UpdateUpdatedAt() *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *PlaylistUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for PlaylistCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *PlaylistUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *PlaylistUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: PlaylistUpsertOne.ID is not supported by MySQL driver. Use PlaylistUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *PlaylistUpsertOne) IDX(ctx context.Context) uuid.UUID {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // PlaylistCreateBulk is the builder for creating many Playlist entities in bulk.
 type PlaylistCreateBulk struct {
 	config
 	builders []*PlaylistCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Playlist entities in the database.
@@ -280,6 +553,7 @@ func (pcb *PlaylistCreateBulk) Save(ctx context.Context) ([]*Playlist, error) {
 					_, err = mutators[i+1].Mutate(root, pcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = pcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, pcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -326,6 +600,190 @@ func (pcb *PlaylistCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (pcb *PlaylistCreateBulk) ExecX(ctx context.Context) {
 	if err := pcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Playlist.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.PlaylistUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (pcb *PlaylistCreateBulk) OnConflict(opts ...sql.ConflictOption) *PlaylistUpsertBulk {
+	pcb.conflict = opts
+	return &PlaylistUpsertBulk{
+		create: pcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Playlist.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (pcb *PlaylistCreateBulk) OnConflictColumns(columns ...string) *PlaylistUpsertBulk {
+	pcb.conflict = append(pcb.conflict, sql.ConflictColumns(columns...))
+	return &PlaylistUpsertBulk{
+		create: pcb,
+	}
+}
+
+// PlaylistUpsertBulk is the builder for "upsert"-ing
+// a bulk of Playlist nodes.
+type PlaylistUpsertBulk struct {
+	create *PlaylistCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Playlist.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(playlist.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *PlaylistUpsertBulk) UpdateNewValues() *PlaylistUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(playlist.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(playlist.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Playlist.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *PlaylistUpsertBulk) Ignore() *PlaylistUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *PlaylistUpsertBulk) DoNothing() *PlaylistUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the PlaylistCreateBulk.OnConflict
+// documentation for more info.
+func (u *PlaylistUpsertBulk) Update(set func(*PlaylistUpsert)) *PlaylistUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&PlaylistUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *PlaylistUpsertBulk) SetName(v string) *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *PlaylistUpsertBulk) UpdateName() *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *PlaylistUpsertBulk) SetDescription(v string) *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *PlaylistUpsertBulk) UpdateDescription() *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *PlaylistUpsertBulk) ClearDescription() *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.ClearDescription()
+	})
+}
+
+// SetThumbnailPath sets the "thumbnail_path" field.
+func (u *PlaylistUpsertBulk) SetThumbnailPath(v string) *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.SetThumbnailPath(v)
+	})
+}
+
+// UpdateThumbnailPath sets the "thumbnail_path" field to the value that was provided on create.
+func (u *PlaylistUpsertBulk) UpdateThumbnailPath() *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.UpdateThumbnailPath()
+	})
+}
+
+// ClearThumbnailPath clears the value of the "thumbnail_path" field.
+func (u *PlaylistUpsertBulk) ClearThumbnailPath() *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.ClearThumbnailPath()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *PlaylistUpsertBulk) SetUpdatedAt(v time.Time) *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *PlaylistUpsertBulk) UpdateUpdatedAt() *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *PlaylistUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the PlaylistCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for PlaylistCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *PlaylistUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
