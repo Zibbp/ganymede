@@ -1,6 +1,7 @@
 package twitch
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,8 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
+	entTwitchCategory "github.com/zibbp/ganymede/ent/twitchcategory"
+	"github.com/zibbp/ganymede/internal/database"
 )
 
 type CategoryResponse struct {
@@ -22,6 +25,28 @@ type TwitchCategory struct {
 	IgdbID    string `json:"igdb_id"`
 }
 
+// SetTwitchCategories sets the twitch categories in the database
+func SetTwitchCategories() error {
+	categories, err := GetCategories()
+	if err != nil {
+		return fmt.Errorf("failed to get twitch categories: %v", err)
+	}
+
+	for _, category := range categories {
+		err = database.DB().Client.TwitchCategory.Create().SetID(category.ID).SetName(category.Name).SetBoxArtURL(category.BoxArtURL).SetIgdbID(category.IgdbID).OnConflictColumns(entTwitchCategory.FieldID).UpdateNewValues().Exec(context.Background())
+		if err != nil {
+			return fmt.Errorf("failed to upsert twitch category: %v", err)
+		}
+	}
+
+	log.Debug().Msgf("successfully set twitch categories")
+
+	return nil
+}
+
+// GetCategories gets the top 100 twitch categories
+// It then gets the next 100 categories until there are no more using the cursor
+// Returns a different number of categories each time it is called for some reason
 func GetCategories() ([]TwitchCategory, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/games/top?first=100"), nil)
@@ -72,7 +97,6 @@ func GetCategories() ([]TwitchCategory, error) {
 }
 
 func getCategoriesWithCursor(cursor string) (*CategoryResponse, error) {
-	log.Debug().Msgf("getting twitch categories with cursor %s", cursor)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/games/top?first=100&after=%s", cursor), nil)
 	if err != nil {
