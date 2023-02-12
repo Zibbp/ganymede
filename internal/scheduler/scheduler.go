@@ -154,7 +154,7 @@ func (s *Service) fetchJwksSchedule(scheduler *gocron.Scheduler) {
 
 func (s *Service) setTwitchCategoriesSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up twitch categories schedule")
-	_, err := scheduler.Every(3).Days().Do(func() {
+	_, err := scheduler.Every(7).Days().Do(func() {
 		log.Debug().Msg("running set twitch categories schedule")
 		err := twitch.SetTwitchCategories()
 		if err != nil {
