@@ -94,13 +94,15 @@ func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.L
 	if err != nil {
 		return nil, fmt.Errorf("error updating watched channel: %v", err)
 	}
+
+	// Delete all categories
+	_, err = s.Store.Client.LiveCategory.Delete().Where(livecategory.HasLiveWith(live.ID(liveDto.ID))).Exec(c.Request().Context())
+	if err != nil {
+		return nil, fmt.Errorf("error deleting categories: %v", err)
+	}
+
 	// Update categories
 	if len(liveDto.Categories) > 0 {
-		// Delete all categories
-		_, err := s.Store.Client.LiveCategory.Delete().Where(livecategory.HasLiveWith(live.ID(liveDto.ID))).Exec(c.Request().Context())
-		if err != nil {
-			return nil, fmt.Errorf("error deleting categories: %v", err)
-		}
 		// Add new categories
 		for _, category := range liveDto.Categories {
 			_, err := s.Store.Client.LiveCategory.Create().SetName(category).SetLive(l).Save(c.Request().Context())
