@@ -6,4 +6,5 @@ type SchedulerService interface {
 	StartQueueItemScheduler()
 	StartJwksScheduler()
 	StartWatchVideoScheduler()
+	StartTwitchCategoriesScheduler()
 }

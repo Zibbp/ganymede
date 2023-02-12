@@ -89,6 +89,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 		go h.Service.SchedulerService.StartJwksScheduler()
 	}
 	go h.Service.SchedulerService.StartWatchVideoScheduler()
+	go h.Service.SchedulerService.StartTwitchCategoriesScheduler()
 
 	// Populate channel external ids
 	go func() {

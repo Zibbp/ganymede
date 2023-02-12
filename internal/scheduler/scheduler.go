@@ -77,6 +77,15 @@ func (s *Service) StartJwksScheduler() {
 	scheduler.StartAsync()
 }
 
+func (s *Service) StartTwitchCategoriesScheduler() {
+	time.Sleep(time.Second * 5)
+	scheduler := gocron.NewScheduler(time.UTC)
+
+	s.setTwitchCategoriesSchedule(scheduler)
+
+	scheduler.StartAsync()
+}
+
 func (s *Service) twitchAuthSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up twitch auth schedule")
 	_, err := scheduler.Every(7).Days().Do(func() {
@@ -140,5 +149,19 @@ func (s *Service) fetchJwksSchedule(scheduler *gocron.Scheduler) {
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to set up fetch jwks schedule")
+	}
+}
+
+func (s *Service) setTwitchCategoriesSchedule(scheduler *gocron.Scheduler) {
+	log.Debug().Msg("setting up twitch categories schedule")
+	_, err := scheduler.Every(3).Days().Do(func() {
+		log.Debug().Msg("running set twitch categories schedule")
+		err := twitch.SetTwitchCategories()
+		if err != nil {
+			log.Error().Err(err).Msg("failed to set twitch categories")
+		}
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to set up set twitch categories schedule")
 	}
 }
