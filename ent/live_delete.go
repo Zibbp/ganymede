@@ -40,15 +40,7 @@ func (ld *LiveDelete) ExecX(ctx context.Context) int {
 }
 
 func (ld *LiveDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: live.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: live.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(live.Table, sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID))
 	if ps := ld.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type LiveDeleteOne struct {
 	ld *LiveDelete
 }
 
+// Where appends a list predicates to the LiveDelete builder.
+func (ldo *LiveDeleteOne) Where(ps ...predicate.Live) *LiveDeleteOne {
+	ldo.ld.mutation.Where(ps...)
+	return ldo
+}
+
 // Exec executes the deletion query.
 func (ldo *LiveDeleteOne) Exec(ctx context.Context) error {
 	n, err := ldo.ld.Exec(ctx)
@@ -84,5 +82,7 @@ func (ldo *LiveDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (ldo *LiveDeleteOne) ExecX(ctx context.Context) {
-	ldo.ld.ExecX(ctx)
+	if err := ldo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

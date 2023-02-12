@@ -485,13 +485,7 @@ func (vc *VodCreate) sqlSave(ctx context.Context) (*Vod, error) {
 func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Vod{config: vc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: vod.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: vod.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(vod.Table, sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID))
 	)
 	if id, ok := vc.mutation.ID(); ok {
 		_node.ID = id

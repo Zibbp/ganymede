@@ -462,16 +462,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := vu.check(); err != nil {
 		return n, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   vod.Table,
-			Columns: vod.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: vod.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(vod.Table, vod.Columns, sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID))
 	if ps := vu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -1081,6 +1072,12 @@ func (vuo *VodUpdateOne) RemovePlaylists(p ...*Playlist) *VodUpdateOne {
 	return vuo.RemovePlaylistIDs(ids...)
 }
 
+// Where appends a list predicates to the VodUpdate builder.
+func (vuo *VodUpdateOne) Where(ps ...predicate.Vod) *VodUpdateOne {
+	vuo.mutation.Where(ps...)
+	return vuo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (vuo *VodUpdateOne) Select(field string, fields ...string) *VodUpdateOne {
@@ -1146,16 +1143,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	if err := vuo.check(); err != nil {
 		return _node, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   vod.Table,
-			Columns: vod.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: vod.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(vod.Table, vod.Columns, sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID))
 	id, ok := vuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Vod.id" for update`)}

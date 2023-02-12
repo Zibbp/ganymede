@@ -22,11 +22,8 @@ import (
 // VodQuery is the builder for querying Vod entities.
 type VodQuery struct {
 	config
-	limit         *int
-	offset        *int
-	unique        *bool
+	ctx           *QueryContext
 	order         []OrderFunc
-	fields        []string
 	inters        []Interceptor
 	predicates    []predicate.Vod
 	withChannel   *ChannelQuery
@@ -46,20 +43,20 @@ func (vq *VodQuery) Where(ps ...predicate.Vod) *VodQuery {
 
 // Limit the number of records to be returned by this query.
 func (vq *VodQuery) Limit(limit int) *VodQuery {
-	vq.limit = &limit
+	vq.ctx.Limit = &limit
 	return vq
 }
 
 // Offset to start from.
 func (vq *VodQuery) Offset(offset int) *VodQuery {
-	vq.offset = &offset
+	vq.ctx.Offset = &offset
 	return vq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (vq *VodQuery) Unique(unique bool) *VodQuery {
-	vq.unique = &unique
+	vq.ctx.Unique = &unique
 	return vq
 }
 
@@ -138,7 +135,7 @@ func (vq *VodQuery) QueryPlaylists() *PlaylistQuery {
 // First returns the first Vod entity from the query.
 // Returns a *NotFoundError when no Vod was found.
 func (vq *VodQuery) First(ctx context.Context) (*Vod, error) {
-	nodes, err := vq.Limit(1).All(newQueryContext(ctx, TypeVod, "First"))
+	nodes, err := vq.Limit(1).All(setContextOp(ctx, vq.ctx, "First"))
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +158,7 @@ func (vq *VodQuery) FirstX(ctx context.Context) *Vod {
 // Returns a *NotFoundError when no Vod ID was found.
 func (vq *VodQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = vq.Limit(1).IDs(newQueryContext(ctx, TypeVod, "FirstID")); err != nil {
+	if ids, err = vq.Limit(1).IDs(setContextOp(ctx, vq.ctx, "FirstID")); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -184,7 +181,7 @@ func (vq *VodQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one Vod entity is found.
 // Returns a *NotFoundError when no Vod entities are found.
 func (vq *VodQuery) Only(ctx context.Context) (*Vod, error) {
-	nodes, err := vq.Limit(2).All(newQueryContext(ctx, TypeVod, "Only"))
+	nodes, err := vq.Limit(2).All(setContextOp(ctx, vq.ctx, "Only"))
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +209,7 @@ func (vq *VodQuery) OnlyX(ctx context.Context) *Vod {
 // Returns a *NotFoundError when no entities are found.
 func (vq *VodQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = vq.Limit(2).IDs(newQueryContext(ctx, TypeVod, "OnlyID")); err != nil {
+	if ids, err = vq.Limit(2).IDs(setContextOp(ctx, vq.ctx, "OnlyID")); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -237,7 +234,7 @@ func (vq *VodQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of Vods.
 func (vq *VodQuery) All(ctx context.Context) ([]*Vod, error) {
-	ctx = newQueryContext(ctx, TypeVod, "All")
+	ctx = setContextOp(ctx, vq.ctx, "All")
 	if err := vq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -255,10 +252,12 @@ func (vq *VodQuery) AllX(ctx context.Context) []*Vod {
 }
 
 // IDs executes the query and returns a list of Vod IDs.
-func (vq *VodQuery) IDs(ctx context.Context) ([]uuid.UUID, error) {
-	var ids []uuid.UUID
-	ctx = newQueryContext(ctx, TypeVod, "IDs")
-	if err := vq.Select(vod.FieldID).Scan(ctx, &ids); err != nil {
+func (vq *VodQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+	if vq.ctx.Unique == nil && vq.path != nil {
+		vq.Unique(true)
+	}
+	ctx = setContextOp(ctx, vq.ctx, "IDs")
+	if err = vq.Select(vod.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -275,7 +274,7 @@ func (vq *VodQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (vq *VodQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeVod, "Count")
+	ctx = setContextOp(ctx, vq.ctx, "Count")
 	if err := vq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -293,7 +292,7 @@ func (vq *VodQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (vq *VodQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeVod, "Exist")
+	ctx = setContextOp(ctx, vq.ctx, "Exist")
 	switch _, err := vq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -321,8 +320,7 @@ func (vq *VodQuery) Clone() *VodQuery {
 	}
 	return &VodQuery{
 		config:        vq.config,
-		limit:         vq.limit,
-		offset:        vq.offset,
+		ctx:           vq.ctx.Clone(),
 		order:         append([]OrderFunc{}, vq.order...),
 		inters:        append([]Interceptor{}, vq.inters...),
 		predicates:    append([]predicate.Vod{}, vq.predicates...),
@@ -330,9 +328,8 @@ func (vq *VodQuery) Clone() *VodQuery {
 		withQueue:     vq.withQueue.Clone(),
 		withPlaylists: vq.withPlaylists.Clone(),
 		// clone intermediate query.
-		sql:    vq.sql.Clone(),
-		path:   vq.path,
-		unique: vq.unique,
+		sql:  vq.sql.Clone(),
+		path: vq.path,
 	}
 }
 
@@ -384,9 +381,9 @@ func (vq *VodQuery) WithPlaylists(opts ...func(*PlaylistQuery)) *VodQuery {
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (vq *VodQuery) GroupBy(field string, fields ...string) *VodGroupBy {
-	vq.fields = append([]string{field}, fields...)
+	vq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &VodGroupBy{build: vq}
-	grbuild.flds = &vq.fields
+	grbuild.flds = &vq.ctx.Fields
 	grbuild.label = vod.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -405,10 +402,10 @@ func (vq *VodQuery) GroupBy(field string, fields ...string) *VodGroupBy {
 //		Select(vod.FieldExtID).
 //		Scan(ctx, &v)
 func (vq *VodQuery) Select(fields ...string) *VodSelect {
-	vq.fields = append(vq.fields, fields...)
+	vq.ctx.Fields = append(vq.ctx.Fields, fields...)
 	sbuild := &VodSelect{VodQuery: vq}
 	sbuild.label = vod.Label
-	sbuild.flds, sbuild.scan = &vq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &vq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -428,7 +425,7 @@ func (vq *VodQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range vq.fields {
+	for _, f := range vq.ctx.Fields {
 		if !vod.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -513,6 +510,9 @@ func (vq *VodQuery) loadChannel(ctx context.Context, query *ChannelQuery, nodes 
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
+	if len(ids) == 0 {
+		return nil
+	}
 	query.Where(channel.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -580,27 +580,30 @@ func (vq *VodQuery) loadPlaylists(ctx context.Context, query *PlaylistQuery, nod
 	if err := query.prepareQuery(ctx); err != nil {
 		return err
 	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
 			}
-			return append([]any{new(uuid.UUID)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := *values[0].(*uuid.UUID)
-			inValue := *values[1].(*uuid.UUID)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*Vod]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Vod]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
 			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
+		})
 	})
+	neighbors, err := withInterceptors[[]*Playlist](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
@@ -618,30 +621,22 @@ func (vq *VodQuery) loadPlaylists(ctx context.Context, query *PlaylistQuery, nod
 
 func (vq *VodQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := vq.querySpec()
-	_spec.Node.Columns = vq.fields
-	if len(vq.fields) > 0 {
-		_spec.Unique = vq.unique != nil && *vq.unique
+	_spec.Node.Columns = vq.ctx.Fields
+	if len(vq.ctx.Fields) > 0 {
+		_spec.Unique = vq.ctx.Unique != nil && *vq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, vq.driver, _spec)
 }
 
 func (vq *VodQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   vod.Table,
-			Columns: vod.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: vod.FieldID,
-			},
-		},
-		From:   vq.sql,
-		Unique: true,
-	}
-	if unique := vq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(vod.Table, vod.Columns, sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID))
+	_spec.From = vq.sql
+	if unique := vq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if vq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := vq.fields; len(fields) > 0 {
+	if fields := vq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, vod.FieldID)
 		for i := range fields {
@@ -657,10 +652,10 @@ func (vq *VodQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := vq.limit; limit != nil {
+	if limit := vq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := vq.offset; offset != nil {
+	if offset := vq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := vq.order; len(ps) > 0 {
@@ -676,7 +671,7 @@ func (vq *VodQuery) querySpec() *sqlgraph.QuerySpec {
 func (vq *VodQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(vq.driver.Dialect())
 	t1 := builder.Table(vod.Table)
-	columns := vq.fields
+	columns := vq.ctx.Fields
 	if len(columns) == 0 {
 		columns = vod.Columns
 	}
@@ -685,7 +680,7 @@ func (vq *VodQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = vq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if vq.unique != nil && *vq.unique {
+	if vq.ctx.Unique != nil && *vq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range vq.predicates {
@@ -694,12 +689,12 @@ func (vq *VodQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range vq.order {
 		p(selector)
 	}
-	if offset := vq.offset; offset != nil {
+	if offset := vq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := vq.limit; limit != nil {
+	if limit := vq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -719,7 +714,7 @@ func (vgb *VodGroupBy) Aggregate(fns ...AggregateFunc) *VodGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (vgb *VodGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeVod, "GroupBy")
+	ctx = setContextOp(ctx, vgb.build.ctx, "GroupBy")
 	if err := vgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -767,7 +762,7 @@ func (vs *VodSelect) Aggregate(fns ...AggregateFunc) *VodSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (vs *VodSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeVod, "Select")
+	ctx = setContextOp(ctx, vs.ctx, "Select")
 	if err := vs.prepareQuery(ctx); err != nil {
 		return err
 	}

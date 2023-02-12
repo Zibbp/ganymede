@@ -467,16 +467,7 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := qu.check(); err != nil {
 		return n, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   queue.Table,
-			Columns: queue.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: queue.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(queue.Table, queue.Columns, sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID))
 	if ps := qu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -967,6 +958,12 @@ func (quo *QueueUpdateOne) ClearVod() *QueueUpdateOne {
 	return quo
 }
 
+// Where appends a list predicates to the QueueUpdate builder.
+func (quo *QueueUpdateOne) Where(ps ...predicate.Queue) *QueueUpdateOne {
+	quo.mutation.Where(ps...)
+	return quo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (quo *QueueUpdateOne) Select(field string, fields ...string) *QueueUpdateOne {
@@ -1072,16 +1069,7 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 	if err := quo.check(); err != nil {
 		return _node, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   queue.Table,
-			Columns: queue.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: queue.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(queue.Table, queue.Columns, sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID))
 	id, ok := quo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Queue.id" for update`)}

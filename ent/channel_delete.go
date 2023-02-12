@@ -40,15 +40,7 @@ func (cd *ChannelDelete) ExecX(ctx context.Context) int {
 }
 
 func (cd *ChannelDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: channel.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: channel.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(channel.Table, sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID))
 	if ps := cd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type ChannelDeleteOne struct {
 	cd *ChannelDelete
 }
 
+// Where appends a list predicates to the ChannelDelete builder.
+func (cdo *ChannelDeleteOne) Where(ps ...predicate.Channel) *ChannelDeleteOne {
+	cdo.cd.mutation.Where(ps...)
+	return cdo
+}
+
 // Exec executes the deletion query.
 func (cdo *ChannelDeleteOne) Exec(ctx context.Context) error {
 	n, err := cdo.cd.Exec(ctx)
@@ -84,5 +82,7 @@ func (cdo *ChannelDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (cdo *ChannelDeleteOne) ExecX(ctx context.Context) {
-	cdo.cd.ExecX(ctx)
+	if err := cdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

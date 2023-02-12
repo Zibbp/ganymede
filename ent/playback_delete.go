@@ -40,15 +40,7 @@ func (pd *PlaybackDelete) ExecX(ctx context.Context) int {
 }
 
 func (pd *PlaybackDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: playback.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: playback.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(playback.Table, sqlgraph.NewFieldSpec(playback.FieldID, field.TypeUUID))
 	if ps := pd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type PlaybackDeleteOne struct {
 	pd *PlaybackDelete
 }
 
+// Where appends a list predicates to the PlaybackDelete builder.
+func (pdo *PlaybackDeleteOne) Where(ps ...predicate.Playback) *PlaybackDeleteOne {
+	pdo.pd.mutation.Where(ps...)
+	return pdo
+}
+
 // Exec executes the deletion query.
 func (pdo *PlaybackDeleteOne) Exec(ctx context.Context) error {
 	n, err := pdo.pd.Exec(ctx)
@@ -84,5 +82,7 @@ func (pdo *PlaybackDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (pdo *PlaybackDeleteOne) ExecX(ctx context.Context) {
-	pdo.pd.ExecX(ctx)
+	if err := pdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

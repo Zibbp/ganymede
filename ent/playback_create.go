@@ -212,13 +212,7 @@ func (pc *PlaybackCreate) sqlSave(ctx context.Context) (*Playback, error) {
 func (pc *PlaybackCreate) createSpec() (*Playback, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Playback{config: pc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: playback.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: playback.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(playback.Table, sqlgraph.NewFieldSpec(playback.FieldID, field.TypeUUID))
 	)
 	if id, ok := pc.mutation.ID(); ok {
 		_node.ID = id

@@ -22,6 +22,8 @@ type Tx struct {
 	Playlist *PlaylistClient
 	// Queue is the client for interacting with the Queue builders.
 	Queue *QueueClient
+	// TwitchCategory is the client for interacting with the TwitchCategory builders.
+	TwitchCategory *TwitchCategoryClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// Vod is the client for interacting with the Vod builders.
@@ -162,6 +164,7 @@ func (tx *Tx) init() {
 	tx.Playback = NewPlaybackClient(tx.config)
 	tx.Playlist = NewPlaylistClient(tx.config)
 	tx.Queue = NewQueueClient(tx.config)
+	tx.TwitchCategory = NewTwitchCategoryClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.Vod = NewVodClient(tx.config)
 }

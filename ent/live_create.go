@@ -392,13 +392,7 @@ func (lc *LiveCreate) sqlSave(ctx context.Context) (*Live, error) {
 func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Live{config: lc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: live.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: live.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(live.Table, sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID))
 	)
 	if id, ok := lc.mutation.ID(); ok {
 		_node.ID = id

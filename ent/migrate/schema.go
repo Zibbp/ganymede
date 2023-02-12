@@ -125,6 +125,21 @@ var (
 			},
 		},
 	}
+	// TwitchCategoriesColumns holds the columns for the "twitch_categories" table.
+	TwitchCategoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "box_art_url", Type: field.TypeString, Nullable: true},
+		{Name: "igdb_id", Type: field.TypeString, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// TwitchCategoriesTable holds the schema information for the "twitch_categories" table.
+	TwitchCategoriesTable = &schema.Table{
+		Name:       "twitch_categories",
+		Columns:    TwitchCategoriesColumns,
+		PrimaryKey: []*schema.Column{TwitchCategoriesColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -214,6 +229,7 @@ var (
 		PlaybacksTable,
 		PlaylistsTable,
 		QueuesTable,
+		TwitchCategoriesTable,
 		UsersTable,
 		VodsTable,
 		PlaylistVodsTable,

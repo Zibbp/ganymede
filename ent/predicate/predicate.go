@@ -21,6 +21,9 @@ type Playlist func(*sql.Selector)
 // Queue is the predicate function for queue builders.
 type Queue func(*sql.Selector)
 
+// TwitchCategory is the predicate function for twitchcategory builders.
+type TwitchCategory func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 

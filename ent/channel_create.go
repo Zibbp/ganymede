@@ -222,13 +222,7 @@ func (cc *ChannelCreate) sqlSave(ctx context.Context) (*Channel, error) {
 func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Channel{config: cc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: channel.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: channel.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(channel.Table, sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID))
 	)
 	if id, ok := cc.mutation.ID(); ok {
 		_node.ID = id

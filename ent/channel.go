@@ -138,19 +138,19 @@ func (c *Channel) assignValues(columns []string, values []any) error {
 
 // QueryVods queries the "vods" edge of the Channel entity.
 func (c *Channel) QueryVods() *VodQuery {
-	return (&ChannelClient{config: c.config}).QueryVods(c)
+	return NewChannelClient(c.config).QueryVods(c)
 }
 
 // QueryLive queries the "live" edge of the Channel entity.
 func (c *Channel) QueryLive() *LiveQuery {
-	return (&ChannelClient{config: c.config}).QueryLive(c)
+	return NewChannelClient(c.config).QueryLive(c)
 }
 
 // Update returns a builder for updating this Channel.
 // Note that you need to call Channel.Unwrap() before calling this method if this Channel
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (c *Channel) Update() *ChannelUpdateOne {
-	return (&ChannelClient{config: c.config}).UpdateOne(c)
+	return NewChannelClient(c.config).UpdateOne(c)
 }
 
 // Unwrap unwraps the Channel entity that was returned from a transaction after it was closed,
@@ -192,9 +192,3 @@ func (c *Channel) String() string {
 
 // Channels is a parsable slice of Channel.
 type Channels []*Channel
-
-func (c Channels) config(cfg config) {
-	for _i := range c {
-		c[_i].config = cfg
-	}
-}

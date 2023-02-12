@@ -200,14 +200,14 @@ func (l *Live) assignValues(columns []string, values []any) error {
 
 // QueryChannel queries the "channel" edge of the Live entity.
 func (l *Live) QueryChannel() *ChannelQuery {
-	return (&LiveClient{config: l.config}).QueryChannel(l)
+	return NewLiveClient(l.config).QueryChannel(l)
 }
 
 // Update returns a builder for updating this Live.
 // Note that you need to call Live.Unwrap() before calling this method if this Live
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (l *Live) Update() *LiveUpdateOne {
-	return (&LiveClient{config: l.config}).UpdateOne(l)
+	return NewLiveClient(l.config).UpdateOne(l)
 }
 
 // Unwrap unwraps the Live entity that was returned from a transaction after it was closed,
@@ -270,9 +270,3 @@ func (l *Live) String() string {
 
 // Lives is a parsable slice of Live.
 type Lives []*Live
-
-func (l Lives) config(cfg config) {
-	for _i := range l {
-		l[_i].config = cfg
-	}
-}

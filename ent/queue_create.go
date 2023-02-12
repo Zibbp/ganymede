@@ -532,13 +532,7 @@ func (qc *QueueCreate) sqlSave(ctx context.Context) (*Queue, error) {
 func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Queue{config: qc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: queue.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: queue.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(queue.Table, sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID))
 	)
 	if id, ok := qc.mutation.ID(); ok {
 		_node.ID = id

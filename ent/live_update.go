@@ -266,16 +266,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := lu.check(); err != nil {
 		return n, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   live.Table,
-			Columns: live.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: live.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(live.Table, live.Columns, sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID))
 	if ps := lu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -565,6 +556,12 @@ func (luo *LiveUpdateOne) ClearChannel() *LiveUpdateOne {
 	return luo
 }
 
+// Where appends a list predicates to the LiveUpdate builder.
+func (luo *LiveUpdateOne) Where(ps ...predicate.Live) *LiveUpdateOne {
+	luo.mutation.Where(ps...)
+	return luo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (luo *LiveUpdateOne) Select(field string, fields ...string) *LiveUpdateOne {
@@ -620,16 +617,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 	if err := luo.check(); err != nil {
 		return _node, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   live.Table,
-			Columns: live.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: live.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(live.Table, live.Columns, sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID))
 	id, ok := luo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Live.id" for update`)}
