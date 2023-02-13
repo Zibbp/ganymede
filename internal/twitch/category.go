@@ -49,7 +49,7 @@ func SetTwitchCategories() error {
 // Returns a different number of categories each time it is called for some reason
 func GetCategories() ([]TwitchCategory, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitch.tv/helix/games/top?first=100"), nil)
+	req, err := http.NewRequest("GET", "https://api.twitch.tv/helix/games/top?first=100", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
