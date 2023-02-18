@@ -56,6 +56,26 @@ var (
 			},
 		},
 	}
+	// LiveCategoriesColumns holds the columns for the "live_categories" table.
+	LiveCategoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString},
+		{Name: "live_id", Type: field.TypeUUID},
+	}
+	// LiveCategoriesTable holds the schema information for the "live_categories" table.
+	LiveCategoriesTable = &schema.Table{
+		Name:       "live_categories",
+		Columns:    LiveCategoriesColumns,
+		PrimaryKey: []*schema.Column{LiveCategoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "live_categories_lives_categories",
+				Columns:    []*schema.Column{LiveCategoriesColumns[2]},
+				RefColumns: []*schema.Column{LivesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// PlaybacksColumns holds the columns for the "playbacks" table.
 	PlaybacksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -124,6 +144,21 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 		},
+	}
+	// TwitchCategoriesColumns holds the columns for the "twitch_categories" table.
+	TwitchCategoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "box_art_url", Type: field.TypeString, Nullable: true},
+		{Name: "igdb_id", Type: field.TypeString, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// TwitchCategoriesTable holds the schema information for the "twitch_categories" table.
+	TwitchCategoriesTable = &schema.Table{
+		Name:       "twitch_categories",
+		Columns:    TwitchCategoriesColumns,
+		PrimaryKey: []*schema.Column{TwitchCategoriesColumns[0]},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -211,9 +246,11 @@ var (
 	Tables = []*schema.Table{
 		ChannelsTable,
 		LivesTable,
+		LiveCategoriesTable,
 		PlaybacksTable,
 		PlaylistsTable,
 		QueuesTable,
+		TwitchCategoriesTable,
 		UsersTable,
 		VodsTable,
 		PlaylistVodsTable,
@@ -222,6 +259,7 @@ var (
 
 func init() {
 	LivesTable.ForeignKeys[0].RefTable = ChannelsTable
+	LiveCategoriesTable.ForeignKeys[0].RefTable = LivesTable
 	QueuesTable.ForeignKeys[0].RefTable = VodsTable
 	VodsTable.ForeignKeys[0].RefTable = ChannelsTable
 	PlaylistVodsTable.ForeignKeys[0].RefTable = PlaylistsTable

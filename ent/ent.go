@@ -13,9 +13,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
 )
@@ -26,6 +28,7 @@ type (
 	Hook          = ent.Hook
 	Value         = ent.Value
 	Query         = ent.Query
+	QueryContext  = ent.QueryContext
 	Querier       = ent.Querier
 	QuerierFunc   = ent.QuerierFunc
 	Interceptor   = ent.Interceptor
@@ -44,13 +47,15 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
-		channel.Table:  channel.ValidColumn,
-		live.Table:     live.ValidColumn,
-		playback.Table: playback.ValidColumn,
-		playlist.Table: playlist.ValidColumn,
-		queue.Table:    queue.ValidColumn,
-		user.Table:     user.ValidColumn,
-		vod.Table:      vod.ValidColumn,
+		channel.Table:        channel.ValidColumn,
+		live.Table:           live.ValidColumn,
+		livecategory.Table:   livecategory.ValidColumn,
+		playback.Table:       playback.ValidColumn,
+		playlist.Table:       playlist.ValidColumn,
+		queue.Table:          queue.ValidColumn,
+		twitchcategory.Table: twitchcategory.ValidColumn,
+		user.Table:           user.ValidColumn,
+		vod.Table:            vod.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {
@@ -515,10 +520,11 @@ func withHooks[V Value, M any, PM interface {
 	return nv, nil
 }
 
-// newQueryContext returns a new context with the given QueryContext attached in case it does not exist.
-func newQueryContext(ctx context.Context, typ, op string) context.Context {
+// setContextOp returns a new context with the given QueryContext attached (including its op) in case it does not exist.
+func setContextOp(ctx context.Context, qc *QueryContext, op string) context.Context {
 	if ent.QueryFromContext(ctx) == nil {
-		ctx = ent.NewQueryContext(ctx, &ent.QueryContext{Type: typ, Op: op})
+		qc.Op = op
+		ctx = ent.NewQueryContext(ctx, qc)
 	}
 	return ctx
 }

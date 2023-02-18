@@ -13,9 +13,11 @@ import (
 
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
 
@@ -33,12 +35,16 @@ type Client struct {
 	Channel *ChannelClient
 	// Live is the client for interacting with the Live builders.
 	Live *LiveClient
+	// LiveCategory is the client for interacting with the LiveCategory builders.
+	LiveCategory *LiveCategoryClient
 	// Playback is the client for interacting with the Playback builders.
 	Playback *PlaybackClient
 	// Playlist is the client for interacting with the Playlist builders.
 	Playlist *PlaylistClient
 	// Queue is the client for interacting with the Queue builders.
 	Queue *QueueClient
+	// TwitchCategory is the client for interacting with the TwitchCategory builders.
+	TwitchCategory *TwitchCategoryClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// Vod is the client for interacting with the Vod builders.
@@ -58,9 +64,11 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Channel = NewChannelClient(c.config)
 	c.Live = NewLiveClient(c.config)
+	c.LiveCategory = NewLiveCategoryClient(c.config)
 	c.Playback = NewPlaybackClient(c.config)
 	c.Playlist = NewPlaylistClient(c.config)
 	c.Queue = NewQueueClient(c.config)
+	c.TwitchCategory = NewTwitchCategoryClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Vod = NewVodClient(c.config)
 }
@@ -94,15 +102,17 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Channel:  NewChannelClient(cfg),
-		Live:     NewLiveClient(cfg),
-		Playback: NewPlaybackClient(cfg),
-		Playlist: NewPlaylistClient(cfg),
-		Queue:    NewQueueClient(cfg),
-		User:     NewUserClient(cfg),
-		Vod:      NewVodClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		Channel:        NewChannelClient(cfg),
+		Live:           NewLiveClient(cfg),
+		LiveCategory:   NewLiveCategoryClient(cfg),
+		Playback:       NewPlaybackClient(cfg),
+		Playlist:       NewPlaylistClient(cfg),
+		Queue:          NewQueueClient(cfg),
+		TwitchCategory: NewTwitchCategoryClient(cfg),
+		User:           NewUserClient(cfg),
+		Vod:            NewVodClient(cfg),
 	}, nil
 }
 
@@ -120,15 +130,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Channel:  NewChannelClient(cfg),
-		Live:     NewLiveClient(cfg),
-		Playback: NewPlaybackClient(cfg),
-		Playlist: NewPlaylistClient(cfg),
-		Queue:    NewQueueClient(cfg),
-		User:     NewUserClient(cfg),
-		Vod:      NewVodClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		Channel:        NewChannelClient(cfg),
+		Live:           NewLiveClient(cfg),
+		LiveCategory:   NewLiveCategoryClient(cfg),
+		Playback:       NewPlaybackClient(cfg),
+		Playlist:       NewPlaylistClient(cfg),
+		Queue:          NewQueueClient(cfg),
+		TwitchCategory: NewTwitchCategoryClient(cfg),
+		User:           NewUserClient(cfg),
+		Vod:            NewVodClient(cfg),
 	}, nil
 }
 
@@ -159,9 +171,11 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Channel.Use(hooks...)
 	c.Live.Use(hooks...)
+	c.LiveCategory.Use(hooks...)
 	c.Playback.Use(hooks...)
 	c.Playlist.Use(hooks...)
 	c.Queue.Use(hooks...)
+	c.TwitchCategory.Use(hooks...)
 	c.User.Use(hooks...)
 	c.Vod.Use(hooks...)
 }
@@ -171,9 +185,11 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Channel.Intercept(interceptors...)
 	c.Live.Intercept(interceptors...)
+	c.LiveCategory.Intercept(interceptors...)
 	c.Playback.Intercept(interceptors...)
 	c.Playlist.Intercept(interceptors...)
 	c.Queue.Intercept(interceptors...)
+	c.TwitchCategory.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 	c.Vod.Intercept(interceptors...)
 }
@@ -185,12 +201,16 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Channel.mutate(ctx, m)
 	case *LiveMutation:
 		return c.Live.mutate(ctx, m)
+	case *LiveCategoryMutation:
+		return c.LiveCategory.mutate(ctx, m)
 	case *PlaybackMutation:
 		return c.Playback.mutate(ctx, m)
 	case *PlaylistMutation:
 		return c.Playlist.mutate(ctx, m)
 	case *QueueMutation:
 		return c.Queue.mutate(ctx, m)
+	case *TwitchCategoryMutation:
+		return c.TwitchCategory.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *VodMutation:
@@ -216,7 +236,7 @@ func (c *ChannelClient) Use(hooks ...Hook) {
 	c.hooks.Channel = append(c.hooks.Channel, hooks...)
 }
 
-// Use adds a list of query interceptors to the interceptors stack.
+// Intercept adds a list of query interceptors to the interceptors stack.
 // A call to `Intercept(f, g, h)` equals to `channel.Intercept(f(g(h())))`.
 func (c *ChannelClient) Intercept(interceptors ...Interceptor) {
 	c.inters.Channel = append(c.inters.Channel, interceptors...)
@@ -274,6 +294,7 @@ func (c *ChannelClient) DeleteOneID(id uuid.UUID) *ChannelDeleteOne {
 func (c *ChannelClient) Query() *ChannelQuery {
 	return &ChannelQuery{
 		config: c.config,
+		ctx:    &QueryContext{Type: TypeChannel},
 		inters: c.Interceptors(),
 	}
 }
@@ -365,7 +386,7 @@ func (c *LiveClient) Use(hooks ...Hook) {
 	c.hooks.Live = append(c.hooks.Live, hooks...)
 }
 
-// Use adds a list of query interceptors to the interceptors stack.
+// Intercept adds a list of query interceptors to the interceptors stack.
 // A call to `Intercept(f, g, h)` equals to `live.Intercept(f(g(h())))`.
 func (c *LiveClient) Intercept(interceptors ...Interceptor) {
 	c.inters.Live = append(c.inters.Live, interceptors...)
@@ -423,6 +444,7 @@ func (c *LiveClient) DeleteOneID(id uuid.UUID) *LiveDeleteOne {
 func (c *LiveClient) Query() *LiveQuery {
 	return &LiveQuery{
 		config: c.config,
+		ctx:    &QueryContext{Type: TypeLive},
 		inters: c.Interceptors(),
 	}
 }
@@ -457,6 +479,22 @@ func (c *LiveClient) QueryChannel(l *Live) *ChannelQuery {
 	return query
 }
 
+// QueryCategories queries the categories edge of a Live.
+func (c *LiveClient) QueryCategories(l *Live) *LiveCategoryQuery {
+	query := (&LiveCategoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := l.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(live.Table, live.FieldID, id),
+			sqlgraph.To(livecategory.Table, livecategory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, live.CategoriesTable, live.CategoriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(l.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *LiveClient) Hooks() []Hook {
 	return c.hooks.Live
@@ -482,6 +520,140 @@ func (c *LiveClient) mutate(ctx context.Context, m *LiveMutation) (Value, error)
 	}
 }
 
+// LiveCategoryClient is a client for the LiveCategory schema.
+type LiveCategoryClient struct {
+	config
+}
+
+// NewLiveCategoryClient returns a client for the LiveCategory from the given config.
+func NewLiveCategoryClient(c config) *LiveCategoryClient {
+	return &LiveCategoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `livecategory.Hooks(f(g(h())))`.
+func (c *LiveCategoryClient) Use(hooks ...Hook) {
+	c.hooks.LiveCategory = append(c.hooks.LiveCategory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `livecategory.Intercept(f(g(h())))`.
+func (c *LiveCategoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LiveCategory = append(c.inters.LiveCategory, interceptors...)
+}
+
+// Create returns a builder for creating a LiveCategory entity.
+func (c *LiveCategoryClient) Create() *LiveCategoryCreate {
+	mutation := newLiveCategoryMutation(c.config, OpCreate)
+	return &LiveCategoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LiveCategory entities.
+func (c *LiveCategoryClient) CreateBulk(builders ...*LiveCategoryCreate) *LiveCategoryCreateBulk {
+	return &LiveCategoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LiveCategory.
+func (c *LiveCategoryClient) Update() *LiveCategoryUpdate {
+	mutation := newLiveCategoryMutation(c.config, OpUpdate)
+	return &LiveCategoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LiveCategoryClient) UpdateOne(lc *LiveCategory) *LiveCategoryUpdateOne {
+	mutation := newLiveCategoryMutation(c.config, OpUpdateOne, withLiveCategory(lc))
+	return &LiveCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LiveCategoryClient) UpdateOneID(id uuid.UUID) *LiveCategoryUpdateOne {
+	mutation := newLiveCategoryMutation(c.config, OpUpdateOne, withLiveCategoryID(id))
+	return &LiveCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LiveCategory.
+func (c *LiveCategoryClient) Delete() *LiveCategoryDelete {
+	mutation := newLiveCategoryMutation(c.config, OpDelete)
+	return &LiveCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LiveCategoryClient) DeleteOne(lc *LiveCategory) *LiveCategoryDeleteOne {
+	return c.DeleteOneID(lc.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LiveCategoryClient) DeleteOneID(id uuid.UUID) *LiveCategoryDeleteOne {
+	builder := c.Delete().Where(livecategory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LiveCategoryDeleteOne{builder}
+}
+
+// Query returns a query builder for LiveCategory.
+func (c *LiveCategoryClient) Query() *LiveCategoryQuery {
+	return &LiveCategoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLiveCategory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LiveCategory entity by its id.
+func (c *LiveCategoryClient) Get(ctx context.Context, id uuid.UUID) (*LiveCategory, error) {
+	return c.Query().Where(livecategory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LiveCategoryClient) GetX(ctx context.Context, id uuid.UUID) *LiveCategory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryLive queries the live edge of a LiveCategory.
+func (c *LiveCategoryClient) QueryLive(lc *LiveCategory) *LiveQuery {
+	query := (&LiveClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := lc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(livecategory.Table, livecategory.FieldID, id),
+			sqlgraph.To(live.Table, live.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, livecategory.LiveTable, livecategory.LiveColumn),
+		)
+		fromV = sqlgraph.Neighbors(lc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *LiveCategoryClient) Hooks() []Hook {
+	return c.hooks.LiveCategory
+}
+
+// Interceptors returns the client interceptors.
+func (c *LiveCategoryClient) Interceptors() []Interceptor {
+	return c.inters.LiveCategory
+}
+
+func (c *LiveCategoryClient) mutate(ctx context.Context, m *LiveCategoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LiveCategoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LiveCategoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LiveCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LiveCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LiveCategory mutation op: %q", m.Op())
+	}
+}
+
 // PlaybackClient is a client for the Playback schema.
 type PlaybackClient struct {
 	config
@@ -498,7 +670,7 @@ func (c *PlaybackClient) Use(hooks ...Hook) {
 	c.hooks.Playback = append(c.hooks.Playback, hooks...)
 }
 
-// Use adds a list of query interceptors to the interceptors stack.
+// Intercept adds a list of query interceptors to the interceptors stack.
 // A call to `Intercept(f, g, h)` equals to `playback.Intercept(f(g(h())))`.
 func (c *PlaybackClient) Intercept(interceptors ...Interceptor) {
 	c.inters.Playback = append(c.inters.Playback, interceptors...)
@@ -556,6 +728,7 @@ func (c *PlaybackClient) DeleteOneID(id uuid.UUID) *PlaybackDeleteOne {
 func (c *PlaybackClient) Query() *PlaybackQuery {
 	return &PlaybackQuery{
 		config: c.config,
+		ctx:    &QueryContext{Type: TypePlayback},
 		inters: c.Interceptors(),
 	}
 }
@@ -615,7 +788,7 @@ func (c *PlaylistClient) Use(hooks ...Hook) {
 	c.hooks.Playlist = append(c.hooks.Playlist, hooks...)
 }
 
-// Use adds a list of query interceptors to the interceptors stack.
+// Intercept adds a list of query interceptors to the interceptors stack.
 // A call to `Intercept(f, g, h)` equals to `playlist.Intercept(f(g(h())))`.
 func (c *PlaylistClient) Intercept(interceptors ...Interceptor) {
 	c.inters.Playlist = append(c.inters.Playlist, interceptors...)
@@ -673,6 +846,7 @@ func (c *PlaylistClient) DeleteOneID(id uuid.UUID) *PlaylistDeleteOne {
 func (c *PlaylistClient) Query() *PlaylistQuery {
 	return &PlaylistQuery{
 		config: c.config,
+		ctx:    &QueryContext{Type: TypePlaylist},
 		inters: c.Interceptors(),
 	}
 }
@@ -748,7 +922,7 @@ func (c *QueueClient) Use(hooks ...Hook) {
 	c.hooks.Queue = append(c.hooks.Queue, hooks...)
 }
 
-// Use adds a list of query interceptors to the interceptors stack.
+// Intercept adds a list of query interceptors to the interceptors stack.
 // A call to `Intercept(f, g, h)` equals to `queue.Intercept(f(g(h())))`.
 func (c *QueueClient) Intercept(interceptors ...Interceptor) {
 	c.inters.Queue = append(c.inters.Queue, interceptors...)
@@ -806,6 +980,7 @@ func (c *QueueClient) DeleteOneID(id uuid.UUID) *QueueDeleteOne {
 func (c *QueueClient) Query() *QueueQuery {
 	return &QueueQuery{
 		config: c.config,
+		ctx:    &QueryContext{Type: TypeQueue},
 		inters: c.Interceptors(),
 	}
 }
@@ -865,6 +1040,124 @@ func (c *QueueClient) mutate(ctx context.Context, m *QueueMutation) (Value, erro
 	}
 }
 
+// TwitchCategoryClient is a client for the TwitchCategory schema.
+type TwitchCategoryClient struct {
+	config
+}
+
+// NewTwitchCategoryClient returns a client for the TwitchCategory from the given config.
+func NewTwitchCategoryClient(c config) *TwitchCategoryClient {
+	return &TwitchCategoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `twitchcategory.Hooks(f(g(h())))`.
+func (c *TwitchCategoryClient) Use(hooks ...Hook) {
+	c.hooks.TwitchCategory = append(c.hooks.TwitchCategory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `twitchcategory.Intercept(f(g(h())))`.
+func (c *TwitchCategoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TwitchCategory = append(c.inters.TwitchCategory, interceptors...)
+}
+
+// Create returns a builder for creating a TwitchCategory entity.
+func (c *TwitchCategoryClient) Create() *TwitchCategoryCreate {
+	mutation := newTwitchCategoryMutation(c.config, OpCreate)
+	return &TwitchCategoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TwitchCategory entities.
+func (c *TwitchCategoryClient) CreateBulk(builders ...*TwitchCategoryCreate) *TwitchCategoryCreateBulk {
+	return &TwitchCategoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TwitchCategory.
+func (c *TwitchCategoryClient) Update() *TwitchCategoryUpdate {
+	mutation := newTwitchCategoryMutation(c.config, OpUpdate)
+	return &TwitchCategoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TwitchCategoryClient) UpdateOne(tc *TwitchCategory) *TwitchCategoryUpdateOne {
+	mutation := newTwitchCategoryMutation(c.config, OpUpdateOne, withTwitchCategory(tc))
+	return &TwitchCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TwitchCategoryClient) UpdateOneID(id string) *TwitchCategoryUpdateOne {
+	mutation := newTwitchCategoryMutation(c.config, OpUpdateOne, withTwitchCategoryID(id))
+	return &TwitchCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TwitchCategory.
+func (c *TwitchCategoryClient) Delete() *TwitchCategoryDelete {
+	mutation := newTwitchCategoryMutation(c.config, OpDelete)
+	return &TwitchCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TwitchCategoryClient) DeleteOne(tc *TwitchCategory) *TwitchCategoryDeleteOne {
+	return c.DeleteOneID(tc.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TwitchCategoryClient) DeleteOneID(id string) *TwitchCategoryDeleteOne {
+	builder := c.Delete().Where(twitchcategory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TwitchCategoryDeleteOne{builder}
+}
+
+// Query returns a query builder for TwitchCategory.
+func (c *TwitchCategoryClient) Query() *TwitchCategoryQuery {
+	return &TwitchCategoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTwitchCategory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TwitchCategory entity by its id.
+func (c *TwitchCategoryClient) Get(ctx context.Context, id string) (*TwitchCategory, error) {
+	return c.Query().Where(twitchcategory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TwitchCategoryClient) GetX(ctx context.Context, id string) *TwitchCategory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TwitchCategoryClient) Hooks() []Hook {
+	return c.hooks.TwitchCategory
+}
+
+// Interceptors returns the client interceptors.
+func (c *TwitchCategoryClient) Interceptors() []Interceptor {
+	return c.inters.TwitchCategory
+}
+
+func (c *TwitchCategoryClient) mutate(ctx context.Context, m *TwitchCategoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TwitchCategoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TwitchCategoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TwitchCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TwitchCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TwitchCategory mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -881,7 +1174,7 @@ func (c *UserClient) Use(hooks ...Hook) {
 	c.hooks.User = append(c.hooks.User, hooks...)
 }
 
-// Use adds a list of query interceptors to the interceptors stack.
+// Intercept adds a list of query interceptors to the interceptors stack.
 // A call to `Intercept(f, g, h)` equals to `user.Intercept(f(g(h())))`.
 func (c *UserClient) Intercept(interceptors ...Interceptor) {
 	c.inters.User = append(c.inters.User, interceptors...)
@@ -939,6 +1232,7 @@ func (c *UserClient) DeleteOneID(id uuid.UUID) *UserDeleteOne {
 func (c *UserClient) Query() *UserQuery {
 	return &UserQuery{
 		config: c.config,
+		ctx:    &QueryContext{Type: TypeUser},
 		inters: c.Interceptors(),
 	}
 }
@@ -998,7 +1292,7 @@ func (c *VodClient) Use(hooks ...Hook) {
 	c.hooks.Vod = append(c.hooks.Vod, hooks...)
 }
 
-// Use adds a list of query interceptors to the interceptors stack.
+// Intercept adds a list of query interceptors to the interceptors stack.
 // A call to `Intercept(f, g, h)` equals to `vod.Intercept(f(g(h())))`.
 func (c *VodClient) Intercept(interceptors ...Interceptor) {
 	c.inters.Vod = append(c.inters.Vod, interceptors...)
@@ -1056,6 +1350,7 @@ func (c *VodClient) DeleteOneID(id uuid.UUID) *VodDeleteOne {
 func (c *VodClient) Query() *VodQuery {
 	return &VodQuery{
 		config: c.config,
+		ctx:    &QueryContext{Type: TypeVod},
 		inters: c.Interceptors(),
 	}
 }

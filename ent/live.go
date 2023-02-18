@@ -54,9 +54,11 @@ type Live struct {
 type LiveEdges struct {
 	// Channel holds the value of the channel edge.
 	Channel *Channel `json:"channel,omitempty"`
+	// Categories holds the value of the categories edge.
+	Categories []*LiveCategory `json:"categories,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -70,6 +72,15 @@ func (e LiveEdges) ChannelOrErr() (*Channel, error) {
 		return e.Channel, nil
 	}
 	return nil, &NotLoadedError{edge: "channel"}
+}
+
+// CategoriesOrErr returns the Categories value or an error if the edge
+// was not loaded in eager-loading.
+func (e LiveEdges) CategoriesOrErr() ([]*LiveCategory, error) {
+	if e.loadedTypes[1] {
+		return e.Categories, nil
+	}
+	return nil, &NotLoadedError{edge: "categories"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -200,14 +211,19 @@ func (l *Live) assignValues(columns []string, values []any) error {
 
 // QueryChannel queries the "channel" edge of the Live entity.
 func (l *Live) QueryChannel() *ChannelQuery {
-	return (&LiveClient{config: l.config}).QueryChannel(l)
+	return NewLiveClient(l.config).QueryChannel(l)
+}
+
+// QueryCategories queries the "categories" edge of the Live entity.
+func (l *Live) QueryCategories() *LiveCategoryQuery {
+	return NewLiveClient(l.config).QueryCategories(l)
 }
 
 // Update returns a builder for updating this Live.
 // Note that you need to call Live.Unwrap() before calling this method if this Live
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (l *Live) Update() *LiveUpdateOne {
-	return (&LiveClient{config: l.config}).UpdateOne(l)
+	return NewLiveClient(l.config).UpdateOne(l)
 }
 
 // Unwrap unwraps the Live entity that was returned from a transaction after it was closed,
@@ -270,9 +286,3 @@ func (l *Live) String() string {
 
 // Lives is a parsable slice of Live.
 type Lives []*Live
-
-func (l Lives) config(cfg config) {
-	for _i := range l {
-		l[_i].config = cfg
-	}
-}

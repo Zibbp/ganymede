@@ -189,16 +189,7 @@ func (cu *ChannelUpdate) defaults() {
 }
 
 func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   channel.Table,
-			Columns: channel.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: channel.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(channel.Table, channel.Columns, sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID))
 	if ps := cu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -473,6 +464,12 @@ func (cuo *ChannelUpdateOne) RemoveLive(l ...*Live) *ChannelUpdateOne {
 	return cuo.RemoveLiveIDs(ids...)
 }
 
+// Where appends a list predicates to the ChannelUpdate builder.
+func (cuo *ChannelUpdateOne) Where(ps ...predicate.Channel) *ChannelUpdateOne {
+	cuo.mutation.Where(ps...)
+	return cuo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (cuo *ChannelUpdateOne) Select(field string, fields ...string) *ChannelUpdateOne {
@@ -517,16 +514,7 @@ func (cuo *ChannelUpdateOne) defaults() {
 }
 
 func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   channel.Table,
-			Columns: channel.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: channel.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(channel.Table, channel.Columns, sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID))
 	id, ok := cuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Channel.id" for update`)}

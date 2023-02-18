@@ -8,10 +8,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/schema"
+	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
 )
@@ -96,6 +98,12 @@ func init() {
 	liveDescID := liveFields[0].Descriptor()
 	// live.DefaultID holds the default value on creation for the id field.
 	live.DefaultID = liveDescID.Default.(func() uuid.UUID)
+	livecategoryFields := schema.LiveCategory{}.Fields()
+	_ = livecategoryFields
+	// livecategoryDescID is the schema descriptor for id field.
+	livecategoryDescID := livecategoryFields[0].Descriptor()
+	// livecategory.DefaultID holds the default value on creation for the id field.
+	livecategory.DefaultID = livecategoryDescID.Default.(func() uuid.UUID)
 	playbackFields := schema.Playback{}.Fields()
 	_ = playbackFields
 	// playbackDescTime is the schema descriptor for time field.
@@ -172,6 +180,18 @@ func init() {
 	queueDescID := queueFields[0].Descriptor()
 	// queue.DefaultID holds the default value on creation for the id field.
 	queue.DefaultID = queueDescID.Default.(func() uuid.UUID)
+	twitchcategoryFields := schema.TwitchCategory{}.Fields()
+	_ = twitchcategoryFields
+	// twitchcategoryDescUpdatedAt is the schema descriptor for updated_at field.
+	twitchcategoryDescUpdatedAt := twitchcategoryFields[4].Descriptor()
+	// twitchcategory.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	twitchcategory.DefaultUpdatedAt = twitchcategoryDescUpdatedAt.Default.(func() time.Time)
+	// twitchcategory.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	twitchcategory.UpdateDefaultUpdatedAt = twitchcategoryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// twitchcategoryDescCreatedAt is the schema descriptor for created_at field.
+	twitchcategoryDescCreatedAt := twitchcategoryFields[5].Descriptor()
+	// twitchcategory.DefaultCreatedAt holds the default value on creation for the created_at field.
+	twitchcategory.DefaultCreatedAt = twitchcategoryDescCreatedAt.Default.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescOauth is the schema descriptor for oauth field.

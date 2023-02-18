@@ -21,28 +21,30 @@ type LiveService interface {
 }
 
 type AddWatchedChannelRequest struct {
-	WatchLive          bool   `json:"watch_live" `
-	WatchVod           bool   `json:"watch_vod" `
-	DownloadArchives   bool   `json:"download_archives" `
-	DownloadHighlights bool   `json:"download_highlights" `
-	DownloadUploads    bool   `json:"download_uploads"`
-	ChannelID          string `json:"channel_id" validate:"required"`
-	Resolution         string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
-	ArchiveChat        bool   `json:"archive_chat"`
-	RenderChat         bool   `json:"render_chat"`
-	DownloadSubOnly    bool   `json:"download_sub_only"`
+	WatchLive          bool     `json:"watch_live" `
+	WatchVod           bool     `json:"watch_vod" `
+	DownloadArchives   bool     `json:"download_archives" `
+	DownloadHighlights bool     `json:"download_highlights" `
+	DownloadUploads    bool     `json:"download_uploads"`
+	ChannelID          string   `json:"channel_id" validate:"required"`
+	Resolution         string   `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
+	ArchiveChat        bool     `json:"archive_chat"`
+	RenderChat         bool     `json:"render_chat"`
+	DownloadSubOnly    bool     `json:"download_sub_only"`
+	Categories         []string `json:"categories"`
 }
 
 type UpdateWatchedChannelRequest struct {
-	WatchLive          bool   `json:"watch_live"`
-	WatchVod           bool   `json:"watch_vod" `
-	DownloadArchives   bool   `json:"download_archives" `
-	DownloadHighlights bool   `json:"download_highlights" `
-	DownloadUploads    bool   `json:"download_uploads"`
-	Resolution         string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
-	ArchiveChat        bool   `json:"archive_chat"`
-	RenderChat         bool   `json:"render_chat"`
-	DownloadSubOnly    bool   `json:"download_sub_only"`
+	WatchLive          bool     `json:"watch_live"`
+	WatchVod           bool     `json:"watch_vod" `
+	DownloadArchives   bool     `json:"download_archives" `
+	DownloadHighlights bool     `json:"download_highlights" `
+	DownloadUploads    bool     `json:"download_uploads"`
+	Resolution         string   `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
+	ArchiveChat        bool     `json:"archive_chat"`
+	RenderChat         bool     `json:"render_chat"`
+	DownloadSubOnly    bool     `json:"download_sub_only"`
+	Categories         []string `json:"categories"`
 }
 
 type ConvertChatRequest struct {
@@ -111,6 +113,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		Resolution:         ccr.Resolution,
 		RenderChat:         ccr.RenderChat,
 		DownloadSubOnly:    ccr.DownloadSubOnly,
+		Categories:         ccr.Categories,
 	}
 	l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 	if err != nil {
@@ -158,6 +161,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		Resolution:         ccr.Resolution,
 		RenderChat:         ccr.RenderChat,
 		DownloadSubOnly:    ccr.DownloadSubOnly,
+		Categories:         ccr.Categories,
 	}
 	l, err := h.Service.LiveService.UpdateLiveWatchedChannel(c, liveDto)
 	if err != nil {

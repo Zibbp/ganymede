@@ -160,16 +160,7 @@ func (pu *PlaylistUpdate) defaults() {
 }
 
 func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   playlist.Table,
-			Columns: playlist.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: playlist.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(playlist.Table, playlist.Columns, sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID))
 	if ps := pu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -362,6 +353,12 @@ func (puo *PlaylistUpdateOne) RemoveVods(v ...*Vod) *PlaylistUpdateOne {
 	return puo.RemoveVodIDs(ids...)
 }
 
+// Where appends a list predicates to the PlaylistUpdate builder.
+func (puo *PlaylistUpdateOne) Where(ps ...predicate.Playlist) *PlaylistUpdateOne {
+	puo.mutation.Where(ps...)
+	return puo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (puo *PlaylistUpdateOne) Select(field string, fields ...string) *PlaylistUpdateOne {
@@ -406,16 +403,7 @@ func (puo *PlaylistUpdateOne) defaults() {
 }
 
 func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   playlist.Table,
-			Columns: playlist.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: playlist.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(playlist.Table, playlist.Columns, sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID))
 	id, ok := puo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Playlist.id" for update`)}

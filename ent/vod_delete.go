@@ -40,15 +40,7 @@ func (vd *VodDelete) ExecX(ctx context.Context) int {
 }
 
 func (vd *VodDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: vod.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: vod.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(vod.Table, sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID))
 	if ps := vd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type VodDeleteOne struct {
 	vd *VodDelete
 }
 
+// Where appends a list predicates to the VodDelete builder.
+func (vdo *VodDeleteOne) Where(ps ...predicate.Vod) *VodDeleteOne {
+	vdo.vd.mutation.Where(ps...)
+	return vdo
+}
+
 // Exec executes the deletion query.
 func (vdo *VodDeleteOne) Exec(ctx context.Context) error {
 	n, err := vdo.vd.Exec(ctx)
@@ -84,5 +82,7 @@ func (vdo *VodDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (vdo *VodDeleteOne) ExecX(ctx context.Context) {
-	vdo.vd.ExecX(ctx)
+	if err := vdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

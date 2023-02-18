@@ -286,24 +286,24 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 
 // QueryChannel queries the "channel" edge of the Vod entity.
 func (v *Vod) QueryChannel() *ChannelQuery {
-	return (&VodClient{config: v.config}).QueryChannel(v)
+	return NewVodClient(v.config).QueryChannel(v)
 }
 
 // QueryQueue queries the "queue" edge of the Vod entity.
 func (v *Vod) QueryQueue() *QueueQuery {
-	return (&VodClient{config: v.config}).QueryQueue(v)
+	return NewVodClient(v.config).QueryQueue(v)
 }
 
 // QueryPlaylists queries the "playlists" edge of the Vod entity.
 func (v *Vod) QueryPlaylists() *PlaylistQuery {
-	return (&VodClient{config: v.config}).QueryPlaylists(v)
+	return NewVodClient(v.config).QueryPlaylists(v)
 }
 
 // Update returns a builder for updating this Vod.
 // Note that you need to call Vod.Unwrap() before calling this method if this Vod
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (v *Vod) Update() *VodUpdateOne {
-	return (&VodClient{config: v.config}).UpdateOne(v)
+	return NewVodClient(v.config).UpdateOne(v)
 }
 
 // Unwrap unwraps the Vod entity that was returned from a transaction after it was closed,
@@ -387,9 +387,3 @@ func (v *Vod) String() string {
 
 // Vods is a parsable slice of Vod.
 type Vods []*Vod
-
-func (v Vods) config(cfg config) {
-	for _i := range v {
-		v[_i].config = cfg
-	}
-}

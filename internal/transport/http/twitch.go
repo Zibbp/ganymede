@@ -4,11 +4,13 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/twitch"
 )
 
 type TwitchService interface {
 	GetVodByID(id string) (twitch.Vod, error)
+	GetCategories() ([]*ent.TwitchCategory, error)
 }
 
 // GetTwitchUser godoc
@@ -85,4 +87,22 @@ func (h *Handler) GQLGetTwitchVideo(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, video)
+}
+
+// GetTwitchCategories godoc
+//
+//	@Summary		Get a list of twitch categories
+//	@Description	Get a list of twitch categories
+//	@Tags			twitch
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	twitch.Categories
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/twitch/categories [get]
+func (h *Handler) GetTwitchCategories(c echo.Context) error {
+	categories, err := h.Service.TwitchService.GetCategories()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, categories)
 }

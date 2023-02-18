@@ -144,16 +144,7 @@ func (pu *PlaybackUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := pu.check(); err != nil {
 		return n, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   playback.Table,
-			Columns: playback.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: playback.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(playback.Table, playback.Columns, sqlgraph.NewFieldSpec(playback.FieldID, field.TypeUUID))
 	if ps := pu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -266,6 +257,12 @@ func (puo *PlaybackUpdateOne) Mutation() *PlaybackMutation {
 	return puo.mutation
 }
 
+// Where appends a list predicates to the PlaybackUpdate builder.
+func (puo *PlaybackUpdateOne) Where(ps ...predicate.Playback) *PlaybackUpdateOne {
+	puo.mutation.Where(ps...)
+	return puo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (puo *PlaybackUpdateOne) Select(field string, fields ...string) *PlaybackUpdateOne {
@@ -323,16 +320,7 @@ func (puo *PlaybackUpdateOne) sqlSave(ctx context.Context) (_node *Playback, err
 	if err := puo.check(); err != nil {
 		return _node, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   playback.Table,
-			Columns: playback.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: playback.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(playback.Table, playback.Columns, sqlgraph.NewFieldSpec(playback.FieldID, field.TypeUUID))
 	id, ok := puo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Playback.id" for update`)}

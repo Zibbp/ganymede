@@ -119,14 +119,14 @@ func (pl *Playlist) assignValues(columns []string, values []any) error {
 
 // QueryVods queries the "vods" edge of the Playlist entity.
 func (pl *Playlist) QueryVods() *VodQuery {
-	return (&PlaylistClient{config: pl.config}).QueryVods(pl)
+	return NewPlaylistClient(pl.config).QueryVods(pl)
 }
 
 // Update returns a builder for updating this Playlist.
 // Note that you need to call Playlist.Unwrap() before calling this method if this Playlist
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (pl *Playlist) Update() *PlaylistUpdateOne {
-	return (&PlaylistClient{config: pl.config}).UpdateOne(pl)
+	return NewPlaylistClient(pl.config).UpdateOne(pl)
 }
 
 // Unwrap unwraps the Playlist entity that was returned from a transaction after it was closed,
@@ -165,9 +165,3 @@ func (pl *Playlist) String() string {
 
 // Playlists is a parsable slice of Playlist.
 type Playlists []*Playlist
-
-func (pl Playlists) config(cfg config) {
-	for _i := range pl {
-		pl[_i].config = cfg
-	}
-}

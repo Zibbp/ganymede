@@ -89,6 +89,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 		go h.Service.SchedulerService.StartJwksScheduler()
 	}
 	go h.Service.SchedulerService.StartWatchVideoScheduler()
+	go h.Service.SchedulerService.StartTwitchCategoriesScheduler()
 
 	// Populate channel external ids
 	go func() {
@@ -193,6 +194,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	twitchGroup.GET("/channel", h.GetTwitchUser)
 	twitchGroup.GET("/vod", h.GetTwitchVod)
 	twitchGroup.GET("/gql/video", h.GQLGetTwitchVideo)
+	twitchGroup.GET("/categories", h.GetTwitchCategories)
 
 	// Archive
 	archiveGroup := e.Group("/archive")

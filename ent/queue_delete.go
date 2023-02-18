@@ -40,15 +40,7 @@ func (qd *QueueDelete) ExecX(ctx context.Context) int {
 }
 
 func (qd *QueueDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: queue.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: queue.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(queue.Table, sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID))
 	if ps := qd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type QueueDeleteOne struct {
 	qd *QueueDelete
 }
 
+// Where appends a list predicates to the QueueDelete builder.
+func (qdo *QueueDeleteOne) Where(ps ...predicate.Queue) *QueueDeleteOne {
+	qdo.qd.mutation.Where(ps...)
+	return qdo
+}
+
 // Exec executes the deletion query.
 func (qdo *QueueDeleteOne) Exec(ctx context.Context) error {
 	n, err := qdo.qd.Exec(ctx)
@@ -84,5 +82,7 @@ func (qdo *QueueDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (qdo *QueueDeleteOne) ExecX(ctx context.Context) {
-	qdo.qd.ExecX(ctx)
+	if err := qdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

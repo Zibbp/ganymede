@@ -12,6 +12,8 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	entLive "github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/notification"
@@ -38,6 +40,7 @@ type Live struct {
 	LastLive           time.Time `json:"last_live"`
 	RenderChat         bool      `json:"render_chat"`
 	DownloadSubOnly    bool      `json:"download_sub_only"`
+	Categories         []string  `json:"categories"`
 }
 
 type ConvertChat struct {
@@ -54,7 +57,7 @@ func NewService(store *database.Database, twitchService *twitch.Service, archive
 }
 
 func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
-	watchedChannels, err := s.Store.Client.Live.Query().WithChannel().All(c.Request().Context())
+	watchedChannels, err := s.Store.Client.Live.Query().WithChannel().WithCategories().All(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error getting watched channels: %v", err)
 	}
@@ -74,6 +77,15 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 	if err != nil {
 		return nil, fmt.Errorf("error adding watched channel: %v", err)
 	}
+	// If category is set, add to database
+	if len(liveDto.Categories) > 0 {
+		for _, category := range liveDto.Categories {
+			_, err := s.Store.Client.LiveCategory.Create().SetName(category).SetLive(l).Save(c.Request().Context())
+			if err != nil {
+				return nil, fmt.Errorf("error adding category: %v", err)
+			}
+		}
+	}
 	return l, nil
 }
 
@@ -82,11 +94,46 @@ func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.L
 	if err != nil {
 		return nil, fmt.Errorf("error updating watched channel: %v", err)
 	}
+
+	// Delete all categories
+	_, err = s.Store.Client.LiveCategory.Delete().Where(livecategory.HasLiveWith(live.ID(liveDto.ID))).Exec(c.Request().Context())
+	if err != nil {
+		return nil, fmt.Errorf("error deleting categories: %v", err)
+	}
+
+	// Update categories
+	if len(liveDto.Categories) > 0 {
+		// Add new categories
+		for _, category := range liveDto.Categories {
+			_, err := s.Store.Client.LiveCategory.Create().SetName(category).SetLive(l).Save(c.Request().Context())
+			if err != nil {
+				return nil, fmt.Errorf("error adding category: %v", err)
+			}
+		}
+	}
+
 	return l, nil
 }
 
 func (s *Service) DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error {
-	err := s.Store.Client.Live.DeleteOneID(lID).Exec(c.Request().Context())
+	// delete watched channel and categories
+	v, err := s.Store.Client.Live.Query().Where(entLive.ID(lID)).WithCategories().Only(c.Request().Context())
+	if err != nil {
+		if _, ok := err.(*ent.NotFoundError); ok {
+			return fmt.Errorf("watched channel not found")
+		}
+		return fmt.Errorf("error deleting watched channel: %v", err)
+	}
+	if v.Edges.Categories != nil {
+		for _, category := range v.Edges.Categories {
+			err := s.Store.Client.LiveCategory.DeleteOneID(category.ID).Exec(c.Request().Context())
+			if err != nil {
+				return fmt.Errorf("error deleting watched channel: %v", err)
+			}
+		}
+	}
+
+	err = s.Store.Client.Live.DeleteOneID(lID).Exec(c.Request().Context())
 	if err != nil {
 		return fmt.Errorf("error deleting watched channel: %v", err)
 	}

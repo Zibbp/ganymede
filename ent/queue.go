@@ -249,14 +249,14 @@ func (q *Queue) assignValues(columns []string, values []any) error {
 
 // QueryVod queries the "vod" edge of the Queue entity.
 func (q *Queue) QueryVod() *VodQuery {
-	return (&QueueClient{config: q.config}).QueryVod(q)
+	return NewQueueClient(q.config).QueryVod(q)
 }
 
 // Update returns a builder for updating this Queue.
 // Note that you need to call Queue.Unwrap() before calling this method if this Queue
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (q *Queue) Update() *QueueUpdateOne {
-	return (&QueueClient{config: q.config}).UpdateOne(q)
+	return NewQueueClient(q.config).UpdateOne(q)
 }
 
 // Unwrap unwraps the Queue entity that was returned from a transaction after it was closed,
@@ -337,9 +337,3 @@ func (q *Queue) String() string {
 
 // Queues is a parsable slice of Queue.
 type Queues []*Queue
-
-func (q Queues) config(cfg config) {
-	for _i := range q {
-		q[_i].config = cfg
-	}
-}

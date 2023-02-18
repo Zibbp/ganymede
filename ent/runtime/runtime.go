@@ -5,6 +5,6 @@ package runtime
 // The schema-stitching logic is generated in github.com/zibbp/ganymede/ent/runtime.go
 
 const (
-	Version = "v0.11.5"                                         // Version of ent codegen.
-	Sum     = "h1:V2qhG91C4PMQTa82Q4StoESMQ4dzkMNeStCzszxi0jQ=" // Sum of ent codegen.
+	Version = "v0.11.8"                                         // Version of ent codegen.
+	Sum     = "h1:M/M0QL1CYCUSdqGRXUrXhFYSDRJPsOOrr+RLEej/gyQ=" // Sum of ent codegen.
 )

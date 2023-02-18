@@ -111,7 +111,7 @@ func (pl *Playback) assignValues(columns []string, values []any) error {
 // Note that you need to call Playback.Unwrap() before calling this method if this Playback
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (pl *Playback) Update() *PlaybackUpdateOne {
-	return (&PlaybackClient{config: pl.config}).UpdateOne(pl)
+	return NewPlaybackClient(pl.config).UpdateOne(pl)
 }
 
 // Unwrap unwraps the Playback entity that was returned from a transaction after it was closed,
@@ -153,9 +153,3 @@ func (pl *Playback) String() string {
 
 // Playbacks is a parsable slice of Playback.
 type Playbacks []*Playback
-
-func (pl Playbacks) config(cfg config) {
-	for _i := range pl {
-		pl[_i].config = cfg
-	}
-}

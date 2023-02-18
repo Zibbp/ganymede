@@ -33,6 +33,18 @@ func (f LiveFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiveMutation", m)
 }
 
+// The LiveCategoryFunc type is an adapter to allow the use of ordinary
+// function as LiveCategory mutator.
+type LiveCategoryFunc func(context.Context, *ent.LiveCategoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LiveCategoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LiveCategoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiveCategoryMutation", m)
+}
+
 // The PlaybackFunc type is an adapter to allow the use of ordinary
 // function as Playback mutator.
 type PlaybackFunc func(context.Context, *ent.PlaybackMutation) (ent.Value, error)
@@ -67,6 +79,18 @@ func (f QueueFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QueueMutation", m)
+}
+
+// The TwitchCategoryFunc type is an adapter to allow the use of ordinary
+// function as TwitchCategory mutator.
+type TwitchCategoryFunc func(context.Context, *ent.TwitchCategoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TwitchCategoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TwitchCategoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TwitchCategoryMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary

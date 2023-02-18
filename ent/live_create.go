@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livecategory"
 )
 
 // LiveCreate is the builder for creating a Live entity.
@@ -20,6 +23,7 @@ type LiveCreate struct {
 	config
 	mutation *LiveMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetWatchLive sets the "watch_live" field.
@@ -229,6 +233,21 @@ func (lc *LiveCreate) SetChannel(c *Channel) *LiveCreate {
 	return lc.SetChannelID(c.ID)
 }
 
+// AddCategoryIDs adds the "categories" edge to the LiveCategory entity by IDs.
+func (lc *LiveCreate) AddCategoryIDs(ids ...uuid.UUID) *LiveCreate {
+	lc.mutation.AddCategoryIDs(ids...)
+	return lc
+}
+
+// AddCategories adds the "categories" edges to the LiveCategory entity.
+func (lc *LiveCreate) AddCategories(l ...*LiveCategory) *LiveCreate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return lc.AddCategoryIDs(ids...)
+}
+
 // Mutation returns the LiveMutation object of the builder.
 func (lc *LiveCreate) Mutation() *LiveMutation {
 	return lc.mutation
@@ -392,14 +411,9 @@ func (lc *LiveCreate) sqlSave(ctx context.Context) (*Live, error) {
 func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Live{config: lc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: live.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: live.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(live.Table, sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID))
 	)
+	_spec.OnConflict = lc.conflict
 	if id, ok := lc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
@@ -476,13 +490,496 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 		_node.channel_live = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := lc.mutation.CategoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.CategoriesTable,
+			Columns: []string{live.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: livecategory.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Live.Create().
+//		SetWatchLive(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.LiveUpsert) {
+//			SetWatchLive(v+v).
+//		}).
+//		Exec(ctx)
+func (lc *LiveCreate) OnConflict(opts ...sql.ConflictOption) *LiveUpsertOne {
+	lc.conflict = opts
+	return &LiveUpsertOne{
+		create: lc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Live.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (lc *LiveCreate) OnConflictColumns(columns ...string) *LiveUpsertOne {
+	lc.conflict = append(lc.conflict, sql.ConflictColumns(columns...))
+	return &LiveUpsertOne{
+		create: lc,
+	}
+}
+
+type (
+	// LiveUpsertOne is the builder for "upsert"-ing
+	//  one Live node.
+	LiveUpsertOne struct {
+		create *LiveCreate
+	}
+
+	// LiveUpsert is the "OnConflict" setter.
+	LiveUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetWatchLive sets the "watch_live" field.
+func (u *LiveUpsert) SetWatchLive(v bool) *LiveUpsert {
+	u.Set(live.FieldWatchLive, v)
+	return u
+}
+
+// UpdateWatchLive sets the "watch_live" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateWatchLive() *LiveUpsert {
+	u.SetExcluded(live.FieldWatchLive)
+	return u
+}
+
+// SetWatchVod sets the "watch_vod" field.
+func (u *LiveUpsert) SetWatchVod(v bool) *LiveUpsert {
+	u.Set(live.FieldWatchVod, v)
+	return u
+}
+
+// UpdateWatchVod sets the "watch_vod" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateWatchVod() *LiveUpsert {
+	u.SetExcluded(live.FieldWatchVod)
+	return u
+}
+
+// SetDownloadArchives sets the "download_archives" field.
+func (u *LiveUpsert) SetDownloadArchives(v bool) *LiveUpsert {
+	u.Set(live.FieldDownloadArchives, v)
+	return u
+}
+
+// UpdateDownloadArchives sets the "download_archives" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateDownloadArchives() *LiveUpsert {
+	u.SetExcluded(live.FieldDownloadArchives)
+	return u
+}
+
+// SetDownloadHighlights sets the "download_highlights" field.
+func (u *LiveUpsert) SetDownloadHighlights(v bool) *LiveUpsert {
+	u.Set(live.FieldDownloadHighlights, v)
+	return u
+}
+
+// UpdateDownloadHighlights sets the "download_highlights" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateDownloadHighlights() *LiveUpsert {
+	u.SetExcluded(live.FieldDownloadHighlights)
+	return u
+}
+
+// SetDownloadUploads sets the "download_uploads" field.
+func (u *LiveUpsert) SetDownloadUploads(v bool) *LiveUpsert {
+	u.Set(live.FieldDownloadUploads, v)
+	return u
+}
+
+// UpdateDownloadUploads sets the "download_uploads" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateDownloadUploads() *LiveUpsert {
+	u.SetExcluded(live.FieldDownloadUploads)
+	return u
+}
+
+// SetDownloadSubOnly sets the "download_sub_only" field.
+func (u *LiveUpsert) SetDownloadSubOnly(v bool) *LiveUpsert {
+	u.Set(live.FieldDownloadSubOnly, v)
+	return u
+}
+
+// UpdateDownloadSubOnly sets the "download_sub_only" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateDownloadSubOnly() *LiveUpsert {
+	u.SetExcluded(live.FieldDownloadSubOnly)
+	return u
+}
+
+// SetIsLive sets the "is_live" field.
+func (u *LiveUpsert) SetIsLive(v bool) *LiveUpsert {
+	u.Set(live.FieldIsLive, v)
+	return u
+}
+
+// UpdateIsLive sets the "is_live" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateIsLive() *LiveUpsert {
+	u.SetExcluded(live.FieldIsLive)
+	return u
+}
+
+// SetArchiveChat sets the "archive_chat" field.
+func (u *LiveUpsert) SetArchiveChat(v bool) *LiveUpsert {
+	u.Set(live.FieldArchiveChat, v)
+	return u
+}
+
+// UpdateArchiveChat sets the "archive_chat" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateArchiveChat() *LiveUpsert {
+	u.SetExcluded(live.FieldArchiveChat)
+	return u
+}
+
+// SetResolution sets the "resolution" field.
+func (u *LiveUpsert) SetResolution(v string) *LiveUpsert {
+	u.Set(live.FieldResolution, v)
+	return u
+}
+
+// UpdateResolution sets the "resolution" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateResolution() *LiveUpsert {
+	u.SetExcluded(live.FieldResolution)
+	return u
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (u *LiveUpsert) ClearResolution() *LiveUpsert {
+	u.SetNull(live.FieldResolution)
+	return u
+}
+
+// SetLastLive sets the "last_live" field.
+func (u *LiveUpsert) SetLastLive(v time.Time) *LiveUpsert {
+	u.Set(live.FieldLastLive, v)
+	return u
+}
+
+// UpdateLastLive sets the "last_live" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateLastLive() *LiveUpsert {
+	u.SetExcluded(live.FieldLastLive)
+	return u
+}
+
+// SetRenderChat sets the "render_chat" field.
+func (u *LiveUpsert) SetRenderChat(v bool) *LiveUpsert {
+	u.Set(live.FieldRenderChat, v)
+	return u
+}
+
+// UpdateRenderChat sets the "render_chat" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateRenderChat() *LiveUpsert {
+	u.SetExcluded(live.FieldRenderChat)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *LiveUpsert) SetUpdatedAt(v time.Time) *LiveUpsert {
+	u.Set(live.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateUpdatedAt() *LiveUpsert {
+	u.SetExcluded(live.FieldUpdatedAt)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Live.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(live.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *LiveUpsertOne) UpdateNewValues() *LiveUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(live.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(live.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Live.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *LiveUpsertOne) Ignore() *LiveUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *LiveUpsertOne) DoNothing() *LiveUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the LiveCreate.OnConflict
+// documentation for more info.
+func (u *LiveUpsertOne) Update(set func(*LiveUpsert)) *LiveUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&LiveUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetWatchLive sets the "watch_live" field.
+func (u *LiveUpsertOne) SetWatchLive(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetWatchLive(v)
+	})
+}
+
+// UpdateWatchLive sets the "watch_live" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateWatchLive() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateWatchLive()
+	})
+}
+
+// SetWatchVod sets the "watch_vod" field.
+func (u *LiveUpsertOne) SetWatchVod(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetWatchVod(v)
+	})
+}
+
+// UpdateWatchVod sets the "watch_vod" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateWatchVod() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateWatchVod()
+	})
+}
+
+// SetDownloadArchives sets the "download_archives" field.
+func (u *LiveUpsertOne) SetDownloadArchives(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetDownloadArchives(v)
+	})
+}
+
+// UpdateDownloadArchives sets the "download_archives" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateDownloadArchives() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateDownloadArchives()
+	})
+}
+
+// SetDownloadHighlights sets the "download_highlights" field.
+func (u *LiveUpsertOne) SetDownloadHighlights(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetDownloadHighlights(v)
+	})
+}
+
+// UpdateDownloadHighlights sets the "download_highlights" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateDownloadHighlights() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateDownloadHighlights()
+	})
+}
+
+// SetDownloadUploads sets the "download_uploads" field.
+func (u *LiveUpsertOne) SetDownloadUploads(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetDownloadUploads(v)
+	})
+}
+
+// UpdateDownloadUploads sets the "download_uploads" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateDownloadUploads() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateDownloadUploads()
+	})
+}
+
+// SetDownloadSubOnly sets the "download_sub_only" field.
+func (u *LiveUpsertOne) SetDownloadSubOnly(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetDownloadSubOnly(v)
+	})
+}
+
+// UpdateDownloadSubOnly sets the "download_sub_only" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateDownloadSubOnly() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateDownloadSubOnly()
+	})
+}
+
+// SetIsLive sets the "is_live" field.
+func (u *LiveUpsertOne) SetIsLive(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetIsLive(v)
+	})
+}
+
+// UpdateIsLive sets the "is_live" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateIsLive() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateIsLive()
+	})
+}
+
+// SetArchiveChat sets the "archive_chat" field.
+func (u *LiveUpsertOne) SetArchiveChat(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetArchiveChat(v)
+	})
+}
+
+// UpdateArchiveChat sets the "archive_chat" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateArchiveChat() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateArchiveChat()
+	})
+}
+
+// SetResolution sets the "resolution" field.
+func (u *LiveUpsertOne) SetResolution(v string) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetResolution(v)
+	})
+}
+
+// UpdateResolution sets the "resolution" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateResolution() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateResolution()
+	})
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (u *LiveUpsertOne) ClearResolution() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.ClearResolution()
+	})
+}
+
+// SetLastLive sets the "last_live" field.
+func (u *LiveUpsertOne) SetLastLive(v time.Time) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetLastLive(v)
+	})
+}
+
+// UpdateLastLive sets the "last_live" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateLastLive() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateLastLive()
+	})
+}
+
+// SetRenderChat sets the "render_chat" field.
+func (u *LiveUpsertOne) SetRenderChat(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetRenderChat(v)
+	})
+}
+
+// UpdateRenderChat sets the "render_chat" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateRenderChat() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateRenderChat()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *LiveUpsertOne) SetUpdatedAt(v time.Time) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateUpdatedAt() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *LiveUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for LiveCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *LiveUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *LiveUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: LiveUpsertOne.ID is not supported by MySQL driver. Use LiveUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *LiveUpsertOne) IDX(ctx context.Context) uuid.UUID {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
 }
 
 // LiveCreateBulk is the builder for creating many Live entities in bulk.
 type LiveCreateBulk struct {
 	config
 	builders []*LiveCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Live entities in the database.
@@ -509,6 +1006,7 @@ func (lcb *LiveCreateBulk) Save(ctx context.Context) ([]*Live, error) {
 					_, err = mutators[i+1].Mutate(root, lcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = lcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, lcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -555,6 +1053,295 @@ func (lcb *LiveCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (lcb *LiveCreateBulk) ExecX(ctx context.Context) {
 	if err := lcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Live.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.LiveUpsert) {
+//			SetWatchLive(v+v).
+//		}).
+//		Exec(ctx)
+func (lcb *LiveCreateBulk) OnConflict(opts ...sql.ConflictOption) *LiveUpsertBulk {
+	lcb.conflict = opts
+	return &LiveUpsertBulk{
+		create: lcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Live.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (lcb *LiveCreateBulk) OnConflictColumns(columns ...string) *LiveUpsertBulk {
+	lcb.conflict = append(lcb.conflict, sql.ConflictColumns(columns...))
+	return &LiveUpsertBulk{
+		create: lcb,
+	}
+}
+
+// LiveUpsertBulk is the builder for "upsert"-ing
+// a bulk of Live nodes.
+type LiveUpsertBulk struct {
+	create *LiveCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Live.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(live.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *LiveUpsertBulk) UpdateNewValues() *LiveUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(live.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(live.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Live.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *LiveUpsertBulk) Ignore() *LiveUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *LiveUpsertBulk) DoNothing() *LiveUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the LiveCreateBulk.OnConflict
+// documentation for more info.
+func (u *LiveUpsertBulk) Update(set func(*LiveUpsert)) *LiveUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&LiveUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetWatchLive sets the "watch_live" field.
+func (u *LiveUpsertBulk) SetWatchLive(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetWatchLive(v)
+	})
+}
+
+// UpdateWatchLive sets the "watch_live" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateWatchLive() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateWatchLive()
+	})
+}
+
+// SetWatchVod sets the "watch_vod" field.
+func (u *LiveUpsertBulk) SetWatchVod(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetWatchVod(v)
+	})
+}
+
+// UpdateWatchVod sets the "watch_vod" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateWatchVod() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateWatchVod()
+	})
+}
+
+// SetDownloadArchives sets the "download_archives" field.
+func (u *LiveUpsertBulk) SetDownloadArchives(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetDownloadArchives(v)
+	})
+}
+
+// UpdateDownloadArchives sets the "download_archives" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateDownloadArchives() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateDownloadArchives()
+	})
+}
+
+// SetDownloadHighlights sets the "download_highlights" field.
+func (u *LiveUpsertBulk) SetDownloadHighlights(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetDownloadHighlights(v)
+	})
+}
+
+// UpdateDownloadHighlights sets the "download_highlights" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateDownloadHighlights() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateDownloadHighlights()
+	})
+}
+
+// SetDownloadUploads sets the "download_uploads" field.
+func (u *LiveUpsertBulk) SetDownloadUploads(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetDownloadUploads(v)
+	})
+}
+
+// UpdateDownloadUploads sets the "download_uploads" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateDownloadUploads() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateDownloadUploads()
+	})
+}
+
+// SetDownloadSubOnly sets the "download_sub_only" field.
+func (u *LiveUpsertBulk) SetDownloadSubOnly(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetDownloadSubOnly(v)
+	})
+}
+
+// UpdateDownloadSubOnly sets the "download_sub_only" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateDownloadSubOnly() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateDownloadSubOnly()
+	})
+}
+
+// SetIsLive sets the "is_live" field.
+func (u *LiveUpsertBulk) SetIsLive(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetIsLive(v)
+	})
+}
+
+// UpdateIsLive sets the "is_live" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateIsLive() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateIsLive()
+	})
+}
+
+// SetArchiveChat sets the "archive_chat" field.
+func (u *LiveUpsertBulk) SetArchiveChat(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetArchiveChat(v)
+	})
+}
+
+// UpdateArchiveChat sets the "archive_chat" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateArchiveChat() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateArchiveChat()
+	})
+}
+
+// SetResolution sets the "resolution" field.
+func (u *LiveUpsertBulk) SetResolution(v string) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetResolution(v)
+	})
+}
+
+// UpdateResolution sets the "resolution" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateResolution() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateResolution()
+	})
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (u *LiveUpsertBulk) ClearResolution() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.ClearResolution()
+	})
+}
+
+// SetLastLive sets the "last_live" field.
+func (u *LiveUpsertBulk) SetLastLive(v time.Time) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetLastLive(v)
+	})
+}
+
+// UpdateLastLive sets the "last_live" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateLastLive() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateLastLive()
+	})
+}
+
+// SetRenderChat sets the "render_chat" field.
+func (u *LiveUpsertBulk) SetRenderChat(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetRenderChat(v)
+	})
+}
+
+// UpdateRenderChat sets the "render_chat" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateRenderChat() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateRenderChat()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *LiveUpsertBulk) SetUpdatedAt(v time.Time) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateUpdatedAt() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *LiveUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the LiveCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for LiveCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *LiveUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

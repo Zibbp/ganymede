@@ -40,15 +40,7 @@ func (pd *PlaylistDelete) ExecX(ctx context.Context) int {
 }
 
 func (pd *PlaylistDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: playlist.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: playlist.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(playlist.Table, sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID))
 	if ps := pd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type PlaylistDeleteOne struct {
 	pd *PlaylistDelete
 }
 
+// Where appends a list predicates to the PlaylistDelete builder.
+func (pdo *PlaylistDeleteOne) Where(ps ...predicate.Playlist) *PlaylistDeleteOne {
+	pdo.pd.mutation.Where(ps...)
+	return pdo
+}
+
 // Exec executes the deletion query.
 func (pdo *PlaylistDeleteOne) Exec(ctx context.Context) error {
 	n, err := pdo.pd.Exec(ctx)
@@ -84,5 +82,7 @@ func (pdo *PlaylistDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (pdo *PlaylistDeleteOne) ExecX(ctx context.Context) {
-	pdo.pd.ExecX(ctx)
+	if err := pdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }
