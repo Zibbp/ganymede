@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/devcontainers/go:1-bullseye
 
 ENV TWITCH_DOWNLOADER_VER=1.51.1
-ENV CHAT_DOWNLOADER_VER=0.2.3
+ENV CHAT_DOWNLOADER_VER=0.2.4
 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
   && apt-get -y install --no-install-recommends ffmpeg python3 python3-pip \
