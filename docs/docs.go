@@ -1429,6 +1429,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/live/multiple": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    }
+                ],
+                "description": "This is useful to add multiple channels at once if they all have the same settings",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Live"
+                ],
+                "summary": "Add multiple watched channels at once",
+                "parameters": [
+                    {
+                        "description": "Add watched channel",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.AddMultipleWatchedChannelRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ent.Live"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/live/{id}": {
             "put": {
                 "security": [
@@ -2493,6 +2544,35 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/twitch/categories": {
+            "get": {
+                "description": "Get a list of twitch categories",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "twitch"
+                ],
+                "summary": "Get a list of twitch categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/twitch.Category"
+                        }
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -4088,9 +4168,50 @@ const docTemplate = `{
                 }
             }
         },
+        "ent.LiveCategory": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the LiveCategoryQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.LiveCategoryEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name holds the value of the \"name\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.LiveCategoryEdges": {
+            "type": "object",
+            "properties": {
+                "live": {
+                    "description": "Live holds the value of the live edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Live"
+                        }
+                    ]
+                }
+            }
+        },
         "ent.LiveEdges": {
             "type": "object",
             "properties": {
+                "categories": {
+                    "description": "Categories holds the value of the categories edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.LiveCategory"
+                    }
+                },
                 "channel": {
                     "description": "Channel holds the value of the channel edge.",
                     "allOf": [
@@ -4507,6 +4628,62 @@ const docTemplate = `{
                 }
             }
         },
+        "http.AddMultipleWatchedChannelRequest": {
+            "type": "object",
+            "required": [
+                "channel_id",
+                "resolution"
+            ],
+            "properties": {
+                "archive_chat": {
+                    "type": "boolean"
+                },
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "channel_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "download_archives": {
+                    "type": "boolean"
+                },
+                "download_highlights": {
+                    "type": "boolean"
+                },
+                "download_sub_only": {
+                    "type": "boolean"
+                },
+                "download_uploads": {
+                    "type": "boolean"
+                },
+                "render_chat": {
+                    "type": "boolean"
+                },
+                "resolution": {
+                    "type": "string",
+                    "enum": [
+                        "best",
+                        "source",
+                        "720p60",
+                        "480p30",
+                        "360p30",
+                        "160p30"
+                    ]
+                },
+                "watch_live": {
+                    "type": "boolean"
+                },
+                "watch_vod": {
+                    "type": "boolean"
+                }
+            }
+        },
         "http.AddVodToPlaylistRequest": {
             "type": "object",
             "required": [
@@ -4527,6 +4704,12 @@ const docTemplate = `{
             "properties": {
                 "archive_chat": {
                     "type": "boolean"
+                },
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "channel_id": {
                     "type": "string"
@@ -5219,6 +5402,12 @@ const docTemplate = `{
                 "archive_chat": {
                     "type": "boolean"
                 },
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "download_archives": {
                     "type": "boolean"
                 },
@@ -5250,6 +5439,17 @@ const docTemplate = `{
                 },
                 "watch_vod": {
                     "type": "boolean"
+                }
+            }
+        },
+        "twitch.Category": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
