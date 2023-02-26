@@ -163,26 +163,39 @@ func (s *Service) Check() error {
 		log.Debug().Msg("no live watched channels")
 		return nil
 	}
-	// Generate query string for Twitch API
-	var queryString string
 
-	for i, lwc := range liveWatchedChannels {
-		if i == 0 {
-			queryString += "?user_login=" + lwc.Edges.Channel.Name
-		} else {
-			queryString += "&user_login=" + lwc.Edges.Channel.Name
+	// split into 99 channels per requests to avoid 100 channel limit
+	var liveWatchedChannelsSplit [][]*ent.Live
+	for i := 0; i < len(liveWatchedChannels); i += 99 {
+		end := i + 99
+		if end > len(liveWatchedChannels) {
+			end = len(liveWatchedChannels)
 		}
+		liveWatchedChannelsSplit = append(liveWatchedChannelsSplit, liveWatchedChannels[i:end])
 	}
 
-	twitchStreams, err := s.TwitchService.GetStreams(queryString)
-	if err != nil {
-		log.Error().Err(err).Msg("error getting twitch streams")
+	var streams []twitch.Live
+	// generate query string for twitch api
+	for _, lwc := range liveWatchedChannelsSplit {
+		var queryString string
+		for i, lwc := range lwc {
+			if i == 0 {
+				queryString += "?user_login=" + lwc.Edges.Channel.Name
+			} else {
+				queryString += "&user_login=" + lwc.Edges.Channel.Name
+			}
+		}
+		twitchStreams, err := s.TwitchService.GetStreams(queryString)
+		if err != nil {
+			log.Error().Err(err).Msg("error getting twitch streams")
+		}
+		streams = append(streams, twitchStreams.Data...)
 	}
 
 	// check if live stream is online
 	for _, lwc := range liveWatchedChannels {
 		// Check if LWC is in twitchStreams.Data
-		stream := stringInSlice(lwc.Edges.Channel.Name, twitchStreams.Data)
+		stream := stringInSlice(lwc.Edges.Channel.Name, streams)
 		if len(stream.ID) > 0 {
 			if !lwc.IsLive {
 				log.Debug().Msgf("%s is now live", lwc.Edges.Channel.Name)
