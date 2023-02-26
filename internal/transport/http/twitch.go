@@ -96,7 +96,7 @@ func (h *Handler) GQLGetTwitchVideo(c echo.Context) error {
 //	@Tags			twitch
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	twitch.Categories
+//	@Success		200	{object}	twitch.Category
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/twitch/categories [get]
 func (h *Handler) GetTwitchCategories(c echo.Context) error {

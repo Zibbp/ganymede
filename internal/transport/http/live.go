@@ -34,6 +34,20 @@ type AddWatchedChannelRequest struct {
 	Categories         []string `json:"categories"`
 }
 
+type AddMultipleWatchedChannelRequest struct {
+	WatchLive          bool     `json:"watch_live" `
+	WatchVod           bool     `json:"watch_vod" `
+	DownloadArchives   bool     `json:"download_archives" `
+	DownloadHighlights bool     `json:"download_highlights" `
+	DownloadUploads    bool     `json:"download_uploads"`
+	ChannelID          []string `json:"channel_id" validate:"required"`
+	Resolution         string   `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
+	ArchiveChat        bool     `json:"archive_chat"`
+	RenderChat         bool     `json:"render_chat"`
+	DownloadSubOnly    bool     `json:"download_sub_only"`
+	Categories         []string `json:"categories"`
+}
+
 type UpdateWatchedChannelRequest struct {
 	WatchLive          bool     `json:"watch_live"`
 	WatchVod           bool     `json:"watch_vod" `
@@ -121,6 +135,58 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, l)
+}
+
+// AddMultipleLiveWatchedChannel godoc
+//
+//	@Summary		Add multiple watched channels at once
+//	@Description	This is useful to add multiple channels at once if they all have the same settings
+//	@Tags			Live
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		AddMultipleWatchedChannelRequest	true	"Add watched channel"
+//	@Success		200		{object}	ent.Live
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/live/multiple [post]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) AddMultipleLiveWatchedChannel(c echo.Context) error {
+	ccr := new(AddMultipleWatchedChannelRequest)
+	if err := c.Bind(ccr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(ccr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	var response []*ent.Live
+	for _, cID := range ccr.ChannelID {
+		cUUID, err := uuid.Parse(cID)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		liveDto := live.Live{
+			ID:                 cUUID,
+			WatchLive:          ccr.WatchLive,
+			WatchVod:           ccr.WatchVod,
+			DownloadArchives:   ccr.DownloadArchives,
+			DownloadHighlights: ccr.DownloadHighlights,
+			DownloadUploads:    ccr.DownloadUploads,
+			IsLive:             false,
+			ArchiveChat:        ccr.ArchiveChat,
+			Resolution:         ccr.Resolution,
+			RenderChat:         ccr.RenderChat,
+			DownloadSubOnly:    ccr.DownloadSubOnly,
+			Categories:         ccr.Categories,
+		}
+		l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		response = append(response, l)
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
 
 // UpdateLiveWatchedChannel godoc

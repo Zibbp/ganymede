@@ -357,8 +357,35 @@ definitions:
         description: Watch new VODs
         type: boolean
     type: object
+  ent.LiveCategory:
+    properties:
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.LiveCategoryEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the LiveCategoryQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: string
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+    type: object
+  ent.LiveCategoryEdges:
+    properties:
+      live:
+        allOf:
+        - $ref: '#/definitions/ent.Live'
+        description: Live holds the value of the live edge.
+    type: object
   ent.LiveEdges:
     properties:
+      categories:
+        description: Categories holds the value of the categories edge.
+        items:
+          $ref: '#/definitions/ent.LiveCategory'
+        type: array
       channel:
         allOf:
         - $ref: '#/definitions/ent.Channel'
@@ -634,6 +661,45 @@ definitions:
         - $ref: '#/definitions/ent.Queue'
         description: Queue holds the value of the queue edge.
     type: object
+  http.AddMultipleWatchedChannelRequest:
+    properties:
+      archive_chat:
+        type: boolean
+      categories:
+        items:
+          type: string
+        type: array
+      channel_id:
+        items:
+          type: string
+        type: array
+      download_archives:
+        type: boolean
+      download_highlights:
+        type: boolean
+      download_sub_only:
+        type: boolean
+      download_uploads:
+        type: boolean
+      render_chat:
+        type: boolean
+      resolution:
+        enum:
+        - best
+        - source
+        - 720p60
+        - 480p30
+        - 360p30
+        - 160p30
+        type: string
+      watch_live:
+        type: boolean
+      watch_vod:
+        type: boolean
+    required:
+    - channel_id
+    - resolution
+    type: object
   http.AddVodToPlaylistRequest:
     properties:
       vod_id:
@@ -645,6 +711,10 @@ definitions:
     properties:
       archive_chat:
         type: boolean
+      categories:
+        items:
+          type: string
+        type: array
       channel_id:
         type: string
       download_archives:
@@ -1115,6 +1185,10 @@ definitions:
     properties:
       archive_chat:
         type: boolean
+      categories:
+        items:
+          type: string
+        type: array
       download_archives:
         type: boolean
       download_highlights:
@@ -1140,6 +1214,13 @@ definitions:
         type: boolean
     required:
     - resolution
+    type: object
+  twitch.Category:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
     type: object
   twitch.Channel:
     properties:
@@ -2311,6 +2392,39 @@ paths:
       summary: Check watched channels
       tags:
       - Live
+  /live/multiple:
+    post:
+      consumes:
+      - application/json
+      description: This is useful to add multiple channels at once if they all have
+        the same settings
+      parameters:
+      - description: Add watched channel
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.AddMultipleWatchedChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.Live'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      summary: Add multiple watched channels at once
+      tags:
+      - Live
   /notification/test:
     get:
       consumes:
@@ -2927,6 +3041,25 @@ paths:
       summary: Start a task
       tags:
       - task
+  /twitch/categories:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of twitch categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/twitch.Category'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get a list of twitch categories
+      tags:
+      - twitch
   /twitch/channel:
     get:
       consumes:
