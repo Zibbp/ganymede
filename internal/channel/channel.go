@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/twitch"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type Service struct {
@@ -161,4 +163,25 @@ func PopulateExternalChannelID() {
 		}
 		log.Debug().Msgf("updated channel %s", c.Name)
 	}
+}
+
+func (s *Service) UpdateChannelImage(c echo.Context, channelID uuid.UUID) error {
+	channel, err := s.GetChannel(channelID)
+	if err != nil {
+		return fmt.Errorf("error getting channel: %v", err)
+	}
+
+	// Fetch channel from Twitch API
+	tChannel, err := twitch.API.GetUserByLogin(channel.Name)
+	if err != nil {
+		return fmt.Errorf("error fetching twitch channel: %v", err)
+	}
+
+	// Download channel profile image
+	err = utils.DownloadFile(tChannel.ProfileImageURL, tChannel.Login, "profile.png")
+	if err != nil {
+		return fmt.Errorf("error downloading channel profile image: %v", err)
+	}
+
+	return nil
 }

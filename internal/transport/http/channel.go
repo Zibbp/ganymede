@@ -16,6 +16,7 @@ type ChannelService interface {
 	GetChannelByName(channelName string) (*ent.Channel, error)
 	DeleteChannel(channelID uuid.UUID) error
 	UpdateChannel(channelID uuid.UUID, channelDto channel.Channel) (*ent.Channel, error)
+	UpdateChannelImage(c echo.Context, channelID uuid.UUID) error
 }
 
 type CreateChannelRequest struct {
@@ -207,4 +208,18 @@ func (h *Handler) GetChannelByName(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, cha)
+}
+
+func (h *Handler) UpdateChannelImage(c echo.Context) error {
+	id := c.QueryParam("id")
+	cUUID, err := uuid.Parse(id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.Service.ChannelService.UpdateChannelImage(c, cUUID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "ok")
 }
