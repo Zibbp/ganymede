@@ -163,6 +163,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	channelGroup.GET("/name/:name", h.GetChannelByName)
 	channelGroup.PUT("/:id", h.UpdateChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	channelGroup.DELETE("/:id", h.DeleteChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	channelGroup.POST("/update-image", h.UpdateChannelImage, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 
 	// VOD
 	vodGroup := e.Group("/vod")
@@ -241,6 +242,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	playbackGroup.POST("/progress", h.UpdateProgress, auth.GuardMiddleware, auth.GetUserMiddleware)
 	playbackGroup.POST("/status", h.UpdateStatus, auth.GuardMiddleware, auth.GetUserMiddleware)
 	playbackGroup.DELETE("/:id", h.DeleteProgress, auth.GuardMiddleware, auth.GetUserMiddleware)
+	playbackGroup.GET("/last", h.GetLastPlaybacks, auth.GuardMiddleware, auth.GetUserMiddleware)
 
 	// Playlist
 	playlistGroup := e.Group("/playlist")
