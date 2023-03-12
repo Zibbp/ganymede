@@ -2,11 +2,13 @@ package http
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/auth"
+	"github.com/zibbp/ganymede/internal/playback"
 )
 
 type PlaybackService interface {
@@ -15,6 +17,7 @@ type PlaybackService interface {
 	GetAllProgress(c *auth.CustomContext) ([]*ent.Playback, error)
 	UpdateStatus(c *auth.CustomContext, vID uuid.UUID, status string) error
 	DeleteProgress(c *auth.CustomContext, vID uuid.UUID) error
+	GetLastPlaybacks(c *auth.CustomContext, limit int) (*playback.GetPlaybackResp, error)
 }
 
 type UpdateProgressRequest struct {
@@ -163,4 +166,19 @@ func (h *Handler) DeleteProgress(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, "ok")
+}
+
+func (h *Handler) GetLastPlaybacks(c echo.Context) error {
+	cc := c.(*auth.CustomContext)
+
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid limit")
+	}
+
+	playbackEntries, err := h.Service.PlaybackService.GetLastPlaybacks(cc, limit)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, playbackEntries)
 }
