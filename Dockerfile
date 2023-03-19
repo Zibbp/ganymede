@@ -12,7 +12,7 @@ RUN apk add --update --no-cache unzip git
 
 WORKDIR /tmp
 RUN wget https://github.com/rsms/inter/releases/download/v3.19/Inter-3.19.zip && unzip Inter-3.19.zip
-RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.52.1/TwitchDownloaderCLI-1.52.1-LinuxAlpine-x64.zip && unzip TwitchDownloaderCLI-1.52.1-LinuxAlpine-x64.zip
+RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.52.2/TwitchDownloaderCLI-1.52.2-LinuxAlpine-x64.zip && unzip TwitchDownloaderCLI-1.52.2-LinuxAlpine-x64.zip
 
 RUN git clone https://github.com/xenova/chat-downloader.git
 
