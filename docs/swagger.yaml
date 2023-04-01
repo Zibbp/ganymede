@@ -2333,6 +2333,31 @@ paths:
       summary: Update watched channel
       tags:
       - Live
+  /live/archive:
+    post:
+      consumes:
+      - application/json
+      description: Adhoc archive a channel's live stream.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      summary: Archive a channel's live stream
+      tags:
+      - Live
   /live/chat-convert:
     post:
       consumes:

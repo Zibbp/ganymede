@@ -1332,6 +1332,46 @@
                 }
             }
         },
+        "/live/archive": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    }
+                ],
+                "description": "Adhoc archive a channel's live stream.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Live"
+                ],
+                "summary": "Archive a channel's live stream",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/live/chat-convert": {
             "post": {
                 "security": [
