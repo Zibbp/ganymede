@@ -41,7 +41,7 @@ RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-
 # Inter font install
 ENV INTER_PATH "/tmp/Inter Desktop/Inter-Regular.otf"
 COPY --from=build-stage-02 ${INTER_PATH} /tmp/
-RUN mkdir /usr/share/fonts/ && chmod a+rX /usr/share/fonts/
+RUN mkdir -p /usr/share/fonts/ && chmod a+rX /usr/share/fonts/
 RUN mv /tmp/Inter-Regular.otf /usr/share/fonts/Inter.otf && fc-cache -f -v
 
 # Install fallback fonts for chat rendering
