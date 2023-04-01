@@ -293,20 +293,6 @@ func (s *Service) CheckOnHold() {
 }
 
 func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodResponse, error) {
-	//// Fetch VOD from Twitch API
-	//tVod, err := s.TwitchService.GetVodByID(vID)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error fetching twitch vod: %v", err)
-	//}
-	//// Check if vod is already archived
-	//vCheck, err := s.VodService.CheckVodExists(c, tVod.ID)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error checking if vod exists: %v", err)
-	//}
-	//if vCheck == true {
-	//	return nil, fmt.Errorf("vod already exists")
-	//}
-
 	// Check if channel exists
 	cCheck := s.ChannelService.CheckChannelExists(ts.UserLogin)
 	if !cCheck {
@@ -358,18 +344,6 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 		chatPath = ""
 		chatVideoPath = ""
 	}
-
-	//// Parse new Twitch API duration
-	//parsedDuration, err := time.ParseDuration(tVod.Duration)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error parsing duration: %v", err)
-	//}
-
-	//// Parse Twitch date to time.Time
-	//parsedDate, err := time.Parse(time.RFC3339, tVod.CreatedAt)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error parsing date: %v", err)
-	//}
 
 	// Create VOD in DB
 	vodDTO := vod.Vod{
@@ -835,6 +809,15 @@ func (s *Service) TaskChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 
 	q.Update().SetTaskChatDownload(utils.Success).SaveX(context.Background())
 
+	// copy chat json
+	sourcePath := fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID)
+	destPath := fmt.Sprintf("/vods/%s/%s/%s-chat.json", ch.Name, v.FolderName, v.FileName)
+
+	err = utils.CopyFile(sourcePath, destPath)
+	if err != nil {
+		log.Error().Err(err).Msg("error copying chat")
+	}
+
 	if cont {
 		go s.TaskChatRender(ch, v, q, true)
 	}
@@ -854,6 +837,15 @@ func (s *Service) TaskLiveChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue
 
 	q.Update().SetTaskChatDownload(utils.Success).SaveX(context.Background())
 
+	// copy live chat
+	sourcePath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
+	destPath := fmt.Sprintf("/vods/%s/%s/%s-live-chat.json", ch.Name, v.FolderName, v.FileName)
+
+	err = utils.CopyFile(sourcePath, destPath)
+	if err != nil {
+		log.Error().Err(err).Msg("error moving live chat")
+	}
+
 	// Always convert live chat to vod chat
 	go s.TaskLiveChatConvert(ch, v, q, true)
 
@@ -863,11 +855,20 @@ func (s *Service) TaskChatConvertRestart(ch *ent.Channel, v *ent.Vod, q *ent.Que
 	// Check if chat file exists
 	chatPath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
 	if !utils.FileExists(chatPath) {
-		log.Error().Msgf("chat file does not exist %s", chatPath)
-		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "chat_convert")
-		return
+		storageChatPath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
+		if utils.FileExists(storageChatPath) {
+			err := utils.CopyFile(storageChatPath, chatPath)
+			if err != nil {
+				log.Error().Err(err).Msg("error copying live chat")
+			}
+		} else {
+			log.Error().Msgf("chat file does not exist %s", chatPath)
+			q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
+			s.TaskError(ch, v, q, "chat_convert")
+			return
+		}
 	}
+
 	go s.TaskLiveChatConvert(ch, v, q, cont)
 }
 
@@ -918,6 +919,8 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 		log.Error().Err(err).Msg("error converting chat")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
 		s.TaskError(ch, v, q, "chat_convert")
+		log.Info().Msgf("livestream chat task failed - setting vod to processed so it can be viewed")
+		v.Update().SetProcessing(false).SaveX(context.Background())
 		return
 	}
 
@@ -928,10 +931,21 @@ func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 		log.Error().Err(err).Msg("error updating chat")
 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
 		s.TaskError(ch, v, q, "chat_convert")
+		log.Info().Msgf("livestream chat task failed - setting vod to processed so it can be viewed")
+		v.Update().SetProcessing(false).SaveX(context.Background())
 		return
 	}
 
 	q.Update().SetTaskChatConvert(utils.Success).SaveX(context.Background())
+
+	// copy converted chat
+	sourcePath := fmt.Sprintf("/tmp/%s_%s-chat-convert.json", v.ExtID, v.ID)
+	destPath := fmt.Sprintf("/vods/%s/%s/%s-chat-convert.json", ch.Name, v.FolderName, v.FileName)
+
+	err = utils.CopyFile(sourcePath, destPath)
+	if err != nil {
+		log.Error().Err(err).Msg("error copying chat convert")
+	}
 
 	// Always render chat
 	go s.TaskChatRender(ch, v, q, true)
@@ -951,6 +965,10 @@ func (s *Service) TaskChatRender(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont
 			log.Error().Err(err).Msg("error rendering chat")
 			q.Update().SetTaskChatRender(utils.Failed).SaveX(context.Background())
 			s.TaskError(ch, v, q, "chat_render")
+			if q.LiveArchive {
+				log.Info().Msgf("livestream chat task failed - setting vod to processed so it can be viewed")
+				v.Update().SetProcessing(false).SaveX(context.Background())
+			}
 			return
 		}
 		renderContinue = rCont

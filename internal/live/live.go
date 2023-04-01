@@ -52,6 +52,13 @@ type ConvertChat struct {
 	ChatStart     string `json:"chat_start"`
 }
 
+type ArchiveLive struct {
+	ChannelID   uuid.UUID `json:"channel_id"`
+	Resolution  string    `json:"resolution"`
+	ArchiveChat bool      `json:"archive_chat"`
+	RenderChat  bool      `json:"render_chat"`
+}
+
 func NewService(store *database.Database, twitchService *twitch.Service, archiveService *archive.Service) *Service {
 	return &Service{Store: store, TwitchService: twitchService, ArchiveService: archiveService}
 }
@@ -245,6 +252,39 @@ func (s *Service) ConvertChat(c echo.Context, convertChatDto ConvertChat) error 
 	if err != nil {
 		return fmt.Errorf("error converting chat: %v", err)
 	}
+	return nil
+}
+
+func (s *Service) ArchiveLiveChannel(c echo.Context, archiveLiveChannelDto ArchiveLive) error {
+	// fetch channel
+	channel, err := s.Store.Client.Channel.Query().Where(channel.ID(archiveLiveChannelDto.ChannelID)).Only(c.Request().Context())
+	if err != nil {
+		if _, ok := err.(*ent.NotFoundError); ok {
+			return fmt.Errorf("channel not found")
+		}
+		return fmt.Errorf("error fetching channel: %v", err)
+	}
+
+	// check if channel is live
+	queryString := "?user_login=" + channel.Name
+	twitchStream, err := s.TwitchService.GetStreams(queryString)
+	if err != nil {
+		return fmt.Errorf("error getting twitch streams: %v", err)
+	}
+	if len(twitchStream.Data) == 0 {
+		return fmt.Errorf("channel is not live")
+	}
+	// create a temp live watched channel
+	lwc := &ent.Live{
+		ArchiveChat: archiveLiveChannelDto.ArchiveChat,
+		RenderChat:  archiveLiveChannelDto.RenderChat,
+		Resolution:  archiveLiveChannelDto.Resolution,
+	}
+	_, err = s.ArchiveService.ArchiveTwitchLive(lwc, twitchStream.Data[0])
+	if err != nil {
+		log.Error().Err(err).Msg("error archiving twitch livestream")
+	}
+
 	return nil
 }
 

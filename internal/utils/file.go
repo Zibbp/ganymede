@@ -90,6 +90,26 @@ func MoveFile(sourcePath, destPath string) error {
 	return nil
 }
 
+func CopyFile(sourcePath, destPath string) error {
+	log.Debug().Msgf("moving file: %s to %s", sourcePath, destPath)
+	inputFile, err := os.Open(sourcePath)
+	if err != nil {
+		return fmt.Errorf("error opening file: %v", err)
+	}
+	outputFile, err := os.Create(destPath)
+	if err != nil {
+		inputFile.Close()
+		return fmt.Errorf("error creating file: %v", err)
+	}
+	defer outputFile.Close()
+	_, err = io.Copy(outputFile, inputFile)
+	inputFile.Close()
+	if err != nil {
+		return fmt.Errorf("writing to output file failed: %v", err)
+	}
+	return nil
+}
+
 func MoveFolder(src string, dst string) error {
 	// Check if the source path exists
 	if _, err := os.Stat(src); os.IsNotExist(err) {

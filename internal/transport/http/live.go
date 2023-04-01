@@ -18,6 +18,7 @@ type LiveService interface {
 	Check() error
 	ConvertChat(c echo.Context, convertDto live.ConvertChat) error
 	CheckVodWatchedChannels()
+	ArchiveLiveChannel(c echo.Context, archiveDto live.ArchiveLive) error
 }
 
 type AddWatchedChannelRequest struct {
@@ -68,6 +69,13 @@ type ConvertChatRequest struct {
 	ChannelID     int    `json:"channel_id" validate:"required"`
 	VodExternalID string `json:"vod_external_id" validate:"required"`
 	ChatStart     string `json:"chat_start" validate:"required"`
+}
+
+type ArchiveLiveChannelRequest struct {
+	ChannelID   string `json:"channel_id" validate:"required"`
+	Resolution  string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
+	ArchiveChat bool   `json:"archive_chat"`
+	RenderChat  bool   `json:"render_chat"`
 }
 
 // GetLiveWatchedChannels godoc
@@ -338,6 +346,47 @@ func (h *Handler) ConvertChat(c echo.Context) error {
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) CheckVodWatchedChannels(c echo.Context) error {
 	go h.Service.LiveService.CheckVodWatchedChannels()
+
+	return c.JSON(http.StatusOK, "ok")
+}
+
+// ArchiveLiveChannel godoc
+//
+//	@Summary		Archive a channel's live stream
+//	@Description	Adhoc archive a channel's live stream.
+//	@Tags			Live
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	string
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/live/archive [post]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) ArchiveLiveChannel(c echo.Context) error {
+	alcr := new(ArchiveLiveChannelRequest)
+	if err := c.Bind(alcr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(alcr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	// validate channel uuid
+	cID, err := uuid.Parse(alcr.ChannelID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	archiveLiveDto := live.ArchiveLive{
+		ChannelID:   cID,
+		Resolution:  alcr.Resolution,
+		ArchiveChat: alcr.ArchiveChat,
+		RenderChat:  alcr.RenderChat,
+	}
+
+	err = h.Service.LiveService.ArchiveLiveChannel(c, archiveLiveDto)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 
 	return c.JSON(http.StatusOK, "ok")
 }
