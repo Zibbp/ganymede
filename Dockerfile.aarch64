@@ -26,6 +26,11 @@ RUN apt-get update
 RUN apt-get install python3 python3-pip fontconfig icu-devtools python3-dev gcc g++ ffmpeg bash tzdata -y
 RUN pip3 install --no-cache --upgrade pip streamlink
 
+# setup user
+RUN groupmod -g 1000 users && \
+  useradd -u 911 -U -d /data abc && \
+  usermod -G users abc
+
 ## Add debian armhf/32bit libs for TwitchDownloaderCLI to work.
 RUN apt-get install libc6:armhf zlib1g:armhf gcc:armhf libicu-dev:armhf libfontconfig1:armhf -y
 
@@ -36,7 +41,8 @@ RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-
 # Inter font install
 ENV INTER_PATH "/tmp/Inter Desktop/Inter-Regular.otf"
 COPY --from=build-stage-02 ${INTER_PATH} /tmp/
-RUN mkdir -p /usr/share/fonts/opentype/ && install -m644 /tmp/Inter-Regular.otf /usr/share/fonts/opentype/Inter.otf && rm ./tmp/Inter-Regular.otf && fc-cache -fv
+RUN mkdir /usr/share/fonts/ && chmod a+rX /usr/share/fonts/
+RUN mv /tmp/Inter-Regular.otf /usr/share/fonts/Inter.otf && fc-cache -f -v
 
 # Install fallback fonts for chat rendering
 RUN apt-get install xfonts-terminus fonts-inconsolata fonts-dejavu fonts-dejavu-extra fonts-noto fonts-noto-cjk fonts-font-awesome fonts-noto-extra fonts-noto-core -y
@@ -47,6 +53,14 @@ RUN chmod 644 /usr/share/fonts/*
 COPY --from=build-stage-02 /tmp/TwitchDownloaderCLI /usr/local/bin/
 RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
 
+WORKDIR /opt/app
+
 COPY --from=build-stage-01 /app/ganymede-api .
 
-CMD ["./ganymede-api"]
+EXPOSE 4000
+
+# copy entrypoint
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
