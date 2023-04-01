@@ -293,20 +293,6 @@ func (s *Service) CheckOnHold() {
 }
 
 func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodResponse, error) {
-	//// Fetch VOD from Twitch API
-	//tVod, err := s.TwitchService.GetVodByID(vID)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error fetching twitch vod: %v", err)
-	//}
-	//// Check if vod is already archived
-	//vCheck, err := s.VodService.CheckVodExists(c, tVod.ID)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error checking if vod exists: %v", err)
-	//}
-	//if vCheck == true {
-	//	return nil, fmt.Errorf("vod already exists")
-	//}
-
 	// Check if channel exists
 	cCheck := s.ChannelService.CheckChannelExists(ts.UserLogin)
 	if !cCheck {
@@ -358,18 +344,6 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 		chatPath = ""
 		chatVideoPath = ""
 	}
-
-	//// Parse new Twitch API duration
-	//parsedDuration, err := time.ParseDuration(tVod.Duration)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error parsing duration: %v", err)
-	//}
-
-	//// Parse Twitch date to time.Time
-	//parsedDate, err := time.Parse(time.RFC3339, tVod.CreatedAt)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error parsing date: %v", err)
-	//}
 
 	// Create VOD in DB
 	vodDTO := vod.Vod{
