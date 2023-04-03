@@ -16,7 +16,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/viper v1.15.0
-	github.com/swaggo/swag v1.8.11
+	github.com/swaggo/swag v1.8.12
 	golang.org/x/crypto v0.7.0
 	golang.org/x/oauth2 v0.6.0
 	gopkg.in/square/go-jose.v2 v2.6.0
@@ -31,7 +31,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/swaggo/files v1.0.0 // indirect
-	golang.org/x/tools v0.6.1-0.20230222164832-25d2519c8696 // indirect
+	golang.org/x/tools v0.7.0 // indirect
 )
 
 require (
@@ -77,7 +77,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/zclconf/go-cty v1.12.1 // indirect
-	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
