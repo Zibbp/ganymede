@@ -72,6 +72,12 @@ Feel free to use an existing Postgres database container and Nginx container if 
 4. Visit the address and port you specified for the frontend and login with username: `admin` password: `ganymede`.
 5. Change the admin password _or_ create a new user, grant admin permissions on that user, and delete the admin user.
 
+### Rootless
+
+The API container can be run as a non root user. To do so add `PUID` and `PGID` environment variables, setting the value to your user. Read [linuxserver's docs](https://docs.linuxserver.io/general/understanding-puid-and-pgid) about this for more information.
+
+Note: On startup the container will `chown` `/data`, `/logs`, and `/tmp`. It will not recursively `chown` the `/vods` directory. Ensure the mounted `vods` directory is readable by the set user.
+
 ### Environment Variables
 
 ##### API
