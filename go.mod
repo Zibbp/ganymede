@@ -30,7 +30,7 @@ require (
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/swaggo/files v1.0.0 // indirect
+	github.com/swaggo/files/v2 v2.0.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 )
 
@@ -73,7 +73,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.8.2
 	github.com/subosito/gotenv v1.4.2 // indirect
-	github.com/swaggo/echo-swagger v1.3.5
+	github.com/swaggo/echo-swagger v1.4.0
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/zclconf/go-cty v1.12.1 // indirect
