@@ -31,6 +31,22 @@ type ChatOnlyEmotes struct {
 	EmbeddedData Emotes     `json:"embeddedData"`
 }
 
+type ChatOnlyBadgesOld struct {
+	Streamer     Streamer              `json:"streamer"`
+	EmbeddedData EmbeddedDataBadgesOld `json:"embeddedData"`
+}
+
+type EmbeddedDataBadgesOld struct {
+	TwitchBadges []ChatTwitchBadgeOld `json:"twitchBadges"`
+	TwitchBits   []ChatTwitchBit      `json:"twitchBits"`
+}
+
+type ChatTwitchBadgeOld struct {
+	Name     string            `json:"name"`
+	Versions map[string]string `json:"versions"`
+}
+
+// new structs for badge update in v1.52.3
 type ChatOnlyBadges struct {
 	Streamer     Streamer           `json:"streamer"`
 	EmbeddedData EmbeddedDataBadges `json:"embeddedData"`
@@ -42,8 +58,14 @@ type EmbeddedDataBadges struct {
 }
 
 type ChatTwitchBadge struct {
-	Name     string            `json:"name"`
-	Versions map[string]string `json:"versions"`
+	Name     string                            `json:"name"`
+	Versions map[string]ChatTwitchBadgeVersion `json:"versions"`
+}
+
+type ChatTwitchBadgeVersion struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Bytes       string `json:"bytes"`
 }
 
 type ChatTwitchBit struct {

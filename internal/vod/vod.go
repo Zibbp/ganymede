@@ -663,10 +663,34 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 	}
 
 	var chatData *chat.ChatOnlyBadges
+	var chatDataOld *chat.ChatOnlyBadgesOld
 	err = json.Unmarshal(data, &chatData)
 	if err != nil {
-		log.Debug().Err(err).Msg("error getting vod chat badges")
-		return nil, fmt.Errorf("error getting vod chat badges: %v", err)
+		// attempt to unmarshal old format
+		err = json.Unmarshal(data, &chatDataOld)
+		if err != nil {
+			log.Debug().Err(err).Msg("error getting vod chat emotes")
+			return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
+		}
+	}
+
+	// convert old format to new format
+	if chatDataOld != nil {
+		for _, badge := range chatDataOld.EmbeddedData.TwitchBadges {
+			var tmpBadges = make(map[string]chat.ChatTwitchBadgeVersion)
+			for v, imgData := range badge.Versions {
+				chatTwitchBadgeVersion := chat.ChatTwitchBadgeVersion{
+					Title:       badge.Name,
+					Description: fmt.Sprintf("%s-%s", badge.Name, v),
+					Bytes:       imgData,
+				}
+				tmpBadges[v] = chatTwitchBadgeVersion
+			}
+			chatData.EmbeddedData.TwitchBadges = append(chatData.EmbeddedData.TwitchBadges, chat.ChatTwitchBadge{
+				Name:     badge.Name,
+				Versions: tmpBadges,
+			})
+		}
 	}
 
 	var badgeResp chat.GanymedeBadges
@@ -677,57 +701,89 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		// Emebedded badges have duplicate arrays for each of the below
 		// So we need to check if we have already added the badge to the response
 		// To ensure we use the channel's badge and not the global one
-		var subscriberBadgesSet bool
-		var bitsBadgesSet bool
-		var subGiftBadgesSet bool
+		subscriberBadgesSet := false
+		bitsBadgesSet := false
+		subGiftBadgesSet := false
 
 		for _, badge := range chatData.EmbeddedData.TwitchBadges {
 
 			if badge.Name == "subscriber" && !subscriberBadgesSet {
+				empty := false
 				for v, imgData := range badge.Versions {
-					badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
-						Name:       badge.Name,
-						Version:    v,
-						Title:      fmt.Sprintf("%s %s", badge.Name, v),
-						ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData),
-					})
+					// check if empty
+					if imgData.Title == "" {
+						empty = true
+					} else {
+						badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+							Name:       badge.Name,
+							Version:    v,
+							Title:      fmt.Sprintf("%s %s", badge.Name, v),
+							ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData.Bytes),
+						})
+					}
 				}
-				subscriberBadgesSet = true
-				continue
+				if empty {
+					continue
+				} else {
+					subscriberBadgesSet = true
+					continue
+				}
 			}
+
 			if badge.Name == "bits" && !bitsBadgesSet {
+				empty := false
 				for v, imgData := range badge.Versions {
-					badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
-						Name:       badge.Name,
-						Version:    v,
-						Title:      fmt.Sprintf("%s %s", badge.Name, v),
-						ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData),
-					})
+					if imgData.Title == "" {
+						empty = true
+					} else {
+						badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+							Name:       badge.Name,
+							Version:    v,
+							Title:      fmt.Sprintf("%s %s", badge.Name, v),
+							ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData.Bytes),
+						})
+					}
 				}
-				bitsBadgesSet = true
-				continue
+				if empty {
+					continue
+				} else {
+					bitsBadgesSet = true
+					continue
+				}
 			}
 			if badge.Name == "sub-gifter" && !subGiftBadgesSet {
+				empty := false
 				for v, imgData := range badge.Versions {
-					badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
-						Name:       badge.Name,
-						Version:    v,
-						Title:      fmt.Sprintf("%s %s", badge.Name, v),
-						ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData),
-					})
+					if imgData.Title == "" {
+						empty = true
+					} else {
+						badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+							Name:       badge.Name,
+							Version:    v,
+							Title:      fmt.Sprintf("%s %s", badge.Name, v),
+							ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData.Bytes),
+						})
+					}
 				}
-				subGiftBadgesSet = true
-				continue
+				if empty {
+					continue
+				} else {
+					subGiftBadgesSet = true
+					continue
+				}
 			}
 
 			if badge.Name != "subscriber" && badge.Name != "bits" && badge.Name != "sub-gifter" {
 				for v, imgData := range badge.Versions {
-					badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
-						Name:       badge.Name,
-						Version:    v,
-						Title:      fmt.Sprintf("%s %s", badge.Name, v),
-						ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData),
-					})
+					if imgData.Title == "" {
+					} else {
+						badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+							Name:       badge.Name,
+							Version:    v,
+							Title:      fmt.Sprintf("%s %s", badge.Name, v),
+							ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData.Bytes),
+						})
+					}
 					break
 				}
 			}
