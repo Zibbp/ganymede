@@ -41,7 +41,7 @@ RUN mv /tmp/Inter-Regular.otf /usr/share/fonts/Inter.otf && fc-cache -f -v
 # Install fallback fonts for chat rendering
 RUN apk add terminus-font ttf-inconsolata ttf-dejavu font-noto font-noto-cjk ttf-font-awesome font-noto-extra font-noto-arabic
 
-RUN chmod 644 /usr/share/fonts/*
+RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
 
 # TwitchDownloaderCLI
 COPY --from=build-stage-02 /tmp/TwitchDownloaderCLI /usr/local/bin/
