@@ -116,9 +116,15 @@ func (s *Service) OAuthCallback(c echo.Context) error {
 	// User check
 	var userInfo UserInfo
 	err = idToken.Claims(&userInfo)
-	if userInfo.NickName == "" || userInfo.Sub == "" {
+
+	// some providers don't return nickname
+	if userInfo.NickName == "" {
+		userInfo.NickName = userInfo.PreferredUsername
+	}
+	if userInfo.Sub == "" || userInfo.NickName == "" {
 		return fmt.Errorf("invalid user info: %w", err)
 	}
+
 	err = s.OAuthUserCheck(c, userInfo)
 	if err != nil {
 		return fmt.Errorf("failed to check user: %w", err)
@@ -270,7 +276,6 @@ func setOauthCookie(c echo.Context, name, value string, time time.Time) {
 
 func FetchJWKS() error {
 	providerURL := os.Getenv("OAUTH_PROVIDER_URL")
-
 	provider, err := oidc.NewProvider(context.Background(), providerURL)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error creating oauth provider")
