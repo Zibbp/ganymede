@@ -3,7 +3,7 @@ module github.com/zibbp/ganymede
 go 1.18
 
 require (
-	entgo.io/ent v0.12.0
+	entgo.io/ent v0.12.1
 	github.com/MicahParks/keyfunc v1.9.0
 	github.com/coreos/go-oidc/v3 v3.5.0
 	github.com/go-co-op/gocron v1.22.2
