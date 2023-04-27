@@ -6,3 +6,8 @@ tasks:
       - go install github.com/swaggo/swag/cmd/swag@latest
     cmds:
       - swag init -g cmd/server/main.go
+  init:
+    cmds:
+      - mkdir -p ./dev/vods
+      - mkdir -p ./dev/logs
+      - mkdir -p ./dev/data
