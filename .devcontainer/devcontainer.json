@@ -1,12 +1,7 @@
 {
   "build": { "dockerfile": "Dockerfile" },
   "features": {
-    // "ghcr.io/devcontainers/features/node:1": {
-    //   "version": "latest"
-    // },
-    // "ghcr.io/devcontainers/features/python:1": {
-    //   "version": "latest"
-    // }
+    "ghcr.io/eitsupi/devcontainer-features/go-task:1": {}
   },
   "customizations": {
     "vscode": {
