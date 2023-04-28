@@ -124,9 +124,9 @@ func (s *Service) GetVodWithChannel(vodID uuid.UUID) (*ent.Vod, error) {
 	return v, nil
 }
 
-func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID) error {
+func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) error {
 	// delete vod and queue item
-	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithQueue().Only(c.Request().Context())
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithQueue().WithChannel().Only(c.Request().Context())
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return fmt.Errorf("vod not found")
@@ -137,6 +137,17 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID) error {
 		err = s.Store.Client.Queue.DeleteOneID(v.Edges.Queue.ID).Exec(c.Request().Context())
 		if err != nil {
 			return fmt.Errorf("error deleting queue item: %v", err)
+		}
+	}
+
+	// delete files
+	if deleteFiles {
+		log.Debug().Msgf("deleting files for vod %s", v.ID)
+		path := fmt.Sprintf("/vods/%s/%s", v.Edges.Channel.Name, v.FolderName)
+		err = os.RemoveAll(path)
+		if err != nil {
+			log.Debug().Err(err).Msgf("error deleting files for vod %s", v.ID)
+			return fmt.Errorf("error deleting files for vod %s: %v", v.ID, err)
 		}
 	}
 

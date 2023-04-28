@@ -21,7 +21,7 @@ type VodService interface {
 	GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error)
 	GetVod(vID uuid.UUID) (*ent.Vod, error)
 	GetVodWithChannel(vID uuid.UUID) (*ent.Vod, error)
-	DeleteVod(c echo.Context, vID uuid.UUID) error
+	DeleteVod(c echo.Context, vID uuid.UUID, deleteFiles bool) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	SearchVods(c echo.Context, query string, limit int, offset int) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
@@ -203,6 +203,7 @@ func (h *Handler) GetVod(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	string	true	"Vod ID"
+//	@Param			delete_files	query	string	false	"Delete files"
 //	@Success		200
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		404	{object}	utils.ErrorResponse
@@ -214,7 +215,13 @@ func (h *Handler) DeleteVod(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	err = h.Service.VodService.DeleteVod(c, vID)
+	// get query param of delete_files if exists
+	deleteFiles := false
+	dF := c.QueryParam("delete_files")
+	if dF == "true" {
+		deleteFiles = true
+	}
+	err = h.Service.VodService.DeleteVod(c, vID, deleteFiles)
 	if err != nil {
 		if err.Error() == "vod not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
