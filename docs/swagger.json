@@ -3295,6 +3295,12 @@
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Delete files",
+                        "name": "delete_files",
+                        "in": "query"
                     }
                 ],
                 "responses": {

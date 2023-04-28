@@ -3302,6 +3302,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Delete files",
+                        "name": "delete_files",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -5776,6 +5782,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Authentication is handled using JWT tokens. The tokens are set as access-token and refresh-token cookies.\nFor information regarding which role is authorized for which endpoint, see the http handler https://github.com/Zibbp/ganymede/blob/main/internal/transport/http/handler.go.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {
