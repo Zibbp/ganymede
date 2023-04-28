@@ -3366,6 +3366,10 @@ paths:
         name: id
         required: true
         type: string
+      - description: Delete files
+        in: query
+        name: delete_files
+        type: string
       produces:
       - application/json
       responses:
