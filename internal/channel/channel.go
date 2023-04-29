@@ -102,7 +102,7 @@ func (s *Service) DeleteChannel(channelID uuid.UUID) error {
 }
 
 func (s *Service) UpdateChannel(cId uuid.UUID, channelDto Channel) (*ent.Channel, error) {
-	cha, err := s.Store.Client.Channel.UpdateOneID(cId).SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).Save(context.Background())
+	cha, err := s.Store.Client.Channel.UpdateOneID(cId).SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).SetRetention(channelDto.Retention).SetRetentionDays(channelDto.RetentionDays).Save(context.Background())
 	if err != nil {
 		// if channel not found
 		if _, ok := err.(*ent.NotFoundError); ok {

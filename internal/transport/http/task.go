@@ -11,7 +11,7 @@ type TaskService interface {
 }
 
 type StartTaskRequest struct {
-	Task string `json:"task" validate:"required,oneof=check_live check_vod get_jwks twitch_auth queue_hold_check storage_migration"`
+	Task string `json:"task" validate:"required,oneof=check_live check_vod get_jwks twitch_auth queue_hold_check storage_migration prune_videos"`
 }
 
 // StartTask godoc

@@ -31,6 +31,7 @@ type VodService interface {
 	GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error)
 	GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.GanymedeBadges, error)
 	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error)
+	LockVod(c echo.Context, vID uuid.UUID, status bool) error
 }
 
 type CreateVodRequest struct {
@@ -52,6 +53,7 @@ type CreateVodRequest struct {
 	InfoPath         string            `json:"info_path"`
 	CaptionPath      string            `json:"caption_path"`
 	StreamedAt       string            `json:"streamed_at" validate:"required"`
+	Locked           bool              `json:"locked"`
 }
 
 // CreateVod godoc
@@ -117,6 +119,7 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		InfoPath:         req.InfoPath,
 		CaptionPath:      req.CaptionPath,
 		StreamedAt:       streamedAt,
+		Locked:           req.Locked,
 	}
 
 	v, err := h.Service.VodService.CreateVod(cvrDto, cUUID)
@@ -284,6 +287,7 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 		InfoPath:         req.InfoPath,
 		CaptionPath:      req.CaptionPath,
 		StreamedAt:       streamedAt,
+		Locked:           req.Locked,
 	}
 
 	v, err := h.Service.VodService.UpdateVod(c, vID, cvrDto, cUUID)
@@ -562,4 +566,21 @@ func (h *Handler) GetNumberOfVodChatCommentsFromTime(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) LockVod(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	status := true
+	param := c.QueryParam("locked")
+	if param == "false" {
+		status = false
+	}
+	err = h.Service.VodService.LockVod(c, vID, status)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, nil)
 }

@@ -20,9 +20,11 @@ type ChannelService interface {
 }
 
 type CreateChannelRequest struct {
-	Name        string `json:"name" validate:"required,min=2,max=50"`
-	DisplayName string `json:"display_name" validate:"required,min=2,max=50"`
-	ImagePath   string `json:"image_path" validate:"required,min=3"`
+	Name          string `json:"name" validate:"required,min=2,max=50"`
+	DisplayName   string `json:"display_name" validate:"required,min=2,max=50"`
+	ImagePath     string `json:"image_path" validate:"required,min=3"`
+	Retention     bool   `json:"retention"`
+	RetentionDays int64  `json:"retention_days"`
 }
 
 // CreateChannel godoc
@@ -170,9 +172,11 @@ func (h *Handler) UpdateChannel(c echo.Context) error {
 	}
 
 	ccDto := channel.Channel{
-		Name:        ccr.Name,
-		DisplayName: ccr.DisplayName,
-		ImagePath:   ccr.ImagePath,
+		Name:          ccr.Name,
+		DisplayName:   ccr.DisplayName,
+		ImagePath:     ccr.ImagePath,
+		Retention:     ccr.Retention,
+		RetentionDays: ccr.RetentionDays,
 	}
 
 	cha, err := h.Service.ChannelService.UpdateChannel(cUUID, ccDto)

@@ -180,6 +180,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.GET("/:id/chat/userid", h.GetUserIdFromChat)
 	vodGroup.GET("/:id/chat/emotes", h.GetVodChatEmotes)
 	vodGroup.GET("/:id/chat/badges", h.GetVodChatBadges)
+	vodGroup.POST("/:id/lock", h.LockVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 
 	// Queue
 	queueGroup := e.Group("/queue")
