@@ -420,11 +420,7 @@ func HasChannel() predicate.Live {
 // HasChannelWith applies the HasEdge predicate on the "channel" edge with a given conditions (other predicates).
 func HasChannelWith(preds ...predicate.Channel) predicate.Live {
 	return predicate.Live(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ChannelInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ChannelTable, ChannelColumn),
-		)
+		step := newChannelStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -447,11 +443,7 @@ func HasCategories() predicate.Live {
 // HasCategoriesWith applies the HasEdge predicate on the "categories" edge with a given conditions (other predicates).
 func HasCategoriesWith(preds ...predicate.LiveCategory) predicate.Live {
 	return predicate.Live(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(CategoriesInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CategoriesTable, CategoriesColumn),
-		)
+		step := newCategoriesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

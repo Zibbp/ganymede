@@ -11,3 +11,6 @@ tasks:
       - mkdir -p ./dev/vods
       - mkdir -p ./dev/logs
       - mkdir -p ./dev/data
+  ent_generate:
+    cmds:
+      - go generate ./ent

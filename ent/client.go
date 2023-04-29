@@ -11,6 +11,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/migrate"
 
+	"entgo.io/ent"
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
@@ -20,10 +24,6 @@ import (
 	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
-
-	"entgo.io/ent/dialect"
-	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // Client is the client that holds all ent builders.
@@ -71,6 +71,55 @@ func (c *Client) init() {
 	c.TwitchCategory = NewTwitchCategoryClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Vod = NewVodClient(c.config)
+}
+
+type (
+	// config is the configuration for the client and its builder.
+	config struct {
+		// driver used for executing database requests.
+		driver dialect.Driver
+		// debug enable a debug logging.
+		debug bool
+		// log used for logging on debug mode.
+		log func(...any)
+		// hooks to execute on mutations.
+		hooks *hooks
+		// interceptors to execute on queries.
+		inters *inters
+	}
+	// Option function to configure the client.
+	Option func(*config)
+)
+
+// options applies the options on the config object.
+func (c *config) options(opts ...Option) {
+	for _, opt := range opts {
+		opt(c)
+	}
+	if c.debug {
+		c.driver = dialect.Debug(c.driver, c.log)
+	}
+}
+
+// Debug enables debug logging on the ent.Driver.
+func Debug() Option {
+	return func(c *config) {
+		c.debug = true
+	}
+}
+
+// Log sets the logging function for debug mode.
+func Log(fn func(...any)) Option {
+	return func(c *config) {
+		c.log = fn
+	}
+}
+
+// Driver configures the client driver.
+func Driver(driver dialect.Driver) Option {
+	return func(c *config) {
+		c.driver = driver
+	}
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -169,29 +218,23 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Channel.Use(hooks...)
-	c.Live.Use(hooks...)
-	c.LiveCategory.Use(hooks...)
-	c.Playback.Use(hooks...)
-	c.Playlist.Use(hooks...)
-	c.Queue.Use(hooks...)
-	c.TwitchCategory.Use(hooks...)
-	c.User.Use(hooks...)
-	c.Vod.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Channel, c.Live, c.LiveCategory, c.Playback, c.Playlist, c.Queue,
+		c.TwitchCategory, c.User, c.Vod,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Channel.Intercept(interceptors...)
-	c.Live.Intercept(interceptors...)
-	c.LiveCategory.Intercept(interceptors...)
-	c.Playback.Intercept(interceptors...)
-	c.Playlist.Intercept(interceptors...)
-	c.Queue.Intercept(interceptors...)
-	c.TwitchCategory.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
-	c.Vod.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Channel, c.Live, c.LiveCategory, c.Playback, c.Playlist, c.Queue,
+		c.TwitchCategory, c.User, c.Vod,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -1441,3 +1484,15 @@ func (c *VodClient) mutate(ctx context.Context, m *VodMutation) (Value, error) {
 		return nil, fmt.Errorf("ent: unknown Vod mutation op: %q", m.Op())
 	}
 }
+
+// hooks and interceptors per client, for fast access.
+type (
+	hooks struct {
+		Channel, Live, LiveCategory, Playback, Playlist, Queue, TwitchCategory, User,
+		Vod []ent.Hook
+	}
+	inters struct {
+		Channel, Live, LiveCategory, Playback, Playlist, Queue, TwitchCategory, User,
+		Vod []ent.Interceptor
+	}
+)

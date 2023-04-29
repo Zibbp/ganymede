@@ -21,7 +21,7 @@ import (
 type PlaylistQuery struct {
 	config
 	ctx        *QueryContext
-	order      []OrderFunc
+	order      []playlist.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Playlist
 	withVods   *VodQuery
@@ -56,7 +56,7 @@ func (pq *PlaylistQuery) Unique(unique bool) *PlaylistQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (pq *PlaylistQuery) Order(o ...OrderFunc) *PlaylistQuery {
+func (pq *PlaylistQuery) Order(o ...playlist.OrderOption) *PlaylistQuery {
 	pq.order = append(pq.order, o...)
 	return pq
 }
@@ -272,7 +272,7 @@ func (pq *PlaylistQuery) Clone() *PlaylistQuery {
 	return &PlaylistQuery{
 		config:     pq.config,
 		ctx:        pq.ctx.Clone(),
-		order:      append([]OrderFunc{}, pq.order...),
+		order:      append([]playlist.OrderOption{}, pq.order...),
 		inters:     append([]Interceptor{}, pq.inters...),
 		predicates: append([]predicate.Playlist{}, pq.predicates...),
 		withVods:   pq.withVods.Clone(),

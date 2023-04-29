@@ -23,7 +23,7 @@ import (
 type VodQuery struct {
 	config
 	ctx           *QueryContext
-	order         []OrderFunc
+	order         []vod.OrderOption
 	inters        []Interceptor
 	predicates    []predicate.Vod
 	withChannel   *ChannelQuery
@@ -61,7 +61,7 @@ func (vq *VodQuery) Unique(unique bool) *VodQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (vq *VodQuery) Order(o ...OrderFunc) *VodQuery {
+func (vq *VodQuery) Order(o ...vod.OrderOption) *VodQuery {
 	vq.order = append(vq.order, o...)
 	return vq
 }
@@ -321,7 +321,7 @@ func (vq *VodQuery) Clone() *VodQuery {
 	return &VodQuery{
 		config:        vq.config,
 		ctx:           vq.ctx.Clone(),
-		order:         append([]OrderFunc{}, vq.order...),
+		order:         append([]vod.OrderOption{}, vq.order...),
 		inters:        append([]Interceptor{}, vq.inters...),
 		predicates:    append([]predicate.Vod{}, vq.predicates...),
 		withChannel:   vq.withChannel.Clone(),
@@ -538,7 +538,7 @@ func (vq *VodQuery) loadQueue(ctx context.Context, query *QueueQuery, nodes []*V
 	}
 	query.withFKs = true
 	query.Where(predicate.Queue(func(s *sql.Selector) {
-		s.Where(sql.InValues(vod.QueueColumn, fks...))
+		s.Where(sql.InValues(s.C(vod.QueueColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -551,7 +551,7 @@ func (vq *VodQuery) loadQueue(ctx context.Context, query *QueueQuery, nodes []*V
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "vod_queue" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "vod_queue" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

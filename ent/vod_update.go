@@ -301,6 +301,20 @@ func (vu *VodUpdate) ClearFileName() *VodUpdate {
 	return vu
 }
 
+// SetLocked sets the "locked" field.
+func (vu *VodUpdate) SetLocked(b bool) *VodUpdate {
+	vu.mutation.SetLocked(b)
+	return vu
+}
+
+// SetNillableLocked sets the "locked" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableLocked(b *bool) *VodUpdate {
+	if b != nil {
+		vu.SetLocked(*b)
+	}
+	return vu
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vu *VodUpdate) SetStreamedAt(t time.Time) *VodUpdate {
 	vu.mutation.SetStreamedAt(t)
@@ -551,6 +565,9 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if vu.mutation.FileNameCleared() {
 		_spec.ClearField(vod.FieldFileName, field.TypeString)
 	}
+	if value, ok := vu.mutation.Locked(); ok {
+		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
+	}
 	if value, ok := vu.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
 	}
@@ -565,10 +582,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{vod.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: channel.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -581,10 +595,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{vod.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: channel.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -600,10 +611,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{vod.QueueColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: queue.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -616,10 +624,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{vod.QueueColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: queue.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -635,10 +640,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: vod.PlaylistsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: playlist.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -651,10 +653,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: vod.PlaylistsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: playlist.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -670,10 +669,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: vod.PlaylistsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: playlist.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -969,6 +965,20 @@ func (vuo *VodUpdateOne) ClearFileName() *VodUpdateOne {
 	return vuo
 }
 
+// SetLocked sets the "locked" field.
+func (vuo *VodUpdateOne) SetLocked(b bool) *VodUpdateOne {
+	vuo.mutation.SetLocked(b)
+	return vuo
+}
+
+// SetNillableLocked sets the "locked" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableLocked(b *bool) *VodUpdateOne {
+	if b != nil {
+		vuo.SetLocked(*b)
+	}
+	return vuo
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vuo *VodUpdateOne) SetStreamedAt(t time.Time) *VodUpdateOne {
 	vuo.mutation.SetStreamedAt(t)
@@ -1249,6 +1259,9 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	if vuo.mutation.FileNameCleared() {
 		_spec.ClearField(vod.FieldFileName, field.TypeString)
 	}
+	if value, ok := vuo.mutation.Locked(); ok {
+		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
+	}
 	if value, ok := vuo.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
 	}
@@ -1263,10 +1276,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Columns: []string{vod.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: channel.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1279,10 +1289,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Columns: []string{vod.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: channel.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1298,10 +1305,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Columns: []string{vod.QueueColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: queue.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1314,10 +1318,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Columns: []string{vod.QueueColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: queue.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1333,10 +1334,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Columns: vod.PlaylistsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: playlist.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1349,10 +1347,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Columns: vod.PlaylistsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: playlist.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1368,10 +1363,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Columns: vod.PlaylistsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: playlist.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

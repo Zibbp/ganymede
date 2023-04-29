@@ -716,11 +716,7 @@ func HasVod() predicate.Queue {
 // HasVodWith applies the HasEdge predicate on the "vod" edge with a given conditions (other predicates).
 func HasVodWith(preds ...predicate.Vod) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(VodInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, true, VodTable, VodColumn),
-		)
+		step := newVodStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

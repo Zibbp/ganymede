@@ -54,6 +54,16 @@ func IDLTE(id string) predicate.TwitchCategory {
 	return predicate.TwitchCategory(sql.FieldLTE(FieldID, id))
 }
 
+// IDEqualFold applies the EqualFold predicate on the ID field.
+func IDEqualFold(id string) predicate.TwitchCategory {
+	return predicate.TwitchCategory(sql.FieldEqualFold(FieldID, id))
+}
+
+// IDContainsFold applies the ContainsFold predicate on the ID field.
+func IDContainsFold(id string) predicate.TwitchCategory {
+	return predicate.TwitchCategory(sql.FieldContainsFold(FieldID, id))
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.TwitchCategory {
 	return predicate.TwitchCategory(sql.FieldEQ(FieldName, v))

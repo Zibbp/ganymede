@@ -358,10 +358,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{live.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: channel.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -374,10 +371,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{live.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: channel.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -393,10 +387,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{live.CategoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: livecategory.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -409,10 +400,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{live.CategoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: livecategory.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -428,10 +416,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{live.CategoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: livecategory.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -816,10 +801,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 			Columns: []string{live.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: channel.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -832,10 +814,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 			Columns: []string{live.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: channel.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -851,10 +830,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 			Columns: []string{live.CategoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: livecategory.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -867,10 +843,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 			Columns: []string{live.CategoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: livecategory.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -886,10 +859,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 			Columns: []string{live.CategoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: livecategory.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -390,11 +390,7 @@ func HasVods() predicate.Playlist {
 // HasVodsWith applies the HasEdge predicate on the "vods" edge with a given conditions (other predicates).
 func HasVodsWith(preds ...predicate.Vod) predicate.Playlist {
 	return predicate.Playlist(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(VodsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, VodsTable, VodsPrimaryKey...),
-		)
+		step := newVodsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

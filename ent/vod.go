@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
@@ -54,6 +55,8 @@ type Vod struct {
 	FolderName string `json:"folder_name,omitempty"`
 	// FileName holds the value of the "file_name" field.
 	FileName string `json:"file_name,omitempty"`
+	// Locked holds the value of the "locked" field.
+	Locked bool `json:"locked,omitempty"`
 	// The time the VOD was streamed.
 	StreamedAt time.Time `json:"streamed_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -64,6 +67,7 @@ type Vod struct {
 	// The values are being populated by the VodQuery when eager-loading is set.
 	Edges        VodEdges `json:"edges"`
 	channel_vods *uuid.UUID
+	selectValues sql.SelectValues
 }
 
 // VodEdges holds the relations/edges for other nodes in the graph.
@@ -119,7 +123,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case vod.FieldProcessing:
+		case vod.FieldProcessing, vod.FieldLocked:
 			values[i] = new(sql.NullBool)
 		case vod.FieldDuration, vod.FieldViews:
 			values[i] = new(sql.NullInt64)
@@ -132,7 +136,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 		case vod.ForeignKeys[0]: // channel_vods
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Vod", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -254,6 +258,12 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				v.FileName = value.String
 			}
+		case vod.FieldLocked:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field locked", values[i])
+			} else if value.Valid {
+				v.Locked = value.Bool
+			}
 		case vod.FieldStreamedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field streamed_at", values[i])
@@ -279,9 +289,17 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 				v.channel_vods = new(uuid.UUID)
 				*v.channel_vods = *value.S.(*uuid.UUID)
 			}
+		default:
+			v.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
+}
+
+// Value returns the ent.Value that was dynamically selected and assigned to the Vod.
+// This includes values selected through modifiers, order, etc.
+func (v *Vod) Value(name string) (ent.Value, error) {
+	return v.selectValues.Get(name)
 }
 
 // QueryChannel queries the "channel" edge of the Vod entity.
@@ -372,6 +390,9 @@ func (v *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("file_name=")
 	builder.WriteString(v.FileName)
+	builder.WriteString(", ")
+	builder.WriteString("locked=")
+	builder.WriteString(fmt.Sprintf("%v", v.Locked))
 	builder.WriteString(", ")
 	builder.WriteString("streamed_at=")
 	builder.WriteString(v.StreamedAt.Format(time.ANSIC))

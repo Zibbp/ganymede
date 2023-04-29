@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/playlist"
@@ -29,7 +30,8 @@ type Playlist struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PlaylistQuery when eager-loading is set.
-	Edges PlaylistEdges `json:"edges"`
+	Edges        PlaylistEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // PlaylistEdges holds the relations/edges for other nodes in the graph.
@@ -62,7 +64,7 @@ func (*Playlist) scanValues(columns []string) ([]any, error) {
 		case playlist.FieldID:
 			values[i] = new(uuid.UUID)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Playlist", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -112,9 +114,17 @@ func (pl *Playlist) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pl.CreatedAt = value.Time
 			}
+		default:
+			pl.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
+}
+
+// Value returns the ent.Value that was dynamically selected and assigned to the Playlist.
+// This includes values selected through modifiers, order, etc.
+func (pl *Playlist) Value(name string) (ent.Value, error) {
+	return pl.selectValues.Get(name)
 }
 
 // QueryVods queries the "vods" edge of the Playlist entity.

@@ -20,7 +20,7 @@ import (
 type LiveCategoryQuery struct {
 	config
 	ctx        *QueryContext
-	order      []OrderFunc
+	order      []livecategory.OrderOption
 	inters     []Interceptor
 	predicates []predicate.LiveCategory
 	withLive   *LiveQuery
@@ -56,7 +56,7 @@ func (lcq *LiveCategoryQuery) Unique(unique bool) *LiveCategoryQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (lcq *LiveCategoryQuery) Order(o ...OrderFunc) *LiveCategoryQuery {
+func (lcq *LiveCategoryQuery) Order(o ...livecategory.OrderOption) *LiveCategoryQuery {
 	lcq.order = append(lcq.order, o...)
 	return lcq
 }
@@ -272,7 +272,7 @@ func (lcq *LiveCategoryQuery) Clone() *LiveCategoryQuery {
 	return &LiveCategoryQuery{
 		config:     lcq.config,
 		ctx:        lcq.ctx.Clone(),
-		order:      append([]OrderFunc{}, lcq.order...),
+		order:      append([]livecategory.OrderOption{}, lcq.order...),
 		inters:     append([]Interceptor{}, lcq.inters...),
 		predicates: append([]predicate.LiveCategory{}, lcq.predicates...),
 		withLive:   lcq.withLive.Clone(),

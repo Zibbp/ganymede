@@ -138,11 +138,7 @@ func HasLive() predicate.LiveCategory {
 // HasLiveWith applies the HasEdge predicate on the "live" edge with a given conditions (other predicates).
 func HasLiveWith(preds ...predicate.Live) predicate.LiveCategory {
 	return predicate.LiveCategory(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(LiveInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, LiveTable, LiveColumn),
-		)
+		step := newLiveStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

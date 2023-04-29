@@ -5,6 +5,8 @@ package live
 import (
 	"time"
 
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -132,3 +134,111 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
+
+// OrderOption defines the ordering options for the Live queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByWatchLive orders the results by the watch_live field.
+func ByWatchLive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWatchLive, opts...).ToFunc()
+}
+
+// ByWatchVod orders the results by the watch_vod field.
+func ByWatchVod(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWatchVod, opts...).ToFunc()
+}
+
+// ByDownloadArchives orders the results by the download_archives field.
+func ByDownloadArchives(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDownloadArchives, opts...).ToFunc()
+}
+
+// ByDownloadHighlights orders the results by the download_highlights field.
+func ByDownloadHighlights(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDownloadHighlights, opts...).ToFunc()
+}
+
+// ByDownloadUploads orders the results by the download_uploads field.
+func ByDownloadUploads(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDownloadUploads, opts...).ToFunc()
+}
+
+// ByDownloadSubOnly orders the results by the download_sub_only field.
+func ByDownloadSubOnly(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDownloadSubOnly, opts...).ToFunc()
+}
+
+// ByIsLive orders the results by the is_live field.
+func ByIsLive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsLive, opts...).ToFunc()
+}
+
+// ByArchiveChat orders the results by the archive_chat field.
+func ByArchiveChat(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldArchiveChat, opts...).ToFunc()
+}
+
+// ByResolution orders the results by the resolution field.
+func ByResolution(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolution, opts...).ToFunc()
+}
+
+// ByLastLive orders the results by the last_live field.
+func ByLastLive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastLive, opts...).ToFunc()
+}
+
+// ByRenderChat orders the results by the render_chat field.
+func ByRenderChat(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRenderChat, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByChannelField orders the results by channel field.
+func ByChannelField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChannelStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByCategoriesCount orders the results by categories count.
+func ByCategoriesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCategoriesStep(), opts...)
+	}
+}
+
+// ByCategories orders the results by categories terms.
+func ByCategories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCategoriesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newChannelStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChannelInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ChannelTable, ChannelColumn),
+	)
+}
+func newCategoriesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CategoriesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CategoriesTable, CategoriesColumn),
+	)
+}

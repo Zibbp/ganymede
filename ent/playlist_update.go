@@ -194,10 +194,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: playlist.VodsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -210,10 +207,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: playlist.VodsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -229,10 +223,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: playlist.VodsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -454,10 +445,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 			Columns: playlist.VodsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -470,10 +458,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 			Columns: playlist.VodsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -489,10 +474,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 			Columns: playlist.VodsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

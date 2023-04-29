@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -49,6 +51,8 @@ const (
 	FieldFolderName = "folder_name"
 	// FieldFileName holds the string denoting the file_name field in the database.
 	FieldFileName = "file_name"
+	// FieldLocked holds the string denoting the locked field in the database.
+	FieldLocked = "locked"
 	// FieldStreamedAt holds the string denoting the streamed_at field in the database.
 	FieldStreamedAt = "streamed_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -104,6 +108,7 @@ var Columns = []string{
 	FieldCaptionPath,
 	FieldFolderName,
 	FieldFileName,
+	FieldLocked,
 	FieldStreamedAt,
 	FieldUpdatedAt,
 	FieldCreatedAt,
@@ -143,6 +148,8 @@ var (
 	DefaultViews int
 	// DefaultProcessing holds the default value on creation for the "processing" field.
 	DefaultProcessing bool
+	// DefaultLocked holds the default value on creation for the "locked" field.
+	DefaultLocked bool
 	// DefaultStreamedAt holds the default value on creation for the "streamed_at" field.
 	DefaultStreamedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -177,4 +184,166 @@ func TypeValidator(_type utils.VodType) error {
 	default:
 		return fmt.Errorf("vod: invalid enum value for type field: %q", _type)
 	}
+}
+
+// OrderOption defines the ordering options for the Vod queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByExtID orders the results by the ext_id field.
+func ByExtID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExtID, opts...).ToFunc()
+}
+
+// ByPlatform orders the results by the platform field.
+func ByPlatform(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPlatform, opts...).ToFunc()
+}
+
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
+}
+
+// ByTitle orders the results by the title field.
+func ByTitle(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTitle, opts...).ToFunc()
+}
+
+// ByDuration orders the results by the duration field.
+func ByDuration(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDuration, opts...).ToFunc()
+}
+
+// ByViews orders the results by the views field.
+func ByViews(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldViews, opts...).ToFunc()
+}
+
+// ByResolution orders the results by the resolution field.
+func ByResolution(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolution, opts...).ToFunc()
+}
+
+// ByProcessing orders the results by the processing field.
+func ByProcessing(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProcessing, opts...).ToFunc()
+}
+
+// ByThumbnailPath orders the results by the thumbnail_path field.
+func ByThumbnailPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldThumbnailPath, opts...).ToFunc()
+}
+
+// ByWebThumbnailPath orders the results by the web_thumbnail_path field.
+func ByWebThumbnailPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWebThumbnailPath, opts...).ToFunc()
+}
+
+// ByVideoPath orders the results by the video_path field.
+func ByVideoPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVideoPath, opts...).ToFunc()
+}
+
+// ByChatPath orders the results by the chat_path field.
+func ByChatPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldChatPath, opts...).ToFunc()
+}
+
+// ByChatVideoPath orders the results by the chat_video_path field.
+func ByChatVideoPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldChatVideoPath, opts...).ToFunc()
+}
+
+// ByInfoPath orders the results by the info_path field.
+func ByInfoPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInfoPath, opts...).ToFunc()
+}
+
+// ByCaptionPath orders the results by the caption_path field.
+func ByCaptionPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCaptionPath, opts...).ToFunc()
+}
+
+// ByFolderName orders the results by the folder_name field.
+func ByFolderName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFolderName, opts...).ToFunc()
+}
+
+// ByFileName orders the results by the file_name field.
+func ByFileName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFileName, opts...).ToFunc()
+}
+
+// ByLocked orders the results by the locked field.
+func ByLocked(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLocked, opts...).ToFunc()
+}
+
+// ByStreamedAt orders the results by the streamed_at field.
+func ByStreamedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStreamedAt, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByChannelField orders the results by channel field.
+func ByChannelField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChannelStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByQueueField orders the results by queue field.
+func ByQueueField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newQueueStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByPlaylistsCount orders the results by playlists count.
+func ByPlaylistsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPlaylistsStep(), opts...)
+	}
+}
+
+// ByPlaylists orders the results by playlists terms.
+func ByPlaylists(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPlaylistsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newChannelStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChannelInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ChannelTable, ChannelColumn),
+	)
+}
+func newQueueStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(QueueInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, false, QueueTable, QueueColumn),
+	)
+}
+func newPlaylistsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PlaylistsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, PlaylistsTable, PlaylistsPrimaryKey...),
+	)
 }

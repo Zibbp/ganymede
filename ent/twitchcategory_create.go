@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"entgo.io/ent/dialect"
-	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
@@ -20,7 +18,6 @@ type TwitchCategoryCreate struct {
 	config
 	mutation *TwitchCategoryMutation
 	hooks    []Hook
-	conflict []sql.ConflictOption
 }
 
 // SetName sets the "name" field.
@@ -178,7 +175,6 @@ func (tcc *TwitchCategoryCreate) createSpec() (*TwitchCategory, *sqlgraph.Create
 		_node = &TwitchCategory{config: tcc.config}
 		_spec = sqlgraph.NewCreateSpec(twitchcategory.Table, sqlgraph.NewFieldSpec(twitchcategory.FieldID, field.TypeString))
 	)
-	_spec.OnConflict = tcc.conflict
 	if id, ok := tcc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -206,279 +202,10 @@ func (tcc *TwitchCategoryCreate) createSpec() (*TwitchCategory, *sqlgraph.Create
 	return _node, _spec
 }
 
-// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
-// of the `INSERT` statement. For example:
-//
-//	client.TwitchCategory.Create().
-//		SetName(v).
-//		OnConflict(
-//			// Update the row with the new values
-//			// the was proposed for insertion.
-//			sql.ResolveWithNewValues(),
-//		).
-//		// Override some of the fields with custom
-//		// update values.
-//		Update(func(u *ent.TwitchCategoryUpsert) {
-//			SetName(v+v).
-//		}).
-//		Exec(ctx)
-func (tcc *TwitchCategoryCreate) OnConflict(opts ...sql.ConflictOption) *TwitchCategoryUpsertOne {
-	tcc.conflict = opts
-	return &TwitchCategoryUpsertOne{
-		create: tcc,
-	}
-}
-
-// OnConflictColumns calls `OnConflict` and configures the columns
-// as conflict target. Using this option is equivalent to using:
-//
-//	client.TwitchCategory.Create().
-//		OnConflict(sql.ConflictColumns(columns...)).
-//		Exec(ctx)
-func (tcc *TwitchCategoryCreate) OnConflictColumns(columns ...string) *TwitchCategoryUpsertOne {
-	tcc.conflict = append(tcc.conflict, sql.ConflictColumns(columns...))
-	return &TwitchCategoryUpsertOne{
-		create: tcc,
-	}
-}
-
-type (
-	// TwitchCategoryUpsertOne is the builder for "upsert"-ing
-	//  one TwitchCategory node.
-	TwitchCategoryUpsertOne struct {
-		create *TwitchCategoryCreate
-	}
-
-	// TwitchCategoryUpsert is the "OnConflict" setter.
-	TwitchCategoryUpsert struct {
-		*sql.UpdateSet
-	}
-)
-
-// SetName sets the "name" field.
-func (u *TwitchCategoryUpsert) SetName(v string) *TwitchCategoryUpsert {
-	u.Set(twitchcategory.FieldName, v)
-	return u
-}
-
-// UpdateName sets the "name" field to the value that was provided on create.
-func (u *TwitchCategoryUpsert) UpdateName() *TwitchCategoryUpsert {
-	u.SetExcluded(twitchcategory.FieldName)
-	return u
-}
-
-// SetBoxArtURL sets the "box_art_url" field.
-func (u *TwitchCategoryUpsert) SetBoxArtURL(v string) *TwitchCategoryUpsert {
-	u.Set(twitchcategory.FieldBoxArtURL, v)
-	return u
-}
-
-// UpdateBoxArtURL sets the "box_art_url" field to the value that was provided on create.
-func (u *TwitchCategoryUpsert) UpdateBoxArtURL() *TwitchCategoryUpsert {
-	u.SetExcluded(twitchcategory.FieldBoxArtURL)
-	return u
-}
-
-// ClearBoxArtURL clears the value of the "box_art_url" field.
-func (u *TwitchCategoryUpsert) ClearBoxArtURL() *TwitchCategoryUpsert {
-	u.SetNull(twitchcategory.FieldBoxArtURL)
-	return u
-}
-
-// SetIgdbID sets the "igdb_id" field.
-func (u *TwitchCategoryUpsert) SetIgdbID(v string) *TwitchCategoryUpsert {
-	u.Set(twitchcategory.FieldIgdbID, v)
-	return u
-}
-
-// UpdateIgdbID sets the "igdb_id" field to the value that was provided on create.
-func (u *TwitchCategoryUpsert) UpdateIgdbID() *TwitchCategoryUpsert {
-	u.SetExcluded(twitchcategory.FieldIgdbID)
-	return u
-}
-
-// ClearIgdbID clears the value of the "igdb_id" field.
-func (u *TwitchCategoryUpsert) ClearIgdbID() *TwitchCategoryUpsert {
-	u.SetNull(twitchcategory.FieldIgdbID)
-	return u
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *TwitchCategoryUpsert) SetUpdatedAt(v time.Time) *TwitchCategoryUpsert {
-	u.Set(twitchcategory.FieldUpdatedAt, v)
-	return u
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *TwitchCategoryUpsert) UpdateUpdatedAt() *TwitchCategoryUpsert {
-	u.SetExcluded(twitchcategory.FieldUpdatedAt)
-	return u
-}
-
-// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
-// Using this option is equivalent to using:
-//
-//	client.TwitchCategory.Create().
-//		OnConflict(
-//			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(twitchcategory.FieldID)
-//			}),
-//		).
-//		Exec(ctx)
-func (u *TwitchCategoryUpsertOne) UpdateNewValues() *TwitchCategoryUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(twitchcategory.FieldID)
-		}
-		if _, exists := u.create.mutation.CreatedAt(); exists {
-			s.SetIgnore(twitchcategory.FieldCreatedAt)
-		}
-	}))
-	return u
-}
-
-// Ignore sets each column to itself in case of conflict.
-// Using this option is equivalent to using:
-//
-//	client.TwitchCategory.Create().
-//	    OnConflict(sql.ResolveWithIgnore()).
-//	    Exec(ctx)
-func (u *TwitchCategoryUpsertOne) Ignore() *TwitchCategoryUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
-	return u
-}
-
-// DoNothing configures the conflict_action to `DO NOTHING`.
-// Supported only by SQLite and PostgreSQL.
-func (u *TwitchCategoryUpsertOne) DoNothing() *TwitchCategoryUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.DoNothing())
-	return u
-}
-
-// Update allows overriding fields `UPDATE` values. See the TwitchCategoryCreate.OnConflict
-// documentation for more info.
-func (u *TwitchCategoryUpsertOne) Update(set func(*TwitchCategoryUpsert)) *TwitchCategoryUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
-		set(&TwitchCategoryUpsert{UpdateSet: update})
-	}))
-	return u
-}
-
-// SetName sets the "name" field.
-func (u *TwitchCategoryUpsertOne) SetName(v string) *TwitchCategoryUpsertOne {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.SetName(v)
-	})
-}
-
-// UpdateName sets the "name" field to the value that was provided on create.
-func (u *TwitchCategoryUpsertOne) UpdateName() *TwitchCategoryUpsertOne {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.UpdateName()
-	})
-}
-
-// SetBoxArtURL sets the "box_art_url" field.
-func (u *TwitchCategoryUpsertOne) SetBoxArtURL(v string) *TwitchCategoryUpsertOne {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.SetBoxArtURL(v)
-	})
-}
-
-// UpdateBoxArtURL sets the "box_art_url" field to the value that was provided on create.
-func (u *TwitchCategoryUpsertOne) UpdateBoxArtURL() *TwitchCategoryUpsertOne {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.UpdateBoxArtURL()
-	})
-}
-
-// ClearBoxArtURL clears the value of the "box_art_url" field.
-func (u *TwitchCategoryUpsertOne) ClearBoxArtURL() *TwitchCategoryUpsertOne {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.ClearBoxArtURL()
-	})
-}
-
-// SetIgdbID sets the "igdb_id" field.
-func (u *TwitchCategoryUpsertOne) SetIgdbID(v string) *TwitchCategoryUpsertOne {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.SetIgdbID(v)
-	})
-}
-
-// UpdateIgdbID sets the "igdb_id" field to the value that was provided on create.
-func (u *TwitchCategoryUpsertOne) UpdateIgdbID() *TwitchCategoryUpsertOne {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.UpdateIgdbID()
-	})
-}
-
-// ClearIgdbID clears the value of the "igdb_id" field.
-func (u *TwitchCategoryUpsertOne) ClearIgdbID() *TwitchCategoryUpsertOne {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.ClearIgdbID()
-	})
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *TwitchCategoryUpsertOne) SetUpdatedAt(v time.Time) *TwitchCategoryUpsertOne {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.SetUpdatedAt(v)
-	})
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *TwitchCategoryUpsertOne) UpdateUpdatedAt() *TwitchCategoryUpsertOne {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.UpdateUpdatedAt()
-	})
-}
-
-// Exec executes the query.
-func (u *TwitchCategoryUpsertOne) Exec(ctx context.Context) error {
-	if len(u.create.conflict) == 0 {
-		return errors.New("ent: missing options for TwitchCategoryCreate.OnConflict")
-	}
-	return u.create.Exec(ctx)
-}
-
-// ExecX is like Exec, but panics if an error occurs.
-func (u *TwitchCategoryUpsertOne) ExecX(ctx context.Context) {
-	if err := u.create.Exec(ctx); err != nil {
-		panic(err)
-	}
-}
-
-// Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *TwitchCategoryUpsertOne) ID(ctx context.Context) (id string, err error) {
-	if u.create.driver.Dialect() == dialect.MySQL {
-		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
-		// fields from the database since MySQL does not support the RETURNING clause.
-		return id, errors.New("ent: TwitchCategoryUpsertOne.ID is not supported by MySQL driver. Use TwitchCategoryUpsertOne.Exec instead")
-	}
-	node, err := u.create.Save(ctx)
-	if err != nil {
-		return id, err
-	}
-	return node.ID, nil
-}
-
-// IDX is like ID, but panics if an error occurs.
-func (u *TwitchCategoryUpsertOne) IDX(ctx context.Context) string {
-	id, err := u.ID(ctx)
-	if err != nil {
-		panic(err)
-	}
-	return id
-}
-
 // TwitchCategoryCreateBulk is the builder for creating many TwitchCategory entities in bulk.
 type TwitchCategoryCreateBulk struct {
 	config
 	builders []*TwitchCategoryCreate
-	conflict []sql.ConflictOption
 }
 
 // Save creates the TwitchCategory entities in the database.
@@ -499,13 +226,12 @@ func (tccb *TwitchCategoryCreateBulk) Save(ctx context.Context) ([]*TwitchCatego
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, tccb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = tccb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, tccb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -552,190 +278,6 @@ func (tccb *TwitchCategoryCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (tccb *TwitchCategoryCreateBulk) ExecX(ctx context.Context) {
 	if err := tccb.Exec(ctx); err != nil {
-		panic(err)
-	}
-}
-
-// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
-// of the `INSERT` statement. For example:
-//
-//	client.TwitchCategory.CreateBulk(builders...).
-//		OnConflict(
-//			// Update the row with the new values
-//			// the was proposed for insertion.
-//			sql.ResolveWithNewValues(),
-//		).
-//		// Override some of the fields with custom
-//		// update values.
-//		Update(func(u *ent.TwitchCategoryUpsert) {
-//			SetName(v+v).
-//		}).
-//		Exec(ctx)
-func (tccb *TwitchCategoryCreateBulk) OnConflict(opts ...sql.ConflictOption) *TwitchCategoryUpsertBulk {
-	tccb.conflict = opts
-	return &TwitchCategoryUpsertBulk{
-		create: tccb,
-	}
-}
-
-// OnConflictColumns calls `OnConflict` and configures the columns
-// as conflict target. Using this option is equivalent to using:
-//
-//	client.TwitchCategory.Create().
-//		OnConflict(sql.ConflictColumns(columns...)).
-//		Exec(ctx)
-func (tccb *TwitchCategoryCreateBulk) OnConflictColumns(columns ...string) *TwitchCategoryUpsertBulk {
-	tccb.conflict = append(tccb.conflict, sql.ConflictColumns(columns...))
-	return &TwitchCategoryUpsertBulk{
-		create: tccb,
-	}
-}
-
-// TwitchCategoryUpsertBulk is the builder for "upsert"-ing
-// a bulk of TwitchCategory nodes.
-type TwitchCategoryUpsertBulk struct {
-	create *TwitchCategoryCreateBulk
-}
-
-// UpdateNewValues updates the mutable fields using the new values that
-// were set on create. Using this option is equivalent to using:
-//
-//	client.TwitchCategory.Create().
-//		OnConflict(
-//			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(twitchcategory.FieldID)
-//			}),
-//		).
-//		Exec(ctx)
-func (u *TwitchCategoryUpsertBulk) UpdateNewValues() *TwitchCategoryUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		for _, b := range u.create.builders {
-			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(twitchcategory.FieldID)
-			}
-			if _, exists := b.mutation.CreatedAt(); exists {
-				s.SetIgnore(twitchcategory.FieldCreatedAt)
-			}
-		}
-	}))
-	return u
-}
-
-// Ignore sets each column to itself in case of conflict.
-// Using this option is equivalent to using:
-//
-//	client.TwitchCategory.Create().
-//		OnConflict(sql.ResolveWithIgnore()).
-//		Exec(ctx)
-func (u *TwitchCategoryUpsertBulk) Ignore() *TwitchCategoryUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
-	return u
-}
-
-// DoNothing configures the conflict_action to `DO NOTHING`.
-// Supported only by SQLite and PostgreSQL.
-func (u *TwitchCategoryUpsertBulk) DoNothing() *TwitchCategoryUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.DoNothing())
-	return u
-}
-
-// Update allows overriding fields `UPDATE` values. See the TwitchCategoryCreateBulk.OnConflict
-// documentation for more info.
-func (u *TwitchCategoryUpsertBulk) Update(set func(*TwitchCategoryUpsert)) *TwitchCategoryUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
-		set(&TwitchCategoryUpsert{UpdateSet: update})
-	}))
-	return u
-}
-
-// SetName sets the "name" field.
-func (u *TwitchCategoryUpsertBulk) SetName(v string) *TwitchCategoryUpsertBulk {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.SetName(v)
-	})
-}
-
-// UpdateName sets the "name" field to the value that was provided on create.
-func (u *TwitchCategoryUpsertBulk) UpdateName() *TwitchCategoryUpsertBulk {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.UpdateName()
-	})
-}
-
-// SetBoxArtURL sets the "box_art_url" field.
-func (u *TwitchCategoryUpsertBulk) SetBoxArtURL(v string) *TwitchCategoryUpsertBulk {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.SetBoxArtURL(v)
-	})
-}
-
-// UpdateBoxArtURL sets the "box_art_url" field to the value that was provided on create.
-func (u *TwitchCategoryUpsertBulk) UpdateBoxArtURL() *TwitchCategoryUpsertBulk {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.UpdateBoxArtURL()
-	})
-}
-
-// ClearBoxArtURL clears the value of the "box_art_url" field.
-func (u *TwitchCategoryUpsertBulk) ClearBoxArtURL() *TwitchCategoryUpsertBulk {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.ClearBoxArtURL()
-	})
-}
-
-// SetIgdbID sets the "igdb_id" field.
-func (u *TwitchCategoryUpsertBulk) SetIgdbID(v string) *TwitchCategoryUpsertBulk {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.SetIgdbID(v)
-	})
-}
-
-// UpdateIgdbID sets the "igdb_id" field to the value that was provided on create.
-func (u *TwitchCategoryUpsertBulk) UpdateIgdbID() *TwitchCategoryUpsertBulk {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.UpdateIgdbID()
-	})
-}
-
-// ClearIgdbID clears the value of the "igdb_id" field.
-func (u *TwitchCategoryUpsertBulk) ClearIgdbID() *TwitchCategoryUpsertBulk {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.ClearIgdbID()
-	})
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *TwitchCategoryUpsertBulk) SetUpdatedAt(v time.Time) *TwitchCategoryUpsertBulk {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.SetUpdatedAt(v)
-	})
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *TwitchCategoryUpsertBulk) UpdateUpdatedAt() *TwitchCategoryUpsertBulk {
-	return u.Update(func(s *TwitchCategoryUpsert) {
-		s.UpdateUpdatedAt()
-	})
-}
-
-// Exec executes the query.
-func (u *TwitchCategoryUpsertBulk) Exec(ctx context.Context) error {
-	for i, b := range u.create.builders {
-		if len(b.conflict) != 0 {
-			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the TwitchCategoryCreateBulk instead", i)
-		}
-	}
-	if len(u.create.conflict) == 0 {
-		return errors.New("ent: missing options for TwitchCategoryCreateBulk.OnConflict")
-	}
-	return u.create.Exec(ctx)
-}
-
-// ExecX is like Exec, but panics if an error occurs.
-func (u *TwitchCategoryUpsertBulk) ExecX(ctx context.Context) {
-	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
