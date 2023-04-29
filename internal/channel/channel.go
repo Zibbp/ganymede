@@ -24,13 +24,15 @@ func NewService(store *database.Database) *Service {
 }
 
 type Channel struct {
-	ID          uuid.UUID `json:"id"`
-	ExtID       string    `json:"ext_id"`
-	Name        string    `json:"name"`
-	DisplayName string    `json:"display_name"`
-	ImagePath   string    `json:"image_path"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID            uuid.UUID `json:"id"`
+	ExtID         string    `json:"ext_id"`
+	Name          string    `json:"name"`
+	DisplayName   string    `json:"display_name"`
+	ImagePath     string    `json:"image_path"`
+	Retention     bool      `json:"retention"`
+	RetentionDays int64     `json:"retention_days"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 func (s *Service) CreateChannel(channelDto Channel) (*ent.Channel, error) {

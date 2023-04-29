@@ -48,27 +48,28 @@ const (
 // ChannelMutation represents an operation that mutates the Channel nodes in the graph.
 type ChannelMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	ext_id         *string
-	name           *string
-	display_name   *string
-	image_path     *string
-	retention      *bool
-	retention_days *string
-	updated_at     *time.Time
-	created_at     *time.Time
-	clearedFields  map[string]struct{}
-	vods           map[uuid.UUID]struct{}
-	removedvods    map[uuid.UUID]struct{}
-	clearedvods    bool
-	live           map[uuid.UUID]struct{}
-	removedlive    map[uuid.UUID]struct{}
-	clearedlive    bool
-	done           bool
-	oldValue       func(context.Context) (*Channel, error)
-	predicates     []predicate.Channel
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	ext_id            *string
+	name              *string
+	display_name      *string
+	image_path        *string
+	retention         *bool
+	retention_days    *int64
+	addretention_days *int64
+	updated_at        *time.Time
+	created_at        *time.Time
+	clearedFields     map[string]struct{}
+	vods              map[uuid.UUID]struct{}
+	removedvods       map[uuid.UUID]struct{}
+	clearedvods       bool
+	live              map[uuid.UUID]struct{}
+	removedlive       map[uuid.UUID]struct{}
+	clearedlive       bool
+	done              bool
+	oldValue          func(context.Context) (*Channel, error)
+	predicates        []predicate.Channel
 }
 
 var _ ent.Mutation = (*ChannelMutation)(nil)
@@ -382,12 +383,13 @@ func (m *ChannelMutation) ResetRetention() {
 }
 
 // SetRetentionDays sets the "retention_days" field.
-func (m *ChannelMutation) SetRetentionDays(s string) {
-	m.retention_days = &s
+func (m *ChannelMutation) SetRetentionDays(i int64) {
+	m.retention_days = &i
+	m.addretention_days = nil
 }
 
 // RetentionDays returns the value of the "retention_days" field in the mutation.
-func (m *ChannelMutation) RetentionDays() (r string, exists bool) {
+func (m *ChannelMutation) RetentionDays() (r int64, exists bool) {
 	v := m.retention_days
 	if v == nil {
 		return
@@ -398,7 +400,7 @@ func (m *ChannelMutation) RetentionDays() (r string, exists bool) {
 // OldRetentionDays returns the old "retention_days" field's value of the Channel entity.
 // If the Channel object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ChannelMutation) OldRetentionDays(ctx context.Context) (v string, err error) {
+func (m *ChannelMutation) OldRetentionDays(ctx context.Context) (v int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldRetentionDays is only allowed on UpdateOne operations")
 	}
@@ -412,9 +414,28 @@ func (m *ChannelMutation) OldRetentionDays(ctx context.Context) (v string, err e
 	return oldValue.RetentionDays, nil
 }
 
+// AddRetentionDays adds i to the "retention_days" field.
+func (m *ChannelMutation) AddRetentionDays(i int64) {
+	if m.addretention_days != nil {
+		*m.addretention_days += i
+	} else {
+		m.addretention_days = &i
+	}
+}
+
+// AddedRetentionDays returns the value that was added to the "retention_days" field in this mutation.
+func (m *ChannelMutation) AddedRetentionDays() (r int64, exists bool) {
+	v := m.addretention_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
 // ClearRetentionDays clears the value of the "retention_days" field.
 func (m *ChannelMutation) ClearRetentionDays() {
 	m.retention_days = nil
+	m.addretention_days = nil
 	m.clearedFields[channel.FieldRetentionDays] = struct{}{}
 }
 
@@ -427,6 +448,7 @@ func (m *ChannelMutation) RetentionDaysCleared() bool {
 // ResetRetentionDays resets all changes to the "retention_days" field.
 func (m *ChannelMutation) ResetRetentionDays() {
 	m.retention_days = nil
+	m.addretention_days = nil
 	delete(m.clearedFields, channel.FieldRetentionDays)
 }
 
@@ -763,7 +785,7 @@ func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 		m.SetRetention(v)
 		return nil
 	case channel.FieldRetentionDays:
-		v, ok := value.(string)
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -790,13 +812,21 @@ func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *ChannelMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addretention_days != nil {
+		fields = append(fields, channel.FieldRetentionDays)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *ChannelMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case channel.FieldRetentionDays:
+		return m.AddedRetentionDays()
+	}
 	return nil, false
 }
 
@@ -805,6 +835,13 @@ func (m *ChannelMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ChannelMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case channel.FieldRetentionDays:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRetentionDays(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Channel numeric field %s", name)
 }

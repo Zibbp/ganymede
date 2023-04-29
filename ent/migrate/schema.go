@@ -16,7 +16,7 @@ var (
 		{Name: "display_name", Type: field.TypeString, Unique: true},
 		{Name: "image_path", Type: field.TypeString},
 		{Name: "retention", Type: field.TypeBool, Nullable: true},
-		{Name: "retention_days", Type: field.TypeString, Nullable: true},
+		{Name: "retention_days", Type: field.TypeInt64, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 	}

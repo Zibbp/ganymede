@@ -82,7 +82,7 @@ func Retention(v bool) predicate.Channel {
 }
 
 // RetentionDays applies equality check predicate on the "retention_days" field. It's identical to RetentionDaysEQ.
-func RetentionDays(v string) predicate.Channel {
+func RetentionDays(v int64) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldRetentionDays, v))
 }
 
@@ -387,58 +387,43 @@ func RetentionNotNil() predicate.Channel {
 }
 
 // RetentionDaysEQ applies the EQ predicate on the "retention_days" field.
-func RetentionDaysEQ(v string) predicate.Channel {
+func RetentionDaysEQ(v int64) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldRetentionDays, v))
 }
 
 // RetentionDaysNEQ applies the NEQ predicate on the "retention_days" field.
-func RetentionDaysNEQ(v string) predicate.Channel {
+func RetentionDaysNEQ(v int64) predicate.Channel {
 	return predicate.Channel(sql.FieldNEQ(FieldRetentionDays, v))
 }
 
 // RetentionDaysIn applies the In predicate on the "retention_days" field.
-func RetentionDaysIn(vs ...string) predicate.Channel {
+func RetentionDaysIn(vs ...int64) predicate.Channel {
 	return predicate.Channel(sql.FieldIn(FieldRetentionDays, vs...))
 }
 
 // RetentionDaysNotIn applies the NotIn predicate on the "retention_days" field.
-func RetentionDaysNotIn(vs ...string) predicate.Channel {
+func RetentionDaysNotIn(vs ...int64) predicate.Channel {
 	return predicate.Channel(sql.FieldNotIn(FieldRetentionDays, vs...))
 }
 
 // RetentionDaysGT applies the GT predicate on the "retention_days" field.
-func RetentionDaysGT(v string) predicate.Channel {
+func RetentionDaysGT(v int64) predicate.Channel {
 	return predicate.Channel(sql.FieldGT(FieldRetentionDays, v))
 }
 
 // RetentionDaysGTE applies the GTE predicate on the "retention_days" field.
-func RetentionDaysGTE(v string) predicate.Channel {
+func RetentionDaysGTE(v int64) predicate.Channel {
 	return predicate.Channel(sql.FieldGTE(FieldRetentionDays, v))
 }
 
 // RetentionDaysLT applies the LT predicate on the "retention_days" field.
-func RetentionDaysLT(v string) predicate.Channel {
+func RetentionDaysLT(v int64) predicate.Channel {
 	return predicate.Channel(sql.FieldLT(FieldRetentionDays, v))
 }
 
 // RetentionDaysLTE applies the LTE predicate on the "retention_days" field.
-func RetentionDaysLTE(v string) predicate.Channel {
+func RetentionDaysLTE(v int64) predicate.Channel {
 	return predicate.Channel(sql.FieldLTE(FieldRetentionDays, v))
-}
-
-// RetentionDaysContains applies the Contains predicate on the "retention_days" field.
-func RetentionDaysContains(v string) predicate.Channel {
-	return predicate.Channel(sql.FieldContains(FieldRetentionDays, v))
-}
-
-// RetentionDaysHasPrefix applies the HasPrefix predicate on the "retention_days" field.
-func RetentionDaysHasPrefix(v string) predicate.Channel {
-	return predicate.Channel(sql.FieldHasPrefix(FieldRetentionDays, v))
-}
-
-// RetentionDaysHasSuffix applies the HasSuffix predicate on the "retention_days" field.
-func RetentionDaysHasSuffix(v string) predicate.Channel {
-	return predicate.Channel(sql.FieldHasSuffix(FieldRetentionDays, v))
 }
 
 // RetentionDaysIsNil applies the IsNil predicate on the "retention_days" field.
@@ -449,16 +434,6 @@ func RetentionDaysIsNil() predicate.Channel {
 // RetentionDaysNotNil applies the NotNil predicate on the "retention_days" field.
 func RetentionDaysNotNil() predicate.Channel {
 	return predicate.Channel(sql.FieldNotNull(FieldRetentionDays))
-}
-
-// RetentionDaysEqualFold applies the EqualFold predicate on the "retention_days" field.
-func RetentionDaysEqualFold(v string) predicate.Channel {
-	return predicate.Channel(sql.FieldEqualFold(FieldRetentionDays, v))
-}
-
-// RetentionDaysContainsFold applies the ContainsFold predicate on the "retention_days" field.
-func RetentionDaysContainsFold(v string) predicate.Channel {
-	return predicate.Channel(sql.FieldContainsFold(FieldRetentionDays, v))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

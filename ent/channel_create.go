@@ -73,15 +73,15 @@ func (cc *ChannelCreate) SetNillableRetention(b *bool) *ChannelCreate {
 }
 
 // SetRetentionDays sets the "retention_days" field.
-func (cc *ChannelCreate) SetRetentionDays(s string) *ChannelCreate {
-	cc.mutation.SetRetentionDays(s)
+func (cc *ChannelCreate) SetRetentionDays(i int64) *ChannelCreate {
+	cc.mutation.SetRetentionDays(i)
 	return cc
 }
 
 // SetNillableRetentionDays sets the "retention_days" field if the given value is not nil.
-func (cc *ChannelCreate) SetNillableRetentionDays(s *string) *ChannelCreate {
-	if s != nil {
-		cc.SetRetentionDays(*s)
+func (cc *ChannelCreate) SetNillableRetentionDays(i *int64) *ChannelCreate {
+	if i != nil {
+		cc.SetRetentionDays(*i)
 	}
 	return cc
 }
@@ -281,7 +281,7 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 		_node.Retention = value
 	}
 	if value, ok := cc.mutation.RetentionDays(); ok {
-		_spec.SetField(channel.FieldRetentionDays, field.TypeString, value)
+		_spec.SetField(channel.FieldRetentionDays, field.TypeInt64, value)
 		_node.RetentionDays = value
 	}
 	if value, ok := cc.mutation.UpdatedAt(); ok {
@@ -449,7 +449,7 @@ func (u *ChannelUpsert) ClearRetention() *ChannelUpsert {
 }
 
 // SetRetentionDays sets the "retention_days" field.
-func (u *ChannelUpsert) SetRetentionDays(v string) *ChannelUpsert {
+func (u *ChannelUpsert) SetRetentionDays(v int64) *ChannelUpsert {
 	u.Set(channel.FieldRetentionDays, v)
 	return u
 }
@@ -457,6 +457,12 @@ func (u *ChannelUpsert) SetRetentionDays(v string) *ChannelUpsert {
 // UpdateRetentionDays sets the "retention_days" field to the value that was provided on create.
 func (u *ChannelUpsert) UpdateRetentionDays() *ChannelUpsert {
 	u.SetExcluded(channel.FieldRetentionDays)
+	return u
+}
+
+// AddRetentionDays adds v to the "retention_days" field.
+func (u *ChannelUpsert) AddRetentionDays(v int64) *ChannelUpsert {
+	u.Add(channel.FieldRetentionDays, v)
 	return u
 }
 
@@ -614,9 +620,16 @@ func (u *ChannelUpsertOne) ClearRetention() *ChannelUpsertOne {
 }
 
 // SetRetentionDays sets the "retention_days" field.
-func (u *ChannelUpsertOne) SetRetentionDays(v string) *ChannelUpsertOne {
+func (u *ChannelUpsertOne) SetRetentionDays(v int64) *ChannelUpsertOne {
 	return u.Update(func(s *ChannelUpsert) {
 		s.SetRetentionDays(v)
+	})
+}
+
+// AddRetentionDays adds v to the "retention_days" field.
+func (u *ChannelUpsertOne) AddRetentionDays(v int64) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.AddRetentionDays(v)
 	})
 }
 
@@ -947,9 +960,16 @@ func (u *ChannelUpsertBulk) ClearRetention() *ChannelUpsertBulk {
 }
 
 // SetRetentionDays sets the "retention_days" field.
-func (u *ChannelUpsertBulk) SetRetentionDays(v string) *ChannelUpsertBulk {
+func (u *ChannelUpsertBulk) SetRetentionDays(v int64) *ChannelUpsertBulk {
 	return u.Update(func(s *ChannelUpsert) {
 		s.SetRetentionDays(v)
+	})
+}
+
+// AddRetentionDays adds v to the "retention_days" field.
+func (u *ChannelUpsertBulk) AddRetentionDays(v int64) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.AddRetentionDays(v)
 	})
 }
 
