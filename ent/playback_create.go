@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
@@ -20,6 +22,7 @@ type PlaybackCreate struct {
 	config
 	mutation *PlaybackMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetVodID sets the "vod_id" field.
@@ -214,6 +217,7 @@ func (pc *PlaybackCreate) createSpec() (*Playback, *sqlgraph.CreateSpec) {
 		_node = &Playback{config: pc.config}
 		_spec = sqlgraph.NewCreateSpec(playback.Table, sqlgraph.NewFieldSpec(playback.FieldID, field.TypeUUID))
 	)
+	_spec.OnConflict = pc.conflict
 	if id, ok := pc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
@@ -245,10 +249,305 @@ func (pc *PlaybackCreate) createSpec() (*Playback, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Playback.Create().
+//		SetVodID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.PlaybackUpsert) {
+//			SetVodID(v+v).
+//		}).
+//		Exec(ctx)
+func (pc *PlaybackCreate) OnConflict(opts ...sql.ConflictOption) *PlaybackUpsertOne {
+	pc.conflict = opts
+	return &PlaybackUpsertOne{
+		create: pc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Playback.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (pc *PlaybackCreate) OnConflictColumns(columns ...string) *PlaybackUpsertOne {
+	pc.conflict = append(pc.conflict, sql.ConflictColumns(columns...))
+	return &PlaybackUpsertOne{
+		create: pc,
+	}
+}
+
+type (
+	// PlaybackUpsertOne is the builder for "upsert"-ing
+	//  one Playback node.
+	PlaybackUpsertOne struct {
+		create *PlaybackCreate
+	}
+
+	// PlaybackUpsert is the "OnConflict" setter.
+	PlaybackUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetVodID sets the "vod_id" field.
+func (u *PlaybackUpsert) SetVodID(v uuid.UUID) *PlaybackUpsert {
+	u.Set(playback.FieldVodID, v)
+	return u
+}
+
+// UpdateVodID sets the "vod_id" field to the value that was provided on create.
+func (u *PlaybackUpsert) UpdateVodID() *PlaybackUpsert {
+	u.SetExcluded(playback.FieldVodID)
+	return u
+}
+
+// SetUserID sets the "user_id" field.
+func (u *PlaybackUpsert) SetUserID(v uuid.UUID) *PlaybackUpsert {
+	u.Set(playback.FieldUserID, v)
+	return u
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *PlaybackUpsert) UpdateUserID() *PlaybackUpsert {
+	u.SetExcluded(playback.FieldUserID)
+	return u
+}
+
+// SetTime sets the "time" field.
+func (u *PlaybackUpsert) SetTime(v int) *PlaybackUpsert {
+	u.Set(playback.FieldTime, v)
+	return u
+}
+
+// UpdateTime sets the "time" field to the value that was provided on create.
+func (u *PlaybackUpsert) UpdateTime() *PlaybackUpsert {
+	u.SetExcluded(playback.FieldTime)
+	return u
+}
+
+// AddTime adds v to the "time" field.
+func (u *PlaybackUpsert) AddTime(v int) *PlaybackUpsert {
+	u.Add(playback.FieldTime, v)
+	return u
+}
+
+// SetStatus sets the "status" field.
+func (u *PlaybackUpsert) SetStatus(v utils.PlaybackStatus) *PlaybackUpsert {
+	u.Set(playback.FieldStatus, v)
+	return u
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *PlaybackUpsert) UpdateStatus() *PlaybackUpsert {
+	u.SetExcluded(playback.FieldStatus)
+	return u
+}
+
+// ClearStatus clears the value of the "status" field.
+func (u *PlaybackUpsert) ClearStatus() *PlaybackUpsert {
+	u.SetNull(playback.FieldStatus)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *PlaybackUpsert) SetUpdatedAt(v time.Time) *PlaybackUpsert {
+	u.Set(playback.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *PlaybackUpsert) UpdateUpdatedAt() *PlaybackUpsert {
+	u.SetExcluded(playback.FieldUpdatedAt)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Playback.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(playback.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *PlaybackUpsertOne) UpdateNewValues() *PlaybackUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(playback.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(playback.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Playback.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *PlaybackUpsertOne) Ignore() *PlaybackUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *PlaybackUpsertOne) DoNothing() *PlaybackUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the PlaybackCreate.OnConflict
+// documentation for more info.
+func (u *PlaybackUpsertOne) Update(set func(*PlaybackUpsert)) *PlaybackUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&PlaybackUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetVodID sets the "vod_id" field.
+func (u *PlaybackUpsertOne) SetVodID(v uuid.UUID) *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.SetVodID(v)
+	})
+}
+
+// UpdateVodID sets the "vod_id" field to the value that was provided on create.
+func (u *PlaybackUpsertOne) UpdateVodID() *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.UpdateVodID()
+	})
+}
+
+// SetUserID sets the "user_id" field.
+func (u *PlaybackUpsertOne) SetUserID(v uuid.UUID) *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *PlaybackUpsertOne) UpdateUserID() *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// SetTime sets the "time" field.
+func (u *PlaybackUpsertOne) SetTime(v int) *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.SetTime(v)
+	})
+}
+
+// AddTime adds v to the "time" field.
+func (u *PlaybackUpsertOne) AddTime(v int) *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.AddTime(v)
+	})
+}
+
+// UpdateTime sets the "time" field to the value that was provided on create.
+func (u *PlaybackUpsertOne) UpdateTime() *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.UpdateTime()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *PlaybackUpsertOne) SetStatus(v utils.PlaybackStatus) *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *PlaybackUpsertOne) UpdateStatus() *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.UpdateStatus()
+	})
+}
+
+// ClearStatus clears the value of the "status" field.
+func (u *PlaybackUpsertOne) ClearStatus() *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.ClearStatus()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *PlaybackUpsertOne) SetUpdatedAt(v time.Time) *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *PlaybackUpsertOne) UpdateUpdatedAt() *PlaybackUpsertOne {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *PlaybackUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for PlaybackCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *PlaybackUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *PlaybackUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: PlaybackUpsertOne.ID is not supported by MySQL driver. Use PlaybackUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *PlaybackUpsertOne) IDX(ctx context.Context) uuid.UUID {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // PlaybackCreateBulk is the builder for creating many Playback entities in bulk.
 type PlaybackCreateBulk struct {
 	config
 	builders []*PlaybackCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Playback entities in the database.
@@ -275,6 +574,7 @@ func (pcb *PlaybackCreateBulk) Save(ctx context.Context) ([]*Playback, error) {
 					_, err = mutators[i+1].Mutate(root, pcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = pcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, pcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -321,6 +621,204 @@ func (pcb *PlaybackCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (pcb *PlaybackCreateBulk) ExecX(ctx context.Context) {
 	if err := pcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Playback.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.PlaybackUpsert) {
+//			SetVodID(v+v).
+//		}).
+//		Exec(ctx)
+func (pcb *PlaybackCreateBulk) OnConflict(opts ...sql.ConflictOption) *PlaybackUpsertBulk {
+	pcb.conflict = opts
+	return &PlaybackUpsertBulk{
+		create: pcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Playback.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (pcb *PlaybackCreateBulk) OnConflictColumns(columns ...string) *PlaybackUpsertBulk {
+	pcb.conflict = append(pcb.conflict, sql.ConflictColumns(columns...))
+	return &PlaybackUpsertBulk{
+		create: pcb,
+	}
+}
+
+// PlaybackUpsertBulk is the builder for "upsert"-ing
+// a bulk of Playback nodes.
+type PlaybackUpsertBulk struct {
+	create *PlaybackCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Playback.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(playback.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *PlaybackUpsertBulk) UpdateNewValues() *PlaybackUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(playback.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(playback.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Playback.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *PlaybackUpsertBulk) Ignore() *PlaybackUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *PlaybackUpsertBulk) DoNothing() *PlaybackUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the PlaybackCreateBulk.OnConflict
+// documentation for more info.
+func (u *PlaybackUpsertBulk) Update(set func(*PlaybackUpsert)) *PlaybackUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&PlaybackUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetVodID sets the "vod_id" field.
+func (u *PlaybackUpsertBulk) SetVodID(v uuid.UUID) *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.SetVodID(v)
+	})
+}
+
+// UpdateVodID sets the "vod_id" field to the value that was provided on create.
+func (u *PlaybackUpsertBulk) UpdateVodID() *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.UpdateVodID()
+	})
+}
+
+// SetUserID sets the "user_id" field.
+func (u *PlaybackUpsertBulk) SetUserID(v uuid.UUID) *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *PlaybackUpsertBulk) UpdateUserID() *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// SetTime sets the "time" field.
+func (u *PlaybackUpsertBulk) SetTime(v int) *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.SetTime(v)
+	})
+}
+
+// AddTime adds v to the "time" field.
+func (u *PlaybackUpsertBulk) AddTime(v int) *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.AddTime(v)
+	})
+}
+
+// UpdateTime sets the "time" field to the value that was provided on create.
+func (u *PlaybackUpsertBulk) UpdateTime() *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.UpdateTime()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *PlaybackUpsertBulk) SetStatus(v utils.PlaybackStatus) *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *PlaybackUpsertBulk) UpdateStatus() *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.UpdateStatus()
+	})
+}
+
+// ClearStatus clears the value of the "status" field.
+func (u *PlaybackUpsertBulk) ClearStatus() *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.ClearStatus()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *PlaybackUpsertBulk) SetUpdatedAt(v time.Time) *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *PlaybackUpsertBulk) UpdateUpdatedAt() *PlaybackUpsertBulk {
+	return u.Update(func(s *PlaybackUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *PlaybackUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the PlaybackCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for PlaybackCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *PlaybackUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
