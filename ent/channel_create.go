@@ -193,6 +193,10 @@ func (cc *ChannelCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (cc *ChannelCreate) defaults() {
+	if _, ok := cc.mutation.Retention(); !ok {
+		v := channel.DefaultRetention
+		cc.mutation.SetRetention(v)
+	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		v := channel.DefaultUpdatedAt()
 		cc.mutation.SetUpdatedAt(v)
@@ -217,6 +221,9 @@ func (cc *ChannelCreate) check() error {
 	}
 	if _, ok := cc.mutation.ImagePath(); !ok {
 		return &ValidationError{Name: "image_path", err: errors.New(`ent: missing required field "Channel.image_path"`)}
+	}
+	if _, ok := cc.mutation.Retention(); !ok {
+		return &ValidationError{Name: "retention", err: errors.New(`ent: missing required field "Channel.retention"`)}
 	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Channel.updated_at"`)}
@@ -442,12 +449,6 @@ func (u *ChannelUpsert) UpdateRetention() *ChannelUpsert {
 	return u
 }
 
-// ClearRetention clears the value of the "retention" field.
-func (u *ChannelUpsert) ClearRetention() *ChannelUpsert {
-	u.SetNull(channel.FieldRetention)
-	return u
-}
-
 // SetRetentionDays sets the "retention_days" field.
 func (u *ChannelUpsert) SetRetentionDays(v int64) *ChannelUpsert {
 	u.Set(channel.FieldRetentionDays, v)
@@ -609,13 +610,6 @@ func (u *ChannelUpsertOne) SetRetention(v bool) *ChannelUpsertOne {
 func (u *ChannelUpsertOne) UpdateRetention() *ChannelUpsertOne {
 	return u.Update(func(s *ChannelUpsert) {
 		s.UpdateRetention()
-	})
-}
-
-// ClearRetention clears the value of the "retention" field.
-func (u *ChannelUpsertOne) ClearRetention() *ChannelUpsertOne {
-	return u.Update(func(s *ChannelUpsert) {
-		s.ClearRetention()
 	})
 }
 
@@ -949,13 +943,6 @@ func (u *ChannelUpsertBulk) SetRetention(v bool) *ChannelUpsertBulk {
 func (u *ChannelUpsertBulk) UpdateRetention() *ChannelUpsertBulk {
 	return u.Update(func(s *ChannelUpsert) {
 		s.UpdateRetention()
-	})
-}
-
-// ClearRetention clears the value of the "retention" field.
-func (u *ChannelUpsertBulk) ClearRetention() *ChannelUpsertBulk {
-	return u.Update(func(s *ChannelUpsert) {
-		s.ClearRetention()
 	})
 }
 

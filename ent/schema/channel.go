@@ -22,7 +22,7 @@ func (Channel) Fields() []ent.Field {
 		field.String("name").Unique(),
 		field.String("display_name").Unique(),
 		field.String("image_path"),
-		field.Bool("retention").Optional(),
+		field.Bool("retention").Default(false),
 		field.Int64("retention_days").Optional(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),

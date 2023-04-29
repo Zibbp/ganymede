@@ -24,6 +24,10 @@ import (
 func init() {
 	channelFields := schema.Channel{}.Fields()
 	_ = channelFields
+	// channelDescRetention is the schema descriptor for retention field.
+	channelDescRetention := channelFields[5].Descriptor()
+	// channel.DefaultRetention holds the default value on creation for the retention field.
+	channel.DefaultRetention = channelDescRetention.Default.(bool)
 	// channelDescUpdatedAt is the schema descriptor for updated_at field.
 	channelDescUpdatedAt := channelFields[7].Descriptor()
 	// channel.DefaultUpdatedAt holds the default value on creation for the updated_at field.

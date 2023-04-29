@@ -364,22 +364,9 @@ func (m *ChannelMutation) OldRetention(ctx context.Context) (v bool, err error) 
 	return oldValue.Retention, nil
 }
 
-// ClearRetention clears the value of the "retention" field.
-func (m *ChannelMutation) ClearRetention() {
-	m.retention = nil
-	m.clearedFields[channel.FieldRetention] = struct{}{}
-}
-
-// RetentionCleared returns if the "retention" field was cleared in this mutation.
-func (m *ChannelMutation) RetentionCleared() bool {
-	_, ok := m.clearedFields[channel.FieldRetention]
-	return ok
-}
-
 // ResetRetention resets all changes to the "retention" field.
 func (m *ChannelMutation) ResetRetention() {
 	m.retention = nil
-	delete(m.clearedFields, channel.FieldRetention)
 }
 
 // SetRetentionDays sets the "retention_days" field.
@@ -853,9 +840,6 @@ func (m *ChannelMutation) ClearedFields() []string {
 	if m.FieldCleared(channel.FieldExtID) {
 		fields = append(fields, channel.FieldExtID)
 	}
-	if m.FieldCleared(channel.FieldRetention) {
-		fields = append(fields, channel.FieldRetention)
-	}
 	if m.FieldCleared(channel.FieldRetentionDays) {
 		fields = append(fields, channel.FieldRetentionDays)
 	}
@@ -875,9 +859,6 @@ func (m *ChannelMutation) ClearField(name string) error {
 	switch name {
 	case channel.FieldExtID:
 		m.ClearExtID()
-		return nil
-	case channel.FieldRetention:
-		m.ClearRetention()
 		return nil
 	case channel.FieldRetentionDays:
 		m.ClearRetentionDays()

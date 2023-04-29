@@ -77,6 +77,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultRetention holds the default value on creation for the "retention" field.
+	DefaultRetention bool
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.

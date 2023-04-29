@@ -83,12 +83,6 @@ func (cu *ChannelUpdate) SetNillableRetention(b *bool) *ChannelUpdate {
 	return cu
 }
 
-// ClearRetention clears the value of the "retention" field.
-func (cu *ChannelUpdate) ClearRetention() *ChannelUpdate {
-	cu.mutation.ClearRetention()
-	return cu
-}
-
 // SetRetentionDays sets the "retention_days" field.
 func (cu *ChannelUpdate) SetRetentionDays(i int64) *ChannelUpdate {
 	cu.mutation.ResetRetentionDays()
@@ -262,9 +256,6 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := cu.mutation.Retention(); ok {
 		_spec.SetField(channel.FieldRetention, field.TypeBool, value)
 	}
-	if cu.mutation.RetentionCleared() {
-		_spec.ClearField(channel.FieldRetention, field.TypeBool)
-	}
 	if value, ok := cu.mutation.RetentionDays(); ok {
 		_spec.SetField(channel.FieldRetentionDays, field.TypeInt64, value)
 	}
@@ -436,12 +427,6 @@ func (cuo *ChannelUpdateOne) SetNillableRetention(b *bool) *ChannelUpdateOne {
 	if b != nil {
 		cuo.SetRetention(*b)
 	}
-	return cuo
-}
-
-// ClearRetention clears the value of the "retention" field.
-func (cuo *ChannelUpdateOne) ClearRetention() *ChannelUpdateOne {
-	cuo.mutation.ClearRetention()
 	return cuo
 }
 
@@ -647,9 +632,6 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 	}
 	if value, ok := cuo.mutation.Retention(); ok {
 		_spec.SetField(channel.FieldRetention, field.TypeBool, value)
-	}
-	if cuo.mutation.RetentionCleared() {
-		_spec.ClearField(channel.FieldRetention, field.TypeBool)
 	}
 	if value, ok := cuo.mutation.RetentionDays(); ok {
 		_spec.SetField(channel.FieldRetentionDays, field.TypeInt64, value)

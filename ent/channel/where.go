@@ -376,16 +376,6 @@ func RetentionNEQ(v bool) predicate.Channel {
 	return predicate.Channel(sql.FieldNEQ(FieldRetention, v))
 }
 
-// RetentionIsNil applies the IsNil predicate on the "retention" field.
-func RetentionIsNil() predicate.Channel {
-	return predicate.Channel(sql.FieldIsNull(FieldRetention))
-}
-
-// RetentionNotNil applies the NotNil predicate on the "retention" field.
-func RetentionNotNil() predicate.Channel {
-	return predicate.Channel(sql.FieldNotNull(FieldRetention))
-}
-
 // RetentionDaysEQ applies the EQ predicate on the "retention_days" field.
 func RetentionDaysEQ(v int64) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldRetentionDays, v))
