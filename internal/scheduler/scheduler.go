@@ -10,6 +10,7 @@ import (
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/live"
+	"github.com/zibbp/ganymede/internal/task"
 	"github.com/zibbp/ganymede/internal/twitch"
 )
 
@@ -82,6 +83,26 @@ func (s *Service) StartTwitchCategoriesScheduler() {
 	scheduler := gocron.NewScheduler(time.UTC)
 
 	s.setTwitchCategoriesSchedule(scheduler)
+
+	scheduler.StartAsync()
+}
+
+func (s *Service) StartPruneVideoScheduler() {
+	time.Sleep(time.Second * 5)
+	// get tz
+	var tz string
+	tz = os.Getenv("TZ")
+	if tz == "" {
+		tz = "UTC"
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		log.Info().Err(err).Msg("failed to load location, defaulting to UTC")
+		loc = time.UTC
+	}
+	scheduler := gocron.NewScheduler(loc)
+
+	s.pruneVideoSchedule(scheduler)
 
 	scheduler.StartAsync()
 }
@@ -163,5 +184,16 @@ func (s *Service) setTwitchCategoriesSchedule(scheduler *gocron.Scheduler) {
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to set up set twitch categories schedule")
+	}
+}
+
+func (s *Service) pruneVideoSchedule(scheduler *gocron.Scheduler) {
+	log.Debug().Msg("setting up prune video schedule")
+	_, err := scheduler.Every(1).Day().At("01:00").Do(func() {
+		log.Info().Msg("running prune videos task")
+		task.PruneVideos()
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to set up prune videos schedule")
 	}
 }

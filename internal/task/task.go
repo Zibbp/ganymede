@@ -69,7 +69,7 @@ func (s *Service) StartTask(c echo.Context, task string) error {
 		}()
 
 	case "prune_videos":
-		go pruneVideos()
+		go PruneVideos()
 	}
 
 	return nil
@@ -252,7 +252,7 @@ func (s *Service) StorageMigration() error {
 	return nil
 }
 
-func pruneVideos() {
+func PruneVideos() {
 	// setup
 	vodService := &vod.Service{Store: database.DB()}
 	req := &http.Request{}
