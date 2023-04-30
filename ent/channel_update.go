@@ -69,6 +69,47 @@ func (cu *ChannelUpdate) SetImagePath(s string) *ChannelUpdate {
 	return cu
 }
 
+// SetRetention sets the "retention" field.
+func (cu *ChannelUpdate) SetRetention(b bool) *ChannelUpdate {
+	cu.mutation.SetRetention(b)
+	return cu
+}
+
+// SetNillableRetention sets the "retention" field if the given value is not nil.
+func (cu *ChannelUpdate) SetNillableRetention(b *bool) *ChannelUpdate {
+	if b != nil {
+		cu.SetRetention(*b)
+	}
+	return cu
+}
+
+// SetRetentionDays sets the "retention_days" field.
+func (cu *ChannelUpdate) SetRetentionDays(i int64) *ChannelUpdate {
+	cu.mutation.ResetRetentionDays()
+	cu.mutation.SetRetentionDays(i)
+	return cu
+}
+
+// SetNillableRetentionDays sets the "retention_days" field if the given value is not nil.
+func (cu *ChannelUpdate) SetNillableRetentionDays(i *int64) *ChannelUpdate {
+	if i != nil {
+		cu.SetRetentionDays(*i)
+	}
+	return cu
+}
+
+// AddRetentionDays adds i to the "retention_days" field.
+func (cu *ChannelUpdate) AddRetentionDays(i int64) *ChannelUpdate {
+	cu.mutation.AddRetentionDays(i)
+	return cu
+}
+
+// ClearRetentionDays clears the value of the "retention_days" field.
+func (cu *ChannelUpdate) ClearRetentionDays() *ChannelUpdate {
+	cu.mutation.ClearRetentionDays()
+	return cu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (cu *ChannelUpdate) SetUpdatedAt(t time.Time) *ChannelUpdate {
 	cu.mutation.SetUpdatedAt(t)
@@ -212,6 +253,18 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := cu.mutation.ImagePath(); ok {
 		_spec.SetField(channel.FieldImagePath, field.TypeString, value)
 	}
+	if value, ok := cu.mutation.Retention(); ok {
+		_spec.SetField(channel.FieldRetention, field.TypeBool, value)
+	}
+	if value, ok := cu.mutation.RetentionDays(); ok {
+		_spec.SetField(channel.FieldRetentionDays, field.TypeInt64, value)
+	}
+	if value, ok := cu.mutation.AddedRetentionDays(); ok {
+		_spec.AddField(channel.FieldRetentionDays, field.TypeInt64, value)
+	}
+	if cu.mutation.RetentionDaysCleared() {
+		_spec.ClearField(channel.FieldRetentionDays, field.TypeInt64)
+	}
 	if value, ok := cu.mutation.UpdatedAt(); ok {
 		_spec.SetField(channel.FieldUpdatedAt, field.TypeTime, value)
 	}
@@ -223,10 +276,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{channel.VodsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -239,10 +289,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{channel.VodsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -258,10 +305,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{channel.VodsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -277,10 +321,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{channel.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -293,10 +334,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{channel.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -312,10 +350,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{channel.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -378,6 +413,47 @@ func (cuo *ChannelUpdateOne) SetDisplayName(s string) *ChannelUpdateOne {
 // SetImagePath sets the "image_path" field.
 func (cuo *ChannelUpdateOne) SetImagePath(s string) *ChannelUpdateOne {
 	cuo.mutation.SetImagePath(s)
+	return cuo
+}
+
+// SetRetention sets the "retention" field.
+func (cuo *ChannelUpdateOne) SetRetention(b bool) *ChannelUpdateOne {
+	cuo.mutation.SetRetention(b)
+	return cuo
+}
+
+// SetNillableRetention sets the "retention" field if the given value is not nil.
+func (cuo *ChannelUpdateOne) SetNillableRetention(b *bool) *ChannelUpdateOne {
+	if b != nil {
+		cuo.SetRetention(*b)
+	}
+	return cuo
+}
+
+// SetRetentionDays sets the "retention_days" field.
+func (cuo *ChannelUpdateOne) SetRetentionDays(i int64) *ChannelUpdateOne {
+	cuo.mutation.ResetRetentionDays()
+	cuo.mutation.SetRetentionDays(i)
+	return cuo
+}
+
+// SetNillableRetentionDays sets the "retention_days" field if the given value is not nil.
+func (cuo *ChannelUpdateOne) SetNillableRetentionDays(i *int64) *ChannelUpdateOne {
+	if i != nil {
+		cuo.SetRetentionDays(*i)
+	}
+	return cuo
+}
+
+// AddRetentionDays adds i to the "retention_days" field.
+func (cuo *ChannelUpdateOne) AddRetentionDays(i int64) *ChannelUpdateOne {
+	cuo.mutation.AddRetentionDays(i)
+	return cuo
+}
+
+// ClearRetentionDays clears the value of the "retention_days" field.
+func (cuo *ChannelUpdateOne) ClearRetentionDays() *ChannelUpdateOne {
+	cuo.mutation.ClearRetentionDays()
 	return cuo
 }
 
@@ -554,6 +630,18 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 	if value, ok := cuo.mutation.ImagePath(); ok {
 		_spec.SetField(channel.FieldImagePath, field.TypeString, value)
 	}
+	if value, ok := cuo.mutation.Retention(); ok {
+		_spec.SetField(channel.FieldRetention, field.TypeBool, value)
+	}
+	if value, ok := cuo.mutation.RetentionDays(); ok {
+		_spec.SetField(channel.FieldRetentionDays, field.TypeInt64, value)
+	}
+	if value, ok := cuo.mutation.AddedRetentionDays(); ok {
+		_spec.AddField(channel.FieldRetentionDays, field.TypeInt64, value)
+	}
+	if cuo.mutation.RetentionDaysCleared() {
+		_spec.ClearField(channel.FieldRetentionDays, field.TypeInt64)
+	}
 	if value, ok := cuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(channel.FieldUpdatedAt, field.TypeTime, value)
 	}
@@ -565,10 +653,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 			Columns: []string{channel.VodsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -581,10 +666,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 			Columns: []string{channel.VodsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -600,10 +682,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 			Columns: []string{channel.VodsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -619,10 +698,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 			Columns: []string{channel.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -635,10 +711,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 			Columns: []string{channel.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -654,10 +727,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 			Columns: []string{channel.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

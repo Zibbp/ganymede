@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/live"
@@ -21,8 +22,9 @@ type LiveCategory struct {
 	Name string `json:"name,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the LiveCategoryQuery when eager-loading is set.
-	Edges   LiveCategoryEdges `json:"edges"`
-	live_id *uuid.UUID
+	Edges        LiveCategoryEdges `json:"edges"`
+	live_id      *uuid.UUID
+	selectValues sql.SelectValues
 }
 
 // LiveCategoryEdges holds the relations/edges for other nodes in the graph.
@@ -59,7 +61,7 @@ func (*LiveCategory) scanValues(columns []string) ([]any, error) {
 		case livecategory.ForeignKeys[0]: // live_id
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type LiveCategory", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -92,9 +94,17 @@ func (lc *LiveCategory) assignValues(columns []string, values []any) error {
 				lc.live_id = new(uuid.UUID)
 				*lc.live_id = *value.S.(*uuid.UUID)
 			}
+		default:
+			lc.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
+}
+
+// Value returns the ent.Value that was dynamically selected and assigned to the LiveCategory.
+// This includes values selected through modifiers, order, etc.
+func (lc *LiveCategory) Value(name string) (ent.Value, error) {
+	return lc.selectValues.Get(name)
 }
 
 // QueryLive queries the "live" edge of the LiveCategory entity.

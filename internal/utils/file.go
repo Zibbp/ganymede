@@ -222,3 +222,11 @@ func ReadChatFile(path string) ([]byte, error) {
 
 	return data, nil
 }
+
+func DeleteFolder(path string) error {
+	err := os.RemoveAll(path)
+	if err != nil {
+		return fmt.Errorf("error deleting folder: %v", err)
+	}
+	return nil
+}

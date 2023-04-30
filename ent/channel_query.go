@@ -22,7 +22,7 @@ import (
 type ChannelQuery struct {
 	config
 	ctx        *QueryContext
-	order      []OrderFunc
+	order      []channel.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Channel
 	withVods   *VodQuery
@@ -58,7 +58,7 @@ func (cq *ChannelQuery) Unique(unique bool) *ChannelQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (cq *ChannelQuery) Order(o ...OrderFunc) *ChannelQuery {
+func (cq *ChannelQuery) Order(o ...channel.OrderOption) *ChannelQuery {
 	cq.order = append(cq.order, o...)
 	return cq
 }
@@ -296,7 +296,7 @@ func (cq *ChannelQuery) Clone() *ChannelQuery {
 	return &ChannelQuery{
 		config:     cq.config,
 		ctx:        cq.ctx.Clone(),
-		order:      append([]OrderFunc{}, cq.order...),
+		order:      append([]channel.OrderOption{}, cq.order...),
 		inters:     append([]Interceptor{}, cq.inters...),
 		predicates: append([]predicate.Channel{}, cq.predicates...),
 		withVods:   cq.withVods.Clone(),
@@ -459,7 +459,7 @@ func (cq *ChannelQuery) loadVods(ctx context.Context, query *VodQuery, nodes []*
 	}
 	query.withFKs = true
 	query.Where(predicate.Vod(func(s *sql.Selector) {
-		s.Where(sql.InValues(channel.VodsColumn, fks...))
+		s.Where(sql.InValues(s.C(channel.VodsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -472,7 +472,7 @@ func (cq *ChannelQuery) loadVods(ctx context.Context, query *VodQuery, nodes []*
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "channel_vods" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "channel_vods" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -490,7 +490,7 @@ func (cq *ChannelQuery) loadLive(ctx context.Context, query *LiveQuery, nodes []
 	}
 	query.withFKs = true
 	query.Where(predicate.Live(func(s *sql.Selector) {
-		s.Where(sql.InValues(channel.LiveColumn, fks...))
+		s.Where(sql.InValues(s.C(channel.LiveColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -503,7 +503,7 @@ func (cq *ChannelQuery) loadLive(ctx context.Context, query *LiveQuery, nodes []
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "channel_live" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "channel_live" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

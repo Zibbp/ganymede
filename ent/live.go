@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
@@ -48,6 +49,7 @@ type Live struct {
 	// The values are being populated by the LiveQuery when eager-loading is set.
 	Edges        LiveEdges `json:"edges"`
 	channel_live *uuid.UUID
+	selectValues sql.SelectValues
 }
 
 // LiveEdges holds the relations/edges for other nodes in the graph.
@@ -99,7 +101,7 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 		case live.ForeignKeys[0]: // channel_live
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Live", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -204,9 +206,17 @@ func (l *Live) assignValues(columns []string, values []any) error {
 				l.channel_live = new(uuid.UUID)
 				*l.channel_live = *value.S.(*uuid.UUID)
 			}
+		default:
+			l.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
+}
+
+// Value returns the ent.Value that was dynamically selected and assigned to the Live.
+// This includes values selected through modifiers, order, etc.
+func (l *Live) Value(name string) (ent.Value, error) {
+	return l.selectValues.Get(name)
 }
 
 // QueryChannel queries the "channel" edge of the Live entity.

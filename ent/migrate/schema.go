@@ -15,6 +15,8 @@ var (
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "display_name", Type: field.TypeString, Unique: true},
 		{Name: "image_path", Type: field.TypeString},
+		{Name: "retention", Type: field.TypeBool, Default: false},
+		{Name: "retention_days", Type: field.TypeInt64, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 	}
@@ -198,6 +200,7 @@ var (
 		{Name: "caption_path", Type: field.TypeString, Nullable: true},
 		{Name: "folder_name", Type: field.TypeString, Nullable: true},
 		{Name: "file_name", Type: field.TypeString, Nullable: true},
+		{Name: "locked", Type: field.TypeBool, Default: false},
 		{Name: "streamed_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
@@ -211,7 +214,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[21]},
+				Columns:    []*schema.Column{VodsColumns[22]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

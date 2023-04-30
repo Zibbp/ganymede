@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"entgo.io/ent"
+	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
@@ -21,9 +23,6 @@ import (
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/utils"
-
-	"entgo.io/ent"
-	"entgo.io/ent/dialect/sql"
 )
 
 const (
@@ -49,25 +48,28 @@ const (
 // ChannelMutation represents an operation that mutates the Channel nodes in the graph.
 type ChannelMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	ext_id        *string
-	name          *string
-	display_name  *string
-	image_path    *string
-	updated_at    *time.Time
-	created_at    *time.Time
-	clearedFields map[string]struct{}
-	vods          map[uuid.UUID]struct{}
-	removedvods   map[uuid.UUID]struct{}
-	clearedvods   bool
-	live          map[uuid.UUID]struct{}
-	removedlive   map[uuid.UUID]struct{}
-	clearedlive   bool
-	done          bool
-	oldValue      func(context.Context) (*Channel, error)
-	predicates    []predicate.Channel
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	ext_id            *string
+	name              *string
+	display_name      *string
+	image_path        *string
+	retention         *bool
+	retention_days    *int64
+	addretention_days *int64
+	updated_at        *time.Time
+	created_at        *time.Time
+	clearedFields     map[string]struct{}
+	vods              map[uuid.UUID]struct{}
+	removedvods       map[uuid.UUID]struct{}
+	clearedvods       bool
+	live              map[uuid.UUID]struct{}
+	removedlive       map[uuid.UUID]struct{}
+	clearedlive       bool
+	done              bool
+	oldValue          func(context.Context) (*Channel, error)
+	predicates        []predicate.Channel
 }
 
 var _ ent.Mutation = (*ChannelMutation)(nil)
@@ -331,6 +333,112 @@ func (m *ChannelMutation) ResetImagePath() {
 	m.image_path = nil
 }
 
+// SetRetention sets the "retention" field.
+func (m *ChannelMutation) SetRetention(b bool) {
+	m.retention = &b
+}
+
+// Retention returns the value of the "retention" field in the mutation.
+func (m *ChannelMutation) Retention() (r bool, exists bool) {
+	v := m.retention
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRetention returns the old "retention" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldRetention(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRetention is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRetention requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRetention: %w", err)
+	}
+	return oldValue.Retention, nil
+}
+
+// ResetRetention resets all changes to the "retention" field.
+func (m *ChannelMutation) ResetRetention() {
+	m.retention = nil
+}
+
+// SetRetentionDays sets the "retention_days" field.
+func (m *ChannelMutation) SetRetentionDays(i int64) {
+	m.retention_days = &i
+	m.addretention_days = nil
+}
+
+// RetentionDays returns the value of the "retention_days" field in the mutation.
+func (m *ChannelMutation) RetentionDays() (r int64, exists bool) {
+	v := m.retention_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRetentionDays returns the old "retention_days" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldRetentionDays(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRetentionDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRetentionDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRetentionDays: %w", err)
+	}
+	return oldValue.RetentionDays, nil
+}
+
+// AddRetentionDays adds i to the "retention_days" field.
+func (m *ChannelMutation) AddRetentionDays(i int64) {
+	if m.addretention_days != nil {
+		*m.addretention_days += i
+	} else {
+		m.addretention_days = &i
+	}
+}
+
+// AddedRetentionDays returns the value that was added to the "retention_days" field in this mutation.
+func (m *ChannelMutation) AddedRetentionDays() (r int64, exists bool) {
+	v := m.addretention_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearRetentionDays clears the value of the "retention_days" field.
+func (m *ChannelMutation) ClearRetentionDays() {
+	m.retention_days = nil
+	m.addretention_days = nil
+	m.clearedFields[channel.FieldRetentionDays] = struct{}{}
+}
+
+// RetentionDaysCleared returns if the "retention_days" field was cleared in this mutation.
+func (m *ChannelMutation) RetentionDaysCleared() bool {
+	_, ok := m.clearedFields[channel.FieldRetentionDays]
+	return ok
+}
+
+// ResetRetentionDays resets all changes to the "retention_days" field.
+func (m *ChannelMutation) ResetRetentionDays() {
+	m.retention_days = nil
+	m.addretention_days = nil
+	delete(m.clearedFields, channel.FieldRetentionDays)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *ChannelMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -545,7 +653,7 @@ func (m *ChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 8)
 	if m.ext_id != nil {
 		fields = append(fields, channel.FieldExtID)
 	}
@@ -557,6 +665,12 @@ func (m *ChannelMutation) Fields() []string {
 	}
 	if m.image_path != nil {
 		fields = append(fields, channel.FieldImagePath)
+	}
+	if m.retention != nil {
+		fields = append(fields, channel.FieldRetention)
+	}
+	if m.retention_days != nil {
+		fields = append(fields, channel.FieldRetentionDays)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, channel.FieldUpdatedAt)
@@ -580,6 +694,10 @@ func (m *ChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.DisplayName()
 	case channel.FieldImagePath:
 		return m.ImagePath()
+	case channel.FieldRetention:
+		return m.Retention()
+	case channel.FieldRetentionDays:
+		return m.RetentionDays()
 	case channel.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case channel.FieldCreatedAt:
@@ -601,6 +719,10 @@ func (m *ChannelMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldDisplayName(ctx)
 	case channel.FieldImagePath:
 		return m.OldImagePath(ctx)
+	case channel.FieldRetention:
+		return m.OldRetention(ctx)
+	case channel.FieldRetentionDays:
+		return m.OldRetentionDays(ctx)
 	case channel.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case channel.FieldCreatedAt:
@@ -642,6 +764,20 @@ func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetImagePath(v)
 		return nil
+	case channel.FieldRetention:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRetention(v)
+		return nil
+	case channel.FieldRetentionDays:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRetentionDays(v)
+		return nil
 	case channel.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -663,13 +799,21 @@ func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *ChannelMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addretention_days != nil {
+		fields = append(fields, channel.FieldRetentionDays)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *ChannelMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case channel.FieldRetentionDays:
+		return m.AddedRetentionDays()
+	}
 	return nil, false
 }
 
@@ -678,6 +822,13 @@ func (m *ChannelMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ChannelMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case channel.FieldRetentionDays:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRetentionDays(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Channel numeric field %s", name)
 }
@@ -688,6 +839,9 @@ func (m *ChannelMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(channel.FieldExtID) {
 		fields = append(fields, channel.FieldExtID)
+	}
+	if m.FieldCleared(channel.FieldRetentionDays) {
+		fields = append(fields, channel.FieldRetentionDays)
 	}
 	return fields
 }
@@ -705,6 +859,9 @@ func (m *ChannelMutation) ClearField(name string) error {
 	switch name {
 	case channel.FieldExtID:
 		m.ClearExtID()
+		return nil
+	case channel.FieldRetentionDays:
+		m.ClearRetentionDays()
 		return nil
 	}
 	return fmt.Errorf("unknown Channel nullable field %s", name)
@@ -725,6 +882,12 @@ func (m *ChannelMutation) ResetField(name string) error {
 		return nil
 	case channel.FieldImagePath:
 		m.ResetImagePath()
+		return nil
+	case channel.FieldRetention:
+		m.ResetRetention()
+		return nil
+	case channel.FieldRetentionDays:
+		m.ResetRetentionDays()
 		return nil
 	case channel.FieldUpdatedAt:
 		m.ResetUpdatedAt()
@@ -6727,6 +6890,7 @@ type VodMutation struct {
 	caption_path       *string
 	folder_name        *string
 	file_name          *string
+	locked             *bool
 	streamed_at        *time.Time
 	updated_at         *time.Time
 	created_at         *time.Time
@@ -7603,6 +7767,42 @@ func (m *VodMutation) ResetFileName() {
 	delete(m.clearedFields, vod.FieldFileName)
 }
 
+// SetLocked sets the "locked" field.
+func (m *VodMutation) SetLocked(b bool) {
+	m.locked = &b
+}
+
+// Locked returns the value of the "locked" field in the mutation.
+func (m *VodMutation) Locked() (r bool, exists bool) {
+	v := m.locked
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLocked returns the old "locked" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldLocked(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLocked is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLocked requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLocked: %w", err)
+	}
+	return oldValue.Locked, nil
+}
+
+// ResetLocked resets all changes to the "locked" field.
+func (m *VodMutation) ResetLocked() {
+	m.locked = nil
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (m *VodMutation) SetStreamedAt(t time.Time) {
 	m.streamed_at = &t
@@ -7877,7 +8077,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 20)
+	fields := make([]string, 0, 21)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -7928,6 +8128,9 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.file_name != nil {
 		fields = append(fields, vod.FieldFileName)
+	}
+	if m.locked != nil {
+		fields = append(fields, vod.FieldLocked)
 	}
 	if m.streamed_at != nil {
 		fields = append(fields, vod.FieldStreamedAt)
@@ -7980,6 +8183,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.FolderName()
 	case vod.FieldFileName:
 		return m.FileName()
+	case vod.FieldLocked:
+		return m.Locked()
 	case vod.FieldStreamedAt:
 		return m.StreamedAt()
 	case vod.FieldUpdatedAt:
@@ -8029,6 +8234,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldFolderName(ctx)
 	case vod.FieldFileName:
 		return m.OldFileName(ctx)
+	case vod.FieldLocked:
+		return m.OldLocked(ctx)
 	case vod.FieldStreamedAt:
 		return m.OldStreamedAt(ctx)
 	case vod.FieldUpdatedAt:
@@ -8162,6 +8369,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetFileName(v)
+		return nil
+	case vod.FieldLocked:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLocked(v)
 		return nil
 	case vod.FieldStreamedAt:
 		v, ok := value.(time.Time)
@@ -8361,6 +8575,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldFileName:
 		m.ResetFileName()
+		return nil
+	case vod.FieldLocked:
+		m.ResetLocked()
 		return nil
 	case vod.FieldStreamedAt:
 		m.ResetStreamedAt()

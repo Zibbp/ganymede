@@ -24,13 +24,15 @@ func NewService(store *database.Database) *Service {
 }
 
 type Channel struct {
-	ID          uuid.UUID `json:"id"`
-	ExtID       string    `json:"ext_id"`
-	Name        string    `json:"name"`
-	DisplayName string    `json:"display_name"`
-	ImagePath   string    `json:"image_path"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID            uuid.UUID `json:"id"`
+	ExtID         string    `json:"ext_id"`
+	Name          string    `json:"name"`
+	DisplayName   string    `json:"display_name"`
+	ImagePath     string    `json:"image_path"`
+	Retention     bool      `json:"retention"`
+	RetentionDays int64     `json:"retention_days"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 func (s *Service) CreateChannel(channelDto Channel) (*ent.Channel, error) {
@@ -100,7 +102,7 @@ func (s *Service) DeleteChannel(channelID uuid.UUID) error {
 }
 
 func (s *Service) UpdateChannel(cId uuid.UUID, channelDto Channel) (*ent.Channel, error) {
-	cha, err := s.Store.Client.Channel.UpdateOneID(cId).SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).Save(context.Background())
+	cha, err := s.Store.Client.Channel.UpdateOneID(cId).SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).SetRetention(channelDto.Retention).SetRetentionDays(channelDto.RetentionDays).Save(context.Background())
 	if err != nil {
 		// if channel not found
 		if _, ok := err.(*ent.NotFoundError); ok {

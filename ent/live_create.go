@@ -478,10 +478,7 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 			Columns: []string{live.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: channel.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -498,10 +495,7 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 			Columns: []string{live.CategoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: livecategory.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1000,8 +994,8 @@ func (lcb *LiveCreateBulk) Save(ctx context.Context) ([]*Live, error) {
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, lcb.builders[i+1].mutation)
 				} else {

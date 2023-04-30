@@ -3,6 +3,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -10,11 +11,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/ent/channel"
+	entChannel "github.com/zibbp/ganymede/ent/channel"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/twitch"
+	"github.com/zibbp/ganymede/internal/vod"
 )
 
 type Service struct {
@@ -62,6 +67,9 @@ func (s *Service) StartTask(c echo.Context, task string) error {
 				log.Error().Err(err).Msg("Error migrating storage")
 			}
 		}()
+
+	case "prune_videos":
+		go pruneVideos()
 	}
 
 	return nil
@@ -242,4 +250,50 @@ func (s *Service) StorageMigration() error {
 	}
 
 	return nil
+}
+
+func pruneVideos() {
+	// setup
+	vodService := &vod.Service{Store: database.DB()}
+	req := &http.Request{}
+	ctx := context.Background()
+	echoCtx := echo.New().NewContext(req, nil)
+	echoCtx.SetRequest(req.WithContext(ctx))
+
+	// fetch all channels that have retention enable
+	channels, err := database.DB().Client.Channel.Query().Where(channel.Retention(true)).All(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("Error fetching channels")
+		return
+	}
+	log.Debug().Msgf("Found %d channels with retention enabled", len(channels))
+
+	// loop over channels
+	for _, channel := range channels {
+		log.Debug().Msgf("Processing channel %s", channel.ID)
+		// fetch all videos for channel
+		videos, err := database.DB().Client.Vod.Query().Where(entVod.HasChannelWith(entChannel.ID(channel.ID))).All(context.Background())
+		if err != nil {
+			log.Error().Err(err).Msgf("Error fetching videos for channel %s", channel.ID)
+			continue
+		}
+
+		// loop over videos
+		for _, video := range videos {
+			// check if video is locked
+			if video.Locked {
+				continue
+			}
+			// check if video is older than retention
+			if video.CreatedAt.Add(time.Duration(channel.RetentionDays) * 24 * time.Hour).Before(time.Now()) {
+				// delete video
+				err := vodService.DeleteVod(echoCtx, video.ID, true)
+				if err != nil {
+					log.Error().Err(err).Msgf("Error deleting video %s", video.ID)
+					continue
+				}
+			}
+		}
+
+	}
 }

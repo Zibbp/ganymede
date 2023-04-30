@@ -18,7 +18,7 @@ import (
 type TwitchCategoryQuery struct {
 	config
 	ctx        *QueryContext
-	order      []OrderFunc
+	order      []twitchcategory.OrderOption
 	inters     []Interceptor
 	predicates []predicate.TwitchCategory
 	// intermediate query (i.e. traversal path).
@@ -52,7 +52,7 @@ func (tcq *TwitchCategoryQuery) Unique(unique bool) *TwitchCategoryQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (tcq *TwitchCategoryQuery) Order(o ...OrderFunc) *TwitchCategoryQuery {
+func (tcq *TwitchCategoryQuery) Order(o ...twitchcategory.OrderOption) *TwitchCategoryQuery {
 	tcq.order = append(tcq.order, o...)
 	return tcq
 }
@@ -246,7 +246,7 @@ func (tcq *TwitchCategoryQuery) Clone() *TwitchCategoryQuery {
 	return &TwitchCategoryQuery{
 		config:     tcq.config,
 		ctx:        tcq.ctx.Clone(),
-		order:      append([]OrderFunc{}, tcq.order...),
+		order:      append([]twitchcategory.OrderOption{}, tcq.order...),
 		inters:     append([]Interceptor{}, tcq.inters...),
 		predicates: append([]predicate.TwitchCategory{}, tcq.predicates...),
 		// clone intermediate query.

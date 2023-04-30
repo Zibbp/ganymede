@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -252,4 +254,121 @@ func TaskChatMoveValidator(tcm utils.TaskStatus) error {
 	default:
 		return fmt.Errorf("queue: invalid enum value for task_chat_move field: %q", tcm)
 	}
+}
+
+// OrderOption defines the ordering options for the Queue queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByLiveArchive orders the results by the live_archive field.
+func ByLiveArchive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLiveArchive, opts...).ToFunc()
+}
+
+// ByOnHold orders the results by the on_hold field.
+func ByOnHold(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOnHold, opts...).ToFunc()
+}
+
+// ByVideoProcessing orders the results by the video_processing field.
+func ByVideoProcessing(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVideoProcessing, opts...).ToFunc()
+}
+
+// ByChatProcessing orders the results by the chat_processing field.
+func ByChatProcessing(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldChatProcessing, opts...).ToFunc()
+}
+
+// ByProcessing orders the results by the processing field.
+func ByProcessing(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProcessing, opts...).ToFunc()
+}
+
+// ByTaskVodCreateFolder orders the results by the task_vod_create_folder field.
+func ByTaskVodCreateFolder(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTaskVodCreateFolder, opts...).ToFunc()
+}
+
+// ByTaskVodDownloadThumbnail orders the results by the task_vod_download_thumbnail field.
+func ByTaskVodDownloadThumbnail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTaskVodDownloadThumbnail, opts...).ToFunc()
+}
+
+// ByTaskVodSaveInfo orders the results by the task_vod_save_info field.
+func ByTaskVodSaveInfo(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTaskVodSaveInfo, opts...).ToFunc()
+}
+
+// ByTaskVideoDownload orders the results by the task_video_download field.
+func ByTaskVideoDownload(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTaskVideoDownload, opts...).ToFunc()
+}
+
+// ByTaskVideoConvert orders the results by the task_video_convert field.
+func ByTaskVideoConvert(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTaskVideoConvert, opts...).ToFunc()
+}
+
+// ByTaskVideoMove orders the results by the task_video_move field.
+func ByTaskVideoMove(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTaskVideoMove, opts...).ToFunc()
+}
+
+// ByTaskChatDownload orders the results by the task_chat_download field.
+func ByTaskChatDownload(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTaskChatDownload, opts...).ToFunc()
+}
+
+// ByTaskChatConvert orders the results by the task_chat_convert field.
+func ByTaskChatConvert(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTaskChatConvert, opts...).ToFunc()
+}
+
+// ByTaskChatRender orders the results by the task_chat_render field.
+func ByTaskChatRender(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTaskChatRender, opts...).ToFunc()
+}
+
+// ByTaskChatMove orders the results by the task_chat_move field.
+func ByTaskChatMove(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTaskChatMove, opts...).ToFunc()
+}
+
+// ByChatStart orders the results by the chat_start field.
+func ByChatStart(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldChatStart, opts...).ToFunc()
+}
+
+// ByRenderChat orders the results by the render_chat field.
+func ByRenderChat(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRenderChat, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByVodField orders the results by vod field.
+func ByVodField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVodStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newVodStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VodInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, true, VodTable, VodColumn),
+	)
 }

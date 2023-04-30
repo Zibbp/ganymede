@@ -19,7 +19,7 @@ import (
 type PlaybackQuery struct {
 	config
 	ctx        *QueryContext
-	order      []OrderFunc
+	order      []playback.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Playback
 	// intermediate query (i.e. traversal path).
@@ -53,7 +53,7 @@ func (pq *PlaybackQuery) Unique(unique bool) *PlaybackQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (pq *PlaybackQuery) Order(o ...OrderFunc) *PlaybackQuery {
+func (pq *PlaybackQuery) Order(o ...playback.OrderOption) *PlaybackQuery {
 	pq.order = append(pq.order, o...)
 	return pq
 }
@@ -247,7 +247,7 @@ func (pq *PlaybackQuery) Clone() *PlaybackQuery {
 	return &PlaybackQuery{
 		config:     pq.config,
 		ctx:        pq.ctx.Clone(),
-		order:      append([]OrderFunc{}, pq.order...),
+		order:      append([]playback.OrderOption{}, pq.order...),
 		inters:     append([]Interceptor{}, pq.inters...),
 		predicates: append([]predicate.Playback{}, pq.predicates...),
 		// clone intermediate query.

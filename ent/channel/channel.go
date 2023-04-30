@@ -5,6 +5,8 @@ package channel
 import (
 	"time"
 
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -21,6 +23,10 @@ const (
 	FieldDisplayName = "display_name"
 	// FieldImagePath holds the string denoting the image_path field in the database.
 	FieldImagePath = "image_path"
+	// FieldRetention holds the string denoting the retention field in the database.
+	FieldRetention = "retention"
+	// FieldRetentionDays holds the string denoting the retention_days field in the database.
+	FieldRetentionDays = "retention_days"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -54,6 +60,8 @@ var Columns = []string{
 	FieldName,
 	FieldDisplayName,
 	FieldImagePath,
+	FieldRetention,
+	FieldRetentionDays,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -69,6 +77,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultRetention holds the default value on creation for the "retention" field.
+	DefaultRetention bool
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
@@ -78,3 +88,93 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
+
+// OrderOption defines the ordering options for the Channel queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByExtID orders the results by the ext_id field.
+func ByExtID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExtID, opts...).ToFunc()
+}
+
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByDisplayName orders the results by the display_name field.
+func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDisplayName, opts...).ToFunc()
+}
+
+// ByImagePath orders the results by the image_path field.
+func ByImagePath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldImagePath, opts...).ToFunc()
+}
+
+// ByRetention orders the results by the retention field.
+func ByRetention(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRetention, opts...).ToFunc()
+}
+
+// ByRetentionDays orders the results by the retention_days field.
+func ByRetentionDays(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRetentionDays, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByVodsCount orders the results by vods count.
+func ByVodsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newVodsStep(), opts...)
+	}
+}
+
+// ByVods orders the results by vods terms.
+func ByVods(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVodsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByLiveCount orders the results by live count.
+func ByLiveCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newLiveStep(), opts...)
+	}
+}
+
+// ByLive orders the results by live terms.
+func ByLive(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newLiveStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newVodsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VodsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, VodsTable, VodsColumn),
+	)
+}
+func newLiveStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(LiveInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, LiveTable, LiveColumn),
+	)
+}

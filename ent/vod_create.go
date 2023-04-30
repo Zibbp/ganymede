@@ -234,6 +234,20 @@ func (vc *VodCreate) SetNillableFileName(s *string) *VodCreate {
 	return vc
 }
 
+// SetLocked sets the "locked" field.
+func (vc *VodCreate) SetLocked(b bool) *VodCreate {
+	vc.mutation.SetLocked(b)
+	return vc
+}
+
+// SetNillableLocked sets the "locked" field if the given value is not nil.
+func (vc *VodCreate) SetNillableLocked(b *bool) *VodCreate {
+	if b != nil {
+		vc.SetLocked(*b)
+	}
+	return vc
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vc *VodCreate) SetStreamedAt(t time.Time) *VodCreate {
 	vc.mutation.SetStreamedAt(t)
@@ -390,6 +404,10 @@ func (vc *VodCreate) defaults() {
 		v := vod.DefaultProcessing
 		vc.mutation.SetProcessing(v)
 	}
+	if _, ok := vc.mutation.Locked(); !ok {
+		v := vod.DefaultLocked
+		vc.mutation.SetLocked(v)
+	}
 	if _, ok := vc.mutation.StreamedAt(); !ok {
 		v := vod.DefaultStreamedAt()
 		vc.mutation.SetStreamedAt(v)
@@ -446,6 +464,9 @@ func (vc *VodCreate) check() error {
 	}
 	if _, ok := vc.mutation.VideoPath(); !ok {
 		return &ValidationError{Name: "video_path", err: errors.New(`ent: missing required field "Vod.video_path"`)}
+	}
+	if _, ok := vc.mutation.Locked(); !ok {
+		return &ValidationError{Name: "locked", err: errors.New(`ent: missing required field "Vod.locked"`)}
 	}
 	if _, ok := vc.mutation.StreamedAt(); !ok {
 		return &ValidationError{Name: "streamed_at", err: errors.New(`ent: missing required field "Vod.streamed_at"`)}
@@ -563,6 +584,10 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		_spec.SetField(vod.FieldFileName, field.TypeString, value)
 		_node.FileName = value
 	}
+	if value, ok := vc.mutation.Locked(); ok {
+		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
+		_node.Locked = value
+	}
 	if value, ok := vc.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
 		_node.StreamedAt = value
@@ -583,10 +608,7 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 			Columns: []string{vod.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: channel.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -603,10 +625,7 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 			Columns: []string{vod.QueueColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: queue.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -622,10 +641,7 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 			Columns: vod.PlaylistsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: playlist.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -946,6 +962,18 @@ func (u *VodUpsert) UpdateFileName() *VodUpsert {
 // ClearFileName clears the value of the "file_name" field.
 func (u *VodUpsert) ClearFileName() *VodUpsert {
 	u.SetNull(vod.FieldFileName)
+	return u
+}
+
+// SetLocked sets the "locked" field.
+func (u *VodUpsert) SetLocked(v bool) *VodUpsert {
+	u.Set(vod.FieldLocked, v)
+	return u
+}
+
+// UpdateLocked sets the "locked" field to the value that was provided on create.
+func (u *VodUpsert) UpdateLocked() *VodUpsert {
+	u.SetExcluded(vod.FieldLocked)
 	return u
 }
 
@@ -1332,6 +1360,20 @@ func (u *VodUpsertOne) ClearFileName() *VodUpsertOne {
 	})
 }
 
+// SetLocked sets the "locked" field.
+func (u *VodUpsertOne) SetLocked(v bool) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetLocked(v)
+	})
+}
+
+// UpdateLocked sets the "locked" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateLocked() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateLocked()
+	})
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (u *VodUpsertOne) SetStreamedAt(v time.Time) *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
@@ -1423,8 +1465,8 @@ func (vcb *VodCreateBulk) Save(ctx context.Context) ([]*Vod, error) {
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, vcb.builders[i+1].mutation)
 				} else {
@@ -1879,6 +1921,20 @@ func (u *VodUpsertBulk) UpdateFileName() *VodUpsertBulk {
 func (u *VodUpsertBulk) ClearFileName() *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.ClearFileName()
+	})
+}
+
+// SetLocked sets the "locked" field.
+func (u *VodUpsertBulk) SetLocked(v bool) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetLocked(v)
+	})
+}
+
+// UpdateLocked sets the "locked" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateLocked() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateLocked()
 	})
 }
 

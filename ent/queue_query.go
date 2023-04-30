@@ -20,7 +20,7 @@ import (
 type QueueQuery struct {
 	config
 	ctx        *QueryContext
-	order      []OrderFunc
+	order      []queue.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Queue
 	withVod    *VodQuery
@@ -56,7 +56,7 @@ func (qq *QueueQuery) Unique(unique bool) *QueueQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (qq *QueueQuery) Order(o ...OrderFunc) *QueueQuery {
+func (qq *QueueQuery) Order(o ...queue.OrderOption) *QueueQuery {
 	qq.order = append(qq.order, o...)
 	return qq
 }
@@ -272,7 +272,7 @@ func (qq *QueueQuery) Clone() *QueueQuery {
 	return &QueueQuery{
 		config:     qq.config,
 		ctx:        qq.ctx.Clone(),
-		order:      append([]OrderFunc{}, qq.order...),
+		order:      append([]queue.OrderOption{}, qq.order...),
 		inters:     append([]Interceptor{}, qq.inters...),
 		predicates: append([]predicate.Queue{}, qq.predicates...),
 		withVod:    qq.withVod.Clone(),

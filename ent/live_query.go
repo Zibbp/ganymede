@@ -22,7 +22,7 @@ import (
 type LiveQuery struct {
 	config
 	ctx            *QueryContext
-	order          []OrderFunc
+	order          []live.OrderOption
 	inters         []Interceptor
 	predicates     []predicate.Live
 	withChannel    *ChannelQuery
@@ -59,7 +59,7 @@ func (lq *LiveQuery) Unique(unique bool) *LiveQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (lq *LiveQuery) Order(o ...OrderFunc) *LiveQuery {
+func (lq *LiveQuery) Order(o ...live.OrderOption) *LiveQuery {
 	lq.order = append(lq.order, o...)
 	return lq
 }
@@ -297,7 +297,7 @@ func (lq *LiveQuery) Clone() *LiveQuery {
 	return &LiveQuery{
 		config:         lq.config,
 		ctx:            lq.ctx.Clone(),
-		order:          append([]OrderFunc{}, lq.order...),
+		order:          append([]live.OrderOption{}, lq.order...),
 		inters:         append([]Interceptor{}, lq.inters...),
 		predicates:     append([]predicate.Live{}, lq.predicates...),
 		withChannel:    lq.withChannel.Clone(),
@@ -498,7 +498,7 @@ func (lq *LiveQuery) loadCategories(ctx context.Context, query *LiveCategoryQuer
 	}
 	query.withFKs = true
 	query.Where(predicate.LiveCategory(func(s *sql.Selector) {
-		s.Where(sql.InValues(live.CategoriesColumn, fks...))
+		s.Where(sql.InValues(s.C(live.CategoriesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -511,7 +511,7 @@ func (lq *LiveQuery) loadCategories(ctx context.Context, query *LiveCategoryQuer
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "live_id" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "live_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

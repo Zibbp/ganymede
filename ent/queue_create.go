@@ -626,10 +626,7 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 			Columns: []string{queue.VodColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1428,8 +1425,8 @@ func (qcb *QueueCreateBulk) Save(ctx context.Context) ([]*Queue, error) {
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, qcb.builders[i+1].mutation)
 				} else {

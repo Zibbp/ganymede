@@ -132,6 +132,11 @@ func FileName(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldFileName, v))
 }
 
+// Locked applies equality check predicate on the "locked" field. It's identical to LockedEQ.
+func Locked(v bool) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldLocked, v))
+}
+
 // StreamedAt applies equality check predicate on the "streamed_at" field. It's identical to StreamedAtEQ.
 func StreamedAt(v time.Time) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldStreamedAt, v))
@@ -1157,6 +1162,16 @@ func FileNameContainsFold(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldContainsFold(FieldFileName, v))
 }
 
+// LockedEQ applies the EQ predicate on the "locked" field.
+func LockedEQ(v bool) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldLocked, v))
+}
+
+// LockedNEQ applies the NEQ predicate on the "locked" field.
+func LockedNEQ(v bool) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldLocked, v))
+}
+
 // StreamedAtEQ applies the EQ predicate on the "streamed_at" field.
 func StreamedAtEQ(v time.Time) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldStreamedAt, v))
@@ -1291,11 +1306,7 @@ func HasChannel() predicate.Vod {
 // HasChannelWith applies the HasEdge predicate on the "channel" edge with a given conditions (other predicates).
 func HasChannelWith(preds ...predicate.Channel) predicate.Vod {
 	return predicate.Vod(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ChannelInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ChannelTable, ChannelColumn),
-		)
+		step := newChannelStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -1318,11 +1329,7 @@ func HasQueue() predicate.Vod {
 // HasQueueWith applies the HasEdge predicate on the "queue" edge with a given conditions (other predicates).
 func HasQueueWith(preds ...predicate.Queue) predicate.Vod {
 	return predicate.Vod(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(QueueInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, false, QueueTable, QueueColumn),
-		)
+		step := newQueueStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -1345,11 +1352,7 @@ func HasPlaylists() predicate.Vod {
 // HasPlaylistsWith applies the HasEdge predicate on the "playlists" edge with a given conditions (other predicates).
 func HasPlaylistsWith(preds ...predicate.Playlist) predicate.Vod {
 	return predicate.Vod(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(PlaylistsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, PlaylistsTable, PlaylistsPrimaryKey...),
-		)
+		step := newPlaylistsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -573,10 +573,7 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{queue.VodColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -589,10 +586,7 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{queue.VodColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1192,10 +1186,7 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 			Columns: []string{queue.VodColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1208,10 +1199,7 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 			Columns: []string{queue.VodColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

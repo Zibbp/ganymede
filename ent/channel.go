@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
@@ -25,13 +26,18 @@ type Channel struct {
 	DisplayName string `json:"display_name,omitempty"`
 	// ImagePath holds the value of the "image_path" field.
 	ImagePath string `json:"image_path,omitempty"`
+	// Retention holds the value of the "retention" field.
+	Retention bool `json:"retention,omitempty"`
+	// RetentionDays holds the value of the "retention_days" field.
+	RetentionDays int64 `json:"retention_days,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ChannelQuery when eager-loading is set.
-	Edges ChannelEdges `json:"edges"`
+	Edges        ChannelEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // ChannelEdges holds the relations/edges for other nodes in the graph.
@@ -68,6 +74,10 @@ func (*Channel) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case channel.FieldRetention:
+			values[i] = new(sql.NullBool)
+		case channel.FieldRetentionDays:
+			values[i] = new(sql.NullInt64)
 		case channel.FieldExtID, channel.FieldName, channel.FieldDisplayName, channel.FieldImagePath:
 			values[i] = new(sql.NullString)
 		case channel.FieldUpdatedAt, channel.FieldCreatedAt:
@@ -75,7 +85,7 @@ func (*Channel) scanValues(columns []string) ([]any, error) {
 		case channel.FieldID:
 			values[i] = new(uuid.UUID)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Channel", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -119,6 +129,18 @@ func (c *Channel) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				c.ImagePath = value.String
 			}
+		case channel.FieldRetention:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field retention", values[i])
+			} else if value.Valid {
+				c.Retention = value.Bool
+			}
+		case channel.FieldRetentionDays:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field retention_days", values[i])
+			} else if value.Valid {
+				c.RetentionDays = value.Int64
+			}
 		case channel.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
@@ -131,9 +153,17 @@ func (c *Channel) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				c.CreatedAt = value.Time
 			}
+		default:
+			c.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
+}
+
+// Value returns the ent.Value that was dynamically selected and assigned to the Channel.
+// This includes values selected through modifiers, order, etc.
+func (c *Channel) Value(name string) (ent.Value, error) {
+	return c.selectValues.Get(name)
 }
 
 // QueryVods queries the "vods" edge of the Channel entity.
@@ -180,6 +210,12 @@ func (c *Channel) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("image_path=")
 	builder.WriteString(c.ImagePath)
+	builder.WriteString(", ")
+	builder.WriteString("retention=")
+	builder.WriteString(fmt.Sprintf("%v", c.Retention))
+	builder.WriteString(", ")
+	builder.WriteString("retention_days=")
+	builder.WriteString(fmt.Sprintf("%v", c.RetentionDays))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))

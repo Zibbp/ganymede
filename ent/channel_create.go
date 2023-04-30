@@ -58,6 +58,34 @@ func (cc *ChannelCreate) SetImagePath(s string) *ChannelCreate {
 	return cc
 }
 
+// SetRetention sets the "retention" field.
+func (cc *ChannelCreate) SetRetention(b bool) *ChannelCreate {
+	cc.mutation.SetRetention(b)
+	return cc
+}
+
+// SetNillableRetention sets the "retention" field if the given value is not nil.
+func (cc *ChannelCreate) SetNillableRetention(b *bool) *ChannelCreate {
+	if b != nil {
+		cc.SetRetention(*b)
+	}
+	return cc
+}
+
+// SetRetentionDays sets the "retention_days" field.
+func (cc *ChannelCreate) SetRetentionDays(i int64) *ChannelCreate {
+	cc.mutation.SetRetentionDays(i)
+	return cc
+}
+
+// SetNillableRetentionDays sets the "retention_days" field if the given value is not nil.
+func (cc *ChannelCreate) SetNillableRetentionDays(i *int64) *ChannelCreate {
+	if i != nil {
+		cc.SetRetentionDays(*i)
+	}
+	return cc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (cc *ChannelCreate) SetUpdatedAt(t time.Time) *ChannelCreate {
 	cc.mutation.SetUpdatedAt(t)
@@ -165,6 +193,10 @@ func (cc *ChannelCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (cc *ChannelCreate) defaults() {
+	if _, ok := cc.mutation.Retention(); !ok {
+		v := channel.DefaultRetention
+		cc.mutation.SetRetention(v)
+	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		v := channel.DefaultUpdatedAt()
 		cc.mutation.SetUpdatedAt(v)
@@ -189,6 +221,9 @@ func (cc *ChannelCreate) check() error {
 	}
 	if _, ok := cc.mutation.ImagePath(); !ok {
 		return &ValidationError{Name: "image_path", err: errors.New(`ent: missing required field "Channel.image_path"`)}
+	}
+	if _, ok := cc.mutation.Retention(); !ok {
+		return &ValidationError{Name: "retention", err: errors.New(`ent: missing required field "Channel.retention"`)}
 	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Channel.updated_at"`)}
@@ -248,6 +283,14 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 		_spec.SetField(channel.FieldImagePath, field.TypeString, value)
 		_node.ImagePath = value
 	}
+	if value, ok := cc.mutation.Retention(); ok {
+		_spec.SetField(channel.FieldRetention, field.TypeBool, value)
+		_node.Retention = value
+	}
+	if value, ok := cc.mutation.RetentionDays(); ok {
+		_spec.SetField(channel.FieldRetentionDays, field.TypeInt64, value)
+		_node.RetentionDays = value
+	}
 	if value, ok := cc.mutation.UpdatedAt(); ok {
 		_spec.SetField(channel.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
@@ -264,10 +307,7 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 			Columns: []string{channel.VodsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: vod.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -283,10 +323,7 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 			Columns: []string{channel.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -397,6 +434,42 @@ func (u *ChannelUpsert) SetImagePath(v string) *ChannelUpsert {
 // UpdateImagePath sets the "image_path" field to the value that was provided on create.
 func (u *ChannelUpsert) UpdateImagePath() *ChannelUpsert {
 	u.SetExcluded(channel.FieldImagePath)
+	return u
+}
+
+// SetRetention sets the "retention" field.
+func (u *ChannelUpsert) SetRetention(v bool) *ChannelUpsert {
+	u.Set(channel.FieldRetention, v)
+	return u
+}
+
+// UpdateRetention sets the "retention" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdateRetention() *ChannelUpsert {
+	u.SetExcluded(channel.FieldRetention)
+	return u
+}
+
+// SetRetentionDays sets the "retention_days" field.
+func (u *ChannelUpsert) SetRetentionDays(v int64) *ChannelUpsert {
+	u.Set(channel.FieldRetentionDays, v)
+	return u
+}
+
+// UpdateRetentionDays sets the "retention_days" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdateRetentionDays() *ChannelUpsert {
+	u.SetExcluded(channel.FieldRetentionDays)
+	return u
+}
+
+// AddRetentionDays adds v to the "retention_days" field.
+func (u *ChannelUpsert) AddRetentionDays(v int64) *ChannelUpsert {
+	u.Add(channel.FieldRetentionDays, v)
+	return u
+}
+
+// ClearRetentionDays clears the value of the "retention_days" field.
+func (u *ChannelUpsert) ClearRetentionDays() *ChannelUpsert {
+	u.SetNull(channel.FieldRetentionDays)
 	return u
 }
 
@@ -526,6 +599,48 @@ func (u *ChannelUpsertOne) UpdateImagePath() *ChannelUpsertOne {
 	})
 }
 
+// SetRetention sets the "retention" field.
+func (u *ChannelUpsertOne) SetRetention(v bool) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetRetention(v)
+	})
+}
+
+// UpdateRetention sets the "retention" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdateRetention() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateRetention()
+	})
+}
+
+// SetRetentionDays sets the "retention_days" field.
+func (u *ChannelUpsertOne) SetRetentionDays(v int64) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetRetentionDays(v)
+	})
+}
+
+// AddRetentionDays adds v to the "retention_days" field.
+func (u *ChannelUpsertOne) AddRetentionDays(v int64) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.AddRetentionDays(v)
+	})
+}
+
+// UpdateRetentionDays sets the "retention_days" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdateRetentionDays() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateRetentionDays()
+	})
+}
+
+// ClearRetentionDays clears the value of the "retention_days" field.
+func (u *ChannelUpsertOne) ClearRetentionDays() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearRetentionDays()
+	})
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (u *ChannelUpsertOne) SetUpdatedAt(v time.Time) *ChannelUpsertOne {
 	return u.Update(func(s *ChannelUpsert) {
@@ -603,8 +718,8 @@ func (ccb *ChannelCreateBulk) Save(ctx context.Context) ([]*Channel, error) {
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, ccb.builders[i+1].mutation)
 				} else {
@@ -814,6 +929,48 @@ func (u *ChannelUpsertBulk) SetImagePath(v string) *ChannelUpsertBulk {
 func (u *ChannelUpsertBulk) UpdateImagePath() *ChannelUpsertBulk {
 	return u.Update(func(s *ChannelUpsert) {
 		s.UpdateImagePath()
+	})
+}
+
+// SetRetention sets the "retention" field.
+func (u *ChannelUpsertBulk) SetRetention(v bool) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetRetention(v)
+	})
+}
+
+// UpdateRetention sets the "retention" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdateRetention() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateRetention()
+	})
+}
+
+// SetRetentionDays sets the "retention_days" field.
+func (u *ChannelUpsertBulk) SetRetentionDays(v int64) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetRetentionDays(v)
+	})
+}
+
+// AddRetentionDays adds v to the "retention_days" field.
+func (u *ChannelUpsertBulk) AddRetentionDays(v int64) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.AddRetentionDays(v)
+	})
+}
+
+// UpdateRetentionDays sets the "retention_days" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdateRetentionDays() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateRetentionDays()
+	})
+}
+
+// ClearRetentionDays clears the value of the "retention_days" field.
+func (u *ChannelUpsertBulk) ClearRetentionDays() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearRetentionDays()
 	})
 }
 

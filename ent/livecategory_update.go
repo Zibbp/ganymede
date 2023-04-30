@@ -115,10 +115,7 @@ func (lcu *LiveCategoryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{livecategory.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -131,10 +128,7 @@ func (lcu *LiveCategoryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{livecategory.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -278,10 +272,7 @@ func (lcuo *LiveCategoryUpdateOne) sqlSave(ctx context.Context) (_node *LiveCate
 			Columns: []string{livecategory.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -294,10 +285,7 @@ func (lcuo *LiveCategoryUpdateOne) sqlSave(ctx context.Context) (_node *LiveCate
 			Columns: []string{livecategory.LiveColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: live.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

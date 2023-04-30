@@ -76,6 +76,16 @@ func ImagePath(v string) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldImagePath, v))
 }
 
+// Retention applies equality check predicate on the "retention" field. It's identical to RetentionEQ.
+func Retention(v bool) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldRetention, v))
+}
+
+// RetentionDays applies equality check predicate on the "retention_days" field. It's identical to RetentionDaysEQ.
+func RetentionDays(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldRetentionDays, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldUpdatedAt, v))
@@ -356,6 +366,66 @@ func ImagePathContainsFold(v string) predicate.Channel {
 	return predicate.Channel(sql.FieldContainsFold(FieldImagePath, v))
 }
 
+// RetentionEQ applies the EQ predicate on the "retention" field.
+func RetentionEQ(v bool) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldRetention, v))
+}
+
+// RetentionNEQ applies the NEQ predicate on the "retention" field.
+func RetentionNEQ(v bool) predicate.Channel {
+	return predicate.Channel(sql.FieldNEQ(FieldRetention, v))
+}
+
+// RetentionDaysEQ applies the EQ predicate on the "retention_days" field.
+func RetentionDaysEQ(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldRetentionDays, v))
+}
+
+// RetentionDaysNEQ applies the NEQ predicate on the "retention_days" field.
+func RetentionDaysNEQ(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldNEQ(FieldRetentionDays, v))
+}
+
+// RetentionDaysIn applies the In predicate on the "retention_days" field.
+func RetentionDaysIn(vs ...int64) predicate.Channel {
+	return predicate.Channel(sql.FieldIn(FieldRetentionDays, vs...))
+}
+
+// RetentionDaysNotIn applies the NotIn predicate on the "retention_days" field.
+func RetentionDaysNotIn(vs ...int64) predicate.Channel {
+	return predicate.Channel(sql.FieldNotIn(FieldRetentionDays, vs...))
+}
+
+// RetentionDaysGT applies the GT predicate on the "retention_days" field.
+func RetentionDaysGT(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldGT(FieldRetentionDays, v))
+}
+
+// RetentionDaysGTE applies the GTE predicate on the "retention_days" field.
+func RetentionDaysGTE(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldGTE(FieldRetentionDays, v))
+}
+
+// RetentionDaysLT applies the LT predicate on the "retention_days" field.
+func RetentionDaysLT(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldLT(FieldRetentionDays, v))
+}
+
+// RetentionDaysLTE applies the LTE predicate on the "retention_days" field.
+func RetentionDaysLTE(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldLTE(FieldRetentionDays, v))
+}
+
+// RetentionDaysIsNil applies the IsNil predicate on the "retention_days" field.
+func RetentionDaysIsNil() predicate.Channel {
+	return predicate.Channel(sql.FieldIsNull(FieldRetentionDays))
+}
+
+// RetentionDaysNotNil applies the NotNil predicate on the "retention_days" field.
+func RetentionDaysNotNil() predicate.Channel {
+	return predicate.Channel(sql.FieldNotNull(FieldRetentionDays))
+}
+
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
 func UpdatedAtEQ(v time.Time) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldUpdatedAt, v))
@@ -450,11 +520,7 @@ func HasVods() predicate.Channel {
 // HasVodsWith applies the HasEdge predicate on the "vods" edge with a given conditions (other predicates).
 func HasVodsWith(preds ...predicate.Vod) predicate.Channel {
 	return predicate.Channel(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(VodsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, VodsTable, VodsColumn),
-		)
+		step := newVodsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -477,11 +543,7 @@ func HasLive() predicate.Channel {
 // HasLiveWith applies the HasEdge predicate on the "live" edge with a given conditions (other predicates).
 func HasLiveWith(preds ...predicate.Live) predicate.Channel {
 	return predicate.Channel(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(LiveInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, LiveTable, LiveColumn),
-		)
+		step := newLiveStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
