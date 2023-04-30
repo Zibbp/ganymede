@@ -254,7 +254,7 @@ func (s *Service) StorageMigration() error {
 
 func pruneVideos() {
 	// setup
-	vodService := *&vod.Service{Store: database.DB()}
+	vodService := &vod.Service{Store: database.DB()}
 	req := &http.Request{}
 	ctx := context.Background()
 	echoCtx := echo.New().NewContext(req, nil)
