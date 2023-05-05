@@ -497,7 +497,6 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 		log.Error().Msg("no stream found")
 		q.Update().SetTaskVodDownloadThumbnail(utils.Failed).SaveX(context.Background())
 		s.TaskError(ch, v, q, "vod_download_thumbnail")
-		return
 	}
 	tVod := stream.Data[0]
 	fullResThumbnailUrl := strings.ReplaceAll(tVod.ThumbnailURL, "{width}", "1920")
