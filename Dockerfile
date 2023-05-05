@@ -23,6 +23,9 @@ RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ 
 RUN python3 -m ensurepip
 RUN pip3 install --no-cache --upgrade pip streamlink
 
+# temp fix for Streamlink https://github.com/streamlink/streamlink/issues/5324
+RUN pip3 install urllib3==1.26.15
+
 # setup user
 RUN groupmod -g 1000 users && \
   useradd -u 911 -U -d /data abc && \
