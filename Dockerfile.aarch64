@@ -26,9 +26,6 @@ RUN apt-get update
 RUN apt-get install python3 python3-pip fontconfig icu-devtools python3-dev gcc libc-dev curl g++ ffmpeg bash tzdata -y
 RUN pip3 install --no-cache --upgrade pip streamlink
 
-# temp fix for Streamlink https://github.com/streamlink/streamlink/issues/5324
-RUN pip3 install urllib3==1.26.15
-
 ## Installing su-exec in debain/ubuntu container.
 RUN  set -ex; \
      \
