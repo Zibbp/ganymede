@@ -674,14 +674,13 @@ func (s *Service) TaskLiveVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queu
 	q.Update().SetTaskVideoDownload(utils.Success).SaveX(context.Background())
 
 	// Set live watch channel to not live
-	// live, err := ch.QueryLive().Only(context.Background())
-	// if err != nil {
-	// 	log.Error().Err(err).Msg("error getting live")
-	// }
-	// if err == nil {
-	// 	live.Update().SetIsLive(false).SaveX(context.Background())
-	// }
-	log.Debug().Msg("skipping setting channel to offline")
+	live, err := ch.QueryLive().Only(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("error getting live")
+	}
+	if err == nil {
+		live.Update().SetIsLive(false).SaveX(context.Background())
+	}
 
 	// Update video duration with duration from video
 	duration, err := exec.GetVideoDuration(fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
