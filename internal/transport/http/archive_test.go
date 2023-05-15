@@ -38,7 +38,7 @@ func (m ServiceFuncMock) GetUserByLogin(login string) (twitch.Channel, error) {
 		ID:              "123",
 		Login:           "test",
 		DisplayName:     "test",
-		ProfileImageURL: "https://i.imgur.com/LCL3kZz.png",
+		ProfileImageURL: "https://raw.githubusercontent.com/Zibbp/ganymede/main/.github/ganymede-logo.png",
 	}, nil
 }
 
