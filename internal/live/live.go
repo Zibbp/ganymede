@@ -14,6 +14,7 @@ import (
 	"github.com/zibbp/ganymede/ent/live"
 	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/notification"
@@ -210,6 +211,17 @@ func (s *Service) Check() error {
 				_, err := s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(true).Save(context.Background())
 				if err != nil {
 					log.Error().Err(err).Msg("error updating live watched channel")
+				}
+				// check if stream is already being archived
+				queueItems, err := database.DB().Client.Queue.Query().Where(queue.Processing(true)).WithVod().All(context.Background())
+				if err != nil {
+					log.Error().Err(err).Msg("error getting queue items")
+				}
+				for _, queueItem := range queueItems {
+					if queueItem.Edges.Vod.ExtID == stream.ID && queueItem.TaskVideoDownload == utils.Running {
+						log.Debug().Msgf("%s is already being archived", lwc.Edges.Channel.Name)
+						return nil
+					}
 				}
 				// Archive stream
 				archiveResp, err := s.ArchiveService.ArchiveTwitchLive(lwc, stream)
