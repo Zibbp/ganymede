@@ -6,7 +6,7 @@ require (
 	entgo.io/ent v0.12.3
 	github.com/MicahParks/keyfunc v1.9.0
 	github.com/coreos/go-oidc/v3 v3.5.0
-	github.com/go-co-op/gocron v1.23.0
+	github.com/go-co-op/gocron v1.27.0
 	github.com/go-playground/validator/v10 v10.13.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.3.0
@@ -31,6 +31,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/tools v0.8.1-0.20230428195545-5283a0178901 // indirect
 )
 
