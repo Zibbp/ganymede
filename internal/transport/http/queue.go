@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
+	entQueue "github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -18,6 +20,7 @@ type QueueService interface {
 	UpdateQueueItem(queueDto queue.Queue, id uuid.UUID) (*ent.Queue, error)
 	DeleteQueueItem(c echo.Context, id uuid.UUID) error
 	ReadLogFile(c echo.Context, id uuid.UUID, logType string) ([]byte, error)
+	StopQueueItem(c echo.Context, id uuid.UUID) error
 }
 
 type CreateQueueRequest struct {
@@ -252,4 +255,24 @@ func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, string(log))
+}
+
+func (h *Handler) StopQueueItem(c echo.Context) error {
+	id := c.Param("id")
+
+	uuid, err := utils.IsValidUUID(id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid id")
+	}
+
+	v, err := database.DB().Client.Queue.Query().Where(entQueue.ID(uuid)).WithVod().First(c.Request().Context())
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	err = h.Service.QueueService.StopQueueItem(c, v.Edges.Vod.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.NoContent(http.StatusNoContent)
 }

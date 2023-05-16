@@ -3,6 +3,8 @@ package queue
 import (
 	"context"
 	"fmt"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -130,4 +132,30 @@ func (s *Service) ArchiveGetQueueItem(qID uuid.UUID) (*ent.Queue, error) {
 		return nil, fmt.Errorf("error archiving queue: %v", err)
 	}
 	return q, nil
+}
+
+// StopQueueItem
+// kills the streamlink process for a queue item
+// which in turn will stop the chat download and proceed to post processing
+func (s *Service) StopQueueItem(c echo.Context, id uuid.UUID) error {
+	fmt.Println(id)
+	fmt.Printf("pgrep -f 'streamlink.*%s' | xargs kill\n", id)
+	getPid := exec.Command("pgrep", "-f", fmt.Sprintf("streamlink.*%s", id))
+	fmt.Println(getPid)
+	killPid := exec.Command("xargs", "kill")
+	getPidOutput, err := getPid.Output()
+	if err != nil {
+		log.Error().Err(err).Msgf("error getting pid for queue item: %v", err)
+		return fmt.Errorf("error getting pid queue item: %v", err)
+	}
+
+	killPid.Stdin = strings.NewReader(string(getPidOutput))
+
+	err = killPid.Run()
+	if err != nil {
+		log.Error().Err(err).Msgf("error killing pid for queue item: %v", err)
+		return fmt.Errorf("error killing pid queue item: %v", err)
+	}
+
+	return nil
 }
