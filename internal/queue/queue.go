@@ -138,10 +138,15 @@ func (s *Service) ArchiveGetQueueItem(qID uuid.UUID) (*ent.Queue, error) {
 // kills the streamlink process for a queue item
 // which in turn will stop the chat download and proceed to post processing
 func (s *Service) StopQueueItem(c echo.Context, id uuid.UUID) error {
-	fmt.Println(id)
-	fmt.Printf("pgrep -f 'streamlink.*%s' | xargs kill\n", id)
-	getPid := exec.Command("pgrep", "-f", fmt.Sprintf("streamlink.*%s", id))
-	fmt.Println(getPid)
+	// get vod
+	v, err := database.DB().Client.Queue.Query().Where(queue.ID(id)).WithVod().First(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("error getting queue item: %v", err)
+	}
+	log.Debug().Msgf("running: pgrep -f 'streamlink.*%s' | xargs kill\n", v.Edges.Vod.ExtID)
+	// get pid using the vod id
+	getPid := exec.Command("pgrep", "-f", fmt.Sprintf("streamlink.*%s", v.Edges.Vod.ExtID))
+	// kill pid
 	killPid := exec.Command("xargs", "kill")
 	getPidOutput, err := getPid.Output()
 	if err != nil {

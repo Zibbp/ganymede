@@ -6,8 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
-	entQueue "github.com/zibbp/ganymede/ent/queue"
-	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -265,12 +263,7 @@ func (h *Handler) StopQueueItem(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid id")
 	}
 
-	v, err := database.DB().Client.Queue.Query().Where(entQueue.ID(uuid)).WithVod().First(c.Request().Context())
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	err = h.Service.QueueService.StopQueueItem(c, v.Edges.Vod.ID)
+	err = h.Service.QueueService.StopQueueItem(c, uuid)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
