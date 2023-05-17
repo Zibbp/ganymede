@@ -18,6 +18,7 @@ type QueueService interface {
 	UpdateQueueItem(queueDto queue.Queue, id uuid.UUID) (*ent.Queue, error)
 	DeleteQueueItem(c echo.Context, id uuid.UUID) error
 	ReadLogFile(c echo.Context, id uuid.UUID, logType string) ([]byte, error)
+	StopQueueItem(c echo.Context, id uuid.UUID) error
 }
 
 type CreateQueueRequest struct {
@@ -252,4 +253,19 @@ func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, string(log))
+}
+
+func (h *Handler) StopQueueItem(c echo.Context) error {
+	id := c.Param("id")
+
+	uuid, err := utils.IsValidUUID(id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid id")
+	}
+
+	err = h.Service.QueueService.StopQueueItem(c, uuid)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.NoContent(http.StatusNoContent)
 }
