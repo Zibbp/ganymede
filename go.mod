@@ -5,7 +5,7 @@ go 1.18
 require (
 	entgo.io/ent v0.12.3
 	github.com/MicahParks/keyfunc v1.9.0
-	github.com/coreos/go-oidc/v3 v3.5.0
+	github.com/coreos/go-oidc/v3 v3.6.0
 	github.com/go-co-op/gocron v1.27.0
 	github.com/go-playground/validator/v10 v10.13.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
