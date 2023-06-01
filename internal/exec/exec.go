@@ -189,8 +189,8 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 
 	for i, arg := range splitParams {
 		// Attempt to find access token
-		if strings.Contains(arg, "twitch-api-header") {
-			log.Debug().Msg("found twitch-api-header in streamlink args")
+		if strings.Contains(arg, "=OAuth ") {
+			log.Debug().Msg("found =OAuth  in streamlink args")
 			// Extract access token
 			accessToken := strings.Split(arg, "=OAuth ")[1]
 			// Check access token
