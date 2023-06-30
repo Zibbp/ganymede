@@ -195,7 +195,7 @@ func (s *Service) SearchVods(c echo.Context, term string, limit int, offset int)
 
 	var pagination Pagination
 
-	v, err := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term)).Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).All(c.Request().Context())
+	v, err := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term)).Order(ent.Desc(vod.FieldStreamedAt)).WithChannel().Limit(limit).Offset(offset).All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error searching vods")
 		return pagination, fmt.Errorf("error searching vods: %v", err)
@@ -242,7 +242,7 @@ func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, chann
 		vodQuery = vodQuery.Where(vod.TypeIn(types...))
 	}
 
-	v, err := vodQuery.Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).All(c.Request().Context())
+	v, err := vodQuery.Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).WithChannel().All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vods")
 		return pagination, fmt.Errorf("error getting vods: %v", err)

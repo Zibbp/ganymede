@@ -139,7 +139,7 @@ func (s *Service) GetLastPlaybacks(c *auth.CustomContext, limit int) (*GetPlayba
 	var tmpPlaybackEntries []*ent.Playback
 
 	for _, playbackEntry := range playbackEntries {
-		vod, err := s.Store.Client.Vod.Query().Where(entVod.ID(playbackEntry.VodID)).Only(c.Request().Context())
+		vod, err := s.Store.Client.Vod.Query().Where(entVod.ID(playbackEntry.VodID)).WithChannel().Only(c.Request().Context())
 		if err != nil {
 			// Skip if vod not found
 			continue
