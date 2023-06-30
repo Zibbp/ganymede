@@ -24,3 +24,4 @@ go.work
 
 /cmd/server/__debug_bin
 dev
+tmp
