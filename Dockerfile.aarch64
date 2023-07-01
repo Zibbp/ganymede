@@ -6,7 +6,7 @@ WORKDIR /app
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -X main.Version=${VERSION} -X main.BuildTime=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X main.GitHash=`git rev-parse HEAD`" -o ganymede-api cmd/server/main.go
 
-FROM arm64v8/debian AS build-stage-02
+FROM arm64v8/debian:bullseye AS build-stage-02
 
 RUN apt-get update
 RUN apt-get install unzip wget git -y
@@ -17,7 +17,7 @@ RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.53.0/Twi
 
 RUN git clone https://github.com/xenova/chat-downloader.git
 
-FROM arm64v8/debian AS production
+FROM arm64v8/debian:bullseye AS production
 
 ## Add armhf support.
 RUN dpkg --add-architecture armhf
