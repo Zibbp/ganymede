@@ -31,16 +31,21 @@ type Conf struct {
 	RegistrationEnabled bool `json:"registration_enabled"`
 	DBSeeded            bool `json:"db_seeded"`
 	Parameters          struct {
-		TwitchToken    string `json:"twitch_token"`
-		VideoConvert   string `json:"video_convert"`
-		ChatRender     string `json:"chat_render"`
-		StreamlinkLive string `json:"streamlink_live"`
+		TwitchToken  string `json:"twitch_token"`
+		VideoConvert string `json:"video_convert"`
+		ChatRender   string `json:"chat_render"`
 	} `json:"parameters"`
 	Archive struct {
 		SaveAsHls bool `json:"save_as_hls"`
 	} `json:"archive"`
 	Notifications    Notification    `json:"notifications"`
 	StorageTemplates StorageTemplate `json:"storage_templates"`
+	Livestream       struct {
+		Proxies         []ProxyListItem `json:"proxies"`
+		ProxyEnabled    bool            `json:"proxy_enabled"`
+		ProxyParameters string          `json:"proxy_parameters"`
+		ProxyWhitelist  []string        `json:"proxy_whitelist"`
+	} `json:"livestream"`
 }
 
 type Notification struct {
@@ -63,6 +68,11 @@ type StorageTemplate struct {
 	FileTemplate   string `json:"file_template"`
 }
 
+type ProxyListItem struct {
+	URL    string `json:"url"`
+	Header string `json:"header"`
+}
+
 func NewConfig() {
 	configLocation := "/data"
 	configName := "config"
@@ -79,9 +89,8 @@ func NewConfig() {
 	viper.SetDefault("oauth_enabled", false)
 	viper.SetDefault("registration_enabled", true)
 	viper.SetDefault("db_seeded", false)
-	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a copy")
+	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a aac")
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
-	viper.SetDefault("parameters.streamlink_live", "--force-progress,--force,--twitch-low-latency,--twitch-disable-hosting")
 	viper.SetDefault("archive.save_as_hls", false)
 	viper.SetDefault("parameters.twitch_token", "")
 	// Notifications
@@ -102,6 +111,23 @@ func NewConfig() {
 	viper.SetDefault("storage_templates.folder_template", "{{date}}-{{id}}-{{type}}-{{uuid}}")
 	viper.SetDefault("storage_templates.file_template", "{{id}}")
 
+	// Livestream
+	viper.SetDefault("livestream.proxies", []ProxyListItem{
+		{
+			URL:    "https://eu.luminous.dev",
+			Header: "",
+		},
+		{
+			URL:    "https://api.ttv.lol",
+			Header: "x-donate-to:https://ttv.lol/donate",
+		},
+	})
+	viper.SetDefault("livestream.proxy_enabled", false)
+	viper.SetDefault("livestream.proxy_parameters", "%3Fplayer%3Dtwitchweb%26type%3Dany%26allow_source%3Dtrue%26allow_audio_only%3Dtrue%26allow_spectre%3Dfalse%26fast_bread%3Dtrue")
+	viper.SetDefault("livestream.proxy_whitelist", []string{
+		"",
+	})
+
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Info().Msgf("config file not found at %s, creating new one", configPath)
 		err := viper.SafeWriteConfigAs(configPath)
@@ -121,6 +147,16 @@ func NewConfig() {
 }
 
 func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
+	proxies := viper.Get("livestream.proxies")
+	var proxyListItems []ProxyListItem
+	for _, proxy := range proxies.([]interface{}) {
+		proxyListItem := ProxyListItem{
+			URL:    proxy.(map[string]interface{})["url"].(string),
+			Header: proxy.(map[string]interface{})["header"].(string),
+		}
+		proxyListItems = append(proxyListItems, proxyListItem)
+	}
+
 	return &Conf{
 		RegistrationEnabled: viper.GetBool("registration_enabled"),
 		DBSeeded:            viper.GetBool("db_seeded"),
@@ -132,20 +168,17 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 			SaveAsHls: viper.GetBool("archive.save_as_hls"),
 		}),
 		Parameters: struct {
-			TwitchToken    string `json:"twitch_token"`
-			VideoConvert   string `json:"video_convert"`
-			ChatRender     string `json:"chat_render"`
-			StreamlinkLive string `json:"streamlink_live"`
+			TwitchToken  string `json:"twitch_token"`
+			VideoConvert string `json:"video_convert"`
+			ChatRender   string `json:"chat_render"`
 		}(struct {
-			TwitchToken    string
-			VideoConvert   string
-			ChatRender     string
-			StreamlinkLive string
+			TwitchToken  string
+			VideoConvert string
+			ChatRender   string
 		}{
-			TwitchToken:    viper.GetString("parameters.twitch_token"),
-			VideoConvert:   viper.GetString("parameters.video_convert"),
-			ChatRender:     viper.GetString("parameters.chat_render"),
-			StreamlinkLive: viper.GetString("parameters.streamlink_live"),
+			TwitchToken:  viper.GetString("parameters.twitch_token"),
+			VideoConvert: viper.GetString("parameters.video_convert"),
+			ChatRender:   viper.GetString("parameters.chat_render"),
 		}),
 		StorageTemplates: struct {
 			FolderTemplate string `json:"folder_template"`
@@ -157,6 +190,22 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 			FolderTemplate: viper.GetString("storage_templates.folder_template"),
 			FileTemplate:   viper.GetString("storage_templates.file_template"),
 		}),
+		Livestream: struct {
+			Proxies         []ProxyListItem `json:"proxies"`
+			ProxyEnabled    bool            `json:"proxy_enabled"`
+			ProxyParameters string          `json:"proxy_parameters"`
+			ProxyWhitelist  []string        `json:"proxy_whitelist"`
+		}(struct {
+			Proxies         []ProxyListItem
+			ProxyEnabled    bool
+			ProxyParameters string
+			ProxyWhitelist  []string
+		}{
+			Proxies:         proxyListItems,
+			ProxyEnabled:    viper.GetBool("livestream.proxy_enabled"),
+			ProxyParameters: viper.GetString("livestream.proxy_parameters"),
+			ProxyWhitelist:  viper.GetStringSlice("livestream.proxy_whitelist"),
+		}),
 	}, nil
 }
 
@@ -164,9 +213,21 @@ func (s *Service) UpdateConfig(c echo.Context, cDto *Conf) error {
 	viper.Set("registration_enabled", cDto.RegistrationEnabled)
 	viper.Set("parameters.video_convert", cDto.Parameters.VideoConvert)
 	viper.Set("parameters.chat_render", cDto.Parameters.ChatRender)
-	viper.Set("parameters.streamlink_live", cDto.Parameters.StreamlinkLive)
 	viper.Set("parameters.twitch_token", cDto.Parameters.TwitchToken)
 	viper.Set("archive.save_as_hls", cDto.Archive.SaveAsHls)
+	// proxies
+	var proxyListItems []interface{}
+	for _, proxy := range cDto.Livestream.Proxies {
+		proxyListItem := map[string]interface{}{
+			"url":    proxy.URL,
+			"header": proxy.Header,
+		}
+		proxyListItems = append(proxyListItems, proxyListItem)
+	}
+	viper.Set("livestream.proxies", proxyListItems)
+	viper.Set("livestream.proxy_enabled", cDto.Livestream.ProxyEnabled)
+	viper.Set("livestream.proxy_whitelist", cDto.Livestream.ProxyWhitelist)
+
 	err := viper.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("error writing config file: %w", err)
@@ -238,10 +299,6 @@ func refreshConfig(configPath string) {
 	if !viper.IsSet("oauth_enabled") {
 		viper.Set("oauth_enabled", false)
 	}
-	// streamlink params
-	if !viper.IsSet("parameters.streamlink_live") {
-		viper.Set("parameters.streamlink_live", "--force-progress,--force,--twitch-low-latency,--twitch-disable-hosting")
-	}
 	err = viper.WriteConfigAs(configPath)
 	if err != nil {
 		log.Panic().Err(err).Msg("error writing config file")
@@ -280,6 +337,30 @@ func refreshConfig(configPath string) {
 	// Twitch Token
 	if !viper.IsSet("parameters.twitch_token") {
 		viper.Set("parameters.twitch_token", "")
+	}
+	// Livestream
+	if !viper.IsSet("livestream.proxies") {
+		viper.Set("livestream.proxies", []ProxyListItem{
+			{
+				URL:    "https://eu.luminous.dev",
+				Header: "",
+			},
+			{
+				URL:    "https://api.ttv.lol",
+				Header: "x-donate-to:https://ttv.lol/donate",
+			},
+		})
+	}
+	if !viper.IsSet("livestream.proxy_enabled") {
+		viper.Set("livestream.proxy_enabled", false)
+	}
+	if !viper.IsSet("livestream.proxy_parameters") {
+		viper.Set("livestream.proxy_parameters", "%3Fplayer%3Dtwitchweb%26type%3Dany%26allow_source%3Dtrue%26allow_audio_only%3Dtrue%26allow_spectre%3Dfalse%26fast_bread%3Dtrue")
+	}
+	if !viper.IsSet("livestream.proxy_whitelist") {
+		viper.Set("livestream.proxy_whitelist", []string{
+			"",
+		})
 	}
 
 }
