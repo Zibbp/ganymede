@@ -73,7 +73,7 @@ type ConvertChatRequest struct {
 
 type ArchiveLiveChannelRequest struct {
 	ChannelID   string `json:"channel_id" validate:"required"`
-	Resolution  string `json:"resolution" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
+	Resolution  string `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30"`
 	ArchiveChat bool   `json:"archive_chat"`
 	RenderChat  bool   `json:"render_chat"`
 }
