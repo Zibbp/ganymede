@@ -20,14 +20,19 @@ type ConfigService interface {
 type UpdateConfigRequest struct {
 	RegistrationEnabled bool `json:"registration_enabled"`
 	Parameters          struct {
-		TwitchToken    string `json:"twitch_token"`
-		VideoConvert   string `json:"video_convert" validate:"required"`
-		ChatRender     string `json:"chat_render" validate:"required"`
-		StreamlinkLive string `json:"streamlink_live"`
+		TwitchToken  string `json:"twitch_token"`
+		VideoConvert string `json:"video_convert" validate:"required"`
+		ChatRender   string `json:"chat_render" validate:"required"`
 	} `json:"parameters"`
 	Archive struct {
 		SaveAsHls bool `json:"save_as_hls"`
 	} `json:"archive"`
+	Livestream struct {
+		Proxies         []config.ProxyListItem `json:"proxies"`
+		ProxyEnabled    bool                   `json:"proxy_enabled"`
+		ProxyParameters string                 `json:"proxy_parameters"`
+		ProxyWhitelist  []string               `json:"proxy_whitelist"`
+	} `json:"livestream"`
 }
 
 type UpdateNotificationRequest struct {
@@ -96,11 +101,16 @@ func (h *Handler) UpdateConfig(c echo.Context) error {
 			SaveAsHls bool `json:"save_as_hls"`
 		}(conf.Archive),
 		Parameters: struct {
-			TwitchToken    string `json:"twitch_token"`
-			VideoConvert   string `json:"video_convert"`
-			ChatRender     string `json:"chat_render"`
-			StreamlinkLive string `json:"streamlink_live"`
+			TwitchToken  string `json:"twitch_token"`
+			VideoConvert string `json:"video_convert"`
+			ChatRender   string `json:"chat_render"`
 		}(conf.Parameters),
+		Livestream: struct {
+			Proxies         []config.ProxyListItem `json:"proxies"`
+			ProxyEnabled    bool                   `json:"proxy_enabled"`
+			ProxyParameters string                 `json:"proxy_parameters"`
+			ProxyWhitelist  []string               `json:"proxy_whitelist"`
+		}(conf.Livestream),
 	}
 	if err := h.Service.ConfigService.UpdateConfig(c, &cDto); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
