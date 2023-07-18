@@ -13,6 +13,8 @@ permissions:
 jobs:
   golangci:
     name: lint
+    # no need to run if dependabot is the author
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v4
