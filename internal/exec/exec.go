@@ -256,7 +256,7 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	}
 	// if proxy requires headers, pass them
 	if proxyHeader != "" {
-		newArgs = append(newArgs, "--add-headers", fmt.Sprintf("%s", proxyHeader))
+		newArgs = append(newArgs, "--add-headers", proxyHeader)
 	}
 	// pass twitch token as header if available
 	// only pass if not using proxy for security reasons
