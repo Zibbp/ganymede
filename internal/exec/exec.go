@@ -185,9 +185,16 @@ func ConvertToHLS(v *ent.Vod) error {
 
 func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	// Fetch config params
-	// liveStreamlinkParams := viper.GetString("parameters.streamlink_live")
+	liveStreamlinkParams := viper.GetString("parameters.streamlink_live")
 	// Split supplied params into array
-	// splitParams := strings.Split(liveStreamlinkParams, ",")
+	splitStreamlinkParams := strings.Split(liveStreamlinkParams, ",")
+	// remove param if contains 'twith-api-header' (set by different config value)
+	for i, param := range splitStreamlinkParams {
+		if strings.Contains(param, "twitch-api-header") {
+			log.Info().Msg("twitch-api-header found in streamlink paramters. Please move your token to the dedicated 'twitch token' field.")
+			splitStreamlinkParams = append(splitStreamlinkParams[:i], splitStreamlinkParams[i+1:]...)
+		}
+	}
 
 	proxyFound := false
 	streamURL := ""
@@ -221,8 +228,8 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 					log.Debug().Msgf("proxy %d is good", i)
 					log.Debug().Msgf("setting stream url to %s", proxyUrl)
 					proxyFound = true
-					// set proxy stream url
-					streamURL = proxyUrl
+					// set proxy stream url (include hls:// so streamlink can download it)
+					streamURL = fmt.Sprintf("hls://%s", proxyUrl)
 					// set proxy header
 					proxyHeader = proxy.Header
 					break
@@ -235,6 +242,7 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	// check if user has twitch token set
 	configTwitchToken := viper.GetString("parameters.twitch_token")
 	if configTwitchToken != "" {
+		// check token is valid
 		err := twitch.CheckUserAccessToken(configTwitchToken)
 		if err != nil {
 			log.Error().Err(err).Msg("error checking twitch token")
@@ -248,12 +256,14 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 		streamURL = fmt.Sprintf("https://twitch.tv/%s", ch.Name)
 	}
 
-	// Generate args for exec
-	newArgs := []string{"--fixup", "never", streamURL}
-	// only pass resolution if it is not set to best
-	if v.Resolution != "best" {
-		newArgs = append(newArgs, fmt.Sprintf("-f %s", v.Resolution))
+	// streamlink livestreams do not use the 30 fps suffic
+	if strings.Contains(v.Resolution, "30") {
+		v.Resolution = strings.Replace(v.Resolution, "30", "", 1)
 	}
+
+	// Generate args for exec
+	newArgs := []string{"--force-progress", "--force", streamURL, fmt.Sprintf("%s,best", v.Resolution)}
+
 	// if proxy requires headers, pass them
 	if proxyHeader != "" {
 		newArgs = append(newArgs, "--add-headers", proxyHeader)
@@ -261,14 +271,18 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	// pass twitch token as header if available
 	// only pass if not using proxy for security reasons
 	if twitchToken != "" && !proxyFound {
-		newArgs = append(newArgs, "--add-headers", fmt.Sprintf("Authorization:OAuth %s", twitchToken))
+		newArgs = append(newArgs, "--http-header", fmt.Sprintf("Authorization=OAuth %s", twitchToken))
 	}
+
+	// pass config params
+	newArgs = append(newArgs, splitStreamlinkParams...)
+
 	newArgs = append(newArgs, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
 
-	log.Debug().Msgf("yt-dlp live args: %v", newArgs)
-	log.Debug().Msgf("running: yt-dlp %s", strings.Join(newArgs, " "))
+	log.Debug().Msgf("streamlink live args: %v", newArgs)
+	log.Debug().Msgf("running: streamlink %s", strings.Join(newArgs, " "))
 	// Execute streamlink
-	cmd := osExec.Command("yt-dlp", newArgs...)
+	cmd := osExec.Command("streamlink", newArgs...)
 
 	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video.log", v.ExtID, v.ID))
 	if err != nil {

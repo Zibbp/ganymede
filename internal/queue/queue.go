@@ -135,7 +135,7 @@ func (s *Service) ArchiveGetQueueItem(qID uuid.UUID) (*ent.Queue, error) {
 }
 
 // StopQueueItem
-// kills the yt-dlp process for a queue item
+// kills the streamlink process for a queue item
 // which in turn will stop the chat download and proceed to post processing
 func (s *Service) StopQueueItem(c echo.Context, id uuid.UUID) error {
 	// get vod
@@ -143,9 +143,9 @@ func (s *Service) StopQueueItem(c echo.Context, id uuid.UUID) error {
 	if err != nil {
 		return fmt.Errorf("error getting queue item: %v", err)
 	}
-	log.Debug().Msgf("running: pgrep -f 'yt-dlp.*%s' | xargs kill\n", v.Edges.Vod.ExtID)
+	log.Debug().Msgf("running: pgrep -f 'streamlink.*%s' | xargs kill\n", v.Edges.Vod.ExtID)
 	// get pid using the vod id
-	getPid := exec.Command("pgrep", "-f", fmt.Sprintf("yt-dlp.*%s", v.Edges.Vod.ExtID))
+	getPid := exec.Command("pgrep", "-f", fmt.Sprintf("streamlink.*%s", v.Edges.Vod.ExtID))
 	// kill pid
 	killPid := exec.Command("xargs", "kill", "-INT")
 	getPidOutput, err := getPid.Output()
