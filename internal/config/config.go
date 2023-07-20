@@ -31,9 +31,10 @@ type Conf struct {
 	RegistrationEnabled bool `json:"registration_enabled"`
 	DBSeeded            bool `json:"db_seeded"`
 	Parameters          struct {
-		TwitchToken  string `json:"twitch_token"`
-		VideoConvert string `json:"video_convert"`
-		ChatRender   string `json:"chat_render"`
+		TwitchToken    string `json:"twitch_token"`
+		VideoConvert   string `json:"video_convert"`
+		ChatRender     string `json:"chat_render"`
+		StreamlinkLive string `json:"streamlink_live"`
 	} `json:"parameters"`
 	Archive struct {
 		SaveAsHls bool `json:"save_as_hls"`
@@ -91,6 +92,7 @@ func NewConfig() {
 	viper.SetDefault("db_seeded", false)
 	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a aac")
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
+	viper.SetDefault("parameters.streamlink_live", "--twitch-low-latency,--twitch-disable-hosting")
 	viper.SetDefault("archive.save_as_hls", false)
 	viper.SetDefault("parameters.twitch_token", "")
 	// Notifications
@@ -168,17 +170,20 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 			SaveAsHls: viper.GetBool("archive.save_as_hls"),
 		}),
 		Parameters: struct {
-			TwitchToken  string `json:"twitch_token"`
-			VideoConvert string `json:"video_convert"`
-			ChatRender   string `json:"chat_render"`
+			TwitchToken    string `json:"twitch_token"`
+			VideoConvert   string `json:"video_convert"`
+			ChatRender     string `json:"chat_render"`
+			StreamlinkLive string `json:"streamlink_live"`
 		}(struct {
-			TwitchToken  string
-			VideoConvert string
-			ChatRender   string
+			TwitchToken    string
+			VideoConvert   string
+			ChatRender     string
+			StreamlinkLive string
 		}{
-			TwitchToken:  viper.GetString("parameters.twitch_token"),
-			VideoConvert: viper.GetString("parameters.video_convert"),
-			ChatRender:   viper.GetString("parameters.chat_render"),
+			TwitchToken:    viper.GetString("parameters.twitch_token"),
+			VideoConvert:   viper.GetString("parameters.video_convert"),
+			ChatRender:     viper.GetString("parameters.chat_render"),
+			StreamlinkLive: viper.GetString("parameters.streamlink_live"),
 		}),
 		StorageTemplates: struct {
 			FolderTemplate string `json:"folder_template"`
@@ -213,6 +218,7 @@ func (s *Service) UpdateConfig(c echo.Context, cDto *Conf) error {
 	viper.Set("registration_enabled", cDto.RegistrationEnabled)
 	viper.Set("parameters.video_convert", cDto.Parameters.VideoConvert)
 	viper.Set("parameters.chat_render", cDto.Parameters.ChatRender)
+	viper.Set("parameters.streamlink_live", cDto.Parameters.StreamlinkLive)
 	viper.Set("parameters.twitch_token", cDto.Parameters.TwitchToken)
 	viper.Set("archive.save_as_hls", cDto.Archive.SaveAsHls)
 	// proxies
@@ -298,6 +304,10 @@ func refreshConfig(configPath string) {
 	// Add authentication method
 	if !viper.IsSet("oauth_enabled") {
 		viper.Set("oauth_enabled", false)
+	}
+	// streamlink params
+	if !viper.IsSet("parameters.streamlink_live") {
+		viper.Set("parameters.streamlink_live", "--twitch-low-latency,--twitch-disable-hosting")
 	}
 	err = viper.WriteConfigAs(configPath)
 	if err != nil {
