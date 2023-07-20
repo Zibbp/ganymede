@@ -257,9 +257,7 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	}
 
 	// streamlink livestreams do not use the 30 fps suffic
-	if strings.Contains(v.Resolution, "30") {
-		v.Resolution = strings.Replace(v.Resolution, "30", "", 1)
-	}
+	v.Resolution = strings.Replace(v.Resolution, "30", "", 1)
 
 	// Generate args for exec
 	newArgs := []string{"--force-progress", "--force", streamURL, fmt.Sprintf("%s,best", v.Resolution)}
