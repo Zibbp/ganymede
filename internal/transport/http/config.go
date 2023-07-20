@@ -20,9 +20,10 @@ type ConfigService interface {
 type UpdateConfigRequest struct {
 	RegistrationEnabled bool `json:"registration_enabled"`
 	Parameters          struct {
-		TwitchToken  string `json:"twitch_token"`
-		VideoConvert string `json:"video_convert" validate:"required"`
-		ChatRender   string `json:"chat_render" validate:"required"`
+		TwitchToken    string `json:"twitch_token"`
+		VideoConvert   string `json:"video_convert" validate:"required"`
+		ChatRender     string `json:"chat_render" validate:"required"`
+		StreamlinkLive string `json:"streamlink_live"`
 	} `json:"parameters"`
 	Archive struct {
 		SaveAsHls bool `json:"save_as_hls"`
@@ -101,9 +102,10 @@ func (h *Handler) UpdateConfig(c echo.Context) error {
 			SaveAsHls bool `json:"save_as_hls"`
 		}(conf.Archive),
 		Parameters: struct {
-			TwitchToken  string `json:"twitch_token"`
-			VideoConvert string `json:"video_convert"`
-			ChatRender   string `json:"chat_render"`
+			TwitchToken    string `json:"twitch_token"`
+			VideoConvert   string `json:"video_convert"`
+			ChatRender     string `json:"chat_render"`
+			StreamlinkLive string `json:"streamlink_live"`
 		}(conf.Parameters),
 		Livestream: struct {
 			Proxies         []config.ProxyListItem `json:"proxies"`
