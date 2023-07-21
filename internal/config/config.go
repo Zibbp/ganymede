@@ -90,7 +90,7 @@ func NewConfig() {
 	viper.SetDefault("oauth_enabled", false)
 	viper.SetDefault("registration_enabled", true)
 	viper.SetDefault("db_seeded", false)
-	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a aac")
+	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a copy")
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
 	viper.SetDefault("parameters.streamlink_live", "--twitch-low-latency,--twitch-disable-hosting")
 	viper.SetDefault("archive.save_as_hls", false)
