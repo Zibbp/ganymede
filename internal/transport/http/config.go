@@ -28,6 +28,12 @@ type UpdateConfigRequest struct {
 	Archive struct {
 		SaveAsHls bool `json:"save_as_hls"`
 	} `json:"archive"`
+	Livestream struct {
+		Proxies         []config.ProxyListItem `json:"proxies"`
+		ProxyEnabled    bool                   `json:"proxy_enabled"`
+		ProxyParameters string                 `json:"proxy_parameters"`
+		ProxyWhitelist  []string               `json:"proxy_whitelist"`
+	} `json:"livestream"`
 }
 
 type UpdateNotificationRequest struct {
@@ -101,6 +107,12 @@ func (h *Handler) UpdateConfig(c echo.Context) error {
 			ChatRender     string `json:"chat_render"`
 			StreamlinkLive string `json:"streamlink_live"`
 		}(conf.Parameters),
+		Livestream: struct {
+			Proxies         []config.ProxyListItem `json:"proxies"`
+			ProxyEnabled    bool                   `json:"proxy_enabled"`
+			ProxyParameters string                 `json:"proxy_parameters"`
+			ProxyWhitelist  []string               `json:"proxy_whitelist"`
+		}(conf.Livestream),
 	}
 	if err := h.Service.ConfigService.UpdateConfig(c, &cDto); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

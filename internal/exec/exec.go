@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	osExec "os/exec"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -185,30 +187,98 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	// Fetch config params
 	liveStreamlinkParams := viper.GetString("parameters.streamlink_live")
 	// Split supplied params into array
-	splitParams := strings.Split(liveStreamlinkParams, ",")
+	splitStreamlinkParams := strings.Split(liveStreamlinkParams, ",")
+	// remove param if contains 'twith-api-header' (set by different config value)
+	for i, param := range splitStreamlinkParams {
+		if strings.Contains(param, "twitch-api-header") {
+			log.Info().Msg("twitch-api-header found in streamlink paramters. Please move your token to the dedicated 'twitch token' field.")
+			splitStreamlinkParams = append(splitStreamlinkParams[:i], splitStreamlinkParams[i+1:]...)
+		}
+	}
 
-	for i, arg := range splitParams {
-		// Attempt to find access token
-		if strings.Contains(arg, "=OAuth ") {
-			log.Debug().Msg("found =OAuth  in streamlink args")
-			// Extract access token
-			accessToken := strings.Split(arg, "=OAuth ")[1]
-			// Check access token
-			err := twitch.CheckUserAccessToken(accessToken)
-			if err != nil {
-				log.Error().Err(err).Msg("error checking access token")
-				// Remove arg from array if token is bad
-				splitParams = append(splitParams[:i], splitParams[i+1:]...)
+	proxyFound := false
+	streamURL := ""
+	proxyHeader := ""
+
+	// check if user has proxies enabled
+	proxyEnabled := viper.GetBool("livestream.proxy_enabled")
+	whitelistedChannels := viper.GetStringSlice("livestream.proxy_whitelist")
+	if proxyEnabled {
+		// check if channel is whitelisted
+		if utils.Contains(whitelistedChannels, ch.Name) {
+			log.Debug().Msgf("channel %s is whitelisted - not using proxy", ch.Name)
+		} else {
+			// Get proxy parameters
+			proxyParams := viper.GetString("livestream.proxy_parameters")
+			// Get proxy list
+			proxyListString := viper.Get("livestream.proxies")
+			var proxyList []config.ProxyListItem
+			for _, proxy := range proxyListString.([]interface{}) {
+				proxyListItem := config.ProxyListItem{
+					URL:    proxy.(map[string]interface{})["url"].(string),
+					Header: proxy.(map[string]interface{})["header"].(string),
+				}
+				proxyList = append(proxyList, proxyListItem)
+			}
+			log.Debug().Msgf("proxy list: %v", proxyList)
+			// test proxies
+			for i, proxy := range proxyList {
+				proxyUrl := fmt.Sprintf("%s/playlist/%s.m3u8%s", proxy.URL, ch.Name, proxyParams)
+				if testProxyServer(proxyUrl, proxy.Header) {
+					log.Debug().Msgf("proxy %d is good", i)
+					log.Debug().Msgf("setting stream url to %s", proxyUrl)
+					proxyFound = true
+					// set proxy stream url (include hls:// so streamlink can download it)
+					streamURL = fmt.Sprintf("hls://%s", proxyUrl)
+					// set proxy header
+					proxyHeader = proxy.Header
+					break
+				}
 			}
 		}
 	}
-	// Generate args for exec
 
-	newArgs := []string{fmt.Sprintf("https://twitch.tv/%s", ch.Name), fmt.Sprintf("%s,best", v.Resolution)}
-	newArgs = append(splitParams, newArgs...)
+	twitchToken := ""
+	// check if user has twitch token set
+	configTwitchToken := viper.GetString("parameters.twitch_token")
+	if configTwitchToken != "" {
+		// check token is valid
+		err := twitch.CheckUserAccessToken(configTwitchToken)
+		if err != nil {
+			log.Error().Err(err).Msg("error checking twitch token")
+		} else {
+			twitchToken = configTwitchToken
+		}
+	}
+
+	// if proxy not enabled, or none are working, use twitch URL
+	if streamURL == "" {
+		streamURL = fmt.Sprintf("https://twitch.tv/%s", ch.Name)
+	}
+
+	// streamlink livestreams do not use the 30 fps suffic
+	v.Resolution = strings.Replace(v.Resolution, "30", "", 1)
+
+	// Generate args for exec
+	newArgs := []string{"--force-progress", "--force", streamURL, fmt.Sprintf("%s,best", v.Resolution)}
+
+	// if proxy requires headers, pass them
+	if proxyHeader != "" {
+		newArgs = append(newArgs, "--add-headers", proxyHeader)
+	}
+	// pass twitch token as header if available
+	// only pass if not using proxy for security reasons
+	if twitchToken != "" && !proxyFound {
+		newArgs = append(newArgs, "--http-header", fmt.Sprintf("Authorization=OAuth %s", twitchToken))
+	}
+
+	// pass config params
+	newArgs = append(newArgs, splitStreamlinkParams...)
+
 	newArgs = append(newArgs, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
 
 	log.Debug().Msgf("streamlink live args: %v", newArgs)
+	log.Debug().Msgf("running: streamlink %s", strings.Join(newArgs, " "))
 	// Execute streamlink
 	cmd := osExec.Command("streamlink", newArgs...)
 
@@ -337,4 +407,36 @@ func TwitchChatUpdate(v *ent.Vod) error {
 
 	log.Debug().Msgf("finished updating chat for %s", v.ExtID)
 	return nil
+}
+
+// test proxy server by making http request to proxy server
+// if request is successful return true
+// timeout after 5 seconds
+func testProxyServer(url string, header string) bool {
+	log.Debug().Msgf("testing proxy server: %s", url)
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("error creating request for proxy server test")
+		return false
+	}
+	if header != "" {
+		log.Debug().Msgf("adding header %s to proxy server test", header)
+		splitHeader := strings.SplitN(header, ":", 2)
+		req.Header.Add(splitHeader[0], splitHeader[1])
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Error().Err(err).Msg("error making request for proxy server test")
+		return false
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		log.Error().Msgf("proxy server test returned status code %d", resp.StatusCode)
+		return false
+	}
+	log.Debug().Msg("proxy server test successful")
+	return true
 }

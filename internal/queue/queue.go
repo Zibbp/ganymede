@@ -147,7 +147,7 @@ func (s *Service) StopQueueItem(c echo.Context, id uuid.UUID) error {
 	// get pid using the vod id
 	getPid := exec.Command("pgrep", "-f", fmt.Sprintf("streamlink.*%s", v.Edges.Vod.ExtID))
 	// kill pid
-	killPid := exec.Command("xargs", "kill")
+	killPid := exec.Command("xargs", "kill", "-INT")
 	getPidOutput, err := getPid.Output()
 	if err != nil {
 		log.Error().Err(err).Msgf("error getting pid for queue item: %v", err)

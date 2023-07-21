@@ -21,7 +21,7 @@ type ArchiveChannelRequest struct {
 }
 type ArchiveVodRequest struct {
 	VodID      string           `json:"vod_id" validate:"required"`
-	Quality    utils.VodQuality `json:"quality" validate:"required,oneof=best source 720p60 480p30 360p30 160p30"`
+	Quality    utils.VodQuality `json:"quality" validate:"required,oneof=best source 720p60 480p30 360p30 160p30 480p 360p 160p"`
 	Chat       bool             `json:"chat"`
 	RenderChat bool             `json:"render_chat"`
 }

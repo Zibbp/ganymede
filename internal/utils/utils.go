@@ -37,3 +37,12 @@ func SanitizeFileName(fileName string) string {
 
 	return fileName
 }
+
+func Contains(s []string, e string) bool {
+	for _, a := range s {
+		if strings.EqualFold(a, e) {
+			return true
+		}
+	}
+	return false
+}
