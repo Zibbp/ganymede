@@ -183,7 +183,7 @@ func ConvertToHLS(v *ent.Vod) error {
 
 }
 
-func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
+func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel, startChatDownloadChannel chan bool) error {
 	// Fetch config params
 	liveStreamlinkParams := viper.GetString("parameters.streamlink_live")
 	// Split supplied params into array
@@ -279,6 +279,11 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 
 	log.Debug().Msgf("streamlink live args: %v", newArgs)
 	log.Debug().Msgf("running: streamlink %s", strings.Join(newArgs, " "))
+
+	// Notify chat download that video download is about to start
+	log.Debug().Msg("notifying chat download that video download is about to start")
+	startChatDownloadChannel <- true
+
 	// Execute streamlink
 	cmd := osExec.Command("streamlink", newArgs...)
 
@@ -301,10 +306,17 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel) error {
 	return nil
 }
 
-func DownloadTwitchLiveChat(v *ent.Vod, ch *ent.Channel, q *ent.Queue, busC chan bool) error {
+func DownloadTwitchLiveChat(v *ent.Vod, ch *ent.Channel, q *ent.Queue, busC chan bool, startChatDownloadChannel chan bool, waitForVideo bool) error {
 
-	log.Debug().Msg("sleeping 3 seconds for streamlink to start.")
-	time.Sleep(3 * time.Second)
+	if waitForVideo {
+		log.Debug().Msg("waiting for video to start before downloading chat")
+		// Wait for video to start
+		<-startChatDownloadChannel
+		log.Debug().Msg("video started - starting chat download")
+	} else {
+		log.Debug().Msg("sleeping 3 seconds for video download to start.")
+		time.Sleep(3 * time.Second)
+	}
 
 	log.Debug().Msg("setting chat start time")
 	chatStartTime := time.Now()

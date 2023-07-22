@@ -616,10 +616,12 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 
 		busC := make(chan bool)
 
-		go s.TaskLiveVideoDownload(ch, v, q, true, busC)
+		startChatDownloadChannel := make(chan bool)
+
+		go s.TaskLiveVideoDownload(ch, v, q, true, busC, startChatDownloadChannel)
 		//	Check if chat download task is set to success
 		if q.TaskChatDownload == utils.Pending {
-			go s.TaskLiveChatDownload(ch, v, q, true, busC)
+			go s.TaskLiveChatDownload(ch, v, q, true, busC, startChatDownloadChannel, true)
 		}
 	}
 }
@@ -654,11 +656,11 @@ func (s *Service) TaskVodSaveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue, con
 	}
 }
 
-func (s *Service) TaskLiveVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool, busC chan bool) {
+func (s *Service) TaskLiveVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool, busC chan bool, startChatDownloadChannel chan bool) {
 	log.Debug().Msgf("starting task video download for live stream %s", v.ID)
 	q.Update().SetTaskVideoDownload(utils.Running).SaveX(context.Background())
 
-	err := exec.DownloadTwitchLiveVideo(v, ch)
+	err := exec.DownloadTwitchLiveVideo(v, ch, startChatDownloadChannel)
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading live video")
 		q.Update().SetTaskVideoDownload(utils.Failed).SaveX(context.Background())
@@ -829,11 +831,11 @@ func (s *Service) TaskChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 	}
 }
 
-func (s *Service) TaskLiveChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool, busC chan bool) {
+func (s *Service) TaskLiveChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool, busC chan bool, startChatDownloadChannel chan bool, waitForVideo bool) {
 	log.Debug().Msgf("starting task chat download for live stream %s", v.ID)
 	q.Update().SetTaskChatDownload(utils.Running).SaveX(context.Background())
 
-	err := exec.DownloadTwitchLiveChat(v, ch, q, busC)
+	err := exec.DownloadTwitchLiveChat(v, ch, q, busC, startChatDownloadChannel, waitForVideo)
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading live chat")
 		q.Update().SetTaskChatDownload(utils.Failed).SaveX(context.Background())
