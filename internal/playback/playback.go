@@ -127,7 +127,8 @@ func (s *Service) DeleteProgress(c *auth.CustomContext, vID uuid.UUID) error {
 func (s *Service) GetLastPlaybacks(c *auth.CustomContext, limit int) (*GetPlaybackResp, error) {
 	uID := c.User.ID
 
-	playbackEntries, err := s.Store.Client.Playback.Query().Where(playback.UserID(uID)).Where(entPlayback.StatusEQ("in_progress")).Order(ent.Desc(playback.FieldUpdatedAt)).Limit(limit).All(c.Request().Context())
+	// Fetch all playbacks for the user
+	playbackEntries, err := s.Store.Client.Playback.Query().Where(playback.UserID(uID)).Where(entPlayback.StatusEQ("in_progress")).Order(ent.Desc(playback.FieldUpdatedAt)).All(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error getting last playbacks: %v", err)
 	}
@@ -138,6 +139,7 @@ func (s *Service) GetLastPlaybacks(c *auth.CustomContext, limit int) (*GetPlayba
 
 	var tmpPlaybackEntries []*ent.Playback
 
+	// Process the fetched playbacks
 	for _, playbackEntry := range playbackEntries {
 		vod, err := s.Store.Client.Vod.Query().Where(entVod.ID(playbackEntry.VodID)).WithChannel().Only(c.Request().Context())
 		if err != nil {
@@ -145,12 +147,17 @@ func (s *Service) GetLastPlaybacks(c *auth.CustomContext, limit int) (*GetPlayba
 			continue
 		}
 
+		// Append only if VOD is found
 		getPlayback = append(getPlayback, &GetPlayback{
 			Playback: playbackEntry,
 			Vod:      vod,
 		})
-
 		tmpPlaybackEntries = append(tmpPlaybackEntries, playbackEntry)
+
+		// Break the loop if we've reached the required limit
+		if len(getPlayback) == limit {
+			break
+		}
 	}
 
 	getPlaybackResp = &GetPlaybackResp{
