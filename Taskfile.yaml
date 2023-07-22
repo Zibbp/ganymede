@@ -16,4 +16,5 @@ tasks:
       - go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/upsert ./ent/schema
   dev:
     cmds:
+      - set -o allexport; source .env.dev; set +o allexport;
       - air
