@@ -1,9 +1,11 @@
 package exec
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	osExec "os/exec"
@@ -293,12 +295,17 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel, startChatDownloadChann
 		return err
 	}
 	defer videoLogfile.Close()
-	cmd.Stdout = videoLogfile
 	cmd.Stderr = videoLogfile
+	var stdout bytes.Buffer
+
+	multiWriterStdout := io.MultiWriter(videoLogfile, &stdout)
+
+	cmd.Stdout = multiWriterStdout
 
 	if err := cmd.Run(); err != nil {
 		// Streamlink will error when the stream is offline - do not log this as an error
-		log.Debug().Msgf("finished downloading live video for %s", v.ExtID)
+		log.Debug().Msgf("finished downloading live video for %s - %s", v.ExtID, err.Error())
+		log.Debug().Msgf("streamlink live stdout: %s", stdout.String())
 		return nil
 	}
 
