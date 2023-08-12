@@ -483,7 +483,15 @@ func (s *Service) TaskVodCreateFolder(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 
 func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
 	log.Debug().Msgf("starting task vod download thumbnail for live stream %s", v.ID)
-	q.Update().SetTaskVodDownloadThumbnail(utils.Running).SaveX(context.Background())
+	_, err := q.Update().SetTaskVodDownloadThumbnail(utils.Running).Save(context.Background())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			log.Warn().Msgf("queue item not found while updating task vod download thumbnail for live stream %s", v.ID)
+			return
+		}
+		log.Error().Err(err).Msgf("error updating task vod download thumbnail for live stream %s", v.ID)
+		return
+	}
 
 	// Fetch Stream from Twitch for thumbnails
 	stream, err := s.TwitchService.GetStreams(fmt.Sprintf("?user_login=%s", ch.Name))
