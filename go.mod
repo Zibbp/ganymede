@@ -9,7 +9,7 @@ require (
 	github.com/go-co-op/gocron v1.31.0
 	github.com/go-playground/validator/v10 v10.15.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/labstack/echo/v4 v4.11.1
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
