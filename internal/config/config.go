@@ -26,6 +26,7 @@ func NewService(store *database.Database) *Service {
 type Conf struct {
 	Debug               bool `json:"debug"`
 	LiveCheckInterval   int  `json:"live_check_interval_seconds"`
+	VideoCheckInterval  int  `json:"video_check_interval_minutes"`
 	ActiveQueueItems    int  `json:"active_queue_items"`
 	OAuthEnabled        bool `json:"oauth_enabled"`
 	RegistrationEnabled bool `json:"registration_enabled"`
@@ -86,6 +87,7 @@ func NewConfig() {
 
 	viper.SetDefault("debug", false)
 	viper.SetDefault("live_check_interval_seconds", 300)
+	viper.SetDefault("video_check_interval_minutes", 180)
 	viper.SetDefault("active_queue_items", 2)
 	viper.SetDefault("oauth_enabled", false)
 	viper.SetDefault("registration_enabled", true)
@@ -371,6 +373,9 @@ func refreshConfig(configPath string) {
 		viper.Set("livestream.proxy_whitelist", []string{
 			"",
 		})
+	}
+	if !viper.IsSet("video_check_interval_minutes") {
+		viper.Set("video_check_interval_minutes", 180)
 	}
 
 }
