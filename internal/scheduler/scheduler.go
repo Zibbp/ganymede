@@ -139,7 +139,10 @@ func (s *Service) checkLiveStreamSchedule(scheduler *gocron.Scheduler) {
 
 func (s *Service) checkWatchedChannelVideos(schedule *gocron.Scheduler) {
 	log.Info().Msg("setting up check watched channel videos schedule")
-	_, err := schedule.Every(1).Day().At("01:00").Do(func() {
+
+	configCheckVideoInterval := viper.GetInt("video_check_interval_minutes")
+	log.Debug().Msgf("setting video check interval to run every %d minutes", configCheckVideoInterval)
+	_, err := schedule.Every(configCheckVideoInterval).Minutes().Do(func() {
 		log.Info().Msg("running check watched channel videos schedule")
 		s.LiveService.CheckVodWatchedChannels()
 	})
