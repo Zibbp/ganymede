@@ -99,7 +99,7 @@ func (tcc *TwitchCategoryCreate) Mutation() *TwitchCategoryMutation {
 // Save creates the TwitchCategory in the database.
 func (tcc *TwitchCategoryCreate) Save(ctx context.Context) (*TwitchCategory, error) {
 	tcc.defaults()
-	return withHooks[*TwitchCategory, TwitchCategoryMutation](ctx, tcc.sqlSave, tcc.mutation, tcc.hooks)
+	return withHooks(ctx, tcc.sqlSave, tcc.mutation, tcc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.

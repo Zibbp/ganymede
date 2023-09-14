@@ -53,6 +53,8 @@ const (
 	FieldFileName = "file_name"
 	// FieldLocked holds the string denoting the locked field in the database.
 	FieldLocked = "locked"
+	// FieldLocalViews holds the string denoting the local_views field in the database.
+	FieldLocalViews = "local_views"
 	// FieldStreamedAt holds the string denoting the streamed_at field in the database.
 	FieldStreamedAt = "streamed_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -109,6 +111,7 @@ var Columns = []string{
 	FieldFolderName,
 	FieldFileName,
 	FieldLocked,
+	FieldLocalViews,
 	FieldStreamedAt,
 	FieldUpdatedAt,
 	FieldCreatedAt,
@@ -150,6 +153,8 @@ var (
 	DefaultProcessing bool
 	// DefaultLocked holds the default value on creation for the "locked" field.
 	DefaultLocked bool
+	// DefaultLocalViews holds the default value on creation for the "local_views" field.
+	DefaultLocalViews int
 	// DefaultStreamedAt holds the default value on creation for the "streamed_at" field.
 	DefaultStreamedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -282,6 +287,11 @@ func ByFileName(opts ...sql.OrderTermOption) OrderOption {
 // ByLocked orders the results by the locked field.
 func ByLocked(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLocked, opts...).ToFunc()
+}
+
+// ByLocalViews orders the results by the local_views field.
+func ByLocalViews(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLocalViews, opts...).ToFunc()
 }
 
 // ByStreamedAt orders the results by the streamed_at field.

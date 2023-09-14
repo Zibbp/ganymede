@@ -97,7 +97,7 @@ func (pu *PlaybackUpdate) Mutation() *PlaybackMutation {
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (pu *PlaybackUpdate) Save(ctx context.Context) (int, error) {
 	pu.defaults()
-	return withHooks[int, PlaybackMutation](ctx, pu.sqlSave, pu.mutation, pu.hooks)
+	return withHooks(ctx, pu.sqlSave, pu.mutation, pu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -273,7 +273,7 @@ func (puo *PlaybackUpdateOne) Select(field string, fields ...string) *PlaybackUp
 // Save executes the query and returns the updated Playback entity.
 func (puo *PlaybackUpdateOne) Save(ctx context.Context) (*Playback, error) {
 	puo.defaults()
-	return withHooks[*Playback, PlaybackMutation](ctx, puo.sqlSave, puo.mutation, puo.hooks)
+	return withHooks(ctx, puo.sqlSave, puo.mutation, puo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.

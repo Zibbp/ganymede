@@ -88,7 +88,7 @@ func (tcu *TwitchCategoryUpdate) Mutation() *TwitchCategoryMutation {
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (tcu *TwitchCategoryUpdate) Save(ctx context.Context) (int, error) {
 	tcu.defaults()
-	return withHooks[int, TwitchCategoryMutation](ctx, tcu.sqlSave, tcu.mutation, tcu.hooks)
+	return withHooks(ctx, tcu.sqlSave, tcu.mutation, tcu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -241,7 +241,7 @@ func (tcuo *TwitchCategoryUpdateOne) Select(field string, fields ...string) *Twi
 // Save executes the query and returns the updated TwitchCategory entity.
 func (tcuo *TwitchCategoryUpdateOne) Save(ctx context.Context) (*TwitchCategory, error) {
 	tcuo.defaults()
-	return withHooks[*TwitchCategory, TwitchCategoryMutation](ctx, tcuo.sqlSave, tcuo.mutation, tcuo.hooks)
+	return withHooks(ctx, tcuo.sqlSave, tcuo.mutation, tcuo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.

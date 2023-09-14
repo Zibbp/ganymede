@@ -37,6 +37,7 @@ func (Vod) Fields() []ent.Field {
 		field.String("folder_name").Optional(),
 		field.String("file_name").Optional(),
 		field.Bool("locked").Default(false),
+		field.Int("local_views").Default(0),
 		field.Time("streamed_at").Default(time.Now).Comment("The time the VOD was streamed."),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),

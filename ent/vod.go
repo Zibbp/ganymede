@@ -57,6 +57,8 @@ type Vod struct {
 	FileName string `json:"file_name,omitempty"`
 	// Locked holds the value of the "locked" field.
 	Locked bool `json:"locked,omitempty"`
+	// LocalViews holds the value of the "local_views" field.
+	LocalViews int `json:"local_views,omitempty"`
 	// The time the VOD was streamed.
 	StreamedAt time.Time `json:"streamed_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -125,7 +127,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case vod.FieldProcessing, vod.FieldLocked:
 			values[i] = new(sql.NullBool)
-		case vod.FieldDuration, vod.FieldViews:
+		case vod.FieldDuration, vod.FieldViews, vod.FieldLocalViews:
 			values[i] = new(sql.NullInt64)
 		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldChatPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName:
 			values[i] = new(sql.NullString)
@@ -264,6 +266,12 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				v.Locked = value.Bool
 			}
+		case vod.FieldLocalViews:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field local_views", values[i])
+			} else if value.Valid {
+				v.LocalViews = int(value.Int64)
+			}
 		case vod.FieldStreamedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field streamed_at", values[i])
@@ -393,6 +401,9 @@ func (v *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("locked=")
 	builder.WriteString(fmt.Sprintf("%v", v.Locked))
+	builder.WriteString(", ")
+	builder.WriteString("local_views=")
+	builder.WriteString(fmt.Sprintf("%v", v.LocalViews))
 	builder.WriteString(", ")
 	builder.WriteString("streamed_at=")
 	builder.WriteString(v.StreamedAt.Format(time.ANSIC))

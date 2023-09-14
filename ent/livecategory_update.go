@@ -59,7 +59,7 @@ func (lcu *LiveCategoryUpdate) ClearLive() *LiveCategoryUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (lcu *LiveCategoryUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, LiveCategoryMutation](ctx, lcu.sqlSave, lcu.mutation, lcu.hooks)
+	return withHooks(ctx, lcu.sqlSave, lcu.mutation, lcu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -199,7 +199,7 @@ func (lcuo *LiveCategoryUpdateOne) Select(field string, fields ...string) *LiveC
 
 // Save executes the query and returns the updated LiveCategory entity.
 func (lcuo *LiveCategoryUpdateOne) Save(ctx context.Context) (*LiveCategory, error) {
-	return withHooks[*LiveCategory, LiveCategoryMutation](ctx, lcuo.sqlSave, lcuo.mutation, lcuo.hooks)
+	return withHooks(ctx, lcuo.sqlSave, lcuo.mutation, lcuo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.

@@ -372,7 +372,7 @@ func (qu *QueueUpdate) ClearVod() *QueueUpdate {
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (qu *QueueUpdate) Save(ctx context.Context) (int, error) {
 	qu.defaults()
-	return withHooks[int, QueueMutation](ctx, qu.sqlSave, qu.mutation, qu.hooks)
+	return withHooks(ctx, qu.sqlSave, qu.mutation, qu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -968,7 +968,7 @@ func (quo *QueueUpdateOne) Select(field string, fields ...string) *QueueUpdateOn
 // Save executes the query and returns the updated Queue entity.
 func (quo *QueueUpdateOne) Save(ctx context.Context) (*Queue, error) {
 	quo.defaults()
-	return withHooks[*Queue, QueueMutation](ctx, quo.sqlSave, quo.mutation, quo.hooks)
+	return withHooks(ctx, quo.sqlSave, quo.mutation, quo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.

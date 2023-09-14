@@ -325,7 +325,7 @@ func (qc *QueueCreate) Mutation() *QueueMutation {
 // Save creates the Queue in the database.
 func (qc *QueueCreate) Save(ctx context.Context) (*Queue, error) {
 	qc.defaults()
-	return withHooks[*Queue, QueueMutation](ctx, qc.sqlSave, qc.mutation, qc.hooks)
+	return withHooks(ctx, qc.sqlSave, qc.mutation, qc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.

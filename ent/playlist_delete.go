@@ -27,7 +27,7 @@ func (pd *PlaylistDelete) Where(ps ...predicate.Playlist) *PlaylistDelete {
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (pd *PlaylistDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, PlaylistMutation](ctx, pd.sqlExec, pd.mutation, pd.hooks)
+	return withHooks(ctx, pd.sqlExec, pd.mutation, pd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.

@@ -256,7 +256,7 @@ func (lc *LiveCreate) Mutation() *LiveMutation {
 // Save creates the Live in the database.
 func (lc *LiveCreate) Save(ctx context.Context) (*Live, error) {
 	lc.defaults()
-	return withHooks[*Live, LiveMutation](ctx, lc.sqlSave, lc.mutation, lc.hooks)
+	return withHooks(ctx, lc.sqlSave, lc.mutation, lc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
