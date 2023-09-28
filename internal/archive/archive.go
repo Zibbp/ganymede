@@ -597,7 +597,7 @@ func (s *Service) TaskVodDownloadThumbnail(ch *ent.Channel, v *ent.Vod, q *ent.Q
 	}
 }
 
-func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
+func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) error {
 	log.Debug().Msgf("starting task vod save info for vod %s", v.ID)
 	q.Update().SetTaskVodSaveInfo(utils.Running).SaveX(context.Background())
 
@@ -608,8 +608,18 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 		log.Error().Err(err).Msg("error fetching twitch vod")
 		q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
 		s.TaskError(ch, v, q, "vod_save_info")
-		return
+		return err
 	}
+
+	if len(stream.Data) == 0 {
+		log.Error().Msg("stream data is empty")
+		err := database.DB().Client.Queue.DeleteOne(q).Exec(context.Background())
+		if err != nil {
+			log.Error().Err(err).Msg("error deleting queue item")
+		}
+		return fmt.Errorf("stream data is empty")
+	}
+
 	tVod := stream.Data[0]
 
 	err = utils.WriteJson(tVod, fmt.Sprintf("%s/%s", ch.Name, v.FolderName), fmt.Sprintf("%s-info.json", v.FileName))
@@ -617,7 +627,7 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 		log.Error().Err(err).Msg("error saving info")
 		q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
 		s.TaskError(ch, v, q, "vod_save_info")
-		return
+		return err
 	}
 	q.Update().SetTaskVodSaveInfo(utils.Success).SaveX(context.Background())
 	if cont {
@@ -632,6 +642,7 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 			go s.TaskLiveChatDownload(ch, v, q, true, busC, startChatDownloadChannel, true)
 		}
 	}
+	return nil
 }
 
 func (s *Service) TaskVodSaveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
