@@ -137,6 +137,11 @@ func Locked(v bool) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldLocked, v))
 }
 
+// LocalViews applies equality check predicate on the "local_views" field. It's identical to LocalViewsEQ.
+func LocalViews(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldLocalViews, v))
+}
+
 // StreamedAt applies equality check predicate on the "streamed_at" field. It's identical to StreamedAtEQ.
 func StreamedAt(v time.Time) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldStreamedAt, v))
@@ -1170,6 +1175,46 @@ func LockedEQ(v bool) predicate.Vod {
 // LockedNEQ applies the NEQ predicate on the "locked" field.
 func LockedNEQ(v bool) predicate.Vod {
 	return predicate.Vod(sql.FieldNEQ(FieldLocked, v))
+}
+
+// LocalViewsEQ applies the EQ predicate on the "local_views" field.
+func LocalViewsEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldLocalViews, v))
+}
+
+// LocalViewsNEQ applies the NEQ predicate on the "local_views" field.
+func LocalViewsNEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldLocalViews, v))
+}
+
+// LocalViewsIn applies the In predicate on the "local_views" field.
+func LocalViewsIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldLocalViews, vs...))
+}
+
+// LocalViewsNotIn applies the NotIn predicate on the "local_views" field.
+func LocalViewsNotIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldLocalViews, vs...))
+}
+
+// LocalViewsGT applies the GT predicate on the "local_views" field.
+func LocalViewsGT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldLocalViews, v))
+}
+
+// LocalViewsGTE applies the GTE predicate on the "local_views" field.
+func LocalViewsGTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldLocalViews, v))
+}
+
+// LocalViewsLT applies the LT predicate on the "local_views" field.
+func LocalViewsLT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldLocalViews, v))
+}
+
+// LocalViewsLTE applies the LTE predicate on the "local_views" field.
+func LocalViewsLTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldLocalViews, v))
 }
 
 // StreamedAtEQ applies the EQ predicate on the "streamed_at" field.

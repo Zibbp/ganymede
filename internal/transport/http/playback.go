@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -18,6 +19,7 @@ type PlaybackService interface {
 	UpdateStatus(c *auth.CustomContext, vID uuid.UUID, status string) error
 	DeleteProgress(c *auth.CustomContext, vID uuid.UUID) error
 	GetLastPlaybacks(c *auth.CustomContext, limit int) (*playback.GetPlaybackResp, error)
+	StartPlayback(c echo.Context, videoId uuid.UUID) error
 }
 
 type UpdateProgressRequest struct {
@@ -181,4 +183,31 @@ func (h *Handler) GetLastPlaybacks(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, playbackEntries)
+}
+
+// StartPlayback godoc
+//
+//	@Summary		Start playback
+//	@Description	Adds a view to the video local view count
+//	@Tags			Playback
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"vod id"
+//	@Success		200	{object}	string
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/playback/start [post]
+func (h *Handler) StartPlayback(c echo.Context) error {
+	videoId, err := uuid.Parse(c.QueryParam("video_id"))
+	if err != nil {
+		fmt.Println(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid video id")
+	}
+
+	err = h.Service.PlaybackService.StartPlayback(c, videoId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "ok")
 }

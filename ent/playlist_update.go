@@ -126,7 +126,7 @@ func (pu *PlaylistUpdate) RemoveVods(v ...*Vod) *PlaylistUpdate {
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (pu *PlaylistUpdate) Save(ctx context.Context) (int, error) {
 	pu.defaults()
-	return withHooks[int, PlaylistMutation](ctx, pu.sqlSave, pu.mutation, pu.hooks)
+	return withHooks(ctx, pu.sqlSave, pu.mutation, pu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -360,7 +360,7 @@ func (puo *PlaylistUpdateOne) Select(field string, fields ...string) *PlaylistUp
 // Save executes the query and returns the updated Playlist entity.
 func (puo *PlaylistUpdateOne) Save(ctx context.Context) (*Playlist, error) {
 	puo.defaults()
-	return withHooks[*Playlist, PlaylistMutation](ctx, puo.sqlSave, puo.mutation, puo.hooks)
+	return withHooks(ctx, puo.sqlSave, puo.mutation, puo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.

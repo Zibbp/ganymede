@@ -27,7 +27,7 @@ func (lcd *LiveCategoryDelete) Where(ps ...predicate.LiveCategory) *LiveCategory
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (lcd *LiveCategoryDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, LiveCategoryMutation](ctx, lcd.sqlExec, lcd.mutation, lcd.hooks)
+	return withHooks(ctx, lcd.sqlExec, lcd.mutation, lcd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.

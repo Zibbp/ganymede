@@ -315,6 +315,27 @@ func (vu *VodUpdate) SetNillableLocked(b *bool) *VodUpdate {
 	return vu
 }
 
+// SetLocalViews sets the "local_views" field.
+func (vu *VodUpdate) SetLocalViews(i int) *VodUpdate {
+	vu.mutation.ResetLocalViews()
+	vu.mutation.SetLocalViews(i)
+	return vu
+}
+
+// SetNillableLocalViews sets the "local_views" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableLocalViews(i *int) *VodUpdate {
+	if i != nil {
+		vu.SetLocalViews(*i)
+	}
+	return vu
+}
+
+// AddLocalViews adds i to the "local_views" field.
+func (vu *VodUpdate) AddLocalViews(i int) *VodUpdate {
+	vu.mutation.AddLocalViews(i)
+	return vu
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vu *VodUpdate) SetStreamedAt(t time.Time) *VodUpdate {
 	vu.mutation.SetStreamedAt(t)
@@ -421,7 +442,7 @@ func (vu *VodUpdate) RemovePlaylists(p ...*Playlist) *VodUpdate {
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (vu *VodUpdate) Save(ctx context.Context) (int, error) {
 	vu.defaults()
-	return withHooks[int, VodMutation](ctx, vu.sqlSave, vu.mutation, vu.hooks)
+	return withHooks(ctx, vu.sqlSave, vu.mutation, vu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -567,6 +588,12 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := vu.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
+	}
+	if value, ok := vu.mutation.LocalViews(); ok {
+		_spec.SetField(vod.FieldLocalViews, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.AddedLocalViews(); ok {
+		_spec.AddField(vod.FieldLocalViews, field.TypeInt, value)
 	}
 	if value, ok := vu.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
@@ -979,6 +1006,27 @@ func (vuo *VodUpdateOne) SetNillableLocked(b *bool) *VodUpdateOne {
 	return vuo
 }
 
+// SetLocalViews sets the "local_views" field.
+func (vuo *VodUpdateOne) SetLocalViews(i int) *VodUpdateOne {
+	vuo.mutation.ResetLocalViews()
+	vuo.mutation.SetLocalViews(i)
+	return vuo
+}
+
+// SetNillableLocalViews sets the "local_views" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableLocalViews(i *int) *VodUpdateOne {
+	if i != nil {
+		vuo.SetLocalViews(*i)
+	}
+	return vuo
+}
+
+// AddLocalViews adds i to the "local_views" field.
+func (vuo *VodUpdateOne) AddLocalViews(i int) *VodUpdateOne {
+	vuo.mutation.AddLocalViews(i)
+	return vuo
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vuo *VodUpdateOne) SetStreamedAt(t time.Time) *VodUpdateOne {
 	vuo.mutation.SetStreamedAt(t)
@@ -1098,7 +1146,7 @@ func (vuo *VodUpdateOne) Select(field string, fields ...string) *VodUpdateOne {
 // Save executes the query and returns the updated Vod entity.
 func (vuo *VodUpdateOne) Save(ctx context.Context) (*Vod, error) {
 	vuo.defaults()
-	return withHooks[*Vod, VodMutation](ctx, vuo.sqlSave, vuo.mutation, vuo.hooks)
+	return withHooks(ctx, vuo.sqlSave, vuo.mutation, vuo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -1261,6 +1309,12 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if value, ok := vuo.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
+	}
+	if value, ok := vuo.mutation.LocalViews(); ok {
+		_spec.SetField(vod.FieldLocalViews, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.AddedLocalViews(); ok {
+		_spec.AddField(vod.FieldLocalViews, field.TypeInt, value)
 	}
 	if value, ok := vuo.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)

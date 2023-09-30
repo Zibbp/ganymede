@@ -63,7 +63,7 @@ func (lcc *LiveCategoryCreate) Mutation() *LiveCategoryMutation {
 // Save creates the LiveCategory in the database.
 func (lcc *LiveCategoryCreate) Save(ctx context.Context) (*LiveCategory, error) {
 	lcc.defaults()
-	return withHooks[*LiveCategory, LiveCategoryMutation](ctx, lcc.sqlSave, lcc.mutation, lcc.hooks)
+	return withHooks(ctx, lcc.sqlSave, lcc.mutation, lcc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.

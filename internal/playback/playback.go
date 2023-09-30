@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/playback"
 	entPlayback "github.com/zibbp/ganymede/ent/playback"
@@ -166,4 +167,19 @@ func (s *Service) GetLastPlaybacks(c *auth.CustomContext, limit int) (*GetPlayba
 	}
 
 	return getPlaybackResp, nil
+}
+
+func (s *Service) StartPlayback(c echo.Context, videoId uuid.UUID) error {
+	video, err := s.Store.Client.Vod.Query().Where(entVod.ID(videoId)).WithChannel().Only(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("error getting video: %v", err)
+	}
+
+	// add a view to the video
+	err = s.Store.Client.Vod.UpdateOne(video).AddLocalViews(1).Exec(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("error adding view to video: %v", err)
+	}
+
+	return nil
 }

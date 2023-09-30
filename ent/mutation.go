@@ -6891,6 +6891,8 @@ type VodMutation struct {
 	folder_name        *string
 	file_name          *string
 	locked             *bool
+	local_views        *int
+	addlocal_views     *int
 	streamed_at        *time.Time
 	updated_at         *time.Time
 	created_at         *time.Time
@@ -7803,6 +7805,62 @@ func (m *VodMutation) ResetLocked() {
 	m.locked = nil
 }
 
+// SetLocalViews sets the "local_views" field.
+func (m *VodMutation) SetLocalViews(i int) {
+	m.local_views = &i
+	m.addlocal_views = nil
+}
+
+// LocalViews returns the value of the "local_views" field in the mutation.
+func (m *VodMutation) LocalViews() (r int, exists bool) {
+	v := m.local_views
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLocalViews returns the old "local_views" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldLocalViews(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLocalViews is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLocalViews requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLocalViews: %w", err)
+	}
+	return oldValue.LocalViews, nil
+}
+
+// AddLocalViews adds i to the "local_views" field.
+func (m *VodMutation) AddLocalViews(i int) {
+	if m.addlocal_views != nil {
+		*m.addlocal_views += i
+	} else {
+		m.addlocal_views = &i
+	}
+}
+
+// AddedLocalViews returns the value that was added to the "local_views" field in this mutation.
+func (m *VodMutation) AddedLocalViews() (r int, exists bool) {
+	v := m.addlocal_views
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLocalViews resets all changes to the "local_views" field.
+func (m *VodMutation) ResetLocalViews() {
+	m.local_views = nil
+	m.addlocal_views = nil
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (m *VodMutation) SetStreamedAt(t time.Time) {
 	m.streamed_at = &t
@@ -8077,7 +8135,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 22)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -8132,6 +8190,9 @@ func (m *VodMutation) Fields() []string {
 	if m.locked != nil {
 		fields = append(fields, vod.FieldLocked)
 	}
+	if m.local_views != nil {
+		fields = append(fields, vod.FieldLocalViews)
+	}
 	if m.streamed_at != nil {
 		fields = append(fields, vod.FieldStreamedAt)
 	}
@@ -8185,6 +8246,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.FileName()
 	case vod.FieldLocked:
 		return m.Locked()
+	case vod.FieldLocalViews:
+		return m.LocalViews()
 	case vod.FieldStreamedAt:
 		return m.StreamedAt()
 	case vod.FieldUpdatedAt:
@@ -8236,6 +8299,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldFileName(ctx)
 	case vod.FieldLocked:
 		return m.OldLocked(ctx)
+	case vod.FieldLocalViews:
+		return m.OldLocalViews(ctx)
 	case vod.FieldStreamedAt:
 		return m.OldStreamedAt(ctx)
 	case vod.FieldUpdatedAt:
@@ -8377,6 +8442,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetLocked(v)
 		return nil
+	case vod.FieldLocalViews:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLocalViews(v)
+		return nil
 	case vod.FieldStreamedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -8412,6 +8484,9 @@ func (m *VodMutation) AddedFields() []string {
 	if m.addviews != nil {
 		fields = append(fields, vod.FieldViews)
 	}
+	if m.addlocal_views != nil {
+		fields = append(fields, vod.FieldLocalViews)
+	}
 	return fields
 }
 
@@ -8424,6 +8499,8 @@ func (m *VodMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedDuration()
 	case vod.FieldViews:
 		return m.AddedViews()
+	case vod.FieldLocalViews:
+		return m.AddedLocalViews()
 	}
 	return nil, false
 }
@@ -8446,6 +8523,13 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddViews(v)
+		return nil
+	case vod.FieldLocalViews:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLocalViews(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Vod numeric field %s", name)
@@ -8578,6 +8662,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldLocked:
 		m.ResetLocked()
+		return nil
+	case vod.FieldLocalViews:
+		m.ResetLocalViews()
 		return nil
 	case vod.FieldStreamedAt:
 		m.ResetStreamedAt()

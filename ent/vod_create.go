@@ -248,6 +248,20 @@ func (vc *VodCreate) SetNillableLocked(b *bool) *VodCreate {
 	return vc
 }
 
+// SetLocalViews sets the "local_views" field.
+func (vc *VodCreate) SetLocalViews(i int) *VodCreate {
+	vc.mutation.SetLocalViews(i)
+	return vc
+}
+
+// SetNillableLocalViews sets the "local_views" field if the given value is not nil.
+func (vc *VodCreate) SetNillableLocalViews(i *int) *VodCreate {
+	if i != nil {
+		vc.SetLocalViews(*i)
+	}
+	return vc
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vc *VodCreate) SetStreamedAt(t time.Time) *VodCreate {
 	vc.mutation.SetStreamedAt(t)
@@ -357,7 +371,7 @@ func (vc *VodCreate) Mutation() *VodMutation {
 // Save creates the Vod in the database.
 func (vc *VodCreate) Save(ctx context.Context) (*Vod, error) {
 	vc.defaults()
-	return withHooks[*Vod, VodMutation](ctx, vc.sqlSave, vc.mutation, vc.hooks)
+	return withHooks(ctx, vc.sqlSave, vc.mutation, vc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -407,6 +421,10 @@ func (vc *VodCreate) defaults() {
 	if _, ok := vc.mutation.Locked(); !ok {
 		v := vod.DefaultLocked
 		vc.mutation.SetLocked(v)
+	}
+	if _, ok := vc.mutation.LocalViews(); !ok {
+		v := vod.DefaultLocalViews
+		vc.mutation.SetLocalViews(v)
 	}
 	if _, ok := vc.mutation.StreamedAt(); !ok {
 		v := vod.DefaultStreamedAt()
@@ -467,6 +485,9 @@ func (vc *VodCreate) check() error {
 	}
 	if _, ok := vc.mutation.Locked(); !ok {
 		return &ValidationError{Name: "locked", err: errors.New(`ent: missing required field "Vod.locked"`)}
+	}
+	if _, ok := vc.mutation.LocalViews(); !ok {
+		return &ValidationError{Name: "local_views", err: errors.New(`ent: missing required field "Vod.local_views"`)}
 	}
 	if _, ok := vc.mutation.StreamedAt(); !ok {
 		return &ValidationError{Name: "streamed_at", err: errors.New(`ent: missing required field "Vod.streamed_at"`)}
@@ -587,6 +608,10 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 	if value, ok := vc.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
 		_node.Locked = value
+	}
+	if value, ok := vc.mutation.LocalViews(); ok {
+		_spec.SetField(vod.FieldLocalViews, field.TypeInt, value)
+		_node.LocalViews = value
 	}
 	if value, ok := vc.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
@@ -974,6 +999,24 @@ func (u *VodUpsert) SetLocked(v bool) *VodUpsert {
 // UpdateLocked sets the "locked" field to the value that was provided on create.
 func (u *VodUpsert) UpdateLocked() *VodUpsert {
 	u.SetExcluded(vod.FieldLocked)
+	return u
+}
+
+// SetLocalViews sets the "local_views" field.
+func (u *VodUpsert) SetLocalViews(v int) *VodUpsert {
+	u.Set(vod.FieldLocalViews, v)
+	return u
+}
+
+// UpdateLocalViews sets the "local_views" field to the value that was provided on create.
+func (u *VodUpsert) UpdateLocalViews() *VodUpsert {
+	u.SetExcluded(vod.FieldLocalViews)
+	return u
+}
+
+// AddLocalViews adds v to the "local_views" field.
+func (u *VodUpsert) AddLocalViews(v int) *VodUpsert {
+	u.Add(vod.FieldLocalViews, v)
 	return u
 }
 
@@ -1371,6 +1414,27 @@ func (u *VodUpsertOne) SetLocked(v bool) *VodUpsertOne {
 func (u *VodUpsertOne) UpdateLocked() *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.UpdateLocked()
+	})
+}
+
+// SetLocalViews sets the "local_views" field.
+func (u *VodUpsertOne) SetLocalViews(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetLocalViews(v)
+	})
+}
+
+// AddLocalViews adds v to the "local_views" field.
+func (u *VodUpsertOne) AddLocalViews(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.AddLocalViews(v)
+	})
+}
+
+// UpdateLocalViews sets the "local_views" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateLocalViews() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateLocalViews()
 	})
 }
 
@@ -1935,6 +1999,27 @@ func (u *VodUpsertBulk) SetLocked(v bool) *VodUpsertBulk {
 func (u *VodUpsertBulk) UpdateLocked() *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.UpdateLocked()
+	})
+}
+
+// SetLocalViews sets the "local_views" field.
+func (u *VodUpsertBulk) SetLocalViews(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetLocalViews(v)
+	})
+}
+
+// AddLocalViews adds v to the "local_views" field.
+func (u *VodUpsertBulk) AddLocalViews(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.AddLocalViews(v)
+	})
+}
+
+// UpdateLocalViews sets the "local_views" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateLocalViews() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateLocalViews()
 	})
 }
 

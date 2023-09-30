@@ -115,7 +115,7 @@ func (pc *PlaybackCreate) Mutation() *PlaybackMutation {
 // Save creates the Playback in the database.
 func (pc *PlaybackCreate) Save(ctx context.Context) (*Playback, error) {
 	pc.defaults()
-	return withHooks[*Playback, PlaybackMutation](ctx, pc.sqlSave, pc.mutation, pc.hooks)
+	return withHooks(ctx, pc.sqlSave, pc.mutation, pc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.

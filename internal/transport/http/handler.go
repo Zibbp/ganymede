@@ -247,6 +247,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	playbackGroup.POST("/status", h.UpdateStatus, auth.GuardMiddleware, auth.GetUserMiddleware)
 	playbackGroup.DELETE("/:id", h.DeleteProgress, auth.GuardMiddleware, auth.GetUserMiddleware)
 	playbackGroup.GET("/last", h.GetLastPlaybacks, auth.GuardMiddleware, auth.GetUserMiddleware)
+	playbackGroup.POST("/start", h.StartPlayback)
 
 	// Playlist
 	playlistGroup := e.Group("/playlist")

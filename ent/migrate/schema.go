@@ -201,6 +201,7 @@ var (
 		{Name: "folder_name", Type: field.TypeString, Nullable: true},
 		{Name: "file_name", Type: field.TypeString, Nullable: true},
 		{Name: "locked", Type: field.TypeBool, Default: false},
+		{Name: "local_views", Type: field.TypeInt, Default: 0},
 		{Name: "streamed_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
@@ -214,7 +215,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[22]},
+				Columns:    []*schema.Column{VodsColumns[23]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

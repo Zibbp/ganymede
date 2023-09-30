@@ -124,7 +124,7 @@ func (pc *PlaylistCreate) Mutation() *PlaylistMutation {
 // Save creates the Playlist in the database.
 func (pc *PlaylistCreate) Save(ctx context.Context) (*Playlist, error) {
 	pc.defaults()
-	return withHooks[*Playlist, PlaylistMutation](ctx, pc.sqlSave, pc.mutation, pc.hooks)
+	return withHooks(ctx, pc.sqlSave, pc.mutation, pc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.

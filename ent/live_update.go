@@ -258,7 +258,7 @@ func (lu *LiveUpdate) RemoveCategories(l ...*LiveCategory) *LiveUpdate {
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (lu *LiveUpdate) Save(ctx context.Context) (int, error) {
 	lu.defaults()
-	return withHooks[int, LiveMutation](ctx, lu.sqlSave, lu.mutation, lu.hooks)
+	return withHooks(ctx, lu.sqlSave, lu.mutation, lu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -684,7 +684,7 @@ func (luo *LiveUpdateOne) Select(field string, fields ...string) *LiveUpdateOne 
 // Save executes the query and returns the updated Live entity.
 func (luo *LiveUpdateOne) Save(ctx context.Context) (*Live, error) {
 	luo.defaults()
-	return withHooks[*Live, LiveMutation](ctx, luo.sqlSave, luo.mutation, luo.hooks)
+	return withHooks(ctx, luo.sqlSave, luo.mutation, luo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.

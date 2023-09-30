@@ -166,7 +166,7 @@ func (cc *ChannelCreate) Mutation() *ChannelMutation {
 // Save creates the Channel in the database.
 func (cc *ChannelCreate) Save(ctx context.Context) (*Channel, error) {
 	cc.defaults()
-	return withHooks[*Channel, ChannelMutation](ctx, cc.sqlSave, cc.mutation, cc.hooks)
+	return withHooks(ctx, cc.sqlSave, cc.mutation, cc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
