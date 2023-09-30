@@ -429,7 +429,14 @@ func (s *Service) RestartTask(c echo.Context, qID uuid.UUID, task string, cont b
 		}
 	case "vod_save_info":
 		if q.LiveArchive {
-			go s.TaskVodSaveLiveInfo(ch, v, q, cont)
+			err = s.TaskVodSaveLiveInfo(ch, v, q, cont)
+			if err != nil {
+				log.Error().Err(err).Msg("error saving live info")
+				q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
+				s.TaskError(ch, v, q, "vod_save_info")
+				return err
+			}
+			q.Update().SetTaskVodSaveInfo(utils.Success).SaveX(context.Background())
 		} else {
 			go s.TaskVodSaveInfo(ch, v, q, cont)
 		}
@@ -509,7 +516,12 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 			// Refresh thumbnails for live stream after 30 minutes
 			go s.RefreshLiveThumbnails(ch, v, q)
 			// Proceed with task
-			go s.TaskVodSaveLiveInfo(ch, v, q, true)
+			err = s.TaskVodSaveLiveInfo(ch, v, q, true)
+			if err != nil {
+				log.Error().Err(err).Msg("error saving live info")
+				q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
+				s.TaskError(ch, v, q, "vod_save_info")
+			}
 		}
 		return
 	}
@@ -543,7 +555,12 @@ func (s *Service) TaskVodDownloadLiveThumbnail(ch *ent.Channel, v *ent.Vod, q *e
 		// Refresh thumbnails for live stream after 30 minutes
 		go s.RefreshLiveThumbnails(ch, v, q)
 		// Proceed with task
-		go s.TaskVodSaveLiveInfo(ch, v, q, true)
+		err = s.TaskVodSaveLiveInfo(ch, v, q, true)
+		if err != nil {
+			log.Error().Err(err).Msg("error saving live info")
+			q.Update().SetTaskVodSaveInfo(utils.Failed).SaveX(context.Background())
+			s.TaskError(ch, v, q, "vod_save_info")
+		}
 	}
 }
 
