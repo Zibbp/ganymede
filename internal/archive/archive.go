@@ -635,13 +635,6 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 		if err != nil {
 			log.Error().Err(err).Msg("error deleting queue item")
 		}
-		// delete vod
-		fakeContext := echo.New().NewContext(nil, nil)
-		err = s.VodService.DeleteVod(fakeContext, v.ID, true)
-		if err != nil {
-			log.Error().Err(err).Msg("error deleting vod")
-			return fmt.Errorf("error deleting vod: %v", err)
-		}
 		return fmt.Errorf("stream data is empty")
 	}
 
