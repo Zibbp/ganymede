@@ -629,12 +629,6 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 	}
 
 	if len(stream.Data) == 0 {
-		log.Error().Msg("stream data is empty")
-		// delete queue item
-		err := database.DB().Client.Queue.DeleteOne(q).Exec(context.Background())
-		if err != nil {
-			log.Error().Err(err).Msg("error deleting queue item")
-		}
 		return fmt.Errorf("stream data is empty")
 	}
 
