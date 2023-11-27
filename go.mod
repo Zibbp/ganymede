@@ -17,7 +17,7 @@ require (
 	github.com/rs/zerolog v1.30.0
 	github.com/spf13/viper v1.16.0
 	github.com/swaggo/swag v1.16.2
-	golang.org/x/crypto v0.13.0
+	golang.org/x/crypto v0.16.0
 	golang.org/x/oauth2 v0.12.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
@@ -83,8 +83,8 @@ require (
 	github.com/zclconf/go-cty v1.12.1 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.15.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
