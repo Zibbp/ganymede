@@ -1,6 +1,8 @@
 package temporal
 
 import (
+	"os"
+
 	"github.com/rs/zerolog/log"
 
 	"go.temporal.io/sdk/client"
@@ -13,8 +15,10 @@ type Temporal struct {
 }
 
 func InitializeTemporalClient() {
+	// TODO: config env parsed
+	temporalUrl := os.Getenv("TEMPORAL_URL")
 	clientOptions := client.Options{
-		HostPort: "dev.tycho:7233",
+		HostPort: temporalUrl,
 	}
 
 	c, err := client.Dial(clientOptions)
