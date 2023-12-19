@@ -19,9 +19,8 @@ RUN git clone https://github.com/xenova/chat-downloader.git
 FROM alpine:latest AS production
 
 # install packages
-RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg bash tzdata shadow su-exec && ln -sf python3 /usr/bin/python
-RUN python3 -m ensurepip
-RUN pip3 install --no-cache --upgrade pip streamlink
+RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg bash tzdata shadow su-exec py3-pip && ln -sf python3 /usr/bin/python
+RUN pip3 install --no-cache --upgrade pip streamlink --break-system-packages
 
 # setup user
 RUN groupmod -g 1000 users && \
