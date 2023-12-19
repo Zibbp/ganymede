@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/live"
-	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type LiveService interface {
@@ -16,7 +15,6 @@ type LiveService interface {
 	DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error
 	UpdateLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
 	Check() error
-	ConvertChat(c echo.Context, convertDto live.ConvertChat) error
 	CheckVodWatchedChannels()
 	ArchiveLiveChannel(c echo.Context, archiveDto live.ArchiveLive) error
 }
@@ -279,57 +277,6 @@ func (h *Handler) Check(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, "ok")
-}
-
-// ConvertChat godoc
-//
-//	@Summary		Convert chat
-//	@Description	Adhoc convert chat endpoint. This is what happens when a live stream chat is converted to a "vod" chat.
-//	@Tags			Live
-//	@Accept			json
-//	@Produce		json
-//	@Param			body	body		ConvertChatRequest	true	"Convert chat"
-//	@Success		200		{object}	string
-//	@Failure		400		{object}	utils.ErrorResponse
-//	@Failure		500		{object}	utils.ErrorResponse
-//	@Router			/live/chat-convert [post]
-//	@Security		ApiKeyCookieAuth
-func (h *Handler) ConvertChat(c echo.Context) error {
-	ccr := new(ConvertChatRequest)
-	if err := c.Bind(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	if err := c.Validate(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	// Validate user input that is used for file name
-	validVodID, err := utils.ValidateFileNameInput(ccr.VodID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	validVodExternalID, err := utils.ValidateFileNameInput(ccr.VodExternalID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	validFileName, err := utils.ValidateFileName(ccr.FileName)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	convertDto := live.ConvertChat{
-		FileName:      validFileName,
-		ChannelName:   ccr.ChannelName,
-		VodID:         validVodID,
-		ChannelID:     ccr.ChannelID,
-		VodExternalID: validVodExternalID,
-		ChatStart:     ccr.ChatStart,
-	}
-	err = h.Service.LiveService.ConvertChat(c, convertDto)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusOK, "ok - converted chat found in /tmp/")
 }
 
 // CheckVodWatchedChannels godoc

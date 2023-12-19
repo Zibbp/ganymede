@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/playback"
@@ -42,6 +43,12 @@ func init() {
 	channelDescID := channelFields[0].Descriptor()
 	// channel.DefaultID holds the default value on creation for the id field.
 	channel.DefaultID = channelDescID.Default.(func() uuid.UUID)
+	chapterFields := schema.Chapter{}.Fields()
+	_ = chapterFields
+	// chapterDescID is the schema descriptor for id field.
+	chapterDescID := chapterFields[0].Descriptor()
+	// chapter.DefaultID holds the default value on creation for the id field.
+	chapter.DefaultID = chapterDescID.Default.(func() uuid.UUID)
 	liveFields := schema.Live{}.Fields()
 	_ = liveFields
 	// liveDescWatchLive is the schema descriptor for watch_live field.

@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
+	entChapter "github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/cache"
 	"github.com/zibbp/ganymede/internal/chat"
@@ -128,7 +129,7 @@ func (s *Service) GetVodWithChannel(vodID uuid.UUID) (*ent.Vod, error) {
 func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) error {
 	log.Debug().Msgf("deleting vod %s", vodID)
 	// delete vod and queue item
-	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithQueue().WithChannel().Only(c.Request().Context())
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithQueue().WithChannel().WithChapters().Only(c.Request().Context())
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return fmt.Errorf("vod not found")
@@ -139,6 +140,12 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) e
 		err = s.Store.Client.Queue.DeleteOneID(v.Edges.Queue.ID).Exec(c.Request().Context())
 		if err != nil {
 			return fmt.Errorf("error deleting queue item: %v", err)
+		}
+	}
+	if v.Edges.Chapters != nil {
+		_, err = s.Store.Client.Chapter.Delete().Where(entChapter.HasVodWith(vod.ID(vodID))).Exec(c.Request().Context())
+		if err != nil {
+			return fmt.Errorf("error deleting chapters: %v", err)
 		}
 	}
 

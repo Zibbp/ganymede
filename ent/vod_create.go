@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -363,6 +364,21 @@ func (vc *VodCreate) AddPlaylists(p ...*Playlist) *VodCreate {
 	return vc.AddPlaylistIDs(ids...)
 }
 
+// AddChapterIDs adds the "chapters" edge to the Chapter entity by IDs.
+func (vc *VodCreate) AddChapterIDs(ids ...uuid.UUID) *VodCreate {
+	vc.mutation.AddChapterIDs(ids...)
+	return vc
+}
+
+// AddChapters adds the "chapters" edges to the Chapter entity.
+func (vc *VodCreate) AddChapters(c ...*Chapter) *VodCreate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return vc.AddChapterIDs(ids...)
+}
+
 // Mutation returns the VodMutation object of the builder.
 func (vc *VodCreate) Mutation() *VodMutation {
 	return vc.mutation
@@ -667,6 +683,22 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := vc.mutation.ChaptersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.ChaptersTable,
+			Columns: []string{vod.ChaptersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1507,12 +1539,16 @@ func (u *VodUpsertOne) IDX(ctx context.Context) uuid.UUID {
 // VodCreateBulk is the builder for creating many Vod entities in bulk.
 type VodCreateBulk struct {
 	config
+	err      error
 	builders []*VodCreate
 	conflict []sql.ConflictOption
 }
 
 // Save creates the Vod entities in the database.
 func (vcb *VodCreateBulk) Save(ctx context.Context) ([]*Vod, error) {
+	if vcb.err != nil {
+		return nil, vcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(vcb.builders))
 	nodes := make([]*Vod, len(vcb.builders))
 	mutators := make([]Mutator, len(vcb.builders))
@@ -2053,6 +2089,9 @@ func (u *VodUpsertBulk) UpdateUpdatedAt() *VodUpsertBulk {
 
 // Exec executes the query.
 func (u *VodUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
 	for i, b := range u.create.builders {
 		if len(b.conflict) != 0 {
 			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the VodCreateBulk instead", i)

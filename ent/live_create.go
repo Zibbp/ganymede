@@ -972,12 +972,16 @@ func (u *LiveUpsertOne) IDX(ctx context.Context) uuid.UUID {
 // LiveCreateBulk is the builder for creating many Live entities in bulk.
 type LiveCreateBulk struct {
 	config
+	err      error
 	builders []*LiveCreate
 	conflict []sql.ConflictOption
 }
 
 // Save creates the Live entities in the database.
 func (lcb *LiveCreateBulk) Save(ctx context.Context) ([]*Live, error) {
+	if lcb.err != nil {
+		return nil, lcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(lcb.builders))
 	nodes := make([]*Live, len(lcb.builders))
 	mutators := make([]Mutator, len(lcb.builders))
@@ -1322,6 +1326,9 @@ func (u *LiveUpsertBulk) UpdateUpdatedAt() *LiveUpsertBulk {
 
 // Exec executes the query.
 func (u *LiveUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
 	for i, b := range u.create.builders {
 		if len(b.conflict) != 0 {
 			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the LiveCreateBulk instead", i)

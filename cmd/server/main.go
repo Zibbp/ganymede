@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/channel"
+	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/kv"
@@ -24,6 +26,7 @@ import (
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/scheduler"
 	"github.com/zibbp/ganymede/internal/task"
+	"github.com/zibbp/ganymede/internal/temporal"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/user"
@@ -75,8 +78,11 @@ func Run() error {
 	//	log.Error().Err(err).Msg("failed to create database connection")
 	//	return err
 	//}
-	database.InitializeDatabase()
+	database.InitializeDatabase(false)
 	store := database.DB()
+
+	// Initialize temporal client
+	temporal.InitializeTemporalClient()
 
 	authService := auth.NewService(store)
 	channelService := channel.NewService(store)
@@ -93,8 +99,9 @@ func Run() error {
 	metricsService := metrics.NewService(store)
 	playlistService := playlist.NewService(store)
 	taskService := task.NewService(store, liveService, archiveService)
+	chapterService := chapter.NewService()
 
-	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService)
+	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService)
 
 	if err := httpHandler.Serve(); err != nil {
 		return err
@@ -104,6 +111,9 @@ func Run() error {
 }
 
 func main() {
+	if os.Getenv("ENV") == "dev" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
 	kv.DB().Set("version", Version)
 	kv.DB().Set("build_time", BuildTime)
 	kv.DB().Set("git_hash", GitHash)
