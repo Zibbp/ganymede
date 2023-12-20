@@ -25,53 +25,43 @@ func checkIfTasksAreDone(input dto.ArchiveVideoInput) error {
 		log.Error().Err(err).Msg("error getting queue item")
 		return err
 	}
-	if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
-		log.Debug().Msgf("all tasks for video %s are done", input.VideoID)
 
-		_, err := q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).Save(context.Background())
-		if err != nil {
-			log.Error().Err(err).Msg("error updating queue item")
-			return err
+	if input.Queue.LiveArchive {
+		if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatConvert == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
+			log.Debug().Msgf("all tasks for video %s are done", input.VideoID)
+
+			_, err := q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).Save(context.Background())
+			if err != nil {
+				log.Error().Err(err).Msg("error updating queue item")
+				return err
+			}
+
+			_, err = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetProcessing(false).Save(context.Background())
+			if err != nil {
+				log.Error().Err(err).Msg("error updating vod")
+				return err
+			}
+
+			notification.SendLiveArchiveSuccessNotification(input.Channel, input.Vod, input.Queue)
 		}
+	} else {
+		if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
+			log.Debug().Msgf("all tasks for video %s are done", input.VideoID)
 
-		_, err = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetProcessing(false).Save(context.Background())
-		if err != nil {
-			log.Error().Err(err).Msg("error updating vod")
-			return err
+			_, err := q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).Save(context.Background())
+			if err != nil {
+				log.Error().Err(err).Msg("error updating queue item")
+				return err
+			}
+
+			_, err = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetProcessing(false).Save(context.Background())
+			if err != nil {
+				log.Error().Err(err).Msg("error updating vod")
+				return err
+			}
+
+			notification.SendVideoArchiveSuccessNotification(input.Channel, input.Vod, input.Queue)
 		}
-
-		// TODO: send notification
-		notification.SendVideoArchiveSuccessNotification(input.Channel, input.Vod, input.Queue)
-	}
-
-	return nil
-}
-
-func checkIfLiveTasksAreDone(input dto.ArchiveVideoInput) error {
-	log.Debug().Msgf("checking if tasks are done for video %s", input.VideoID)
-
-	q, err := database.DB().Client.Queue.Query().Where(queue.ID(input.Queue.ID)).Only(context.Background())
-	if err != nil {
-		log.Error().Err(err).Msg("error getting queue item")
-		return err
-	}
-	if q.TaskVideoDownload == utils.Success && q.TaskVideoConvert == utils.Success && q.TaskVideoMove == utils.Success && q.TaskChatDownload == utils.Success && q.TaskChatConvert == utils.Success && q.TaskChatRender == utils.Success && q.TaskChatMove == utils.Success {
-		log.Debug().Msgf("all tasks for video %s are done", input.VideoID)
-
-		_, err := q.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).Save(context.Background())
-		if err != nil {
-			log.Error().Err(err).Msg("error updating queue item")
-			return err
-		}
-
-		_, err = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetProcessing(false).Save(context.Background())
-		if err != nil {
-			log.Error().Err(err).Msg("error updating vod")
-			return err
-		}
-
-		// TODO: send notification
-		notification.SendLiveArchiveSuccessNotification(input.Channel, input.Vod, input.Queue)
 	}
 
 	return nil
@@ -217,7 +207,7 @@ func DownloadTwitchLiveThumbnailsWorkflow(ctx workflow.Context, input dto.Archiv
 		return err
 	}
 
-	err = checkIfLiveTasksAreDone(input)
+	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
 	}
@@ -255,7 +245,7 @@ func SaveTwitchLiveVideoInfoWorkflow(ctx workflow.Context, input dto.ArchiveVide
 		return err
 	}
 
-	err = checkIfLiveTasksAreDone(input)
+	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
 	}
@@ -354,7 +344,7 @@ func ConvertTwitchLiveChatWorkflow(ctx workflow.Context, input dto.ArchiveVideoI
 		return err
 	}
 
-	err = checkIfLiveTasksAreDone(input)
+	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
 	}
@@ -453,7 +443,7 @@ func DownloadTwitchLiveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVide
 		}
 	}
 
-	err = checkIfLiveTasksAreDone(input)
+	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
 	}
@@ -485,7 +475,7 @@ func PostprocessVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput)
 		return err
 	}
 
-	err = checkIfLiveTasksAreDone(input)
+	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
 	}
@@ -516,7 +506,7 @@ func MoveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) error 
 		return err
 	}
 
-	err = checkIfLiveTasksAreDone(input)
+	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
 	}
@@ -600,7 +590,7 @@ func DownloadTwitchLiveChatWorkflow(ctx workflow.Context, input dto.ArchiveVideo
 		return err
 	}
 
-	err = checkIfLiveTasksAreDone(input)
+	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
 	}
@@ -627,7 +617,7 @@ func RenderTwitchChatWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput)
 		return err
 	}
 
-	err = checkIfLiveTasksAreDone(input)
+	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
 	}
@@ -658,7 +648,28 @@ func MoveTwitchChatWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) e
 		return err
 	}
 
-	err = checkIfLiveTasksAreDone(input)
+	err = checkIfTasksAreDone(input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// *Low Level Workflow*
+func SaveTwitchVideoChapters(ctx workflow.Context) error {
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		HeartbeatTimeout:    90 * time.Second,
+		StartToCloseTimeout: 168 * time.Hour,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    1 * time.Minute,
+			BackoffCoefficient: 2,
+			MaximumAttempts:    3,
+			MaximumInterval:    15 * time.Minute,
+		},
+	})
+
+	err := workflow.ExecuteActivity(ctx, activities.TwitchSaveVideoChapters).Get(ctx, nil)
 	if err != nil {
 		return err
 	}

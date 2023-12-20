@@ -274,25 +274,32 @@ func DownloadTwitchLiveVideo(ctx context.Context, v *ent.Vod, ch *ent.Channel, l
 	v.Resolution = strings.Replace(v.Resolution, "30", "", 1)
 
 	// Generate args for exec
-	newArgs := []string{"--force-progress", "--force", streamURL, fmt.Sprintf("%s,best", v.Resolution)}
+	args := []string{"--progress=force", "--force", streamURL, fmt.Sprintf("%s,best", v.Resolution)}
 
 	// if proxy requires headers, pass them
 	if proxyHeader != "" {
-		newArgs = append(newArgs, "--add-headers", proxyHeader)
+		args = append(args, "--add-headers", proxyHeader)
 	}
 	// pass twitch token as header if available
 	// only pass if not using proxy for security reasons
 	if twitchToken != "" && !proxyFound {
-		newArgs = append(newArgs, "--http-header", fmt.Sprintf("Authorization=OAuth %s", twitchToken))
+		args = append(args, "--http-header", fmt.Sprintf("Authorization=OAuth %s", twitchToken))
 	}
 
 	// pass config params
-	newArgs = append(newArgs, splitStreamlinkParams...)
+	args = append(args, splitStreamlinkParams...)
 
-	newArgs = append(newArgs, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+	filteredArgs := make([]string, 0, len(args))
+	for _, arg := range args {
+		if arg != "" {
+			filteredArgs = append(filteredArgs, arg)
+		}
+	}
 
-	log.Debug().Msgf("streamlink live args: %v", newArgs)
-	log.Debug().Msgf("running: streamlink %s", strings.Join(newArgs, " "))
+	cmdArgs := append(filteredArgs, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+
+	log.Debug().Msgf("streamlink live args: %v", cmdArgs)
+	log.Debug().Msgf("running: streamlink %s", strings.Join(cmdArgs, " "))
 
 	// Notify chat download that video download is about to start
 	log.Debug().Msg("notifying chat download that video download is about to start")
@@ -308,7 +315,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, v *ent.Vod, ch *ent.Channel, l
 	}
 
 	// Execute streamlink
-	cmd := osExec.Command("streamlink", newArgs...)
+	cmd := osExec.Command("streamlink", cmdArgs...)
 
 	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video.log", v.ExtID, v.ID))
 	if err != nil {
@@ -324,6 +331,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, v *ent.Vod, ch *ent.Channel, l
 	cmd.Stdout = multiWriterStdout
 
 	if err := cmd.Run(); err != nil {
+		fmt.Printf("streamlink error: %v", err)
 		// Streamlink will error when the stream is offline - do not log this as an error
 		log.Debug().Msgf("finished downloading live video for %s - %s", v.ExtID, err.Error())
 		log.Debug().Msgf("streamlink live stdout: %s", stdout.String())

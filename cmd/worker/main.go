@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/activities"
+	serverConfig "github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/workflows"
@@ -66,6 +67,10 @@ func main() {
 	}
 
 	log.Info().Msgf("Starting worker with config: %+v", config)
+
+	// initializte main program config
+	// this needs to be removed in the future to decouple the worker from the server
+	serverConfig.NewConfig()
 
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 
@@ -133,6 +138,7 @@ func main() {
 		w.RegisterWorkflow(workflows.SaveTwitchLiveVideoInfoWorkflow)
 		w.RegisterWorkflow(workflows.ArchiveTwitchLiveChatWorkflow)
 		w.RegisterWorkflow(workflows.ConvertTwitchLiveChatWorkflow)
+		w.RegisterWorkflow(workflows.SaveTwitchVideoChapters)
 
 		w.RegisterActivity(activities.ArchiveVideoActivity)
 		w.RegisterActivity(activities.SaveTwitchVideoInfo)
@@ -150,6 +156,7 @@ func main() {
 		w.RegisterActivity(activities.SaveTwitchLiveVideoInfo)
 		w.RegisterActivity(activities.KillTwitchLiveChatDownload)
 		w.RegisterActivity(activities.ConvertTwitchLiveChat)
+		w.RegisterActivity(activities.TwitchSaveVideoChapters)
 
 		err = w.Start()
 		if err != nil {

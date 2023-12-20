@@ -886,3 +886,82 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 
 	return nil
 }
+
+func TwitchSaveVideoChapters(ctx context.Context) error {
+	// Create a new context with cancel
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel() // Make sure to cancel when download is complete
+
+	// Start a goroutine that sends a heartbeat every 30 seconds
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				// If the context is done, stop the goroutine
+				return
+			default:
+				// Otherwise, record a heartbeat and sleep for 30 seconds
+				activity.RecordHeartbeat(ctx, "my-heartbeat")
+				time.Sleep(30 * time.Second)
+			}
+		}
+	}()
+
+	// get all videos
+	videos, err := database.DB().Client.Vod.Query().All(ctx)
+	if err != nil {
+		return temporal.NewApplicationError(err.Error(), "", nil)
+	}
+
+	for _, video := range videos {
+		if video.Type == "live" {
+			continue
+		}
+		if video.ExtID == "" {
+			continue
+		}
+		log.Debug().Msgf("getting chapters for video %s", video.ID)
+		// get chapters
+		twitchChapters, err := twitch.GQLGetChapters(video.ExtID)
+		if err != nil {
+			log.Error().Err(err).Msgf("error getting chapters for video %s", video.ID)
+			continue
+		}
+
+		// convert twitch chapters to chapters
+		// get nodes from gql response
+		var nodes []twitch.Node
+		for _, v := range twitchChapters.Data.Video.Moments.Edges {
+			nodes = append(nodes, v.Node)
+		}
+		if len(nodes) > 0 {
+			chapters, err := convertTwitchChaptersToChapters(nodes, video.Duration)
+			if err != nil {
+				return temporal.NewApplicationError(err.Error(), "", nil)
+			}
+			// add chapters to database
+			chapterService := chapter.NewService()
+			// check if chapters already exist
+			existingChapters, err := chapterService.GetVideoChapters(video.ID)
+			if err != nil {
+				log.Error().Err(err).Msgf("error getting chapters for video %s", video.ID)
+			}
+			if len(existingChapters) > 0 {
+				log.Debug().Msgf("chapters already exist for video %s", video.ID)
+				continue
+			}
+
+			for _, c := range chapters {
+				_, err := chapterService.CreateChapter(c, video.ID)
+				if err != nil {
+					return temporal.NewApplicationError(err.Error(), "", nil)
+				}
+			}
+			log.Info().Msgf("added %d chapters to video %s", len(chapters), video.ID)
+		}
+		// sleep for 0.25 seconds to not hit rate limit
+		time.Sleep(250 * time.Millisecond)
+	}
+
+	return nil
+}
