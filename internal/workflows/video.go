@@ -475,11 +475,6 @@ func PostprocessVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput)
 		return err
 	}
 
-	err = checkIfTasksAreDone(input)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -497,11 +492,6 @@ func MoveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) error 
 	})
 
 	err := workflow.ExecuteActivity(ctx, activities.MoveVideo, input).Get(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
 	}
@@ -639,11 +629,6 @@ func MoveTwitchChatWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) e
 	})
 
 	err := workflow.ExecuteActivity(ctx, activities.MoveChat, input).Get(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
 	}
