@@ -29,7 +29,19 @@ type Logger struct {
 }
 
 func (l *Logger) Debug(msg string, keyvals ...interface{}) {
-	l.logger.Debug().Msgf(msg, keyvals...)
+	if len(keyvals)%2 != 0 {
+		l.logger.Debug().Msgf(msg)
+		return
+	}
+
+	fields := make(map[string]interface{})
+	for i := 0; i < len(keyvals); i += 2 {
+		if key, ok := keyvals[i].(string); ok {
+			fields[key] = keyvals[i+1]
+		}
+	}
+
+	l.logger.Debug().Fields(fields).Msg(msg)
 }
 
 func (l *Logger) Info(msg string, keyvals ...interface{}) {
@@ -49,11 +61,35 @@ func (l *Logger) Info(msg string, keyvals ...interface{}) {
 }
 
 func (l *Logger) Warn(msg string, keyvals ...interface{}) {
-	l.logger.Warn().Msgf(msg, keyvals...)
+	if len(keyvals)%2 != 0 {
+		l.logger.Warn().Msgf(msg)
+		return
+	}
+
+	fields := make(map[string]interface{})
+	for i := 0; i < len(keyvals); i += 2 {
+		if key, ok := keyvals[i].(string); ok {
+			fields[key] = keyvals[i+1]
+		}
+	}
+
+	l.logger.Warn().Fields(fields).Msg(msg)
 }
 
 func (l *Logger) Error(msg string, keyvals ...interface{}) {
-	l.logger.Error().Msgf(msg, keyvals...)
+	if len(keyvals)%2 != 0 {
+		l.logger.Error().Msgf(msg)
+		return
+	}
+
+	fields := make(map[string]interface{})
+	for i := 0; i < len(keyvals); i += 2 {
+		if key, ok := keyvals[i].(string); ok {
+			fields[key] = keyvals[i+1]
+		}
+	}
+
+	l.logger.Error().Fields(fields).Msg(msg)
 }
 
 func main() {
