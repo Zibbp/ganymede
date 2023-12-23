@@ -114,3 +114,15 @@ func (h *Handler) RestartArchiveWorkflow(c echo.Context) error {
 		"workflow_id": workflowId,
 	})
 }
+
+func (h *Handler) GetVideoIdFromWorkflow(c echo.Context) error {
+	workflowId := c.Param("workflowId")
+	runId := c.Param("runId")
+
+	id, err := temporal.GetVideoIdFromWorkflow(c.Request().Context(), workflowId, runId)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, id)
+}

@@ -67,6 +67,12 @@ func checkIfTasksAreDone(input dto.ArchiveVideoInput) error {
 	return nil
 }
 
+func workflowErrorHandler(err error, input dto.ArchiveVideoInput, task string) error {
+	notification.SendErrorNotification(input.Channel, input.Vod, input.Queue, task)
+
+	return err
+}
+
 // *Top Level Workflow*
 func ArchiveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{})
@@ -171,7 +177,7 @@ func CreateDirectoryWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) 
 
 	err := workflow.ExecuteActivity(ctx, activities.CreateDirectory, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "create-directory")
 	}
 
 	return nil
@@ -185,7 +191,7 @@ func DownloadTwitchThumbnailsWorkflow(ctx workflow.Context, input dto.ArchiveVid
 
 	err := workflow.ExecuteActivity(ctx, activities.DownloadTwitchThumbnails, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "download-thumbnails")
 	}
 
 	err = checkIfTasksAreDone(input)
@@ -204,7 +210,7 @@ func DownloadTwitchLiveThumbnailsWorkflow(ctx workflow.Context, input dto.Archiv
 
 	err := workflow.ExecuteActivity(ctx, activities.DownloadTwitchLiveThumbnails, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "download-thumbnails")
 	}
 
 	err = checkIfTasksAreDone(input)
@@ -223,7 +229,7 @@ func SaveTwitchVideoInfoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInp
 
 	err := workflow.ExecuteActivity(ctx, activities.SaveTwitchVideoInfo, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "save-video-info")
 	}
 
 	err = checkIfTasksAreDone(input)
@@ -242,7 +248,7 @@ func SaveTwitchLiveVideoInfoWorkflow(ctx workflow.Context, input dto.ArchiveVide
 
 	err := workflow.ExecuteActivity(ctx, activities.SaveTwitchLiveVideoInfo, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "save-video-info")
 	}
 
 	err = checkIfTasksAreDone(input)
@@ -341,7 +347,7 @@ func ConvertTwitchLiveChatWorkflow(ctx workflow.Context, input dto.ArchiveVideoI
 
 	err := workflow.ExecuteActivity(ctx, activities.ConvertTwitchLiveChat, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "convert-chat")
 	}
 
 	err = checkIfTasksAreDone(input)
@@ -392,7 +398,7 @@ func DownloadTwitchVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInp
 
 	err := workflow.ExecuteActivity(cctx, activities.DownloadTwitchVideo, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "download-video")
 	}
 
 	err = checkIfTasksAreDone(input)
@@ -418,7 +424,7 @@ func DownloadTwitchLiveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVide
 
 	err := workflow.ExecuteActivity(ctx, activities.DownloadTwitchLiveVideo, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "download-video")
 	}
 
 	future := workflow.RequestCancelExternalWorkflow(ctx, input.LiveChatWorkflowId, "")
@@ -467,7 +473,7 @@ func PostprocessVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput)
 
 	err := workflow.ExecuteActivity(ctx, activities.PostprocessVideo, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "postprocess-video")
 	}
 
 	err = checkIfTasksAreDone(input)
@@ -493,7 +499,7 @@ func MoveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) error 
 
 	err := workflow.ExecuteActivity(ctx, activities.MoveVideo, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "move-video")
 	}
 
 	err = checkIfTasksAreDone(input)
@@ -520,7 +526,7 @@ func DownloadTwitchChatWorkflow(ctx workflow.Context, input dto.ArchiveVideoInpu
 
 	err := workflow.ExecuteActivity(ctx, activities.DownloadTwitchChat, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "download-chat")
 	}
 
 	err = checkIfTasksAreDone(input)
@@ -604,7 +610,7 @@ func RenderTwitchChatWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput)
 
 	err := workflow.ExecuteActivity(ctx, activities.RenderTwitchChat, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "render-chat")
 	}
 
 	err = checkIfTasksAreDone(input)
@@ -630,7 +636,7 @@ func MoveTwitchChatWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) e
 
 	err := workflow.ExecuteActivity(ctx, activities.MoveChat, input).Get(ctx, nil)
 	if err != nil {
-		return err
+		return workflowErrorHandler(err, input, "move-chat")
 	}
 
 	err = checkIfTasksAreDone(input)

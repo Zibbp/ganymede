@@ -2,6 +2,8 @@ package temporal
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -9,6 +11,7 @@ import (
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/dto"
+	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/api/history/v1"
 	"go.temporal.io/api/workflow/v1"
 	"go.temporal.io/api/workflowservice/v1"
@@ -17,6 +20,11 @@ import (
 
 type WorkflowHistory struct {
 	*history.HistoryEvent
+}
+
+type WorkflowVideoIdResult struct {
+	VideoId         string `json:"video_id"`
+	ExternalVideoId string `json:"external_video_id"`
 }
 
 func GetActiveWorkflows(ctx context.Context) ([]*workflow.WorkflowExecutionInfo, error) {
@@ -112,4 +120,33 @@ func RestartArchiveWorkflow(ctx context.Context, videoId uuid.UUID, workflowName
 	log.Info().Msgf("Started workflow %s", workflowRun.GetID())
 
 	return workflowRun.GetID(), nil
+}
+
+func GetVideoIdFromWorkflow(ctx context.Context, workflowId string, runId string) (WorkflowVideoIdResult, error) {
+	var result WorkflowVideoIdResult
+	history, err := GetWorkflowHistory(ctx, workflowId, runId)
+	if err != nil {
+		return WorkflowVideoIdResult{}, err
+	}
+
+	for _, event := range history {
+		if event.GetEventType() == enums.EVENT_TYPE_WORKFLOW_EXECUTION_STARTED {
+			attributes := event.GetWorkflowExecutionStartedEventAttributes()
+			if attributes != nil {
+				input := attributes.Input
+				if input != nil {
+					data := input.Payloads[0].GetData()
+					var input dto.ArchiveVideoInput
+					err := json.Unmarshal(data, &input)
+					if err != nil {
+						return WorkflowVideoIdResult{}, fmt.Errorf("failed to unmarshal input: %w", err)
+					}
+					result.VideoId = input.Vod.ID.String()
+					result.ExternalVideoId = input.Vod.ExtID
+				}
+			}
+		}
+	}
+
+	return result, nil
 }
