@@ -15,12 +15,19 @@ import (
 
 type ParsedChat struct {
 	Streamer Streamer  `json:"streamer"`
+	Video    Video     `json:"video"`
 	Comments []Comment `json:"comments"`
 }
 
 type Streamer struct {
 	Name string `json:"name"`
 	ID   int    `json:"id"`
+}
+
+type Video struct {
+	ID    string `json:"id"`
+	Start int64  `json:"start"`
+	End   int64  `json:"end"`
 }
 
 type Comment struct {
@@ -140,7 +147,7 @@ func OpenChatFile(path string) ([]LiveComment, error) {
 	return liveComments, nil
 }
 
-func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string, vExtID string, cID int, chatStart time.Time) error {
+func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string, vExtID string, cID int, chatStart time.Time, previousVideoID string) error {
 
 	log.Debug().Msg("Converting Twitch Live Chat to Vod Chat")
 
@@ -153,6 +160,8 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 	var parsedChat ParsedChat
 	parsedChat.Streamer.Name = channelName
 	parsedChat.Streamer.ID = cID
+	parsedChat.Video.ID = previousVideoID
+	parsedChat.Video.Start = 0
 
 	var parsedComments []Comment
 
@@ -337,6 +346,10 @@ func ConvertTwitchLiveChatToVodChat(path string, channelName string, vID string,
 	}
 
 	parsedChat.Comments = parsedComments
+
+	// get last comment offset and set as video end
+	lastComment := parsedChat.Comments[len(parsedChat.Comments)-1]
+	parsedChat.Video.End = int64(lastComment.ContentOffsetSeconds)
 
 	err = writeParsedChat(parsedChat, vID, vExtID)
 	if err != nil {

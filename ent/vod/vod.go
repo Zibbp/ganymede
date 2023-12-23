@@ -67,6 +67,8 @@ const (
 	EdgeQueue = "queue"
 	// EdgePlaylists holds the string denoting the playlists edge name in mutations.
 	EdgePlaylists = "playlists"
+	// EdgeChapters holds the string denoting the chapters edge name in mutations.
+	EdgeChapters = "chapters"
 	// Table holds the table name of the vod in the database.
 	Table = "vods"
 	// ChannelTable is the table that holds the channel relation/edge.
@@ -88,6 +90,13 @@ const (
 	// PlaylistsInverseTable is the table name for the Playlist entity.
 	// It exists in this package in order to avoid circular dependency with the "playlist" package.
 	PlaylistsInverseTable = "playlists"
+	// ChaptersTable is the table that holds the chapters relation/edge.
+	ChaptersTable = "chapters"
+	// ChaptersInverseTable is the table name for the Chapter entity.
+	// It exists in this package in order to avoid circular dependency with the "chapter" package.
+	ChaptersInverseTable = "chapters"
+	// ChaptersColumn is the table column denoting the chapters relation/edge.
+	ChaptersColumn = "vod_chapters"
 )
 
 // Columns holds all SQL columns for vod fields.
@@ -336,6 +345,20 @@ func ByPlaylists(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPlaylistsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByChaptersCount orders the results by chapters count.
+func ByChaptersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChaptersStep(), opts...)
+	}
+}
+
+// ByChapters orders the results by chapters terms.
+func ByChapters(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChaptersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newChannelStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -355,5 +378,12 @@ func newPlaylistsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PlaylistsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, PlaylistsTable, PlaylistsPrimaryKey...),
+	)
+}
+func newChaptersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChaptersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ChaptersTable, ChaptersColumn),
 	)
 }

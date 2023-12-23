@@ -1,7 +1,7 @@
 {
   "build": { "dockerfile": "Dockerfile" },
   "features": {
-    "ghcr.io/eitsupi/devcontainer-features/go-task:1": {}
+    "ghcr.io/jungaretti/features/make:1": {}
   },
   "customizations": {
     "vscode": {

@@ -328,12 +328,16 @@ func (u *LiveCategoryUpsertOne) IDX(ctx context.Context) uuid.UUID {
 // LiveCategoryCreateBulk is the builder for creating many LiveCategory entities in bulk.
 type LiveCategoryCreateBulk struct {
 	config
+	err      error
 	builders []*LiveCategoryCreate
 	conflict []sql.ConflictOption
 }
 
 // Save creates the LiveCategory entities in the database.
 func (lccb *LiveCategoryCreateBulk) Save(ctx context.Context) ([]*LiveCategory, error) {
+	if lccb.err != nil {
+		return nil, lccb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(lccb.builders))
 	nodes := make([]*LiveCategory, len(lccb.builders))
 	mutators := make([]Mutator, len(lccb.builders))
@@ -514,6 +518,9 @@ func (u *LiveCategoryUpsertBulk) UpdateName() *LiveCategoryUpsertBulk {
 
 // Exec executes the query.
 func (u *LiveCategoryUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
 	for i, b := range u.create.builders {
 		if len(b.conflict) != 0 {
 			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the LiveCategoryCreateBulk instead", i)

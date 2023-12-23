@@ -50,5 +50,6 @@ func (Vod) Edges() []ent.Edge {
 		edge.From("channel", Channel.Type).Ref("vods").Unique().Required(),
 		edge.To("queue", Queue.Type).Unique(),
 		edge.From("playlists", Playlist.Type).Ref("vods"),
+		edge.To("chapters", Chapter.Type),
 	}
 }

@@ -522,12 +522,16 @@ func (u *PlaylistUpsertOne) IDX(ctx context.Context) uuid.UUID {
 // PlaylistCreateBulk is the builder for creating many Playlist entities in bulk.
 type PlaylistCreateBulk struct {
 	config
+	err      error
 	builders []*PlaylistCreate
 	conflict []sql.ConflictOption
 }
 
 // Save creates the Playlist entities in the database.
 func (pcb *PlaylistCreateBulk) Save(ctx context.Context) ([]*Playlist, error) {
+	if pcb.err != nil {
+		return nil, pcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(pcb.builders))
 	nodes := make([]*Playlist, len(pcb.builders))
 	mutators := make([]Mutator, len(pcb.builders))
@@ -767,6 +771,9 @@ func (u *PlaylistUpsertBulk) UpdateUpdatedAt() *PlaylistUpsertBulk {
 
 // Exec executes the query.
 func (u *PlaylistUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
 	for i, b := range u.create.builders {
 		if len(b.conflict) != 0 {
 			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the PlaylistCreateBulk instead", i)

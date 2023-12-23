@@ -36,6 +36,7 @@ type Services struct {
 	MetricsService   MetricsService
 	PlaylistService  PlaylistService
 	TaskService      TaskService
+	ChapterService   ChapterService
 }
 
 type Handler struct {
@@ -43,7 +44,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService) *Handler {
 	log.Debug().Msg("creating new handler")
 
 	h := &Handler{
@@ -64,6 +65,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			MetricsService:   metricsService,
 			PlaylistService:  playlistService,
 			TaskService:      taskService,
+			ChapterService:   chapterService,
 		},
 	}
 
@@ -235,7 +237,6 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.GET("/check", h.Check, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	liveGroup.POST("/chat-convert", h.ConvertChat, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.GET("/vod", h.CheckVodWatchedChannels, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.POST("/archive", h.ArchiveLiveChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
@@ -270,6 +271,21 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// Notification
 	notificationGroup := e.Group("/notification")
 	notificationGroup.POST("/test", h.TestNotification, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+
+	// Workflows
+	workflowGroup := e.Group("/workflows")
+	workflowGroup.GET("/active", h.GetActiveWorkflows, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	workflowGroup.GET("/closed", h.GetClosedWorkflows, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	workflowGroup.GET("/:workflowId/:runId", h.GetWorkflowById, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	workflowGroup.GET("/:workflowId/:runId/history", h.GetWorkflowHistory, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	workflowGroup.GET("/:workflowId/:runId/video_id", h.GetVideoIdFromWorkflow, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	workflowGroup.POST("/start", h.StartWorkflow, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	workflowGroup.POST("/restart", h.RestartArchiveWorkflow, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+
+	// Chapter
+	chapterGroup := e.Group("/chapter")
+	chapterGroup.GET("/video/:videoId", h.GetVideoChapters)
+	chapterGroup.GET("/video/:videoId/webvtt", h.GetWebVTTChapters)
 }
 
 func (h *Handler) Serve() error {

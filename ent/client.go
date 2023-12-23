@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
 
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/migrate"
@@ -16,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/playback"
@@ -33,6 +35,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
+	// Chapter is the client for interacting with the Chapter builders.
+	Chapter *ChapterClient
 	// Live is the client for interacting with the Live builders.
 	Live *LiveClient
 	// LiveCategory is the client for interacting with the LiveCategory builders.
@@ -63,6 +67,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Channel = NewChannelClient(c.config)
+	c.Chapter = NewChapterClient(c.config)
 	c.Live = NewLiveClient(c.config)
 	c.LiveCategory = NewLiveCategoryClient(c.config)
 	c.Playback = NewPlaybackClient(c.config)
@@ -138,11 +143,14 @@ func Open(driverName, dataSourceName string, options ...Option) (*Client, error)
 	}
 }
 
+// ErrTxStarted is returned when trying to start a new transaction from a transactional client.
+var ErrTxStarted = errors.New("ent: cannot start a transaction within a transaction")
+
 // Tx returns a new transactional client. The provided context
 // is used until the transaction is committed or rolled back.
 func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	if _, ok := c.driver.(*txDriver); ok {
-		return nil, errors.New("ent: cannot start a transaction within a transaction")
+		return nil, ErrTxStarted
 	}
 	tx, err := newTx(ctx, c.driver)
 	if err != nil {
@@ -154,6 +162,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:            ctx,
 		config:         cfg,
 		Channel:        NewChannelClient(cfg),
+		Chapter:        NewChapterClient(cfg),
 		Live:           NewLiveClient(cfg),
 		LiveCategory:   NewLiveCategoryClient(cfg),
 		Playback:       NewPlaybackClient(cfg),
@@ -182,6 +191,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:            ctx,
 		config:         cfg,
 		Channel:        NewChannelClient(cfg),
+		Chapter:        NewChapterClient(cfg),
 		Live:           NewLiveClient(cfg),
 		LiveCategory:   NewLiveCategoryClient(cfg),
 		Playback:       NewPlaybackClient(cfg),
@@ -219,7 +229,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Channel, c.Live, c.LiveCategory, c.Playback, c.Playlist, c.Queue,
+		c.Channel, c.Chapter, c.Live, c.LiveCategory, c.Playback, c.Playlist, c.Queue,
 		c.TwitchCategory, c.User, c.Vod,
 	} {
 		n.Use(hooks...)
@@ -230,7 +240,7 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Channel, c.Live, c.LiveCategory, c.Playback, c.Playlist, c.Queue,
+		c.Channel, c.Chapter, c.Live, c.LiveCategory, c.Playback, c.Playlist, c.Queue,
 		c.TwitchCategory, c.User, c.Vod,
 	} {
 		n.Intercept(interceptors...)
@@ -242,6 +252,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *ChannelMutation:
 		return c.Channel.mutate(ctx, m)
+	case *ChapterMutation:
+		return c.Chapter.mutate(ctx, m)
 	case *LiveMutation:
 		return c.Live.mutate(ctx, m)
 	case *LiveCategoryMutation:
@@ -293,6 +305,21 @@ func (c *ChannelClient) Create() *ChannelCreate {
 
 // CreateBulk returns a builder for creating a bulk of Channel entities.
 func (c *ChannelClient) CreateBulk(builders ...*ChannelCreate) *ChannelCreateBulk {
+	return &ChannelCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ChannelClient) MapCreateBulk(slice any, setFunc func(*ChannelCreate, int)) *ChannelCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ChannelCreateBulk{err: fmt.Errorf("calling to ChannelClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ChannelCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
 	return &ChannelCreateBulk{config: c.config, builders: builders}
 }
 
@@ -413,6 +440,155 @@ func (c *ChannelClient) mutate(ctx context.Context, m *ChannelMutation) (Value, 
 	}
 }
 
+// ChapterClient is a client for the Chapter schema.
+type ChapterClient struct {
+	config
+}
+
+// NewChapterClient returns a client for the Chapter from the given config.
+func NewChapterClient(c config) *ChapterClient {
+	return &ChapterClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `chapter.Hooks(f(g(h())))`.
+func (c *ChapterClient) Use(hooks ...Hook) {
+	c.hooks.Chapter = append(c.hooks.Chapter, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `chapter.Intercept(f(g(h())))`.
+func (c *ChapterClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Chapter = append(c.inters.Chapter, interceptors...)
+}
+
+// Create returns a builder for creating a Chapter entity.
+func (c *ChapterClient) Create() *ChapterCreate {
+	mutation := newChapterMutation(c.config, OpCreate)
+	return &ChapterCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Chapter entities.
+func (c *ChapterClient) CreateBulk(builders ...*ChapterCreate) *ChapterCreateBulk {
+	return &ChapterCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ChapterClient) MapCreateBulk(slice any, setFunc func(*ChapterCreate, int)) *ChapterCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ChapterCreateBulk{err: fmt.Errorf("calling to ChapterClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ChapterCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ChapterCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Chapter.
+func (c *ChapterClient) Update() *ChapterUpdate {
+	mutation := newChapterMutation(c.config, OpUpdate)
+	return &ChapterUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ChapterClient) UpdateOne(ch *Chapter) *ChapterUpdateOne {
+	mutation := newChapterMutation(c.config, OpUpdateOne, withChapter(ch))
+	return &ChapterUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ChapterClient) UpdateOneID(id uuid.UUID) *ChapterUpdateOne {
+	mutation := newChapterMutation(c.config, OpUpdateOne, withChapterID(id))
+	return &ChapterUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Chapter.
+func (c *ChapterClient) Delete() *ChapterDelete {
+	mutation := newChapterMutation(c.config, OpDelete)
+	return &ChapterDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ChapterClient) DeleteOne(ch *Chapter) *ChapterDeleteOne {
+	return c.DeleteOneID(ch.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ChapterClient) DeleteOneID(id uuid.UUID) *ChapterDeleteOne {
+	builder := c.Delete().Where(chapter.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ChapterDeleteOne{builder}
+}
+
+// Query returns a query builder for Chapter.
+func (c *ChapterClient) Query() *ChapterQuery {
+	return &ChapterQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeChapter},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Chapter entity by its id.
+func (c *ChapterClient) Get(ctx context.Context, id uuid.UUID) (*Chapter, error) {
+	return c.Query().Where(chapter.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ChapterClient) GetX(ctx context.Context, id uuid.UUID) *Chapter {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryVod queries the vod edge of a Chapter.
+func (c *ChapterClient) QueryVod(ch *Chapter) *VodQuery {
+	query := (&VodClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ch.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(chapter.Table, chapter.FieldID, id),
+			sqlgraph.To(vod.Table, vod.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, chapter.VodTable, chapter.VodColumn),
+		)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ChapterClient) Hooks() []Hook {
+	return c.hooks.Chapter
+}
+
+// Interceptors returns the client interceptors.
+func (c *ChapterClient) Interceptors() []Interceptor {
+	return c.inters.Chapter
+}
+
+func (c *ChapterClient) mutate(ctx context.Context, m *ChapterMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ChapterCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ChapterUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ChapterUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ChapterDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Chapter mutation op: %q", m.Op())
+	}
+}
+
 // LiveClient is a client for the Live schema.
 type LiveClient struct {
 	config
@@ -443,6 +619,21 @@ func (c *LiveClient) Create() *LiveCreate {
 
 // CreateBulk returns a builder for creating a bulk of Live entities.
 func (c *LiveClient) CreateBulk(builders ...*LiveCreate) *LiveCreateBulk {
+	return &LiveCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LiveClient) MapCreateBulk(slice any, setFunc func(*LiveCreate, int)) *LiveCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LiveCreateBulk{err: fmt.Errorf("calling to LiveClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LiveCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
 	return &LiveCreateBulk{config: c.config, builders: builders}
 }
 
@@ -596,6 +787,21 @@ func (c *LiveCategoryClient) CreateBulk(builders ...*LiveCategoryCreate) *LiveCa
 	return &LiveCategoryCreateBulk{config: c.config, builders: builders}
 }
 
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LiveCategoryClient) MapCreateBulk(slice any, setFunc func(*LiveCategoryCreate, int)) *LiveCategoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LiveCategoryCreateBulk{err: fmt.Errorf("calling to LiveCategoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LiveCategoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LiveCategoryCreateBulk{config: c.config, builders: builders}
+}
+
 // Update returns an update builder for LiveCategory.
 func (c *LiveCategoryClient) Update() *LiveCategoryUpdate {
 	mutation := newLiveCategoryMutation(c.config, OpUpdate)
@@ -730,6 +936,21 @@ func (c *PlaybackClient) CreateBulk(builders ...*PlaybackCreate) *PlaybackCreate
 	return &PlaybackCreateBulk{config: c.config, builders: builders}
 }
 
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PlaybackClient) MapCreateBulk(slice any, setFunc func(*PlaybackCreate, int)) *PlaybackCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PlaybackCreateBulk{err: fmt.Errorf("calling to PlaybackClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PlaybackCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PlaybackCreateBulk{config: c.config, builders: builders}
+}
+
 // Update returns an update builder for Playback.
 func (c *PlaybackClient) Update() *PlaybackUpdate {
 	mutation := newPlaybackMutation(c.config, OpUpdate)
@@ -845,6 +1066,21 @@ func (c *PlaylistClient) Create() *PlaylistCreate {
 
 // CreateBulk returns a builder for creating a bulk of Playlist entities.
 func (c *PlaylistClient) CreateBulk(builders ...*PlaylistCreate) *PlaylistCreateBulk {
+	return &PlaylistCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PlaylistClient) MapCreateBulk(slice any, setFunc func(*PlaylistCreate, int)) *PlaylistCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PlaylistCreateBulk{err: fmt.Errorf("calling to PlaylistClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PlaylistCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
 	return &PlaylistCreateBulk{config: c.config, builders: builders}
 }
 
@@ -982,6 +1218,21 @@ func (c *QueueClient) CreateBulk(builders ...*QueueCreate) *QueueCreateBulk {
 	return &QueueCreateBulk{config: c.config, builders: builders}
 }
 
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *QueueClient) MapCreateBulk(slice any, setFunc func(*QueueCreate, int)) *QueueCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &QueueCreateBulk{err: fmt.Errorf("calling to QueueClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*QueueCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &QueueCreateBulk{config: c.config, builders: builders}
+}
+
 // Update returns an update builder for Queue.
 func (c *QueueClient) Update() *QueueUpdate {
 	mutation := newQueueMutation(c.config, OpUpdate)
@@ -1116,6 +1367,21 @@ func (c *TwitchCategoryClient) CreateBulk(builders ...*TwitchCategoryCreate) *Tw
 	return &TwitchCategoryCreateBulk{config: c.config, builders: builders}
 }
 
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TwitchCategoryClient) MapCreateBulk(slice any, setFunc func(*TwitchCategoryCreate, int)) *TwitchCategoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TwitchCategoryCreateBulk{err: fmt.Errorf("calling to TwitchCategoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TwitchCategoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TwitchCategoryCreateBulk{config: c.config, builders: builders}
+}
+
 // Update returns an update builder for TwitchCategory.
 func (c *TwitchCategoryClient) Update() *TwitchCategoryUpdate {
 	mutation := newTwitchCategoryMutation(c.config, OpUpdate)
@@ -1231,6 +1497,21 @@ func (c *UserClient) Create() *UserCreate {
 
 // CreateBulk returns a builder for creating a bulk of User entities.
 func (c *UserClient) CreateBulk(builders ...*UserCreate) *UserCreateBulk {
+	return &UserCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserClient) MapCreateBulk(slice any, setFunc func(*UserCreate, int)) *UserCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserCreateBulk{err: fmt.Errorf("calling to UserClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
 	return &UserCreateBulk{config: c.config, builders: builders}
 }
 
@@ -1352,6 +1633,21 @@ func (c *VodClient) CreateBulk(builders ...*VodCreate) *VodCreateBulk {
 	return &VodCreateBulk{config: c.config, builders: builders}
 }
 
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *VodClient) MapCreateBulk(slice any, setFunc func(*VodCreate, int)) *VodCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &VodCreateBulk{err: fmt.Errorf("calling to VodClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*VodCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &VodCreateBulk{config: c.config, builders: builders}
+}
+
 // Update returns an update builder for Vod.
 func (c *VodClient) Update() *VodUpdate {
 	mutation := newVodMutation(c.config, OpUpdate)
@@ -1460,6 +1756,22 @@ func (c *VodClient) QueryPlaylists(v *Vod) *PlaylistQuery {
 	return query
 }
 
+// QueryChapters queries the chapters edge of a Vod.
+func (c *VodClient) QueryChapters(v *Vod) *ChapterQuery {
+	query := (&ChapterClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vod.Table, vod.FieldID, id),
+			sqlgraph.To(chapter.Table, chapter.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, vod.ChaptersTable, vod.ChaptersColumn),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *VodClient) Hooks() []Hook {
 	return c.hooks.Vod
@@ -1488,11 +1800,11 @@ func (c *VodClient) mutate(ctx context.Context, m *VodMutation) (Value, error) {
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Channel, Live, LiveCategory, Playback, Playlist, Queue, TwitchCategory, User,
-		Vod []ent.Hook
+		Channel, Chapter, Live, LiveCategory, Playback, Playlist, Queue, TwitchCategory,
+		User, Vod []ent.Hook
 	}
 	inters struct {
-		Channel, Live, LiveCategory, Playback, Playlist, Queue, TwitchCategory, User,
-		Vod []ent.Interceptor
+		Channel, Chapter, Live, LiveCategory, Playback, Playlist, Queue, TwitchCategory,
+		User, Vod []ent.Interceptor
 	}
 )

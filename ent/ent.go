@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/playback"
@@ -82,6 +83,7 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			channel.Table:        channel.ValidColumn,
+			chapter.Table:        chapter.ValidColumn,
 			live.Table:           live.ValidColumn,
 			livecategory.Table:   livecategory.ValidColumn,
 			playback.Table:       playback.ValidColumn,
