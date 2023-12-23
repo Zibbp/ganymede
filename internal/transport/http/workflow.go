@@ -72,14 +72,12 @@ func (h *Handler) StartWorkflow(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	workflowId, err := workflows.StartWorkflow(c.Request().Context(), request.WorkflowName)
+	startWorkflowResponse, err := workflows.StartWorkflow(c.Request().Context(), request.WorkflowName)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(200, map[string]string{
-		"workflow_id": workflowId,
-	})
+	return c.JSON(200, startWorkflowResponse)
 }
 
 func (h *Handler) RestartArchiveWorkflow(c echo.Context) error {

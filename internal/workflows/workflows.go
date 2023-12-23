@@ -8,24 +8,28 @@ import (
 	"go.temporal.io/sdk/client"
 )
 
-func StartWorkflow(ctx context.Context, workflowName string) (string, error) {
+type StartWorkflowResponse struct {
+	WorkflowId string `json:"workflow_id"`
+	RunId      string `json:"run_id"`
+}
+
+func StartWorkflow(ctx context.Context, workflowName string) (StartWorkflowResponse, error) {
 	// TODO: develop a better way to do this
 
-	wfOptions := client.StartWorkflowOptions{
-		ID:        workflowName,
+	var startWorkflowResponse StartWorkflowResponse
+
+	workflowOptions := client.StartWorkflowOptions{
 		TaskQueue: "archive",
 	}
 
-	switch workflowName {
-	case "save_chapters_for_twitch_videos":
-		we, err := temporal.GetTemporalClient().Client.ExecuteWorkflow(ctx, wfOptions, SaveTwitchVideoChapters)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to start workflow")
-			return "", err
-		}
-
-		return we.GetID(), nil
+	we, err := temporal.GetTemporalClient().Client.ExecuteWorkflow(ctx, workflowOptions, workflowName)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to start workflow")
+		return startWorkflowResponse, err
 	}
 
-	return "", nil
+	startWorkflowResponse.WorkflowId = we.GetID()
+	startWorkflowResponse.RunId = we.GetRunID()
+
+	return startWorkflowResponse, nil
 }
