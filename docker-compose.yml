@@ -22,7 +22,7 @@ services:
       # - OAUTH_CLIENT_ID=
       # - OAUTH_CLIENT_SECRET=
       # - OAUTH_REDIRECT_URL=http://IP:PORT/api/v1/auth/oauth/callback # Points to the API service
-      - TEMPORAL_URL=temporal:7233
+      - TEMPORAL_URL=ganymede-temporal:7233
       # WORKER
       - MAX_CHAT_DOWNLOAD_EXECUTIONS=5
       - MAX_CHAT_RENDER_EXECUTIONS=3
