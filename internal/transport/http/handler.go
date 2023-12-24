@@ -86,7 +86,6 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	// to avoid blocking application start
 	// and to wait for twitch api auth
 	go h.Service.SchedulerService.StartLiveScheduler()
-	go h.Service.SchedulerService.StartQueueItemScheduler()
 	if viper.GetBool("oauth_enabled") {
 		go h.Service.SchedulerService.StartJwksScheduler()
 	}

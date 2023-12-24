@@ -60,15 +60,6 @@ func (s *Service) StartWatchVideoScheduler() {
 	scheduler.StartAsync()
 }
 
-func (s *Service) StartQueueItemScheduler() {
-	time.Sleep(time.Second * 5)
-	scheduler := gocron.NewScheduler(time.UTC)
-
-	s.checkHeldQueueItems(scheduler)
-
-	scheduler.StartAsync()
-}
-
 func (s *Service) StartJwksScheduler() {
 	time.Sleep(time.Second * 5)
 	scheduler := gocron.NewScheduler(time.UTC)
@@ -148,17 +139,6 @@ func (s *Service) checkWatchedChannelVideos(schedule *gocron.Scheduler) {
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to set up check watched channel videos schedule")
-	}
-}
-
-func (s *Service) checkHeldQueueItems(scheduler *gocron.Scheduler) {
-	log.Debug().Msg("setting up queue item schedule")
-	_, err := scheduler.Every(1).Hours().Do(func() {
-		log.Debug().Msg("running queue item schedule")
-		go s.ArchiveService.CheckOnHold()
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("failed to set up queue item schedule")
 	}
 }
 
