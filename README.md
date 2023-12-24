@@ -82,26 +82,31 @@ Note: On startup the container will `chown` `/data`, `/logs`, and `/tmp`. It wil
 
 ##### API
 
-| ENV Name               | Description                                                                                                                                                     |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TZ`                   | Timezone.                                                                                                                                                       |
-| `DB_HOST`              | Host of the database.                                                                                                                                           |
-| `DB_PORT`              | Port of the database.                                                                                                                                           |
-| `DB_USER`              | Username for the database.                                                                                                                                      |
-| `DB_PASS`              | Password for the database.                                                                                                                                      |
-| `DB_NAME`              | Name of the database.                                                                                                                                           |
-| `DB_SSL`               | Whether to use SSL. Default: `disable`. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.                                       |
-| `DB_SSL_ROOT_CERT`     | _Optional_ Path to DB SSL root certificate. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.                                   |
-| `JWT_SECRET`           | Secret for JWT tokens. This should be a long random string.                                                                                                     |
-| `JWT_REFRESH_SECRET`   | Secret for JWT refresh tokens. This should be a long random string.                                                                                             |
-| `TWITCH_CLIENT_ID`     | Twitch application client ID.                                                                                                                                   |
-| `TWITCH_CLIENT_SECRET` | Twitch application client secret.                                                                                                                               |
-| `FRONTEND_HOST`        | Host of the frontend, used for CORS. Example: `http://192.168.1.2:4801`                                                                                         |
-| `COOKIE_DOMAIN`        | _Optional_ Base domain for cookies. Used when reverse proxying. See [reverse proxy](https://github.com/Zibbp/ganymede/wiki/Reverse-Proxy) for more information. |
-| `OAUTH_PROVIDER_URL`   | _Optional_ OAuth provider URL. See https://github.com/Zibbp/ganymede/wiki/SSO---OpenID-Connect                                                                  |
-| `OAUTH_CLIENT_ID`      | _Optional_ OAuth client ID.                                                                                                                                     |
-| `OAUTH_CLIENT_SECRET`  | _Optional_ OAuth client secret.                                                                                                                                 |
-| `OAUTH_REDIRECT_URL`   | _Optional_ OAuth redirect URL, points to the API. Example: `http://localhost:4000/api/v1/auth/oauth/callback`.                                                  |
+| ENV Name                        | Description                                                                                                                                                     |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TZ`                            | Timezone.                                                                                                                                                       |
+| `DB_HOST`                       | Host of the database.                                                                                                                                           |
+| `DB_PORT`                       | Port of the database.                                                                                                                                           |
+| `DB_USER`                       | Username for the database.                                                                                                                                      |
+| `DB_PASS`                       | Password for the database.                                                                                                                                      |
+| `DB_NAME`                       | Name of the database.                                                                                                                                           |
+| `DB_SSL`                        | Whether to use SSL. Default: `disable`. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.                                       |
+| `DB_SSL_ROOT_CERT`              | _Optional_ Path to DB SSL root certificate. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.                                   |
+| `JWT_SECRET`                    | Secret for JWT tokens. This should be a long random string.                                                                                                     |
+| `JWT_REFRESH_SECRET`            | Secret for JWT refresh tokens. This should be a long random string.                                                                                             |
+| `TWITCH_CLIENT_ID`              | Twitch application client ID.                                                                                                                                   |
+| `TWITCH_CLIENT_SECRET`          | Twitch application client secret.                                                                                                                               |
+| `FRONTEND_HOST`                 | Host of the frontend, used for CORS. Example: `http://192.168.1.2:4801`                                                                                         |
+| `COOKIE_DOMAIN`                 | _Optional_ Base domain for cookies. Used when reverse proxying. See [reverse proxy](https://github.com/Zibbp/ganymede/wiki/Reverse-Proxy) for more information. |
+| `OAUTH_PROVIDER_URL`            | _Optional_ OAuth provider URL. See https://github.com/Zibbp/ganymede/wiki/SSO---OpenID-Connect                                                                  |
+| `OAUTH_CLIENT_ID`               | _Optional_ OAuth client ID.                                                                                                                                     |
+| `OAUTH_CLIENT_SECRET`           | _Optional_ OAuth client secret.                                                                                                                                 |
+| `OAUTH_REDIRECT_URL`            | _Optional_ OAuth redirect URL, points to the API. Example: `http://localhost:4000/api/v1/auth/oauth/callback`.                                                  |
+| `TEMPORAL_URL`                  | URL to the Temporal server                                                                                                                                      |
+| `MAX_CHAT_DOWNLOAD_EXECUTIONS`  | Maximum number of chat downloads that can be running at once.                                                                                                   |
+| `MAX_CHAT_RENDER_EXECUTIONS`    | Maximum number of chat renders that can be running at once.                                                                                                     |
+| `MAX_VIDEO_DOWNLOAD_EXECUTIONS` | Maximum number of video downloads that can be running at once.                                                                                                  |
+| `MAX_VIDEO_CONVERT_EXECUTIONS`  | Maximum number of video conversions that can be running at once.                                                                                                |
 
 ##### Frontend
 
