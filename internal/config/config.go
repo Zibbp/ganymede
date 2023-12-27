@@ -76,7 +76,7 @@ type ProxyListItem struct {
 	Header string `json:"header"`
 }
 
-func NewConfig() {
+func NewConfig(refresh bool) {
 	configLocation := "/data"
 	configName := "config"
 	configType := "json"
@@ -135,9 +135,20 @@ func NewConfig() {
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Info().Msgf("config file not found at %s, creating new one", configPath)
-		err := viper.SafeWriteConfigAs(configPath)
-		if err != nil {
-			log.Panic().Err(err).Msg("error creating config file")
+		retries := 10
+		for i := 0; i < retries; i++ {
+			err := viper.SafeWriteConfigAs(configPath)
+			if err == nil {
+				log.Info().Msgf("config file created")
+				break
+			}
+			log.Error().Err(err).Msgf("error creating config file (attempt %d/%d)", i+1, retries)
+			if i < retries-1 {
+				log.Info().Msgf("retrying in 1 second")
+				time.Sleep(1 * time.Second)
+			} else {
+				log.Panic().Err(err).Msg("error creating config file")
+			}
 		}
 	} else {
 		log.Info().Msgf("config file found at %s, loading", configPath)
@@ -157,7 +168,9 @@ func NewConfig() {
 			}
 		}
 		// Rewrite config file to apply new variables and remove old values
-		refreshConfig(configPath)
+		if refresh {
+			refreshConfig(configPath)
+		}
 		log.Debug().Msgf("config file loaded: %s", viper.ConfigFileUsed())
 	}
 }

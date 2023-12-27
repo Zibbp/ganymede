@@ -62,7 +62,7 @@ var (
 
 func Run() error {
 
-	config.NewConfig()
+	config.NewConfig(true)
 
 	configDebug := viper.GetBool("debug")
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack

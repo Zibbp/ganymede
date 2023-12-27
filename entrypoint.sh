@@ -29,6 +29,10 @@ export FONTCONFIG_CACHE=/var/cache/fontconfig
 
 su-exec abc /opt/app/ganymede-api &
 api_pid=$!
+
+# delay 5 seconds to wait for api to start
+sleep 5
+
 su-exec abc /opt/app/ganymede-worker &
 worker_pid=$!
 
