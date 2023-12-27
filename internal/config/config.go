@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -140,13 +141,24 @@ func NewConfig() {
 		}
 	} else {
 		log.Info().Msgf("config file found at %s, loading", configPath)
-		err := viper.ReadInConfig()
+		retries := 10
+		for i := 0; i < retries; i++ {
+			err := viper.ReadInConfig()
+			if err == nil {
+				log.Info().Msgf("config file loaded: %s", viper.ConfigFileUsed())
+				break
+			}
+			log.Error().Err(err).Msgf("error loading config (attempt %d/%d)", i+1, retries)
+			if i < retries-1 {
+				log.Info().Msgf("retrying in 1 second")
+				time.Sleep(1 * time.Second)
+			} else {
+				log.Panic().Err(err).Msg("error loading config")
+			}
+		}
 		// Rewrite config file to apply new variables and remove old values
 		refreshConfig(configPath)
 		log.Debug().Msgf("config file loaded: %s", viper.ConfigFileUsed())
-		if err != nil {
-			log.Panic().Err(err).Msg("error reading config file")
-		}
 	}
 }
 
