@@ -106,7 +106,7 @@ func main() {
 
 	// initializte main program config
 	// this needs to be removed in the future to decouple the worker from the server
-	serverConfig.NewConfig()
+	serverConfig.NewConfig(false)
 
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 
