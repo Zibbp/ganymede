@@ -28,10 +28,8 @@ type Conf struct {
 	Debug               bool `json:"debug"`
 	LiveCheckInterval   int  `json:"live_check_interval_seconds"`
 	VideoCheckInterval  int  `json:"video_check_interval_minutes"`
-	ActiveQueueItems    int  `json:"active_queue_items"`
 	OAuthEnabled        bool `json:"oauth_enabled"`
 	RegistrationEnabled bool `json:"registration_enabled"`
-	DBSeeded            bool `json:"db_seeded"`
 	Parameters          struct {
 		TwitchToken    string `json:"twitch_token"`
 		VideoConvert   string `json:"video_convert"`
@@ -89,10 +87,8 @@ func NewConfig(refresh bool) {
 	viper.SetDefault("debug", false)
 	viper.SetDefault("live_check_interval_seconds", 300)
 	viper.SetDefault("video_check_interval_minutes", 180)
-	viper.SetDefault("active_queue_items", 2)
 	viper.SetDefault("oauth_enabled", false)
 	viper.SetDefault("registration_enabled", true)
-	viper.SetDefault("db_seeded", false)
 	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a copy")
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
 	viper.SetDefault("parameters.streamlink_live", "--twitch-low-latency,--twitch-disable-hosting")
@@ -188,7 +184,6 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 
 	return &Conf{
 		RegistrationEnabled: viper.GetBool("registration_enabled"),
-		DBSeeded:            viper.GetBool("db_seeded"),
 		Archive: struct {
 			SaveAsHls bool `json:"save_as_hls"`
 		}(struct {
@@ -401,6 +396,14 @@ func refreshConfig(configPath string) {
 	}
 	if !viper.IsSet("video_check_interval_minutes") {
 		viper.Set("video_check_interval_minutes", 180)
+	}
+	err = unset("db_seeded")
+	if err != nil {
+		log.Error().Err(err).Msg("error unsetting config value")
+	}
+	err = unset("active_queue_items")
+	if err != nil {
+		log.Error().Err(err).Msg("error unsetting config value")
 	}
 
 }
