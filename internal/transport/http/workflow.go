@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/base64"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -18,7 +19,15 @@ type RestartArchiveWorkflowRequest struct {
 }
 
 func (h *Handler) GetActiveWorkflows(c echo.Context) error {
-	executions, err := temporal.GetActiveWorkflows(c.Request().Context())
+	nextPageToken := c.QueryParam("next_page_token")
+
+	// base64 decode the next page token
+	decoded, err := base64.StdEncoding.DecodeString(nextPageToken)
+	if err != nil {
+		return err
+	}
+
+	executions, err := temporal.GetActiveWorkflows(c.Request().Context(), []byte(decoded))
 	if err != nil {
 		return err
 	}
@@ -28,7 +37,15 @@ func (h *Handler) GetActiveWorkflows(c echo.Context) error {
 }
 
 func (h *Handler) GetClosedWorkflows(c echo.Context) error {
-	executions, err := temporal.GetClosedWorkflows(c.Request().Context())
+	nextPageToken := c.QueryParam("next_page_token")
+
+	// base64 decode the next page token
+	decoded, err := base64.StdEncoding.DecodeString(nextPageToken)
+	if err != nil {
+		return err
+	}
+
+	executions, err := temporal.GetClosedWorkflows(c.Request().Context(), []byte(decoded))
 	if err != nil {
 		return err
 	}
