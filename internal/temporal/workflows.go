@@ -2,6 +2,7 @@ package temporal
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -27,25 +28,65 @@ type WorkflowVideoIdResult struct {
 	ExternalVideoId string `json:"external_video_id"`
 }
 
-func GetActiveWorkflows(ctx context.Context) ([]*workflow.WorkflowExecutionInfo, error) {
-	w, err := temporalClient.Client.ListOpenWorkflow(ctx, &workflowservice.ListOpenWorkflowExecutionsRequest{})
-	if err != nil {
-		log.Error().Err(err).Msg("failed to list open workflows")
-		return nil, nil
-	}
-
-	return w.Executions, nil
-
+type WorkflowExecutionResponse struct {
+	Executions    []*workflow.WorkflowExecutionInfo `json:"executions"`
+	NextPageToken string                            `json:"next_page_token"`
 }
 
-func GetClosedWorkflows(ctx context.Context) ([]*workflow.WorkflowExecutionInfo, error) {
-	w, err := temporalClient.Client.ListClosedWorkflow(ctx, &workflowservice.ListClosedWorkflowExecutionsRequest{})
+func GetActiveWorkflows(ctx context.Context, inputPageToken []byte) (*WorkflowExecutionResponse, error) {
+	listRequest := &workflowservice.ListOpenWorkflowExecutionsRequest{
+		MaximumPageSize: 30,
+	}
+
+	if inputPageToken != nil {
+		listRequest.NextPageToken = inputPageToken
+	}
+
+	w, err := temporalClient.Client.ListOpenWorkflow(ctx, listRequest)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to list closed workflows")
 		return nil, nil
 	}
 
-	return w.Executions, nil
+	var nextPageToken string
+	if w.NextPageToken != nil {
+		token := string(w.NextPageToken)
+		// base64 encode
+		nextPageToken = base64.StdEncoding.EncodeToString([]byte(token))
+	}
+
+	return &WorkflowExecutionResponse{
+		Executions:    w.Executions,
+		NextPageToken: nextPageToken,
+	}, nil
+}
+
+func GetClosedWorkflows(ctx context.Context, inputPageToken []byte) (*WorkflowExecutionResponse, error) {
+	listRequest := &workflowservice.ListClosedWorkflowExecutionsRequest{
+		MaximumPageSize: 30,
+	}
+
+	if inputPageToken != nil {
+		listRequest.NextPageToken = inputPageToken
+	}
+
+	w, err := temporalClient.Client.ListClosedWorkflow(ctx, listRequest)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to list closed workflows")
+		return nil, nil
+	}
+
+	var nextPageToken string
+	if w.NextPageToken != nil {
+		token := string(w.NextPageToken)
+		// base64 encode
+		nextPageToken = base64.StdEncoding.EncodeToString([]byte(token))
+	}
+
+	return &WorkflowExecutionResponse{
+		Executions:    w.Executions,
+		NextPageToken: nextPageToken,
+	}, nil
 }
 
 func GetWorkflowById(ctx context.Context, workflowId string, runId string) (*workflow.WorkflowExecutionInfo, error) {
