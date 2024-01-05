@@ -882,18 +882,17 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
-	// loop through videos and find the one that matches vExtID
+	// attempt to find vod of current livestream
 	var previousVideoID string
 	for _, video := range videos {
 		if video.StreamID == input.Vod.ExtID {
 			previousVideoID = video.ID
 		}
 	}
-	// If no previous video ID was found, use the current video ID
+	// If no previous video ID was found, use a random id
 	if previousVideoID == "" {
-		cancel()
-		log.Warn().Msgf("Unable to convert chat due to no previous video IDs")
-		// TODO: exit gracefully
+		log.Warn().Msgf("Stream %s on channel %s has no previous video ID, using %s", input.VideoID, input.Channel.Name, previousVideoID)
+		previousVideoID = "132195945"
 	}
 
 	err = utils.ConvertTwitchLiveChatToVodChat(fmt.Sprintf("/tmp/%s_%s-live-chat.json", input.Vod.ExtID, input.Vod.ID), input.Channel.Name, input.Vod.ID.String(), input.Vod.ExtID, cID, input.Queue.ChatStart, string(previousVideoID))
