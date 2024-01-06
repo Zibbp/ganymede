@@ -1,7 +1,9 @@
 package http
 
 import (
+	"math/rand"
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -20,6 +22,7 @@ type ChannelService interface {
 }
 
 type CreateChannelRequest struct {
+	ExternalID    string `json:"ext_id"`
 	Name          string `json:"name" validate:"required,min=2,max=50"`
 	DisplayName   string `json:"display_name" validate:"required,min=2,max=50"`
 	ImagePath     string `json:"image_path" validate:"required,min=3"`
@@ -49,7 +52,13 @@ func (h *Handler) CreateChannel(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	if ccr.ExternalID == "" {
+		// generate random id - doesn't need to be a uuid
+		ccr.ExternalID = strconv.Itoa(rand.Intn(1000000))
+	}
+
 	ccDto := channel.Channel{
+		ExtID:       ccr.ExternalID,
 		Name:        ccr.Name,
 		DisplayName: ccr.DisplayName,
 		ImagePath:   ccr.ImagePath,
