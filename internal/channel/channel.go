@@ -40,7 +40,7 @@ func (s *Service) CreateChannel(channelDto Channel) (*ent.Channel, error) {
 	cha, err := s.Store.Client.Channel.Create().SetExtID(channelDto.ExtID).SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).Save(context.Background())
 	if err != nil {
 		if _, ok := err.(*ent.ConstraintError); ok {
-			return nil, fmt.Errorf("channel already exists")
+			return nil, fmt.Errorf("channel already exists: %v", err)
 		}
 		log.Debug().Err(err).Msg("error creating channel")
 		return nil, fmt.Errorf("error creating channel: %v", err)
