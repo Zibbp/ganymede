@@ -383,6 +383,32 @@ func DownloadTwitchLiveVideo(ctx context.Context, input dto.ArchiveVideoInput, c
 		return dbErr
 	}
 
+	// attempt to find vod id of the livesstream so the external id is correct
+	videos, err := twitch.GetVideosByUser(input.Channel.ExtID, "archive")
+	if err != nil {
+		cancel()
+		return temporal.NewApplicationError(err.Error(), "", nil)
+	}
+
+	// attempt to find vod of current livestream
+	var livestreamVodId string
+	for _, video := range videos {
+		if video.StreamID == input.Vod.ExtID {
+			livestreamVodId = video.ID
+			log.Info().Msgf("found vod id %s for livestream %s, updating database", livestreamVodId, input.Vod.ExtID)
+			// update vod with external id
+			_, dbErr = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetExtID(livestreamVodId).Save(ctx)
+			if dbErr != nil {
+				cancel()
+				return temporal.NewApplicationError(err.Error(), "", nil)
+			}
+		}
+	}
+
+	if livestreamVodId == "" {
+		log.Info().Msgf("no vod found for livestream %s, keeping live stream ID as external id", input.Vod.ExtID)
+	}
+
 	cancel()
 	return nil
 }
