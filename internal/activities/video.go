@@ -11,6 +11,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	entChannel "github.com/zibbp/ganymede/ent/channel"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/dto"
@@ -1049,6 +1051,75 @@ func TwitchSaveVideoChapters(ctx context.Context) error {
 		}
 		// sleep for 0.25 seconds to not hit rate limit
 		time.Sleep(250 * time.Millisecond)
+	}
+	cancel()
+	return nil
+}
+
+func UpdateTwitchLiveStreamArchivesWithVodIds(ctx context.Context) error {
+	// Create a new context with cancel
+	heartbeatCtx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Make sure to cancel when download is complete
+
+	// Start a goroutine that sends a heartbeat every 30 seconds
+	go func() {
+		for {
+			select {
+			case <-heartbeatCtx.Done():
+				// If the context is done, stop the goroutine
+				return
+			default:
+				// Otherwise, record a heartbeat and sleep for 30 seconds
+				activity.RecordHeartbeat(ctx, "my-heartbeat")
+				time.Sleep(30 * time.Second)
+			}
+		}
+	}()
+
+	// get all channels
+	channels, err := database.DB().Client.Channel.Query().All(ctx)
+	if err != nil {
+		cancel()
+		return temporal.NewApplicationError(err.Error(), "", nil)
+	}
+
+	for _, channel := range channels {
+		log.Info().Msgf("processing channel %s", channel.Name)
+		// get all videos for channel
+		videos, err := database.DB().Client.Vod.Query().Where(entVod.HasChannelWith(entChannel.ID(channel.ID))).All(ctx)
+		if err != nil {
+			cancel()
+			return temporal.NewApplicationError(err.Error(), "", nil)
+		}
+
+		// get all videos from twitch for channel
+		twitchChannelVideoss, err := twitch.GetVideosByUser(channel.ExtID, "archive")
+		if err != nil {
+			cancel()
+			return temporal.NewApplicationError(err.Error(), "", nil)
+		}
+
+		for _, video := range videos {
+			if video.Type != "live" {
+				continue
+			}
+			if video.ExtID == "" {
+				continue
+			}
+			// find video in twitch videos
+			for _, twitchVideo := range twitchChannelVideoss {
+				if video.ExtID == twitchVideo.StreamID {
+					log.Debug().Msgf("found video %s in twitch videos", video.ExtID)
+					// update video with vod id
+					_, err := database.DB().Client.Vod.UpdateOneID(video.ID).SetExtID(twitchVideo.ID).Save(ctx)
+					if err != nil {
+						cancel()
+						return temporal.NewApplicationError(err.Error(), "", nil)
+					}
+				}
+			}
+
+		}
 	}
 	cancel()
 	return nil
