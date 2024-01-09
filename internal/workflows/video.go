@@ -667,3 +667,24 @@ func SaveTwitchVideoChapters(ctx workflow.Context) error {
 
 	return nil
 }
+
+// *Low Level Workflow*
+func UpdateTwitchLiveStreamArchivesWithVodIds(ctx workflow.Context) error {
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		HeartbeatTimeout:    90 * time.Second,
+		StartToCloseTimeout: 168 * time.Hour,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    1 * time.Minute,
+			BackoffCoefficient: 2,
+			MaximumAttempts:    3,
+			MaximumInterval:    15 * time.Minute,
+		},
+	})
+
+	err := workflow.ExecuteActivity(ctx, activities.UpdateTwitchLiveStreamArchivesWithVodIds).Get(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

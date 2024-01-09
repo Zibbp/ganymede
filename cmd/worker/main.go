@@ -175,6 +175,7 @@ func main() {
 		w.RegisterWorkflow(workflows.ArchiveTwitchLiveChatWorkflow)
 		w.RegisterWorkflow(workflows.ConvertTwitchLiveChatWorkflow)
 		w.RegisterWorkflow(workflows.SaveTwitchVideoChapters)
+		w.RegisterWorkflow(workflows.UpdateTwitchLiveStreamArchivesWithVodIds)
 
 		w.RegisterActivity(activities.ArchiveVideoActivity)
 		w.RegisterActivity(activities.SaveTwitchVideoInfo)
@@ -193,6 +194,7 @@ func main() {
 		w.RegisterActivity(activities.KillTwitchLiveChatDownload)
 		w.RegisterActivity(activities.ConvertTwitchLiveChat)
 		w.RegisterActivity(activities.TwitchSaveVideoChapters)
+		w.RegisterActivity(activities.UpdateTwitchLiveStreamArchivesWithVodIds)
 
 		err = w.Start()
 		if err != nil {
