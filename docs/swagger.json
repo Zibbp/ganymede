@@ -1372,57 +1372,6 @@
                 }
             }
         },
-        "/live/chat-convert": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Adhoc convert chat endpoint. This is what happens when a live stream chat is converted to a \"vod\" chat.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Live"
-                ],
-                "summary": "Convert chat",
-                "parameters": [
-                    {
-                        "description": "Convert chat",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.ConvertChatRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/live/check": {
             "get": {
                 "security": [
@@ -1799,6 +1748,50 @@
                 }
             }
         },
+        "/playback/start": {
+            "post": {
+                "description": "Adds a view to the video local view count",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Playback"
+                ],
+                "summary": "Start playback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "vod id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/playback/status": {
             "post": {
                 "security": [
@@ -2000,6 +1993,12 @@
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "include multistream info",
+                        "name": "with_multistream_info",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3734,6 +3733,26 @@
                 }
             }
         },
+        "chapter.Chapter": {
+            "type": "object",
+            "properties": {
+                "end": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "chat.Comment": {
             "type": "object",
             "properties": {
@@ -3976,9 +3995,6 @@
         "config.Conf": {
             "type": "object",
             "properties": {
-                "active_queue_items": {
-                    "type": "integer"
-                },
                 "archive": {
                     "type": "object",
                     "properties": {
@@ -3987,14 +4003,34 @@
                         }
                     }
                 },
-                "db_seeded": {
-                    "type": "boolean"
-                },
                 "debug": {
                     "type": "boolean"
                 },
                 "live_check_interval_seconds": {
                     "type": "integer"
+                },
+                "livestream": {
+                    "type": "object",
+                    "properties": {
+                        "proxies": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/config.ProxyListItem"
+                            }
+                        },
+                        "proxy_enabled": {
+                            "type": "boolean"
+                        },
+                        "proxy_parameters": {
+                            "type": "string"
+                        },
+                        "proxy_whitelist": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
                 },
                 "notifications": {
                     "$ref": "#/definitions/config.Notification"
@@ -4024,6 +4060,9 @@
                 },
                 "storage_templates": {
                     "$ref": "#/definitions/config.StorageTemplate"
+                },
+                "video_check_interval_minutes": {
+                    "type": "integer"
                 }
             }
         },
@@ -4064,6 +4103,17 @@
                     "type": "string"
                 },
                 "video_success_webhook_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "config.ProxyListItem": {
+            "type": "object",
+            "properties": {
+                "header": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -4114,6 +4164,14 @@
                     "description": "Name holds the value of the \"name\" field.",
                     "type": "string"
                 },
+                "retention": {
+                    "description": "Retention holds the value of the \"retention\" field.",
+                    "type": "boolean"
+                },
+                "retention_days": {
+                    "description": "RetentionDays holds the value of the \"retention_days\" field.",
+                    "type": "integer"
+                },
                 "updated_at": {
                     "description": "UpdatedAt holds the value of the \"updated_at\" field.",
                     "type": "string"
@@ -4136,6 +4194,52 @@
                     "items": {
                         "$ref": "#/definitions/ent.Vod"
                     }
+                }
+            }
+        },
+        "ent.Chapter": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ChapterQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ChapterEdges"
+                        }
+                    ]
+                },
+                "end": {
+                    "description": "End holds the value of the \"end\" field.",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "start": {
+                    "description": "Start holds the value of the \"start\" field.",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "Title holds the value of the \"title\" field.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type holds the value of the \"type\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ChapterEdges": {
+            "type": "object",
+            "properties": {
+                "vod": {
+                    "description": "Vod holds the value of the vod edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Vod"
+                        }
+                    ]
                 }
             }
         },
@@ -4262,6 +4366,48 @@
                 }
             }
         },
+        "ent.MultistreamInfo": {
+            "type": "object",
+            "properties": {
+                "delay_ms": {
+                    "description": "DelayMs holds the value of the \"delay_ms\" field.",
+                    "type": "integer"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the MultistreamInfoQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.MultistreamInfoEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.MultistreamInfoEdges": {
+            "type": "object",
+            "properties": {
+                "playlist": {
+                    "description": "Playlist holds the value of the playlist edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Playlist"
+                        }
+                    ]
+                },
+                "vod": {
+                    "description": "Vod holds the value of the vod edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Vod"
+                        }
+                    ]
+                }
+            }
+        },
         "ent.Playback": {
             "type": "object",
             "properties": {
@@ -4339,6 +4485,13 @@
         "ent.PlaylistEdges": {
             "type": "object",
             "properties": {
+                "multistream_info": {
+                    "description": "MultistreamInfo holds the value of the multistream_info edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.MultistreamInfo"
+                    }
+                },
                 "vods": {
                     "description": "Vods holds the value of the vods edge.",
                     "type": "array",
@@ -4586,6 +4739,14 @@
                     "description": "InfoPath holds the value of the \"info_path\" field.",
                     "type": "string"
                 },
+                "local_views": {
+                    "description": "LocalViews holds the value of the \"local_views\" field.",
+                    "type": "integer"
+                },
+                "locked": {
+                    "description": "Locked holds the value of the \"locked\" field.",
+                    "type": "boolean"
+                },
                 "platform": {
                     "description": "The platform the VOD is from, takes an enum.",
                     "allOf": [
@@ -4651,6 +4812,20 @@
                         }
                     ]
                 },
+                "chapters": {
+                    "description": "Chapters holds the value of the chapters edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Chapter"
+                    }
+                },
+                "multistream_info": {
+                    "description": "MultistreamInfo holds the value of the multistream_info edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.MultistreamInfo"
+                    }
+                },
                 "playlists": {
                     "description": "Playlists holds the value of the playlists edge.",
                     "type": "array",
@@ -4711,6 +4886,9 @@
                         "best",
                         "source",
                         "720p60",
+                        "480p",
+                        "360p",
+                        "160p",
                         "480p30",
                         "360p30",
                         "160p30"
@@ -4775,6 +4953,9 @@
                         "best",
                         "source",
                         "720p60",
+                        "480p",
+                        "360p",
+                        "160p",
                         "480p30",
                         "360p30",
                         "160p30"
@@ -4816,7 +4997,10 @@
                         "720p60",
                         "480p30",
                         "360p30",
-                        "160p30"
+                        "160p30",
+                        "480p",
+                        "360p",
+                        "160p"
                     ],
                     "allOf": [
                         {
@@ -4852,37 +5036,6 @@
                 }
             }
         },
-        "http.ConvertChatRequest": {
-            "type": "object",
-            "required": [
-                "channel_id",
-                "channel_name",
-                "chat_start",
-                "file_name",
-                "vod_external_id",
-                "vod_id"
-            ],
-            "properties": {
-                "channel_id": {
-                    "type": "integer"
-                },
-                "channel_name": {
-                    "type": "string"
-                },
-                "chat_start": {
-                    "type": "string"
-                },
-                "file_name": {
-                    "type": "string"
-                },
-                "vod_external_id": {
-                    "type": "string"
-                },
-                "vod_id": {
-                    "type": "string"
-                }
-            }
-        },
         "http.CreateChannelRequest": {
             "type": "object",
             "required": [
@@ -4896,6 +5049,9 @@
                     "maxLength": 50,
                     "minLength": 2
                 },
+                "ext_id": {
+                    "type": "string"
+                },
                 "image_path": {
                     "type": "string",
                     "minLength": 3
@@ -4904,6 +5060,12 @@
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 2
+                },
+                "retention": {
+                    "type": "boolean"
+                },
+                "retention_days": {
+                    "type": "integer"
                 }
             }
         },
@@ -4970,6 +5132,9 @@
                 },
                 "info_path": {
                     "type": "string"
+                },
+                "locked": {
+                    "type": "boolean"
                 },
                 "platform": {
                     "enum": [
@@ -5099,6 +5264,20 @@
                 }
             }
         },
+        "http.SetVodDelayPlaylistRequest": {
+            "type": "object",
+            "required": [
+                "vod_id"
+            ],
+            "properties": {
+                "delay_ms": {
+                    "type": "integer"
+                },
+                "vod_id": {
+                    "type": "string"
+                }
+            }
+        },
         "http.StartTaskRequest": {
             "type": "object",
             "required": [
@@ -5113,7 +5292,8 @@
                         "get_jwks",
                         "twitch_auth",
                         "queue_hold_check",
-                        "storage_migration"
+                        "storage_migration",
+                        "prune_videos"
                     ]
                 }
             }
@@ -5149,6 +5329,29 @@
                     "properties": {
                         "save_as_hls": {
                             "type": "boolean"
+                        }
+                    }
+                },
+                "livestream": {
+                    "type": "object",
+                    "properties": {
+                        "proxies": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/config.ProxyListItem"
+                            }
+                        },
+                        "proxy_enabled": {
+                            "type": "boolean"
+                        },
+                        "proxy_parameters": {
+                            "type": "string"
+                        },
+                        "proxy_whitelist": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     }
                 },
@@ -5469,6 +5672,9 @@
                         "best",
                         "source",
                         "720p60",
+                        "480p",
+                        "360p",
+                        "160p",
                         "480p30",
                         "360p30",
                         "160p30"
@@ -5585,6 +5791,12 @@
         "twitch.Vod": {
             "type": "object",
             "properties": {
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/chapter.Chapter"
+                    }
+                },
                 "created_at": {
                     "type": "string"
                 },

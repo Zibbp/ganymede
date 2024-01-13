@@ -127,8 +127,12 @@ func (s *Service) GetPlaylists(c echo.Context) ([]*ent.Playlist, error) {
 	return playlists, nil
 }
 
-func (s *Service) GetPlaylist(c echo.Context, playlistID uuid.UUID) (*ent.Playlist, error) {
-	rPlaylist, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).WithVods(func(vq *ent.VodQuery) { vq.WithChannel() }).WithMultistreamInfo(func(miq *ent.MultistreamInfoQuery) { miq.WithVod() }).Order(ent.Desc(playlist.FieldCreatedAt)).Only(c.Request().Context())
+func (s *Service) GetPlaylist(c echo.Context, playlistID uuid.UUID, withMultistreamInfo bool) (*ent.Playlist, error) {
+	playlistQuery := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).WithVods(func(vq *ent.VodQuery) { vq.WithChannel() })
+	if withMultistreamInfo {
+		playlistQuery.WithMultistreamInfo(func(miq *ent.MultistreamInfoQuery) { miq.WithVod() })
+	}
+	rPlaylist, err := playlistQuery.Order(ent.Desc(playlist.FieldCreatedAt)).Only(c.Request().Context())
 	// Order VODs by date streamed
 	tmpVods := rPlaylist.Edges.Vods
 	sort.Slice(tmpVods, func(i, j int) bool {

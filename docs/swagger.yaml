@@ -38,6 +38,19 @@ definitions:
       vod:
         $ref: '#/definitions/ent.Vod'
     type: object
+  chapter.Chapter:
+    properties:
+      end:
+        type: integer
+      id:
+        type: string
+      start:
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+    type: object
   chat.Comment:
     properties:
       _id:
@@ -196,19 +209,30 @@ definitions:
     type: object
   config.Conf:
     properties:
-      active_queue_items:
-        type: integer
       archive:
         properties:
           save_as_hls:
             type: boolean
         type: object
-      db_seeded:
-        type: boolean
       debug:
         type: boolean
       live_check_interval_seconds:
         type: integer
+      livestream:
+        properties:
+          proxies:
+            items:
+              $ref: '#/definitions/config.ProxyListItem'
+            type: array
+          proxy_enabled:
+            type: boolean
+          proxy_parameters:
+            type: string
+          proxy_whitelist:
+            items:
+              type: string
+            type: array
+        type: object
       notifications:
         $ref: '#/definitions/config.Notification'
       oauth_enabled:
@@ -228,6 +252,8 @@ definitions:
         type: boolean
       storage_templates:
         $ref: '#/definitions/config.StorageTemplate'
+      video_check_interval_minutes:
+        type: integer
     type: object
   config.Notification:
     properties:
@@ -254,6 +280,13 @@ definitions:
       video_success_template:
         type: string
       video_success_webhook_url:
+        type: string
+    type: object
+  config.ProxyListItem:
+    properties:
+      header:
+        type: string
+      url:
         type: string
     type: object
   config.StorageTemplate:
@@ -289,6 +322,12 @@ definitions:
       name:
         description: Name holds the value of the "name" field.
         type: string
+      retention:
+        description: Retention holds the value of the "retention" field.
+        type: boolean
+      retention_days:
+        description: RetentionDays holds the value of the "retention_days" field.
+        type: integer
       updated_at:
         description: UpdatedAt holds the value of the "updated_at" field.
         type: string
@@ -305,6 +344,37 @@ definitions:
         items:
           $ref: '#/definitions/ent.Vod'
         type: array
+    type: object
+  ent.Chapter:
+    properties:
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.ChapterEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the ChapterQuery when eager-loading is set.
+      end:
+        description: End holds the value of the "end" field.
+        type: integer
+      id:
+        description: ID of the ent.
+        type: string
+      start:
+        description: Start holds the value of the "start" field.
+        type: integer
+      title:
+        description: Title holds the value of the "title" field.
+        type: string
+      type:
+        description: Type holds the value of the "type" field.
+        type: string
+    type: object
+  ent.ChapterEdges:
+    properties:
+      vod:
+        allOf:
+        - $ref: '#/definitions/ent.Vod'
+        description: Vod holds the value of the vod edge.
     type: object
   ent.Live:
     properties:
@@ -391,6 +461,32 @@ definitions:
         - $ref: '#/definitions/ent.Channel'
         description: Channel holds the value of the channel edge.
     type: object
+  ent.MultistreamInfo:
+    properties:
+      delay_ms:
+        description: DelayMs holds the value of the "delay_ms" field.
+        type: integer
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.MultistreamInfoEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the MultistreamInfoQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: integer
+    type: object
+  ent.MultistreamInfoEdges:
+    properties:
+      playlist:
+        allOf:
+        - $ref: '#/definitions/ent.Playlist'
+        description: Playlist holds the value of the playlist edge.
+      vod:
+        allOf:
+        - $ref: '#/definitions/ent.Vod'
+        description: Vod holds the value of the vod edge.
+    type: object
   ent.Playback:
     properties:
       created_at:
@@ -445,6 +541,11 @@ definitions:
     type: object
   ent.PlaylistEdges:
     properties:
+      multistream_info:
+        description: MultistreamInfo holds the value of the multistream_info edge.
+        items:
+          $ref: '#/definitions/ent.MultistreamInfo'
+        type: array
       vods:
         description: Vods holds the value of the vods edge.
         items:
@@ -608,6 +709,12 @@ definitions:
       info_path:
         description: InfoPath holds the value of the "info_path" field.
         type: string
+      local_views:
+        description: LocalViews holds the value of the "local_views" field.
+        type: integer
+      locked:
+        description: Locked holds the value of the "locked" field.
+        type: boolean
       platform:
         allOf:
         - $ref: '#/definitions/utils.VodPlatform'
@@ -651,6 +758,16 @@ definitions:
         allOf:
         - $ref: '#/definitions/ent.Channel'
         description: Channel holds the value of the channel edge.
+      chapters:
+        description: Chapters holds the value of the chapters edge.
+        items:
+          $ref: '#/definitions/ent.Chapter'
+        type: array
+      multistream_info:
+        description: MultistreamInfo holds the value of the multistream_info edge.
+        items:
+          $ref: '#/definitions/ent.MultistreamInfo'
+        type: array
       playlists:
         description: Playlists holds the value of the playlists edge.
         items:
@@ -688,6 +805,9 @@ definitions:
         - best
         - source
         - 720p60
+        - 480p
+        - 360p
+        - 160p
         - 480p30
         - 360p30
         - 160p30
@@ -732,6 +852,9 @@ definitions:
         - best
         - source
         - 720p60
+        - 480p
+        - 360p
+        - 160p
         - 480p30
         - 360p30
         - 160p30
@@ -765,6 +888,9 @@ definitions:
         - 480p30
         - 360p30
         - 160p30
+        - 480p
+        - 360p
+        - 160p
       render_chat:
         type: boolean
       vod_id:
@@ -787,33 +913,13 @@ definitions:
     - new_password
     - old_password
     type: object
-  http.ConvertChatRequest:
-    properties:
-      channel_id:
-        type: integer
-      channel_name:
-        type: string
-      chat_start:
-        type: string
-      file_name:
-        type: string
-      vod_external_id:
-        type: string
-      vod_id:
-        type: string
-    required:
-    - channel_id
-    - channel_name
-    - chat_start
-    - file_name
-    - vod_external_id
-    - vod_id
-    type: object
   http.CreateChannelRequest:
     properties:
       display_name:
         maxLength: 50
         minLength: 2
+        type: string
+      ext_id:
         type: string
       image_path:
         minLength: 3
@@ -822,6 +928,10 @@ definitions:
         maxLength: 50
         minLength: 2
         type: string
+      retention:
+        type: boolean
+      retention_days:
+        type: integer
     required:
     - display_name
     - image_path
@@ -862,6 +972,8 @@ definitions:
         type: string
       info_path:
         type: string
+      locked:
+        type: boolean
       platform:
         allOf:
         - $ref: '#/definitions/utils.VodPlatform'
@@ -960,6 +1072,15 @@ definitions:
     - queue_id
     - task
     type: object
+  http.SetVodDelayPlaylistRequest:
+    properties:
+      delay_ms:
+        type: integer
+      vod_id:
+        type: string
+    required:
+    - vod_id
+    type: object
   http.StartTaskRequest:
     properties:
       task:
@@ -970,6 +1091,7 @@ definitions:
         - twitch_auth
         - queue_hold_check
         - storage_migration
+        - prune_videos
         type: string
     required:
     - task
@@ -997,6 +1119,21 @@ definitions:
         properties:
           save_as_hls:
             type: boolean
+        type: object
+      livestream:
+        properties:
+          proxies:
+            items:
+              $ref: '#/definitions/config.ProxyListItem'
+            type: array
+          proxy_enabled:
+            type: boolean
+          proxy_parameters:
+            type: string
+          proxy_whitelist:
+            items:
+              type: string
+            type: array
         type: object
       parameters:
         properties:
@@ -1204,6 +1341,9 @@ definitions:
         - best
         - source
         - 720p60
+        - 480p
+        - 360p
+        - 160p
         - 480p30
         - 360p30
         - 160p30
@@ -1283,6 +1423,10 @@ definitions:
     type: object
   twitch.Vod:
     properties:
+      chapters:
+        items:
+          $ref: '#/definitions/chapter.Chapter'
+        type: array
       created_at:
         type: string
       description:
@@ -2358,39 +2502,6 @@ paths:
       summary: Archive a channel's live stream
       tags:
       - Live
-  /live/chat-convert:
-    post:
-      consumes:
-      - application/json
-      description: Adhoc convert chat endpoint. This is what happens when a live stream
-        chat is converted to a "vod" chat.
-      parameters:
-      - description: Convert chat
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/http.ConvertChatRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
-      summary: Convert chat
-      tags:
-      - Live
   /live/check:
     get:
       consumes:
@@ -2594,6 +2705,35 @@ paths:
       summary: Get progress
       tags:
       - Playback
+  /playback/start:
+    post:
+      consumes:
+      - application/json
+      description: Adds a view to the video local view count
+      parameters:
+      - description: vod id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Start playback
+      tags:
+      - Playback
   /playback/status:
     post:
       consumes:
@@ -2719,6 +2859,10 @@ paths:
         name: id
         required: true
         type: string
+      - description: include multistream info
+        in: query
+        name: with_multistream_info
+        type: boolean
       produces:
       - application/json
       responses:
