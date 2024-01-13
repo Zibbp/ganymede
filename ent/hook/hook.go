@@ -57,6 +57,18 @@ func (f LiveCategoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiveCategoryMutation", m)
 }
 
+// The MultistreamInfoFunc type is an adapter to allow the use of ordinary
+// function as MultistreamInfo mutator.
+type MultistreamInfoFunc func(context.Context, *ent.MultistreamInfoMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MultistreamInfoFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MultistreamInfoMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MultistreamInfoMutation", m)
+}
+
 // The PlaybackFunc type is an adapter to allow the use of ordinary
 // function as Playback mutator.
 type PlaybackFunc func(context.Context, *ent.PlaybackMutation) (ent.Value, error)

@@ -67,6 +67,8 @@ const (
 	EdgeQueue = "queue"
 	// EdgePlaylists holds the string denoting the playlists edge name in mutations.
 	EdgePlaylists = "playlists"
+	// EdgeMultistreamInfo holds the string denoting the multistream_info edge name in mutations.
+	EdgeMultistreamInfo = "multistream_info"
 	// EdgeChapters holds the string denoting the chapters edge name in mutations.
 	EdgeChapters = "chapters"
 	// Table holds the table name of the vod in the database.
@@ -90,6 +92,13 @@ const (
 	// PlaylistsInverseTable is the table name for the Playlist entity.
 	// It exists in this package in order to avoid circular dependency with the "playlist" package.
 	PlaylistsInverseTable = "playlists"
+	// MultistreamInfoTable is the table that holds the multistream_info relation/edge.
+	MultistreamInfoTable = "multistream_infos"
+	// MultistreamInfoInverseTable is the table name for the MultistreamInfo entity.
+	// It exists in this package in order to avoid circular dependency with the "multistreaminfo" package.
+	MultistreamInfoInverseTable = "multistream_infos"
+	// MultistreamInfoColumn is the table column denoting the multistream_info relation/edge.
+	MultistreamInfoColumn = "multistream_info_vod"
 	// ChaptersTable is the table that holds the chapters relation/edge.
 	ChaptersTable = "chapters"
 	// ChaptersInverseTable is the table name for the Chapter entity.
@@ -346,6 +355,20 @@ func ByPlaylists(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByMultistreamInfoCount orders the results by multistream_info count.
+func ByMultistreamInfoCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMultistreamInfoStep(), opts...)
+	}
+}
+
+// ByMultistreamInfo orders the results by multistream_info terms.
+func ByMultistreamInfo(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMultistreamInfoStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByChaptersCount orders the results by chapters count.
 func ByChaptersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -378,6 +401,13 @@ func newPlaylistsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PlaylistsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, PlaylistsTable, PlaylistsPrimaryKey...),
+	)
+}
+func newMultistreamInfoStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MultistreamInfoInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, MultistreamInfoTable, MultistreamInfoColumn),
 	)
 }
 func newChaptersStep() *sqlgraph.Step {

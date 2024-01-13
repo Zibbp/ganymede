@@ -255,6 +255,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	playlistGroup.GET("", h.GetPlaylists)
 	playlistGroup.POST("", h.CreatePlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	playlistGroup.POST("/:id", h.AddVodToPlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	playlistGroup.PUT("/:id/delay", h.SetVodDelayOnPlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	playlistGroup.DELETE("/:id/vod", h.DeleteVodFromPlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	playlistGroup.DELETE("/:id", h.DeletePlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	playlistGroup.PUT("/:id", h.UpdatePlaylist, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))

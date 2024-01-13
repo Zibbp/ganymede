@@ -1406,6 +1406,29 @@ func HasPlaylistsWith(preds ...predicate.Playlist) predicate.Vod {
 	})
 }
 
+// HasMultistreamInfo applies the HasEdge predicate on the "multistream_info" edge.
+func HasMultistreamInfo() predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, MultistreamInfoTable, MultistreamInfoColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMultistreamInfoWith applies the HasEdge predicate on the "multistream_info" edge with a given conditions (other predicates).
+func HasMultistreamInfoWith(preds ...predicate.MultistreamInfo) predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		step := newMultistreamInfoStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasChapters applies the HasEdge predicate on the "chapters" edge.
 func HasChapters() predicate.Vod {
 	return predicate.Vod(func(s *sql.Selector) {

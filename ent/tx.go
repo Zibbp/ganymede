@@ -20,6 +20,8 @@ type Tx struct {
 	Live *LiveClient
 	// LiveCategory is the client for interacting with the LiveCategory builders.
 	LiveCategory *LiveCategoryClient
+	// MultistreamInfo is the client for interacting with the MultistreamInfo builders.
+	MultistreamInfo *MultistreamInfoClient
 	// Playback is the client for interacting with the Playback builders.
 	Playback *PlaybackClient
 	// Playlist is the client for interacting with the Playlist builders.
@@ -167,6 +169,7 @@ func (tx *Tx) init() {
 	tx.Chapter = NewChapterClient(tx.config)
 	tx.Live = NewLiveClient(tx.config)
 	tx.LiveCategory = NewLiveCategoryClient(tx.config)
+	tx.MultistreamInfo = NewMultistreamInfoClient(tx.config)
 	tx.Playback = NewPlaybackClient(tx.config)
 	tx.Playlist = NewPlaylistClient(tx.config)
 	tx.Queue = NewQueueClient(tx.config)

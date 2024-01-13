@@ -16,6 +16,7 @@ import (
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -82,16 +83,17 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			channel.Table:        channel.ValidColumn,
-			chapter.Table:        chapter.ValidColumn,
-			live.Table:           live.ValidColumn,
-			livecategory.Table:   livecategory.ValidColumn,
-			playback.Table:       playback.ValidColumn,
-			playlist.Table:       playlist.ValidColumn,
-			queue.Table:          queue.ValidColumn,
-			twitchcategory.Table: twitchcategory.ValidColumn,
-			user.Table:           user.ValidColumn,
-			vod.Table:            vod.ValidColumn,
+			channel.Table:         channel.ValidColumn,
+			chapter.Table:         chapter.ValidColumn,
+			live.Table:            live.ValidColumn,
+			livecategory.Table:    livecategory.ValidColumn,
+			multistreaminfo.Table: multistreaminfo.ValidColumn,
+			playback.Table:        playback.ValidColumn,
+			playlist.Table:        playlist.ValidColumn,
+			queue.Table:           queue.ValidColumn,
+			twitchcategory.Table:  twitchcategory.ValidColumn,
+			user.Table:            user.ValidColumn,
+			vod.Table:             vod.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)
