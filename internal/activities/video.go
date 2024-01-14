@@ -596,6 +596,7 @@ func DownloadTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) er
 		return dbErr
 	}
 	stopHeartbeat <- true
+
 	return nil
 }
 

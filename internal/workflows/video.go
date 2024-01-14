@@ -2,7 +2,6 @@ package workflows
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -310,7 +309,7 @@ func ArchiveTwitchLiveChatWorkflow(ctx workflow.Context, input dto.ArchiveVideoI
 	// download happened earlier, this is post-download tasks
 
 	var signal utils.ArchiveTwitchLiveChatStartSignal
-	signalChan := workflow.GetSignalChannel(ctx, "continue-chat-arhive")
+	signalChan := workflow.GetSignalChannel(ctx, "continue-chat-archive")
 	signalChan.Receive(ctx, &signal)
 
 	log.Info().Msgf("Received signal: %v", signal)
@@ -430,9 +429,10 @@ func DownloadTwitchLiveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVide
 		return workflowErrorHandler(err, input, "download-video")
 	}
 
-	future := workflow.RequestCancelExternalWorkflow(ctx, input.LiveChatWorkflowId, "")
-	if err := future.Get(ctx, nil); err != nil {
-		return err
+	// kill live chat download
+	err = workflow.ExecuteActivity(ctx, activities.KillTwitchLiveChatDownload, input).Get(ctx, nil)
+	if err != nil {
+		return workflowErrorHandler(err, input, "kill-chat-download")
 	}
 
 	// mark live channel as not live
@@ -554,30 +554,6 @@ func DownloadTwitchLiveChatWorkflow(ctx workflow.Context, input dto.ArchiveVideo
 		WaitForCancellation: false,
 	})
 
-	defer func() {
-
-		if !errors.Is(ctx.Err(), workflow.ErrCanceled) {
-			return
-		}
-
-		// When the Workflow is canceled, it has to get a new disconnected context to execute any Activities
-		log.Debug().Msgf("Killing chat download: %s", input.LiveChatWorkflowId)
-		newCtx, _ := workflow.NewDisconnectedContext(ctx)
-		err := workflow.ExecuteActivity(newCtx, activities.KillTwitchLiveChatDownload, input).Get(ctx, nil)
-		if err != nil {
-			log.Error().Err(err).Msgf("error killing chat download: %v", err)
-		}
-
-		log.Debug().Msgf("Sending signal to continue chat archive: %s", input.LiveChatArchiveWorkflowId)
-		signal := utils.ArchiveTwitchLiveChatStartSignal{
-			Start: true,
-		}
-		err = workflow.SignalExternalWorkflow(ctx, input.LiveChatArchiveWorkflowId, "", "continue-chat-arhive", signal).Get(ctx, nil)
-		if err != nil {
-			log.Error().Err(err).Msgf("error sending signal to continue chat archive: %v", err)
-		}
-	}()
-
 	var signal utils.ArchiveTwitchLiveChatStartSignal
 	signalChan := workflow.GetSignalChannel(ctx, "start-chat-download")
 	signalChan.Receive(ctx, &signal)
@@ -592,6 +568,15 @@ func DownloadTwitchLiveChatWorkflow(ctx workflow.Context, input dto.ArchiveVideo
 	err = checkIfTasksAreDone(input)
 	if err != nil {
 		return err
+	}
+
+	log.Debug().Msgf("Sending signal to continue chat archive: %s", input.LiveChatArchiveWorkflowId)
+	continueSignal := utils.ArchiveTwitchLiveChatStartSignal{
+		Start: true,
+	}
+	err = workflow.SignalExternalWorkflow(ctx, input.LiveChatArchiveWorkflowId, "", "continue-chat-archive", continueSignal).Get(ctx, nil)
+	if err != nil {
+		log.Error().Err(err).Msgf("error sending signal to continue chat archive: %v", err)
 	}
 
 	return nil
