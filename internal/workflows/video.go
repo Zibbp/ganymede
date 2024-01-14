@@ -134,20 +134,23 @@ func ArchiveLiveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput)
 		return err
 	}
 
+	chatCtx := workflow.WithChildOptions(ctx, workflow.ChildWorkflowOptions{})
+	downloadChatCtx := workflow.WithChildOptions(ctx, workflow.ChildWorkflowOptions{})
+
 	var chatFuture workflow.ChildWorkflowFuture
 	if input.Queue.ChatProcessing {
-		chatFuture = workflow.ExecuteChildWorkflow(ctx, ArchiveTwitchLiveChatWorkflow, input)
+		chatFuture = workflow.ExecuteChildWorkflow(chatCtx, ArchiveTwitchLiveChatWorkflow, input)
 		var chatWorkflowExecution workflow.Execution
-		_ = chatFuture.GetChildWorkflowExecution().Get(ctx, &chatWorkflowExecution)
+		_ = chatFuture.GetChildWorkflowExecution().Get(chatCtx, &chatWorkflowExecution)
 
 		log.Debug().Msgf("Live chat archive workflow ID: %s", chatWorkflowExecution.ID)
 		input.LiveChatArchiveWorkflowId = chatWorkflowExecution.ID
 
 		// execute chat download first to get a workflow ID for signals
 		// the actual download of chat is held until the video is about to start
-		liveChatFuture := workflow.ExecuteChildWorkflow(ctx, DownloadTwitchLiveChatWorkflow, input)
+		liveChatFuture := workflow.ExecuteChildWorkflow(downloadChatCtx, DownloadTwitchLiveChatWorkflow, input)
 		var liveChatWorkflowExecution workflow.Execution
-		_ = liveChatFuture.GetChildWorkflowExecution().Get(ctx, &liveChatWorkflowExecution)
+		_ = liveChatFuture.GetChildWorkflowExecution().Get(downloadChatCtx, &liveChatWorkflowExecution)
 
 		log.Debug().Msgf("Live chat workflow ID: %s", liveChatWorkflowExecution.ID)
 		input.LiveChatWorkflowId = liveChatWorkflowExecution.ID
