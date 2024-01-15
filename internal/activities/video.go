@@ -694,11 +694,12 @@ func KillTwitchLiveChatDownload(ctx context.Context, input dto.ArchiveVideoInput
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 	// convert out to a string and remove newline
-	pid := strings.TrimSuffix(string(out), "\n")
+	pid := strings.TrimSpace(string(out))
+	pid = strings.ReplaceAll(pid, "\n", "")
 	log.Debug().Msgf("found pid %s for chat_downloader", string(out))
 
 	// kill pid
-	cmd = osExec.Command("kill", "-2", pid)
+	cmd = osExec.Command("kill", "-15", pid)
 	_, err = cmd.Output()
 	if err != nil {
 		return temporal.NewApplicationError(err.Error(), "", nil)
