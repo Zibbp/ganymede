@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	osExec "os/exec"
 	"strconv"
 	"strings"
@@ -373,9 +374,18 @@ func DownloadTwitchLiveChat(ctx context.Context, v *ent.Vod, ch *ent.Channel, q 
 		return err
 	}
 
+	// Wait for the command to finish
 	if err := cmd.Wait(); err != nil {
-		log.Error().Err(err).Msg("error waiting for chat_downloader for live chat download")
-		return err
+		// Check if the error is due to a signal
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exitErr.Sys().(interface{ ExitStatus() int }); ok {
+				if status.ExitStatus() != -1 {
+					fmt.Println("chat_downloader terminated by signal:", status.ExitStatus())
+				}
+			}
+		}
+
+		fmt.Println("error in chat_downloader for live chat download:", err)
 	}
 
 	log.Debug().Msgf("finished downloading live chat for %s", v.ExtID)

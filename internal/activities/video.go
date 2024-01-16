@@ -23,6 +23,21 @@ import (
 	"go.temporal.io/sdk/temporal"
 )
 
+func sendHeartbeat(ctx context.Context, msg string, stop chan bool) {
+	ticker := time.NewTicker(20 * time.Second)
+	log.Debug().Msgf("starting heartbeat %s", msg)
+	for {
+		select {
+		case <-ticker.C:
+			activity.RecordHeartbeat(ctx, msg)
+		case <-stop:
+			log.Debug().Msgf("stopping heartbeat %s", msg)
+			ticker.Stop()
+			return
+		}
+	}
+}
+
 func convertTwitchChaptersToChapters(chapters []twitch.Node, duration int) ([]chapter.Chapter, error) {
 	if len(chapters) == 0 {
 		return nil, fmt.Errorf("no chapters found")
@@ -288,44 +303,28 @@ func DownloadTwitchVideo(ctx context.Context, input dto.ArchiveVideoInput) error
 		return dbErr
 	}
 
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, fmt.Sprintf("download-video-%s", input.VideoID), stopHeartbeat)
 
 	// Start the download
 	err := exec.DownloadTwitchVodVideo(input.Vod)
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoDownload(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoDownload(utils.Success).Save(ctx)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
 
-	cancel()
+	stopHeartbeat <- true
 	return nil
 }
 
@@ -336,60 +335,44 @@ func DownloadTwitchLiveVideo(ctx context.Context, input dto.ArchiveVideoInput, c
 		return dbErr
 	}
 
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, fmt.Sprintf("download-livevideo-%s", input.VideoID), stopHeartbeat)
 
 	// Start the download
 	err := exec.DownloadTwitchLiveVideo(ctx, input.Vod, input.Channel, input.LiveChatWorkflowId)
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoDownload(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoDownload(utils.Success).Save(ctx)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
 
 	// Update video duration with duration from downloaded video
 	duration, err := exec.GetVideoDuration(fmt.Sprintf("/tmp/%s_%s-video.mp4", input.Vod.ExtID, input.Vod.ID))
 	if err != nil {
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 	_, dbErr = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetDuration(duration).Save(ctx)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
 
 	// attempt to find vod id of the livesstream so the external id is correct
 	videos, err := twitch.GetVideosByUser(input.Channel.ExtID, "archive")
 	if err != nil {
-		cancel()
-		return temporal.NewApplicationError(err.Error(), "", nil)
+		stopHeartbeat <- true
+		log.Err(err).Msg("error getting videos from twitch api")
 	}
 
 	// attempt to find vod of current livestream
@@ -401,8 +384,8 @@ func DownloadTwitchLiveVideo(ctx context.Context, input dto.ArchiveVideoInput, c
 			// update vod with external id
 			_, dbErr = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetExtID(livestreamVodId).Save(ctx)
 			if dbErr != nil {
-				cancel()
-				return temporal.NewApplicationError(err.Error(), "", nil)
+				stopHeartbeat <- true
+				log.Err(dbErr).Msg("error updating vod with external id")
 			}
 		}
 	}
@@ -411,7 +394,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, input dto.ArchiveVideoInput, c
 		log.Info().Msgf("no vod found for livestream %s, keeping live stream ID as external id", input.Vod.ExtID)
 	}
 
-	cancel()
+	stopHeartbeat <- true
 	return nil
 }
 
@@ -422,34 +405,18 @@ func PostprocessVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 		return dbErr
 	}
 
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, fmt.Sprintf("postprocess-video-%s", input.VideoID), stopHeartbeat)
 
 	// Start post process
 	err := exec.ConvertTwitchVodVideo(input.Vod)
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoConvert(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
@@ -459,21 +426,21 @@ func PostprocessVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 		if err != nil {
 			_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoConvert(utils.Failed).Save(ctx)
 			if dbErr != nil {
-				cancel()
+				stopHeartbeat <- true
 				return dbErr
 			}
-			cancel()
+			stopHeartbeat <- true
 			return temporal.NewApplicationError(err.Error(), "", nil)
 		}
 	}
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoConvert(utils.Success).Save(ctx)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
 
-	cancel()
+	stopHeartbeat <- true
 	return nil
 }
 
@@ -484,24 +451,8 @@ func MoveVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 		return dbErr
 	}
 
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, fmt.Sprintf("move-video-%s", input.VideoID), stopHeartbeat)
 
 	if viper.GetBool("archive.save_as_hls") {
 		sourcePath := fmt.Sprintf("/tmp/%s_%s-video_hls0", input.Vod.ExtID, input.Vod.ID)
@@ -510,16 +461,16 @@ func MoveVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 		if err != nil {
 			_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoMove(utils.Failed).Save(ctx)
 			if dbErr != nil {
-				cancel()
+				stopHeartbeat <- true
 				return dbErr
 			}
-			cancel()
+			stopHeartbeat <- true
 			return temporal.NewApplicationError(err.Error(), "", nil)
 		}
 		// Update video path to hls path
 		_, dbErr = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetVideoPath(fmt.Sprintf("/vods/%s/%s/%s-video_hls/%s-video.m3u8", input.Channel.Name, input.Vod.FolderName, input.Vod.FileName, input.Vod.ExtID)).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
 	} else {
@@ -530,10 +481,10 @@ func MoveVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 		if err != nil {
 			_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoMove(utils.Failed).Save(ctx)
 			if dbErr != nil {
-				cancel()
+				stopHeartbeat <- true
 				return dbErr
 			}
-			cancel()
+			stopHeartbeat <- true
 			return temporal.NewApplicationError(err.Error(), "", nil)
 		}
 	}
@@ -547,11 +498,11 @@ func MoveVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoMove(utils.Success).Save(ctx)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
 
-	cancel()
+	stopHeartbeat <- true
 	return nil
 }
 
@@ -562,34 +513,18 @@ func DownloadTwitchChat(ctx context.Context, input dto.ArchiveVideoInput) error 
 		return dbErr
 	}
 
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, fmt.Sprintf("download-chat-%s", input.VideoID), stopHeartbeat)
 
 	// Start the download
 	err := exec.DownloadTwitchVodChat(input.Vod)
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
@@ -601,20 +536,20 @@ func DownloadTwitchChat(ctx context.Context, input dto.ArchiveVideoInput) error 
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Success).Save(ctx)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
 
-	cancel()
+	stopHeartbeat <- true
 	return nil
 }
 
@@ -625,34 +560,18 @@ func DownloadTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) er
 		return dbErr
 	}
 
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, fmt.Sprintf("download-livechat-%s", input.VideoID), stopHeartbeat)
 
 	// Start the download
 	err := exec.DownloadTwitchLiveChat(ctx, input.Vod, input.Channel, input.Queue)
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
@@ -664,19 +583,20 @@ func DownloadTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) er
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Success).Save(ctx)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
-	cancel()
+	stopHeartbeat <- true
+
 	return nil
 }
 
@@ -687,44 +607,28 @@ func RenderTwitchChat(ctx context.Context, input dto.ArchiveVideoInput) error {
 		return dbErr
 	}
 
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, fmt.Sprintf("render-chat-%s", input.VideoID), stopHeartbeat)
 
 	// Start the download
 	err, _ := exec.RenderTwitchVodChat(input.Vod)
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatRender(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatRender(utils.Success).Save(ctx)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
 
-	cancel()
+	stopHeartbeat <- true
 
 	return nil
 }
@@ -736,24 +640,8 @@ func MoveChat(ctx context.Context, input dto.ArchiveVideoInput) error {
 		return dbErr
 	}
 
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, fmt.Sprintf("move-chat-%s", input.VideoID), stopHeartbeat)
 
 	sourcePath := fmt.Sprintf("/tmp/%s_%s-chat.json", input.Vod.ExtID, input.Vod.ID)
 	destPath := fmt.Sprintf("/vods/%s/%s/%s-chat.json", input.Channel.Name, input.Vod.FolderName, input.Vod.FileName)
@@ -762,10 +650,10 @@ func MoveChat(ctx context.Context, input dto.ArchiveVideoInput) error {
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatMove(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
@@ -777,21 +665,21 @@ func MoveChat(ctx context.Context, input dto.ArchiveVideoInput) error {
 		if err != nil {
 			_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatMove(utils.Failed).Save(ctx)
 			if dbErr != nil {
-				cancel()
+				stopHeartbeat <- true
 				return dbErr
 			}
-			cancel()
+			stopHeartbeat <- true
 			return temporal.NewApplicationError(err.Error(), "", nil)
 		}
 	}
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatMove(utils.Success).Save(ctx)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
 
-	cancel()
+	stopHeartbeat <- true
 	return nil
 }
 
@@ -805,11 +693,13 @@ func KillTwitchLiveChatDownload(ctx context.Context, input dto.ArchiveVideoInput
 	if err != nil {
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
-	pid := strings.ReplaceAll(string(out), "\n", "")
+	// convert out to a string and remove newline
+	pid := strings.TrimSpace(string(out))
+	pid = strings.ReplaceAll(pid, "\n", "")
 	log.Debug().Msgf("found pid %s for chat_downloader", string(out))
 
 	// kill pid
-	cmd = osExec.Command("kill", "-2", pid)
+	cmd = osExec.Command("kill", "-15", pid)
 	_, err = cmd.Output()
 	if err != nil {
 		return temporal.NewApplicationError(err.Error(), "", nil)
@@ -832,24 +722,8 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		return dbErr
 	}
 
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, fmt.Sprintf("convert-livechat-%s", input.VideoID), stopHeartbeat)
 
 	// Check if chat file exists
 	chatPath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", input.Vod.ExtID, input.Vod.ID)
@@ -858,16 +732,16 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		// Set queue chat task to complete
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove((utils.Success)).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
 		// Set VOD chat to empty
 		_, dbErr = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetChatVideoPath("").SetChatPath("").Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return nil
 	}
 
@@ -877,10 +751,10 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		log.Error().Err(err).Msg("error getting streamer from Twitch API")
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 	cID, err := strconv.Atoi(streamer.ID)
@@ -888,17 +762,17 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		log.Error().Err(err).Msg("error converting streamer ID to int")
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
 	// update queue item
 	updatedQueue, dbErr := database.DB().Client.Queue.Get(ctx, input.Queue.ID)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
 	input.Queue = updatedQueue
@@ -906,7 +780,7 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 	// TwitchDownloader requires the ID of the video, or at least a previous video ID
 	videos, err := twitch.GetVideosByUser(streamer.ID, "archive")
 	if err != nil {
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
@@ -928,10 +802,10 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		log.Error().Err(err).Msg("error converting chat")
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
@@ -942,10 +816,10 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		log.Error().Err(err).Msg("error updating chat")
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
@@ -958,47 +832,31 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		log.Error().Err(err).Msg("error copying chat convert")
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)
 		if dbErr != nil {
-			cancel()
+			stopHeartbeat <- true
 			return dbErr
 		}
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Success).Save(ctx)
 	if dbErr != nil {
-		cancel()
+		stopHeartbeat <- true
 		return dbErr
 	}
 
-	cancel()
+	stopHeartbeat <- true
 	return nil
 }
 
 func TwitchSaveVideoChapters(ctx context.Context) error {
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, "save-video-chapters", stopHeartbeat)
 
 	// get all videos
 	videos, err := database.DB().Client.Vod.Query().All(ctx)
 	if err != nil {
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
@@ -1043,7 +901,7 @@ func TwitchSaveVideoChapters(ctx context.Context) error {
 			for _, c := range chapters {
 				_, err := chapterService.CreateChapter(c, video.ID)
 				if err != nil {
-					cancel()
+					stopHeartbeat <- true
 					return temporal.NewApplicationError(err.Error(), "", nil)
 				}
 			}
@@ -1052,34 +910,18 @@ func TwitchSaveVideoChapters(ctx context.Context) error {
 		// sleep for 0.25 seconds to not hit rate limit
 		time.Sleep(250 * time.Millisecond)
 	}
-	cancel()
+	stopHeartbeat <- true
 	return nil
 }
 
 func UpdateTwitchLiveStreamArchivesWithVodIds(ctx context.Context) error {
-	// Create a new context with cancel
-	heartbeatCtx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Make sure to cancel when download is complete
-
-	// Start a goroutine that sends a heartbeat every 30 seconds
-	go func() {
-		for {
-			select {
-			case <-heartbeatCtx.Done():
-				// If the context is done, stop the goroutine
-				return
-			default:
-				// Otherwise, record a heartbeat and sleep for 30 seconds
-				activity.RecordHeartbeat(ctx, "my-heartbeat")
-				time.Sleep(30 * time.Second)
-			}
-		}
-	}()
+	stopHeartbeat := make(chan bool)
+	go sendHeartbeat(ctx, "update-video-ids", stopHeartbeat)
 
 	// get all channels
 	channels, err := database.DB().Client.Channel.Query().All(ctx)
 	if err != nil {
-		cancel()
+		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 
@@ -1088,14 +930,14 @@ func UpdateTwitchLiveStreamArchivesWithVodIds(ctx context.Context) error {
 		// get all videos for channel
 		videos, err := database.DB().Client.Vod.Query().Where(entVod.HasChannelWith(entChannel.ID(channel.ID))).All(ctx)
 		if err != nil {
-			cancel()
+			stopHeartbeat <- true
 			return temporal.NewApplicationError(err.Error(), "", nil)
 		}
 
 		// get all videos from twitch for channel
 		twitchChannelVideoss, err := twitch.GetVideosByUser(channel.ExtID, "archive")
 		if err != nil {
-			cancel()
+			stopHeartbeat <- true
 			return temporal.NewApplicationError(err.Error(), "", nil)
 		}
 
@@ -1113,7 +955,7 @@ func UpdateTwitchLiveStreamArchivesWithVodIds(ctx context.Context) error {
 					// update video with vod id
 					_, err := database.DB().Client.Vod.UpdateOneID(video.ID).SetExtID(twitchVideo.ID).Save(ctx)
 					if err != nil {
-						cancel()
+						stopHeartbeat <- true
 						return temporal.NewApplicationError(err.Error(), "", nil)
 					}
 				}
@@ -1121,6 +963,6 @@ func UpdateTwitchLiveStreamArchivesWithVodIds(ctx context.Context) error {
 
 		}
 	}
-	cancel()
+	stopHeartbeat <- true
 	return nil
 }

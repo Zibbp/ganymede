@@ -1,7 +1,8 @@
 {
   "build": { "dockerfile": "Dockerfile" },
   "features": {
-    "ghcr.io/jungaretti/features/make:1": {}
+    "ghcr.io/jungaretti/features/make:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "customizations": {
     "vscode": {
