@@ -372,7 +372,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, input dto.ArchiveVideoInput, c
 	videos, err := twitch.GetVideosByUser(input.Channel.ExtID, "archive")
 	if err != nil {
 		stopHeartbeat <- true
-		return temporal.NewApplicationError(err.Error(), "", nil)
+		log.Err(err).Msg("error getting videos from twitch api")
 	}
 
 	// attempt to find vod of current livestream
@@ -385,7 +385,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, input dto.ArchiveVideoInput, c
 			_, dbErr = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetExtID(livestreamVodId).Save(ctx)
 			if dbErr != nil {
 				stopHeartbeat <- true
-				return temporal.NewApplicationError(err.Error(), "", nil)
+				log.Err(dbErr).Msg("error updating vod with external id")
 			}
 		}
 	}
