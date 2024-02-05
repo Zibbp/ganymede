@@ -175,6 +175,12 @@ func ArchiveLiveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput)
 func CreateDirectoryWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: 10 * time.Second,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    1 * time.Minute,
+			BackoffCoefficient: 2,
+			MaximumAttempts:    5,
+			MaximumInterval:    15 * time.Minute,
+		},
 	})
 
 	err := workflow.ExecuteActivity(ctx, activities.CreateDirectory, input).Get(ctx, nil)
@@ -189,6 +195,12 @@ func CreateDirectoryWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) 
 func DownloadTwitchThumbnailsWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: 10 * time.Second,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    1 * time.Minute,
+			BackoffCoefficient: 2,
+			MaximumAttempts:    5,
+			MaximumInterval:    15 * time.Minute,
+		},
 	})
 
 	err := workflow.ExecuteActivity(ctx, activities.DownloadTwitchThumbnails, input).Get(ctx, nil)
@@ -208,6 +220,12 @@ func DownloadTwitchThumbnailsWorkflow(ctx workflow.Context, input dto.ArchiveVid
 func DownloadTwitchLiveThumbnailsWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: 10 * time.Second,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    1 * time.Minute,
+			BackoffCoefficient: 2,
+			MaximumAttempts:    2,
+			MaximumInterval:    15 * time.Minute,
+		},
 	})
 
 	err := workflow.ExecuteActivity(ctx, activities.DownloadTwitchLiveThumbnails, input).Get(ctx, nil)
@@ -227,6 +245,12 @@ func DownloadTwitchLiveThumbnailsWorkflow(ctx workflow.Context, input dto.Archiv
 func SaveTwitchVideoInfoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: 10 * time.Second,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    1 * time.Minute,
+			BackoffCoefficient: 2,
+			MaximumAttempts:    5,
+			MaximumInterval:    15 * time.Minute,
+		},
 	})
 
 	err := workflow.ExecuteActivity(ctx, activities.SaveTwitchVideoInfo, input).Get(ctx, nil)
@@ -246,6 +270,12 @@ func SaveTwitchVideoInfoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInp
 func SaveTwitchLiveVideoInfoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: 10 * time.Second,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    1 * time.Minute,
+			BackoffCoefficient: 2,
+			MaximumAttempts:    3,
+			MaximumInterval:    15 * time.Minute,
+		},
 	})
 
 	err := workflow.ExecuteActivity(ctx, activities.SaveTwitchLiveVideoInfo, input).Get(ctx, nil)

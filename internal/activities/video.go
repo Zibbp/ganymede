@@ -251,7 +251,7 @@ func DownloadTwitchLiveThumbnails(ctx context.Context, input dto.ArchiveVideoInp
 		if dbErr != nil {
 			return dbErr
 		}
-		return fmt.Errorf("no stream found for channel %s", input.Channel.Name)
+		return temporal.NewApplicationError(fmt.Sprintf("no stream found for channel %s", input.Channel.Name), "", nil)
 	}
 
 	twitchVideo := stream.Data[0]
