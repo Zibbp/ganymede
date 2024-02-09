@@ -302,17 +302,19 @@ func DownloadTwitchLiveVideo(ctx context.Context, v *ent.Vod, ch *ent.Channel, l
 	log.Debug().Msgf("streamlink live args: %v", cmdArgs)
 	log.Debug().Msgf("running: streamlink %s", strings.Join(cmdArgs, " "))
 
-	// Notify chat download that video download is about to start
-	log.Debug().Msg("notifying chat download that video download is about to start")
+	if liveChatWorkflowId != "" {
+		// Notify chat download that video download is about to start
+		log.Debug().Msg("notifying chat download that video download is about to start")
 
-	// !send signal to workflow to start chat download
-	temporal.InitializeTemporalClient()
-	signal := utils.ArchiveTwitchLiveChatStartSignal{
-		Start: true,
-	}
-	err := temporal.GetTemporalClient().Client.SignalWorkflow(ctx, liveChatWorkflowId, "", "start-chat-download", signal)
-	if err != nil {
-		return fmt.Errorf("error sending signal to workflow to start chat download: %w", err)
+		// !send signal to workflow to start chat download
+		temporal.InitializeTemporalClient()
+		signal := utils.ArchiveTwitchLiveChatStartSignal{
+			Start: true,
+		}
+		err := temporal.GetTemporalClient().Client.SignalWorkflow(ctx, liveChatWorkflowId, "", "start-chat-download", signal)
+		if err != nil {
+			return fmt.Errorf("error sending signal to workflow to start chat download: %w", err)
+		}
 	}
 
 	// Execute streamlink
