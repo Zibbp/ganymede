@@ -459,7 +459,7 @@ func DownloadTwitchLiveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVide
 		return workflowErrorHandler(err, input, "download-video")
 	}
 
-	// kill live chat download
+	// kill live chat download if chat is being archived
 	if input.Queue.ChatProcessing {
 		err = workflow.ExecuteActivity(ctx, activities.KillTwitchLiveChatDownload, input).Get(ctx, nil)
 		if err != nil {

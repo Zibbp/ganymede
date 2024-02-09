@@ -302,6 +302,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, v *ent.Vod, ch *ent.Channel, l
 	log.Debug().Msgf("streamlink live args: %v", cmdArgs)
 	log.Debug().Msgf("running: streamlink %s", strings.Join(cmdArgs, " "))
 
+	// Start chat download workflow if liveChatWorkflowId is set (chat is being archived)
 	if liveChatWorkflowId != "" {
 		// Notify chat download that video download is about to start
 		log.Debug().Msg("notifying chat download that video download is about to start")
