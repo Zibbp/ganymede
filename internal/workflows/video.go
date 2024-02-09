@@ -460,9 +460,11 @@ func DownloadTwitchLiveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVide
 	}
 
 	// kill live chat download
-	err = workflow.ExecuteActivity(ctx, activities.KillTwitchLiveChatDownload, input).Get(ctx, nil)
-	if err != nil {
-		return workflowErrorHandler(err, input, "kill-chat-download")
+	if input.Queue.ChatProcessing {
+		err = workflow.ExecuteActivity(ctx, activities.KillTwitchLiveChatDownload, input).Get(ctx, nil)
+		if err != nil {
+			return workflowErrorHandler(err, input, "kill-chat-download")
+		}
 	}
 
 	// mark live channel as not live
