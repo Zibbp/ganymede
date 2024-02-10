@@ -80,11 +80,13 @@ type VodEdges struct {
 	Queue *Queue `json:"queue,omitempty"`
 	// Playlists holds the value of the playlists edge.
 	Playlists []*Playlist `json:"playlists,omitempty"`
+	// MultistreamInfo holds the value of the multistream_info edge.
+	MultistreamInfo []*MultistreamInfo `json:"multistream_info,omitempty"`
 	// Chapters holds the value of the chapters edge.
 	Chapters []*Chapter `json:"chapters,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -122,10 +124,19 @@ func (e VodEdges) PlaylistsOrErr() ([]*Playlist, error) {
 	return nil, &NotLoadedError{edge: "playlists"}
 }
 
+// MultistreamInfoOrErr returns the MultistreamInfo value or an error if the edge
+// was not loaded in eager-loading.
+func (e VodEdges) MultistreamInfoOrErr() ([]*MultistreamInfo, error) {
+	if e.loadedTypes[3] {
+		return e.MultistreamInfo, nil
+	}
+	return nil, &NotLoadedError{edge: "multistream_info"}
+}
+
 // ChaptersOrErr returns the Chapters value or an error if the edge
 // was not loaded in eager-loading.
 func (e VodEdges) ChaptersOrErr() ([]*Chapter, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.Chapters, nil
 	}
 	return nil, &NotLoadedError{edge: "chapters"}
@@ -334,6 +345,11 @@ func (v *Vod) QueryQueue() *QueueQuery {
 // QueryPlaylists queries the "playlists" edge of the Vod entity.
 func (v *Vod) QueryPlaylists() *PlaylistQuery {
 	return NewVodClient(v.config).QueryPlaylists(v)
+}
+
+// QueryMultistreamInfo queries the "multistream_info" edge of the Vod entity.
+func (v *Vod) QueryMultistreamInfo() *MultistreamInfoQuery {
+	return NewVodClient(v.config).QueryMultistreamInfo(v)
 }
 
 // QueryChapters queries the "chapters" edge of the Vod entity.

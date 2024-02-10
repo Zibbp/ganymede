@@ -34,6 +34,14 @@ func (tcu *TwitchCategoryUpdate) SetName(s string) *TwitchCategoryUpdate {
 	return tcu
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (tcu *TwitchCategoryUpdate) SetNillableName(s *string) *TwitchCategoryUpdate {
+	if s != nil {
+		tcu.SetName(*s)
+	}
+	return tcu
+}
+
 // SetBoxArtURL sets the "box_art_url" field.
 func (tcu *TwitchCategoryUpdate) SetBoxArtURL(s string) *TwitchCategoryUpdate {
 	tcu.mutation.SetBoxArtURL(s)
@@ -171,6 +179,14 @@ type TwitchCategoryUpdateOne struct {
 // SetName sets the "name" field.
 func (tcuo *TwitchCategoryUpdateOne) SetName(s string) *TwitchCategoryUpdateOne {
 	tcuo.mutation.SetName(s)
+	return tcuo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (tcuo *TwitchCategoryUpdateOne) SetNillableName(s *string) *TwitchCategoryUpdateOne {
+	if s != nil {
+		tcuo.SetName(*s)
+	}
 	return tcuo
 }
 

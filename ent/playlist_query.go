@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -20,11 +21,12 @@ import (
 // PlaylistQuery is the builder for querying Playlist entities.
 type PlaylistQuery struct {
 	config
-	ctx        *QueryContext
-	order      []playlist.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Playlist
-	withVods   *VodQuery
+	ctx                 *QueryContext
+	order               []playlist.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.Playlist
+	withVods            *VodQuery
+	withMultistreamInfo *MultistreamInfoQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +78,28 @@ func (pq *PlaylistQuery) QueryVods() *VodQuery {
 			sqlgraph.From(playlist.Table, playlist.FieldID, selector),
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, playlist.VodsTable, playlist.VodsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMultistreamInfo chains the current query on the "multistream_info" edge.
+func (pq *PlaylistQuery) QueryMultistreamInfo() *MultistreamInfoQuery {
+	query := (&MultistreamInfoClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(playlist.Table, playlist.FieldID, selector),
+			sqlgraph.To(multistreaminfo.Table, multistreaminfo.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, playlist.MultistreamInfoTable, playlist.MultistreamInfoColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -270,12 +294,13 @@ func (pq *PlaylistQuery) Clone() *PlaylistQuery {
 		return nil
 	}
 	return &PlaylistQuery{
-		config:     pq.config,
-		ctx:        pq.ctx.Clone(),
-		order:      append([]playlist.OrderOption{}, pq.order...),
-		inters:     append([]Interceptor{}, pq.inters...),
-		predicates: append([]predicate.Playlist{}, pq.predicates...),
-		withVods:   pq.withVods.Clone(),
+		config:              pq.config,
+		ctx:                 pq.ctx.Clone(),
+		order:               append([]playlist.OrderOption{}, pq.order...),
+		inters:              append([]Interceptor{}, pq.inters...),
+		predicates:          append([]predicate.Playlist{}, pq.predicates...),
+		withVods:            pq.withVods.Clone(),
+		withMultistreamInfo: pq.withMultistreamInfo.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
 		path: pq.path,
@@ -290,6 +315,17 @@ func (pq *PlaylistQuery) WithVods(opts ...func(*VodQuery)) *PlaylistQuery {
 		opt(query)
 	}
 	pq.withVods = query
+	return pq
+}
+
+// WithMultistreamInfo tells the query-builder to eager-load the nodes that are connected to
+// the "multistream_info" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *PlaylistQuery) WithMultistreamInfo(opts ...func(*MultistreamInfoQuery)) *PlaylistQuery {
+	query := (&MultistreamInfoClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withMultistreamInfo = query
 	return pq
 }
 
@@ -371,8 +407,9 @@ func (pq *PlaylistQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pla
 	var (
 		nodes       = []*Playlist{}
 		_spec       = pq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			pq.withVods != nil,
+			pq.withMultistreamInfo != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -397,6 +434,13 @@ func (pq *PlaylistQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pla
 		if err := pq.loadVods(ctx, query, nodes,
 			func(n *Playlist) { n.Edges.Vods = []*Vod{} },
 			func(n *Playlist, e *Vod) { n.Edges.Vods = append(n.Edges.Vods, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withMultistreamInfo; query != nil {
+		if err := pq.loadMultistreamInfo(ctx, query, nodes,
+			func(n *Playlist) { n.Edges.MultistreamInfo = []*MultistreamInfo{} },
+			func(n *Playlist, e *MultistreamInfo) { n.Edges.MultistreamInfo = append(n.Edges.MultistreamInfo, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -461,6 +505,37 @@ func (pq *PlaylistQuery) loadVods(ctx context.Context, query *VodQuery, nodes []
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (pq *PlaylistQuery) loadMultistreamInfo(ctx context.Context, query *MultistreamInfoQuery, nodes []*Playlist, init func(*Playlist), assign func(*Playlist, *MultistreamInfo)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Playlist)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.MultistreamInfo(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(playlist.MultistreamInfoColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.playlist_multistream_info
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "playlist_multistream_info" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "playlist_multistream_info" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

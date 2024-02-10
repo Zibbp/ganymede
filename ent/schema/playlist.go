@@ -1,11 +1,12 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"time"
 )
 
 // Playlist holds the schema definition for the Playlist entity.
@@ -29,5 +30,6 @@ func (Playlist) Fields() []ent.Field {
 func (Playlist) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("vods", Vod.Type),
+		edge.To("multistream_info", MultistreamInfo.Type),
 	}
 }

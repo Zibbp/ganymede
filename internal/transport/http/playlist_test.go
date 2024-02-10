@@ -14,7 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/enttest"
+	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	entPlaylist "github.com/zibbp/ganymede/ent/playlist"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/playlist"
 	httpHandler "github.com/zibbp/ganymede/internal/transport/http"
@@ -120,6 +122,157 @@ func TestAddVodToPlaylist(t *testing.T) {
 		err := json.Unmarshal(rec.Body.Bytes(), &response)
 		assert.NoError(t, err)
 		assert.Equal(t, "ok", response)
+	}
+}
+
+// * TestSetVodDelayOnPlaylist tests the SetVodDelayOnPlaylist function
+// Adds a vod to a playlist
+func TestSetVodDelayOnPlaylist(t *testing.T) {
+	opts := []enttest.Option{
+		enttest.WithOptions(ent.Log(t.Log)),
+	}
+
+	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
+	defer client.Close()
+
+	// Create a playlist
+	dbPlaylist, err := client.Playlist.Create().SetName("test_playlist").SetDescription("test_description").Save(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a channel
+	dbChannel, err := client.Channel.Create().SetName("test_channel").SetDisplayName("Test Channel").SetImagePath("/vods/test_channel/test_channel.jpg").Save(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a vod
+	dbVod, err := client.Vod.Create().SetTitle("test vod").SetExtID("123").SetWebThumbnailPath("").SetVideoPath("").SetChannel(dbChannel).Save(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = client.Playlist.UpdateOne(dbPlaylist).AddVods(dbVod).Save(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h := &httpHandler.Handler{
+		Server: echo.New(),
+		Service: httpHandler.Services{
+			PlaylistService: playlist.NewService(&database.Database{Client: client}),
+		},
+	}
+
+	h.Server.Validator = &utils.CustomValidator{Validator: validator.New()}
+
+	// First time setting the delay, should create a new multistream info
+	{
+		setVodDelayOnPlaylistJson := `{
+			"vod_id": "` + dbVod.ID.String() + `",
+			"delay_ms": 100
+		}`
+
+		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/playlist/%s", dbVod.ID.String()), strings.NewReader(setVodDelayOnPlaylistJson))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := h.Server.NewContext(req, rec)
+		c.SetParamNames("id")
+		c.SetParamValues(dbPlaylist.ID.String())
+
+		if assert.NoError(t, h.SetVodDelayOnPlaylist(c)) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+
+			// Check response body
+			// response will be a string
+			var response string
+			err := json.Unmarshal(rec.Body.Bytes(), &response)
+			assert.NoError(t, err)
+			assert.Equal(t, "ok", response)
+
+			// Check the saved delay
+			dbMultistreamInfo, err := client.MultistreamInfo.Query().Where(
+				multistreaminfo.And(
+					multistreaminfo.HasPlaylistWith(entPlaylist.ID(dbPlaylist.ID)),
+					multistreaminfo.HasVodWith(entVod.ID(dbVod.ID)),
+				),
+			).Only(context.Background())
+			assert.NoError(t, err)
+			assert.Equal(t, 100, dbMultistreamInfo.DelayMs)
+		}
+	}
+
+	// Second update, should update the existing multistream info
+	{
+		setVodDelayOnPlaylistJson := `{
+			"vod_id": "` + dbVod.ID.String() + `",
+			"delay_ms": 1000
+		}`
+
+		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/playlist/%s", dbVod.ID.String()), strings.NewReader(setVodDelayOnPlaylistJson))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := h.Server.NewContext(req, rec)
+		c.SetParamNames("id")
+		c.SetParamValues(dbPlaylist.ID.String())
+
+		if assert.NoError(t, h.SetVodDelayOnPlaylist(c)) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+
+			// Check response body
+			// response will be a string
+			var response string
+			err := json.Unmarshal(rec.Body.Bytes(), &response)
+			assert.NoError(t, err)
+			assert.Equal(t, "ok", response)
+
+			// Check the saved delay
+			dbMultistreamInfo, err := client.MultistreamInfo.Query().Where(
+				multistreaminfo.And(
+					multistreaminfo.HasPlaylistWith(entPlaylist.ID(dbPlaylist.ID)),
+					multistreaminfo.HasVodWith(entVod.ID(dbVod.ID)),
+				),
+			).Only(context.Background())
+			assert.NoError(t, err)
+			assert.Equal(t, 1000, dbMultistreamInfo.DelayMs)
+		}
+	}
+
+	// Setting the delay to 0, should delete the multistream info
+	{
+		setVodDelayOnPlaylistJson := `{
+			"vod_id": "` + dbVod.ID.String() + `",
+			"delay_ms": 0
+		}`
+
+		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/playlist/%s", dbVod.ID.String()), strings.NewReader(setVodDelayOnPlaylistJson))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := h.Server.NewContext(req, rec)
+		c.SetParamNames("id")
+		c.SetParamValues(dbPlaylist.ID.String())
+
+		if assert.NoError(t, h.SetVodDelayOnPlaylist(c)) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+
+			// Check response body
+			// response will be a string
+			var response string
+			err := json.Unmarshal(rec.Body.Bytes(), &response)
+			assert.NoError(t, err)
+			assert.Equal(t, "ok", response)
+
+			// Check the saved delay
+			count, err := client.MultistreamInfo.Query().Where(
+				multistreaminfo.And(
+					multistreaminfo.HasPlaylistWith(entPlaylist.ID(dbPlaylist.ID)),
+					multistreaminfo.HasVodWith(entVod.ID(dbVod.ID)),
+				),
+			).Count(context.Background())
+			assert.NoError(t, err)
+			assert.Equal(t, 0, count)
+		}
 	}
 }
 

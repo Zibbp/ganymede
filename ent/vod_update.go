@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
+	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -37,6 +38,14 @@ func (vu *VodUpdate) Where(ps ...predicate.Vod) *VodUpdate {
 // SetExtID sets the "ext_id" field.
 func (vu *VodUpdate) SetExtID(s string) *VodUpdate {
 	vu.mutation.SetExtID(s)
+	return vu
+}
+
+// SetNillableExtID sets the "ext_id" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableExtID(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetExtID(*s)
+	}
 	return vu
 }
 
@@ -71,6 +80,14 @@ func (vu *VodUpdate) SetNillableType(ut *utils.VodType) *VodUpdate {
 // SetTitle sets the "title" field.
 func (vu *VodUpdate) SetTitle(s string) *VodUpdate {
 	vu.mutation.SetTitle(s)
+	return vu
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableTitle(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetTitle(*s)
+	}
 	return vu
 }
 
@@ -176,9 +193,25 @@ func (vu *VodUpdate) SetWebThumbnailPath(s string) *VodUpdate {
 	return vu
 }
 
+// SetNillableWebThumbnailPath sets the "web_thumbnail_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableWebThumbnailPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetWebThumbnailPath(*s)
+	}
+	return vu
+}
+
 // SetVideoPath sets the "video_path" field.
 func (vu *VodUpdate) SetVideoPath(s string) *VodUpdate {
 	vu.mutation.SetVideoPath(s)
+	return vu
+}
+
+// SetNillableVideoPath sets the "video_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableVideoPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetVideoPath(*s)
+	}
 	return vu
 }
 
@@ -402,6 +435,21 @@ func (vu *VodUpdate) AddPlaylists(p ...*Playlist) *VodUpdate {
 	return vu.AddPlaylistIDs(ids...)
 }
 
+// AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
+func (vu *VodUpdate) AddMultistreamInfoIDs(ids ...int) *VodUpdate {
+	vu.mutation.AddMultistreamInfoIDs(ids...)
+	return vu
+}
+
+// AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
+func (vu *VodUpdate) AddMultistreamInfo(m ...*MultistreamInfo) *VodUpdate {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return vu.AddMultistreamInfoIDs(ids...)
+}
+
 // AddChapterIDs adds the "chapters" edge to the Chapter entity by IDs.
 func (vu *VodUpdate) AddChapterIDs(ids ...uuid.UUID) *VodUpdate {
 	vu.mutation.AddChapterIDs(ids...)
@@ -453,6 +501,27 @@ func (vu *VodUpdate) RemovePlaylists(p ...*Playlist) *VodUpdate {
 		ids[i] = p[i].ID
 	}
 	return vu.RemovePlaylistIDs(ids...)
+}
+
+// ClearMultistreamInfo clears all "multistream_info" edges to the MultistreamInfo entity.
+func (vu *VodUpdate) ClearMultistreamInfo() *VodUpdate {
+	vu.mutation.ClearMultistreamInfo()
+	return vu
+}
+
+// RemoveMultistreamInfoIDs removes the "multistream_info" edge to MultistreamInfo entities by IDs.
+func (vu *VodUpdate) RemoveMultistreamInfoIDs(ids ...int) *VodUpdate {
+	vu.mutation.RemoveMultistreamInfoIDs(ids...)
+	return vu
+}
+
+// RemoveMultistreamInfo removes "multistream_info" edges to MultistreamInfo entities.
+func (vu *VodUpdate) RemoveMultistreamInfo(m ...*MultistreamInfo) *VodUpdate {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return vu.RemoveMultistreamInfoIDs(ids...)
 }
 
 // ClearChapters clears all "chapters" edges to the Chapter entity.
@@ -741,6 +810,51 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if vu.mutation.MultistreamInfoCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   vod.MultistreamInfoTable,
+			Columns: []string{vod.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !vu.mutation.MultistreamInfoCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   vod.MultistreamInfoTable,
+			Columns: []string{vod.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   vod.MultistreamInfoTable,
+			Columns: []string{vod.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if vu.mutation.ChaptersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -812,6 +926,14 @@ func (vuo *VodUpdateOne) SetExtID(s string) *VodUpdateOne {
 	return vuo
 }
 
+// SetNillableExtID sets the "ext_id" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableExtID(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetExtID(*s)
+	}
+	return vuo
+}
+
 // SetPlatform sets the "platform" field.
 func (vuo *VodUpdateOne) SetPlatform(up utils.VodPlatform) *VodUpdateOne {
 	vuo.mutation.SetPlatform(up)
@@ -843,6 +965,14 @@ func (vuo *VodUpdateOne) SetNillableType(ut *utils.VodType) *VodUpdateOne {
 // SetTitle sets the "title" field.
 func (vuo *VodUpdateOne) SetTitle(s string) *VodUpdateOne {
 	vuo.mutation.SetTitle(s)
+	return vuo
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableTitle(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetTitle(*s)
+	}
 	return vuo
 }
 
@@ -948,9 +1078,25 @@ func (vuo *VodUpdateOne) SetWebThumbnailPath(s string) *VodUpdateOne {
 	return vuo
 }
 
+// SetNillableWebThumbnailPath sets the "web_thumbnail_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableWebThumbnailPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetWebThumbnailPath(*s)
+	}
+	return vuo
+}
+
 // SetVideoPath sets the "video_path" field.
 func (vuo *VodUpdateOne) SetVideoPath(s string) *VodUpdateOne {
 	vuo.mutation.SetVideoPath(s)
+	return vuo
+}
+
+// SetNillableVideoPath sets the "video_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableVideoPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetVideoPath(*s)
+	}
 	return vuo
 }
 
@@ -1174,6 +1320,21 @@ func (vuo *VodUpdateOne) AddPlaylists(p ...*Playlist) *VodUpdateOne {
 	return vuo.AddPlaylistIDs(ids...)
 }
 
+// AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
+func (vuo *VodUpdateOne) AddMultistreamInfoIDs(ids ...int) *VodUpdateOne {
+	vuo.mutation.AddMultistreamInfoIDs(ids...)
+	return vuo
+}
+
+// AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
+func (vuo *VodUpdateOne) AddMultistreamInfo(m ...*MultistreamInfo) *VodUpdateOne {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return vuo.AddMultistreamInfoIDs(ids...)
+}
+
 // AddChapterIDs adds the "chapters" edge to the Chapter entity by IDs.
 func (vuo *VodUpdateOne) AddChapterIDs(ids ...uuid.UUID) *VodUpdateOne {
 	vuo.mutation.AddChapterIDs(ids...)
@@ -1225,6 +1386,27 @@ func (vuo *VodUpdateOne) RemovePlaylists(p ...*Playlist) *VodUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return vuo.RemovePlaylistIDs(ids...)
+}
+
+// ClearMultistreamInfo clears all "multistream_info" edges to the MultistreamInfo entity.
+func (vuo *VodUpdateOne) ClearMultistreamInfo() *VodUpdateOne {
+	vuo.mutation.ClearMultistreamInfo()
+	return vuo
+}
+
+// RemoveMultistreamInfoIDs removes the "multistream_info" edge to MultistreamInfo entities by IDs.
+func (vuo *VodUpdateOne) RemoveMultistreamInfoIDs(ids ...int) *VodUpdateOne {
+	vuo.mutation.RemoveMultistreamInfoIDs(ids...)
+	return vuo
+}
+
+// RemoveMultistreamInfo removes "multistream_info" edges to MultistreamInfo entities.
+func (vuo *VodUpdateOne) RemoveMultistreamInfo(m ...*MultistreamInfo) *VodUpdateOne {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return vuo.RemoveMultistreamInfoIDs(ids...)
 }
 
 // ClearChapters clears all "chapters" edges to the Chapter entity.
@@ -1536,6 +1718,51 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if vuo.mutation.MultistreamInfoCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   vod.MultistreamInfoTable,
+			Columns: []string{vod.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !vuo.mutation.MultistreamInfoCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   vod.MultistreamInfoTable,
+			Columns: []string{vod.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   vod.MultistreamInfoTable,
+			Columns: []string{vod.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

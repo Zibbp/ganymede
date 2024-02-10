@@ -18,6 +18,9 @@ type Live func(*sql.Selector)
 // LiveCategory is the predicate function for livecategory builders.
 type LiveCategory func(*sql.Selector)
 
+// MultistreamInfo is the predicate function for multistreaminfo builders.
+type MultistreamInfo func(*sql.Selector)
+
 // Playback is the predicate function for playback builders.
 type Playback func(*sql.Selector)
 

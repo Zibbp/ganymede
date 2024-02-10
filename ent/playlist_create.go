@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/vod"
 )
@@ -114,6 +115,21 @@ func (pc *PlaylistCreate) AddVods(v ...*Vod) *PlaylistCreate {
 		ids[i] = v[i].ID
 	}
 	return pc.AddVodIDs(ids...)
+}
+
+// AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
+func (pc *PlaylistCreate) AddMultistreamInfoIDs(ids ...int) *PlaylistCreate {
+	pc.mutation.AddMultistreamInfoIDs(ids...)
+	return pc
+}
+
+// AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
+func (pc *PlaylistCreate) AddMultistreamInfo(m ...*MultistreamInfo) *PlaylistCreate {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return pc.AddMultistreamInfoIDs(ids...)
 }
 
 // Mutation returns the PlaylistMutation object of the builder.
@@ -241,6 +257,22 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.MultistreamInfoTable,
+			Columns: []string{playlist.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
