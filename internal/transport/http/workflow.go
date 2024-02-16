@@ -13,6 +13,10 @@ import (
 type StartWorkflowRequest struct {
 	WorkflowName string `json:"workflow_name" validate:"required"`
 }
+
+type StartWorkflowRequestGenerateThumbnails struct {
+	VideoID string `json:"video_id" validate:"required"`
+}
 type RestartArchiveWorkflowRequest struct {
 	WorkflowName string `json:"workflow_name" validate:"required"`
 	VideoID      string `json:"video_id" validate:"required"`
@@ -90,6 +94,26 @@ func (h *Handler) StartWorkflow(c echo.Context) error {
 	}
 
 	startWorkflowResponse, err := workflows.StartWorkflow(c.Request().Context(), request.WorkflowName)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, startWorkflowResponse)
+}
+
+func (h *Handler) StartWorkflowGenerateThumbnailsForVideo(c echo.Context) error {
+	var request StartWorkflowRequestGenerateThumbnails
+	err := c.Bind(&request)
+	if err != nil {
+		return err
+	}
+
+	// validate request
+	if err := c.Validate(request); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	startWorkflowResponse, err := workflows.StartWorkflowGenerateThumbnailsForVideo(c.Request().Context(), request.VideoID)
 	if err != nil {
 		return err
 	}

@@ -279,6 +279,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	workflowGroup.GET("/:workflowId/:runId/history", h.GetWorkflowHistory, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	workflowGroup.GET("/:workflowId/:runId/video_id", h.GetVideoIdFromWorkflow, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	workflowGroup.POST("/start", h.StartWorkflow, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	workflowGroup.POST("/start/generate_thumbnails", h.StartWorkflowGenerateThumbnailsForVideo, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	workflowGroup.POST("/restart", h.RestartArchiveWorkflow, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Chapter

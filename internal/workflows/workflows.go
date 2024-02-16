@@ -33,3 +33,22 @@ func StartWorkflow(ctx context.Context, workflowName string) (StartWorkflowRespo
 
 	return startWorkflowResponse, nil
 }
+
+func StartWorkflowGenerateThumbnailsForVideo(ctx context.Context, videoId string) (StartWorkflowResponse, error) {
+	var startWorkflowResponse StartWorkflowResponse
+
+	workflowOptions := client.StartWorkflowOptions{
+		TaskQueue: "generate-thumbnails",
+	}
+
+	we, err := temporal.GetTemporalClient().Client.ExecuteWorkflow(ctx, workflowOptions, GenerateThumbnailsForVideo, videoId)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to start workflow")
+		return startWorkflowResponse, err
+	}
+
+	startWorkflowResponse.WorkflowId = we.GetID()
+	startWorkflowResponse.RunId = we.GetRunID()
+
+	return startWorkflowResponse, nil
+}
