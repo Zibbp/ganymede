@@ -19,7 +19,7 @@ RUN git clone https://github.com/xenova/chat-downloader.git
 FROM debian:bookworm-slim AS production
 
 # install packages
-RUN apt update && apt install -y python3 python3-pip fontconfig ffmpeg tzdata curl
+RUN apt update && apt install -y python3 python3-pip fontconfig ffmpeg tzdata curl procps
 RUN ln -sf python3 /usr/bin/python
 
 # RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg bash tzdata shadow su-exec py3-pip && ln -sf python3 /usr/bin/python
