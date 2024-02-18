@@ -231,11 +231,6 @@ func DownloadTwitchThumbnails(ctx context.Context, input dto.ArchiveVideoInput) 
 
 func DownloadTwitchLiveThumbnails(ctx context.Context, input dto.ArchiveVideoInput) error {
 
-	_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVodDownloadThumbnail(utils.Running).Save(ctx)
-	if dbErr != nil {
-		return dbErr
-	}
-
 	twitchService := twitch.NewService()
 	stream, err := twitchService.GetStreams(fmt.Sprintf("?user_login=%s", input.Channel.Name))
 	if err != nil {
@@ -244,6 +239,11 @@ func DownloadTwitchLiveThumbnails(ctx context.Context, input dto.ArchiveVideoInp
 			return dbErr
 		}
 		return temporal.NewApplicationError(err.Error(), "", nil)
+	}
+
+	_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVodDownloadThumbnail(utils.Running).Save(ctx)
+	if dbErr != nil {
+		return dbErr
 	}
 
 	if len(stream.Data) == 0 {
