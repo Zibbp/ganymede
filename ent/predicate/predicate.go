@@ -9,6 +9,9 @@ import (
 // Channel is the predicate function for channel builders.
 type Channel func(*sql.Selector)
 
+// Chapter is the predicate function for chapter builders.
+type Chapter func(*sql.Selector)
+
 // Live is the predicate function for live builders.
 type Live func(*sql.Selector)
 

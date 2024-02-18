@@ -3,7 +3,6 @@ package live
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -247,25 +246,25 @@ func (s *Service) Check() error {
 	return nil
 }
 
-func (s *Service) ConvertChat(c echo.Context, convertChatDto ConvertChat) error {
-	i, err := strconv.ParseInt(convertChatDto.ChatStart, 10, 64)
-	if err != nil {
-		return fmt.Errorf("error parsing chat start: %v", err)
-	}
-	tm := time.Unix(i, 0)
-	err = utils.ConvertTwitchLiveChatToVodChat(
-		fmt.Sprintf("/tmp/%s", convertChatDto.FileName),
-		convertChatDto.ChannelName,
-		convertChatDto.VodID,
-		convertChatDto.VodExternalID,
-		convertChatDto.ChannelID,
-		tm,
-	)
-	if err != nil {
-		return fmt.Errorf("error converting chat: %v", err)
-	}
-	return nil
-}
+// func (s *Service) ConvertChat(c echo.Context, convertChatDto ConvertChat) error {
+// 	i, err := strconv.ParseInt(convertChatDto.ChatStart, 10, 64)
+// 	if err != nil {
+// 		return fmt.Errorf("error parsing chat start: %v", err)
+// 	}
+// 	tm := time.Unix(i, 0)
+// 	err = utils.ConvertTwitchLiveChatToVodChat(
+// 		fmt.Sprintf("/tmp/%s", convertChatDto.FileName),
+// 		convertChatDto.ChannelName,
+// 		convertChatDto.VodID,
+// 		convertChatDto.VodExternalID,
+// 		convertChatDto.ChannelID,
+// 		tm,
+// 	)
+// 	if err != nil {
+// 		return fmt.Errorf("error converting chat: %v", err)
+// 	}
+// 	return nil
+// }
 
 func (s *Service) ArchiveLiveChannel(c echo.Context, archiveLiveChannelDto ArchiveLive) error {
 	// fetch channel

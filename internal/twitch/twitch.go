@@ -11,6 +11,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/database"
 )
 
@@ -85,23 +86,24 @@ type VodResponse struct {
 }
 
 type Vod struct {
-	ID            string      `json:"id"`
-	StreamID      string      `json:"stream_id"`
-	UserID        string      `json:"user_id"`
-	UserLogin     string      `json:"user_login"`
-	UserName      string      `json:"user_name"`
-	Title         string      `json:"title"`
-	Description   string      `json:"description"`
-	CreatedAt     string      `json:"created_at"`
-	PublishedAt   string      `json:"published_at"`
-	URL           string      `json:"url"`
-	ThumbnailURL  string      `json:"thumbnail_url"`
-	Viewable      string      `json:"viewable"`
-	ViewCount     int64       `json:"view_count"`
-	Language      string      `json:"language"`
-	Type          string      `json:"type"`
-	Duration      string      `json:"duration"`
-	MutedSegments interface{} `json:"muted_segments"`
+	ID            string            `json:"id"`
+	StreamID      string            `json:"stream_id"`
+	UserID        string            `json:"user_id"`
+	UserLogin     string            `json:"user_login"`
+	UserName      string            `json:"user_name"`
+	Title         string            `json:"title"`
+	Description   string            `json:"description"`
+	CreatedAt     string            `json:"created_at"`
+	PublishedAt   string            `json:"published_at"`
+	URL           string            `json:"url"`
+	ThumbnailURL  string            `json:"thumbnail_url"`
+	Viewable      string            `json:"viewable"`
+	ViewCount     int64             `json:"view_count"`
+	Language      string            `json:"language"`
+	Type          string            `json:"type"`
+	Duration      string            `json:"duration"`
+	MutedSegments interface{}       `json:"muted_segments"`
+	Chapters      []chapter.Chapter `json:"chapters"`
 }
 
 type Stream struct {
@@ -258,13 +260,13 @@ func (s *Service) GetVodByID(vID string) (Vod, error) {
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return Vod{}, fmt.Errorf("vod not found")
-	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Vod{}, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return Vod{}, fmt.Errorf("%s", body)
 	}
 
 	var vodResponse VodResponse

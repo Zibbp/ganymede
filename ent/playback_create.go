@@ -546,12 +546,16 @@ func (u *PlaybackUpsertOne) IDX(ctx context.Context) uuid.UUID {
 // PlaybackCreateBulk is the builder for creating many Playback entities in bulk.
 type PlaybackCreateBulk struct {
 	config
+	err      error
 	builders []*PlaybackCreate
 	conflict []sql.ConflictOption
 }
 
 // Save creates the Playback entities in the database.
 func (pcb *PlaybackCreateBulk) Save(ctx context.Context) ([]*Playback, error) {
+	if pcb.err != nil {
+		return nil, pcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(pcb.builders))
 	nodes := make([]*Playback, len(pcb.builders))
 	mutators := make([]Mutator, len(pcb.builders))
@@ -805,6 +809,9 @@ func (u *PlaybackUpsertBulk) UpdateUpdatedAt() *PlaybackUpsertBulk {
 
 // Exec executes the query.
 func (u *PlaybackUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
 	for i, b := range u.create.builders {
 		if len(b.conflict) != 0 {
 			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the PlaybackCreateBulk instead", i)

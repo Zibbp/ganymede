@@ -21,6 +21,18 @@ func (f ChannelFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChannelMutation", m)
 }
 
+// The ChapterFunc type is an adapter to allow the use of ordinary
+// function as Chapter mutator.
+type ChapterFunc func(context.Context, *ent.ChapterMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChapterFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChapterMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChapterMutation", m)
+}
+
 // The LiveFunc type is an adapter to allow the use of ordinary
 // function as Live mutator.
 type LiveFunc func(context.Context, *ent.LiveMutation) (ent.Value, error)

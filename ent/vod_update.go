@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -401,6 +402,21 @@ func (vu *VodUpdate) AddPlaylists(p ...*Playlist) *VodUpdate {
 	return vu.AddPlaylistIDs(ids...)
 }
 
+// AddChapterIDs adds the "chapters" edge to the Chapter entity by IDs.
+func (vu *VodUpdate) AddChapterIDs(ids ...uuid.UUID) *VodUpdate {
+	vu.mutation.AddChapterIDs(ids...)
+	return vu
+}
+
+// AddChapters adds the "chapters" edges to the Chapter entity.
+func (vu *VodUpdate) AddChapters(c ...*Chapter) *VodUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return vu.AddChapterIDs(ids...)
+}
+
 // Mutation returns the VodMutation object of the builder.
 func (vu *VodUpdate) Mutation() *VodMutation {
 	return vu.mutation
@@ -437,6 +453,27 @@ func (vu *VodUpdate) RemovePlaylists(p ...*Playlist) *VodUpdate {
 		ids[i] = p[i].ID
 	}
 	return vu.RemovePlaylistIDs(ids...)
+}
+
+// ClearChapters clears all "chapters" edges to the Chapter entity.
+func (vu *VodUpdate) ClearChapters() *VodUpdate {
+	vu.mutation.ClearChapters()
+	return vu
+}
+
+// RemoveChapterIDs removes the "chapters" edge to Chapter entities by IDs.
+func (vu *VodUpdate) RemoveChapterIDs(ids ...uuid.UUID) *VodUpdate {
+	vu.mutation.RemoveChapterIDs(ids...)
+	return vu
+}
+
+// RemoveChapters removes "chapters" edges to Chapter entities.
+func (vu *VodUpdate) RemoveChapters(c ...*Chapter) *VodUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return vu.RemoveChapterIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -697,6 +734,51 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if vu.mutation.ChaptersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.ChaptersTable,
+			Columns: []string{vod.ChaptersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.RemovedChaptersIDs(); len(nodes) > 0 && !vu.mutation.ChaptersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.ChaptersTable,
+			Columns: []string{vod.ChaptersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.ChaptersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.ChaptersTable,
+			Columns: []string{vod.ChaptersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1092,6 +1174,21 @@ func (vuo *VodUpdateOne) AddPlaylists(p ...*Playlist) *VodUpdateOne {
 	return vuo.AddPlaylistIDs(ids...)
 }
 
+// AddChapterIDs adds the "chapters" edge to the Chapter entity by IDs.
+func (vuo *VodUpdateOne) AddChapterIDs(ids ...uuid.UUID) *VodUpdateOne {
+	vuo.mutation.AddChapterIDs(ids...)
+	return vuo
+}
+
+// AddChapters adds the "chapters" edges to the Chapter entity.
+func (vuo *VodUpdateOne) AddChapters(c ...*Chapter) *VodUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return vuo.AddChapterIDs(ids...)
+}
+
 // Mutation returns the VodMutation object of the builder.
 func (vuo *VodUpdateOne) Mutation() *VodMutation {
 	return vuo.mutation
@@ -1128,6 +1225,27 @@ func (vuo *VodUpdateOne) RemovePlaylists(p ...*Playlist) *VodUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return vuo.RemovePlaylistIDs(ids...)
+}
+
+// ClearChapters clears all "chapters" edges to the Chapter entity.
+func (vuo *VodUpdateOne) ClearChapters() *VodUpdateOne {
+	vuo.mutation.ClearChapters()
+	return vuo
+}
+
+// RemoveChapterIDs removes the "chapters" edge to Chapter entities by IDs.
+func (vuo *VodUpdateOne) RemoveChapterIDs(ids ...uuid.UUID) *VodUpdateOne {
+	vuo.mutation.RemoveChapterIDs(ids...)
+	return vuo
+}
+
+// RemoveChapters removes "chapters" edges to Chapter entities.
+func (vuo *VodUpdateOne) RemoveChapters(c ...*Chapter) *VodUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return vuo.RemoveChapterIDs(ids...)
 }
 
 // Where appends a list predicates to the VodUpdate builder.
@@ -1418,6 +1536,51 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if vuo.mutation.ChaptersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.ChaptersTable,
+			Columns: []string{vod.ChaptersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.RemovedChaptersIDs(); len(nodes) > 0 && !vuo.mutation.ChaptersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.ChaptersTable,
+			Columns: []string{vod.ChaptersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.ChaptersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.ChaptersTable,
+			Columns: []string{vod.ChaptersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

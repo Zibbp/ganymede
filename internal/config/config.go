@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -27,10 +28,8 @@ type Conf struct {
 	Debug               bool `json:"debug"`
 	LiveCheckInterval   int  `json:"live_check_interval_seconds"`
 	VideoCheckInterval  int  `json:"video_check_interval_minutes"`
-	ActiveQueueItems    int  `json:"active_queue_items"`
 	OAuthEnabled        bool `json:"oauth_enabled"`
 	RegistrationEnabled bool `json:"registration_enabled"`
-	DBSeeded            bool `json:"db_seeded"`
 	Parameters          struct {
 		TwitchToken    string `json:"twitch_token"`
 		VideoConvert   string `json:"video_convert"`
@@ -75,7 +74,7 @@ type ProxyListItem struct {
 	Header string `json:"header"`
 }
 
-func NewConfig() {
+func NewConfig(refresh bool) {
 	configLocation := "/data"
 	configName := "config"
 	configType := "json"
@@ -88,10 +87,8 @@ func NewConfig() {
 	viper.SetDefault("debug", false)
 	viper.SetDefault("live_check_interval_seconds", 300)
 	viper.SetDefault("video_check_interval_minutes", 180)
-	viper.SetDefault("active_queue_items", 2)
 	viper.SetDefault("oauth_enabled", false)
 	viper.SetDefault("registration_enabled", true)
-	viper.SetDefault("db_seeded", false)
 	viper.SetDefault("parameters.video_convert", "-c:v copy -c:a copy")
 	viper.SetDefault("parameters.chat_render", "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13")
 	viper.SetDefault("parameters.streamlink_live", "--twitch-low-latency,--twitch-disable-hosting")
@@ -134,19 +131,43 @@ func NewConfig() {
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Info().Msgf("config file not found at %s, creating new one", configPath)
-		err := viper.SafeWriteConfigAs(configPath)
-		if err != nil {
-			log.Panic().Err(err).Msg("error creating config file")
+		retries := 10
+		for i := 0; i < retries; i++ {
+			err := viper.SafeWriteConfigAs(configPath)
+			if err == nil {
+				log.Info().Msgf("config file created")
+				break
+			}
+			log.Error().Err(err).Msgf("error creating config file (attempt %d/%d)", i+1, retries)
+			if i < retries-1 {
+				log.Info().Msgf("retrying in 1 second")
+				time.Sleep(1 * time.Second)
+			} else {
+				log.Panic().Err(err).Msg("error creating config file")
+			}
 		}
 	} else {
 		log.Info().Msgf("config file found at %s, loading", configPath)
-		err := viper.ReadInConfig()
-		// Rewrite config file to apply new variables and remove old values
-		refreshConfig(configPath)
-		log.Debug().Msgf("config file loaded: %s", viper.ConfigFileUsed())
-		if err != nil {
-			log.Panic().Err(err).Msg("error reading config file")
+		retries := 10
+		for i := 0; i < retries; i++ {
+			err := viper.ReadInConfig()
+			if err == nil {
+				log.Info().Msgf("config file loaded: %s", viper.ConfigFileUsed())
+				break
+			}
+			log.Error().Err(err).Msgf("error loading config (attempt %d/%d)", i+1, retries)
+			if i < retries-1 {
+				log.Info().Msgf("retrying in 1 second")
+				time.Sleep(1 * time.Second)
+			} else {
+				log.Panic().Err(err).Msg("error loading config")
+			}
 		}
+		// Rewrite config file to apply new variables and remove old values
+		if refresh {
+			refreshConfig(configPath)
+		}
+		log.Debug().Msgf("config file loaded: %s", viper.ConfigFileUsed())
 	}
 }
 
@@ -163,7 +184,6 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 
 	return &Conf{
 		RegistrationEnabled: viper.GetBool("registration_enabled"),
-		DBSeeded:            viper.GetBool("db_seeded"),
 		Archive: struct {
 			SaveAsHls bool `json:"save_as_hls"`
 		}(struct {
@@ -376,6 +396,14 @@ func refreshConfig(configPath string) {
 	}
 	if !viper.IsSet("video_check_interval_minutes") {
 		viper.Set("video_check_interval_minutes", 180)
+	}
+	err = unset("db_seeded")
+	if err != nil {
+		log.Error().Err(err).Msg("error unsetting config value")
+	}
+	err = unset("active_queue_items")
+	if err != nil {
+		log.Error().Err(err).Msg("error unsetting config value")
 	}
 
 }

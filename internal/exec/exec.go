@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	osExec "os/exec"
 	"strconv"
 	"strings"
@@ -17,6 +18,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/config"
+	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/temporal"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -41,16 +44,19 @@ func DownloadTwitchVodVideo(v *ent.Vod) error {
 
 	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video.log", v.ExtID, v.ID))
 	if err != nil {
-		log.Error().Err(err).Msg("error creating video logfile")
-		return err
+		return fmt.Errorf("error creating video logfile: %w", err)
 	}
+
 	defer videoLogfile.Close()
 	cmd.Stdout = videoLogfile
 	cmd.Stderr = videoLogfile
 
 	if err := cmd.Run(); err != nil {
-		log.Error().Err(err).Msg("error running streamlink for vod video download")
-		return err
+		if exitError, ok := err.(*osExec.ExitError); ok {
+			log.Error().Err(err).Msg("error running streamlink for vod download")
+			return fmt.Errorf("error running streamlink for vod download with exit code %d: %w", exitError.ExitCode(), exitError)
+		}
+		return fmt.Errorf("error running streamlink for vod video download: %w", err)
 	}
 
 	log.Debug().Msgf("finished downloading vod video for %s", v.ExtID)
@@ -62,23 +68,26 @@ func DownloadTwitchVodChat(v *ent.Vod) error {
 
 	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat.log", v.ExtID, v.ID))
 	if err != nil {
-		log.Error().Err(err).Msg("error creating chat logfile")
-		return err
+		return fmt.Errorf("error creating chat logfile: %w", err)
 	}
 	defer chatLogfile.Close()
 	cmd.Stdout = chatLogfile
 	cmd.Stderr = chatLogfile
 
 	if err := cmd.Run(); err != nil {
+		if exitError, ok := err.(*osExec.ExitError); ok {
+			log.Error().Err(err).Msg("error running TwitchDownloaderCLI for vod chat download")
+			return fmt.Errorf("error running TwitchDownloaderCLI for vod chat download with exit code %d: %w", exitError.ExitCode(), exitError)
+		}
 		log.Error().Err(err).Msg("error running TwitchDownloaderCLI for vod chat download")
-		return err
+		return fmt.Errorf("error running TwitchDownloaderCLI for vod chat download: %w", err)
 	}
 
 	log.Debug().Msgf("finished downloading vod chat for %s", v.ExtID)
 	return nil
 }
 
-func RenderTwitchVodChat(v *ent.Vod, q *ent.Queue) (error, bool) {
+func RenderTwitchVodChat(v *ent.Vod) (error, bool) {
 	// Fetch config params
 	chatRenderParams := viper.GetString("parameters.chat_render")
 	// Split supplied params into array
@@ -95,14 +104,17 @@ func RenderTwitchVodChat(v *ent.Vod, q *ent.Queue) (error, bool) {
 
 	chatRenderLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat-render.log", v.ExtID, v.ID))
 	if err != nil {
-		log.Error().Err(err).Msg("error creating chat render logfile")
-		return err, true
+		return fmt.Errorf("error creating chat render logfile: %w", err), true
 	}
 	defer chatRenderLogfile.Close()
 	cmd.Stdout = chatRenderLogfile
 	cmd.Stderr = chatRenderLogfile
 
 	if err := cmd.Run(); err != nil {
+		if exitError, ok := err.(*osExec.ExitError); ok {
+			log.Error().Err(err).Msg("error running TwitchDownloaderCLI for vod chat render")
+			return fmt.Errorf("error running TwitchDownloaderCLI for vod chat render with exit code %d: %w", exitError.ExitCode(), exitError), true
+		}
 		log.Error().Err(err).Msg("error running TwitchDownloaderCLI for vod chat render")
 
 		// Check if error is because of no messages
@@ -110,12 +122,13 @@ func RenderTwitchVodChat(v *ent.Vod, q *ent.Queue) (error, bool) {
 		_, err := osExec.Command("bash", "-c", checkCmd).Output()
 		if err != nil {
 			log.Error().Err(err).Msg("error checking chat render logfile for no messages")
-			return err, true
+			return fmt.Errorf("erreor checking chat render logfile for no messages %w", err), true
 		}
 
-		log.Debug().Msg("no messages found in chat render logfile. setting vod and queue to reflect no chat.")
-		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
-		q.Update().SetChatProcessing(false).SetTaskChatMove(utils.Success).SaveX(context.Background())
+		// TODO: re-implment this
+		// log.Debug().Msg("no messages found in chat render logfile. setting vod and queue to reflect no chat.")
+		// v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
+		// q.Update().SetChatProcessing(false).SetTaskChatMove(utils.Success).SaveX(context.Background())
 		return nil, false
 	}
 
@@ -185,7 +198,7 @@ func ConvertToHLS(v *ent.Vod) error {
 
 }
 
-func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel, startChatDownloadChannel chan bool) error {
+func DownloadTwitchLiveVideo(ctx context.Context, v *ent.Vod, ch *ent.Channel, liveChatWorkflowId string) error {
 	// Fetch config params
 	liveStreamlinkParams := viper.GetString("parameters.streamlink_live")
 	// Split supplied params into array
@@ -262,32 +275,51 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel, startChatDownloadChann
 	v.Resolution = strings.Replace(v.Resolution, "30", "", 1)
 
 	// Generate args for exec
-	newArgs := []string{"--force-progress", "--force", streamURL, fmt.Sprintf("%s,best", v.Resolution)}
+	args := []string{"--progress=force", "--force", streamURL, fmt.Sprintf("%s,best", v.Resolution)}
 
 	// if proxy requires headers, pass them
 	if proxyHeader != "" {
-		newArgs = append(newArgs, "--add-headers", proxyHeader)
+		args = append(args, "--add-headers", proxyHeader)
 	}
 	// pass twitch token as header if available
 	// only pass if not using proxy for security reasons
 	if twitchToken != "" && !proxyFound {
-		newArgs = append(newArgs, "--http-header", fmt.Sprintf("Authorization=OAuth %s", twitchToken))
+		args = append(args, "--http-header", fmt.Sprintf("Authorization=OAuth %s", twitchToken))
 	}
 
 	// pass config params
-	newArgs = append(newArgs, splitStreamlinkParams...)
+	args = append(args, splitStreamlinkParams...)
 
-	newArgs = append(newArgs, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+	filteredArgs := make([]string, 0, len(args))
+	for _, arg := range args {
+		if arg != "" {
+			filteredArgs = append(filteredArgs, arg)
+		}
+	}
 
-	log.Debug().Msgf("streamlink live args: %v", newArgs)
-	log.Debug().Msgf("running: streamlink %s", strings.Join(newArgs, " "))
+	cmdArgs := append(filteredArgs, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
 
-	// Notify chat download that video download is about to start
-	log.Debug().Msg("notifying chat download that video download is about to start")
-	startChatDownloadChannel <- true
+	log.Debug().Msgf("streamlink live args: %v", cmdArgs)
+	log.Debug().Msgf("running: streamlink %s", strings.Join(cmdArgs, " "))
+
+	// Start chat download workflow if liveChatWorkflowId is set (chat is being archived)
+	if liveChatWorkflowId != "" {
+		// Notify chat download that video download is about to start
+		log.Debug().Msg("notifying chat download that video download is about to start")
+
+		// !send signal to workflow to start chat download
+		temporal.InitializeTemporalClient()
+		signal := utils.ArchiveTwitchLiveChatStartSignal{
+			Start: true,
+		}
+		err := temporal.GetTemporalClient().Client.SignalWorkflow(ctx, liveChatWorkflowId, "", "start-chat-download", signal)
+		if err != nil {
+			return fmt.Errorf("error sending signal to workflow to start chat download: %w", err)
+		}
+	}
 
 	// Execute streamlink
-	cmd := osExec.Command("streamlink", newArgs...)
+	cmd := osExec.Command("streamlink", cmdArgs...)
 
 	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video.log", v.ExtID, v.ID))
 	if err != nil {
@@ -303,6 +335,7 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel, startChatDownloadChann
 	cmd.Stdout = multiWriterStdout
 
 	if err := cmd.Run(); err != nil {
+		fmt.Printf("streamlink error: %v", err)
 		// Streamlink will error when the stream is offline - do not log this as an error
 		log.Debug().Msgf("finished downloading live video for %s - %s", v.ExtID, err.Error())
 		log.Debug().Msgf("streamlink live stdout: %s", stdout.String())
@@ -313,23 +346,15 @@ func DownloadTwitchLiveVideo(v *ent.Vod, ch *ent.Channel, startChatDownloadChann
 	return nil
 }
 
-func DownloadTwitchLiveChat(v *ent.Vod, ch *ent.Channel, q *ent.Queue, busC chan bool, startChatDownloadChannel chan bool, waitForVideo bool) error {
-
-	if waitForVideo {
-		log.Debug().Msg("waiting for video to start before downloading chat")
-		// Wait for video to start
-		<-startChatDownloadChannel
-		log.Debug().Msg("video started - starting chat download")
-	} else {
-		log.Debug().Msg("sleeping 3 seconds for video download to start.")
-		time.Sleep(3 * time.Second)
-	}
+func DownloadTwitchLiveChat(ctx context.Context, v *ent.Vod, ch *ent.Channel, q *ent.Queue) error {
 
 	log.Debug().Msg("setting chat start time")
 	chatStartTime := time.Now()
-	q.Update().SetChatStart(chatStartTime).SaveX(context.Background())
-
-	log.Debug().Msgf("spawning chat_downloader for live stream %s", v.ID)
+	_, err := database.DB().Client.Queue.UpdateOneID(q.ID).SetChatStart(chatStartTime).Save(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("error setting chat start time")
+		return err
+	}
 
 	cmd := osExec.Command("chat_downloader", fmt.Sprintf("https://twitch.tv/%s", ch.Name), "--output", fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), "-q")
 
@@ -352,20 +377,18 @@ func DownloadTwitchLiveChat(v *ent.Vod, ch *ent.Channel, q *ent.Queue, busC chan
 		return err
 	}
 
-	// When video download is complete kill chat download
-	k := <-busC
-	if k {
-		log.Debug().Msg("streamlink detected the stream was down - killing chat_downloader")
-		err := cmd.Process.Signal(os.Interrupt)
-		if err != nil {
-			log.Error().Err(err).Msg("error killing chat_downloader")
-			return err
-		}
-	}
-
+	// Wait for the command to finish
 	if err := cmd.Wait(); err != nil {
-		log.Error().Err(err).Msg("error waiting for chat_downloader for live chat download")
-		return err
+		// Check if the error is due to a signal
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exitErr.Sys().(interface{ ExitStatus() int }); ok {
+				if status.ExitStatus() != -1 {
+					fmt.Println("chat_downloader terminated by signal:", status.ExitStatus())
+				}
+			}
+		}
+
+		fmt.Println("error in chat_downloader for live chat download:", err)
 	}
 
 	log.Debug().Msgf("finished downloading live chat for %s", v.ExtID)
