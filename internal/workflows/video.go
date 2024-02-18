@@ -127,6 +127,9 @@ func ArchiveLiveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVideoInput)
 		return err
 	}
 
+	// download thumbnails againt in 5 minutes
+	_ = workflow.ExecuteChildWorkflow(ctx, DownloadTwitchLiveThumbnailsWorkflowWait, input)
+
 	// save video info
 	err = workflow.ExecuteChildWorkflow(ctx, SaveTwitchLiveVideoInfoWorkflow, input).Get(ctx, nil)
 	if err != nil {
@@ -229,6 +232,35 @@ func DownloadTwitchLiveThumbnailsWorkflow(ctx workflow.Context, input dto.Archiv
 	})
 
 	err := workflow.ExecuteActivity(ctx, activities.DownloadTwitchLiveThumbnails, input).Get(ctx, nil)
+	if err != nil {
+		return workflowErrorHandler(err, input, "download-thumbnails")
+	}
+
+	err = checkIfTasksAreDone(input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DownloadTwitchLiveThumbnailsWorkflowWait(ctx workflow.Context, input dto.ArchiveVideoInput) error {
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		StartToCloseTimeout: 15 * time.Minute,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    1 * time.Minute,
+			BackoffCoefficient: 2,
+			MaximumAttempts:    2,
+			MaximumInterval:    15 * time.Minute,
+		},
+	})
+
+	err := workflow.Sleep(ctx, 10*time.Minute)
+	if err != nil {
+		return err
+	}
+
+	err = workflow.ExecuteActivity(ctx, activities.DownloadTwitchLiveThumbnails, input).Get(ctx, nil)
 	if err != nil {
 		return workflowErrorHandler(err, input, "download-thumbnails")
 	}
