@@ -80,9 +80,11 @@ type VodEdges struct {
 	Queue *Queue `json:"queue,omitempty"`
 	// Playlists holds the value of the playlists edge.
 	Playlists []*Playlist `json:"playlists,omitempty"`
+	// Chapters holds the value of the chapters edge.
+	Chapters []*Chapter `json:"chapters,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -118,6 +120,15 @@ func (e VodEdges) PlaylistsOrErr() ([]*Playlist, error) {
 		return e.Playlists, nil
 	}
 	return nil, &NotLoadedError{edge: "playlists"}
+}
+
+// ChaptersOrErr returns the Chapters value or an error if the edge
+// was not loaded in eager-loading.
+func (e VodEdges) ChaptersOrErr() ([]*Chapter, error) {
+	if e.loadedTypes[3] {
+		return e.Chapters, nil
+	}
+	return nil, &NotLoadedError{edge: "chapters"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -323,6 +334,11 @@ func (v *Vod) QueryQueue() *QueueQuery {
 // QueryPlaylists queries the "playlists" edge of the Vod entity.
 func (v *Vod) QueryPlaylists() *PlaylistQuery {
 	return NewVodClient(v.config).QueryPlaylists(v)
+}
+
+// QueryChapters queries the "chapters" edge of the Vod entity.
+func (v *Vod) QueryChapters() *ChapterQuery {
+	return NewVodClient(v.config).QueryChapters(v)
 }
 
 // Update returns a builder for updating this Vod.

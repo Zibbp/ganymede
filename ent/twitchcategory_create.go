@@ -477,12 +477,16 @@ func (u *TwitchCategoryUpsertOne) IDX(ctx context.Context) string {
 // TwitchCategoryCreateBulk is the builder for creating many TwitchCategory entities in bulk.
 type TwitchCategoryCreateBulk struct {
 	config
+	err      error
 	builders []*TwitchCategoryCreate
 	conflict []sql.ConflictOption
 }
 
 // Save creates the TwitchCategory entities in the database.
 func (tccb *TwitchCategoryCreateBulk) Save(ctx context.Context) ([]*TwitchCategory, error) {
+	if tccb.err != nil {
+		return nil, tccb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(tccb.builders))
 	nodes := make([]*TwitchCategory, len(tccb.builders))
 	mutators := make([]Mutator, len(tccb.builders))
@@ -722,6 +726,9 @@ func (u *TwitchCategoryUpsertBulk) UpdateUpdatedAt() *TwitchCategoryUpsertBulk {
 
 // Exec executes the query.
 func (u *TwitchCategoryUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
 	for i, b := range u.create.builders {
 		if len(b.conflict) != 0 {
 			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the TwitchCategoryCreateBulk instead", i)

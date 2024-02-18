@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
+	// Chapter is the client for interacting with the Chapter builders.
+	Chapter *ChapterClient
 	// Live is the client for interacting with the Live builders.
 	Live *LiveClient
 	// LiveCategory is the client for interacting with the LiveCategory builders.
@@ -162,6 +164,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Channel = NewChannelClient(tx.config)
+	tx.Chapter = NewChapterClient(tx.config)
 	tx.Live = NewLiveClient(tx.config)
 	tx.LiveCategory = NewLiveCategoryClient(tx.config)
 	tx.Playback = NewPlaybackClient(tx.config)

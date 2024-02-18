@@ -696,12 +696,16 @@ func (u *ChannelUpsertOne) IDX(ctx context.Context) uuid.UUID {
 // ChannelCreateBulk is the builder for creating many Channel entities in bulk.
 type ChannelCreateBulk struct {
 	config
+	err      error
 	builders []*ChannelCreate
 	conflict []sql.ConflictOption
 }
 
 // Save creates the Channel entities in the database.
 func (ccb *ChannelCreateBulk) Save(ctx context.Context) ([]*Channel, error) {
+	if ccb.err != nil {
+		return nil, ccb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(ccb.builders))
 	nodes := make([]*Channel, len(ccb.builders))
 	mutators := make([]Mutator, len(ccb.builders))
@@ -990,6 +994,9 @@ func (u *ChannelUpsertBulk) UpdateUpdatedAt() *ChannelUpsertBulk {
 
 // Exec executes the query.
 func (u *ChannelUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
 	for i, b := range u.create.builders {
 		if len(b.conflict) != 0 {
 			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the ChannelCreateBulk instead", i)

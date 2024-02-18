@@ -3,13 +3,13 @@ package database
 import (
 	"context"
 	"fmt"
+	"os"
+
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/utils"
 	"golang.org/x/crypto/bcrypt"
-	"os"
 )
 
 var db *Database
@@ -18,7 +18,7 @@ type Database struct {
 	Client *ent.Client
 }
 
-func InitializeDatabase() {
+func InitializeDatabase(worker bool) {
 	log.Debug().Msg("setting up database connection")
 
 	dbHost := os.Getenv("DB_HOST")
@@ -38,21 +38,23 @@ func InitializeDatabase() {
 		log.Fatal().Err(err).Msg("error connecting to database")
 	}
 
-	// Run auto migration
-	if err := client.Schema.Create(context.Background()); err != nil {
-		log.Fatal().Err(err).Msg("error running auto migration")
-	}
-
-	isSeeded := viper.Get("db_seeded").(bool)
-	if !isSeeded {
-		log.Debug().Msg("seeding database")
-		if err := seedDatabase(client); err != nil {
-			log.Fatal().Err(err).Msg("error seeding database")
+	if !worker {
+		// Run auto migration
+		if err := client.Schema.Create(context.Background()); err != nil {
+			log.Fatal().Err(err).Msg("error running auto migration")
 		}
-		viper.Set("db_seeded", true)
-		err := viper.WriteConfig()
+		// check if any users exist
+		users, err := client.User.Query().All(context.Background())
 		if err != nil {
-			log.Fatal().Err(err).Msg("error writing config")
+			log.Panic().Err(err).Msg("error querying users")
+		}
+		// if no users exist, seed database
+		if len(users) == 0 {
+			// seed database
+			log.Debug().Msg("seeding database")
+			if err := seedDatabase(client); err != nil {
+				log.Panic().Err(err).Msg("error seeding database")
+			}
 		}
 	}
 	db = &Database{Client: client}
@@ -87,16 +89,17 @@ func NewDatabase() (*Database, error) {
 		return nil, err
 	}
 
-	isSeeded := viper.Get("db_seeded").(bool)
-	if !isSeeded {
+	// check if any users exist
+	users, err := client.User.Query().All(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	// if no users exist, seed database
+	if len(users) == 0 {
+		// seed database
 		log.Debug().Msg("seeding database")
 		if err := seedDatabase(client); err != nil {
 			return nil, err
-		}
-		viper.Set("db_seeded", true)
-		err := viper.WriteConfig()
-		if err != nil {
-			return nil, fmt.Errorf("error writing config: %v", err)
 		}
 	}
 

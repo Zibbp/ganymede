@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"time"
 )
 
 func PrintMemUsage() {
@@ -45,4 +46,14 @@ func Contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func SecondsToHHMMSS(seconds int) string {
+	duration := time.Duration(seconds) * time.Second
+
+	hours := int(duration.Hours())
+	minutes := int(duration.Minutes()) % 60
+	seconds = int(duration.Seconds()) % 60
+
+	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 }

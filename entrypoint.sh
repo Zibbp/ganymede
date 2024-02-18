@@ -27,4 +27,14 @@ su-exec abc fc-cache -f
 export DOTNET_BUNDLE_EXTRACT_BASE_DIR=/tmp
 export FONTCONFIG_CACHE=/var/cache/fontconfig
 
-su-exec abc /opt/app/ganymede-api
+su-exec abc /opt/app/ganymede-api &
+api_pid=$!
+
+# delay 5 seconds to wait for api to start
+sleep 5
+
+su-exec abc /opt/app/ganymede-worker &
+worker_pid=$!
+
+# wait
+wait $api_pid $worker_pid

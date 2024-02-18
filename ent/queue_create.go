@@ -1403,12 +1403,16 @@ func (u *QueueUpsertOne) IDX(ctx context.Context) uuid.UUID {
 // QueueCreateBulk is the builder for creating many Queue entities in bulk.
 type QueueCreateBulk struct {
 	config
+	err      error
 	builders []*QueueCreate
 	conflict []sql.ConflictOption
 }
 
 // Save creates the Queue entities in the database.
 func (qcb *QueueCreateBulk) Save(ctx context.Context) ([]*Queue, error) {
+	if qcb.err != nil {
+		return nil, qcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(qcb.builders))
 	nodes := make([]*Queue, len(qcb.builders))
 	mutators := make([]Mutator, len(qcb.builders))
@@ -1914,6 +1918,9 @@ func (u *QueueUpsertBulk) UpdateUpdatedAt() *QueueUpsertBulk {
 
 // Exec executes the query.
 func (u *QueueUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
 	for i, b := range u.create.builders {
 		if len(b.conflict) != 0 {
 			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the QueueCreateBulk instead", i)

@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -29,6 +30,7 @@ type VodQuery struct {
 	withChannel   *ChannelQuery
 	withQueue     *QueueQuery
 	withPlaylists *PlaylistQuery
+	withChapters  *ChapterQuery
 	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -125,6 +127,28 @@ func (vq *VodQuery) QueryPlaylists() *PlaylistQuery {
 			sqlgraph.From(vod.Table, vod.FieldID, selector),
 			sqlgraph.To(playlist.Table, playlist.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, vod.PlaylistsTable, vod.PlaylistsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryChapters chains the current query on the "chapters" edge.
+func (vq *VodQuery) QueryChapters() *ChapterQuery {
+	query := (&ChapterClient{config: vq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := vq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := vq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vod.Table, vod.FieldID, selector),
+			sqlgraph.To(chapter.Table, chapter.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, vod.ChaptersTable, vod.ChaptersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
 		return fromU, nil
@@ -327,6 +351,7 @@ func (vq *VodQuery) Clone() *VodQuery {
 		withChannel:   vq.withChannel.Clone(),
 		withQueue:     vq.withQueue.Clone(),
 		withPlaylists: vq.withPlaylists.Clone(),
+		withChapters:  vq.withChapters.Clone(),
 		// clone intermediate query.
 		sql:  vq.sql.Clone(),
 		path: vq.path,
@@ -363,6 +388,17 @@ func (vq *VodQuery) WithPlaylists(opts ...func(*PlaylistQuery)) *VodQuery {
 		opt(query)
 	}
 	vq.withPlaylists = query
+	return vq
+}
+
+// WithChapters tells the query-builder to eager-load the nodes that are connected to
+// the "chapters" edge. The optional arguments are used to configure the query builder of the edge.
+func (vq *VodQuery) WithChapters(opts ...func(*ChapterQuery)) *VodQuery {
+	query := (&ChapterClient{config: vq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	vq.withChapters = query
 	return vq
 }
 
@@ -445,10 +481,11 @@ func (vq *VodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vod, err
 		nodes       = []*Vod{}
 		withFKs     = vq.withFKs
 		_spec       = vq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			vq.withChannel != nil,
 			vq.withQueue != nil,
 			vq.withPlaylists != nil,
+			vq.withChapters != nil,
 		}
 	)
 	if vq.withChannel != nil {
@@ -491,6 +528,13 @@ func (vq *VodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vod, err
 		if err := vq.loadPlaylists(ctx, query, nodes,
 			func(n *Vod) { n.Edges.Playlists = []*Playlist{} },
 			func(n *Vod, e *Playlist) { n.Edges.Playlists = append(n.Edges.Playlists, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := vq.withChapters; query != nil {
+		if err := vq.loadChapters(ctx, query, nodes,
+			func(n *Vod) { n.Edges.Chapters = []*Chapter{} },
+			func(n *Vod, e *Chapter) { n.Edges.Chapters = append(n.Edges.Chapters, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -615,6 +659,37 @@ func (vq *VodQuery) loadPlaylists(ctx context.Context, query *PlaylistQuery, nod
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (vq *VodQuery) loadChapters(ctx context.Context, query *ChapterQuery, nodes []*Vod, init func(*Vod), assign func(*Vod, *Chapter)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Vod)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Chapter(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(vod.ChaptersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.vod_chapters
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "vod_chapters" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "vod_chapters" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

@@ -3,7 +3,6 @@ package archive
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -15,12 +14,16 @@ import (
 	queue2 "github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/dto"
 	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/queue"
+	"github.com/zibbp/ganymede/internal/temporal"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
+	"github.com/zibbp/ganymede/internal/workflows"
+	"go.temporal.io/sdk/client"
 )
 
 type Service struct {
@@ -194,14 +197,26 @@ func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool, render
 
 	// If chat is disabled update queue
 	if !chat {
-		q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
-		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
+		_, err := q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).Save(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error updating queue item: %v", err)
+		}
+		_, err = v.Update().SetChatPath("").SetChatVideoPath("").Save(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error updating vod: %v", err)
+		}
 	}
 
 	// If render chat is disabled update queue
 	if !renderChat {
-		q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).SaveX(context.Background())
-		v.Update().SetChatVideoPath("").SaveX(context.Background())
+		_, err := q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).Save(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error updating queue item: %v", err)
+		}
+		_, err = v.Update().SetChatVideoPath("").Save(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error updating vod: %v", err)
+		}
 	}
 
 	// Re-query queue from DB for updated values
@@ -210,26 +225,29 @@ func (s *Service) ArchiveTwitchVod(vID string, quality string, chat bool, render
 		return nil, fmt.Errorf("error fetching queue item: %v", err)
 	}
 
-	// Get max active queue items from config
-	maxActiveQueueItems := viper.GetInt("active_queue_items")
+	wfOptions := client.StartWorkflowOptions{
+		ID:        vUUID.String(),
+		TaskQueue: "archive",
+	}
 
-	// Get all queue items that are not on hold
-	qItems, err := s.Store.Client.Queue.Query().Where(queue2.Processing(true)).Where(queue2.OnHold(false)).All(context.Background())
+	input := dto.ArchiveVideoInput{
+		VideoID:      vID,
+		Type:         "vod",
+		Platform:     "twitch",
+		Resolution:   "source",
+		DownloadChat: true,
+		RenderChat:   true,
+		Vod:          v,
+		Channel:      dbC,
+		Queue:        q,
+	}
+	we, err := temporal.GetTemporalClient().Client.ExecuteWorkflow(context.Background(), wfOptions, workflows.ArchiveVideoWorkflow, input)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching queue items: %v", err)
-	}
-	if len(qItems)-1 >= maxActiveQueueItems {
-		// If there are more than X active items in queue set new queue item to on hold
-		log.Debug().Msgf("more than %d active items in queue. setting new queue item %s to on hold", maxActiveQueueItems, q.ID)
-		q.Update().SetOnHold(true).SaveX(context.Background())
-
-		return &TwitchVodResponse{
-			VOD:   v,
-			Queue: q,
-		}, nil
+		log.Error().Err(err).Msg("error starting workflow")
+		return nil, fmt.Errorf("error starting workflow: %v", err)
 	}
 
-	go s.TaskVodCreateFolder(dbC, v, q, true)
+	log.Debug().Msgf("workflow id %s started for vod %s", we.GetID(), vID)
 
 	return &TwitchVodResponse{
 		VOD:   v,
@@ -379,13 +397,27 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 
 	// If chat is disabled update queue
 	if !lwc.ArchiveChat {
-		q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
-		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
+		_, err := q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).Save(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error updating queue item: %v", err)
+		}
+
+		_, err = v.Update().SetChatPath("").SetChatVideoPath("").Save(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error updating vod: %v", err)
+		}
+
 	}
 
 	if !lwc.RenderChat {
-		q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).SaveX(context.Background())
-		v.Update().SetChatVideoPath("").SaveX(context.Background())
+		_, err := q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).Save(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error updating queue item: %v", err)
+		}
+		_, err = v.Update().SetChatVideoPath("").Save(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error updating vod: %v", err)
+		}
 	}
 
 	// Re-query queue from DB for updated values
@@ -394,7 +426,33 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 		return nil, fmt.Errorf("error fetching queue item: %v", err)
 	}
 
-	go s.TaskVodCreateFolder(dbC, v, q, true)
+	wfOptions := client.StartWorkflowOptions{
+		ID:        vUUID.String(),
+		TaskQueue: "archive",
+	}
+
+	input := dto.ArchiveVideoInput{
+		VideoID:          ts.ID,
+		Type:             "live",
+		Platform:         "twitch",
+		Resolution:       lwc.Resolution,
+		DownloadChat:     lwc.ArchiveChat,
+		RenderChat:       lwc.RenderChat,
+		Vod:              v,
+		Channel:          dbC,
+		Queue:            q,
+		LiveWatchChannel: lwc,
+	}
+
+	we, err := temporal.GetTemporalClient().Client.ExecuteWorkflow(context.Background(), wfOptions, workflows.ArchiveLiveVideoWorkflow, input)
+	if err != nil {
+		log.Error().Err(err).Msg("error starting workflow")
+		return nil, fmt.Errorf("error starting workflow: %v", err)
+	}
+
+	log.Debug().Msgf("workflow id %s started for live stream %s", we.GetID(), ts.ID)
+
+	// go s.TaskVodCreateFolder(dbC, v, q, true)
 
 	return &TwitchVodResponse{
 		VOD:   v,
@@ -650,9 +708,7 @@ func (s *Service) TaskVodSaveLiveInfo(ch *ent.Channel, v *ent.Vod, q *ent.Queue,
 
 		go s.TaskLiveVideoDownload(ch, v, q, true, busC, startChatDownloadChannel)
 		//	Check if chat download task is set to success
-		if q.TaskChatDownload == utils.Pending {
-			go s.TaskLiveChatDownload(ch, v, q, true, busC, startChatDownloadChannel, true)
-		}
+
 	}
 	return nil
 }
@@ -691,13 +747,13 @@ func (s *Service) TaskLiveVideoDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queu
 	log.Debug().Msgf("starting task video download for live stream %s", v.ID)
 	q.Update().SetTaskVideoDownload(utils.Running).SaveX(context.Background())
 
-	err := exec.DownloadTwitchLiveVideo(v, ch, startChatDownloadChannel)
-	if err != nil {
-		log.Error().Err(err).Msg("error downloading live video")
-		q.Update().SetTaskVideoDownload(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "video_download")
-		return
-	}
+	// err := exec.DownloadTwitchLiveVideo(v, ch, startChatDownloadChannel)
+	// if err != nil {
+	// 	log.Error().Err(err).Msg("error downloading live video")
+	// 	q.Update().SetTaskVideoDownload(utils.Failed).SaveX(context.Background())
+	// 	s.TaskError(ch, v, q, "video_download")
+	// 	return
+	// }
 
 	// Send kill command to chat download
 	if q.TaskChatDownload != utils.Success {
@@ -862,33 +918,33 @@ func (s *Service) TaskChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, co
 	}
 }
 
-func (s *Service) TaskLiveChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool, busC chan bool, startChatDownloadChannel chan bool, waitForVideo bool) {
-	log.Debug().Msgf("starting task chat download for live stream %s", v.ID)
-	q.Update().SetTaskChatDownload(utils.Running).SaveX(context.Background())
+// func (s *Service) TaskLiveChatDownload(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool, busC chan bool, startChatDownloadChannel chan bool, waitForVideo bool) {
+// 	log.Debug().Msgf("starting task chat download for live stream %s", v.ID)
+// 	q.Update().SetTaskChatDownload(utils.Running).SaveX(context.Background())
 
-	err := exec.DownloadTwitchLiveChat(v, ch, q, busC, startChatDownloadChannel, waitForVideo)
-	if err != nil {
-		log.Error().Err(err).Msg("error downloading live chat")
-		q.Update().SetTaskChatDownload(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "chat_download")
-		return
-	}
+// 	err := exec.DownloadTwitchLiveChat(v, ch, q, busC, startChatDownloadChannel, waitForVideo)
+// 	if err != nil {
+// 		log.Error().Err(err).Msg("error downloading live chat")
+// 		q.Update().SetTaskChatDownload(utils.Failed).SaveX(context.Background())
+// 		s.TaskError(ch, v, q, "chat_download")
+// 		return
+// 	}
 
-	q.Update().SetTaskChatDownload(utils.Success).SaveX(context.Background())
+// 	q.Update().SetTaskChatDownload(utils.Success).SaveX(context.Background())
 
-	// copy live chat
-	sourcePath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
-	destPath := fmt.Sprintf("/vods/%s/%s/%s-live-chat.json", ch.Name, v.FolderName, v.FileName)
+// 	// copy live chat
+// 	sourcePath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
+// 	destPath := fmt.Sprintf("/vods/%s/%s/%s-live-chat.json", ch.Name, v.FolderName, v.FileName)
 
-	err = utils.CopyFile(sourcePath, destPath)
-	if err != nil {
-		log.Error().Err(err).Msg("error moving live chat")
-	}
+// 	err = utils.CopyFile(sourcePath, destPath)
+// 	if err != nil {
+// 		log.Error().Err(err).Msg("error moving live chat")
+// 	}
 
-	// Always convert live chat to vod chat
-	go s.TaskLiveChatConvert(ch, v, q, true)
+// 	// Always convert live chat to vod chat
+// 	go s.TaskLiveChatConvert(ch, v, q, true)
 
-}
+// }
 
 func (s *Service) TaskChatConvertRestart(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
 	// Check if chat file exists
@@ -908,87 +964,87 @@ func (s *Service) TaskChatConvertRestart(ch *ent.Channel, v *ent.Vod, q *ent.Que
 		}
 	}
 
-	go s.TaskLiveChatConvert(ch, v, q, cont)
+	// go s.TaskLiveChatConvert(ch, v, q, cont)
 }
 
-func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
-	log.Debug().Msgf("starting task chat convert for vod %s", v.ID)
-	q.Update().SetTaskChatConvert(utils.Running).SaveX(context.Background())
+// func (s *Service) TaskLiveChatConvert(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
+// 	log.Debug().Msgf("starting task chat convert for vod %s", v.ID)
+// 	q.Update().SetTaskChatConvert(utils.Running).SaveX(context.Background())
 
-	// Check if chat file exists
-	chatPath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
-	if !utils.FileExists(chatPath) {
-		log.Debug().Msgf("chat file does not exist %s - this means there were no chat messages - setting chat to complete", chatPath)
-		// Set queue chat task to complete
-		q.Update().SetChatProcessing(false).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
-		// Set VOD chat to empty
-		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
-		// Check if all task are done
-		go s.CheckIfLiveTasksAreDone(ch, v, q)
-		return
-	}
+// 	// Check if chat file exists
+// 	chatPath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID)
+// 	if !utils.FileExists(chatPath) {
+// 		log.Debug().Msgf("chat file does not exist %s - this means there were no chat messages - setting chat to complete", chatPath)
+// 		// Set queue chat task to complete
+// 		q.Update().SetChatProcessing(false).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(context.Background())
+// 		// Set VOD chat to empty
+// 		v.Update().SetChatPath("").SetChatVideoPath("").SaveX(context.Background())
+// 		// Check if all task are done
+// 		go s.CheckIfLiveTasksAreDone(ch, v, q)
+// 		return
+// 	}
 
-	// Fetch streamer from Twitch API for their user ID
-	streamer, err := twitch.API.GetUserByLogin(ch.Name)
-	if err != nil {
-		log.Error().Err(err).Msg("error getting streamer from Twitch API")
-		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "chat_convert")
-		return
-	}
-	cID, err := strconv.Atoi(streamer.ID)
-	if err != nil {
-		log.Error().Err(err).Msg("error converting streamer ID to int")
-		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "chat_convert")
-		return
-	}
+// 	// // Fetch streamer from Twitch API for their user ID
+// 	// streamer, err := twitch.API.GetUserByLogin(ch.Name)
+// 	// if err != nil {
+// 	// 	log.Error().Err(err).Msg("error getting streamer from Twitch API")
+// 	// 	q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
+// 	// 	s.TaskError(ch, v, q, "chat_convert")
+// 	// 	return
+// 	// }
+// 	// cID, err := strconv.Atoi(streamer.ID)
+// 	// if err != nil {
+// 	// 	log.Error().Err(err).Msg("error converting streamer ID to int")
+// 	// 	q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
+// 	// 	s.TaskError(ch, v, q, "chat_convert")
+// 	// 	return
+// 	// }
 
-	// Get queue item (refresh)
-	q, err = s.QueueService.GetQueueItem(q.ID)
-	if err != nil {
-		log.Error().Err(err).Msg("error getting queue item")
-		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "chat_convert")
-		return
-	}
+// 	// Get queue item (refresh)
+// 	q, err = s.QueueService.GetQueueItem(q.ID)
+// 	if err != nil {
+// 		log.Error().Err(err).Msg("error getting queue item")
+// 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
+// 		s.TaskError(ch, v, q, "chat_convert")
+// 		return
+// 	}
 
-	err = utils.ConvertTwitchLiveChatToVodChat(fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), ch.Name, v.ID.String(), v.ExtID, cID, q.ChatStart)
-	if err != nil {
-		log.Error().Err(err).Msg("error converting chat")
-		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "chat_convert")
-		log.Info().Msgf("livestream chat task failed - setting vod to processed so it can be viewed")
-		v.Update().SetProcessing(false).SaveX(context.Background())
-		return
-	}
+// 	// err = utils.ConvertTwitchLiveChatToVodChat(fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), ch.Name, v.ID.String(), v.ExtID, cID, q.ChatStart)
+// 	// if err != nil {
+// 	// 	log.Error().Err(err).Msg("error converting chat")
+// 	// 	q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
+// 	// 	s.TaskError(ch, v, q, "chat_convert")
+// 	// 	log.Info().Msgf("livestream chat task failed - setting vod to processed so it can be viewed")
+// 	// 	v.Update().SetProcessing(false).SaveX(context.Background())
+// 	// 	return
+// 	// }
 
-	// TwitchDownloader "chatupdate"
-	// Embeds emotes and badges into the chat file
-	err = exec.TwitchChatUpdate(v)
-	if err != nil {
-		log.Error().Err(err).Msg("error updating chat")
-		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
-		s.TaskError(ch, v, q, "chat_convert")
-		log.Info().Msgf("livestream chat task failed - setting vod to processed so it can be viewed")
-		v.Update().SetProcessing(false).SaveX(context.Background())
-		return
-	}
+// 	// TwitchDownloader "chatupdate"
+// 	// Embeds emotes and badges into the chat file
+// 	err = exec.TwitchChatUpdate(v)
+// 	if err != nil {
+// 		log.Error().Err(err).Msg("error updating chat")
+// 		q.Update().SetTaskChatConvert(utils.Failed).SaveX(context.Background())
+// 		s.TaskError(ch, v, q, "chat_convert")
+// 		log.Info().Msgf("livestream chat task failed - setting vod to processed so it can be viewed")
+// 		v.Update().SetProcessing(false).SaveX(context.Background())
+// 		return
+// 	}
 
-	q.Update().SetTaskChatConvert(utils.Success).SaveX(context.Background())
+// 	q.Update().SetTaskChatConvert(utils.Success).SaveX(context.Background())
 
-	// copy converted chat
-	sourcePath := fmt.Sprintf("/tmp/%s_%s-chat-convert.json", v.ExtID, v.ID)
-	destPath := fmt.Sprintf("/vods/%s/%s/%s-chat-convert.json", ch.Name, v.FolderName, v.FileName)
+// 	// copy converted chat
+// 	sourcePath := fmt.Sprintf("/tmp/%s_%s-chat-convert.json", v.ExtID, v.ID)
+// 	destPath := fmt.Sprintf("/vods/%s/%s/%s-chat-convert.json", ch.Name, v.FolderName, v.FileName)
 
-	err = utils.CopyFile(sourcePath, destPath)
-	if err != nil {
-		log.Error().Err(err).Msg("error copying chat convert")
-	}
+// 	err = utils.CopyFile(sourcePath, destPath)
+// 	if err != nil {
+// 		log.Error().Err(err).Msg("error copying chat convert")
+// 	}
 
-	// Always render chat
-	go s.TaskChatRender(ch, v, q, true)
-}
+// 	// Always render chat
+// 	go s.TaskChatRender(ch, v, q, true)
+// }
 
 func (s *Service) TaskChatRender(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont bool) {
 	var renderContinue bool
@@ -999,18 +1055,18 @@ func (s *Service) TaskChatRender(ch *ent.Channel, v *ent.Vod, q *ent.Queue, cont
 		log.Debug().Msgf("starting task chat render for vod %s", v.ID)
 		q.Update().SetTaskChatRender(utils.Running).SaveX(context.Background())
 
-		err, rCont := exec.RenderTwitchVodChat(v, q)
-		if err != nil {
-			log.Error().Err(err).Msg("error rendering chat")
-			q.Update().SetTaskChatRender(utils.Failed).SaveX(context.Background())
-			s.TaskError(ch, v, q, "chat_render")
-			if q.LiveArchive {
-				log.Info().Msgf("livestream chat task failed - setting vod to processed so it can be viewed")
-				v.Update().SetProcessing(false).SaveX(context.Background())
-			}
-			return
-		}
-		renderContinue = rCont
+		// err, rCont := exec.RenderTwitchVodChat(v, q)
+		// if err != nil {
+		// 	log.Error().Err(err).Msg("error rendering chat")
+		// 	q.Update().SetTaskChatRender(utils.Failed).SaveX(context.Background())
+		// 	s.TaskError(ch, v, q, "chat_render")
+		// 	if q.LiveArchive {
+		// 		log.Info().Msgf("livestream chat task failed - setting vod to processed so it can be viewed")
+		// 		v.Update().SetProcessing(false).SaveX(context.Background())
+		// 	}
+		// 	return
+		// }
+		// renderContinue = rCont
 
 		q.Update().SetTaskChatRender(utils.Success).SaveX(context.Background())
 	}
