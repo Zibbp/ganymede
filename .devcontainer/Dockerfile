@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/go:1-bullseye
+FROM mcr.microsoft.com/devcontainers/go:1
 
 ENV CHAT_DOWNLOADER_VER=0.2.8
 
@@ -6,7 +6,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
   && apt-get -y install --no-install-recommends ffmpeg python3 python3-pip \
   && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache --upgrade pip streamlink chat-downloader
+RUN pip3 install --no-cache --upgrade --break-system-packages pip streamlink chat-downloader
 
 
 WORKDIR /tmp

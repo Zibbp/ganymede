@@ -379,7 +379,7 @@ func TestReadQueueLogFile(t *testing.T) {
 	}
 
 	// Create log file
-	logFile, err := os.Create(fmt.Sprintf("/logs/%s_%s-%s.log", dbVod.ExtID, dbVod.ID.String(), "video"))
+	logFile, err := os.Create(fmt.Sprintf("/logs/%s-%s.log", dbVod.ID.String(), "video"))
 	if err != nil {
 		t.Fatal(err)
 	}

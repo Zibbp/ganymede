@@ -1,4 +1,4 @@
-FROM golang:1.21 AS build-stage-01
+FROM golang:1.22-bookworm AS build-stage-01
 
 RUN mkdir /app
 ADD . /app
@@ -7,39 +7,48 @@ WORKDIR /app
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -X main.Version=${VERSION} -X main.BuildTime=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X main.GitHash=`git rev-parse HEAD`" -o ganymede-api cmd/server/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -X main.Version=${VERSION} -X main.BuildTime=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X main.GitHash=`git rev-parse HEAD`" -o ganymede-worker cmd/worker/main.go
 
-FROM alpine:latest AS build-stage-02
+FROM debian:bookworm-slim AS build-stage-02
 
-RUN apk add --update --no-cache unzip git
+RUN apt update && apt install -y git wget unzip
 
 WORKDIR /tmp
-RUN wget https://github.com/rsms/inter/releases/download/v3.19/Inter-3.19.zip && unzip Inter-3.19.zip
-RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.54.0/TwitchDownloaderCLI-1.54.0-LinuxAlpine-x64.zip && unzip TwitchDownloaderCLI-1.54.0-LinuxAlpine-x64.zip
+RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.54.0/TwitchDownloaderCLI-1.54.0-Linux-x64.zip && unzip TwitchDownloaderCLI-1.54.0-Linux-x64.zip 
 
 RUN git clone https://github.com/xenova/chat-downloader.git
 
-FROM alpine:latest AS production
+FROM debian:bookworm-slim AS production
 
 # install packages
-RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg bash tzdata shadow su-exec py3-pip && ln -sf python3 /usr/bin/python
+RUN apt update && apt install -y python3 python3-pip fontconfig ffmpeg tzdata curl procps
+RUN ln -sf python3 /usr/bin/python
+
+# RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg bash tzdata shadow su-exec py3-pip && ln -sf python3 /usr/bin/python
 RUN pip3 install --no-cache --upgrade pip streamlink --break-system-packages
 
+## Installing su-exec in debain/ubuntu container.
+RUN  set -ex; \
+     \
+     curl -o /usr/local/bin/su-exec.c https://raw.githubusercontent.com/ncopa/su-exec/master/su-exec.c; \
+     \
+     gcc -Wall \
+         /usr/local/bin/su-exec.c -o/usr/local/bin/su-exec; \
+     chown root:root /usr/local/bin/su-exec; \
+     chmod 0755 /usr/local/bin/su-exec; \
+     rm /usr/local/bin/su-exec.c; \
+     \
+## Remove the su-exec dependency. It is no longer needed after building.
+     apt-get purge -y --auto-remove curl libc-dev
+
 # setup user
-RUN groupmod -g 1000 users && \
-  useradd -u 911 -U -d /data abc && \
-  usermod -G users abc
+RUN useradd -u 911 -d /data abc && \
+    usermod -a -G users abc
 
 # Install chat-downloader
 COPY --from=build-stage-02 /tmp/chat-downloader /tmp/chat-downloader
 RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
 
-# install font
-ENV INTER_PATH "/tmp/Inter Desktop/Inter-Regular.otf"
-COPY --from=build-stage-02 ${INTER_PATH} /tmp/
-RUN mkdir /usr/share/fonts/ && chmod a+rX /usr/share/fonts/
-RUN mv /tmp/Inter-Regular.otf /usr/share/fonts/Inter.otf && fc-cache -f -v
-
 # Install fallback fonts for chat rendering
-RUN apk add terminus-font ttf-inconsolata ttf-dejavu font-noto font-noto-cjk ttf-font-awesome font-noto-extra font-noto-arabic
+RUN apt install -y  fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-inter
 
 RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
 
