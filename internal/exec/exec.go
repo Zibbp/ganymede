@@ -42,7 +42,7 @@ func DownloadTwitchVodVideo(v *ent.Vod) error {
 
 	cmd := osExec.Command("streamlink", argArr...)
 
-	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video.log", v.ExtID, v.ID))
+	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s-video.log", v.ID))
 	if err != nil {
 		return fmt.Errorf("error creating video logfile: %w", err)
 	}
@@ -66,7 +66,7 @@ func DownloadTwitchVodVideo(v *ent.Vod) error {
 func DownloadTwitchVodChat(v *ent.Vod) error {
 	cmd := osExec.Command("TwitchDownloaderCLI", "chatdownload", "--id", v.ExtID, "--embed-images", "-o", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID))
 
-	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat.log", v.ExtID, v.ID))
+	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s-chat.log", v.ID))
 	if err != nil {
 		return fmt.Errorf("error creating chat logfile: %w", err)
 	}
@@ -102,7 +102,7 @@ func RenderTwitchVodChat(v *ent.Vod) (error, bool) {
 	// Execute chat render
 	cmd := osExec.Command("TwitchDownloaderCLI", argArr...)
 
-	chatRenderLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat-render.log", v.ExtID, v.ID))
+	chatRenderLogfile, err := os.Create(fmt.Sprintf("/logs/%s-chat-render.log", v.ID))
 	if err != nil {
 		return fmt.Errorf("error creating chat render logfile: %w", err), true
 	}
@@ -118,7 +118,7 @@ func RenderTwitchVodChat(v *ent.Vod) (error, bool) {
 		log.Error().Err(err).Msg("error running TwitchDownloaderCLI for vod chat render")
 
 		// Check if error is because of no messages
-		checkCmd := fmt.Sprintf("cat /logs/%s_%s-chat-render.log | grep 'Sequence contains no elements'", v.ExtID, v.ID)
+		checkCmd := fmt.Sprintf("cat /logs/%s-chat-render.log | grep 'Sequence contains no elements'", v.ID)
 		_, err := osExec.Command("bash", "-c", checkCmd).Output()
 		if err != nil {
 			log.Error().Err(err).Msg("error checking chat render logfile for no messages")
@@ -151,7 +151,7 @@ func ConvertTwitchVodVideo(v *ent.Vod) error {
 	// Execute ffmpeg
 	cmd := osExec.Command("ffmpeg", argArr...)
 
-	videoConvertLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video-convert.log", v.ExtID, v.ID))
+	videoConvertLogfile, err := os.Create(fmt.Sprintf("/logs/%s-video-convert.log", v.ID))
 	if err != nil {
 		log.Error().Err(err).Msg("error creating video convert logfile")
 		return err
@@ -179,7 +179,7 @@ func ConvertToHLS(v *ent.Vod) error {
 
 	cmd := osExec.Command("ffmpeg", "-y", "-hide_banner", "-i", fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID), "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("/tmp/%s_%s-video_hls%s/%s_segment%s.ts", v.ExtID, v.ID, "%v", v.ExtID, "%d"), "-f", "hls", fmt.Sprintf("/tmp/%s_%s-video_hls%s/%s-video.m3u8", v.ExtID, v.ID, "%v", v.ExtID))
 
-	videoConverLogFile, err := os.Open(fmt.Sprintf("/logs/%s_%s-video-convert.log", v.ExtID, v.ID))
+	videoConverLogFile, err := os.Open(fmt.Sprintf("/logs/%s-video-convert.log", v.ID))
 	if err != nil {
 		log.Error().Err(err).Msg("error opening video convert logfile")
 		return err
@@ -321,7 +321,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, v *ent.Vod, ch *ent.Channel, l
 	// Execute streamlink
 	cmd := osExec.Command("streamlink", cmdArgs...)
 
-	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-video.log", v.ExtID, v.ID))
+	videoLogfile, err := os.Create(fmt.Sprintf("/logs/%s-video.log", v.ID))
 	if err != nil {
 		log.Error().Err(err).Msg("error creating video logfile")
 		return err
@@ -358,7 +358,7 @@ func DownloadTwitchLiveChat(ctx context.Context, v *ent.Vod, ch *ent.Channel, q 
 
 	cmd := osExec.Command("chat_downloader", fmt.Sprintf("https://twitch.tv/%s", ch.Name), "--output", fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), "-q")
 
-	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat.log", v.ExtID, v.ID))
+	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s-chat.log", v.ID))
 	if err != nil {
 		log.Error().Err(err).Msg("error creating chat logfile")
 		return err
@@ -433,7 +433,7 @@ func TwitchChatUpdate(v *ent.Vod) error {
 
 	cmd := osExec.Command("TwitchDownloaderCLI", "chatupdate", "-i", fmt.Sprintf("/tmp/%s_%s-chat-convert.json", v.ExtID, v.ID), "--embed-missing", "-o", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID))
 
-	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s_%s-chat-convert.log", v.ExtID, v.ID))
+	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s-chat-convert.log", v.ID))
 	if err != nil {
 		log.Error().Err(err).Msg("error creating chat convert logfile")
 		return err
