@@ -255,9 +255,12 @@ func DownloadTwitchLiveThumbnailsWorkflowWait(ctx workflow.Context, input dto.Ar
 		},
 	})
 
-	workflow.Sleep(ctx, 10*time.Minute)
+	err := workflow.Sleep(ctx, 10*time.Minute)
+	if err != nil {
+		return err
+	}
 
-	err := workflow.ExecuteActivity(ctx, activities.DownloadTwitchLiveThumbnails, input).Get(ctx, nil)
+	err = workflow.ExecuteActivity(ctx, activities.DownloadTwitchLiveThumbnails, input).Get(ctx, nil)
 	if err != nil {
 		return workflowErrorHandler(err, input, "download-thumbnails")
 	}
