@@ -170,6 +170,7 @@ func main() {
 		w.RegisterWorkflow(workflows.ArchiveTwitchLiveVideoWorkflow)
 		w.RegisterWorkflow(workflows.DownloadTwitchLiveChatWorkflow)
 		w.RegisterWorkflow(workflows.DownloadTwitchLiveThumbnailsWorkflow)
+		w.RegisterWorkflow(workflows.DownloadTwitchLiveThumbnailsWorkflowWait)
 		w.RegisterWorkflow(workflows.DownloadTwitchLiveVideoWorkflow)
 		w.RegisterWorkflow(workflows.SaveTwitchLiveVideoInfoWorkflow)
 		w.RegisterWorkflow(workflows.ArchiveTwitchLiveChatWorkflow)
