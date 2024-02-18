@@ -49,14 +49,28 @@ services:
     ports:
       - 4801:3000
   ganymede-temporal:
+    image: temporalio/auto-setup:1
     container_name: ganymede-temporal
-    image: ghcr.io/zibbp/ganymede-temporal:latest
-    restart: unless-stopped
-    volumes:
-      - ./temporal:/data
+    depends_on:
+      - ganymede-db
+    environment:
+      - DB=postgresql # this tells temporal to use postgres (not the db name)
+      - DB_PORT=5432
+      - POSTGRES_USER=ganymede
+      - POSTGRES_PWD=PASSWORD
+      - POSTGRES_SEEDS=ganymede-db # name of the db service
     ports:
       - 7233:7233
-      - 8233:8233 # web ui - optional
+  # -- Uncomment below to enable temporal web ui --
+  # ganymede-temporal-ui:
+  #   image: temporalio/ui:latest
+  #   container_name: ganymede-temporal-ui
+  #   depends_on:
+  #     - ganymede-temporal
+  #   environment:
+  #     - TEMPORAL_ADDRESS=ganymede-temporal:7233
+  #   ports:
+  #     - 8233:8080
   ganymede-db:
     container_name: ganymede-db
     image: postgres:14
