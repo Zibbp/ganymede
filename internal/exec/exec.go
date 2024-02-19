@@ -451,6 +451,43 @@ func TwitchChatUpdate(v *ent.Vod) error {
 	return nil
 }
 
+func ExecuteFFprobeCommand(args []string, file string) (string, error) {
+	args = append(args, file)
+	cmd := osExec.Command("ffprobe", args...)
+	out, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("error running ffprobe command: %w", err)
+	}
+	return string(out), nil
+}
+
+func ExecuteFFmpegCommand(preArgs []string, postArgs []string, inputFile string, outputFile string) (string, error) {
+	var ffmpegArgs []string
+	ffmpegArgs = append(ffmpegArgs, "-hide_banner", "-loglevel", "error")
+	ffmpegArgs = append(ffmpegArgs, preArgs...)
+	ffmpegArgs = append(ffmpegArgs, "-i", inputFile)
+	ffmpegArgs = append(ffmpegArgs, postArgs...)
+	ffmpegArgs = append(ffmpegArgs, outputFile)
+
+	log.Debug().Msgf("ffmpeg args: %v", ffmpegArgs)
+
+	cmd := osExec.Command("ffmpeg", ffmpegArgs...)
+
+	// Capture output
+	var output bytes.Buffer
+	cmd.Stdout = &output
+	cmd.Stderr = &output
+
+	// Execute the command
+	if err := cmd.Run(); err != nil {
+		log.Error().Err(err).Msg("error running ffmpeg command")
+		log.Debug().Msgf("ffmpeg output: %s", output.String())
+		return fmt.Sprintf("%s", output.String()), fmt.Errorf("error running ffmpeg command: %w", err)
+	}
+
+	return output.String(), nil
+}
+
 // test proxy server by making http request to proxy server
 // if request is successful return true
 // timeout after 5 seconds

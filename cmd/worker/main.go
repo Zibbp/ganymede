@@ -130,11 +130,12 @@ func main() {
 	database.InitializeDatabase(true)
 
 	taskQueues := map[string]int{
-		"archive":        100,
-		"chat-download":  config.MAX_CHAT_DOWNLOAD_EXECUTIONS,
-		"chat-render":    config.MAX_CHAT_RENDER_EXECUTIONS,
-		"video-download": config.MAX_VIDEO_DOWNLOAD_EXECUTIONS,
-		"video-convert":  config.MAX_VIDEO_CONVERT_EXECUTIONS,
+		"archive":             100,
+		"chat-download":       config.MAX_CHAT_DOWNLOAD_EXECUTIONS,
+		"chat-render":         config.MAX_CHAT_RENDER_EXECUTIONS,
+		"video-download":      config.MAX_VIDEO_DOWNLOAD_EXECUTIONS,
+		"video-convert":       config.MAX_VIDEO_CONVERT_EXECUTIONS,
+		"generate-thumbnails": 1,
 	}
 
 	// create worker interrupt channel
@@ -177,6 +178,7 @@ func main() {
 		w.RegisterWorkflow(workflows.ConvertTwitchLiveChatWorkflow)
 		w.RegisterWorkflow(workflows.SaveTwitchVideoChapters)
 		w.RegisterWorkflow(workflows.UpdateTwitchLiveStreamArchivesWithVodIds)
+		w.RegisterWorkflow(workflows.GenerateThumbnailsForVideo)
 
 		w.RegisterActivity(activities.ArchiveVideoActivity)
 		w.RegisterActivity(activities.SaveTwitchVideoInfo)
@@ -196,6 +198,7 @@ func main() {
 		w.RegisterActivity(activities.ConvertTwitchLiveChat)
 		w.RegisterActivity(activities.TwitchSaveVideoChapters)
 		w.RegisterActivity(activities.UpdateTwitchLiveStreamArchivesWithVodIds)
+		w.RegisterActivity(activities.GenerateThumbnailsForVideo)
 
 		err = w.Start()
 		if err != nil {
