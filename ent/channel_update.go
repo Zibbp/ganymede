@@ -57,15 +57,39 @@ func (cu *ChannelUpdate) SetName(s string) *ChannelUpdate {
 	return cu
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (cu *ChannelUpdate) SetNillableName(s *string) *ChannelUpdate {
+	if s != nil {
+		cu.SetName(*s)
+	}
+	return cu
+}
+
 // SetDisplayName sets the "display_name" field.
 func (cu *ChannelUpdate) SetDisplayName(s string) *ChannelUpdate {
 	cu.mutation.SetDisplayName(s)
 	return cu
 }
 
+// SetNillableDisplayName sets the "display_name" field if the given value is not nil.
+func (cu *ChannelUpdate) SetNillableDisplayName(s *string) *ChannelUpdate {
+	if s != nil {
+		cu.SetDisplayName(*s)
+	}
+	return cu
+}
+
 // SetImagePath sets the "image_path" field.
 func (cu *ChannelUpdate) SetImagePath(s string) *ChannelUpdate {
 	cu.mutation.SetImagePath(s)
+	return cu
+}
+
+// SetNillableImagePath sets the "image_path" field if the given value is not nil.
+func (cu *ChannelUpdate) SetNillableImagePath(s *string) *ChannelUpdate {
+	if s != nil {
+		cu.SetImagePath(*s)
+	}
 	return cu
 }
 
@@ -404,15 +428,39 @@ func (cuo *ChannelUpdateOne) SetName(s string) *ChannelUpdateOne {
 	return cuo
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (cuo *ChannelUpdateOne) SetNillableName(s *string) *ChannelUpdateOne {
+	if s != nil {
+		cuo.SetName(*s)
+	}
+	return cuo
+}
+
 // SetDisplayName sets the "display_name" field.
 func (cuo *ChannelUpdateOne) SetDisplayName(s string) *ChannelUpdateOne {
 	cuo.mutation.SetDisplayName(s)
 	return cuo
 }
 
+// SetNillableDisplayName sets the "display_name" field if the given value is not nil.
+func (cuo *ChannelUpdateOne) SetNillableDisplayName(s *string) *ChannelUpdateOne {
+	if s != nil {
+		cuo.SetDisplayName(*s)
+	}
+	return cuo
+}
+
 // SetImagePath sets the "image_path" field.
 func (cuo *ChannelUpdateOne) SetImagePath(s string) *ChannelUpdateOne {
 	cuo.mutation.SetImagePath(s)
+	return cuo
+}
+
+// SetNillableImagePath sets the "image_path" field if the given value is not nil.
+func (cuo *ChannelUpdateOne) SetNillableImagePath(s *string) *ChannelUpdateOne {
+	if s != nil {
+		cuo.SetImagePath(*s)
+	}
 	return cuo
 }
 

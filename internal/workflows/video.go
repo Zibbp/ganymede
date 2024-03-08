@@ -2,6 +2,8 @@ package workflows
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -12,6 +14,7 @@ import (
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/dto"
 	"github.com/zibbp/ganymede/internal/notification"
+	ganymedeTemporal "github.com/zibbp/ganymede/internal/temporal"
 	"github.com/zibbp/ganymede/internal/utils"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -70,6 +73,43 @@ func workflowErrorHandler(err error, input dto.ArchiveVideoInput, task string) e
 	notification.SendErrorNotification(input.Channel, input.Vod, input.Queue, task)
 
 	return err
+}
+
+func cancelWorkflowAndCleanup(ctx context.Context, input dto.ArchiveVideoInput) error {
+	log.Info().Msg("no stream found for channel - cancelling workflow")
+	q, err := database.DB().Client.Queue.Query().Where(queue.ID(input.Queue.ID)).Only(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("error getting queue item")
+		return err
+	}
+	log.Debug().Msgf("cancelling workflow: %s run: %s", q.WorkflowID, q.WorkflowRunID)
+	// cancel workflow
+	err = ganymedeTemporal.GetTemporalClient().Client.TerminateWorkflow(ctx, q.WorkflowID, q.WorkflowRunID, "no stream found")
+	if err != nil {
+		log.Error().Err(err).Msg("error cancelling workflow")
+		return err
+	}
+	// delete directory
+	path := fmt.Sprintf("/vods/%s/%s", input.Channel.Name, input.Vod.FolderName)
+	err = utils.DeleteFolder(path)
+	if err != nil {
+		log.Error().Err(err).Msg("error deleting files")
+		return err
+	}
+	// delete queue item
+	err = database.DB().Client.Queue.DeleteOneID(input.Queue.ID).Exec(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("error deleting queue item")
+		return err
+	}
+	// delete vod
+	err = database.DB().Client.Vod.DeleteOneID(input.Vod.ID).Exec(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("error deleting vod")
+		return err
+	}
+
+	return nil
 }
 
 // *Top Level Workflow*
@@ -233,6 +273,13 @@ func DownloadTwitchLiveThumbnailsWorkflow(ctx workflow.Context, input dto.Archiv
 
 	err := workflow.ExecuteActivity(ctx, activities.DownloadTwitchLiveThumbnails, input).Get(ctx, nil)
 	if err != nil {
+		if strings.Contains(err.Error(), "no stream found for channel") {
+			err := cancelWorkflowAndCleanup(context.Background(), input)
+			if err != nil {
+				return err
+			}
+			return err
+		}
 		return workflowErrorHandler(err, input, "download-thumbnails")
 	}
 
@@ -488,6 +535,20 @@ func DownloadTwitchLiveVideoWorkflow(ctx workflow.Context, input dto.ArchiveVide
 
 	err := workflow.ExecuteActivity(ctx, activities.DownloadTwitchLiveVideo, input).Get(ctx, nil)
 	if err != nil {
+		// cleanup archive if no stream found
+		if strings.Contains(err.Error(), "no playable streams found on this URL") {
+			log.Error().Err(err).Msg("no stream found for channel")
+			err := cancelWorkflowAndCleanup(context.Background(), input)
+			if err != nil {
+				return err
+			}
+			err = workflow.ExecuteActivity(ctx, activities.KillTwitchLiveChatDownload, input).Get(ctx, nil)
+			if err != nil {
+				return err
+			}
+			return err
+		}
+
 		return workflowErrorHandler(err, input, "download-video")
 	}
 
