@@ -359,6 +359,13 @@ func SaveTwitchLiveVideoInfoWorkflow(ctx workflow.Context, input dto.ArchiveVide
 
 	err := workflow.ExecuteActivity(ctx, activities.SaveTwitchLiveVideoInfo, input).Get(ctx, nil)
 	if err != nil {
+		if strings.Contains(err.Error(), "no stream found for channel") {
+			err := cancelWorkflowAndCleanup(context.Background(), input)
+			if err != nil {
+				return err
+			}
+			return err
+		}
 		return workflowErrorHandler(err, input, "save-video-info")
 	}
 
