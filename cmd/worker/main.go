@@ -31,7 +31,7 @@ type Logger struct {
 
 func (l *Logger) Debug(msg string, keyvals ...interface{}) {
 	if len(keyvals)%2 != 0 {
-		l.logger.Debug().Msgf(msg)
+		l.logger.Debug().Str("service", "worker").Msgf(msg)
 		return
 	}
 
@@ -42,12 +42,12 @@ func (l *Logger) Debug(msg string, keyvals ...interface{}) {
 		}
 	}
 
-	l.logger.Debug().Fields(fields).Msg(msg)
+	l.logger.Debug().Str("service", "worker").Fields(fields).Msg(msg)
 }
 
 func (l *Logger) Info(msg string, keyvals ...interface{}) {
 	if len(keyvals)%2 != 0 {
-		l.logger.Info().Msgf(msg)
+		l.logger.Info().Str("service", "worker").Msgf(msg)
 		return
 	}
 
@@ -58,12 +58,12 @@ func (l *Logger) Info(msg string, keyvals ...interface{}) {
 		}
 	}
 
-	l.logger.Info().Fields(fields).Msg(msg)
+	l.logger.Info().Str("service", "worker").Fields(fields).Msg(msg)
 }
 
 func (l *Logger) Warn(msg string, keyvals ...interface{}) {
 	if len(keyvals)%2 != 0 {
-		l.logger.Warn().Msgf(msg)
+		l.logger.Warn().Str("service", "worker").Msgf(msg)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (l *Logger) Warn(msg string, keyvals ...interface{}) {
 		}
 	}
 
-	l.logger.Warn().Fields(fields).Msg(msg)
+	l.logger.Warn().Str("service", "worker").Fields(fields).Msg(msg)
 }
 
 func (l *Logger) Error(msg string, keyvals ...interface{}) {
@@ -90,7 +90,7 @@ func (l *Logger) Error(msg string, keyvals ...interface{}) {
 		}
 	}
 
-	l.logger.Error().Fields(fields).Msg(msg)
+	l.logger.Error().Str("service", "worker").Fields(fields).Msg(msg)
 }
 
 func main() {
