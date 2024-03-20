@@ -82,12 +82,14 @@ func cancelWorkflowAndCleanup(ctx context.Context, input dto.ArchiveVideoInput) 
 		log.Error().Err(err).Msg("error getting queue item")
 		return err
 	}
-	log.Debug().Msgf("cancelling workflow: %s run: %s", q.WorkflowID, q.WorkflowRunID)
 	// cancel workflow
-	err = ganymedeTemporal.GetTemporalClient().Client.TerminateWorkflow(ctx, q.WorkflowID, q.WorkflowRunID, "no stream found")
-	if err != nil {
-		log.Error().Err(err).Msg("error cancelling workflow")
-		return err
+	if q.WorkflowID != "" && q.WorkflowRunID != "" {
+		log.Debug().Msgf("cancelling workflow: %s run: %s", q.WorkflowID, q.WorkflowRunID)
+		err = ganymedeTemporal.GetTemporalClient().Client.TerminateWorkflow(ctx, q.WorkflowID, q.WorkflowRunID, "no stream found")
+		if err != nil {
+			log.Error().Err(err).Msg("error cancelling workflow")
+			return err
+		}
 	}
 	// delete directory
 	path := fmt.Sprintf("/vods/%s/%s", input.Channel.Name, input.Vod.FolderName)
