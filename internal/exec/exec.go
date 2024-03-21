@@ -335,10 +335,13 @@ func DownloadTwitchLiveVideo(ctx context.Context, v *ent.Vod, ch *ent.Channel, l
 	cmd.Stdout = multiWriterStdout
 
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("streamlink error: %v", err)
 		// Streamlink will error when the stream is offline - do not log this as an error
 		log.Debug().Msgf("finished downloading live video for %s - %s", v.ExtID, err.Error())
 		log.Debug().Msgf("streamlink live stdout: %s", stdout.String())
+		if strings.Contains(stdout.String(), "No playable streams found on this URL") {
+			log.Error().Msgf("no playable streams found on this URL for %s", v.ExtID)
+			return utils.NewLiveVideoDownloadNoStreamError("no playable streams found on this URL")
+		}
 		return nil
 	}
 

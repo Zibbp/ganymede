@@ -36,6 +36,14 @@ func (pu *PlaylistUpdate) SetName(s string) *PlaylistUpdate {
 	return pu
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (pu *PlaylistUpdate) SetNillableName(s *string) *PlaylistUpdate {
+	if s != nil {
+		pu.SetName(*s)
+	}
+	return pu
+}
+
 // SetDescription sets the "description" field.
 func (pu *PlaylistUpdate) SetDescription(s string) *PlaylistUpdate {
 	pu.mutation.SetDescription(s)
@@ -254,6 +262,14 @@ type PlaylistUpdateOne struct {
 // SetName sets the "name" field.
 func (puo *PlaylistUpdateOne) SetName(s string) *PlaylistUpdateOne {
 	puo.mutation.SetName(s)
+	return puo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (puo *PlaylistUpdateOne) SetNillableName(s *string) *PlaylistUpdateOne {
+	if s != nil {
+		puo.SetName(*s)
+	}
 	return puo
 }
 

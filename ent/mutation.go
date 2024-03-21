@@ -4640,6 +4640,8 @@ type QueueMutation struct {
 	task_chat_move              *utils.TaskStatus
 	chat_start                  *time.Time
 	render_chat                 *bool
+	workflow_id                 *string
+	workflow_run_id             *string
 	updated_at                  *time.Time
 	created_at                  *time.Time
 	clearedFields               map[string]struct{}
@@ -5522,6 +5524,104 @@ func (m *QueueMutation) ResetRenderChat() {
 	delete(m.clearedFields, queue.FieldRenderChat)
 }
 
+// SetWorkflowID sets the "workflow_id" field.
+func (m *QueueMutation) SetWorkflowID(s string) {
+	m.workflow_id = &s
+}
+
+// WorkflowID returns the value of the "workflow_id" field in the mutation.
+func (m *QueueMutation) WorkflowID() (r string, exists bool) {
+	v := m.workflow_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkflowID returns the old "workflow_id" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldWorkflowID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkflowID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkflowID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkflowID: %w", err)
+	}
+	return oldValue.WorkflowID, nil
+}
+
+// ClearWorkflowID clears the value of the "workflow_id" field.
+func (m *QueueMutation) ClearWorkflowID() {
+	m.workflow_id = nil
+	m.clearedFields[queue.FieldWorkflowID] = struct{}{}
+}
+
+// WorkflowIDCleared returns if the "workflow_id" field was cleared in this mutation.
+func (m *QueueMutation) WorkflowIDCleared() bool {
+	_, ok := m.clearedFields[queue.FieldWorkflowID]
+	return ok
+}
+
+// ResetWorkflowID resets all changes to the "workflow_id" field.
+func (m *QueueMutation) ResetWorkflowID() {
+	m.workflow_id = nil
+	delete(m.clearedFields, queue.FieldWorkflowID)
+}
+
+// SetWorkflowRunID sets the "workflow_run_id" field.
+func (m *QueueMutation) SetWorkflowRunID(s string) {
+	m.workflow_run_id = &s
+}
+
+// WorkflowRunID returns the value of the "workflow_run_id" field in the mutation.
+func (m *QueueMutation) WorkflowRunID() (r string, exists bool) {
+	v := m.workflow_run_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkflowRunID returns the old "workflow_run_id" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldWorkflowRunID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkflowRunID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkflowRunID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkflowRunID: %w", err)
+	}
+	return oldValue.WorkflowRunID, nil
+}
+
+// ClearWorkflowRunID clears the value of the "workflow_run_id" field.
+func (m *QueueMutation) ClearWorkflowRunID() {
+	m.workflow_run_id = nil
+	m.clearedFields[queue.FieldWorkflowRunID] = struct{}{}
+}
+
+// WorkflowRunIDCleared returns if the "workflow_run_id" field was cleared in this mutation.
+func (m *QueueMutation) WorkflowRunIDCleared() bool {
+	_, ok := m.clearedFields[queue.FieldWorkflowRunID]
+	return ok
+}
+
+// ResetWorkflowRunID resets all changes to the "workflow_run_id" field.
+func (m *QueueMutation) ResetWorkflowRunID() {
+	m.workflow_run_id = nil
+	delete(m.clearedFields, queue.FieldWorkflowRunID)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *QueueMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -5667,7 +5767,7 @@ func (m *QueueMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QueueMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 21)
 	if m.live_archive != nil {
 		fields = append(fields, queue.FieldLiveArchive)
 	}
@@ -5719,6 +5819,12 @@ func (m *QueueMutation) Fields() []string {
 	if m.render_chat != nil {
 		fields = append(fields, queue.FieldRenderChat)
 	}
+	if m.workflow_id != nil {
+		fields = append(fields, queue.FieldWorkflowID)
+	}
+	if m.workflow_run_id != nil {
+		fields = append(fields, queue.FieldWorkflowRunID)
+	}
 	if m.updated_at != nil {
 		fields = append(fields, queue.FieldUpdatedAt)
 	}
@@ -5767,6 +5873,10 @@ func (m *QueueMutation) Field(name string) (ent.Value, bool) {
 		return m.ChatStart()
 	case queue.FieldRenderChat:
 		return m.RenderChat()
+	case queue.FieldWorkflowID:
+		return m.WorkflowID()
+	case queue.FieldWorkflowRunID:
+		return m.WorkflowRunID()
 	case queue.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case queue.FieldCreatedAt:
@@ -5814,6 +5924,10 @@ func (m *QueueMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldChatStart(ctx)
 	case queue.FieldRenderChat:
 		return m.OldRenderChat(ctx)
+	case queue.FieldWorkflowID:
+		return m.OldWorkflowID(ctx)
+	case queue.FieldWorkflowRunID:
+		return m.OldWorkflowRunID(ctx)
 	case queue.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case queue.FieldCreatedAt:
@@ -5946,6 +6060,20 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRenderChat(v)
 		return nil
+	case queue.FieldWorkflowID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkflowID(v)
+		return nil
+	case queue.FieldWorkflowRunID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkflowRunID(v)
+		return nil
 	case queue.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -6026,6 +6154,12 @@ func (m *QueueMutation) ClearedFields() []string {
 	if m.FieldCleared(queue.FieldRenderChat) {
 		fields = append(fields, queue.FieldRenderChat)
 	}
+	if m.FieldCleared(queue.FieldWorkflowID) {
+		fields = append(fields, queue.FieldWorkflowID)
+	}
+	if m.FieldCleared(queue.FieldWorkflowRunID) {
+		fields = append(fields, queue.FieldWorkflowRunID)
+	}
 	return fields
 }
 
@@ -6075,6 +6209,12 @@ func (m *QueueMutation) ClearField(name string) error {
 		return nil
 	case queue.FieldRenderChat:
 		m.ClearRenderChat()
+		return nil
+	case queue.FieldWorkflowID:
+		m.ClearWorkflowID()
+		return nil
+	case queue.FieldWorkflowRunID:
+		m.ClearWorkflowRunID()
 		return nil
 	}
 	return fmt.Errorf("unknown Queue nullable field %s", name)
@@ -6134,6 +6274,12 @@ func (m *QueueMutation) ResetField(name string) error {
 		return nil
 	case queue.FieldRenderChat:
 		m.ResetRenderChat()
+		return nil
+	case queue.FieldWorkflowID:
+		m.ResetWorkflowID()
+		return nil
+	case queue.FieldWorkflowRunID:
+		m.ResetWorkflowRunID()
 		return nil
 	case queue.FieldUpdatedAt:
 		m.ResetUpdatedAt()

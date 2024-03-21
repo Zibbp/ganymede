@@ -26,3 +26,4 @@ go.work
 dev
 tmp
 **/__debug
+__debug*

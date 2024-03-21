@@ -9,6 +9,7 @@ import (
 	"github.com/zibbp/ganymede/internal/activities"
 	serverConfig "github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/temporal"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/workflows"
 
@@ -108,7 +109,7 @@ func main() {
 	// this needs to be removed in the future to decouple the worker from the server
 	serverConfig.NewConfig(false)
 
-	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+	logger := zerolog.New(os.Stdout).With().Timestamp().Logger().With().Str("service", "worker").Logger()
 
 	clientOptions := client.Options{
 		HostPort: config.TEMPORAL_URL,
@@ -128,6 +129,9 @@ func main() {
 	}
 
 	database.InitializeDatabase(true)
+
+	// Initialize the temporal client for the worker
+	temporal.InitializeTemporalClient()
 
 	taskQueues := map[string]int{
 		"archive":        100,
