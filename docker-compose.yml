@@ -4,6 +4,8 @@ services:
     container_name: ganymede-api
     image: ghcr.io/zibbp/ganymede:latest
     restart: unless-stopped
+    depends_on:
+      - ganymede-temporal
     environment:
       - TZ=America/Chicago # Set to your timezone
       - DB_HOST=ganymede-db
