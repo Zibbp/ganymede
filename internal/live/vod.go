@@ -3,6 +3,7 @@ package live
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -119,6 +120,25 @@ func (s *Service) CheckVodWatchedChannels() {
 					log.Error().Err(err).Msgf("error getting video %s from GraphQL API", video.ID)
 					continue
 				}
+
+				// check if video is too old
+				if watch.VideoAge > 0 {
+					parsedTime, err := time.Parse(time.RFC3339, video.CreatedAt)
+					if err != nil {
+						log.Error().Err(err).Msgf("error parsing video %s created_at", video.ID)
+						continue
+					}
+
+					currentTime := time.Now()
+					ageDuration := time.Duration(watch.VideoAge) * 24 * time.Hour
+					ageCutOff := currentTime.Add(-ageDuration)
+
+					if parsedTime.Before(ageCutOff) {
+						log.Debug().Msgf("skipping video %s. video is older than %d days.", video.ID, watch.VideoAge)
+						continue
+					}
+				}
+
 				// Get video chapters
 				gqlVideoChapters, err := twitch.GQLGetChapters(video.ID)
 				if err != nil {

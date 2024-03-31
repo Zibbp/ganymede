@@ -41,6 +41,8 @@ type Live struct {
 	LastLive time.Time `json:"last_live,omitempty"`
 	// Whether the chat should be rendered.
 	RenderChat bool `json:"render_chat,omitempty"`
+	// Restrict fetching videos to a certain age.
+	VideoAge int64 `json:"video_age,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -92,6 +94,8 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat:
 			values[i] = new(sql.NullBool)
+		case live.FieldVideoAge:
+			values[i] = new(sql.NullInt64)
 		case live.FieldResolution:
 			values[i] = new(sql.NullString)
 		case live.FieldLastLive, live.FieldUpdatedAt, live.FieldCreatedAt:
@@ -186,6 +190,12 @@ func (l *Live) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field render_chat", values[i])
 			} else if value.Valid {
 				l.RenderChat = value.Bool
+			}
+		case live.FieldVideoAge:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field video_age", values[i])
+			} else if value.Valid {
+				l.VideoAge = value.Int64
 			}
 		case live.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -284,6 +294,9 @@ func (l *Live) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("render_chat=")
 	builder.WriteString(fmt.Sprintf("%v", l.RenderChat))
+	builder.WriteString(", ")
+	builder.WriteString("video_age=")
+	builder.WriteString(fmt.Sprintf("%v", l.VideoAge))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(l.UpdatedAt.Format(time.ANSIC))

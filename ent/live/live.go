@@ -37,6 +37,8 @@ const (
 	FieldLastLive = "last_live"
 	// FieldRenderChat holds the string denoting the render_chat field in the database.
 	FieldRenderChat = "render_chat"
+	// FieldVideoAge holds the string denoting the video_age field in the database.
+	FieldVideoAge = "video_age"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -77,6 +79,7 @@ var Columns = []string{
 	FieldResolution,
 	FieldLastLive,
 	FieldRenderChat,
+	FieldVideoAge,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -125,6 +128,8 @@ var (
 	DefaultLastLive func() time.Time
 	// DefaultRenderChat holds the default value on creation for the "render_chat" field.
 	DefaultRenderChat bool
+	// DefaultVideoAge holds the default value on creation for the "video_age" field.
+	DefaultVideoAge int64
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
@@ -196,6 +201,11 @@ func ByLastLive(opts ...sql.OrderTermOption) OrderOption {
 // ByRenderChat orders the results by the render_chat field.
 func ByRenderChat(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRenderChat, opts...).ToFunc()
+}
+
+// ByVideoAge orders the results by the video_age field.
+func ByVideoAge(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVideoAge, opts...).ToFunc()
 }
 
 // ByUpdatedAt orders the results by the updated_at field.

@@ -1739,6 +1739,8 @@ type LiveMutation struct {
 	resolution          *string
 	last_live           *time.Time
 	render_chat         *bool
+	video_age           *int64
+	addvideo_age        *int64
 	updated_at          *time.Time
 	created_at          *time.Time
 	clearedFields       map[string]struct{}
@@ -2265,6 +2267,62 @@ func (m *LiveMutation) ResetRenderChat() {
 	m.render_chat = nil
 }
 
+// SetVideoAge sets the "video_age" field.
+func (m *LiveMutation) SetVideoAge(i int64) {
+	m.video_age = &i
+	m.addvideo_age = nil
+}
+
+// VideoAge returns the value of the "video_age" field in the mutation.
+func (m *LiveMutation) VideoAge() (r int64, exists bool) {
+	v := m.video_age
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVideoAge returns the old "video_age" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldVideoAge(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVideoAge is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVideoAge requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVideoAge: %w", err)
+	}
+	return oldValue.VideoAge, nil
+}
+
+// AddVideoAge adds i to the "video_age" field.
+func (m *LiveMutation) AddVideoAge(i int64) {
+	if m.addvideo_age != nil {
+		*m.addvideo_age += i
+	} else {
+		m.addvideo_age = &i
+	}
+}
+
+// AddedVideoAge returns the value that was added to the "video_age" field in this mutation.
+func (m *LiveMutation) AddedVideoAge() (r int64, exists bool) {
+	v := m.addvideo_age
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVideoAge resets all changes to the "video_age" field.
+func (m *LiveMutation) ResetVideoAge() {
+	m.video_age = nil
+	m.addvideo_age = nil
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *LiveMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -2464,7 +2522,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -2497,6 +2555,9 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.render_chat != nil {
 		fields = append(fields, live.FieldRenderChat)
+	}
+	if m.video_age != nil {
+		fields = append(fields, live.FieldVideoAge)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, live.FieldUpdatedAt)
@@ -2534,6 +2595,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.LastLive()
 	case live.FieldRenderChat:
 		return m.RenderChat()
+	case live.FieldVideoAge:
+		return m.VideoAge()
 	case live.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case live.FieldCreatedAt:
@@ -2569,6 +2632,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldLastLive(ctx)
 	case live.FieldRenderChat:
 		return m.OldRenderChat(ctx)
+	case live.FieldVideoAge:
+		return m.OldVideoAge(ctx)
 	case live.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case live.FieldCreatedAt:
@@ -2659,6 +2724,13 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRenderChat(v)
 		return nil
+	case live.FieldVideoAge:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVideoAge(v)
+		return nil
 	case live.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -2680,13 +2752,21 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *LiveMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addvideo_age != nil {
+		fields = append(fields, live.FieldVideoAge)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *LiveMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case live.FieldVideoAge:
+		return m.AddedVideoAge()
+	}
 	return nil, false
 }
 
@@ -2695,6 +2775,13 @@ func (m *LiveMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *LiveMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case live.FieldVideoAge:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVideoAge(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Live numeric field %s", name)
 }
@@ -2763,6 +2850,9 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldRenderChat:
 		m.ResetRenderChat()
+		return nil
+	case live.FieldVideoAge:
+		m.ResetVideoAge()
 		return nil
 	case live.FieldUpdatedAt:
 		m.ResetUpdatedAt()
