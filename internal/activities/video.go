@@ -252,7 +252,6 @@ func DownloadTwitchLiveThumbnails(ctx context.Context, input dto.ArchiveVideoInp
 			return dbErr
 		}
 		// stream isn't live so archive shouldn't continue and should be cleaned up
-		// TODO: clean up entire archive thus far
 		return temporal.NewApplicationError(fmt.Sprintf("no stream found for channel %s", input.Channel.Name), "", nil)
 	}
 

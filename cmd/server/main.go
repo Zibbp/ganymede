@@ -73,11 +73,6 @@ func Run() error {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	//store, err := database.NewDatabase()
-	//if err != nil {
-	//	log.Error().Err(err).Msg("failed to create database connection")
-	//	return err
-	//}
 	database.InitializeDatabase(false)
 	store := database.DB()
 

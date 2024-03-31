@@ -180,6 +180,20 @@ func (lc *LiveCreate) SetNillableRenderChat(b *bool) *LiveCreate {
 	return lc
 }
 
+// SetVideoAge sets the "video_age" field.
+func (lc *LiveCreate) SetVideoAge(i int64) *LiveCreate {
+	lc.mutation.SetVideoAge(i)
+	return lc
+}
+
+// SetNillableVideoAge sets the "video_age" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableVideoAge(i *int64) *LiveCreate {
+	if i != nil {
+		lc.SetVideoAge(*i)
+	}
+	return lc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lc *LiveCreate) SetUpdatedAt(t time.Time) *LiveCreate {
 	lc.mutation.SetUpdatedAt(t)
@@ -327,6 +341,10 @@ func (lc *LiveCreate) defaults() {
 		v := live.DefaultRenderChat
 		lc.mutation.SetRenderChat(v)
 	}
+	if _, ok := lc.mutation.VideoAge(); !ok {
+		v := live.DefaultVideoAge
+		lc.mutation.SetVideoAge(v)
+	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		v := live.DefaultUpdatedAt()
 		lc.mutation.SetUpdatedAt(v)
@@ -372,6 +390,9 @@ func (lc *LiveCreate) check() error {
 	}
 	if _, ok := lc.mutation.RenderChat(); !ok {
 		return &ValidationError{Name: "render_chat", err: errors.New(`ent: missing required field "Live.render_chat"`)}
+	}
+	if _, ok := lc.mutation.VideoAge(); !ok {
+		return &ValidationError{Name: "video_age", err: errors.New(`ent: missing required field "Live.video_age"`)}
 	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Live.updated_at"`)}
@@ -461,6 +482,10 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := lc.mutation.RenderChat(); ok {
 		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
 		_node.RenderChat = value
+	}
+	if value, ok := lc.mutation.VideoAge(); ok {
+		_spec.SetField(live.FieldVideoAge, field.TypeInt64, value)
+		_node.VideoAge = value
 	}
 	if value, ok := lc.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -693,6 +718,24 @@ func (u *LiveUpsert) UpdateRenderChat() *LiveUpsert {
 	return u
 }
 
+// SetVideoAge sets the "video_age" field.
+func (u *LiveUpsert) SetVideoAge(v int64) *LiveUpsert {
+	u.Set(live.FieldVideoAge, v)
+	return u
+}
+
+// UpdateVideoAge sets the "video_age" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateVideoAge() *LiveUpsert {
+	u.SetExcluded(live.FieldVideoAge)
+	return u
+}
+
+// AddVideoAge adds v to the "video_age" field.
+func (u *LiveUpsert) AddVideoAge(v int64) *LiveUpsert {
+	u.Add(live.FieldVideoAge, v)
+	return u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (u *LiveUpsert) SetUpdatedAt(v time.Time) *LiveUpsert {
 	u.Set(live.FieldUpdatedAt, v)
@@ -914,6 +957,27 @@ func (u *LiveUpsertOne) SetRenderChat(v bool) *LiveUpsertOne {
 func (u *LiveUpsertOne) UpdateRenderChat() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateRenderChat()
+	})
+}
+
+// SetVideoAge sets the "video_age" field.
+func (u *LiveUpsertOne) SetVideoAge(v int64) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetVideoAge(v)
+	})
+}
+
+// AddVideoAge adds v to the "video_age" field.
+func (u *LiveUpsertOne) AddVideoAge(v int64) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.AddVideoAge(v)
+	})
+}
+
+// UpdateVideoAge sets the "video_age" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateVideoAge() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateVideoAge()
 	})
 }
 
@@ -1307,6 +1371,27 @@ func (u *LiveUpsertBulk) SetRenderChat(v bool) *LiveUpsertBulk {
 func (u *LiveUpsertBulk) UpdateRenderChat() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateRenderChat()
+	})
+}
+
+// SetVideoAge sets the "video_age" field.
+func (u *LiveUpsertBulk) SetVideoAge(v int64) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetVideoAge(v)
+	})
+}
+
+// AddVideoAge adds v to the "video_age" field.
+func (u *LiveUpsertBulk) AddVideoAge(v int64) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.AddVideoAge(v)
+	})
+}
+
+// UpdateVideoAge sets the "video_age" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateVideoAge() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateVideoAge()
 	})
 }
 

@@ -452,6 +452,13 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 
 	log.Debug().Msgf("workflow id %s started for live stream %s", we.GetID(), ts.ID)
 
+	// set IDs in queue
+	_, err = q.Update().SetWorkflowID(we.GetID()).SetWorkflowRunID(we.GetRunID()).Save(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("error updating queue item")
+		return nil, fmt.Errorf("error updating queue item: %v", err)
+	}
+
 	// go s.TaskVodCreateFolder(dbC, v, q, true)
 
 	return &TwitchVodResponse{

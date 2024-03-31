@@ -40,6 +40,14 @@ func (vu *VodUpdate) SetExtID(s string) *VodUpdate {
 	return vu
 }
 
+// SetNillableExtID sets the "ext_id" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableExtID(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetExtID(*s)
+	}
+	return vu
+}
+
 // SetPlatform sets the "platform" field.
 func (vu *VodUpdate) SetPlatform(up utils.VodPlatform) *VodUpdate {
 	vu.mutation.SetPlatform(up)
@@ -71,6 +79,14 @@ func (vu *VodUpdate) SetNillableType(ut *utils.VodType) *VodUpdate {
 // SetTitle sets the "title" field.
 func (vu *VodUpdate) SetTitle(s string) *VodUpdate {
 	vu.mutation.SetTitle(s)
+	return vu
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableTitle(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetTitle(*s)
+	}
 	return vu
 }
 
@@ -176,9 +192,25 @@ func (vu *VodUpdate) SetWebThumbnailPath(s string) *VodUpdate {
 	return vu
 }
 
+// SetNillableWebThumbnailPath sets the "web_thumbnail_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableWebThumbnailPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetWebThumbnailPath(*s)
+	}
+	return vu
+}
+
 // SetVideoPath sets the "video_path" field.
 func (vu *VodUpdate) SetVideoPath(s string) *VodUpdate {
 	vu.mutation.SetVideoPath(s)
+	return vu
+}
+
+// SetNillableVideoPath sets the "video_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableVideoPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetVideoPath(*s)
+	}
 	return vu
 }
 
@@ -812,6 +844,14 @@ func (vuo *VodUpdateOne) SetExtID(s string) *VodUpdateOne {
 	return vuo
 }
 
+// SetNillableExtID sets the "ext_id" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableExtID(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetExtID(*s)
+	}
+	return vuo
+}
+
 // SetPlatform sets the "platform" field.
 func (vuo *VodUpdateOne) SetPlatform(up utils.VodPlatform) *VodUpdateOne {
 	vuo.mutation.SetPlatform(up)
@@ -843,6 +883,14 @@ func (vuo *VodUpdateOne) SetNillableType(ut *utils.VodType) *VodUpdateOne {
 // SetTitle sets the "title" field.
 func (vuo *VodUpdateOne) SetTitle(s string) *VodUpdateOne {
 	vuo.mutation.SetTitle(s)
+	return vuo
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableTitle(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetTitle(*s)
+	}
 	return vuo
 }
 
@@ -948,9 +996,25 @@ func (vuo *VodUpdateOne) SetWebThumbnailPath(s string) *VodUpdateOne {
 	return vuo
 }
 
+// SetNillableWebThumbnailPath sets the "web_thumbnail_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableWebThumbnailPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetWebThumbnailPath(*s)
+	}
+	return vuo
+}
+
 // SetVideoPath sets the "video_path" field.
 func (vuo *VodUpdateOne) SetVideoPath(s string) *VodUpdateOne {
 	vuo.mutation.SetVideoPath(s)
+	return vuo
+}
+
+// SetNillableVideoPath sets the "video_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableVideoPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetVideoPath(*s)
+	}
 	return vuo
 }
 

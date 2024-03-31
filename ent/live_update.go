@@ -191,6 +191,27 @@ func (lu *LiveUpdate) SetNillableRenderChat(b *bool) *LiveUpdate {
 	return lu
 }
 
+// SetVideoAge sets the "video_age" field.
+func (lu *LiveUpdate) SetVideoAge(i int64) *LiveUpdate {
+	lu.mutation.ResetVideoAge()
+	lu.mutation.SetVideoAge(i)
+	return lu
+}
+
+// SetNillableVideoAge sets the "video_age" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableVideoAge(i *int64) *LiveUpdate {
+	if i != nil {
+		lu.SetVideoAge(*i)
+	}
+	return lu
+}
+
+// AddVideoAge adds i to the "video_age" field.
+func (lu *LiveUpdate) AddVideoAge(i int64) *LiveUpdate {
+	lu.mutation.AddVideoAge(i)
+	return lu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lu *LiveUpdate) SetUpdatedAt(t time.Time) *LiveUpdate {
 	lu.mutation.SetUpdatedAt(t)
@@ -346,6 +367,12 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := lu.mutation.RenderChat(); ok {
 		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
+	}
+	if value, ok := lu.mutation.VideoAge(); ok {
+		_spec.SetField(live.FieldVideoAge, field.TypeInt64, value)
+	}
+	if value, ok := lu.mutation.AddedVideoAge(); ok {
+		_spec.AddField(live.FieldVideoAge, field.TypeInt64, value)
 	}
 	if value, ok := lu.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -604,6 +631,27 @@ func (luo *LiveUpdateOne) SetNillableRenderChat(b *bool) *LiveUpdateOne {
 	return luo
 }
 
+// SetVideoAge sets the "video_age" field.
+func (luo *LiveUpdateOne) SetVideoAge(i int64) *LiveUpdateOne {
+	luo.mutation.ResetVideoAge()
+	luo.mutation.SetVideoAge(i)
+	return luo
+}
+
+// SetNillableVideoAge sets the "video_age" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableVideoAge(i *int64) *LiveUpdateOne {
+	if i != nil {
+		luo.SetVideoAge(*i)
+	}
+	return luo
+}
+
+// AddVideoAge adds i to the "video_age" field.
+func (luo *LiveUpdateOne) AddVideoAge(i int64) *LiveUpdateOne {
+	luo.mutation.AddVideoAge(i)
+	return luo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (luo *LiveUpdateOne) SetUpdatedAt(t time.Time) *LiveUpdateOne {
 	luo.mutation.SetUpdatedAt(t)
@@ -789,6 +837,12 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 	}
 	if value, ok := luo.mutation.RenderChat(); ok {
 		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
+	}
+	if value, ok := luo.mutation.VideoAge(); ok {
+		_spec.SetField(live.FieldVideoAge, field.TypeInt64, value)
+	}
+	if value, ok := luo.mutation.AddedVideoAge(); ok {
+		_spec.AddField(live.FieldVideoAge, field.TypeInt64, value)
 	}
 	if value, ok := luo.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)

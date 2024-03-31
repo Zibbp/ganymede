@@ -264,6 +264,34 @@ func (qc *QueueCreate) SetNillableRenderChat(b *bool) *QueueCreate {
 	return qc
 }
 
+// SetWorkflowID sets the "workflow_id" field.
+func (qc *QueueCreate) SetWorkflowID(s string) *QueueCreate {
+	qc.mutation.SetWorkflowID(s)
+	return qc
+}
+
+// SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
+func (qc *QueueCreate) SetNillableWorkflowID(s *string) *QueueCreate {
+	if s != nil {
+		qc.SetWorkflowID(*s)
+	}
+	return qc
+}
+
+// SetWorkflowRunID sets the "workflow_run_id" field.
+func (qc *QueueCreate) SetWorkflowRunID(s string) *QueueCreate {
+	qc.mutation.SetWorkflowRunID(s)
+	return qc
+}
+
+// SetNillableWorkflowRunID sets the "workflow_run_id" field if the given value is not nil.
+func (qc *QueueCreate) SetNillableWorkflowRunID(s *string) *QueueCreate {
+	if s != nil {
+		qc.SetWorkflowRunID(*s)
+	}
+	return qc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (qc *QueueCreate) SetUpdatedAt(t time.Time) *QueueCreate {
 	qc.mutation.SetUpdatedAt(t)
@@ -609,6 +637,14 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 	if value, ok := qc.mutation.RenderChat(); ok {
 		_spec.SetField(queue.FieldRenderChat, field.TypeBool, value)
 		_node.RenderChat = value
+	}
+	if value, ok := qc.mutation.WorkflowID(); ok {
+		_spec.SetField(queue.FieldWorkflowID, field.TypeString, value)
+		_node.WorkflowID = value
+	}
+	if value, ok := qc.mutation.WorkflowRunID(); ok {
+		_spec.SetField(queue.FieldWorkflowRunID, field.TypeString, value)
+		_node.WorkflowRunID = value
 	}
 	if value, ok := qc.mutation.UpdatedAt(); ok {
 		_spec.SetField(queue.FieldUpdatedAt, field.TypeTime, value)
@@ -960,6 +996,42 @@ func (u *QueueUpsert) UpdateRenderChat() *QueueUpsert {
 // ClearRenderChat clears the value of the "render_chat" field.
 func (u *QueueUpsert) ClearRenderChat() *QueueUpsert {
 	u.SetNull(queue.FieldRenderChat)
+	return u
+}
+
+// SetWorkflowID sets the "workflow_id" field.
+func (u *QueueUpsert) SetWorkflowID(v string) *QueueUpsert {
+	u.Set(queue.FieldWorkflowID, v)
+	return u
+}
+
+// UpdateWorkflowID sets the "workflow_id" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateWorkflowID() *QueueUpsert {
+	u.SetExcluded(queue.FieldWorkflowID)
+	return u
+}
+
+// ClearWorkflowID clears the value of the "workflow_id" field.
+func (u *QueueUpsert) ClearWorkflowID() *QueueUpsert {
+	u.SetNull(queue.FieldWorkflowID)
+	return u
+}
+
+// SetWorkflowRunID sets the "workflow_run_id" field.
+func (u *QueueUpsert) SetWorkflowRunID(v string) *QueueUpsert {
+	u.Set(queue.FieldWorkflowRunID, v)
+	return u
+}
+
+// UpdateWorkflowRunID sets the "workflow_run_id" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateWorkflowRunID() *QueueUpsert {
+	u.SetExcluded(queue.FieldWorkflowRunID)
+	return u
+}
+
+// ClearWorkflowRunID clears the value of the "workflow_run_id" field.
+func (u *QueueUpsert) ClearWorkflowRunID() *QueueUpsert {
+	u.SetNull(queue.FieldWorkflowRunID)
 	return u
 }
 
@@ -1345,6 +1417,48 @@ func (u *QueueUpsertOne) UpdateRenderChat() *QueueUpsertOne {
 func (u *QueueUpsertOne) ClearRenderChat() *QueueUpsertOne {
 	return u.Update(func(s *QueueUpsert) {
 		s.ClearRenderChat()
+	})
+}
+
+// SetWorkflowID sets the "workflow_id" field.
+func (u *QueueUpsertOne) SetWorkflowID(v string) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetWorkflowID(v)
+	})
+}
+
+// UpdateWorkflowID sets the "workflow_id" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateWorkflowID() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateWorkflowID()
+	})
+}
+
+// ClearWorkflowID clears the value of the "workflow_id" field.
+func (u *QueueUpsertOne) ClearWorkflowID() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearWorkflowID()
+	})
+}
+
+// SetWorkflowRunID sets the "workflow_run_id" field.
+func (u *QueueUpsertOne) SetWorkflowRunID(v string) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetWorkflowRunID(v)
+	})
+}
+
+// UpdateWorkflowRunID sets the "workflow_run_id" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateWorkflowRunID() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateWorkflowRunID()
+	})
+}
+
+// ClearWorkflowRunID clears the value of the "workflow_run_id" field.
+func (u *QueueUpsertOne) ClearWorkflowRunID() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearWorkflowRunID()
 	})
 }
 
@@ -1899,6 +2013,48 @@ func (u *QueueUpsertBulk) UpdateRenderChat() *QueueUpsertBulk {
 func (u *QueueUpsertBulk) ClearRenderChat() *QueueUpsertBulk {
 	return u.Update(func(s *QueueUpsert) {
 		s.ClearRenderChat()
+	})
+}
+
+// SetWorkflowID sets the "workflow_id" field.
+func (u *QueueUpsertBulk) SetWorkflowID(v string) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetWorkflowID(v)
+	})
+}
+
+// UpdateWorkflowID sets the "workflow_id" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateWorkflowID() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateWorkflowID()
+	})
+}
+
+// ClearWorkflowID clears the value of the "workflow_id" field.
+func (u *QueueUpsertBulk) ClearWorkflowID() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearWorkflowID()
+	})
+}
+
+// SetWorkflowRunID sets the "workflow_run_id" field.
+func (u *QueueUpsertBulk) SetWorkflowRunID(v string) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetWorkflowRunID(v)
+	})
+}
+
+// UpdateWorkflowRunID sets the "workflow_run_id" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateWorkflowRunID() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateWorkflowRunID()
+	})
+}
+
+// ClearWorkflowRunID clears the value of the "workflow_run_id" field.
+func (u *QueueUpsertBulk) ClearWorkflowRunID() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearWorkflowRunID()
 	})
 }
 

@@ -35,6 +35,14 @@ func (lcu *LiveCategoryUpdate) SetName(s string) *LiveCategoryUpdate {
 	return lcu
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (lcu *LiveCategoryUpdate) SetNillableName(s *string) *LiveCategoryUpdate {
+	if s != nil {
+		lcu.SetName(*s)
+	}
+	return lcu
+}
+
 // SetLiveID sets the "live" edge to the Live entity by ID.
 func (lcu *LiveCategoryUpdate) SetLiveID(id uuid.UUID) *LiveCategoryUpdate {
 	lcu.mutation.SetLiveID(id)
@@ -159,6 +167,14 @@ type LiveCategoryUpdateOne struct {
 // SetName sets the "name" field.
 func (lcuo *LiveCategoryUpdateOne) SetName(s string) *LiveCategoryUpdateOne {
 	lcuo.mutation.SetName(s)
+	return lcuo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (lcuo *LiveCategoryUpdateOne) SetNillableName(s *string) *LiveCategoryUpdateOne {
+	if s != nil {
+		lcuo.SetName(*s)
+	}
 	return lcuo
 }
 

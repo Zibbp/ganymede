@@ -31,6 +31,7 @@ type AddWatchedChannelRequest struct {
 	RenderChat         bool     `json:"render_chat"`
 	DownloadSubOnly    bool     `json:"download_sub_only"`
 	Categories         []string `json:"categories"`
+	MaxAge             int64    `json:"max_age"`
 }
 
 type AddMultipleWatchedChannelRequest struct {
@@ -45,6 +46,7 @@ type AddMultipleWatchedChannelRequest struct {
 	RenderChat         bool     `json:"render_chat"`
 	DownloadSubOnly    bool     `json:"download_sub_only"`
 	Categories         []string `json:"categories"`
+	MaxAge             int64    `json:"max_age"`
 }
 
 type UpdateWatchedChannelRequest struct {
@@ -58,6 +60,7 @@ type UpdateWatchedChannelRequest struct {
 	RenderChat         bool     `json:"render_chat"`
 	DownloadSubOnly    bool     `json:"download_sub_only"`
 	Categories         []string `json:"categories"`
+	MaxAge             int64    `json:"max_age"`
 }
 
 type ConvertChatRequest struct {
@@ -134,6 +137,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		RenderChat:         ccr.RenderChat,
 		DownloadSubOnly:    ccr.DownloadSubOnly,
 		Categories:         ccr.Categories,
+		MaxAge:             ccr.MaxAge,
 	}
 	l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 	if err != nil {
@@ -184,6 +188,7 @@ func (h *Handler) AddMultipleLiveWatchedChannel(c echo.Context) error {
 			RenderChat:         ccr.RenderChat,
 			DownloadSubOnly:    ccr.DownloadSubOnly,
 			Categories:         ccr.Categories,
+			MaxAge:             ccr.MaxAge,
 		}
 		l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 		if err != nil {
@@ -234,6 +239,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		RenderChat:         ccr.RenderChat,
 		DownloadSubOnly:    ccr.DownloadSubOnly,
 		Categories:         ccr.Categories,
+		MaxAge:             ccr.MaxAge,
 	}
 	l, err := h.Service.LiveService.UpdateLiveWatchedChannel(c, liveDto)
 	if err != nil {
