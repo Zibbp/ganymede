@@ -10,6 +10,7 @@ import (
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -119,6 +120,12 @@ func init() {
 	livecategoryDescID := livecategoryFields[0].Descriptor()
 	// livecategory.DefaultID holds the default value on creation for the id field.
 	livecategory.DefaultID = livecategoryDescID.Default.(func() uuid.UUID)
+	mutedsegmentFields := schema.MutedSegment{}.Fields()
+	_ = mutedsegmentFields
+	// mutedsegmentDescID is the schema descriptor for id field.
+	mutedsegmentDescID := mutedsegmentFields[0].Descriptor()
+	// mutedsegment.DefaultID holds the default value on creation for the id field.
+	mutedsegment.DefaultID = mutedsegmentDescID.Default.(func() uuid.UUID)
 	playbackFields := schema.Playback{}.Fields()
 	_ = playbackFields
 	// playbackDescTime is the schema descriptor for time field.

@@ -51,5 +51,6 @@ func (Vod) Edges() []ent.Edge {
 		edge.To("queue", Queue.Type).Unique(),
 		edge.From("playlists", Playlist.Type).Ref("vods"),
 		edge.To("chapters", Chapter.Type),
+		edge.To("muted_segments", MutedSegment.Type),
 	}
 }

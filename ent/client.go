@@ -20,6 +20,7 @@ import (
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -41,6 +42,8 @@ type Client struct {
 	Live *LiveClient
 	// LiveCategory is the client for interacting with the LiveCategory builders.
 	LiveCategory *LiveCategoryClient
+	// MutedSegment is the client for interacting with the MutedSegment builders.
+	MutedSegment *MutedSegmentClient
 	// Playback is the client for interacting with the Playback builders.
 	Playback *PlaybackClient
 	// Playlist is the client for interacting with the Playlist builders.
@@ -68,6 +71,7 @@ func (c *Client) init() {
 	c.Chapter = NewChapterClient(c.config)
 	c.Live = NewLiveClient(c.config)
 	c.LiveCategory = NewLiveCategoryClient(c.config)
+	c.MutedSegment = NewMutedSegmentClient(c.config)
 	c.Playback = NewPlaybackClient(c.config)
 	c.Playlist = NewPlaylistClient(c.config)
 	c.Queue = NewQueueClient(c.config)
@@ -170,6 +174,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Chapter:        NewChapterClient(cfg),
 		Live:           NewLiveClient(cfg),
 		LiveCategory:   NewLiveCategoryClient(cfg),
+		MutedSegment:   NewMutedSegmentClient(cfg),
 		Playback:       NewPlaybackClient(cfg),
 		Playlist:       NewPlaylistClient(cfg),
 		Queue:          NewQueueClient(cfg),
@@ -199,6 +204,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Chapter:        NewChapterClient(cfg),
 		Live:           NewLiveClient(cfg),
 		LiveCategory:   NewLiveCategoryClient(cfg),
+		MutedSegment:   NewMutedSegmentClient(cfg),
 		Playback:       NewPlaybackClient(cfg),
 		Playlist:       NewPlaylistClient(cfg),
 		Queue:          NewQueueClient(cfg),
@@ -234,8 +240,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Channel, c.Chapter, c.Live, c.LiveCategory, c.Playback, c.Playlist, c.Queue,
-		c.TwitchCategory, c.User, c.Vod,
+		c.Channel, c.Chapter, c.Live, c.LiveCategory, c.MutedSegment, c.Playback,
+		c.Playlist, c.Queue, c.TwitchCategory, c.User, c.Vod,
 	} {
 		n.Use(hooks...)
 	}
@@ -245,8 +251,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Channel, c.Chapter, c.Live, c.LiveCategory, c.Playback, c.Playlist, c.Queue,
-		c.TwitchCategory, c.User, c.Vod,
+		c.Channel, c.Chapter, c.Live, c.LiveCategory, c.MutedSegment, c.Playback,
+		c.Playlist, c.Queue, c.TwitchCategory, c.User, c.Vod,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -263,6 +269,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Live.mutate(ctx, m)
 	case *LiveCategoryMutation:
 		return c.LiveCategory.mutate(ctx, m)
+	case *MutedSegmentMutation:
+		return c.MutedSegment.mutate(ctx, m)
 	case *PlaybackMutation:
 		return c.Playback.mutate(ctx, m)
 	case *PlaylistMutation:
@@ -905,6 +913,155 @@ func (c *LiveCategoryClient) mutate(ctx context.Context, m *LiveCategoryMutation
 		return (&LiveCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown LiveCategory mutation op: %q", m.Op())
+	}
+}
+
+// MutedSegmentClient is a client for the MutedSegment schema.
+type MutedSegmentClient struct {
+	config
+}
+
+// NewMutedSegmentClient returns a client for the MutedSegment from the given config.
+func NewMutedSegmentClient(c config) *MutedSegmentClient {
+	return &MutedSegmentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `mutedsegment.Hooks(f(g(h())))`.
+func (c *MutedSegmentClient) Use(hooks ...Hook) {
+	c.hooks.MutedSegment = append(c.hooks.MutedSegment, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `mutedsegment.Intercept(f(g(h())))`.
+func (c *MutedSegmentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MutedSegment = append(c.inters.MutedSegment, interceptors...)
+}
+
+// Create returns a builder for creating a MutedSegment entity.
+func (c *MutedSegmentClient) Create() *MutedSegmentCreate {
+	mutation := newMutedSegmentMutation(c.config, OpCreate)
+	return &MutedSegmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MutedSegment entities.
+func (c *MutedSegmentClient) CreateBulk(builders ...*MutedSegmentCreate) *MutedSegmentCreateBulk {
+	return &MutedSegmentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MutedSegmentClient) MapCreateBulk(slice any, setFunc func(*MutedSegmentCreate, int)) *MutedSegmentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MutedSegmentCreateBulk{err: fmt.Errorf("calling to MutedSegmentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MutedSegmentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MutedSegmentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MutedSegment.
+func (c *MutedSegmentClient) Update() *MutedSegmentUpdate {
+	mutation := newMutedSegmentMutation(c.config, OpUpdate)
+	return &MutedSegmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MutedSegmentClient) UpdateOne(ms *MutedSegment) *MutedSegmentUpdateOne {
+	mutation := newMutedSegmentMutation(c.config, OpUpdateOne, withMutedSegment(ms))
+	return &MutedSegmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MutedSegmentClient) UpdateOneID(id uuid.UUID) *MutedSegmentUpdateOne {
+	mutation := newMutedSegmentMutation(c.config, OpUpdateOne, withMutedSegmentID(id))
+	return &MutedSegmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MutedSegment.
+func (c *MutedSegmentClient) Delete() *MutedSegmentDelete {
+	mutation := newMutedSegmentMutation(c.config, OpDelete)
+	return &MutedSegmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MutedSegmentClient) DeleteOne(ms *MutedSegment) *MutedSegmentDeleteOne {
+	return c.DeleteOneID(ms.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MutedSegmentClient) DeleteOneID(id uuid.UUID) *MutedSegmentDeleteOne {
+	builder := c.Delete().Where(mutedsegment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MutedSegmentDeleteOne{builder}
+}
+
+// Query returns a query builder for MutedSegment.
+func (c *MutedSegmentClient) Query() *MutedSegmentQuery {
+	return &MutedSegmentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMutedSegment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MutedSegment entity by its id.
+func (c *MutedSegmentClient) Get(ctx context.Context, id uuid.UUID) (*MutedSegment, error) {
+	return c.Query().Where(mutedsegment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MutedSegmentClient) GetX(ctx context.Context, id uuid.UUID) *MutedSegment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryVod queries the vod edge of a MutedSegment.
+func (c *MutedSegmentClient) QueryVod(ms *MutedSegment) *VodQuery {
+	query := (&VodClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ms.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(mutedsegment.Table, mutedsegment.FieldID, id),
+			sqlgraph.To(vod.Table, vod.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, mutedsegment.VodTable, mutedsegment.VodColumn),
+		)
+		fromV = sqlgraph.Neighbors(ms.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MutedSegmentClient) Hooks() []Hook {
+	return c.hooks.MutedSegment
+}
+
+// Interceptors returns the client interceptors.
+func (c *MutedSegmentClient) Interceptors() []Interceptor {
+	return c.inters.MutedSegment
+}
+
+func (c *MutedSegmentClient) mutate(ctx context.Context, m *MutedSegmentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MutedSegmentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MutedSegmentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MutedSegmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MutedSegmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MutedSegment mutation op: %q", m.Op())
 	}
 }
 
@@ -1777,6 +1934,22 @@ func (c *VodClient) QueryChapters(v *Vod) *ChapterQuery {
 	return query
 }
 
+// QueryMutedSegments queries the muted_segments edge of a Vod.
+func (c *VodClient) QueryMutedSegments(v *Vod) *MutedSegmentQuery {
+	query := (&MutedSegmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vod.Table, vod.FieldID, id),
+			sqlgraph.To(mutedsegment.Table, mutedsegment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, vod.MutedSegmentsTable, vod.MutedSegmentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *VodClient) Hooks() []Hook {
 	return c.hooks.Vod
@@ -1805,11 +1978,11 @@ func (c *VodClient) mutate(ctx context.Context, m *VodMutation) (Value, error) {
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Channel, Chapter, Live, LiveCategory, Playback, Playlist, Queue, TwitchCategory,
-		User, Vod []ent.Hook
+		Channel, Chapter, Live, LiveCategory, MutedSegment, Playback, Playlist, Queue,
+		TwitchCategory, User, Vod []ent.Hook
 	}
 	inters struct {
-		Channel, Chapter, Live, LiveCategory, Playback, Playlist, Queue, TwitchCategory,
-		User, Vod []ent.Interceptor
+		Channel, Chapter, Live, LiveCategory, MutedSegment, Playback, Playlist, Queue,
+		TwitchCategory, User, Vod []ent.Interceptor
 	}
 )

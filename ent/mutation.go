@@ -16,6 +16,7 @@ import (
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
@@ -39,6 +40,7 @@ const (
 	TypeChapter        = "Chapter"
 	TypeLive           = "Live"
 	TypeLiveCategory   = "LiveCategory"
+	TypeMutedSegment   = "MutedSegment"
 	TypePlayback       = "Playback"
 	TypePlaylist       = "Playlist"
 	TypeQueue          = "Queue"
@@ -3363,6 +3365,528 @@ func (m *LiveCategoryMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown LiveCategory edge %s", name)
+}
+
+// MutedSegmentMutation represents an operation that mutates the MutedSegment nodes in the graph.
+type MutedSegmentMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	start         *int
+	addstart      *int
+	end           *int
+	addend        *int
+	clearedFields map[string]struct{}
+	vod           *uuid.UUID
+	clearedvod    bool
+	done          bool
+	oldValue      func(context.Context) (*MutedSegment, error)
+	predicates    []predicate.MutedSegment
+}
+
+var _ ent.Mutation = (*MutedSegmentMutation)(nil)
+
+// mutedsegmentOption allows management of the mutation configuration using functional options.
+type mutedsegmentOption func(*MutedSegmentMutation)
+
+// newMutedSegmentMutation creates new mutation for the MutedSegment entity.
+func newMutedSegmentMutation(c config, op Op, opts ...mutedsegmentOption) *MutedSegmentMutation {
+	m := &MutedSegmentMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMutedSegment,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMutedSegmentID sets the ID field of the mutation.
+func withMutedSegmentID(id uuid.UUID) mutedsegmentOption {
+	return func(m *MutedSegmentMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MutedSegment
+		)
+		m.oldValue = func(ctx context.Context) (*MutedSegment, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MutedSegment.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMutedSegment sets the old MutedSegment of the mutation.
+func withMutedSegment(node *MutedSegment) mutedsegmentOption {
+	return func(m *MutedSegmentMutation) {
+		m.oldValue = func(context.Context) (*MutedSegment, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MutedSegmentMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MutedSegmentMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MutedSegment entities.
+func (m *MutedSegmentMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MutedSegmentMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MutedSegmentMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MutedSegment.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetStart sets the "start" field.
+func (m *MutedSegmentMutation) SetStart(i int) {
+	m.start = &i
+	m.addstart = nil
+}
+
+// Start returns the value of the "start" field in the mutation.
+func (m *MutedSegmentMutation) Start() (r int, exists bool) {
+	v := m.start
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStart returns the old "start" field's value of the MutedSegment entity.
+// If the MutedSegment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MutedSegmentMutation) OldStart(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStart is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStart requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStart: %w", err)
+	}
+	return oldValue.Start, nil
+}
+
+// AddStart adds i to the "start" field.
+func (m *MutedSegmentMutation) AddStart(i int) {
+	if m.addstart != nil {
+		*m.addstart += i
+	} else {
+		m.addstart = &i
+	}
+}
+
+// AddedStart returns the value that was added to the "start" field in this mutation.
+func (m *MutedSegmentMutation) AddedStart() (r int, exists bool) {
+	v := m.addstart
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStart resets all changes to the "start" field.
+func (m *MutedSegmentMutation) ResetStart() {
+	m.start = nil
+	m.addstart = nil
+}
+
+// SetEnd sets the "end" field.
+func (m *MutedSegmentMutation) SetEnd(i int) {
+	m.end = &i
+	m.addend = nil
+}
+
+// End returns the value of the "end" field in the mutation.
+func (m *MutedSegmentMutation) End() (r int, exists bool) {
+	v := m.end
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnd returns the old "end" field's value of the MutedSegment entity.
+// If the MutedSegment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MutedSegmentMutation) OldEnd(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnd is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnd requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnd: %w", err)
+	}
+	return oldValue.End, nil
+}
+
+// AddEnd adds i to the "end" field.
+func (m *MutedSegmentMutation) AddEnd(i int) {
+	if m.addend != nil {
+		*m.addend += i
+	} else {
+		m.addend = &i
+	}
+}
+
+// AddedEnd returns the value that was added to the "end" field in this mutation.
+func (m *MutedSegmentMutation) AddedEnd() (r int, exists bool) {
+	v := m.addend
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetEnd resets all changes to the "end" field.
+func (m *MutedSegmentMutation) ResetEnd() {
+	m.end = nil
+	m.addend = nil
+}
+
+// SetVodID sets the "vod" edge to the Vod entity by id.
+func (m *MutedSegmentMutation) SetVodID(id uuid.UUID) {
+	m.vod = &id
+}
+
+// ClearVod clears the "vod" edge to the Vod entity.
+func (m *MutedSegmentMutation) ClearVod() {
+	m.clearedvod = true
+}
+
+// VodCleared reports if the "vod" edge to the Vod entity was cleared.
+func (m *MutedSegmentMutation) VodCleared() bool {
+	return m.clearedvod
+}
+
+// VodID returns the "vod" edge ID in the mutation.
+func (m *MutedSegmentMutation) VodID() (id uuid.UUID, exists bool) {
+	if m.vod != nil {
+		return *m.vod, true
+	}
+	return
+}
+
+// VodIDs returns the "vod" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// VodID instead. It exists only for internal usage by the builders.
+func (m *MutedSegmentMutation) VodIDs() (ids []uuid.UUID) {
+	if id := m.vod; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetVod resets all changes to the "vod" edge.
+func (m *MutedSegmentMutation) ResetVod() {
+	m.vod = nil
+	m.clearedvod = false
+}
+
+// Where appends a list predicates to the MutedSegmentMutation builder.
+func (m *MutedSegmentMutation) Where(ps ...predicate.MutedSegment) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MutedSegmentMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MutedSegmentMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MutedSegment, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MutedSegmentMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MutedSegmentMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MutedSegment).
+func (m *MutedSegmentMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MutedSegmentMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.start != nil {
+		fields = append(fields, mutedsegment.FieldStart)
+	}
+	if m.end != nil {
+		fields = append(fields, mutedsegment.FieldEnd)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MutedSegmentMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case mutedsegment.FieldStart:
+		return m.Start()
+	case mutedsegment.FieldEnd:
+		return m.End()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MutedSegmentMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case mutedsegment.FieldStart:
+		return m.OldStart(ctx)
+	case mutedsegment.FieldEnd:
+		return m.OldEnd(ctx)
+	}
+	return nil, fmt.Errorf("unknown MutedSegment field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MutedSegmentMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case mutedsegment.FieldStart:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStart(v)
+		return nil
+	case mutedsegment.FieldEnd:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnd(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MutedSegment field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MutedSegmentMutation) AddedFields() []string {
+	var fields []string
+	if m.addstart != nil {
+		fields = append(fields, mutedsegment.FieldStart)
+	}
+	if m.addend != nil {
+		fields = append(fields, mutedsegment.FieldEnd)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MutedSegmentMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case mutedsegment.FieldStart:
+		return m.AddedStart()
+	case mutedsegment.FieldEnd:
+		return m.AddedEnd()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MutedSegmentMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case mutedsegment.FieldStart:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStart(v)
+		return nil
+	case mutedsegment.FieldEnd:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddEnd(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MutedSegment numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MutedSegmentMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MutedSegmentMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MutedSegmentMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown MutedSegment nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MutedSegmentMutation) ResetField(name string) error {
+	switch name {
+	case mutedsegment.FieldStart:
+		m.ResetStart()
+		return nil
+	case mutedsegment.FieldEnd:
+		m.ResetEnd()
+		return nil
+	}
+	return fmt.Errorf("unknown MutedSegment field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MutedSegmentMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.vod != nil {
+		edges = append(edges, mutedsegment.EdgeVod)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MutedSegmentMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case mutedsegment.EdgeVod:
+		if id := m.vod; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MutedSegmentMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MutedSegmentMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MutedSegmentMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedvod {
+		edges = append(edges, mutedsegment.EdgeVod)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MutedSegmentMutation) EdgeCleared(name string) bool {
+	switch name {
+	case mutedsegment.EdgeVod:
+		return m.clearedvod
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MutedSegmentMutation) ClearEdge(name string) error {
+	switch name {
+	case mutedsegment.EdgeVod:
+		m.ClearVod()
+		return nil
+	}
+	return fmt.Errorf("unknown MutedSegment unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MutedSegmentMutation) ResetEdge(name string) error {
+	switch name {
+	case mutedsegment.EdgeVod:
+		m.ResetVod()
+		return nil
+	}
+	return fmt.Errorf("unknown MutedSegment edge %s", name)
 }
 
 // PlaybackMutation represents an operation that mutates the Playback nodes in the graph.
@@ -7817,48 +8341,51 @@ func (m *UserMutation) ResetEdge(name string) error {
 // VodMutation represents an operation that mutates the Vod nodes in the graph.
 type VodMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *uuid.UUID
-	ext_id             *string
-	platform           *utils.VodPlatform
-	_type              *utils.VodType
-	title              *string
-	duration           *int
-	addduration        *int
-	views              *int
-	addviews           *int
-	resolution         *string
-	processing         *bool
-	thumbnail_path     *string
-	web_thumbnail_path *string
-	video_path         *string
-	chat_path          *string
-	chat_video_path    *string
-	info_path          *string
-	caption_path       *string
-	folder_name        *string
-	file_name          *string
-	locked             *bool
-	local_views        *int
-	addlocal_views     *int
-	streamed_at        *time.Time
-	updated_at         *time.Time
-	created_at         *time.Time
-	clearedFields      map[string]struct{}
-	channel            *uuid.UUID
-	clearedchannel     bool
-	queue              *uuid.UUID
-	clearedqueue       bool
-	playlists          map[uuid.UUID]struct{}
-	removedplaylists   map[uuid.UUID]struct{}
-	clearedplaylists   bool
-	chapters           map[uuid.UUID]struct{}
-	removedchapters    map[uuid.UUID]struct{}
-	clearedchapters    bool
-	done               bool
-	oldValue           func(context.Context) (*Vod, error)
-	predicates         []predicate.Vod
+	op                    Op
+	typ                   string
+	id                    *uuid.UUID
+	ext_id                *string
+	platform              *utils.VodPlatform
+	_type                 *utils.VodType
+	title                 *string
+	duration              *int
+	addduration           *int
+	views                 *int
+	addviews              *int
+	resolution            *string
+	processing            *bool
+	thumbnail_path        *string
+	web_thumbnail_path    *string
+	video_path            *string
+	chat_path             *string
+	chat_video_path       *string
+	info_path             *string
+	caption_path          *string
+	folder_name           *string
+	file_name             *string
+	locked                *bool
+	local_views           *int
+	addlocal_views        *int
+	streamed_at           *time.Time
+	updated_at            *time.Time
+	created_at            *time.Time
+	clearedFields         map[string]struct{}
+	channel               *uuid.UUID
+	clearedchannel        bool
+	queue                 *uuid.UUID
+	clearedqueue          bool
+	playlists             map[uuid.UUID]struct{}
+	removedplaylists      map[uuid.UUID]struct{}
+	clearedplaylists      bool
+	chapters              map[uuid.UUID]struct{}
+	removedchapters       map[uuid.UUID]struct{}
+	clearedchapters       bool
+	muted_segments        map[uuid.UUID]struct{}
+	removedmuted_segments map[uuid.UUID]struct{}
+	clearedmuted_segments bool
+	done                  bool
+	oldValue              func(context.Context) (*Vod, error)
+	predicates            []predicate.Vod
 }
 
 var _ ent.Mutation = (*VodMutation)(nil)
@@ -9107,6 +9634,60 @@ func (m *VodMutation) ResetChapters() {
 	m.removedchapters = nil
 }
 
+// AddMutedSegmentIDs adds the "muted_segments" edge to the MutedSegment entity by ids.
+func (m *VodMutation) AddMutedSegmentIDs(ids ...uuid.UUID) {
+	if m.muted_segments == nil {
+		m.muted_segments = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.muted_segments[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMutedSegments clears the "muted_segments" edge to the MutedSegment entity.
+func (m *VodMutation) ClearMutedSegments() {
+	m.clearedmuted_segments = true
+}
+
+// MutedSegmentsCleared reports if the "muted_segments" edge to the MutedSegment entity was cleared.
+func (m *VodMutation) MutedSegmentsCleared() bool {
+	return m.clearedmuted_segments
+}
+
+// RemoveMutedSegmentIDs removes the "muted_segments" edge to the MutedSegment entity by IDs.
+func (m *VodMutation) RemoveMutedSegmentIDs(ids ...uuid.UUID) {
+	if m.removedmuted_segments == nil {
+		m.removedmuted_segments = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.muted_segments, ids[i])
+		m.removedmuted_segments[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMutedSegments returns the removed IDs of the "muted_segments" edge to the MutedSegment entity.
+func (m *VodMutation) RemovedMutedSegmentsIDs() (ids []uuid.UUID) {
+	for id := range m.removedmuted_segments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MutedSegmentsIDs returns the "muted_segments" edge IDs in the mutation.
+func (m *VodMutation) MutedSegmentsIDs() (ids []uuid.UUID) {
+	for id := range m.muted_segments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMutedSegments resets all changes to the "muted_segments" edge.
+func (m *VodMutation) ResetMutedSegments() {
+	m.muted_segments = nil
+	m.clearedmuted_segments = false
+	m.removedmuted_segments = nil
+}
+
 // Where appends a list predicates to the VodMutation builder.
 func (m *VodMutation) Where(ps ...predicate.Vod) {
 	m.predicates = append(m.predicates, ps...)
@@ -9687,7 +10268,7 @@ func (m *VodMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *VodMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.channel != nil {
 		edges = append(edges, vod.EdgeChannel)
 	}
@@ -9699,6 +10280,9 @@ func (m *VodMutation) AddedEdges() []string {
 	}
 	if m.chapters != nil {
 		edges = append(edges, vod.EdgeChapters)
+	}
+	if m.muted_segments != nil {
+		edges = append(edges, vod.EdgeMutedSegments)
 	}
 	return edges
 }
@@ -9727,18 +10311,27 @@ func (m *VodMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case vod.EdgeMutedSegments:
+		ids := make([]ent.Value, 0, len(m.muted_segments))
+		for id := range m.muted_segments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *VodMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedplaylists != nil {
 		edges = append(edges, vod.EdgePlaylists)
 	}
 	if m.removedchapters != nil {
 		edges = append(edges, vod.EdgeChapters)
+	}
+	if m.removedmuted_segments != nil {
+		edges = append(edges, vod.EdgeMutedSegments)
 	}
 	return edges
 }
@@ -9759,13 +10352,19 @@ func (m *VodMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case vod.EdgeMutedSegments:
+		ids := make([]ent.Value, 0, len(m.removedmuted_segments))
+		for id := range m.removedmuted_segments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *VodMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedchannel {
 		edges = append(edges, vod.EdgeChannel)
 	}
@@ -9777,6 +10376,9 @@ func (m *VodMutation) ClearedEdges() []string {
 	}
 	if m.clearedchapters {
 		edges = append(edges, vod.EdgeChapters)
+	}
+	if m.clearedmuted_segments {
+		edges = append(edges, vod.EdgeMutedSegments)
 	}
 	return edges
 }
@@ -9793,6 +10395,8 @@ func (m *VodMutation) EdgeCleared(name string) bool {
 		return m.clearedplaylists
 	case vod.EdgeChapters:
 		return m.clearedchapters
+	case vod.EdgeMutedSegments:
+		return m.clearedmuted_segments
 	}
 	return false
 }
@@ -9826,6 +10430,9 @@ func (m *VodMutation) ResetEdge(name string) error {
 		return nil
 	case vod.EdgeChapters:
 		m.ResetChapters()
+		return nil
+	case vod.EdgeMutedSegments:
+		m.ResetMutedSegments()
 		return nil
 	}
 	return fmt.Errorf("unknown Vod edge %s", name)

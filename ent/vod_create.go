@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
+	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -379,6 +380,21 @@ func (vc *VodCreate) AddChapters(c ...*Chapter) *VodCreate {
 	return vc.AddChapterIDs(ids...)
 }
 
+// AddMutedSegmentIDs adds the "muted_segments" edge to the MutedSegment entity by IDs.
+func (vc *VodCreate) AddMutedSegmentIDs(ids ...uuid.UUID) *VodCreate {
+	vc.mutation.AddMutedSegmentIDs(ids...)
+	return vc
+}
+
+// AddMutedSegments adds the "muted_segments" edges to the MutedSegment entity.
+func (vc *VodCreate) AddMutedSegments(m ...*MutedSegment) *VodCreate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return vc.AddMutedSegmentIDs(ids...)
+}
+
 // Mutation returns the VodMutation object of the builder.
 func (vc *VodCreate) Mutation() *VodMutation {
 	return vc.mutation
@@ -699,6 +715,22 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := vc.mutation.MutedSegmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.MutedSegmentsTable,
+			Columns: []string{vod.MutedSegmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

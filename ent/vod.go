@@ -82,9 +82,11 @@ type VodEdges struct {
 	Playlists []*Playlist `json:"playlists,omitempty"`
 	// Chapters holds the value of the chapters edge.
 	Chapters []*Chapter `json:"chapters,omitempty"`
+	// MutedSegments holds the value of the muted_segments edge.
+	MutedSegments []*MutedSegment `json:"muted_segments,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -129,6 +131,15 @@ func (e VodEdges) ChaptersOrErr() ([]*Chapter, error) {
 		return e.Chapters, nil
 	}
 	return nil, &NotLoadedError{edge: "chapters"}
+}
+
+// MutedSegmentsOrErr returns the MutedSegments value or an error if the edge
+// was not loaded in eager-loading.
+func (e VodEdges) MutedSegmentsOrErr() ([]*MutedSegment, error) {
+	if e.loadedTypes[4] {
+		return e.MutedSegments, nil
+	}
+	return nil, &NotLoadedError{edge: "muted_segments"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -339,6 +350,11 @@ func (v *Vod) QueryPlaylists() *PlaylistQuery {
 // QueryChapters queries the "chapters" edge of the Vod entity.
 func (v *Vod) QueryChapters() *ChapterQuery {
 	return NewVodClient(v.config).QueryChapters(v)
+}
+
+// QueryMutedSegments queries the "muted_segments" edge of the Vod entity.
+func (v *Vod) QueryMutedSegments() *MutedSegmentQuery {
+	return NewVodClient(v.config).QueryMutedSegments(v)
 }
 
 // Update returns a builder for updating this Vod.
