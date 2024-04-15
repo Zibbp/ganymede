@@ -40,6 +40,35 @@ type Extensions struct {
 	RequestID            string `json:"requestID"`
 }
 
+type GQLMutedSegmentResponse struct {
+	Data       MutedSegmentData `json:"data"`
+	Extensions Extensions       `json:"extensions"`
+}
+
+type MutedSegmentData struct {
+	Video MutedSegmentVideo `json:"video"`
+}
+
+type MutedSegmentVideo struct {
+	ID       string   `json:"id"`
+	MuteInfo MuteInfo `json:"muteInfo"`
+}
+
+type MuteInfo struct {
+	MutedSegmentConnection MutedSegmentConnection `json:"mutedSegmentConnection"`
+	TypeName               string                 `json:"__typename"`
+}
+
+type MutedSegmentConnection struct {
+	Nodes []MutedSegmentNode `json:"nodes"`
+}
+
+type MutedSegmentNode struct {
+	Duration int    `json:"duration"`
+	Offset   int    `json:"offset"`
+	TypeName string `json:"__typename"`
+}
+
 type GQLChapterResponse struct {
 	Data       GQLChapterData `json:"data"`
 	Extensions Extensions     `json:"extensions"`
@@ -150,6 +179,52 @@ func GQLGetVideo(id string) (GQLResponse, error) {
 	resp, err := gqlRequest(body)
 	if err != nil {
 		return resp, fmt.Errorf("error getting video: %w", err)
+	}
+
+	return resp, nil
+}
+
+func gqlGetMutedSegmentsRequest(body string) (GQLMutedSegmentResponse, error) {
+	var response GQLMutedSegmentResponse
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", "https://gql.twitch.tv/gql", strings.NewReader(body))
+	if err != nil {
+		return response, err
+	}
+	req.Header.Set("Client-ID", "kimne78kx3ncx6brgo4mv6wki5h1ko")
+	req.Header.Set("Content-Type", "text/plain;charset=UTF-8")
+	req.Header.Set("Origin", "https://www.twitch.tv")
+	req.Header.Set("Referer", "https://www.twitch.tv/")
+	req.Header.Set("Sec-Fetch-Mode", "cors")
+	req.Header.Set("Sec-Fetch-Site", "same-site")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return response, fmt.Errorf("error sending request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return response, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	err = json.Unmarshal(bodyBytes, &response)
+	if err != nil {
+		return response, fmt.Errorf("error unmarshalling response: %w", err)
+	}
+
+	return response, nil
+
+}
+
+func GQLGetMutedSegments(id string) (GQLMutedSegmentResponse, error) {
+	body := fmt.Sprintf(`{"operationName":"VideoPlayer_MutedSegmentsAlertOverlay","variables":{"vodID":"%s","includePrivate":false},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"c36e7400657815f4704e6063d265dff766ed8fc1590361c6d71e4368805e0b49"}}}`, id)
+	resp, err := gqlGetMutedSegmentsRequest(body)
+	if err != nil {
+		return resp, fmt.Errorf("error getting video muted segments: %w", err)
 	}
 
 	return resp, nil

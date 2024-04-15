@@ -57,6 +57,18 @@ func (f LiveCategoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiveCategoryMutation", m)
 }
 
+// The MutedSegmentFunc type is an adapter to allow the use of ordinary
+// function as MutedSegment mutator.
+type MutedSegmentFunc func(context.Context, *ent.MutedSegmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MutedSegmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MutedSegmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MutedSegmentMutation", m)
+}
+
 // The PlaybackFunc type is an adapter to allow the use of ordinary
 // function as Playback mutator.
 type PlaybackFunc func(context.Context, *ent.PlaybackMutation) (ent.Value, error)

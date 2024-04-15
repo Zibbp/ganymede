@@ -102,6 +102,27 @@ var (
 			},
 		},
 	}
+	// MutedSegmentsColumns holds the columns for the "muted_segments" table.
+	MutedSegmentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "start", Type: field.TypeInt},
+		{Name: "end", Type: field.TypeInt},
+		{Name: "vod_muted_segments", Type: field.TypeUUID},
+	}
+	// MutedSegmentsTable holds the schema information for the "muted_segments" table.
+	MutedSegmentsTable = &schema.Table{
+		Name:       "muted_segments",
+		Columns:    MutedSegmentsColumns,
+		PrimaryKey: []*schema.Column{MutedSegmentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "muted_segments_vods_muted_segments",
+				Columns:    []*schema.Column{MutedSegmentsColumns[3]},
+				RefColumns: []*schema.Column{VodsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// PlaybacksColumns holds the columns for the "playbacks" table.
 	PlaybacksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -278,6 +299,7 @@ var (
 		ChaptersTable,
 		LivesTable,
 		LiveCategoriesTable,
+		MutedSegmentsTable,
 		PlaybacksTable,
 		PlaylistsTable,
 		QueuesTable,
@@ -292,6 +314,7 @@ func init() {
 	ChaptersTable.ForeignKeys[0].RefTable = VodsTable
 	LivesTable.ForeignKeys[0].RefTable = ChannelsTable
 	LiveCategoriesTable.ForeignKeys[0].RefTable = LivesTable
+	MutedSegmentsTable.ForeignKeys[0].RefTable = VodsTable
 	QueuesTable.ForeignKeys[0].RefTable = VodsTable
 	VodsTable.ForeignKeys[0].RefTable = ChannelsTable
 	PlaylistVodsTable.ForeignKeys[0].RefTable = PlaylistsTable

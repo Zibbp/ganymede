@@ -17,6 +17,7 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
 	entChapter "github.com/zibbp/ganymede/ent/chapter"
+	entMutedSegment "github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/cache"
 	"github.com/zibbp/ganymede/internal/chat"
@@ -65,6 +66,12 @@ type Pagination struct {
 	Data       []*ent.Vod `json:"data"`
 }
 
+type MutedSegment struct {
+	ID    string `json:"id"`
+	Start int    `json:"start"`
+	End   int    `json:"end"`
+}
+
 func (s *Service) CreateVod(vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
 	v, err := s.Store.Client.Vod.Create().SetID(vodDto.ID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).SetCaptionPath(vodDto.CaptionPath).SetStreamedAt(vodDto.StreamedAt).SetFolderName(vodDto.FolderName).SetFileName(vodDto.FileName).SetLocked(vodDto.Locked).Save(context.Background())
 	if err != nil {
@@ -98,22 +105,21 @@ func (s *Service) GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod,
 	return v, nil
 }
 
-func (s *Service) GetVod(vodID uuid.UUID) (*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(context.Background())
-	if err != nil {
-		log.Debug().Err(err).Msg("error getting vod")
-		// if vod not found
-		if _, ok := err.(*ent.NotFoundError); ok {
-			return nil, fmt.Errorf("vod not found")
-		}
-		return nil, fmt.Errorf("error getting vod: %v", err)
+func (s *Service) GetVod(vodID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool) (*ent.Vod, error) {
+	q := s.Store.Client.Vod.Query()
+	q.Where(vod.ID(vodID))
+
+	if withChannel {
+		q.WithChannel()
+	}
+	if withChapters {
+		q.WithChapters()
+	}
+	if withMutedSegments {
+		q.WithMutedSegments()
 	}
 
-	return v, nil
-}
-
-func (s *Service) GetVodWithChannel(vodID uuid.UUID) (*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithChannel().Only(context.Background())
+	v, err := q.Only(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod")
 		// if vod not found
@@ -129,7 +135,7 @@ func (s *Service) GetVodWithChannel(vodID uuid.UUID) (*ent.Vod, error) {
 func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) error {
 	log.Debug().Msgf("deleting vod %s", vodID)
 	// delete vod and queue item
-	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithQueue().WithChannel().WithChapters().Only(c.Request().Context())
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithQueue().WithChannel().WithChapters().WithMutedSegments().Only(c.Request().Context())
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return fmt.Errorf("vod not found")
@@ -146,6 +152,12 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) e
 		_, err = s.Store.Client.Chapter.Delete().Where(entChapter.HasVodWith(vod.ID(vodID))).Exec(c.Request().Context())
 		if err != nil {
 			return fmt.Errorf("error deleting chapters: %v", err)
+		}
+	}
+	if v.Edges.MutedSegments != nil {
+		_, err = s.Store.Client.MutedSegment.Delete().Where(entMutedSegment.HasVodWith(vod.ID(vodID))).Exec(c.Request().Context())
+		if err != nil {
+			return fmt.Errorf("error deleting muted segments: %v", err)
 		}
 	}
 
