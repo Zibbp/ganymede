@@ -192,7 +192,9 @@ func (s *Service) DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error 
 func (s *Service) Check() error {
 	log.Debug().Msg("checking live channels")
 	// get live watched channels from database
-	liveWatchedChannels, err := s.Store.Client.Live.Query().Where(live.WatchLive(true)).WithChannel().WithTitleRegex().All(context.Background())
+	liveWatchedChannels, err := s.Store.Client.Live.Query().Where(live.WatchLive(true)).WithChannel().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
+		ltrq.Where(livetitleregex.ApplyToVideosEQ(false))
+	}).All(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("error getting live watched channels")
 	}
@@ -241,7 +243,7 @@ OUTER:
 				if lwc.Edges.TitleRegex != nil && len(lwc.Edges.TitleRegex) > 0 {
 					// run regexes against title
 					for _, titleRegex := range lwc.Edges.TitleRegex {
-						regex, err := regexp.Compile(fmt.Sprintf(`%s`, titleRegex.Regex))
+						regex, err := regexp.Compile(titleRegex.Regex)
 						if err != nil {
 							log.Error().Err(err).Msg("error compiling regex for watched channel check, skipping this regex")
 							continue
@@ -252,7 +254,7 @@ OUTER:
 							continue
 						}
 
-						if len(matches) > 0 {
+						if !titleRegex.Negative && len(matches) > 0 {
 							continue
 						}
 
