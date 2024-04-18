@@ -102,6 +102,28 @@ var (
 			},
 		},
 	}
+	// LiveTitleRegexesColumns holds the columns for the "live_title_regexes" table.
+	LiveTitleRegexesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "negative", Type: field.TypeBool, Default: false},
+		{Name: "regex", Type: field.TypeString},
+		{Name: "apply_to_videos", Type: field.TypeBool, Default: false},
+		{Name: "live_id", Type: field.TypeUUID},
+	}
+	// LiveTitleRegexesTable holds the schema information for the "live_title_regexes" table.
+	LiveTitleRegexesTable = &schema.Table{
+		Name:       "live_title_regexes",
+		Columns:    LiveTitleRegexesColumns,
+		PrimaryKey: []*schema.Column{LiveTitleRegexesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "live_title_regexes_lives_title_regex",
+				Columns:    []*schema.Column{LiveTitleRegexesColumns[4]},
+				RefColumns: []*schema.Column{LivesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// MutedSegmentsColumns holds the columns for the "muted_segments" table.
 	MutedSegmentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -299,6 +321,7 @@ var (
 		ChaptersTable,
 		LivesTable,
 		LiveCategoriesTable,
+		LiveTitleRegexesTable,
 		MutedSegmentsTable,
 		PlaybacksTable,
 		PlaylistsTable,
@@ -314,6 +337,7 @@ func init() {
 	ChaptersTable.ForeignKeys[0].RefTable = VodsTable
 	LivesTable.ForeignKeys[0].RefTable = ChannelsTable
 	LiveCategoriesTable.ForeignKeys[0].RefTable = LivesTable
+	LiveTitleRegexesTable.ForeignKeys[0].RefTable = LivesTable
 	MutedSegmentsTable.ForeignKeys[0].RefTable = VodsTable
 	QueuesTable.ForeignKeys[0].RefTable = VodsTable
 	VodsTable.ForeignKeys[0].RefTable = ChannelsTable
