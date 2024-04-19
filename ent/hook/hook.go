@@ -57,6 +57,18 @@ func (f LiveCategoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiveCategoryMutation", m)
 }
 
+// The LiveTitleRegexFunc type is an adapter to allow the use of ordinary
+// function as LiveTitleRegex mutator.
+type LiveTitleRegexFunc func(context.Context, *ent.LiveTitleRegexMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LiveTitleRegexFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LiveTitleRegexMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiveTitleRegexMutation", m)
+}
+
 // The MutedSegmentFunc type is an adapter to allow the use of ordinary
 // function as MutedSegment mutator.
 type MutedSegmentFunc func(context.Context, *ent.MutedSegmentMutation) (ent.Value, error)

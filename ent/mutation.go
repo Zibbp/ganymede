@@ -16,6 +16,7 @@ import (
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
@@ -40,6 +41,7 @@ const (
 	TypeChapter        = "Chapter"
 	TypeLive           = "Live"
 	TypeLiveCategory   = "LiveCategory"
+	TypeLiveTitleRegex = "LiveTitleRegex"
 	TypeMutedSegment   = "MutedSegment"
 	TypePlayback       = "Playback"
 	TypePlaylist       = "Playlist"
@@ -1751,6 +1753,9 @@ type LiveMutation struct {
 	categories          map[uuid.UUID]struct{}
 	removedcategories   map[uuid.UUID]struct{}
 	clearedcategories   bool
+	title_regex         map[uuid.UUID]struct{}
+	removedtitle_regex  map[uuid.UUID]struct{}
+	clearedtitle_regex  bool
 	done                bool
 	oldValue            func(context.Context) (*Live, error)
 	predicates          []predicate.Live
@@ -2490,6 +2495,60 @@ func (m *LiveMutation) ResetCategories() {
 	m.removedcategories = nil
 }
 
+// AddTitleRegexIDs adds the "title_regex" edge to the LiveTitleRegex entity by ids.
+func (m *LiveMutation) AddTitleRegexIDs(ids ...uuid.UUID) {
+	if m.title_regex == nil {
+		m.title_regex = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.title_regex[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTitleRegex clears the "title_regex" edge to the LiveTitleRegex entity.
+func (m *LiveMutation) ClearTitleRegex() {
+	m.clearedtitle_regex = true
+}
+
+// TitleRegexCleared reports if the "title_regex" edge to the LiveTitleRegex entity was cleared.
+func (m *LiveMutation) TitleRegexCleared() bool {
+	return m.clearedtitle_regex
+}
+
+// RemoveTitleRegexIDs removes the "title_regex" edge to the LiveTitleRegex entity by IDs.
+func (m *LiveMutation) RemoveTitleRegexIDs(ids ...uuid.UUID) {
+	if m.removedtitle_regex == nil {
+		m.removedtitle_regex = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.title_regex, ids[i])
+		m.removedtitle_regex[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTitleRegex returns the removed IDs of the "title_regex" edge to the LiveTitleRegex entity.
+func (m *LiveMutation) RemovedTitleRegexIDs() (ids []uuid.UUID) {
+	for id := range m.removedtitle_regex {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TitleRegexIDs returns the "title_regex" edge IDs in the mutation.
+func (m *LiveMutation) TitleRegexIDs() (ids []uuid.UUID) {
+	for id := range m.title_regex {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTitleRegex resets all changes to the "title_regex" edge.
+func (m *LiveMutation) ResetTitleRegex() {
+	m.title_regex = nil
+	m.clearedtitle_regex = false
+	m.removedtitle_regex = nil
+}
+
 // Where appends a list predicates to the LiveMutation builder.
 func (m *LiveMutation) Where(ps ...predicate.Live) {
 	m.predicates = append(m.predicates, ps...)
@@ -2868,12 +2927,15 @@ func (m *LiveMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *LiveMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.channel != nil {
 		edges = append(edges, live.EdgeChannel)
 	}
 	if m.categories != nil {
 		edges = append(edges, live.EdgeCategories)
+	}
+	if m.title_regex != nil {
+		edges = append(edges, live.EdgeTitleRegex)
 	}
 	return edges
 }
@@ -2892,15 +2954,24 @@ func (m *LiveMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case live.EdgeTitleRegex:
+		ids := make([]ent.Value, 0, len(m.title_regex))
+		for id := range m.title_regex {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *LiveMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedcategories != nil {
 		edges = append(edges, live.EdgeCategories)
+	}
+	if m.removedtitle_regex != nil {
+		edges = append(edges, live.EdgeTitleRegex)
 	}
 	return edges
 }
@@ -2915,18 +2986,27 @@ func (m *LiveMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case live.EdgeTitleRegex:
+		ids := make([]ent.Value, 0, len(m.removedtitle_regex))
+		for id := range m.removedtitle_regex {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *LiveMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedchannel {
 		edges = append(edges, live.EdgeChannel)
 	}
 	if m.clearedcategories {
 		edges = append(edges, live.EdgeCategories)
+	}
+	if m.clearedtitle_regex {
+		edges = append(edges, live.EdgeTitleRegex)
 	}
 	return edges
 }
@@ -2939,6 +3019,8 @@ func (m *LiveMutation) EdgeCleared(name string) bool {
 		return m.clearedchannel
 	case live.EdgeCategories:
 		return m.clearedcategories
+	case live.EdgeTitleRegex:
+		return m.clearedtitle_regex
 	}
 	return false
 }
@@ -2963,6 +3045,9 @@ func (m *LiveMutation) ResetEdge(name string) error {
 		return nil
 	case live.EdgeCategories:
 		m.ResetCategories()
+		return nil
+	case live.EdgeTitleRegex:
+		m.ResetTitleRegex()
 		return nil
 	}
 	return fmt.Errorf("unknown Live edge %s", name)
@@ -3365,6 +3450,513 @@ func (m *LiveCategoryMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown LiveCategory edge %s", name)
+}
+
+// LiveTitleRegexMutation represents an operation that mutates the LiveTitleRegex nodes in the graph.
+type LiveTitleRegexMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	negative        *bool
+	regex           *string
+	apply_to_videos *bool
+	clearedFields   map[string]struct{}
+	live            *uuid.UUID
+	clearedlive     bool
+	done            bool
+	oldValue        func(context.Context) (*LiveTitleRegex, error)
+	predicates      []predicate.LiveTitleRegex
+}
+
+var _ ent.Mutation = (*LiveTitleRegexMutation)(nil)
+
+// livetitleregexOption allows management of the mutation configuration using functional options.
+type livetitleregexOption func(*LiveTitleRegexMutation)
+
+// newLiveTitleRegexMutation creates new mutation for the LiveTitleRegex entity.
+func newLiveTitleRegexMutation(c config, op Op, opts ...livetitleregexOption) *LiveTitleRegexMutation {
+	m := &LiveTitleRegexMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeLiveTitleRegex,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withLiveTitleRegexID sets the ID field of the mutation.
+func withLiveTitleRegexID(id uuid.UUID) livetitleregexOption {
+	return func(m *LiveTitleRegexMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *LiveTitleRegex
+		)
+		m.oldValue = func(ctx context.Context) (*LiveTitleRegex, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().LiveTitleRegex.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withLiveTitleRegex sets the old LiveTitleRegex of the mutation.
+func withLiveTitleRegex(node *LiveTitleRegex) livetitleregexOption {
+	return func(m *LiveTitleRegexMutation) {
+		m.oldValue = func(context.Context) (*LiveTitleRegex, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m LiveTitleRegexMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m LiveTitleRegexMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of LiveTitleRegex entities.
+func (m *LiveTitleRegexMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *LiveTitleRegexMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *LiveTitleRegexMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().LiveTitleRegex.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetNegative sets the "negative" field.
+func (m *LiveTitleRegexMutation) SetNegative(b bool) {
+	m.negative = &b
+}
+
+// Negative returns the value of the "negative" field in the mutation.
+func (m *LiveTitleRegexMutation) Negative() (r bool, exists bool) {
+	v := m.negative
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNegative returns the old "negative" field's value of the LiveTitleRegex entity.
+// If the LiveTitleRegex object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveTitleRegexMutation) OldNegative(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNegative is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNegative requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNegative: %w", err)
+	}
+	return oldValue.Negative, nil
+}
+
+// ResetNegative resets all changes to the "negative" field.
+func (m *LiveTitleRegexMutation) ResetNegative() {
+	m.negative = nil
+}
+
+// SetRegex sets the "regex" field.
+func (m *LiveTitleRegexMutation) SetRegex(s string) {
+	m.regex = &s
+}
+
+// Regex returns the value of the "regex" field in the mutation.
+func (m *LiveTitleRegexMutation) Regex() (r string, exists bool) {
+	v := m.regex
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRegex returns the old "regex" field's value of the LiveTitleRegex entity.
+// If the LiveTitleRegex object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveTitleRegexMutation) OldRegex(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRegex is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRegex requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRegex: %w", err)
+	}
+	return oldValue.Regex, nil
+}
+
+// ResetRegex resets all changes to the "regex" field.
+func (m *LiveTitleRegexMutation) ResetRegex() {
+	m.regex = nil
+}
+
+// SetApplyToVideos sets the "apply_to_videos" field.
+func (m *LiveTitleRegexMutation) SetApplyToVideos(b bool) {
+	m.apply_to_videos = &b
+}
+
+// ApplyToVideos returns the value of the "apply_to_videos" field in the mutation.
+func (m *LiveTitleRegexMutation) ApplyToVideos() (r bool, exists bool) {
+	v := m.apply_to_videos
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldApplyToVideos returns the old "apply_to_videos" field's value of the LiveTitleRegex entity.
+// If the LiveTitleRegex object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveTitleRegexMutation) OldApplyToVideos(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldApplyToVideos is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldApplyToVideos requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldApplyToVideos: %w", err)
+	}
+	return oldValue.ApplyToVideos, nil
+}
+
+// ResetApplyToVideos resets all changes to the "apply_to_videos" field.
+func (m *LiveTitleRegexMutation) ResetApplyToVideos() {
+	m.apply_to_videos = nil
+}
+
+// SetLiveID sets the "live" edge to the Live entity by id.
+func (m *LiveTitleRegexMutation) SetLiveID(id uuid.UUID) {
+	m.live = &id
+}
+
+// ClearLive clears the "live" edge to the Live entity.
+func (m *LiveTitleRegexMutation) ClearLive() {
+	m.clearedlive = true
+}
+
+// LiveCleared reports if the "live" edge to the Live entity was cleared.
+func (m *LiveTitleRegexMutation) LiveCleared() bool {
+	return m.clearedlive
+}
+
+// LiveID returns the "live" edge ID in the mutation.
+func (m *LiveTitleRegexMutation) LiveID() (id uuid.UUID, exists bool) {
+	if m.live != nil {
+		return *m.live, true
+	}
+	return
+}
+
+// LiveIDs returns the "live" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// LiveID instead. It exists only for internal usage by the builders.
+func (m *LiveTitleRegexMutation) LiveIDs() (ids []uuid.UUID) {
+	if id := m.live; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetLive resets all changes to the "live" edge.
+func (m *LiveTitleRegexMutation) ResetLive() {
+	m.live = nil
+	m.clearedlive = false
+}
+
+// Where appends a list predicates to the LiveTitleRegexMutation builder.
+func (m *LiveTitleRegexMutation) Where(ps ...predicate.LiveTitleRegex) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the LiveTitleRegexMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *LiveTitleRegexMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.LiveTitleRegex, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *LiveTitleRegexMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *LiveTitleRegexMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (LiveTitleRegex).
+func (m *LiveTitleRegexMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *LiveTitleRegexMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.negative != nil {
+		fields = append(fields, livetitleregex.FieldNegative)
+	}
+	if m.regex != nil {
+		fields = append(fields, livetitleregex.FieldRegex)
+	}
+	if m.apply_to_videos != nil {
+		fields = append(fields, livetitleregex.FieldApplyToVideos)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *LiveTitleRegexMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case livetitleregex.FieldNegative:
+		return m.Negative()
+	case livetitleregex.FieldRegex:
+		return m.Regex()
+	case livetitleregex.FieldApplyToVideos:
+		return m.ApplyToVideos()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *LiveTitleRegexMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case livetitleregex.FieldNegative:
+		return m.OldNegative(ctx)
+	case livetitleregex.FieldRegex:
+		return m.OldRegex(ctx)
+	case livetitleregex.FieldApplyToVideos:
+		return m.OldApplyToVideos(ctx)
+	}
+	return nil, fmt.Errorf("unknown LiveTitleRegex field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LiveTitleRegexMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case livetitleregex.FieldNegative:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNegative(v)
+		return nil
+	case livetitleregex.FieldRegex:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRegex(v)
+		return nil
+	case livetitleregex.FieldApplyToVideos:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetApplyToVideos(v)
+		return nil
+	}
+	return fmt.Errorf("unknown LiveTitleRegex field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *LiveTitleRegexMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *LiveTitleRegexMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LiveTitleRegexMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown LiveTitleRegex numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *LiveTitleRegexMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *LiveTitleRegexMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *LiveTitleRegexMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown LiveTitleRegex nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *LiveTitleRegexMutation) ResetField(name string) error {
+	switch name {
+	case livetitleregex.FieldNegative:
+		m.ResetNegative()
+		return nil
+	case livetitleregex.FieldRegex:
+		m.ResetRegex()
+		return nil
+	case livetitleregex.FieldApplyToVideos:
+		m.ResetApplyToVideos()
+		return nil
+	}
+	return fmt.Errorf("unknown LiveTitleRegex field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *LiveTitleRegexMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.live != nil {
+		edges = append(edges, livetitleregex.EdgeLive)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *LiveTitleRegexMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case livetitleregex.EdgeLive:
+		if id := m.live; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *LiveTitleRegexMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *LiveTitleRegexMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *LiveTitleRegexMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedlive {
+		edges = append(edges, livetitleregex.EdgeLive)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *LiveTitleRegexMutation) EdgeCleared(name string) bool {
+	switch name {
+	case livetitleregex.EdgeLive:
+		return m.clearedlive
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *LiveTitleRegexMutation) ClearEdge(name string) error {
+	switch name {
+	case livetitleregex.EdgeLive:
+		m.ClearLive()
+		return nil
+	}
+	return fmt.Errorf("unknown LiveTitleRegex unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *LiveTitleRegexMutation) ResetEdge(name string) error {
+	switch name {
+	case livetitleregex.EdgeLive:
+		m.ResetLive()
+		return nil
+	}
+	return fmt.Errorf("unknown LiveTitleRegex edge %s", name)
 }
 
 // MutedSegmentMutation represents an operation that mutates the MutedSegment nodes in the graph.

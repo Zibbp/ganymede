@@ -1,9 +1,13 @@
 package schema
 
 import (
+	"database/sql/driver"
+	"fmt"
+	"strings"
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
@@ -40,5 +44,38 @@ func (Live) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("channel", Channel.Type).Ref("live").Unique().Required(),
 		edge.To("categories", LiveCategory.Type).StorageKey(edge.Column("live_id")),
+		edge.To("title_regex", LiveTitleRegex.Type).StorageKey(edge.Column("live_id")).Annotations(
+			entsql.OnDelete(entsql.Cascade),
+		),
 	}
+}
+
+type Strings []string
+
+func (s *Strings) Scan(v any) (err error) {
+	switch v := v.(type) {
+	case nil:
+	case []byte:
+		err = s.scan(string(v))
+	case string:
+		err = s.scan(v)
+	default:
+		err = fmt.Errorf("unexpected type %T", v)
+	}
+	return
+}
+
+func (s *Strings) scan(v string) error {
+	if v == "" {
+		return nil
+	}
+	if l := len(v); l < 2 || v[0] != '{' && v[l-1] != '}' {
+		return fmt.Errorf("unexpected array format %q", v)
+	}
+	*s = strings.Split(v[1:len(v)-1], ",")
+	return nil
+}
+
+func (s Strings) Value() (driver.Value, error) {
+	return "{" + strings.Join(s, ",") + "}", nil
 }

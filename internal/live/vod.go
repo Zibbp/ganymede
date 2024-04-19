@@ -2,6 +2,7 @@ package live
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/twitch"
 )
@@ -55,7 +57,9 @@ type Viewable string
 
 func (s *Service) CheckVodWatchedChannels() {
 	// Get channels from DB
-	channels, err := s.Store.Client.Live.Query().Where(live.WatchVod(true)).WithChannel().WithCategories().All(context.Background())
+	channels, err := s.Store.Client.Live.Query().Where(live.WatchVod(true)).WithChannel().WithCategories().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
+		ltrq.Where(livetitleregex.ApplyToVideosEQ(true))
+	}).All(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting channels")
 		return
@@ -111,9 +115,34 @@ func (s *Service) CheckVodWatchedChannels() {
 			continue
 		}
 		// Check if video is already in DB
+	OUTER:
 		for _, video := range videos {
 			// Video is not in DB
 			if !contains(dbVideos, video.ID) {
+				// check if there are any title regexes that need to be tested
+				if watch.Edges.TitleRegex != nil && len(watch.Edges.TitleRegex) > 0 {
+					// run regexes against title
+					for _, titleRegex := range watch.Edges.TitleRegex {
+						regex, err := regexp.Compile(titleRegex.Regex)
+						if err != nil {
+							log.Error().Err(err).Msg("error compiling regex for watched channel check, skipping this regex")
+							continue
+						}
+						matches := regex.FindAllString(video.Title, -1)
+
+						if titleRegex.Negative && len(matches) == 0 {
+							continue
+						}
+
+						if !titleRegex.Negative && len(matches) > 0 {
+							continue
+						}
+
+						log.Debug().Str("regex", titleRegex.Regex).Str("title", video.Title).Msgf("no regex matches for video")
+						continue OUTER
+					}
+				}
+
 				// Query the video using Twitch's GraphQL API to check for restrictions
 				gqlVideo, err := twitch.GQLGetVideo(video.ID)
 				if err != nil {
