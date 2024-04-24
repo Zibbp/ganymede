@@ -16,6 +16,8 @@ import (
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
+	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -86,6 +88,8 @@ func checkColumn(table, column string) error {
 			chapter.Table:        chapter.ValidColumn,
 			live.Table:           live.ValidColumn,
 			livecategory.Table:   livecategory.ValidColumn,
+			livetitleregex.Table: livetitleregex.ValidColumn,
+			mutedsegment.Table:   mutedsegment.ValidColumn,
 			playback.Table:       playback.ValidColumn,
 			playlist.Table:       playlist.ValidColumn,
 			queue.Table:          queue.ValidColumn,

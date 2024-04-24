@@ -10,6 +10,8 @@ import (
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
+	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -119,6 +121,26 @@ func init() {
 	livecategoryDescID := livecategoryFields[0].Descriptor()
 	// livecategory.DefaultID holds the default value on creation for the id field.
 	livecategory.DefaultID = livecategoryDescID.Default.(func() uuid.UUID)
+	livetitleregexFields := schema.LiveTitleRegex{}.Fields()
+	_ = livetitleregexFields
+	// livetitleregexDescNegative is the schema descriptor for negative field.
+	livetitleregexDescNegative := livetitleregexFields[1].Descriptor()
+	// livetitleregex.DefaultNegative holds the default value on creation for the negative field.
+	livetitleregex.DefaultNegative = livetitleregexDescNegative.Default.(bool)
+	// livetitleregexDescApplyToVideos is the schema descriptor for apply_to_videos field.
+	livetitleregexDescApplyToVideos := livetitleregexFields[3].Descriptor()
+	// livetitleregex.DefaultApplyToVideos holds the default value on creation for the apply_to_videos field.
+	livetitleregex.DefaultApplyToVideos = livetitleregexDescApplyToVideos.Default.(bool)
+	// livetitleregexDescID is the schema descriptor for id field.
+	livetitleregexDescID := livetitleregexFields[0].Descriptor()
+	// livetitleregex.DefaultID holds the default value on creation for the id field.
+	livetitleregex.DefaultID = livetitleregexDescID.Default.(func() uuid.UUID)
+	mutedsegmentFields := schema.MutedSegment{}.Fields()
+	_ = mutedsegmentFields
+	// mutedsegmentDescID is the schema descriptor for id field.
+	mutedsegmentDescID := mutedsegmentFields[0].Descriptor()
+	// mutedsegment.DefaultID holds the default value on creation for the id field.
+	mutedsegment.DefaultID = mutedsegmentDescID.Default.(func() uuid.UUID)
 	playbackFields := schema.Playback{}.Fields()
 	_ = playbackFields
 	// playbackDescTime is the schema descriptor for time field.

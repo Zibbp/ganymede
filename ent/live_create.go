@@ -16,6 +16,7 @@ import (
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
 )
 
 // LiveCreate is the builder for creating a Live entity.
@@ -260,6 +261,21 @@ func (lc *LiveCreate) AddCategories(l ...*LiveCategory) *LiveCreate {
 		ids[i] = l[i].ID
 	}
 	return lc.AddCategoryIDs(ids...)
+}
+
+// AddTitleRegexIDs adds the "title_regex" edge to the LiveTitleRegex entity by IDs.
+func (lc *LiveCreate) AddTitleRegexIDs(ids ...uuid.UUID) *LiveCreate {
+	lc.mutation.AddTitleRegexIDs(ids...)
+	return lc
+}
+
+// AddTitleRegex adds the "title_regex" edges to the LiveTitleRegex entity.
+func (lc *LiveCreate) AddTitleRegex(l ...*LiveTitleRegex) *LiveCreate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return lc.AddTitleRegexIDs(ids...)
 }
 
 // Mutation returns the LiveMutation object of the builder.
@@ -521,6 +537,22 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := lc.mutation.TitleRegexIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.TitleRegexTable,
+			Columns: []string{live.TitleRegexColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
+	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -449,6 +450,21 @@ func (vu *VodUpdate) AddChapters(c ...*Chapter) *VodUpdate {
 	return vu.AddChapterIDs(ids...)
 }
 
+// AddMutedSegmentIDs adds the "muted_segments" edge to the MutedSegment entity by IDs.
+func (vu *VodUpdate) AddMutedSegmentIDs(ids ...uuid.UUID) *VodUpdate {
+	vu.mutation.AddMutedSegmentIDs(ids...)
+	return vu
+}
+
+// AddMutedSegments adds the "muted_segments" edges to the MutedSegment entity.
+func (vu *VodUpdate) AddMutedSegments(m ...*MutedSegment) *VodUpdate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return vu.AddMutedSegmentIDs(ids...)
+}
+
 // Mutation returns the VodMutation object of the builder.
 func (vu *VodUpdate) Mutation() *VodMutation {
 	return vu.mutation
@@ -506,6 +522,27 @@ func (vu *VodUpdate) RemoveChapters(c ...*Chapter) *VodUpdate {
 		ids[i] = c[i].ID
 	}
 	return vu.RemoveChapterIDs(ids...)
+}
+
+// ClearMutedSegments clears all "muted_segments" edges to the MutedSegment entity.
+func (vu *VodUpdate) ClearMutedSegments() *VodUpdate {
+	vu.mutation.ClearMutedSegments()
+	return vu
+}
+
+// RemoveMutedSegmentIDs removes the "muted_segments" edge to MutedSegment entities by IDs.
+func (vu *VodUpdate) RemoveMutedSegmentIDs(ids ...uuid.UUID) *VodUpdate {
+	vu.mutation.RemoveMutedSegmentIDs(ids...)
+	return vu
+}
+
+// RemoveMutedSegments removes "muted_segments" edges to MutedSegment entities.
+func (vu *VodUpdate) RemoveMutedSegments(m ...*MutedSegment) *VodUpdate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return vu.RemoveMutedSegmentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -811,6 +848,51 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if vu.mutation.MutedSegmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.MutedSegmentsTable,
+			Columns: []string{vod.MutedSegmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.RemovedMutedSegmentsIDs(); len(nodes) > 0 && !vu.mutation.MutedSegmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.MutedSegmentsTable,
+			Columns: []string{vod.MutedSegmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.MutedSegmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.MutedSegmentsTable,
+			Columns: []string{vod.MutedSegmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1253,6 +1335,21 @@ func (vuo *VodUpdateOne) AddChapters(c ...*Chapter) *VodUpdateOne {
 	return vuo.AddChapterIDs(ids...)
 }
 
+// AddMutedSegmentIDs adds the "muted_segments" edge to the MutedSegment entity by IDs.
+func (vuo *VodUpdateOne) AddMutedSegmentIDs(ids ...uuid.UUID) *VodUpdateOne {
+	vuo.mutation.AddMutedSegmentIDs(ids...)
+	return vuo
+}
+
+// AddMutedSegments adds the "muted_segments" edges to the MutedSegment entity.
+func (vuo *VodUpdateOne) AddMutedSegments(m ...*MutedSegment) *VodUpdateOne {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return vuo.AddMutedSegmentIDs(ids...)
+}
+
 // Mutation returns the VodMutation object of the builder.
 func (vuo *VodUpdateOne) Mutation() *VodMutation {
 	return vuo.mutation
@@ -1310,6 +1407,27 @@ func (vuo *VodUpdateOne) RemoveChapters(c ...*Chapter) *VodUpdateOne {
 		ids[i] = c[i].ID
 	}
 	return vuo.RemoveChapterIDs(ids...)
+}
+
+// ClearMutedSegments clears all "muted_segments" edges to the MutedSegment entity.
+func (vuo *VodUpdateOne) ClearMutedSegments() *VodUpdateOne {
+	vuo.mutation.ClearMutedSegments()
+	return vuo
+}
+
+// RemoveMutedSegmentIDs removes the "muted_segments" edge to MutedSegment entities by IDs.
+func (vuo *VodUpdateOne) RemoveMutedSegmentIDs(ids ...uuid.UUID) *VodUpdateOne {
+	vuo.mutation.RemoveMutedSegmentIDs(ids...)
+	return vuo
+}
+
+// RemoveMutedSegments removes "muted_segments" edges to MutedSegment entities.
+func (vuo *VodUpdateOne) RemoveMutedSegments(m ...*MutedSegment) *VodUpdateOne {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return vuo.RemoveMutedSegmentIDs(ids...)
 }
 
 // Where appends a list predicates to the VodUpdate builder.
@@ -1645,6 +1763,51 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if vuo.mutation.MutedSegmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.MutedSegmentsTable,
+			Columns: []string{vod.MutedSegmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.RemovedMutedSegmentsIDs(); len(nodes) > 0 && !vuo.mutation.MutedSegmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.MutedSegmentsTable,
+			Columns: []string{vod.MutedSegmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.MutedSegmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   vod.MutedSegmentsTable,
+			Columns: []string{vod.MutedSegmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

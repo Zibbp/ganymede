@@ -47,6 +47,8 @@ const (
 	EdgeChannel = "channel"
 	// EdgeCategories holds the string denoting the categories edge name in mutations.
 	EdgeCategories = "categories"
+	// EdgeTitleRegex holds the string denoting the title_regex edge name in mutations.
+	EdgeTitleRegex = "title_regex"
 	// Table holds the table name of the live in the database.
 	Table = "lives"
 	// ChannelTable is the table that holds the channel relation/edge.
@@ -63,6 +65,13 @@ const (
 	CategoriesInverseTable = "live_categories"
 	// CategoriesColumn is the table column denoting the categories relation/edge.
 	CategoriesColumn = "live_id"
+	// TitleRegexTable is the table that holds the title_regex relation/edge.
+	TitleRegexTable = "live_title_regexes"
+	// TitleRegexInverseTable is the table name for the LiveTitleRegex entity.
+	// It exists in this package in order to avoid circular dependency with the "livetitleregex" package.
+	TitleRegexInverseTable = "live_title_regexes"
+	// TitleRegexColumn is the table column denoting the title_regex relation/edge.
+	TitleRegexColumn = "live_id"
 )
 
 // Columns holds all SQL columns for live fields.
@@ -238,6 +247,20 @@ func ByCategories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCategoriesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByTitleRegexCount orders the results by title_regex count.
+func ByTitleRegexCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTitleRegexStep(), opts...)
+	}
+}
+
+// ByTitleRegex orders the results by title_regex terms.
+func ByTitleRegex(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTitleRegexStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newChannelStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -250,5 +273,12 @@ func newCategoriesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CategoriesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CategoriesTable, CategoriesColumn),
+	)
+}
+func newTitleRegexStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TitleRegexInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TitleRegexTable, TitleRegexColumn),
 	)
 }
