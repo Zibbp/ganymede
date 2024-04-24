@@ -60,9 +60,11 @@ type LiveEdges struct {
 	Channel *Channel `json:"channel,omitempty"`
 	// Categories holds the value of the categories edge.
 	Categories []*LiveCategory `json:"categories,omitempty"`
+	// TitleRegex holds the value of the title_regex edge.
+	TitleRegex []*LiveTitleRegex `json:"title_regex,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -85,6 +87,15 @@ func (e LiveEdges) CategoriesOrErr() ([]*LiveCategory, error) {
 		return e.Categories, nil
 	}
 	return nil, &NotLoadedError{edge: "categories"}
+}
+
+// TitleRegexOrErr returns the TitleRegex value or an error if the edge
+// was not loaded in eager-loading.
+func (e LiveEdges) TitleRegexOrErr() ([]*LiveTitleRegex, error) {
+	if e.loadedTypes[2] {
+		return e.TitleRegex, nil
+	}
+	return nil, &NotLoadedError{edge: "title_regex"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -237,6 +248,11 @@ func (l *Live) QueryChannel() *ChannelQuery {
 // QueryCategories queries the "categories" edge of the Live entity.
 func (l *Live) QueryCategories() *LiveCategoryQuery {
 	return NewLiveClient(l.config).QueryCategories(l)
+}
+
+// QueryTitleRegex queries the "title_regex" edge of the Live entity.
+func (l *Live) QueryTitleRegex() *LiveTitleRegexQuery {
+	return NewLiveClient(l.config).QueryTitleRegex(l)
 }
 
 // Update returns a builder for updating this Live.
