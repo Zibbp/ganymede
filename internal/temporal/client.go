@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"go.temporal.io/api/namespace/v1"
 	"go.temporal.io/api/workflowservice/v1"
@@ -37,7 +38,11 @@ func InitializeTemporalClient() {
 	}
 
 	// 30 day ttl
-	retentionTtl := 30 * 24 * time.Hour
+	retentionTtlTime := 30 * 24 * time.Hour
+
+	retentionTtl := durationpb.Duration{
+		Seconds: int64(retentionTtlTime.Seconds()),
+	}
 
 	err = namespaceClient.Update(context.Background(), &workflowservice.UpdateNamespaceRequest{
 		Namespace: "default",

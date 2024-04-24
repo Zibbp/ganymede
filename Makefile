@@ -9,3 +9,6 @@ dev_worker: prereq_command
 
 ent_generate:
 	go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/upsert ./ent/schema
+
+go_update_packages:
+	go get -u ./... && go mod tidy
