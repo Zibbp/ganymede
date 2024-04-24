@@ -341,6 +341,46 @@ func (qu *QueueUpdate) ClearRenderChat() *QueueUpdate {
 	return qu
 }
 
+// SetWorkflowID sets the "workflow_id" field.
+func (qu *QueueUpdate) SetWorkflowID(s string) *QueueUpdate {
+	qu.mutation.SetWorkflowID(s)
+	return qu
+}
+
+// SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
+func (qu *QueueUpdate) SetNillableWorkflowID(s *string) *QueueUpdate {
+	if s != nil {
+		qu.SetWorkflowID(*s)
+	}
+	return qu
+}
+
+// ClearWorkflowID clears the value of the "workflow_id" field.
+func (qu *QueueUpdate) ClearWorkflowID() *QueueUpdate {
+	qu.mutation.ClearWorkflowID()
+	return qu
+}
+
+// SetWorkflowRunID sets the "workflow_run_id" field.
+func (qu *QueueUpdate) SetWorkflowRunID(s string) *QueueUpdate {
+	qu.mutation.SetWorkflowRunID(s)
+	return qu
+}
+
+// SetNillableWorkflowRunID sets the "workflow_run_id" field if the given value is not nil.
+func (qu *QueueUpdate) SetNillableWorkflowRunID(s *string) *QueueUpdate {
+	if s != nil {
+		qu.SetWorkflowRunID(*s)
+	}
+	return qu
+}
+
+// ClearWorkflowRunID clears the value of the "workflow_run_id" field.
+func (qu *QueueUpdate) ClearWorkflowRunID() *QueueUpdate {
+	qu.mutation.ClearWorkflowRunID()
+	return qu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (qu *QueueUpdate) SetUpdatedAt(t time.Time) *QueueUpdate {
 	qu.mutation.SetUpdatedAt(t)
@@ -561,6 +601,18 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if qu.mutation.RenderChatCleared() {
 		_spec.ClearField(queue.FieldRenderChat, field.TypeBool)
+	}
+	if value, ok := qu.mutation.WorkflowID(); ok {
+		_spec.SetField(queue.FieldWorkflowID, field.TypeString, value)
+	}
+	if qu.mutation.WorkflowIDCleared() {
+		_spec.ClearField(queue.FieldWorkflowID, field.TypeString)
+	}
+	if value, ok := qu.mutation.WorkflowRunID(); ok {
+		_spec.SetField(queue.FieldWorkflowRunID, field.TypeString, value)
+	}
+	if qu.mutation.WorkflowRunIDCleared() {
+		_spec.ClearField(queue.FieldWorkflowRunID, field.TypeString)
 	}
 	if value, ok := qu.mutation.UpdatedAt(); ok {
 		_spec.SetField(queue.FieldUpdatedAt, field.TypeTime, value)
@@ -924,6 +976,46 @@ func (quo *QueueUpdateOne) ClearRenderChat() *QueueUpdateOne {
 	return quo
 }
 
+// SetWorkflowID sets the "workflow_id" field.
+func (quo *QueueUpdateOne) SetWorkflowID(s string) *QueueUpdateOne {
+	quo.mutation.SetWorkflowID(s)
+	return quo
+}
+
+// SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
+func (quo *QueueUpdateOne) SetNillableWorkflowID(s *string) *QueueUpdateOne {
+	if s != nil {
+		quo.SetWorkflowID(*s)
+	}
+	return quo
+}
+
+// ClearWorkflowID clears the value of the "workflow_id" field.
+func (quo *QueueUpdateOne) ClearWorkflowID() *QueueUpdateOne {
+	quo.mutation.ClearWorkflowID()
+	return quo
+}
+
+// SetWorkflowRunID sets the "workflow_run_id" field.
+func (quo *QueueUpdateOne) SetWorkflowRunID(s string) *QueueUpdateOne {
+	quo.mutation.SetWorkflowRunID(s)
+	return quo
+}
+
+// SetNillableWorkflowRunID sets the "workflow_run_id" field if the given value is not nil.
+func (quo *QueueUpdateOne) SetNillableWorkflowRunID(s *string) *QueueUpdateOne {
+	if s != nil {
+		quo.SetWorkflowRunID(*s)
+	}
+	return quo
+}
+
+// ClearWorkflowRunID clears the value of the "workflow_run_id" field.
+func (quo *QueueUpdateOne) ClearWorkflowRunID() *QueueUpdateOne {
+	quo.mutation.ClearWorkflowRunID()
+	return quo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (quo *QueueUpdateOne) SetUpdatedAt(t time.Time) *QueueUpdateOne {
 	quo.mutation.SetUpdatedAt(t)
@@ -1174,6 +1266,18 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error
 	}
 	if quo.mutation.RenderChatCleared() {
 		_spec.ClearField(queue.FieldRenderChat, field.TypeBool)
+	}
+	if value, ok := quo.mutation.WorkflowID(); ok {
+		_spec.SetField(queue.FieldWorkflowID, field.TypeString, value)
+	}
+	if quo.mutation.WorkflowIDCleared() {
+		_spec.ClearField(queue.FieldWorkflowID, field.TypeString)
+	}
+	if value, ok := quo.mutation.WorkflowRunID(); ok {
+		_spec.SetField(queue.FieldWorkflowRunID, field.TypeString, value)
+	}
+	if quo.mutation.WorkflowRunIDCleared() {
+		_spec.ClearField(queue.FieldWorkflowRunID, field.TypeString)
 	}
 	if value, ok := quo.mutation.UpdatedAt(); ok {
 		_spec.SetField(queue.FieldUpdatedAt, field.TypeTime, value)

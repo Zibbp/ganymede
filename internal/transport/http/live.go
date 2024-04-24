@@ -20,17 +20,25 @@ type LiveService interface {
 }
 
 type AddWatchedChannelRequest struct {
-	WatchLive          bool     `json:"watch_live" `
-	WatchVod           bool     `json:"watch_vod" `
-	DownloadArchives   bool     `json:"download_archives" `
-	DownloadHighlights bool     `json:"download_highlights" `
-	DownloadUploads    bool     `json:"download_uploads"`
-	ChannelID          string   `json:"channel_id" validate:"required"`
-	Resolution         string   `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30"`
-	ArchiveChat        bool     `json:"archive_chat"`
-	RenderChat         bool     `json:"render_chat"`
-	DownloadSubOnly    bool     `json:"download_sub_only"`
-	Categories         []string `json:"categories"`
+	WatchLive          bool                `json:"watch_live" validate:"boolean"`
+	WatchVod           bool                `json:"watch_vod" validate:"boolean"`
+	DownloadArchives   bool                `json:"download_archives" validate:"boolean"`
+	DownloadHighlights bool                `json:"download_highlights" validate:"boolean"`
+	DownloadUploads    bool                `json:"download_uploads" validate:"boolean"`
+	ChannelID          string              `json:"channel_id" validate:"required"`
+	Resolution         string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30"`
+	ArchiveChat        bool                `json:"archive_chat" validate:"boolean"`
+	RenderChat         bool                `json:"render_chat" validate:"boolean"`
+	DownloadSubOnly    bool                `json:"download_sub_only" validate:"boolean"`
+	Categories         []string            `json:"categories"`
+	MaxAge             int64               `json:"max_age"`
+	Regex              []AddLiveTitleRegex `json:"regex"`
+}
+
+type AddLiveTitleRegex struct {
+	Regex         string `json:"regex" validate:"required"`
+	Negative      bool   `json:"negative" validate:"boolean"`
+	ApplyToVideos bool   `json:"apply_to_videos" validate:"boolean"`
 }
 
 type AddMultipleWatchedChannelRequest struct {
@@ -45,19 +53,22 @@ type AddMultipleWatchedChannelRequest struct {
 	RenderChat         bool     `json:"render_chat"`
 	DownloadSubOnly    bool     `json:"download_sub_only"`
 	Categories         []string `json:"categories"`
+	MaxAge             int64    `json:"max_age"`
 }
 
 type UpdateWatchedChannelRequest struct {
-	WatchLive          bool     `json:"watch_live"`
-	WatchVod           bool     `json:"watch_vod" `
-	DownloadArchives   bool     `json:"download_archives" `
-	DownloadHighlights bool     `json:"download_highlights" `
-	DownloadUploads    bool     `json:"download_uploads"`
-	Resolution         string   `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30"`
-	ArchiveChat        bool     `json:"archive_chat"`
-	RenderChat         bool     `json:"render_chat"`
-	DownloadSubOnly    bool     `json:"download_sub_only"`
-	Categories         []string `json:"categories"`
+	WatchLive          bool                `json:"watch_live" validate:"boolean"`
+	WatchVod           bool                `json:"watch_vod" validate:"boolean"`
+	DownloadArchives   bool                `json:"download_archives" validate:"boolean"`
+	DownloadHighlights bool                `json:"download_highlights" validate:"boolean"`
+	DownloadUploads    bool                `json:"download_uploads" validate:"boolean"`
+	Resolution         string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30"`
+	ArchiveChat        bool                `json:"archive_chat" validate:"boolean"`
+	RenderChat         bool                `json:"render_chat" validate:"boolean"`
+	DownloadSubOnly    bool                `json:"download_sub_only" validate:"boolean"`
+	Categories         []string            `json:"categories"`
+	MaxAge             int64               `json:"max_age"`
+	Regex              []AddLiveTitleRegex `json:"regex"`
 }
 
 type ConvertChatRequest struct {
@@ -134,7 +145,20 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		RenderChat:         ccr.RenderChat,
 		DownloadSubOnly:    ccr.DownloadSubOnly,
 		Categories:         ccr.Categories,
+		MaxAge:             ccr.MaxAge,
 	}
+
+	for _, regex := range ccr.Regex {
+		if err := c.Validate(regex); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		liveDto.TitleRegex = append(liveDto.TitleRegex, ent.LiveTitleRegex{
+			Negative:      regex.Negative,
+			Regex:         regex.Regex,
+			ApplyToVideos: regex.ApplyToVideos,
+		})
+	}
+
 	l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -184,6 +208,7 @@ func (h *Handler) AddMultipleLiveWatchedChannel(c echo.Context) error {
 			RenderChat:         ccr.RenderChat,
 			DownloadSubOnly:    ccr.DownloadSubOnly,
 			Categories:         ccr.Categories,
+			MaxAge:             ccr.MaxAge,
 		}
 		l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 		if err != nil {
@@ -234,7 +259,20 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		RenderChat:         ccr.RenderChat,
 		DownloadSubOnly:    ccr.DownloadSubOnly,
 		Categories:         ccr.Categories,
+		MaxAge:             ccr.MaxAge,
 	}
+
+	for _, regex := range ccr.Regex {
+		if err := c.Validate(regex); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		liveDto.TitleRegex = append(liveDto.TitleRegex, ent.LiveTitleRegex{
+			Negative:      regex.Negative,
+			Regex:         regex.Regex,
+			ApplyToVideos: regex.ApplyToVideos,
+		})
+	}
+
 	l, err := h.Service.LiveService.UpdateLiveWatchedChannel(c, liveDto)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

@@ -111,6 +111,11 @@ func RenderChat(v bool) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldRenderChat, v))
 }
 
+// VideoAge applies equality check predicate on the "video_age" field. It's identical to VideoAgeEQ.
+func VideoAge(v int64) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldVideoAge, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldUpdatedAt, v))
@@ -326,6 +331,46 @@ func RenderChatNEQ(v bool) predicate.Live {
 	return predicate.Live(sql.FieldNEQ(FieldRenderChat, v))
 }
 
+// VideoAgeEQ applies the EQ predicate on the "video_age" field.
+func VideoAgeEQ(v int64) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldVideoAge, v))
+}
+
+// VideoAgeNEQ applies the NEQ predicate on the "video_age" field.
+func VideoAgeNEQ(v int64) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldVideoAge, v))
+}
+
+// VideoAgeIn applies the In predicate on the "video_age" field.
+func VideoAgeIn(vs ...int64) predicate.Live {
+	return predicate.Live(sql.FieldIn(FieldVideoAge, vs...))
+}
+
+// VideoAgeNotIn applies the NotIn predicate on the "video_age" field.
+func VideoAgeNotIn(vs ...int64) predicate.Live {
+	return predicate.Live(sql.FieldNotIn(FieldVideoAge, vs...))
+}
+
+// VideoAgeGT applies the GT predicate on the "video_age" field.
+func VideoAgeGT(v int64) predicate.Live {
+	return predicate.Live(sql.FieldGT(FieldVideoAge, v))
+}
+
+// VideoAgeGTE applies the GTE predicate on the "video_age" field.
+func VideoAgeGTE(v int64) predicate.Live {
+	return predicate.Live(sql.FieldGTE(FieldVideoAge, v))
+}
+
+// VideoAgeLT applies the LT predicate on the "video_age" field.
+func VideoAgeLT(v int64) predicate.Live {
+	return predicate.Live(sql.FieldLT(FieldVideoAge, v))
+}
+
+// VideoAgeLTE applies the LTE predicate on the "video_age" field.
+func VideoAgeLTE(v int64) predicate.Live {
+	return predicate.Live(sql.FieldLTE(FieldVideoAge, v))
+}
+
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
 func UpdatedAtEQ(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldUpdatedAt, v))
@@ -444,6 +489,29 @@ func HasCategories() predicate.Live {
 func HasCategoriesWith(preds ...predicate.LiveCategory) predicate.Live {
 	return predicate.Live(func(s *sql.Selector) {
 		step := newCategoriesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTitleRegex applies the HasEdge predicate on the "title_regex" edge.
+func HasTitleRegex() predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TitleRegexTable, TitleRegexColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTitleRegexWith applies the HasEdge predicate on the "title_regex" edge with a given conditions (other predicates).
+func HasTitleRegexWith(preds ...predicate.LiveTitleRegex) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		step := newTitleRegexStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

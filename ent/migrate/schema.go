@@ -63,6 +63,7 @@ var (
 		{Name: "resolution", Type: field.TypeString, Nullable: true, Default: "best"},
 		{Name: "last_live", Type: field.TypeTime},
 		{Name: "render_chat", Type: field.TypeBool, Default: true},
+		{Name: "video_age", Type: field.TypeInt64, Default: 0},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "channel_live", Type: field.TypeUUID},
@@ -75,7 +76,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[14]},
+				Columns:    []*schema.Column{LivesColumns[15]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -97,6 +98,49 @@ var (
 				Symbol:     "live_categories_lives_categories",
 				Columns:    []*schema.Column{LiveCategoriesColumns[2]},
 				RefColumns: []*schema.Column{LivesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// LiveTitleRegexesColumns holds the columns for the "live_title_regexes" table.
+	LiveTitleRegexesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "negative", Type: field.TypeBool, Default: false},
+		{Name: "regex", Type: field.TypeString},
+		{Name: "apply_to_videos", Type: field.TypeBool, Default: false},
+		{Name: "live_id", Type: field.TypeUUID},
+	}
+	// LiveTitleRegexesTable holds the schema information for the "live_title_regexes" table.
+	LiveTitleRegexesTable = &schema.Table{
+		Name:       "live_title_regexes",
+		Columns:    LiveTitleRegexesColumns,
+		PrimaryKey: []*schema.Column{LiveTitleRegexesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "live_title_regexes_lives_title_regex",
+				Columns:    []*schema.Column{LiveTitleRegexesColumns[4]},
+				RefColumns: []*schema.Column{LivesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// MutedSegmentsColumns holds the columns for the "muted_segments" table.
+	MutedSegmentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "start", Type: field.TypeInt},
+		{Name: "end", Type: field.TypeInt},
+		{Name: "vod_muted_segments", Type: field.TypeUUID},
+	}
+	// MutedSegmentsTable holds the schema information for the "muted_segments" table.
+	MutedSegmentsTable = &schema.Table{
+		Name:       "muted_segments",
+		Columns:    MutedSegmentsColumns,
+		PrimaryKey: []*schema.Column{MutedSegmentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "muted_segments_vods_muted_segments",
+				Columns:    []*schema.Column{MutedSegmentsColumns[3]},
+				RefColumns: []*schema.Column{VodsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
@@ -152,6 +196,8 @@ var (
 		{Name: "task_chat_move", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "chat_start", Type: field.TypeTime, Nullable: true},
 		{Name: "render_chat", Type: field.TypeBool, Nullable: true, Default: true},
+		{Name: "workflow_id", Type: field.TypeString, Nullable: true},
+		{Name: "workflow_run_id", Type: field.TypeString, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "vod_queue", Type: field.TypeUUID, Unique: true},
@@ -164,7 +210,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "queues_vods_queue",
-				Columns:    []*schema.Column{QueuesColumns[20]},
+				Columns:    []*schema.Column{QueuesColumns[22]},
 				RefColumns: []*schema.Column{VodsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -275,6 +321,8 @@ var (
 		ChaptersTable,
 		LivesTable,
 		LiveCategoriesTable,
+		LiveTitleRegexesTable,
+		MutedSegmentsTable,
 		PlaybacksTable,
 		PlaylistsTable,
 		QueuesTable,
@@ -289,6 +337,8 @@ func init() {
 	ChaptersTable.ForeignKeys[0].RefTable = VodsTable
 	LivesTable.ForeignKeys[0].RefTable = ChannelsTable
 	LiveCategoriesTable.ForeignKeys[0].RefTable = LivesTable
+	LiveTitleRegexesTable.ForeignKeys[0].RefTable = LivesTable
+	MutedSegmentsTable.ForeignKeys[0].RefTable = VodsTable
 	QueuesTable.ForeignKeys[0].RefTable = VodsTable
 	VodsTable.ForeignKeys[0].RefTable = ChannelsTable
 	PlaylistVodsTable.ForeignKeys[0].RefTable = PlaylistsTable

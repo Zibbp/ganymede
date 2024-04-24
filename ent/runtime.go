@@ -10,6 +10,8 @@ import (
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
+	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -95,14 +97,18 @@ func init() {
 	liveDescRenderChat := liveFields[11].Descriptor()
 	// live.DefaultRenderChat holds the default value on creation for the render_chat field.
 	live.DefaultRenderChat = liveDescRenderChat.Default.(bool)
+	// liveDescVideoAge is the schema descriptor for video_age field.
+	liveDescVideoAge := liveFields[12].Descriptor()
+	// live.DefaultVideoAge holds the default value on creation for the video_age field.
+	live.DefaultVideoAge = liveDescVideoAge.Default.(int64)
 	// liveDescUpdatedAt is the schema descriptor for updated_at field.
-	liveDescUpdatedAt := liveFields[12].Descriptor()
+	liveDescUpdatedAt := liveFields[13].Descriptor()
 	// live.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	live.DefaultUpdatedAt = liveDescUpdatedAt.Default.(func() time.Time)
 	// live.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	live.UpdateDefaultUpdatedAt = liveDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// liveDescCreatedAt is the schema descriptor for created_at field.
-	liveDescCreatedAt := liveFields[13].Descriptor()
+	liveDescCreatedAt := liveFields[14].Descriptor()
 	// live.DefaultCreatedAt holds the default value on creation for the created_at field.
 	live.DefaultCreatedAt = liveDescCreatedAt.Default.(func() time.Time)
 	// liveDescID is the schema descriptor for id field.
@@ -115,6 +121,26 @@ func init() {
 	livecategoryDescID := livecategoryFields[0].Descriptor()
 	// livecategory.DefaultID holds the default value on creation for the id field.
 	livecategory.DefaultID = livecategoryDescID.Default.(func() uuid.UUID)
+	livetitleregexFields := schema.LiveTitleRegex{}.Fields()
+	_ = livetitleregexFields
+	// livetitleregexDescNegative is the schema descriptor for negative field.
+	livetitleregexDescNegative := livetitleregexFields[1].Descriptor()
+	// livetitleregex.DefaultNegative holds the default value on creation for the negative field.
+	livetitleregex.DefaultNegative = livetitleregexDescNegative.Default.(bool)
+	// livetitleregexDescApplyToVideos is the schema descriptor for apply_to_videos field.
+	livetitleregexDescApplyToVideos := livetitleregexFields[3].Descriptor()
+	// livetitleregex.DefaultApplyToVideos holds the default value on creation for the apply_to_videos field.
+	livetitleregex.DefaultApplyToVideos = livetitleregexDescApplyToVideos.Default.(bool)
+	// livetitleregexDescID is the schema descriptor for id field.
+	livetitleregexDescID := livetitleregexFields[0].Descriptor()
+	// livetitleregex.DefaultID holds the default value on creation for the id field.
+	livetitleregex.DefaultID = livetitleregexDescID.Default.(func() uuid.UUID)
+	mutedsegmentFields := schema.MutedSegment{}.Fields()
+	_ = mutedsegmentFields
+	// mutedsegmentDescID is the schema descriptor for id field.
+	mutedsegmentDescID := mutedsegmentFields[0].Descriptor()
+	// mutedsegment.DefaultID holds the default value on creation for the id field.
+	mutedsegment.DefaultID = mutedsegmentDescID.Default.(func() uuid.UUID)
 	playbackFields := schema.Playback{}.Fields()
 	_ = playbackFields
 	// playbackDescTime is the schema descriptor for time field.
@@ -178,13 +204,13 @@ func init() {
 	// queue.DefaultRenderChat holds the default value on creation for the render_chat field.
 	queue.DefaultRenderChat = queueDescRenderChat.Default.(bool)
 	// queueDescUpdatedAt is the schema descriptor for updated_at field.
-	queueDescUpdatedAt := queueFields[18].Descriptor()
+	queueDescUpdatedAt := queueFields[20].Descriptor()
 	// queue.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	queue.DefaultUpdatedAt = queueDescUpdatedAt.Default.(func() time.Time)
 	// queue.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	queue.UpdateDefaultUpdatedAt = queueDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// queueDescCreatedAt is the schema descriptor for created_at field.
-	queueDescCreatedAt := queueFields[19].Descriptor()
+	queueDescCreatedAt := queueFields[21].Descriptor()
 	// queue.DefaultCreatedAt holds the default value on creation for the created_at field.
 	queue.DefaultCreatedAt = queueDescCreatedAt.Default.(func() time.Time)
 	// queueDescID is the schema descriptor for id field.

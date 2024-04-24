@@ -16,6 +16,8 @@ import (
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
+	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
@@ -39,6 +41,8 @@ const (
 	TypeChapter        = "Chapter"
 	TypeLive           = "Live"
 	TypeLiveCategory   = "LiveCategory"
+	TypeLiveTitleRegex = "LiveTitleRegex"
+	TypeMutedSegment   = "MutedSegment"
 	TypePlayback       = "Playback"
 	TypePlaylist       = "Playlist"
 	TypeQueue          = "Queue"
@@ -1739,6 +1743,8 @@ type LiveMutation struct {
 	resolution          *string
 	last_live           *time.Time
 	render_chat         *bool
+	video_age           *int64
+	addvideo_age        *int64
 	updated_at          *time.Time
 	created_at          *time.Time
 	clearedFields       map[string]struct{}
@@ -1747,6 +1753,9 @@ type LiveMutation struct {
 	categories          map[uuid.UUID]struct{}
 	removedcategories   map[uuid.UUID]struct{}
 	clearedcategories   bool
+	title_regex         map[uuid.UUID]struct{}
+	removedtitle_regex  map[uuid.UUID]struct{}
+	clearedtitle_regex  bool
 	done                bool
 	oldValue            func(context.Context) (*Live, error)
 	predicates          []predicate.Live
@@ -2265,6 +2274,62 @@ func (m *LiveMutation) ResetRenderChat() {
 	m.render_chat = nil
 }
 
+// SetVideoAge sets the "video_age" field.
+func (m *LiveMutation) SetVideoAge(i int64) {
+	m.video_age = &i
+	m.addvideo_age = nil
+}
+
+// VideoAge returns the value of the "video_age" field in the mutation.
+func (m *LiveMutation) VideoAge() (r int64, exists bool) {
+	v := m.video_age
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVideoAge returns the old "video_age" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldVideoAge(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVideoAge is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVideoAge requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVideoAge: %w", err)
+	}
+	return oldValue.VideoAge, nil
+}
+
+// AddVideoAge adds i to the "video_age" field.
+func (m *LiveMutation) AddVideoAge(i int64) {
+	if m.addvideo_age != nil {
+		*m.addvideo_age += i
+	} else {
+		m.addvideo_age = &i
+	}
+}
+
+// AddedVideoAge returns the value that was added to the "video_age" field in this mutation.
+func (m *LiveMutation) AddedVideoAge() (r int64, exists bool) {
+	v := m.addvideo_age
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVideoAge resets all changes to the "video_age" field.
+func (m *LiveMutation) ResetVideoAge() {
+	m.video_age = nil
+	m.addvideo_age = nil
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *LiveMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -2430,6 +2495,60 @@ func (m *LiveMutation) ResetCategories() {
 	m.removedcategories = nil
 }
 
+// AddTitleRegexIDs adds the "title_regex" edge to the LiveTitleRegex entity by ids.
+func (m *LiveMutation) AddTitleRegexIDs(ids ...uuid.UUID) {
+	if m.title_regex == nil {
+		m.title_regex = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.title_regex[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTitleRegex clears the "title_regex" edge to the LiveTitleRegex entity.
+func (m *LiveMutation) ClearTitleRegex() {
+	m.clearedtitle_regex = true
+}
+
+// TitleRegexCleared reports if the "title_regex" edge to the LiveTitleRegex entity was cleared.
+func (m *LiveMutation) TitleRegexCleared() bool {
+	return m.clearedtitle_regex
+}
+
+// RemoveTitleRegexIDs removes the "title_regex" edge to the LiveTitleRegex entity by IDs.
+func (m *LiveMutation) RemoveTitleRegexIDs(ids ...uuid.UUID) {
+	if m.removedtitle_regex == nil {
+		m.removedtitle_regex = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.title_regex, ids[i])
+		m.removedtitle_regex[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTitleRegex returns the removed IDs of the "title_regex" edge to the LiveTitleRegex entity.
+func (m *LiveMutation) RemovedTitleRegexIDs() (ids []uuid.UUID) {
+	for id := range m.removedtitle_regex {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TitleRegexIDs returns the "title_regex" edge IDs in the mutation.
+func (m *LiveMutation) TitleRegexIDs() (ids []uuid.UUID) {
+	for id := range m.title_regex {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTitleRegex resets all changes to the "title_regex" edge.
+func (m *LiveMutation) ResetTitleRegex() {
+	m.title_regex = nil
+	m.clearedtitle_regex = false
+	m.removedtitle_regex = nil
+}
+
 // Where appends a list predicates to the LiveMutation builder.
 func (m *LiveMutation) Where(ps ...predicate.Live) {
 	m.predicates = append(m.predicates, ps...)
@@ -2464,7 +2583,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -2497,6 +2616,9 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.render_chat != nil {
 		fields = append(fields, live.FieldRenderChat)
+	}
+	if m.video_age != nil {
+		fields = append(fields, live.FieldVideoAge)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, live.FieldUpdatedAt)
@@ -2534,6 +2656,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.LastLive()
 	case live.FieldRenderChat:
 		return m.RenderChat()
+	case live.FieldVideoAge:
+		return m.VideoAge()
 	case live.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case live.FieldCreatedAt:
@@ -2569,6 +2693,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldLastLive(ctx)
 	case live.FieldRenderChat:
 		return m.OldRenderChat(ctx)
+	case live.FieldVideoAge:
+		return m.OldVideoAge(ctx)
 	case live.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case live.FieldCreatedAt:
@@ -2659,6 +2785,13 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRenderChat(v)
 		return nil
+	case live.FieldVideoAge:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVideoAge(v)
+		return nil
 	case live.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -2680,13 +2813,21 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *LiveMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addvideo_age != nil {
+		fields = append(fields, live.FieldVideoAge)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *LiveMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case live.FieldVideoAge:
+		return m.AddedVideoAge()
+	}
 	return nil, false
 }
 
@@ -2695,6 +2836,13 @@ func (m *LiveMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *LiveMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case live.FieldVideoAge:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVideoAge(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Live numeric field %s", name)
 }
@@ -2764,6 +2912,9 @@ func (m *LiveMutation) ResetField(name string) error {
 	case live.FieldRenderChat:
 		m.ResetRenderChat()
 		return nil
+	case live.FieldVideoAge:
+		m.ResetVideoAge()
+		return nil
 	case live.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
@@ -2776,12 +2927,15 @@ func (m *LiveMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *LiveMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.channel != nil {
 		edges = append(edges, live.EdgeChannel)
 	}
 	if m.categories != nil {
 		edges = append(edges, live.EdgeCategories)
+	}
+	if m.title_regex != nil {
+		edges = append(edges, live.EdgeTitleRegex)
 	}
 	return edges
 }
@@ -2800,15 +2954,24 @@ func (m *LiveMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case live.EdgeTitleRegex:
+		ids := make([]ent.Value, 0, len(m.title_regex))
+		for id := range m.title_regex {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *LiveMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedcategories != nil {
 		edges = append(edges, live.EdgeCategories)
+	}
+	if m.removedtitle_regex != nil {
+		edges = append(edges, live.EdgeTitleRegex)
 	}
 	return edges
 }
@@ -2823,18 +2986,27 @@ func (m *LiveMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case live.EdgeTitleRegex:
+		ids := make([]ent.Value, 0, len(m.removedtitle_regex))
+		for id := range m.removedtitle_regex {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *LiveMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedchannel {
 		edges = append(edges, live.EdgeChannel)
 	}
 	if m.clearedcategories {
 		edges = append(edges, live.EdgeCategories)
+	}
+	if m.clearedtitle_regex {
+		edges = append(edges, live.EdgeTitleRegex)
 	}
 	return edges
 }
@@ -2847,6 +3019,8 @@ func (m *LiveMutation) EdgeCleared(name string) bool {
 		return m.clearedchannel
 	case live.EdgeCategories:
 		return m.clearedcategories
+	case live.EdgeTitleRegex:
+		return m.clearedtitle_regex
 	}
 	return false
 }
@@ -2871,6 +3045,9 @@ func (m *LiveMutation) ResetEdge(name string) error {
 		return nil
 	case live.EdgeCategories:
 		m.ResetCategories()
+		return nil
+	case live.EdgeTitleRegex:
+		m.ResetTitleRegex()
 		return nil
 	}
 	return fmt.Errorf("unknown Live edge %s", name)
@@ -3273,6 +3450,1035 @@ func (m *LiveCategoryMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown LiveCategory edge %s", name)
+}
+
+// LiveTitleRegexMutation represents an operation that mutates the LiveTitleRegex nodes in the graph.
+type LiveTitleRegexMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	negative        *bool
+	regex           *string
+	apply_to_videos *bool
+	clearedFields   map[string]struct{}
+	live            *uuid.UUID
+	clearedlive     bool
+	done            bool
+	oldValue        func(context.Context) (*LiveTitleRegex, error)
+	predicates      []predicate.LiveTitleRegex
+}
+
+var _ ent.Mutation = (*LiveTitleRegexMutation)(nil)
+
+// livetitleregexOption allows management of the mutation configuration using functional options.
+type livetitleregexOption func(*LiveTitleRegexMutation)
+
+// newLiveTitleRegexMutation creates new mutation for the LiveTitleRegex entity.
+func newLiveTitleRegexMutation(c config, op Op, opts ...livetitleregexOption) *LiveTitleRegexMutation {
+	m := &LiveTitleRegexMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeLiveTitleRegex,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withLiveTitleRegexID sets the ID field of the mutation.
+func withLiveTitleRegexID(id uuid.UUID) livetitleregexOption {
+	return func(m *LiveTitleRegexMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *LiveTitleRegex
+		)
+		m.oldValue = func(ctx context.Context) (*LiveTitleRegex, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().LiveTitleRegex.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withLiveTitleRegex sets the old LiveTitleRegex of the mutation.
+func withLiveTitleRegex(node *LiveTitleRegex) livetitleregexOption {
+	return func(m *LiveTitleRegexMutation) {
+		m.oldValue = func(context.Context) (*LiveTitleRegex, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m LiveTitleRegexMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m LiveTitleRegexMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of LiveTitleRegex entities.
+func (m *LiveTitleRegexMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *LiveTitleRegexMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *LiveTitleRegexMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().LiveTitleRegex.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetNegative sets the "negative" field.
+func (m *LiveTitleRegexMutation) SetNegative(b bool) {
+	m.negative = &b
+}
+
+// Negative returns the value of the "negative" field in the mutation.
+func (m *LiveTitleRegexMutation) Negative() (r bool, exists bool) {
+	v := m.negative
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNegative returns the old "negative" field's value of the LiveTitleRegex entity.
+// If the LiveTitleRegex object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveTitleRegexMutation) OldNegative(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNegative is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNegative requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNegative: %w", err)
+	}
+	return oldValue.Negative, nil
+}
+
+// ResetNegative resets all changes to the "negative" field.
+func (m *LiveTitleRegexMutation) ResetNegative() {
+	m.negative = nil
+}
+
+// SetRegex sets the "regex" field.
+func (m *LiveTitleRegexMutation) SetRegex(s string) {
+	m.regex = &s
+}
+
+// Regex returns the value of the "regex" field in the mutation.
+func (m *LiveTitleRegexMutation) Regex() (r string, exists bool) {
+	v := m.regex
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRegex returns the old "regex" field's value of the LiveTitleRegex entity.
+// If the LiveTitleRegex object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveTitleRegexMutation) OldRegex(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRegex is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRegex requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRegex: %w", err)
+	}
+	return oldValue.Regex, nil
+}
+
+// ResetRegex resets all changes to the "regex" field.
+func (m *LiveTitleRegexMutation) ResetRegex() {
+	m.regex = nil
+}
+
+// SetApplyToVideos sets the "apply_to_videos" field.
+func (m *LiveTitleRegexMutation) SetApplyToVideos(b bool) {
+	m.apply_to_videos = &b
+}
+
+// ApplyToVideos returns the value of the "apply_to_videos" field in the mutation.
+func (m *LiveTitleRegexMutation) ApplyToVideos() (r bool, exists bool) {
+	v := m.apply_to_videos
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldApplyToVideos returns the old "apply_to_videos" field's value of the LiveTitleRegex entity.
+// If the LiveTitleRegex object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveTitleRegexMutation) OldApplyToVideos(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldApplyToVideos is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldApplyToVideos requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldApplyToVideos: %w", err)
+	}
+	return oldValue.ApplyToVideos, nil
+}
+
+// ResetApplyToVideos resets all changes to the "apply_to_videos" field.
+func (m *LiveTitleRegexMutation) ResetApplyToVideos() {
+	m.apply_to_videos = nil
+}
+
+// SetLiveID sets the "live" edge to the Live entity by id.
+func (m *LiveTitleRegexMutation) SetLiveID(id uuid.UUID) {
+	m.live = &id
+}
+
+// ClearLive clears the "live" edge to the Live entity.
+func (m *LiveTitleRegexMutation) ClearLive() {
+	m.clearedlive = true
+}
+
+// LiveCleared reports if the "live" edge to the Live entity was cleared.
+func (m *LiveTitleRegexMutation) LiveCleared() bool {
+	return m.clearedlive
+}
+
+// LiveID returns the "live" edge ID in the mutation.
+func (m *LiveTitleRegexMutation) LiveID() (id uuid.UUID, exists bool) {
+	if m.live != nil {
+		return *m.live, true
+	}
+	return
+}
+
+// LiveIDs returns the "live" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// LiveID instead. It exists only for internal usage by the builders.
+func (m *LiveTitleRegexMutation) LiveIDs() (ids []uuid.UUID) {
+	if id := m.live; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetLive resets all changes to the "live" edge.
+func (m *LiveTitleRegexMutation) ResetLive() {
+	m.live = nil
+	m.clearedlive = false
+}
+
+// Where appends a list predicates to the LiveTitleRegexMutation builder.
+func (m *LiveTitleRegexMutation) Where(ps ...predicate.LiveTitleRegex) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the LiveTitleRegexMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *LiveTitleRegexMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.LiveTitleRegex, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *LiveTitleRegexMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *LiveTitleRegexMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (LiveTitleRegex).
+func (m *LiveTitleRegexMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *LiveTitleRegexMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.negative != nil {
+		fields = append(fields, livetitleregex.FieldNegative)
+	}
+	if m.regex != nil {
+		fields = append(fields, livetitleregex.FieldRegex)
+	}
+	if m.apply_to_videos != nil {
+		fields = append(fields, livetitleregex.FieldApplyToVideos)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *LiveTitleRegexMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case livetitleregex.FieldNegative:
+		return m.Negative()
+	case livetitleregex.FieldRegex:
+		return m.Regex()
+	case livetitleregex.FieldApplyToVideos:
+		return m.ApplyToVideos()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *LiveTitleRegexMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case livetitleregex.FieldNegative:
+		return m.OldNegative(ctx)
+	case livetitleregex.FieldRegex:
+		return m.OldRegex(ctx)
+	case livetitleregex.FieldApplyToVideos:
+		return m.OldApplyToVideos(ctx)
+	}
+	return nil, fmt.Errorf("unknown LiveTitleRegex field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LiveTitleRegexMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case livetitleregex.FieldNegative:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNegative(v)
+		return nil
+	case livetitleregex.FieldRegex:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRegex(v)
+		return nil
+	case livetitleregex.FieldApplyToVideos:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetApplyToVideos(v)
+		return nil
+	}
+	return fmt.Errorf("unknown LiveTitleRegex field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *LiveTitleRegexMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *LiveTitleRegexMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LiveTitleRegexMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown LiveTitleRegex numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *LiveTitleRegexMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *LiveTitleRegexMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *LiveTitleRegexMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown LiveTitleRegex nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *LiveTitleRegexMutation) ResetField(name string) error {
+	switch name {
+	case livetitleregex.FieldNegative:
+		m.ResetNegative()
+		return nil
+	case livetitleregex.FieldRegex:
+		m.ResetRegex()
+		return nil
+	case livetitleregex.FieldApplyToVideos:
+		m.ResetApplyToVideos()
+		return nil
+	}
+	return fmt.Errorf("unknown LiveTitleRegex field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *LiveTitleRegexMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.live != nil {
+		edges = append(edges, livetitleregex.EdgeLive)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *LiveTitleRegexMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case livetitleregex.EdgeLive:
+		if id := m.live; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *LiveTitleRegexMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *LiveTitleRegexMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *LiveTitleRegexMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedlive {
+		edges = append(edges, livetitleregex.EdgeLive)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *LiveTitleRegexMutation) EdgeCleared(name string) bool {
+	switch name {
+	case livetitleregex.EdgeLive:
+		return m.clearedlive
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *LiveTitleRegexMutation) ClearEdge(name string) error {
+	switch name {
+	case livetitleregex.EdgeLive:
+		m.ClearLive()
+		return nil
+	}
+	return fmt.Errorf("unknown LiveTitleRegex unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *LiveTitleRegexMutation) ResetEdge(name string) error {
+	switch name {
+	case livetitleregex.EdgeLive:
+		m.ResetLive()
+		return nil
+	}
+	return fmt.Errorf("unknown LiveTitleRegex edge %s", name)
+}
+
+// MutedSegmentMutation represents an operation that mutates the MutedSegment nodes in the graph.
+type MutedSegmentMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	start         *int
+	addstart      *int
+	end           *int
+	addend        *int
+	clearedFields map[string]struct{}
+	vod           *uuid.UUID
+	clearedvod    bool
+	done          bool
+	oldValue      func(context.Context) (*MutedSegment, error)
+	predicates    []predicate.MutedSegment
+}
+
+var _ ent.Mutation = (*MutedSegmentMutation)(nil)
+
+// mutedsegmentOption allows management of the mutation configuration using functional options.
+type mutedsegmentOption func(*MutedSegmentMutation)
+
+// newMutedSegmentMutation creates new mutation for the MutedSegment entity.
+func newMutedSegmentMutation(c config, op Op, opts ...mutedsegmentOption) *MutedSegmentMutation {
+	m := &MutedSegmentMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMutedSegment,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMutedSegmentID sets the ID field of the mutation.
+func withMutedSegmentID(id uuid.UUID) mutedsegmentOption {
+	return func(m *MutedSegmentMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MutedSegment
+		)
+		m.oldValue = func(ctx context.Context) (*MutedSegment, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MutedSegment.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMutedSegment sets the old MutedSegment of the mutation.
+func withMutedSegment(node *MutedSegment) mutedsegmentOption {
+	return func(m *MutedSegmentMutation) {
+		m.oldValue = func(context.Context) (*MutedSegment, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MutedSegmentMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MutedSegmentMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MutedSegment entities.
+func (m *MutedSegmentMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MutedSegmentMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MutedSegmentMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MutedSegment.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetStart sets the "start" field.
+func (m *MutedSegmentMutation) SetStart(i int) {
+	m.start = &i
+	m.addstart = nil
+}
+
+// Start returns the value of the "start" field in the mutation.
+func (m *MutedSegmentMutation) Start() (r int, exists bool) {
+	v := m.start
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStart returns the old "start" field's value of the MutedSegment entity.
+// If the MutedSegment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MutedSegmentMutation) OldStart(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStart is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStart requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStart: %w", err)
+	}
+	return oldValue.Start, nil
+}
+
+// AddStart adds i to the "start" field.
+func (m *MutedSegmentMutation) AddStart(i int) {
+	if m.addstart != nil {
+		*m.addstart += i
+	} else {
+		m.addstart = &i
+	}
+}
+
+// AddedStart returns the value that was added to the "start" field in this mutation.
+func (m *MutedSegmentMutation) AddedStart() (r int, exists bool) {
+	v := m.addstart
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStart resets all changes to the "start" field.
+func (m *MutedSegmentMutation) ResetStart() {
+	m.start = nil
+	m.addstart = nil
+}
+
+// SetEnd sets the "end" field.
+func (m *MutedSegmentMutation) SetEnd(i int) {
+	m.end = &i
+	m.addend = nil
+}
+
+// End returns the value of the "end" field in the mutation.
+func (m *MutedSegmentMutation) End() (r int, exists bool) {
+	v := m.end
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnd returns the old "end" field's value of the MutedSegment entity.
+// If the MutedSegment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MutedSegmentMutation) OldEnd(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnd is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnd requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnd: %w", err)
+	}
+	return oldValue.End, nil
+}
+
+// AddEnd adds i to the "end" field.
+func (m *MutedSegmentMutation) AddEnd(i int) {
+	if m.addend != nil {
+		*m.addend += i
+	} else {
+		m.addend = &i
+	}
+}
+
+// AddedEnd returns the value that was added to the "end" field in this mutation.
+func (m *MutedSegmentMutation) AddedEnd() (r int, exists bool) {
+	v := m.addend
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetEnd resets all changes to the "end" field.
+func (m *MutedSegmentMutation) ResetEnd() {
+	m.end = nil
+	m.addend = nil
+}
+
+// SetVodID sets the "vod" edge to the Vod entity by id.
+func (m *MutedSegmentMutation) SetVodID(id uuid.UUID) {
+	m.vod = &id
+}
+
+// ClearVod clears the "vod" edge to the Vod entity.
+func (m *MutedSegmentMutation) ClearVod() {
+	m.clearedvod = true
+}
+
+// VodCleared reports if the "vod" edge to the Vod entity was cleared.
+func (m *MutedSegmentMutation) VodCleared() bool {
+	return m.clearedvod
+}
+
+// VodID returns the "vod" edge ID in the mutation.
+func (m *MutedSegmentMutation) VodID() (id uuid.UUID, exists bool) {
+	if m.vod != nil {
+		return *m.vod, true
+	}
+	return
+}
+
+// VodIDs returns the "vod" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// VodID instead. It exists only for internal usage by the builders.
+func (m *MutedSegmentMutation) VodIDs() (ids []uuid.UUID) {
+	if id := m.vod; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetVod resets all changes to the "vod" edge.
+func (m *MutedSegmentMutation) ResetVod() {
+	m.vod = nil
+	m.clearedvod = false
+}
+
+// Where appends a list predicates to the MutedSegmentMutation builder.
+func (m *MutedSegmentMutation) Where(ps ...predicate.MutedSegment) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MutedSegmentMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MutedSegmentMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MutedSegment, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MutedSegmentMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MutedSegmentMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MutedSegment).
+func (m *MutedSegmentMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MutedSegmentMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.start != nil {
+		fields = append(fields, mutedsegment.FieldStart)
+	}
+	if m.end != nil {
+		fields = append(fields, mutedsegment.FieldEnd)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MutedSegmentMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case mutedsegment.FieldStart:
+		return m.Start()
+	case mutedsegment.FieldEnd:
+		return m.End()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MutedSegmentMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case mutedsegment.FieldStart:
+		return m.OldStart(ctx)
+	case mutedsegment.FieldEnd:
+		return m.OldEnd(ctx)
+	}
+	return nil, fmt.Errorf("unknown MutedSegment field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MutedSegmentMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case mutedsegment.FieldStart:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStart(v)
+		return nil
+	case mutedsegment.FieldEnd:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnd(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MutedSegment field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MutedSegmentMutation) AddedFields() []string {
+	var fields []string
+	if m.addstart != nil {
+		fields = append(fields, mutedsegment.FieldStart)
+	}
+	if m.addend != nil {
+		fields = append(fields, mutedsegment.FieldEnd)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MutedSegmentMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case mutedsegment.FieldStart:
+		return m.AddedStart()
+	case mutedsegment.FieldEnd:
+		return m.AddedEnd()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MutedSegmentMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case mutedsegment.FieldStart:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStart(v)
+		return nil
+	case mutedsegment.FieldEnd:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddEnd(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MutedSegment numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MutedSegmentMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MutedSegmentMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MutedSegmentMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown MutedSegment nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MutedSegmentMutation) ResetField(name string) error {
+	switch name {
+	case mutedsegment.FieldStart:
+		m.ResetStart()
+		return nil
+	case mutedsegment.FieldEnd:
+		m.ResetEnd()
+		return nil
+	}
+	return fmt.Errorf("unknown MutedSegment field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MutedSegmentMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.vod != nil {
+		edges = append(edges, mutedsegment.EdgeVod)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MutedSegmentMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case mutedsegment.EdgeVod:
+		if id := m.vod; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MutedSegmentMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MutedSegmentMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MutedSegmentMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedvod {
+		edges = append(edges, mutedsegment.EdgeVod)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MutedSegmentMutation) EdgeCleared(name string) bool {
+	switch name {
+	case mutedsegment.EdgeVod:
+		return m.clearedvod
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MutedSegmentMutation) ClearEdge(name string) error {
+	switch name {
+	case mutedsegment.EdgeVod:
+		m.ClearVod()
+		return nil
+	}
+	return fmt.Errorf("unknown MutedSegment unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MutedSegmentMutation) ResetEdge(name string) error {
+	switch name {
+	case mutedsegment.EdgeVod:
+		m.ResetVod()
+		return nil
+	}
+	return fmt.Errorf("unknown MutedSegment edge %s", name)
 }
 
 // PlaybackMutation represents an operation that mutates the Playback nodes in the graph.
@@ -4640,6 +5846,8 @@ type QueueMutation struct {
 	task_chat_move              *utils.TaskStatus
 	chat_start                  *time.Time
 	render_chat                 *bool
+	workflow_id                 *string
+	workflow_run_id             *string
 	updated_at                  *time.Time
 	created_at                  *time.Time
 	clearedFields               map[string]struct{}
@@ -5522,6 +6730,104 @@ func (m *QueueMutation) ResetRenderChat() {
 	delete(m.clearedFields, queue.FieldRenderChat)
 }
 
+// SetWorkflowID sets the "workflow_id" field.
+func (m *QueueMutation) SetWorkflowID(s string) {
+	m.workflow_id = &s
+}
+
+// WorkflowID returns the value of the "workflow_id" field in the mutation.
+func (m *QueueMutation) WorkflowID() (r string, exists bool) {
+	v := m.workflow_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkflowID returns the old "workflow_id" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldWorkflowID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkflowID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkflowID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkflowID: %w", err)
+	}
+	return oldValue.WorkflowID, nil
+}
+
+// ClearWorkflowID clears the value of the "workflow_id" field.
+func (m *QueueMutation) ClearWorkflowID() {
+	m.workflow_id = nil
+	m.clearedFields[queue.FieldWorkflowID] = struct{}{}
+}
+
+// WorkflowIDCleared returns if the "workflow_id" field was cleared in this mutation.
+func (m *QueueMutation) WorkflowIDCleared() bool {
+	_, ok := m.clearedFields[queue.FieldWorkflowID]
+	return ok
+}
+
+// ResetWorkflowID resets all changes to the "workflow_id" field.
+func (m *QueueMutation) ResetWorkflowID() {
+	m.workflow_id = nil
+	delete(m.clearedFields, queue.FieldWorkflowID)
+}
+
+// SetWorkflowRunID sets the "workflow_run_id" field.
+func (m *QueueMutation) SetWorkflowRunID(s string) {
+	m.workflow_run_id = &s
+}
+
+// WorkflowRunID returns the value of the "workflow_run_id" field in the mutation.
+func (m *QueueMutation) WorkflowRunID() (r string, exists bool) {
+	v := m.workflow_run_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkflowRunID returns the old "workflow_run_id" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldWorkflowRunID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkflowRunID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkflowRunID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkflowRunID: %w", err)
+	}
+	return oldValue.WorkflowRunID, nil
+}
+
+// ClearWorkflowRunID clears the value of the "workflow_run_id" field.
+func (m *QueueMutation) ClearWorkflowRunID() {
+	m.workflow_run_id = nil
+	m.clearedFields[queue.FieldWorkflowRunID] = struct{}{}
+}
+
+// WorkflowRunIDCleared returns if the "workflow_run_id" field was cleared in this mutation.
+func (m *QueueMutation) WorkflowRunIDCleared() bool {
+	_, ok := m.clearedFields[queue.FieldWorkflowRunID]
+	return ok
+}
+
+// ResetWorkflowRunID resets all changes to the "workflow_run_id" field.
+func (m *QueueMutation) ResetWorkflowRunID() {
+	m.workflow_run_id = nil
+	delete(m.clearedFields, queue.FieldWorkflowRunID)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *QueueMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -5667,7 +6973,7 @@ func (m *QueueMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QueueMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 21)
 	if m.live_archive != nil {
 		fields = append(fields, queue.FieldLiveArchive)
 	}
@@ -5719,6 +7025,12 @@ func (m *QueueMutation) Fields() []string {
 	if m.render_chat != nil {
 		fields = append(fields, queue.FieldRenderChat)
 	}
+	if m.workflow_id != nil {
+		fields = append(fields, queue.FieldWorkflowID)
+	}
+	if m.workflow_run_id != nil {
+		fields = append(fields, queue.FieldWorkflowRunID)
+	}
 	if m.updated_at != nil {
 		fields = append(fields, queue.FieldUpdatedAt)
 	}
@@ -5767,6 +7079,10 @@ func (m *QueueMutation) Field(name string) (ent.Value, bool) {
 		return m.ChatStart()
 	case queue.FieldRenderChat:
 		return m.RenderChat()
+	case queue.FieldWorkflowID:
+		return m.WorkflowID()
+	case queue.FieldWorkflowRunID:
+		return m.WorkflowRunID()
 	case queue.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case queue.FieldCreatedAt:
@@ -5814,6 +7130,10 @@ func (m *QueueMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldChatStart(ctx)
 	case queue.FieldRenderChat:
 		return m.OldRenderChat(ctx)
+	case queue.FieldWorkflowID:
+		return m.OldWorkflowID(ctx)
+	case queue.FieldWorkflowRunID:
+		return m.OldWorkflowRunID(ctx)
 	case queue.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case queue.FieldCreatedAt:
@@ -5946,6 +7266,20 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRenderChat(v)
 		return nil
+	case queue.FieldWorkflowID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkflowID(v)
+		return nil
+	case queue.FieldWorkflowRunID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkflowRunID(v)
+		return nil
 	case queue.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -6026,6 +7360,12 @@ func (m *QueueMutation) ClearedFields() []string {
 	if m.FieldCleared(queue.FieldRenderChat) {
 		fields = append(fields, queue.FieldRenderChat)
 	}
+	if m.FieldCleared(queue.FieldWorkflowID) {
+		fields = append(fields, queue.FieldWorkflowID)
+	}
+	if m.FieldCleared(queue.FieldWorkflowRunID) {
+		fields = append(fields, queue.FieldWorkflowRunID)
+	}
 	return fields
 }
 
@@ -6075,6 +7415,12 @@ func (m *QueueMutation) ClearField(name string) error {
 		return nil
 	case queue.FieldRenderChat:
 		m.ClearRenderChat()
+		return nil
+	case queue.FieldWorkflowID:
+		m.ClearWorkflowID()
+		return nil
+	case queue.FieldWorkflowRunID:
+		m.ClearWorkflowRunID()
 		return nil
 	}
 	return fmt.Errorf("unknown Queue nullable field %s", name)
@@ -6134,6 +7480,12 @@ func (m *QueueMutation) ResetField(name string) error {
 		return nil
 	case queue.FieldRenderChat:
 		m.ResetRenderChat()
+		return nil
+	case queue.FieldWorkflowID:
+		m.ResetWorkflowID()
+		return nil
+	case queue.FieldWorkflowRunID:
+		m.ResetWorkflowRunID()
 		return nil
 	case queue.FieldUpdatedAt:
 		m.ResetUpdatedAt()
@@ -7581,48 +8933,51 @@ func (m *UserMutation) ResetEdge(name string) error {
 // VodMutation represents an operation that mutates the Vod nodes in the graph.
 type VodMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *uuid.UUID
-	ext_id             *string
-	platform           *utils.VodPlatform
-	_type              *utils.VodType
-	title              *string
-	duration           *int
-	addduration        *int
-	views              *int
-	addviews           *int
-	resolution         *string
-	processing         *bool
-	thumbnail_path     *string
-	web_thumbnail_path *string
-	video_path         *string
-	chat_path          *string
-	chat_video_path    *string
-	info_path          *string
-	caption_path       *string
-	folder_name        *string
-	file_name          *string
-	locked             *bool
-	local_views        *int
-	addlocal_views     *int
-	streamed_at        *time.Time
-	updated_at         *time.Time
-	created_at         *time.Time
-	clearedFields      map[string]struct{}
-	channel            *uuid.UUID
-	clearedchannel     bool
-	queue              *uuid.UUID
-	clearedqueue       bool
-	playlists          map[uuid.UUID]struct{}
-	removedplaylists   map[uuid.UUID]struct{}
-	clearedplaylists   bool
-	chapters           map[uuid.UUID]struct{}
-	removedchapters    map[uuid.UUID]struct{}
-	clearedchapters    bool
-	done               bool
-	oldValue           func(context.Context) (*Vod, error)
-	predicates         []predicate.Vod
+	op                    Op
+	typ                   string
+	id                    *uuid.UUID
+	ext_id                *string
+	platform              *utils.VodPlatform
+	_type                 *utils.VodType
+	title                 *string
+	duration              *int
+	addduration           *int
+	views                 *int
+	addviews              *int
+	resolution            *string
+	processing            *bool
+	thumbnail_path        *string
+	web_thumbnail_path    *string
+	video_path            *string
+	chat_path             *string
+	chat_video_path       *string
+	info_path             *string
+	caption_path          *string
+	folder_name           *string
+	file_name             *string
+	locked                *bool
+	local_views           *int
+	addlocal_views        *int
+	streamed_at           *time.Time
+	updated_at            *time.Time
+	created_at            *time.Time
+	clearedFields         map[string]struct{}
+	channel               *uuid.UUID
+	clearedchannel        bool
+	queue                 *uuid.UUID
+	clearedqueue          bool
+	playlists             map[uuid.UUID]struct{}
+	removedplaylists      map[uuid.UUID]struct{}
+	clearedplaylists      bool
+	chapters              map[uuid.UUID]struct{}
+	removedchapters       map[uuid.UUID]struct{}
+	clearedchapters       bool
+	muted_segments        map[uuid.UUID]struct{}
+	removedmuted_segments map[uuid.UUID]struct{}
+	clearedmuted_segments bool
+	done                  bool
+	oldValue              func(context.Context) (*Vod, error)
+	predicates            []predicate.Vod
 }
 
 var _ ent.Mutation = (*VodMutation)(nil)
@@ -8871,6 +10226,60 @@ func (m *VodMutation) ResetChapters() {
 	m.removedchapters = nil
 }
 
+// AddMutedSegmentIDs adds the "muted_segments" edge to the MutedSegment entity by ids.
+func (m *VodMutation) AddMutedSegmentIDs(ids ...uuid.UUID) {
+	if m.muted_segments == nil {
+		m.muted_segments = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.muted_segments[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMutedSegments clears the "muted_segments" edge to the MutedSegment entity.
+func (m *VodMutation) ClearMutedSegments() {
+	m.clearedmuted_segments = true
+}
+
+// MutedSegmentsCleared reports if the "muted_segments" edge to the MutedSegment entity was cleared.
+func (m *VodMutation) MutedSegmentsCleared() bool {
+	return m.clearedmuted_segments
+}
+
+// RemoveMutedSegmentIDs removes the "muted_segments" edge to the MutedSegment entity by IDs.
+func (m *VodMutation) RemoveMutedSegmentIDs(ids ...uuid.UUID) {
+	if m.removedmuted_segments == nil {
+		m.removedmuted_segments = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.muted_segments, ids[i])
+		m.removedmuted_segments[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMutedSegments returns the removed IDs of the "muted_segments" edge to the MutedSegment entity.
+func (m *VodMutation) RemovedMutedSegmentsIDs() (ids []uuid.UUID) {
+	for id := range m.removedmuted_segments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MutedSegmentsIDs returns the "muted_segments" edge IDs in the mutation.
+func (m *VodMutation) MutedSegmentsIDs() (ids []uuid.UUID) {
+	for id := range m.muted_segments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMutedSegments resets all changes to the "muted_segments" edge.
+func (m *VodMutation) ResetMutedSegments() {
+	m.muted_segments = nil
+	m.clearedmuted_segments = false
+	m.removedmuted_segments = nil
+}
+
 // Where appends a list predicates to the VodMutation builder.
 func (m *VodMutation) Where(ps ...predicate.Vod) {
 	m.predicates = append(m.predicates, ps...)
@@ -9451,7 +10860,7 @@ func (m *VodMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *VodMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.channel != nil {
 		edges = append(edges, vod.EdgeChannel)
 	}
@@ -9463,6 +10872,9 @@ func (m *VodMutation) AddedEdges() []string {
 	}
 	if m.chapters != nil {
 		edges = append(edges, vod.EdgeChapters)
+	}
+	if m.muted_segments != nil {
+		edges = append(edges, vod.EdgeMutedSegments)
 	}
 	return edges
 }
@@ -9491,18 +10903,27 @@ func (m *VodMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case vod.EdgeMutedSegments:
+		ids := make([]ent.Value, 0, len(m.muted_segments))
+		for id := range m.muted_segments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *VodMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedplaylists != nil {
 		edges = append(edges, vod.EdgePlaylists)
 	}
 	if m.removedchapters != nil {
 		edges = append(edges, vod.EdgeChapters)
+	}
+	if m.removedmuted_segments != nil {
+		edges = append(edges, vod.EdgeMutedSegments)
 	}
 	return edges
 }
@@ -9523,13 +10944,19 @@ func (m *VodMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case vod.EdgeMutedSegments:
+		ids := make([]ent.Value, 0, len(m.removedmuted_segments))
+		for id := range m.removedmuted_segments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *VodMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedchannel {
 		edges = append(edges, vod.EdgeChannel)
 	}
@@ -9541,6 +10968,9 @@ func (m *VodMutation) ClearedEdges() []string {
 	}
 	if m.clearedchapters {
 		edges = append(edges, vod.EdgeChapters)
+	}
+	if m.clearedmuted_segments {
+		edges = append(edges, vod.EdgeMutedSegments)
 	}
 	return edges
 }
@@ -9557,6 +10987,8 @@ func (m *VodMutation) EdgeCleared(name string) bool {
 		return m.clearedplaylists
 	case vod.EdgeChapters:
 		return m.clearedchapters
+	case vod.EdgeMutedSegments:
+		return m.clearedmuted_segments
 	}
 	return false
 }
@@ -9590,6 +11022,9 @@ func (m *VodMutation) ResetEdge(name string) error {
 		return nil
 	case vod.EdgeChapters:
 		m.ResetChapters()
+		return nil
+	case vod.EdgeMutedSegments:
+		m.ResetMutedSegments()
 		return nil
 	}
 	return fmt.Errorf("unknown Vod edge %s", name)

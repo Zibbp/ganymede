@@ -51,6 +51,10 @@ const (
 	FieldChatStart = "chat_start"
 	// FieldRenderChat holds the string denoting the render_chat field in the database.
 	FieldRenderChat = "render_chat"
+	// FieldWorkflowID holds the string denoting the workflow_id field in the database.
+	FieldWorkflowID = "workflow_id"
+	// FieldWorkflowRunID holds the string denoting the workflow_run_id field in the database.
+	FieldWorkflowRunID = "workflow_run_id"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -88,6 +92,8 @@ var Columns = []string{
 	FieldTaskChatMove,
 	FieldChatStart,
 	FieldRenderChat,
+	FieldWorkflowID,
+	FieldWorkflowRunID,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -347,6 +353,16 @@ func ByChatStart(opts ...sql.OrderTermOption) OrderOption {
 // ByRenderChat orders the results by the render_chat field.
 func ByRenderChat(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRenderChat, opts...).ToFunc()
+}
+
+// ByWorkflowID orders the results by the workflow_id field.
+func ByWorkflowID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkflowID, opts...).ToFunc()
+}
+
+// ByWorkflowRunID orders the results by the workflow_run_id field.
+func ByWorkflowRunID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkflowRunID, opts...).ToFunc()
 }
 
 // ByUpdatedAt orders the results by the updated_at field.

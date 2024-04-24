@@ -19,6 +19,7 @@ import (
 	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
+	"github.com/zibbp/ganymede/internal/vod"
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/temporal"
 )
@@ -121,6 +122,39 @@ func SaveTwitchVideoInfo(ctx context.Context, input dto.ArchiveVideoInput) error
 
 		twitchVideo.Chapters = chapters
 	}
+
+	// get muted segments
+	mutedSegments, err := twitch.GQLGetMutedSegments(input.VideoID)
+	if err != nil {
+		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVodSaveInfo(utils.Failed).Save(ctx)
+		if dbErr != nil {
+			return dbErr
+		}
+		return temporal.NewApplicationError(err.Error(), "", nil)
+	}
+	cleanMutedSegments := []vod.MutedSegment{}
+
+	// insert muted segments into database
+	for _, mutedSegment := range mutedSegments.Data.Video.MuteInfo.MutedSegmentConnection.Nodes {
+		segmentEnd := mutedSegment.Offset + mutedSegment.Duration
+		if segmentEnd > input.Vod.Duration {
+			segmentEnd = input.Vod.Duration
+		}
+		// insert muted segment into database
+		_, err := database.DB().Client.MutedSegment.Create().SetStart(mutedSegment.Offset).SetEnd(segmentEnd).SetVod(input.Vod).Save(ctx)
+		if err != nil {
+			_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVodSaveInfo(utils.Failed).Save(ctx)
+			if dbErr != nil {
+				return dbErr
+			}
+			return temporal.NewApplicationError(err.Error(), "", nil)
+		}
+		cleanMutedSegments = append(cleanMutedSegments, vod.MutedSegment{
+			Start: mutedSegment.Offset,
+			End:   segmentEnd,
+		})
+	}
+	twitchVideo.MutedSegments = cleanMutedSegments
 
 	err = utils.WriteJson(twitchVideo, fmt.Sprintf("%s/%s", input.Channel.Name, input.Vod.FolderName), fmt.Sprintf("%s-info.json", input.Vod.FileName))
 	if err != nil {
@@ -252,7 +286,6 @@ func DownloadTwitchLiveThumbnails(ctx context.Context, input dto.ArchiveVideoInp
 			return dbErr
 		}
 		// stream isn't live so archive shouldn't continue and should be cleaned up
-		// TODO: clean up entire archive thus far
 		return temporal.NewApplicationError(fmt.Sprintf("no stream found for channel %s", input.Channel.Name), "", nil)
 	}
 

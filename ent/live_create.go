@@ -16,6 +16,7 @@ import (
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
 )
 
 // LiveCreate is the builder for creating a Live entity.
@@ -180,6 +181,20 @@ func (lc *LiveCreate) SetNillableRenderChat(b *bool) *LiveCreate {
 	return lc
 }
 
+// SetVideoAge sets the "video_age" field.
+func (lc *LiveCreate) SetVideoAge(i int64) *LiveCreate {
+	lc.mutation.SetVideoAge(i)
+	return lc
+}
+
+// SetNillableVideoAge sets the "video_age" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableVideoAge(i *int64) *LiveCreate {
+	if i != nil {
+		lc.SetVideoAge(*i)
+	}
+	return lc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lc *LiveCreate) SetUpdatedAt(t time.Time) *LiveCreate {
 	lc.mutation.SetUpdatedAt(t)
@@ -246,6 +261,21 @@ func (lc *LiveCreate) AddCategories(l ...*LiveCategory) *LiveCreate {
 		ids[i] = l[i].ID
 	}
 	return lc.AddCategoryIDs(ids...)
+}
+
+// AddTitleRegexIDs adds the "title_regex" edge to the LiveTitleRegex entity by IDs.
+func (lc *LiveCreate) AddTitleRegexIDs(ids ...uuid.UUID) *LiveCreate {
+	lc.mutation.AddTitleRegexIDs(ids...)
+	return lc
+}
+
+// AddTitleRegex adds the "title_regex" edges to the LiveTitleRegex entity.
+func (lc *LiveCreate) AddTitleRegex(l ...*LiveTitleRegex) *LiveCreate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return lc.AddTitleRegexIDs(ids...)
 }
 
 // Mutation returns the LiveMutation object of the builder.
@@ -327,6 +357,10 @@ func (lc *LiveCreate) defaults() {
 		v := live.DefaultRenderChat
 		lc.mutation.SetRenderChat(v)
 	}
+	if _, ok := lc.mutation.VideoAge(); !ok {
+		v := live.DefaultVideoAge
+		lc.mutation.SetVideoAge(v)
+	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		v := live.DefaultUpdatedAt()
 		lc.mutation.SetUpdatedAt(v)
@@ -372,6 +406,9 @@ func (lc *LiveCreate) check() error {
 	}
 	if _, ok := lc.mutation.RenderChat(); !ok {
 		return &ValidationError{Name: "render_chat", err: errors.New(`ent: missing required field "Live.render_chat"`)}
+	}
+	if _, ok := lc.mutation.VideoAge(); !ok {
+		return &ValidationError{Name: "video_age", err: errors.New(`ent: missing required field "Live.video_age"`)}
 	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Live.updated_at"`)}
@@ -462,6 +499,10 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
 		_node.RenderChat = value
 	}
+	if value, ok := lc.mutation.VideoAge(); ok {
+		_spec.SetField(live.FieldVideoAge, field.TypeInt64, value)
+		_node.VideoAge = value
+	}
 	if value, ok := lc.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
@@ -496,6 +537,22 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := lc.mutation.TitleRegexIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.TitleRegexTable,
+			Columns: []string{live.TitleRegexColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -690,6 +747,24 @@ func (u *LiveUpsert) SetRenderChat(v bool) *LiveUpsert {
 // UpdateRenderChat sets the "render_chat" field to the value that was provided on create.
 func (u *LiveUpsert) UpdateRenderChat() *LiveUpsert {
 	u.SetExcluded(live.FieldRenderChat)
+	return u
+}
+
+// SetVideoAge sets the "video_age" field.
+func (u *LiveUpsert) SetVideoAge(v int64) *LiveUpsert {
+	u.Set(live.FieldVideoAge, v)
+	return u
+}
+
+// UpdateVideoAge sets the "video_age" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateVideoAge() *LiveUpsert {
+	u.SetExcluded(live.FieldVideoAge)
+	return u
+}
+
+// AddVideoAge adds v to the "video_age" field.
+func (u *LiveUpsert) AddVideoAge(v int64) *LiveUpsert {
+	u.Add(live.FieldVideoAge, v)
 	return u
 }
 
@@ -914,6 +989,27 @@ func (u *LiveUpsertOne) SetRenderChat(v bool) *LiveUpsertOne {
 func (u *LiveUpsertOne) UpdateRenderChat() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateRenderChat()
+	})
+}
+
+// SetVideoAge sets the "video_age" field.
+func (u *LiveUpsertOne) SetVideoAge(v int64) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetVideoAge(v)
+	})
+}
+
+// AddVideoAge adds v to the "video_age" field.
+func (u *LiveUpsertOne) AddVideoAge(v int64) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.AddVideoAge(v)
+	})
+}
+
+// UpdateVideoAge sets the "video_age" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateVideoAge() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateVideoAge()
 	})
 }
 
@@ -1307,6 +1403,27 @@ func (u *LiveUpsertBulk) SetRenderChat(v bool) *LiveUpsertBulk {
 func (u *LiveUpsertBulk) UpdateRenderChat() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateRenderChat()
+	})
+}
+
+// SetVideoAge sets the "video_age" field.
+func (u *LiveUpsertBulk) SetVideoAge(v int64) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetVideoAge(v)
+	})
+}
+
+// AddVideoAge adds v to the "video_age" field.
+func (u *LiveUpsertBulk) AddVideoAge(v int64) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.AddVideoAge(v)
+	})
+}
+
+// UpdateVideoAge sets the "video_age" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateVideoAge() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateVideoAge()
 	})
 }
 

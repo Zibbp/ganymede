@@ -15,6 +15,7 @@ import (
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/predicate"
 )
 
@@ -27,6 +28,7 @@ type LiveQuery struct {
 	predicates     []predicate.Live
 	withChannel    *ChannelQuery
 	withCategories *LiveCategoryQuery
+	withTitleRegex *LiveTitleRegexQuery
 	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -101,6 +103,28 @@ func (lq *LiveQuery) QueryCategories() *LiveCategoryQuery {
 			sqlgraph.From(live.Table, live.FieldID, selector),
 			sqlgraph.To(livecategory.Table, livecategory.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, live.CategoriesTable, live.CategoriesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(lq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTitleRegex chains the current query on the "title_regex" edge.
+func (lq *LiveQuery) QueryTitleRegex() *LiveTitleRegexQuery {
+	query := (&LiveTitleRegexClient{config: lq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := lq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := lq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(live.Table, live.FieldID, selector),
+			sqlgraph.To(livetitleregex.Table, livetitleregex.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, live.TitleRegexTable, live.TitleRegexColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(lq.driver.Dialect(), step)
 		return fromU, nil
@@ -302,6 +326,7 @@ func (lq *LiveQuery) Clone() *LiveQuery {
 		predicates:     append([]predicate.Live{}, lq.predicates...),
 		withChannel:    lq.withChannel.Clone(),
 		withCategories: lq.withCategories.Clone(),
+		withTitleRegex: lq.withTitleRegex.Clone(),
 		// clone intermediate query.
 		sql:  lq.sql.Clone(),
 		path: lq.path,
@@ -327,6 +352,17 @@ func (lq *LiveQuery) WithCategories(opts ...func(*LiveCategoryQuery)) *LiveQuery
 		opt(query)
 	}
 	lq.withCategories = query
+	return lq
+}
+
+// WithTitleRegex tells the query-builder to eager-load the nodes that are connected to
+// the "title_regex" edge. The optional arguments are used to configure the query builder of the edge.
+func (lq *LiveQuery) WithTitleRegex(opts ...func(*LiveTitleRegexQuery)) *LiveQuery {
+	query := (&LiveTitleRegexClient{config: lq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	lq.withTitleRegex = query
 	return lq
 }
 
@@ -409,9 +445,10 @@ func (lq *LiveQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Live, e
 		nodes       = []*Live{}
 		withFKs     = lq.withFKs
 		_spec       = lq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			lq.withChannel != nil,
 			lq.withCategories != nil,
+			lq.withTitleRegex != nil,
 		}
 	)
 	if lq.withChannel != nil {
@@ -448,6 +485,13 @@ func (lq *LiveQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Live, e
 		if err := lq.loadCategories(ctx, query, nodes,
 			func(n *Live) { n.Edges.Categories = []*LiveCategory{} },
 			func(n *Live, e *LiveCategory) { n.Edges.Categories = append(n.Edges.Categories, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := lq.withTitleRegex; query != nil {
+		if err := lq.loadTitleRegex(ctx, query, nodes,
+			func(n *Live) { n.Edges.TitleRegex = []*LiveTitleRegex{} },
+			func(n *Live, e *LiveTitleRegex) { n.Edges.TitleRegex = append(n.Edges.TitleRegex, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -499,6 +543,37 @@ func (lq *LiveQuery) loadCategories(ctx context.Context, query *LiveCategoryQuer
 	query.withFKs = true
 	query.Where(predicate.LiveCategory(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(live.CategoriesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.live_id
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "live_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "live_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (lq *LiveQuery) loadTitleRegex(ctx context.Context, query *LiveTitleRegexQuery, nodes []*Live, init func(*Live), assign func(*Live, *LiveTitleRegex)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Live)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.LiveTitleRegex(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(live.TitleRegexColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
