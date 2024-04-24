@@ -19,8 +19,7 @@ type VodService interface {
 	CreateVod(vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	GetVods(c echo.Context) ([]*ent.Vod, error)
 	GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error)
-	GetVod(vID uuid.UUID) (*ent.Vod, error)
-	GetVodWithChannel(vID uuid.UUID) (*ent.Vod, error)
+	GetVod(vID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool) (*ent.Vod, error)
 	DeleteVod(c echo.Context, vID uuid.UUID, deleteFiles bool) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	SearchVods(c echo.Context, query string, limit int, offset int) (vod.Pagination, error)
@@ -94,7 +93,7 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
-		_, err = h.Service.VodService.GetVod(vID)
+		_, err = h.Service.VodService.GetVod(vID, false, false, false)
 		if err == nil {
 			return echo.NewHTTPError(http.StatusConflict, "vod already exists")
 		}
@@ -163,32 +162,46 @@ func (h *Handler) GetVods(c echo.Context) error {
 
 // GetVod godoc
 //
-//	@Summary		Get a vod
-//	@Description	Get a vod
-//	@Tags			vods
-//	@Accept			json
-//	@Produce		json
-//	@Param			id				path		string	true	"Vod ID"
-//	@Param			with_channel	query		string	false	"With channel"
-//	@Success		200				{object}	ent.Vod
-//	@Failure		400				{object}	utils.ErrorResponse
-//	@Failure		404				{object}	utils.ErrorResponse
-//	@Failure		500				{object}	utils.ErrorResponse
-//	@Router			/vod/{id} [get]
+//		@Summary		Get a vod
+//		@Description	Get a vod
+//		@Tags			vods
+//		@Accept			json
+//		@Produce		json
+//		@Param			id				path		string	true	"Vod ID"
+//		@Param			with_channel	query		string	false	"With channel"
+//	 	@Param			with_chapters	query		string	false	"With chapters"
+//		@Param			with_muted_segments	query	string	false	"With muted segments"
+//		@Success		200				{object}	ent.Vod
+//		@Failure		400				{object}	utils.ErrorResponse
+//		@Failure		404				{object}	utils.ErrorResponse
+//		@Failure		500				{object}	utils.ErrorResponse
+//		@Router			/vod/{id} [get]
 func (h *Handler) GetVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	withChannel := false
+	withChapters := false
+	withMutedSegments := false
+
 	wC := c.QueryParam("with_channel")
 	if wC == "true" {
-		v, err := h.Service.VodService.GetVodWithChannel(vID)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-		return c.JSON(http.StatusOK, v)
+		withChannel = true
 	}
-	v, err := h.Service.VodService.GetVod(vID)
+
+	wChapters := c.QueryParam("with_chapters")
+	if wChapters == "true" {
+		withChapters = true
+	}
+
+	wMutedSegments := c.QueryParam("with_muted_segments")
+	if wMutedSegments == "true" {
+		withMutedSegments = true
+	}
+
+	v, err := h.Service.VodService.GetVod(vID, withChannel, withChapters, withMutedSegments)
 	if err != nil {
 		if err.Error() == "vod not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())

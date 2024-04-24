@@ -497,6 +497,29 @@ func HasCategoriesWith(preds ...predicate.LiveCategory) predicate.Live {
 	})
 }
 
+// HasTitleRegex applies the HasEdge predicate on the "title_regex" edge.
+func HasTitleRegex() predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TitleRegexTable, TitleRegexColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTitleRegexWith applies the HasEdge predicate on the "title_regex" edge with a given conditions (other predicates).
+func HasTitleRegexWith(preds ...predicate.LiveTitleRegex) predicate.Live {
+	return predicate.Live(func(s *sql.Selector) {
+		step := newTitleRegexStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Live) predicate.Live {
 	return predicate.Live(sql.AndPredicates(predicates...))

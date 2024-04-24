@@ -285,7 +285,7 @@ func (s *Service) CheckOnHold() {
 	qItem := qItems[0]
 
 	// Get VOD
-	v, err := s.VodService.GetVodWithChannel(qItem.Edges.Vod.ID)
+	v, err := s.VodService.GetVod(qItem.Edges.Vod.ID, true, false, false)
 	if err != nil {
 		log.Error().Err(err).Msgf("error getting vod: %v", err)
 	}
@@ -472,7 +472,7 @@ func (s *Service) RestartTask(c echo.Context, qID uuid.UUID, task string, cont b
 	if err != nil {
 		return err
 	}
-	v, err := s.VodService.GetVodWithChannel(q.Edges.Vod.ID)
+	v, err := s.VodService.GetVod(q.Edges.Vod.ID, true, false, false)
 	if err != nil {
 		return err
 	}

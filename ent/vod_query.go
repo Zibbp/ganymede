@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
+	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -23,15 +24,16 @@ import (
 // VodQuery is the builder for querying Vod entities.
 type VodQuery struct {
 	config
-	ctx           *QueryContext
-	order         []vod.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.Vod
-	withChannel   *ChannelQuery
-	withQueue     *QueueQuery
-	withPlaylists *PlaylistQuery
-	withChapters  *ChapterQuery
-	withFKs       bool
+	ctx               *QueryContext
+	order             []vod.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.Vod
+	withChannel       *ChannelQuery
+	withQueue         *QueueQuery
+	withPlaylists     *PlaylistQuery
+	withChapters      *ChapterQuery
+	withMutedSegments *MutedSegmentQuery
+	withFKs           bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -149,6 +151,28 @@ func (vq *VodQuery) QueryChapters() *ChapterQuery {
 			sqlgraph.From(vod.Table, vod.FieldID, selector),
 			sqlgraph.To(chapter.Table, chapter.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, vod.ChaptersTable, vod.ChaptersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMutedSegments chains the current query on the "muted_segments" edge.
+func (vq *VodQuery) QueryMutedSegments() *MutedSegmentQuery {
+	query := (&MutedSegmentClient{config: vq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := vq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := vq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vod.Table, vod.FieldID, selector),
+			sqlgraph.To(mutedsegment.Table, mutedsegment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, vod.MutedSegmentsTable, vod.MutedSegmentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
 		return fromU, nil
@@ -343,15 +367,16 @@ func (vq *VodQuery) Clone() *VodQuery {
 		return nil
 	}
 	return &VodQuery{
-		config:        vq.config,
-		ctx:           vq.ctx.Clone(),
-		order:         append([]vod.OrderOption{}, vq.order...),
-		inters:        append([]Interceptor{}, vq.inters...),
-		predicates:    append([]predicate.Vod{}, vq.predicates...),
-		withChannel:   vq.withChannel.Clone(),
-		withQueue:     vq.withQueue.Clone(),
-		withPlaylists: vq.withPlaylists.Clone(),
-		withChapters:  vq.withChapters.Clone(),
+		config:            vq.config,
+		ctx:               vq.ctx.Clone(),
+		order:             append([]vod.OrderOption{}, vq.order...),
+		inters:            append([]Interceptor{}, vq.inters...),
+		predicates:        append([]predicate.Vod{}, vq.predicates...),
+		withChannel:       vq.withChannel.Clone(),
+		withQueue:         vq.withQueue.Clone(),
+		withPlaylists:     vq.withPlaylists.Clone(),
+		withChapters:      vq.withChapters.Clone(),
+		withMutedSegments: vq.withMutedSegments.Clone(),
 		// clone intermediate query.
 		sql:  vq.sql.Clone(),
 		path: vq.path,
@@ -399,6 +424,17 @@ func (vq *VodQuery) WithChapters(opts ...func(*ChapterQuery)) *VodQuery {
 		opt(query)
 	}
 	vq.withChapters = query
+	return vq
+}
+
+// WithMutedSegments tells the query-builder to eager-load the nodes that are connected to
+// the "muted_segments" edge. The optional arguments are used to configure the query builder of the edge.
+func (vq *VodQuery) WithMutedSegments(opts ...func(*MutedSegmentQuery)) *VodQuery {
+	query := (&MutedSegmentClient{config: vq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	vq.withMutedSegments = query
 	return vq
 }
 
@@ -481,11 +517,12 @@ func (vq *VodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vod, err
 		nodes       = []*Vod{}
 		withFKs     = vq.withFKs
 		_spec       = vq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			vq.withChannel != nil,
 			vq.withQueue != nil,
 			vq.withPlaylists != nil,
 			vq.withChapters != nil,
+			vq.withMutedSegments != nil,
 		}
 	)
 	if vq.withChannel != nil {
@@ -535,6 +572,13 @@ func (vq *VodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vod, err
 		if err := vq.loadChapters(ctx, query, nodes,
 			func(n *Vod) { n.Edges.Chapters = []*Chapter{} },
 			func(n *Vod, e *Chapter) { n.Edges.Chapters = append(n.Edges.Chapters, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := vq.withMutedSegments; query != nil {
+		if err := vq.loadMutedSegments(ctx, query, nodes,
+			func(n *Vod) { n.Edges.MutedSegments = []*MutedSegment{} },
+			func(n *Vod, e *MutedSegment) { n.Edges.MutedSegments = append(n.Edges.MutedSegments, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -688,6 +732,37 @@ func (vq *VodQuery) loadChapters(ctx context.Context, query *ChapterQuery, nodes
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "vod_chapters" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (vq *VodQuery) loadMutedSegments(ctx context.Context, query *MutedSegmentQuery, nodes []*Vod, init func(*Vod), assign func(*Vod, *MutedSegment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Vod)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.MutedSegment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(vod.MutedSegmentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.vod_muted_segments
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "vod_muted_segments" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "vod_muted_segments" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
