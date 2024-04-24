@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.19.5
+          go-version: "stable"
 
       - uses: actions/checkout@v4
 
