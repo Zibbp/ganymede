@@ -1,4 +1,4 @@
-FROM arm64v8/golang:1.21 AS build-stage-01
+FROM arm64v8/golang:1.22 AS build-stage-01
 
 RUN mkdir /app
 ADD . /app
