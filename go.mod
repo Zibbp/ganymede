@@ -2,8 +2,6 @@ module github.com/zibbp/ganymede
 
 go 1.22
 
-toolchain go1.22.0
-
 require (
 	entgo.io/ent v0.13.1
 	github.com/MicahParks/keyfunc v1.9.0
