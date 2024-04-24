@@ -36,9 +36,25 @@ func (pu *PlaybackUpdate) SetVodID(u uuid.UUID) *PlaybackUpdate {
 	return pu
 }
 
+// SetNillableVodID sets the "vod_id" field if the given value is not nil.
+func (pu *PlaybackUpdate) SetNillableVodID(u *uuid.UUID) *PlaybackUpdate {
+	if u != nil {
+		pu.SetVodID(*u)
+	}
+	return pu
+}
+
 // SetUserID sets the "user_id" field.
 func (pu *PlaybackUpdate) SetUserID(u uuid.UUID) *PlaybackUpdate {
 	pu.mutation.SetUserID(u)
+	return pu
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (pu *PlaybackUpdate) SetNillableUserID(u *uuid.UUID) *PlaybackUpdate {
+	if u != nil {
+		pu.SetUserID(*u)
+	}
 	return pu
 }
 
@@ -199,9 +215,25 @@ func (puo *PlaybackUpdateOne) SetVodID(u uuid.UUID) *PlaybackUpdateOne {
 	return puo
 }
 
+// SetNillableVodID sets the "vod_id" field if the given value is not nil.
+func (puo *PlaybackUpdateOne) SetNillableVodID(u *uuid.UUID) *PlaybackUpdateOne {
+	if u != nil {
+		puo.SetVodID(*u)
+	}
+	return puo
+}
+
 // SetUserID sets the "user_id" field.
 func (puo *PlaybackUpdateOne) SetUserID(u uuid.UUID) *PlaybackUpdateOne {
 	puo.mutation.SetUserID(u)
+	return puo
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (puo *PlaybackUpdateOne) SetNillableUserID(u *uuid.UUID) *PlaybackUpdateOne {
+	if u != nil {
+		puo.SetUserID(*u)
+	}
 	return puo
 }
 

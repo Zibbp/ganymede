@@ -3,6 +3,7 @@ package live
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ import (
 	"github.com/zibbp/ganymede/ent/live"
 	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
@@ -28,19 +30,21 @@ type Service struct {
 }
 
 type Live struct {
-	ID                 uuid.UUID `json:"id"`
-	WatchLive          bool      `json:"watch_live"`
-	WatchVod           bool      `json:"watch_vod"`
-	DownloadArchives   bool      `json:"download_archives"`
-	DownloadHighlights bool      `json:"download_highlights"`
-	DownloadUploads    bool      `json:"download_uploads"`
-	IsLive             bool      `json:"is_live"`
-	ArchiveChat        bool      `json:"archive_chat"`
-	Resolution         string    `json:"resolution"`
-	LastLive           time.Time `json:"last_live"`
-	RenderChat         bool      `json:"render_chat"`
-	DownloadSubOnly    bool      `json:"download_sub_only"`
-	Categories         []string  `json:"categories"`
+	ID                 uuid.UUID            `json:"id"`
+	WatchLive          bool                 `json:"watch_live"`
+	WatchVod           bool                 `json:"watch_vod"`
+	DownloadArchives   bool                 `json:"download_archives"`
+	DownloadHighlights bool                 `json:"download_highlights"`
+	DownloadUploads    bool                 `json:"download_uploads"`
+	IsLive             bool                 `json:"is_live"`
+	ArchiveChat        bool                 `json:"archive_chat"`
+	Resolution         string               `json:"resolution"`
+	LastLive           time.Time            `json:"last_live"`
+	RenderChat         bool                 `json:"render_chat"`
+	DownloadSubOnly    bool                 `json:"download_sub_only"`
+	Categories         []string             `json:"categories"`
+	MaxAge             int64                `json:"max_age"`
+	TitleRegex         []ent.LiveTitleRegex `json:"title_regex"`
 }
 
 type ConvertChat struct {
@@ -64,7 +68,7 @@ func NewService(store *database.Database, twitchService *twitch.Service, archive
 }
 
 func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
-	watchedChannels, err := s.Store.Client.Live.Query().WithChannel().WithCategories().All(c.Request().Context())
+	watchedChannels, err := s.Store.Client.Live.Query().WithChannel().WithCategories().WithTitleRegex().All(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error getting watched channels: %v", err)
 	}
@@ -80,7 +84,8 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 	if len(liveWatchedChannel) > 0 {
 		return nil, fmt.Errorf("channel already watched")
 	}
-	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).Save(c.Request().Context())
+
+	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.MaxAge).Save(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error adding watched channel: %v", err)
 	}
@@ -93,11 +98,20 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 			}
 		}
 	}
+	// add title regexes
+	if len(liveDto.TitleRegex) > 0 {
+		for _, regex := range liveDto.TitleRegex {
+			_, err := s.Store.Client.LiveTitleRegex.Create().SetNegative(regex.Negative).SetApplyToVideos(regex.ApplyToVideos).SetRegex(regex.Regex).SetLive(l).Save(c.Request().Context())
+			if err != nil {
+				return nil, fmt.Errorf("error adding title regex: %v", err)
+			}
+		}
+	}
 	return l, nil
 }
 
 func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live, error) {
-	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).Save(c.Request().Context())
+	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.MaxAge).Save(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error updating watched channel: %v", err)
 	}
@@ -115,6 +129,22 @@ func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.L
 			_, err := s.Store.Client.LiveCategory.Create().SetName(category).SetLive(l).Save(c.Request().Context())
 			if err != nil {
 				return nil, fmt.Errorf("error adding category: %v", err)
+			}
+		}
+	}
+
+	// delete all title regexes
+	_, err = s.Store.Client.LiveTitleRegex.Delete().Where(livetitleregex.HasLiveWith(live.ID(liveDto.ID))).Exec(c.Request().Context())
+	if err != nil {
+		return nil, fmt.Errorf("error deleting title regexes: %v", err)
+	}
+
+	// update title regexes
+	if len(liveDto.TitleRegex) > 0 {
+		for _, regex := range liveDto.TitleRegex {
+			_, err := s.Store.Client.LiveTitleRegex.Create().SetNegative(regex.Negative).SetApplyToVideos(regex.ApplyToVideos).SetRegex(regex.Regex).SetLive(l).Save(c.Request().Context())
+			if err != nil {
+				return nil, fmt.Errorf("error adding title regex: %v", err)
 			}
 		}
 	}
@@ -162,7 +192,9 @@ func (s *Service) DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error 
 func (s *Service) Check() error {
 	log.Debug().Msg("checking live channels")
 	// get live watched channels from database
-	liveWatchedChannels, err := s.Store.Client.Live.Query().Where(live.WatchLive(true)).WithChannel().All(context.Background())
+	liveWatchedChannels, err := s.Store.Client.Live.Query().Where(live.WatchLive(true)).WithChannel().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
+		ltrq.Where(livetitleregex.ApplyToVideosEQ(false))
+	}).All(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("error getting live watched channels")
 	}
@@ -200,11 +232,37 @@ func (s *Service) Check() error {
 	}
 
 	// check if live stream is online
+OUTER:
 	for _, lwc := range liveWatchedChannels {
 		// Check if LWC is in twitchStreams.Data
 		stream := stringInSlice(lwc.Edges.Channel.Name, streams)
 		if len(stream.ID) > 0 {
 			if !lwc.IsLive {
+				// stream is live
+				// check for any user-constraints before archiving
+				if lwc.Edges.TitleRegex != nil && len(lwc.Edges.TitleRegex) > 0 {
+					// run regexes against title
+					for _, titleRegex := range lwc.Edges.TitleRegex {
+						regex, err := regexp.Compile(titleRegex.Regex)
+						if err != nil {
+							log.Error().Err(err).Msg("error compiling regex for watched channel check, skipping this regex")
+							continue
+						}
+						matches := regex.FindAllString(stream.Title, -1)
+
+						if titleRegex.Negative && len(matches) == 0 {
+							continue
+						}
+
+						if !titleRegex.Negative && len(matches) > 0 {
+							continue
+						}
+
+						log.Debug().Str("regex", titleRegex.Regex).Str("title", stream.Title).Msgf("no regex matches for stream")
+						continue OUTER
+					}
+				}
+
 				log.Debug().Msgf("%s is now live", lwc.Edges.Channel.Name)
 				// Stream is online, update database
 				_, err := s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(true).Save(context.Background())

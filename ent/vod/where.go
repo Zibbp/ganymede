@@ -1429,6 +1429,29 @@ func HasChaptersWith(preds ...predicate.Chapter) predicate.Vod {
 	})
 }
 
+// HasMutedSegments applies the HasEdge predicate on the "muted_segments" edge.
+func HasMutedSegments() predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MutedSegmentsTable, MutedSegmentsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMutedSegmentsWith applies the HasEdge predicate on the "muted_segments" edge with a given conditions (other predicates).
+func HasMutedSegmentsWith(preds ...predicate.MutedSegment) predicate.Vod {
+	return predicate.Vod(func(s *sql.Selector) {
+		step := newMutedSegmentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Vod) predicate.Vod {
 	return predicate.Vod(sql.AndPredicates(predicates...))

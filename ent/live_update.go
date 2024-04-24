@@ -15,6 +15,7 @@ import (
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
+	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/predicate"
 )
 
@@ -191,6 +192,27 @@ func (lu *LiveUpdate) SetNillableRenderChat(b *bool) *LiveUpdate {
 	return lu
 }
 
+// SetVideoAge sets the "video_age" field.
+func (lu *LiveUpdate) SetVideoAge(i int64) *LiveUpdate {
+	lu.mutation.ResetVideoAge()
+	lu.mutation.SetVideoAge(i)
+	return lu
+}
+
+// SetNillableVideoAge sets the "video_age" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableVideoAge(i *int64) *LiveUpdate {
+	if i != nil {
+		lu.SetVideoAge(*i)
+	}
+	return lu
+}
+
+// AddVideoAge adds i to the "video_age" field.
+func (lu *LiveUpdate) AddVideoAge(i int64) *LiveUpdate {
+	lu.mutation.AddVideoAge(i)
+	return lu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lu *LiveUpdate) SetUpdatedAt(t time.Time) *LiveUpdate {
 	lu.mutation.SetUpdatedAt(t)
@@ -223,6 +245,21 @@ func (lu *LiveUpdate) AddCategories(l ...*LiveCategory) *LiveUpdate {
 	return lu.AddCategoryIDs(ids...)
 }
 
+// AddTitleRegexIDs adds the "title_regex" edge to the LiveTitleRegex entity by IDs.
+func (lu *LiveUpdate) AddTitleRegexIDs(ids ...uuid.UUID) *LiveUpdate {
+	lu.mutation.AddTitleRegexIDs(ids...)
+	return lu
+}
+
+// AddTitleRegex adds the "title_regex" edges to the LiveTitleRegex entity.
+func (lu *LiveUpdate) AddTitleRegex(l ...*LiveTitleRegex) *LiveUpdate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return lu.AddTitleRegexIDs(ids...)
+}
+
 // Mutation returns the LiveMutation object of the builder.
 func (lu *LiveUpdate) Mutation() *LiveMutation {
 	return lu.mutation
@@ -253,6 +290,27 @@ func (lu *LiveUpdate) RemoveCategories(l ...*LiveCategory) *LiveUpdate {
 		ids[i] = l[i].ID
 	}
 	return lu.RemoveCategoryIDs(ids...)
+}
+
+// ClearTitleRegex clears all "title_regex" edges to the LiveTitleRegex entity.
+func (lu *LiveUpdate) ClearTitleRegex() *LiveUpdate {
+	lu.mutation.ClearTitleRegex()
+	return lu
+}
+
+// RemoveTitleRegexIDs removes the "title_regex" edge to LiveTitleRegex entities by IDs.
+func (lu *LiveUpdate) RemoveTitleRegexIDs(ids ...uuid.UUID) *LiveUpdate {
+	lu.mutation.RemoveTitleRegexIDs(ids...)
+	return lu
+}
+
+// RemoveTitleRegex removes "title_regex" edges to LiveTitleRegex entities.
+func (lu *LiveUpdate) RemoveTitleRegex(l ...*LiveTitleRegex) *LiveUpdate {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return lu.RemoveTitleRegexIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -347,6 +405,12 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := lu.mutation.RenderChat(); ok {
 		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
 	}
+	if value, ok := lu.mutation.VideoAge(); ok {
+		_spec.SetField(live.FieldVideoAge, field.TypeInt64, value)
+	}
+	if value, ok := lu.mutation.AddedVideoAge(); ok {
+		_spec.AddField(live.FieldVideoAge, field.TypeInt64, value)
+	}
 	if value, ok := lu.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
 	}
@@ -417,6 +481,51 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if lu.mutation.TitleRegexCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.TitleRegexTable,
+			Columns: []string{live.TitleRegexColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := lu.mutation.RemovedTitleRegexIDs(); len(nodes) > 0 && !lu.mutation.TitleRegexCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.TitleRegexTable,
+			Columns: []string{live.TitleRegexColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := lu.mutation.TitleRegexIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.TitleRegexTable,
+			Columns: []string{live.TitleRegexColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -604,6 +713,27 @@ func (luo *LiveUpdateOne) SetNillableRenderChat(b *bool) *LiveUpdateOne {
 	return luo
 }
 
+// SetVideoAge sets the "video_age" field.
+func (luo *LiveUpdateOne) SetVideoAge(i int64) *LiveUpdateOne {
+	luo.mutation.ResetVideoAge()
+	luo.mutation.SetVideoAge(i)
+	return luo
+}
+
+// SetNillableVideoAge sets the "video_age" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableVideoAge(i *int64) *LiveUpdateOne {
+	if i != nil {
+		luo.SetVideoAge(*i)
+	}
+	return luo
+}
+
+// AddVideoAge adds i to the "video_age" field.
+func (luo *LiveUpdateOne) AddVideoAge(i int64) *LiveUpdateOne {
+	luo.mutation.AddVideoAge(i)
+	return luo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (luo *LiveUpdateOne) SetUpdatedAt(t time.Time) *LiveUpdateOne {
 	luo.mutation.SetUpdatedAt(t)
@@ -636,6 +766,21 @@ func (luo *LiveUpdateOne) AddCategories(l ...*LiveCategory) *LiveUpdateOne {
 	return luo.AddCategoryIDs(ids...)
 }
 
+// AddTitleRegexIDs adds the "title_regex" edge to the LiveTitleRegex entity by IDs.
+func (luo *LiveUpdateOne) AddTitleRegexIDs(ids ...uuid.UUID) *LiveUpdateOne {
+	luo.mutation.AddTitleRegexIDs(ids...)
+	return luo
+}
+
+// AddTitleRegex adds the "title_regex" edges to the LiveTitleRegex entity.
+func (luo *LiveUpdateOne) AddTitleRegex(l ...*LiveTitleRegex) *LiveUpdateOne {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return luo.AddTitleRegexIDs(ids...)
+}
+
 // Mutation returns the LiveMutation object of the builder.
 func (luo *LiveUpdateOne) Mutation() *LiveMutation {
 	return luo.mutation
@@ -666,6 +811,27 @@ func (luo *LiveUpdateOne) RemoveCategories(l ...*LiveCategory) *LiveUpdateOne {
 		ids[i] = l[i].ID
 	}
 	return luo.RemoveCategoryIDs(ids...)
+}
+
+// ClearTitleRegex clears all "title_regex" edges to the LiveTitleRegex entity.
+func (luo *LiveUpdateOne) ClearTitleRegex() *LiveUpdateOne {
+	luo.mutation.ClearTitleRegex()
+	return luo
+}
+
+// RemoveTitleRegexIDs removes the "title_regex" edge to LiveTitleRegex entities by IDs.
+func (luo *LiveUpdateOne) RemoveTitleRegexIDs(ids ...uuid.UUID) *LiveUpdateOne {
+	luo.mutation.RemoveTitleRegexIDs(ids...)
+	return luo
+}
+
+// RemoveTitleRegex removes "title_regex" edges to LiveTitleRegex entities.
+func (luo *LiveUpdateOne) RemoveTitleRegex(l ...*LiveTitleRegex) *LiveUpdateOne {
+	ids := make([]uuid.UUID, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return luo.RemoveTitleRegexIDs(ids...)
 }
 
 // Where appends a list predicates to the LiveUpdate builder.
@@ -790,6 +956,12 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 	if value, ok := luo.mutation.RenderChat(); ok {
 		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
 	}
+	if value, ok := luo.mutation.VideoAge(); ok {
+		_spec.SetField(live.FieldVideoAge, field.TypeInt64, value)
+	}
+	if value, ok := luo.mutation.AddedVideoAge(); ok {
+		_spec.AddField(live.FieldVideoAge, field.TypeInt64, value)
+	}
 	if value, ok := luo.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
 	}
@@ -860,6 +1032,51 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if luo.mutation.TitleRegexCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.TitleRegexTable,
+			Columns: []string{live.TitleRegexColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := luo.mutation.RemovedTitleRegexIDs(); len(nodes) > 0 && !luo.mutation.TitleRegexCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.TitleRegexTable,
+			Columns: []string{live.TitleRegexColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := luo.mutation.TitleRegexIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   live.TitleRegexTable,
+			Columns: []string{live.TitleRegexColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

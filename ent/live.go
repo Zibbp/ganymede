@@ -41,6 +41,8 @@ type Live struct {
 	LastLive time.Time `json:"last_live,omitempty"`
 	// Whether the chat should be rendered.
 	RenderChat bool `json:"render_chat,omitempty"`
+	// Restrict fetching videos to a certain age.
+	VideoAge int64 `json:"video_age,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -58,9 +60,11 @@ type LiveEdges struct {
 	Channel *Channel `json:"channel,omitempty"`
 	// Categories holds the value of the categories edge.
 	Categories []*LiveCategory `json:"categories,omitempty"`
+	// TitleRegex holds the value of the title_regex edge.
+	TitleRegex []*LiveTitleRegex `json:"title_regex,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -85,6 +89,15 @@ func (e LiveEdges) CategoriesOrErr() ([]*LiveCategory, error) {
 	return nil, &NotLoadedError{edge: "categories"}
 }
 
+// TitleRegexOrErr returns the TitleRegex value or an error if the edge
+// was not loaded in eager-loading.
+func (e LiveEdges) TitleRegexOrErr() ([]*LiveTitleRegex, error) {
+	if e.loadedTypes[2] {
+		return e.TitleRegex, nil
+	}
+	return nil, &NotLoadedError{edge: "title_regex"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Live) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -92,6 +105,8 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat:
 			values[i] = new(sql.NullBool)
+		case live.FieldVideoAge:
+			values[i] = new(sql.NullInt64)
 		case live.FieldResolution:
 			values[i] = new(sql.NullString)
 		case live.FieldLastLive, live.FieldUpdatedAt, live.FieldCreatedAt:
@@ -187,6 +202,12 @@ func (l *Live) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				l.RenderChat = value.Bool
 			}
+		case live.FieldVideoAge:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field video_age", values[i])
+			} else if value.Valid {
+				l.VideoAge = value.Int64
+			}
 		case live.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
@@ -227,6 +248,11 @@ func (l *Live) QueryChannel() *ChannelQuery {
 // QueryCategories queries the "categories" edge of the Live entity.
 func (l *Live) QueryCategories() *LiveCategoryQuery {
 	return NewLiveClient(l.config).QueryCategories(l)
+}
+
+// QueryTitleRegex queries the "title_regex" edge of the Live entity.
+func (l *Live) QueryTitleRegex() *LiveTitleRegexQuery {
+	return NewLiveClient(l.config).QueryTitleRegex(l)
 }
 
 // Update returns a builder for updating this Live.
@@ -284,6 +310,9 @@ func (l *Live) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("render_chat=")
 	builder.WriteString(fmt.Sprintf("%v", l.RenderChat))
+	builder.WriteString(", ")
+	builder.WriteString("video_age=")
+	builder.WriteString(fmt.Sprintf("%v", l.VideoAge))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(l.UpdatedAt.Format(time.ANSIC))

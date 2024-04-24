@@ -37,6 +37,8 @@ const (
 	FieldLastLive = "last_live"
 	// FieldRenderChat holds the string denoting the render_chat field in the database.
 	FieldRenderChat = "render_chat"
+	// FieldVideoAge holds the string denoting the video_age field in the database.
+	FieldVideoAge = "video_age"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -45,6 +47,8 @@ const (
 	EdgeChannel = "channel"
 	// EdgeCategories holds the string denoting the categories edge name in mutations.
 	EdgeCategories = "categories"
+	// EdgeTitleRegex holds the string denoting the title_regex edge name in mutations.
+	EdgeTitleRegex = "title_regex"
 	// Table holds the table name of the live in the database.
 	Table = "lives"
 	// ChannelTable is the table that holds the channel relation/edge.
@@ -61,6 +65,13 @@ const (
 	CategoriesInverseTable = "live_categories"
 	// CategoriesColumn is the table column denoting the categories relation/edge.
 	CategoriesColumn = "live_id"
+	// TitleRegexTable is the table that holds the title_regex relation/edge.
+	TitleRegexTable = "live_title_regexes"
+	// TitleRegexInverseTable is the table name for the LiveTitleRegex entity.
+	// It exists in this package in order to avoid circular dependency with the "livetitleregex" package.
+	TitleRegexInverseTable = "live_title_regexes"
+	// TitleRegexColumn is the table column denoting the title_regex relation/edge.
+	TitleRegexColumn = "live_id"
 )
 
 // Columns holds all SQL columns for live fields.
@@ -77,6 +88,7 @@ var Columns = []string{
 	FieldResolution,
 	FieldLastLive,
 	FieldRenderChat,
+	FieldVideoAge,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -125,6 +137,8 @@ var (
 	DefaultLastLive func() time.Time
 	// DefaultRenderChat holds the default value on creation for the "render_chat" field.
 	DefaultRenderChat bool
+	// DefaultVideoAge holds the default value on creation for the "video_age" field.
+	DefaultVideoAge int64
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
@@ -198,6 +212,11 @@ func ByRenderChat(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRenderChat, opts...).ToFunc()
 }
 
+// ByVideoAge orders the results by the video_age field.
+func ByVideoAge(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVideoAge, opts...).ToFunc()
+}
+
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
@@ -228,6 +247,20 @@ func ByCategories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCategoriesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByTitleRegexCount orders the results by title_regex count.
+func ByTitleRegexCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTitleRegexStep(), opts...)
+	}
+}
+
+// ByTitleRegex orders the results by title_regex terms.
+func ByTitleRegex(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTitleRegexStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newChannelStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -240,5 +273,12 @@ func newCategoriesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CategoriesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CategoriesTable, CategoriesColumn),
+	)
+}
+func newTitleRegexStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TitleRegexInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TitleRegexTable, TitleRegexColumn),
 	)
 }

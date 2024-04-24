@@ -285,7 +285,7 @@ func (s *Service) CheckOnHold() {
 	qItem := qItems[0]
 
 	// Get VOD
-	v, err := s.VodService.GetVodWithChannel(qItem.Edges.Vod.ID)
+	v, err := s.VodService.GetVod(qItem.Edges.Vod.ID, true, false, false)
 	if err != nil {
 		log.Error().Err(err).Msgf("error getting vod: %v", err)
 	}
@@ -452,6 +452,13 @@ func (s *Service) ArchiveTwitchLive(lwc *ent.Live, ts twitch.Live) (*TwitchVodRe
 
 	log.Debug().Msgf("workflow id %s started for live stream %s", we.GetID(), ts.ID)
 
+	// set IDs in queue
+	_, err = q.Update().SetWorkflowID(we.GetID()).SetWorkflowRunID(we.GetRunID()).Save(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("error updating queue item")
+		return nil, fmt.Errorf("error updating queue item: %v", err)
+	}
+
 	// go s.TaskVodCreateFolder(dbC, v, q, true)
 
 	return &TwitchVodResponse{
@@ -465,7 +472,7 @@ func (s *Service) RestartTask(c echo.Context, qID uuid.UUID, task string, cont b
 	if err != nil {
 		return err
 	}
-	v, err := s.VodService.GetVodWithChannel(q.Edges.Vod.ID)
+	v, err := s.VodService.GetVod(q.Edges.Vod.ID, true, false, false)
 	if err != nil {
 		return err
 	}

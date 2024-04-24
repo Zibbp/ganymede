@@ -18,6 +18,12 @@ type Live func(*sql.Selector)
 // LiveCategory is the predicate function for livecategory builders.
 type LiveCategory func(*sql.Selector)
 
+// LiveTitleRegex is the predicate function for livetitleregex builders.
+type LiveTitleRegex func(*sql.Selector)
+
+// MutedSegment is the predicate function for mutedsegment builders.
+type MutedSegment func(*sql.Selector)
+
 // Playback is the predicate function for playback builders.
 type Playback func(*sql.Selector)
 

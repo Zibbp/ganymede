@@ -54,6 +54,10 @@ type Queue struct {
 	ChatStart time.Time `json:"chat_start,omitempty"`
 	// RenderChat holds the value of the "render_chat" field.
 	RenderChat bool `json:"render_chat,omitempty"`
+	// WorkflowID holds the value of the "workflow_id" field.
+	WorkflowID string `json:"workflow_id,omitempty"`
+	// WorkflowRunID holds the value of the "workflow_run_id" field.
+	WorkflowRunID string `json:"workflow_run_id,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -94,7 +98,7 @@ func (*Queue) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case queue.FieldLiveArchive, queue.FieldOnHold, queue.FieldVideoProcessing, queue.FieldChatProcessing, queue.FieldProcessing, queue.FieldRenderChat:
 			values[i] = new(sql.NullBool)
-		case queue.FieldTaskVodCreateFolder, queue.FieldTaskVodDownloadThumbnail, queue.FieldTaskVodSaveInfo, queue.FieldTaskVideoDownload, queue.FieldTaskVideoConvert, queue.FieldTaskVideoMove, queue.FieldTaskChatDownload, queue.FieldTaskChatConvert, queue.FieldTaskChatRender, queue.FieldTaskChatMove:
+		case queue.FieldTaskVodCreateFolder, queue.FieldTaskVodDownloadThumbnail, queue.FieldTaskVodSaveInfo, queue.FieldTaskVideoDownload, queue.FieldTaskVideoConvert, queue.FieldTaskVideoMove, queue.FieldTaskChatDownload, queue.FieldTaskChatConvert, queue.FieldTaskChatRender, queue.FieldTaskChatMove, queue.FieldWorkflowID, queue.FieldWorkflowRunID:
 			values[i] = new(sql.NullString)
 		case queue.FieldChatStart, queue.FieldUpdatedAt, queue.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -225,6 +229,18 @@ func (q *Queue) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				q.RenderChat = value.Bool
 			}
+		case queue.FieldWorkflowID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field workflow_id", values[i])
+			} else if value.Valid {
+				q.WorkflowID = value.String
+			}
+		case queue.FieldWorkflowRunID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field workflow_run_id", values[i])
+			} else if value.Valid {
+				q.WorkflowRunID = value.String
+			}
 		case queue.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
@@ -335,6 +351,12 @@ func (q *Queue) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("render_chat=")
 	builder.WriteString(fmt.Sprintf("%v", q.RenderChat))
+	builder.WriteString(", ")
+	builder.WriteString("workflow_id=")
+	builder.WriteString(q.WorkflowID)
+	builder.WriteString(", ")
+	builder.WriteString("workflow_run_id=")
+	builder.WriteString(q.WorkflowRunID)
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(q.UpdatedAt.Format(time.ANSIC))

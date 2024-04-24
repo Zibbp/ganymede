@@ -92,6 +92,16 @@ func RenderChat(v bool) predicate.Queue {
 	return predicate.Queue(sql.FieldEQ(FieldRenderChat, v))
 }
 
+// WorkflowID applies equality check predicate on the "workflow_id" field. It's identical to WorkflowIDEQ.
+func WorkflowID(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldEQ(FieldWorkflowID, v))
+}
+
+// WorkflowRunID applies equality check predicate on the "workflow_run_id" field. It's identical to WorkflowRunIDEQ.
+func WorkflowRunID(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldEQ(FieldWorkflowRunID, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Queue {
 	return predicate.Queue(sql.FieldEQ(FieldUpdatedAt, v))
@@ -620,6 +630,156 @@ func RenderChatIsNil() predicate.Queue {
 // RenderChatNotNil applies the NotNil predicate on the "render_chat" field.
 func RenderChatNotNil() predicate.Queue {
 	return predicate.Queue(sql.FieldNotNull(FieldRenderChat))
+}
+
+// WorkflowIDEQ applies the EQ predicate on the "workflow_id" field.
+func WorkflowIDEQ(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldEQ(FieldWorkflowID, v))
+}
+
+// WorkflowIDNEQ applies the NEQ predicate on the "workflow_id" field.
+func WorkflowIDNEQ(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldNEQ(FieldWorkflowID, v))
+}
+
+// WorkflowIDIn applies the In predicate on the "workflow_id" field.
+func WorkflowIDIn(vs ...string) predicate.Queue {
+	return predicate.Queue(sql.FieldIn(FieldWorkflowID, vs...))
+}
+
+// WorkflowIDNotIn applies the NotIn predicate on the "workflow_id" field.
+func WorkflowIDNotIn(vs ...string) predicate.Queue {
+	return predicate.Queue(sql.FieldNotIn(FieldWorkflowID, vs...))
+}
+
+// WorkflowIDGT applies the GT predicate on the "workflow_id" field.
+func WorkflowIDGT(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldGT(FieldWorkflowID, v))
+}
+
+// WorkflowIDGTE applies the GTE predicate on the "workflow_id" field.
+func WorkflowIDGTE(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldGTE(FieldWorkflowID, v))
+}
+
+// WorkflowIDLT applies the LT predicate on the "workflow_id" field.
+func WorkflowIDLT(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldLT(FieldWorkflowID, v))
+}
+
+// WorkflowIDLTE applies the LTE predicate on the "workflow_id" field.
+func WorkflowIDLTE(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldLTE(FieldWorkflowID, v))
+}
+
+// WorkflowIDContains applies the Contains predicate on the "workflow_id" field.
+func WorkflowIDContains(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldContains(FieldWorkflowID, v))
+}
+
+// WorkflowIDHasPrefix applies the HasPrefix predicate on the "workflow_id" field.
+func WorkflowIDHasPrefix(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldHasPrefix(FieldWorkflowID, v))
+}
+
+// WorkflowIDHasSuffix applies the HasSuffix predicate on the "workflow_id" field.
+func WorkflowIDHasSuffix(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldHasSuffix(FieldWorkflowID, v))
+}
+
+// WorkflowIDIsNil applies the IsNil predicate on the "workflow_id" field.
+func WorkflowIDIsNil() predicate.Queue {
+	return predicate.Queue(sql.FieldIsNull(FieldWorkflowID))
+}
+
+// WorkflowIDNotNil applies the NotNil predicate on the "workflow_id" field.
+func WorkflowIDNotNil() predicate.Queue {
+	return predicate.Queue(sql.FieldNotNull(FieldWorkflowID))
+}
+
+// WorkflowIDEqualFold applies the EqualFold predicate on the "workflow_id" field.
+func WorkflowIDEqualFold(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldEqualFold(FieldWorkflowID, v))
+}
+
+// WorkflowIDContainsFold applies the ContainsFold predicate on the "workflow_id" field.
+func WorkflowIDContainsFold(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldContainsFold(FieldWorkflowID, v))
+}
+
+// WorkflowRunIDEQ applies the EQ predicate on the "workflow_run_id" field.
+func WorkflowRunIDEQ(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldEQ(FieldWorkflowRunID, v))
+}
+
+// WorkflowRunIDNEQ applies the NEQ predicate on the "workflow_run_id" field.
+func WorkflowRunIDNEQ(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldNEQ(FieldWorkflowRunID, v))
+}
+
+// WorkflowRunIDIn applies the In predicate on the "workflow_run_id" field.
+func WorkflowRunIDIn(vs ...string) predicate.Queue {
+	return predicate.Queue(sql.FieldIn(FieldWorkflowRunID, vs...))
+}
+
+// WorkflowRunIDNotIn applies the NotIn predicate on the "workflow_run_id" field.
+func WorkflowRunIDNotIn(vs ...string) predicate.Queue {
+	return predicate.Queue(sql.FieldNotIn(FieldWorkflowRunID, vs...))
+}
+
+// WorkflowRunIDGT applies the GT predicate on the "workflow_run_id" field.
+func WorkflowRunIDGT(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldGT(FieldWorkflowRunID, v))
+}
+
+// WorkflowRunIDGTE applies the GTE predicate on the "workflow_run_id" field.
+func WorkflowRunIDGTE(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldGTE(FieldWorkflowRunID, v))
+}
+
+// WorkflowRunIDLT applies the LT predicate on the "workflow_run_id" field.
+func WorkflowRunIDLT(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldLT(FieldWorkflowRunID, v))
+}
+
+// WorkflowRunIDLTE applies the LTE predicate on the "workflow_run_id" field.
+func WorkflowRunIDLTE(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldLTE(FieldWorkflowRunID, v))
+}
+
+// WorkflowRunIDContains applies the Contains predicate on the "workflow_run_id" field.
+func WorkflowRunIDContains(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldContains(FieldWorkflowRunID, v))
+}
+
+// WorkflowRunIDHasPrefix applies the HasPrefix predicate on the "workflow_run_id" field.
+func WorkflowRunIDHasPrefix(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldHasPrefix(FieldWorkflowRunID, v))
+}
+
+// WorkflowRunIDHasSuffix applies the HasSuffix predicate on the "workflow_run_id" field.
+func WorkflowRunIDHasSuffix(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldHasSuffix(FieldWorkflowRunID, v))
+}
+
+// WorkflowRunIDIsNil applies the IsNil predicate on the "workflow_run_id" field.
+func WorkflowRunIDIsNil() predicate.Queue {
+	return predicate.Queue(sql.FieldIsNull(FieldWorkflowRunID))
+}
+
+// WorkflowRunIDNotNil applies the NotNil predicate on the "workflow_run_id" field.
+func WorkflowRunIDNotNil() predicate.Queue {
+	return predicate.Queue(sql.FieldNotNull(FieldWorkflowRunID))
+}
+
+// WorkflowRunIDEqualFold applies the EqualFold predicate on the "workflow_run_id" field.
+func WorkflowRunIDEqualFold(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldEqualFold(FieldWorkflowRunID, v))
+}
+
+// WorkflowRunIDContainsFold applies the ContainsFold predicate on the "workflow_run_id" field.
+func WorkflowRunIDContainsFold(v string) predicate.Queue {
+	return predicate.Queue(sql.FieldContainsFold(FieldWorkflowRunID, v))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

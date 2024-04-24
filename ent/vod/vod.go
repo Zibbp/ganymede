@@ -69,6 +69,8 @@ const (
 	EdgePlaylists = "playlists"
 	// EdgeChapters holds the string denoting the chapters edge name in mutations.
 	EdgeChapters = "chapters"
+	// EdgeMutedSegments holds the string denoting the muted_segments edge name in mutations.
+	EdgeMutedSegments = "muted_segments"
 	// Table holds the table name of the vod in the database.
 	Table = "vods"
 	// ChannelTable is the table that holds the channel relation/edge.
@@ -97,6 +99,13 @@ const (
 	ChaptersInverseTable = "chapters"
 	// ChaptersColumn is the table column denoting the chapters relation/edge.
 	ChaptersColumn = "vod_chapters"
+	// MutedSegmentsTable is the table that holds the muted_segments relation/edge.
+	MutedSegmentsTable = "muted_segments"
+	// MutedSegmentsInverseTable is the table name for the MutedSegment entity.
+	// It exists in this package in order to avoid circular dependency with the "mutedsegment" package.
+	MutedSegmentsInverseTable = "muted_segments"
+	// MutedSegmentsColumn is the table column denoting the muted_segments relation/edge.
+	MutedSegmentsColumn = "vod_muted_segments"
 )
 
 // Columns holds all SQL columns for vod fields.
@@ -359,6 +368,20 @@ func ByChapters(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newChaptersStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByMutedSegmentsCount orders the results by muted_segments count.
+func ByMutedSegmentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMutedSegmentsStep(), opts...)
+	}
+}
+
+// ByMutedSegments orders the results by muted_segments terms.
+func ByMutedSegments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMutedSegmentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newChannelStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -385,5 +408,12 @@ func newChaptersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ChaptersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ChaptersTable, ChaptersColumn),
+	)
+}
+func newMutedSegmentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MutedSegmentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MutedSegmentsTable, MutedSegmentsColumn),
 	)
 }
