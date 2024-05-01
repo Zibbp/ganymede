@@ -50,7 +50,7 @@ func NewService(store *database.Database) *Service {
 			ClientSecret: oauthClientSecret,
 			RedirectURL:  oauthRedirectURL,
 			Endpoint:     provider.Endpoint(),
-			Scopes:       []string{oidc.ScopeOpenID, "profile"},
+			Scopes:       []string{oidc.ScopeOpenID, "profile", oidc.ScopeOfflineAccess},
 		}
 
 		err = FetchJWKS()
