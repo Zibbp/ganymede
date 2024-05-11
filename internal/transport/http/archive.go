@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -116,6 +117,29 @@ func (h *Handler) RestartTask(c echo.Context) error {
 	}
 
 	err = h.Service.ArchiveService.RestartTask(c, qUUID, rtr.Task, rtr.Cont)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+// debug route to test converting chat files
+func (h *Handler) ConvertTwitchChat(c echo.Context) error {
+	type Body struct {
+		LiveChatPath    string `json:"live_chat_path"`
+		ChannelName     string `json:"channel_name"`
+		VideoID         string `json:"video_id"`
+		VideoExternalID string `json:"video_external_id"`
+		ChannelID       int    `json:"channel_id"`
+		PreviousVideoID string `json:"previous_video_id"`
+	}
+	body := new(Body)
+	if err := c.Bind(body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err := utils.ConvertTwitchLiveChatToTDLChat(body.LiveChatPath, body.ChannelName, body.VideoID, body.VideoExternalID, body.ChannelID, time.Now(), body.PreviousVideoID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
