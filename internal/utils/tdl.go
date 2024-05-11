@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -79,19 +78,6 @@ type Emoticon struct {
 
 type LiveChat struct {
 	Comments []LiveComment `json:"comments"`
-}
-
-func findSubstringPositions(input string, substring string, occurrenceNumber int) (start int, end int, found bool) {
-	re := regexp.MustCompile(regexp.QuoteMeta(substring))
-	matches := re.FindAllStringIndex(input, -1)
-
-	if occurrenceNumber <= len(matches) {
-		startIndex := matches[occurrenceNumber-1][0]
-		endIndex := matches[occurrenceNumber-1][1]
-		return startIndex, endIndex, true
-	}
-
-	return -1, -1, false
 }
 
 func ConvertTwitchLiveChatToTDLChat(path string, channelName string, videoID string, videoExternalID string, channelID int, chatStartTime time.Time, previousVideoID string) error {
