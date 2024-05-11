@@ -2,7 +2,9 @@ package http
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/archive"
@@ -78,4 +80,62 @@ func (h *Handler) ArchiveTwitchVod(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, vod)
+}
+
+// RestartTask godoc
+//
+//	@Summary		Restart a task
+//	@Description	Restart a task
+//	@Tags			archive
+//	@Accept			json
+//	@Produce		json
+//	@Param			queue_id	path	string				true	"Queue ID"
+//	@Param			task		body	RestartTaskRequest	true	"Task"
+//	@Success		200
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/archive/restart [post]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) RestartTask(c echo.Context) error {
+	rtr := new(RestartTaskRequest)
+	if err := c.Bind(rtr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(rtr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	qUUID, err := uuid.Parse(rtr.QueueID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.Service.ArchiveService.RestartTask(c, qUUID, rtr.Task, rtr.Cont)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+// debug route to test converting chat files
+func (h *Handler) ConvertTwitchChat(c echo.Context) error {
+	type Body struct {
+		LiveChatPath    string `json:"live_chat_path"`
+		ChannelName     string `json:"channel_name"`
+		VideoID         string `json:"video_id"`
+		VideoExternalID string `json:"video_external_id"`
+		ChannelID       int    `json:"channel_id"`
+		PreviousVideoID string `json:"previous_video_id"`
+	}
+	body := new(Body)
+	if err := c.Bind(body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err := utils.ConvertTwitchLiveChatToTDLChat(body.LiveChatPath, body.ChannelName, body.VideoID, body.VideoExternalID, body.ChannelID, time.Now(), body.PreviousVideoID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.NoContent(http.StatusOK)
 }
