@@ -12,7 +12,7 @@ FROM debian:bookworm-slim AS build-stage-02
 RUN apt update && apt install -y git wget unzip
 
 WORKDIR /tmp
-RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.54.2/TwitchDownloaderCLI-1.54.2-Linux-x64.zip && unzip TwitchDownloaderCLI-1.54.2-Linux-x64.zip 
+RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.54.3/TwitchDownloaderCLI-1.54.3-Linux-x64.zip && unzip TwitchDownloaderCLI-1.54.3-Linux-x64.zip 
 
 RUN git clone https://github.com/xenova/chat-downloader.git
 
