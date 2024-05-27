@@ -7,7 +7,7 @@ require (
 	github.com/MicahParks/keyfunc v1.9.0
 	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/go-co-op/gocron v1.37.0
-	github.com/go-playground/validator/v10 v10.19.0
+	github.com/go-playground/validator/v10 v10.20.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.6.0
 	github.com/kelseyhightower/envconfig v1.4.0
