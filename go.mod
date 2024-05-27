@@ -21,7 +21,7 @@ require (
 	go.temporal.io/api v1.32.0
 	go.temporal.io/sdk v1.26.1
 	golang.org/x/crypto v0.22.0
-	golang.org/x/oauth2 v0.19.0
+	golang.org/x/oauth2 v0.20.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
@@ -40,7 +40,6 @@ require (
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
