@@ -392,7 +392,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, input dto.ArchiveVideoInput, c
 	}
 
 	// Update video duration with duration from downloaded video
-	duration, err := exec.GetVideoDuration(fmt.Sprintf("/tmp/%s_%s-video.mp4", input.Vod.ExtID, input.Vod.ID))
+	duration, err := exec.GetVideoDuration(input.Vod.TmpVideoDownloadPath)
 	if err != nil {
 		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
@@ -490,6 +490,7 @@ func MoveVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 	go sendHeartbeat(ctx, fmt.Sprintf("move-video-%s", input.VideoID), stopHeartbeat)
 
 	if viper.GetBool("archive.save_as_hls") {
+		// todo: variablies paths?
 		sourcePath := fmt.Sprintf("/tmp/%s_%s-video_hls0", input.Vod.ExtID, input.Vod.ID)
 		destPath := fmt.Sprintf("/vods/%s/%s/%s-video_hls", input.Channel.Name, input.Vod.FolderName, input.Vod.FileName)
 		err := utils.MoveFolder(sourcePath, destPath)
@@ -509,10 +510,7 @@ func MoveVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 			return dbErr
 		}
 	} else {
-		sourcePath := fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", input.Vod.ExtID, input.Vod.ID)
-		destPath := fmt.Sprintf("/vods/%s/%s/%s-video.mp4", input.Channel.Name, input.Vod.FolderName, input.Vod.FileName)
-
-		err := utils.MoveFile(sourcePath, destPath)
+		err := utils.MoveFile(input.Vod.TmpVideoConvertPath, input.Vod.VideoPath)
 		if err != nil {
 			_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoMove(utils.Failed).Save(ctx)
 			if dbErr != nil {
@@ -526,7 +524,7 @@ func MoveVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 
 	// Clean up files
 	// Delete source file
-	err := utils.DeleteFile(fmt.Sprintf("/tmp/%s_%s-video.mp4", input.Vod.ExtID, input.Vod.ID))
+	err := utils.DeleteFile(input.Vod.TmpVideoDownloadPath)
 	if err != nil {
 		log.Info().Err(err).Msgf("error deleting source file for vod %s", input.Vod.ID)
 	}
@@ -564,10 +562,7 @@ func DownloadTwitchChat(ctx context.Context, input dto.ArchiveVideoInput) error 
 	}
 
 	// copy json to vod folder
-	sourcePath := fmt.Sprintf("/tmp/%s_%s-chat.json", input.Vod.ExtID, input.Vod.ID)
-	destPath := fmt.Sprintf("/vods/%s/%s/%s-chat.json", input.Channel.Name, input.Vod.FolderName, input.Vod.FileName)
-
-	err = utils.CopyFile(sourcePath, destPath)
+	err = utils.CopyFile(input.Vod.TmpChatDownloadPath, input.Vod.ChatPath)
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Failed).Save(ctx)
 		if dbErr != nil {
@@ -611,10 +606,7 @@ func DownloadTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) er
 	}
 
 	// copy json to vod folder
-	sourcePath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", input.Vod.ExtID, input.Vod.ID)
-	destPath := fmt.Sprintf("/vods/%s/%s/%s-live-chat.json", input.Channel.Name, input.Vod.FolderName, input.Vod.FileName)
-
-	err = utils.CopyFile(sourcePath, destPath)
+	err = utils.CopyFile(input.Vod.TmpLiveChatDownloadPath, input.Vod.ChatPath)
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Failed).Save(ctx)
 		if dbErr != nil {
@@ -678,10 +670,7 @@ func MoveChat(ctx context.Context, input dto.ArchiveVideoInput) error {
 	stopHeartbeat := make(chan bool)
 	go sendHeartbeat(ctx, fmt.Sprintf("move-chat-%s", input.VideoID), stopHeartbeat)
 
-	sourcePath := fmt.Sprintf("/tmp/%s_%s-chat.json", input.Vod.ExtID, input.Vod.ID)
-	destPath := fmt.Sprintf("/vods/%s/%s/%s-chat.json", input.Channel.Name, input.Vod.FolderName, input.Vod.FileName)
-
-	err := utils.MoveFile(sourcePath, destPath)
+	err := utils.MoveFile(input.Vod.TmpChatDownloadPath, input.Vod.ChatPath)
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatMove(utils.Failed).Save(ctx)
 		if dbErr != nil {
@@ -693,10 +682,7 @@ func MoveChat(ctx context.Context, input dto.ArchiveVideoInput) error {
 	}
 
 	if input.Queue.RenderChat {
-		sourcePath = fmt.Sprintf("/tmp/%s_%s-chat.mp4", input.Vod.ExtID, input.Vod.ID)
-		destPath = fmt.Sprintf("/vods/%s/%s/%s-chat.mp4", input.Channel.Name, input.Vod.FolderName, input.Vod.FileName)
-
-		err = utils.MoveFile(sourcePath, destPath)
+		err = utils.MoveFile(input.Vod.TmpChatRenderPath, input.Vod.ChatVideoPath)
 		if err != nil {
 			_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatMove(utils.Failed).Save(ctx)
 			if dbErr != nil {
@@ -761,9 +747,8 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 	go sendHeartbeat(ctx, fmt.Sprintf("convert-livechat-%s", input.VideoID), stopHeartbeat)
 
 	// Check if chat file exists
-	chatPath := fmt.Sprintf("/tmp/%s_%s-live-chat.json", input.Vod.ExtID, input.Vod.ID)
-	if !utils.FileExists(chatPath) {
-		log.Debug().Msgf("chat file does not exist %s - this means there were no chat messages - setting chat to complete", chatPath)
+	if !utils.FileExists(input.Vod.TmpLiveChatDownloadPath) {
+		log.Debug().Msgf("chat file does not exist %s - this means there were no chat messages - setting chat to complete", input.Vod.TmpLiveChatDownloadPath)
 		// Set queue chat task to complete
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove((utils.Success)).Save(ctx)
 		if dbErr != nil {
@@ -832,7 +817,7 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		previousVideoID = "132195945"
 	}
 
-	err = utils.ConvertTwitchLiveChatToVodChat(fmt.Sprintf("/tmp/%s_%s-live-chat.json", input.Vod.ExtID, input.Vod.ID), input.Channel.Name, input.Vod.ID.String(), input.Vod.ExtID, cID, input.Queue.ChatStart, string(previousVideoID))
+	err = utils.ConvertTwitchLiveChatToVodChat(input.Vod.TmpLiveChatDownloadPath, input.Channel.Name, input.Vod.ID.String(), input.Vod.ExtID, cID, input.Queue.ChatStart, string(previousVideoID))
 	if err != nil {
 		log.Error().Err(err).Msg("error converting chat")
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)
@@ -859,10 +844,7 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 	}
 
 	// copy converted chat
-	sourcePath := fmt.Sprintf("/tmp/%s_%s-chat-convert.json", input.Vod.ExtID, input.Vod.ID)
-	destPath := fmt.Sprintf("/vods/%s/%s/%s-chat-convert.json", input.Channel.Name, input.Vod.FolderName, input.Vod.FileName)
-
-	err = utils.CopyFile(sourcePath, destPath)
+	err = utils.CopyFile(input.Vod.TmpLiveChatConvertPath, input.Vod.LiveChatConvertPath)
 	if err != nil {
 		log.Error().Err(err).Msg("error copying chat convert")
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)

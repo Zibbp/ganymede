@@ -26,7 +26,7 @@ type AddWatchedChannelRequest struct {
 	DownloadHighlights bool                `json:"download_highlights" validate:"boolean"`
 	DownloadUploads    bool                `json:"download_uploads" validate:"boolean"`
 	ChannelID          string              `json:"channel_id" validate:"required"`
-	Resolution         string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30"`
+	Resolution         string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
 	ArchiveChat        bool                `json:"archive_chat" validate:"boolean"`
 	RenderChat         bool                `json:"render_chat" validate:"boolean"`
 	DownloadSubOnly    bool                `json:"download_sub_only" validate:"boolean"`
@@ -48,7 +48,7 @@ type AddMultipleWatchedChannelRequest struct {
 	DownloadHighlights bool     `json:"download_highlights" `
 	DownloadUploads    bool     `json:"download_uploads"`
 	ChannelID          []string `json:"channel_id" validate:"required"`
-	Resolution         string   `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30"`
+	Resolution         string   `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
 	ArchiveChat        bool     `json:"archive_chat"`
 	RenderChat         bool     `json:"render_chat"`
 	DownloadSubOnly    bool     `json:"download_sub_only"`
@@ -62,7 +62,7 @@ type UpdateWatchedChannelRequest struct {
 	DownloadArchives   bool                `json:"download_archives" validate:"boolean"`
 	DownloadHighlights bool                `json:"download_highlights" validate:"boolean"`
 	DownloadUploads    bool                `json:"download_uploads" validate:"boolean"`
-	Resolution         string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30"`
+	Resolution         string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
 	ArchiveChat        bool                `json:"archive_chat" validate:"boolean"`
 	RenderChat         bool                `json:"render_chat" validate:"boolean"`
 	DownloadSubOnly    bool                `json:"download_sub_only" validate:"boolean"`
@@ -82,7 +82,7 @@ type ConvertChatRequest struct {
 
 type ArchiveLiveChannelRequest struct {
 	ChannelID   string `json:"channel_id" validate:"required"`
-	Resolution  string `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30"`
+	Resolution  string `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
 	ArchiveChat bool   `json:"archive_chat"`
 	RenderChat  bool   `json:"render_chat"`
 }

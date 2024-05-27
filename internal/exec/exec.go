@@ -36,7 +36,7 @@ func DownloadTwitchVodVideo(v *ent.Vod) error {
 		argArr = append(argArr, fmt.Sprintf("--twitch-api-header=Authorization=OAuth %s", twitchToken))
 	}
 
-	argArr = append(argArr, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+	argArr = append(argArr, "-o", v.TmpVideoDownloadPath)
 
 	log.Debug().Msgf("running streamlink for vod video download: %s", strings.Join(argArr, " "))
 
@@ -64,7 +64,7 @@ func DownloadTwitchVodVideo(v *ent.Vod) error {
 }
 
 func DownloadTwitchVodChat(v *ent.Vod) error {
-	cmd := osExec.Command("TwitchDownloaderCLI", "chatdownload", "--id", v.ExtID, "--embed-images", "-o", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID))
+	cmd := osExec.Command("TwitchDownloaderCLI", "chatdownload", "--id", v.ExtID, "--embed-images", "-o", v.TmpChatDownloadPath)
 
 	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s-chat.log", v.ID))
 	if err != nil {
@@ -93,11 +93,11 @@ func RenderTwitchVodChat(v *ent.Vod) (error, bool) {
 	// Split supplied params into array
 	arr := strings.Fields(chatRenderParams)
 	// Generate args for exec
-	argArr := []string{"chatrender", "-i", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID)}
+	argArr := []string{"chatrender", "-i", v.TmpChatDownloadPath}
 	// add each config param to arg
 	argArr = append(argArr, arr...)
 	// add output file
-	argArr = append(argArr, "-o", fmt.Sprintf("/tmp/%s_%s-chat.mp4", v.ExtID, v.ID))
+	argArr = append(argArr, "-o", v.TmpChatRenderPath)
 	log.Debug().Msgf("chat render args: %v", argArr)
 	// Execute chat render
 	cmd := osExec.Command("TwitchDownloaderCLI", argArr...)
@@ -142,11 +142,11 @@ func ConvertTwitchVodVideo(v *ent.Vod) error {
 	// Split supplied params into array
 	arr := strings.Fields(ffmpegParams)
 	// Generate args for exec
-	argArr := []string{"-y", "-hide_banner", "-i", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID)}
+	argArr := []string{"-y", "-hide_banner", "-i", v.TmpVideoDownloadPath}
 	// add each config param to arg
 	argArr = append(argArr, arr...)
 	// add output file
-	argArr = append(argArr, fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID))
+	argArr = append(argArr, v.TmpVideoConvertPath)
 	log.Debug().Msgf("video convert args: %v", argArr)
 	// Execute ffmpeg
 	cmd := osExec.Command("ffmpeg", argArr...)
@@ -172,12 +172,12 @@ func ConvertTwitchVodVideo(v *ent.Vod) error {
 func ConvertToHLS(v *ent.Vod) error {
 	// Delete original video file to save space
 	log.Debug().Msgf("deleting original video file for %s to save space", v.ExtID)
-	if err := os.Remove(fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID)); err != nil {
+	if err := os.Remove(v.TmpVideoDownloadPath); err != nil {
 		log.Error().Err(err).Msg("error deleting original video file")
 		return err
 	}
 
-	cmd := osExec.Command("ffmpeg", "-y", "-hide_banner", "-i", fmt.Sprintf("/tmp/%s_%s-video-convert.mp4", v.ExtID, v.ID), "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("/tmp/%s_%s-video_hls%s/%s_segment%s.ts", v.ExtID, v.ID, "%v", v.ExtID, "%d"), "-f", "hls", fmt.Sprintf("/tmp/%s_%s-video_hls%s/%s-video.m3u8", v.ExtID, v.ID, "%v", v.ExtID))
+	cmd := osExec.Command("ffmpeg", "-y", "-hide_banner", "-i", v.TmpVideoConvertPath, "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("/tmp/%s_%s-video_hls%s/%s_segment%s.ts", v.ExtID, v.ID, "%v", v.ExtID, "%d"), "-f", "hls", fmt.Sprintf("/tmp/%s_%s-video_hls%s/%s-video.m3u8", v.ExtID, v.ID, "%v", v.ExtID))
 
 	videoConverLogFile, err := os.Open(fmt.Sprintf("/logs/%s-video-convert.log", v.ID))
 	if err != nil {
@@ -271,8 +271,13 @@ func DownloadTwitchLiveVideo(ctx context.Context, v *ent.Vod, ch *ent.Channel, l
 		streamURL = fmt.Sprintf("https://twitch.tv/%s", ch.Name)
 	}
 
-	// streamlink livestreams do not use the 30 fps suffic
+	// streamlink livestreams do not use the 30 fps suffix
 	v.Resolution = strings.Replace(v.Resolution, "30", "", 1)
+
+	// streamlink livestreams expect 'audio_only' instead of 'audio'
+	if v.Resolution == "audio" {
+		v.Resolution = "audio_only"
+	}
 
 	// Generate args for exec
 	args := []string{"--progress=force", "--force", streamURL, fmt.Sprintf("%s,best", v.Resolution)}
@@ -297,7 +302,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, v *ent.Vod, ch *ent.Channel, l
 		}
 	}
 
-	cmdArgs := append(filteredArgs, "-o", fmt.Sprintf("/tmp/%s_%s-video.mp4", v.ExtID, v.ID))
+	cmdArgs := append(filteredArgs, "-o", v.TmpVideoDownloadPath)
 
 	log.Debug().Msgf("streamlink live args: %v", cmdArgs)
 	log.Debug().Msgf("running: streamlink %s", strings.Join(cmdArgs, " "))
@@ -359,7 +364,7 @@ func DownloadTwitchLiveChat(ctx context.Context, v *ent.Vod, ch *ent.Channel, q 
 		return err
 	}
 
-	cmd := osExec.Command("chat_downloader", fmt.Sprintf("https://twitch.tv/%s", ch.Name), "--output", fmt.Sprintf("/tmp/%s_%s-live-chat.json", v.ExtID, v.ID), "-q")
+	cmd := osExec.Command("chat_downloader", fmt.Sprintf("https://twitch.tv/%s", ch.Name), "--output", v.TmpLiveChatDownloadPath, "-q")
 
 	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s-chat.log", v.ID))
 	if err != nil {
@@ -434,7 +439,7 @@ func GetFfprobeData(path string) (map[string]interface{}, error) {
 
 func TwitchChatUpdate(v *ent.Vod) error {
 
-	cmd := osExec.Command("TwitchDownloaderCLI", "chatupdate", "-i", fmt.Sprintf("/tmp/%s_%s-chat-convert.json", v.ExtID, v.ID), "--embed-missing", "-o", fmt.Sprintf("/tmp/%s_%s-chat.json", v.ExtID, v.ID))
+	cmd := osExec.Command("TwitchDownloaderCLI", "chatupdate", "-i", v.TmpLiveChatConvertPath, "--embed-missing", "-o", v.TmpChatDownloadPath)
 
 	chatLogfile, err := os.Create(fmt.Sprintf("/logs/%s-chat-convert.log", v.ID))
 	if err != nil {
