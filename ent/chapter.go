@@ -45,12 +45,10 @@ type ChapterEdges struct {
 // VodOrErr returns the Vod value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e ChapterEdges) VodOrErr() (*Vod, error) {
-	if e.loadedTypes[0] {
-		if e.Vod == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: vod.Label}
-		}
+	if e.Vod != nil {
 		return e.Vod, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: vod.Label}
 	}
 	return nil, &NotLoadedError{edge: "vod"}
 }

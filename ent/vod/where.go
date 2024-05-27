@@ -107,6 +107,16 @@ func ChatPath(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldChatPath, v))
 }
 
+// LiveChatPath applies equality check predicate on the "live_chat_path" field. It's identical to LiveChatPathEQ.
+func LiveChatPath(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldLiveChatPath, v))
+}
+
+// LiveChatConvertPath applies equality check predicate on the "live_chat_convert_path" field. It's identical to LiveChatConvertPathEQ.
+func LiveChatConvertPath(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldLiveChatConvertPath, v))
+}
+
 // ChatVideoPath applies equality check predicate on the "chat_video_path" field. It's identical to ChatVideoPathEQ.
 func ChatVideoPath(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldChatVideoPath, v))
@@ -130,6 +140,36 @@ func FolderName(v string) predicate.Vod {
 // FileName applies equality check predicate on the "file_name" field. It's identical to FileNameEQ.
 func FileName(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldFileName, v))
+}
+
+// TmpVideoDownloadPath applies equality check predicate on the "tmp_video_download_path" field. It's identical to TmpVideoDownloadPathEQ.
+func TmpVideoDownloadPath(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoConvertPath applies equality check predicate on the "tmp_video_convert_path" field. It's identical to TmpVideoConvertPathEQ.
+func TmpVideoConvertPath(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpVideoConvertPath, v))
+}
+
+// TmpChatDownloadPath applies equality check predicate on the "tmp_chat_download_path" field. It's identical to TmpChatDownloadPathEQ.
+func TmpChatDownloadPath(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPath applies equality check predicate on the "tmp_live_chat_download_path" field. It's identical to TmpLiveChatDownloadPathEQ.
+func TmpLiveChatDownloadPath(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatConvertPath applies equality check predicate on the "tmp_live_chat_convert_path" field. It's identical to TmpLiveChatConvertPathEQ.
+func TmpLiveChatConvertPath(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpChatRenderPath applies equality check predicate on the "tmp_chat_render_path" field. It's identical to TmpChatRenderPathEQ.
+func TmpChatRenderPath(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpChatRenderPath, v))
 }
 
 // Locked applies equality check predicate on the "locked" field. It's identical to LockedEQ.
@@ -792,6 +832,156 @@ func ChatPathContainsFold(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldContainsFold(FieldChatPath, v))
 }
 
+// LiveChatPathEQ applies the EQ predicate on the "live_chat_path" field.
+func LiveChatPathEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldLiveChatPath, v))
+}
+
+// LiveChatPathNEQ applies the NEQ predicate on the "live_chat_path" field.
+func LiveChatPathNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldLiveChatPath, v))
+}
+
+// LiveChatPathIn applies the In predicate on the "live_chat_path" field.
+func LiveChatPathIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldLiveChatPath, vs...))
+}
+
+// LiveChatPathNotIn applies the NotIn predicate on the "live_chat_path" field.
+func LiveChatPathNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldLiveChatPath, vs...))
+}
+
+// LiveChatPathGT applies the GT predicate on the "live_chat_path" field.
+func LiveChatPathGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldLiveChatPath, v))
+}
+
+// LiveChatPathGTE applies the GTE predicate on the "live_chat_path" field.
+func LiveChatPathGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldLiveChatPath, v))
+}
+
+// LiveChatPathLT applies the LT predicate on the "live_chat_path" field.
+func LiveChatPathLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldLiveChatPath, v))
+}
+
+// LiveChatPathLTE applies the LTE predicate on the "live_chat_path" field.
+func LiveChatPathLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldLiveChatPath, v))
+}
+
+// LiveChatPathContains applies the Contains predicate on the "live_chat_path" field.
+func LiveChatPathContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldLiveChatPath, v))
+}
+
+// LiveChatPathHasPrefix applies the HasPrefix predicate on the "live_chat_path" field.
+func LiveChatPathHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldLiveChatPath, v))
+}
+
+// LiveChatPathHasSuffix applies the HasSuffix predicate on the "live_chat_path" field.
+func LiveChatPathHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldLiveChatPath, v))
+}
+
+// LiveChatPathIsNil applies the IsNil predicate on the "live_chat_path" field.
+func LiveChatPathIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldLiveChatPath))
+}
+
+// LiveChatPathNotNil applies the NotNil predicate on the "live_chat_path" field.
+func LiveChatPathNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldLiveChatPath))
+}
+
+// LiveChatPathEqualFold applies the EqualFold predicate on the "live_chat_path" field.
+func LiveChatPathEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldLiveChatPath, v))
+}
+
+// LiveChatPathContainsFold applies the ContainsFold predicate on the "live_chat_path" field.
+func LiveChatPathContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldLiveChatPath, v))
+}
+
+// LiveChatConvertPathEQ applies the EQ predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldLiveChatConvertPath, v))
+}
+
+// LiveChatConvertPathNEQ applies the NEQ predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldLiveChatConvertPath, v))
+}
+
+// LiveChatConvertPathIn applies the In predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldLiveChatConvertPath, vs...))
+}
+
+// LiveChatConvertPathNotIn applies the NotIn predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldLiveChatConvertPath, vs...))
+}
+
+// LiveChatConvertPathGT applies the GT predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldLiveChatConvertPath, v))
+}
+
+// LiveChatConvertPathGTE applies the GTE predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldLiveChatConvertPath, v))
+}
+
+// LiveChatConvertPathLT applies the LT predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldLiveChatConvertPath, v))
+}
+
+// LiveChatConvertPathLTE applies the LTE predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldLiveChatConvertPath, v))
+}
+
+// LiveChatConvertPathContains applies the Contains predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldLiveChatConvertPath, v))
+}
+
+// LiveChatConvertPathHasPrefix applies the HasPrefix predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldLiveChatConvertPath, v))
+}
+
+// LiveChatConvertPathHasSuffix applies the HasSuffix predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldLiveChatConvertPath, v))
+}
+
+// LiveChatConvertPathIsNil applies the IsNil predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldLiveChatConvertPath))
+}
+
+// LiveChatConvertPathNotNil applies the NotNil predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldLiveChatConvertPath))
+}
+
+// LiveChatConvertPathEqualFold applies the EqualFold predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldLiveChatConvertPath, v))
+}
+
+// LiveChatConvertPathContainsFold applies the ContainsFold predicate on the "live_chat_convert_path" field.
+func LiveChatConvertPathContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldLiveChatConvertPath, v))
+}
+
 // ChatVideoPathEQ applies the EQ predicate on the "chat_video_path" field.
 func ChatVideoPathEQ(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldChatVideoPath, v))
@@ -1165,6 +1355,456 @@ func FileNameEqualFold(v string) predicate.Vod {
 // FileNameContainsFold applies the ContainsFold predicate on the "file_name" field.
 func FileNameContainsFold(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldContainsFold(FieldFileName, v))
+}
+
+// TmpVideoDownloadPathEQ applies the EQ predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoDownloadPathNEQ applies the NEQ predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoDownloadPathIn applies the In predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldTmpVideoDownloadPath, vs...))
+}
+
+// TmpVideoDownloadPathNotIn applies the NotIn predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldTmpVideoDownloadPath, vs...))
+}
+
+// TmpVideoDownloadPathGT applies the GT predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoDownloadPathGTE applies the GTE predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoDownloadPathLT applies the LT predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoDownloadPathLTE applies the LTE predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoDownloadPathContains applies the Contains predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoDownloadPathHasPrefix applies the HasPrefix predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoDownloadPathHasSuffix applies the HasSuffix predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoDownloadPathIsNil applies the IsNil predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldTmpVideoDownloadPath))
+}
+
+// TmpVideoDownloadPathNotNil applies the NotNil predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldTmpVideoDownloadPath))
+}
+
+// TmpVideoDownloadPathEqualFold applies the EqualFold predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoDownloadPathContainsFold applies the ContainsFold predicate on the "tmp_video_download_path" field.
+func TmpVideoDownloadPathContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldTmpVideoDownloadPath, v))
+}
+
+// TmpVideoConvertPathEQ applies the EQ predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpVideoConvertPath, v))
+}
+
+// TmpVideoConvertPathNEQ applies the NEQ predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldTmpVideoConvertPath, v))
+}
+
+// TmpVideoConvertPathIn applies the In predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldTmpVideoConvertPath, vs...))
+}
+
+// TmpVideoConvertPathNotIn applies the NotIn predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldTmpVideoConvertPath, vs...))
+}
+
+// TmpVideoConvertPathGT applies the GT predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldTmpVideoConvertPath, v))
+}
+
+// TmpVideoConvertPathGTE applies the GTE predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldTmpVideoConvertPath, v))
+}
+
+// TmpVideoConvertPathLT applies the LT predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldTmpVideoConvertPath, v))
+}
+
+// TmpVideoConvertPathLTE applies the LTE predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldTmpVideoConvertPath, v))
+}
+
+// TmpVideoConvertPathContains applies the Contains predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldTmpVideoConvertPath, v))
+}
+
+// TmpVideoConvertPathHasPrefix applies the HasPrefix predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldTmpVideoConvertPath, v))
+}
+
+// TmpVideoConvertPathHasSuffix applies the HasSuffix predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldTmpVideoConvertPath, v))
+}
+
+// TmpVideoConvertPathIsNil applies the IsNil predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldTmpVideoConvertPath))
+}
+
+// TmpVideoConvertPathNotNil applies the NotNil predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldTmpVideoConvertPath))
+}
+
+// TmpVideoConvertPathEqualFold applies the EqualFold predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldTmpVideoConvertPath, v))
+}
+
+// TmpVideoConvertPathContainsFold applies the ContainsFold predicate on the "tmp_video_convert_path" field.
+func TmpVideoConvertPathContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldTmpVideoConvertPath, v))
+}
+
+// TmpChatDownloadPathEQ applies the EQ predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpChatDownloadPath, v))
+}
+
+// TmpChatDownloadPathNEQ applies the NEQ predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldTmpChatDownloadPath, v))
+}
+
+// TmpChatDownloadPathIn applies the In predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldTmpChatDownloadPath, vs...))
+}
+
+// TmpChatDownloadPathNotIn applies the NotIn predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldTmpChatDownloadPath, vs...))
+}
+
+// TmpChatDownloadPathGT applies the GT predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldTmpChatDownloadPath, v))
+}
+
+// TmpChatDownloadPathGTE applies the GTE predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldTmpChatDownloadPath, v))
+}
+
+// TmpChatDownloadPathLT applies the LT predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldTmpChatDownloadPath, v))
+}
+
+// TmpChatDownloadPathLTE applies the LTE predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldTmpChatDownloadPath, v))
+}
+
+// TmpChatDownloadPathContains applies the Contains predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldTmpChatDownloadPath, v))
+}
+
+// TmpChatDownloadPathHasPrefix applies the HasPrefix predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldTmpChatDownloadPath, v))
+}
+
+// TmpChatDownloadPathHasSuffix applies the HasSuffix predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldTmpChatDownloadPath, v))
+}
+
+// TmpChatDownloadPathIsNil applies the IsNil predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldTmpChatDownloadPath))
+}
+
+// TmpChatDownloadPathNotNil applies the NotNil predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldTmpChatDownloadPath))
+}
+
+// TmpChatDownloadPathEqualFold applies the EqualFold predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldTmpChatDownloadPath, v))
+}
+
+// TmpChatDownloadPathContainsFold applies the ContainsFold predicate on the "tmp_chat_download_path" field.
+func TmpChatDownloadPathContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldTmpChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathEQ applies the EQ predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathNEQ applies the NEQ predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathIn applies the In predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldTmpLiveChatDownloadPath, vs...))
+}
+
+// TmpLiveChatDownloadPathNotIn applies the NotIn predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldTmpLiveChatDownloadPath, vs...))
+}
+
+// TmpLiveChatDownloadPathGT applies the GT predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathGTE applies the GTE predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathLT applies the LT predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathLTE applies the LTE predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathContains applies the Contains predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathHasPrefix applies the HasPrefix predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathHasSuffix applies the HasSuffix predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathIsNil applies the IsNil predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldTmpLiveChatDownloadPath))
+}
+
+// TmpLiveChatDownloadPathNotNil applies the NotNil predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldTmpLiveChatDownloadPath))
+}
+
+// TmpLiveChatDownloadPathEqualFold applies the EqualFold predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatDownloadPathContainsFold applies the ContainsFold predicate on the "tmp_live_chat_download_path" field.
+func TmpLiveChatDownloadPathContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldTmpLiveChatDownloadPath, v))
+}
+
+// TmpLiveChatConvertPathEQ applies the EQ predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpLiveChatConvertPathNEQ applies the NEQ predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpLiveChatConvertPathIn applies the In predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldTmpLiveChatConvertPath, vs...))
+}
+
+// TmpLiveChatConvertPathNotIn applies the NotIn predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldTmpLiveChatConvertPath, vs...))
+}
+
+// TmpLiveChatConvertPathGT applies the GT predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpLiveChatConvertPathGTE applies the GTE predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpLiveChatConvertPathLT applies the LT predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpLiveChatConvertPathLTE applies the LTE predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpLiveChatConvertPathContains applies the Contains predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpLiveChatConvertPathHasPrefix applies the HasPrefix predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpLiveChatConvertPathHasSuffix applies the HasSuffix predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpLiveChatConvertPathIsNil applies the IsNil predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldTmpLiveChatConvertPath))
+}
+
+// TmpLiveChatConvertPathNotNil applies the NotNil predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldTmpLiveChatConvertPath))
+}
+
+// TmpLiveChatConvertPathEqualFold applies the EqualFold predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpLiveChatConvertPathContainsFold applies the ContainsFold predicate on the "tmp_live_chat_convert_path" field.
+func TmpLiveChatConvertPathContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldTmpLiveChatConvertPath, v))
+}
+
+// TmpChatRenderPathEQ applies the EQ predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldTmpChatRenderPath, v))
+}
+
+// TmpChatRenderPathNEQ applies the NEQ predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldTmpChatRenderPath, v))
+}
+
+// TmpChatRenderPathIn applies the In predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldTmpChatRenderPath, vs...))
+}
+
+// TmpChatRenderPathNotIn applies the NotIn predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldTmpChatRenderPath, vs...))
+}
+
+// TmpChatRenderPathGT applies the GT predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldTmpChatRenderPath, v))
+}
+
+// TmpChatRenderPathGTE applies the GTE predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldTmpChatRenderPath, v))
+}
+
+// TmpChatRenderPathLT applies the LT predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldTmpChatRenderPath, v))
+}
+
+// TmpChatRenderPathLTE applies the LTE predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldTmpChatRenderPath, v))
+}
+
+// TmpChatRenderPathContains applies the Contains predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldTmpChatRenderPath, v))
+}
+
+// TmpChatRenderPathHasPrefix applies the HasPrefix predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldTmpChatRenderPath, v))
+}
+
+// TmpChatRenderPathHasSuffix applies the HasSuffix predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldTmpChatRenderPath, v))
+}
+
+// TmpChatRenderPathIsNil applies the IsNil predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldTmpChatRenderPath))
+}
+
+// TmpChatRenderPathNotNil applies the NotNil predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldTmpChatRenderPath))
+}
+
+// TmpChatRenderPathEqualFold applies the EqualFold predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldTmpChatRenderPath, v))
+}
+
+// TmpChatRenderPathContainsFold applies the ContainsFold predicate on the "tmp_chat_render_path" field.
+func TmpChatRenderPathContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldTmpChatRenderPath, v))
 }
 
 // LockedEQ applies the EQ predicate on the "locked" field.

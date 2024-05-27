@@ -41,6 +41,10 @@ const (
 	FieldVideoPath = "video_path"
 	// FieldChatPath holds the string denoting the chat_path field in the database.
 	FieldChatPath = "chat_path"
+	// FieldLiveChatPath holds the string denoting the live_chat_path field in the database.
+	FieldLiveChatPath = "live_chat_path"
+	// FieldLiveChatConvertPath holds the string denoting the live_chat_convert_path field in the database.
+	FieldLiveChatConvertPath = "live_chat_convert_path"
 	// FieldChatVideoPath holds the string denoting the chat_video_path field in the database.
 	FieldChatVideoPath = "chat_video_path"
 	// FieldInfoPath holds the string denoting the info_path field in the database.
@@ -51,6 +55,18 @@ const (
 	FieldFolderName = "folder_name"
 	// FieldFileName holds the string denoting the file_name field in the database.
 	FieldFileName = "file_name"
+	// FieldTmpVideoDownloadPath holds the string denoting the tmp_video_download_path field in the database.
+	FieldTmpVideoDownloadPath = "tmp_video_download_path"
+	// FieldTmpVideoConvertPath holds the string denoting the tmp_video_convert_path field in the database.
+	FieldTmpVideoConvertPath = "tmp_video_convert_path"
+	// FieldTmpChatDownloadPath holds the string denoting the tmp_chat_download_path field in the database.
+	FieldTmpChatDownloadPath = "tmp_chat_download_path"
+	// FieldTmpLiveChatDownloadPath holds the string denoting the tmp_live_chat_download_path field in the database.
+	FieldTmpLiveChatDownloadPath = "tmp_live_chat_download_path"
+	// FieldTmpLiveChatConvertPath holds the string denoting the tmp_live_chat_convert_path field in the database.
+	FieldTmpLiveChatConvertPath = "tmp_live_chat_convert_path"
+	// FieldTmpChatRenderPath holds the string denoting the tmp_chat_render_path field in the database.
+	FieldTmpChatRenderPath = "tmp_chat_render_path"
 	// FieldLocked holds the string denoting the locked field in the database.
 	FieldLocked = "locked"
 	// FieldLocalViews holds the string denoting the local_views field in the database.
@@ -123,11 +139,19 @@ var Columns = []string{
 	FieldWebThumbnailPath,
 	FieldVideoPath,
 	FieldChatPath,
+	FieldLiveChatPath,
+	FieldLiveChatConvertPath,
 	FieldChatVideoPath,
 	FieldInfoPath,
 	FieldCaptionPath,
 	FieldFolderName,
 	FieldFileName,
+	FieldTmpVideoDownloadPath,
+	FieldTmpVideoConvertPath,
+	FieldTmpChatDownloadPath,
+	FieldTmpLiveChatDownloadPath,
+	FieldTmpLiveChatConvertPath,
+	FieldTmpChatRenderPath,
 	FieldLocked,
 	FieldLocalViews,
 	FieldStreamedAt,
@@ -277,6 +301,16 @@ func ByChatPath(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldChatPath, opts...).ToFunc()
 }
 
+// ByLiveChatPath orders the results by the live_chat_path field.
+func ByLiveChatPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLiveChatPath, opts...).ToFunc()
+}
+
+// ByLiveChatConvertPath orders the results by the live_chat_convert_path field.
+func ByLiveChatConvertPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLiveChatConvertPath, opts...).ToFunc()
+}
+
 // ByChatVideoPath orders the results by the chat_video_path field.
 func ByChatVideoPath(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldChatVideoPath, opts...).ToFunc()
@@ -300,6 +334,36 @@ func ByFolderName(opts ...sql.OrderTermOption) OrderOption {
 // ByFileName orders the results by the file_name field.
 func ByFileName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldFileName, opts...).ToFunc()
+}
+
+// ByTmpVideoDownloadPath orders the results by the tmp_video_download_path field.
+func ByTmpVideoDownloadPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTmpVideoDownloadPath, opts...).ToFunc()
+}
+
+// ByTmpVideoConvertPath orders the results by the tmp_video_convert_path field.
+func ByTmpVideoConvertPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTmpVideoConvertPath, opts...).ToFunc()
+}
+
+// ByTmpChatDownloadPath orders the results by the tmp_chat_download_path field.
+func ByTmpChatDownloadPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTmpChatDownloadPath, opts...).ToFunc()
+}
+
+// ByTmpLiveChatDownloadPath orders the results by the tmp_live_chat_download_path field.
+func ByTmpLiveChatDownloadPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTmpLiveChatDownloadPath, opts...).ToFunc()
+}
+
+// ByTmpLiveChatConvertPath orders the results by the tmp_live_chat_convert_path field.
+func ByTmpLiveChatConvertPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTmpLiveChatConvertPath, opts...).ToFunc()
+}
+
+// ByTmpChatRenderPath orders the results by the tmp_chat_render_path field.
+func ByTmpChatRenderPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTmpChatRenderPath, opts...).ToFunc()
 }
 
 // ByLocked orders the results by the locked field.

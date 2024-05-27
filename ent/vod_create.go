@@ -166,6 +166,34 @@ func (vc *VodCreate) SetNillableChatPath(s *string) *VodCreate {
 	return vc
 }
 
+// SetLiveChatPath sets the "live_chat_path" field.
+func (vc *VodCreate) SetLiveChatPath(s string) *VodCreate {
+	vc.mutation.SetLiveChatPath(s)
+	return vc
+}
+
+// SetNillableLiveChatPath sets the "live_chat_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableLiveChatPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetLiveChatPath(*s)
+	}
+	return vc
+}
+
+// SetLiveChatConvertPath sets the "live_chat_convert_path" field.
+func (vc *VodCreate) SetLiveChatConvertPath(s string) *VodCreate {
+	vc.mutation.SetLiveChatConvertPath(s)
+	return vc
+}
+
+// SetNillableLiveChatConvertPath sets the "live_chat_convert_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableLiveChatConvertPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetLiveChatConvertPath(*s)
+	}
+	return vc
+}
+
 // SetChatVideoPath sets the "chat_video_path" field.
 func (vc *VodCreate) SetChatVideoPath(s string) *VodCreate {
 	vc.mutation.SetChatVideoPath(s)
@@ -232,6 +260,90 @@ func (vc *VodCreate) SetFileName(s string) *VodCreate {
 func (vc *VodCreate) SetNillableFileName(s *string) *VodCreate {
 	if s != nil {
 		vc.SetFileName(*s)
+	}
+	return vc
+}
+
+// SetTmpVideoDownloadPath sets the "tmp_video_download_path" field.
+func (vc *VodCreate) SetTmpVideoDownloadPath(s string) *VodCreate {
+	vc.mutation.SetTmpVideoDownloadPath(s)
+	return vc
+}
+
+// SetNillableTmpVideoDownloadPath sets the "tmp_video_download_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableTmpVideoDownloadPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetTmpVideoDownloadPath(*s)
+	}
+	return vc
+}
+
+// SetTmpVideoConvertPath sets the "tmp_video_convert_path" field.
+func (vc *VodCreate) SetTmpVideoConvertPath(s string) *VodCreate {
+	vc.mutation.SetTmpVideoConvertPath(s)
+	return vc
+}
+
+// SetNillableTmpVideoConvertPath sets the "tmp_video_convert_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableTmpVideoConvertPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetTmpVideoConvertPath(*s)
+	}
+	return vc
+}
+
+// SetTmpChatDownloadPath sets the "tmp_chat_download_path" field.
+func (vc *VodCreate) SetTmpChatDownloadPath(s string) *VodCreate {
+	vc.mutation.SetTmpChatDownloadPath(s)
+	return vc
+}
+
+// SetNillableTmpChatDownloadPath sets the "tmp_chat_download_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableTmpChatDownloadPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetTmpChatDownloadPath(*s)
+	}
+	return vc
+}
+
+// SetTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field.
+func (vc *VodCreate) SetTmpLiveChatDownloadPath(s string) *VodCreate {
+	vc.mutation.SetTmpLiveChatDownloadPath(s)
+	return vc
+}
+
+// SetNillableTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableTmpLiveChatDownloadPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetTmpLiveChatDownloadPath(*s)
+	}
+	return vc
+}
+
+// SetTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field.
+func (vc *VodCreate) SetTmpLiveChatConvertPath(s string) *VodCreate {
+	vc.mutation.SetTmpLiveChatConvertPath(s)
+	return vc
+}
+
+// SetNillableTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableTmpLiveChatConvertPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetTmpLiveChatConvertPath(*s)
+	}
+	return vc
+}
+
+// SetTmpChatRenderPath sets the "tmp_chat_render_path" field.
+func (vc *VodCreate) SetTmpChatRenderPath(s string) *VodCreate {
+	vc.mutation.SetTmpChatRenderPath(s)
+	return vc
+}
+
+// SetNillableTmpChatRenderPath sets the "tmp_chat_render_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableTmpChatRenderPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetTmpChatRenderPath(*s)
 	}
 	return vc
 }
@@ -617,6 +729,14 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		_spec.SetField(vod.FieldChatPath, field.TypeString, value)
 		_node.ChatPath = value
 	}
+	if value, ok := vc.mutation.LiveChatPath(); ok {
+		_spec.SetField(vod.FieldLiveChatPath, field.TypeString, value)
+		_node.LiveChatPath = value
+	}
+	if value, ok := vc.mutation.LiveChatConvertPath(); ok {
+		_spec.SetField(vod.FieldLiveChatConvertPath, field.TypeString, value)
+		_node.LiveChatConvertPath = value
+	}
 	if value, ok := vc.mutation.ChatVideoPath(); ok {
 		_spec.SetField(vod.FieldChatVideoPath, field.TypeString, value)
 		_node.ChatVideoPath = value
@@ -636,6 +756,30 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 	if value, ok := vc.mutation.FileName(); ok {
 		_spec.SetField(vod.FieldFileName, field.TypeString, value)
 		_node.FileName = value
+	}
+	if value, ok := vc.mutation.TmpVideoDownloadPath(); ok {
+		_spec.SetField(vod.FieldTmpVideoDownloadPath, field.TypeString, value)
+		_node.TmpVideoDownloadPath = value
+	}
+	if value, ok := vc.mutation.TmpVideoConvertPath(); ok {
+		_spec.SetField(vod.FieldTmpVideoConvertPath, field.TypeString, value)
+		_node.TmpVideoConvertPath = value
+	}
+	if value, ok := vc.mutation.TmpChatDownloadPath(); ok {
+		_spec.SetField(vod.FieldTmpChatDownloadPath, field.TypeString, value)
+		_node.TmpChatDownloadPath = value
+	}
+	if value, ok := vc.mutation.TmpLiveChatDownloadPath(); ok {
+		_spec.SetField(vod.FieldTmpLiveChatDownloadPath, field.TypeString, value)
+		_node.TmpLiveChatDownloadPath = value
+	}
+	if value, ok := vc.mutation.TmpLiveChatConvertPath(); ok {
+		_spec.SetField(vod.FieldTmpLiveChatConvertPath, field.TypeString, value)
+		_node.TmpLiveChatConvertPath = value
+	}
+	if value, ok := vc.mutation.TmpChatRenderPath(); ok {
+		_spec.SetField(vod.FieldTmpChatRenderPath, field.TypeString, value)
+		_node.TmpChatRenderPath = value
 	}
 	if value, ok := vc.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
@@ -964,6 +1108,42 @@ func (u *VodUpsert) ClearChatPath() *VodUpsert {
 	return u
 }
 
+// SetLiveChatPath sets the "live_chat_path" field.
+func (u *VodUpsert) SetLiveChatPath(v string) *VodUpsert {
+	u.Set(vod.FieldLiveChatPath, v)
+	return u
+}
+
+// UpdateLiveChatPath sets the "live_chat_path" field to the value that was provided on create.
+func (u *VodUpsert) UpdateLiveChatPath() *VodUpsert {
+	u.SetExcluded(vod.FieldLiveChatPath)
+	return u
+}
+
+// ClearLiveChatPath clears the value of the "live_chat_path" field.
+func (u *VodUpsert) ClearLiveChatPath() *VodUpsert {
+	u.SetNull(vod.FieldLiveChatPath)
+	return u
+}
+
+// SetLiveChatConvertPath sets the "live_chat_convert_path" field.
+func (u *VodUpsert) SetLiveChatConvertPath(v string) *VodUpsert {
+	u.Set(vod.FieldLiveChatConvertPath, v)
+	return u
+}
+
+// UpdateLiveChatConvertPath sets the "live_chat_convert_path" field to the value that was provided on create.
+func (u *VodUpsert) UpdateLiveChatConvertPath() *VodUpsert {
+	u.SetExcluded(vod.FieldLiveChatConvertPath)
+	return u
+}
+
+// ClearLiveChatConvertPath clears the value of the "live_chat_convert_path" field.
+func (u *VodUpsert) ClearLiveChatConvertPath() *VodUpsert {
+	u.SetNull(vod.FieldLiveChatConvertPath)
+	return u
+}
+
 // SetChatVideoPath sets the "chat_video_path" field.
 func (u *VodUpsert) SetChatVideoPath(v string) *VodUpsert {
 	u.Set(vod.FieldChatVideoPath, v)
@@ -1051,6 +1231,114 @@ func (u *VodUpsert) UpdateFileName() *VodUpsert {
 // ClearFileName clears the value of the "file_name" field.
 func (u *VodUpsert) ClearFileName() *VodUpsert {
 	u.SetNull(vod.FieldFileName)
+	return u
+}
+
+// SetTmpVideoDownloadPath sets the "tmp_video_download_path" field.
+func (u *VodUpsert) SetTmpVideoDownloadPath(v string) *VodUpsert {
+	u.Set(vod.FieldTmpVideoDownloadPath, v)
+	return u
+}
+
+// UpdateTmpVideoDownloadPath sets the "tmp_video_download_path" field to the value that was provided on create.
+func (u *VodUpsert) UpdateTmpVideoDownloadPath() *VodUpsert {
+	u.SetExcluded(vod.FieldTmpVideoDownloadPath)
+	return u
+}
+
+// ClearTmpVideoDownloadPath clears the value of the "tmp_video_download_path" field.
+func (u *VodUpsert) ClearTmpVideoDownloadPath() *VodUpsert {
+	u.SetNull(vod.FieldTmpVideoDownloadPath)
+	return u
+}
+
+// SetTmpVideoConvertPath sets the "tmp_video_convert_path" field.
+func (u *VodUpsert) SetTmpVideoConvertPath(v string) *VodUpsert {
+	u.Set(vod.FieldTmpVideoConvertPath, v)
+	return u
+}
+
+// UpdateTmpVideoConvertPath sets the "tmp_video_convert_path" field to the value that was provided on create.
+func (u *VodUpsert) UpdateTmpVideoConvertPath() *VodUpsert {
+	u.SetExcluded(vod.FieldTmpVideoConvertPath)
+	return u
+}
+
+// ClearTmpVideoConvertPath clears the value of the "tmp_video_convert_path" field.
+func (u *VodUpsert) ClearTmpVideoConvertPath() *VodUpsert {
+	u.SetNull(vod.FieldTmpVideoConvertPath)
+	return u
+}
+
+// SetTmpChatDownloadPath sets the "tmp_chat_download_path" field.
+func (u *VodUpsert) SetTmpChatDownloadPath(v string) *VodUpsert {
+	u.Set(vod.FieldTmpChatDownloadPath, v)
+	return u
+}
+
+// UpdateTmpChatDownloadPath sets the "tmp_chat_download_path" field to the value that was provided on create.
+func (u *VodUpsert) UpdateTmpChatDownloadPath() *VodUpsert {
+	u.SetExcluded(vod.FieldTmpChatDownloadPath)
+	return u
+}
+
+// ClearTmpChatDownloadPath clears the value of the "tmp_chat_download_path" field.
+func (u *VodUpsert) ClearTmpChatDownloadPath() *VodUpsert {
+	u.SetNull(vod.FieldTmpChatDownloadPath)
+	return u
+}
+
+// SetTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field.
+func (u *VodUpsert) SetTmpLiveChatDownloadPath(v string) *VodUpsert {
+	u.Set(vod.FieldTmpLiveChatDownloadPath, v)
+	return u
+}
+
+// UpdateTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field to the value that was provided on create.
+func (u *VodUpsert) UpdateTmpLiveChatDownloadPath() *VodUpsert {
+	u.SetExcluded(vod.FieldTmpLiveChatDownloadPath)
+	return u
+}
+
+// ClearTmpLiveChatDownloadPath clears the value of the "tmp_live_chat_download_path" field.
+func (u *VodUpsert) ClearTmpLiveChatDownloadPath() *VodUpsert {
+	u.SetNull(vod.FieldTmpLiveChatDownloadPath)
+	return u
+}
+
+// SetTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field.
+func (u *VodUpsert) SetTmpLiveChatConvertPath(v string) *VodUpsert {
+	u.Set(vod.FieldTmpLiveChatConvertPath, v)
+	return u
+}
+
+// UpdateTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field to the value that was provided on create.
+func (u *VodUpsert) UpdateTmpLiveChatConvertPath() *VodUpsert {
+	u.SetExcluded(vod.FieldTmpLiveChatConvertPath)
+	return u
+}
+
+// ClearTmpLiveChatConvertPath clears the value of the "tmp_live_chat_convert_path" field.
+func (u *VodUpsert) ClearTmpLiveChatConvertPath() *VodUpsert {
+	u.SetNull(vod.FieldTmpLiveChatConvertPath)
+	return u
+}
+
+// SetTmpChatRenderPath sets the "tmp_chat_render_path" field.
+func (u *VodUpsert) SetTmpChatRenderPath(v string) *VodUpsert {
+	u.Set(vod.FieldTmpChatRenderPath, v)
+	return u
+}
+
+// UpdateTmpChatRenderPath sets the "tmp_chat_render_path" field to the value that was provided on create.
+func (u *VodUpsert) UpdateTmpChatRenderPath() *VodUpsert {
+	u.SetExcluded(vod.FieldTmpChatRenderPath)
+	return u
+}
+
+// ClearTmpChatRenderPath clears the value of the "tmp_chat_render_path" field.
+func (u *VodUpsert) ClearTmpChatRenderPath() *VodUpsert {
+	u.SetNull(vod.FieldTmpChatRenderPath)
 	return u
 }
 
@@ -1362,6 +1650,48 @@ func (u *VodUpsertOne) ClearChatPath() *VodUpsertOne {
 	})
 }
 
+// SetLiveChatPath sets the "live_chat_path" field.
+func (u *VodUpsertOne) SetLiveChatPath(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetLiveChatPath(v)
+	})
+}
+
+// UpdateLiveChatPath sets the "live_chat_path" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateLiveChatPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateLiveChatPath()
+	})
+}
+
+// ClearLiveChatPath clears the value of the "live_chat_path" field.
+func (u *VodUpsertOne) ClearLiveChatPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearLiveChatPath()
+	})
+}
+
+// SetLiveChatConvertPath sets the "live_chat_convert_path" field.
+func (u *VodUpsertOne) SetLiveChatConvertPath(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetLiveChatConvertPath(v)
+	})
+}
+
+// UpdateLiveChatConvertPath sets the "live_chat_convert_path" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateLiveChatConvertPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateLiveChatConvertPath()
+	})
+}
+
+// ClearLiveChatConvertPath clears the value of the "live_chat_convert_path" field.
+func (u *VodUpsertOne) ClearLiveChatConvertPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearLiveChatConvertPath()
+	})
+}
+
 // SetChatVideoPath sets the "chat_video_path" field.
 func (u *VodUpsertOne) SetChatVideoPath(v string) *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
@@ -1464,6 +1794,132 @@ func (u *VodUpsertOne) UpdateFileName() *VodUpsertOne {
 func (u *VodUpsertOne) ClearFileName() *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.ClearFileName()
+	})
+}
+
+// SetTmpVideoDownloadPath sets the "tmp_video_download_path" field.
+func (u *VodUpsertOne) SetTmpVideoDownloadPath(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpVideoDownloadPath(v)
+	})
+}
+
+// UpdateTmpVideoDownloadPath sets the "tmp_video_download_path" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateTmpVideoDownloadPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpVideoDownloadPath()
+	})
+}
+
+// ClearTmpVideoDownloadPath clears the value of the "tmp_video_download_path" field.
+func (u *VodUpsertOne) ClearTmpVideoDownloadPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpVideoDownloadPath()
+	})
+}
+
+// SetTmpVideoConvertPath sets the "tmp_video_convert_path" field.
+func (u *VodUpsertOne) SetTmpVideoConvertPath(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpVideoConvertPath(v)
+	})
+}
+
+// UpdateTmpVideoConvertPath sets the "tmp_video_convert_path" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateTmpVideoConvertPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpVideoConvertPath()
+	})
+}
+
+// ClearTmpVideoConvertPath clears the value of the "tmp_video_convert_path" field.
+func (u *VodUpsertOne) ClearTmpVideoConvertPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpVideoConvertPath()
+	})
+}
+
+// SetTmpChatDownloadPath sets the "tmp_chat_download_path" field.
+func (u *VodUpsertOne) SetTmpChatDownloadPath(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpChatDownloadPath(v)
+	})
+}
+
+// UpdateTmpChatDownloadPath sets the "tmp_chat_download_path" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateTmpChatDownloadPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpChatDownloadPath()
+	})
+}
+
+// ClearTmpChatDownloadPath clears the value of the "tmp_chat_download_path" field.
+func (u *VodUpsertOne) ClearTmpChatDownloadPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpChatDownloadPath()
+	})
+}
+
+// SetTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field.
+func (u *VodUpsertOne) SetTmpLiveChatDownloadPath(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpLiveChatDownloadPath(v)
+	})
+}
+
+// UpdateTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateTmpLiveChatDownloadPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpLiveChatDownloadPath()
+	})
+}
+
+// ClearTmpLiveChatDownloadPath clears the value of the "tmp_live_chat_download_path" field.
+func (u *VodUpsertOne) ClearTmpLiveChatDownloadPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpLiveChatDownloadPath()
+	})
+}
+
+// SetTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field.
+func (u *VodUpsertOne) SetTmpLiveChatConvertPath(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpLiveChatConvertPath(v)
+	})
+}
+
+// UpdateTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateTmpLiveChatConvertPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpLiveChatConvertPath()
+	})
+}
+
+// ClearTmpLiveChatConvertPath clears the value of the "tmp_live_chat_convert_path" field.
+func (u *VodUpsertOne) ClearTmpLiveChatConvertPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpLiveChatConvertPath()
+	})
+}
+
+// SetTmpChatRenderPath sets the "tmp_chat_render_path" field.
+func (u *VodUpsertOne) SetTmpChatRenderPath(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpChatRenderPath(v)
+	})
+}
+
+// UpdateTmpChatRenderPath sets the "tmp_chat_render_path" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateTmpChatRenderPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpChatRenderPath()
+	})
+}
+
+// ClearTmpChatRenderPath clears the value of the "tmp_chat_render_path" field.
+func (u *VodUpsertOne) ClearTmpChatRenderPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpChatRenderPath()
 	})
 }
 
@@ -1951,6 +2407,48 @@ func (u *VodUpsertBulk) ClearChatPath() *VodUpsertBulk {
 	})
 }
 
+// SetLiveChatPath sets the "live_chat_path" field.
+func (u *VodUpsertBulk) SetLiveChatPath(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetLiveChatPath(v)
+	})
+}
+
+// UpdateLiveChatPath sets the "live_chat_path" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateLiveChatPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateLiveChatPath()
+	})
+}
+
+// ClearLiveChatPath clears the value of the "live_chat_path" field.
+func (u *VodUpsertBulk) ClearLiveChatPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearLiveChatPath()
+	})
+}
+
+// SetLiveChatConvertPath sets the "live_chat_convert_path" field.
+func (u *VodUpsertBulk) SetLiveChatConvertPath(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetLiveChatConvertPath(v)
+	})
+}
+
+// UpdateLiveChatConvertPath sets the "live_chat_convert_path" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateLiveChatConvertPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateLiveChatConvertPath()
+	})
+}
+
+// ClearLiveChatConvertPath clears the value of the "live_chat_convert_path" field.
+func (u *VodUpsertBulk) ClearLiveChatConvertPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearLiveChatConvertPath()
+	})
+}
+
 // SetChatVideoPath sets the "chat_video_path" field.
 func (u *VodUpsertBulk) SetChatVideoPath(v string) *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
@@ -2053,6 +2551,132 @@ func (u *VodUpsertBulk) UpdateFileName() *VodUpsertBulk {
 func (u *VodUpsertBulk) ClearFileName() *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.ClearFileName()
+	})
+}
+
+// SetTmpVideoDownloadPath sets the "tmp_video_download_path" field.
+func (u *VodUpsertBulk) SetTmpVideoDownloadPath(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpVideoDownloadPath(v)
+	})
+}
+
+// UpdateTmpVideoDownloadPath sets the "tmp_video_download_path" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateTmpVideoDownloadPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpVideoDownloadPath()
+	})
+}
+
+// ClearTmpVideoDownloadPath clears the value of the "tmp_video_download_path" field.
+func (u *VodUpsertBulk) ClearTmpVideoDownloadPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpVideoDownloadPath()
+	})
+}
+
+// SetTmpVideoConvertPath sets the "tmp_video_convert_path" field.
+func (u *VodUpsertBulk) SetTmpVideoConvertPath(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpVideoConvertPath(v)
+	})
+}
+
+// UpdateTmpVideoConvertPath sets the "tmp_video_convert_path" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateTmpVideoConvertPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpVideoConvertPath()
+	})
+}
+
+// ClearTmpVideoConvertPath clears the value of the "tmp_video_convert_path" field.
+func (u *VodUpsertBulk) ClearTmpVideoConvertPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpVideoConvertPath()
+	})
+}
+
+// SetTmpChatDownloadPath sets the "tmp_chat_download_path" field.
+func (u *VodUpsertBulk) SetTmpChatDownloadPath(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpChatDownloadPath(v)
+	})
+}
+
+// UpdateTmpChatDownloadPath sets the "tmp_chat_download_path" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateTmpChatDownloadPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpChatDownloadPath()
+	})
+}
+
+// ClearTmpChatDownloadPath clears the value of the "tmp_chat_download_path" field.
+func (u *VodUpsertBulk) ClearTmpChatDownloadPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpChatDownloadPath()
+	})
+}
+
+// SetTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field.
+func (u *VodUpsertBulk) SetTmpLiveChatDownloadPath(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpLiveChatDownloadPath(v)
+	})
+}
+
+// UpdateTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateTmpLiveChatDownloadPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpLiveChatDownloadPath()
+	})
+}
+
+// ClearTmpLiveChatDownloadPath clears the value of the "tmp_live_chat_download_path" field.
+func (u *VodUpsertBulk) ClearTmpLiveChatDownloadPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpLiveChatDownloadPath()
+	})
+}
+
+// SetTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field.
+func (u *VodUpsertBulk) SetTmpLiveChatConvertPath(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpLiveChatConvertPath(v)
+	})
+}
+
+// UpdateTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateTmpLiveChatConvertPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpLiveChatConvertPath()
+	})
+}
+
+// ClearTmpLiveChatConvertPath clears the value of the "tmp_live_chat_convert_path" field.
+func (u *VodUpsertBulk) ClearTmpLiveChatConvertPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpLiveChatConvertPath()
+	})
+}
+
+// SetTmpChatRenderPath sets the "tmp_chat_render_path" field.
+func (u *VodUpsertBulk) SetTmpChatRenderPath(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpChatRenderPath(v)
+	})
+}
+
+// UpdateTmpChatRenderPath sets the "tmp_chat_render_path" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateTmpChatRenderPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpChatRenderPath()
+	})
+}
+
+// ClearTmpChatRenderPath clears the value of the "tmp_chat_render_path" field.
+func (u *VodUpsertBulk) ClearTmpChatRenderPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpChatRenderPath()
 	})
 }
 

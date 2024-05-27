@@ -235,6 +235,46 @@ func (vu *VodUpdate) ClearChatPath() *VodUpdate {
 	return vu
 }
 
+// SetLiveChatPath sets the "live_chat_path" field.
+func (vu *VodUpdate) SetLiveChatPath(s string) *VodUpdate {
+	vu.mutation.SetLiveChatPath(s)
+	return vu
+}
+
+// SetNillableLiveChatPath sets the "live_chat_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableLiveChatPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetLiveChatPath(*s)
+	}
+	return vu
+}
+
+// ClearLiveChatPath clears the value of the "live_chat_path" field.
+func (vu *VodUpdate) ClearLiveChatPath() *VodUpdate {
+	vu.mutation.ClearLiveChatPath()
+	return vu
+}
+
+// SetLiveChatConvertPath sets the "live_chat_convert_path" field.
+func (vu *VodUpdate) SetLiveChatConvertPath(s string) *VodUpdate {
+	vu.mutation.SetLiveChatConvertPath(s)
+	return vu
+}
+
+// SetNillableLiveChatConvertPath sets the "live_chat_convert_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableLiveChatConvertPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetLiveChatConvertPath(*s)
+	}
+	return vu
+}
+
+// ClearLiveChatConvertPath clears the value of the "live_chat_convert_path" field.
+func (vu *VodUpdate) ClearLiveChatConvertPath() *VodUpdate {
+	vu.mutation.ClearLiveChatConvertPath()
+	return vu
+}
+
 // SetChatVideoPath sets the "chat_video_path" field.
 func (vu *VodUpdate) SetChatVideoPath(s string) *VodUpdate {
 	vu.mutation.SetChatVideoPath(s)
@@ -332,6 +372,126 @@ func (vu *VodUpdate) SetNillableFileName(s *string) *VodUpdate {
 // ClearFileName clears the value of the "file_name" field.
 func (vu *VodUpdate) ClearFileName() *VodUpdate {
 	vu.mutation.ClearFileName()
+	return vu
+}
+
+// SetTmpVideoDownloadPath sets the "tmp_video_download_path" field.
+func (vu *VodUpdate) SetTmpVideoDownloadPath(s string) *VodUpdate {
+	vu.mutation.SetTmpVideoDownloadPath(s)
+	return vu
+}
+
+// SetNillableTmpVideoDownloadPath sets the "tmp_video_download_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableTmpVideoDownloadPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetTmpVideoDownloadPath(*s)
+	}
+	return vu
+}
+
+// ClearTmpVideoDownloadPath clears the value of the "tmp_video_download_path" field.
+func (vu *VodUpdate) ClearTmpVideoDownloadPath() *VodUpdate {
+	vu.mutation.ClearTmpVideoDownloadPath()
+	return vu
+}
+
+// SetTmpVideoConvertPath sets the "tmp_video_convert_path" field.
+func (vu *VodUpdate) SetTmpVideoConvertPath(s string) *VodUpdate {
+	vu.mutation.SetTmpVideoConvertPath(s)
+	return vu
+}
+
+// SetNillableTmpVideoConvertPath sets the "tmp_video_convert_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableTmpVideoConvertPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetTmpVideoConvertPath(*s)
+	}
+	return vu
+}
+
+// ClearTmpVideoConvertPath clears the value of the "tmp_video_convert_path" field.
+func (vu *VodUpdate) ClearTmpVideoConvertPath() *VodUpdate {
+	vu.mutation.ClearTmpVideoConvertPath()
+	return vu
+}
+
+// SetTmpChatDownloadPath sets the "tmp_chat_download_path" field.
+func (vu *VodUpdate) SetTmpChatDownloadPath(s string) *VodUpdate {
+	vu.mutation.SetTmpChatDownloadPath(s)
+	return vu
+}
+
+// SetNillableTmpChatDownloadPath sets the "tmp_chat_download_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableTmpChatDownloadPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetTmpChatDownloadPath(*s)
+	}
+	return vu
+}
+
+// ClearTmpChatDownloadPath clears the value of the "tmp_chat_download_path" field.
+func (vu *VodUpdate) ClearTmpChatDownloadPath() *VodUpdate {
+	vu.mutation.ClearTmpChatDownloadPath()
+	return vu
+}
+
+// SetTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field.
+func (vu *VodUpdate) SetTmpLiveChatDownloadPath(s string) *VodUpdate {
+	vu.mutation.SetTmpLiveChatDownloadPath(s)
+	return vu
+}
+
+// SetNillableTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableTmpLiveChatDownloadPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetTmpLiveChatDownloadPath(*s)
+	}
+	return vu
+}
+
+// ClearTmpLiveChatDownloadPath clears the value of the "tmp_live_chat_download_path" field.
+func (vu *VodUpdate) ClearTmpLiveChatDownloadPath() *VodUpdate {
+	vu.mutation.ClearTmpLiveChatDownloadPath()
+	return vu
+}
+
+// SetTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field.
+func (vu *VodUpdate) SetTmpLiveChatConvertPath(s string) *VodUpdate {
+	vu.mutation.SetTmpLiveChatConvertPath(s)
+	return vu
+}
+
+// SetNillableTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableTmpLiveChatConvertPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetTmpLiveChatConvertPath(*s)
+	}
+	return vu
+}
+
+// ClearTmpLiveChatConvertPath clears the value of the "tmp_live_chat_convert_path" field.
+func (vu *VodUpdate) ClearTmpLiveChatConvertPath() *VodUpdate {
+	vu.mutation.ClearTmpLiveChatConvertPath()
+	return vu
+}
+
+// SetTmpChatRenderPath sets the "tmp_chat_render_path" field.
+func (vu *VodUpdate) SetTmpChatRenderPath(s string) *VodUpdate {
+	vu.mutation.SetTmpChatRenderPath(s)
+	return vu
+}
+
+// SetNillableTmpChatRenderPath sets the "tmp_chat_render_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableTmpChatRenderPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetTmpChatRenderPath(*s)
+	}
+	return vu
+}
+
+// ClearTmpChatRenderPath clears the value of the "tmp_chat_render_path" field.
+func (vu *VodUpdate) ClearTmpChatRenderPath() *VodUpdate {
+	vu.mutation.ClearTmpChatRenderPath()
 	return vu
 }
 
@@ -662,6 +822,18 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if vu.mutation.ChatPathCleared() {
 		_spec.ClearField(vod.FieldChatPath, field.TypeString)
 	}
+	if value, ok := vu.mutation.LiveChatPath(); ok {
+		_spec.SetField(vod.FieldLiveChatPath, field.TypeString, value)
+	}
+	if vu.mutation.LiveChatPathCleared() {
+		_spec.ClearField(vod.FieldLiveChatPath, field.TypeString)
+	}
+	if value, ok := vu.mutation.LiveChatConvertPath(); ok {
+		_spec.SetField(vod.FieldLiveChatConvertPath, field.TypeString, value)
+	}
+	if vu.mutation.LiveChatConvertPathCleared() {
+		_spec.ClearField(vod.FieldLiveChatConvertPath, field.TypeString)
+	}
 	if value, ok := vu.mutation.ChatVideoPath(); ok {
 		_spec.SetField(vod.FieldChatVideoPath, field.TypeString, value)
 	}
@@ -691,6 +863,42 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if vu.mutation.FileNameCleared() {
 		_spec.ClearField(vod.FieldFileName, field.TypeString)
+	}
+	if value, ok := vu.mutation.TmpVideoDownloadPath(); ok {
+		_spec.SetField(vod.FieldTmpVideoDownloadPath, field.TypeString, value)
+	}
+	if vu.mutation.TmpVideoDownloadPathCleared() {
+		_spec.ClearField(vod.FieldTmpVideoDownloadPath, field.TypeString)
+	}
+	if value, ok := vu.mutation.TmpVideoConvertPath(); ok {
+		_spec.SetField(vod.FieldTmpVideoConvertPath, field.TypeString, value)
+	}
+	if vu.mutation.TmpVideoConvertPathCleared() {
+		_spec.ClearField(vod.FieldTmpVideoConvertPath, field.TypeString)
+	}
+	if value, ok := vu.mutation.TmpChatDownloadPath(); ok {
+		_spec.SetField(vod.FieldTmpChatDownloadPath, field.TypeString, value)
+	}
+	if vu.mutation.TmpChatDownloadPathCleared() {
+		_spec.ClearField(vod.FieldTmpChatDownloadPath, field.TypeString)
+	}
+	if value, ok := vu.mutation.TmpLiveChatDownloadPath(); ok {
+		_spec.SetField(vod.FieldTmpLiveChatDownloadPath, field.TypeString, value)
+	}
+	if vu.mutation.TmpLiveChatDownloadPathCleared() {
+		_spec.ClearField(vod.FieldTmpLiveChatDownloadPath, field.TypeString)
+	}
+	if value, ok := vu.mutation.TmpLiveChatConvertPath(); ok {
+		_spec.SetField(vod.FieldTmpLiveChatConvertPath, field.TypeString, value)
+	}
+	if vu.mutation.TmpLiveChatConvertPathCleared() {
+		_spec.ClearField(vod.FieldTmpLiveChatConvertPath, field.TypeString)
+	}
+	if value, ok := vu.mutation.TmpChatRenderPath(); ok {
+		_spec.SetField(vod.FieldTmpChatRenderPath, field.TypeString, value)
+	}
+	if vu.mutation.TmpChatRenderPathCleared() {
+		_spec.ClearField(vod.FieldTmpChatRenderPath, field.TypeString)
 	}
 	if value, ok := vu.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
@@ -1120,6 +1328,46 @@ func (vuo *VodUpdateOne) ClearChatPath() *VodUpdateOne {
 	return vuo
 }
 
+// SetLiveChatPath sets the "live_chat_path" field.
+func (vuo *VodUpdateOne) SetLiveChatPath(s string) *VodUpdateOne {
+	vuo.mutation.SetLiveChatPath(s)
+	return vuo
+}
+
+// SetNillableLiveChatPath sets the "live_chat_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableLiveChatPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetLiveChatPath(*s)
+	}
+	return vuo
+}
+
+// ClearLiveChatPath clears the value of the "live_chat_path" field.
+func (vuo *VodUpdateOne) ClearLiveChatPath() *VodUpdateOne {
+	vuo.mutation.ClearLiveChatPath()
+	return vuo
+}
+
+// SetLiveChatConvertPath sets the "live_chat_convert_path" field.
+func (vuo *VodUpdateOne) SetLiveChatConvertPath(s string) *VodUpdateOne {
+	vuo.mutation.SetLiveChatConvertPath(s)
+	return vuo
+}
+
+// SetNillableLiveChatConvertPath sets the "live_chat_convert_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableLiveChatConvertPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetLiveChatConvertPath(*s)
+	}
+	return vuo
+}
+
+// ClearLiveChatConvertPath clears the value of the "live_chat_convert_path" field.
+func (vuo *VodUpdateOne) ClearLiveChatConvertPath() *VodUpdateOne {
+	vuo.mutation.ClearLiveChatConvertPath()
+	return vuo
+}
+
 // SetChatVideoPath sets the "chat_video_path" field.
 func (vuo *VodUpdateOne) SetChatVideoPath(s string) *VodUpdateOne {
 	vuo.mutation.SetChatVideoPath(s)
@@ -1217,6 +1465,126 @@ func (vuo *VodUpdateOne) SetNillableFileName(s *string) *VodUpdateOne {
 // ClearFileName clears the value of the "file_name" field.
 func (vuo *VodUpdateOne) ClearFileName() *VodUpdateOne {
 	vuo.mutation.ClearFileName()
+	return vuo
+}
+
+// SetTmpVideoDownloadPath sets the "tmp_video_download_path" field.
+func (vuo *VodUpdateOne) SetTmpVideoDownloadPath(s string) *VodUpdateOne {
+	vuo.mutation.SetTmpVideoDownloadPath(s)
+	return vuo
+}
+
+// SetNillableTmpVideoDownloadPath sets the "tmp_video_download_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableTmpVideoDownloadPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetTmpVideoDownloadPath(*s)
+	}
+	return vuo
+}
+
+// ClearTmpVideoDownloadPath clears the value of the "tmp_video_download_path" field.
+func (vuo *VodUpdateOne) ClearTmpVideoDownloadPath() *VodUpdateOne {
+	vuo.mutation.ClearTmpVideoDownloadPath()
+	return vuo
+}
+
+// SetTmpVideoConvertPath sets the "tmp_video_convert_path" field.
+func (vuo *VodUpdateOne) SetTmpVideoConvertPath(s string) *VodUpdateOne {
+	vuo.mutation.SetTmpVideoConvertPath(s)
+	return vuo
+}
+
+// SetNillableTmpVideoConvertPath sets the "tmp_video_convert_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableTmpVideoConvertPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetTmpVideoConvertPath(*s)
+	}
+	return vuo
+}
+
+// ClearTmpVideoConvertPath clears the value of the "tmp_video_convert_path" field.
+func (vuo *VodUpdateOne) ClearTmpVideoConvertPath() *VodUpdateOne {
+	vuo.mutation.ClearTmpVideoConvertPath()
+	return vuo
+}
+
+// SetTmpChatDownloadPath sets the "tmp_chat_download_path" field.
+func (vuo *VodUpdateOne) SetTmpChatDownloadPath(s string) *VodUpdateOne {
+	vuo.mutation.SetTmpChatDownloadPath(s)
+	return vuo
+}
+
+// SetNillableTmpChatDownloadPath sets the "tmp_chat_download_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableTmpChatDownloadPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetTmpChatDownloadPath(*s)
+	}
+	return vuo
+}
+
+// ClearTmpChatDownloadPath clears the value of the "tmp_chat_download_path" field.
+func (vuo *VodUpdateOne) ClearTmpChatDownloadPath() *VodUpdateOne {
+	vuo.mutation.ClearTmpChatDownloadPath()
+	return vuo
+}
+
+// SetTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field.
+func (vuo *VodUpdateOne) SetTmpLiveChatDownloadPath(s string) *VodUpdateOne {
+	vuo.mutation.SetTmpLiveChatDownloadPath(s)
+	return vuo
+}
+
+// SetNillableTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableTmpLiveChatDownloadPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetTmpLiveChatDownloadPath(*s)
+	}
+	return vuo
+}
+
+// ClearTmpLiveChatDownloadPath clears the value of the "tmp_live_chat_download_path" field.
+func (vuo *VodUpdateOne) ClearTmpLiveChatDownloadPath() *VodUpdateOne {
+	vuo.mutation.ClearTmpLiveChatDownloadPath()
+	return vuo
+}
+
+// SetTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field.
+func (vuo *VodUpdateOne) SetTmpLiveChatConvertPath(s string) *VodUpdateOne {
+	vuo.mutation.SetTmpLiveChatConvertPath(s)
+	return vuo
+}
+
+// SetNillableTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableTmpLiveChatConvertPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetTmpLiveChatConvertPath(*s)
+	}
+	return vuo
+}
+
+// ClearTmpLiveChatConvertPath clears the value of the "tmp_live_chat_convert_path" field.
+func (vuo *VodUpdateOne) ClearTmpLiveChatConvertPath() *VodUpdateOne {
+	vuo.mutation.ClearTmpLiveChatConvertPath()
+	return vuo
+}
+
+// SetTmpChatRenderPath sets the "tmp_chat_render_path" field.
+func (vuo *VodUpdateOne) SetTmpChatRenderPath(s string) *VodUpdateOne {
+	vuo.mutation.SetTmpChatRenderPath(s)
+	return vuo
+}
+
+// SetNillableTmpChatRenderPath sets the "tmp_chat_render_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableTmpChatRenderPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetTmpChatRenderPath(*s)
+	}
+	return vuo
+}
+
+// ClearTmpChatRenderPath clears the value of the "tmp_chat_render_path" field.
+func (vuo *VodUpdateOne) ClearTmpChatRenderPath() *VodUpdateOne {
+	vuo.mutation.ClearTmpChatRenderPath()
 	return vuo
 }
 
@@ -1577,6 +1945,18 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	if vuo.mutation.ChatPathCleared() {
 		_spec.ClearField(vod.FieldChatPath, field.TypeString)
 	}
+	if value, ok := vuo.mutation.LiveChatPath(); ok {
+		_spec.SetField(vod.FieldLiveChatPath, field.TypeString, value)
+	}
+	if vuo.mutation.LiveChatPathCleared() {
+		_spec.ClearField(vod.FieldLiveChatPath, field.TypeString)
+	}
+	if value, ok := vuo.mutation.LiveChatConvertPath(); ok {
+		_spec.SetField(vod.FieldLiveChatConvertPath, field.TypeString, value)
+	}
+	if vuo.mutation.LiveChatConvertPathCleared() {
+		_spec.ClearField(vod.FieldLiveChatConvertPath, field.TypeString)
+	}
 	if value, ok := vuo.mutation.ChatVideoPath(); ok {
 		_spec.SetField(vod.FieldChatVideoPath, field.TypeString, value)
 	}
@@ -1606,6 +1986,42 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if vuo.mutation.FileNameCleared() {
 		_spec.ClearField(vod.FieldFileName, field.TypeString)
+	}
+	if value, ok := vuo.mutation.TmpVideoDownloadPath(); ok {
+		_spec.SetField(vod.FieldTmpVideoDownloadPath, field.TypeString, value)
+	}
+	if vuo.mutation.TmpVideoDownloadPathCleared() {
+		_spec.ClearField(vod.FieldTmpVideoDownloadPath, field.TypeString)
+	}
+	if value, ok := vuo.mutation.TmpVideoConvertPath(); ok {
+		_spec.SetField(vod.FieldTmpVideoConvertPath, field.TypeString, value)
+	}
+	if vuo.mutation.TmpVideoConvertPathCleared() {
+		_spec.ClearField(vod.FieldTmpVideoConvertPath, field.TypeString)
+	}
+	if value, ok := vuo.mutation.TmpChatDownloadPath(); ok {
+		_spec.SetField(vod.FieldTmpChatDownloadPath, field.TypeString, value)
+	}
+	if vuo.mutation.TmpChatDownloadPathCleared() {
+		_spec.ClearField(vod.FieldTmpChatDownloadPath, field.TypeString)
+	}
+	if value, ok := vuo.mutation.TmpLiveChatDownloadPath(); ok {
+		_spec.SetField(vod.FieldTmpLiveChatDownloadPath, field.TypeString, value)
+	}
+	if vuo.mutation.TmpLiveChatDownloadPathCleared() {
+		_spec.ClearField(vod.FieldTmpLiveChatDownloadPath, field.TypeString)
+	}
+	if value, ok := vuo.mutation.TmpLiveChatConvertPath(); ok {
+		_spec.SetField(vod.FieldTmpLiveChatConvertPath, field.TypeString, value)
+	}
+	if vuo.mutation.TmpLiveChatConvertPathCleared() {
+		_spec.ClearField(vod.FieldTmpLiveChatConvertPath, field.TypeString)
+	}
+	if value, ok := vuo.mutation.TmpChatRenderPath(); ok {
+		_spec.SetField(vod.FieldTmpChatRenderPath, field.TypeString, value)
+	}
+	if vuo.mutation.TmpChatRenderPathCleared() {
+		_spec.ClearField(vod.FieldTmpChatRenderPath, field.TypeString)
 	}
 	if value, ok := vuo.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
