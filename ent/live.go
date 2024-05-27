@@ -70,12 +70,10 @@ type LiveEdges struct {
 // ChannelOrErr returns the Channel value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e LiveEdges) ChannelOrErr() (*Channel, error) {
-	if e.loadedTypes[0] {
-		if e.Channel == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: channel.Label}
-		}
+	if e.Channel != nil {
 		return e.Channel, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: channel.Label}
 	}
 	return nil, &NotLoadedError{edge: "channel"}
 }

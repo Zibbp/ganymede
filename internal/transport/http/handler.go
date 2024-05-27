@@ -205,7 +205,6 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	archiveGroup := e.Group("/archive")
 	archiveGroup.POST("/channel", h.ArchiveTwitchChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	archiveGroup.POST("/vod", h.ArchiveTwitchVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	archiveGroup.POST("/restart", h.RestartTask, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Admin
 	adminGroup := e.Group("/admin")

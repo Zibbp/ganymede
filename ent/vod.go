@@ -45,6 +45,10 @@ type Vod struct {
 	VideoPath string `json:"video_path,omitempty"`
 	// ChatPath holds the value of the "chat_path" field.
 	ChatPath string `json:"chat_path,omitempty"`
+	// Path to the raw live chat file
+	LiveChatPath string `json:"live_chat_path,omitempty"`
+	// Path to the converted live chat file
+	LiveChatConvertPath string `json:"live_chat_convert_path,omitempty"`
 	// ChatVideoPath holds the value of the "chat_video_path" field.
 	ChatVideoPath string `json:"chat_video_path,omitempty"`
 	// InfoPath holds the value of the "info_path" field.
@@ -55,6 +59,18 @@ type Vod struct {
 	FolderName string `json:"folder_name,omitempty"`
 	// FileName holds the value of the "file_name" field.
 	FileName string `json:"file_name,omitempty"`
+	// The path where the video is downloaded to
+	TmpVideoDownloadPath string `json:"tmp_video_download_path,omitempty"`
+	// The path where the converted video is
+	TmpVideoConvertPath string `json:"tmp_video_convert_path,omitempty"`
+	// The path where the chat is downloaded to
+	TmpChatDownloadPath string `json:"tmp_chat_download_path,omitempty"`
+	// The path where the converted chat is
+	TmpLiveChatDownloadPath string `json:"tmp_live_chat_download_path,omitempty"`
+	// The path where the converted chat is
+	TmpLiveChatConvertPath string `json:"tmp_live_chat_convert_path,omitempty"`
+	// The path where the rendered chat is
+	TmpChatRenderPath string `json:"tmp_chat_render_path,omitempty"`
 	// Locked holds the value of the "locked" field.
 	Locked bool `json:"locked,omitempty"`
 	// LocalViews holds the value of the "local_views" field.
@@ -92,12 +108,10 @@ type VodEdges struct {
 // ChannelOrErr returns the Channel value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e VodEdges) ChannelOrErr() (*Channel, error) {
-	if e.loadedTypes[0] {
-		if e.Channel == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: channel.Label}
-		}
+	if e.Channel != nil {
 		return e.Channel, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: channel.Label}
 	}
 	return nil, &NotLoadedError{edge: "channel"}
 }
@@ -105,12 +119,10 @@ func (e VodEdges) ChannelOrErr() (*Channel, error) {
 // QueueOrErr returns the Queue value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e VodEdges) QueueOrErr() (*Queue, error) {
-	if e.loadedTypes[1] {
-		if e.Queue == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: queue.Label}
-		}
+	if e.Queue != nil {
 		return e.Queue, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: queue.Label}
 	}
 	return nil, &NotLoadedError{edge: "queue"}
 }
@@ -151,7 +163,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case vod.FieldDuration, vod.FieldViews, vod.FieldLocalViews:
 			values[i] = new(sql.NullInt64)
-		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldChatPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName:
+		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath:
 			values[i] = new(sql.NullString)
 		case vod.FieldStreamedAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -252,6 +264,18 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				v.ChatPath = value.String
 			}
+		case vod.FieldLiveChatPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field live_chat_path", values[i])
+			} else if value.Valid {
+				v.LiveChatPath = value.String
+			}
+		case vod.FieldLiveChatConvertPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field live_chat_convert_path", values[i])
+			} else if value.Valid {
+				v.LiveChatConvertPath = value.String
+			}
 		case vod.FieldChatVideoPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field chat_video_path", values[i])
@@ -281,6 +305,42 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field file_name", values[i])
 			} else if value.Valid {
 				v.FileName = value.String
+			}
+		case vod.FieldTmpVideoDownloadPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field tmp_video_download_path", values[i])
+			} else if value.Valid {
+				v.TmpVideoDownloadPath = value.String
+			}
+		case vod.FieldTmpVideoConvertPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field tmp_video_convert_path", values[i])
+			} else if value.Valid {
+				v.TmpVideoConvertPath = value.String
+			}
+		case vod.FieldTmpChatDownloadPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field tmp_chat_download_path", values[i])
+			} else if value.Valid {
+				v.TmpChatDownloadPath = value.String
+			}
+		case vod.FieldTmpLiveChatDownloadPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field tmp_live_chat_download_path", values[i])
+			} else if value.Valid {
+				v.TmpLiveChatDownloadPath = value.String
+			}
+		case vod.FieldTmpLiveChatConvertPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field tmp_live_chat_convert_path", values[i])
+			} else if value.Valid {
+				v.TmpLiveChatConvertPath = value.String
+			}
+		case vod.FieldTmpChatRenderPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field tmp_chat_render_path", values[i])
+			} else if value.Valid {
+				v.TmpChatRenderPath = value.String
 			}
 		case vod.FieldLocked:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -416,6 +476,12 @@ func (v *Vod) String() string {
 	builder.WriteString("chat_path=")
 	builder.WriteString(v.ChatPath)
 	builder.WriteString(", ")
+	builder.WriteString("live_chat_path=")
+	builder.WriteString(v.LiveChatPath)
+	builder.WriteString(", ")
+	builder.WriteString("live_chat_convert_path=")
+	builder.WriteString(v.LiveChatConvertPath)
+	builder.WriteString(", ")
 	builder.WriteString("chat_video_path=")
 	builder.WriteString(v.ChatVideoPath)
 	builder.WriteString(", ")
@@ -430,6 +496,24 @@ func (v *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("file_name=")
 	builder.WriteString(v.FileName)
+	builder.WriteString(", ")
+	builder.WriteString("tmp_video_download_path=")
+	builder.WriteString(v.TmpVideoDownloadPath)
+	builder.WriteString(", ")
+	builder.WriteString("tmp_video_convert_path=")
+	builder.WriteString(v.TmpVideoConvertPath)
+	builder.WriteString(", ")
+	builder.WriteString("tmp_chat_download_path=")
+	builder.WriteString(v.TmpChatDownloadPath)
+	builder.WriteString(", ")
+	builder.WriteString("tmp_live_chat_download_path=")
+	builder.WriteString(v.TmpLiveChatDownloadPath)
+	builder.WriteString(", ")
+	builder.WriteString("tmp_live_chat_convert_path=")
+	builder.WriteString(v.TmpLiveChatConvertPath)
+	builder.WriteString(", ")
+	builder.WriteString("tmp_chat_render_path=")
+	builder.WriteString(v.TmpChatRenderPath)
 	builder.WriteString(", ")
 	builder.WriteString("locked=")
 	builder.WriteString(fmt.Sprintf("%v", v.Locked))
