@@ -247,6 +247,10 @@ func ConvertTwitchLiveChatToTDLChat(path string, channelName string, videoID str
 				formattedEmoteFragments = append(formattedEmoteFragments, fragment)
 				formattedEmoteFragments = append(formattedEmoteFragments, emoteFragment)
 			} else {
+				if emoteFragment.Pos1 == 0 {
+					log.Warn().Str("message_id", liveComment.MessageID).Msg("skipping invalid emote position")
+					continue
+				}
 				fragmentText := tdlComment.Message.Body[emoteFragments[i-1].Pos2:emoteFragment.Pos1]
 				fragment := Fragment{
 					Text:     fragmentText,
