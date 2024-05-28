@@ -7,7 +7,7 @@ require (
 	github.com/MicahParks/keyfunc v1.9.0
 	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/go-co-op/gocron v1.37.0
-	github.com/go-playground/validator/v10 v10.19.0
+	github.com/go-playground/validator/v10 v10.20.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.6.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -18,10 +18,10 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/viper v1.18.2
 	github.com/swaggo/swag v1.16.3
-	go.temporal.io/api v1.32.0
+	go.temporal.io/api v1.34.0
 	go.temporal.io/sdk v1.26.1
-	golang.org/x/crypto v0.22.0
-	golang.org/x/oauth2 v0.19.0
+	golang.org/x/crypto v0.23.0
+	golang.org/x/oauth2 v0.20.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
@@ -39,8 +39,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
@@ -55,9 +54,9 @@ require (
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/tools v0.20.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240415180920-8c6c420018be // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240415180920-8c6c420018be // indirect
-	google.golang.org/grpc v1.63.2 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240521202816-d264139d666e // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240521202816-d264139d666e // indirect
+	google.golang.org/grpc v1.64.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
@@ -100,11 +99,11 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
 	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.34.1
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
