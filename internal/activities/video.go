@@ -467,6 +467,12 @@ func PostprocessVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 			stopHeartbeat <- true
 			return temporal.NewApplicationError(err.Error(), "", nil)
 		}
+		// delete -convert video as it is not being moved
+		err := utils.DeleteFile(input.Vod.TmpVideoConvertPath)
+		if err != nil {
+			stopHeartbeat <- true
+			return temporal.NewApplicationError(err.Error(), "", nil)
+		}
 	}
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoConvert(utils.Success).Save(ctx)
@@ -490,7 +496,7 @@ func MoveVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 	go sendHeartbeat(ctx, fmt.Sprintf("move-video-%s", input.VideoID), stopHeartbeat)
 
 	if viper.GetBool("archive.save_as_hls") {
-		// todo: variablies paths?
+		// todo: variabilize paths?
 		sourcePath := fmt.Sprintf("/tmp/%s_%s-video_hls0", input.Vod.ExtID, input.Vod.ID)
 		destPath := fmt.Sprintf("/vods/%s/%s/%s-video_hls", input.Channel.Name, input.Vod.FolderName, input.Vod.FileName)
 		err := utils.MoveFolder(sourcePath, destPath)
