@@ -2,6 +2,8 @@ package http
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
@@ -78,4 +80,38 @@ func (h *Handler) ArchiveTwitchVod(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, vod)
+}
+
+// debug route to test converting chat files
+func (h *Handler) ConvertTwitchChat(c echo.Context) error {
+	type Body struct {
+		LiveChatPath      string `json:"live_chat_path"`
+		ChannelName       string `json:"channel_name"`
+		VideoID           string `json:"video_id"`
+		VideoExternalID   string `json:"video_external_id"`
+		ChannelID         int    `json:"channel_id"`
+		PreviousVideoID   string `json:"previous_video_id"`
+		FirstMessageEpoch string `json:"first_message_epoch"`
+	}
+	body := new(Body)
+	if err := c.Bind(body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	epoch, err := strconv.Atoi(body.FirstMessageEpoch)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	epochMicroseconds := int64(epoch)
+	seconds := epochMicroseconds / 1_000_000
+	nanoseconds := (epochMicroseconds % 1_000_000) * 1_000
+
+	t := time.Unix(seconds, nanoseconds)
+
+	err = utils.ConvertTwitchLiveChatToTDLChat(body.LiveChatPath, body.ChannelName, body.VideoID, body.VideoExternalID, body.ChannelID, t, body.PreviousVideoID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.NoContent(http.StatusOK)
 }
