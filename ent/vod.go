@@ -43,6 +43,8 @@ type Vod struct {
 	WebThumbnailPath string `json:"web_thumbnail_path,omitempty"`
 	// VideoPath holds the value of the "video_path" field.
 	VideoPath string `json:"video_path,omitempty"`
+	// The path where the video hls files are
+	VideoHlsPath string `json:"video_hls_path,omitempty"`
 	// ChatPath holds the value of the "chat_path" field.
 	ChatPath string `json:"chat_path,omitempty"`
 	// Path to the raw live chat file
@@ -71,6 +73,8 @@ type Vod struct {
 	TmpLiveChatConvertPath string `json:"tmp_live_chat_convert_path,omitempty"`
 	// The path where the rendered chat is
 	TmpChatRenderPath string `json:"tmp_chat_render_path,omitempty"`
+	// The path where the temporary video hls files are
+	TmpVideoHlsPath string `json:"tmp_video_hls_path,omitempty"`
 	// Locked holds the value of the "locked" field.
 	Locked bool `json:"locked,omitempty"`
 	// LocalViews holds the value of the "local_views" field.
@@ -163,7 +167,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case vod.FieldDuration, vod.FieldViews, vod.FieldLocalViews:
 			values[i] = new(sql.NullInt64)
-		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath:
+		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath:
 			values[i] = new(sql.NullString)
 		case vod.FieldStreamedAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -258,6 +262,12 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				v.VideoPath = value.String
 			}
+		case vod.FieldVideoHlsPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field video_hls_path", values[i])
+			} else if value.Valid {
+				v.VideoHlsPath = value.String
+			}
 		case vod.FieldChatPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field chat_path", values[i])
@@ -341,6 +351,12 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field tmp_chat_render_path", values[i])
 			} else if value.Valid {
 				v.TmpChatRenderPath = value.String
+			}
+		case vod.FieldTmpVideoHlsPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field tmp_video_hls_path", values[i])
+			} else if value.Valid {
+				v.TmpVideoHlsPath = value.String
 			}
 		case vod.FieldLocked:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -473,6 +489,9 @@ func (v *Vod) String() string {
 	builder.WriteString("video_path=")
 	builder.WriteString(v.VideoPath)
 	builder.WriteString(", ")
+	builder.WriteString("video_hls_path=")
+	builder.WriteString(v.VideoHlsPath)
+	builder.WriteString(", ")
 	builder.WriteString("chat_path=")
 	builder.WriteString(v.ChatPath)
 	builder.WriteString(", ")
@@ -514,6 +533,9 @@ func (v *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("tmp_chat_render_path=")
 	builder.WriteString(v.TmpChatRenderPath)
+	builder.WriteString(", ")
+	builder.WriteString("tmp_video_hls_path=")
+	builder.WriteString(v.TmpVideoHlsPath)
 	builder.WriteString(", ")
 	builder.WriteString("locked=")
 	builder.WriteString(fmt.Sprintf("%v", v.Locked))

@@ -264,8 +264,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	execGroup.POST("/ffprobe", h.GetFfprobeData, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Task
-	taskGroup := e.Group("/task")
-	taskGroup.POST("/start", h.StartTask, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	// taskGroup := e.Group("/task")
 
 	// Notification
 	notificationGroup := e.Group("/notification")
