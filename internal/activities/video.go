@@ -823,7 +823,7 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		previousVideoID = "132195945"
 	}
 
-	err = utils.ConvertTwitchLiveChatToVodChat(input.Vod.TmpLiveChatDownloadPath, input.Channel.Name, input.Vod.ID.String(), input.Vod.ExtID, cID, input.Queue.ChatStart, string(previousVideoID))
+	err = utils.ConvertTwitchLiveChatToTDLChat(input.Vod.TmpLiveChatDownloadPath, input.Channel.Name, input.Vod.ID.String(), input.Vod.ExtID, cID, input.Queue.ChatStart, string(previousVideoID))
 	if err != nil {
 		log.Error().Err(err).Msg("error converting chat")
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)
