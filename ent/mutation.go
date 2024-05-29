@@ -8949,6 +8949,7 @@ type VodMutation struct {
 	thumbnail_path              *string
 	web_thumbnail_path          *string
 	video_path                  *string
+	video_hls_path              *string
 	chat_path                   *string
 	live_chat_path              *string
 	live_chat_convert_path      *string
@@ -8963,6 +8964,7 @@ type VodMutation struct {
 	tmp_live_chat_download_path *string
 	tmp_live_chat_convert_path  *string
 	tmp_chat_render_path        *string
+	tmp_video_hls_path          *string
 	locked                      *bool
 	local_views                 *int
 	addlocal_views              *int
@@ -9552,6 +9554,55 @@ func (m *VodMutation) OldVideoPath(ctx context.Context) (v string, err error) {
 // ResetVideoPath resets all changes to the "video_path" field.
 func (m *VodMutation) ResetVideoPath() {
 	m.video_path = nil
+}
+
+// SetVideoHlsPath sets the "video_hls_path" field.
+func (m *VodMutation) SetVideoHlsPath(s string) {
+	m.video_hls_path = &s
+}
+
+// VideoHlsPath returns the value of the "video_hls_path" field in the mutation.
+func (m *VodMutation) VideoHlsPath() (r string, exists bool) {
+	v := m.video_hls_path
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVideoHlsPath returns the old "video_hls_path" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldVideoHlsPath(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVideoHlsPath is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVideoHlsPath requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVideoHlsPath: %w", err)
+	}
+	return oldValue.VideoHlsPath, nil
+}
+
+// ClearVideoHlsPath clears the value of the "video_hls_path" field.
+func (m *VodMutation) ClearVideoHlsPath() {
+	m.video_hls_path = nil
+	m.clearedFields[vod.FieldVideoHlsPath] = struct{}{}
+}
+
+// VideoHlsPathCleared returns if the "video_hls_path" field was cleared in this mutation.
+func (m *VodMutation) VideoHlsPathCleared() bool {
+	_, ok := m.clearedFields[vod.FieldVideoHlsPath]
+	return ok
+}
+
+// ResetVideoHlsPath resets all changes to the "video_hls_path" field.
+func (m *VodMutation) ResetVideoHlsPath() {
+	m.video_hls_path = nil
+	delete(m.clearedFields, vod.FieldVideoHlsPath)
 }
 
 // SetChatPath sets the "chat_path" field.
@@ -10240,6 +10291,55 @@ func (m *VodMutation) ResetTmpChatRenderPath() {
 	delete(m.clearedFields, vod.FieldTmpChatRenderPath)
 }
 
+// SetTmpVideoHlsPath sets the "tmp_video_hls_path" field.
+func (m *VodMutation) SetTmpVideoHlsPath(s string) {
+	m.tmp_video_hls_path = &s
+}
+
+// TmpVideoHlsPath returns the value of the "tmp_video_hls_path" field in the mutation.
+func (m *VodMutation) TmpVideoHlsPath() (r string, exists bool) {
+	v := m.tmp_video_hls_path
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTmpVideoHlsPath returns the old "tmp_video_hls_path" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldTmpVideoHlsPath(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTmpVideoHlsPath is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTmpVideoHlsPath requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTmpVideoHlsPath: %w", err)
+	}
+	return oldValue.TmpVideoHlsPath, nil
+}
+
+// ClearTmpVideoHlsPath clears the value of the "tmp_video_hls_path" field.
+func (m *VodMutation) ClearTmpVideoHlsPath() {
+	m.tmp_video_hls_path = nil
+	m.clearedFields[vod.FieldTmpVideoHlsPath] = struct{}{}
+}
+
+// TmpVideoHlsPathCleared returns if the "tmp_video_hls_path" field was cleared in this mutation.
+func (m *VodMutation) TmpVideoHlsPathCleared() bool {
+	_, ok := m.clearedFields[vod.FieldTmpVideoHlsPath]
+	return ok
+}
+
+// ResetTmpVideoHlsPath resets all changes to the "tmp_video_hls_path" field.
+func (m *VodMutation) ResetTmpVideoHlsPath() {
+	m.tmp_video_hls_path = nil
+	delete(m.clearedFields, vod.FieldTmpVideoHlsPath)
+}
+
 // SetLocked sets the "locked" field.
 func (m *VodMutation) SetLocked(b bool) {
 	m.locked = &b
@@ -10714,7 +10814,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 30)
+	fields := make([]string, 0, 32)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -10747,6 +10847,9 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.video_path != nil {
 		fields = append(fields, vod.FieldVideoPath)
+	}
+	if m.video_hls_path != nil {
+		fields = append(fields, vod.FieldVideoHlsPath)
 	}
 	if m.chat_path != nil {
 		fields = append(fields, vod.FieldChatPath)
@@ -10789,6 +10892,9 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.tmp_chat_render_path != nil {
 		fields = append(fields, vod.FieldTmpChatRenderPath)
+	}
+	if m.tmp_video_hls_path != nil {
+		fields = append(fields, vod.FieldTmpVideoHlsPath)
 	}
 	if m.locked != nil {
 		fields = append(fields, vod.FieldLocked)
@@ -10835,6 +10941,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.WebThumbnailPath()
 	case vod.FieldVideoPath:
 		return m.VideoPath()
+	case vod.FieldVideoHlsPath:
+		return m.VideoHlsPath()
 	case vod.FieldChatPath:
 		return m.ChatPath()
 	case vod.FieldLiveChatPath:
@@ -10863,6 +10971,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.TmpLiveChatConvertPath()
 	case vod.FieldTmpChatRenderPath:
 		return m.TmpChatRenderPath()
+	case vod.FieldTmpVideoHlsPath:
+		return m.TmpVideoHlsPath()
 	case vod.FieldLocked:
 		return m.Locked()
 	case vod.FieldLocalViews:
@@ -10904,6 +11014,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldWebThumbnailPath(ctx)
 	case vod.FieldVideoPath:
 		return m.OldVideoPath(ctx)
+	case vod.FieldVideoHlsPath:
+		return m.OldVideoHlsPath(ctx)
 	case vod.FieldChatPath:
 		return m.OldChatPath(ctx)
 	case vod.FieldLiveChatPath:
@@ -10932,6 +11044,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldTmpLiveChatConvertPath(ctx)
 	case vod.FieldTmpChatRenderPath:
 		return m.OldTmpChatRenderPath(ctx)
+	case vod.FieldTmpVideoHlsPath:
+		return m.OldTmpVideoHlsPath(ctx)
 	case vod.FieldLocked:
 		return m.OldLocked(ctx)
 	case vod.FieldLocalViews:
@@ -11027,6 +11141,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetVideoPath(v)
+		return nil
+	case vod.FieldVideoHlsPath:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVideoHlsPath(v)
 		return nil
 	case vod.FieldChatPath:
 		v, ok := value.(string)
@@ -11125,6 +11246,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTmpChatRenderPath(v)
+		return nil
+	case vod.FieldTmpVideoHlsPath:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTmpVideoHlsPath(v)
 		return nil
 	case vod.FieldLocked:
 		v, ok := value.(bool)
@@ -11236,6 +11364,9 @@ func (m *VodMutation) ClearedFields() []string {
 	if m.FieldCleared(vod.FieldThumbnailPath) {
 		fields = append(fields, vod.FieldThumbnailPath)
 	}
+	if m.FieldCleared(vod.FieldVideoHlsPath) {
+		fields = append(fields, vod.FieldVideoHlsPath)
+	}
 	if m.FieldCleared(vod.FieldChatPath) {
 		fields = append(fields, vod.FieldChatPath)
 	}
@@ -11278,6 +11409,9 @@ func (m *VodMutation) ClearedFields() []string {
 	if m.FieldCleared(vod.FieldTmpChatRenderPath) {
 		fields = append(fields, vod.FieldTmpChatRenderPath)
 	}
+	if m.FieldCleared(vod.FieldTmpVideoHlsPath) {
+		fields = append(fields, vod.FieldTmpVideoHlsPath)
+	}
 	return fields
 }
 
@@ -11297,6 +11431,9 @@ func (m *VodMutation) ClearField(name string) error {
 		return nil
 	case vod.FieldThumbnailPath:
 		m.ClearThumbnailPath()
+		return nil
+	case vod.FieldVideoHlsPath:
+		m.ClearVideoHlsPath()
 		return nil
 	case vod.FieldChatPath:
 		m.ClearChatPath()
@@ -11340,6 +11477,9 @@ func (m *VodMutation) ClearField(name string) error {
 	case vod.FieldTmpChatRenderPath:
 		m.ClearTmpChatRenderPath()
 		return nil
+	case vod.FieldTmpVideoHlsPath:
+		m.ClearTmpVideoHlsPath()
+		return nil
 	}
 	return fmt.Errorf("unknown Vod nullable field %s", name)
 }
@@ -11380,6 +11520,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldVideoPath:
 		m.ResetVideoPath()
+		return nil
+	case vod.FieldVideoHlsPath:
+		m.ResetVideoHlsPath()
 		return nil
 	case vod.FieldChatPath:
 		m.ResetChatPath()
@@ -11422,6 +11565,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldTmpChatRenderPath:
 		m.ResetTmpChatRenderPath()
+		return nil
+	case vod.FieldTmpVideoHlsPath:
+		m.ResetTmpVideoHlsPath()
 		return nil
 	case vod.FieldLocked:
 		m.ResetLocked()

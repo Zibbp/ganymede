@@ -152,6 +152,20 @@ func (vc *VodCreate) SetVideoPath(s string) *VodCreate {
 	return vc
 }
 
+// SetVideoHlsPath sets the "video_hls_path" field.
+func (vc *VodCreate) SetVideoHlsPath(s string) *VodCreate {
+	vc.mutation.SetVideoHlsPath(s)
+	return vc
+}
+
+// SetNillableVideoHlsPath sets the "video_hls_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableVideoHlsPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetVideoHlsPath(*s)
+	}
+	return vc
+}
+
 // SetChatPath sets the "chat_path" field.
 func (vc *VodCreate) SetChatPath(s string) *VodCreate {
 	vc.mutation.SetChatPath(s)
@@ -344,6 +358,20 @@ func (vc *VodCreate) SetTmpChatRenderPath(s string) *VodCreate {
 func (vc *VodCreate) SetNillableTmpChatRenderPath(s *string) *VodCreate {
 	if s != nil {
 		vc.SetTmpChatRenderPath(*s)
+	}
+	return vc
+}
+
+// SetTmpVideoHlsPath sets the "tmp_video_hls_path" field.
+func (vc *VodCreate) SetTmpVideoHlsPath(s string) *VodCreate {
+	vc.mutation.SetTmpVideoHlsPath(s)
+	return vc
+}
+
+// SetNillableTmpVideoHlsPath sets the "tmp_video_hls_path" field if the given value is not nil.
+func (vc *VodCreate) SetNillableTmpVideoHlsPath(s *string) *VodCreate {
+	if s != nil {
+		vc.SetTmpVideoHlsPath(*s)
 	}
 	return vc
 }
@@ -725,6 +753,10 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		_spec.SetField(vod.FieldVideoPath, field.TypeString, value)
 		_node.VideoPath = value
 	}
+	if value, ok := vc.mutation.VideoHlsPath(); ok {
+		_spec.SetField(vod.FieldVideoHlsPath, field.TypeString, value)
+		_node.VideoHlsPath = value
+	}
 	if value, ok := vc.mutation.ChatPath(); ok {
 		_spec.SetField(vod.FieldChatPath, field.TypeString, value)
 		_node.ChatPath = value
@@ -780,6 +812,10 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 	if value, ok := vc.mutation.TmpChatRenderPath(); ok {
 		_spec.SetField(vod.FieldTmpChatRenderPath, field.TypeString, value)
 		_node.TmpChatRenderPath = value
+	}
+	if value, ok := vc.mutation.TmpVideoHlsPath(); ok {
+		_spec.SetField(vod.FieldTmpVideoHlsPath, field.TypeString, value)
+		_node.TmpVideoHlsPath = value
 	}
 	if value, ok := vc.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
@@ -1090,6 +1126,24 @@ func (u *VodUpsert) UpdateVideoPath() *VodUpsert {
 	return u
 }
 
+// SetVideoHlsPath sets the "video_hls_path" field.
+func (u *VodUpsert) SetVideoHlsPath(v string) *VodUpsert {
+	u.Set(vod.FieldVideoHlsPath, v)
+	return u
+}
+
+// UpdateVideoHlsPath sets the "video_hls_path" field to the value that was provided on create.
+func (u *VodUpsert) UpdateVideoHlsPath() *VodUpsert {
+	u.SetExcluded(vod.FieldVideoHlsPath)
+	return u
+}
+
+// ClearVideoHlsPath clears the value of the "video_hls_path" field.
+func (u *VodUpsert) ClearVideoHlsPath() *VodUpsert {
+	u.SetNull(vod.FieldVideoHlsPath)
+	return u
+}
+
 // SetChatPath sets the "chat_path" field.
 func (u *VodUpsert) SetChatPath(v string) *VodUpsert {
 	u.Set(vod.FieldChatPath, v)
@@ -1339,6 +1393,24 @@ func (u *VodUpsert) UpdateTmpChatRenderPath() *VodUpsert {
 // ClearTmpChatRenderPath clears the value of the "tmp_chat_render_path" field.
 func (u *VodUpsert) ClearTmpChatRenderPath() *VodUpsert {
 	u.SetNull(vod.FieldTmpChatRenderPath)
+	return u
+}
+
+// SetTmpVideoHlsPath sets the "tmp_video_hls_path" field.
+func (u *VodUpsert) SetTmpVideoHlsPath(v string) *VodUpsert {
+	u.Set(vod.FieldTmpVideoHlsPath, v)
+	return u
+}
+
+// UpdateTmpVideoHlsPath sets the "tmp_video_hls_path" field to the value that was provided on create.
+func (u *VodUpsert) UpdateTmpVideoHlsPath() *VodUpsert {
+	u.SetExcluded(vod.FieldTmpVideoHlsPath)
+	return u
+}
+
+// ClearTmpVideoHlsPath clears the value of the "tmp_video_hls_path" field.
+func (u *VodUpsert) ClearTmpVideoHlsPath() *VodUpsert {
+	u.SetNull(vod.FieldTmpVideoHlsPath)
 	return u
 }
 
@@ -1626,6 +1698,27 @@ func (u *VodUpsertOne) SetVideoPath(v string) *VodUpsertOne {
 func (u *VodUpsertOne) UpdateVideoPath() *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.UpdateVideoPath()
+	})
+}
+
+// SetVideoHlsPath sets the "video_hls_path" field.
+func (u *VodUpsertOne) SetVideoHlsPath(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetVideoHlsPath(v)
+	})
+}
+
+// UpdateVideoHlsPath sets the "video_hls_path" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateVideoHlsPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateVideoHlsPath()
+	})
+}
+
+// ClearVideoHlsPath clears the value of the "video_hls_path" field.
+func (u *VodUpsertOne) ClearVideoHlsPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearVideoHlsPath()
 	})
 }
 
@@ -1920,6 +2013,27 @@ func (u *VodUpsertOne) UpdateTmpChatRenderPath() *VodUpsertOne {
 func (u *VodUpsertOne) ClearTmpChatRenderPath() *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.ClearTmpChatRenderPath()
+	})
+}
+
+// SetTmpVideoHlsPath sets the "tmp_video_hls_path" field.
+func (u *VodUpsertOne) SetTmpVideoHlsPath(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpVideoHlsPath(v)
+	})
+}
+
+// UpdateTmpVideoHlsPath sets the "tmp_video_hls_path" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateTmpVideoHlsPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpVideoHlsPath()
+	})
+}
+
+// ClearTmpVideoHlsPath clears the value of the "tmp_video_hls_path" field.
+func (u *VodUpsertOne) ClearTmpVideoHlsPath() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpVideoHlsPath()
 	})
 }
 
@@ -2386,6 +2500,27 @@ func (u *VodUpsertBulk) UpdateVideoPath() *VodUpsertBulk {
 	})
 }
 
+// SetVideoHlsPath sets the "video_hls_path" field.
+func (u *VodUpsertBulk) SetVideoHlsPath(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetVideoHlsPath(v)
+	})
+}
+
+// UpdateVideoHlsPath sets the "video_hls_path" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateVideoHlsPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateVideoHlsPath()
+	})
+}
+
+// ClearVideoHlsPath clears the value of the "video_hls_path" field.
+func (u *VodUpsertBulk) ClearVideoHlsPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearVideoHlsPath()
+	})
+}
+
 // SetChatPath sets the "chat_path" field.
 func (u *VodUpsertBulk) SetChatPath(v string) *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
@@ -2677,6 +2812,27 @@ func (u *VodUpsertBulk) UpdateTmpChatRenderPath() *VodUpsertBulk {
 func (u *VodUpsertBulk) ClearTmpChatRenderPath() *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.ClearTmpChatRenderPath()
+	})
+}
+
+// SetTmpVideoHlsPath sets the "tmp_video_hls_path" field.
+func (u *VodUpsertBulk) SetTmpVideoHlsPath(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetTmpVideoHlsPath(v)
+	})
+}
+
+// UpdateTmpVideoHlsPath sets the "tmp_video_hls_path" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateTmpVideoHlsPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateTmpVideoHlsPath()
+	})
+}
+
+// ClearTmpVideoHlsPath clears the value of the "tmp_video_hls_path" field.
+func (u *VodUpsertBulk) ClearTmpVideoHlsPath() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearTmpVideoHlsPath()
 	})
 }
 

@@ -215,6 +215,26 @@ func (vu *VodUpdate) SetNillableVideoPath(s *string) *VodUpdate {
 	return vu
 }
 
+// SetVideoHlsPath sets the "video_hls_path" field.
+func (vu *VodUpdate) SetVideoHlsPath(s string) *VodUpdate {
+	vu.mutation.SetVideoHlsPath(s)
+	return vu
+}
+
+// SetNillableVideoHlsPath sets the "video_hls_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableVideoHlsPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetVideoHlsPath(*s)
+	}
+	return vu
+}
+
+// ClearVideoHlsPath clears the value of the "video_hls_path" field.
+func (vu *VodUpdate) ClearVideoHlsPath() *VodUpdate {
+	vu.mutation.ClearVideoHlsPath()
+	return vu
+}
+
 // SetChatPath sets the "chat_path" field.
 func (vu *VodUpdate) SetChatPath(s string) *VodUpdate {
 	vu.mutation.SetChatPath(s)
@@ -492,6 +512,26 @@ func (vu *VodUpdate) SetNillableTmpChatRenderPath(s *string) *VodUpdate {
 // ClearTmpChatRenderPath clears the value of the "tmp_chat_render_path" field.
 func (vu *VodUpdate) ClearTmpChatRenderPath() *VodUpdate {
 	vu.mutation.ClearTmpChatRenderPath()
+	return vu
+}
+
+// SetTmpVideoHlsPath sets the "tmp_video_hls_path" field.
+func (vu *VodUpdate) SetTmpVideoHlsPath(s string) *VodUpdate {
+	vu.mutation.SetTmpVideoHlsPath(s)
+	return vu
+}
+
+// SetNillableTmpVideoHlsPath sets the "tmp_video_hls_path" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableTmpVideoHlsPath(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetTmpVideoHlsPath(*s)
+	}
+	return vu
+}
+
+// ClearTmpVideoHlsPath clears the value of the "tmp_video_hls_path" field.
+func (vu *VodUpdate) ClearTmpVideoHlsPath() *VodUpdate {
+	vu.mutation.ClearTmpVideoHlsPath()
 	return vu
 }
 
@@ -816,6 +856,12 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.VideoPath(); ok {
 		_spec.SetField(vod.FieldVideoPath, field.TypeString, value)
 	}
+	if value, ok := vu.mutation.VideoHlsPath(); ok {
+		_spec.SetField(vod.FieldVideoHlsPath, field.TypeString, value)
+	}
+	if vu.mutation.VideoHlsPathCleared() {
+		_spec.ClearField(vod.FieldVideoHlsPath, field.TypeString)
+	}
 	if value, ok := vu.mutation.ChatPath(); ok {
 		_spec.SetField(vod.FieldChatPath, field.TypeString, value)
 	}
@@ -899,6 +945,12 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if vu.mutation.TmpChatRenderPathCleared() {
 		_spec.ClearField(vod.FieldTmpChatRenderPath, field.TypeString)
+	}
+	if value, ok := vu.mutation.TmpVideoHlsPath(); ok {
+		_spec.SetField(vod.FieldTmpVideoHlsPath, field.TypeString, value)
+	}
+	if vu.mutation.TmpVideoHlsPathCleared() {
+		_spec.ClearField(vod.FieldTmpVideoHlsPath, field.TypeString)
 	}
 	if value, ok := vu.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
@@ -1308,6 +1360,26 @@ func (vuo *VodUpdateOne) SetNillableVideoPath(s *string) *VodUpdateOne {
 	return vuo
 }
 
+// SetVideoHlsPath sets the "video_hls_path" field.
+func (vuo *VodUpdateOne) SetVideoHlsPath(s string) *VodUpdateOne {
+	vuo.mutation.SetVideoHlsPath(s)
+	return vuo
+}
+
+// SetNillableVideoHlsPath sets the "video_hls_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableVideoHlsPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetVideoHlsPath(*s)
+	}
+	return vuo
+}
+
+// ClearVideoHlsPath clears the value of the "video_hls_path" field.
+func (vuo *VodUpdateOne) ClearVideoHlsPath() *VodUpdateOne {
+	vuo.mutation.ClearVideoHlsPath()
+	return vuo
+}
+
 // SetChatPath sets the "chat_path" field.
 func (vuo *VodUpdateOne) SetChatPath(s string) *VodUpdateOne {
 	vuo.mutation.SetChatPath(s)
@@ -1585,6 +1657,26 @@ func (vuo *VodUpdateOne) SetNillableTmpChatRenderPath(s *string) *VodUpdateOne {
 // ClearTmpChatRenderPath clears the value of the "tmp_chat_render_path" field.
 func (vuo *VodUpdateOne) ClearTmpChatRenderPath() *VodUpdateOne {
 	vuo.mutation.ClearTmpChatRenderPath()
+	return vuo
+}
+
+// SetTmpVideoHlsPath sets the "tmp_video_hls_path" field.
+func (vuo *VodUpdateOne) SetTmpVideoHlsPath(s string) *VodUpdateOne {
+	vuo.mutation.SetTmpVideoHlsPath(s)
+	return vuo
+}
+
+// SetNillableTmpVideoHlsPath sets the "tmp_video_hls_path" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableTmpVideoHlsPath(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetTmpVideoHlsPath(*s)
+	}
+	return vuo
+}
+
+// ClearTmpVideoHlsPath clears the value of the "tmp_video_hls_path" field.
+func (vuo *VodUpdateOne) ClearTmpVideoHlsPath() *VodUpdateOne {
+	vuo.mutation.ClearTmpVideoHlsPath()
 	return vuo
 }
 
@@ -1939,6 +2031,12 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	if value, ok := vuo.mutation.VideoPath(); ok {
 		_spec.SetField(vod.FieldVideoPath, field.TypeString, value)
 	}
+	if value, ok := vuo.mutation.VideoHlsPath(); ok {
+		_spec.SetField(vod.FieldVideoHlsPath, field.TypeString, value)
+	}
+	if vuo.mutation.VideoHlsPathCleared() {
+		_spec.ClearField(vod.FieldVideoHlsPath, field.TypeString)
+	}
 	if value, ok := vuo.mutation.ChatPath(); ok {
 		_spec.SetField(vod.FieldChatPath, field.TypeString, value)
 	}
@@ -2022,6 +2120,12 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if vuo.mutation.TmpChatRenderPathCleared() {
 		_spec.ClearField(vod.FieldTmpChatRenderPath, field.TypeString)
+	}
+	if value, ok := vuo.mutation.TmpVideoHlsPath(); ok {
+		_spec.SetField(vod.FieldTmpVideoHlsPath, field.TypeString, value)
+	}
+	if vuo.mutation.TmpVideoHlsPathCleared() {
+		_spec.ClearField(vod.FieldTmpVideoHlsPath, field.TypeString)
 	}
 	if value, ok := vuo.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)

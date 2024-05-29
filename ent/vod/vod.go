@@ -39,6 +39,8 @@ const (
 	FieldWebThumbnailPath = "web_thumbnail_path"
 	// FieldVideoPath holds the string denoting the video_path field in the database.
 	FieldVideoPath = "video_path"
+	// FieldVideoHlsPath holds the string denoting the video_hls_path field in the database.
+	FieldVideoHlsPath = "video_hls_path"
 	// FieldChatPath holds the string denoting the chat_path field in the database.
 	FieldChatPath = "chat_path"
 	// FieldLiveChatPath holds the string denoting the live_chat_path field in the database.
@@ -67,6 +69,8 @@ const (
 	FieldTmpLiveChatConvertPath = "tmp_live_chat_convert_path"
 	// FieldTmpChatRenderPath holds the string denoting the tmp_chat_render_path field in the database.
 	FieldTmpChatRenderPath = "tmp_chat_render_path"
+	// FieldTmpVideoHlsPath holds the string denoting the tmp_video_hls_path field in the database.
+	FieldTmpVideoHlsPath = "tmp_video_hls_path"
 	// FieldLocked holds the string denoting the locked field in the database.
 	FieldLocked = "locked"
 	// FieldLocalViews holds the string denoting the local_views field in the database.
@@ -138,6 +142,7 @@ var Columns = []string{
 	FieldThumbnailPath,
 	FieldWebThumbnailPath,
 	FieldVideoPath,
+	FieldVideoHlsPath,
 	FieldChatPath,
 	FieldLiveChatPath,
 	FieldLiveChatConvertPath,
@@ -152,6 +157,7 @@ var Columns = []string{
 	FieldTmpLiveChatDownloadPath,
 	FieldTmpLiveChatConvertPath,
 	FieldTmpChatRenderPath,
+	FieldTmpVideoHlsPath,
 	FieldLocked,
 	FieldLocalViews,
 	FieldStreamedAt,
@@ -296,6 +302,11 @@ func ByVideoPath(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVideoPath, opts...).ToFunc()
 }
 
+// ByVideoHlsPath orders the results by the video_hls_path field.
+func ByVideoHlsPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVideoHlsPath, opts...).ToFunc()
+}
+
 // ByChatPath orders the results by the chat_path field.
 func ByChatPath(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldChatPath, opts...).ToFunc()
@@ -364,6 +375,11 @@ func ByTmpLiveChatConvertPath(opts ...sql.OrderTermOption) OrderOption {
 // ByTmpChatRenderPath orders the results by the tmp_chat_render_path field.
 func ByTmpChatRenderPath(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTmpChatRenderPath, opts...).ToFunc()
+}
+
+// ByTmpVideoHlsPath orders the results by the tmp_video_hls_path field.
+func ByTmpVideoHlsPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTmpVideoHlsPath, opts...).ToFunc()
 }
 
 // ByLocked orders the results by the locked field.
