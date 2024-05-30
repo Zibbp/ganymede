@@ -707,7 +707,7 @@ func KillTwitchLiveChatDownload(ctx context.Context, input dto.ArchiveVideoInput
 
 	// find pid of chat_downloader to kill
 	// search for channel and unique temporary download path to ensure we do not kill a new instance
-	cmd := osExec.Command("pgrep", "-f", fmt.Sprintf("chat_downloader https://twitch.tv/%s --output %s", input.Channel.Name, input.Vod.TmpLiveChatDownloadPath))
+	cmd := osExec.Command("pgrep", "-f", input.Vod.TmpLiveChatDownloadPath)
 	out, err := cmd.Output()
 	if err != nil {
 		return temporal.NewApplicationError(err.Error(), "", nil)
