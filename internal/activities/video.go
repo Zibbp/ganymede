@@ -712,15 +712,16 @@ func KillTwitchLiveChatDownload(ctx context.Context, input dto.ArchiveVideoInput
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
 	// convert out to a string and remove newline
-	pid := strings.TrimSpace(string(out))
-	pid = strings.ReplaceAll(pid, "\n", "")
-	log.Debug().Msgf("found pid %s for chat_downloader", string(out))
+	pids := strings.Split(strings.TrimSpace(string(out)), "\n")
+	log.Info().Msgf("founds process ids to kill: %s", pids)
 
 	// kill pid
-	cmd = osExec.Command("kill", "-15", pid)
-	_, err = cmd.Output()
-	if err != nil {
-		return temporal.NewApplicationError(err.Error(), "", nil)
+	for _, pid := range pids {
+		cmd = osExec.Command("kill", "-15", pid)
+		_, err = cmd.Output()
+		if err != nil {
+			return temporal.NewApplicationError(err.Error(), "", nil)
+		}
 	}
 
 	log.Info().Msgf("killed chat downloader for channel %s", input.Channel.Name)
