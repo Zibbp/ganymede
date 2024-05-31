@@ -51,12 +51,12 @@ services:
     ports:
       - 4801:3000
   ganymede-temporal:
-    image: temporalio/auto-setup:1
+    image: temporalio/auto-setup:1.23
     container_name: ganymede-temporal
     depends_on:
       - ganymede-db
     environment:
-      - DB=postgresql # this tells temporal to use postgres (not the db name)
+      - DB=DB=postgres12 # this tells temporal to use postgres (not the db name)
       - DB_PORT=5432
       - POSTGRES_USER=ganymede
       - POSTGRES_PWD=PASSWORD
