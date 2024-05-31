@@ -703,27 +703,34 @@ func MoveChat(ctx context.Context, input dto.ArchiveVideoInput) error {
 
 func KillTwitchLiveChatDownload(ctx context.Context, input dto.ArchiveVideoInput) error {
 
-	log.Info().Msgf("killing chat downloader for channel %s", input.Channel.Name)
+	log.Info().Str("channel", input.Channel.Name).Str("stream_id", input.Vod.ExtID).Msg("Killing chat download")
 
 	// find pid of chat_downloader to kill
-	cmd := osExec.Command("pgrep", "-f", fmt.Sprintf("chat_downloader https://twitch.tv/%s", input.Channel.Name))
+	// search for channel and unique temporary download path to ensure we do not kill a new instance
+	cmd := osExec.Command("pgrep", "-f", input.Vod.TmpLiveChatDownloadPath)
 	out, err := cmd.Output()
 	if err != nil {
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
-	// convert out to a string and remove newline
-	pid := strings.TrimSpace(string(out))
-	pid = strings.ReplaceAll(pid, "\n", "")
-	log.Debug().Msgf("found pid %s for chat_downloader", string(out))
+	// parse output into array of process ids
+	pids := strings.Split(strings.TrimSpace(string(out)), "\n")
+	if len(pids) > 0 {
+		log.Debug().Str("channel", input.Channel.Name).Str("stream_id", input.Vod.ExtID).Msgf("Found chat download processes to kill: %s", pids)
 
-	// kill pid
-	cmd = osExec.Command("kill", "-15", pid)
-	_, err = cmd.Output()
-	if err != nil {
-		return temporal.NewApplicationError(err.Error(), "", nil)
+		// kill pid
+		for _, pid := range pids {
+			cmd = osExec.Command("kill", "-15", pid)
+			_, err = cmd.Output()
+			if err != nil {
+				return temporal.NewApplicationError(err.Error(), "", nil)
+			}
+		}
+
+		log.Info().Str("channel", input.Channel.Name).Str("stream_id", input.Vod.ExtID).Msgf("Killed chat downloader for channel %s", input.Channel.Name)
+	} else {
+		// not a big enough issue to raise an error if chat downloader is not running
+		log.Warn().Str("channel", input.Channel.Name).Str("stream_id", input.Vod.ExtID).Msg("No chat download processes found")
 	}
-
-	log.Info().Msgf("killed chat downloader for channel %s", input.Channel.Name)
 
 	_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Success).Save(ctx)
 	if dbErr != nil {
