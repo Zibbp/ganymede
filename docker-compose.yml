@@ -56,7 +56,7 @@ services:
     depends_on:
       - ganymede-db
     environment:
-      - DB=DB=postgres12 # this tells temporal to use postgres (not the db name)
+      - DB=postgres12 # this tells temporal to use postgres (not the db name)
       - DB_PORT=5432
       - POSTGRES_USER=ganymede
       - POSTGRES_PWD=PASSWORD
