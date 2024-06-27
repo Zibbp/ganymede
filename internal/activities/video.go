@@ -379,16 +379,15 @@ func DownloadTwitchLiveVideo(ctx context.Context, input dto.ArchiveVideoInput, c
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoDownload(utils.Failed).Save(ctx)
 		if dbErr != nil {
 			stopHeartbeat <- true
-			return temporal.NewApplicationError(err.Error(), "", nil)
+			return temporal.NewApplicationError(dbErr.Error(), "", nil)
 		}
 		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
-
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoDownload(utils.Success).Save(ctx)
 	if dbErr != nil {
 		stopHeartbeat <- true
-		return temporal.NewApplicationError(err.Error(), "", nil)
+		return temporal.NewApplicationError(dbErr.Error(), "", nil)
 	}
 
 	// Update video duration with duration from downloaded video
