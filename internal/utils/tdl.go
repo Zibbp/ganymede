@@ -168,6 +168,11 @@ func ConvertTwitchLiveChatToTDLChat(path string, channelName string, videoID str
 			},
 		}
 
+		if (liveComment.MessageType == "highlighted_message") {
+			var highlightString = "highlighted-message"
+			tdlComment.Message.UserNoticeParams.MsgID == &highlightString
+		}
+
 		// create the first message fragment
 		tdlComment.Message.Fragments = append(tdlComment.Message.Fragments, Fragment{
 			Text:     liveComment.Message,
