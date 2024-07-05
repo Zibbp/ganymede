@@ -55,18 +55,18 @@ type UserName string
 
 type Viewable string
 
-func (s *Service) CheckVodWatchedChannels() {
+func (s *Service) CheckVodWatchedChannels() error {
 	// Get channels from DB
 	channels, err := s.Store.Client.Live.Query().Where(live.WatchVod(true)).WithChannel().WithCategories().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
 		ltrq.Where(livetitleregex.ApplyToVideosEQ(true))
 	}).All(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting channels")
-		return
+		return err
 	}
 	if len(channels) == 0 {
 		log.Debug().Msg("No channels to check")
-		return
+		return nil
 	}
 	log.Info().Msgf("Checking %d channels for new videos", len(channels))
 	for _, watch := range channels {
@@ -230,6 +230,8 @@ func (s *Service) CheckVodWatchedChannels() {
 		}
 	}
 	log.Info().Msg("Finished checking channels for new videos")
+
+	return nil
 }
 
 func contains(videos []*ent.Vod, id string) bool {

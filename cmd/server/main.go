@@ -27,7 +27,7 @@ import (
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/scheduler"
 	"github.com/zibbp/ganymede/internal/task"
-	"github.com/zibbp/ganymede/internal/tasks"
+	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/user"
@@ -86,7 +86,7 @@ func Run() error {
 	})
 
 	// Initialize river client
-	riverClient, err := tasks.NewRiverClient(tasks.RiverClientInput{
+	riverClient, err := tasks_client.NewRiverClient(tasks_client.RiverClientInput{
 		DB_URL: dbString,
 	})
 	if err != nil {

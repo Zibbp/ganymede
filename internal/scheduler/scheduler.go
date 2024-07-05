@@ -135,7 +135,10 @@ func (s *Service) checkWatchedChannelVideos(schedule *gocron.Scheduler) {
 	log.Debug().Msgf("setting video check interval to run every %d minutes", configCheckVideoInterval)
 	_, err := schedule.Every(configCheckVideoInterval).Minutes().Do(func() {
 		log.Info().Msg("running check watched channel videos schedule")
-		s.LiveService.CheckVodWatchedChannels()
+		err := s.LiveService.CheckVodWatchedChannels()
+		if err != nil {
+			log.Error().Err(err).Msg("failed to check watched channel videos")
+		}
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to set up check watched channel videos schedule")

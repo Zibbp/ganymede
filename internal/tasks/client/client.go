@@ -1,4 +1,4 @@
-package tasks
+package tasks_client
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	"github.com/riverqueue/river/rivermigrate"
 	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/internal/tasks"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -80,25 +81,6 @@ func (rc *RiverClient) RunMigrations() error {
 	return nil
 }
 
-func setupPeriodicJobs() []*river.PeriodicJob {
-
-	// setup periodic jobs
-	periodicJobs := []*river.PeriodicJob{
-		// run watchdog job every minute
-		river.NewPeriodicJob(
-			river.PeriodicInterval(1*time.Minute),
-			func() (river.JobArgs, *river.InsertOpts) {
-				return WatchdogArgs{}, nil
-			},
-			&river.PeriodicJobOpts{RunOnStart: true},
-		),
-
-		//
-	}
-
-	return periodicJobs
-}
-
 // params := river.NewJobListParams().States(rivertype.JobStateRunning).First(10000)
 func (rc *RiverClient) JobList(ctx context.Context, params *river.JobListParams) (*river.JobListResult, error) {
 	// fetch jobs
@@ -123,7 +105,7 @@ func (rc *RiverClient) CancelJobsForQueueId(ctx context.Context, queueId uuid.UU
 		// only check archive jobs
 		if utils.Contains(job.Tags, "archive") {
 			// unmarshal args
-			var args RiverJobArgs
+			var args tasks.RiverJobArgs
 
 			if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
 				return err

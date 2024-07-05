@@ -151,9 +151,15 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		return err
 	}
 
+	// download video
+	err = exec.PostProcessVideo(ctx, dbItems.Video)
+	if err != nil {
+		return err
+	}
+
 	// update video duration for live archive
 	if dbItems.Queue.LiveArchive {
-		duration, err := exec.GetVideoDuration(ctx, dbItems.Video.TmpVideoDownloadPath)
+		duration, err := exec.GetVideoDuration(ctx, dbItems.Video.TmpVideoConvertPath)
 		if err != nil {
 			return err
 		}
@@ -161,12 +167,6 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		if err != nil {
 			return err
 		}
-	}
-
-	// download video
-	err = exec.PostProcessVideo(ctx, dbItems.Video)
-	if err != nil {
-		return err
 	}
 
 	// convert to HLS if needed

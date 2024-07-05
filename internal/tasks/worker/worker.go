@@ -1,8 +1,7 @@
-package tasks
+package tasks_worker
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -12,8 +11,11 @@ import (
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/platform"
 	platform_twitch "github.com/zibbp/ganymede/internal/platform/twitch"
+	"github.com/zibbp/ganymede/internal/tasks"
+	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
 )
 
 type contextKey string
@@ -36,43 +38,47 @@ func NewRiverWorker(input RiverWorkerInput, db *database.Database, platformServi
 	rc := &RiverWorkerClient{}
 
 	workers := river.NewWorkers()
-	if err := river.AddWorkerSafely(workers, &WatchdogWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.WatchdogWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &CreateDirectoryWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.CreateDirectoryWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &SaveVideoInfoWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.SaveVideoInfoWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &DownloadTumbnailsWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.DownloadTumbnailsWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &DownloadVideoWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.DownloadVideoWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &PostProcessVideoWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.PostProcessVideoWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &MoveVideoWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.MoveVideoWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &DownloadChatWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.DownloadChatWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &RenderChatWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.RenderChatWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &MoveChatWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.MoveChatWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &DownloadLiveVideoWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.DownloadLiveVideoWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &DownloadLiveChatWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.DownloadLiveChatWorker{}); err != nil {
 		return rc, err
 	}
-	if err := river.AddWorkerSafely(workers, &ConvertLiveChatWorker{}); err != nil {
+	if err := river.AddWorkerSafely(workers, &tasks.ConvertLiveChatWorker{}); err != nil {
+		return rc, err
+	}
+	// periodic tasks
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.CheckChannelsForNewVideosWorker{}); err != nil {
 		return rc, err
 	}
 
@@ -102,7 +108,7 @@ func NewRiverWorker(input RiverWorkerInput, db *database.Database, platformServi
 		JobTimeout:           -1,
 		RescueStuckJobsAfter: 49 * time.Hour,
 		// PeriodicJobs:         periodicJobs,
-		ErrorHandler: &CustomErrorHandler{},
+		ErrorHandler: &tasks.CustomErrorHandler{},
 	})
 	if err != nil {
 		return rc, fmt.Errorf("error creating river client: %v", err)
@@ -110,10 +116,10 @@ func NewRiverWorker(input RiverWorkerInput, db *database.Database, platformServi
 	rc.Client = riverClient
 
 	// put store in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, storeKey, db)
+	rc.Ctx = context.WithValue(rc.Ctx, "store", db)
 
 	// put platform in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, platformKey, platformService)
+	rc.Ctx = context.WithValue(rc.Ctx, "platform", platformService)
 
 	return rc, nil
 }
@@ -133,25 +139,30 @@ func (rc *RiverWorkerClient) Stop() error {
 	return nil
 }
 
-// func (rc *RiverWorkerClient) GetPeriodicJobs() []river.PeriodicJob {
-// 	srv := archive.NewService()
-// 	return nil
-// }
+func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) []*river.PeriodicJob {
 
-func StoreFromContext(ctx context.Context) (*database.Database, error) {
-	store, exists := ctx.Value(storeKey).(*database.Database)
-	if !exists || store == nil {
-		return nil, errors.New("store not found in context")
+	// put services in ctx for workers
+	rc.Ctx = context.WithValue(rc.Ctx, "live_service", liveService)
+
+	periodicJobs := []*river.PeriodicJob{
+		// run watchdog job every minute
+		river.NewPeriodicJob(
+			river.PeriodicInterval(1*time.Minute),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks.WatchdogArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
+		),
+
+		// check watched channels for new videos
+		river.NewPeriodicJob(
+			river.PeriodicInterval(1*time.Minute),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.CheckChannelsForNewVideosArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
+		),
 	}
 
-	return store, nil
-}
-
-func PlatformFromContext(ctx context.Context) (platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel], error) {
-	platform, exists := ctx.Value(platformKey).(platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel])
-	if !exists || platform == nil {
-		return nil, errors.New("platform not found in context")
-	}
-
-	return platform, nil
+	return periodicJobs
 }

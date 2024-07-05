@@ -9,13 +9,19 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
 	serverConfig "github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/platform"
 	platform_twitch "github.com/zibbp/ganymede/internal/platform/twitch"
-	"github.com/zibbp/ganymede/internal/tasks"
+	"github.com/zibbp/ganymede/internal/queue"
+	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
+	tasks_worker "github.com/zibbp/ganymede/internal/tasks/worker"
 	"github.com/zibbp/ganymede/internal/twitch"
+	"github.com/zibbp/ganymede/internal/vod"
 )
 
 type Config struct {
@@ -140,6 +146,20 @@ func main() {
 		IsWorker: false,
 	})
 
+	riverClient, err := tasks_client.NewRiverClient(tasks_client.RiverClientInput{
+		DB_URL: dbString,
+	})
+	if err != nil {
+		log.Panic().Err(err).Msg("Error creating river worker")
+	}
+
+	channelService := channel.NewService(db)
+	vodService := vod.NewService(db)
+	queueService := queue.NewService(db, vodService, channelService, riverClient)
+	twitchService := twitch.NewService()
+	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient)
+	liveService := live.NewService(db, twitchService, archiveService)
+
 	// create platform service
 	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel]
 	platformService, err = platform_twitch.NewTwitchPlatformService(
@@ -151,16 +171,23 @@ func main() {
 	}
 
 	// initialize river
-	riverClient, err := tasks.NewRiverWorker(tasks.RiverWorkerInput{
+	riverWorkerClient, err := tasks_worker.NewRiverWorker(tasks_worker.RiverWorkerInput{
 		DB_URL: dbString,
 	}, db, platformService)
 	if err != nil {
 		log.Panic().Err(err).Msg("Error creating river worker")
 	}
 
+	// get periodic tasks
+	periodicTasks := riverWorkerClient.GetPeriodicTasks(liveService)
+
+	for _, task := range periodicTasks {
+		riverWorkerClient.Client.PeriodicJobs().Add(task)
+	}
+
 	// Start your worker in a goroutine
 	go func() {
-		if err := riverClient.Start(); err != nil {
+		if err := riverWorkerClient.Start(); err != nil {
 			log.Panic().Err(err).Msg("Error running river worker")
 		}
 	}()
@@ -173,7 +200,7 @@ func main() {
 	<-sigs
 
 	// Gracefully stop the worker
-	if err := riverClient.Stop(); err != nil {
+	if err := riverWorkerClient.Stop(); err != nil {
 		log.Panic().Err(err).Msg("Error stopping river worker")
 	}
 

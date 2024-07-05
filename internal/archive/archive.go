@@ -17,6 +17,7 @@ import (
 	platform_twitch "github.com/zibbp/ganymede/internal/platform/twitch"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/tasks"
+	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
@@ -27,7 +28,7 @@ type Service struct {
 	ChannelService *channel.Service
 	VodService     *vod.Service
 	QueueService   *queue.Service
-	RiverClient    *tasks.RiverClient
+	RiverClient    *tasks_client.RiverClient
 }
 
 type TwitchVodResponse struct {
@@ -35,7 +36,7 @@ type TwitchVodResponse struct {
 	Queue *ent.Queue `json:"queue"`
 }
 
-func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, riverClient *tasks.RiverClient) *Service {
+func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, riverClient *tasks_client.RiverClient) *Service {
 	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, RiverClient: riverClient}
 }
 

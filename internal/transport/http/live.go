@@ -15,7 +15,7 @@ type LiveService interface {
 	DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error
 	UpdateLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
 	Check() error
-	CheckVodWatchedChannels()
+	CheckVodWatchedChannels() error
 	ArchiveLiveChannel(c echo.Context, archiveDto live.ArchiveLive) error
 }
 

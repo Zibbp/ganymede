@@ -12,7 +12,7 @@ import (
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/database"
-	"github.com/zibbp/ganymede/internal/tasks"
+	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
@@ -21,10 +21,10 @@ type Service struct {
 	Store          *database.Database
 	VodService     *vod.Service
 	ChannelService *channel.Service
-	RiverClient    *tasks.RiverClient
+	RiverClient    *tasks_client.RiverClient
 }
 
-func NewService(store *database.Database, vodService *vod.Service, channelService *channel.Service, riverClient *tasks.RiverClient) *Service {
+func NewService(store *database.Database, vodService *vod.Service, channelService *channel.Service, riverClient *tasks_client.RiverClient) *Service {
 	return &Service{Store: store, VodService: vodService, ChannelService: channelService, RiverClient: riverClient}
 }
 
