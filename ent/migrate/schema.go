@@ -195,6 +195,7 @@ var (
 		{Name: "task_chat_render", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "task_chat_move", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "chat_start", Type: field.TypeTime, Nullable: true},
+		{Name: "archive_chat", Type: field.TypeBool, Nullable: true, Default: true},
 		{Name: "render_chat", Type: field.TypeBool, Nullable: true, Default: true},
 		{Name: "workflow_id", Type: field.TypeString, Nullable: true},
 		{Name: "workflow_run_id", Type: field.TypeString, Nullable: true},
@@ -210,7 +211,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "queues_vods_queue",
-				Columns:    []*schema.Column{QueuesColumns[22]},
+				Columns:    []*schema.Column{QueuesColumns[23]},
 				RefColumns: []*schema.Column{VodsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -253,6 +254,7 @@ var (
 	VodsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "ext_id", Type: field.TypeString},
+		{Name: "ext_stream_id", Type: field.TypeString, Nullable: true},
 		{Name: "platform", Type: field.TypeEnum, Enums: []string{"twitch", "youtube"}, Default: "twitch"},
 		{Name: "type", Type: field.TypeEnum, Enums: []string{"archive", "live", "highlight", "upload", "clip"}, Default: "archive"},
 		{Name: "title", Type: field.TypeString},
@@ -294,7 +296,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[33]},
+				Columns:    []*schema.Column{VodsColumns[34]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

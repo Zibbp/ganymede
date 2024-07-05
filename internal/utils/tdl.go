@@ -168,7 +168,7 @@ func ConvertTwitchLiveChatToTDLChat(path string, channelName string, videoID str
 			},
 		}
 
-		if (liveComment.MessageType == "highlighted_message") {
+		if liveComment.MessageType == "highlighted_message" {
 			var highlightString = "highlighted-message"
 			tdlComment.Message.UserNoticeParams.MsgID = &highlightString
 		}
@@ -180,9 +180,9 @@ func ConvertTwitchLiveChatToTDLChat(path string, channelName string, videoID str
 		})
 
 		// set default offset value for this live comment
-		
+
 		message_is_offset := false
-		
+
 		// parse emotes, creating fragments with positions
 		emoteFragments := []Fragment{}
 		if liveComment.Emotes != nil {

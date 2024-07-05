@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,6 +21,47 @@ func CreateFolder(path string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// Create a directory given the path
+func CreateDirectory(path string) error {
+	err := os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DownloadAndSaveFile - downloads file from url to destination
+func DownloadAndSaveFile(url, path string) error {
+	client := &http.Client{}
+
+	// Send GET request to the URL
+	resp, err := client.Get(url)
+	if err != nil {
+		return fmt.Errorf("error making GET request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Check if the response status code is OK (200)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	// Create the local file
+	out, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("error creating file: %v", err)
+	}
+	defer out.Close()
+
+	// Write the response body to the local file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
+
 	return nil
 }
 
@@ -53,6 +95,19 @@ func DownloadFile(url, path, filename string) error {
 	return nil
 }
 
+func WriteJsonFile(j interface{}, path string) error {
+	data, err := json.Marshal(j)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(path, data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func WriteJson(j interface{}, path string, filename string) error {
 	data, err := json.Marshal(j)
 	if err != nil {
@@ -65,29 +120,61 @@ func WriteJson(j interface{}, path string, filename string) error {
 	return nil
 }
 
-func MoveFile(sourcePath, destPath string) error {
-	log.Debug().Msgf("moving file: %s to %s", sourcePath, destPath)
-	inputFile, err := os.Open(sourcePath)
-	if err != nil {
-		return fmt.Errorf("error opening file: %v", err)
+// MoveFile - moves file from source to destination.
+//
+// os.Rename is used if possible, and falls back to copy and delete if it fails (e.g. cross-device link)
+func MoveFile(ctx context.Context, source, dest string) error {
+	// Try to rename the file first
+	err := os.Rename(source, dest)
+	if err == nil {
+		return nil
 	}
-	outputFile, err := os.Create(destPath)
+
+	// If rename fails (e.g. cross-device link), fall back to copy and delete
+	srcFile, err := os.Open(source)
 	if err != nil {
-		inputFile.Close()
-		return fmt.Errorf("error creating file: %v", err)
+		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer outputFile.Close()
-	_, err = io.Copy(outputFile, inputFile)
-	inputFile.Close()
+	defer srcFile.Close()
+
+	destFile, err := os.Create(dest)
 	if err != nil {
-		return fmt.Errorf("writing to output file failed: %v", err)
+		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	// Copy was successful - delete source file
-	err = os.Remove(sourcePath)
+	defer destFile.Close()
+
+	// Use io.Copy with context to respect cancellation
+	_, err = io.Copy(destFile, &contextReader{ctx: ctx, r: srcFile})
 	if err != nil {
-		log.Info().Msgf("error deleting source file: %v", err)
+		destFile.Close()
+		os.Remove(dest) // Clean up the partially written file
+		return fmt.Errorf("failed to copy file: %w", err)
 	}
+
+	// Close files before attempting to remove the source
+	srcFile.Close()
+	destFile.Close()
+
+	// Remove the source file
+	err = os.Remove(source)
+	if err != nil {
+		return fmt.Errorf("failed to remove source file: %w", err)
+	}
+
 	return nil
+}
+
+// contextReader wraps an io.Reader with a context
+type contextReader struct {
+	ctx context.Context
+	r   io.Reader
+}
+
+func (cr *contextReader) Read(p []byte) (n int, err error) {
+	if err := cr.ctx.Err(); err != nil {
+		return 0, err
+	}
+	return cr.r.Read(p)
 }
 
 func CopyFile(sourcePath, destPath string) error {
@@ -108,6 +195,46 @@ func CopyFile(sourcePath, destPath string) error {
 		return fmt.Errorf("writing to output file failed: %v", err)
 	}
 	return nil
+}
+
+// MoveDirectory - moves directory from source to destination.
+func MoveDirectory(ctx context.Context, source, dest string) error {
+	// Create the destination directory
+	if err := os.MkdirAll(dest, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create destination directory: %w", err)
+	}
+
+	// Walk through the source directory
+	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+		// Check if the context has been canceled
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		if err != nil {
+			return fmt.Errorf("error accessing path %q: %w", path, err)
+		}
+
+		// Compute the relative path
+		relPath, err := filepath.Rel(source, path)
+		if err != nil {
+			return fmt.Errorf("failed to get relative path for %q: %w", path, err)
+		}
+
+		destPath := filepath.Join(dest, relPath)
+
+		if info.IsDir() {
+			// Create the directory in the destination
+			return os.MkdirAll(destPath, info.Mode())
+		}
+
+		// Move the file
+		if err := MoveFile(ctx, path, destPath); err != nil {
+			return fmt.Errorf("failed to move file %q: %w", path, err)
+		}
+
+		return nil
+	})
 }
 
 func MoveFolder(src string, dst string) error {
@@ -189,13 +316,9 @@ func ReadLastLines(path string, lines int) ([]byte, error) {
 	return out, nil
 }
 
-func FileExists(path string) bool {
-	if _, err := os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
+func FileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	return !os.IsNotExist(err)
 }
 
 func ReadChatFile(path string) ([]byte, error) {

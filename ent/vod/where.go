@@ -62,6 +62,11 @@ func ExtID(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldExtID, v))
 }
 
+// ExtStreamID applies equality check predicate on the "ext_stream_id" field. It's identical to ExtStreamIDEQ.
+func ExtStreamID(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldExtStreamID, v))
+}
+
 // Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
 func Title(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldTitle, v))
@@ -272,20 +277,95 @@ func ExtIDContainsFold(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldContainsFold(FieldExtID, v))
 }
 
+// ExtStreamIDEQ applies the EQ predicate on the "ext_stream_id" field.
+func ExtStreamIDEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldExtStreamID, v))
+}
+
+// ExtStreamIDNEQ applies the NEQ predicate on the "ext_stream_id" field.
+func ExtStreamIDNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldExtStreamID, v))
+}
+
+// ExtStreamIDIn applies the In predicate on the "ext_stream_id" field.
+func ExtStreamIDIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldExtStreamID, vs...))
+}
+
+// ExtStreamIDNotIn applies the NotIn predicate on the "ext_stream_id" field.
+func ExtStreamIDNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldExtStreamID, vs...))
+}
+
+// ExtStreamIDGT applies the GT predicate on the "ext_stream_id" field.
+func ExtStreamIDGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldExtStreamID, v))
+}
+
+// ExtStreamIDGTE applies the GTE predicate on the "ext_stream_id" field.
+func ExtStreamIDGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldExtStreamID, v))
+}
+
+// ExtStreamIDLT applies the LT predicate on the "ext_stream_id" field.
+func ExtStreamIDLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldExtStreamID, v))
+}
+
+// ExtStreamIDLTE applies the LTE predicate on the "ext_stream_id" field.
+func ExtStreamIDLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldExtStreamID, v))
+}
+
+// ExtStreamIDContains applies the Contains predicate on the "ext_stream_id" field.
+func ExtStreamIDContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldExtStreamID, v))
+}
+
+// ExtStreamIDHasPrefix applies the HasPrefix predicate on the "ext_stream_id" field.
+func ExtStreamIDHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldExtStreamID, v))
+}
+
+// ExtStreamIDHasSuffix applies the HasSuffix predicate on the "ext_stream_id" field.
+func ExtStreamIDHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldExtStreamID, v))
+}
+
+// ExtStreamIDIsNil applies the IsNil predicate on the "ext_stream_id" field.
+func ExtStreamIDIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldExtStreamID))
+}
+
+// ExtStreamIDNotNil applies the NotNil predicate on the "ext_stream_id" field.
+func ExtStreamIDNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldExtStreamID))
+}
+
+// ExtStreamIDEqualFold applies the EqualFold predicate on the "ext_stream_id" field.
+func ExtStreamIDEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldExtStreamID, v))
+}
+
+// ExtStreamIDContainsFold applies the ContainsFold predicate on the "ext_stream_id" field.
+func ExtStreamIDContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldExtStreamID, v))
+}
+
 // PlatformEQ applies the EQ predicate on the "platform" field.
-func PlatformEQ(v utils.VodPlatform) predicate.Vod {
+func PlatformEQ(v utils.VideoPlatform) predicate.Vod {
 	vc := v
 	return predicate.Vod(sql.FieldEQ(FieldPlatform, vc))
 }
 
 // PlatformNEQ applies the NEQ predicate on the "platform" field.
-func PlatformNEQ(v utils.VodPlatform) predicate.Vod {
+func PlatformNEQ(v utils.VideoPlatform) predicate.Vod {
 	vc := v
 	return predicate.Vod(sql.FieldNEQ(FieldPlatform, vc))
 }
 
 // PlatformIn applies the In predicate on the "platform" field.
-func PlatformIn(vs ...utils.VodPlatform) predicate.Vod {
+func PlatformIn(vs ...utils.VideoPlatform) predicate.Vod {
 	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -294,7 +374,7 @@ func PlatformIn(vs ...utils.VodPlatform) predicate.Vod {
 }
 
 // PlatformNotIn applies the NotIn predicate on the "platform" field.
-func PlatformNotIn(vs ...utils.VodPlatform) predicate.Vod {
+func PlatformNotIn(vs ...utils.VideoPlatform) predicate.Vod {
 	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]

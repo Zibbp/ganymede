@@ -220,12 +220,12 @@ func (s *Service) CheckVodWatchedChannels() {
 				}
 
 				// archive the video
-				_, err = s.ArchiveService.ArchiveTwitchVod(video.ID, watch.Resolution, watch.ArchiveChat, watch.RenderChat)
-				if err != nil {
-					log.Error().Err(err).Msgf("Error archiving video %s", video.ID)
-					continue
-				}
-				log.Info().Msgf("[Channel Watch] starting archive for video %s", video.ID)
+				// _, err = s.ArchiveService.ArchiveTwitchVod(video.ID, watch.Resolution, watch.ArchiveChat, watch.RenderChat)
+				// if err != nil {
+				// 	log.Error().Err(err).Msgf("Error archiving video %s", video.ID)
+				// 	continue
+				// }
+				// log.Info().Msgf("[Channel Watch] starting archive for video %s", video.ID)
 			}
 		}
 	}

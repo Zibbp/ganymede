@@ -16,15 +16,15 @@ func (Role) Values() (kinds []string) {
 	return
 }
 
-type VodPlatform string
+type VideoPlatform string
 
 const (
-	PlatformTwitch  VodPlatform = "twitch"
-	PlatformYoutube VodPlatform = "youtube"
+	PlatformTwitch  VideoPlatform = "twitch"
+	PlatformYoutube VideoPlatform = "youtube"
 )
 
-func (VodPlatform) Values() (kinds []string) {
-	for _, s := range []VodPlatform{PlatformTwitch, PlatformYoutube} {
+func (VideoPlatform) Values() (kinds []string) {
+	for _, s := range []VideoPlatform{PlatformTwitch, PlatformYoutube} {
 		kinds = append(kinds, string(s))
 	}
 	return
@@ -81,6 +81,10 @@ func (VodQuality) Values() (kinds []string) {
 	return
 }
 
+func (q VodQuality) String() string {
+	return string(q)
+}
+
 type PlaybackStatus string
 
 const (
@@ -93,4 +97,55 @@ func (PlaybackStatus) Values() (kinds []string) {
 		kinds = append(kinds, string(s))
 	}
 	return
+}
+
+type TaskName string
+
+const (
+	TaskCreateFolder      TaskName = "task_vod_create_folder"
+	TaskDownloadThumbnail TaskName = "task_vod_download_thumbnail"
+	TaskSaveInfo          TaskName = "task_vod_save_info"
+	TaskDownloadVideo     TaskName = "task_video_download"
+	TaskDownloadLiveVideo TaskName = "task_live_video_download" // not used queue
+	TaskPostProcessVideo  TaskName = "task_video_convert"
+	TaskMoveVideo         TaskName = "task_video_move"
+	TaskDownloadChat      TaskName = "task_chat_download"
+	TaskDownloadLiveChat  TaskName = "task_live_chat_download" // not used queue
+	TaskConvertChat       TaskName = "task_chat_convert"
+	TaskRenderChat        TaskName = "task_chat_render"
+	TaskMoveChat          TaskName = "task_chat_move"
+)
+
+func (TaskName) Values() (kinds []string) {
+	for _, s := range []TaskName{TaskCreateFolder, TaskDownloadThumbnail, TaskSaveInfo, TaskDownloadVideo, TaskPostProcessVideo, TaskMoveVideo, TaskDownloadChat, TaskConvertChat, TaskRenderChat, TaskMoveChat} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}
+
+func GetTaskName(s string) TaskName {
+	switch s {
+	case string(TaskCreateFolder):
+		return TaskCreateFolder
+	case string(TaskDownloadThumbnail):
+		return TaskDownloadThumbnail
+	case string(TaskSaveInfo):
+		return TaskSaveInfo
+	case string(TaskDownloadVideo):
+		return TaskDownloadVideo
+	case string(TaskPostProcessVideo):
+		return TaskPostProcessVideo
+	case string(TaskMoveVideo):
+		return TaskMoveVideo
+	case string(TaskDownloadChat):
+		return TaskDownloadChat
+	case string(TaskConvertChat):
+		return TaskConvertChat
+	case string(TaskRenderChat):
+		return TaskRenderChat
+	case string(TaskMoveChat):
+		return TaskMoveChat
+	default:
+		return ""
+	}
 }

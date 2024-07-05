@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -18,7 +19,7 @@ type QueueService interface {
 	UpdateQueueItem(queueDto queue.Queue, id uuid.UUID) (*ent.Queue, error)
 	DeleteQueueItem(c echo.Context, id uuid.UUID) error
 	ReadLogFile(c echo.Context, id uuid.UUID, logType string) ([]byte, error)
-	StopQueueItem(c echo.Context, id uuid.UUID) error
+	StopQueueItem(ctx context.Context, id uuid.UUID) error
 }
 
 type CreateQueueRequest struct {
@@ -263,7 +264,7 @@ func (h *Handler) StopQueueItem(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid id")
 	}
 
-	err = h.Service.QueueService.StopQueueItem(c, uuid)
+	err = h.Service.QueueService.StopQueueItem(c.Request().Context(), uuid)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

@@ -83,19 +83,20 @@ func (s *Service) StorageMigration() error {
 	for _, video := range videos {
 
 		// Populate templates
-		vDto := twitch.Vod{
-			ID:        video.ExtID,
-			UserLogin: video.Edges.Channel.Name,
-			Title:     video.Title,
-			Type:      string(video.Type),
-			CreatedAt: video.StreamedAt.Format(time.RFC3339),
+		storageTemplateInput := archive.StorageTemplateInput{
+			UUID:    video.ID,
+			ID:      video.ExtID,
+			Channel: video.Edges.Channel.Name,
+			Title:   video.Title,
+			Type:    string(video.Type),
+			Date:    video.CreatedAt.Format("2006-01-02"),
 		}
-		folderName, err := archive.GetFolderName(video.ID, vDto)
+		folderName, err := archive.GetFolderName(video.ID, storageTemplateInput)
 		if err != nil {
 			log.Error().Err(err).Msgf("Error getting folder name for video %s", video.ID)
 			continue
 		}
-		fileName, err := archive.GetFileName(video.ID, vDto)
+		fileName, err := archive.GetFileName(video.ID, storageTemplateInput)
 		if err != nil {
 			log.Error().Err(err).Msgf("Error getting file name for video %s", video.ID)
 			continue

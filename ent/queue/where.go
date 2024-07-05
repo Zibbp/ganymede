@@ -87,6 +87,11 @@ func ChatStart(v time.Time) predicate.Queue {
 	return predicate.Queue(sql.FieldEQ(FieldChatStart, v))
 }
 
+// ArchiveChat applies equality check predicate on the "archive_chat" field. It's identical to ArchiveChatEQ.
+func ArchiveChat(v bool) predicate.Queue {
+	return predicate.Queue(sql.FieldEQ(FieldArchiveChat, v))
+}
+
 // RenderChat applies equality check predicate on the "render_chat" field. It's identical to RenderChatEQ.
 func RenderChat(v bool) predicate.Queue {
 	return predicate.Queue(sql.FieldEQ(FieldRenderChat, v))
@@ -610,6 +615,26 @@ func ChatStartIsNil() predicate.Queue {
 // ChatStartNotNil applies the NotNil predicate on the "chat_start" field.
 func ChatStartNotNil() predicate.Queue {
 	return predicate.Queue(sql.FieldNotNull(FieldChatStart))
+}
+
+// ArchiveChatEQ applies the EQ predicate on the "archive_chat" field.
+func ArchiveChatEQ(v bool) predicate.Queue {
+	return predicate.Queue(sql.FieldEQ(FieldArchiveChat, v))
+}
+
+// ArchiveChatNEQ applies the NEQ predicate on the "archive_chat" field.
+func ArchiveChatNEQ(v bool) predicate.Queue {
+	return predicate.Queue(sql.FieldNEQ(FieldArchiveChat, v))
+}
+
+// ArchiveChatIsNil applies the IsNil predicate on the "archive_chat" field.
+func ArchiveChatIsNil() predicate.Queue {
+	return predicate.Queue(sql.FieldIsNull(FieldArchiveChat))
+}
+
+// ArchiveChatNotNil applies the NotNil predicate on the "archive_chat" field.
+func ArchiveChatNotNil() predicate.Queue {
+	return predicate.Queue(sql.FieldNotNull(FieldArchiveChat))
 }
 
 // RenderChatEQ applies the EQ predicate on the "render_chat" field.

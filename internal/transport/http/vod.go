@@ -34,25 +34,25 @@ type VodService interface {
 }
 
 type CreateVodRequest struct {
-	ID               string            `json:"id"`
-	ChannelID        string            `json:"channel_id" validate:"required"`
-	ExtID            string            `json:"ext_id" validate:"min=1"`
-	Platform         utils.VodPlatform `json:"platform" validate:"required,oneof=twitch youtube"`
-	Type             utils.VodType     `json:"type" validate:"required,oneof=archive live highlight upload clip"`
-	Title            string            `json:"title" validate:"required,min=1"`
-	Duration         int               `json:"duration" validate:"required"`
-	Views            int               `json:"views" validate:"required"`
-	Resolution       string            `json:"resolution"`
-	Processing       bool              `json:"processing"`
-	ThumbnailPath    string            `json:"thumbnail_path"`
-	WebThumbnailPath string            `json:"web_thumbnail_path" validate:"required,min=1"`
-	VideoPath        string            `json:"video_path" validate:"required,min=1"`
-	ChatPath         string            `json:"chat_path"`
-	ChatVideoPath    string            `json:"chat_video_path"`
-	InfoPath         string            `json:"info_path"`
-	CaptionPath      string            `json:"caption_path"`
-	StreamedAt       string            `json:"streamed_at" validate:"required"`
-	Locked           bool              `json:"locked"`
+	ID               string              `json:"id"`
+	ChannelID        string              `json:"channel_id" validate:"required"`
+	ExtID            string              `json:"ext_id" validate:"min=1"`
+	Platform         utils.VideoPlatform `json:"platform" validate:"required,oneof=twitch youtube"`
+	Type             utils.VodType       `json:"type" validate:"required,oneof=archive live highlight upload clip"`
+	Title            string              `json:"title" validate:"required,min=1"`
+	Duration         int                 `json:"duration" validate:"required"`
+	Views            int                 `json:"views" validate:"required"`
+	Resolution       string              `json:"resolution"`
+	Processing       bool                `json:"processing"`
+	ThumbnailPath    string              `json:"thumbnail_path"`
+	WebThumbnailPath string              `json:"web_thumbnail_path" validate:"required,min=1"`
+	VideoPath        string              `json:"video_path" validate:"required,min=1"`
+	ChatPath         string              `json:"chat_path"`
+	ChatVideoPath    string              `json:"chat_video_path"`
+	InfoPath         string              `json:"info_path"`
+	CaptionPath      string              `json:"caption_path"`
+	StreamedAt       string              `json:"streamed_at" validate:"required"`
+	Locked           bool                `json:"locked"`
 }
 
 // CreateVod godoc

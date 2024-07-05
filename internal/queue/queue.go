@@ -3,8 +3,6 @@ package queue
 import (
 	"context"
 	"fmt"
-	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +12,7 @@ import (
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/tasks"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
@@ -22,10 +21,11 @@ type Service struct {
 	Store          *database.Database
 	VodService     *vod.Service
 	ChannelService *channel.Service
+	RiverClient    *tasks.RiverClient
 }
 
-func NewService(store *database.Database, vodService *vod.Service, channelService *channel.Service) *Service {
-	return &Service{Store: store, VodService: vodService, ChannelService: channelService}
+func NewService(store *database.Database, vodService *vod.Service, channelService *channel.Service, riverClient *tasks.RiverClient) *Service {
+	return &Service{Store: store, VodService: vodService, ChannelService: channelService, RiverClient: riverClient}
 }
 
 type Queue struct {
@@ -45,13 +45,15 @@ type Queue struct {
 	TaskChatConvert          utils.TaskStatus `json:"task_chat_convert"`
 	TaskChatRender           utils.TaskStatus `json:"task_chat_render"`
 	TaskChatMove             utils.TaskStatus `json:"task_chat_move"`
+	ArchiveChat              bool             `json:"archive_chat"`
+	RenderChat               bool             `json:"render_chat"`
 	UpdatedAt                time.Time        `json:"updated_at"`
 	CreatedAt                time.Time        `json:"created_at"`
 }
 
 func (s *Service) CreateQueueItem(queueDto Queue, vID uuid.UUID) (*ent.Queue, error) {
 	if queueDto.LiveArchive {
-		q, err := s.Store.Client.Queue.Create().SetVodID(vID).SetLiveArchive(true).Save(context.Background())
+		q, err := s.Store.Client.Queue.Create().SetVodID(vID).SetLiveArchive(true).SetArchiveChat(queueDto.ArchiveChat).SetRenderChat(queueDto.RenderChat).Save(context.Background())
 		if err != nil {
 			if _, ok := err.(*ent.ConstraintError); ok {
 				return nil, fmt.Errorf("queue item exists for vod or vod does not exist")
@@ -61,7 +63,7 @@ func (s *Service) CreateQueueItem(queueDto Queue, vID uuid.UUID) (*ent.Queue, er
 		}
 		return q, nil
 	} else {
-		q, err := s.Store.Client.Queue.Create().SetVodID(vID).Save(context.Background())
+		q, err := s.Store.Client.Queue.Create().SetVodID(vID).SetArchiveChat(queueDto.ArchiveChat).SetRenderChat(queueDto.RenderChat).Save(context.Background())
 		if err != nil {
 			if _, ok := err.(*ent.ConstraintError); ok {
 				return nil, fmt.Errorf("queue item exists for vod or vod does not exist")
@@ -75,7 +77,7 @@ func (s *Service) CreateQueueItem(queueDto Queue, vID uuid.UUID) (*ent.Queue, er
 }
 
 func (s *Service) UpdateQueueItem(queueDto Queue, qID uuid.UUID) (*ent.Queue, error) {
-	q, err := s.Store.Client.Queue.UpdateOneID(qID).SetLiveArchive(queueDto.LiveArchive).SetOnHold(queueDto.OnHold).SetVideoProcessing(queueDto.VideoProcessing).SetChatProcessing(queueDto.ChatProcessing).SetProcessing(queueDto.Processing).SetTaskVodCreateFolder(queueDto.TaskVodCreateFolder).SetTaskVodDownloadThumbnail(queueDto.TaskVodDownloadThumbnail).SetTaskVodSaveInfo(queueDto.TaskVodSaveInfo).SetTaskVideoDownload(queueDto.TaskVideoDownload).SetTaskVideoConvert(queueDto.TaskVideoConvert).SetTaskVideoMove(queueDto.TaskVideoMove).SetTaskChatDownload(queueDto.TaskChatDownload).SetTaskChatConvert(queueDto.TaskChatConvert).SetTaskChatRender(queueDto.TaskChatRender).SetTaskChatMove(queueDto.TaskChatMove).Save(context.Background())
+	q, err := s.Store.Client.Queue.UpdateOneID(qID).SetLiveArchive(queueDto.LiveArchive).SetOnHold(queueDto.OnHold).SetVideoProcessing(queueDto.VideoProcessing).SetChatProcessing(queueDto.ChatProcessing).SetProcessing(queueDto.Processing).SetTaskVodCreateFolder(queueDto.TaskVodCreateFolder).SetTaskVodDownloadThumbnail(queueDto.TaskVodDownloadThumbnail).SetTaskVodSaveInfo(queueDto.TaskVodSaveInfo).SetTaskVideoDownload(queueDto.TaskVideoDownload).SetTaskVideoConvert(queueDto.TaskVideoConvert).SetTaskVideoMove(queueDto.TaskVideoMove).SetTaskChatDownload(queueDto.TaskChatDownload).SetTaskChatConvert(queueDto.TaskChatConvert).SetArchiveChat(queueDto.ArchiveChat).SetRenderChat(queueDto.RenderChat).SetTaskChatRender(queueDto.TaskChatRender).SetTaskChatMove(queueDto.TaskChatMove).Save(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("error updating queue: %v", err)
 	}
@@ -137,29 +139,11 @@ func (s *Service) ArchiveGetQueueItem(qID uuid.UUID) (*ent.Queue, error) {
 // StopQueueItem
 // kills the streamlink process for a queue item
 // which in turn will stop the chat download and proceed to post processing
-func (s *Service) StopQueueItem(c echo.Context, id uuid.UUID) error {
-	// get vod
-	v, err := database.DB().Client.Queue.Query().Where(queue.ID(id)).WithVod().First(c.Request().Context())
-	if err != nil {
-		return fmt.Errorf("error getting queue item: %v", err)
-	}
-	log.Debug().Msgf("running: pgrep -f 'streamlink.*%s' | xargs kill\n", v.Edges.Vod.ExtID)
-	// get pid using the vod id
-	getPid := exec.Command("pgrep", "-f", fmt.Sprintf("streamlink.*%s", v.Edges.Vod.ExtID))
-	// kill pid
-	killPid := exec.Command("xargs", "kill", "-INT")
-	getPidOutput, err := getPid.Output()
-	if err != nil {
-		log.Error().Err(err).Msgf("error getting pid for queue item: %v", err)
-		return fmt.Errorf("error getting pid queue item: %v", err)
-	}
+func (s *Service) StopQueueItem(ctx context.Context, id uuid.UUID) error {
 
-	killPid.Stdin = strings.NewReader(string(getPidOutput))
-
-	err = killPid.Run()
+	err := s.RiverClient.CancelJobsForQueueId(ctx, id)
 	if err != nil {
-		log.Error().Err(err).Msgf("error killing pid for queue item: %v", err)
-		return fmt.Errorf("error killing pid queue item: %v", err)
+		return err
 	}
 
 	return nil

@@ -49,14 +49,34 @@ func (vu *VodUpdate) SetNillableExtID(s *string) *VodUpdate {
 	return vu
 }
 
+// SetExtStreamID sets the "ext_stream_id" field.
+func (vu *VodUpdate) SetExtStreamID(s string) *VodUpdate {
+	vu.mutation.SetExtStreamID(s)
+	return vu
+}
+
+// SetNillableExtStreamID sets the "ext_stream_id" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableExtStreamID(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetExtStreamID(*s)
+	}
+	return vu
+}
+
+// ClearExtStreamID clears the value of the "ext_stream_id" field.
+func (vu *VodUpdate) ClearExtStreamID() *VodUpdate {
+	vu.mutation.ClearExtStreamID()
+	return vu
+}
+
 // SetPlatform sets the "platform" field.
-func (vu *VodUpdate) SetPlatform(up utils.VodPlatform) *VodUpdate {
+func (vu *VodUpdate) SetPlatform(up utils.VideoPlatform) *VodUpdate {
 	vu.mutation.SetPlatform(up)
 	return vu
 }
 
 // SetNillablePlatform sets the "platform" field if the given value is not nil.
-func (vu *VodUpdate) SetNillablePlatform(up *utils.VodPlatform) *VodUpdate {
+func (vu *VodUpdate) SetNillablePlatform(up *utils.VideoPlatform) *VodUpdate {
 	if up != nil {
 		vu.SetPlatform(*up)
 	}
@@ -814,6 +834,12 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.ExtID(); ok {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 	}
+	if value, ok := vu.mutation.ExtStreamID(); ok {
+		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
+	}
+	if vu.mutation.ExtStreamIDCleared() {
+		_spec.ClearField(vod.FieldExtStreamID, field.TypeString)
+	}
 	if value, ok := vu.mutation.Platform(); ok {
 		_spec.SetField(vod.FieldPlatform, field.TypeEnum, value)
 	}
@@ -1194,14 +1220,34 @@ func (vuo *VodUpdateOne) SetNillableExtID(s *string) *VodUpdateOne {
 	return vuo
 }
 
+// SetExtStreamID sets the "ext_stream_id" field.
+func (vuo *VodUpdateOne) SetExtStreamID(s string) *VodUpdateOne {
+	vuo.mutation.SetExtStreamID(s)
+	return vuo
+}
+
+// SetNillableExtStreamID sets the "ext_stream_id" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableExtStreamID(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetExtStreamID(*s)
+	}
+	return vuo
+}
+
+// ClearExtStreamID clears the value of the "ext_stream_id" field.
+func (vuo *VodUpdateOne) ClearExtStreamID() *VodUpdateOne {
+	vuo.mutation.ClearExtStreamID()
+	return vuo
+}
+
 // SetPlatform sets the "platform" field.
-func (vuo *VodUpdateOne) SetPlatform(up utils.VodPlatform) *VodUpdateOne {
+func (vuo *VodUpdateOne) SetPlatform(up utils.VideoPlatform) *VodUpdateOne {
 	vuo.mutation.SetPlatform(up)
 	return vuo
 }
 
 // SetNillablePlatform sets the "platform" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillablePlatform(up *utils.VodPlatform) *VodUpdateOne {
+func (vuo *VodUpdateOne) SetNillablePlatform(up *utils.VideoPlatform) *VodUpdateOne {
 	if up != nil {
 		vuo.SetPlatform(*up)
 	}
@@ -1988,6 +2034,12 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if value, ok := vuo.mutation.ExtID(); ok {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
+	}
+	if value, ok := vuo.mutation.ExtStreamID(); ok {
+		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
+	}
+	if vuo.mutation.ExtStreamIDCleared() {
+		_spec.ClearField(vod.FieldExtStreamID, field.TypeString)
 	}
 	if value, ok := vuo.mutation.Platform(); ok {
 		_spec.SetField(vod.FieldPlatform, field.TypeEnum, value)

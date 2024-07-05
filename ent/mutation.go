@@ -5845,6 +5845,7 @@ type QueueMutation struct {
 	task_chat_render            *utils.TaskStatus
 	task_chat_move              *utils.TaskStatus
 	chat_start                  *time.Time
+	archive_chat                *bool
 	render_chat                 *bool
 	workflow_id                 *string
 	workflow_run_id             *string
@@ -6681,6 +6682,55 @@ func (m *QueueMutation) ResetChatStart() {
 	delete(m.clearedFields, queue.FieldChatStart)
 }
 
+// SetArchiveChat sets the "archive_chat" field.
+func (m *QueueMutation) SetArchiveChat(b bool) {
+	m.archive_chat = &b
+}
+
+// ArchiveChat returns the value of the "archive_chat" field in the mutation.
+func (m *QueueMutation) ArchiveChat() (r bool, exists bool) {
+	v := m.archive_chat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldArchiveChat returns the old "archive_chat" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldArchiveChat(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldArchiveChat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldArchiveChat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldArchiveChat: %w", err)
+	}
+	return oldValue.ArchiveChat, nil
+}
+
+// ClearArchiveChat clears the value of the "archive_chat" field.
+func (m *QueueMutation) ClearArchiveChat() {
+	m.archive_chat = nil
+	m.clearedFields[queue.FieldArchiveChat] = struct{}{}
+}
+
+// ArchiveChatCleared returns if the "archive_chat" field was cleared in this mutation.
+func (m *QueueMutation) ArchiveChatCleared() bool {
+	_, ok := m.clearedFields[queue.FieldArchiveChat]
+	return ok
+}
+
+// ResetArchiveChat resets all changes to the "archive_chat" field.
+func (m *QueueMutation) ResetArchiveChat() {
+	m.archive_chat = nil
+	delete(m.clearedFields, queue.FieldArchiveChat)
+}
+
 // SetRenderChat sets the "render_chat" field.
 func (m *QueueMutation) SetRenderChat(b bool) {
 	m.render_chat = &b
@@ -6973,7 +7023,7 @@ func (m *QueueMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QueueMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 22)
 	if m.live_archive != nil {
 		fields = append(fields, queue.FieldLiveArchive)
 	}
@@ -7021,6 +7071,9 @@ func (m *QueueMutation) Fields() []string {
 	}
 	if m.chat_start != nil {
 		fields = append(fields, queue.FieldChatStart)
+	}
+	if m.archive_chat != nil {
+		fields = append(fields, queue.FieldArchiveChat)
 	}
 	if m.render_chat != nil {
 		fields = append(fields, queue.FieldRenderChat)
@@ -7077,6 +7130,8 @@ func (m *QueueMutation) Field(name string) (ent.Value, bool) {
 		return m.TaskChatMove()
 	case queue.FieldChatStart:
 		return m.ChatStart()
+	case queue.FieldArchiveChat:
+		return m.ArchiveChat()
 	case queue.FieldRenderChat:
 		return m.RenderChat()
 	case queue.FieldWorkflowID:
@@ -7128,6 +7183,8 @@ func (m *QueueMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldTaskChatMove(ctx)
 	case queue.FieldChatStart:
 		return m.OldChatStart(ctx)
+	case queue.FieldArchiveChat:
+		return m.OldArchiveChat(ctx)
 	case queue.FieldRenderChat:
 		return m.OldRenderChat(ctx)
 	case queue.FieldWorkflowID:
@@ -7259,6 +7316,13 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetChatStart(v)
 		return nil
+	case queue.FieldArchiveChat:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetArchiveChat(v)
+		return nil
 	case queue.FieldRenderChat:
 		v, ok := value.(bool)
 		if !ok {
@@ -7357,6 +7421,9 @@ func (m *QueueMutation) ClearedFields() []string {
 	if m.FieldCleared(queue.FieldChatStart) {
 		fields = append(fields, queue.FieldChatStart)
 	}
+	if m.FieldCleared(queue.FieldArchiveChat) {
+		fields = append(fields, queue.FieldArchiveChat)
+	}
 	if m.FieldCleared(queue.FieldRenderChat) {
 		fields = append(fields, queue.FieldRenderChat)
 	}
@@ -7412,6 +7479,9 @@ func (m *QueueMutation) ClearField(name string) error {
 		return nil
 	case queue.FieldChatStart:
 		m.ClearChatStart()
+		return nil
+	case queue.FieldArchiveChat:
+		m.ClearArchiveChat()
 		return nil
 	case queue.FieldRenderChat:
 		m.ClearRenderChat()
@@ -7477,6 +7547,9 @@ func (m *QueueMutation) ResetField(name string) error {
 		return nil
 	case queue.FieldChatStart:
 		m.ResetChatStart()
+		return nil
+	case queue.FieldArchiveChat:
+		m.ResetArchiveChat()
 		return nil
 	case queue.FieldRenderChat:
 		m.ResetRenderChat()
@@ -8937,7 +9010,8 @@ type VodMutation struct {
 	typ                         string
 	id                          *uuid.UUID
 	ext_id                      *string
-	platform                    *utils.VodPlatform
+	ext_stream_id               *string
+	platform                    *utils.VideoPlatform
 	_type                       *utils.VodType
 	title                       *string
 	duration                    *int
@@ -9130,13 +9204,62 @@ func (m *VodMutation) ResetExtID() {
 	m.ext_id = nil
 }
 
+// SetExtStreamID sets the "ext_stream_id" field.
+func (m *VodMutation) SetExtStreamID(s string) {
+	m.ext_stream_id = &s
+}
+
+// ExtStreamID returns the value of the "ext_stream_id" field in the mutation.
+func (m *VodMutation) ExtStreamID() (r string, exists bool) {
+	v := m.ext_stream_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExtStreamID returns the old "ext_stream_id" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldExtStreamID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExtStreamID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExtStreamID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExtStreamID: %w", err)
+	}
+	return oldValue.ExtStreamID, nil
+}
+
+// ClearExtStreamID clears the value of the "ext_stream_id" field.
+func (m *VodMutation) ClearExtStreamID() {
+	m.ext_stream_id = nil
+	m.clearedFields[vod.FieldExtStreamID] = struct{}{}
+}
+
+// ExtStreamIDCleared returns if the "ext_stream_id" field was cleared in this mutation.
+func (m *VodMutation) ExtStreamIDCleared() bool {
+	_, ok := m.clearedFields[vod.FieldExtStreamID]
+	return ok
+}
+
+// ResetExtStreamID resets all changes to the "ext_stream_id" field.
+func (m *VodMutation) ResetExtStreamID() {
+	m.ext_stream_id = nil
+	delete(m.clearedFields, vod.FieldExtStreamID)
+}
+
 // SetPlatform sets the "platform" field.
-func (m *VodMutation) SetPlatform(up utils.VodPlatform) {
+func (m *VodMutation) SetPlatform(up utils.VideoPlatform) {
 	m.platform = &up
 }
 
 // Platform returns the value of the "platform" field in the mutation.
-func (m *VodMutation) Platform() (r utils.VodPlatform, exists bool) {
+func (m *VodMutation) Platform() (r utils.VideoPlatform, exists bool) {
 	v := m.platform
 	if v == nil {
 		return
@@ -9147,7 +9270,7 @@ func (m *VodMutation) Platform() (r utils.VodPlatform, exists bool) {
 // OldPlatform returns the old "platform" field's value of the Vod entity.
 // If the Vod object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *VodMutation) OldPlatform(ctx context.Context) (v utils.VodPlatform, err error) {
+func (m *VodMutation) OldPlatform(ctx context.Context) (v utils.VideoPlatform, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldPlatform is only allowed on UpdateOne operations")
 	}
@@ -10814,9 +10937,12 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 32)
+	fields := make([]string, 0, 33)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
+	}
+	if m.ext_stream_id != nil {
+		fields = append(fields, vod.FieldExtStreamID)
 	}
 	if m.platform != nil {
 		fields = append(fields, vod.FieldPlatform)
@@ -10921,6 +11047,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case vod.FieldExtID:
 		return m.ExtID()
+	case vod.FieldExtStreamID:
+		return m.ExtStreamID()
 	case vod.FieldPlatform:
 		return m.Platform()
 	case vod.FieldType:
@@ -10994,6 +11122,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 	switch name {
 	case vod.FieldExtID:
 		return m.OldExtID(ctx)
+	case vod.FieldExtStreamID:
+		return m.OldExtStreamID(ctx)
 	case vod.FieldPlatform:
 		return m.OldPlatform(ctx)
 	case vod.FieldType:
@@ -11072,8 +11202,15 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetExtID(v)
 		return nil
+	case vod.FieldExtStreamID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExtStreamID(v)
+		return nil
 	case vod.FieldPlatform:
-		v, ok := value.(utils.VodPlatform)
+		v, ok := value.(utils.VideoPlatform)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -11358,6 +11495,9 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *VodMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(vod.FieldExtStreamID) {
+		fields = append(fields, vod.FieldExtStreamID)
+	}
 	if m.FieldCleared(vod.FieldResolution) {
 		fields = append(fields, vod.FieldResolution)
 	}
@@ -11426,6 +11566,9 @@ func (m *VodMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *VodMutation) ClearField(name string) error {
 	switch name {
+	case vod.FieldExtStreamID:
+		m.ClearExtStreamID()
+		return nil
 	case vod.FieldResolution:
 		m.ClearResolution()
 		return nil
@@ -11490,6 +11633,9 @@ func (m *VodMutation) ResetField(name string) error {
 	switch name {
 	case vod.FieldExtID:
 		m.ResetExtID()
+		return nil
+	case vod.FieldExtStreamID:
+		m.ResetExtStreamID()
 		return nil
 	case vod.FieldPlatform:
 		m.ResetPlatform()

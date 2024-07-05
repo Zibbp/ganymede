@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -26,7 +27,7 @@ import (
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/scheduler"
 	"github.com/zibbp/ganymede/internal/task"
-	"github.com/zibbp/ganymede/internal/temporal"
+	"github.com/zibbp/ganymede/internal/tasks"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/user"
@@ -62,6 +63,8 @@ var (
 
 func Run() error {
 
+	ctx := context.Background()
+
 	config.NewConfig(true)
 
 	configDebug := viper.GetBool("debug")
@@ -73,27 +76,46 @@ func Run() error {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	database.InitializeDatabase(false)
-	store := database.DB()
+	envConfig := config.GetEnvConfig()
+
+	dbString := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s", envConfig.DB_USER, envConfig.DB_PASS, envConfig.DB_HOST, envConfig.DB_PORT, envConfig.DB_NAME, envConfig.DB_SSL)
+
+	db := database.NewDatabase(ctx, database.DatabaseConnectionInput{
+		DBString: dbString,
+		IsWorker: false,
+	})
+
+	// Initialize river client
+	riverClient, err := tasks.NewRiverClient(tasks.RiverClientInput{
+		DB_URL: dbString,
+	})
+	if err != nil {
+		return fmt.Errorf("error creating river client: %v", err)
+	}
+
+	err = riverClient.RunMigrations()
+	if err != nil {
+		return fmt.Errorf("error running migrations: %v", err)
+	}
 
 	// Initialize temporal client
-	temporal.InitializeTemporalClient()
+	// temporal.InitializeTemporalClient()
 
-	authService := auth.NewService(store)
-	channelService := channel.NewService(store)
-	vodService := vod.NewService(store)
-	queueService := queue.NewService(store, vodService, channelService)
+	authService := auth.NewService(db)
+	channelService := channel.NewService(db)
+	vodService := vod.NewService(db)
+	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	twitchService := twitch.NewService()
-	archiveService := archive.NewService(store, twitchService, channelService, vodService, queueService)
-	adminService := admin.NewService(store)
-	userService := user.NewService(store)
-	configService := config.NewService(store)
-	liveService := live.NewService(store, twitchService, archiveService)
+	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient)
+	adminService := admin.NewService(db)
+	userService := user.NewService(db)
+	configService := config.NewService(db)
+	liveService := live.NewService(db, twitchService, archiveService)
 	schedulerService := scheduler.NewService(liveService, archiveService)
-	playbackService := playback.NewService(store)
-	metricsService := metrics.NewService(store)
-	playlistService := playlist.NewService(store)
-	taskService := task.NewService(store, liveService, archiveService)
+	playbackService := playback.NewService(db)
+	metricsService := metrics.NewService(db)
+	playlistService := playlist.NewService(db)
+	taskService := task.NewService(db, liveService, archiveService)
 	chapterService := chapter.NewService()
 
 	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService)
