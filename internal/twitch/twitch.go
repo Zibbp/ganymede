@@ -189,6 +189,7 @@ func Authenticate() error {
 		return fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 
+	fmt.Println(authTokenResponse.AccessToken)
 	// Set access token as env var
 	err = os.Setenv("TWITCH_ACCESS_TOKEN", authTokenResponse.AccessToken)
 	if err != nil {

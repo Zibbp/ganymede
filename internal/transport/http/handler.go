@@ -17,6 +17,7 @@ import (
 	_ "github.com/zibbp/ganymede/docs"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/channel"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -122,7 +123,8 @@ func (h *Handler) mapRoutes() {
 	})
 
 	// Static files
-	h.Server.Static("/static/vods", "/vods")
+	envConfig := config.GetEnvConfig()
+	h.Server.Static(envConfig.VideosDir, envConfig.VideosDir)
 
 	// Swagger
 	h.Server.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -204,7 +206,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// Archive
 	archiveGroup := e.Group("/archive")
 	archiveGroup.POST("/channel", h.ArchiveTwitchChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	archiveGroup.POST("/vod", h.ArchiveTwitchVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	archiveGroup.POST("/video", h.ArchiveVideo, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	archiveGroup.POST("/convert-twitch-live-chat", h.ConvertTwitchChat, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// Admin

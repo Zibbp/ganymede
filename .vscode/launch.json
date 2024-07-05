@@ -16,7 +16,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/server/main.go",
-      "envFile": "${workspaceFolder}/.env.dev"
+      "envFile": "${workspaceFolder}/.env"
     },
     {
       "name": "dev-worker",
@@ -24,7 +24,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/worker/main.go",
-      "envFile": "${workspaceFolder}/.env.dev"
+      "envFile": "${workspaceFolder}/.env"
     }
   ]
 }

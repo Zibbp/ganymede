@@ -199,18 +199,22 @@ func init() {
 	queueDescProcessing := queueFields[5].Descriptor()
 	// queue.DefaultProcessing holds the default value on creation for the processing field.
 	queue.DefaultProcessing = queueDescProcessing.Default.(bool)
+	// queueDescArchiveChat is the schema descriptor for archive_chat field.
+	queueDescArchiveChat := queueFields[17].Descriptor()
+	// queue.DefaultArchiveChat holds the default value on creation for the archive_chat field.
+	queue.DefaultArchiveChat = queueDescArchiveChat.Default.(bool)
 	// queueDescRenderChat is the schema descriptor for render_chat field.
-	queueDescRenderChat := queueFields[17].Descriptor()
+	queueDescRenderChat := queueFields[18].Descriptor()
 	// queue.DefaultRenderChat holds the default value on creation for the render_chat field.
 	queue.DefaultRenderChat = queueDescRenderChat.Default.(bool)
 	// queueDescUpdatedAt is the schema descriptor for updated_at field.
-	queueDescUpdatedAt := queueFields[20].Descriptor()
+	queueDescUpdatedAt := queueFields[21].Descriptor()
 	// queue.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	queue.DefaultUpdatedAt = queueDescUpdatedAt.Default.(func() time.Time)
 	// queue.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	queue.UpdateDefaultUpdatedAt = queueDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// queueDescCreatedAt is the schema descriptor for created_at field.
-	queueDescCreatedAt := queueFields[21].Descriptor()
+	queueDescCreatedAt := queueFields[22].Descriptor()
 	// queue.DefaultCreatedAt holds the default value on creation for the created_at field.
 	queue.DefaultCreatedAt = queueDescCreatedAt.Default.(func() time.Time)
 	// queueDescID is the schema descriptor for id field.
@@ -252,37 +256,37 @@ func init() {
 	vodFields := schema.Vod{}.Fields()
 	_ = vodFields
 	// vodDescDuration is the schema descriptor for duration field.
-	vodDescDuration := vodFields[5].Descriptor()
+	vodDescDuration := vodFields[6].Descriptor()
 	// vod.DefaultDuration holds the default value on creation for the duration field.
 	vod.DefaultDuration = vodDescDuration.Default.(int)
 	// vodDescViews is the schema descriptor for views field.
-	vodDescViews := vodFields[6].Descriptor()
+	vodDescViews := vodFields[7].Descriptor()
 	// vod.DefaultViews holds the default value on creation for the views field.
 	vod.DefaultViews = vodDescViews.Default.(int)
 	// vodDescProcessing is the schema descriptor for processing field.
-	vodDescProcessing := vodFields[8].Descriptor()
+	vodDescProcessing := vodFields[9].Descriptor()
 	// vod.DefaultProcessing holds the default value on creation for the processing field.
 	vod.DefaultProcessing = vodDescProcessing.Default.(bool)
 	// vodDescLocked is the schema descriptor for locked field.
-	vodDescLocked := vodFields[28].Descriptor()
+	vodDescLocked := vodFields[29].Descriptor()
 	// vod.DefaultLocked holds the default value on creation for the locked field.
 	vod.DefaultLocked = vodDescLocked.Default.(bool)
 	// vodDescLocalViews is the schema descriptor for local_views field.
-	vodDescLocalViews := vodFields[29].Descriptor()
+	vodDescLocalViews := vodFields[30].Descriptor()
 	// vod.DefaultLocalViews holds the default value on creation for the local_views field.
 	vod.DefaultLocalViews = vodDescLocalViews.Default.(int)
 	// vodDescStreamedAt is the schema descriptor for streamed_at field.
-	vodDescStreamedAt := vodFields[30].Descriptor()
+	vodDescStreamedAt := vodFields[31].Descriptor()
 	// vod.DefaultStreamedAt holds the default value on creation for the streamed_at field.
 	vod.DefaultStreamedAt = vodDescStreamedAt.Default.(func() time.Time)
 	// vodDescUpdatedAt is the schema descriptor for updated_at field.
-	vodDescUpdatedAt := vodFields[31].Descriptor()
+	vodDescUpdatedAt := vodFields[32].Descriptor()
 	// vod.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	vod.DefaultUpdatedAt = vodDescUpdatedAt.Default.(func() time.Time)
 	// vod.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	vod.UpdateDefaultUpdatedAt = vodDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// vodDescCreatedAt is the schema descriptor for created_at field.
-	vodDescCreatedAt := vodFields[32].Descriptor()
+	vodDescCreatedAt := vodFields[33].Descriptor()
 	// vod.DefaultCreatedAt holds the default value on creation for the created_at field.
 	vod.DefaultCreatedAt = vodDescCreatedAt.Default.(func() time.Time)
 	// vodDescID is the schema descriptor for id field.

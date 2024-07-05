@@ -21,10 +21,12 @@ type Vod struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
-	// ExtID holds the value of the "ext_id" field.
+	// The ID of the video on the external platform.
 	ExtID string `json:"ext_id,omitempty"`
+	// The ID of the stream on the external platform, if applicable.
+	ExtStreamID string `json:"ext_stream_id,omitempty"`
 	// The platform the VOD is from, takes an enum.
-	Platform utils.VodPlatform `json:"platform,omitempty"`
+	Platform utils.VideoPlatform `json:"platform,omitempty"`
 	// The type of VOD, takes an enum.
 	Type utils.VodType `json:"type,omitempty"`
 	// Title holds the value of the "title" field.
@@ -167,7 +169,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case vod.FieldDuration, vod.FieldViews, vod.FieldLocalViews:
 			values[i] = new(sql.NullInt64)
-		case vod.FieldExtID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath:
+		case vod.FieldExtID, vod.FieldExtStreamID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath:
 			values[i] = new(sql.NullString)
 		case vod.FieldStreamedAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -202,11 +204,17 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				v.ExtID = value.String
 			}
+		case vod.FieldExtStreamID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ext_stream_id", values[i])
+			} else if value.Valid {
+				v.ExtStreamID = value.String
+			}
 		case vod.FieldPlatform:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field platform", values[i])
 			} else if value.Valid {
-				v.Platform = utils.VodPlatform(value.String)
+				v.Platform = utils.VideoPlatform(value.String)
 			}
 		case vod.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -458,6 +466,9 @@ func (v *Vod) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", v.ID))
 	builder.WriteString("ext_id=")
 	builder.WriteString(v.ExtID)
+	builder.WriteString(", ")
+	builder.WriteString("ext_stream_id=")
+	builder.WriteString(v.ExtStreamID)
 	builder.WriteString(", ")
 	builder.WriteString("platform=")
 	builder.WriteString(fmt.Sprintf("%v", v.Platform))

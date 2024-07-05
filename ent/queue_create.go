@@ -250,6 +250,20 @@ func (qc *QueueCreate) SetNillableChatStart(t *time.Time) *QueueCreate {
 	return qc
 }
 
+// SetArchiveChat sets the "archive_chat" field.
+func (qc *QueueCreate) SetArchiveChat(b bool) *QueueCreate {
+	qc.mutation.SetArchiveChat(b)
+	return qc
+}
+
+// SetNillableArchiveChat sets the "archive_chat" field if the given value is not nil.
+func (qc *QueueCreate) SetNillableArchiveChat(b *bool) *QueueCreate {
+	if b != nil {
+		qc.SetArchiveChat(*b)
+	}
+	return qc
+}
+
 // SetRenderChat sets the "render_chat" field.
 func (qc *QueueCreate) SetRenderChat(b bool) *QueueCreate {
 	qc.mutation.SetRenderChat(b)
@@ -439,6 +453,10 @@ func (qc *QueueCreate) defaults() {
 	if _, ok := qc.mutation.TaskChatMove(); !ok {
 		v := queue.DefaultTaskChatMove
 		qc.mutation.SetTaskChatMove(v)
+	}
+	if _, ok := qc.mutation.ArchiveChat(); !ok {
+		v := queue.DefaultArchiveChat
+		qc.mutation.SetArchiveChat(v)
 	}
 	if _, ok := qc.mutation.RenderChat(); !ok {
 		v := queue.DefaultRenderChat
@@ -633,6 +651,10 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 	if value, ok := qc.mutation.ChatStart(); ok {
 		_spec.SetField(queue.FieldChatStart, field.TypeTime, value)
 		_node.ChatStart = value
+	}
+	if value, ok := qc.mutation.ArchiveChat(); ok {
+		_spec.SetField(queue.FieldArchiveChat, field.TypeBool, value)
+		_node.ArchiveChat = value
 	}
 	if value, ok := qc.mutation.RenderChat(); ok {
 		_spec.SetField(queue.FieldRenderChat, field.TypeBool, value)
@@ -978,6 +1000,24 @@ func (u *QueueUpsert) UpdateChatStart() *QueueUpsert {
 // ClearChatStart clears the value of the "chat_start" field.
 func (u *QueueUpsert) ClearChatStart() *QueueUpsert {
 	u.SetNull(queue.FieldChatStart)
+	return u
+}
+
+// SetArchiveChat sets the "archive_chat" field.
+func (u *QueueUpsert) SetArchiveChat(v bool) *QueueUpsert {
+	u.Set(queue.FieldArchiveChat, v)
+	return u
+}
+
+// UpdateArchiveChat sets the "archive_chat" field to the value that was provided on create.
+func (u *QueueUpsert) UpdateArchiveChat() *QueueUpsert {
+	u.SetExcluded(queue.FieldArchiveChat)
+	return u
+}
+
+// ClearArchiveChat clears the value of the "archive_chat" field.
+func (u *QueueUpsert) ClearArchiveChat() *QueueUpsert {
+	u.SetNull(queue.FieldArchiveChat)
 	return u
 }
 
@@ -1396,6 +1436,27 @@ func (u *QueueUpsertOne) UpdateChatStart() *QueueUpsertOne {
 func (u *QueueUpsertOne) ClearChatStart() *QueueUpsertOne {
 	return u.Update(func(s *QueueUpsert) {
 		s.ClearChatStart()
+	})
+}
+
+// SetArchiveChat sets the "archive_chat" field.
+func (u *QueueUpsertOne) SetArchiveChat(v bool) *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetArchiveChat(v)
+	})
+}
+
+// UpdateArchiveChat sets the "archive_chat" field to the value that was provided on create.
+func (u *QueueUpsertOne) UpdateArchiveChat() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateArchiveChat()
+	})
+}
+
+// ClearArchiveChat clears the value of the "archive_chat" field.
+func (u *QueueUpsertOne) ClearArchiveChat() *QueueUpsertOne {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearArchiveChat()
 	})
 }
 
@@ -1992,6 +2053,27 @@ func (u *QueueUpsertBulk) UpdateChatStart() *QueueUpsertBulk {
 func (u *QueueUpsertBulk) ClearChatStart() *QueueUpsertBulk {
 	return u.Update(func(s *QueueUpsert) {
 		s.ClearChatStart()
+	})
+}
+
+// SetArchiveChat sets the "archive_chat" field.
+func (u *QueueUpsertBulk) SetArchiveChat(v bool) *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.SetArchiveChat(v)
+	})
+}
+
+// UpdateArchiveChat sets the "archive_chat" field to the value that was provided on create.
+func (u *QueueUpsertBulk) UpdateArchiveChat() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.UpdateArchiveChat()
+	})
+}
+
+// ClearArchiveChat clears the value of the "archive_chat" field.
+func (u *QueueUpsertBulk) ClearArchiveChat() *QueueUpsertBulk {
+	return u.Update(func(s *QueueUpsert) {
+		s.ClearArchiveChat()
 	})
 }
 

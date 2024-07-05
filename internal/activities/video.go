@@ -374,33 +374,33 @@ func DownloadTwitchLiveVideo(ctx context.Context, input dto.ArchiveVideoInput, c
 	go sendHeartbeat(ctx, fmt.Sprintf("download-livevideo-%s", input.VideoID), stopHeartbeat)
 
 	// Start the download
-	err := exec.DownloadTwitchLiveVideo(ctx, input.Vod, input.Channel, input.LiveChatWorkflowId)
-	if err != nil {
-		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoDownload(utils.Failed).Save(ctx)
-		if dbErr != nil {
-			stopHeartbeat <- true
-			return temporal.NewApplicationError(dbErr.Error(), "", nil)
-		}
-		stopHeartbeat <- true
-		return temporal.NewApplicationError(err.Error(), "", nil)
-	}
-	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoDownload(utils.Success).Save(ctx)
-	if dbErr != nil {
-		stopHeartbeat <- true
-		return temporal.NewApplicationError(dbErr.Error(), "", nil)
-	}
+	// err := exec.DownloadTwitchLiveVideo(ctx, input.Vod, input.Channel, input.LiveChatWorkflowId)
+	// if err != nil {
+	// 	_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoDownload(utils.Failed).Save(ctx)
+	// 	if dbErr != nil {
+	// 		stopHeartbeat <- true
+	// 		return temporal.NewApplicationError(dbErr.Error(), "", nil)
+	// 	}
+	// 	stopHeartbeat <- true
+	// 	return temporal.NewApplicationError(err.Error(), "", nil)
+	// }
+	// _, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoDownload(utils.Success).Save(ctx)
+	// if dbErr != nil {
+	// 	stopHeartbeat <- true
+	// 	return temporal.NewApplicationError(dbErr.Error(), "", nil)
+	// }
 
 	// Update video duration with duration from downloaded video
-	duration, err := exec.GetVideoDuration(input.Vod.TmpVideoDownloadPath)
-	if err != nil {
-		stopHeartbeat <- true
-		return temporal.NewApplicationError(err.Error(), "", nil)
-	}
-	_, dbErr = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetDuration(duration).Save(ctx)
-	if dbErr != nil {
-		stopHeartbeat <- true
-		return dbErr
-	}
+	// duration, err := exec.GetVideoDuration(input.Vod.TmpVideoDownloadPath)
+	// if err != nil {
+	// 	stopHeartbeat <- true
+	// 	return temporal.NewApplicationError(err.Error(), "", nil)
+	// }
+	// _, dbErr = database.DB().Client.Vod.UpdateOneID(input.Vod.ID).SetDuration(duration).Save(ctx)
+	// if dbErr != nil {
+	// 	stopHeartbeat <- true
+	// 	return dbErr
+	// }
 
 	// attempt to find vod id of the livesstream so the external id is correct
 	videos, err := twitch.GetVideosByUser(input.Channel.ExtID, "archive")
@@ -506,16 +506,16 @@ func MoveVideo(ctx context.Context, input dto.ArchiveVideoInput) error {
 			return temporal.NewApplicationError(err.Error(), "", nil)
 		}
 	} else {
-		err := utils.MoveFile(input.Vod.TmpVideoConvertPath, input.Vod.VideoPath)
-		if err != nil {
-			_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoMove(utils.Failed).Save(ctx)
-			if dbErr != nil {
-				stopHeartbeat <- true
-				return dbErr
-			}
-			stopHeartbeat <- true
-			return temporal.NewApplicationError(err.Error(), "", nil)
-		}
+		// err := utils.MoveFile(input.Vod.TmpVideoConvertPath, input.Vod.VideoPath)
+		// if err != nil {
+		// 	_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskVideoMove(utils.Failed).Save(ctx)
+		// 	if dbErr != nil {
+		// 		stopHeartbeat <- true
+		// 		return dbErr
+		// 	}
+		// 	stopHeartbeat <- true
+		// 	return temporal.NewApplicationError(err.Error(), "", nil)
+		// }
 	}
 
 	// Clean up files
@@ -590,19 +590,19 @@ func DownloadTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) er
 	go sendHeartbeat(ctx, fmt.Sprintf("download-livechat-%s", input.VideoID), stopHeartbeat)
 
 	// Start the download
-	err := exec.DownloadTwitchLiveChat(ctx, input.Vod, input.Channel, input.Queue)
-	if err != nil {
-		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Failed).Save(ctx)
-		if dbErr != nil {
-			stopHeartbeat <- true
-			return dbErr
-		}
-		stopHeartbeat <- true
-		return temporal.NewApplicationError(err.Error(), "", nil)
-	}
+	// err := exec.DownloadTwitchLiveChat(ctx, input.Vod, input.Channel, input.Queue)
+	// if err != nil {
+	// 	_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Failed).Save(ctx)
+	// 	if dbErr != nil {
+	// 		stopHeartbeat <- true
+	// 		return dbErr
+	// 	}
+	// 	stopHeartbeat <- true
+	// 	return temporal.NewApplicationError(err.Error(), "", nil)
+	// }
 
 	// copy json to vod folder
-	err = utils.CopyFile(input.Vod.TmpLiveChatDownloadPath, input.Vod.ChatPath)
+	err := utils.CopyFile(input.Vod.TmpLiveChatDownloadPath, input.Vod.ChatPath)
 	if err != nil {
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatDownload(utils.Failed).Save(ctx)
 		if dbErr != nil {
@@ -666,29 +666,29 @@ func MoveChat(ctx context.Context, input dto.ArchiveVideoInput) error {
 	stopHeartbeat := make(chan bool)
 	go sendHeartbeat(ctx, fmt.Sprintf("move-chat-%s", input.VideoID), stopHeartbeat)
 
-	err := utils.MoveFile(input.Vod.TmpChatDownloadPath, input.Vod.ChatPath)
-	if err != nil {
-		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatMove(utils.Failed).Save(ctx)
-		if dbErr != nil {
-			stopHeartbeat <- true
-			return dbErr
-		}
-		stopHeartbeat <- true
-		return temporal.NewApplicationError(err.Error(), "", nil)
-	}
+	// err := utils.MoveFile(input.Vod.TmpChatDownloadPath, input.Vod.ChatPath)
+	// if err != nil {
+	// 	_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatMove(utils.Failed).Save(ctx)
+	// 	if dbErr != nil {
+	// 		stopHeartbeat <- true
+	// 		return dbErr
+	// 	}
+	// 	stopHeartbeat <- true
+	// 	return temporal.NewApplicationError(err.Error(), "", nil)
+	// }
 
-	if input.Queue.RenderChat {
-		err = utils.MoveFile(input.Vod.TmpChatRenderPath, input.Vod.ChatVideoPath)
-		if err != nil {
-			_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatMove(utils.Failed).Save(ctx)
-			if dbErr != nil {
-				stopHeartbeat <- true
-				return dbErr
-			}
-			stopHeartbeat <- true
-			return temporal.NewApplicationError(err.Error(), "", nil)
-		}
-	}
+	// if input.Queue.RenderChat {
+	// 	err = utils.MoveFile(input.Vod.TmpChatRenderPath, input.Vod.ChatVideoPath)
+	// 	if err != nil {
+	// 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatMove(utils.Failed).Save(ctx)
+	// 		if dbErr != nil {
+	// 			stopHeartbeat <- true
+	// 			return dbErr
+	// 		}
+	// 		stopHeartbeat <- true
+	// 		return temporal.NewApplicationError(err.Error(), "", nil)
+	// 	}
+	// }
 
 	_, dbErr = database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatMove(utils.Success).Save(ctx)
 	if dbErr != nil {

@@ -18,7 +18,6 @@ import (
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
-	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -281,13 +280,13 @@ OUTER:
 					}
 				}
 				// Archive stream
-				archiveResp, err := s.ArchiveService.ArchiveTwitchLive(lwc, stream)
-				if err != nil {
-					log.Error().Err(err).Msg("error archiving twitch live")
-				}
+				// archiveResp, err := s.ArchiveService.ArchiveTwitchLive(lwc, stream)
+				// if err != nil {
+				// 	log.Error().Err(err).Msg("error archiving twitch live")
+				// }
 				// Notification
 				// Fetch channel for notification
-				go notification.SendLiveNotification(lwc.Edges.Channel, archiveResp.VOD, archiveResp.Queue)
+				// go notification.SendLiveNotification(lwc.Edges.Channel, archiveResp.VOD, archiveResp.Queue)
 			}
 		} else {
 			if lwc.IsLive {
@@ -344,15 +343,15 @@ func (s *Service) ArchiveLiveChannel(c echo.Context, archiveLiveChannelDto Archi
 		return fmt.Errorf("channel is not live")
 	}
 	// create a temp live watched channel
-	lwc := &ent.Live{
-		ArchiveChat: archiveLiveChannelDto.ArchiveChat,
-		RenderChat:  archiveLiveChannelDto.RenderChat,
-		Resolution:  archiveLiveChannelDto.Resolution,
-	}
-	_, err = s.ArchiveService.ArchiveTwitchLive(lwc, twitchStream.Data[0])
-	if err != nil {
-		log.Error().Err(err).Msg("error archiving twitch livestream")
-	}
+	// lwc := &ent.Live{
+	// 	ArchiveChat: archiveLiveChannelDto.ArchiveChat,
+	// 	RenderChat:  archiveLiveChannelDto.RenderChat,
+	// 	Resolution:  archiveLiveChannelDto.Resolution,
+	// }
+	// _, err = s.ArchiveService.ArchiveTwitchLive(lwc, twitchStream.Data[0])
+	// if err != nil {
+	// 	log.Error().Err(err).Msg("error archiving twitch livestream")
+	// }
 
 	return nil
 }

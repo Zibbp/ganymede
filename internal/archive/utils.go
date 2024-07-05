@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -17,9 +16,18 @@ var (
 	storageTemplateVariableRegex = regexp.MustCompile(`\{{([^}]+)\}}`)
 )
 
-func GetFolderName(uuid uuid.UUID, tVideoItem twitch.Vod) (string, error) {
+type StorageTemplateInput struct {
+	UUID    uuid.UUID
+	ID      string
+	Channel string
+	Title   string
+	Type    string
+	Date    string // parsed date
+}
 
-	variableMap, err := getVariableMap(uuid, &tVideoItem)
+func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
+
+	variableMap, err := getVariableMap(uuid, input)
 	if err != nil {
 		return "", fmt.Errorf("error getting variable map: %w", err)
 	}
@@ -49,9 +57,9 @@ func GetFolderName(uuid uuid.UUID, tVideoItem twitch.Vod) (string, error) {
 	return folderTemplate, nil
 }
 
-func GetFileName(uuid uuid.UUID, tVideoItem twitch.Vod) (string, error) {
+func GetFileName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 
-	variableMap, err := getVariableMap(uuid, &tVideoItem)
+	variableMap, err := getVariableMap(uuid, input)
 	if err != nil {
 		return "", fmt.Errorf("error getting variable map: %w", err)
 	}
@@ -81,20 +89,16 @@ func GetFileName(uuid uuid.UUID, tVideoItem twitch.Vod) (string, error) {
 	return fileTemplate, nil
 }
 
-func getVariableMap(uuid uuid.UUID, tVideoItem *twitch.Vod) (map[string]interface{}, error) {
-	safeTitle := utils.SanitizeFileName(tVideoItem.Title)
-	parsedDate, err := parseDate(tVideoItem.CreatedAt)
-	if err != nil {
-		return nil, err
-	}
+func getVariableMap(uuid uuid.UUID, input StorageTemplateInput) (map[string]interface{}, error) {
+	safeTitle := utils.SanitizeFileName(input.Title)
 
 	variables := map[string]interface{}{
 		"uuid":    uuid.String(),
-		"id":      tVideoItem.ID,
-		"channel": tVideoItem.UserLogin,
+		"id":      input.ID,
+		"channel": input.Channel,
 		"title":   safeTitle,
-		"date":    parsedDate,
-		"type":    tVideoItem.Type,
+		"date":    input.Date,
+		"type":    input.Type,
 	}
 	return variables, nil
 }
