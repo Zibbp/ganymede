@@ -15,7 +15,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/notification"
+	"github.com/zibbp/ganymede/internal/platform"
+	platform_twitch "github.com/zibbp/ganymede/internal/platform/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -36,6 +40,24 @@ type QueueStatusInput struct {
 	Status  utils.TaskStatus
 	QueueId uuid.UUID
 	Task    utils.TaskName
+}
+
+func StoreFromContext(ctx context.Context) (*database.Database, error) {
+	store, exists := ctx.Value("store").(*database.Database)
+	if !exists || store == nil {
+		return nil, errors.New("store not found in context")
+	}
+
+	return store, nil
+}
+
+func PlatformFromContext(ctx context.Context) (platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel], error) {
+	platform, exists := ctx.Value("platform").(platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel])
+	if !exists || platform == nil {
+		return nil, errors.New("platform not found in context")
+	}
+
+	return platform, nil
 }
 
 // getDatabaseItems retrieves the database items associated with the provided queueId. This is used instead of passing all the structs to each job so that they can be easily updated in the database.

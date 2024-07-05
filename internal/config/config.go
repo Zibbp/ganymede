@@ -181,7 +181,6 @@ func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
 		}
 		proxyListItems = append(proxyListItems, proxyListItem)
 	}
-
 	return &Conf{
 		RegistrationEnabled: viper.GetBool("registration_enabled"),
 		Archive: struct {
