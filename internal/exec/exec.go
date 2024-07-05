@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	osExec "os/exec"
@@ -26,7 +25,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 
 	// open log file
 	logFilePath := fmt.Sprintf("/logs/%s-video.log", video.ID.String())
-	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -50,24 +49,16 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 
 	cmd := osExec.CommandContext(ctx, "streamlink", cmdArgs...)
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stdout pipe: %v", err)
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stderr pipe: %v", err)
-	}
+	cmd.Stderr = file
+	cmd.Stdout = file
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting streamlink: %w", err)
 	}
 
-	done := make(chan struct{})
+	done := make(chan error)
 	go func() {
-		io.Copy(file, stdout)
-		io.Copy(file, stderr)
-		close(done)
+		done <- cmd.Wait()
 	}()
 
 	// Wait for the command to finish or context to be cancelled
@@ -79,9 +70,9 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
-	case <-done:
+	case err := <-done:
 		// Command finished normally
-		if err := cmd.Wait(); err != nil {
+		if err != nil {
 			if exitError, ok := err.(*osExec.ExitError); ok {
 				log.Error().Err(err).Str("exitCode", strconv.Itoa(exitError.ExitCode())).Str("exit_error", exitError.Error()).Msg("error running streamlink")
 				return fmt.Errorf("error running streamlink")
@@ -97,7 +88,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 	// open log file
 	logFilePath := fmt.Sprintf("/logs/%s-video.log", video.ID.String())
-	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -199,24 +190,16 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 	cmd := osExec.CommandContext(ctx, "streamlink", filteredArgs...)
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stdout pipe: %v", err)
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stderr pipe: %v", err)
-	}
+	cmd.Stderr = file
+	cmd.Stdout = file
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting streamlink: %w", err)
 	}
 
-	done := make(chan struct{})
+	done := make(chan error)
 	go func() {
-		io.Copy(file, stdout)
-		io.Copy(file, stderr)
-		close(done)
+		done <- cmd.Wait()
 	}()
 
 	// Wait for the command to finish or context to be cancelled
@@ -228,9 +211,9 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
-	case <-done:
+	case err := <-done:
 		// Command finished normally
-		if err := cmd.Wait(); err != nil {
+		if err != nil {
 			// Streamlink will error when the stream goes offline - do not return an error
 			log.Info().Str("channel", channel.Name).Str("exit_error", err.Error()).Msg("finished downloading live video")
 			// Check if log output indicates no messages
@@ -255,7 +238,7 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 
 	// open log file
 	logFilePath := fmt.Sprintf("/logs/%s-video-convert.log", video.ID.String())
-	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -266,24 +249,16 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 
 	cmd := osExec.CommandContext(ctx, "ffmpeg", ffmpegArgs...)
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stdout pipe: %v", err)
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stderr pipe: %v", err)
-	}
+	cmd.Stderr = file
+	cmd.Stdout = file
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting ffmpeg: %w", err)
 	}
 
-	done := make(chan struct{})
+	done := make(chan error)
 	go func() {
-		io.Copy(file, stdout)
-		io.Copy(file, stderr)
-		close(done)
+		done <- cmd.Wait()
 	}()
 
 	// Wait for the command to finish or context to be cancelled
@@ -295,9 +270,9 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
-	case <-done:
+	case err := <-done:
 		// Command finished normally
-		if err := cmd.Wait(); err != nil {
+		if err != nil {
 			log.Error().Err(err).Msg("error running ffmpeg")
 			return fmt.Errorf("error running ffmpeg: %w", err)
 		}
@@ -311,7 +286,7 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 
 	// open log file
 	logFilePath := fmt.Sprintf("/logs/%s-video-convert.log", video.ID.String())
-	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -323,24 +298,16 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 
 	cmd := osExec.CommandContext(ctx, "ffmpeg", ffmpegArgs...)
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stdout pipe: %v", err)
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stderr pipe: %v", err)
-	}
+	cmd.Stderr = file
+	cmd.Stdout = file
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting ffmpeg: %w", err)
 	}
 
-	done := make(chan struct{})
+	done := make(chan error)
 	go func() {
-		io.Copy(file, stdout)
-		io.Copy(file, stderr)
-		close(done)
+		done <- cmd.Wait()
 	}()
 
 	// Wait for the command to finish or context to be cancelled
@@ -352,9 +319,9 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
-	case <-done:
+	case err := <-done:
 		// Command finished normally
-		if err := cmd.Wait(); err != nil {
+		if err != nil {
 			log.Error().Err(err).Msg("error running ffmpeg")
 			return fmt.Errorf("error running ffmpeg: %w", err)
 		}
@@ -367,7 +334,7 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 
 	// open log file
 	logFilePath := fmt.Sprintf("/logs/%s-chat.log", video.ID.String())
-	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -381,24 +348,16 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 
 	cmd := osExec.CommandContext(ctx, "TwitchDownloaderCLI", cmdArgs...)
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stdout pipe: %v", err)
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stderr pipe: %v", err)
-	}
+	cmd.Stderr = file
+	cmd.Stdout = file
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting TwitchDownloaderCLI: %w", err)
+		return fmt.Errorf("error starting TwitchDownloader: %w", err)
 	}
 
-	done := make(chan struct{})
+	done := make(chan error)
 	go func() {
-		io.Copy(file, stdout)
-		io.Copy(file, stderr)
-		close(done)
+		done <- cmd.Wait()
 	}()
 
 	// Wait for the command to finish or context to be cancelled
@@ -410,9 +369,9 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
-	case <-done:
+	case err := <-done:
 		// Command finished normally
-		if err := cmd.Wait(); err != nil {
+		if err != nil {
 			if exitError, ok := err.(*osExec.ExitError); ok {
 				log.Error().Err(err).Msg("error running TwitchDownloaderCLI")
 				return fmt.Errorf("error running TwitchDownloaderCLI exit code %d: %w", exitError.ExitCode(), exitError)
@@ -436,7 +395,7 @@ func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Chan
 
 	// open log file
 	logFilePath := fmt.Sprintf("/logs/%s-chat.log", video.ID.String())
-	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -450,24 +409,16 @@ func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Chan
 
 	cmd := osExec.CommandContext(ctx, "chat_downloader", cmdArgs...)
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stdout pipe: %v", err)
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stderr pipe: %v", err)
-	}
+	cmd.Stderr = file
+	cmd.Stdout = file
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting TwitchDownloaderCLI: %w", err)
+		return fmt.Errorf("error starting TwitchDownloader: %w", err)
 	}
 
-	done := make(chan struct{})
+	done := make(chan error)
 	go func() {
-		io.Copy(file, stdout)
-		io.Copy(file, stderr)
-		close(done)
+		done <- cmd.Wait()
 	}()
 
 	// Wait for the command to finish or context to be cancelled
@@ -479,9 +430,9 @@ func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Chan
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
-	case <-done:
+	case err := <-done:
 		// Command finished normally
-		if err := cmd.Wait(); err != nil {
+		if err != nil {
 			if exitError, ok := err.(*osExec.ExitError); ok {
 				if status, ok := exitError.Sys().(interface{ ExitStatus() int }); ok {
 					if status.ExitStatus() != -1 {
@@ -501,7 +452,7 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 
 	// open log file
 	logFilePath := fmt.Sprintf("/logs/%s-chat-render.log", video.ID.String())
-	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -522,24 +473,16 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 
 	cmd := osExec.CommandContext(ctx, "TwitchDownloaderCLI", cmdArgs...)
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stdout pipe: %v", err)
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stderr pipe: %v", err)
-	}
+	cmd.Stderr = file
+	cmd.Stdout = file
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting TwitchDownloaderCLI: %w", err)
+		return fmt.Errorf("error starting TwitchDownloader: %w", err)
 	}
 
-	done := make(chan struct{})
+	done := make(chan error)
 	go func() {
-		io.Copy(file, stdout)
-		io.Copy(file, stderr)
-		close(done)
+		done <- cmd.Wait()
 	}()
 
 	// Wait for the command to finish or context to be cancelled
@@ -551,9 +494,9 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
-	case <-done:
+	case err := <-done:
 		// Command finished normally
-		if err := cmd.Wait(); err != nil {
+		if err != nil {
 			if exitError, ok := err.(*osExec.ExitError); ok {
 				log.Error().Err(err).Msg("error running TwitchDownloaderCLI")
 				return fmt.Errorf("error running TwitchDownloaderCLI exit code %d: %w", exitError.ExitCode(), exitError)
@@ -617,7 +560,7 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 
 	// open log file
 	logFilePath := fmt.Sprintf("/logs/%s-chat-convert.log", video.ID.String())
-	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -631,24 +574,16 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 
 	cmd := osExec.CommandContext(ctx, "TwitchDownloaderCLI", cmdArgs...)
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stdout pipe: %v", err)
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stderr pipe: %v", err)
-	}
+	cmd.Stderr = file
+	cmd.Stdout = file
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting streamlink: %w", err)
+		return fmt.Errorf("error starting TwitchDownloader: %w", err)
 	}
 
-	done := make(chan struct{})
+	done := make(chan error)
 	go func() {
-		io.Copy(file, stdout)
-		io.Copy(file, stderr)
-		close(done)
+		done <- cmd.Wait()
 	}()
 
 	// Wait for the command to finish or context to be cancelled
@@ -660,9 +595,9 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
-	case <-done:
+	case err := <-done:
 		// Command finished normally
-		if err := cmd.Wait(); err != nil {
+		if err != nil {
 			if exitError, ok := err.(*osExec.ExitError); ok {
 				log.Error().Err(err).Str("exitCode", strconv.Itoa(exitError.ExitCode())).Str("exit_error", exitError.Error()).Msg("error running TwitchDownloader")
 				return fmt.Errorf("error running TwitchDownloader")
