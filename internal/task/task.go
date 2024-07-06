@@ -42,8 +42,8 @@ func (s *Service) StartTask(c echo.Context, task string) error {
 			return fmt.Errorf("error checking live: %v", err)
 		}
 
-	case "check_vod":
-		go s.LiveService.CheckVodWatchedChannels()
+	// case "check_vod":
+	// 	go s.LiveService.CheckVodWatchedChannels()
 
 	case "get_jwks":
 		err := auth.FetchJWKS()

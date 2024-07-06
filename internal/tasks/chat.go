@@ -85,10 +85,17 @@ func (w DownloadChatWorker) Work(ctx context.Context, job *river.Job[DownloadCha
 	// continue with next job
 	if job.Args.Continue {
 		client := river.ClientFromContext[pgx.Tx](ctx)
-		client.Insert(ctx, &RenderChatArgs{
-			Continue: true,
-			Input:    job.Args.Input,
-		}, nil)
+		if dbItems.Queue.RenderChat {
+			client.Insert(ctx, &RenderChatArgs{
+				Continue: true,
+				Input:    job.Args.Input,
+			}, nil)
+		} else {
+			client.Insert(ctx, &MoveChatArgs{
+				Continue: true,
+				Input:    job.Args.Input,
+			}, nil)
+		}
 	}
 
 	// check if tasks are done

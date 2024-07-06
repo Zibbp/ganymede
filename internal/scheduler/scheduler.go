@@ -40,25 +40,25 @@ func (s *Service) StartLiveScheduler() {
 	scheduler.StartAsync()
 }
 
-func (s *Service) StartWatchVideoScheduler() {
-	time.Sleep(time.Second * 5)
-	// get tz
-	var tz string
-	tz = os.Getenv("TZ")
-	if tz == "" {
-		tz = "UTC"
-	}
-	loc, err := time.LoadLocation(tz)
-	if err != nil {
-		log.Info().Err(err).Msg("failed to load location, defaulting to UTC")
-		loc = time.UTC
-	}
-	scheduler := gocron.NewScheduler(loc)
+// func (s *Service) StartWatchVideoScheduler() {
+// 	time.Sleep(time.Second * 5)
+// 	// get tz
+// 	var tz string
+// 	tz = os.Getenv("TZ")
+// 	if tz == "" {
+// 		tz = "UTC"
+// 	}
+// 	loc, err := time.LoadLocation(tz)
+// 	if err != nil {
+// 		log.Info().Err(err).Msg("failed to load location, defaulting to UTC")
+// 		loc = time.UTC
+// 	}
+// 	scheduler := gocron.NewScheduler(loc)
 
-	s.checkWatchedChannelVideos(scheduler)
+// 	s.checkWatchedChannelVideos(scheduler)
 
-	scheduler.StartAsync()
-}
+// 	scheduler.StartAsync()
+// }
 
 func (s *Service) StartJwksScheduler() {
 	time.Sleep(time.Second * 5)
@@ -128,22 +128,22 @@ func (s *Service) checkLiveStreamSchedule(scheduler *gocron.Scheduler) {
 	}
 }
 
-func (s *Service) checkWatchedChannelVideos(schedule *gocron.Scheduler) {
-	log.Info().Msg("setting up check watched channel videos schedule")
+// func (s *Service) checkWatchedChannelVideos(schedule *gocron.Scheduler) {
+// 	log.Info().Msg("setting up check watched channel videos schedule")
 
-	configCheckVideoInterval := viper.GetInt("video_check_interval_minutes")
-	log.Debug().Msgf("setting video check interval to run every %d minutes", configCheckVideoInterval)
-	_, err := schedule.Every(configCheckVideoInterval).Minutes().Do(func() {
-		log.Info().Msg("running check watched channel videos schedule")
-		err := s.LiveService.CheckVodWatchedChannels()
-		if err != nil {
-			log.Error().Err(err).Msg("failed to check watched channel videos")
-		}
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("failed to set up check watched channel videos schedule")
-	}
-}
+// 	configCheckVideoInterval := viper.GetInt("video_check_interval_minutes")
+// 	log.Debug().Msgf("setting video check interval to run every %d minutes", configCheckVideoInterval)
+// 	_, err := schedule.Every(configCheckVideoInterval).Minutes().Do(func() {
+// 		log.Info().Msg("running check watched channel videos schedule")
+// 		err := s.LiveService.CheckVodWatchedChannels()
+// 		if err != nil {
+// 			log.Error().Err(err).Msg("failed to check watched channel videos")
+// 		}
+// 	})
+// 	if err != nil {
+// 		log.Error().Err(err).Msg("failed to set up check watched channel videos schedule")
+// 	}
+// }
 
 func (s *Service) fetchJwksSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up fetch jwks schedule")
