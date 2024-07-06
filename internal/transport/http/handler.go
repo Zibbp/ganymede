@@ -90,7 +90,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	if viper.GetBool("oauth_enabled") {
 		go h.Service.SchedulerService.StartJwksScheduler()
 	}
-	go h.Service.SchedulerService.StartWatchVideoScheduler()
+	// go h.Service.SchedulerService.StartWatchVideoScheduler()
 	go h.Service.SchedulerService.StartTwitchCategoriesScheduler()
 	go h.Service.SchedulerService.StartPruneVideoScheduler()
 
@@ -238,7 +238,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.GET("/check", h.Check, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	liveGroup.GET("/vod", h.CheckVodWatchedChannels, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	// liveGroup.GET("/vod", h.CheckVodWatchedChannels, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.POST("/archive", h.ArchiveLiveChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Playback

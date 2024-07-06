@@ -44,7 +44,7 @@ func (w CheckChannelsForNewVideosWorker) Work(ctx context.Context, job *river.Jo
 		return err
 	}
 
-	err = liveService.CheckVodWatchedChannels()
+	err = liveService.CheckVodWatchedChannels(ctx)
 	if err != nil {
 		return err
 	}

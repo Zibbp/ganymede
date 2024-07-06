@@ -13,7 +13,9 @@ import (
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/vod"
+	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/twitch"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type TwitchVideoResponse struct {
@@ -55,7 +57,7 @@ type UserName string
 
 type Viewable string
 
-func (s *Service) CheckVodWatchedChannels() error {
+func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 	// Get channels from DB
 	channels, err := s.Store.Client.Live.Query().Where(live.WatchVod(true)).WithChannel().WithCategories().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
 		ltrq.Where(livetitleregex.ApplyToVideosEQ(true))
@@ -220,12 +222,18 @@ func (s *Service) CheckVodWatchedChannels() error {
 				}
 
 				// archive the video
-				// _, err = s.ArchiveService.ArchiveTwitchVod(video.ID, watch.Resolution, watch.ArchiveChat, watch.RenderChat)
-				// if err != nil {
-				// 	log.Error().Err(err).Msgf("Error archiving video %s", video.ID)
-				// 	continue
-				// }
-				// log.Info().Msgf("[Channel Watch] starting archive for video %s", video.ID)
+				input := archive.ArchiveVideoInput{
+					VideoId:     video.ID,
+					Quality:     utils.VodQuality(watch.Resolution),
+					ArchiveChat: watch.ArchiveChat,
+					RenderChat:  watch.RenderChat,
+				}
+				err = s.ArchiveService.ArchiveVideo(ctx, input)
+				if err != nil {
+					log.Error().Err(err).Msgf("Error archiving video %s", video.ID)
+					continue
+				}
+				log.Info().Msgf("[Channel Watch] starting archive for video %s", video.ID)
 			}
 		}
 	}

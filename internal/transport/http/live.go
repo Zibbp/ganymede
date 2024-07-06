@@ -15,7 +15,7 @@ type LiveService interface {
 	DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error
 	UpdateLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
 	Check() error
-	CheckVodWatchedChannels() error
+	// CheckVodWatchedChannels() error
 	ArchiveLiveChannel(c echo.Context, archiveDto live.ArchiveLive) error
 }
 
@@ -329,11 +329,11 @@ func (h *Handler) Check(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/live/check [get]
 //	@Security		ApiKeyCookieAuth
-func (h *Handler) CheckVodWatchedChannels(c echo.Context) error {
-	go h.Service.LiveService.CheckVodWatchedChannels()
+// func (h *Handler) CheckVodWatchedChannels(c echo.Context) error {
+// 	go h.Service.LiveService.CheckVodWatchedChannels()
 
-	return c.JSON(http.StatusOK, "ok")
-}
+// 	return c.JSON(http.StatusOK, "ok")
+// }
 
 // ArchiveLiveChannel godoc
 //

@@ -4,7 +4,7 @@ type SchedulerService interface {
 	StartAppScheduler()
 	StartLiveScheduler()
 	StartJwksScheduler()
-	StartWatchVideoScheduler()
+	// StartWatchVideoScheduler()
 	StartTwitchCategoriesScheduler()
 	StartPruneVideoScheduler()
 }
