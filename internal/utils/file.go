@@ -300,7 +300,7 @@ func DeleteFile(path string) error {
 	log.Debug().Msgf("deleting file: %s", path)
 	err := os.Remove(path)
 	if err != nil {
-		return fmt.Errorf("error deleting file: %v", err)
+		return err
 	}
 	return nil
 }

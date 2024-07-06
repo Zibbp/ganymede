@@ -459,6 +459,13 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 	defer file.Close()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging TwitchDownloaderCLI output to %s", logFilePath)
 
+	// check if video already exists (failed render that should be deleted)
+	if utils.FileExists(video.TmpChatRenderPath) {
+		if err := utils.DeleteFile(video.TmpChatRenderPath); err != nil {
+			return err
+		}
+	}
+
 	var cmdArgs []string
 
 	configRenderArgs := viper.GetString("parameters.chat_render")
