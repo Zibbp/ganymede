@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -146,7 +148,10 @@ func (h *Handler) ConvertTwitchChat(c echo.Context) error {
 
 	t := time.Unix(seconds, nanoseconds)
 
-	err = utils.ConvertTwitchLiveChatToTDLChat(body.LiveChatPath, body.ChannelName, body.VideoID, body.VideoExternalID, body.ChannelID, t, body.PreviousVideoID)
+	envConfig := config.GetEnvConfig()
+	outPath := fmt.Sprintf("%s/%s_%s-chat-convert.json", envConfig.TempDir, body.VideoID)
+
+	err = utils.ConvertTwitchLiveChatToTDLChat(body.LiveChatPath, outPath, body.ChannelName, body.VideoID, body.VideoExternalID, body.ChannelID, t, body.PreviousVideoID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

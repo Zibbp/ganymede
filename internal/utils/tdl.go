@@ -80,7 +80,7 @@ type LiveChat struct {
 	Comments []LiveComment `json:"comments"`
 }
 
-func ConvertTwitchLiveChatToTDLChat(path string, channelName string, videoID string, videoExternalID string, channelID int, chatStartTime time.Time, previousVideoID string) error {
+func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName string, videoID string, videoExternalID string, channelID int, chatStartTime time.Time, previousVideoID string) error {
 
 	log.Debug().Str("chat_file", path).Msg("Converting live Twitch chat to TDL chat for rendering")
 
@@ -310,7 +310,7 @@ func ConvertTwitchLiveChatToTDLChat(path string, channelName string, videoID str
 	tdlChat.Video.End = int64(lastComment.ContentOffsetSeconds)
 
 	// write chat
-	err = writeTDLChat(tdlChat, videoID, videoExternalID)
+	err = writeTDLChat(tdlChat, outPath)
 	if err != nil {
 		return err
 	}
@@ -319,12 +319,12 @@ func ConvertTwitchLiveChatToTDLChat(path string, channelName string, videoID str
 
 }
 
-func writeTDLChat(parsedChat TDLChat, vID string, vExtID string) error {
+func writeTDLChat(parsedChat TDLChat, outPath string) error {
 	data, err := json.Marshal(parsedChat)
 	if err != nil {
 		return fmt.Errorf("failed to marshal parsed comments: %v", err)
 	}
-	err = os.WriteFile(fmt.Sprintf("/tmp/%s_%s-chat-convert.json", vExtID, vID), data, 0644)
+	err = os.WriteFile(outPath, data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write parsed comments: %v", err)
 	}

@@ -220,7 +220,7 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	}
 
 	// convert chat
-	err = utils.ConvertTwitchLiveChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Channel.Name, dbItems.Video.ID.String(), dbItems.Video.ExtID, channelIdInt, dbItems.Queue.ChatStart, string(previousVideoID))
+	err = utils.ConvertTwitchLiveChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Channel.Name, dbItems.Video.ID.String(), dbItems.Video.ExtID, channelIdInt, dbItems.Queue.ChatStart, string(previousVideoID))
 	if err != nil {
 		return err
 	}
