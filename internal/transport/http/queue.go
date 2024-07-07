@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/riverqueue/river/rivertype"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -20,10 +21,17 @@ type QueueService interface {
 	DeleteQueueItem(c echo.Context, id uuid.UUID) error
 	ReadLogFile(c echo.Context, id uuid.UUID, logType string) ([]byte, error)
 	StopQueueItem(ctx context.Context, id uuid.UUID) error
+	StartQueueTask(ctx context.Context, input queue.StartQueueTaskInput) (*rivertype.JobRow, error)
 }
 
 type CreateQueueRequest struct {
 	VodID string `json:"vod_id" validate:"required"`
+}
+
+type StartQueueTaskRequest struct {
+	QueueId  uuid.UUID `json:"queue_id" validate:"required,uuid4"`
+	TaskName string    `json:"task_name" validate:"required,oneof=task_vod_create_folder task_vod_download_thumbnail task_vod_save_info task_video_download task_video_convert task_video_move task_chat_download task_chat_convert task_chat_render task_chat_move task_live_chat_download task_live_video_download"`
+	Continue bool      `json:"continue"`
 }
 
 type UpdateQueueRequest struct {
@@ -256,6 +264,19 @@ func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 	return c.JSON(http.StatusOK, string(log))
 }
 
+// StopQueueItem godoc
+//
+//	@Summary		Stop a queue item
+//	@Description	Stop processing the video and chat downloads of an active queue item
+//	@Tags			queue
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string	true	"Queue item id"
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/queue/{id}/stop [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) StopQueueItem(c echo.Context) error {
 	id := c.Param("id")
 
@@ -269,4 +290,38 @@ func (h *Handler) StopQueueItem(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)
+}
+
+// StartQueueTask godoc
+//
+//	@Summary		Start a queue task for a queue
+//	@Description	Start a specific queue task
+//	@Tags			queue
+//	@Accept			json
+//	@Produce		json
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/queue/task/start [post]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) StartQueueTask(c echo.Context) error {
+	body := new(StartQueueTaskRequest)
+	if err := c.Bind(body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	_, err := h.Service.QueueService.StartQueueTask(c.Request().Context(), queue.StartQueueTaskInput{
+		QueueId:  body.QueueId,
+		TaskName: body.TaskName,
+		Continue: body.Continue,
+	})
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.NoContent(http.StatusOK)
 }
