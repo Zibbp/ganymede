@@ -575,7 +575,7 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging TwitchDownloader output to %s", logFilePath)
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, "chatupdate", "-i", video.TmpLiveChatConvertPath, "--embed-missing", "-o", video.TmpChatDownloadPath)
+	cmdArgs = append(cmdArgs, "chatupdate", "-i", video.TmpLiveChatDownloadPath, "--embed-missing", "-o", video.TmpChatDownloadPath)
 
 	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running TwitchDownloader")
 
