@@ -780,7 +780,7 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		stopHeartbeat <- true
 		return temporal.NewApplicationError(err.Error(), "", nil)
 	}
-	cID, err := strconv.Atoi(streamer.ID)
+	_, err = strconv.Atoi(streamer.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("error converting streamer ID to int")
 		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)
@@ -820,17 +820,17 @@ func ConvertTwitchLiveChat(ctx context.Context, input dto.ArchiveVideoInput) err
 		previousVideoID = "132195945"
 	}
 
-	err = utils.ConvertTwitchLiveChatToTDLChat(input.Vod.TmpLiveChatDownloadPath, input.Channel.Name, input.Vod.ID.String(), input.Vod.ExtID, cID, input.Queue.ChatStart, string(previousVideoID))
-	if err != nil {
-		log.Error().Err(err).Msg("error converting chat")
-		_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)
-		if dbErr != nil {
-			stopHeartbeat <- true
-			return dbErr
-		}
-		stopHeartbeat <- true
-		return temporal.NewApplicationError(err.Error(), "", nil)
-	}
+	// err = utils.ConvertTwitchLiveChatToTDLChat(input.Vod.TmpLiveChatDownloadPath, input.Channel.Name, input.Vod.ID.String(), input.Vod.ExtID, cID, input.Queue.ChatStart, string(previousVideoID))
+	// if err != nil {
+	// 	log.Error().Err(err).Msg("error converting chat")
+	// 	_, dbErr := database.DB().Client.Queue.UpdateOneID(input.Queue.ID).SetTaskChatConvert(utils.Failed).Save(ctx)
+	// 	if dbErr != nil {
+	// 		stopHeartbeat <- true
+	// 		return dbErr
+	// 	}
+	// 	stopHeartbeat <- true
+	// 	return temporal.NewApplicationError(err.Error(), "", nil)
+	// }
 
 	// TwitchDownloader "chatupdate"
 	// Embeds emotes and badges into the chat file
