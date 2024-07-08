@@ -19,6 +19,12 @@ type EnvConfig struct {
 	TempDir            string `env:"TEMP_DIR, default=/tmp"`
 	TwitchClientId     string `env:"TWITCH_CLIENT_ID, default="`
 	TwitchClientSecret string `env:"TWITCH_CLIENT_SECRET, default="`
+
+	// worker config
+	MaxChatDownloadExecutions  int `env:"MAX_CHAT_DOWNLOAD_EXECUTIONS, default=5"`
+	MaxChatRenderExecutions    int `env:"MAX_CHAT_RENDER_EXECUTIONS, default=3"`
+	MaxVideoDownloadExecutions int `env:"MAX_VIDEO_DOWNLOAD_EXECUTIONS, default=5"`
+	MaxVideoConvertExecutions  int `env:"MAX_VIDEO_CONVERT_EXECUTIONS, default=3"`
 }
 
 func GetEnvConfig() EnvConfig {

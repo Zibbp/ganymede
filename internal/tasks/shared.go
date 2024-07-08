@@ -25,6 +25,13 @@ import (
 
 var archive_tag = "archive"
 
+var (
+	QueueVideoDownload    = "video-download"
+	QueueVideoPostProcess = "video-postprocess"
+	QueueChatDownload     = "chat-download"
+	QueueChatRender       = "chat-render"
+)
+
 type ArchiveVideoInput struct {
 	QueueId       uuid.UUID
 	HeartBeatTime time.Time // do not set this field
@@ -51,8 +58,8 @@ func StoreFromContext(ctx context.Context) (*database.Database, error) {
 	return store, nil
 }
 
-func PlatformFromContext(ctx context.Context) (platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel], error) {
-	platform, exists := ctx.Value("platform").(platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel])
+func PlatformFromContext(ctx context.Context) (platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory], error) {
+	platform, exists := ctx.Value("platform").(platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory])
 	if !exists || platform == nil {
 		return nil, errors.New("platform not found in context")
 	}

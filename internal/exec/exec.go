@@ -342,7 +342,7 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, "chatdownload", "--id", video.ExtID, "--embed-images", "-o", video.TmpChatDownloadPath)
+	cmdArgs = append(cmdArgs, "chatdownload", "--id", video.ExtID, "--embed-images", "--collision", "overwrite", "-o", video.TmpChatDownloadPath)
 
 	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running TwitchDownloaderCLI")
 
@@ -457,21 +457,14 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
 	defer file.Close()
-	log.Debug().Str("video_id", video.ID.String()).Msgf("logging TwitchDownloaderCLI output to %s", logFilePath)
-
-	// check if video already exists (failed render that should be deleted)
-	if utils.FileExists(video.TmpChatRenderPath) {
-		if err := utils.DeleteFile(video.TmpChatRenderPath); err != nil {
-			return err
-		}
-	}
+	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chat_downloader output to %s", logFilePath)
 
 	var cmdArgs []string
 
 	configRenderArgs := viper.GetString("parameters.chat_render")
 	configRenderArgsArr := strings.Fields(configRenderArgs)
 
-	cmdArgs = append(cmdArgs, "chatrender", "-i", video.TmpChatDownloadPath)
+	cmdArgs = append(cmdArgs, "chatrender", "-i", video.TmpChatDownloadPath, "--collision", "overwrite")
 
 	cmdArgs = append(cmdArgs, configRenderArgsArr...)
 	cmdArgs = append(cmdArgs, "-o", video.TmpChatRenderPath)
@@ -575,9 +568,9 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging TwitchDownloader output to %s", logFilePath)
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, "chatupdate", "-i", video.TmpLiveChatConvertPath, "--embed-missing", "-o", video.TmpChatDownloadPath)
+	cmdArgs = append(cmdArgs, "chatupdate", "-i", video.TmpLiveChatConvertPath, "--embed-missing", "--collision", "overwrite", "-o", video.TmpChatDownloadPath)
 
-	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running TwitchDownloader")
+	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running TwitchDownloaderCLI")
 
 	cmd := osExec.CommandContext(ctx, "TwitchDownloaderCLI", cmdArgs...)
 

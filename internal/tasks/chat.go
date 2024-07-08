@@ -25,7 +25,7 @@ func (DownloadChatArgs) Kind() string { return string(utils.TaskDownloadChat) }
 func (args DownloadChatArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 5,
-		Queue:       "default",
+		Queue:       QueueChatDownload,
 		Tags:        []string{"archive"},
 	}
 }
@@ -119,7 +119,7 @@ func (RenderChatArgs) Kind() string { return string(utils.TaskRenderChat) }
 func (args RenderChatArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 5,
-		Queue:       "chat-render",
+		Queue:       QueueChatRender,
 		Tags:        []string{"archive"},
 	}
 }

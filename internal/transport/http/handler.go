@@ -73,6 +73,8 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	// Middleware
 	h.Server.Validator = &utils.CustomValidator{Validator: validator.New()}
 
+	h.Server.HideBanner = true
+
 	h.Server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{os.Getenv("FRONTEND_HOST")},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
@@ -91,8 +93,8 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 		go h.Service.SchedulerService.StartJwksScheduler()
 	}
 	// go h.Service.SchedulerService.StartWatchVideoScheduler()
-	go h.Service.SchedulerService.StartTwitchCategoriesScheduler()
-	go h.Service.SchedulerService.StartPruneVideoScheduler()
+	// go h.Service.SchedulerService.StartTwitchCategoriesScheduler()
+	// go h.Service.SchedulerService.StartPruneVideoScheduler()
 
 	// Populate channel external ids
 	go func() {

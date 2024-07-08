@@ -250,7 +250,7 @@ func (s *Service) StorageMigration() error {
 	return nil
 }
 
-func PruneVideos() {
+func PruneVideos() error {
 	// setup
 	vodService := &vod.Service{Store: database.DB()}
 	req := &http.Request{}
@@ -262,7 +262,7 @@ func PruneVideos() {
 	channels, err := database.DB().Client.Channel.Query().Where(channel.Retention(true)).All(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("Error fetching channels")
-		return
+		return err
 	}
 	log.Debug().Msgf("Found %d channels with retention enabled", len(channels))
 
@@ -294,4 +294,6 @@ func PruneVideos() {
 		}
 
 	}
+
+	return nil
 }

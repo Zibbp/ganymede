@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/worker"
-  cmd = "go build -o ./tmp/worker ./cmd/worker/main.go"
+  cmd = "make build_dev_worker"
   delay = 1000
   exclude_dir = ["tmp", "dev"]
   exclude_file = []

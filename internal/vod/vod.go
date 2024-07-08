@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
@@ -175,11 +176,12 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) e
 	// delete files
 	if deleteFiles {
 		log.Debug().Msgf("deleting files for vod %s", v.ID)
-		path := fmt.Sprintf("/vods/%s/%s", v.Edges.Channel.Name, v.FolderName)
-		err := utils.DeleteFolder(path)
-		if err != nil {
-			log.Debug().Err(err).Msg("error deleting files")
-			return err
+
+		path := filepath.Dir(filepath.Clean(v.VideoPath))
+
+		if err := utils.DeleteDirectory(path); err != nil {
+			log.Error().Err(err).Msg("error deleting directory")
+			return fmt.Errorf("error deleting directory: %v", err)
 		}
 	}
 

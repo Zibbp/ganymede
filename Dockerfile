@@ -4,8 +4,8 @@ RUN mkdir /app
 ADD . /app
 WORKDIR /app
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -X main.Version=${VERSION} -X main.BuildTime=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X main.GitHash=`git rev-parse HEAD`" -o ganymede-api cmd/server/main.go
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -X main.Version=${VERSION} -X main.BuildTime=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X main.GitHash=`git rev-parse HEAD`" -o ganymede-worker cmd/worker/main.go
+RUN make build_server
+RUN make build_worker
 
 FROM debian:bookworm-slim AS build-stage-02
 

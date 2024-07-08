@@ -8,8 +8,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"github.com/zibbp/ganymede/internal/config"
-	"github.com/zibbp/ganymede/internal/platform"
-	platform_twitch "github.com/zibbp/ganymede/internal/platform/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -157,13 +155,7 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 		return err
 	}
 
-	// TODO: move to context
-	envConfig := config.GetEnvConfig()
-	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel]
-	platformService, err = platform_twitch.NewTwitchPlatformService(
-		envConfig.TwitchClientId,
-		envConfig.TwitchClientSecret,
-	)
+	platformService, err := PlatformFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -269,13 +261,7 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 		return err
 	}
 
-	// TODO: move to context
-	envConfig := config.GetEnvConfig()
-	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel]
-	platformService, err = platform_twitch.NewTwitchPlatformService(
-		envConfig.TwitchClientId,
-		envConfig.TwitchClientSecret,
-	)
+	platformService, err := PlatformFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -397,13 +383,7 @@ func (w DownloadThumbnailsMinimalWorker) Work(ctx context.Context, job *river.Jo
 		return err
 	}
 
-	// TODO: move to context
-	envConfig := config.GetEnvConfig()
-	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel]
-	platformService, err = platform_twitch.NewTwitchPlatformService(
-		envConfig.TwitchClientId,
-		envConfig.TwitchClientSecret,
-	)
+	platformService, err := PlatformFromContext(ctx)
 	if err != nil {
 		return err
 	}
