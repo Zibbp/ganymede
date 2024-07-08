@@ -271,7 +271,7 @@ func (w MoveChatWorker) Work(ctx context.Context, job *river.Job[MoveChatArgs]) 
 	}
 
 	if dbItems.Queue.LiveArchive {
-		err = utils.MoveFile(ctx, dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatDownloadPath)
+		err = utils.MoveFile(ctx, dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.LiveChatPath)
 		if err != nil {
 			return err
 		}
