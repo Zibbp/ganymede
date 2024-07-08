@@ -99,7 +99,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 	envConfig := config.GetEnvConfig()
 
 	// setup platform service
-	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel]
+	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory]
 	platformService, err := platform_twitch.NewTwitchPlatformService(
 		envConfig.TwitchClientId,
 		envConfig.TwitchClientSecret,
@@ -306,7 +306,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 	}
 
 	// setup platform service
-	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel]
+	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory]
 	platformService, err = platform_twitch.NewTwitchPlatformService(
 		envConfig.TwitchClientId,
 		envConfig.TwitchClientSecret,

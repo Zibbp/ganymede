@@ -24,7 +24,7 @@ func (DownloadVideoArgs) Kind() string { return string(utils.TaskDownloadVideo) 
 func (args DownloadVideoArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 5,
-		Queue:       "video-download",
+		Queue:       QueueVideoDownload,
 		Tags:        []string{"archive"},
 	}
 }
@@ -110,7 +110,7 @@ func (PostProcessVideoArgs) Kind() string { return string(utils.TaskPostProcessV
 func (args PostProcessVideoArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 5,
-		Queue:       "video-postprocess",
+		Queue:       QueueVideoPostProcess,
 		Tags:        []string{"archive"},
 	}
 }
@@ -172,6 +172,14 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 	// convert to HLS if needed
 	if viper.GetBool("archive.save_as_hls") {
 		err = exec.ConvertVideoToHLS(ctx, dbItems.Video)
+		if err != nil {
+			return err
+		}
+	}
+
+	// delete source video
+	if utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
+		err = utils.DeleteFile(dbItems.Video.TmpVideoDownloadPath)
 		if err != nil {
 			return err
 		}

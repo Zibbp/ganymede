@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
@@ -57,20 +58,22 @@ type UserName string
 
 type Viewable string
 
-func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
+func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Logger) error {
 	// Get channels from DB
 	channels, err := s.Store.Client.Live.Query().Where(live.WatchVod(true)).WithChannel().WithCategories().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
 		ltrq.Where(livetitleregex.ApplyToVideosEQ(true))
 	}).All(context.Background())
 	if err != nil {
-		log.Debug().Err(err).Msg("error getting channels")
 		return err
 	}
+
 	if len(channels) == 0 {
-		log.Debug().Msg("No channels to check")
+		logger.Info().Msg("no channels to check")
 		return nil
 	}
-	log.Info().Msgf("Checking %d channels for new videos", len(channels))
+
+	logger.Debug().Msgf("checking %d channels", len(channels))
+
 	for _, watch := range channels {
 		// Check if channel has category restrictions
 		var channelVideoCategories []string
@@ -78,7 +81,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 			for _, category := range watch.Edges.Categories {
 				channelVideoCategories = append(channelVideoCategories, category.Name)
 			}
-			log.Debug().Msgf("Channel %s has category restrictions: %s", watch.Edges.Channel.Name, strings.Join(channelVideoCategories, ", "))
+			logger.Debug().Msgf("channel %s has category restrictions: %s", watch.Edges.Channel.Name, strings.Join(channelVideoCategories, ", "))
 		}
 
 		var videos []twitch.Video
@@ -86,7 +89,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 		if watch.DownloadArchives {
 			tmpVideos, err := twitch.GetVideosByUser(watch.Edges.Channel.ExtID, "archive")
 			if err != nil {
-				log.Error().Err(err).Msg("error getting videos")
+				logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting videos")
 				continue
 			}
 			videos = append(videos, tmpVideos...)
@@ -95,7 +98,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 		if watch.DownloadHighlights {
 			tmpVideos, err := twitch.GetVideosByUser(watch.Edges.Channel.ExtID, "highlight")
 			if err != nil {
-				log.Error().Err(err).Msg("error getting videos")
+				logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting videos")
 				continue
 			}
 			videos = append(videos, tmpVideos...)
@@ -104,7 +107,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 		if watch.DownloadUploads {
 			tmpVideos, err := twitch.GetVideosByUser(watch.Edges.Channel.ExtID, "upload")
 			if err != nil {
-				log.Error().Err(err).Msg("error getting videos")
+				logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting videos")
 				continue
 			}
 			videos = append(videos, tmpVideos...)
@@ -113,7 +116,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 		// Fetch all videos from DB
 		dbVideos, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(watch.Edges.Channel.ID))).All(context.Background())
 		if err != nil {
-			log.Error().Err(err).Msg("error getting videos from DB")
+			logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting videos from database")
 			continue
 		}
 		// Check if video is already in DB
@@ -127,7 +130,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 					for _, titleRegex := range watch.Edges.TitleRegex {
 						regex, err := regexp.Compile(titleRegex.Regex)
 						if err != nil {
-							log.Error().Err(err).Msg("error compiling regex for watched channel check, skipping this regex")
+							logger.Error().Err(err).Msgf("error compiling regex %s", titleRegex.Regex)
 							continue
 						}
 						matches := regex.FindAllString(video.Title, -1)
@@ -140,7 +143,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 							continue
 						}
 
-						log.Debug().Str("regex", titleRegex.Regex).Str("title", video.Title).Msgf("no regex matches for video")
+						logger.Debug().Str("regex", titleRegex.Regex).Str("title", video.Title).Msgf("no regex matches for video")
 						continue OUTER
 					}
 				}
@@ -148,7 +151,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 				// Query the video using Twitch's GraphQL API to check for restrictions
 				gqlVideo, err := twitch.GQLGetVideo(video.ID)
 				if err != nil {
-					log.Error().Err(err).Msgf("error getting video %s from GraphQL API", video.ID)
+					logger.Error().Err(err).Str("video_id", video.ID).Msg("error getting video from GraphQL API")
 					continue
 				}
 
@@ -156,7 +159,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 				if watch.VideoAge > 0 {
 					parsedTime, err := time.Parse(time.RFC3339, video.CreatedAt)
 					if err != nil {
-						log.Error().Err(err).Msgf("error parsing video %s created_at", video.ID)
+						logger.Error().Err(err).Str("video_id", video.ID).Msg("error parsing video created_at")
 						continue
 					}
 
@@ -165,7 +168,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 					ageCutOff := currentTime.Add(-ageDuration)
 
 					if parsedTime.Before(ageCutOff) {
-						log.Debug().Msgf("skipping video %s. video is older than %d days.", video.ID, watch.VideoAge)
+						logger.Debug().Str("video_id", video.ID).Msgf("skipping video; video is older than %d days.", watch.VideoAge)
 						continue
 					}
 				}
@@ -173,7 +176,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 				// Get video chapters
 				gqlVideoChapters, err := twitch.GQLGetChapters(video.ID)
 				if err != nil {
-					log.Error().Err(err).Msgf("error getting video %s chapters from GraphQL API", video.ID)
+					logger.Error().Err(err).Str("video_id", video.ID).Msgf("error getting video chapters from GraphQL API")
 					continue
 				}
 				var videoChapters []string
@@ -182,7 +185,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 					for _, chapter := range gqlVideoChapters.Data.Video.Moments.Edges {
 						videoChapters = append(videoChapters, chapter.Node.Details.Game.DisplayName)
 					}
-					log.Debug().Msgf("Video %s has chapters: %s", video.ID, strings.Join(videoChapters, ", "))
+					logger.Debug().Str("video_id", video.ID).Msgf("video has chapters: %s", strings.Join(videoChapters, ", "))
 				}
 
 				// Append chapters and video category to video categories
@@ -194,12 +197,12 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 				if strings.Contains(gqlVideo.Data.Video.ResourceRestriction.Type, "SUB") {
 					// Skip if sub only is disabled
 					if !watch.DownloadSubOnly {
-						log.Info().Msgf("skipping sub only video %s.", video.ID)
+						logger.Info().Str("video_id", video.ID).Msgf("skipping subscriber-only video")
 						continue
 					}
 					// Skip if Twitch token is not set
 					if viper.GetString("parameters.twitch_token") == "" {
-						log.Info().Msgf("skipping sub only video %s. Twitch token is not set.", video.ID)
+						logger.Info().Str("video_id", video.ID).Msg("skipping sub only video; Twitch token is not set")
 						continue
 					}
 				}
@@ -216,7 +219,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 						}
 					}
 					if !found {
-						log.Info().Msgf("skipping video %s. video has categories of %s when the restriction requires %s.", video.ID, strings.Join(videoCategories, ", "), strings.Join(channelVideoCategories, ", "))
+						logger.Info().Str("video_id", video.ID).Msgf("skipping video; video has categories of %s when the restriction requires %s.", strings.Join(videoCategories, ", "), strings.Join(channelVideoCategories, ", "))
 						continue
 					}
 				}
@@ -230,15 +233,13 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context) error {
 				}
 				err = s.ArchiveService.ArchiveVideo(ctx, input)
 				if err != nil {
-					log.Error().Err(err).Msgf("Error archiving video %s", video.ID)
+					log.Error().Err(err).Str("video_id", video.ID).Msgf("error archiving video")
 					continue
 				}
-				log.Info().Msgf("[Channel Watch] starting archive for video %s", video.ID)
+				logger.Info().Str("video_id", video.ID).Msgf("archiving video")
 			}
 		}
 	}
-	log.Info().Msg("Finished checking channels for new videos")
-
 	return nil
 }
 

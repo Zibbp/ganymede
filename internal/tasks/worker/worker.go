@@ -3,13 +3,16 @@ package tasks_worker
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/platform"
@@ -24,7 +27,13 @@ const storeKey contextKey = "store"
 const platformKey contextKey = "platform"
 
 type RiverWorkerInput struct {
-	DB_URL string
+	DB_URL                  string
+	DB                      *database.Database
+	PlatformService         platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory]
+	VideoDownloadWorkers    int
+	VideoPostProcessWorkers int
+	ChatDownloadWorkers     int
+	ChatRenderWorkers       int
 }
 
 type RiverWorkerClient struct {
@@ -34,7 +43,7 @@ type RiverWorkerClient struct {
 	Client         *river.Client[pgx.Tx]
 }
 
-func NewRiverWorker(input RiverWorkerInput, db *database.Database, platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel]) (*RiverWorkerClient, error) {
+func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	rc := &RiverWorkerClient{}
 
 	workers := river.NewWorkers()
@@ -81,6 +90,15 @@ func NewRiverWorker(input RiverWorkerInput, db *database.Database, platformServi
 	if err := river.AddWorkerSafely(workers, &tasks_periodic.CheckChannelsForNewVideosWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.PruneVideosWorker{}); err != nil {
+		return rc, err
+	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.ImportCategoriesWorker{}); err != nil {
+		return rc, err
+	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.AuthenticatePlatformWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 
@@ -99,10 +117,11 @@ func NewRiverWorker(input RiverWorkerInput, db *database.Database, platformServi
 	// create river client
 	riverClient, err := river.NewClient(rc.RiverPgxDriver, &river.Config{
 		Queues: map[string]river.QueueConfig{
-			river.QueueDefault:  {MaxWorkers: 5},
-			"video-download":    {MaxWorkers: 5},
-			"video-postprocess": {MaxWorkers: 5},
-			"chat-render":       {MaxWorkers: 5},
+			river.QueueDefault:          {MaxWorkers: 100}, // non-resource intensive tasks or time sensitive tasks (live videos and chat)
+			tasks.QueueVideoDownload:    {MaxWorkers: input.VideoDownloadWorkers},
+			tasks.QueueVideoPostProcess: {MaxWorkers: input.VideoPostProcessWorkers},
+			tasks.QueueChatDownload:     {MaxWorkers: input.ChatRenderWorkers},
+			tasks.QueueChatRender:       {MaxWorkers: input.VideoDownloadWorkers},
 		},
 		Workers:              workers,
 		JobTimeout:           -1,
@@ -113,19 +132,22 @@ func NewRiverWorker(input RiverWorkerInput, db *database.Database, platformServi
 	if err != nil {
 		return rc, fmt.Errorf("error creating river client: %v", err)
 	}
+
+	log.Info().Str("default_workers", "100").Str("download_workers", strconv.Itoa(input.VideoDownloadWorkers)).Str("post_process_workers", strconv.Itoa(input.VideoPostProcessWorkers)).Str("chat_download_workers", strconv.Itoa(input.ChatDownloadWorkers)).Str("chat_render_workers", strconv.Itoa(input.ChatRenderWorkers)).Msg("created river client")
+
 	rc.Client = riverClient
 
 	// put store in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, "store", db)
+	rc.Ctx = context.WithValue(rc.Ctx, "store", input.DB)
 
 	// put platform in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, "platform", platformService)
+	rc.Ctx = context.WithValue(rc.Ctx, "platform", input.PlatformService)
 
 	return rc, nil
 }
 
 func (rc *RiverWorkerClient) Start() error {
-	log.Info().Str("name", rc.Client.ID()).Msg("starting wortker")
+	log.Info().Str("name", rc.Client.ID()).Msg("starting worker")
 	if err := rc.Client.Start(rc.Ctx); err != nil {
 		return err
 	}
@@ -139,13 +161,22 @@ func (rc *RiverWorkerClient) Stop() error {
 	return nil
 }
 
-func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) []*river.PeriodicJob {
+func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*river.PeriodicJob, error) {
+
+	midnightCron, err := cron.ParseStandard("0 0 * * *")
+	if err != nil {
+		return nil, err
+	}
 
 	// put services in ctx for workers
 	rc.Ctx = context.WithValue(rc.Ctx, "live_service", liveService)
 
+	// check videos interval
+	configCheckVideoInterval := viper.GetInt("video_check_interval_minutes")
+
 	periodicJobs := []*river.PeriodicJob{
-		// run watchdog job every minute
+		// archive watchdog
+		// runs every minute
 		river.NewPeriodicJob(
 			river.PeriodicInterval(1*time.Minute),
 			func() (river.JobArgs, *river.InsertOpts) {
@@ -155,14 +186,45 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) []*rive
 		),
 
 		// check watched channels for new videos
+		// run at specified interval
 		river.NewPeriodicJob(
-			river.PeriodicInterval(1*time.Minute),
+			river.PeriodicInterval(time.Duration(configCheckVideoInterval)*time.Minute),
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.CheckChannelsForNewVideosArgs{}, nil
 			},
+			&river.PeriodicJobOpts{RunOnStart: false},
+		),
+
+		// prune videos
+		// runs once a day at midnight
+		river.NewPeriodicJob(
+			midnightCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.PruneVideosArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: false},
+		),
+
+		// import categories
+		// runs once a day at midnight
+		river.NewPeriodicJob(
+			midnightCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.ImportCategoriesArgs{}, nil
+			},
 			&river.PeriodicJobOpts{RunOnStart: true},
+		),
+
+		// authenticate to platform
+		// runs once a day at midnight
+		river.NewPeriodicJob(
+			midnightCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.AuthenticatePlatformArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: false},
 		),
 	}
 
-	return periodicJobs
+	return periodicJobs, nil
 }

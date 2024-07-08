@@ -83,7 +83,19 @@ type TwitchChannel struct {
 	CreatedAt       string `json:"created_at"`
 }
 
-func NewTwitchPlatformService(clientId string, clientSercret string) (platform.PlatformService[TwitchVideoInfo, TwitchLivestreamInfo, TwitchChannel], error) {
+type TwitchCategoryResponse struct {
+	Data       []TwitchCategory `json:"data"`
+	Pagination Pagination       `json:"pagination"`
+}
+
+type TwitchCategory struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	BoxArtURL string `json:"box_art_url"`
+	IgdbID    string `json:"igdb_id"`
+}
+
+func NewTwitchPlatformService(clientId string, clientSercret string) (platform.PlatformService[TwitchVideoInfo, TwitchLivestreamInfo, TwitchChannel, TwitchCategory], error) {
 
 	accessToken := kv.DB().Get("TWITCH_ACCESS_TOKEN")
 
@@ -102,6 +114,19 @@ func NewTwitchPlatformService(clientId string, clientSercret string) (platform.P
 		ClientSecret: clientSercret,
 		AccessToken:  accessToken,
 	}, nil
+}
+
+func (tp *TwitchPlatformService) Authenticate(ctx context.Context) error {
+
+	tokenResponse, err := authenticate(tp.ClientId, tp.ClientSecret)
+	if err != nil {
+		return err
+	}
+	tp.AccessToken = tokenResponse.AccessToken
+
+	kv.DB().Set("TWITCH_ACCESS_TOKEN", tp.AccessToken)
+
+	return nil
 }
 
 func (tp *TwitchPlatformService) GetVideoInfo(ctx context.Context, id string) (TwitchVideoInfo, error) {
@@ -208,4 +233,40 @@ func (tp *TwitchPlatformService) GetVideosByUser(ctx context.Context, userId str
 	}
 
 	return videos, nil
+}
+
+func (tp *TwitchPlatformService) GetCategories(ctx context.Context) ([]TwitchCategory, error) {
+	queryParams := map[string]string{}
+	body, err := makeHTTPRequest("GET", "games/top", queryParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp TwitchCategoryResponse
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	var categories []TwitchCategory
+	categories = append(categories, resp.Data...)
+
+	// pagination
+	cursor := resp.Pagination.Cursor
+	for cursor != "" {
+		queryParams["after"] = cursor
+		body, err = makeHTTPRequest("GET", "games/top", queryParams, nil)
+		if err != nil {
+			return nil, err
+		}
+		var resp TwitchCategoryResponse
+		err = json.Unmarshal(body, &resp)
+		if err != nil {
+			return nil, err
+		}
+		categories = append(categories, resp.Data...)
+		cursor = resp.Pagination.Cursor
+	}
+
+	return categories, nil
 }

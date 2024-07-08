@@ -3,17 +3,15 @@ package admin
 import (
 	"fmt"
 	"os/exec"
-	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/zibbp/ganymede/internal/kv"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type InfoResp struct {
-	Version         string `json:"version"`
+	CommitHash      string `json:"commit_hash"`
 	BuildTime       string `json:"build_time"`
-	GitHash         string `json:"git_hash"`
 	Uptime          string `json:"uptime"`
 	ProgramVersions `json:"program_versions"`
 }
@@ -27,15 +25,9 @@ type ProgramVersions struct {
 
 func (s *Service) GetInfo(c echo.Context) (InfoResp, error) {
 	var resp InfoResp
-	resp.Version = kv.DB().Get("version")
-	resp.BuildTime = kv.DB().Get("build_time")
-	resp.GitHash = kv.DB().Get("git_hash")
-	startTimeUnix := kv.DB().Get("start_time_unix")
-	parsedStart, err := strconv.ParseInt(startTimeUnix, 10, 64)
-	if err != nil {
-		return resp, fmt.Errorf("error parsing start time: %v", err)
-	}
-	resp.Uptime = time.Since(time.Unix(parsedStart, 0)).String()
+	resp.CommitHash = utils.Commit
+	resp.BuildTime = utils.BuildTime
+	resp.Uptime = time.Since(utils.StartTime).String()
 
 	// Program versions
 	var programVersion ProgramVersions

@@ -33,6 +33,15 @@ func CreateDirectory(path string) error {
 	return nil
 }
 
+// Delete a directory given the path
+func DeleteDirectory(path string) error {
+	err := os.RemoveAll(path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // DownloadAndSaveFile - downloads file from url to destination
 func DownloadAndSaveFile(url, path string) error {
 	client := &http.Client{}

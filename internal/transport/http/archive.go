@@ -149,7 +149,7 @@ func (h *Handler) ConvertTwitchChat(c echo.Context) error {
 	t := time.Unix(seconds, nanoseconds)
 
 	envConfig := config.GetEnvConfig()
-	outPath := fmt.Sprintf("%s/%s_%s-chat-convert.json", envConfig.TempDir, body.VideoID)
+	outPath := fmt.Sprintf("%s/%s-chat-convert.json", envConfig.TempDir, body.VideoID)
 
 	err = utils.ConvertTwitchLiveChatToTDLChat(body.LiveChatPath, outPath, body.ChannelName, body.VideoID, body.VideoExternalID, body.ChannelID, t, body.PreviousVideoID)
 	if err != nil {
