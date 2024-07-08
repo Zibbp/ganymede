@@ -2,6 +2,7 @@ FROM golang:1.22-bookworm AS build-stage-01
 
 RUN mkdir /app
 ADD . /app
+ADD .git /app/.git
 WORKDIR /app
 
 RUN make build_server

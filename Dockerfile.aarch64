@@ -2,6 +2,7 @@ FROM arm64v8/golang:1.22 AS build-stage-01
 
 RUN mkdir /app
 ADD . /app
+ADD .git /app/.git
 WORKDIR /app
 
 RUN make build_server
