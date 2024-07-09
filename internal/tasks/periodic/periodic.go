@@ -136,7 +136,7 @@ func (w ImportCategoriesWorker) Work(ctx context.Context, job *river.Job[ImportC
 
 	// upsert categories
 	for _, category := range categories {
-		err = store.Client.TwitchCategory.Create().SetID(category.ID).SetName(category.Name).SetBoxArtURL(category.BoxArtURL).SetIgdbID(category.IgdbID).OnConflictColumns(entTwitchCategory.FieldID).UpdateNewValues().Exec(context.Background())
+		err = store.Client.TwitchCategory.Create().SetID(category.ID).SetName(category.Name).OnConflictColumns(entTwitchCategory.FieldID).UpdateNewValues().Exec(context.Background())
 		if err != nil {
 			return fmt.Errorf("failed to upsert twitch category: %v", err)
 		}
@@ -175,7 +175,7 @@ func (w AuthenticatePlatformWorker) Work(ctx context.Context, job *river.Job[Aut
 		return err
 	}
 
-	err = platform.Authenticate(ctx)
+	_, err = platform.Authenticate(ctx)
 	if err != nil {
 		return err
 	}

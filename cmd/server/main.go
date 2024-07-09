@@ -19,6 +19,7 @@ import (
 	_ "github.com/zibbp/ganymede/internal/kv"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/metrics"
+	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/playback"
 	"github.com/zibbp/ganymede/internal/playlist"
 	"github.com/zibbp/ganymede/internal/queue"
@@ -90,15 +91,25 @@ func Run() error {
 		return fmt.Errorf("error running migrations: %v", err)
 	}
 
-	// Initialize temporal client
-	// temporal.InitializeTemporalClient()
+	var twitchConn platform.Platform
+	// setup twitch platform
+	if envConfig.TwitchClientId != "" && envConfig.TwitchClientSecret != "" {
+		twitchConn := platform.TwitchConnection{
+			ClientId:     envConfig.TwitchClientId,
+			ClientSecret: envConfig.TwitchClientSecret,
+		}
+		_, err = twitchConn.Authenticate(ctx)
+		if err != nil {
+			log.Panic().Err(err).Msg("Error authenticating to Twitch")
+		}
+	}
 
 	authService := auth.NewService(db)
 	channelService := channel.NewService(db)
 	vodService := vod.NewService(db)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	twitchService := twitch.NewService()
-	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient)
+	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, twitchConn)
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
 	configService := config.NewService(db)

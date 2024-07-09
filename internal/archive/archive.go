@@ -14,7 +14,6 @@ import (
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/platform"
-	platform_twitch "github.com/zibbp/ganymede/internal/platform/twitch"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
@@ -29,6 +28,7 @@ type Service struct {
 	VodService     *vod.Service
 	QueueService   *queue.Service
 	RiverClient    *tasks_client.RiverClient
+	PlatformTwitch platform.Platform
 }
 
 type TwitchVodResponse struct {
@@ -36,8 +36,8 @@ type TwitchVodResponse struct {
 	Queue *ent.Queue `json:"queue"`
 }
 
-func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, riverClient *tasks_client.RiverClient) *Service {
-	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, RiverClient: riverClient}
+func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, riverClient *tasks_client.RiverClient, platformTwitch platform.Platform) *Service {
+	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, RiverClient: riverClient, PlatformTwitch: platformTwitch}
 }
 
 // ArchiveTwitchChannel - Create Twitch channel folder, profile image, and database entry.
@@ -98,18 +98,8 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 
 	envConfig := config.GetEnvConfig()
 
-	// setup platform service
-	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory]
-	platformService, err := platform_twitch.NewTwitchPlatformService(
-		envConfig.TwitchClientId,
-		envConfig.TwitchClientSecret,
-	)
-	if err != nil {
-		return err
-	}
-
 	// get video
-	video, err := platformService.GetVideoById(context.Background(), input.VideoId)
+	video, err := s.PlatformTwitch.GetVideoInfo(context.Background(), input.VideoId)
 	if err != nil {
 		return err
 	}
@@ -305,18 +295,8 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		return fmt.Errorf("error fetching channel: %v", err)
 	}
 
-	// setup platform service
-	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory]
-	platformService, err = platform_twitch.NewTwitchPlatformService(
-		envConfig.TwitchClientId,
-		envConfig.TwitchClientSecret,
-	)
-	if err != nil {
-		return err
-	}
-
 	// get video
-	video, err := platformService.GetLivestreamInfo(context.Background(), channel.Name)
+	video, err := s.PlatformTwitch.GetLiveStreamInfo(context.Background(), channel.Name)
 	if err != nil {
 		return err
 	}

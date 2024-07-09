@@ -16,7 +16,6 @@ import (
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/platform"
-	platform_twitch "github.com/zibbp/ganymede/internal/platform/twitch"
 	"github.com/zibbp/ganymede/internal/queue"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	tasks_worker "github.com/zibbp/ganymede/internal/tasks/worker"
@@ -58,28 +57,31 @@ func main() {
 		log.Panic().Err(err).Msg("Error creating river worker")
 	}
 
+	var twitchConn platform.Platform
+	// setup twitch platform
+	if envConfig.TwitchClientId != "" && envConfig.TwitchClientSecret != "" {
+		twitchConn = &platform.TwitchConnection{
+			ClientId:     envConfig.TwitchClientId,
+			ClientSecret: envConfig.TwitchClientSecret,
+		}
+		_, err = twitchConn.Authenticate(ctx)
+		if err != nil {
+			log.Panic().Err(err).Msg("Error authenticating to Twitch")
+		}
+	}
+
 	channelService := channel.NewService(db)
 	vodService := vod.NewService(db)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	twitchService := twitch.NewService()
-	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient)
+	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, twitchConn)
 	liveService := live.NewService(db, twitchService, archiveService)
-
-	// create platform service
-	var platformService platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory]
-	platformService, err = platform_twitch.NewTwitchPlatformService(
-		envConfig.TwitchClientId,
-		envConfig.TwitchClientSecret,
-	)
-	if err != nil {
-		log.Panic().Err(err).Msg("Error creating platform service")
-	}
 
 	// initialize river
 	riverWorkerClient, err := tasks_worker.NewRiverWorker(tasks_worker.RiverWorkerInput{
 		DB_URL:                  dbString,
 		DB:                      db,
-		PlatformService:         platformService,
+		PlatformTwitch:          twitchConn,
 		VideoDownloadWorkers:    envConfig.MaxVideoDownloadExecutions,
 		VideoPostProcessWorkers: envConfig.MaxVideoConvertExecutions,
 		ChatDownloadWorkers:     envConfig.MaxChatDownloadExecutions,
