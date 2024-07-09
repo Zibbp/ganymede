@@ -94,7 +94,7 @@ func Run() error {
 	var twitchConn platform.Platform
 	// setup twitch platform
 	if envConfig.TwitchClientId != "" && envConfig.TwitchClientSecret != "" {
-		twitchConn := platform.TwitchConnection{
+		twitchConn = &platform.TwitchConnection{
 			ClientId:     envConfig.TwitchClientId,
 			ClientSecret: envConfig.TwitchClientSecret,
 		}
