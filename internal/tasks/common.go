@@ -163,7 +163,7 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 	var info interface{}
 
 	if dbItems.Queue.LiveArchive {
-		info, err = platformService.GetLivestreamInfo(ctx, dbItems.Channel.Name)
+		info, err = platformService.GetLiveStreamInfo(ctx, dbItems.Channel.Name)
 		if err != nil {
 			return err
 		}
@@ -269,7 +269,7 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 	var thumbnailUrl string
 
 	if dbItems.Queue.LiveArchive {
-		info, err := platformService.GetLivestreamInfo(ctx, dbItems.Channel.Name)
+		info, err := platformService.GetLiveStreamInfo(ctx, dbItems.Channel.Name)
 		if err != nil {
 			return err
 		}
@@ -391,7 +391,7 @@ func (w DownloadThumbnailsMinimalWorker) Work(ctx context.Context, job *river.Jo
 	var thumbnailUrl string
 
 	if dbItems.Queue.LiveArchive {
-		info, err := platformService.GetLivestreamInfo(ctx, dbItems.Channel.Name)
+		info, err := platformService.GetLiveStreamInfo(ctx, dbItems.Channel.Name)
 		if err != nil {
 			return err
 		}

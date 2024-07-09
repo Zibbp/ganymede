@@ -19,7 +19,6 @@ import (
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
-	platform_twitch "github.com/zibbp/ganymede/internal/platform/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -58,8 +57,8 @@ func StoreFromContext(ctx context.Context) (*database.Database, error) {
 	return store, nil
 }
 
-func PlatformFromContext(ctx context.Context) (platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory], error) {
-	platform, exists := ctx.Value("platform").(platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory])
+func PlatformFromContext(ctx context.Context) (platform.Platform, error) {
+	platform, exists := ctx.Value("platform_twitch").(platform.Platform)
 	if !exists || platform == nil {
 		return nil, errors.New("platform not found in context")
 	}

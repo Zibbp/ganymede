@@ -1,0 +1,76 @@
+package platform
+
+import (
+	"context"
+
+	"github.com/zibbp/ganymede/internal/chapter"
+)
+
+type VideoInfo struct {
+	ID            string            `json:"id"`
+	StreamID      string            `json:"stream_id"`
+	UserID        string            `json:"user_id"`
+	UserLogin     string            `json:"user_login"`
+	UserName      string            `json:"user_name"`
+	Title         string            `json:"title"`
+	Description   string            `json:"description"`
+	CreatedAt     string            `json:"created_at"`
+	PublishedAt   string            `json:"published_at"`
+	URL           string            `json:"url"`
+	ThumbnailURL  string            `json:"thumbnail_url"`
+	Viewable      string            `json:"viewable"`
+	ViewCount     int64             `json:"view_count"`
+	Language      string            `json:"language"`
+	Type          string            `json:"type"`
+	Duration      string            `json:"duration"`
+	MutedSegments interface{}       `json:"muted_segments"`
+	Chapters      []chapter.Chapter `json:"chapters"`
+}
+
+type LiveStreamInfo struct {
+	ID           string `json:"id"`
+	UserID       string `json:"user_id"`
+	UserLogin    string `json:"user_login"`
+	UserName     string `json:"user_name"`
+	GameID       string `json:"game_id"`
+	GameName     string `json:"game_name"`
+	Type         string `json:"type"`
+	Title        string `json:"title"`
+	ViewerCount  int64  `json:"viewer_count"`
+	StartedAt    string `json:"started_at"`
+	Language     string `json:"language"`
+	ThumbnailURL string `json:"thumbnail_url"`
+}
+
+type ChannelInfo struct {
+	ID              string `json:"id"`
+	Login           string `json:"login"`
+	DisplayName     string `json:"display_name"`
+	Type            string `json:"type"`
+	BroadcasterType string `json:"broadcaster_type"`
+	Description     string `json:"description"`
+	ProfileImageURL string `json:"profile_image_url"`
+	OfflineImageURL string `json:"offline_image_url"`
+	ViewCount       int64  `json:"view_count"`
+	CreatedAt       string `json:"created_at"`
+}
+
+type Category struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type ConnectionInfo struct {
+	ClientId     string
+	ClientSecret string
+	AccessToken  string
+}
+
+type Platform interface {
+	Authenticate(ctx context.Context) (*ConnectionInfo, error)
+	GetVideoInfo(ctx context.Context, id string) (*VideoInfo, error)
+	GetLiveStreamInfo(ctx context.Context, channelName string) (*LiveStreamInfo, error)
+	GetChannel(ctx context.Context, channelName string) (*ChannelInfo, error)
+	GetVideos(ctx context.Context, channelId string, videoType string) ([]VideoInfo, error)
+	GetCategories(ctx context.Context) ([]Category, error)
+}

@@ -16,7 +16,6 @@ import (
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/platform"
-	platform_twitch "github.com/zibbp/ganymede/internal/platform/twitch"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
 )
@@ -29,7 +28,7 @@ const platformKey contextKey = "platform"
 type RiverWorkerInput struct {
 	DB_URL                  string
 	DB                      *database.Database
-	PlatformService         platform.PlatformService[platform_twitch.TwitchVideoInfo, platform_twitch.TwitchLivestreamInfo, platform_twitch.TwitchChannel, platform_twitch.TwitchCategory]
+	PlatformTwitch          platform.Platform
 	VideoDownloadWorkers    int
 	VideoPostProcessWorkers int
 	ChatDownloadWorkers     int
@@ -141,7 +140,7 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	rc.Ctx = context.WithValue(rc.Ctx, "store", input.DB)
 
 	// put platform in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, "platform", input.PlatformService)
+	rc.Ctx = context.WithValue(rc.Ctx, "platform_twitch", input.PlatformTwitch)
 
 	return rc, nil
 }

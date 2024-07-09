@@ -182,7 +182,7 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	if err != nil {
 		return err
 	}
-	channel, err := platform.GetChannelByName(ctx, dbItems.Channel.Name)
+	channel, err := platform.GetChannel(ctx, dbItems.Channel.Name)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	}
 
 	// need the ID of a previous video for channel emotes and badges
-	videos, err := platform.GetVideosByUser(ctx, channel.ID, "archive")
+	videos, err := platform.GetVideos(ctx, channel.ID, "archive")
 	if err != nil {
 		return err
 	}
