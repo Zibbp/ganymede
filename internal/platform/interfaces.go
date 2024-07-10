@@ -68,8 +68,9 @@ type ConnectionInfo struct {
 
 type Platform interface {
 	Authenticate(ctx context.Context) (*ConnectionInfo, error)
-	GetVideoInfo(ctx context.Context, id string) (*VideoInfo, error)
-	GetLiveStreamInfo(ctx context.Context, channelName string) (*LiveStreamInfo, error)
+	GetVideo(ctx context.Context, id string) (*VideoInfo, error)
+	GetLiveStream(ctx context.Context, channelName string) (*LiveStreamInfo, error)
+	GetLiveStreams(ctx context.Context, channelNames []string) ([]LiveStreamInfo, error)
 	GetChannel(ctx context.Context, channelName string) (*ChannelInfo, error)
 	GetVideos(ctx context.Context, channelId string, videoType string) ([]VideoInfo, error)
 	GetCategories(ctx context.Context) ([]Category, error)

@@ -2,6 +2,7 @@ package live
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -16,16 +17,18 @@ import (
 	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/queue"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
-	"github.com/zibbp/ganymede/internal/twitch"
+	"github.com/zibbp/ganymede/internal/notification"
+	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type Service struct {
 	Store          *database.Database
-	TwitchService  *twitch.Service
 	ArchiveService *archive.Service
+	PlatformTwitch platform.Platform
 }
 
 type Live struct {
@@ -62,8 +65,8 @@ type ArchiveLive struct {
 	RenderChat  bool      `json:"render_chat"`
 }
 
-func NewService(store *database.Database, twitchService *twitch.Service, archiveService *archive.Service) *Service {
-	return &Service{Store: store, TwitchService: twitchService, ArchiveService: archiveService}
+func NewService(store *database.Database, archiveService *archive.Service, platformTwitch platform.Platform) *Service {
+	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch}
 }
 
 func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
@@ -188,7 +191,7 @@ func (s *Service) DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error 
 //	s.Every(5).Minutes().Do(Check)
 //}
 
-func (s *Service) Check() error {
+func (s *Service) Check(ctx context.Context) error {
 	log.Debug().Msg("checking live channels")
 	// get live watched channels from database
 	liveWatchedChannels, err := s.Store.Client.Live.Query().Where(live.WatchLive(true)).WithChannel().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
@@ -212,29 +215,32 @@ func (s *Service) Check() error {
 		liveWatchedChannelsSplit = append(liveWatchedChannelsSplit, liveWatchedChannels[i:end])
 	}
 
-	var streams []twitch.Live
+	var streams []platform.LiveStreamInfo
+	channels := make([]string, 0)
 	// generate query string for twitch api
 	for _, lwc := range liveWatchedChannelsSplit {
-		var queryString string
-		for i, lwc := range lwc {
-			if i == 0 {
-				queryString += "?user_login=" + lwc.Edges.Channel.Name
+		for _, lwc := range lwc {
+			channels = append(channels, lwc.Edges.Channel.Name)
+		}
+
+		twitchStreams, err := s.PlatformTwitch.GetLiveStreams(ctx, channels)
+		if err != nil {
+			if errors.Is(err, &platform.ErrorNoStreamsFound{}) {
+				log.Debug().Msg("no streams found")
+				continue
 			} else {
-				queryString += "&user_login=" + lwc.Edges.Channel.Name
+				return fmt.Errorf("error getting live streams: %v", err)
 			}
 		}
-		twitchStreams, err := s.TwitchService.GetStreams(queryString)
-		if err != nil {
-			log.Error().Err(err).Msg("error getting twitch streams")
-		}
-		streams = append(streams, twitchStreams.Data...)
+
+		streams = append(streams, twitchStreams...)
 	}
 
 	// check if live stream is online
 OUTER:
 	for _, lwc := range liveWatchedChannels {
 		// Check if LWC is in twitchStreams.Data
-		stream := stringInSlice(lwc.Edges.Channel.Name, streams)
+		stream := channelInLiveStreamInfo(lwc.Edges.Channel.Name, streams)
 		if len(stream.ID) > 0 {
 			if !lwc.IsLive {
 				// stream is live
@@ -280,13 +286,23 @@ OUTER:
 					}
 				}
 				// Archive stream
-				// archiveResp, err := s.ArchiveService.ArchiveTwitchLive(lwc, stream)
-				// if err != nil {
-				// 	log.Error().Err(err).Msg("error archiving twitch live")
-				// }
+				err = s.ArchiveService.ArchiveLivestream(ctx, archive.ArchiveVideoInput{
+					ChannelId:   lwc.Edges.Channel.ID,
+					Quality:     utils.VodQuality(lwc.Resolution),
+					ArchiveChat: lwc.ArchiveChat,
+					RenderChat:  lwc.RenderChat,
+				})
+				if err != nil {
+					log.Error().Err(err).Msg("error archiving twitch livestream")
+				}
 				// Notification
 				// Fetch channel for notification
-				// go notification.SendLiveNotification(lwc.Edges.Channel, archiveResp.VOD, archiveResp.Queue)
+				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(entVod.ByCreatedAt()).Limit(1).First(ctx)
+				if err != nil {
+					log.Error().Err(err).Msg("error getting vod")
+					continue
+				}
+				go notification.SendLiveNotification(lwc.Edges.Channel, vod, vod.Edges.Queue)
 			}
 		} else {
 			if lwc.IsLive {
@@ -299,7 +315,6 @@ OUTER:
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -323,44 +338,45 @@ OUTER:
 // 	return nil
 // }
 
-func (s *Service) ArchiveLiveChannel(c echo.Context, archiveLiveChannelDto ArchiveLive) error {
-	// fetch channel
-	channel, err := s.Store.Client.Channel.Query().Where(channel.ID(archiveLiveChannelDto.ChannelID)).Only(c.Request().Context())
-	if err != nil {
-		if _, ok := err.(*ent.NotFoundError); ok {
-			return fmt.Errorf("channel not found")
-		}
-		return fmt.Errorf("error fetching channel: %v", err)
-	}
+// func (s *Service) ArchiveLiveChannel(c echo.Context, archiveLiveChannelDto ArchiveLive) error {
+// 	// fetch channel
+// 	channel, err := s.Store.Client.Channel.Query().Where(channel.ID(archiveLiveChannelDto.ChannelID)).Only(c.Request().Context())
+// 	if err != nil {
+// 		if _, ok := err.(*ent.NotFoundError); ok {
+// 			return fmt.Errorf("channel not found")
+// 		}
+// 		return fmt.Errorf("error fetching channel: %v", err)
+// 	}
 
-	// check if channel is live
-	queryString := "?user_login=" + channel.Name
-	twitchStream, err := s.TwitchService.GetStreams(queryString)
-	if err != nil {
-		return fmt.Errorf("error getting twitch streams: %v", err)
-	}
-	if len(twitchStream.Data) == 0 {
-		return fmt.Errorf("channel is not live")
-	}
-	// create a temp live watched channel
-	// lwc := &ent.Live{
-	// 	ArchiveChat: archiveLiveChannelDto.ArchiveChat,
-	// 	RenderChat:  archiveLiveChannelDto.RenderChat,
-	// 	Resolution:  archiveLiveChannelDto.Resolution,
-	// }
-	// _, err = s.ArchiveService.ArchiveTwitchLive(lwc, twitchStream.Data[0])
-	// if err != nil {
-	// 	log.Error().Err(err).Msg("error archiving twitch livestream")
-	// }
+// 	// check if channel is live
+// 	queryString := "?user_login=" + channel.Name
+// 	twitchStream, err := s.TwitchService.GetStreams(queryString)
+// 	if err != nil {
+// 		return fmt.Errorf("error getting twitch streams: %v", err)
+// 	}
+// 	if len(twitchStream.Data) == 0 {
+// 		return fmt.Errorf("channel is not live")
+// 	}
+// 	// create a temp live watched channel
+// 	// lwc := &ent.Live{
+// 	// 	ArchiveChat: archiveLiveChannelDto.ArchiveChat,
+// 	// 	RenderChat:  archiveLiveChannelDto.RenderChat,
+// 	// 	Resolution:  archiveLiveChannelDto.Resolution,
+// 	// }
+// 	// _, err = s.ArchiveService.ArchiveTwitchLive(lwc, twitchStream.Data[0])
+// 	// if err != nil {
+// 	// 	log.Error().Err(err).Msg("error archiving twitch livestream")
+// 	// }
 
-	return nil
-}
+// 	return nil
+// }
 
-func stringInSlice(a string, list []twitch.Live) twitch.Live {
+// channelInLiveStreamInfo searches for a string in a slice of LiveStreamInfo and returns the first match.
+func channelInLiveStreamInfo(a string, list []platform.LiveStreamInfo) platform.LiveStreamInfo {
 	for _, b := range list {
 		if b.UserLogin == a {
 			return b
 		}
 	}
-	return twitch.Live{}
+	return platform.LiveStreamInfo{}
 }

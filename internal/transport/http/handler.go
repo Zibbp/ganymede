@@ -16,7 +16,6 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 	_ "github.com/zibbp/ganymede/docs"
 	"github.com/zibbp/ganymede/internal/auth"
-	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -84,23 +83,10 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	h.mapRoutes()
 
 	// Start scheduler
-	h.Service.SchedulerService.StartAppScheduler()
-	// Start schedules as a goroutine
-	// to avoid blocking application start
-	// and to wait for twitch api auth
 	go h.Service.SchedulerService.StartLiveScheduler()
 	if viper.GetBool("oauth_enabled") {
 		go h.Service.SchedulerService.StartJwksScheduler()
 	}
-	// go h.Service.SchedulerService.StartWatchVideoScheduler()
-	// go h.Service.SchedulerService.StartTwitchCategoriesScheduler()
-	// go h.Service.SchedulerService.StartPruneVideoScheduler()
-
-	// Populate channel external ids
-	go func() {
-		time.Sleep(5 * time.Second)
-		channel.PopulateExternalChannelID()
-	}()
 
 	return h
 }
@@ -242,7 +228,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.GET("/check", h.Check, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	// liveGroup.GET("/vod", h.CheckVodWatchedChannels, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	liveGroup.POST("/archive", h.ArchiveLiveChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	// liveGroup.POST("/archive", h.ArchiveLiveChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Playback
 	playbackGroup := e.Group("/playback")

@@ -163,12 +163,12 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 	var info interface{}
 
 	if dbItems.Queue.LiveArchive {
-		info, err = platformService.GetLiveStreamInfo(ctx, dbItems.Channel.Name)
+		info, err = platformService.GetLiveStream(ctx, dbItems.Channel.Name)
 		if err != nil {
 			return err
 		}
 	} else {
-		info, err = platformService.GetVideoInfo(ctx, dbItems.Video.ExtID)
+		info, err = platformService.GetVideo(ctx, dbItems.Video.ExtID)
 		if err != nil {
 			return err
 		}
@@ -269,14 +269,14 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 	var thumbnailUrl string
 
 	if dbItems.Queue.LiveArchive {
-		info, err := platformService.GetLiveStreamInfo(ctx, dbItems.Channel.Name)
+		info, err := platformService.GetLiveStream(ctx, dbItems.Channel.Name)
 		if err != nil {
 			return err
 		}
 		thumbnailUrl = info.ThumbnailURL
 
 	} else {
-		info, err := platformService.GetVideoInfo(ctx, dbItems.Video.ExtID)
+		info, err := platformService.GetVideo(ctx, dbItems.Video.ExtID)
 		if err != nil {
 			return err
 		}
@@ -391,14 +391,14 @@ func (w DownloadThumbnailsMinimalWorker) Work(ctx context.Context, job *river.Jo
 	var thumbnailUrl string
 
 	if dbItems.Queue.LiveArchive {
-		info, err := platformService.GetLiveStreamInfo(ctx, dbItems.Channel.Name)
+		info, err := platformService.GetLiveStream(ctx, dbItems.Channel.Name)
 		if err != nil {
 			return err
 		}
 		thumbnailUrl = info.ThumbnailURL
 
 	} else {
-		info, err := platformService.GetVideoInfo(ctx, dbItems.Video.ExtID)
+		info, err := platformService.GetVideo(ctx, dbItems.Video.ExtID)
 		if err != nil {
 			return err
 		}
