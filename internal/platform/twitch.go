@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func (c *TwitchConnection) GetVideoInfo(ctx context.Context, id string) (*VideoInfo, error) {
+func (c *TwitchConnection) GetVideo(ctx context.Context, id string) (*VideoInfo, error) {
 	queryParams := map[string]string{"id": id}
 	body, err := c.twitchMakeHTTPRequest("GET", "videos", queryParams, nil)
 	if err != nil {
@@ -46,7 +46,7 @@ func (c *TwitchConnection) GetVideoInfo(ctx context.Context, id string) (*VideoI
 	return &info, nil
 }
 
-func (c *TwitchConnection) GetLiveStreamInfo(ctx context.Context, channelName string) (*LiveStreamInfo, error) {
+func (c *TwitchConnection) GetLiveStream(ctx context.Context, channelName string) (*LiveStreamInfo, error) {
 	queryParams := map[string]string{"user_login": channelName}
 	body, err := c.twitchMakeHTTPRequest("GET", "streams", queryParams, nil)
 	if err != nil {
@@ -79,6 +79,49 @@ func (c *TwitchConnection) GetLiveStreamInfo(ctx context.Context, channelName st
 	}
 
 	return &info, nil
+}
+
+func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelNames []string) ([]LiveStreamInfo, error) {
+	queryParams := map[string]string{}
+
+	for _, channelName := range channelNames {
+		queryParams["user_login"] = channelName
+	}
+
+	body, err := c.twitchMakeHTTPRequest("GET", "streams", queryParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp TwitchLiveStreamsRepsponse
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Data) == 0 {
+		return nil, &ErrorNoStreamsFound{}
+	}
+
+	streams := make([]LiveStreamInfo, 0, len(resp.Data))
+	for _, stream := range resp.Data {
+		streams = append(streams, LiveStreamInfo{
+			ID:           stream.ID,
+			UserID:       stream.UserID,
+			UserLogin:    stream.UserLogin,
+			UserName:     stream.UserName,
+			GameID:       stream.GameID,
+			GameName:     stream.GameName,
+			Type:         stream.Type,
+			Title:        stream.Title,
+			ViewerCount:  stream.ViewerCount,
+			StartedAt:    stream.StartedAt,
+			Language:     stream.Language,
+			ThumbnailURL: stream.ThumbnailURL,
+		})
+	}
+
+	return streams, nil
 }
 
 func (c *TwitchConnection) GetChannel(ctx context.Context, channelName string) (*ChannelInfo, error) {

@@ -57,14 +57,14 @@ func main() {
 		log.Panic().Err(err).Msg("Error creating river worker")
 	}
 
-	var twitchConn platform.Platform
+	var platformTwitch platform.Platform
 	// setup twitch platform
 	if envConfig.TwitchClientId != "" && envConfig.TwitchClientSecret != "" {
-		twitchConn = &platform.TwitchConnection{
+		platformTwitch = &platform.TwitchConnection{
 			ClientId:     envConfig.TwitchClientId,
 			ClientSecret: envConfig.TwitchClientSecret,
 		}
-		_, err = twitchConn.Authenticate(ctx)
+		_, err = platformTwitch.Authenticate(ctx)
 		if err != nil {
 			log.Panic().Err(err).Msg("Error authenticating to Twitch")
 		}
@@ -73,15 +73,15 @@ func main() {
 	channelService := channel.NewService(db)
 	vodService := vod.NewService(db)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
-	twitchService := twitch.NewService()
-	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, twitchConn)
-	liveService := live.NewService(db, twitchService, archiveService)
+	// twitchService := twitch.NewService()
+	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, platformTwitch)
+	liveService := live.NewService(db, archiveService, platformTwitch)
 
 	// initialize river
 	riverWorkerClient, err := tasks_worker.NewRiverWorker(tasks_worker.RiverWorkerInput{
 		DB_URL:                  dbString,
 		DB:                      db,
-		PlatformTwitch:          twitchConn,
+		PlatformTwitch:          platformTwitch,
 		VideoDownloadWorkers:    envConfig.MaxVideoDownloadExecutions,
 		VideoPostProcessWorkers: envConfig.MaxVideoConvertExecutions,
 		ChatDownloadWorkers:     envConfig.MaxChatDownloadExecutions,

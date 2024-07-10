@@ -28,7 +28,7 @@ func (w WatchdogArgs) InsertOpts() river.InsertOpts {
 }
 
 func (w WatchdogArgs) Timeout(job *river.Job[WatchdogArgs]) time.Duration {
-	return 45 * time.Second
+	return 1 * time.Minute
 }
 
 type WatchdogWorker struct {
@@ -46,7 +46,7 @@ func (w WatchdogWorker) Work(ctx context.Context, job *river.Job[WatchdogArgs]) 
 	return nil
 }
 
-// Watchdog tasks that checks the status of jobs every minutes. It checks if the job is still running and if it has timed out. If it has timed out, it sets the status of the job to retryable.
+// Watchdog tasks that checks the status of archive jobs every minute. It checks if the job is still running and if it has timed out. If it has timed out, it sets the status of the job to retryable.
 func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 	logger := log.With().Str("task", "watchdog").Logger()
 	store, err := StoreFromContext(ctx)

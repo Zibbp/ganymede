@@ -37,7 +37,7 @@ func (s *Service) StartTask(c echo.Context, task string) error {
 
 	switch task {
 	case "check_live":
-		err := s.LiveService.Check()
+		err := s.LiveService.Check(c.Request().Context())
 		if err != nil {
 			return fmt.Errorf("error checking live: %v", err)
 		}

@@ -99,7 +99,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 	envConfig := config.GetEnvConfig()
 
 	// get video
-	video, err := s.PlatformTwitch.GetVideoInfo(context.Background(), input.VideoId)
+	video, err := s.PlatformTwitch.GetVideo(context.Background(), input.VideoId)
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 	}
 
 	// get video
-	video, err := s.PlatformTwitch.GetLiveStreamInfo(context.Background(), channel.Name)
+	video, err := s.PlatformTwitch.GetLiveStream(context.Background(), channel.Name)
 	if err != nil {
 		return err
 	}

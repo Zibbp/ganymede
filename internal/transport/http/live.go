@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -14,9 +15,8 @@ type LiveService interface {
 	AddLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
 	DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error
 	UpdateLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
-	Check() error
-	// CheckVodWatchedChannels() error
-	ArchiveLiveChannel(c echo.Context, archiveDto live.ArchiveLive) error
+	Check(ctx context.Context) error
+	// ArchiveLiveChannel(c echo.Context, archiveDto live.ArchiveLive) error
 }
 
 type AddWatchedChannelRequest struct {
@@ -310,7 +310,7 @@ func (h *Handler) DeleteLiveWatchedChannel(c echo.Context) error {
 }
 
 func (h *Handler) Check(c echo.Context) error {
-	err := h.Service.LiveService.Check()
+	err := h.Service.LiveService.Check(c.Request().Context())
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -347,31 +347,31 @@ func (h *Handler) Check(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/live/archive [post]
 //	@Security		ApiKeyCookieAuth
-func (h *Handler) ArchiveLiveChannel(c echo.Context) error {
-	alcr := new(ArchiveLiveChannelRequest)
-	if err := c.Bind(alcr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	if err := c.Validate(alcr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	// validate channel uuid
-	cID, err := uuid.Parse(alcr.ChannelID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
+// func (h *Handler) ArchiveLiveChannel(c echo.Context) error {
+// 	alcr := new(ArchiveLiveChannelRequest)
+// 	if err := c.Bind(alcr); err != nil {
+// 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+// 	}
+// 	if err := c.Validate(alcr); err != nil {
+// 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+// 	}
+// 	// validate channel uuid
+// 	cID, err := uuid.Parse(alcr.ChannelID)
+// 	if err != nil {
+// 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+// 	}
 
-	archiveLiveDto := live.ArchiveLive{
-		ChannelID:   cID,
-		Resolution:  alcr.Resolution,
-		ArchiveChat: alcr.ArchiveChat,
-		RenderChat:  alcr.RenderChat,
-	}
+// 	archiveLiveDto := live.ArchiveLive{
+// 		ChannelID:   cID,
+// 		Resolution:  alcr.Resolution,
+// 		ArchiveChat: alcr.ArchiveChat,
+// 		RenderChat:  alcr.RenderChat,
+// 	}
 
-	err = h.Service.LiveService.ArchiveLiveChannel(c, archiveLiveDto)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
+// 	err = h.Service.LiveService.ArchiveLiveChannel(c, archiveLiveDto)
+// 	if err != nil {
+// 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+// 	}
 
-	return c.JSON(http.StatusOK, "ok")
-}
+// 	return c.JSON(http.StatusOK, "ok")
+// }

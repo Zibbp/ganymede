@@ -91,14 +91,14 @@ func Run() error {
 		return fmt.Errorf("error running migrations: %v", err)
 	}
 
-	var twitchConn platform.Platform
+	var platformTwitch platform.Platform
 	// setup twitch platform
 	if envConfig.TwitchClientId != "" && envConfig.TwitchClientSecret != "" {
-		twitchConn = &platform.TwitchConnection{
+		platformTwitch = &platform.TwitchConnection{
 			ClientId:     envConfig.TwitchClientId,
 			ClientSecret: envConfig.TwitchClientSecret,
 		}
-		_, err = twitchConn.Authenticate(ctx)
+		_, err = platformTwitch.Authenticate(ctx)
 		if err != nil {
 			log.Panic().Err(err).Msg("Error authenticating to Twitch")
 		}
@@ -109,11 +109,11 @@ func Run() error {
 	vodService := vod.NewService(db)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	twitchService := twitch.NewService()
-	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, twitchConn)
+	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, platformTwitch)
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
 	configService := config.NewService(db)
-	liveService := live.NewService(db, twitchService, archiveService)
+	liveService := live.NewService(db, archiveService, platformTwitch)
 	schedulerService := scheduler.NewService(liveService, archiveService)
 	playbackService := playback.NewService(db)
 	metricsService := metrics.NewService(db)
