@@ -175,73 +175,73 @@ func (s *Service) StartQueueTask(ctx context.Context, input StartQueueTaskInput)
 	switch input.TaskName {
 	case "task_vod_create_folder":
 		task = tasks.CreateDirectoryArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_vod_download_thumbnail":
 		task = tasks.DownloadThumbnailArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_vod_save_info":
 		task = tasks.SaveVideoInfoArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_video_download":
 		task = tasks.DownloadVideoArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_video_convert":
 		task = tasks.PostProcessVideoArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_video_move":
 		task = tasks.MoveVideoArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_chat_download":
 		task = tasks.DownloadChatArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_chat_convert":
 		task = tasks.ConvertLiveChatArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_chat_render":
 		task = tasks.RenderChatArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_chat_move":
 		task = tasks.MoveChatArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_live_chat_download":
 		task = tasks.DownloadLiveChatArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
 	case "task_live_video_download":
 		task = tasks.DownloadLiveVideoArgs{
-			Continue: true,
+			Continue: input.Continue,
 			Input:    taskInput,
 		}
 
