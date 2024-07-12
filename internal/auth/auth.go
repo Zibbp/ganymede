@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v4"
@@ -111,11 +112,23 @@ func (s *Service) Login(c echo.Context, uDto user.User) (*ent.User, error) {
 		Role:     u.Role,
 	}
 
-	// Generate JWT and set cookie
-	err = GenerateTokensAndSetCookies(&uDto, c)
+	// generate access token
+	accessToken, exp, err := generateJWTToken(&uDto, time.Now().Add(1*time.Hour), []byte(GetJWTSecret()))
 	if err != nil {
-		return nil, fmt.Errorf("error generating tokens: %v", err)
+		return nil, fmt.Errorf("error generating access token: %v", err)
 	}
+
+	// set access token cookie
+	setTokenCookie(c, accessTokenCookieName, accessToken, exp)
+
+	// generate refresh token
+	refreshToken, exp, err := generateJWTToken(&uDto, time.Now().Add(30*24*time.Hour), []byte(GetJWTRefreshSecret()))
+	if err != nil {
+		return nil, fmt.Errorf("error generating refresh token: %v", err)
+	}
+
+	// set refresh token cookie
+	setTokenCookie(c, refreshTokenCookieName, refreshToken, exp)
 
 	return u, nil
 }
@@ -146,11 +159,15 @@ func (s *Service) Refresh(c echo.Context, refreshToken string) error {
 			return fmt.Errorf("error getting user: %v", err)
 		}
 
-		// Generate JWT and set cookie
-		err = GenerateTokensAndSetCookies(&user.User{ID: u.ID, Username: u.Username, Role: u.Role}, c)
+		// generate access token
+		accessToken, exp, err := generateJWTToken(&user.User{ID: u.ID, Username: u.Username, Role: u.Role}, time.Now().Add(1*time.Hour), []byte(GetJWTSecret()))
 		if err != nil {
-			return fmt.Errorf("error generating tokens: %v", err)
+			return fmt.Errorf("error generating access token: %v", err)
 		}
+
+		// set access token cookie
+		setTokenCookie(c, accessTokenCookieName, accessToken, exp)
+
 		return nil
 	}
 

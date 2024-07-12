@@ -123,8 +123,9 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
 			log.Debug().Str("channel", dbItems.Channel.Name).Msg("watched channel not found")
+		} else {
+			return err
 		}
-		return err
 	}
 	// mark channel as not live if it exists
 	if watchedChannel != nil {
