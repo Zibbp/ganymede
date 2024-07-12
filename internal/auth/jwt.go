@@ -1,15 +1,16 @@
 package auth
 
 import (
-	"github.com/golang-jwt/jwt/v4"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/utils"
-	"net/http"
-	"os"
-	"time"
 )
 
 const (
@@ -41,40 +42,8 @@ func GetJWTRefreshSecret() string {
 	return jwtRefreshSecret
 }
 
-// GenerateTokensAndSetCookies generates jwt token and saves it to the http-only cookie.
-func GenerateTokensAndSetCookies(user *user.User, c echo.Context) error {
-	accessToken, exp, err := generateAccessToken(user)
-	if err != nil {
-		return err
-	}
-
-	setTokenCookie(accessTokenCookieName, accessToken, exp, c)
-
-	// Refresh
-	refreshToken, exp, err := generateRefreshToken(user)
-	if err != nil {
-		return err
-	}
-	setTokenCookie(refreshTokenCookieName, refreshToken, exp, c)
-
-	return nil
-}
-
-func generateAccessToken(user *user.User) (string, time.Time, error) {
-	// Declare the expiration time of the token (1h).
-	expirationTime := time.Now().Add(1 * time.Hour)
-
-	return generateToken(user, expirationTime, []byte(GetJWTSecret()))
-}
-
-func generateRefreshToken(user *user.User) (string, time.Time, error) {
-	// Declare the expiration time of the token - 24 hours.
-	expirationTime := time.Now().Add(30 * 24 * time.Hour)
-
-	return generateToken(user, expirationTime, []byte(GetJWTRefreshSecret()))
-}
-
-func generateToken(user *user.User, expirationTime time.Time, secret []byte) (string, time.Time, error) {
+// generateJWTToken generates a new JWT token for the user.
+func generateJWTToken(user *user.User, expirationTime time.Time, secret []byte) (string, time.Time, error) {
 	// Create the JWT claims, which includes the username and expiry time.
 	claims := &Claims{
 		UserID:   user.ID,
@@ -98,8 +67,8 @@ func generateToken(user *user.User, expirationTime time.Time, secret []byte) (st
 	return tokenString, expirationTime, nil
 }
 
-// Here we are creating a new cookie, which will store the valid JWT token.
-func setTokenCookie(name, token string, expiration time.Time, c echo.Context) {
+// setTokenCookie sets the cookie with the token.
+func setTokenCookie(c echo.Context, name string, token string, expiration time.Time) {
 	// Get optional cookie domain name
 	cookieDomain := os.Getenv("COOKIE_DOMAIN")
 	cookie := new(http.Cookie)
@@ -107,7 +76,7 @@ func setTokenCookie(name, token string, expiration time.Time, c echo.Context) {
 	cookie.Value = token
 	cookie.Expires = expiration
 	cookie.Path = "/"
-	// Http-only helps mitigate the risk of client side script accessing the protected cookie.
+	// Frontend uses the contents of the cookie - not the best but it works.
 	cookie.HttpOnly = false
 	cookie.SameSite = http.SameSiteLaxMode
 	if cookieDomain != "" {
@@ -117,6 +86,7 @@ func setTokenCookie(name, token string, expiration time.Time, c echo.Context) {
 	c.SetCookie(cookie)
 }
 
+// checkAccessToken checks if the JWT access token is valid.
 func checkAccessToken(accessToken string) (*Claims, error) {
 	// Parse the token.
 	token, err := jwt.ParseWithClaims(accessToken, &Claims{}, func(token *jwt.Token) (interface{}, error) {
