@@ -98,6 +98,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks_periodic.AuthenticatePlatformWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.FetchJWKSWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 
@@ -111,8 +114,6 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	// create river pgx driver
 	rc.RiverPgxDriver = riverpgxv5.New(rc.PgxPool)
 
-	// periodicJobs := setupPeriodicJobs()
-
 	// create river client
 	riverClient, err := river.NewClient(rc.RiverPgxDriver, &river.Config{
 		Queues: map[string]river.QueueConfig{
@@ -125,8 +126,7 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 		Workers:              workers,
 		JobTimeout:           -1,
 		RescueStuckJobsAfter: 49 * time.Hour,
-		// PeriodicJobs:         periodicJobs,
-		ErrorHandler: &tasks.CustomErrorHandler{},
+		ErrorHandler:         &tasks.CustomErrorHandler{},
 	})
 	if err != nil {
 		return rc, fmt.Errorf("error creating river client: %v", err)
@@ -223,6 +223,18 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
+	}
+
+	// check jwks
+	if viper.GetBool("oauth_enabled") {
+		// runs once a day at midnight
+		periodicJobs = append(periodicJobs, river.NewPeriodicJob(
+			midnightCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.FetchJWKSArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
+		))
 	}
 
 	return periodicJobs, nil

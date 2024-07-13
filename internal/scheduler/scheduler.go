@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/archive"
-	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/live"
 )
 
@@ -30,15 +29,6 @@ func (s *Service) StartLiveScheduler() {
 	scheduler.StartAsync()
 }
 
-func (s *Service) StartJwksScheduler() {
-	time.Sleep(time.Second * 5)
-	scheduler := gocron.NewScheduler(time.UTC)
-
-	s.fetchJwksSchedule(scheduler)
-
-	scheduler.StartAsync()
-}
-
 func (s *Service) checkLiveStreamSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up check live stream schedule")
 	configLiveCheckInterval := viper.GetInt("live_check_interval_seconds")
@@ -53,19 +43,5 @@ func (s *Service) checkLiveStreamSchedule(scheduler *gocron.Scheduler) {
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to set up check live stream schedule")
-	}
-}
-
-func (s *Service) fetchJwksSchedule(scheduler *gocron.Scheduler) {
-	log.Debug().Msg("setting up fetch jwks schedule")
-	_, err := scheduler.Every(1).Days().Do(func() {
-		log.Debug().Msg("running fetch jwks schedule")
-		err := auth.FetchJWKS()
-		if err != nil {
-			log.Error().Err(err).Msg("failed to fetch jwks")
-		}
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("failed to set up fetch jwks schedule")
 	}
 }

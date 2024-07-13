@@ -15,7 +15,6 @@ import (
 	entChannel "github.com/zibbp/ganymede/ent/channel"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
-	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/twitch"
@@ -45,11 +44,11 @@ func (s *Service) StartTask(c echo.Context, task string) error {
 	// case "check_vod":
 	// 	go s.LiveService.CheckVodWatchedChannels()
 
-	case "get_jwks":
-		err := auth.FetchJWKS()
-		if err != nil {
-			return fmt.Errorf("error fetching jwks: %v", err)
-		}
+	// case "get_jwks":
+	// 	err := auth.FetchJWKS()
+	// 	if err != nil {
+	// 		return fmt.Errorf("error fetching jwks: %v", err)
+	// 	}
 
 	case "twitch_auth":
 		err := twitch.Authenticate()

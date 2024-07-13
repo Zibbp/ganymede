@@ -12,7 +12,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	_ "github.com/zibbp/ganymede/docs"
 	"github.com/zibbp/ganymede/internal/auth"
@@ -84,9 +83,6 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 
 	// Start scheduler
 	go h.Service.SchedulerService.StartLiveScheduler()
-	if viper.GetBool("oauth_enabled") {
-		go h.Service.SchedulerService.StartJwksScheduler()
-	}
 
 	return h
 }
