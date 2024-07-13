@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -347,12 +346,6 @@ func (s *Service) GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, er
 }
 
 func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error) {
-	envDeployment := os.Getenv("ENV")
-
-	if envDeployment == "development" {
-		utils.PrintMemUsage()
-	}
-
 	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat")
@@ -430,12 +423,6 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 }
 
 func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error) {
-	envDeployment := os.Getenv("ENV")
-
-	if envDeployment == "development" {
-		utils.PrintMemUsage()
-	}
-
 	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat")
@@ -690,12 +677,6 @@ func (s *Service) GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 }
 
 func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.GanymedeBadges, error) {
-	envDeployment := os.Getenv("ENV")
-
-	if envDeployment == "development" {
-		utils.PrintMemUsage()
-	}
-
 	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod chat emotes")

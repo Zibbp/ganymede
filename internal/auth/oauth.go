@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/kv"
 	"golang.org/x/oauth2"
 )
@@ -189,7 +189,7 @@ func clearCookie(c echo.Context, name string) {
 }
 
 func CheckOAuthAccessToken(c echo.Context, accessToken string) (*UserInfo, error) {
-	clientID := os.Getenv("OAUTH_CLIENT_ID")
+	env := config.GetEnvConfig()
 	// Get JWKS from KV store
 	jwksString := kv.DB().Get("jwks")
 	if jwksString == "" {
@@ -215,7 +215,7 @@ func CheckOAuthAccessToken(c echo.Context, accessToken string) (*UserInfo, error
 
 	// Check aud
 	aud := token.Claims.(jwt.MapClaims)["aud"]
-	if aud != clientID {
+	if aud != env.OAuthClientID {
 		return nil, fmt.Errorf("invalid aud claim")
 	}
 
@@ -241,7 +241,8 @@ func randString(nByte int) (string, error) {
 }
 
 func setCallbackCookie(c echo.Context, name, value string) {
-	cookieDomain := os.Getenv("COOKIE_DOMAIN")
+	env := config.GetEnvConfig()
+	cookieDomain := env.CookieDomain
 	cookie := new(http.Cookie)
 	cookie.Name = name
 	cookie.Value = value
@@ -258,7 +259,8 @@ func setCallbackCookie(c echo.Context, name, value string) {
 }
 
 func setOauthCookie(c echo.Context, name, value string, time time.Time) {
-	cookieDomain := os.Getenv("COOKIE_DOMAIN")
+	env := config.GetEnvConfig()
+	cookieDomain := env.CookieDomain
 	cookie := new(http.Cookie)
 	cookie.Name = name
 	cookie.Value = value
@@ -275,7 +277,8 @@ func setOauthCookie(c echo.Context, name, value string, time time.Time) {
 }
 
 func FetchJWKS(ctx context.Context) error {
-	providerURL := os.Getenv("OAUTH_PROVIDER_URL")
+	env := config.GetEnvConfig()
+	providerURL := env.OAuthProviderURL
 	provider, err := oidc.NewProvider(context.Background(), providerURL)
 	if err != nil {
 		return err
