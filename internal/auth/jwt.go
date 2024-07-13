@@ -2,13 +2,12 @@ package auth
 
 import (
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -26,19 +25,13 @@ type Claims struct {
 }
 
 func GetJWTSecret() string {
-	jwtSecret := os.Getenv("JWT_SECRET")
-	// Exit if JWT_SECRET is not set
-	if jwtSecret == "" {
-		log.Fatal().Msg("JWT_SECRET is not set")
-	}
+	env := config.GetEnvConfig()
+	jwtSecret := env.JWTSecret
 	return jwtSecret
 }
 func GetJWTRefreshSecret() string {
-	jwtRefreshSecret := os.Getenv("JWT_REFRESH_SECRET")
-	// Exit if JWT_REFRESH_SECRET is not set
-	if jwtRefreshSecret == "" {
-		log.Fatal().Msg("JWT_REFRESH_SECRET is not set")
-	}
+	env := config.GetEnvConfig()
+	jwtRefreshSecret := env.JWTRefreshSecret
 	return jwtRefreshSecret
 }
 
@@ -70,7 +63,8 @@ func generateJWTToken(user *user.User, expirationTime time.Time, secret []byte) 
 // setTokenCookie sets the cookie with the token.
 func setTokenCookie(c echo.Context, name string, token string, expiration time.Time) {
 	// Get optional cookie domain name
-	cookieDomain := os.Getenv("COOKIE_DOMAIN")
+	env := config.GetEnvConfig()
+	cookieDomain := env.CookieDomain
 	cookie := new(http.Cookie)
 	cookie.Name = name
 	cookie.Value = token

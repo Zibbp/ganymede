@@ -25,19 +25,6 @@ type Database struct {
 }
 
 func InitializeDatabase(input DatabaseConnectionInput) {
-	// log.Debug().Msg("setting up database connection")
-
-	// dbHost := os.Getenv("DB_HOST")
-	// dbPort := os.Getenv("DB_PORT")
-	// dbUser := os.Getenv("DB_USER")
-	// dbPass := os.Getenv("DB_PASS")
-	// dbName := os.Getenv("DB_NAME")
-	// dbSSL := os.Getenv("DB_SSL")
-	// dbSSLTRootCert := os.Getenv("DB_SSL_ROOT_CERT")
-
-	// connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s sslrootcert=%s",
-	// 	dbHost, dbPort, dbUser, dbPass, dbName, dbSSL, dbSSLTRootCert)
-
 	client, err := ent.Open("postgres", input.DBString)
 
 	if err != nil {
@@ -71,19 +58,6 @@ func DB() *Database {
 }
 
 func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
-	// log.Debug().Msg("setting up database connection")
-
-	// dbHost := os.Getenv("DB_HOST")
-	// dbPort := os.Getenv("DB_PORT")
-	// dbUser := os.Getenv("DB_USER")
-	// dbPass := os.Getenv("DB_PASS")
-	// dbName := os.Getenv("DB_NAME")
-	// dbSSL := os.Getenv("DB_SSL")
-	// dbSSLTRootCert := os.Getenv("DB_SSL_ROOT_CERT")
-
-	// connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s sslrootcert=%s",
-	// 	dbHost, dbPort, dbUser, dbPass, dbName, dbSSL, dbSSLTRootCert)
-
 	client, err := ent.Open("postgres", input.DBString)
 
 	if err != nil {

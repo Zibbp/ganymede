@@ -123,10 +123,10 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 			tasks.QueueChatDownload:     {MaxWorkers: input.ChatRenderWorkers},
 			tasks.QueueChatRender:       {MaxWorkers: input.VideoDownloadWorkers},
 		},
-		Workers:              workers,
-		JobTimeout:           -1,
-		RescueStuckJobsAfter: 49 * time.Hour,
-		ErrorHandler:         &tasks.CustomErrorHandler{},
+		Workers:    workers,
+		JobTimeout: -1,
+		// RescueStuckJobsAfter: 49 * time.Hour,
+		ErrorHandler: &tasks.CustomErrorHandler{},
 	})
 	if err != nil {
 		return rc, fmt.Errorf("error creating river client: %v", err)

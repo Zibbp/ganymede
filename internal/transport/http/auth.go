@@ -2,12 +2,12 @@ package http
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/auth"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/user"
 )
 
@@ -240,11 +240,12 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/callback [get]
 func (h *Handler) OAuthCallback(c echo.Context) error {
+	env := config.GetEnvConfig()
 	err := h.Service.AuthService.OAuthCallback(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.Redirect(http.StatusFound, os.Getenv("FRONTEND_HOST"))
+	return c.Redirect(http.StatusFound, env.FrontendHost)
 }
 
 // OAuthTokenRefresh godoc
@@ -287,10 +288,10 @@ func (h *Handler) OAuthTokenRefresh(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/logout [get]
 func (h *Handler) OAuthLogout(c echo.Context) error {
-
+	env := config.GetEnvConfig()
 	err := h.Service.AuthService.OAuthLogout(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.Redirect(http.StatusFound, os.Getenv("FRONTEND_HOST"))
+	return c.Redirect(http.StatusFound, env.FrontendHost)
 }

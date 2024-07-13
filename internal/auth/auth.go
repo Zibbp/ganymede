@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -12,9 +11,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	entUser "github.com/zibbp/ganymede/ent/user"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -32,13 +31,14 @@ type Service struct {
 
 func NewService(store *database.Database) *Service {
 	ctx := context.Background()
-	oAuthEnabled := viper.GetBool("oauth_enabled")
-	if oAuthEnabled {
+	env := config.GetEnvConfig()
+
+	if env.OAuthEnabled {
 		// Fetch environment variables
-		providerURL := os.Getenv("OAUTH_PROVIDER_URL")
-		oauthClientID := os.Getenv("OAUTH_CLIENT_ID")
-		oauthClientSecret := os.Getenv("OAUTH_CLIENT_SECRET")
-		oauthRedirectURL := os.Getenv("OAUTH_REDIRECT_URL")
+		providerURL := env.OAuthProviderURL
+		oauthClientID := env.OAuthClientID
+		oauthClientSecret := env.OAuthClientSecret
+		oauthRedirectURL := env.OAuthRedirectURL
 		if providerURL == "" || oauthClientID == "" || oauthClientSecret == "" || oauthRedirectURL == "" {
 			log.Fatal().Msg("missing environment variables for oauth authentication")
 		}
