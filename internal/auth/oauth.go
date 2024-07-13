@@ -274,11 +274,11 @@ func setOauthCookie(c echo.Context, name, value string, time time.Time) {
 	c.SetCookie(cookie)
 }
 
-func FetchJWKS() error {
+func FetchJWKS(ctx context.Context) error {
 	providerURL := os.Getenv("OAUTH_PROVIDER_URL")
 	provider, err := oidc.NewProvider(context.Background(), providerURL)
 	if err != nil {
-		log.Fatal().Err(err).Msg("error creating oauth provider")
+		return err
 	}
 
 	// Get JWKS uri
@@ -290,34 +290,34 @@ func FetchJWKS() error {
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", claims.JWKSURI, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", claims.JWKSURI, nil)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to create JWKS request")
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 	jwksResp, err := client.Do(req)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to fetch JWKS")
+		return fmt.Errorf("failed to fetch JWKS: %w", err)
 	}
 	defer jwksResp.Body.Close()
 	body, err := io.ReadAll(jwksResp.Body)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to read JWKS response")
+		return fmt.Errorf("failed to read body: %w", err)
 	}
 	var jwks jose.JSONWebKeySet
 	err = json.Unmarshal(body, &jwks)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to decode JWKS response")
+		return fmt.Errorf("failed to unmarshal JWKS: %w", err)
 	}
 
 	// jwks to string
 	jwksString, err := json.Marshal(jwks)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to encode JWKS")
+		return fmt.Errorf("failed to marshal JWKS: %w", err)
 	}
 
 	kv.DB().Set("jwks", string(jwksString))
 
-	log.Debug().Msg("JWKS fetched and set")
+	log.Debug().Msg("fetched jwks")
 
 	return nil
 }

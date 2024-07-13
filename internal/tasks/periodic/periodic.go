@@ -8,6 +8,7 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/rs/zerolog/log"
 	entTwitchCategory "github.com/zibbp/ganymede/ent/twitchcategory"
+	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/task"
@@ -176,6 +177,39 @@ func (w AuthenticatePlatformWorker) Work(ctx context.Context, job *river.Job[Aut
 	}
 
 	_, err = platform.Authenticate(ctx)
+	if err != nil {
+		return err
+	}
+
+	logger.Info().Msg("task completed")
+
+	return nil
+}
+
+// Fetch Json Web Keys if using OIDC
+type FetchJWKSArgs struct{}
+
+func (FetchJWKSArgs) Kind() string { return "fetch_jwks" }
+
+func (w FetchJWKSArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w FetchJWKSArgs) Timeout(job *river.Job[FetchJWKSArgs]) time.Duration {
+	return 1 * time.Minute
+}
+
+type FetchJWKSWorker struct {
+	river.WorkerDefaults[FetchJWKSArgs]
+}
+
+func (w FetchJWKSWorker) Work(ctx context.Context, job *river.Job[FetchJWKSArgs]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	err := auth.FetchJWKS(ctx)
 	if err != nil {
 		return err
 	}

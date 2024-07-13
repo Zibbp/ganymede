@@ -31,6 +31,7 @@ type Service struct {
 }
 
 func NewService(store *database.Database) *Service {
+	ctx := context.Background()
 	oAuthEnabled := viper.GetBool("oauth_enabled")
 	if oAuthEnabled {
 		// Fetch environment variables
@@ -54,7 +55,7 @@ func NewService(store *database.Database) *Service {
 			Scopes:       []string{oidc.ScopeOpenID, "profile", oidc.ScopeOfflineAccess},
 		}
 
-		err = FetchJWKS()
+		err = FetchJWKS(ctx)
 		if err != nil {
 			log.Fatal().Err(err).Msg("error fetching jwks")
 		}
