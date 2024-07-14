@@ -359,7 +359,7 @@ func (DownloadThumbnailsMinimalArgs) Kind() string { return string(utils.TaskDow
 func (args DownloadThumbnailsMinimalArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 5,
-		Tags:        []string{"archive"},
+		Tags:        []string{archive_tag, allow_fail_tag},
 	}
 }
 
