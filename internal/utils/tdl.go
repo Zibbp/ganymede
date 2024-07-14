@@ -179,6 +179,9 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 			Emoticon: nil,
 		})
 
+		// set default offset value for this live comment
+		message_is_offset := false
+
 		// parse emotes, creating fragments with positions
 		emoteFragments := []Fragment{}
 		if liveComment.Emotes != nil {
@@ -198,8 +201,9 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 
 					// ensure that the sliced string equals the emote
 					// sometimes the output of chat-downloader will not include a unicode character when calculating positions causing an offset in positions
-					if slicedEmote != liveCommentEmote.Name {
+					if slicedEmote != liveCommentEmote.Name || message_is_offset {
 						log.Debug().Str("message_id", liveComment.MessageID).Msg("emote position mismatch detected while converting chat")
+						message_is_offset = true
 
 						// attempt to get emote position in comment message
 						pos1, pos2, found := findSubstringPositions(liveComment.Message, liveCommentEmote.Name, i+1)

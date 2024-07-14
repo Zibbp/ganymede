@@ -74,4 +74,8 @@ type Platform interface {
 	GetChannel(ctx context.Context, channelName string) (*ChannelInfo, error)
 	GetVideos(ctx context.Context, channelId string, videoType string) ([]VideoInfo, error)
 	GetCategories(ctx context.Context) ([]Category, error)
+	GetGlobalBadges(ctx context.Context) ([]Badge, error)
+	GetChannelBadges(ctx context.Context, channelId string) ([]Badge, error)
+	GetGlobalEmotes(ctx context.Context) ([]Emote, error)
+	GetChannelEmotes(ctx context.Context, channelId string) ([]Emote, error)
 }

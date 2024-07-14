@@ -167,7 +167,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.GET("/:id/chat", h.GetVodChatComments)
 	vodGroup.GET("/:id/chat/seek", h.GetNumberOfVodChatCommentsFromTime)
 	vodGroup.GET("/:id/chat/userid", h.GetUserIdFromChat)
-	vodGroup.GET("/:id/chat/emotes", h.GetVodChatEmotes)
+	vodGroup.GET("/:id/chat/emotes", h.GetChatEmotes)
 	vodGroup.GET("/:id/chat/badges", h.GetVodChatBadges)
 	vodGroup.POST("/:id/lock", h.LockVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 
@@ -191,7 +191,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 
 	// Archive
 	archiveGroup := e.Group("/archive")
-	archiveGroup.POST("/channel", h.ArchiveTwitchChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	archiveGroup.POST("/channel", h.ArchiveChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	archiveGroup.POST("/video", h.ArchiveVideo, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	archiveGroup.POST("/convert-twitch-live-chat", h.ConvertTwitchChat, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 

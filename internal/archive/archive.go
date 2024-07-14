@@ -17,7 +17,6 @@ import (
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
-	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
@@ -40,38 +39,39 @@ func NewService(store *database.Database, channelService *channel.Service, vodSe
 	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, RiverClient: riverClient, PlatformTwitch: platformTwitch}
 }
 
-// ArchiveTwitchChannel - Create Twitch channel folder, profile image, and database entry.
-func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
-	// Fetch channel from Twitch API
-	tChannel, err := twitch.API.GetUserByLogin(cName)
+// ArchiveChannel - Create channel entry in database along with folder, profile image, etc.
+func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.Channel, error) {
+	// get channel from platform
+	platformChannel, err := s.PlatformTwitch.GetChannel(ctx, channelName)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching twitch channel: %v", err)
 	}
 
 	// Check if channel exists in DB
-	cCheck := s.ChannelService.CheckChannelExists(tChannel.Login)
+	cCheck := s.ChannelService.CheckChannelExists(platformChannel.Login)
 	if cCheck {
 		return nil, fmt.Errorf("channel already exists")
 	}
 
 	// Create channel folder
-	err = utils.CreateFolder(tChannel.Login)
+	err = utils.CreateFolder(platformChannel.Login)
 	if err != nil {
 		return nil, fmt.Errorf("error creating channel folder: %v", err)
 	}
 
 	// Download channel profile image
-	err = utils.DownloadFile(tChannel.ProfileImageURL, tChannel.Login, "profile.png")
+	err = utils.DownloadFile(platformChannel.ProfileImageURL, platformChannel.Login, "profile.png")
 	if err != nil {
 		return nil, fmt.Errorf("error downloading channel profile image: %v", err)
 	}
 
 	// Create channel in DB
+	env := config.GetEnvConfig()
 	channelDTO := channel.Channel{
-		ExtID:       tChannel.ID,
-		Name:        tChannel.Login,
-		DisplayName: tChannel.DisplayName,
-		ImagePath:   fmt.Sprintf("/vods/%s/profile.png", tChannel.Login),
+		ExtID:       platformChannel.ID,
+		Name:        platformChannel.Login,
+		DisplayName: platformChannel.DisplayName,
+		ImagePath:   fmt.Sprintf("%s/%s/profile.png", env.VideosDir, platformChannel.Login),
 	}
 
 	dbC, err := s.ChannelService.CreateChannel(channelDTO)
@@ -82,8 +82,6 @@ func (s *Service) ArchiveTwitchChannel(cName string) (*ent.Channel, error) {
 	return dbC, nil
 
 }
-
-// ! NEW!!!!!!!!!!!
 
 type ArchiveVideoInput struct {
 	VideoId     string
@@ -122,7 +120,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 	cCheck := s.ChannelService.CheckChannelExists(video.UserLogin)
 	if !cCheck {
 		log.Debug().Msgf("channel does not exist: %s while archiving vod. creating now.", video.UserLogin)
-		_, err := s.ArchiveTwitchChannel(video.UserLogin)
+		_, err := s.ArchiveChannel(ctx, video.UserLogin)
 		if err != nil {
 			return fmt.Errorf("error creating channel: %v", err)
 		}
@@ -449,180 +447,3 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 
 	return nil
 }
-
-// func (s *Service) ArchiveTwitchLive(lwc *ent.Live, live twitch.Live) (*TwitchVodResponse, error) {
-// 	// Check if channel exists
-// 	cCheck := s.ChannelService.CheckChannelExists(live.UserLogin)
-// 	if !cCheck {
-// 		log.Debug().Msgf("channel does not exist: %s while archiving live stream. creating now.", live.UserLogin)
-// 		_, err := s.ArchiveTwitchChannel(live.UserLogin)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("error creating channel: %v", err)
-// 		}
-// 	}
-// 	// Fetch channel
-// 	dbC, err := s.ChannelService.GetChannelByName(live.UserLogin)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error fetching channel: %v", err)
-// 	}
-
-// 	// Generate VOD ID for folder name
-// 	vUUID, err := uuid.NewUUID()
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error creating vod uuid: %v", err)
-// 	}
-
-// 	// Create vodDto for storage templates
-// 	tVodDto := twitch.Vod{
-// 		ID:        live.ID,
-// 		UserLogin: live.UserLogin,
-// 		Title:     live.Title,
-// 		Type:      "live",
-// 		CreatedAt: live.StartedAt,
-// 	}
-// 	folderName, err := GetFolderName(vUUID, tVodDto)
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("error using template to create folder name, falling back to default")
-// 		folderName = fmt.Sprintf("%s-%s", tVodDto.ID, vUUID.String())
-// 	}
-// 	fileName, err := GetFileName(vUUID, tVodDto)
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("error using template to create file name, falling back to default")
-// 		fileName = tVodDto.ID
-// 	}
-
-// 	// Sets
-// 	rootVodPath := fmt.Sprintf("/vods/%s/%s", live.UserLogin, folderName)
-// 	chatPath := ""
-// 	chatVideoPath := ""
-// 	liveChatPath := ""
-// 	liveChatConvertPath := ""
-
-// 	if lwc.ArchiveChat {
-// 		chatPath = fmt.Sprintf("%s/%s-chat.json", rootVodPath, fileName)
-// 		chatVideoPath = fmt.Sprintf("%s/%s-chat.mp4", rootVodPath, fileName)
-// 		liveChatPath = fmt.Sprintf("%s/%s-live-chat.json", rootVodPath, fileName)
-// 		liveChatConvertPath = fmt.Sprintf("%s/%s-chat-convert.json", rootVodPath, fileName)
-// 	}
-
-// 	videoExtension := "mp4"
-
-// 	// Create VOD in DB
-// 	vodDTO := vod.Vod{
-// 		ID:                  vUUID,
-// 		ExtID:               live.ID,
-// 		Platform:            "twitch",
-// 		Type:                utils.VodType("live"),
-// 		Title:               live.Title,
-// 		Duration:            1,
-// 		Views:               1,
-// 		Resolution:          lwc.Resolution,
-// 		Processing:          true,
-// 		ThumbnailPath:       fmt.Sprintf("%s/%s-thumbnail.jpg", rootVodPath, fileName),
-// 		WebThumbnailPath:    fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVodPath, fileName),
-// 		VideoPath:           fmt.Sprintf("%s/%s-video.%s", rootVodPath, fileName, videoExtension),
-// 		ChatPath:            chatPath,
-// 		LiveChatPath:        liveChatPath,
-// 		ChatVideoPath:       chatVideoPath,
-// 		LiveChatConvertPath: liveChatConvertPath,
-// 		InfoPath:            fmt.Sprintf("%s/%s-info.json", rootVodPath, fileName),
-// 		StreamedAt:          time.Now(),
-// 		FolderName:          folderName,
-// 		FileName:            fileName,
-// 		// create temporary paths
-// 		TmpVideoDownloadPath:    fmt.Sprintf("/tmp/%s_%s-video.%s", live.ID, vUUID, videoExtension),
-// 		TmpVideoConvertPath:     fmt.Sprintf("/tmp/%s_%s-video-convert.%s", live.ID, vUUID, videoExtension),
-// 		TmpChatDownloadPath:     fmt.Sprintf("/tmp/%s_%s-chat.json", live.ID, vUUID),
-// 		TmpLiveChatDownloadPath: fmt.Sprintf("/tmp/%s_%s-live-chat.json", live.ID, vUUID),
-// 		TmpLiveChatConvertPath:  fmt.Sprintf("/tmp/%s_%s-chat-convert.json", live.ID, vUUID),
-// 		TmpChatRenderPath:       fmt.Sprintf("/tmp/%s_%s-chat.mp4", live.ID, vUUID),
-// 	}
-
-// 	if viper.GetBool("archive.save_as_hls") {
-// 		vodDTO.TmpVideoHLSPath = fmt.Sprintf("/tmp/%s_%s-video_hls0", live.ID, vUUID)
-// 		vodDTO.VideoHLSPath = fmt.Sprintf("%s/%s-video_hls", rootVodPath, fileName)
-// 		vodDTO.VideoPath = fmt.Sprintf("%s/%s-video_hls/%s-video.m3u8", rootVodPath, fileName, live.ID)
-// 	}
-
-// 	v, err := s.VodService.CreateVod(vodDTO, dbC.ID)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error creating vod: %v", err)
-// 	}
-
-// 	// Create queue item
-// 	q, err := s.QueueService.CreateQueueItem(queue.Queue{LiveArchive: true}, v.ID)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error creating queue item: %v", err)
-// 	}
-
-// 	// If chat is disabled update queue
-// 	if !lwc.ArchiveChat {
-// 		_, err := q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).Save(context.Background())
-// 		if err != nil {
-// 			return nil, fmt.Errorf("error updating queue item: %v", err)
-// 		}
-
-// 		_, err = v.Update().SetChatPath("").SetChatVideoPath("").Save(context.Background())
-// 		if err != nil {
-// 			return nil, fmt.Errorf("error updating vod: %v", err)
-// 		}
-
-// 	}
-
-// 	if !lwc.RenderChat {
-// 		_, err := q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).Save(context.Background())
-// 		if err != nil {
-// 			return nil, fmt.Errorf("error updating queue item: %v", err)
-// 		}
-// 		_, err = v.Update().SetChatVideoPath("").Save(context.Background())
-// 		if err != nil {
-// 			return nil, fmt.Errorf("error updating vod: %v", err)
-// 		}
-// 	}
-
-// 	// Re-query queue from DB for updated values
-// 	q, err = s.QueueService.GetQueueItem(q.ID)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error fetching queue item: %v", err)
-// 	}
-
-// 	wfOptions := client.StartWorkflowOptions{
-// 		ID:        vUUID.String(),
-// 		TaskQueue: "archive",
-// 	}
-
-// 	input := dto.ArchiveVideoInput{
-// 		VideoID:          live.ID,
-// 		Type:             "live",
-// 		Platform:         "twitch",
-// 		Resolution:       lwc.Resolution,
-// 		DownloadChat:     lwc.ArchiveChat,
-// 		RenderChat:       lwc.RenderChat,
-// 		Vod:              v,
-// 		Channel:          dbC,
-// 		Queue:            q,
-// 		LiveWatchChannel: lwc,
-// 	}
-
-// 	we, err := temporal.GetTemporalClient().Client.ExecuteWorkflow(context.Background(), wfOptions, workflows.ArchiveLiveVideoWorkflow, input)
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("error starting workflow")
-// 		return nil, fmt.Errorf("error starting workflow: %v", err)
-// 	}
-
-// 	log.Debug().Msgf("workflow id %s started for live stream %s", we.GetID(), live.ID)
-
-// 	// set IDs in queue
-// 	_, err = q.Update().SetWorkflowID(we.GetID()).SetWorkflowRunID(we.GetRunID()).Save(context.Background())
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("error updating queue item")
-// 		return nil, fmt.Errorf("error updating queue item: %v", err)
-// 	}
-
-// 	// go s.TaskVodCreateFolder(dbC, v, q, true)
-
-// 	return &TwitchVodResponse{
-// 		VOD:   v,
-// 		Queue: q,
-// 	}, nil
-// }
