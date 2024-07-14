@@ -77,6 +77,15 @@ func Run() error {
 		IsWorker: false,
 	})
 
+	// application migrations
+	// check if VideosDir changed
+	if err := db.VideosDirMigrate(ctx, envConfig.VideosDir); err != nil {
+		return fmt.Errorf("error migrating videos dir: %v", err)
+	}
+	if err := db.TempDirMigrate(ctx, envConfig.TempDir); err != nil {
+		return fmt.Errorf("error migrating videos dir: %v", err)
+	}
+
 	// Initialize river client
 	riverClient, err := tasks_client.NewRiverClient(tasks_client.RiverClientInput{
 		DB_URL: dbString,
