@@ -39,6 +39,7 @@ func SanitizeFileName(fileName string) string {
 	return fileName
 }
 
+// Contains returns true if the slice contains the string
 func Contains(s []string, e string) bool {
 	for _, a := range s {
 		if strings.EqualFold(a, e) {

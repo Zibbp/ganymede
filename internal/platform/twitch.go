@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 func (c *TwitchConnection) GetVideo(ctx context.Context, id string) (*VideoInfo, error) {
@@ -258,4 +262,220 @@ func (c *TwitchConnection) GetCategories(ctx context.Context) ([]Category, error
 	}
 
 	return info, nil
+}
+
+func (c *TwitchConnection) GetGlobalBadges(ctx context.Context) ([]Badge, error) {
+	body, err := c.twitchMakeHTTPRequest("GET", "chat/badges/global", nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var twitchGlobalBadges TwitchGlobalBadgeResponse
+	err = json.Unmarshal(body, &twitchGlobalBadges)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(twitchGlobalBadges.Data) == 0 {
+		return nil, fmt.Errorf("badges not found")
+	}
+
+	var badges []Badge
+
+	for _, v := range twitchGlobalBadges.Data {
+		for _, b := range v.Versions {
+			badges = append(badges, Badge{
+				Version:     b.ID,
+				Name:        v.SetID,
+				IamgeUrl:    b.ImageURL4X,
+				ImageUrl1X:  b.ImageURL1X,
+				ImageUrl2X:  b.ImageURL2X,
+				ImageUrl4X:  b.ImageURL4X,
+				Description: b.Description,
+				Title:       b.Title,
+				ClickAction: b.ClickAction,
+				ClickUrl:    b.ClickURL,
+			})
+		}
+	}
+
+	return badges, nil
+}
+
+func (c *TwitchConnection) GetChannelBadges(ctx context.Context, channelId string) ([]Badge, error) {
+	queryParams := map[string]string{"broadcaster_id": channelId}
+	body, err := c.twitchMakeHTTPRequest("GET", "chat/badges", queryParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var twitchGlobalBadges TwitchGlobalBadgeResponse
+	err = json.Unmarshal(body, &twitchGlobalBadges)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(twitchGlobalBadges.Data) == 0 {
+		return nil, fmt.Errorf("badges not found")
+	}
+
+	var badges []Badge
+
+	for _, v := range twitchGlobalBadges.Data {
+		for _, b := range v.Versions {
+			badges = append(badges, Badge{
+				Version:     b.ID,
+				Name:        v.SetID,
+				IamgeUrl:    b.ImageURL4X,
+				ImageUrl1X:  b.ImageURL1X,
+				ImageUrl2X:  b.ImageURL2X,
+				ImageUrl4X:  b.ImageURL4X,
+				Description: b.Description,
+				Title:       b.Title,
+				ClickAction: b.ClickAction,
+				ClickUrl:    b.ClickURL,
+			})
+		}
+	}
+
+	return badges, nil
+}
+
+func (c *TwitchConnection) GetGlobalEmotes(ctx context.Context) ([]Emote, error) {
+	body, err := c.twitchMakeHTTPRequest("GET", "chat/emotes/global", nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var twitchGlobalEmotes TwitchGlobalEmoteResponse
+	err = json.Unmarshal(body, &twitchGlobalEmotes)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(twitchGlobalEmotes.Data) == 0 {
+		return nil, fmt.Errorf("emotes not found")
+	}
+
+	var emotes []Emote
+
+	// https://dev.twitch.tv/docs/api/reference/#get-global-emotes
+	for _, e := range twitchGlobalEmotes.Data {
+		emote := Emote{
+			ID:     e.ID,
+			Name:   e.Name,
+			Source: "twitch",
+			Type:   EmoteTypeGlobal,
+		}
+
+		// check if emote is static or animated
+		// format can be static or animated
+		if utils.Contains(e.Format, "animated") {
+			emote.Format = EmoteFormatDynamic
+		} else {
+			emote.Format = EmoteFormatStatic
+		}
+
+		emote.Scale = twitchEmoteGetLargestScale(e.Scale)
+
+		emote.URL = twitchTemplateEmoteURL(e.ID, string(emote.Format), "dark", emote.Scale)
+
+		emotes = append(emotes, emote)
+	}
+
+	return emotes, nil
+}
+
+func (c *TwitchConnection) GetChannelEmotes(ctx context.Context, channelId string) ([]Emote, error) {
+	queryParams := map[string]string{"broadcaster_id": channelId}
+	body, err := c.twitchMakeHTTPRequest("GET", "chat/emotes", queryParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var twitchGlobalEmotes TwitchGlobalEmoteResponse
+	err = json.Unmarshal(body, &twitchGlobalEmotes)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(twitchGlobalEmotes.Data) == 0 {
+		return nil, fmt.Errorf("emotes not found")
+	}
+
+	var emotes []Emote
+
+	// https://dev.twitch.tv/docs/api/reference/#get-global-emotes
+	for _, e := range twitchGlobalEmotes.Data {
+		emote := Emote{
+			ID:     e.ID,
+			Name:   e.Name,
+			Source: "twitch",
+			Type:   EmoteTypeSubscription,
+		}
+
+		// check if emote is static or animated
+		// format can be static or animated
+		if utils.Contains(e.Format, "animated") {
+			emote.Format = EmoteFormatDynamic
+		} else {
+			emote.Format = EmoteFormatStatic
+		}
+
+		emote.Scale = twitchEmoteGetLargestScale(e.Scale)
+
+		emote.URL = twitchTemplateEmoteURL(e.ID, string(emote.Format), "dark", emote.Scale)
+
+		emotes = append(emotes, emote)
+	}
+
+	return emotes, nil
+}
+
+// twitchEmoteGetLargestScale returns the largest scale of the given values
+//
+// https://dev.twitch.tv/docs/api/reference/#get-global-emotes
+func twitchEmoteGetLargestScale(values []string) string {
+	if len(values) == 0 {
+		return "0"
+	}
+
+	highest, err := strconv.ParseFloat(values[0], 64)
+	if err != nil {
+		return "0"
+	}
+
+	for _, v := range values[1:] {
+		current, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			continue
+		}
+		if current > highest {
+			highest = current
+		}
+	}
+
+	return strconv.FormatFloat(highest, 'f', 1, 64)
+}
+
+// twitchTemplateEmoteURL returns the URL of an emote
+//
+// https://dev.twitch.tv/docs/api/reference/#get-global-emotes
+//
+// Twitch recommends using the template URL rather than the raw URL
+func twitchTemplateEmoteURL(id, format, themeMode string, scale string) string {
+	template := "https://static-cdn.jtvnw.net/emoticons/v2/{{id}}/{{format}}/{{theme_mode}}/{{scale}}"
+
+	replacements := map[string]string{
+		"{{id}}":         id,
+		"{{format}}":     format,
+		"{{theme_mode}}": themeMode,
+		"{{scale}}":      scale,
+	}
+
+	for placeholder, value := range replacements {
+		template = strings.Replace(template, placeholder, value, 1)
+	}
+
+	return template
 }

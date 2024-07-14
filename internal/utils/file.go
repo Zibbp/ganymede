@@ -332,25 +332,10 @@ func FileExists(filename string) bool {
 
 func ReadChatFile(path string) ([]byte, error) {
 
-	// Check if file is cached
-	//cached, found := cache.Cache().Get(path)
-	//if found {
-	//	log.Debug().Msgf("using cached file: %s", path)
-	//	return cached.([]byte), nil
-	//}
-
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("error reading chat file: %v", err)
 	}
-
-	// Cache file
-	//err = cache.Cache().Set(path, data, 5*time.Minute)
-	//if err != nil {
-	//
-	//	return nil, err
-	//}
-	//log.Debug().Msgf("set cache for file: %s", path)
 
 	return data, nil
 }

@@ -71,7 +71,7 @@ func main() {
 	}
 
 	channelService := channel.NewService(db)
-	vodService := vod.NewService(db)
+	vodService := vod.NewService(db, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	// twitchService := twitch.NewService()
 	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, platformTwitch)

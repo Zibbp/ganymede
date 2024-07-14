@@ -180,7 +180,6 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 		})
 
 		// set default offset value for this live comment
-
 		message_is_offset := false
 
 		// parse emotes, creating fragments with positions

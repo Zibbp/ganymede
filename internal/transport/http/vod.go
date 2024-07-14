@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/chat"
+	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
@@ -27,7 +28,7 @@ type VodService interface {
 	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error)
-	GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error)
+	GetChatEmotes(c echo.Context, vodID uuid.UUID) (*platform.Emotes, error)
 	GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.GanymedeBadges, error)
 	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error)
 	LockVod(c echo.Context, vID uuid.UUID, status bool) error
@@ -485,7 +486,7 @@ func (h *Handler) GetVodChatComments(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
-// GetVodChatEmotes godoc
+// GetChatEmotes godoc
 //
 //	@Summary		Get vod chat emotes
 //	@Description	Get vod chat emotes
@@ -498,13 +499,13 @@ func (h *Handler) GetVodChatComments(c echo.Context) error {
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/chat/emotes [get]
-func (h *Handler) GetVodChatEmotes(c echo.Context) error {
+func (h *Handler) GetChatEmotes(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	emotes, err := h.Service.VodService.GetVodChatEmotes(c, vID)
+	emotes, err := h.Service.VodService.GetChatEmotes(c, vID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

@@ -55,7 +55,6 @@ import (
 //	@name								refresh-token
 
 func Run() error {
-
 	ctx := context.Background()
 
 	config.NewConfig(true)
@@ -104,9 +103,15 @@ func Run() error {
 		}
 	}
 
+	b, err := platformTwitch.GetChannelEmotes(ctx, "29899360")
+	if err != nil {
+		log.Panic().Err(err).Msg("Error getting global badges")
+	}
+	fmt.Println(b[0])
+
 	authService := auth.NewService(db)
 	channelService := channel.NewService(db)
-	vodService := vod.NewService(db)
+	vodService := vod.NewService(db, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	twitchService := twitch.NewService()
 	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, platformTwitch)

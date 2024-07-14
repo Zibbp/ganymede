@@ -16,8 +16,7 @@ import (
 )
 
 type ArchiveService interface {
-	ArchiveTwitchChannel(cName string) (*ent.Channel, error)
-	// ArchiveTwitchVod(vID string, quality string, chat bool, renderChat bool) (*archive.TwitchVodResponse, error)
+	ArchiveChannel(ctx context.Context, channelName string) (*ent.Channel, error)
 	ArchiveVideo(ctx context.Context, input archive.ArchiveVideoInput) error
 	ArchiveLivestream(ctx context.Context, input archive.ArchiveVideoInput) error
 }
@@ -33,7 +32,7 @@ type ArchiveVideoRequest struct {
 	RenderChat  bool             `json:"render_chat"`
 }
 
-// ArchiveTwitchChannel godoc
+// ArchiveChannel godoc
 //
 //	@Summary		Archive a twitch channel
 //	@Description	Archive a twitch channel (creates channel in database and download profile image)
@@ -46,15 +45,15 @@ type ArchiveVideoRequest struct {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/archive/channel [post]
 //	@Security		ApiKeyCookieAuth
-func (h *Handler) ArchiveTwitchChannel(c echo.Context) error {
-	acr := new(ArchiveChannelRequest)
-	if err := c.Bind(acr); err != nil {
+func (h *Handler) ArchiveChannel(c echo.Context) error {
+	body := new(ArchiveChannelRequest)
+	if err := c.Bind(body); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if err := c.Validate(acr); err != nil {
+	if err := c.Validate(body); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	channel, err := h.Service.ArchiveService.ArchiveTwitchChannel(acr.ChannelName)
+	channel, err := h.Service.ArchiveService.ArchiveChannel(c.Request().Context(), body.ChannelName)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

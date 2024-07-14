@@ -102,6 +102,39 @@ type TwitchPagination struct {
 	Cursor string `json:"cursor"`
 }
 
+type TwitchGlobalBadgeResponse struct {
+	Data []struct {
+		SetID    string `json:"set_id"`
+		Versions []struct {
+			ID          string `json:"id"`
+			ImageURL1X  string `json:"image_url_1x"`
+			ImageURL2X  string `json:"image_url_2x"`
+			ImageURL4X  string `json:"image_url_4x"`
+			Title       string `json:"title"`
+			Description string `json:"description"`
+			ClickAction string `json:"click_action"`
+			ClickURL    string `json:"click_url"`
+		} `json:"versions"`
+	} `json:"data"`
+}
+
+type TwitchGlobalEmoteResponse struct {
+	Data []struct {
+		ID     string `json:"id"`
+		Name   string `json:"name"`
+		Images struct {
+			URL1X string `json:"url_1x"`
+			URL2X string `json:"url_2x"`
+			URL4X string `json:"url_4x"`
+		} `json:"images"`
+		Format    []string `json:"format"`
+		Scale     []string `json:"scale"`
+		ThemeMode []string `json:"theme_mode"`
+		EmoteType string   `json:"emote_type"`
+	} `json:"data"`
+	Template string `json:"template"`
+}
+
 // authenticate sends a POST request to Twitch for authentication using client credentials. An AuthenTokenResponse is returned on success containing the access token.
 func twitchAuthenticate(clientId string, clientSecret string) (*AuthTokenResponse, error) {
 	client := &http.Client{}
