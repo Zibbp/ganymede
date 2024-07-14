@@ -23,6 +23,7 @@ import (
 )
 
 var archive_tag = "archive"
+var allow_fail_tag = "allow_fail"
 
 var (
 	QueueVideoDownload    = "video-download"
@@ -271,7 +272,7 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 	log.Error().Str("job_id", fmt.Sprintf("%d", job.ID)).Str("attempt", fmt.Sprintf("%d", job.Attempt)).Str("attempted_by", job.AttemptedBy[job.Attempt-1]).Str("args", string(job.EncodedArgs)).Err(err).Msg("task error")
 
 	// if the job is an archive job, mark it as failed in the queue and send an error notification
-	if utils.Contains(job.Tags, archive_tag) {
+	if utils.Contains(job.Tags, archive_tag) && !utils.Contains(job.Tags, allow_fail_tag) {
 		// unmarshal custom arguments
 		var args RiverJobArgs
 		if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
@@ -305,7 +306,7 @@ func (*CustomErrorHandler) HandlePanic(ctx context.Context, job *rivertype.JobRo
 	log.Error().Str("job_id", fmt.Sprintf("%d", job.ID)).Str("attempt", fmt.Sprintf("%d", job.Attempt)).Str("attempted_by", job.AttemptedBy[job.Attempt-1]).Str("args", string(job.EncodedArgs)).Str("panic_val", fmt.Sprintf("%v", panicVal)).Str("trace", trace).Msg("task error")
 
 	// if the job is an archive job, mark it as failed in the queue and send an error notification
-	if utils.Contains(job.Tags, archive_tag) {
+	if utils.Contains(job.Tags, archive_tag) && !utils.Contains(job.Tags, allow_fail_tag) {
 		// unmarshal custom arguments
 		var args RiverJobArgs
 		if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
