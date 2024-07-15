@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -28,8 +29,8 @@ type VodService interface {
 	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error)
-	GetChatEmotes(c echo.Context, vodID uuid.UUID) (*platform.Emotes, error)
-	GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.GanymedeBadges, error)
+	GetChatEmotes(ctx context.Context, vodID uuid.UUID) (*platform.Emotes, error)
+	GetChatBadges(ctx context.Context, vodID uuid.UUID) (*platform.Badges, error)
 	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error)
 	LockVod(c echo.Context, vID uuid.UUID, status bool) error
 }
@@ -505,7 +506,7 @@ func (h *Handler) GetChatEmotes(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	emotes, err := h.Service.VodService.GetChatEmotes(c, vID)
+	emotes, err := h.Service.VodService.GetChatEmotes(c.Request().Context(), vID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -513,7 +514,7 @@ func (h *Handler) GetChatEmotes(c echo.Context) error {
 	return c.JSON(http.StatusOK, emotes)
 }
 
-// GetVodChatBadges godoc
+// GetChatBadges godoc
 //
 //	@Summary		Get vod chat badges
 //	@Description	Get vod chat badges
@@ -526,13 +527,13 @@ func (h *Handler) GetChatEmotes(c echo.Context) error {
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/chat/badges [get]
-func (h *Handler) GetVodChatBadges(c echo.Context) error {
+func (h *Handler) GetChatBadges(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	badges, err := h.Service.VodService.GetVodChatBadges(c, vID)
+	badges, err := h.Service.VodService.GetChatBadges(c.Request().Context(), vID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

@@ -181,8 +181,8 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 				}
 				var videoChapters []string
 
-				if len(gqlVideoChapters.Data.Video.Moments.Edges) > 0 {
-					for _, chapter := range gqlVideoChapters.Data.Video.Moments.Edges {
+				if len(gqlVideoChapters) > 0 {
+					for _, chapter := range gqlVideoChapters {
 						videoChapters = append(videoChapters, chapter.Node.Details.Game.DisplayName)
 					}
 					logger.Debug().Str("video_id", video.ID).Msgf("video has chapters: %s", strings.Join(videoChapters, ", "))
@@ -191,10 +191,10 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 				// Append chapters and video category to video categories
 				var videoCategories []string
 				videoCategories = append(videoCategories, videoChapters...)
-				videoCategories = append(videoCategories, gqlVideo.Data.Video.Game.Name)
+				videoCategories = append(videoCategories, gqlVideo.Game.Name)
 
 				// Check if video is sub only restricted
-				if strings.Contains(gqlVideo.Data.Video.ResourceRestriction.Type, "SUB") {
+				if strings.Contains(gqlVideo.ResourceRestriction.Type, "SUB") {
 					// Skip if sub only is disabled
 					if !watch.DownloadSubOnly {
 						logger.Info().Str("video_id", video.ID).Msgf("skipping subscriber-only video")

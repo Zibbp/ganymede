@@ -1,10 +1,13 @@
 package chat
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/zibbp/ganymede/internal/platform"
 )
 
 type BTTVEmote struct {
@@ -12,6 +15,7 @@ type BTTVEmote struct {
 	Code      string    `json:"code"`
 	ImageType ImageType `json:"imageType"`
 	UserID    UserID    `json:"userId"`
+	Animated  bool      `json:"animated"`
 }
 
 type ImageType string
@@ -26,9 +30,9 @@ type BTTVChannelEmotes struct {
 	SharedEmotes  []BTTVEmote   `json:"sharedEmotes"`
 }
 
-func GetBTTVGlobalEmotes() ([]*GanymedeEmote, error) {
+func GetBTTVGlobalEmotes(ctx context.Context) ([]platform.Emote, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "https://api.betterttv.net/3/cached/emotes/global", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.betterttv.net/3/cached/emotes/global", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -51,25 +55,30 @@ func GetBTTVGlobalEmotes() ([]*GanymedeEmote, error) {
 		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 
-	var emotes []*GanymedeEmote
+	var emotes []platform.Emote
 	for _, emote := range bttvGlobalEmotes {
-		emotes = append(emotes, &GanymedeEmote{
+		e := platform.Emote{
 			ID:     emote.ID,
 			Name:   emote.Code,
 			URL:    fmt.Sprintf("https://cdn.betterttv.net/emote/%s/1x", emote.ID),
-			Type:   "third_party",
+			Format: platform.EmoteFormatStatic,
+			Type:   platform.EmoteTypeGlobal,
 			Source: "bttv",
-		})
+		}
+		if emote.Animated {
+			e.Format = platform.EmoteFormatAnimated
+		}
+
+		emotes = append(emotes, e)
 	}
 
 	return emotes, nil
 }
 
-func GetBTTVChannelEmotes(channelId int64) ([]*GanymedeEmote, error) {
-	stringChannelId := fmt.Sprintf("%d", channelId)
+func GetBTTVChannelEmotes(ctx context.Context, channelId string) ([]platform.Emote, error) {
 	client := &http.Client{}
 
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.betterttv.net/3/cached/users/twitch/%s", stringChannelId), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("https://api.betterttv.net/3/cached/users/twitch/%s", channelId), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -92,24 +101,36 @@ func GetBTTVChannelEmotes(channelId int64) ([]*GanymedeEmote, error) {
 		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 
-	var emotes []*GanymedeEmote
+	var emotes []platform.Emote
 	for _, emote := range bttvChannelEmotes.ChannelEmotes {
-		emotes = append(emotes, &GanymedeEmote{
+		e := platform.Emote{
 			ID:     emote.ID,
 			Name:   emote.Code,
 			URL:    fmt.Sprintf("https://cdn.betterttv.net/emote/%s/1x", emote.ID),
-			Type:   "third_party",
+			Format: platform.EmoteFormatStatic,
+			Type:   platform.EmoteTypeGlobal,
 			Source: "bttv",
-		})
+		}
+		if emote.Animated {
+			e.Format = platform.EmoteFormatAnimated
+		}
+
+		emotes = append(emotes, e)
 	}
 	for _, emote := range bttvChannelEmotes.SharedEmotes {
-		emotes = append(emotes, &GanymedeEmote{
+		e := platform.Emote{
 			ID:     emote.ID,
 			Name:   emote.Code,
 			URL:    fmt.Sprintf("https://cdn.betterttv.net/emote/%s/1x", emote.ID),
-			Type:   "third_party",
+			Format: platform.EmoteFormatStatic,
+			Type:   platform.EmoteTypeGlobal,
 			Source: "bttv",
-		})
+		}
+		if emote.Animated {
+			e.Format = platform.EmoteFormatAnimated
+		}
+
+		emotes = append(emotes, e)
 	}
 
 	return emotes, nil

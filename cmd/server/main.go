@@ -112,12 +112,6 @@ func Run() error {
 		}
 	}
 
-	b, err := platformTwitch.GetChannelEmotes(ctx, "29899360")
-	if err != nil {
-		log.Panic().Err(err).Msg("Error getting global badges")
-	}
-	fmt.Println(b[0])
-
 	authService := auth.NewService(db)
 	channelService := channel.NewService(db)
 	vodService := vod.NewService(db, platformTwitch)

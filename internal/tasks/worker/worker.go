@@ -13,6 +13,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/platform"
@@ -161,7 +162,7 @@ func (rc *RiverWorkerClient) Stop() error {
 }
 
 func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*river.PeriodicJob, error) {
-
+	env := config.GetEnvConfig()
 	midnightCron, err := cron.ParseStandard("0 0 * * *")
 	if err != nil {
 		return nil, err
@@ -175,9 +176,9 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 
 	periodicJobs := []*river.PeriodicJob{
 		// archive watchdog
-		// runs every minute
+		// runs every 5 minutes
 		river.NewPeriodicJob(
-			river.PeriodicInterval(1*time.Minute),
+			river.PeriodicInterval(5*time.Minute),
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks.WatchdogArgs{}, nil
 			},
@@ -226,7 +227,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 	}
 
 	// check jwks
-	if viper.GetBool("oauth_enabled") {
+	if env.OAuthEnabled {
 		// runs once a day at midnight
 		periodicJobs = append(periodicJobs, river.NewPeriodicJob(
 			midnightCron,

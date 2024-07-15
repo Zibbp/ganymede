@@ -28,6 +28,7 @@ services:
       - MAX_VIDEO_DOWNLOAD_EXECUTIONS=2
       - MAX_VIDEO_CONVERT_EXECUTIONS=3
       # Optional OAuth settings
+      # - OAUTH_ENABLED=false
       # - OAUTH_PROVIDER_URL=
       # - OAUTH_CLIENT_ID=
       # - OAUTH_CLIENT_SECRET=

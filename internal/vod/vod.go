@@ -501,8 +501,8 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 
 }
 
-func (s *Service) GetChatEmotes(c echo.Context, vodID uuid.UUID) (*platform.Emotes, error) {
-	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
+func (s *Service) GetChatEmotes(ctx context.Context, vodID uuid.UUID) (*platform.Emotes, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -519,6 +519,12 @@ func (s *Service) GetChatEmotes(c echo.Context, vodID uuid.UUID) (*platform.Emot
 	defer runtime.GC()
 
 	var emotes platform.Emotes
+
+	// get streamer id from chat
+	streamerId, err := getStreamerIdFromInterface(chatData.Streamer.ID)
+	if err != nil {
+		return nil, err
+	}
 
 	switch {
 	// check if emotes are embedded in the 'emotes' struct
@@ -570,87 +576,62 @@ func (s *Service) GetChatEmotes(c echo.Context, vodID uuid.UUID) (*platform.Emot
 				Type:   "embed",
 			})
 		}
+		// no embedded emotes; fetch emotes from remote providers
 	default:
 		log.Debug().Str("video_id", v.ID.String()).Msg("chat emotes are not embedded; fetching emotes from remote providers")
 
 		// get platform global emotes
-		globalEmotes, err := s.Platform.GetGlobalEmotes(c.Request().Context())
+		globalEmotes, err := s.Platform.GetGlobalEmotes(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("error getting global emotes: %v", err)
 		}
 		emotes.Emotes = append(emotes.Emotes, globalEmotes...)
 
 		// get platform channel emotes
-		channelEmotes, err := s.Platform.GetChannelEmotes(c.Request().Context(), fmt.Sprintf("%s", chatData.Streamer.ID))
+		channelEmotes, err := s.Platform.GetChannelEmotes(ctx, streamerId)
 		if err != nil {
 			return nil, fmt.Errorf("error getting channel emotes: %v", err)
 		}
 		emotes.Emotes = append(emotes.Emotes, channelEmotes...)
 
-		// sevenTVGlobalEmotes, err := chat.Get7TVGlobalEmotes()
-		// if err != nil {
-		// 	log.Debug().Err(err).Msg("error getting 7tv global emotes")
-		// 	return nil, fmt.Errorf("error getting 7tv global emotes: %v", err)
-		// }
-		// sevenTVChannelEmotes, err := chat.Get7TVChannelEmotes(sID)
-		// if err != nil {
-		// 	log.Debug().Err(err).Msg("error getting 7tv channel emotes")
-		// 	return nil, fmt.Errorf("error getting 7tv channel emotes: %v", err)
-		// }
-		// bttvGlobalEmotes, err := chat.GetBTTVGlobalEmotes()
-		// if err != nil {
-		// 	log.Debug().Err(err).Msg("error getting bttv global emotes")
-		// 	return nil, fmt.Errorf("error getting bttv global emotes: %v", err)
-		// }
-		// bttvChannelEmotes, err := chat.GetBTTVChannelEmotes(sID)
-		// if err != nil {
-		// 	log.Debug().Err(err).Msg("error getting bttv channel emotes")
-		// 	return nil, fmt.Errorf("error getting bttv channel emotes: %v", err)
-		// }
-		// ffzGlobalEmotes, err := chat.GetFFZGlobalEmotes()
-		// if err != nil {
-		// 	log.Debug().Err(err).Msg("error getting ffz global emotes")
-		// 	return nil, fmt.Errorf("error getting ffz global emotes: %v", err)
-		// }
-		// ffzChannelEmotes, err := chat.GetFFZChannelEmotes(sID)
-		// if err != nil {
-		// 	log.Debug().Err(err).Msg("error getting ffz channel emotes")
-		// 	return nil, fmt.Errorf("error getting ffz channel emotes: %v", err)
-		// }
+		// get 7tv emotes
+		sevenTVGlobalEmotes, err := chat.Get7TVGlobalEmotes(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("error getting 7tv global emotes: %v", err)
+		}
+		emotes.Emotes = append(emotes.Emotes, sevenTVGlobalEmotes...)
 
-		// // Loop through twitch global emotes
-		// for _, emote := range twitchGlobalEmotes {
-		// 	ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
-		// }
-		// // Loop through twitch channel emotes
-		// for _, emote := range twitchChannelEmotes {
-		// 	ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
-		// }
-		// // Loop through 7tv global emotes
-		// for _, emote := range sevenTVGlobalEmotes {
-		// 	ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
-		// }
-		// // Loop through 7tv channel emotes
-		// for _, emote := range sevenTVChannelEmotes {
-		// 	ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
-		// }
-		// // Loop through bttv global emotes
-		// for _, emote := range bttvGlobalEmotes {
-		// 	ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
-		// }
-		// // Loop through bttv channel emotes
-		// for _, emote := range bttvChannelEmotes {
-		// 	ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
-		// }
-		// // Loop through ffz global emotes
-		// for _, emote := range ffzGlobalEmotes {
-		// 	ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
-		// }
-		// // Loop through ffz channel emotes
-		// for _, emote := range ffzChannelEmotes {
-		// 	ganymedeEmotes.Emotes = append(ganymedeEmotes.Emotes, *emote)
-		// }
+		sevenTVChannelEmotes, err := chat.Get7TVChannelEmotes(ctx, streamerId)
+		if err != nil {
+			return nil, fmt.Errorf("error getting 7tv channel emotes: %v", err)
+		}
+		emotes.Emotes = append(emotes.Emotes, sevenTVChannelEmotes...)
 
+		// get bttv emotes
+		bttvGlobalEmotes, err := chat.GetBTTVGlobalEmotes(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("error getting bttv global emotes: %v", err)
+		}
+		emotes.Emotes = append(emotes.Emotes, bttvGlobalEmotes...)
+
+		bttvChannelEmotes, err := chat.GetBTTVChannelEmotes(ctx, streamerId)
+		if err != nil {
+			return nil, fmt.Errorf("error getting bttv channel emotes: %v", err)
+		}
+		emotes.Emotes = append(emotes.Emotes, bttvChannelEmotes...)
+
+		// get ffz emotes
+		ffzGlobalEmotes, err := chat.GetFFZGlobalEmotes(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("error getting ffz global emotes: %v", err)
+		}
+		emotes.Emotes = append(emotes.Emotes, ffzGlobalEmotes...)
+
+		ffzChannelEmotes, err := chat.GetFFZChannelEmotes(ctx, streamerId)
+		if err != nil {
+			return nil, fmt.Errorf("error getting ffz channel emotes: %v", err)
+		}
+		emotes.Emotes = append(emotes.Emotes, ffzChannelEmotes...)
 	}
 
 	chatData = nil
@@ -660,15 +641,13 @@ func (s *Service) GetChatEmotes(c echo.Context, vodID uuid.UUID) (*platform.Emot
 
 }
 
-func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.GanymedeBadges, error) {
-	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
+func (s *Service) GetChatBadges(ctx context.Context, vodID uuid.UUID) (*platform.Badges, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(ctx)
 	if err != nil {
-		log.Debug().Err(err).Msg("error getting vod chat emotes")
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
 	data, err := utils.ReadChatFile(v.ChatPath)
 	if err != nil {
-		log.Debug().Err(err).Msg("error getting vod chat emotes")
 		return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 	}
 
@@ -679,7 +658,6 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		// attempt to unmarshal old format
 		err = json.Unmarshal(data, &chatDataOld)
 		if err != nil {
-			log.Debug().Err(err).Msg("error getting vod chat emotes")
 			return nil, fmt.Errorf("error getting vod chat emotes: %v", err)
 		}
 	}
@@ -703,11 +681,11 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		}
 	}
 
-	var badgeResp chat.GanymedeBadges
+	var badgeResp platform.Badges
 
 	// If emebedded badges
 	if len(chatData.EmbeddedData.TwitchBadges) != 0 {
-		log.Debug().Msgf("VOD %s chat playback embedded badges found", vodID)
+		log.Debug().Str("vod_id", vodID.String()).Msg("Found embedded badges")
 		// Emebedded badges have duplicate arrays for each of the below
 		// So we need to check if we have already added the badge to the response
 		// To ensure we use the channel's badge and not the global one
@@ -724,7 +702,7 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 					if imgData.Title == "" {
 						empty = true
 					} else {
-						badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+						badgeResp.Badges = append(badgeResp.Badges, platform.Badge{
 							Name:       badge.Name,
 							Version:    v,
 							Title:      fmt.Sprintf("%s %s", badge.Name, v),
@@ -746,7 +724,7 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 					if imgData.Title == "" {
 						empty = true
 					} else {
-						badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+						badgeResp.Badges = append(badgeResp.Badges, platform.Badge{
 							Name:       badge.Name,
 							Version:    v,
 							Title:      fmt.Sprintf("%s %s", badge.Name, v),
@@ -767,7 +745,7 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 					if imgData.Title == "" {
 						empty = true
 					} else {
-						badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+						badgeResp.Badges = append(badgeResp.Badges, platform.Badge{
 							Name:       badge.Name,
 							Version:    v,
 							Title:      fmt.Sprintf("%s %s", badge.Name, v),
@@ -787,7 +765,7 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 				for v, imgData := range badge.Versions {
 					if imgData.Title == "" {
 					} else {
-						badgeResp.Badges = append(badgeResp.Badges, chat.GanymedeBadge{
+						badgeResp.Badges = append(badgeResp.Badges, platform.Badge{
 							Name:       badge.Name,
 							Version:    v,
 							Title:      fmt.Sprintf("%s %s", badge.Name, v),
@@ -801,48 +779,29 @@ func (s *Service) GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.Ganym
 		}
 
 	} else {
-		log.Debug().Msgf("VOD %s chat playback embedded badges not found, fetching badges from providers", vodID)
-		// Older chat files have the streamer ID stored as a string, need to convert to an int64
-		var sID int64
-		switch streamerChatId := chatData.Streamer.ID.(type) {
-		case string:
-			sID, err = strconv.ParseInt(streamerChatId, 10, 64)
-			if err != nil {
-				log.Debug().Err(err).Msg("error parsing streamer chat id")
-				return nil, fmt.Errorf("error parsing streamer chat id: %v", err)
-			}
-		case float64:
-			sID = int64(streamerChatId)
+		log.Debug().Str("vod_id", vodID.String()).Msg("No embedded badges found; fetching from provider")
+		// get streamer id from chat
+		streamerId, err := getStreamerIdFromInterface(chatData.Streamer.ID)
+		if err != nil {
+			return nil, err
 		}
 
-		twitchBadges, err := chat.GetTwitchGlobalBadges()
+		twitchBadges, err := s.Platform.GetGlobalBadges(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("error getting twitch global badges")
 			return nil, fmt.Errorf("error getting twitch global badges: %v", err)
 		}
-		channelBadges, err := chat.GetTwitchChannelBadges(sID)
+		badgeResp.Badges = append(badgeResp.Badges, twitchBadges...)
+		channelBadges, err := s.Platform.GetChannelBadges(ctx, streamerId)
 		if err != nil {
-			log.Error().Err(err).Msg("error getting twitch channel badges")
 			return nil, fmt.Errorf("error getting twitch channel badges: %v", err)
 		}
-
-		// Loop through twitch global badges
-		badgeResp.Badges = append(badgeResp.Badges, twitchBadges.Badges...)
-
-		// Loop through twitch channel badges
-
-		badgeResp.Badges = append(badgeResp.Badges, channelBadges.Badges...)
-
-		twitchBadges = nil
-		channelBadges = nil
-
+		badgeResp.Badges = append(badgeResp.Badges, channelBadges...)
 	}
 
 	chatData = nil
 	defer runtime.GC()
 
 	return &badgeResp, nil
-
 }
 
 func (s *Service) LockVod(c echo.Context, vID uuid.UUID, status bool) error {
@@ -858,4 +817,24 @@ func (s *Service) LockVod(c echo.Context, vID uuid.UUID, status bool) error {
 	}
 
 	return nil
+}
+
+// getStreamerIdFromInterface returns the string representation of the streamer id
+//
+// Older chat files have the streamer ID stored as an int, need to convert to a string
+func getStreamerIdFromInterface(id interface{}) (string, error) {
+	var streamerId string
+	switch i := id.(type) {
+	case string:
+		streamerId = i
+	case int:
+		streamerId = strconv.Itoa(i)
+	case int64:
+		streamerId = strconv.FormatInt(i, 10)
+	case float64:
+		streamerId = strconv.FormatFloat(i, 'f', -1, 64)
+	default:
+		return "", fmt.Errorf("unsupported streamer id type: %T", streamerId)
+	}
+	return streamerId, nil
 }

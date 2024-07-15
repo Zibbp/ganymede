@@ -19,8 +19,8 @@ type Emote struct {
 type EmoteFormat string
 
 const (
-	EmoteFormatStatic  EmoteFormat = "static"
-	EmoteFormatDynamic EmoteFormat = "animated"
+	EmoteFormatStatic   EmoteFormat = "static"
+	EmoteFormatAnimated EmoteFormat = "animated"
 )
 
 type EmoteType string

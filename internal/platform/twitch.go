@@ -371,7 +371,7 @@ func (c *TwitchConnection) GetGlobalEmotes(ctx context.Context) ([]Emote, error)
 		// check if emote is static or animated
 		// format can be static or animated
 		if utils.Contains(e.Format, "animated") {
-			emote.Format = EmoteFormatDynamic
+			emote.Format = EmoteFormatAnimated
 		} else {
 			emote.Format = EmoteFormatStatic
 		}
@@ -417,7 +417,7 @@ func (c *TwitchConnection) GetChannelEmotes(ctx context.Context, channelId strin
 		// check if emote is static or animated
 		// format can be static or animated
 		if utils.Contains(e.Format, "animated") {
-			emote.Format = EmoteFormatDynamic
+			emote.Format = EmoteFormatAnimated
 		} else {
 			emote.Format = EmoteFormatStatic
 		}

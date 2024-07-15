@@ -1,5 +1,9 @@
 package platform
 
+type Badges struct {
+	Badges []Badge `json:"badges"`
+}
+
 type Badge struct {
 	Version     string `json:"version"`
 	Name        string `json:"name"`
