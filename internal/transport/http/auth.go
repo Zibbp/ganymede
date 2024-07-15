@@ -124,8 +124,8 @@ func (h *Handler) Login(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/login [get]
 func (h *Handler) OAuthLogin(c echo.Context) error {
-	oAuthEnabled := viper.GetBool("oauth_enabled")
-	if !oAuthEnabled {
+	env := config.GetEnvConfig()
+	if !env.OAuthEnabled {
 		return echo.NewHTTPError(http.StatusForbidden, "OAuth is disabled")
 	}
 	// Redirect to OAuth provider

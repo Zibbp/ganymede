@@ -1,10 +1,13 @@
 package chat
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/zibbp/ganymede/internal/platform"
 )
 
 type SevenTVGlobalEmotes struct {
@@ -141,9 +144,9 @@ type EmoteSet struct {
 	Owner      *User         `json:"owner"`
 }
 
-func Get7TVGlobalEmotes() ([]*GanymedeEmote, error) {
+func Get7TVGlobalEmotes(ctx context.Context) ([]platform.Emote, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "https://7tv.io/v3/emote-sets/global", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://7tv.io/v3/emote-sets/global", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -160,33 +163,38 @@ func Get7TVGlobalEmotes() ([]*GanymedeEmote, error) {
 		return nil, fmt.Errorf("failed to read body: %v", err)
 	}
 
-	var emotes SevenTVGlobalEmotes
-	err = json.Unmarshal(body, &emotes)
+	var globalEmotes SevenTVGlobalEmotes
+	err = json.Unmarshal(body, &globalEmotes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal emotes: %v", err)
 	}
 
-	var ganymedeEmotes []*GanymedeEmote
-	for _, emote := range emotes.Emotes {
-		ganymedeEmotes = append(ganymedeEmotes, &GanymedeEmote{
+	var emotes []platform.Emote
+	for _, emote := range globalEmotes.Emotes {
+		e := platform.Emote{
 			ID:     emote.ID,
 			Name:   emote.Name,
-			URL:    fmt.Sprintf("https:%s/1x.webp", emote.Data.Host.URL),
-			Type:   "third_party",
+			URL:    fmt.Sprintf("https:%s/1x.avif", emote.Data.Host.URL),
+			Format: platform.EmoteFormatStatic,
+			Type:   platform.EmoteTypeGlobal,
 			Source: "7tv",
 			Width:  emote.Data.Host.Files[0].Width,
 			Height: emote.Data.Host.Files[0].Height,
-		})
+		}
+		if emote.Data.Animated {
+			e.Format = platform.EmoteFormatAnimated
+		}
+
+		emotes = append(emotes, e)
 	}
 
-	return ganymedeEmotes, nil
+	return emotes, nil
 }
 
-func Get7TVChannelEmotes(channelId int64) ([]*GanymedeEmote, error) {
-	stringChannelId := fmt.Sprintf("%d", channelId)
-
+func Get7TVChannelEmotes(ctx context.Context, channelId string) ([]platform.Emote, error) {
+	fmt.Println("foooo")
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://7tv.io/v3/users/twitch/%s", stringChannelId), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("https://7tv.io/v3/users/twitch/%s", channelId), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -203,30 +211,36 @@ func Get7TVChannelEmotes(channelId int64) ([]*GanymedeEmote, error) {
 		return nil, fmt.Errorf("failed to read body: %v", err)
 	}
 
-	var emotes SevenTVChannelEmotes
-	err = json.Unmarshal(body, &emotes)
+	var channelEmotes SevenTVChannelEmotes
+	err = json.Unmarshal(body, &channelEmotes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal emotes: %v", err)
 	}
 
-	var ganymedeEmotes []*GanymedeEmote
-	for _, emote := range emotes.EmoteSet.Emotes {
+	var emotes []platform.Emote
+	for _, emote := range channelEmotes.EmoteSet.Emotes {
 		var width int64
 		var height int64
 		if len(emote.Data.Host.Files) > 0 {
 			width = emote.Data.Host.Files[0].Width
 			height = emote.Data.Host.Files[0].Height
 		}
-		ganymedeEmotes = append(ganymedeEmotes, &GanymedeEmote{
+		e := platform.Emote{
 			ID:     emote.ID,
 			Name:   emote.Name,
-			URL:    fmt.Sprintf("https:%s/1x.webp", emote.Data.Host.URL),
-			Type:   "third_party",
+			URL:    fmt.Sprintf("https:%s/1x.avif", emote.Data.Host.URL),
+			Format: platform.EmoteFormatStatic,
+			Type:   platform.EmoteTypeGlobal,
 			Source: "7tv",
 			Width:  width,
 			Height: height,
-		})
+		}
+		if emote.Data.Animated {
+			e.Format = platform.EmoteFormatAnimated
+		}
+
+		emotes = append(emotes, e)
 	}
 
-	return ganymedeEmotes, nil
+	return emotes, nil
 }

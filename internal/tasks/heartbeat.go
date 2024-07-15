@@ -38,7 +38,7 @@ func startHeartBeatForTask(ctx context.Context, input HeartBeatInput) {
 		return
 	}
 
-	ticker := time.NewTicker(15 * time.Second)
+	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 
 	for {
