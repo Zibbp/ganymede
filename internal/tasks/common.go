@@ -168,7 +168,7 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 			return err
 		}
 	} else {
-		info, err = platformService.GetVideo(ctx, dbItems.Video.ExtID)
+		info, err = platformService.GetVideo(ctx, dbItems.Video.ExtID, true, true)
 		if err != nil {
 			return err
 		}
@@ -276,7 +276,7 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 		thumbnailUrl = info.ThumbnailURL
 
 	} else {
-		info, err := platformService.GetVideo(ctx, dbItems.Video.ExtID)
+		info, err := platformService.GetVideo(ctx, dbItems.Video.ExtID, false, false)
 		if err != nil {
 			return err
 		}
@@ -398,7 +398,7 @@ func (w DownloadThumbnailsMinimalWorker) Work(ctx context.Context, job *river.Jo
 		thumbnailUrl = info.ThumbnailURL
 
 	} else {
-		info, err := platformService.GetVideo(ctx, dbItems.Video.ExtID)
+		info, err := platformService.GetVideo(ctx, dbItems.Video.ExtID, false, false)
 		if err != nil {
 			return err
 		}

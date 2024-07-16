@@ -15,6 +15,7 @@ import (
 	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -72,7 +73,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 		return nil
 	}
 
-	logger.Debug().Msgf("checking %d channels", len(channels))
+	logger.Info().Msgf("checking %d channels for new videos", len(channels))
 
 	for _, watch := range channels {
 		// Check if channel has category restrictions
@@ -84,10 +85,10 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 			logger.Debug().Msgf("channel %s has category restrictions: %s", watch.Edges.Channel.Name, strings.Join(channelVideoCategories, ", "))
 		}
 
-		var videos []twitch.Video
+		var videos []platform.VideoInfo
 		// If archives is enabled, fetch all videos
 		if watch.DownloadArchives {
-			tmpVideos, err := twitch.GetVideosByUser(watch.Edges.Channel.ExtID, "archive")
+			tmpVideos, err := s.PlatformTwitch.GetVideos(ctx, watch.Edges.Channel.ExtID, platform.VideoTypeArchive)
 			if err != nil {
 				logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting videos")
 				continue
@@ -96,7 +97,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 		}
 		// If highlights is enabled, fetch all videos
 		if watch.DownloadHighlights {
-			tmpVideos, err := twitch.GetVideosByUser(watch.Edges.Channel.ExtID, "highlight")
+			tmpVideos, err := s.PlatformTwitch.GetVideos(ctx, watch.Edges.Channel.ExtID, platform.VideoTypeHighlight)
 			if err != nil {
 				logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting videos")
 				continue
@@ -105,7 +106,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 		}
 		// If uploads is enabled, fetch all videos
 		if watch.DownloadUploads {
-			tmpVideos, err := twitch.GetVideosByUser(watch.Edges.Channel.ExtID, "upload")
+			tmpVideos, err := s.PlatformTwitch.GetVideos(ctx, watch.Edges.Channel.ExtID, platform.VideoTypeUpload)
 			if err != nil {
 				logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting videos")
 				continue
@@ -149,9 +150,10 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 				}
 
 				// Query the video using Twitch's GraphQL API to check for restrictions
+				// this is twitch-specific and outside the main platform package
 				gqlVideo, err := twitch.GQLGetVideo(video.ID)
 				if err != nil {
-					logger.Error().Err(err).Str("video_id", video.ID).Msg("error getting video from GraphQL API")
+					logger.Error().Err(err).Str("video_id", video.ID).Msg("error getting twitch video from GraphQL API")
 					continue
 				}
 

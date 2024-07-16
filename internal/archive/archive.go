@@ -97,7 +97,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 	envConfig := config.GetEnvConfig()
 
 	// get video
-	video, err := s.PlatformTwitch.GetVideo(context.Background(), input.VideoId)
+	video, err := s.PlatformTwitch.GetVideo(context.Background(), input.VideoId, false, false)
 	if err != nil {
 		return err
 	}

@@ -23,8 +23,8 @@ type VideoInfo struct {
 	Language      string            `json:"language"`
 	Type          string            `json:"type"`
 	Duration      string            `json:"duration"`
-	MutedSegments interface{}       `json:"muted_segments"`
 	Chapters      []chapter.Chapter `json:"chapters"`
+	MutedSegments []MutedSegment    `json:"muted_segments"`
 }
 
 type LiveStreamInfo struct {
@@ -66,13 +66,26 @@ type ConnectionInfo struct {
 	AccessToken  string
 }
 
+type VideoType string
+
+const (
+	VideoTypeArchive   VideoType = "archive"
+	VideoTypeHighlight VideoType = "highlight"
+	VideoTypeUpload    VideoType = "upload"
+)
+
+type MutedSegment struct {
+	Duration int `json:"duration"`
+	Offset   int `json:"offset"`
+}
+
 type Platform interface {
 	Authenticate(ctx context.Context) (*ConnectionInfo, error)
-	GetVideo(ctx context.Context, id string) (*VideoInfo, error)
+	GetVideo(ctx context.Context, id string, withChapters bool, withMutedSegments bool) (*VideoInfo, error)
 	GetLiveStream(ctx context.Context, channelName string) (*LiveStreamInfo, error)
 	GetLiveStreams(ctx context.Context, channelNames []string) ([]LiveStreamInfo, error)
 	GetChannel(ctx context.Context, channelName string) (*ChannelInfo, error)
-	GetVideos(ctx context.Context, channelId string, videoType string) ([]VideoInfo, error)
+	GetVideos(ctx context.Context, channelId string, videoType VideoType) ([]VideoInfo, error)
 	GetCategories(ctx context.Context) ([]Category, error)
 	GetGlobalBadges(ctx context.Context) ([]Badge, error)
 	GetChannelBadges(ctx context.Context, channelId string) ([]Badge, error)
