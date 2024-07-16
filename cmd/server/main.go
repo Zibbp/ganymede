@@ -27,7 +27,6 @@ import (
 	"github.com/zibbp/ganymede/internal/task"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
-	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
@@ -116,7 +115,6 @@ func Run() error {
 	channelService := channel.NewService(db)
 	vodService := vod.NewService(db, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
-	twitchService := twitch.NewService()
 	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, platformTwitch)
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
@@ -129,7 +127,7 @@ func Run() error {
 	taskService := task.NewService(db, liveService, archiveService)
 	chapterService := chapter.NewService()
 
-	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, twitchService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService)
+	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService, platformTwitch)
 
 	if err := httpHandler.Serve(); err != nil {
 		return err

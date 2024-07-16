@@ -16,6 +16,7 @@ import (
 	_ "github.com/zibbp/ganymede/docs"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/config"
+	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -24,7 +25,6 @@ type Services struct {
 	ChannelService   ChannelService
 	VodService       VodService
 	QueueService     QueueService
-	TwitchService    TwitchService
 	ArchiveService   ArchiveService
 	AdminService     AdminService
 	UserService      UserService
@@ -36,6 +36,7 @@ type Services struct {
 	PlaylistService  PlaylistService
 	TaskService      TaskService
 	ChapterService   ChapterService
+	PlatformTwitch   platform.Platform
 }
 
 type Handler struct {
@@ -43,7 +44,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, platformTwitch platform.Platform) *Handler {
 	log.Debug().Msg("creating new handler")
 	env := config.GetEnvConfig()
 
@@ -54,7 +55,6 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			ChannelService:   channelService,
 			VodService:       vodService,
 			QueueService:     queueService,
-			TwitchService:    twitchService,
 			ArchiveService:   archiveService,
 			AdminService:     adminService,
 			UserService:      userService,
@@ -66,6 +66,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			PlaylistService:  playlistService,
 			TaskService:      taskService,
 			ChapterService:   chapterService,
+			PlatformTwitch:   platformTwitch,
 		},
 	}
 
@@ -184,10 +185,10 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 
 	// Twitch
 	twitchGroup := e.Group("/twitch")
-	twitchGroup.GET("/channel", h.GetTwitchUser)
-	twitchGroup.GET("/vod", h.GetTwitchVod)
-	twitchGroup.GET("/gql/video", h.GQLGetTwitchVideo)
-	twitchGroup.GET("/categories", h.GetTwitchCategories)
+	twitchGroup.GET("/channel", h.GetTwitchChannel)
+	twitchGroup.GET("/video", h.GetTwitchVideo)
+	// twitchGroup.GET("/gql/video", h.GQLGetTwitchVideo)
+	// twitchGroup.GET("/categories", h.GetTwitchCategories)
 
 	// Archive
 	archiveGroup := e.Group("/archive")
