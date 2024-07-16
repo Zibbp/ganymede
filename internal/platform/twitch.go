@@ -6,11 +6,15 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/zibbp/ganymede/internal/chapter"
+	"github.com/zibbp/ganymede/internal/dto"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
-func (c *TwitchConnection) GetVideo(ctx context.Context, id string) (*VideoInfo, error) {
+// GetVideo implements the Platform interface to get video information from Twitch. Optional parameters are chapters and muted segments. These use the undocumented Twitch GraphQL API.
+func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters bool, withMutedSegments bool) (*VideoInfo, error) {
 	queryParams := map[string]string{"id": id}
 	body, err := c.twitchMakeHTTPRequest("GET", "videos", queryParams, nil)
 	if err != nil {
@@ -28,23 +32,62 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string) (*VideoInfo,
 	}
 
 	info := VideoInfo{
-		ID:            videoResponse.Data[0].ID,
-		StreamID:      videoResponse.Data[0].StreamID,
-		UserID:        videoResponse.Data[0].UserID,
-		UserLogin:     videoResponse.Data[0].UserLogin,
-		UserName:      videoResponse.Data[0].UserName,
-		Title:         videoResponse.Data[0].Title,
-		Description:   videoResponse.Data[0].Description,
-		CreatedAt:     videoResponse.Data[0].CreatedAt,
-		PublishedAt:   videoResponse.Data[0].PublishedAt,
-		URL:           videoResponse.Data[0].URL,
-		ThumbnailURL:  videoResponse.Data[0].ThumbnailURL,
-		Viewable:      videoResponse.Data[0].Viewable,
-		ViewCount:     videoResponse.Data[0].ViewCount,
-		Language:      videoResponse.Data[0].Language,
-		Type:          videoResponse.Data[0].Type,
-		Duration:      videoResponse.Data[0].Duration,
-		MutedSegments: videoResponse.Data[0].MutedSegments,
+		ID:           videoResponse.Data[0].ID,
+		StreamID:     videoResponse.Data[0].StreamID,
+		UserID:       videoResponse.Data[0].UserID,
+		UserLogin:    videoResponse.Data[0].UserLogin,
+		UserName:     videoResponse.Data[0].UserName,
+		Title:        videoResponse.Data[0].Title,
+		Description:  videoResponse.Data[0].Description,
+		CreatedAt:    videoResponse.Data[0].CreatedAt,
+		PublishedAt:  videoResponse.Data[0].PublishedAt,
+		URL:          videoResponse.Data[0].URL,
+		ThumbnailURL: videoResponse.Data[0].ThumbnailURL,
+		Viewable:     videoResponse.Data[0].Viewable,
+		ViewCount:    videoResponse.Data[0].ViewCount,
+		Language:     videoResponse.Data[0].Language,
+		Type:         videoResponse.Data[0].Type,
+		Duration:     videoResponse.Data[0].Duration,
+	}
+
+	// get chapters
+	if withChapters {
+		gqlChapters, err := c.TwitchGQLGetChapters(info.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		parsedDuration, err := time.ParseDuration(info.Duration)
+		if err != nil {
+			return &info, fmt.Errorf("error parsing duration: %v", err)
+		}
+
+		var chapters []chapter.Chapter
+		convertedChapters, err := convertTwitchChaptersToChapters(gqlChapters, int(parsedDuration.Seconds()))
+		if err != nil {
+			return &info, err
+		}
+		chapters = append(chapters, convertedChapters...)
+		info.Chapters = chapters
+	}
+
+	// get muted segments
+	if withMutedSegments {
+		gqlMutedSegments, err := c.TwitchGQLGetMutedSegments(info.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		var mutedSegments []MutedSegment
+
+		for _, segment := range gqlMutedSegments {
+			mutedSegment := MutedSegment{
+				Duration: segment.Duration,
+				Offset:   segment.Offset,
+			}
+			mutedSegments = append(mutedSegments, mutedSegment)
+		}
+		info.MutedSegments = mutedSegments
 	}
 
 	return &info, nil
@@ -161,8 +204,8 @@ func (c *TwitchConnection) GetChannel(ctx context.Context, channelName string) (
 	return &info, nil
 }
 
-func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, videoType string) ([]VideoInfo, error) {
-	queryParams := map[string]string{"user_id": channelId, "first": "100", "type": videoType}
+func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, videoType VideoType) ([]VideoInfo, error) {
+	queryParams := map[string]string{"user_id": channelId, "first": "100", "type": string(videoType)}
 	body, err := c.twitchMakeHTTPRequest("GET", "videos", queryParams, nil)
 	if err != nil {
 		return nil, err
@@ -197,23 +240,22 @@ func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, vide
 	var info []VideoInfo
 	for _, video := range videos {
 		info = append(info, VideoInfo{
-			ID:            video.ID,
-			StreamID:      video.StreamID,
-			UserID:        video.UserID,
-			UserLogin:     video.UserLogin,
-			UserName:      video.UserName,
-			Title:         video.Title,
-			Description:   video.Description,
-			CreatedAt:     video.CreatedAt,
-			PublishedAt:   video.PublishedAt,
-			URL:           video.URL,
-			ThumbnailURL:  video.ThumbnailURL,
-			Viewable:      video.Viewable,
-			ViewCount:     video.ViewCount,
-			Language:      video.Language,
-			Type:          video.Type,
-			Duration:      video.Duration,
-			MutedSegments: video.MutedSegments,
+			ID:           video.ID,
+			StreamID:     video.StreamID,
+			UserID:       video.UserID,
+			UserLogin:    video.UserLogin,
+			UserName:     video.UserName,
+			Title:        video.Title,
+			Description:  video.Description,
+			CreatedAt:    video.CreatedAt,
+			PublishedAt:  video.PublishedAt,
+			URL:          video.URL,
+			ThumbnailURL: video.ThumbnailURL,
+			Viewable:     video.Viewable,
+			ViewCount:    video.ViewCount,
+			Language:     video.Language,
+			Type:         video.Type,
+			Duration:     video.Duration,
 		})
 	}
 
@@ -478,4 +520,8 @@ func twitchTemplateEmoteURL(id, format, themeMode string, scale string) string {
 	}
 
 	return template
+}
+
+func ArchiveVideoActivity(ctx context.Context, input dto.ArchiveVideoInput) error {
+	return nil
 }
