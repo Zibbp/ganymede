@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
+	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -168,10 +169,36 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 			return err
 		}
 	} else {
-		info, err = platformService.GetVideo(ctx, dbItems.Video.ExtID, true, true)
+		videoInfo, err := platformService.GetVideo(ctx, dbItems.Video.ExtID, true, true)
 		if err != nil {
 			return err
 		}
+
+		// add chapters to database
+		chapterService := chapter.NewService(store)
+		for _, chapter := range videoInfo.Chapters {
+			_, err = chapterService.CreateChapter(chapter, dbItems.Video.ID)
+			if err != nil {
+				return err
+			}
+		}
+
+		// add muted segments to database
+		for _, segment := range videoInfo.MutedSegments {
+			// parse twitch duration
+			parsedDurationSeconds := int(videoInfo.DurationParsed.Seconds())
+			segmentEnd := segment.Offset + segment.Duration
+			if segmentEnd > parsedDurationSeconds {
+				segmentEnd = parsedDurationSeconds
+			}
+			// insert into database
+			_, err := store.Client.MutedSegment.Create().SetStart(segment.Offset).SetEnd(segmentEnd).SetVod(&dbItems.Video).Save(ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		info = videoInfo
 	}
 
 	// write info to file
