@@ -2,29 +2,31 @@ package platform
 
 import (
 	"context"
+	"time"
 
 	"github.com/zibbp/ganymede/internal/chapter"
 )
 
 type VideoInfo struct {
-	ID            string            `json:"id"`
-	StreamID      string            `json:"stream_id"`
-	UserID        string            `json:"user_id"`
-	UserLogin     string            `json:"user_login"`
-	UserName      string            `json:"user_name"`
-	Title         string            `json:"title"`
-	Description   string            `json:"description"`
-	CreatedAt     string            `json:"created_at"`
-	PublishedAt   string            `json:"published_at"`
-	URL           string            `json:"url"`
-	ThumbnailURL  string            `json:"thumbnail_url"`
-	Viewable      string            `json:"viewable"`
-	ViewCount     int64             `json:"view_count"`
-	Language      string            `json:"language"`
-	Type          string            `json:"type"`
-	Duration      string            `json:"duration"`
-	Chapters      []chapter.Chapter `json:"chapters"`
-	MutedSegments []MutedSegment    `json:"muted_segments"`
+	ID             string            `json:"id"`
+	StreamID       string            `json:"stream_id"`
+	UserID         string            `json:"user_id"`
+	UserLogin      string            `json:"user_login"`
+	UserName       string            `json:"user_name"`
+	Title          string            `json:"title"`
+	Description    string            `json:"description"`
+	CreatedAt      string            `json:"created_at"`
+	PublishedAt    string            `json:"published_at"`
+	URL            string            `json:"url"`
+	ThumbnailURL   string            `json:"thumbnail_url"`
+	Viewable       string            `json:"viewable"`
+	ViewCount      int64             `json:"view_count"`
+	Language       string            `json:"language"`
+	Type           string            `json:"type"`
+	Duration       string            `json:"duration"`
+	DurationParsed time.Duration     `json:"duration_parsed"`
+	Chapters       []chapter.Chapter `json:"chapters"`
+	MutedSegments  []MutedSegment    `json:"muted_segments"`
 }
 
 type LiveStreamInfo struct {

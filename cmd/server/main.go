@@ -125,7 +125,7 @@ func Run() error {
 	metricsService := metrics.NewService(db)
 	playlistService := playlist.NewService(db)
 	taskService := task.NewService(db, liveService, archiveService)
-	chapterService := chapter.NewService()
+	chapterService := chapter.NewService(db)
 
 	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService, platformTwitch)
 

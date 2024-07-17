@@ -50,6 +50,13 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters
 		Duration:     videoResponse.Data[0].Duration,
 	}
 
+	// get duration
+	parsedDuration, err := time.ParseDuration(info.Duration)
+	if err != nil {
+		return &info, fmt.Errorf("error parsing duration: %v", err)
+	}
+	info.DurationParsed = parsedDuration
+
 	// get chapters
 	if withChapters {
 		gqlChapters, err := c.TwitchGQLGetChapters(info.ID)
