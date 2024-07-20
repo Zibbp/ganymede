@@ -6,21 +6,22 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
-	"github.com/zibbp/ganymede/internal/twitch"
+	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type Service struct {
-	Store *database.Database
+	Store          *database.Database
+	PlatformTwitch platform.Platform
 }
 
-func NewService(store *database.Database) *Service {
-	return &Service{Store: store}
+func NewService(store *database.Database, platformTwitch platform.Platform) *Service {
+	return &Service{Store: store, PlatformTwitch: platformTwitch}
 }
 
 type Channel struct {
@@ -143,7 +144,7 @@ func (s *Service) CheckChannelExistsNoContext(cName string) bool {
 	return true
 }
 
-func PopulateExternalChannelID() {
+func (s *Service) PopulateExternalChannelID(ctx context.Context) {
 	channels, err := database.DB().Client.Channel.Query().All(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting channels")
@@ -153,12 +154,12 @@ func PopulateExternalChannelID() {
 		if c.ExtID != "" {
 			continue
 		}
-		twitchC, err := twitch.API.GetUserByLogin(c.Name)
+		twitcChannel, err := s.PlatformTwitch.GetChannel(ctx, c.Name)
 		if err != nil {
 			log.Error().Msg("error getting twitch channel")
 			continue
 		}
-		_, err = database.DB().Client.Channel.UpdateOneID(c.ID).SetExtID(twitchC.ID).Save(context.Background())
+		_, err = database.DB().Client.Channel.UpdateOneID(c.ID).SetExtID(twitcChannel.ID).Save(context.Background())
 		if err != nil {
 			log.Error().Err(err).Msg("error updating channel")
 			continue
@@ -167,20 +168,22 @@ func PopulateExternalChannelID() {
 	}
 }
 
-func (s *Service) UpdateChannelImage(c echo.Context, channelID uuid.UUID) error {
+func (s *Service) UpdateChannelImage(ctx context.Context, channelID uuid.UUID) error {
 	channel, err := s.GetChannel(channelID)
 	if err != nil {
 		return fmt.Errorf("error getting channel: %v", err)
 	}
 
 	// Fetch channel from Twitch API
-	tChannel, err := twitch.API.GetUserByLogin(channel.Name)
+	twitchChannel, err := s.PlatformTwitch.GetChannel(ctx, channel.Name)
 	if err != nil {
 		return fmt.Errorf("error fetching twitch channel: %v", err)
 	}
 
+	env := config.GetEnvConfig()
+
 	// Download channel profile image
-	err = utils.DownloadFile(tChannel.ProfileImageURL, tChannel.Login, "profile.png")
+	err = utils.DownloadFile(twitchChannel.ProfileImageURL, fmt.Sprintf("%s/%s/%s", env.VideosDir, twitchChannel.Login, "profile.png"))
 	if err != nil {
 		return fmt.Errorf("error downloading channel profile image: %v", err)
 	}

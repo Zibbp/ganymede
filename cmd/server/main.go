@@ -12,6 +12,7 @@ import (
 	"github.com/zibbp/ganymede/internal/admin"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/auth"
+	"github.com/zibbp/ganymede/internal/category"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/config"
@@ -111,8 +112,13 @@ func Run() error {
 		}
 	}
 
+	_, err = platformTwitch.GetVideo(ctx, "2200478055", true, true)
+	if err != nil {
+		log.Panic().Err(err).Msg("Error authenticating to Twitch")
+	}
+
 	authService := auth.NewService(db)
-	channelService := channel.NewService(db)
+	channelService := channel.NewService(db, platformTwitch)
 	vodService := vod.NewService(db, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, platformTwitch)
@@ -126,8 +132,9 @@ func Run() error {
 	playlistService := playlist.NewService(db)
 	taskService := task.NewService(db, liveService, archiveService)
 	chapterService := chapter.NewService(db)
+	categoryService := category.NewService(db)
 
-	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService, platformTwitch)
+	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService, categoryService, platformTwitch)
 
 	if err := httpHandler.Serve(); err != nil {
 		return err

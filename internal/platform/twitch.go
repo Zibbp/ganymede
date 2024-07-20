@@ -31,6 +31,28 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters
 		return nil, fmt.Errorf("video not found")
 	}
 
+	// TODO get video from graphql api to get game name along with resourceRestriction
+	gqlVideo, err := c.TwitchGQLGetVideo(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// parse dates
+	createdAt, err := time.Parse(time.RFC3339, videoResponse.Data[0].CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	publishedAt, err := time.Parse(time.RFC3339, videoResponse.Data[0].PublishedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	// get duration
+	duration, err := time.ParseDuration(videoResponse.Data[0].Duration)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing duration: %v", err)
+	}
+
 	info := VideoInfo{
 		ID:           videoResponse.Data[0].ID,
 		StreamID:     videoResponse.Data[0].StreamID,
@@ -39,23 +61,17 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters
 		UserName:     videoResponse.Data[0].UserName,
 		Title:        videoResponse.Data[0].Title,
 		Description:  videoResponse.Data[0].Description,
-		CreatedAt:    videoResponse.Data[0].CreatedAt,
-		PublishedAt:  videoResponse.Data[0].PublishedAt,
+		CreatedAt:    createdAt,
+		PublishedAt:  publishedAt,
 		URL:          videoResponse.Data[0].URL,
 		ThumbnailURL: videoResponse.Data[0].ThumbnailURL,
 		Viewable:     videoResponse.Data[0].Viewable,
 		ViewCount:    videoResponse.Data[0].ViewCount,
 		Language:     videoResponse.Data[0].Language,
 		Type:         videoResponse.Data[0].Type,
-		Duration:     videoResponse.Data[0].Duration,
+		Duration:     duration,
+		Category:     &gqlVideo.Game.Name,
 	}
-
-	// get duration
-	parsedDuration, err := time.ParseDuration(info.Duration)
-	if err != nil {
-		return &info, fmt.Errorf("error parsing duration: %v", err)
-	}
-	info.DurationParsed = parsedDuration
 
 	// get chapters
 	if withChapters {
@@ -64,13 +80,8 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters
 			return nil, err
 		}
 
-		parsedDuration, err := time.ParseDuration(info.Duration)
-		if err != nil {
-			return &info, fmt.Errorf("error parsing duration: %v", err)
-		}
-
 		var chapters []chapter.Chapter
-		convertedChapters, err := convertTwitchChaptersToChapters(gqlChapters, int(parsedDuration.Seconds()))
+		convertedChapters, err := convertTwitchChaptersToChapters(gqlChapters, int(info.Duration.Seconds()))
 		if err != nil {
 			return &info, err
 		}
@@ -117,6 +128,11 @@ func (c *TwitchConnection) GetLiveStream(ctx context.Context, channelName string
 		return nil, fmt.Errorf("no streams found")
 	}
 
+	startedAt, err := time.Parse(time.RFC3339, resp.Data[0].StartedAt)
+	if err != nil {
+		return nil, err
+	}
+
 	info := LiveStreamInfo{
 		ID:           resp.Data[0].ID,
 		UserID:       resp.Data[0].UserID,
@@ -127,7 +143,7 @@ func (c *TwitchConnection) GetLiveStream(ctx context.Context, channelName string
 		Type:         resp.Data[0].Type,
 		Title:        resp.Data[0].Title,
 		ViewerCount:  resp.Data[0].ViewerCount,
-		StartedAt:    resp.Data[0].StartedAt,
+		StartedAt:    startedAt,
 		Language:     resp.Data[0].Language,
 		ThumbnailURL: resp.Data[0].ThumbnailURL,
 	}
@@ -159,6 +175,11 @@ func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelNames []st
 
 	streams := make([]LiveStreamInfo, 0, len(resp.Data))
 	for _, stream := range resp.Data {
+		startedAt, err := time.Parse(time.RFC3339, stream.StartedAt)
+		if err != nil {
+			return nil, err
+		}
+
 		streams = append(streams, LiveStreamInfo{
 			ID:           stream.ID,
 			UserID:       stream.UserID,
@@ -169,7 +190,7 @@ func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelNames []st
 			Type:         stream.Type,
 			Title:        stream.Title,
 			ViewerCount:  stream.ViewerCount,
-			StartedAt:    stream.StartedAt,
+			StartedAt:    startedAt,
 			Language:     stream.Language,
 			ThumbnailURL: stream.ThumbnailURL,
 		})
@@ -195,6 +216,11 @@ func (c *TwitchConnection) GetChannel(ctx context.Context, channelName string) (
 		return nil, fmt.Errorf("channel not found")
 	}
 
+	createdAt, err := time.Parse(time.RFC3339, resp.Data[0].CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
 	info := ChannelInfo{
 		ID:              resp.Data[0].ID,
 		Login:           resp.Data[0].Login,
@@ -205,7 +231,7 @@ func (c *TwitchConnection) GetChannel(ctx context.Context, channelName string) (
 		ProfileImageURL: resp.Data[0].ProfileImageURL,
 		OfflineImageURL: resp.Data[0].OfflineImageURL,
 		ViewCount:       resp.Data[0].ViewCount,
-		CreatedAt:       resp.Data[0].CreatedAt,
+		CreatedAt:       createdAt,
 	}
 
 	return &info, nil
@@ -246,24 +272,12 @@ func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, vide
 
 	var info []VideoInfo
 	for _, video := range videos {
-		info = append(info, VideoInfo{
-			ID:           video.ID,
-			StreamID:     video.StreamID,
-			UserID:       video.UserID,
-			UserLogin:    video.UserLogin,
-			UserName:     video.UserName,
-			Title:        video.Title,
-			Description:  video.Description,
-			CreatedAt:    video.CreatedAt,
-			PublishedAt:  video.PublishedAt,
-			URL:          video.URL,
-			ThumbnailURL: video.ThumbnailURL,
-			Viewable:     video.Viewable,
-			ViewCount:    video.ViewCount,
-			Language:     video.Language,
-			Type:         video.Type,
-			Duration:     video.Duration,
-		})
+		video, err := c.GetVideo(ctx, video.ID, true, true)
+		if err != nil {
+			return nil, err
+		}
+
+		info = append(info, *video)
 	}
 
 	return info, nil

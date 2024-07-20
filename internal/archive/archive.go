@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -59,14 +58,15 @@ func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.
 		return nil, fmt.Errorf("error creating channel folder: %v", err)
 	}
 
+	env := config.GetEnvConfig()
+
 	// Download channel profile image
-	err = utils.DownloadFile(platformChannel.ProfileImageURL, platformChannel.Login, "profile.png")
+	err = utils.DownloadFile(platformChannel.ProfileImageURL, fmt.Sprintf("%s/%s/%s", env.VideosDir, platformChannel.Login, "profile.png"))
 	if err != nil {
 		return nil, fmt.Errorf("error downloading channel profile image: %v", err)
 	}
 
 	// Create channel in DB
-	env := config.GetEnvConfig()
 	channelDTO := channel.Channel{
 		ExtID:       platformChannel.ID,
 		Name:        platformChannel.Login,
@@ -138,18 +138,13 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 		return fmt.Errorf("error creating vod uuid: %v", err)
 	}
 
-	storageTemplateDate, err := parseDate(video.CreatedAt)
-	if err != nil {
-		return fmt.Errorf("error parsing date: %v", err)
-	}
-
 	storageTemplateInput := StorageTemplateInput{
 		UUID:    vUUID,
 		ID:      input.VideoId,
 		Channel: channel.Name,
 		Title:   video.Title,
 		Type:    video.Type,
-		Date:    storageTemplateDate,
+		Date:    video.CreatedAt.Format("2024-07-18"),
 	}
 	// Create directory paths
 	folderName, err := GetFolderName(vUUID, storageTemplateInput)
@@ -176,17 +171,6 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 		liveChatPath = fmt.Sprintf("%s/%s-live-chat.json", rootVideoPath, fileName)
 		liveChatConvertPath = fmt.Sprintf("%s/%s-chat-convert.json", rootVideoPath, fileName)
 	}
-	// Parse new Twitch API duration
-	parsedDuration, err := time.ParseDuration(video.Duration)
-	if err != nil {
-		return fmt.Errorf("error parsing duration: %v", err)
-	}
-
-	// Parse Twitch date to time.Time
-	parsedDate, err := time.Parse(time.RFC3339, video.CreatedAt)
-	if err != nil {
-		return fmt.Errorf("error parsing date: %v", err)
-	}
 
 	videoExtension := "mp4"
 
@@ -197,7 +181,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 		Platform:            "twitch",
 		Type:                utils.VodType(video.Type),
 		Title:               video.Title,
-		Duration:            int(parsedDuration.Seconds()),
+		Duration:            int(video.Duration.Seconds()),
 		Views:               int(video.ViewCount),
 		Resolution:          input.Quality.String(),
 		Processing:          true,
@@ -209,7 +193,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 		ChatVideoPath:       chatVideoPath,
 		LiveChatConvertPath: liveChatConvertPath,
 		InfoPath:            fmt.Sprintf("%s/%s-info.json", rootVideoPath, fileName),
-		StreamedAt:          parsedDate,
+		StreamedAt:          video.CreatedAt,
 		FolderName:          folderName,
 		FileName:            fileName,
 		// create temporary paths
@@ -305,18 +289,13 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		return fmt.Errorf("error creating vod uuid: %v", err)
 	}
 
-	storageTemplateDate, err := parseDate(video.StartedAt)
-	if err != nil {
-		return fmt.Errorf("error parsing date: %v", err)
-	}
-
 	storageTemplateInput := StorageTemplateInput{
 		UUID:    vUUID,
 		ID:      input.ChannelId.String(),
 		Channel: channel.Name,
 		Title:   video.Title,
 		Type:    video.Type,
-		Date:    storageTemplateDate,
+		Date:    video.StartedAt.Format("2024-07-18"),
 	}
 	// Create directory paths
 	folderName, err := GetFolderName(vUUID, storageTemplateInput)
@@ -344,12 +323,6 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		liveChatConvertPath = fmt.Sprintf("%s/%s-chat-convert.json", rootVideoPath, fileName)
 	}
 
-	// Parse Twitch date to time.Time
-	parsedDate, err := time.Parse(time.RFC3339, video.StartedAt)
-	if err != nil {
-		return fmt.Errorf("error parsing date: %v", err)
-	}
-
 	videoExtension := "mp4"
 
 	// Create VOD in DB
@@ -372,7 +345,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		ChatVideoPath:       chatVideoPath,
 		LiveChatConvertPath: liveChatConvertPath,
 		InfoPath:            fmt.Sprintf("%s/%s-info.json", rootVideoPath, fileName),
-		StreamedAt:          parsedDate,
+		StreamedAt:          video.StartedAt,
 		FolderName:          folderName,
 		FileName:            fileName,
 		// create temporary paths

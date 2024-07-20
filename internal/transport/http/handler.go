@@ -36,6 +36,7 @@ type Services struct {
 	PlaylistService  PlaylistService
 	TaskService      TaskService
 	ChapterService   ChapterService
+	CategoryService  CategoryService
 	PlatformTwitch   platform.Platform
 }
 
@@ -44,7 +45,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, platformTwitch platform.Platform) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, platformTwitch platform.Platform) *Handler {
 	log.Debug().Msg("creating new handler")
 	env := config.GetEnvConfig()
 
@@ -66,6 +67,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			PlaylistService:  playlistService,
 			TaskService:      taskService,
 			ChapterService:   chapterService,
+			CategoryService:  categoryService,
 			PlatformTwitch:   platformTwitch,
 		},
 	}
@@ -264,6 +266,10 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	chapterGroup := e.Group("/chapter")
 	chapterGroup.GET("/video/:videoId", h.GetVideoChapters)
 	chapterGroup.GET("/video/:videoId/webvtt", h.GetWebVTTChapters)
+
+	// Category
+	categoryGroup := e.Group("/category")
+	categoryGroup.GET("", h.GetCategories)
 }
 
 func (h *Handler) Serve() error {

@@ -19,7 +19,6 @@ import (
 	"github.com/zibbp/ganymede/internal/queue"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	tasks_worker "github.com/zibbp/ganymede/internal/tasks/worker"
-	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
@@ -34,12 +33,6 @@ func main() {
 	log.Info().Str("commit", utils.Commit).Str("build_time", utils.BuildTime).Msg("starting worker")
 
 	serverConfig.NewConfig(false)
-
-	// authenticate to Twitch
-	err := twitch.Authenticate()
-	if err != nil {
-		log.Fatal().Msgf("Unable to authenticate to Twitch: %v", err)
-	}
 
 	envConfig := config.GetEnvConfig()
 
@@ -70,7 +63,7 @@ func main() {
 		}
 	}
 
-	channelService := channel.NewService(db)
+	channelService := channel.NewService(db, platformTwitch)
 	vodService := vod.NewService(db, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	// twitchService := twitch.NewService()

@@ -17,7 +17,6 @@ import (
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
-	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/vod"
 )
 
@@ -41,8 +40,9 @@ func (s *Service) StartTask(c echo.Context, task string) error {
 			return fmt.Errorf("error checking live: %v", err)
 		}
 
-	// case "check_vod":
-	// 	go s.LiveService.CheckVodWatchedChannels()
+	case "check_vod":
+		logger := log.With().Logger()
+		go s.LiveService.CheckVodWatchedChannels(c.Request().Context(), logger)
 
 	// case "get_jwks":
 	// 	err := auth.FetchJWKS()
@@ -50,11 +50,11 @@ func (s *Service) StartTask(c echo.Context, task string) error {
 	// 		return fmt.Errorf("error fetching jwks: %v", err)
 	// 	}
 
-	case "twitch_auth":
-		err := twitch.Authenticate()
-		if err != nil {
-			return fmt.Errorf("error authenticating twitch: %v", err)
-		}
+	// case "twitch_auth":
+	// 	err := twitch.Authenticate()
+	// 	if err != nil {
+	// 		return fmt.Errorf("error authenticating twitch: %v", err)
+	// 	}
 
 	case "storage_migration":
 		go func() {

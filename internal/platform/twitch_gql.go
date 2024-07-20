@@ -174,6 +174,22 @@ func (c *TwitchConnection) TwitchGQLGetMutedSegments(id string) ([]TwitchGQLMute
 	return resp.Data.Video.MuteInfo.MutedSegmentConnection.Nodes, nil
 }
 
+func (c *TwitchConnection) TwitchGQLGetVideo(id string) (*TwitchGQLVideo, error) {
+	body := fmt.Sprintf(`{"query": "query{video(id:\"%s\"){broadcastType,resourceRestriction{id,type},game{id,name},title,createdAt}}"}`, id)
+	respBytes, err := twitchGQLRequest(body)
+	if err != nil {
+		return nil, fmt.Errorf("error getting video muted segments: %w", err)
+	}
+
+	var resp TwitchGQLVideoResponse
+	err = json.Unmarshal(respBytes, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling response: %w", err)
+	}
+
+	return &resp.Data.Video, nil
+}
+
 func (c *TwitchConnection) TwitchGQLGetChapters(id string) ([]TwitchGQLChapterEdge, error) {
 	body := fmt.Sprintf(`{"operationName":"VideoPlayer_ChapterSelectButtonVideo","variables":{"videoID":"%s","includePrivate":false},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"8d2793384aac3773beab5e59bd5d6f585aedb923d292800119e03d40cd0f9b41"}}}`, id)
 	respBytes, err := twitchGQLRequest(body)
