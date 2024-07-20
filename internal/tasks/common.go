@@ -186,10 +186,9 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 		// add muted segments to database
 		for _, segment := range videoInfo.MutedSegments {
 			// parse twitch duration
-			parsedDurationSeconds := int(videoInfo.DurationParsed.Seconds())
 			segmentEnd := segment.Offset + segment.Duration
-			if segmentEnd > parsedDurationSeconds {
-				segmentEnd = parsedDurationSeconds
+			if segmentEnd > int(videoInfo.Duration.Seconds()) {
+				segmentEnd = int(videoInfo.Duration.Seconds())
 			}
 			// insert into database
 			_, err := store.Client.MutedSegment.Create().SetStart(segment.Offset).SetEnd(segmentEnd).SetVod(&dbItems.Video).Save(ctx)

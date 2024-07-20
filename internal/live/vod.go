@@ -16,7 +16,6 @@ import (
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/platform"
-	"github.com/zibbp/ganymede/internal/twitch"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -125,6 +124,11 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 		for _, video := range videos {
 			// Video is not in DB
 			if !contains(dbVideos, video.ID) {
+				platformVideo, err := s.PlatformTwitch.GetVideo(ctx, video.ID, true, true)
+				if err != nil {
+					logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting video")
+					continue
+				}
 				// check if there are any title regexes that need to be tested
 				if watch.Edges.TitleRegex != nil && len(watch.Edges.TitleRegex) > 0 {
 					// run regexes against title
@@ -149,43 +153,25 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 					}
 				}
 
-				// Query the video using Twitch's GraphQL API to check for restrictions
-				// this is twitch-specific and outside the main platform package
-				gqlVideo, err := twitch.GQLGetVideo(video.ID)
-				if err != nil {
-					logger.Error().Err(err).Str("video_id", video.ID).Msg("error getting twitch video from GraphQL API")
-					continue
-				}
-
 				// check if video is too old
 				if watch.VideoAge > 0 {
-					parsedTime, err := time.Parse(time.RFC3339, video.CreatedAt)
-					if err != nil {
-						logger.Error().Err(err).Str("video_id", video.ID).Msg("error parsing video created_at")
-						continue
-					}
 
 					currentTime := time.Now()
 					ageDuration := time.Duration(watch.VideoAge) * 24 * time.Hour
 					ageCutOff := currentTime.Add(-ageDuration)
 
-					if parsedTime.Before(ageCutOff) {
+					if platformVideo.CreatedAt.Before(ageCutOff) {
 						logger.Debug().Str("video_id", video.ID).Msgf("skipping video; video is older than %d days.", watch.VideoAge)
 						continue
 					}
 				}
 
 				// Get video chapters
-				gqlVideoChapters, err := twitch.GQLGetChapters(video.ID)
-				if err != nil {
-					logger.Error().Err(err).Str("video_id", video.ID).Msgf("error getting video chapters from GraphQL API")
-					continue
-				}
 				var videoChapters []string
 
-				if len(gqlVideoChapters) > 0 {
-					for _, chapter := range gqlVideoChapters {
-						videoChapters = append(videoChapters, chapter.Node.Details.Game.DisplayName)
+				if len(platformVideo.Chapters) > 0 {
+					for _, chapter := range platformVideo.Chapters {
+						videoChapters = append(videoChapters, chapter.Title)
 					}
 					logger.Debug().Str("video_id", video.ID).Msgf("video has chapters: %s", strings.Join(videoChapters, ", "))
 				}
@@ -193,10 +179,12 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 				// Append chapters and video category to video categories
 				var videoCategories []string
 				videoCategories = append(videoCategories, videoChapters...)
-				videoCategories = append(videoCategories, gqlVideo.Game.Name)
+				if video.Category != nil {
+					videoCategories = append(videoCategories, *video.Category)
+				}
 
 				// Check if video is sub only restricted
-				if strings.Contains(gqlVideo.ResourceRestriction.Type, "SUB") {
+				if video.Restriction != nil && *video.Restriction == string(platform.VideoRestrictionSubscriber) {
 					// Skip if sub only is disabled
 					if !watch.DownloadSubOnly {
 						logger.Info().Str("video_id", video.ID).Msgf("skipping subscriber-only video")

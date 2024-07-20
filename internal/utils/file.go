@@ -74,10 +74,8 @@ func DownloadAndSaveFile(url, path string) error {
 	return nil
 }
 
-// DownloadFile - downloads file from url to destination
-// Adds base directory to path - supply with everything after /vods/
-// DownloadFile("http://img", "channel", "profile.png")
-func DownloadFile(url, path, filename string) error {
+// DownloadFile downloads file from url to the path provided
+func DownloadFile(url, path string) error {
 	log.Debug().Msgf("downloading file: %s", url)
 	// Get response bytes from URL
 	resp, err := http.Get(url)
@@ -90,7 +88,7 @@ func DownloadFile(url, path, filename string) error {
 	}
 
 	// Create file
-	file, err := os.Create(fmt.Sprintf("/vods/%s/%s", path, filename))
+	file, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("error creating file: %v", err)
 	}

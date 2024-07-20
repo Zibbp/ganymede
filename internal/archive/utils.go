@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -101,12 +100,4 @@ func getVariableMap(uuid uuid.UUID, input StorageTemplateInput) (map[string]inte
 		"type":    input.Type,
 	}
 	return variables, nil
-}
-
-func parseDate(dateString string) (string, error) {
-	t, err := time.Parse(time.RFC3339, dateString)
-	if err != nil {
-		return "", fmt.Errorf("error parsing date %v", err)
-	}
-	return t.Format("2006-01-02"), nil
 }

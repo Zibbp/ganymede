@@ -140,7 +140,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	configTwitchToken := viper.GetString("parameters.twitch_token")
 	if configTwitchToken != "" {
 		// check if token is valid
-		err := twitch.CheckUserAccessToken(configTwitchToken)
+		err := twitch.CheckUserAccessToken(ctx, configTwitchToken)
 		if err != nil {
 			log.Error().Err(err).Msg("invalid twitch token")
 		} else {
