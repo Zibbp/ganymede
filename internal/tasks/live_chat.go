@@ -192,11 +192,12 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	}
 
 	// need the ID of a previous video for channel emotes and badges
-	videos, err := platform.GetVideos(ctx, channel.ID, "archive")
+	videos, err := platform.GetVideos(ctx, channel.ID, "archive", false, false)
 	if err != nil {
 		return err
 	}
 
+	// TODO: repalce with something else?
 	// attempt to find video of current livestream
 	var previousVideoID string
 	for _, video := range videos {

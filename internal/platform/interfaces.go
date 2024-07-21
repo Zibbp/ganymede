@@ -88,13 +88,18 @@ type MutedSegment struct {
 	Offset   int `json:"offset"`
 }
 
+const (
+	maxRetryAttempts = 3
+	retryDelay       = 5 * time.Second
+)
+
 type Platform interface {
 	Authenticate(ctx context.Context) (*ConnectionInfo, error)
 	GetVideo(ctx context.Context, id string, withChapters bool, withMutedSegments bool) (*VideoInfo, error)
 	GetLiveStream(ctx context.Context, channelName string) (*LiveStreamInfo, error)
 	GetLiveStreams(ctx context.Context, channelNames []string) ([]LiveStreamInfo, error)
 	GetChannel(ctx context.Context, channelName string) (*ChannelInfo, error)
-	GetVideos(ctx context.Context, channelId string, videoType VideoType) ([]VideoInfo, error)
+	GetVideos(ctx context.Context, channelId string, videoType VideoType, withChapters bool, withMutedSegments bool) ([]VideoInfo, error)
 	GetCategories(ctx context.Context) ([]Category, error)
 	GetGlobalBadges(ctx context.Context) ([]Badge, error)
 	GetChannelBadges(ctx context.Context, channelId string) ([]Badge, error)

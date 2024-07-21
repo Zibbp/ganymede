@@ -87,7 +87,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 		var videos []platform.VideoInfo
 		// If archives is enabled, fetch all videos
 		if watch.DownloadArchives {
-			tmpVideos, err := s.PlatformTwitch.GetVideos(ctx, watch.Edges.Channel.ExtID, platform.VideoTypeArchive)
+			tmpVideos, err := s.PlatformTwitch.GetVideos(ctx, watch.Edges.Channel.ExtID, platform.VideoTypeArchive, false, false)
 			if err != nil {
 				logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting videos")
 				continue
@@ -96,7 +96,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 		}
 		// If highlights is enabled, fetch all videos
 		if watch.DownloadHighlights {
-			tmpVideos, err := s.PlatformTwitch.GetVideos(ctx, watch.Edges.Channel.ExtID, platform.VideoTypeHighlight)
+			tmpVideos, err := s.PlatformTwitch.GetVideos(ctx, watch.Edges.Channel.ExtID, platform.VideoTypeHighlight, false, false)
 			if err != nil {
 				logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting videos")
 				continue
@@ -105,7 +105,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 		}
 		// If uploads is enabled, fetch all videos
 		if watch.DownloadUploads {
-			tmpVideos, err := s.PlatformTwitch.GetVideos(ctx, watch.Edges.Channel.ExtID, platform.VideoTypeUpload)
+			tmpVideos, err := s.PlatformTwitch.GetVideos(ctx, watch.Edges.Channel.ExtID, platform.VideoTypeUpload, false, false)
 			if err != nil {
 				logger.Error().Str("channel", watch.Edges.Channel.Name).Err(err).Msg("error getting videos")
 				continue

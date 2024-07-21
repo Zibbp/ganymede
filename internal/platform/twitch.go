@@ -237,7 +237,7 @@ func (c *TwitchConnection) GetChannel(ctx context.Context, channelName string) (
 	return &info, nil
 }
 
-func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, videoType VideoType) ([]VideoInfo, error) {
+func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, videoType VideoType, withChapters bool, withMutedSegments bool) ([]VideoInfo, error) {
 	queryParams := map[string]string{"user_id": channelId, "first": "100", "type": string(videoType)}
 	body, err := c.twitchMakeHTTPRequest("GET", "videos", queryParams, nil)
 	if err != nil {
@@ -272,12 +272,51 @@ func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, vide
 
 	var info []VideoInfo
 	for _, video := range videos {
-		video, err := c.GetVideo(ctx, video.ID, true, true)
-		if err != nil {
-			return nil, err
-		}
+		// if withChapters or withMutedSegments is true, get the video from the GetVideo function which fetches extra information
+		// else just use the video from the API response
+		if withChapters || withMutedSegments {
+			video, err := c.GetVideo(ctx, video.ID, withChapters, withMutedSegments)
+			if err != nil {
+				return nil, err
+			}
 
-		info = append(info, *video)
+			info = append(info, *video)
+		} else {
+
+			// parse dates
+			createdAt, err := time.Parse(time.RFC3339, video.CreatedAt)
+			if err != nil {
+				return nil, err
+			}
+			publishedAt, err := time.Parse(time.RFC3339, video.PublishedAt)
+			if err != nil {
+				return nil, err
+			}
+			// get duration
+			duration, err := time.ParseDuration(video.Duration)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing duration: %v", err)
+			}
+
+			info = append(info, VideoInfo{
+				ID:           video.ID,
+				StreamID:     video.StreamID,
+				UserID:       video.UserID,
+				UserLogin:    video.UserLogin,
+				UserName:     video.UserName,
+				Title:        video.Title,
+				Description:  video.Description,
+				CreatedAt:    createdAt,
+				PublishedAt:  publishedAt,
+				URL:          video.URL,
+				ThumbnailURL: video.ThumbnailURL,
+				Viewable:     video.Viewable,
+				ViewCount:    video.ViewCount,
+				Language:     video.Language,
+				Type:         video.Type,
+				Duration:     duration,
+			})
+		}
 	}
 
 	return info, nil
