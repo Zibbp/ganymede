@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/zibbp/ganymede/internal/chapter"
 )
@@ -177,41 +178,53 @@ func twitchAuthenticate(clientId string, clientSecret string) (*AuthTokenRespons
 
 func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams map[string]string, headers map[string]string) ([]byte, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", TwitchApiUrl, url), nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %v", err)
+
+	for attempt := 0; attempt < maxRetryAttempts; attempt++ {
+		req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", TwitchApiUrl, url), nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create request: %v", err)
+		}
+
+		// Set headers
+		for key, value := range headers {
+			req.Header.Set(key, value)
+		}
+
+		// Set auth headers
+		req.Header.Set("Client-ID", c.ClientId)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
+
+		// Set query parameters
+		q := req.URL.Query()
+		for key, value := range queryParams {
+			q.Add(key, value)
+		}
+		req.URL.RawQuery = q.Encode()
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("failed to make request: %v", err)
+		}
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %v", err)
+		}
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			if attempt < maxRetryAttempts-1 {
+				time.Sleep(retryDelay)
+				continue
+			}
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, body)
+		}
+
+		return body, nil
 	}
 
-	// Set headers
-	for key, value := range headers {
-		req.Header.Set(key, value)
-	}
-
-	// Set auth headers
-	req.Header.Set("Client-ID", c.ClientId)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
-
-	// Set query parameters
-	q := req.URL.Query()
-	for key, value := range queryParams {
-		q.Add(key, value)
-	}
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to make request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %v", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, body)
-	}
-
-	return body, nil
+	return nil, fmt.Errorf("max retry attempts reached")
 }

@@ -1,17 +1,18 @@
 package http
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
 type TaskService interface {
-	StartTask(c echo.Context, task string) error
+	StartTask(ctx context.Context, task string) error
 }
 
 type StartTaskRequest struct {
-	Task string `json:"task" validate:"required,oneof=check_live check_vod get_jwks twitch_auth storage_migration prune_videos"`
+	Task string `json:"task" validate:"required,oneof=check_live check_vod get_jwks storage_migration prune_videos save_chapters update_stream_vod_ids"`
 }
 
 // StartTask godoc
@@ -34,7 +35,7 @@ func (h *Handler) StartTask(c echo.Context) error {
 	if err := c.Validate(str); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if err := h.Service.TaskService.StartTask(c, str.Task); err != nil {
+	if err := h.Service.TaskService.StartTask(c.Request().Context(), str.Task); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)

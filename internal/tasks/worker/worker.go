@@ -102,6 +102,12 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks_periodic.FetchJWKSWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.SaveVideoChaptersWorker{}); err != nil {
+		return rc, err
+	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.UpdateLivestreamVodIdsWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 

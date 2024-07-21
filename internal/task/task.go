@@ -3,69 +3,81 @@ package task
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"path"
 	"strings"
-	"time"
 
-	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
-	"github.com/zibbp/ganymede/ent/channel"
-	entChannel "github.com/zibbp/ganymede/ent/channel"
-	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
-	"github.com/zibbp/ganymede/internal/vod"
+	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
+	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
 )
 
 type Service struct {
-	Store          *database.Database
-	LiveService    *live.Service
-	ArchiveService *archive.Service
+	Store       *database.Database
+	LiveService *live.Service
+	RiverClient *tasks_client.RiverClient
 }
 
-func NewService(store *database.Database, liveService *live.Service, archiveService *archive.Service) *Service {
-	return &Service{Store: store, LiveService: liveService, ArchiveService: archiveService}
+func NewService(store *database.Database, liveService *live.Service, riverClient *tasks_client.RiverClient) *Service {
+	return &Service{Store: store, LiveService: liveService, RiverClient: riverClient}
 }
 
-func (s *Service) StartTask(c echo.Context, task string) error {
-	log.Info().Msgf("Manually starting task %s", task)
+func (s *Service) StartTask(ctx context.Context, task string) error {
+	log.Info().Msgf("manually starting task %s", task)
 
 	switch task {
 	case "check_live":
-		err := s.LiveService.Check(c.Request().Context())
+		err := s.LiveService.Check(ctx)
 		if err != nil {
 			return fmt.Errorf("error checking live: %v", err)
 		}
 
 	case "check_vod":
-		logger := log.With().Logger()
-		go s.LiveService.CheckVodWatchedChannels(c.Request().Context(), logger)
+		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.CheckChannelsForNewVideosArgs{}, nil)
+		if err != nil {
+			return fmt.Errorf("error inserting task: %v", err)
+		}
+		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
 
-	// case "get_jwks":
-	// 	err := auth.FetchJWKS()
-	// 	if err != nil {
-	// 		return fmt.Errorf("error fetching jwks: %v", err)
-	// 	}
-
-	// case "twitch_auth":
-	// 	err := twitch.Authenticate()
-	// 	if err != nil {
-	// 		return fmt.Errorf("error authenticating twitch: %v", err)
-	// 	}
+	case "get_jwks":
+		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.FetchJWKSArgs{}, nil)
+		if err != nil {
+			return fmt.Errorf("error inserting task: %v", err)
+		}
+		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
 
 	case "storage_migration":
 		go func() {
 			err := s.StorageMigration()
 			if err != nil {
-				log.Error().Err(err).Msg("Error migrating storage")
+				log.Error().Err(err).Msg("error migrating storage")
 			}
 		}()
 
 	case "prune_videos":
-		go PruneVideos()
+		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.PruneVideosArgs{}, nil)
+		if err != nil {
+			return fmt.Errorf("error inserting task: %v", err)
+		}
+		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
+
+	case "save_chapters":
+		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.SaveVideoChaptersArgs{}, nil)
+		if err != nil {
+			return fmt.Errorf("error inserting task: %v", err)
+		}
+		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
+
+	case "update_stream_vod_ids":
+		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.UpdateLivestreamVodIdsArgs{}, nil)
+		if err != nil {
+			return fmt.Errorf("error inserting task: %v", err)
+		}
+		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
+
 	}
 
 	return nil
@@ -243,54 +255,6 @@ func (s *Service) StorageMigration() error {
 		}
 
 		log.Info().Msgf("Migrated video %s to new storage template", video.ID)
-
-	}
-
-	return nil
-}
-
-func PruneVideos() error {
-	// setup
-	vodService := &vod.Service{Store: database.DB()}
-	req := &http.Request{}
-	ctx := context.Background()
-	echoCtx := echo.New().NewContext(req, nil)
-	echoCtx.SetRequest(req.WithContext(ctx))
-
-	// fetch all channels that have retention enable
-	channels, err := database.DB().Client.Channel.Query().Where(channel.Retention(true)).All(context.Background())
-	if err != nil {
-		log.Error().Err(err).Msg("Error fetching channels")
-		return err
-	}
-	log.Debug().Msgf("Found %d channels with retention enabled", len(channels))
-
-	// loop over channels
-	for _, channel := range channels {
-		log.Debug().Msgf("Processing channel %s", channel.ID)
-		// fetch all videos for channel
-		videos, err := database.DB().Client.Vod.Query().Where(entVod.HasChannelWith(entChannel.ID(channel.ID))).All(context.Background())
-		if err != nil {
-			log.Error().Err(err).Msgf("Error fetching videos for channel %s", channel.ID)
-			continue
-		}
-
-		// loop over videos
-		for _, video := range videos {
-			// check if video is locked
-			if video.Locked {
-				continue
-			}
-			// check if video is older than retention
-			if video.CreatedAt.Add(time.Duration(channel.RetentionDays) * 24 * time.Hour).Before(time.Now()) {
-				// delete video
-				err := vodService.DeleteVod(echoCtx, video.ID, true)
-				if err != nil {
-					log.Error().Err(err).Msgf("Error deleting video %s", video.ID)
-					continue
-				}
-			}
-		}
 
 	}
 

@@ -11,8 +11,8 @@ import (
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/live"
-	"github.com/zibbp/ganymede/internal/task"
 	"github.com/zibbp/ganymede/internal/tasks"
+	"github.com/zibbp/ganymede/internal/vod"
 )
 
 func liveServiceFromContext(ctx context.Context) (*live.Service, error) {
@@ -36,7 +36,7 @@ func (w CheckChannelsForNewVideosArgs) InsertOpts() river.InsertOpts {
 }
 
 func (w CheckChannelsForNewVideosArgs) Timeout(job *river.Job[CheckChannelsForNewVideosArgs]) time.Duration {
-	return 1 * time.Minute
+	return 10 * time.Minute
 }
 
 type CheckChannelsForNewVideosWorker struct {
@@ -85,7 +85,12 @@ func (w PruneVideosWorker) Work(ctx context.Context, job *river.Job[PruneVideosA
 	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
 	logger.Info().Msg("starting task")
 
-	err := task.PruneVideos()
+	store, err := tasks.StoreFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = vod.PruneVideos(ctx, store)
 	if err != nil {
 		return err
 	}

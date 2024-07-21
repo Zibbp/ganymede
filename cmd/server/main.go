@@ -130,7 +130,7 @@ func Run() error {
 	playbackService := playback.NewService(db)
 	metricsService := metrics.NewService(db)
 	playlistService := playlist.NewService(db)
-	taskService := task.NewService(db, liveService, archiveService)
+	taskService := task.NewService(db, liveService, riverClient)
 	chapterService := chapter.NewService(db)
 	categoryService := category.NewService(db)
 
