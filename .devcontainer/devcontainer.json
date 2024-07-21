@@ -35,5 +35,5 @@
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
   "workspaceFolder": "/workspace",
-  "postAttachCommand": "go install github.com/joho/godotenv/cmd/godotenv@latest && go install github.com/cosmtrek/air@latest"
+  "postAttachCommand": "make dev_setup"
 }
