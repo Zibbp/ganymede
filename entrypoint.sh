@@ -21,19 +21,20 @@ chown abc:abc /vods
 # fonts
 mkdir -p /var/cache/fontconfig
 chown abc:abc /var/cache/fontconfig
-su-exec abc fc-cache -f
+gosu abc fc-cache -f
 
 # dotnet envs
 export DOTNET_BUNDLE_EXTRACT_BASE_DIR=/tmp
 export FONTCONFIG_CACHE=/var/cache/fontconfig
 
-su-exec abc /opt/app/ganymede-api &
+# start api and worker as user abc
+gosu abc /opt/app/ganymede-api &
 api_pid=$!
 
 # delay 5 seconds to wait for api to start
 sleep 5
 
-su-exec abc /opt/app/ganymede-worker &
+gosu abc /opt/app/ganymede-worker &
 worker_pid=$!
 
 # wait
