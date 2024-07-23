@@ -40,14 +40,16 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Extract metadata (tags, labels) for Docker
-      - name: Extract Docker metadata
+      - name: Extract Docker metadata (release)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=auto
           tags: |
             type=semver,pattern={{version}}
-            type=raw,value=latest
+            type=raw,value=dev
 
       - name: Build and push
         uses: docker/build-push-action@v6
