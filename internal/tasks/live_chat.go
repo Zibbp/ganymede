@@ -91,10 +91,13 @@ func (w DownloadLiveChatWorker) Work(ctx context.Context, job *river.Job[Downloa
 
 	// continue with next job
 	if job.Args.Continue {
-		client.Insert(ctx, &ConvertLiveChatArgs{
+		_, err := client.Insert(ctx, &ConvertLiveChatArgs{
 			Continue: true,
 			Input:    job.Args.Input,
 		}, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	// check if tasks are done
@@ -245,10 +248,13 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	// continue with next job
 	if job.Args.Continue {
 		client := river.ClientFromContext[pgx.Tx](ctx)
-		client.Insert(ctx, &RenderChatArgs{
+		_, err := client.Insert(ctx, &RenderChatArgs{
 			Continue: true,
 			Input:    job.Args.Input,
 		}, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	// check if tasks are done

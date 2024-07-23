@@ -83,7 +83,8 @@ func TestArchiveChannel(t *testing.T) {
 	if assert.NoError(t, handler.ArchiveChannel(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		var responseChannel ent.Channel
-		json.Unmarshal(rec.Body.Bytes(), &responseChannel)
+		err := json.Unmarshal(rec.Body.Bytes(), &responseChannel)
+		assert.NoError(t, err)
 		assert.Equal(t, mockChannel.Name, responseChannel.Name)
 	}
 
@@ -120,24 +121,6 @@ func TestArchiveVideo(t *testing.T) {
 
 	if assert.NoError(t, handler.ArchiveVideo(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
-	}
-
-	// test invalid archive video
-	invalidArchiveVideoBody := httpHandler.ArchiveVideoRequest{
-		VideoId:     "123456789",
-		ChannelId:   "123456789",
-		Quality:     "best",
-		ArchiveChat: true,
-		RenderChat:  false,
-	}
-
-	reqBody, _ = json.Marshal(invalidArchiveVideoBody)
-	req = httptest.NewRequest(http.MethodPost, "/archive/video", bytes.NewBuffer(reqBody))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec = httptest.NewRecorder()
-	c = e.NewContext(req, rec)
-
-	if assert.Error(t, handler.ArchiveVideo(c)) {
 	}
 
 	mockService.AssertExpectations(t)

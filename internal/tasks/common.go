@@ -88,10 +88,13 @@ func (w CreateDirectoryWorker) Work(ctx context.Context, job *river.Job[CreateDi
 	// continue with next job
 	if job.Args.Continue {
 		client := river.ClientFromContext[pgx.Tx](ctx)
-		client.Insert(ctx, &SaveVideoInfoArgs{
+		_, err := client.Insert(ctx, &SaveVideoInfoArgs{
 			Continue: true,
 			Input:    job.Args.Input,
 		}, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	// check if tasks are done
@@ -219,10 +222,13 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 	// continue with next job
 	if job.Args.Continue {
 		client := river.ClientFromContext[pgx.Tx](ctx)
-		client.Insert(ctx, &DownloadThumbnailArgs{
+		_, err := client.Insert(ctx, &DownloadThumbnailArgs{
 			Continue: true,
 			Input:    job.Args.Input,
 		}, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	// check if tasks are done
@@ -335,28 +341,40 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 	if job.Args.Continue {
 		client := river.ClientFromContext[pgx.Tx](ctx)
 		if dbItems.Queue.LiveArchive {
-			client.Insert(ctx, &DownloadLiveVideoArgs{
+			_, err := client.Insert(ctx, &DownloadLiveVideoArgs{
 				Continue: true,
 				Input:    job.Args.Input,
 			}, nil)
+			if err != nil {
+				return err
+			}
 
-			client.Insert(ctx, &DownloadThumbnailsMinimalArgs{
+			_, err = client.Insert(ctx, &DownloadThumbnailsMinimalArgs{
 				Continue: false,
 				Input:    job.Args.Input,
 			}, &river.InsertOpts{
 				ScheduledAt: time.Now().Add(10 * time.Minute),
 			})
+			if err != nil {
+				return err
+			}
 
 		} else {
-			client.Insert(ctx, &DownloadVideoArgs{
+			_, err = client.Insert(ctx, &DownloadVideoArgs{
 				Continue: true,
 				Input:    job.Args.Input,
 			}, nil)
+			if err != nil {
+				return err
+			}
 
-			client.Insert(ctx, &DownloadChatArgs{
+			_, err = client.Insert(ctx, &DownloadChatArgs{
 				Continue: true,
 				Input:    job.Args.Input,
 			}, nil)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

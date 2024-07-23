@@ -173,10 +173,10 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	// pass config args
 	cmdArgs = append(cmdArgs, configStreamlinkArgsArr...)
 
-	filteredArgs := make([]string, 0, len(cmdArgs))
+	filteredArgs := make([]string, 0)
 	for _, arg := range cmdArgs {
 		if arg != "" {
-			filteredArgs = append(filteredArgs, arg)
+			filteredArgs = append(filteredArgs, arg) //nolint:staticcheck
 		}
 	}
 

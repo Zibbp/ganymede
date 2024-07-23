@@ -19,6 +19,7 @@ import (
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
+	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -50,7 +51,7 @@ type QueueStatusInput struct {
 }
 
 func StoreFromContext(ctx context.Context) (*database.Database, error) {
-	store, exists := ctx.Value("store").(*database.Database)
+	store, exists := ctx.Value(tasks_shared.StoreKey).(*database.Database)
 	if !exists || store == nil {
 		return nil, errors.New("store not found in context")
 	}
@@ -59,7 +60,7 @@ func StoreFromContext(ctx context.Context) (*database.Database, error) {
 }
 
 func PlatformFromContext(ctx context.Context) (platform.Platform, error) {
-	platform, exists := ctx.Value("platform_twitch").(platform.Platform)
+	platform, exists := ctx.Value(tasks_shared.PlatformTwitchKey).(platform.Platform)
 	if !exists || platform == nil {
 		return nil, errors.New("platform not found in context")
 	}

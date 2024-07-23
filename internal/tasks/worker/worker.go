@@ -19,12 +19,8 @@ import (
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
+	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
 )
-
-type contextKey string
-
-const storeKey contextKey = "store"
-const platformKey contextKey = "platform"
 
 type RiverWorkerInput struct {
 	DB_URL                  string
@@ -144,10 +140,10 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	rc.Client = riverClient
 
 	// put store in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, "store", input.DB)
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.StoreKey, input.DB)
 
 	// put platform in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, "platform_twitch", input.PlatformTwitch)
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformTwitchKey, input.PlatformTwitch)
 
 	return rc, nil
 }
@@ -175,7 +171,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 	}
 
 	// put services in ctx for workers
-	rc.Ctx = context.WithValue(rc.Ctx, "live_service", liveService)
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.LiveServiceKey, liveService)
 
 	// check videos interval
 	configCheckVideoInterval := viper.GetInt("video_check_interval_minutes")

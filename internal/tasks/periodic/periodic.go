@@ -12,11 +12,12 @@ import (
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/tasks"
+	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
 	"github.com/zibbp/ganymede/internal/vod"
 )
 
 func liveServiceFromContext(ctx context.Context) (*live.Service, error) {
-	liveService, exists := ctx.Value("live_service").(*live.Service)
+	liveService, exists := ctx.Value(tasks_shared.LiveServiceKey).(*live.Service)
 	if !exists || liveService == nil {
 		return nil, errors.New("live service not found in context")
 	}

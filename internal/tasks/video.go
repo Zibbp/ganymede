@@ -83,10 +83,13 @@ func (w DownloadVideoWorker) Work(ctx context.Context, job *river.Job[DownloadVi
 	// continue with next job
 	if job.Args.Continue {
 		client := river.ClientFromContext[pgx.Tx](ctx)
-		client.Insert(ctx, &PostProcessVideoArgs{
+		_, err = client.Insert(ctx, &PostProcessVideoArgs{
 			Continue: true,
 			Input:    job.Args.Input,
 		}, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	// check if tasks are done
@@ -198,10 +201,13 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 	// continue with next job
 	if job.Args.Continue {
 		client := river.ClientFromContext[pgx.Tx](ctx)
-		client.Insert(ctx, &MoveVideoArgs{
+		_, err = client.Insert(ctx, &MoveVideoArgs{
 			Continue: true,
 			Input:    job.Args.Input,
 		}, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	// check if tasks are done

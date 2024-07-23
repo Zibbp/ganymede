@@ -78,10 +78,13 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 			case <-startChatDownload:
 				log.Debug().Str("channel", dbItems.Channel.Name).Msgf("starting chat download for %s", dbItems.Video.ExtID)
 				client := river.ClientFromContext[pgx.Tx](ctx)
-				client.Insert(ctx, &DownloadLiveChatArgs{
+				_, err = client.Insert(ctx, &DownloadLiveChatArgs{
 					Continue: true,
 					Input:    job.Args.Input,
 				}, nil)
+				if err != nil {
+					log.Error().Err(err).Msg("failed to start chat download")
+				}
 			case <-ctx.Done():
 				return
 			}
@@ -147,10 +150,13 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 
 	// continue with next job
 	if job.Args.Continue {
-		client.Insert(ctx, &PostProcessVideoArgs{
+		_, err = client.Insert(ctx, &PostProcessVideoArgs{
 			Continue: true,
 			Input:    job.Args.Input,
 		}, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	// check if tasks are done

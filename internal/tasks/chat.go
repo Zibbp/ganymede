@@ -86,15 +86,21 @@ func (w DownloadChatWorker) Work(ctx context.Context, job *river.Job[DownloadCha
 	if job.Args.Continue {
 		client := river.ClientFromContext[pgx.Tx](ctx)
 		if dbItems.Queue.RenderChat {
-			client.Insert(ctx, &RenderChatArgs{
+			_, err = client.Insert(ctx, &RenderChatArgs{
 				Continue: true,
 				Input:    job.Args.Input,
 			}, nil)
+			if err != nil {
+				return err
+			}
 		} else {
-			client.Insert(ctx, &MoveChatArgs{
+			_, err = client.Insert(ctx, &MoveChatArgs{
 				Continue: true,
 				Input:    job.Args.Input,
 			}, nil)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -198,10 +204,13 @@ func (w RenderChatWorker) Work(ctx context.Context, job *river.Job[RenderChatArg
 	// continue with next job
 	if job.Args.Continue && continueArchive {
 		client := river.ClientFromContext[pgx.Tx](ctx)
-		client.Insert(ctx, &MoveChatArgs{
+		_, err := client.Insert(ctx, &MoveChatArgs{
 			Continue: true,
 			Input:    job.Args.Input,
 		}, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	// check if tasks are done
