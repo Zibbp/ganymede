@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -171,7 +172,7 @@ func NewConfig(refresh bool) {
 	}
 }
 
-func (s *Service) GetConfig(c echo.Context) (*Conf, error) {
+func (s *Service) GetConfig(ctx context.Context) (*Conf, error) {
 	proxies := viper.Get("livestream.proxies")
 	var proxyListItems []ProxyListItem
 	for _, proxy := range proxies.([]interface{}) {

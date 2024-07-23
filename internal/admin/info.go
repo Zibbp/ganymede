@@ -1,11 +1,11 @@
 package admin
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"time"
 
-	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -23,7 +23,7 @@ type ProgramVersions struct {
 	Streamlink       string `json:"streamlink"`
 }
 
-func (s *Service) GetInfo(c echo.Context) (InfoResp, error) {
+func (s *Service) GetInfo(ctx context.Context) (InfoResp, error) {
 	var resp InfoResp
 	resp.CommitHash = utils.Commit
 	resp.BuildTime = utils.BuildTime
