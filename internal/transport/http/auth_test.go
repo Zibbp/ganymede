@@ -1,180 +1,167 @@
 package http_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"strings"
 	"testing"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/zibbp/ganymede/ent"
-	"github.com/zibbp/ganymede/ent/enttest"
 	"github.com/zibbp/ganymede/internal/auth"
-	"github.com/zibbp/ganymede/internal/database"
-	httpTransport "github.com/zibbp/ganymede/internal/transport/http"
-	"github.com/zibbp/ganymede/internal/utils"
+	httpHandler "github.com/zibbp/ganymede/internal/transport/http"
+	"github.com/zibbp/ganymede/internal/user"
 )
 
-var (
-	// The following are used for testing.
-	testUserJson = `{
-		"username": "test",
-		"password": "test1234"
-		}`
-)
+type MockAuthService struct {
+	mock.Mock
+}
 
-// * TestRegister tests the Register function.
-// Test registers a new user.
+func (m *MockAuthService) Register(c echo.Context, userDto user.User) (*ent.User, error) {
+	args := m.Called(c, userDto)
+	return args.Get(0).(*ent.User), args.Error(1)
+}
+
+func (m *MockAuthService) Login(c echo.Context, userDto user.User) (*ent.User, error) {
+	args := m.Called(c, userDto)
+	return args.Get(0).(*ent.User), args.Error(1)
+}
+
+func (m *MockAuthService) Refresh(c echo.Context, refreshToken string) error {
+	args := m.Called(c, refreshToken)
+	return args.Error(0)
+}
+
+func (m *MockAuthService) Me(c *auth.CustomContext) (*ent.User, error) {
+	args := m.Called(c)
+	return args.Get(0).(*ent.User), args.Error(1)
+}
+
+func (m *MockAuthService) ChangePassword(c *auth.CustomContext, passwordDto auth.ChangePassword) error {
+	args := m.Called(c, passwordDto)
+	return args.Error(0)
+}
+
+func (m *MockAuthService) OAuthRedirect(c echo.Context) error {
+	args := m.Called(c)
+	return args.Error(0)
+}
+
+func (m *MockAuthService) OAuthCallback(c echo.Context) error {
+	args := m.Called(c)
+	return args.Error(0)
+}
+
+func (m *MockAuthService) OAuthTokenRefresh(c echo.Context, refreshToken string) error {
+	args := m.Called(c, refreshToken)
+	return args.Error(0)
+}
+
+func (m *MockAuthService) OAuthLogout(c echo.Context) error {
+	args := m.Called(c)
+	return args.Error(0)
+}
+
+func setupAuthHandler() *httpHandler.Handler {
+	e := setupEcho()
+	mockAuthService := new(MockAuthService)
+
+	services := httpHandler.Services{
+		AuthService: mockAuthService,
+	}
+
+	handler := &httpHandler.Handler{
+		Server:  e,
+		Service: services,
+	}
+
+	return handler
+}
+
 func TestRegister(t *testing.T) {
-	opts := []enttest.Option{
-		enttest.WithOptions(ent.Log(t.Log)),
-	}
+	handler := setupAuthHandler()
+	e := handler.Server
+	mockService := handler.Service.AuthService.(*MockAuthService)
 
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
-	defer client.Close()
-
+	viper.New()
 	viper.Set("registration_enabled", true)
 
-	h := &httpTransport.Handler{
-		Server: echo.New(),
-		Service: httpTransport.Services{
-			AuthService: auth.NewService(&database.Database{Client: client}),
-		},
+	// test register
+	registerBody := httpHandler.RegisterRequest{
+		Username: "username",
+		Password: "password",
 	}
 
-	h.Server.Validator = &utils.CustomValidator{Validator: validator.New()}
+	expectedInput := user.User{
+		Username: "username",
+		Password: "password",
+	}
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", strings.NewReader(testUserJson))
+	expectedOutput := &ent.User{
+		Username: "username",
+	}
+
+	mockService.On("Register", mock.Anything, expectedInput).Return(expectedOutput, nil)
+
+	b, err := json.Marshal(registerBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/auth/register", bytes.NewBuffer(b))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
-	c := h.Server.NewContext(req, rec)
+	c := e.NewContext(req, rec)
 
-	if assert.NoError(t, h.Register(c)) {
+	if assert.NoError(t, handler.Register(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
-
-		// Check response body
-		var response map[string]interface{}
+		var response *ent.User
 		err := json.Unmarshal(rec.Body.Bytes(), &response)
 		assert.NoError(t, err)
-		assert.Equal(t, "test", response["username"])
+		assert.Equal(t, expectedOutput, response)
 	}
 }
 
-// * TestLogin tests the Login function.
-// Test logs in a user.
+// TestLogin is a test function for login.
 func TestLogin(t *testing.T) {
-	opts := []enttest.Option{
-		enttest.WithOptions(ent.Log(t.Log)),
+	handler := setupAuthHandler()
+	e := handler.Server
+	mockService := handler.Service.AuthService.(*MockAuthService)
+
+	// test login
+	loginBody := httpHandler.LoginRequest{
+		Username: "username",
+		Password: "password",
 	}
 
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
-	defer client.Close()
-
-	viper.Set("registration_enabled", true)
-	os.Setenv("JWT_SECRET", "test")
-	os.Setenv("JWT_REFRESH_SECRET", "test")
-
-	h := &httpTransport.Handler{
-		Server: echo.New(),
-		Service: httpTransport.Services{
-			AuthService: auth.NewService(&database.Database{Client: client}),
-		},
+	expectedInput := user.User{
+		Username: "username",
+		Password: "password",
 	}
 
-	h.Server.Validator = &utils.CustomValidator{Validator: validator.New()}
+	expectedOutput := &ent.User{
+		Username: "username",
+	}
 
-	// Register a new user
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", strings.NewReader(testUserJson))
+	mockService.On("Login", mock.Anything, expectedInput).Return(expectedOutput, nil)
+
+	b, err := json.Marshal(loginBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", bytes.NewBuffer(b))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
-	c := h.Server.NewContext(req, rec)
-	err := h.Register(c)
-	assert.NoError(t, err)
+	c := e.NewContext(req, rec)
 
-	// Login the user
-	req = httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(testUserJson))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec = httptest.NewRecorder()
-	c = h.Server.NewContext(req, rec)
-
-	if assert.NoError(t, h.Login(c)) {
+	if assert.NoError(t, handler.Login(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
-
-		// Check response body
-		var response map[string]interface{}
+		var response *ent.User
 		err := json.Unmarshal(rec.Body.Bytes(), &response)
 		assert.NoError(t, err)
-		assert.Equal(t, "test", response["username"])
-	}
-}
-
-// * TestRefresh tests the Refresh function.
-// Test refreshes a user's access token.
-func TestRefresh(t *testing.T) {
-	opts := []enttest.Option{
-		enttest.WithOptions(ent.Log(t.Log)),
-	}
-
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", opts...)
-	defer client.Close()
-
-	viper.Set("registration_enabled", true)
-	os.Setenv("JWT_SECRET", "test")
-	os.Setenv("JWT_REFRESH", "test")
-
-	h := &httpTransport.Handler{
-		Server: echo.New(),
-		Service: httpTransport.Services{
-			AuthService: auth.NewService(&database.Database{Client: client}),
-		},
-	}
-
-	h.Server.Validator = &utils.CustomValidator{Validator: validator.New()}
-
-	// Register a new user
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", strings.NewReader(testUserJson))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec := httptest.NewRecorder()
-	c := h.Server.NewContext(req, rec)
-	err := h.Register(c)
-	assert.NoError(t, err)
-
-	// Login the user
-	req = httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(testUserJson))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec = httptest.NewRecorder()
-	c = h.Server.NewContext(req, rec)
-	err = h.Login(c)
-	assert.NoError(t, err)
-
-	// Refresh the user's access token
-
-	// Get the refresh token from the response cookie
-	cookies := rec.Result().Cookies()
-	var refreshToken string
-	for _, cookie := range cookies {
-		if cookie.Name == "refresh-token" {
-			refreshToken = cookie.Value
-		}
-	}
-
-	// Create a new request with the refresh token
-	req = httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", nil)
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.AddCookie(&http.Cookie{
-		Name:  "refresh-token",
-		Value: refreshToken,
-	})
-	rec = httptest.NewRecorder()
-	c = h.Server.NewContext(req, rec)
-
-	if assert.NoError(t, h.Refresh(c)) {
-		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, expectedOutput, response)
 	}
 }

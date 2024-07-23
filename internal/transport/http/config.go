@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -9,7 +10,7 @@ import (
 )
 
 type ConfigService interface {
-	GetConfig(c echo.Context) (*config.Conf, error)
+	GetConfig(ctx context.Context) (*config.Conf, error)
 	UpdateConfig(c echo.Context, conf *config.Conf) error
 	GetNotificationConfig(c echo.Context) (*config.Notification, error)
 	UpdateNotificationConfig(c echo.Context, conf *config.Notification) error
@@ -68,7 +69,7 @@ type UpdateStorageTemplateRequest struct {
 //	@Router			/config [get]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) GetConfig(c echo.Context) error {
-	conf, err := h.Service.ConfigService.GetConfig(c)
+	conf, err := h.Service.ConfigService.GetConfig(c.Request().Context())
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
