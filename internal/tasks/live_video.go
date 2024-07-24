@@ -157,6 +157,17 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 		if err != nil {
 			return err
 		}
+
+		// insert task to update stream id with video id
+		_, err := client.Insert(ctx, &UpdateStreamVideoIdArgs{
+			Input: job.Args.Input,
+		}, &river.InsertOpts{
+			// schedule task to run after 10 minutes to ensure the video is processed by the platform
+			ScheduledAt: time.Now().Add(10 * time.Minute),
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	// check if tasks are done

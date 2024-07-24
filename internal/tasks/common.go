@@ -5,10 +5,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
+	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/ent"
+	entChannel "github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/config"
+	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -460,6 +466,125 @@ func (w DownloadThumbnailsMinimalWorker) Work(ctx context.Context, job *river.Jo
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// UpdateStreamVideoId is scheduled to run after a livestream archive finishes. It will attempt to update the external ID of the stream video (vod).
+//
+// Has two use modes:
+// - Supply a Queue ID to update the video ID of the video related to the queue
+// - Do not supply a Queue ID (set to uuid.Nil) to update the video IDs of all videos
+type UpdateStreamVideoIdArgs struct {
+	Input ArchiveVideoInput `json:"input"`
+}
+
+func (UpdateStreamVideoIdArgs) Kind() string { return "update_stream_video_id" }
+
+func (args UpdateStreamVideoIdArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 2,
+		Queue:       "default",
+		Tags:        []string{"archive"},
+	}
+}
+
+func (w UpdateStreamVideoIdArgs) Timeout(job *river.Job[UpdateStreamVideoIdArgs]) time.Duration {
+	return 10 * time.Minute
+}
+
+type UpdateStreamVideoIdWorker struct {
+	river.WorkerDefaults[UpdateStreamVideoIdArgs]
+}
+
+func (w UpdateStreamVideoIdWorker) Work(ctx context.Context, job *river.Job[UpdateStreamVideoIdArgs]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	// get store from context
+	store, err := StoreFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	// start task heartbeat
+	go startHeartBeatForTask(ctx, HeartBeatInput{
+		TaskId: job.ID,
+		conn:   store.ConnPool,
+	})
+
+	platformService, err := PlatformFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var channels []*ent.Channel
+	var videos []*ent.Vod
+
+	// check if queue id is set and only one video needs to be updated
+	if job.Args.Input.QueueId != uuid.Nil {
+		dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
+		if err != nil {
+			return err
+		}
+		channels = []*ent.Channel{&dbItems.Channel}
+		videos = []*ent.Vod{&dbItems.Video}
+	}
+
+	if len(channels) == 0 {
+		channels, err = store.Client.Channel.Query().All(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	// loop over each channel and get all channel videos
+	// this is necessary because the 'streamid' is not an id we can query from APIs
+	for _, channel := range channels {
+		logger.Info().Str("channel", channel.Name).Msg("fetching channel videos")
+
+		// only get videos if no queue id is set
+		if len(videos) == 0 {
+			videos, err = store.Client.Vod.Query().Where(vod.HasChannelWith(entChannel.ID(channel.ID))).All(ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		// get all channel videos from platform
+		platformVideos, err := platformService.GetVideos(ctx, channel.ExtID, platform.VideoTypeArchive, false, false)
+		if err != nil {
+			return err
+		}
+
+		logger.Info().Str("channel", channel.Name).Msgf("found %d videos in platform", len(platformVideos))
+
+		for _, video := range videos {
+			if video.Type != utils.Live {
+				continue
+			}
+			if video.ExtID == "" {
+				continue
+			}
+
+			// attempt to find video in list of platform videos
+			for _, platformVideo := range platformVideos {
+				if platformVideo.StreamID == video.ExtStreamID {
+					logger.Info().Str("channel", channel.Name).Str("video_id", video.ID.String()).Msg("found video in platform")
+					_, err := store.Client.Vod.UpdateOneID(video.ID).SetExtID(platformVideo.ID).Save(ctx)
+					if err != nil {
+						return err
+					}
+					// TODO: kick off job to save chapters and muted segments?
+					break
+				}
+			}
+
+		}
+
+	}
+
+	logger.Info().Msg("task completed")
 
 	return nil
 }

@@ -7,10 +7,12 @@ import (
 	"path"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
+	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
 )
@@ -72,7 +74,7 @@ func (s *Service) StartTask(ctx context.Context, task string) error {
 		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
 
 	case "update_stream_vod_ids":
-		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.UpdateLivestreamVodIdsArgs{}, nil)
+		task, err := s.RiverClient.Client.Insert(ctx, tasks.UpdateStreamVideoIdArgs{Input: tasks.ArchiveVideoInput{QueueId: uuid.Nil}}, nil)
 		if err != nil {
 			return fmt.Errorf("error inserting task: %v", err)
 		}
