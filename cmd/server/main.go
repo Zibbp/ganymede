@@ -12,6 +12,7 @@ import (
 	"github.com/zibbp/ganymede/internal/admin"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/auth"
+	"github.com/zibbp/ganymede/internal/blocked"
 	"github.com/zibbp/ganymede/internal/category"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/chapter"
@@ -133,8 +134,9 @@ func Run() error {
 	taskService := task.NewService(db, liveService, riverClient)
 	chapterService := chapter.NewService(db)
 	categoryService := category.NewService(db)
+	blockedVodService := blocked.NewService(db)
 
-	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService, categoryService, platformTwitch)
+	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService, categoryService, blockedVodService, platformTwitch)
 
 	if err := httpHandler.Serve(); err != nil {
 		return err

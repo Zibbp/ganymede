@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// BlockedVods is the predicate function for blockedvods builders.
+type BlockedVods func(*sql.Selector)
+
 // Channel is the predicate function for channel builders.
 type Channel func(*sql.Selector)
 

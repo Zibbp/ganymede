@@ -21,23 +21,24 @@ import (
 )
 
 type Services struct {
-	AuthService      AuthService
-	ChannelService   ChannelService
-	VodService       VodService
-	QueueService     QueueService
-	ArchiveService   ArchiveService
-	AdminService     AdminService
-	UserService      UserService
-	ConfigService    ConfigService
-	LiveService      LiveService
-	SchedulerService SchedulerService
-	PlaybackService  PlaybackService
-	MetricsService   MetricsService
-	PlaylistService  PlaylistService
-	TaskService      TaskService
-	ChapterService   ChapterService
-	CategoryService  CategoryService
-	PlatformTwitch   platform.Platform
+	AuthService       AuthService
+	ChannelService    ChannelService
+	VodService        VodService
+	QueueService      QueueService
+	ArchiveService    ArchiveService
+	AdminService      AdminService
+	UserService       UserService
+	ConfigService     ConfigService
+	LiveService       LiveService
+	SchedulerService  SchedulerService
+	PlaybackService   PlaybackService
+	MetricsService    MetricsService
+	PlaylistService   PlaylistService
+	TaskService       TaskService
+	ChapterService    ChapterService
+	CategoryService   CategoryService
+	BlockedVodService BlockedVodService
+	PlatformTwitch    platform.Platform
 }
 
 type Handler struct {
@@ -45,30 +46,31 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, platformTwitch platform.Platform) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVodService BlockedVodService, platformTwitch platform.Platform) *Handler {
 	log.Debug().Msg("creating new handler")
 	env := config.GetEnvConfig()
 
 	h := &Handler{
 		Server: echo.New(),
 		Service: Services{
-			AuthService:      authService,
-			ChannelService:   channelService,
-			VodService:       vodService,
-			QueueService:     queueService,
-			ArchiveService:   archiveService,
-			AdminService:     adminService,
-			UserService:      userService,
-			ConfigService:    configService,
-			LiveService:      liveService,
-			SchedulerService: schedulerService,
-			PlaybackService:  playbackService,
-			MetricsService:   metricsService,
-			PlaylistService:  playlistService,
-			TaskService:      taskService,
-			ChapterService:   chapterService,
-			CategoryService:  categoryService,
-			PlatformTwitch:   platformTwitch,
+			AuthService:       authService,
+			ChannelService:    channelService,
+			VodService:        vodService,
+			QueueService:      queueService,
+			ArchiveService:    archiveService,
+			AdminService:      adminService,
+			UserService:       userService,
+			ConfigService:     configService,
+			LiveService:       liveService,
+			SchedulerService:  schedulerService,
+			PlaybackService:   playbackService,
+			MetricsService:    metricsService,
+			PlaylistService:   playlistService,
+			TaskService:       taskService,
+			ChapterService:    chapterService,
+			CategoryService:   categoryService,
+			BlockedVodService: blockedVodService,
+			PlatformTwitch:    platformTwitch,
 		},
 	}
 
@@ -270,6 +272,13 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// Category
 	categoryGroup := e.Group("/category")
 	categoryGroup.GET("", h.GetCategories)
+
+	// Blocked
+	blockedGroup := e.Group("/blocked")
+	blockedGroup.GET("", h.GetBlockedVods)
+	blockedGroup.POST("/:id", h.CreateBlockedVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	blockedGroup.DELETE("/:id", h.DeleteBlockedVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	blockedGroup.GET("/:id", h.IsVodBlocked)
 }
 
 func (h *Handler) Serve() error {
