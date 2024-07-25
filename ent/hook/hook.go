@@ -9,16 +9,16 @@ import (
 	"github.com/zibbp/ganymede/ent"
 )
 
-// The BlockedVodsFunc type is an adapter to allow the use of ordinary
-// function as BlockedVods mutator.
-type BlockedVodsFunc func(context.Context, *ent.BlockedVodsMutation) (ent.Value, error)
+// The BlockedVideosFunc type is an adapter to allow the use of ordinary
+// function as BlockedVideos mutator.
+type BlockedVideosFunc func(context.Context, *ent.BlockedVideosMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f BlockedVodsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.BlockedVodsMutation); ok {
+func (f BlockedVideosFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BlockedVideosMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BlockedVodsMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BlockedVideosMutation", m)
 }
 
 // The ChannelFunc type is an adapter to allow the use of ordinary

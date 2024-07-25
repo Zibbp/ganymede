@@ -5,49 +5,69 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/zibbp/ganymede/ent"
 )
 
-type BlockedVodService interface {
-	IsVodBlocked(ctx context.Context, id string) (bool, error)
-	CreateBlockedVod(ctx context.Context, id string) error
-	DeleteBlockedVod(ctx context.Context, id string) error
-	GetBlockedVods(ctx context.Context) ([]string, error)
+type BlockedVideoService interface {
+	IsVideoBlocked(ctx context.Context, id string) (bool, error)
+	CreateBlockedVideo(ctx context.Context, id string) error
+	DeleteBlockedVideo(ctx context.Context, id string) error
+	GetBlockedVideos(ctx context.Context) ([]*ent.BlockedVideos, error)
 }
 
-func (h *Handler) IsVodBlocked(c echo.Context) error {
+type ID struct {
+	ID string `json:"id" validate:"required,alphanum"`
+}
+
+func (h *Handler) IsVideoBlocked(c echo.Context) error {
 	id := c.Param("id")
 
-	blocked, err := h.Service.BlockedVodService.IsVodBlocked(c.Request().Context(), id)
+	err := h.Server.Validator.Validate(ID{ID: id})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	blocked, err := h.Service.BlockedVideoService.IsVideoBlocked(c.Request().Context(), id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, blocked)
 }
 
-func (h *Handler) CreateBlockedVod(c echo.Context) error {
+func (h *Handler) CreateBlockedVideo(c echo.Context) error {
 	id := c.Param("id")
 
-	err := h.Service.BlockedVodService.CreateBlockedVod(c.Request().Context(), id)
+	err := h.Server.Validator.Validate(ID{ID: id})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.Service.BlockedVideoService.CreateBlockedVideo(c.Request().Context(), id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, nil)
 }
 
-func (h *Handler) DeleteBlockedVod(c echo.Context) error {
+func (h *Handler) DeleteBlockedVideo(c echo.Context) error {
 	id := c.Param("id")
 
-	err := h.Service.BlockedVodService.DeleteBlockedVod(c.Request().Context(), id)
+	err := h.Server.Validator.Validate(ID{ID: id})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.Service.BlockedVideoService.DeleteBlockedVideo(c.Request().Context(), id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, nil)
 }
 
-func (h *Handler) GetBlockedVods(c echo.Context) error {
-	vods, err := h.Service.BlockedVodService.GetBlockedVods(c.Request().Context())
+func (h *Handler) GetBlockedVideos(c echo.Context) error {
+	videos, err := h.Service.BlockedVideoService.GetBlockedVideos(c.Request().Context())
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, vods)
+	return c.JSON(http.StatusOK, videos)
 }

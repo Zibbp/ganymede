@@ -122,7 +122,8 @@ func Run() error {
 	channelService := channel.NewService(db, platformTwitch)
 	vodService := vod.NewService(db, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
-	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, platformTwitch)
+	blockedVodService := blocked.NewService(db)
+	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch)
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
 	configService := config.NewService(db)
@@ -134,7 +135,6 @@ func Run() error {
 	taskService := task.NewService(db, liveService, riverClient)
 	chapterService := chapter.NewService(db)
 	categoryService := category.NewService(db)
-	blockedVodService := blocked.NewService(db)
 
 	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService, categoryService, blockedVodService, platformTwitch)
 

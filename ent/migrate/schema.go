@@ -8,16 +8,16 @@ import (
 )
 
 var (
-	// BlockedVodsColumns holds the columns for the "blocked_vods" table.
-	BlockedVodsColumns = []*schema.Column{
+	// BlockedVideosColumns holds the columns for the "blocked_videos" table.
+	BlockedVideosColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 	}
-	// BlockedVodsTable holds the schema information for the "blocked_vods" table.
-	BlockedVodsTable = &schema.Table{
-		Name:       "blocked_vods",
-		Columns:    BlockedVodsColumns,
-		PrimaryKey: []*schema.Column{BlockedVodsColumns[0]},
+	// BlockedVideosTable holds the schema information for the "blocked_videos" table.
+	BlockedVideosTable = &schema.Table{
+		Name:       "blocked_videos",
+		Columns:    BlockedVideosColumns,
+		PrimaryKey: []*schema.Column{BlockedVideosColumns[0]},
 	}
 	// ChannelsColumns holds the columns for the "channels" table.
 	ChannelsColumns = []*schema.Column{
@@ -340,7 +340,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		BlockedVodsTable,
+		BlockedVideosTable,
 		ChannelsTable,
 		ChaptersTable,
 		LivesTable,

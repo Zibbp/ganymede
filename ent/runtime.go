@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/zibbp/ganymede/ent/blockedvods"
+	"github.com/zibbp/ganymede/ent/blockedvideos"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
@@ -26,12 +26,12 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	blockedvodsFields := schema.BlockedVods{}.Fields()
-	_ = blockedvodsFields
-	// blockedvodsDescCreatedAt is the schema descriptor for created_at field.
-	blockedvodsDescCreatedAt := blockedvodsFields[1].Descriptor()
-	// blockedvods.DefaultCreatedAt holds the default value on creation for the created_at field.
-	blockedvods.DefaultCreatedAt = blockedvodsDescCreatedAt.Default.(func() time.Time)
+	blockedvideosFields := schema.BlockedVideos{}.Fields()
+	_ = blockedvideosFields
+	// blockedvideosDescCreatedAt is the schema descriptor for created_at field.
+	blockedvideosDescCreatedAt := blockedvideosFields[1].Descriptor()
+	// blockedvideos.DefaultCreatedAt holds the default value on creation for the created_at field.
+	blockedvideos.DefaultCreatedAt = blockedvideosDescCreatedAt.Default.(func() time.Time)
 	channelFields := schema.Channel{}.Fields()
 	_ = channelFields
 	// channelDescRetention is the schema descriptor for retention field.

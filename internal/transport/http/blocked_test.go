@@ -9,40 +9,41 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/zibbp/ganymede/ent"
 	httpHandler "github.com/zibbp/ganymede/internal/transport/http"
 )
 
-type MockBlockedVodService struct {
+type MockBlockedVideoService struct {
 	mock.Mock
 }
 
-func (m *MockBlockedVodService) IsVodBlocked(ctx context.Context, id string) (bool, error) {
+func (m *MockBlockedVideoService) IsVideoBlocked(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(bool), args.Error(1)
 }
 
-func (m *MockBlockedVodService) CreateBlockedVod(ctx context.Context, id string) error {
+func (m *MockBlockedVideoService) CreateBlockedVideo(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
-func (m *MockBlockedVodService) DeleteBlockedVod(ctx context.Context, id string) error {
+func (m *MockBlockedVideoService) DeleteBlockedVideo(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
-func (m *MockBlockedVodService) GetBlockedVods(ctx context.Context) ([]string, error) {
+func (m *MockBlockedVideoService) GetBlockedVideos(ctx context.Context) ([]*ent.BlockedVideos, error) {
 	args := m.Called(ctx)
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).([]*ent.BlockedVideos), args.Error(1)
 }
 
-func setupBlockedVodHandler() *httpHandler.Handler {
+func setupBlockedVideoHandler() *httpHandler.Handler {
 	e := setupEcho()
 
-	MockBlockedVodService := new(MockBlockedVodService)
+	MockBlockedVideoService := new(MockBlockedVideoService)
 
 	services := httpHandler.Services{
-		BlockedVodService: MockBlockedVodService,
+		BlockedVideoService: MockBlockedVideoService,
 	}
 
 	handler := &httpHandler.Handler{
@@ -53,73 +54,73 @@ func setupBlockedVodHandler() *httpHandler.Handler {
 	return handler
 }
 
-func TestIsVodBlocked(t *testing.T) {
-	handler := setupBlockedVodHandler()
+func TestIsVideoBlocked(t *testing.T) {
+	handler := setupBlockedVideoHandler()
 	e := handler.Server
-	mockService := handler.Service.BlockedVodService.(*MockBlockedVodService)
+	mockService := handler.Service.BlockedVideoService.(*MockBlockedVideoService)
 
-	mockService.On("IsVodBlocked", mock.Anything, mock.Anything).Return(true, nil)
+	mockService.On("IsVideoBlocked", mock.Anything, mock.Anything).Return(true, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/blocked/123", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	if assert.NoError(t, handler.IsVodBlocked(c)) {
+	if assert.NoError(t, handler.IsVideoBlocked(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		mockService.AssertExpectations(t)
 	}
 }
 
-func TestCreateBlockedVod(t *testing.T) {
-	handler := setupBlockedVodHandler()
+func TestCreateBlockedVideo(t *testing.T) {
+	handler := setupBlockedVideoHandler()
 	e := handler.Server
-	mockService := handler.Service.BlockedVodService.(*MockBlockedVodService)
+	mockService := handler.Service.BlockedVideoService.(*MockBlockedVideoService)
 
-	mockService.On("CreateBlockedVod", mock.Anything, mock.Anything).Return(nil)
+	mockService.On("CreateBlockedVideo", mock.Anything, mock.Anything).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/blocked/123", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	if assert.NoError(t, handler.CreateBlockedVod(c)) {
+	if assert.NoError(t, handler.CreateBlockedVideo(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		mockService.AssertExpectations(t)
 	}
 }
 
-func TestDeleteBlockedVod(t *testing.T) {
-	handler := setupBlockedVodHandler()
+func TestDeleteBlockedVideo(t *testing.T) {
+	handler := setupBlockedVideoHandler()
 	e := handler.Server
-	mockService := handler.Service.BlockedVodService.(*MockBlockedVodService)
+	mockService := handler.Service.BlockedVideoService.(*MockBlockedVideoService)
 
-	mockService.On("DeleteBlockedVod", mock.Anything, mock.Anything).Return(nil)
+	mockService.On("DeleteBlockedVideo", mock.Anything, mock.Anything).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/blocked/123", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	if assert.NoError(t, handler.DeleteBlockedVod(c)) {
+	if assert.NoError(t, handler.DeleteBlockedVideo(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		mockService.AssertExpectations(t)
 	}
 }
 
-func TestGetBlockedVods(t *testing.T) {
-	handler := setupBlockedVodHandler()
+func TestGetBlockedVideos(t *testing.T) {
+	handler := setupBlockedVideoHandler()
 	e := handler.Server
-	mockService := handler.Service.BlockedVodService.(*MockBlockedVodService)
+	mockService := handler.Service.BlockedVideoService.(*MockBlockedVideoService)
 
-	mockService.On("GetBlockedVods", mock.Anything).Return([]string{"123"}, nil)
+	mockService.On("GetBlockedVideos", mock.Anything).Return([]*ent.BlockedVideos{}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/blocked", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	if assert.NoError(t, handler.GetBlockedVods(c)) {
+	if assert.NoError(t, handler.GetBlockedVideos(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		mockService.AssertExpectations(t)
 	}

@@ -12,25 +12,25 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/zibbp/ganymede/ent/blockedvods"
+	"github.com/zibbp/ganymede/ent/blockedvideos"
 )
 
-// BlockedVodsCreate is the builder for creating a BlockedVods entity.
-type BlockedVodsCreate struct {
+// BlockedVideosCreate is the builder for creating a BlockedVideos entity.
+type BlockedVideosCreate struct {
 	config
-	mutation *BlockedVodsMutation
+	mutation *BlockedVideosMutation
 	hooks    []Hook
 	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (bvc *BlockedVodsCreate) SetCreatedAt(t time.Time) *BlockedVodsCreate {
+func (bvc *BlockedVideosCreate) SetCreatedAt(t time.Time) *BlockedVideosCreate {
 	bvc.mutation.SetCreatedAt(t)
 	return bvc
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (bvc *BlockedVodsCreate) SetNillableCreatedAt(t *time.Time) *BlockedVodsCreate {
+func (bvc *BlockedVideosCreate) SetNillableCreatedAt(t *time.Time) *BlockedVideosCreate {
 	if t != nil {
 		bvc.SetCreatedAt(*t)
 	}
@@ -38,24 +38,24 @@ func (bvc *BlockedVodsCreate) SetNillableCreatedAt(t *time.Time) *BlockedVodsCre
 }
 
 // SetID sets the "id" field.
-func (bvc *BlockedVodsCreate) SetID(s string) *BlockedVodsCreate {
+func (bvc *BlockedVideosCreate) SetID(s string) *BlockedVideosCreate {
 	bvc.mutation.SetID(s)
 	return bvc
 }
 
-// Mutation returns the BlockedVodsMutation object of the builder.
-func (bvc *BlockedVodsCreate) Mutation() *BlockedVodsMutation {
+// Mutation returns the BlockedVideosMutation object of the builder.
+func (bvc *BlockedVideosCreate) Mutation() *BlockedVideosMutation {
 	return bvc.mutation
 }
 
-// Save creates the BlockedVods in the database.
-func (bvc *BlockedVodsCreate) Save(ctx context.Context) (*BlockedVods, error) {
+// Save creates the BlockedVideos in the database.
+func (bvc *BlockedVideosCreate) Save(ctx context.Context) (*BlockedVideos, error) {
 	bvc.defaults()
 	return withHooks(ctx, bvc.sqlSave, bvc.mutation, bvc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (bvc *BlockedVodsCreate) SaveX(ctx context.Context) *BlockedVods {
+func (bvc *BlockedVideosCreate) SaveX(ctx context.Context) *BlockedVideos {
 	v, err := bvc.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -64,35 +64,35 @@ func (bvc *BlockedVodsCreate) SaveX(ctx context.Context) *BlockedVods {
 }
 
 // Exec executes the query.
-func (bvc *BlockedVodsCreate) Exec(ctx context.Context) error {
+func (bvc *BlockedVideosCreate) Exec(ctx context.Context) error {
 	_, err := bvc.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (bvc *BlockedVodsCreate) ExecX(ctx context.Context) {
+func (bvc *BlockedVideosCreate) ExecX(ctx context.Context) {
 	if err := bvc.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (bvc *BlockedVodsCreate) defaults() {
+func (bvc *BlockedVideosCreate) defaults() {
 	if _, ok := bvc.mutation.CreatedAt(); !ok {
-		v := blockedvods.DefaultCreatedAt()
+		v := blockedvideos.DefaultCreatedAt()
 		bvc.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (bvc *BlockedVodsCreate) check() error {
+func (bvc *BlockedVideosCreate) check() error {
 	if _, ok := bvc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "BlockedVods.created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "BlockedVideos.created_at"`)}
 	}
 	return nil
 }
 
-func (bvc *BlockedVodsCreate) sqlSave(ctx context.Context) (*BlockedVods, error) {
+func (bvc *BlockedVideosCreate) sqlSave(ctx context.Context) (*BlockedVideos, error) {
 	if err := bvc.check(); err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (bvc *BlockedVodsCreate) sqlSave(ctx context.Context) (*BlockedVods, error)
 		if id, ok := _spec.ID.Value.(string); ok {
 			_node.ID = id
 		} else {
-			return nil, fmt.Errorf("unexpected BlockedVods.ID type: %T", _spec.ID.Value)
+			return nil, fmt.Errorf("unexpected BlockedVideos.ID type: %T", _spec.ID.Value)
 		}
 	}
 	bvc.mutation.id = &_node.ID
@@ -115,10 +115,10 @@ func (bvc *BlockedVodsCreate) sqlSave(ctx context.Context) (*BlockedVods, error)
 	return _node, nil
 }
 
-func (bvc *BlockedVodsCreate) createSpec() (*BlockedVods, *sqlgraph.CreateSpec) {
+func (bvc *BlockedVideosCreate) createSpec() (*BlockedVideos, *sqlgraph.CreateSpec) {
 	var (
-		_node = &BlockedVods{config: bvc.config}
-		_spec = sqlgraph.NewCreateSpec(blockedvods.Table, sqlgraph.NewFieldSpec(blockedvods.FieldID, field.TypeString))
+		_node = &BlockedVideos{config: bvc.config}
+		_spec = sqlgraph.NewCreateSpec(blockedvideos.Table, sqlgraph.NewFieldSpec(blockedvideos.FieldID, field.TypeString))
 	)
 	_spec.OnConflict = bvc.conflict
 	if id, ok := bvc.mutation.ID(); ok {
@@ -126,7 +126,7 @@ func (bvc *BlockedVodsCreate) createSpec() (*BlockedVods, *sqlgraph.CreateSpec) 
 		_spec.ID.Value = id
 	}
 	if value, ok := bvc.mutation.CreatedAt(); ok {
-		_spec.SetField(blockedvods.FieldCreatedAt, field.TypeTime, value)
+		_spec.SetField(blockedvideos.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	return _node, _spec
@@ -135,7 +135,7 @@ func (bvc *BlockedVodsCreate) createSpec() (*BlockedVods, *sqlgraph.CreateSpec) 
 // OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
 // of the `INSERT` statement. For example:
 //
-//	client.BlockedVods.Create().
+//	client.BlockedVideos.Create().
 //		SetCreatedAt(v).
 //		OnConflict(
 //			// Update the row with the new values
@@ -144,13 +144,13 @@ func (bvc *BlockedVodsCreate) createSpec() (*BlockedVods, *sqlgraph.CreateSpec) 
 //		).
 //		// Override some of the fields with custom
 //		// update values.
-//		Update(func(u *ent.BlockedVodsUpsert) {
+//		Update(func(u *ent.BlockedVideosUpsert) {
 //			SetCreatedAt(v+v).
 //		}).
 //		Exec(ctx)
-func (bvc *BlockedVodsCreate) OnConflict(opts ...sql.ConflictOption) *BlockedVodsUpsertOne {
+func (bvc *BlockedVideosCreate) OnConflict(opts ...sql.ConflictOption) *BlockedVideosUpsertOne {
 	bvc.conflict = opts
-	return &BlockedVodsUpsertOne{
+	return &BlockedVideosUpsertOne{
 		create: bvc,
 	}
 }
@@ -158,25 +158,25 @@ func (bvc *BlockedVodsCreate) OnConflict(opts ...sql.ConflictOption) *BlockedVod
 // OnConflictColumns calls `OnConflict` and configures the columns
 // as conflict target. Using this option is equivalent to using:
 //
-//	client.BlockedVods.Create().
+//	client.BlockedVideos.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (bvc *BlockedVodsCreate) OnConflictColumns(columns ...string) *BlockedVodsUpsertOne {
+func (bvc *BlockedVideosCreate) OnConflictColumns(columns ...string) *BlockedVideosUpsertOne {
 	bvc.conflict = append(bvc.conflict, sql.ConflictColumns(columns...))
-	return &BlockedVodsUpsertOne{
+	return &BlockedVideosUpsertOne{
 		create: bvc,
 	}
 }
 
 type (
-	// BlockedVodsUpsertOne is the builder for "upsert"-ing
-	//  one BlockedVods node.
-	BlockedVodsUpsertOne struct {
-		create *BlockedVodsCreate
+	// BlockedVideosUpsertOne is the builder for "upsert"-ing
+	//  one BlockedVideos node.
+	BlockedVideosUpsertOne struct {
+		create *BlockedVideosCreate
 	}
 
-	// BlockedVodsUpsert is the "OnConflict" setter.
-	BlockedVodsUpsert struct {
+	// BlockedVideosUpsert is the "OnConflict" setter.
+	BlockedVideosUpsert struct {
 		*sql.UpdateSet
 	}
 )
@@ -184,22 +184,22 @@ type (
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
-//	client.BlockedVods.Create().
+//	client.BlockedVideos.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
 //			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(blockedvods.FieldID)
+//				u.SetIgnore(blockedvideos.FieldID)
 //			}),
 //		).
 //		Exec(ctx)
-func (u *BlockedVodsUpsertOne) UpdateNewValues() *BlockedVodsUpsertOne {
+func (u *BlockedVideosUpsertOne) UpdateNewValues() *BlockedVideosUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(blockedvods.FieldID)
+			s.SetIgnore(blockedvideos.FieldID)
 		}
 		if _, exists := u.create.mutation.CreatedAt(); exists {
-			s.SetIgnore(blockedvods.FieldCreatedAt)
+			s.SetIgnore(blockedvideos.FieldCreatedAt)
 		}
 	}))
 	return u
@@ -208,51 +208,51 @@ func (u *BlockedVodsUpsertOne) UpdateNewValues() *BlockedVodsUpsertOne {
 // Ignore sets each column to itself in case of conflict.
 // Using this option is equivalent to using:
 //
-//	client.BlockedVods.Create().
+//	client.BlockedVideos.Create().
 //	    OnConflict(sql.ResolveWithIgnore()).
 //	    Exec(ctx)
-func (u *BlockedVodsUpsertOne) Ignore() *BlockedVodsUpsertOne {
+func (u *BlockedVideosUpsertOne) Ignore() *BlockedVideosUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
 	return u
 }
 
 // DoNothing configures the conflict_action to `DO NOTHING`.
 // Supported only by SQLite and PostgreSQL.
-func (u *BlockedVodsUpsertOne) DoNothing() *BlockedVodsUpsertOne {
+func (u *BlockedVideosUpsertOne) DoNothing() *BlockedVideosUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.DoNothing())
 	return u
 }
 
-// Update allows overriding fields `UPDATE` values. See the BlockedVodsCreate.OnConflict
+// Update allows overriding fields `UPDATE` values. See the BlockedVideosCreate.OnConflict
 // documentation for more info.
-func (u *BlockedVodsUpsertOne) Update(set func(*BlockedVodsUpsert)) *BlockedVodsUpsertOne {
+func (u *BlockedVideosUpsertOne) Update(set func(*BlockedVideosUpsert)) *BlockedVideosUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
-		set(&BlockedVodsUpsert{UpdateSet: update})
+		set(&BlockedVideosUpsert{UpdateSet: update})
 	}))
 	return u
 }
 
 // Exec executes the query.
-func (u *BlockedVodsUpsertOne) Exec(ctx context.Context) error {
+func (u *BlockedVideosUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
-		return errors.New("ent: missing options for BlockedVodsCreate.OnConflict")
+		return errors.New("ent: missing options for BlockedVideosCreate.OnConflict")
 	}
 	return u.create.Exec(ctx)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (u *BlockedVodsUpsertOne) ExecX(ctx context.Context) {
+func (u *BlockedVideosUpsertOne) ExecX(ctx context.Context) {
 	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *BlockedVodsUpsertOne) ID(ctx context.Context) (id string, err error) {
+func (u *BlockedVideosUpsertOne) ID(ctx context.Context) (id string, err error) {
 	if u.create.driver.Dialect() == dialect.MySQL {
 		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
 		// fields from the database since MySQL does not support the RETURNING clause.
-		return id, errors.New("ent: BlockedVodsUpsertOne.ID is not supported by MySQL driver. Use BlockedVodsUpsertOne.Exec instead")
+		return id, errors.New("ent: BlockedVideosUpsertOne.ID is not supported by MySQL driver. Use BlockedVideosUpsertOne.Exec instead")
 	}
 	node, err := u.create.Save(ctx)
 	if err != nil {
@@ -262,7 +262,7 @@ func (u *BlockedVodsUpsertOne) ID(ctx context.Context) (id string, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *BlockedVodsUpsertOne) IDX(ctx context.Context) string {
+func (u *BlockedVideosUpsertOne) IDX(ctx context.Context) string {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -270,28 +270,28 @@ func (u *BlockedVodsUpsertOne) IDX(ctx context.Context) string {
 	return id
 }
 
-// BlockedVodsCreateBulk is the builder for creating many BlockedVods entities in bulk.
-type BlockedVodsCreateBulk struct {
+// BlockedVideosCreateBulk is the builder for creating many BlockedVideos entities in bulk.
+type BlockedVideosCreateBulk struct {
 	config
 	err      error
-	builders []*BlockedVodsCreate
+	builders []*BlockedVideosCreate
 	conflict []sql.ConflictOption
 }
 
-// Save creates the BlockedVods entities in the database.
-func (bvcb *BlockedVodsCreateBulk) Save(ctx context.Context) ([]*BlockedVods, error) {
+// Save creates the BlockedVideos entities in the database.
+func (bvcb *BlockedVideosCreateBulk) Save(ctx context.Context) ([]*BlockedVideos, error) {
 	if bvcb.err != nil {
 		return nil, bvcb.err
 	}
 	specs := make([]*sqlgraph.CreateSpec, len(bvcb.builders))
-	nodes := make([]*BlockedVods, len(bvcb.builders))
+	nodes := make([]*BlockedVideos, len(bvcb.builders))
 	mutators := make([]Mutator, len(bvcb.builders))
 	for i := range bvcb.builders {
 		func(i int, root context.Context) {
 			builder := bvcb.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*BlockedVodsMutation)
+				mutation, ok := m.(*BlockedVideosMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -335,7 +335,7 @@ func (bvcb *BlockedVodsCreateBulk) Save(ctx context.Context) ([]*BlockedVods, er
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (bvcb *BlockedVodsCreateBulk) SaveX(ctx context.Context) []*BlockedVods {
+func (bvcb *BlockedVideosCreateBulk) SaveX(ctx context.Context) []*BlockedVideos {
 	v, err := bvcb.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -344,13 +344,13 @@ func (bvcb *BlockedVodsCreateBulk) SaveX(ctx context.Context) []*BlockedVods {
 }
 
 // Exec executes the query.
-func (bvcb *BlockedVodsCreateBulk) Exec(ctx context.Context) error {
+func (bvcb *BlockedVideosCreateBulk) Exec(ctx context.Context) error {
 	_, err := bvcb.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (bvcb *BlockedVodsCreateBulk) ExecX(ctx context.Context) {
+func (bvcb *BlockedVideosCreateBulk) ExecX(ctx context.Context) {
 	if err := bvcb.Exec(ctx); err != nil {
 		panic(err)
 	}
@@ -359,7 +359,7 @@ func (bvcb *BlockedVodsCreateBulk) ExecX(ctx context.Context) {
 // OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
 // of the `INSERT` statement. For example:
 //
-//	client.BlockedVods.CreateBulk(builders...).
+//	client.BlockedVideos.CreateBulk(builders...).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -367,13 +367,13 @@ func (bvcb *BlockedVodsCreateBulk) ExecX(ctx context.Context) {
 //		).
 //		// Override some of the fields with custom
 //		// update values.
-//		Update(func(u *ent.BlockedVodsUpsert) {
+//		Update(func(u *ent.BlockedVideosUpsert) {
 //			SetCreatedAt(v+v).
 //		}).
 //		Exec(ctx)
-func (bvcb *BlockedVodsCreateBulk) OnConflict(opts ...sql.ConflictOption) *BlockedVodsUpsertBulk {
+func (bvcb *BlockedVideosCreateBulk) OnConflict(opts ...sql.ConflictOption) *BlockedVideosUpsertBulk {
 	bvcb.conflict = opts
-	return &BlockedVodsUpsertBulk{
+	return &BlockedVideosUpsertBulk{
 		create: bvcb,
 	}
 }
@@ -381,42 +381,42 @@ func (bvcb *BlockedVodsCreateBulk) OnConflict(opts ...sql.ConflictOption) *Block
 // OnConflictColumns calls `OnConflict` and configures the columns
 // as conflict target. Using this option is equivalent to using:
 //
-//	client.BlockedVods.Create().
+//	client.BlockedVideos.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (bvcb *BlockedVodsCreateBulk) OnConflictColumns(columns ...string) *BlockedVodsUpsertBulk {
+func (bvcb *BlockedVideosCreateBulk) OnConflictColumns(columns ...string) *BlockedVideosUpsertBulk {
 	bvcb.conflict = append(bvcb.conflict, sql.ConflictColumns(columns...))
-	return &BlockedVodsUpsertBulk{
+	return &BlockedVideosUpsertBulk{
 		create: bvcb,
 	}
 }
 
-// BlockedVodsUpsertBulk is the builder for "upsert"-ing
-// a bulk of BlockedVods nodes.
-type BlockedVodsUpsertBulk struct {
-	create *BlockedVodsCreateBulk
+// BlockedVideosUpsertBulk is the builder for "upsert"-ing
+// a bulk of BlockedVideos nodes.
+type BlockedVideosUpsertBulk struct {
+	create *BlockedVideosCreateBulk
 }
 
 // UpdateNewValues updates the mutable fields using the new values that
 // were set on create. Using this option is equivalent to using:
 //
-//	client.BlockedVods.Create().
+//	client.BlockedVideos.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
 //			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(blockedvods.FieldID)
+//				u.SetIgnore(blockedvideos.FieldID)
 //			}),
 //		).
 //		Exec(ctx)
-func (u *BlockedVodsUpsertBulk) UpdateNewValues() *BlockedVodsUpsertBulk {
+func (u *BlockedVideosUpsertBulk) UpdateNewValues() *BlockedVideosUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		for _, b := range u.create.builders {
 			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(blockedvods.FieldID)
+				s.SetIgnore(blockedvideos.FieldID)
 			}
 			if _, exists := b.mutation.CreatedAt(); exists {
-				s.SetIgnore(blockedvods.FieldCreatedAt)
+				s.SetIgnore(blockedvideos.FieldCreatedAt)
 			}
 		}
 	}))
@@ -426,48 +426,48 @@ func (u *BlockedVodsUpsertBulk) UpdateNewValues() *BlockedVodsUpsertBulk {
 // Ignore sets each column to itself in case of conflict.
 // Using this option is equivalent to using:
 //
-//	client.BlockedVods.Create().
+//	client.BlockedVideos.Create().
 //		OnConflict(sql.ResolveWithIgnore()).
 //		Exec(ctx)
-func (u *BlockedVodsUpsertBulk) Ignore() *BlockedVodsUpsertBulk {
+func (u *BlockedVideosUpsertBulk) Ignore() *BlockedVideosUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
 	return u
 }
 
 // DoNothing configures the conflict_action to `DO NOTHING`.
 // Supported only by SQLite and PostgreSQL.
-func (u *BlockedVodsUpsertBulk) DoNothing() *BlockedVodsUpsertBulk {
+func (u *BlockedVideosUpsertBulk) DoNothing() *BlockedVideosUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.DoNothing())
 	return u
 }
 
-// Update allows overriding fields `UPDATE` values. See the BlockedVodsCreateBulk.OnConflict
+// Update allows overriding fields `UPDATE` values. See the BlockedVideosCreateBulk.OnConflict
 // documentation for more info.
-func (u *BlockedVodsUpsertBulk) Update(set func(*BlockedVodsUpsert)) *BlockedVodsUpsertBulk {
+func (u *BlockedVideosUpsertBulk) Update(set func(*BlockedVideosUpsert)) *BlockedVideosUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
-		set(&BlockedVodsUpsert{UpdateSet: update})
+		set(&BlockedVideosUpsert{UpdateSet: update})
 	}))
 	return u
 }
 
 // Exec executes the query.
-func (u *BlockedVodsUpsertBulk) Exec(ctx context.Context) error {
+func (u *BlockedVideosUpsertBulk) Exec(ctx context.Context) error {
 	if u.create.err != nil {
 		return u.create.err
 	}
 	for i, b := range u.create.builders {
 		if len(b.conflict) != 0 {
-			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the BlockedVodsCreateBulk instead", i)
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the BlockedVideosCreateBulk instead", i)
 		}
 	}
 	if len(u.create.conflict) == 0 {
-		return errors.New("ent: missing options for BlockedVodsCreateBulk.OnConflict")
+		return errors.New("ent: missing options for BlockedVideosCreateBulk.OnConflict")
 	}
 	return u.create.Exec(ctx)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (u *BlockedVodsUpsertBulk) ExecX(ctx context.Context) {
+func (u *BlockedVideosUpsertBulk) ExecX(ctx context.Context) {
 	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}

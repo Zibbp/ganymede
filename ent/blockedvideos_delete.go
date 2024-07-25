@@ -8,30 +8,30 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/zibbp/ganymede/ent/blockedvods"
+	"github.com/zibbp/ganymede/ent/blockedvideos"
 	"github.com/zibbp/ganymede/ent/predicate"
 )
 
-// BlockedVodsDelete is the builder for deleting a BlockedVods entity.
-type BlockedVodsDelete struct {
+// BlockedVideosDelete is the builder for deleting a BlockedVideos entity.
+type BlockedVideosDelete struct {
 	config
 	hooks    []Hook
-	mutation *BlockedVodsMutation
+	mutation *BlockedVideosMutation
 }
 
-// Where appends a list predicates to the BlockedVodsDelete builder.
-func (bvd *BlockedVodsDelete) Where(ps ...predicate.BlockedVods) *BlockedVodsDelete {
+// Where appends a list predicates to the BlockedVideosDelete builder.
+func (bvd *BlockedVideosDelete) Where(ps ...predicate.BlockedVideos) *BlockedVideosDelete {
 	bvd.mutation.Where(ps...)
 	return bvd
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (bvd *BlockedVodsDelete) Exec(ctx context.Context) (int, error) {
+func (bvd *BlockedVideosDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, bvd.sqlExec, bvd.mutation, bvd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (bvd *BlockedVodsDelete) ExecX(ctx context.Context) int {
+func (bvd *BlockedVideosDelete) ExecX(ctx context.Context) int {
 	n, err := bvd.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -39,8 +39,8 @@ func (bvd *BlockedVodsDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (bvd *BlockedVodsDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(blockedvods.Table, sqlgraph.NewFieldSpec(blockedvods.FieldID, field.TypeString))
+func (bvd *BlockedVideosDelete) sqlExec(ctx context.Context) (int, error) {
+	_spec := sqlgraph.NewDeleteSpec(blockedvideos.Table, sqlgraph.NewFieldSpec(blockedvideos.FieldID, field.TypeString))
 	if ps := bvd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -56,32 +56,32 @@ func (bvd *BlockedVodsDelete) sqlExec(ctx context.Context) (int, error) {
 	return affected, err
 }
 
-// BlockedVodsDeleteOne is the builder for deleting a single BlockedVods entity.
-type BlockedVodsDeleteOne struct {
-	bvd *BlockedVodsDelete
+// BlockedVideosDeleteOne is the builder for deleting a single BlockedVideos entity.
+type BlockedVideosDeleteOne struct {
+	bvd *BlockedVideosDelete
 }
 
-// Where appends a list predicates to the BlockedVodsDelete builder.
-func (bvdo *BlockedVodsDeleteOne) Where(ps ...predicate.BlockedVods) *BlockedVodsDeleteOne {
+// Where appends a list predicates to the BlockedVideosDelete builder.
+func (bvdo *BlockedVideosDeleteOne) Where(ps ...predicate.BlockedVideos) *BlockedVideosDeleteOne {
 	bvdo.bvd.mutation.Where(ps...)
 	return bvdo
 }
 
 // Exec executes the deletion query.
-func (bvdo *BlockedVodsDeleteOne) Exec(ctx context.Context) error {
+func (bvdo *BlockedVideosDeleteOne) Exec(ctx context.Context) error {
 	n, err := bvdo.bvd.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{blockedvods.Label}
+		return &NotFoundError{blockedvideos.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (bvdo *BlockedVodsDeleteOne) ExecX(ctx context.Context) {
+func (bvdo *BlockedVideosDeleteOne) ExecX(ctx context.Context) {
 	if err := bvdo.Exec(ctx); err != nil {
 		panic(err)
 	}

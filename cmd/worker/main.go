@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/blocked"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
 	serverConfig "github.com/zibbp/ganymede/internal/config"
@@ -66,8 +67,9 @@ func main() {
 	channelService := channel.NewService(db, platformTwitch)
 	vodService := vod.NewService(db, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
+	blockedVodsService := blocked.NewService(db)
 	// twitchService := twitch.NewService()
-	archiveService := archive.NewService(db, channelService, vodService, queueService, riverClient, platformTwitch)
+	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodsService, riverClient, platformTwitch)
 	liveService := live.NewService(db, archiveService, platformTwitch)
 
 	// initialize river

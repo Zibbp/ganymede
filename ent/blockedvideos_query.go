@@ -10,68 +10,68 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/zibbp/ganymede/ent/blockedvods"
+	"github.com/zibbp/ganymede/ent/blockedvideos"
 	"github.com/zibbp/ganymede/ent/predicate"
 )
 
-// BlockedVodsQuery is the builder for querying BlockedVods entities.
-type BlockedVodsQuery struct {
+// BlockedVideosQuery is the builder for querying BlockedVideos entities.
+type BlockedVideosQuery struct {
 	config
 	ctx        *QueryContext
-	order      []blockedvods.OrderOption
+	order      []blockedvideos.OrderOption
 	inters     []Interceptor
-	predicates []predicate.BlockedVods
+	predicates []predicate.BlockedVideos
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the BlockedVodsQuery builder.
-func (bvq *BlockedVodsQuery) Where(ps ...predicate.BlockedVods) *BlockedVodsQuery {
+// Where adds a new predicate for the BlockedVideosQuery builder.
+func (bvq *BlockedVideosQuery) Where(ps ...predicate.BlockedVideos) *BlockedVideosQuery {
 	bvq.predicates = append(bvq.predicates, ps...)
 	return bvq
 }
 
 // Limit the number of records to be returned by this query.
-func (bvq *BlockedVodsQuery) Limit(limit int) *BlockedVodsQuery {
+func (bvq *BlockedVideosQuery) Limit(limit int) *BlockedVideosQuery {
 	bvq.ctx.Limit = &limit
 	return bvq
 }
 
 // Offset to start from.
-func (bvq *BlockedVodsQuery) Offset(offset int) *BlockedVodsQuery {
+func (bvq *BlockedVideosQuery) Offset(offset int) *BlockedVideosQuery {
 	bvq.ctx.Offset = &offset
 	return bvq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (bvq *BlockedVodsQuery) Unique(unique bool) *BlockedVodsQuery {
+func (bvq *BlockedVideosQuery) Unique(unique bool) *BlockedVideosQuery {
 	bvq.ctx.Unique = &unique
 	return bvq
 }
 
 // Order specifies how the records should be ordered.
-func (bvq *BlockedVodsQuery) Order(o ...blockedvods.OrderOption) *BlockedVodsQuery {
+func (bvq *BlockedVideosQuery) Order(o ...blockedvideos.OrderOption) *BlockedVideosQuery {
 	bvq.order = append(bvq.order, o...)
 	return bvq
 }
 
-// First returns the first BlockedVods entity from the query.
-// Returns a *NotFoundError when no BlockedVods was found.
-func (bvq *BlockedVodsQuery) First(ctx context.Context) (*BlockedVods, error) {
+// First returns the first BlockedVideos entity from the query.
+// Returns a *NotFoundError when no BlockedVideos was found.
+func (bvq *BlockedVideosQuery) First(ctx context.Context) (*BlockedVideos, error) {
 	nodes, err := bvq.Limit(1).All(setContextOp(ctx, bvq.ctx, "First"))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{blockedvods.Label}
+		return nil, &NotFoundError{blockedvideos.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (bvq *BlockedVodsQuery) FirstX(ctx context.Context) *BlockedVods {
+func (bvq *BlockedVideosQuery) FirstX(ctx context.Context) *BlockedVideos {
 	node, err := bvq.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -79,22 +79,22 @@ func (bvq *BlockedVodsQuery) FirstX(ctx context.Context) *BlockedVods {
 	return node
 }
 
-// FirstID returns the first BlockedVods ID from the query.
-// Returns a *NotFoundError when no BlockedVods ID was found.
-func (bvq *BlockedVodsQuery) FirstID(ctx context.Context) (id string, err error) {
+// FirstID returns the first BlockedVideos ID from the query.
+// Returns a *NotFoundError when no BlockedVideos ID was found.
+func (bvq *BlockedVideosQuery) FirstID(ctx context.Context) (id string, err error) {
 	var ids []string
 	if ids, err = bvq.Limit(1).IDs(setContextOp(ctx, bvq.ctx, "FirstID")); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{blockedvods.Label}
+		err = &NotFoundError{blockedvideos.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (bvq *BlockedVodsQuery) FirstIDX(ctx context.Context) string {
+func (bvq *BlockedVideosQuery) FirstIDX(ctx context.Context) string {
 	id, err := bvq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -102,10 +102,10 @@ func (bvq *BlockedVodsQuery) FirstIDX(ctx context.Context) string {
 	return id
 }
 
-// Only returns a single BlockedVods entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one BlockedVods entity is found.
-// Returns a *NotFoundError when no BlockedVods entities are found.
-func (bvq *BlockedVodsQuery) Only(ctx context.Context) (*BlockedVods, error) {
+// Only returns a single BlockedVideos entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one BlockedVideos entity is found.
+// Returns a *NotFoundError when no BlockedVideos entities are found.
+func (bvq *BlockedVideosQuery) Only(ctx context.Context) (*BlockedVideos, error) {
 	nodes, err := bvq.Limit(2).All(setContextOp(ctx, bvq.ctx, "Only"))
 	if err != nil {
 		return nil, err
@@ -114,14 +114,14 @@ func (bvq *BlockedVodsQuery) Only(ctx context.Context) (*BlockedVods, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{blockedvods.Label}
+		return nil, &NotFoundError{blockedvideos.Label}
 	default:
-		return nil, &NotSingularError{blockedvods.Label}
+		return nil, &NotSingularError{blockedvideos.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (bvq *BlockedVodsQuery) OnlyX(ctx context.Context) *BlockedVods {
+func (bvq *BlockedVideosQuery) OnlyX(ctx context.Context) *BlockedVideos {
 	node, err := bvq.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -129,10 +129,10 @@ func (bvq *BlockedVodsQuery) OnlyX(ctx context.Context) *BlockedVods {
 	return node
 }
 
-// OnlyID is like Only, but returns the only BlockedVods ID in the query.
-// Returns a *NotSingularError when more than one BlockedVods ID is found.
+// OnlyID is like Only, but returns the only BlockedVideos ID in the query.
+// Returns a *NotSingularError when more than one BlockedVideos ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (bvq *BlockedVodsQuery) OnlyID(ctx context.Context) (id string, err error) {
+func (bvq *BlockedVideosQuery) OnlyID(ctx context.Context) (id string, err error) {
 	var ids []string
 	if ids, err = bvq.Limit(2).IDs(setContextOp(ctx, bvq.ctx, "OnlyID")); err != nil {
 		return
@@ -141,15 +141,15 @@ func (bvq *BlockedVodsQuery) OnlyID(ctx context.Context) (id string, err error) 
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{blockedvods.Label}
+		err = &NotFoundError{blockedvideos.Label}
 	default:
-		err = &NotSingularError{blockedvods.Label}
+		err = &NotSingularError{blockedvideos.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (bvq *BlockedVodsQuery) OnlyIDX(ctx context.Context) string {
+func (bvq *BlockedVideosQuery) OnlyIDX(ctx context.Context) string {
 	id, err := bvq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -157,18 +157,18 @@ func (bvq *BlockedVodsQuery) OnlyIDX(ctx context.Context) string {
 	return id
 }
 
-// All executes the query and returns a list of BlockedVodsSlice.
-func (bvq *BlockedVodsQuery) All(ctx context.Context) ([]*BlockedVods, error) {
+// All executes the query and returns a list of BlockedVideosSlice.
+func (bvq *BlockedVideosQuery) All(ctx context.Context) ([]*BlockedVideos, error) {
 	ctx = setContextOp(ctx, bvq.ctx, "All")
 	if err := bvq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*BlockedVods, *BlockedVodsQuery]()
-	return withInterceptors[[]*BlockedVods](ctx, bvq, qr, bvq.inters)
+	qr := querierAll[[]*BlockedVideos, *BlockedVideosQuery]()
+	return withInterceptors[[]*BlockedVideos](ctx, bvq, qr, bvq.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (bvq *BlockedVodsQuery) AllX(ctx context.Context) []*BlockedVods {
+func (bvq *BlockedVideosQuery) AllX(ctx context.Context) []*BlockedVideos {
 	nodes, err := bvq.All(ctx)
 	if err != nil {
 		panic(err)
@@ -176,20 +176,20 @@ func (bvq *BlockedVodsQuery) AllX(ctx context.Context) []*BlockedVods {
 	return nodes
 }
 
-// IDs executes the query and returns a list of BlockedVods IDs.
-func (bvq *BlockedVodsQuery) IDs(ctx context.Context) (ids []string, err error) {
+// IDs executes the query and returns a list of BlockedVideos IDs.
+func (bvq *BlockedVideosQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if bvq.ctx.Unique == nil && bvq.path != nil {
 		bvq.Unique(true)
 	}
 	ctx = setContextOp(ctx, bvq.ctx, "IDs")
-	if err = bvq.Select(blockedvods.FieldID).Scan(ctx, &ids); err != nil {
+	if err = bvq.Select(blockedvideos.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (bvq *BlockedVodsQuery) IDsX(ctx context.Context) []string {
+func (bvq *BlockedVideosQuery) IDsX(ctx context.Context) []string {
 	ids, err := bvq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -198,16 +198,16 @@ func (bvq *BlockedVodsQuery) IDsX(ctx context.Context) []string {
 }
 
 // Count returns the count of the given query.
-func (bvq *BlockedVodsQuery) Count(ctx context.Context) (int, error) {
+func (bvq *BlockedVideosQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, bvq.ctx, "Count")
 	if err := bvq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, bvq, querierCount[*BlockedVodsQuery](), bvq.inters)
+	return withInterceptors[int](ctx, bvq, querierCount[*BlockedVideosQuery](), bvq.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (bvq *BlockedVodsQuery) CountX(ctx context.Context) int {
+func (bvq *BlockedVideosQuery) CountX(ctx context.Context) int {
 	count, err := bvq.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -216,7 +216,7 @@ func (bvq *BlockedVodsQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (bvq *BlockedVodsQuery) Exist(ctx context.Context) (bool, error) {
+func (bvq *BlockedVideosQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, bvq.ctx, "Exist")
 	switch _, err := bvq.FirstID(ctx); {
 	case IsNotFound(err):
@@ -229,7 +229,7 @@ func (bvq *BlockedVodsQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (bvq *BlockedVodsQuery) ExistX(ctx context.Context) bool {
+func (bvq *BlockedVideosQuery) ExistX(ctx context.Context) bool {
 	exist, err := bvq.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -237,18 +237,18 @@ func (bvq *BlockedVodsQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the BlockedVodsQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the BlockedVideosQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (bvq *BlockedVodsQuery) Clone() *BlockedVodsQuery {
+func (bvq *BlockedVideosQuery) Clone() *BlockedVideosQuery {
 	if bvq == nil {
 		return nil
 	}
-	return &BlockedVodsQuery{
+	return &BlockedVideosQuery{
 		config:     bvq.config,
 		ctx:        bvq.ctx.Clone(),
-		order:      append([]blockedvods.OrderOption{}, bvq.order...),
+		order:      append([]blockedvideos.OrderOption{}, bvq.order...),
 		inters:     append([]Interceptor{}, bvq.inters...),
-		predicates: append([]predicate.BlockedVods{}, bvq.predicates...),
+		predicates: append([]predicate.BlockedVideos{}, bvq.predicates...),
 		// clone intermediate query.
 		sql:  bvq.sql.Clone(),
 		path: bvq.path,
@@ -265,15 +265,15 @@ func (bvq *BlockedVodsQuery) Clone() *BlockedVodsQuery {
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.BlockedVods.Query().
-//		GroupBy(blockedvods.FieldCreatedAt).
+//	client.BlockedVideos.Query().
+//		GroupBy(blockedvideos.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (bvq *BlockedVodsQuery) GroupBy(field string, fields ...string) *BlockedVodsGroupBy {
+func (bvq *BlockedVideosQuery) GroupBy(field string, fields ...string) *BlockedVideosGroupBy {
 	bvq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &BlockedVodsGroupBy{build: bvq}
+	grbuild := &BlockedVideosGroupBy{build: bvq}
 	grbuild.flds = &bvq.ctx.Fields
-	grbuild.label = blockedvods.Label
+	grbuild.label = blockedvideos.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -287,23 +287,23 @@ func (bvq *BlockedVodsQuery) GroupBy(field string, fields ...string) *BlockedVod
 //		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.BlockedVods.Query().
-//		Select(blockedvods.FieldCreatedAt).
+//	client.BlockedVideos.Query().
+//		Select(blockedvideos.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (bvq *BlockedVodsQuery) Select(fields ...string) *BlockedVodsSelect {
+func (bvq *BlockedVideosQuery) Select(fields ...string) *BlockedVideosSelect {
 	bvq.ctx.Fields = append(bvq.ctx.Fields, fields...)
-	sbuild := &BlockedVodsSelect{BlockedVodsQuery: bvq}
-	sbuild.label = blockedvods.Label
+	sbuild := &BlockedVideosSelect{BlockedVideosQuery: bvq}
+	sbuild.label = blockedvideos.Label
 	sbuild.flds, sbuild.scan = &bvq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a BlockedVodsSelect configured with the given aggregations.
-func (bvq *BlockedVodsQuery) Aggregate(fns ...AggregateFunc) *BlockedVodsSelect {
+// Aggregate returns a BlockedVideosSelect configured with the given aggregations.
+func (bvq *BlockedVideosQuery) Aggregate(fns ...AggregateFunc) *BlockedVideosSelect {
 	return bvq.Select().Aggregate(fns...)
 }
 
-func (bvq *BlockedVodsQuery) prepareQuery(ctx context.Context) error {
+func (bvq *BlockedVideosQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range bvq.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -315,7 +315,7 @@ func (bvq *BlockedVodsQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range bvq.ctx.Fields {
-		if !blockedvods.ValidColumn(f) {
+		if !blockedvideos.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -329,16 +329,16 @@ func (bvq *BlockedVodsQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (bvq *BlockedVodsQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*BlockedVods, error) {
+func (bvq *BlockedVideosQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*BlockedVideos, error) {
 	var (
-		nodes = []*BlockedVods{}
+		nodes = []*BlockedVideos{}
 		_spec = bvq.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*BlockedVods).scanValues(nil, columns)
+		return (*BlockedVideos).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &BlockedVods{config: bvq.config}
+		node := &BlockedVideos{config: bvq.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
 	}
@@ -354,7 +354,7 @@ func (bvq *BlockedVodsQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	return nodes, nil
 }
 
-func (bvq *BlockedVodsQuery) sqlCount(ctx context.Context) (int, error) {
+func (bvq *BlockedVideosQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := bvq.querySpec()
 	_spec.Node.Columns = bvq.ctx.Fields
 	if len(bvq.ctx.Fields) > 0 {
@@ -363,8 +363,8 @@ func (bvq *BlockedVodsQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, bvq.driver, _spec)
 }
 
-func (bvq *BlockedVodsQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(blockedvods.Table, blockedvods.Columns, sqlgraph.NewFieldSpec(blockedvods.FieldID, field.TypeString))
+func (bvq *BlockedVideosQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(blockedvideos.Table, blockedvideos.Columns, sqlgraph.NewFieldSpec(blockedvideos.FieldID, field.TypeString))
 	_spec.From = bvq.sql
 	if unique := bvq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -373,9 +373,9 @@ func (bvq *BlockedVodsQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := bvq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, blockedvods.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, blockedvideos.FieldID)
 		for i := range fields {
-			if fields[i] != blockedvods.FieldID {
+			if fields[i] != blockedvideos.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
@@ -403,12 +403,12 @@ func (bvq *BlockedVodsQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (bvq *BlockedVodsQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (bvq *BlockedVideosQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(bvq.driver.Dialect())
-	t1 := builder.Table(blockedvods.Table)
+	t1 := builder.Table(blockedvideos.Table)
 	columns := bvq.ctx.Fields
 	if len(columns) == 0 {
-		columns = blockedvods.Columns
+		columns = blockedvideos.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if bvq.sql != nil {
@@ -435,28 +435,28 @@ func (bvq *BlockedVodsQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// BlockedVodsGroupBy is the group-by builder for BlockedVods entities.
-type BlockedVodsGroupBy struct {
+// BlockedVideosGroupBy is the group-by builder for BlockedVideos entities.
+type BlockedVideosGroupBy struct {
 	selector
-	build *BlockedVodsQuery
+	build *BlockedVideosQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (bvgb *BlockedVodsGroupBy) Aggregate(fns ...AggregateFunc) *BlockedVodsGroupBy {
+func (bvgb *BlockedVideosGroupBy) Aggregate(fns ...AggregateFunc) *BlockedVideosGroupBy {
 	bvgb.fns = append(bvgb.fns, fns...)
 	return bvgb
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (bvgb *BlockedVodsGroupBy) Scan(ctx context.Context, v any) error {
+func (bvgb *BlockedVideosGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, bvgb.build.ctx, "GroupBy")
 	if err := bvgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*BlockedVodsQuery, *BlockedVodsGroupBy](ctx, bvgb.build, bvgb, bvgb.build.inters, v)
+	return scanWithInterceptors[*BlockedVideosQuery, *BlockedVideosGroupBy](ctx, bvgb.build, bvgb, bvgb.build.inters, v)
 }
 
-func (bvgb *BlockedVodsGroupBy) sqlScan(ctx context.Context, root *BlockedVodsQuery, v any) error {
+func (bvgb *BlockedVideosGroupBy) sqlScan(ctx context.Context, root *BlockedVideosQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(bvgb.fns))
 	for _, fn := range bvgb.fns {
@@ -483,28 +483,28 @@ func (bvgb *BlockedVodsGroupBy) sqlScan(ctx context.Context, root *BlockedVodsQu
 	return sql.ScanSlice(rows, v)
 }
 
-// BlockedVodsSelect is the builder for selecting fields of BlockedVods entities.
-type BlockedVodsSelect struct {
-	*BlockedVodsQuery
+// BlockedVideosSelect is the builder for selecting fields of BlockedVideos entities.
+type BlockedVideosSelect struct {
+	*BlockedVideosQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (bvs *BlockedVodsSelect) Aggregate(fns ...AggregateFunc) *BlockedVodsSelect {
+func (bvs *BlockedVideosSelect) Aggregate(fns ...AggregateFunc) *BlockedVideosSelect {
 	bvs.fns = append(bvs.fns, fns...)
 	return bvs
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (bvs *BlockedVodsSelect) Scan(ctx context.Context, v any) error {
+func (bvs *BlockedVideosSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, bvs.ctx, "Select")
 	if err := bvs.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*BlockedVodsQuery, *BlockedVodsSelect](ctx, bvs.BlockedVodsQuery, bvs, bvs.inters, v)
+	return scanWithInterceptors[*BlockedVideosQuery, *BlockedVideosSelect](ctx, bvs.BlockedVideosQuery, bvs, bvs.inters, v)
 }
 
-func (bvs *BlockedVodsSelect) sqlScan(ctx context.Context, root *BlockedVodsQuery, v any) error {
+func (bvs *BlockedVideosSelect) sqlScan(ctx context.Context, root *BlockedVideosQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(bvs.fns))
 	for _, fn := range bvs.fns {

@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/zibbp/ganymede/ent/blockedvods"
+	"github.com/zibbp/ganymede/ent/blockedvideos"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
@@ -38,7 +38,7 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeBlockedVods    = "BlockedVods"
+	TypeBlockedVideos  = "BlockedVideos"
 	TypeChannel        = "Channel"
 	TypeChapter        = "Chapter"
 	TypeLive           = "Live"
@@ -53,8 +53,8 @@ const (
 	TypeVod            = "Vod"
 )
 
-// BlockedVodsMutation represents an operation that mutates the BlockedVods nodes in the graph.
-type BlockedVodsMutation struct {
+// BlockedVideosMutation represents an operation that mutates the BlockedVideos nodes in the graph.
+type BlockedVideosMutation struct {
 	config
 	op            Op
 	typ           string
@@ -62,21 +62,21 @@ type BlockedVodsMutation struct {
 	created_at    *time.Time
 	clearedFields map[string]struct{}
 	done          bool
-	oldValue      func(context.Context) (*BlockedVods, error)
-	predicates    []predicate.BlockedVods
+	oldValue      func(context.Context) (*BlockedVideos, error)
+	predicates    []predicate.BlockedVideos
 }
 
-var _ ent.Mutation = (*BlockedVodsMutation)(nil)
+var _ ent.Mutation = (*BlockedVideosMutation)(nil)
 
-// blockedvodsOption allows management of the mutation configuration using functional options.
-type blockedvodsOption func(*BlockedVodsMutation)
+// blockedvideosOption allows management of the mutation configuration using functional options.
+type blockedvideosOption func(*BlockedVideosMutation)
 
-// newBlockedVodsMutation creates new mutation for the BlockedVods entity.
-func newBlockedVodsMutation(c config, op Op, opts ...blockedvodsOption) *BlockedVodsMutation {
-	m := &BlockedVodsMutation{
+// newBlockedVideosMutation creates new mutation for the BlockedVideos entity.
+func newBlockedVideosMutation(c config, op Op, opts ...blockedvideosOption) *BlockedVideosMutation {
+	m := &BlockedVideosMutation{
 		config:        c,
 		op:            op,
-		typ:           TypeBlockedVods,
+		typ:           TypeBlockedVideos,
 		clearedFields: make(map[string]struct{}),
 	}
 	for _, opt := range opts {
@@ -85,20 +85,20 @@ func newBlockedVodsMutation(c config, op Op, opts ...blockedvodsOption) *Blocked
 	return m
 }
 
-// withBlockedVodsID sets the ID field of the mutation.
-func withBlockedVodsID(id string) blockedvodsOption {
-	return func(m *BlockedVodsMutation) {
+// withBlockedVideosID sets the ID field of the mutation.
+func withBlockedVideosID(id string) blockedvideosOption {
+	return func(m *BlockedVideosMutation) {
 		var (
 			err   error
 			once  sync.Once
-			value *BlockedVods
+			value *BlockedVideos
 		)
-		m.oldValue = func(ctx context.Context) (*BlockedVods, error) {
+		m.oldValue = func(ctx context.Context) (*BlockedVideos, error) {
 			once.Do(func() {
 				if m.done {
 					err = errors.New("querying old values post mutation is not allowed")
 				} else {
-					value, err = m.Client().BlockedVods.Get(ctx, id)
+					value, err = m.Client().BlockedVideos.Get(ctx, id)
 				}
 			})
 			return value, err
@@ -107,10 +107,10 @@ func withBlockedVodsID(id string) blockedvodsOption {
 	}
 }
 
-// withBlockedVods sets the old BlockedVods of the mutation.
-func withBlockedVods(node *BlockedVods) blockedvodsOption {
-	return func(m *BlockedVodsMutation) {
-		m.oldValue = func(context.Context) (*BlockedVods, error) {
+// withBlockedVideos sets the old BlockedVideos of the mutation.
+func withBlockedVideos(node *BlockedVideos) blockedvideosOption {
+	return func(m *BlockedVideosMutation) {
+		m.oldValue = func(context.Context) (*BlockedVideos, error) {
 			return node, nil
 		}
 		m.id = &node.ID
@@ -119,7 +119,7 @@ func withBlockedVods(node *BlockedVods) blockedvodsOption {
 
 // Client returns a new `ent.Client` from the mutation. If the mutation was
 // executed in a transaction (ent.Tx), a transactional client is returned.
-func (m BlockedVodsMutation) Client() *Client {
+func (m BlockedVideosMutation) Client() *Client {
 	client := &Client{config: m.config}
 	client.init()
 	return client
@@ -127,7 +127,7 @@ func (m BlockedVodsMutation) Client() *Client {
 
 // Tx returns an `ent.Tx` for mutations that were executed in transactions;
 // it returns an error otherwise.
-func (m BlockedVodsMutation) Tx() (*Tx, error) {
+func (m BlockedVideosMutation) Tx() (*Tx, error) {
 	if _, ok := m.driver.(*txDriver); !ok {
 		return nil, errors.New("ent: mutation is not running in a transaction")
 	}
@@ -137,14 +137,14 @@ func (m BlockedVodsMutation) Tx() (*Tx, error) {
 }
 
 // SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of BlockedVods entities.
-func (m *BlockedVodsMutation) SetID(id string) {
+// operation is only accepted on creation of BlockedVideos entities.
+func (m *BlockedVideosMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *BlockedVodsMutation) ID() (id string, exists bool) {
+func (m *BlockedVideosMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -155,7 +155,7 @@ func (m *BlockedVodsMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *BlockedVodsMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *BlockedVideosMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
@@ -164,19 +164,19 @@ func (m *BlockedVodsMutation) IDs(ctx context.Context) ([]string, error) {
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().BlockedVods.Query().Where(m.predicates...).IDs(ctx)
+		return m.Client().BlockedVideos.Query().Where(m.predicates...).IDs(ctx)
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (m *BlockedVodsMutation) SetCreatedAt(t time.Time) {
+func (m *BlockedVideosMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
 }
 
 // CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *BlockedVodsMutation) CreatedAt() (r time.Time, exists bool) {
+func (m *BlockedVideosMutation) CreatedAt() (r time.Time, exists bool) {
 	v := m.created_at
 	if v == nil {
 		return
@@ -184,10 +184,10 @@ func (m *BlockedVodsMutation) CreatedAt() (r time.Time, exists bool) {
 	return *v, true
 }
 
-// OldCreatedAt returns the old "created_at" field's value of the BlockedVods entity.
-// If the BlockedVods object wasn't provided to the builder, the object is fetched from the database.
+// OldCreatedAt returns the old "created_at" field's value of the BlockedVideos entity.
+// If the BlockedVideos object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BlockedVodsMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+func (m *BlockedVideosMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
 	}
@@ -202,19 +202,19 @@ func (m *BlockedVodsMutation) OldCreatedAt(ctx context.Context) (v time.Time, er
 }
 
 // ResetCreatedAt resets all changes to the "created_at" field.
-func (m *BlockedVodsMutation) ResetCreatedAt() {
+func (m *BlockedVideosMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// Where appends a list predicates to the BlockedVodsMutation builder.
-func (m *BlockedVodsMutation) Where(ps ...predicate.BlockedVods) {
+// Where appends a list predicates to the BlockedVideosMutation builder.
+func (m *BlockedVideosMutation) Where(ps ...predicate.BlockedVideos) {
 	m.predicates = append(m.predicates, ps...)
 }
 
-// WhereP appends storage-level predicates to the BlockedVodsMutation builder. Using this method,
+// WhereP appends storage-level predicates to the BlockedVideosMutation builder. Using this method,
 // users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *BlockedVodsMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.BlockedVods, len(ps))
+func (m *BlockedVideosMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BlockedVideos, len(ps))
 	for i := range ps {
 		p[i] = ps[i]
 	}
@@ -222,27 +222,27 @@ func (m *BlockedVodsMutation) WhereP(ps ...func(*sql.Selector)) {
 }
 
 // Op returns the operation name.
-func (m *BlockedVodsMutation) Op() Op {
+func (m *BlockedVideosMutation) Op() Op {
 	return m.op
 }
 
 // SetOp allows setting the mutation operation.
-func (m *BlockedVodsMutation) SetOp(op Op) {
+func (m *BlockedVideosMutation) SetOp(op Op) {
 	m.op = op
 }
 
-// Type returns the node type of this mutation (BlockedVods).
-func (m *BlockedVodsMutation) Type() string {
+// Type returns the node type of this mutation (BlockedVideos).
+func (m *BlockedVideosMutation) Type() string {
 	return m.typ
 }
 
 // Fields returns all fields that were changed during this mutation. Note that in
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
-func (m *BlockedVodsMutation) Fields() []string {
+func (m *BlockedVideosMutation) Fields() []string {
 	fields := make([]string, 0, 1)
 	if m.created_at != nil {
-		fields = append(fields, blockedvods.FieldCreatedAt)
+		fields = append(fields, blockedvideos.FieldCreatedAt)
 	}
 	return fields
 }
@@ -250,9 +250,9 @@ func (m *BlockedVodsMutation) Fields() []string {
 // Field returns the value of a field with the given name. The second boolean
 // return value indicates that this field was not set, or was not defined in the
 // schema.
-func (m *BlockedVodsMutation) Field(name string) (ent.Value, bool) {
+func (m *BlockedVideosMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case blockedvods.FieldCreatedAt:
+	case blockedvideos.FieldCreatedAt:
 		return m.CreatedAt()
 	}
 	return nil, false
@@ -261,20 +261,20 @@ func (m *BlockedVodsMutation) Field(name string) (ent.Value, bool) {
 // OldField returns the old value of the field from the database. An error is
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
-func (m *BlockedVodsMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+func (m *BlockedVideosMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case blockedvods.FieldCreatedAt:
+	case blockedvideos.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	}
-	return nil, fmt.Errorf("unknown BlockedVods field %s", name)
+	return nil, fmt.Errorf("unknown BlockedVideos field %s", name)
 }
 
 // SetField sets the value of a field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *BlockedVodsMutation) SetField(name string, value ent.Value) error {
+func (m *BlockedVideosMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case blockedvods.FieldCreatedAt:
+	case blockedvideos.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
@@ -282,107 +282,107 @@ func (m *BlockedVodsMutation) SetField(name string, value ent.Value) error {
 		m.SetCreatedAt(v)
 		return nil
 	}
-	return fmt.Errorf("unknown BlockedVods field %s", name)
+	return fmt.Errorf("unknown BlockedVideos field %s", name)
 }
 
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
-func (m *BlockedVodsMutation) AddedFields() []string {
+func (m *BlockedVideosMutation) AddedFields() []string {
 	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
-func (m *BlockedVodsMutation) AddedField(name string) (ent.Value, bool) {
+func (m *BlockedVideosMutation) AddedField(name string) (ent.Value, bool) {
 	return nil, false
 }
 
 // AddField adds the value to the field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *BlockedVodsMutation) AddField(name string, value ent.Value) error {
+func (m *BlockedVideosMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	}
-	return fmt.Errorf("unknown BlockedVods numeric field %s", name)
+	return fmt.Errorf("unknown BlockedVideos numeric field %s", name)
 }
 
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
-func (m *BlockedVodsMutation) ClearedFields() []string {
+func (m *BlockedVideosMutation) ClearedFields() []string {
 	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
 // cleared in this mutation.
-func (m *BlockedVodsMutation) FieldCleared(name string) bool {
+func (m *BlockedVideosMutation) FieldCleared(name string) bool {
 	_, ok := m.clearedFields[name]
 	return ok
 }
 
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
-func (m *BlockedVodsMutation) ClearField(name string) error {
-	return fmt.Errorf("unknown BlockedVods nullable field %s", name)
+func (m *BlockedVideosMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown BlockedVideos nullable field %s", name)
 }
 
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
-func (m *BlockedVodsMutation) ResetField(name string) error {
+func (m *BlockedVideosMutation) ResetField(name string) error {
 	switch name {
-	case blockedvods.FieldCreatedAt:
+	case blockedvideos.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
 	}
-	return fmt.Errorf("unknown BlockedVods field %s", name)
+	return fmt.Errorf("unknown BlockedVideos field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
-func (m *BlockedVodsMutation) AddedEdges() []string {
+func (m *BlockedVideosMutation) AddedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
-func (m *BlockedVodsMutation) AddedIDs(name string) []ent.Value {
+func (m *BlockedVideosMutation) AddedIDs(name string) []ent.Value {
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
-func (m *BlockedVodsMutation) RemovedEdges() []string {
+func (m *BlockedVideosMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
-func (m *BlockedVodsMutation) RemovedIDs(name string) []ent.Value {
+func (m *BlockedVideosMutation) RemovedIDs(name string) []ent.Value {
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *BlockedVodsMutation) ClearedEdges() []string {
+func (m *BlockedVideosMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
-func (m *BlockedVodsMutation) EdgeCleared(name string) bool {
+func (m *BlockedVideosMutation) EdgeCleared(name string) bool {
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
-func (m *BlockedVodsMutation) ClearEdge(name string) error {
-	return fmt.Errorf("unknown BlockedVods unique edge %s", name)
+func (m *BlockedVideosMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BlockedVideos unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
-func (m *BlockedVodsMutation) ResetEdge(name string) error {
-	return fmt.Errorf("unknown BlockedVods edge %s", name)
+func (m *BlockedVideosMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BlockedVideos edge %s", name)
 }
 
 // ChannelMutation represents an operation that mutates the Channel nodes in the graph.

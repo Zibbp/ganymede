@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/blocked"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
@@ -21,12 +22,13 @@ import (
 )
 
 type Service struct {
-	Store          *database.Database
-	ChannelService *channel.Service
-	VodService     *vod.Service
-	QueueService   *queue.Service
-	RiverClient    *tasks_client.RiverClient
-	PlatformTwitch platform.Platform
+	Store              *database.Database
+	ChannelService     *channel.Service
+	VodService         *vod.Service
+	QueueService       *queue.Service
+	BlockedVodsService *blocked.Service
+	RiverClient        *tasks_client.RiverClient
+	PlatformTwitch     platform.Platform
 }
 
 type TwitchVodResponse struct {
@@ -34,8 +36,8 @@ type TwitchVodResponse struct {
 	Queue *ent.Queue `json:"queue"`
 }
 
-func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, riverClient *tasks_client.RiverClient, platformTwitch platform.Platform) *Service {
-	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, RiverClient: riverClient, PlatformTwitch: platformTwitch}
+func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, blockedVodService *blocked.Service, riverClient *tasks_client.RiverClient, platformTwitch platform.Platform) *Service {
+	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, BlockedVodsService: blockedVodService, RiverClient: riverClient, PlatformTwitch: platformTwitch}
 }
 
 // ArchiveChannel - Create channel entry in database along with folder, profile image, etc.
@@ -95,6 +97,15 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 	// log.Debug().Msgf("Archiving video %s quality: %s chat: %t render chat: %t", videoId, quality, chat, renderChat)
 
 	envConfig := config.GetEnvConfig()
+
+	// check if video is blocked
+	blocked, err := s.BlockedVodsService.IsVideoBlocked(ctx, input.VideoId)
+	if err != nil {
+		return fmt.Errorf("error checking if vod is blocked: %v", err)
+	}
+	if blocked {
+		return fmt.Errorf("video id is blocked")
+	}
 
 	// get video
 	video, err := s.PlatformTwitch.GetVideo(context.Background(), input.VideoId, false, false)

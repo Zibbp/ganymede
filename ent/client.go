@@ -16,7 +16,7 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/zibbp/ganymede/ent/blockedvods"
+	"github.com/zibbp/ganymede/ent/blockedvideos"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
@@ -36,8 +36,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
-	// BlockedVods is the client for interacting with the BlockedVods builders.
-	BlockedVods *BlockedVodsClient
+	// BlockedVideos is the client for interacting with the BlockedVideos builders.
+	BlockedVideos *BlockedVideosClient
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
 	// Chapter is the client for interacting with the Chapter builders.
@@ -73,7 +73,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
-	c.BlockedVods = NewBlockedVodsClient(c.config)
+	c.BlockedVideos = NewBlockedVideosClient(c.config)
 	c.Channel = NewChannelClient(c.config)
 	c.Chapter = NewChapterClient(c.config)
 	c.Live = NewLiveClient(c.config)
@@ -178,7 +178,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:            ctx,
 		config:         cfg,
-		BlockedVods:    NewBlockedVodsClient(cfg),
+		BlockedVideos:  NewBlockedVideosClient(cfg),
 		Channel:        NewChannelClient(cfg),
 		Chapter:        NewChapterClient(cfg),
 		Live:           NewLiveClient(cfg),
@@ -210,7 +210,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:            ctx,
 		config:         cfg,
-		BlockedVods:    NewBlockedVodsClient(cfg),
+		BlockedVideos:  NewBlockedVideosClient(cfg),
 		Channel:        NewChannelClient(cfg),
 		Chapter:        NewChapterClient(cfg),
 		Live:           NewLiveClient(cfg),
@@ -229,7 +229,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		BlockedVods.
+//		BlockedVideos.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -252,7 +252,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.BlockedVods, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
+		c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
 		c.MutedSegment, c.Playback, c.Playlist, c.Queue, c.TwitchCategory, c.User,
 		c.Vod,
 	} {
@@ -264,7 +264,7 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.BlockedVods, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
+		c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
 		c.MutedSegment, c.Playback, c.Playlist, c.Queue, c.TwitchCategory, c.User,
 		c.Vod,
 	} {
@@ -275,8 +275,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
-	case *BlockedVodsMutation:
-		return c.BlockedVods.mutate(ctx, m)
+	case *BlockedVideosMutation:
+		return c.BlockedVideos.mutate(ctx, m)
 	case *ChannelMutation:
 		return c.Channel.mutate(ctx, m)
 	case *ChapterMutation:
@@ -306,107 +306,107 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	}
 }
 
-// BlockedVodsClient is a client for the BlockedVods schema.
-type BlockedVodsClient struct {
+// BlockedVideosClient is a client for the BlockedVideos schema.
+type BlockedVideosClient struct {
 	config
 }
 
-// NewBlockedVodsClient returns a client for the BlockedVods from the given config.
-func NewBlockedVodsClient(c config) *BlockedVodsClient {
-	return &BlockedVodsClient{config: c}
+// NewBlockedVideosClient returns a client for the BlockedVideos from the given config.
+func NewBlockedVideosClient(c config) *BlockedVideosClient {
+	return &BlockedVideosClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `blockedvods.Hooks(f(g(h())))`.
-func (c *BlockedVodsClient) Use(hooks ...Hook) {
-	c.hooks.BlockedVods = append(c.hooks.BlockedVods, hooks...)
+// A call to `Use(f, g, h)` equals to `blockedvideos.Hooks(f(g(h())))`.
+func (c *BlockedVideosClient) Use(hooks ...Hook) {
+	c.hooks.BlockedVideos = append(c.hooks.BlockedVideos, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `blockedvods.Intercept(f(g(h())))`.
-func (c *BlockedVodsClient) Intercept(interceptors ...Interceptor) {
-	c.inters.BlockedVods = append(c.inters.BlockedVods, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `blockedvideos.Intercept(f(g(h())))`.
+func (c *BlockedVideosClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BlockedVideos = append(c.inters.BlockedVideos, interceptors...)
 }
 
-// Create returns a builder for creating a BlockedVods entity.
-func (c *BlockedVodsClient) Create() *BlockedVodsCreate {
-	mutation := newBlockedVodsMutation(c.config, OpCreate)
-	return &BlockedVodsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a BlockedVideos entity.
+func (c *BlockedVideosClient) Create() *BlockedVideosCreate {
+	mutation := newBlockedVideosMutation(c.config, OpCreate)
+	return &BlockedVideosCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of BlockedVods entities.
-func (c *BlockedVodsClient) CreateBulk(builders ...*BlockedVodsCreate) *BlockedVodsCreateBulk {
-	return &BlockedVodsCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of BlockedVideos entities.
+func (c *BlockedVideosClient) CreateBulk(builders ...*BlockedVideosCreate) *BlockedVideosCreateBulk {
+	return &BlockedVideosCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *BlockedVodsClient) MapCreateBulk(slice any, setFunc func(*BlockedVodsCreate, int)) *BlockedVodsCreateBulk {
+func (c *BlockedVideosClient) MapCreateBulk(slice any, setFunc func(*BlockedVideosCreate, int)) *BlockedVideosCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &BlockedVodsCreateBulk{err: fmt.Errorf("calling to BlockedVodsClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &BlockedVideosCreateBulk{err: fmt.Errorf("calling to BlockedVideosClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*BlockedVodsCreate, rv.Len())
+	builders := make([]*BlockedVideosCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &BlockedVodsCreateBulk{config: c.config, builders: builders}
+	return &BlockedVideosCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for BlockedVods.
-func (c *BlockedVodsClient) Update() *BlockedVodsUpdate {
-	mutation := newBlockedVodsMutation(c.config, OpUpdate)
-	return &BlockedVodsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for BlockedVideos.
+func (c *BlockedVideosClient) Update() *BlockedVideosUpdate {
+	mutation := newBlockedVideosMutation(c.config, OpUpdate)
+	return &BlockedVideosUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *BlockedVodsClient) UpdateOne(bv *BlockedVods) *BlockedVodsUpdateOne {
-	mutation := newBlockedVodsMutation(c.config, OpUpdateOne, withBlockedVods(bv))
-	return &BlockedVodsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *BlockedVideosClient) UpdateOne(bv *BlockedVideos) *BlockedVideosUpdateOne {
+	mutation := newBlockedVideosMutation(c.config, OpUpdateOne, withBlockedVideos(bv))
+	return &BlockedVideosUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *BlockedVodsClient) UpdateOneID(id string) *BlockedVodsUpdateOne {
-	mutation := newBlockedVodsMutation(c.config, OpUpdateOne, withBlockedVodsID(id))
-	return &BlockedVodsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *BlockedVideosClient) UpdateOneID(id string) *BlockedVideosUpdateOne {
+	mutation := newBlockedVideosMutation(c.config, OpUpdateOne, withBlockedVideosID(id))
+	return &BlockedVideosUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for BlockedVods.
-func (c *BlockedVodsClient) Delete() *BlockedVodsDelete {
-	mutation := newBlockedVodsMutation(c.config, OpDelete)
-	return &BlockedVodsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for BlockedVideos.
+func (c *BlockedVideosClient) Delete() *BlockedVideosDelete {
+	mutation := newBlockedVideosMutation(c.config, OpDelete)
+	return &BlockedVideosDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *BlockedVodsClient) DeleteOne(bv *BlockedVods) *BlockedVodsDeleteOne {
+func (c *BlockedVideosClient) DeleteOne(bv *BlockedVideos) *BlockedVideosDeleteOne {
 	return c.DeleteOneID(bv.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *BlockedVodsClient) DeleteOneID(id string) *BlockedVodsDeleteOne {
-	builder := c.Delete().Where(blockedvods.ID(id))
+func (c *BlockedVideosClient) DeleteOneID(id string) *BlockedVideosDeleteOne {
+	builder := c.Delete().Where(blockedvideos.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &BlockedVodsDeleteOne{builder}
+	return &BlockedVideosDeleteOne{builder}
 }
 
-// Query returns a query builder for BlockedVods.
-func (c *BlockedVodsClient) Query() *BlockedVodsQuery {
-	return &BlockedVodsQuery{
+// Query returns a query builder for BlockedVideos.
+func (c *BlockedVideosClient) Query() *BlockedVideosQuery {
+	return &BlockedVideosQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeBlockedVods},
+		ctx:    &QueryContext{Type: TypeBlockedVideos},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a BlockedVods entity by its id.
-func (c *BlockedVodsClient) Get(ctx context.Context, id string) (*BlockedVods, error) {
-	return c.Query().Where(blockedvods.ID(id)).Only(ctx)
+// Get returns a BlockedVideos entity by its id.
+func (c *BlockedVideosClient) Get(ctx context.Context, id string) (*BlockedVideos, error) {
+	return c.Query().Where(blockedvideos.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *BlockedVodsClient) GetX(ctx context.Context, id string) *BlockedVods {
+func (c *BlockedVideosClient) GetX(ctx context.Context, id string) *BlockedVideos {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -415,27 +415,27 @@ func (c *BlockedVodsClient) GetX(ctx context.Context, id string) *BlockedVods {
 }
 
 // Hooks returns the client hooks.
-func (c *BlockedVodsClient) Hooks() []Hook {
-	return c.hooks.BlockedVods
+func (c *BlockedVideosClient) Hooks() []Hook {
+	return c.hooks.BlockedVideos
 }
 
 // Interceptors returns the client interceptors.
-func (c *BlockedVodsClient) Interceptors() []Interceptor {
-	return c.inters.BlockedVods
+func (c *BlockedVideosClient) Interceptors() []Interceptor {
+	return c.inters.BlockedVideos
 }
 
-func (c *BlockedVodsClient) mutate(ctx context.Context, m *BlockedVodsMutation) (Value, error) {
+func (c *BlockedVideosClient) mutate(ctx context.Context, m *BlockedVideosMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&BlockedVodsCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&BlockedVideosCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&BlockedVodsUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&BlockedVideosUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&BlockedVodsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&BlockedVideosUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&BlockedVodsDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&BlockedVideosDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown BlockedVods mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown BlockedVideos mutation op: %q", m.Op())
 	}
 }
 
@@ -2294,11 +2294,12 @@ func (c *VodClient) mutate(ctx context.Context, m *VodMutation) (Value, error) {
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		BlockedVods, Channel, Chapter, Live, LiveCategory, LiveTitleRegex, MutedSegment,
-		Playback, Playlist, Queue, TwitchCategory, User, Vod []ent.Hook
+		BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
+		MutedSegment, Playback, Playlist, Queue, TwitchCategory, User, Vod []ent.Hook
 	}
 	inters struct {
-		BlockedVods, Channel, Chapter, Live, LiveCategory, LiveTitleRegex, MutedSegment,
-		Playback, Playlist, Queue, TwitchCategory, User, Vod []ent.Interceptor
+		BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
+		MutedSegment, Playback, Playlist, Queue, TwitchCategory, User,
+		Vod []ent.Interceptor
 	}
 )
