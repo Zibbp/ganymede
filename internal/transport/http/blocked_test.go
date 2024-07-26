@@ -65,6 +65,8 @@ func TestIsVideoBlocked(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("123")
 
 	if assert.NoError(t, handler.IsVideoBlocked(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -83,6 +85,8 @@ func TestCreateBlockedVideo(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("123")
 
 	if assert.NoError(t, handler.CreateBlockedVideo(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -101,6 +105,8 @@ func TestDeleteBlockedVideo(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("123")
 
 	if assert.NoError(t, handler.DeleteBlockedVideo(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
