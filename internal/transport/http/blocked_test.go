@@ -61,7 +61,7 @@ func TestIsVideoBlocked(t *testing.T) {
 
 	mockService.On("IsVideoBlocked", mock.Anything, mock.Anything).Return(true, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/blocked/123", nil)
+	req := httptest.NewRequest(http.MethodGet, "/blocked-video/123", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -79,7 +79,7 @@ func TestCreateBlockedVideo(t *testing.T) {
 
 	mockService.On("CreateBlockedVideo", mock.Anything, mock.Anything).Return(nil)
 
-	req := httptest.NewRequest(http.MethodPost, "/blocked/123", nil)
+	req := httptest.NewRequest(http.MethodPost, "/blocked-video/123", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -97,7 +97,7 @@ func TestDeleteBlockedVideo(t *testing.T) {
 
 	mockService.On("DeleteBlockedVideo", mock.Anything, mock.Anything).Return(nil)
 
-	req := httptest.NewRequest(http.MethodDelete, "/blocked/123", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/blocked-video/123", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)

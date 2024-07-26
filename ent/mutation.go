@@ -2063,36 +2063,37 @@ func (m *ChapterMutation) ResetEdge(name string) error {
 // LiveMutation represents an operation that mutates the Live nodes in the graph.
 type LiveMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *uuid.UUID
-	watch_live          *bool
-	watch_vod           *bool
-	download_archives   *bool
-	download_highlights *bool
-	download_uploads    *bool
-	download_sub_only   *bool
-	is_live             *bool
-	archive_chat        *bool
-	resolution          *string
-	last_live           *time.Time
-	render_chat         *bool
-	video_age           *int64
-	addvideo_age        *int64
-	updated_at          *time.Time
-	created_at          *time.Time
-	clearedFields       map[string]struct{}
-	channel             *uuid.UUID
-	clearedchannel      bool
-	categories          map[uuid.UUID]struct{}
-	removedcategories   map[uuid.UUID]struct{}
-	clearedcategories   bool
-	title_regex         map[uuid.UUID]struct{}
-	removedtitle_regex  map[uuid.UUID]struct{}
-	clearedtitle_regex  bool
-	done                bool
-	oldValue            func(context.Context) (*Live, error)
-	predicates          []predicate.Live
+	op                       Op
+	typ                      string
+	id                       *uuid.UUID
+	watch_live               *bool
+	watch_vod                *bool
+	download_archives        *bool
+	download_highlights      *bool
+	download_uploads         *bool
+	download_sub_only        *bool
+	is_live                  *bool
+	archive_chat             *bool
+	resolution               *string
+	last_live                *time.Time
+	render_chat              *bool
+	video_age                *int64
+	addvideo_age             *int64
+	apply_categories_to_live *bool
+	updated_at               *time.Time
+	created_at               *time.Time
+	clearedFields            map[string]struct{}
+	channel                  *uuid.UUID
+	clearedchannel           bool
+	categories               map[uuid.UUID]struct{}
+	removedcategories        map[uuid.UUID]struct{}
+	clearedcategories        bool
+	title_regex              map[uuid.UUID]struct{}
+	removedtitle_regex       map[uuid.UUID]struct{}
+	clearedtitle_regex       bool
+	done                     bool
+	oldValue                 func(context.Context) (*Live, error)
+	predicates               []predicate.Live
 }
 
 var _ ent.Mutation = (*LiveMutation)(nil)
@@ -2664,6 +2665,42 @@ func (m *LiveMutation) ResetVideoAge() {
 	m.addvideo_age = nil
 }
 
+// SetApplyCategoriesToLive sets the "apply_categories_to_live" field.
+func (m *LiveMutation) SetApplyCategoriesToLive(b bool) {
+	m.apply_categories_to_live = &b
+}
+
+// ApplyCategoriesToLive returns the value of the "apply_categories_to_live" field in the mutation.
+func (m *LiveMutation) ApplyCategoriesToLive() (r bool, exists bool) {
+	v := m.apply_categories_to_live
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldApplyCategoriesToLive returns the old "apply_categories_to_live" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldApplyCategoriesToLive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldApplyCategoriesToLive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldApplyCategoriesToLive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldApplyCategoriesToLive: %w", err)
+	}
+	return oldValue.ApplyCategoriesToLive, nil
+}
+
+// ResetApplyCategoriesToLive resets all changes to the "apply_categories_to_live" field.
+func (m *LiveMutation) ResetApplyCategoriesToLive() {
+	m.apply_categories_to_live = nil
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *LiveMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -2917,7 +2954,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 15)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -2953,6 +2990,9 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.video_age != nil {
 		fields = append(fields, live.FieldVideoAge)
+	}
+	if m.apply_categories_to_live != nil {
+		fields = append(fields, live.FieldApplyCategoriesToLive)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, live.FieldUpdatedAt)
@@ -2992,6 +3032,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.RenderChat()
 	case live.FieldVideoAge:
 		return m.VideoAge()
+	case live.FieldApplyCategoriesToLive:
+		return m.ApplyCategoriesToLive()
 	case live.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case live.FieldCreatedAt:
@@ -3029,6 +3071,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldRenderChat(ctx)
 	case live.FieldVideoAge:
 		return m.OldVideoAge(ctx)
+	case live.FieldApplyCategoriesToLive:
+		return m.OldApplyCategoriesToLive(ctx)
 	case live.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case live.FieldCreatedAt:
@@ -3125,6 +3169,13 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetVideoAge(v)
+		return nil
+	case live.FieldApplyCategoriesToLive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetApplyCategoriesToLive(v)
 		return nil
 	case live.FieldUpdatedAt:
 		v, ok := value.(time.Time)
@@ -3248,6 +3299,9 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldVideoAge:
 		m.ResetVideoAge()
+		return nil
+	case live.FieldApplyCategoriesToLive:
+		m.ResetApplyCategoriesToLive()
 		return nil
 	case live.FieldUpdatedAt:
 		m.ResetUpdatedAt()

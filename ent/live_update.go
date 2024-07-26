@@ -213,6 +213,20 @@ func (lu *LiveUpdate) AddVideoAge(i int64) *LiveUpdate {
 	return lu
 }
 
+// SetApplyCategoriesToLive sets the "apply_categories_to_live" field.
+func (lu *LiveUpdate) SetApplyCategoriesToLive(b bool) *LiveUpdate {
+	lu.mutation.SetApplyCategoriesToLive(b)
+	return lu
+}
+
+// SetNillableApplyCategoriesToLive sets the "apply_categories_to_live" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableApplyCategoriesToLive(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetApplyCategoriesToLive(*b)
+	}
+	return lu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lu *LiveUpdate) SetUpdatedAt(t time.Time) *LiveUpdate {
 	lu.mutation.SetUpdatedAt(t)
@@ -410,6 +424,9 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := lu.mutation.AddedVideoAge(); ok {
 		_spec.AddField(live.FieldVideoAge, field.TypeInt64, value)
+	}
+	if value, ok := lu.mutation.ApplyCategoriesToLive(); ok {
+		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -734,6 +751,20 @@ func (luo *LiveUpdateOne) AddVideoAge(i int64) *LiveUpdateOne {
 	return luo
 }
 
+// SetApplyCategoriesToLive sets the "apply_categories_to_live" field.
+func (luo *LiveUpdateOne) SetApplyCategoriesToLive(b bool) *LiveUpdateOne {
+	luo.mutation.SetApplyCategoriesToLive(b)
+	return luo
+}
+
+// SetNillableApplyCategoriesToLive sets the "apply_categories_to_live" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableApplyCategoriesToLive(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetApplyCategoriesToLive(*b)
+	}
+	return luo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (luo *LiveUpdateOne) SetUpdatedAt(t time.Time) *LiveUpdateOne {
 	luo.mutation.SetUpdatedAt(t)
@@ -961,6 +992,9 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 	}
 	if value, ok := luo.mutation.AddedVideoAge(); ok {
 		_spec.AddField(live.FieldVideoAge, field.TypeInt64, value)
+	}
+	if value, ok := luo.mutation.ApplyCategoriesToLive(); ok {
+		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)

@@ -195,6 +195,20 @@ func (lc *LiveCreate) SetNillableVideoAge(i *int64) *LiveCreate {
 	return lc
 }
 
+// SetApplyCategoriesToLive sets the "apply_categories_to_live" field.
+func (lc *LiveCreate) SetApplyCategoriesToLive(b bool) *LiveCreate {
+	lc.mutation.SetApplyCategoriesToLive(b)
+	return lc
+}
+
+// SetNillableApplyCategoriesToLive sets the "apply_categories_to_live" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableApplyCategoriesToLive(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetApplyCategoriesToLive(*b)
+	}
+	return lc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lc *LiveCreate) SetUpdatedAt(t time.Time) *LiveCreate {
 	lc.mutation.SetUpdatedAt(t)
@@ -361,6 +375,10 @@ func (lc *LiveCreate) defaults() {
 		v := live.DefaultVideoAge
 		lc.mutation.SetVideoAge(v)
 	}
+	if _, ok := lc.mutation.ApplyCategoriesToLive(); !ok {
+		v := live.DefaultApplyCategoriesToLive
+		lc.mutation.SetApplyCategoriesToLive(v)
+	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		v := live.DefaultUpdatedAt()
 		lc.mutation.SetUpdatedAt(v)
@@ -409,6 +427,9 @@ func (lc *LiveCreate) check() error {
 	}
 	if _, ok := lc.mutation.VideoAge(); !ok {
 		return &ValidationError{Name: "video_age", err: errors.New(`ent: missing required field "Live.video_age"`)}
+	}
+	if _, ok := lc.mutation.ApplyCategoriesToLive(); !ok {
+		return &ValidationError{Name: "apply_categories_to_live", err: errors.New(`ent: missing required field "Live.apply_categories_to_live"`)}
 	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Live.updated_at"`)}
@@ -502,6 +523,10 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := lc.mutation.VideoAge(); ok {
 		_spec.SetField(live.FieldVideoAge, field.TypeInt64, value)
 		_node.VideoAge = value
+	}
+	if value, ok := lc.mutation.ApplyCategoriesToLive(); ok {
+		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
+		_node.ApplyCategoriesToLive = value
 	}
 	if value, ok := lc.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -768,6 +793,18 @@ func (u *LiveUpsert) AddVideoAge(v int64) *LiveUpsert {
 	return u
 }
 
+// SetApplyCategoriesToLive sets the "apply_categories_to_live" field.
+func (u *LiveUpsert) SetApplyCategoriesToLive(v bool) *LiveUpsert {
+	u.Set(live.FieldApplyCategoriesToLive, v)
+	return u
+}
+
+// UpdateApplyCategoriesToLive sets the "apply_categories_to_live" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateApplyCategoriesToLive() *LiveUpsert {
+	u.SetExcluded(live.FieldApplyCategoriesToLive)
+	return u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (u *LiveUpsert) SetUpdatedAt(v time.Time) *LiveUpsert {
 	u.Set(live.FieldUpdatedAt, v)
@@ -1010,6 +1047,20 @@ func (u *LiveUpsertOne) AddVideoAge(v int64) *LiveUpsertOne {
 func (u *LiveUpsertOne) UpdateVideoAge() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateVideoAge()
+	})
+}
+
+// SetApplyCategoriesToLive sets the "apply_categories_to_live" field.
+func (u *LiveUpsertOne) SetApplyCategoriesToLive(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetApplyCategoriesToLive(v)
+	})
+}
+
+// UpdateApplyCategoriesToLive sets the "apply_categories_to_live" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateApplyCategoriesToLive() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateApplyCategoriesToLive()
 	})
 }
 
@@ -1424,6 +1475,20 @@ func (u *LiveUpsertBulk) AddVideoAge(v int64) *LiveUpsertBulk {
 func (u *LiveUpsertBulk) UpdateVideoAge() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateVideoAge()
+	})
+}
+
+// SetApplyCategoriesToLive sets the "apply_categories_to_live" field.
+func (u *LiveUpsertBulk) SetApplyCategoriesToLive(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetApplyCategoriesToLive(v)
+	})
+}
+
+// UpdateApplyCategoriesToLive sets the "apply_categories_to_live" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateApplyCategoriesToLive() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateApplyCategoriesToLive()
 	})
 }
 

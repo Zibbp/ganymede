@@ -20,19 +20,20 @@ type LiveService interface {
 }
 
 type AddWatchedChannelRequest struct {
-	WatchLive          bool                `json:"watch_live" validate:"boolean"`
-	WatchVod           bool                `json:"watch_vod" validate:"boolean"`
-	DownloadArchives   bool                `json:"download_archives" validate:"boolean"`
-	DownloadHighlights bool                `json:"download_highlights" validate:"boolean"`
-	DownloadUploads    bool                `json:"download_uploads" validate:"boolean"`
-	ChannelID          string              `json:"channel_id" validate:"required"`
-	Resolution         string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
-	ArchiveChat        bool                `json:"archive_chat" validate:"boolean"`
-	RenderChat         bool                `json:"render_chat" validate:"boolean"`
-	DownloadSubOnly    bool                `json:"download_sub_only" validate:"boolean"`
-	Categories         []string            `json:"categories"`
-	MaxAge             int64               `json:"max_age"`
-	Regex              []AddLiveTitleRegex `json:"regex"`
+	WatchLive             bool                `json:"watch_live" validate:"boolean"`
+	WatchVod              bool                `json:"watch_vod" validate:"boolean"`
+	DownloadArchives      bool                `json:"download_archives" validate:"boolean"`
+	DownloadHighlights    bool                `json:"download_highlights" validate:"boolean"`
+	DownloadUploads       bool                `json:"download_uploads" validate:"boolean"`
+	ChannelID             string              `json:"channel_id" validate:"required"`
+	Resolution            string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
+	ArchiveChat           bool                `json:"archive_chat" validate:"boolean"`
+	RenderChat            bool                `json:"render_chat" validate:"boolean"`
+	DownloadSubOnly       bool                `json:"download_sub_only" validate:"boolean"`
+	Categories            []string            `json:"categories"`
+	ApplyCategoriesToLive bool                `json:"apply_categories_to_live" validate:"boolean"`
+	MaxAge                int64               `json:"max_age"`
+	Regex                 []AddLiveTitleRegex `json:"regex"`
 }
 
 type AddLiveTitleRegex struct {
@@ -42,33 +43,35 @@ type AddLiveTitleRegex struct {
 }
 
 type AddMultipleWatchedChannelRequest struct {
-	WatchLive          bool     `json:"watch_live" `
-	WatchVod           bool     `json:"watch_vod" `
-	DownloadArchives   bool     `json:"download_archives" `
-	DownloadHighlights bool     `json:"download_highlights" `
-	DownloadUploads    bool     `json:"download_uploads"`
-	ChannelID          []string `json:"channel_id" validate:"required"`
-	Resolution         string   `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
-	ArchiveChat        bool     `json:"archive_chat"`
-	RenderChat         bool     `json:"render_chat"`
-	DownloadSubOnly    bool     `json:"download_sub_only"`
-	Categories         []string `json:"categories"`
-	MaxAge             int64    `json:"max_age"`
+	WatchLive             bool     `json:"watch_live" `
+	WatchVod              bool     `json:"watch_vod" `
+	DownloadArchives      bool     `json:"download_archives" `
+	DownloadHighlights    bool     `json:"download_highlights" `
+	DownloadUploads       bool     `json:"download_uploads"`
+	ChannelID             []string `json:"channel_id" validate:"required"`
+	Resolution            string   `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
+	ArchiveChat           bool     `json:"archive_chat"`
+	RenderChat            bool     `json:"render_chat"`
+	DownloadSubOnly       bool     `json:"download_sub_only"`
+	Categories            []string `json:"categories"`
+	ApplyCategoriesToLive bool     `json:"apply_categories_to_live"`
+	MaxAge                int64    `json:"max_age"`
 }
 
 type UpdateWatchedChannelRequest struct {
-	WatchLive          bool                `json:"watch_live" validate:"boolean"`
-	WatchVod           bool                `json:"watch_vod" validate:"boolean"`
-	DownloadArchives   bool                `json:"download_archives" validate:"boolean"`
-	DownloadHighlights bool                `json:"download_highlights" validate:"boolean"`
-	DownloadUploads    bool                `json:"download_uploads" validate:"boolean"`
-	Resolution         string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
-	ArchiveChat        bool                `json:"archive_chat" validate:"boolean"`
-	RenderChat         bool                `json:"render_chat" validate:"boolean"`
-	DownloadSubOnly    bool                `json:"download_sub_only" validate:"boolean"`
-	Categories         []string            `json:"categories"`
-	MaxAge             int64               `json:"max_age"`
-	Regex              []AddLiveTitleRegex `json:"regex"`
+	WatchLive             bool                `json:"watch_live" validate:"boolean"`
+	WatchVod              bool                `json:"watch_vod" validate:"boolean"`
+	DownloadArchives      bool                `json:"download_archives" validate:"boolean"`
+	DownloadHighlights    bool                `json:"download_highlights" validate:"boolean"`
+	DownloadUploads       bool                `json:"download_uploads" validate:"boolean"`
+	Resolution            string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
+	ArchiveChat           bool                `json:"archive_chat" validate:"boolean"`
+	RenderChat            bool                `json:"render_chat" validate:"boolean"`
+	DownloadSubOnly       bool                `json:"download_sub_only" validate:"boolean"`
+	Categories            []string            `json:"categories"`
+	ApplyCategoriesToLive bool                `json:"apply_categories_to_live" validate:"boolean"`
+	MaxAge                int64               `json:"max_age"`
+	Regex                 []AddLiveTitleRegex `json:"regex"`
 }
 
 type ConvertChatRequest struct {
@@ -132,20 +135,26 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	if len(ccr.Categories) == 0 && ccr.ApplyCategoriesToLive {
+		return echo.NewHTTPError(http.StatusBadRequest, "categories cannot be empty if apply_categories_to_live is true")
+	}
+
 	liveDto := live.Live{
-		ID:                 cUUID,
-		WatchLive:          ccr.WatchLive,
-		WatchVod:           ccr.WatchVod,
-		DownloadArchives:   ccr.DownloadArchives,
-		DownloadHighlights: ccr.DownloadHighlights,
-		DownloadUploads:    ccr.DownloadUploads,
-		IsLive:             false,
-		ArchiveChat:        ccr.ArchiveChat,
-		Resolution:         ccr.Resolution,
-		RenderChat:         ccr.RenderChat,
-		DownloadSubOnly:    ccr.DownloadSubOnly,
-		Categories:         ccr.Categories,
-		MaxAge:             ccr.MaxAge,
+		ID:                    cUUID,
+		WatchLive:             ccr.WatchLive,
+		WatchVod:              ccr.WatchVod,
+		DownloadArchives:      ccr.DownloadArchives,
+		DownloadHighlights:    ccr.DownloadHighlights,
+		DownloadUploads:       ccr.DownloadUploads,
+		IsLive:                false,
+		ArchiveChat:           ccr.ArchiveChat,
+		Resolution:            ccr.Resolution,
+		RenderChat:            ccr.RenderChat,
+		DownloadSubOnly:       ccr.DownloadSubOnly,
+		Categories:            ccr.Categories,
+		ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
+		MaxAge:                ccr.MaxAge,
 	}
 
 	for _, regex := range ccr.Regex {
@@ -195,20 +204,26 @@ func (h *Handler) AddMultipleLiveWatchedChannel(c echo.Context) error {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
+
+		if len(ccr.Categories) == 0 && ccr.ApplyCategoriesToLive {
+			return echo.NewHTTPError(http.StatusBadRequest, "categories cannot be empty if apply_categories_to_live is true")
+		}
+
 		liveDto := live.Live{
-			ID:                 cUUID,
-			WatchLive:          ccr.WatchLive,
-			WatchVod:           ccr.WatchVod,
-			DownloadArchives:   ccr.DownloadArchives,
-			DownloadHighlights: ccr.DownloadHighlights,
-			DownloadUploads:    ccr.DownloadUploads,
-			IsLive:             false,
-			ArchiveChat:        ccr.ArchiveChat,
-			Resolution:         ccr.Resolution,
-			RenderChat:         ccr.RenderChat,
-			DownloadSubOnly:    ccr.DownloadSubOnly,
-			Categories:         ccr.Categories,
-			MaxAge:             ccr.MaxAge,
+			ID:                    cUUID,
+			WatchLive:             ccr.WatchLive,
+			WatchVod:              ccr.WatchVod,
+			DownloadArchives:      ccr.DownloadArchives,
+			DownloadHighlights:    ccr.DownloadHighlights,
+			DownloadUploads:       ccr.DownloadUploads,
+			IsLive:                false,
+			ArchiveChat:           ccr.ArchiveChat,
+			Resolution:            ccr.Resolution,
+			RenderChat:            ccr.RenderChat,
+			DownloadSubOnly:       ccr.DownloadSubOnly,
+			Categories:            ccr.Categories,
+			ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
+			MaxAge:                ccr.MaxAge,
 		}
 		l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 		if err != nil {
@@ -247,19 +262,25 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 	if err := c.Validate(ccr); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	if len(ccr.Categories) == 0 && ccr.ApplyCategoriesToLive {
+		return echo.NewHTTPError(http.StatusBadRequest, "categories cannot be empty if apply_categories_to_live is true")
+	}
+
 	liveDto := live.Live{
-		ID:                 lID,
-		WatchLive:          ccr.WatchLive,
-		WatchVod:           ccr.WatchVod,
-		DownloadArchives:   ccr.DownloadArchives,
-		DownloadHighlights: ccr.DownloadHighlights,
-		DownloadUploads:    ccr.DownloadUploads,
-		ArchiveChat:        ccr.ArchiveChat,
-		Resolution:         ccr.Resolution,
-		RenderChat:         ccr.RenderChat,
-		DownloadSubOnly:    ccr.DownloadSubOnly,
-		Categories:         ccr.Categories,
-		MaxAge:             ccr.MaxAge,
+		ID:                    lID,
+		WatchLive:             ccr.WatchLive,
+		WatchVod:              ccr.WatchVod,
+		DownloadArchives:      ccr.DownloadArchives,
+		DownloadHighlights:    ccr.DownloadHighlights,
+		DownloadUploads:       ccr.DownloadUploads,
+		ArchiveChat:           ccr.ArchiveChat,
+		Resolution:            ccr.Resolution,
+		RenderChat:            ccr.RenderChat,
+		DownloadSubOnly:       ccr.DownloadSubOnly,
+		Categories:            ccr.Categories,
+		ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
+		MaxAge:                ccr.MaxAge,
 	}
 
 	for _, regex := range ccr.Regex {

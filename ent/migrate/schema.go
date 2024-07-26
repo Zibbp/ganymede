@@ -75,6 +75,7 @@ var (
 		{Name: "last_live", Type: field.TypeTime},
 		{Name: "render_chat", Type: field.TypeBool, Default: true},
 		{Name: "video_age", Type: field.TypeInt64, Default: 0},
+		{Name: "apply_categories_to_live", Type: field.TypeBool, Default: false},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "channel_live", Type: field.TypeUUID},
@@ -87,7 +88,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[15]},
+				Columns:    []*schema.Column{LivesColumns[16]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

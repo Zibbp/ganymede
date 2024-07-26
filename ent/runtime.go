@@ -108,14 +108,18 @@ func init() {
 	liveDescVideoAge := liveFields[12].Descriptor()
 	// live.DefaultVideoAge holds the default value on creation for the video_age field.
 	live.DefaultVideoAge = liveDescVideoAge.Default.(int64)
+	// liveDescApplyCategoriesToLive is the schema descriptor for apply_categories_to_live field.
+	liveDescApplyCategoriesToLive := liveFields[13].Descriptor()
+	// live.DefaultApplyCategoriesToLive holds the default value on creation for the apply_categories_to_live field.
+	live.DefaultApplyCategoriesToLive = liveDescApplyCategoriesToLive.Default.(bool)
 	// liveDescUpdatedAt is the schema descriptor for updated_at field.
-	liveDescUpdatedAt := liveFields[13].Descriptor()
+	liveDescUpdatedAt := liveFields[14].Descriptor()
 	// live.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	live.DefaultUpdatedAt = liveDescUpdatedAt.Default.(func() time.Time)
 	// live.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	live.UpdateDefaultUpdatedAt = liveDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// liveDescCreatedAt is the schema descriptor for created_at field.
-	liveDescCreatedAt := liveFields[14].Descriptor()
+	liveDescCreatedAt := liveFields[15].Descriptor()
 	// live.DefaultCreatedAt holds the default value on creation for the created_at field.
 	live.DefaultCreatedAt = liveDescCreatedAt.Default.(func() time.Time)
 	// liveDescID is the schema descriptor for id field.

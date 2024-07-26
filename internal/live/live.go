@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,21 +33,22 @@ type Service struct {
 }
 
 type Live struct {
-	ID                 uuid.UUID            `json:"id"`
-	WatchLive          bool                 `json:"watch_live"`
-	WatchVod           bool                 `json:"watch_vod"`
-	DownloadArchives   bool                 `json:"download_archives"`
-	DownloadHighlights bool                 `json:"download_highlights"`
-	DownloadUploads    bool                 `json:"download_uploads"`
-	IsLive             bool                 `json:"is_live"`
-	ArchiveChat        bool                 `json:"archive_chat"`
-	Resolution         string               `json:"resolution"`
-	LastLive           time.Time            `json:"last_live"`
-	RenderChat         bool                 `json:"render_chat"`
-	DownloadSubOnly    bool                 `json:"download_sub_only"`
-	Categories         []string             `json:"categories"`
-	MaxAge             int64                `json:"max_age"`
-	TitleRegex         []ent.LiveTitleRegex `json:"title_regex"`
+	ID                    uuid.UUID            `json:"id"`
+	WatchLive             bool                 `json:"watch_live"`
+	WatchVod              bool                 `json:"watch_vod"`
+	DownloadArchives      bool                 `json:"download_archives"`
+	DownloadHighlights    bool                 `json:"download_highlights"`
+	DownloadUploads       bool                 `json:"download_uploads"`
+	IsLive                bool                 `json:"is_live"`
+	ArchiveChat           bool                 `json:"archive_chat"`
+	Resolution            string               `json:"resolution"`
+	LastLive              time.Time            `json:"last_live"`
+	RenderChat            bool                 `json:"render_chat"`
+	DownloadSubOnly       bool                 `json:"download_sub_only"`
+	Categories            []string             `json:"categories"`
+	ApplyCategoriesToLive bool                 `json:"apply_categories_to_live"`
+	MaxAge                int64                `json:"max_age"`
+	TitleRegex            []ent.LiveTitleRegex `json:"title_regex"`
 }
 
 type ConvertChat struct {
@@ -87,7 +89,7 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 		return nil, fmt.Errorf("channel already watched")
 	}
 
-	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.MaxAge).Save(c.Request().Context())
+	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.MaxAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).Save(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error adding watched channel: %v", err)
 	}
@@ -113,7 +115,7 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 }
 
 func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live, error) {
-	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.MaxAge).Save(c.Request().Context())
+	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.MaxAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).Save(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error updating watched channel: %v", err)
 	}
@@ -194,7 +196,7 @@ func (s *Service) DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error 
 func (s *Service) Check(ctx context.Context) error {
 	log.Debug().Msg("checking live channels")
 	// get live watched channels from database
-	liveWatchedChannels, err := s.Store.Client.Live.Query().Where(live.WatchLive(true)).WithChannel().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
+	liveWatchedChannels, err := s.Store.Client.Live.Query().Where(live.WatchLive(true)).WithChannel().WithCategories().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
 		ltrq.Where(livetitleregex.ApplyToVideosEQ(false))
 	}).All(context.Background())
 	if err != nil {
@@ -268,6 +270,28 @@ OUTER:
 					}
 				}
 
+				tmpCategoryNames := make([]string, 0)
+				for _, category := range lwc.Edges.Categories {
+					tmpCategoryNames = append(tmpCategoryNames, category.Name)
+				}
+
+				// check for category restrictions
+				if lwc.ApplyCategoriesToLive && len(lwc.Edges.Categories) > 0 {
+					found := false
+					for _, category := range lwc.Edges.Categories {
+						if strings.EqualFold(category.Name, stream.GameName) {
+							log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(tmpCategoryNames, ", ")).Msgf("%s matches category restrictions", lwc.Edges.Channel.Name)
+							found = true
+							break
+						}
+					}
+
+					if !found {
+						log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(tmpCategoryNames, ", ")).Msgf("%s does not match category restrictions", lwc.Edges.Channel.Name)
+						continue
+					}
+				}
+
 				log.Debug().Msgf("%s is now live", lwc.Edges.Channel.Name)
 				// Stream is online, update database
 				_, err := s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(true).Save(context.Background())
@@ -317,59 +341,6 @@ OUTER:
 	}
 	return nil
 }
-
-// func (s *Service) ConvertChat(c echo.Context, convertChatDto ConvertChat) error {
-// 	i, err := strconv.ParseInt(convertChatDto.ChatStart, 10, 64)
-// 	if err != nil {
-// 		return fmt.Errorf("error parsing chat start: %v", err)
-// 	}
-// 	tm := time.Unix(i, 0)
-// 	err = utils.ConvertTwitchLiveChatToVodChat(
-// 		fmt.Sprintf("/tmp/%s", convertChatDto.FileName),
-// 		convertChatDto.ChannelName,
-// 		convertChatDto.VodID,
-// 		convertChatDto.VodExternalID,
-// 		convertChatDto.ChannelID,
-// 		tm,
-// 	)
-// 	if err != nil {
-// 		return fmt.Errorf("error converting chat: %v", err)
-// 	}
-// 	return nil
-// }
-
-// func (s *Service) ArchiveLiveChannel(c echo.Context, archiveLiveChannelDto ArchiveLive) error {
-// 	// fetch channel
-// 	channel, err := s.Store.Client.Channel.Query().Where(channel.ID(archiveLiveChannelDto.ChannelID)).Only(c.Request().Context())
-// 	if err != nil {
-// 		if _, ok := err.(*ent.NotFoundError); ok {
-// 			return fmt.Errorf("channel not found")
-// 		}
-// 		return fmt.Errorf("error fetching channel: %v", err)
-// 	}
-
-// 	// check if channel is live
-// 	queryString := "?user_login=" + channel.Name
-// 	twitchStream, err := s.TwitchService.GetStreams(queryString)
-// 	if err != nil {
-// 		return fmt.Errorf("error getting twitch streams: %v", err)
-// 	}
-// 	if len(twitchStream.Data) == 0 {
-// 		return fmt.Errorf("channel is not live")
-// 	}
-// 	// create a temp live watched channel
-// 	// lwc := &ent.Live{
-// 	// 	ArchiveChat: archiveLiveChannelDto.ArchiveChat,
-// 	// 	RenderChat:  archiveLiveChannelDto.RenderChat,
-// 	// 	Resolution:  archiveLiveChannelDto.Resolution,
-// 	// }
-// 	// _, err = s.ArchiveService.ArchiveTwitchLive(lwc, twitchStream.Data[0])
-// 	// if err != nil {
-// 	// 	log.Error().Err(err).Msg("error archiving twitch livestream")
-// 	// }
-
-// 	return nil
-// }
 
 // channelInLiveStreamInfo searches for a string in a slice of LiveStreamInfo and returns the first match.
 func channelInLiveStreamInfo(a string, list []platform.LiveStreamInfo) platform.LiveStreamInfo {
