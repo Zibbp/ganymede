@@ -96,10 +96,62 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 						return err
 					}
 					logger.Info().Str("job_id", fmt.Sprintf("%d", job.ID)).Msg("job set to failed and deleted")
+
+					// if job was live video download or chat download then proceeds with next jobs
+					if job.Kind == string(utils.TaskDownloadLiveVideo) || job.Kind == string(utils.TaskDownloadLiveChat) {
+						logger.Info().Str("job_id", fmt.Sprintf("%d", job.ID)).Msg("detected job was live video download or chat download; proceeding with next jobs")
+						// get queue
+						queue, err := store.Client.Queue.Get(ctx, args.Input.QueueId)
+						if err != nil {
+							return err
+						}
+
+						// set queue status to completed
+						err = setQueueStatus(ctx, store.Client, QueueStatusInput{
+							Status:  utils.Success,
+							QueueId: queue.ID,
+							Task:    utils.TaskDownloadVideo,
+						})
+						if err != nil {
+							return err
+						}
+
+						// queue video postprocess
+						_, err = riverClient.Insert(ctx, &PostProcessVideoArgs{
+							Continue: true,
+							Input: ArchiveVideoInput{
+								QueueId: args.Input.QueueId,
+							},
+						}, nil)
+						if err != nil {
+							return err
+						}
+
+						if queue.ChatProcessing {
+							// set queue status to completed
+							err = setQueueStatus(ctx, store.Client, QueueStatusInput{
+								Status:  utils.Success,
+								QueueId: queue.ID,
+								Task:    utils.TaskDownloadChat,
+							})
+							if err != nil {
+								return err
+							}
+							// queue chat convert
+							_, err = riverClient.Insert(ctx, &ConvertLiveChatArgs{
+								Continue: true,
+								Input: ArchiveVideoInput{
+									QueueId: args.Input.QueueId,
+								},
+							}, nil)
+							if err != nil {
+								return err
+							}
+						}
+					}
 				}
 			}
 		}
-
 	}
 
 	return nil

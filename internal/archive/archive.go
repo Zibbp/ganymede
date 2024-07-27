@@ -302,7 +302,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 
 	storageTemplateInput := StorageTemplateInput{
 		UUID:    vUUID,
-		ID:      input.ChannelId.String(),
+		ID:      video.ID,
 		Channel: channel.Name,
 		Title:   video.Title,
 		Type:    video.Type,

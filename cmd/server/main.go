@@ -130,7 +130,7 @@ func Run() error {
 	liveService := live.NewService(db, archiveService, platformTwitch)
 	schedulerService := scheduler.NewService(liveService, archiveService)
 	playbackService := playback.NewService(db)
-	metricsService := metrics.NewService(db)
+	metricsService := metrics.NewService(db, riverClient)
 	playlistService := playlist.NewService(db)
 	taskService := task.NewService(db, liveService, riverClient)
 	chapterService := chapter.NewService(db)

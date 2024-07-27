@@ -105,7 +105,10 @@ func (h *Handler) mapRoutes() {
 	})
 
 	h.Server.GET("/metrics", func(c echo.Context) error {
-		r := h.GatherMetrics()
+		r, err := h.GatherMetrics()
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
 
 		handler := promhttp.HandlerFor(r, promhttp.HandlerOpts{})
 		handler.ServeHTTP(c.Response(), c.Request())
