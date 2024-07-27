@@ -176,7 +176,7 @@ func twitchAuthenticate(clientId string, clientSecret string) (*AuthTokenRespons
 	return &authTokenResponse, nil
 }
 
-func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams map[string]string, headers map[string]string) ([]byte, error) {
+func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams url.Values, headers map[string]string) ([]byte, error) {
 	client := &http.Client{}
 
 	for attempt := 0; attempt < maxRetryAttempts; attempt++ {
@@ -195,11 +195,7 @@ func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
 
 		// Set query parameters
-		q := req.URL.Query()
-		for key, value := range queryParams {
-			q.Add(key, value)
-		}
-		req.URL.RawQuery = q.Encode()
+		req.URL.RawQuery = queryParams.Encode()
 
 		resp, err := client.Do(req)
 		if err != nil {

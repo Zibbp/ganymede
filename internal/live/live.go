@@ -224,6 +224,7 @@ func (s *Service) Check(ctx context.Context) error {
 		for _, lwc := range lwc {
 			channels = append(channels, lwc.Edges.Channel.Name)
 		}
+		log.Debug().Str("channels", strings.Join(channels, ", ")).Msg("checking live streams")
 
 		twitchStreams, err := s.PlatformTwitch.GetLiveStreams(ctx, channels)
 		if err != nil {
@@ -246,6 +247,7 @@ OUTER:
 		if len(stream.ID) > 0 {
 			if !lwc.IsLive {
 				// stream is live
+				log.Debug().Str("channel", lwc.Edges.Channel.Name).Msg("stream is live; checking for restrictions before archiving")
 				// check for any user-constraints before archiving
 				if lwc.Edges.TitleRegex != nil && len(lwc.Edges.TitleRegex) > 0 {
 					// run regexes against title

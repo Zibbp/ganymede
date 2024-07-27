@@ -173,14 +173,14 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 					for _, chapter := range platformVideo.Chapters {
 						videoChapters = append(videoChapters, chapter.Title)
 					}
-					logger.Debug().Str("video_id", video.ID).Msgf("video has chapters: %s", strings.Join(videoChapters, ", "))
+					logger.Debug().Str("video_id", video.ID).Str("chapters", strings.Join(videoChapters, ", ")).Msg("video has chapters")
 				}
 
 				// Append chapters and video category to video categories
 				var videoCategories []string
 				videoCategories = append(videoCategories, videoChapters...)
-				if video.Category != nil {
-					videoCategories = append(videoCategories, *video.Category)
+				if platformVideo.Category != nil {
+					videoCategories = append(videoCategories, *platformVideo.Category)
 				}
 
 				// Check if video is sub only restricted
@@ -209,7 +209,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 						}
 					}
 					if !found {
-						logger.Info().Str("video_id", video.ID).Msgf("skipping video; video has categories of %s when the restriction requires %s.", strings.Join(videoCategories, ", "), strings.Join(channelVideoCategories, ", "))
+						logger.Info().Str("video_id", video.ID).Str("categories", strings.Join(videoCategories, ", ")).Str("expected_categories", strings.Join(channelVideoCategories, ", ")).Msg("video does not match category restrictions")
 						continue
 					}
 				}
