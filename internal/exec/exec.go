@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	osExec "os/exec"
@@ -449,20 +450,23 @@ func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Chan
 }
 
 func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
+
 	// open log file
 	logFilePath := fmt.Sprintf("/logs/%s-chat-render.log", video.ID.String())
-	file, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
 	defer file.Close()
-
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chat_downloader output to %s", logFilePath)
 
 	var cmdArgs []string
+
 	configRenderArgs := viper.GetString("parameters.chat_render")
 	configRenderArgsArr := strings.Fields(configRenderArgs)
+
 	cmdArgs = append(cmdArgs, "chatrender", "-i", video.TmpChatDownloadPath, "--collision", "overwrite")
+
 	cmdArgs = append(cmdArgs, configRenderArgsArr...)
 	cmdArgs = append(cmdArgs, "-o", video.TmpChatRenderPath)
 
@@ -470,54 +474,66 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 
 	cmd := osExec.CommandContext(ctx, "TwitchDownloaderCLI", cmdArgs...)
 
-	// Use a buffered writer for better performance
-	bufWriter := bufio.NewWriter(file)
-	cmd.Stdout = bufWriter
-	cmd.Stderr = bufWriter
+	// Get pipes for stdout and stderr
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to get stdout pipe: %v\n", err)
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to get stderr pipe: %v\n", err)
+	}
+
+	go streamToFile(stdout, file, "STDOUT")
+	go streamToFile(stderr, file, "STDERR")
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting TwitchDownloader: %w", err)
 	}
 
-	done := make(chan error, 1)
+	done := make(chan error)
 	go func() {
 		done <- cmd.Wait()
 	}()
 
-	// Flush the buffer periodically
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			// Context was cancelled, kill the process
-			if err := cmd.Process.Kill(); err != nil {
-				log.Error().Err(err).Msg("failed to kill TwitchDownloaderCLI process")
-			}
-			bufWriter.Flush()
-			return ctx.Err()
-		case err := <-done:
-			// Command finished
-			bufWriter.Flush()
-			if err != nil {
-				if exitError, ok := err.(*osExec.ExitError); ok {
-					log.Error().Err(err).Msg("error running TwitchDownloaderCLI")
-					return fmt.Errorf("error running TwitchDownloaderCLI exit code %d: %w", exitError.ExitCode(), exitError)
-				}
-				// Check if log output indicates no messages
-				noElements, checkErr := checkLogForNoElements(logFilePath)
-				if checkErr == nil && noElements {
-					return errors.ErrNoChatMessages
-				}
-				log.Error().Err(err).Msg("error running TwitchDownloaderCLI")
-				return fmt.Errorf("error running TwitchDownloaderCLI: %w", err)
-			}
-			return nil
-		case <-ticker.C:
-			// Flush the buffer periodically
-			bufWriter.Flush()
+	// Wait for the command to finish or context to be cancelled
+	select {
+	case <-ctx.Done():
+		// Context was cancelled, kill the process
+		if err := cmd.Process.Kill(); err != nil {
+			return fmt.Errorf("failed to kill TwitchDownloaderCLI process: %v", err)
 		}
+		<-done // Wait for copying to finish
+		return ctx.Err()
+	case err := <-done:
+		// Command finished normally
+		if err != nil {
+			if exitError, ok := err.(*osExec.ExitError); ok {
+				log.Error().Err(err).Msg("error running TwitchDownloaderCLI")
+				return fmt.Errorf("error running TwitchDownloaderCLI exit code %d: %w", exitError.ExitCode(), exitError)
+			}
+
+			// Check if log output indicates no messages
+			noElements, err := checkLogForNoElements(logFilePath)
+			if err == nil && noElements {
+				return errors.ErrNoChatMessages
+			}
+
+			log.Error().Err(err).Msg("error running TwitchDownloaderCLI")
+			return fmt.Errorf("error running TwitchDownloaderCLI: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func streamToFile(r io.Reader, w io.Writer, prefix string) {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		fmt.Fprintf(w, "[%s] %s\n", prefix, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintf(w, "Error reading %s: %v\n", prefix, err)
 	}
 }
 
