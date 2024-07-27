@@ -155,7 +155,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 		Channel: channel.Name,
 		Title:   video.Title,
 		Type:    video.Type,
-		Date:    video.CreatedAt.Format("2024-07-18"),
+		Date:    video.CreatedAt.Format("2006-01-02"),
 	}
 	// Create directory paths
 	folderName, err := GetFolderName(vUUID, storageTemplateInput)
@@ -306,7 +306,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		Channel: channel.Name,
 		Title:   video.Title,
 		Type:    video.Type,
-		Date:    video.StartedAt.Format("2024-07-18"),
+		Date:    video.StartedAt.Format("2006-01-02"),
 	}
 	// Create directory paths
 	folderName, err := GetFolderName(vUUID, storageTemplateInput)
