@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	osExec "os/exec"
@@ -474,18 +473,8 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 
 	cmd := osExec.CommandContext(ctx, "TwitchDownloaderCLI", cmdArgs...)
 
-	// Get pipes for stdout and stderr
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to get stdout pipe: %v\n", err)
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to get stderr pipe: %v\n", err)
-	}
-
-	go streamToFile(stdout, file, "STDOUT")
-	go streamToFile(stderr, file, "STDERR")
+	cmd.Stderr = file
+	cmd.Stdout = file
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting TwitchDownloader: %w", err)
@@ -525,16 +514,6 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 	}
 
 	return nil
-}
-
-func streamToFile(r io.Reader, w io.Writer, prefix string) {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		fmt.Fprintf(w, "[%s] %s\n", prefix, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintf(w, "Error reading %s: %v\n", prefix, err)
-	}
 }
 
 // checkLogForNoElements returns true if the log file contains the expected message.
