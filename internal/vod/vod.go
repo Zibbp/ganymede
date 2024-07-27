@@ -3,8 +3,10 @@ package vod
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
+	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -184,6 +186,58 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) e
 			log.Error().Err(err).Msg("error deleting directory")
 			return fmt.Errorf("error deleting directory: %v", err)
 		}
+
+		// attempt to delete temp files
+		if err := utils.DeleteFile(v.TmpVideoDownloadPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				log.Debug().Msgf("temp file %s does not exist", v.TmpVideoDownloadPath)
+			} else {
+				return err
+			}
+		}
+		if err := utils.DeleteFile(v.TmpVideoConvertPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				log.Debug().Msgf("temp file %s does not exist", v.TmpVideoConvertPath)
+			} else {
+				return err
+			}
+		}
+		if err := utils.DeleteFile(v.TmpVideoHlsPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				log.Debug().Msgf("temp file %s does not exist", v.TmpVideoHlsPath)
+			} else {
+				return err
+			}
+		}
+		if err := utils.DeleteFile(v.TmpChatDownloadPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				log.Debug().Msgf("temp file %s does not exist", v.TmpChatDownloadPath)
+			} else {
+				return err
+			}
+		}
+		if err := utils.DeleteFile(v.TmpChatRenderPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				log.Debug().Msgf("temp file %s does not exist", v.TmpChatRenderPath)
+			} else {
+				return err
+			}
+		}
+		if err := utils.DeleteFile(v.TmpLiveChatConvertPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				log.Debug().Msgf("temp file %s does not exist", v.TmpLiveChatConvertPath)
+			} else {
+				return err
+			}
+		}
+		if err := utils.DeleteFile(v.TmpLiveChatDownloadPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				log.Debug().Msgf("temp file %s does not exist", v.TmpLiveChatDownloadPath)
+			} else {
+				return err
+			}
+		}
+
 	}
 
 	err = s.Store.Client.Vod.DeleteOneID(vodID).Exec(c.Request().Context())

@@ -145,9 +145,7 @@ func (s *Service) ArchiveGetQueueItem(qID uuid.UUID) (*ent.Queue, error) {
 	return q, nil
 }
 
-// StopQueueItem
-// kills the streamlink process for a queue item
-// which in turn will stop the chat download and proceed to post processing
+// StopQueueItem stops a queue item's tasks by canceling each job's context
 func (s *Service) StopQueueItem(ctx context.Context, id uuid.UUID) error {
 
 	err := s.RiverClient.CancelJobsForQueueId(ctx, id)
