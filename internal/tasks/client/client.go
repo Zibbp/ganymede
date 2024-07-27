@@ -92,9 +92,10 @@ func (rc *RiverClient) JobList(ctx context.Context, params *river.JobListParams)
 	return jobs, nil
 }
 
+// CancelJobsForQueueId cancels all jobs for a queue. This unmarshals the job args which stores the queue id
 func (rc *RiverClient) CancelJobsForQueueId(ctx context.Context, queueId uuid.UUID) error {
 
-	params := river.NewJobListParams().States(rivertype.JobStateRunning).First(10000)
+	params := river.NewJobListParams().States(rivertype.JobStateRunning, rivertype.JobStatePending, rivertype.JobStateScheduled).First(10000)
 	jobs, err := rc.Client.JobList(ctx, params)
 	if err != nil {
 		return err
