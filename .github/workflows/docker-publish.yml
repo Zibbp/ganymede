@@ -21,9 +21,6 @@ jobs:
       # Checkout the repo
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 5
-          fetch-tags: true
 
       # Set up QEMU for Arm64
       - name: Set up QEMU
@@ -61,3 +58,5 @@ jobs:
           push: true # TODO: remove this line
           # push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            COMMIT_SHA=${{ github.sha }}

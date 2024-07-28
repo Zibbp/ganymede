@@ -3,16 +3,16 @@ dev_setup:
 	go install github.com/air-verse/air@latest
 
 build_server:
-	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=$(shell git rev-parse HEAD) -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ganymede-api cmd/server/main.go
+	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=$(COMMIT_SHA) -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ganymede-api cmd/server/main.go
 
 build_worker:
-	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=$(shell git rev-parse HEAD) -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ganymede-worker cmd/worker/main.go
+	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=$(COMMIT_SHA) -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ganymede-worker cmd/worker/main.go
 
 build_dev_server:
-	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=$(shell git rev-parse HEAD) -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ./tmp/server ./cmd/server/main.go
+	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=development -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ./tmp/server ./cmd/server/main.go
 
 build_dev_worker:
-	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=$(shell git rev-parse HEAD) -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ./tmp/worker ./cmd/worker/main.go
+	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=development -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ./tmp/worker ./cmd/worker/main.go
 
 dev_server:
 	rm -f ./tmp/server
