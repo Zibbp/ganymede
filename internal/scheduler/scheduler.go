@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-co-op/gocron"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/live"
 )
 
@@ -31,9 +31,9 @@ func (s *Service) StartLiveScheduler() {
 
 func (s *Service) checkLiveStreamSchedule(scheduler *gocron.Scheduler) {
 	log.Debug().Msg("setting up check live stream schedule")
-	configLiveCheckInterval := viper.GetInt("live_check_interval_seconds")
-	log.Debug().Msgf("setting live check interval to run every %d seconds", configLiveCheckInterval)
-	_, err := scheduler.Every(configLiveCheckInterval).Seconds().Do(func() {
+	config := config.Get()
+	log.Debug().Msgf("setting live check interval to run every %d seconds", config.LiveCheckInterval)
+	_, err := scheduler.Every(config.LiveCheckInterval).Seconds().Do(func() {
 		ctx := context.Background()
 		log.Debug().Msg("running check live stream schedule")
 		err := s.LiveService.Check(ctx)

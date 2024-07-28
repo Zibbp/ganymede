@@ -81,6 +81,9 @@ type ChangePassword struct {
 }
 
 func (s *Service) Register(c echo.Context, user user.User) (*ent.User, error) {
+	if !config.Get().RegistrationEnabled {
+		return nil, fmt.Errorf("registration is disabled")
+	}
 	// hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err != nil {

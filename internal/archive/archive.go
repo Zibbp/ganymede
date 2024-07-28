@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/blocked"
 	"github.com/zibbp/ganymede/internal/channel"
@@ -216,7 +215,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 		TmpChatRenderPath:       fmt.Sprintf("%s/%s_%s-chat.mp4", envConfig.TempDir, video.ID, vUUID),
 	}
 
-	if viper.GetBool("archive.save_as_hls") {
+	if config.Get().Archive.SaveAsHls {
 		vodDTO.TmpVideoHLSPath = fmt.Sprintf("%s/%s_%s-video_hls0", envConfig.TempDir, video.ID, vUUID)
 		vodDTO.VideoHLSPath = fmt.Sprintf("%s/%s-video_hls", rootVideoPath, fileName)
 		vodDTO.VideoPath = fmt.Sprintf("%s/%s-video_hls/%s-video.m3u8", rootVideoPath, fileName, video.ID)
@@ -368,7 +367,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		TmpChatRenderPath:       fmt.Sprintf("%s/%s_%s-chat.mp4", envConfig.TempDir, video.ID, vUUID),
 	}
 
-	if viper.GetBool("archive.save_as_hls") {
+	if config.Get().Archive.SaveAsHls {
 		vodDTO.TmpVideoHLSPath = fmt.Sprintf("%s/%s_%s-video_hls0", envConfig.TempDir, video.ID, vUUID)
 		vodDTO.VideoHLSPath = fmt.Sprintf("%s/%s-video_hls", rootVideoPath, fileName)
 		vodDTO.VideoPath = fmt.Sprintf("%s/%s-video_hls/%s-video.m3u8", rootVideoPath, fileName, video.ID)

@@ -27,15 +27,17 @@ import (
 func main() {
 	ctx := context.Background()
 
+	envConfig := config.GetEnvConfig()
+	_, err := serverConfig.Init()
+	if err != nil {
+		log.Panic().Err(err).Msg("Error initializing server config")
+	}
+
 	if os.Getenv("ENV") == "dev" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	log.Info().Str("commit", utils.Commit).Str("build_time", utils.BuildTime).Msg("starting worker")
-
-	serverConfig.NewConfig(false)
-
-	envConfig := config.GetEnvConfig()
 
 	dbString := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s", envConfig.DB_USER, envConfig.DB_PASS, envConfig.DB_HOST, envConfig.DB_PORT, envConfig.DB_NAME, envConfig.DB_SSL)
 

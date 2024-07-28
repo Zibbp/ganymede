@@ -10,6 +10,7 @@ import (
 // EnvConfig represents the environment variables for the application
 type EnvConfig struct {
 	// application
+	DEBUG              bool   `env:"DEBUG, default=false"`
 	DB_HOST            string `env:"DB_HOST, required"`
 	DB_PORT            string `env:"DB_PORT, required"`
 	DB_USER            string `env:"DB_USER, required"`

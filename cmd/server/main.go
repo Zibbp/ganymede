@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/admin"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/auth"
@@ -58,18 +57,19 @@ import (
 func Run() error {
 	ctx := context.Background()
 
-	config.NewConfig(true)
+	envConfig := config.GetEnvConfig()
+	_, err := config.Init()
+	if err != nil {
+		log.Panic().Err(err).Msg("error getting config")
+	}
 
-	configDebug := viper.GetBool("debug")
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
-	if configDebug {
+	if envConfig.DEBUG {
 		log.Info().Msg("debug mode enabled")
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
-
-	envConfig := config.GetEnvConfig()
 
 	dbString := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s", envConfig.DB_USER, envConfig.DB_PASS, envConfig.DB_HOST, envConfig.DB_PORT, envConfig.DB_NAME, envConfig.DB_SSL)
 
@@ -126,7 +126,7 @@ func Run() error {
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch)
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
-	configService := config.NewService(db)
+	// configService := config.NewService(db)
 	liveService := live.NewService(db, archiveService, platformTwitch)
 	schedulerService := scheduler.NewService(liveService, archiveService)
 	playbackService := playback.NewService(db)
@@ -136,7 +136,7 @@ func Run() error {
 	chapterService := chapter.NewService(db)
 	categoryService := category.NewService(db)
 
-	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, archiveService, adminService, userService, configService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService, categoryService, blockedVodService, platformTwitch)
+	httpHandler := transportHttp.NewHandler(authService, channelService, vodService, queueService, archiveService, adminService, userService, liveService, schedulerService, playbackService, metricsService, playlistService, taskService, chapterService, categoryService, blockedVodService, platformTwitch)
 
 	if err := httpHandler.Serve(); err != nil {
 		return err

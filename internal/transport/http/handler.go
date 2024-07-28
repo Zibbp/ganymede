@@ -28,7 +28,6 @@ type Services struct {
 	ArchiveService      ArchiveService
 	AdminService        AdminService
 	UserService         UserService
-	ConfigService       ConfigService
 	LiveService         LiveService
 	SchedulerService    SchedulerService
 	PlaybackService     PlaybackService
@@ -46,7 +45,7 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform) *Handler {
 	log.Debug().Msg("creating new handler")
 	env := config.GetEnvConfig()
 
@@ -60,7 +59,6 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 			ArchiveService:      archiveService,
 			AdminService:        adminService,
 			UserService:         userService,
-			ConfigService:       configService,
 			LiveService:         liveService,
 			SchedulerService:    schedulerService,
 			PlaybackService:     playbackService,
@@ -219,10 +217,6 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	configGroup := e.Group("/config")
 	configGroup.GET("", h.GetConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	configGroup.PUT("", h.UpdateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	configGroup.GET("/notification", h.GetNotificationConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	configGroup.PUT("/notification", h.UpdateNotificationConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	configGroup.GET("/storage", h.GetStorageTemplateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	configGroup.PUT("/storage", h.UpdateStorageTemplateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// Live
 	liveGroup := e.Group("/live")

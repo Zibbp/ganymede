@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -31,7 +31,7 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 		return "", fmt.Errorf("error getting variable map: %w", err)
 	}
 
-	folderTemplate := viper.GetString("storage_templates.folder_template")
+	folderTemplate := config.Get().StorageTemplates.FolderTemplate
 	if folderTemplate == "" {
 		log.Error().Msg("Folder template is empty")
 		// Fallback template
@@ -63,7 +63,7 @@ func GetFileName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 		return "", fmt.Errorf("error getting variable map: %w", err)
 	}
 
-	fileTemplate := viper.GetString("storage_templates.file_template")
+	fileTemplate := config.Get().StorageTemplates.FileTemplate
 	if fileTemplate == "" {
 		log.Error().Msg("File template is empty")
 		// Fallback template

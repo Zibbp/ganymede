@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/config"
@@ -53,10 +52,6 @@ type ChangePasswordRequest struct {
 //	@Failure		500			{object}	utils.ErrorResponse
 //	@Router			/auth/register [post]
 func (h *Handler) Register(c echo.Context) error {
-	// Check if registration is enabled
-	if !viper.Get("registration_enabled").(bool) {
-		return echo.NewHTTPError(http.StatusForbidden, "registration is disabled")
-	}
 	rr := new(RegisterRequest)
 	if err := c.Bind(rr); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())

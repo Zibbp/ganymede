@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/config"
 )
 
 var (
@@ -47,9 +47,9 @@ func sendWebhook(url string, body []byte) error {
 
 func SendVideoArchiveSuccessNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue) {
 	// Get notification settings
-	videoSuccessWebhookUrl := viper.GetString("notifications.video_success_webhook_url")
-	videoSuccessTemplate := viper.GetString("notifications.video_success_template")
-	videoSuccessEnabled := viper.GetBool("notifications.video_success_enabled")
+	videoSuccessWebhookUrl := config.Get().Notification.VideoSuccessWebhookUrl
+	videoSuccessTemplate := config.Get().Notification.VideoSuccessTemplate
+	videoSuccessEnabled := config.Get().Notification.VideoSuccessEnabled
 
 	if (!videoSuccessEnabled) || (videoSuccessWebhookUrl == "") || (videoSuccessTemplate == "") {
 		log.Debug().Msg("Video archive success notification is disabled")
@@ -91,9 +91,9 @@ func SendVideoArchiveSuccessNotification(channelItem *ent.Channel, vodItem *ent.
 
 func SendLiveArchiveSuccessNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue) {
 	// Get notification settings
-	liveSuccessWebhookUrl := viper.GetString("notifications.live_success_webhook_url")
-	liveSuccessTemplate := viper.GetString("notifications.live_success_template")
-	liveSuccessEnabled := viper.GetBool("notifications.live_success_enabled")
+	liveSuccessWebhookUrl := config.Get().Notification.LiveSuccessWebhookUrl
+	liveSuccessTemplate := config.Get().Notification.LiveSuccessTemplate
+	liveSuccessEnabled := config.Get().Notification.LiveSuccessEnabled
 
 	if (!liveSuccessEnabled) || (liveSuccessWebhookUrl == "") || (liveSuccessTemplate == "") {
 		log.Debug().Msg("Live archive success notification is disabled")
@@ -135,9 +135,9 @@ func SendLiveArchiveSuccessNotification(channelItem *ent.Channel, vodItem *ent.V
 
 func SendErrorNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue, failedTask string) {
 	// Get notification settings
-	errorWebhookUrl := viper.GetString("notifications.error_webhook_url")
-	errorTemplate := viper.GetString("notifications.error_template")
-	errorEnabled := viper.GetBool("notifications.error_enabled")
+	errorWebhookUrl := config.Get().Notification.ErrorWebhookUrl
+	errorTemplate := config.Get().Notification.ErrorTemplate
+	errorEnabled := config.Get().Notification.ErrorEnabled
 
 	if (!errorEnabled) || (errorWebhookUrl == "") || (errorTemplate == "") {
 		log.Debug().Msg("Error notification is disabled")
@@ -179,9 +179,9 @@ func SendErrorNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *en
 
 func SendLiveNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue) {
 	// Get notification settings
-	liveWebhookUrl := viper.GetString("notifications.is_live_webhook_url")
-	liveTemplate := viper.GetString("notifications.is_live_template")
-	liveEnabled := viper.GetBool("notifications.is_live_enabled")
+	liveWebhookUrl := config.Get().Notification.IsLiveWebhookUrl
+	liveTemplate := config.Get().Notification.IsLiveTemplate
+	liveEnabled := config.Get().Notification.IsLiveEnabled
 
 	if (!liveEnabled) || (liveWebhookUrl == "") || (liveTemplate == "") {
 		log.Debug().Msg("Live notification is disabled")

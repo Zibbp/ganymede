@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
-	"github.com/spf13/viper"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -173,7 +173,7 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 	}
 
 	// convert to HLS if needed
-	if viper.GetBool("archive.save_as_hls") {
+	if config.Get().Archive.SaveAsHls {
 		err = exec.ConvertVideoToHLS(ctx, dbItems.Video)
 		if err != nil {
 			return err

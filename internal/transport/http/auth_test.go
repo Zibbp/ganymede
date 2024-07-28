@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/zibbp/ganymede/ent"
@@ -86,9 +85,6 @@ func TestRegister(t *testing.T) {
 	handler := setupAuthHandler()
 	e := handler.Server
 	mockService := handler.Service.AuthService.(*MockAuthService)
-
-	viper.New()
-	viper.Set("registration_enabled", true)
 
 	// test register
 	registerBody := httpHandler.RegisterRequest{

@@ -12,7 +12,6 @@ import (
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
@@ -174,7 +173,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.LiveServiceKey, liveService)
 
 	// check videos interval
-	configCheckVideoInterval := viper.GetInt("video_check_interval_minutes")
+	configCheckVideoInterval := config.Get().VideoCheckInterval
 
 	periodicJobs := []*river.PeriodicJob{
 		// archive watchdog

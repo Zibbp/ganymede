@@ -8,13 +8,13 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -191,7 +191,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 						continue
 					}
 					// Skip if Twitch token is not set
-					if viper.GetString("parameters.twitch_token") == "" {
+					if config.Get().Parameters.TwitchToken == "" {
 						logger.Info().Str("video_id", video.ID).Msg("skipping sub only video; Twitch token is not set")
 						continue
 					}

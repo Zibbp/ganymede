@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/errors"
@@ -37,7 +36,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 
 	// check if user has twitch token set
 	// if so, set token in streamlink command
-	twitchToken := viper.GetString("parameters.twitch_token")
+	twitchToken := config.Get().Parameters.TwitchToken
 	if twitchToken != "" {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--twitch-api-header=Authorization=OAuth %s", twitchToken))
 	}
@@ -95,7 +94,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	defer file.Close()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
 
-	configStreamlinkArgs := viper.GetString("parameters.streamlink_live")
+	configStreamlinkArgs := config.Get().Parameters.StreamlinkLive
 
 	configStreamlinkArgsArr := strings.Split(configStreamlinkArgs, ",")
 
@@ -105,21 +104,15 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	proxyHeader := ""
 
 	// check if user has proxies enable
-	proxyEnabled = viper.GetBool("livestream.proxy_enabled")
-	whitelistedChannels := viper.GetStringSlice("livestream.proxy_whitelist") // list of channels that are not allowed to use the proxy
+	proxyEnabled = config.Get().Livestream.ProxyEnabled
+	whitelistedChannels := config.Get().Livestream.ProxyWhitelist // list of channels that are whitelisted from using proxy
 	if proxyEnabled {
 		if utils.Contains(whitelistedChannels, channel.Name) {
 			log.Debug().Str("channel_name", channel.Name).Msg("channel is whitelisted, not using proxy")
 		} else {
-			proxyParams := viper.GetString("livestream.proxy_parameters")
-			proxyListString := viper.Get("livestream.proxies")
-			var proxyList []config.ProxyListItem
-			for _, proxy := range proxyListString.([]interface{}) {
-				proxyList = append(proxyList, config.ProxyListItem{
-					URL:    proxy.(map[string]interface{})["url"].(string),
-					Header: proxy.(map[string]interface{})["header"].(string),
-				})
-			}
+			proxyParams := config.Get().Livestream.ProxyParameters
+			proxyList := config.Get().Livestream.Proxies
+
 			log.Debug().Str("proxy_list", fmt.Sprintf("%v", proxyList)).Msg("proxy list")
 			// test proxies
 			for _, proxy := range proxyList {
@@ -137,7 +130,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 	twitchToken := ""
 	// check if user has twitch token set
-	configTwitchToken := viper.GetString("parameters.twitch_token")
+	configTwitchToken := config.Get().Parameters.TwitchToken
 	if configTwitchToken != "" {
 		// check if token is valid
 		err := twitch.CheckUserAccessToken(ctx, configTwitchToken)
@@ -229,7 +222,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 }
 
 func PostProcessVideo(ctx context.Context, video ent.Vod) error {
-	configFfmpegArgs := viper.GetString("parameters.video_convert")
+	configFfmpegArgs := config.Get().Parameters.VideoConvert
 	arr := strings.Fields(configFfmpegArgs)
 	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoDownloadPath}
 
@@ -461,7 +454,7 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 
 	var cmdArgs []string
 
-	configRenderArgs := viper.GetString("parameters.chat_render")
+	configRenderArgs := config.Get().Parameters.ChatRender
 	configRenderArgsArr := strings.Fields(configRenderArgs)
 
 	cmdArgs = append(cmdArgs, "chatrender", "-i", video.TmpChatDownloadPath, "--collision", "overwrite")
@@ -635,7 +628,7 @@ func checkLogForNoStreams(logFilePath string) (bool, error) {
 
 func ConvertTwitchVodVideo(v *ent.Vod) error {
 	// Fetch config params
-	ffmpegParams := viper.GetString("parameters.video_convert")
+	ffmpegParams := config.Get().Parameters.VideoConvert
 	// Split supplied params into array
 	arr := strings.Fields(ffmpegParams)
 	// Generate args for exec
