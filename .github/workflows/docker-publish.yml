@@ -21,6 +21,9 @@ jobs:
       # Checkout the repo
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+          fetch-tags: true
 
       # Set up QEMU for Arm64
       - name: Set up QEMU
