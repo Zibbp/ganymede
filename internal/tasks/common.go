@@ -210,7 +210,7 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 	}
 
 	// write info to file
-	err = utils.WriteJsonFile(info, fmt.Sprintf("%s/%s/%s/info.json", config.GetEnvConfig().VideosDir, dbItems.Channel.Name, dbItems.Video.FolderName))
+	err = utils.WriteJsonFile(info, fmt.Sprintf("%s/%s/%s/%s-info.json", config.GetEnvConfig().VideosDir, dbItems.Channel.Name, dbItems.Video.FolderName, dbItems.Video.FileName))
 	if err != nil {
 		return err
 	}
