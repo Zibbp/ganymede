@@ -1,9 +1,7 @@
-ARG COMMIT_SHA
 ARG TWITCHDOWNLOADER_VERSION="1.54.9"
 
 # Build stage
 FROM --platform=$BUILDPLATFORM golang:1.22-bookworm AS build
-ENV COMMIT_SHA=$COMMIT_SHA
 WORKDIR /app
 COPY . .
 RUN make build_server build_worker
