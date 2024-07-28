@@ -3,9 +3,11 @@ dev_setup:
 	go install github.com/air-verse/air@latest
 
 build_server:
+	@echo "Building with COMMIT_SHA: $(COMMIT_SHA)"
 	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=$(COMMIT_SHA) -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ganymede-api cmd/server/main.go
 
 build_worker:
+	@echo "Building with COMMIT_SHA: $(COMMIT_SHA)"
 	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=$(COMMIT_SHA) -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ganymede-worker cmd/worker/main.go
 
 build_dev_server:
