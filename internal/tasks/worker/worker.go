@@ -122,8 +122,8 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 			river.QueueDefault:          {MaxWorkers: 100}, // non-resource intensive tasks or time sensitive tasks (live videos and chat)
 			tasks.QueueVideoDownload:    {MaxWorkers: input.VideoDownloadWorkers},
 			tasks.QueueVideoPostProcess: {MaxWorkers: input.VideoPostProcessWorkers},
-			tasks.QueueChatDownload:     {MaxWorkers: input.ChatRenderWorkers},
-			tasks.QueueChatRender:       {MaxWorkers: input.VideoDownloadWorkers},
+			tasks.QueueChatDownload:     {MaxWorkers: input.ChatDownloadWorkers},
+			tasks.QueueChatRender:       {MaxWorkers: input.ChatRenderWorkers},
 		},
 		Workers:              workers,
 		JobTimeout:           -1,

@@ -7,10 +7,12 @@ services:
     depends_on:
       - ganymede-temporal
     environment:
+      - DEBUG=false
       - TZ=America/Chicago # Set to your timezone
       # Data paths in container; update the mounted volume paths as well
-      - VIDEOS_DIR=/data/videos
-      - TEMP_DIR=/data/temp
+      - VIDEOS_DIR=/data/videos # update the mounted volume paths as well
+      - TEMP_DIR=/data/temp # update the mounted volume paths as well
+      # Database settings
       - DB_HOST=ganymede-db
       - DB_PORT=5432
       - DB_USER=ganymede
@@ -63,7 +65,7 @@ services:
       - POSTGRES_DB=ganymede-prd
     ports:
       - 4803:5432
-  # Nginx is not really required, it provides nice-to-have caching. The API container will serve the VIDEO_DIR env var path if you wish to use that instead (e.g. IP:4800/data/vods/channel/channel.jpg).
+  # Nginx is not really required, it provides nice-to-have caching. The API container will serve the VIDEO_DIR env var path if you want to use that instead (e.g. VIDEOS_DIR=/data/vods would be served at IP:4800/data/vods/channel/channel.jpg).
   ganymede-nginx:
     container_name: ganymede-nginx
     image: nginx
@@ -72,3 +74,9 @@ services:
       - /pah/to/vod/stoage:/mnt/vods
     ports:
       - 4802:8080
+  ganymede-river-ui:
+    image: ghcr.io/riverqueue/riverui:0.3
+    environment:
+      - DATABASE_URL=postgres://ganymede:DB_PASSWORD@ganymede-db:5432/ganymede-prd # update with env settings from the ganymede-db container
+    ports:
+      - 4804:8080
