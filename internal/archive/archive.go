@@ -41,6 +41,7 @@ func NewService(store *database.Database, channelService *channel.Service, vodSe
 
 // ArchiveChannel - Create channel entry in database along with folder, profile image, etc.
 func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.Channel, error) {
+	env := config.GetEnvConfig()
 	// get channel from platform
 	platformChannel, err := s.PlatformTwitch.GetChannel(ctx, channelName)
 	if err != nil {
@@ -54,12 +55,10 @@ func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.
 	}
 
 	// Create channel folder
-	err = utils.CreateFolder(platformChannel.Login)
+	err = utils.CreateDirectory(fmt.Sprintf("%s/%s", env.VideosDir, platformChannel.Login))
 	if err != nil {
 		return nil, fmt.Errorf("error creating channel folder: %v", err)
 	}
-
-	env := config.GetEnvConfig()
 
 	// Download channel profile image
 	err = utils.DownloadFile(platformChannel.ProfileImageURL, fmt.Sprintf("%s/%s/%s", env.VideosDir, platformChannel.Login, "profile.png"))

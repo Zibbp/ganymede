@@ -21,9 +21,9 @@ import (
 )
 
 func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
-
+	env := config.GetEnvConfig()
 	// open log file
-	logFilePath := fmt.Sprintf("/logs/%s-video.log", video.ID.String())
+	logFilePath := fmt.Sprintf("%s/%s-video.log", env.LogsDir, video.ID.String())
 	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
@@ -84,9 +84,9 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 }
 
 func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Channel, startChat chan bool) error {
-
+	env := config.GetEnvConfig()
 	// open log file
-	logFilePath := fmt.Sprintf("/logs/%s-video.log", video.ID.String())
+	logFilePath := fmt.Sprintf("%s/%s-video.log", env.LogsDir, video.ID.String())
 	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
@@ -222,6 +222,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 }
 
 func PostProcessVideo(ctx context.Context, video ent.Vod) error {
+	env := config.GetEnvConfig()
 	configFfmpegArgs := config.Get().Parameters.VideoConvert
 	arr := strings.Fields(configFfmpegArgs)
 	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoDownloadPath}
@@ -230,7 +231,7 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
 
 	// open log file
-	logFilePath := fmt.Sprintf("/logs/%s-video-convert.log", video.ID.String())
+	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
 	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
@@ -275,10 +276,11 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 }
 
 func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
+	env := config.GetEnvConfig()
 	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoConvertPath, "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("%s/%s_segment%s.ts", video.TmpVideoHlsPath, video.ExtID, "%d"), "-f", "hls", fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)}
 
 	// open log file
-	logFilePath := fmt.Sprintf("/logs/%s-video-convert.log", video.ID.String())
+	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
 	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
@@ -324,9 +326,9 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 }
 
 func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
-
+	env := config.GetEnvConfig()
 	// open log file
-	logFilePath := fmt.Sprintf("/logs/%s-chat.log", video.ID.String())
+	logFilePath := fmt.Sprintf("%s/%s-chat.log", env.LogsDir, video.ID.String())
 	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
@@ -378,7 +380,7 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 }
 
 func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Channel, queue ent.Queue) error {
-
+	env := config.GetEnvConfig()
 	// set chat start time
 	chatStarTime := time.Now()
 	_, err := queue.Update().SetChatStart(chatStarTime).Save(ctx)
@@ -387,7 +389,7 @@ func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Chan
 	}
 
 	// open log file
-	logFilePath := fmt.Sprintf("/logs/%s-chat.log", video.ID.String())
+	logFilePath := fmt.Sprintf("%s/%s-chat.log", env.LogsDir, video.ID.String())
 	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
@@ -442,9 +444,9 @@ func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Chan
 }
 
 func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
-
+	env := config.GetEnvConfig()
 	// open log file
-	logFilePath := fmt.Sprintf("/logs/%s-chat-render.log", video.ID.String())
+	logFilePath := fmt.Sprintf("%s/%s-chat-render.log", env.LogsDir, video.ID.String())
 	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
@@ -550,9 +552,9 @@ func GetVideoDuration(ctx context.Context, path string) (int, error) {
 }
 
 func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
-
+	env := config.GetEnvConfig()
 	// open log file
-	logFilePath := fmt.Sprintf("/logs/%s-chat-convert.log", video.ID.String())
+	logFilePath := fmt.Sprintf("%s/%s-chat-convert.log", env.LogsDir, video.ID.String())
 	file, err := os.Create(logFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
@@ -627,6 +629,7 @@ func checkLogForNoStreams(logFilePath string) (bool, error) {
 }
 
 func ConvertTwitchVodVideo(v *ent.Vod) error {
+	env := config.GetEnvConfig()
 	// Fetch config params
 	ffmpegParams := config.Get().Parameters.VideoConvert
 	// Split supplied params into array
@@ -641,7 +644,7 @@ func ConvertTwitchVodVideo(v *ent.Vod) error {
 	// Execute ffmpeg
 	cmd := osExec.Command("ffmpeg", argArr...)
 
-	videoConvertLogfile, err := os.Create(fmt.Sprintf("/logs/%s-video-convert.log", v.ID))
+	videoConvertLogfile, err := os.Create(fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, v.ID))
 	if err != nil {
 		log.Error().Err(err).Msg("error creating video convert logfile")
 		return err

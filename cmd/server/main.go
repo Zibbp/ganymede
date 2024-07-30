@@ -58,6 +58,7 @@ func Run() error {
 	ctx := context.Background()
 
 	envConfig := config.GetEnvConfig()
+	envAppConfig := config.GetEnvApplicationConfig()
 	_, err := config.Init()
 	if err != nil {
 		log.Panic().Err(err).Msg("error getting config")
@@ -71,7 +72,7 @@ func Run() error {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	dbString := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s", envConfig.DB_USER, envConfig.DB_PASS, envConfig.DB_HOST, envConfig.DB_PORT, envConfig.DB_NAME, envConfig.DB_SSL)
+	dbString := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s", envAppConfig.DB_USER, envAppConfig.DB_PASS, envAppConfig.DB_HOST, envAppConfig.DB_PORT, envAppConfig.DB_NAME, envAppConfig.DB_SSL)
 
 	db := database.NewDatabase(ctx, database.DatabaseConnectionInput{
 		DBString: dbString,

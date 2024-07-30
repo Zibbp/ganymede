@@ -13,17 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// CreateFolder - creates folder if it doesn't exist
-// Adds base directory to path - supply with everything after /vods/
-func CreateFolder(path string) error {
-	log.Debug().Msgf("creating folder: %s", path)
-	err := os.MkdirAll(fmt.Sprintf("/vods/%s", path), os.ModePerm)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // Create a directory given the path
 func CreateDirectory(path string) error {
 	err := os.MkdirAll(path, os.ModePerm)
@@ -111,18 +100,6 @@ func WriteJsonFile(j interface{}, path string) error {
 	err = os.WriteFile(path, data, 0644)
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func WriteJson(j interface{}, path string, filename string) error {
-	data, err := json.Marshal(j)
-	if err != nil {
-		log.Error().Msgf("error marshalling json: %v", err)
-	}
-	err = os.WriteFile(fmt.Sprintf("/vods/%s/%s", path, filename), data, 0644)
-	if err != nil {
-		log.Error().Msgf("error writing json: %v", err)
 	}
 	return nil
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/tasks"
@@ -121,7 +122,8 @@ func (s *Service) StorageMigration() error {
 		// Add array of strings together seperated by /
 		oldRootFolderPath := strings.Join(tmpRootFolder, "/")
 
-		newRootFolderPath := fmt.Sprintf("/vods/%s/%s", video.Edges.Channel.Name, folderName)
+		envConfig := config.GetEnvConfig()
+		newRootFolderPath := fmt.Sprintf("/%s/%s/%s", envConfig.VideosDir, video.Edges.Channel.Name, folderName)
 
 		// Rename files first
 		// Video

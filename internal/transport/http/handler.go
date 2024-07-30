@@ -47,7 +47,7 @@ type Handler struct {
 
 func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform) *Handler {
 	log.Debug().Msg("creating new handler")
-	env := config.GetEnvConfig()
+	env := config.GetEnvApplicationConfig()
 
 	h := &Handler{
 		Server: echo.New(),

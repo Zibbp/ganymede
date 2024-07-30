@@ -25,12 +25,12 @@ type Claims struct {
 }
 
 func GetJWTSecret() string {
-	env := config.GetEnvConfig()
+	env := config.GetEnvApplicationConfig()
 	jwtSecret := env.JWTSecret
 	return jwtSecret
 }
 func GetJWTRefreshSecret() string {
-	env := config.GetEnvConfig()
+	env := config.GetEnvApplicationConfig()
 	jwtRefreshSecret := env.JWTRefreshSecret
 	return jwtRefreshSecret
 }

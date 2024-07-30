@@ -61,7 +61,12 @@ var (
 	initErr  error
 )
 
-const configFile = "/data/config.json"
+var configFile string
+
+func init() {
+	env := GetEnvConfig()
+	configFile = env.ConfigDir + "/config.json"
+}
 
 // Init initializes and returns the configuration
 func Init() (*Config, error) {

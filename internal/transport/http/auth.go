@@ -235,7 +235,7 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/callback [get]
 func (h *Handler) OAuthCallback(c echo.Context) error {
-	env := config.GetEnvConfig()
+	env := config.GetEnvApplicationConfig()
 	err := h.Service.AuthService.OAuthCallback(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -283,7 +283,7 @@ func (h *Handler) OAuthTokenRefresh(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/logout [get]
 func (h *Handler) OAuthLogout(c echo.Context) error {
-	env := config.GetEnvConfig()
+	env := config.GetEnvApplicationConfig()
 	err := h.Service.AuthService.OAuthLogout(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

@@ -13,6 +13,7 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/channel"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
@@ -129,11 +130,12 @@ func (s *Service) GetQueueItem(qID uuid.UUID) (*ent.Queue, error) {
 }
 
 func (s *Service) ReadLogFile(c echo.Context, qID uuid.UUID, logType string) ([]byte, error) {
+	env := config.GetEnvConfig()
 	q, err := s.GetQueueItem(qID)
 	if err != nil {
 		return nil, err
 	}
-	path := fmt.Sprintf("/logs/%s-%s.log", q.Edges.Vod.ID, logType)
+	path := fmt.Sprintf("%s/%s-%s.log", env.LogsDir, q.Edges.Vod.ID, logType)
 	logLines, err := utils.ReadLastLines(path, 20)
 	if err != nil {
 		return nil, err
