@@ -12,11 +12,27 @@ User gid:    $(id -g abc)
 -------------------------------------
 "
 
+# define default directories
+LOGS_DIR=${LOGS_DIR:-"/data/logs"}
+CONFIG_DIR=${CONFIG_DIR:-"/data/config"}
+VIDEOS_DIR=${VIDEOS_DIR:-"/vods"}
+TEMP_DIR=${TEMP_DIR:-"/data/temp"}
+
 # set permissions
-chown -R abc:abc /logs
-chown -R abc:abc /data
-chown -R abc:abc /tmp
-chown abc:abc /vods
+chown -R abc:abc ${LOGS_DIR}
+chown -R abc:abc ${CONFIG_DIR}
+chown -R abc:abc ${TEMP_DIR}
+chown abc:abc ${VIDEOS_DIR}
+
+# migrate config from old directory
+if [ -f "/data/config.json" ]; then
+  if mv /data/config.json ${CONFIG_DIR}/config.json; then
+    echo "Moved config.json to ${CONFIG_DIR}"
+  else
+    echo "Failed to move config.json to ${CONFIG_DIR}"
+    exit 1
+  fi
+fi
 
 # fonts
 mkdir -p /var/cache/fontconfig
