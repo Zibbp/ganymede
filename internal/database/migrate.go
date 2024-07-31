@@ -29,13 +29,24 @@ func (db *Database) VideosDirMigrate(ctx context.Context, videosDir string) erro
 
 	// check if videos directory has changed
 	if oldVideoPath != "" && oldVideoPath != videosDir {
-		log.Info().Msg("detected new videos directory; migrating existing video directories")
+		log.Info().Msg("detected new videos directory; migrating pathes to new directory")
 
+		// update channel paths
+		channels, err := db.Client.Channel.Query().All(ctx)
+		if err != nil {
+			return err
+		}
+		// replace old path with new path
+		for _, c := range channels {
+			update := db.Client.Channel.UpdateOne(c)
+			update.SetImagePath(strings.Replace(c.ImagePath, oldVideoPath, videosDir, 1))
+		}
+
+		// update video paths
 		videos, err := db.Client.Vod.Query().WithChannel().All(ctx)
 		if err != nil {
 			return err
 		}
-
 		// replace old path with new path
 		for _, v := range videos {
 			update := db.Client.Vod.UpdateOneID(v.ID)
