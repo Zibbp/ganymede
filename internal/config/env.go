@@ -26,7 +26,7 @@ type EnvConfig struct {
 	DEBUG        bool   `env:"DEBUG, default=false"`
 	CookieDomain string `env:"COOKIE_DOMAIN, default="`
 	// customizable paths
-	VideosDir string `env:"VIDEOS_DIR, default=/vods"`
+	VideosDir string `env:"VIDEOS_DIR, default=/data/videos"`
 	TempDir   string `env:"TEMP_DIR, default=/data/temp"`
 	ConfigDir string `env:"CONFIG_DIR, default=/data/config"`
 	LogsDir   string `env:"LOGS_DIR, default=/data/logs"`
