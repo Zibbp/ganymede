@@ -15,7 +15,7 @@ User gid:    $(id -g abc)
 # define default directories
 LOGS_DIR=${LOGS_DIR:-"/data/logs"}
 CONFIG_DIR=${CONFIG_DIR:-"/data/config"}
-VIDEOS_DIR=${VIDEOS_DIR:-"/vods"}
+VIDEOS_DIR=${VIDEOS_DIR:-"/data/videos"}
 TEMP_DIR=${TEMP_DIR:-"/data/temp"}
 
 # set permissions
