@@ -40,6 +40,10 @@ func (db *Database) VideosDirMigrate(ctx context.Context, videosDir string) erro
 		for _, c := range channels {
 			update := db.Client.Channel.UpdateOne(c)
 			update.SetImagePath(strings.Replace(c.ImagePath, oldVideoPath, videosDir, 1))
+
+			if _, err := update.Save(ctx); err != nil {
+				return err
+			}
 		}
 
 		// update video paths
