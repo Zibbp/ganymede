@@ -10,8 +10,10 @@ services:
       - DEBUG=false
       - TZ=America/Chicago # Set to your timezone
       # Data paths in container; update the mounted volume paths as well
-      - VIDEOS_DIR=/data/videos # update the mounted volume paths as well
-      - TEMP_DIR=/data/temp # update the mounted volume paths as well
+      - VIDEOS_DIR=/data/videos
+      - TEMP_DIR=/data/temp
+      - LOGS_DIR=/data/logs
+      - CONFIG_DIR=/data/config
       # Database settings
       - DB_HOST=ganymede-db
       - DB_PORT=5432
@@ -38,8 +40,8 @@ services:
     volumes:
       - /path/to/vod/storage:/data/videos # update VIDEOS_DIR env var
       - ./temp:/data/temp # update TEMP_DIR env var
-      - ./logs:/logs # queue logs
-      - ./data:/data # config and other miscellaneous files
+      - ./logs:/data/logs # queue logs
+      - ./config:/data/config # config and other miscellaneous files
     ports:
       - 4800:4000
   ganymede-frontend:
@@ -71,7 +73,7 @@ services:
     image: nginx
     volumes:
       - /path/to/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /pah/to/vod/stoage:/mnt/vods
+      - /pah/to/vod/stoage:/mnt/videos
     ports:
       - 4802:8080
   ganymede-river-ui:
