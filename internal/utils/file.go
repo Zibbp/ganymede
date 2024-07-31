@@ -281,7 +281,6 @@ func MoveFolder(src string, dst string) error {
 }
 
 func DeleteFile(path string) error {
-	log.Debug().Msgf("deleting file: %s", path)
 	err := os.Remove(path)
 	if err != nil {
 		return err

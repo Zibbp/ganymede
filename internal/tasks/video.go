@@ -174,6 +174,12 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 
 	// convert to HLS if needed
 	if config.Get().Archive.SaveAsHls {
+		// create temp hls directory
+		if err := utils.CreateDirectory(dbItems.Video.TmpVideoHlsPath); err != nil {
+			return err
+		}
+
+		// convert to hls
 		err = exec.ConvertVideoToHLS(ctx, dbItems.Video)
 		if err != nil {
 			return err
@@ -283,6 +289,18 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		err := utils.MoveDirectory(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.VideoHlsPath)
 		if err != nil {
 			return err
+		}
+
+		// clean up temp hls directory
+		if err := utils.DeleteDirectory(dbItems.Video.TmpVideoHlsPath); err != nil {
+			return err
+		}
+		// delete temp converted video
+		if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
+			err = utils.DeleteFile(dbItems.Video.TmpVideoConvertPath)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

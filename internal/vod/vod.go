@@ -202,7 +202,7 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) e
 				return err
 			}
 		}
-		if err := utils.DeleteFile(v.TmpVideoHlsPath); err != nil {
+		if err := utils.DeleteDirectory(v.TmpVideoHlsPath); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				log.Debug().Msgf("temp file %s does not exist", v.TmpVideoHlsPath)
 			} else {
