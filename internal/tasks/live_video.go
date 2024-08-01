@@ -9,9 +9,6 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog/log"
-	"github.com/zibbp/ganymede/ent"
-	entChannel "github.com/zibbp/ganymede/ent/channel"
-	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -121,21 +118,9 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 		}
 	}
 
-	// get watched channel
-	watchedChannel, err := store.Client.Live.Query().Where(entLive.HasChannelWith(entChannel.ID(dbItems.Channel.ID))).Only(ctx)
-	if err != nil {
-		if _, ok := err.(*ent.NotFoundError); ok {
-			log.Debug().Str("channel", dbItems.Channel.Name).Msg("watched channel not found")
-		} else {
-			return err
-		}
-	}
-	// mark channel as not live if it exists
-	if watchedChannel != nil {
-		err = store.Client.Live.UpdateOneID(watchedChannel.ID).SetIsLive(false).Exec(ctx)
-		if err != nil {
-			return err
-		}
+	// mark channel as not live
+	if err := setWatchChannelAsNotLive(ctx, store, dbItems.Channel.ID); err != nil {
+		return err
 	}
 
 	// set queue status to completed
