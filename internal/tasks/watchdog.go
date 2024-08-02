@@ -18,7 +18,7 @@ import (
 // //////////
 type WatchdogArgs struct{}
 
-func (WatchdogArgs) Kind() string { return "archive-watchdog" }
+func (WatchdogArgs) Kind() string { return TaskArchiveWatchdog }
 
 func (w WatchdogArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{

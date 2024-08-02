@@ -29,6 +29,18 @@ var archive_tag = "archive"
 var allow_fail_tag = "allow_fail"
 
 var (
+	TaskUpdateStreamVideoId      = "update_stream_video_id"
+	TaskGenerateStaticThumbnails = "generate_static_thumbnails"
+	TaskArchiveWatchdog          = "archive_watchdog"
+	TaskCheckChannelForNewVideos = "check_channel_for_new_videos"
+	TaskPruneVideos              = "prune_videos"
+	TaskImportVideos             = "import_videos"
+	TaskAuthenticatePlatform     = "authenticate_platform"
+	TaskFetchJWKS                = "fetch_jwks"
+	TaskSaveVideoChapters        = "save_video_chapters"
+)
+
+var (
 	QueueVideoDownload    = "video-download"
 	QueueVideoPostProcess = "video-postprocess"
 	QueueChatDownload     = "chat-download"

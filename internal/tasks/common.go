@@ -479,7 +479,7 @@ type UpdateStreamVideoIdArgs struct {
 	Input ArchiveVideoInput `json:"input"`
 }
 
-func (UpdateStreamVideoIdArgs) Kind() string { return "update_stream_video_id" }
+func (UpdateStreamVideoIdArgs) Kind() string { return TaskUpdateStreamVideoId }
 
 func (args UpdateStreamVideoIdArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{

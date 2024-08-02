@@ -17,7 +17,7 @@ import (
 // Save chapters for all archived videos. Going forward this is done as part of the archive task, it's here to backfill old data.
 type SaveVideoChaptersArgs struct{}
 
-func (SaveVideoChaptersArgs) Kind() string { return "save_video_chapters" }
+func (SaveVideoChaptersArgs) Kind() string { return tasks.TaskSaveVideoChapters }
 
 func (w SaveVideoChaptersArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{

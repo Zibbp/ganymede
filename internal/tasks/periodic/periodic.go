@@ -28,7 +28,7 @@ func liveServiceFromContext(ctx context.Context) (*live.Service, error) {
 // Check watched channels for new videos
 type CheckChannelsForNewVideosArgs struct{}
 
-func (CheckChannelsForNewVideosArgs) Kind() string { return "check_channels_for_new_videos" }
+func (CheckChannelsForNewVideosArgs) Kind() string { return tasks.TaskCheckChannelForNewVideos }
 
 func (w CheckChannelsForNewVideosArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
@@ -66,7 +66,7 @@ func (w CheckChannelsForNewVideosWorker) Work(ctx context.Context, job *river.Jo
 // Prune videos
 type PruneVideosArgs struct{}
 
-func (PruneVideosArgs) Kind() string { return "prune_videos" }
+func (PruneVideosArgs) Kind() string { return tasks.TaskPruneVideos }
 
 func (w PruneVideosArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
@@ -104,7 +104,7 @@ func (w PruneVideosWorker) Work(ctx context.Context, job *river.Job[PruneVideosA
 // Import Twitch categories
 type ImportCategoriesArgs struct{}
 
-func (ImportCategoriesArgs) Kind() string { return "import_categories" }
+func (ImportCategoriesArgs) Kind() string { return tasks.TaskImportVideos }
 
 func (w ImportCategoriesArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
@@ -157,7 +157,7 @@ func (w ImportCategoriesWorker) Work(ctx context.Context, job *river.Job[ImportC
 // Authenticate with Platform
 type AuthenticatePlatformArgs struct{}
 
-func (AuthenticatePlatformArgs) Kind() string { return "authenticate_platform" }
+func (AuthenticatePlatformArgs) Kind() string { return tasks.TaskAuthenticatePlatform }
 
 func (w AuthenticatePlatformArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
@@ -195,7 +195,7 @@ func (w AuthenticatePlatformWorker) Work(ctx context.Context, job *river.Job[Aut
 // Fetch Json Web Keys if using OIDC
 type FetchJWKSArgs struct{}
 
-func (FetchJWKSArgs) Kind() string { return "fetch_jwks" }
+func (FetchJWKSArgs) Kind() string { return tasks.TaskFetchJWKS }
 
 func (w FetchJWKSArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{

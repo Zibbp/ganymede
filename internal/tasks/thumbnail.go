@@ -14,7 +14,7 @@ type GenerateStaticThumbnailArgs struct {
 	VideoId string `json:"video_id"`
 }
 
-func (GenerateStaticThumbnailArgs) Kind() string { return "generate_static_thumbnail" }
+func (GenerateStaticThumbnailArgs) Kind() string { return TaskGenerateStaticThumbnails }
 
 func (args GenerateStaticThumbnailArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
