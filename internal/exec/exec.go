@@ -2,6 +2,7 @@ package exec
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -707,4 +708,53 @@ func testProxyServer(url string, header string) bool {
 	}
 	log.Debug().Msg("proxy server test successful")
 	return true
+}
+
+// GenerateStaticThumbnail generates static thumbnail for video.
+//
+// Resolution is optional and if not set the thumbnail will be generated at the original resolution.
+func GenerateStaticThumbnail(ctx context.Context, videoPath string, position int, thumbnailPath string, resolution string) error {
+	log.Info().Str("videoPath", videoPath).Str("position", strconv.Itoa(position)).Str("thumbnailPath", thumbnailPath).Str("resolution", resolution).Msg("generating static thumbnail")
+	// placing -ss 1 before the input is faster
+	// https://stackoverflow.com/questions/27568254/how-to-extract-1-screenshot-for-a-video-with-ffmpeg-at-a-given-time
+	ffmpegArgs := []string{"-y", "-hide_banner", "-ss", strconv.Itoa(position), "-i", videoPath, "-vframes", "1", "-update", "1"}
+	if resolution != "" {
+		ffmpegArgs = append(ffmpegArgs, "-s", resolution)
+	}
+
+	ffmpegArgs = append(ffmpegArgs, thumbnailPath)
+
+	cmd := osExec.CommandContext(ctx, "ffmpeg", ffmpegArgs...)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("error starting ffmpeg: %w", err)
+	}
+
+	done := make(chan error)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	// Wait for the command to finish or context to be cancelled
+	select {
+	case <-ctx.Done():
+		// Context was cancelled, kill the process
+		if err := cmd.Process.Kill(); err != nil {
+			return fmt.Errorf("failed to kill ffmpeg process: %v", err)
+		}
+		<-done // Wait for copying to finish
+		return ctx.Err()
+	case err := <-done:
+		// Command finished normally
+		if err != nil {
+			log.Error().Err(err).Str("ffmpeg_stderr", stderr.String()).Str("ffmpeg_stdout", stdout.String()).Msg("error running ffmpeg")
+			return fmt.Errorf("error running ffmpeg: %w", err)
+		}
+	}
+
+	return nil
 }

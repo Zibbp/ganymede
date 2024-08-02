@@ -114,14 +114,9 @@ func Run() error {
 		}
 	}
 
-	_, err = platformTwitch.GetVideo(ctx, "2200478055", true, true)
-	if err != nil {
-		log.Panic().Err(err).Msg("Error authenticating to Twitch")
-	}
-
 	authService := auth.NewService(db)
 	channelService := channel.NewService(db, platformTwitch)
-	vodService := vod.NewService(db, platformTwitch)
+	vodService := vod.NewService(db, riverClient, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodService := blocked.NewService(db)
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch)

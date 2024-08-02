@@ -11,11 +11,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	entChannel "github.com/zibbp/ganymede/ent/channel"
-	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/config"
-	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -587,27 +585,6 @@ func (w UpdateStreamVideoIdWorker) Work(ctx context.Context, job *river.Job[Upda
 	}
 
 	logger.Info().Msg("task completed")
-
-	return nil
-}
-
-// setWatchChannelAsNotLive marks the watched channel as not live
-func setWatchChannelAsNotLive(ctx context.Context, store *database.Database, channelId uuid.UUID) error {
-	watchedChannel, err := store.Client.Live.Query().Where(entLive.HasChannelWith(entChannel.ID(channelId))).Only(ctx)
-	if err != nil {
-		if _, ok := err.(*ent.NotFoundError); ok {
-			log.Debug().Str("channel_id", channelId.String()).Msg("watched channel not found")
-		} else {
-			return err
-		}
-	}
-	// mark channel as not live if it exists
-	if watchedChannel != nil {
-		err = store.Client.Live.UpdateOneID(watchedChannel.ID).SetIsLive(false).Exec(ctx)
-		if err != nil {
-			return err
-		}
-	}
 
 	return nil
 }

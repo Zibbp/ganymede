@@ -103,6 +103,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks.UpdateStreamVideoIdWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks.GenerateStaticThubmnailWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 

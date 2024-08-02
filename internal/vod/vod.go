@@ -15,6 +15,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
@@ -25,16 +26,19 @@ import (
 	"github.com/zibbp/ganymede/internal/chat"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/platform"
+	"github.com/zibbp/ganymede/internal/tasks"
+	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type Service struct {
-	Store    *database.Database
-	Platform platform.Platform
+	Store       *database.Database
+	RiverClient *tasks_client.RiverClient
+	Platform    platform.Platform
 }
 
-func NewService(store *database.Database, platform platform.Platform) *Service {
-	return &Service{Store: store, Platform: platform}
+func NewService(store *database.Database, riverClient *tasks_client.RiverClient, platform platform.Platform) *Service {
+	return &Service{Store: store, RiverClient: riverClient, Platform: platform}
 }
 
 type Vod struct {
@@ -362,6 +366,12 @@ func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, chann
 	pagination.Data = v
 
 	return pagination, nil
+}
+
+func (s *Service) GenerateStaticThumbnail(ctx context.Context, videoID uuid.UUID) (*rivertype.JobInsertResult, error) {
+	return s.RiverClient.Client.Insert(ctx, tasks.GenerateStaticThumbnailArgs{
+		VideoId: videoID.String(),
+	}, nil)
 }
 
 func (s *Service) GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error) {

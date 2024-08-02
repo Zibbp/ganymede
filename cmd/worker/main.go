@@ -68,7 +68,7 @@ func main() {
 	}
 
 	channelService := channel.NewService(db, platformTwitch)
-	vodService := vod.NewService(db, platformTwitch)
+	vodService := vod.NewService(db, riverClient, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodsService := blocked.NewService(db)
 	// twitchService := twitch.NewService()

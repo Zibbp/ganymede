@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/riverqueue/river/rivertype"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/chat"
 	"github.com/zibbp/ganymede/internal/platform"
@@ -33,6 +34,7 @@ type VodService interface {
 	GetChatBadges(ctx context.Context, vodID uuid.UUID) (*platform.Badges, error)
 	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error)
 	LockVod(c echo.Context, vID uuid.UUID, status bool) error
+	GenerateStaticThumbnail(ctx context.Context, videoID uuid.UUID) (*rivertype.JobInsertResult, error)
 }
 
 type CreateVodRequest struct {
@@ -598,4 +600,16 @@ func (h *Handler) LockVod(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, nil)
+}
+
+func (h *Handler) GenerateStaticThumbnail(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	job, err := h.Service.VodService.GenerateStaticThumbnail(c.Request().Context(), vID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return SuccessResponse(c, nil, fmt.Sprintf("job created: %d", job.Job.ID))
 }
