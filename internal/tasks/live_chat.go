@@ -248,12 +248,24 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	// continue with next job
 	if job.Args.Continue {
 		client := river.ClientFromContext[pgx.Tx](ctx)
-		_, err := client.Insert(ctx, &RenderChatArgs{
-			Continue: true,
-			Input:    job.Args.Input,
-		}, nil)
-		if err != nil {
-			return err
+		// render chat if needed
+		if dbItems.Queue.TaskChatRender != utils.Success {
+			_, err := client.Insert(ctx, &RenderChatArgs{
+				Continue: true,
+				Input:    job.Args.Input,
+			}, nil)
+			if err != nil {
+				return err
+			}
+			// else move chat as rendering is not needed
+		} else {
+			_, err := client.Insert(ctx, &MoveChatArgs{
+				Continue: true,
+				Input:    job.Args.Input,
+			}, nil)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
