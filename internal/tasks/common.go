@@ -374,12 +374,15 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 				return err
 			}
 
-			_, err = client.Insert(ctx, &DownloadChatArgs{
-				Continue: true,
-				Input:    job.Args.Input,
-			}, nil)
-			if err != nil {
-				return err
+			// download chat if needed
+			if dbItems.Queue.ArchiveChat {
+				_, err = client.Insert(ctx, &DownloadChatArgs{
+					Continue: true,
+					Input:    job.Args.Input,
+				}, nil)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

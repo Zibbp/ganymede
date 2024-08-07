@@ -73,14 +73,17 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 		for {
 			select {
 			case <-startChatDownload:
-				log.Debug().Str("channel", dbItems.Channel.Name).Msgf("starting chat download for %s", dbItems.Video.ExtID)
-				client := river.ClientFromContext[pgx.Tx](ctx)
-				_, err = client.Insert(ctx, &DownloadLiveChatArgs{
-					Continue: true,
-					Input:    job.Args.Input,
-				}, nil)
-				if err != nil {
-					log.Error().Err(err).Msg("failed to start chat download")
+				// start chat download if requested
+				if dbItems.Queue.ArchiveChat {
+					log.Debug().Str("channel", dbItems.Channel.Name).Msgf("starting chat download for %s", dbItems.Video.ExtID)
+					client := river.ClientFromContext[pgx.Tx](ctx)
+					_, err = client.Insert(ctx, &DownloadLiveChatArgs{
+						Continue: true,
+						Input:    job.Args.Input,
+					}, nil)
+					if err != nil {
+						log.Error().Err(err).Msg("failed to start chat download")
+					}
 				}
 			case <-ctx.Done():
 				return
