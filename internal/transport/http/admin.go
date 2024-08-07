@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -8,8 +9,8 @@ import (
 )
 
 type AdminService interface {
-	GetStats(c echo.Context) (admin.GetStatsResp, error)
-	GetInfo(c echo.Context) (admin.InfoResp, error)
+	GetStats(ctx context.Context) (admin.GetStatsResp, error)
+	GetInfo(ctx context.Context) (admin.InfoResp, error)
 }
 
 // GetStats godoc
@@ -24,7 +25,7 @@ type AdminService interface {
 //	@Router			/admin/stats [get]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) GetStats(c echo.Context) error {
-	resp, err := h.Service.AdminService.GetStats(c)
+	resp, err := h.Service.AdminService.GetStats(c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -43,7 +44,7 @@ func (h *Handler) GetStats(c echo.Context) error {
 //	@Router			/admin/info [get]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) GetInfo(c echo.Context) error {
-	resp, err := h.Service.AdminService.GetInfo(c)
+	resp, err := h.Service.AdminService.GetInfo(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

@@ -27,6 +27,3 @@ jobs:
 
       - name: Run Tests
         run: go test -v ./...
-        env:
-          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
-          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}

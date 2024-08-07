@@ -116,6 +116,11 @@ func VideoAge(v int64) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldVideoAge, v))
 }
 
+// ApplyCategoriesToLive applies equality check predicate on the "apply_categories_to_live" field. It's identical to ApplyCategoriesToLiveEQ.
+func ApplyCategoriesToLive(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldApplyCategoriesToLive, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldUpdatedAt, v))
@@ -369,6 +374,16 @@ func VideoAgeLT(v int64) predicate.Live {
 // VideoAgeLTE applies the LTE predicate on the "video_age" field.
 func VideoAgeLTE(v int64) predicate.Live {
 	return predicate.Live(sql.FieldLTE(FieldVideoAge, v))
+}
+
+// ApplyCategoriesToLiveEQ applies the EQ predicate on the "apply_categories_to_live" field.
+func ApplyCategoriesToLiveEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldApplyCategoriesToLive, v))
+}
+
+// ApplyCategoriesToLiveNEQ applies the NEQ predicate on the "apply_categories_to_live" field.
+func ApplyCategoriesToLiveNEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldApplyCategoriesToLive, v))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

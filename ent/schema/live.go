@@ -34,6 +34,7 @@ func (Live) Fields() []ent.Field {
 		field.Time("last_live").Default(time.Now).Comment("The time the channel last went live."),
 		field.Bool("render_chat").Default(true).Comment("Whether the chat should be rendered."),
 		field.Int64("video_age").Default(0).Comment("Restrict fetching videos to a certain age."),
+		field.Bool("apply_categories_to_live").Default(false).Comment("Whether the categories should be applied to livestreams."),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}

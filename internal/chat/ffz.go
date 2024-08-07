@@ -1,11 +1,14 @@
 package chat
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/zibbp/ganymede/internal/platform"
 )
 
 type FFZEmote struct {
@@ -14,6 +17,7 @@ type FFZEmote struct {
 	Code      string    `json:"code"`
 	Images    FFZImages `json:"images"`
 	ImageType ImageType `json:"imageType"`
+	Animated  bool      `json:"animated"`
 }
 
 type FFZImages struct {
@@ -32,9 +36,9 @@ type FFZImageType string
 
 type DisplayName string
 
-func GetFFZGlobalEmotes() ([]*GanymedeEmote, error) {
+func GetFFZGlobalEmotes(ctx context.Context) ([]platform.Emote, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "https://api.betterttv.net/3/cached/frankerfacez/emotes/global", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.betterttv.net/3/cached/frankerfacez/emotes/global", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -57,24 +61,29 @@ func GetFFZGlobalEmotes() ([]*GanymedeEmote, error) {
 		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 
-	var emotes []*GanymedeEmote
+	var emotes []platform.Emote
 	for _, emote := range ffzGlobalEmotes {
-		emotes = append(emotes, &GanymedeEmote{
+		e := platform.Emote{
 			ID:     strconv.FormatInt(emote.ID, 10),
 			Name:   emote.Code,
 			URL:    emote.Images.The1X,
-			Type:   "third_party",
+			Format: platform.EmoteFormatStatic,
+			Type:   platform.EmoteTypeGlobal,
 			Source: "ffz",
-		})
+		}
+		if emote.Animated {
+			e.Format = platform.EmoteFormatAnimated
+		}
+
+		emotes = append(emotes, e)
 	}
 
 	return emotes, nil
 }
 
-func GetFFZChannelEmotes(channelId int64) ([]*GanymedeEmote, error) {
-	stringChannelId := fmt.Sprintf("%d", channelId)
+func GetFFZChannelEmotes(ctx context.Context, channelId string) ([]platform.Emote, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.betterttv.net/3/cached/frankerfacez/users/twitch/%s", stringChannelId), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("https://api.betterttv.net/3/cached/frankerfacez/users/twitch/%s", channelId), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -97,15 +106,21 @@ func GetFFZChannelEmotes(channelId int64) ([]*GanymedeEmote, error) {
 		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 
-	var emotes []*GanymedeEmote
+	var emotes []platform.Emote
 	for _, emote := range ffzChannelEmotes {
-		emotes = append(emotes, &GanymedeEmote{
+		e := platform.Emote{
 			ID:     strconv.FormatInt(emote.ID, 10),
 			Name:   emote.Code,
 			URL:    emote.Images.The1X,
-			Type:   "third_party",
+			Format: platform.EmoteFormatStatic,
+			Type:   platform.EmoteTypeGlobal,
 			Source: "ffz",
-		})
+		}
+		if emote.Animated {
+			e.Format = platform.EmoteFormatAnimated
+		}
+
+		emotes = append(emotes, e)
 	}
 
 	return emotes, nil

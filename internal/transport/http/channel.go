@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -18,7 +19,7 @@ type ChannelService interface {
 	GetChannelByName(channelName string) (*ent.Channel, error)
 	DeleteChannel(channelID uuid.UUID) error
 	UpdateChannel(channelID uuid.UUID, channelDto channel.Channel) (*ent.Channel, error)
-	UpdateChannelImage(c echo.Context, channelID uuid.UUID) error
+	UpdateChannelImage(ctx context.Context, channelID uuid.UUID) error
 }
 
 type CreateChannelRequest struct {
@@ -230,7 +231,7 @@ func (h *Handler) UpdateChannelImage(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	err = h.Service.ChannelService.UpdateChannelImage(c, cUUID)
+	err = h.Service.ChannelService.UpdateChannelImage(c.Request().Context(), cUUID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

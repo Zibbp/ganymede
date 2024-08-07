@@ -52,6 +52,8 @@ type Queue struct {
 	TaskChatMove utils.TaskStatus `json:"task_chat_move,omitempty"`
 	// ChatStart holds the value of the "chat_start" field.
 	ChatStart time.Time `json:"chat_start,omitempty"`
+	// ArchiveChat holds the value of the "archive_chat" field.
+	ArchiveChat bool `json:"archive_chat,omitempty"`
 	// RenderChat holds the value of the "render_chat" field.
 	RenderChat bool `json:"render_chat,omitempty"`
 	// WorkflowID holds the value of the "workflow_id" field.
@@ -94,7 +96,7 @@ func (*Queue) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case queue.FieldLiveArchive, queue.FieldOnHold, queue.FieldVideoProcessing, queue.FieldChatProcessing, queue.FieldProcessing, queue.FieldRenderChat:
+		case queue.FieldLiveArchive, queue.FieldOnHold, queue.FieldVideoProcessing, queue.FieldChatProcessing, queue.FieldProcessing, queue.FieldArchiveChat, queue.FieldRenderChat:
 			values[i] = new(sql.NullBool)
 		case queue.FieldTaskVodCreateFolder, queue.FieldTaskVodDownloadThumbnail, queue.FieldTaskVodSaveInfo, queue.FieldTaskVideoDownload, queue.FieldTaskVideoConvert, queue.FieldTaskVideoMove, queue.FieldTaskChatDownload, queue.FieldTaskChatConvert, queue.FieldTaskChatRender, queue.FieldTaskChatMove, queue.FieldWorkflowID, queue.FieldWorkflowRunID:
 			values[i] = new(sql.NullString)
@@ -221,6 +223,12 @@ func (q *Queue) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				q.ChatStart = value.Time
 			}
+		case queue.FieldArchiveChat:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field archive_chat", values[i])
+			} else if value.Valid {
+				q.ArchiveChat = value.Bool
+			}
 		case queue.FieldRenderChat:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field render_chat", values[i])
@@ -346,6 +354,9 @@ func (q *Queue) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("chat_start=")
 	builder.WriteString(q.ChatStart.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("archive_chat=")
+	builder.WriteString(fmt.Sprintf("%v", q.ArchiveChat))
 	builder.WriteString(", ")
 	builder.WriteString("render_chat=")
 	builder.WriteString(fmt.Sprintf("%v", q.RenderChat))

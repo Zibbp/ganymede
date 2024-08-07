@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -39,6 +40,7 @@ func SanitizeFileName(fileName string) string {
 	return fileName
 }
 
+// Contains returns true if the slice contains the string
 func Contains(s []string, e string) bool {
 	for _, a := range s {
 		if strings.EqualFold(a, e) {
@@ -56,4 +58,22 @@ func SecondsToHHMMSS(seconds int) string {
 	seconds = int(duration.Seconds()) % 60
 
 	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
+}
+
+// GetPathBefore returns the path before the delimiter
+func GetPathBefore(path, delimiter string) string {
+	index := strings.Index(path, delimiter)
+	if index == -1 {
+		return path
+	}
+	return path[:index]
+}
+
+// GetPathBeforePartial returns the path before the partialMatch
+func GetPathBeforePartial(fullPath, partialMatch string) string {
+	index := strings.Index(strings.ToLower(fullPath), strings.ToLower(partialMatch))
+	if index == -1 {
+		return fullPath
+	}
+	return filepath.Dir(fullPath[:index])
 }

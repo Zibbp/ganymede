@@ -49,6 +49,8 @@ const (
 	FieldTaskChatMove = "task_chat_move"
 	// FieldChatStart holds the string denoting the chat_start field in the database.
 	FieldChatStart = "chat_start"
+	// FieldArchiveChat holds the string denoting the archive_chat field in the database.
+	FieldArchiveChat = "archive_chat"
 	// FieldRenderChat holds the string denoting the render_chat field in the database.
 	FieldRenderChat = "render_chat"
 	// FieldWorkflowID holds the string denoting the workflow_id field in the database.
@@ -91,6 +93,7 @@ var Columns = []string{
 	FieldTaskChatRender,
 	FieldTaskChatMove,
 	FieldChatStart,
+	FieldArchiveChat,
 	FieldRenderChat,
 	FieldWorkflowID,
 	FieldWorkflowRunID,
@@ -130,6 +133,8 @@ var (
 	DefaultChatProcessing bool
 	// DefaultProcessing holds the default value on creation for the "processing" field.
 	DefaultProcessing bool
+	// DefaultArchiveChat holds the default value on creation for the "archive_chat" field.
+	DefaultArchiveChat bool
 	// DefaultRenderChat holds the default value on creation for the "render_chat" field.
 	DefaultRenderChat bool
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -348,6 +353,11 @@ func ByTaskChatMove(opts ...sql.OrderTermOption) OrderOption {
 // ByChatStart orders the results by the chat_start field.
 func ByChatStart(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldChatStart, opts...).ToFunc()
+}
+
+// ByArchiveChat orders the results by the archive_chat field.
+func ByArchiveChat(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldArchiveChat, opts...).ToFunc()
 }
 
 // ByRenderChat orders the results by the render_chat field.

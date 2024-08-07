@@ -36,14 +36,28 @@ func (vc *VodCreate) SetExtID(s string) *VodCreate {
 	return vc
 }
 
+// SetExtStreamID sets the "ext_stream_id" field.
+func (vc *VodCreate) SetExtStreamID(s string) *VodCreate {
+	vc.mutation.SetExtStreamID(s)
+	return vc
+}
+
+// SetNillableExtStreamID sets the "ext_stream_id" field if the given value is not nil.
+func (vc *VodCreate) SetNillableExtStreamID(s *string) *VodCreate {
+	if s != nil {
+		vc.SetExtStreamID(*s)
+	}
+	return vc
+}
+
 // SetPlatform sets the "platform" field.
-func (vc *VodCreate) SetPlatform(up utils.VodPlatform) *VodCreate {
+func (vc *VodCreate) SetPlatform(up utils.VideoPlatform) *VodCreate {
 	vc.mutation.SetPlatform(up)
 	return vc
 }
 
 // SetNillablePlatform sets the "platform" field if the given value is not nil.
-func (vc *VodCreate) SetNillablePlatform(up *utils.VodPlatform) *VodCreate {
+func (vc *VodCreate) SetNillablePlatform(up *utils.VideoPlatform) *VodCreate {
 	if up != nil {
 		vc.SetPlatform(*up)
 	}
@@ -713,6 +727,10 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 		_node.ExtID = value
 	}
+	if value, ok := vc.mutation.ExtStreamID(); ok {
+		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
+		_node.ExtStreamID = value
+	}
 	if value, ok := vc.mutation.Platform(); ok {
 		_spec.SetField(vod.FieldPlatform, field.TypeEnum, value)
 		_node.Platform = value
@@ -982,8 +1000,26 @@ func (u *VodUpsert) UpdateExtID() *VodUpsert {
 	return u
 }
 
+// SetExtStreamID sets the "ext_stream_id" field.
+func (u *VodUpsert) SetExtStreamID(v string) *VodUpsert {
+	u.Set(vod.FieldExtStreamID, v)
+	return u
+}
+
+// UpdateExtStreamID sets the "ext_stream_id" field to the value that was provided on create.
+func (u *VodUpsert) UpdateExtStreamID() *VodUpsert {
+	u.SetExcluded(vod.FieldExtStreamID)
+	return u
+}
+
+// ClearExtStreamID clears the value of the "ext_stream_id" field.
+func (u *VodUpsert) ClearExtStreamID() *VodUpsert {
+	u.SetNull(vod.FieldExtStreamID)
+	return u
+}
+
 // SetPlatform sets the "platform" field.
-func (u *VodUpsert) SetPlatform(v utils.VodPlatform) *VodUpsert {
+func (u *VodUpsert) SetPlatform(v utils.VideoPlatform) *VodUpsert {
 	u.Set(vod.FieldPlatform, v)
 	return u
 }
@@ -1533,8 +1569,29 @@ func (u *VodUpsertOne) UpdateExtID() *VodUpsertOne {
 	})
 }
 
+// SetExtStreamID sets the "ext_stream_id" field.
+func (u *VodUpsertOne) SetExtStreamID(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetExtStreamID(v)
+	})
+}
+
+// UpdateExtStreamID sets the "ext_stream_id" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateExtStreamID() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateExtStreamID()
+	})
+}
+
+// ClearExtStreamID clears the value of the "ext_stream_id" field.
+func (u *VodUpsertOne) ClearExtStreamID() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearExtStreamID()
+	})
+}
+
 // SetPlatform sets the "platform" field.
-func (u *VodUpsertOne) SetPlatform(v utils.VodPlatform) *VodUpsertOne {
+func (u *VodUpsertOne) SetPlatform(v utils.VideoPlatform) *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.SetPlatform(v)
 	})
@@ -2332,8 +2389,29 @@ func (u *VodUpsertBulk) UpdateExtID() *VodUpsertBulk {
 	})
 }
 
+// SetExtStreamID sets the "ext_stream_id" field.
+func (u *VodUpsertBulk) SetExtStreamID(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetExtStreamID(v)
+	})
+}
+
+// UpdateExtStreamID sets the "ext_stream_id" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateExtStreamID() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateExtStreamID()
+	})
+}
+
+// ClearExtStreamID clears the value of the "ext_stream_id" field.
+func (u *VodUpsertBulk) ClearExtStreamID() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearExtStreamID()
+	})
+}
+
 // SetPlatform sets the "platform" field.
-func (u *VodUpsertBulk) SetPlatform(v utils.VodPlatform) *VodUpsertBulk {
+func (u *VodUpsertBulk) SetPlatform(v utils.VideoPlatform) *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.SetPlatform(v)
 	})

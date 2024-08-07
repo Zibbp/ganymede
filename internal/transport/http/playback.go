@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -86,9 +87,13 @@ func (h *Handler) GetProgress(c echo.Context) error {
 	}
 	playbackEntry, err := h.Service.PlaybackService.GetProgress(cc, vID)
 	if err != nil {
+		if errors.Is(err, playback.ErrorPlaybackNotFound) {
+			return ErrorResponse(c, http.StatusOK, "playback not found")
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, playbackEntry)
+
+	return SuccessResponse(c, playbackEntry, fmt.Sprintf("playback data for %s", vID))
 }
 
 // GetAllProgress godoc

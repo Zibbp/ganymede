@@ -5,14 +5,14 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/server"
-  cmd = "go build -o ./tmp/server ./cmd/server/main.go"
+  cmd = "make build_dev_server"
   delay = 1000
   exclude_dir = ["tmp", "dev"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
-  full_bin = "godotenv -f .env.dev ./tmp/server"
+  full_bin = "godotenv -f .env ./tmp/server"
   include_dir = []
   include_ext = ["go", "tpl", "tmpl", "html"]
   include_file = []
@@ -25,7 +25,7 @@ tmp_dir = "tmp"
   rerun = false
   rerun_delay = 500
   send_interrupt = false
-  stop_on_error = false
+  stop_on_error = true
 
 [color]
   app = ""

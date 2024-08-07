@@ -2,10 +2,11 @@ FROM arm64v8/golang:1.22 AS build-stage-01
 
 RUN mkdir /app
 ADD . /app
+ADD .git /app/.git
 WORKDIR /app
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -X main.Version=${VERSION} -X main.BuildTime=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X main.GitHash=`git rev-parse HEAD`" -o ganymede-api cmd/server/main.go
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -X main.Version=${VERSION} -X main.BuildTime=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X main.GitHash=`git rev-parse HEAD`" -o ganymede-worker cmd/worker/main.go
+RUN make build_server
+RUN make build_worker
 
 FROM arm64v8/debian:bullseye AS build-stage-02
 
@@ -14,7 +15,7 @@ RUN apt-get install unzip wget git -y
 
 WORKDIR /tmp
 RUN wget https://github.com/rsms/inter/releases/download/v3.19/Inter-3.19.zip && unzip Inter-3.19.zip
-RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.54.3/TwitchDownloaderCLI-1.54.3-LinuxArm.zip && unzip TwitchDownloaderCLI-1.54.3-LinuxArm.zip
+RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.54.7/TwitchDownloaderCLI-1.54.7-LinuxArm.zip && unzip TwitchDownloaderCLI-1.54.7-LinuxArm.zip
 
 RUN git clone https://github.com/xenova/chat-downloader.git
 

@@ -19,6 +19,8 @@ const (
 	FieldID = "id"
 	// FieldExtID holds the string denoting the ext_id field in the database.
 	FieldExtID = "ext_id"
+	// FieldExtStreamID holds the string denoting the ext_stream_id field in the database.
+	FieldExtStreamID = "ext_stream_id"
 	// FieldPlatform holds the string denoting the platform field in the database.
 	FieldPlatform = "platform"
 	// FieldType holds the string denoting the type field in the database.
@@ -132,6 +134,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldExtID,
+	FieldExtStreamID,
 	FieldPlatform,
 	FieldType,
 	FieldTitle,
@@ -215,10 +218,10 @@ var (
 	DefaultID func() uuid.UUID
 )
 
-const DefaultPlatform utils.VodPlatform = "twitch"
+const DefaultPlatform utils.VideoPlatform = "twitch"
 
 // PlatformValidator is a validator for the "platform" field enum values. It is called by the builders before save.
-func PlatformValidator(pl utils.VodPlatform) error {
+func PlatformValidator(pl utils.VideoPlatform) error {
 	switch pl {
 	case "twitch", "youtube":
 		return nil
@@ -250,6 +253,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByExtID orders the results by the ext_id field.
 func ByExtID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExtID, opts...).ToFunc()
+}
+
+// ByExtStreamID orders the results by the ext_stream_id field.
+func ByExtStreamID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExtStreamID, opts...).ToFunc()
 }
 
 // ByPlatform orders the results by the platform field.

@@ -67,7 +67,9 @@ func (s *Service) GetPlaylists(c echo.Context) ([]*ent.Playlist, error) {
 }
 
 func (s *Service) GetPlaylist(c echo.Context, playlistID uuid.UUID) (*ent.Playlist, error) {
-	rPlaylist, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).WithVods().Order(ent.Desc(playlist.FieldCreatedAt)).Only(c.Request().Context())
+	rPlaylist, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).WithVods(func(q *ent.VodQuery) {
+		q.WithChannel()
+	}).Order(ent.Desc(playlist.FieldCreatedAt)).Only(c.Request().Context())
 	// Order VODs by date streamed
 	tmpVods := rPlaylist.Edges.Vods
 	sort.Slice(tmpVods, func(i, j int) bool {

@@ -1,32 +1,38 @@
 package http
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type ArchiveService interface {
-	ArchiveTwitchChannel(cName string) (*ent.Channel, error)
-	ArchiveTwitchVod(vID string, quality string, chat bool, renderChat bool) (*archive.TwitchVodResponse, error)
+	ArchiveChannel(ctx context.Context, channelName string) (*ent.Channel, error)
+	ArchiveVideo(ctx context.Context, input archive.ArchiveVideoInput) error
+	ArchiveLivestream(ctx context.Context, input archive.ArchiveVideoInput) error
 }
 
 type ArchiveChannelRequest struct {
 	ChannelName string `json:"channel_name" validate:"required"`
 }
-type ArchiveVodRequest struct {
-	VodID      string           `json:"vod_id" validate:"required"`
-	Quality    utils.VodQuality `json:"quality" validate:"required,oneof=best source 720p60 480p30 360p30 160p30 480p 360p 160p audio"`
-	Chat       bool             `json:"chat"`
-	RenderChat bool             `json:"render_chat"`
+type ArchiveVideoRequest struct {
+	VideoId     string           `json:"video_id"`
+	ChannelId   string           `json:"channel_id"`
+	Quality     utils.VodQuality `json:"quality" validate:"required,oneof=best source 720p60 480p30 360p30 160p30 480p 360p 160p audio"`
+	ArchiveChat bool             `json:"archive_chat"`
+	RenderChat  bool             `json:"render_chat"`
 }
 
-// ArchiveTwitchChannel godoc
+// ArchiveChannel godoc
 //
 //	@Summary		Archive a twitch channel
 //	@Description	Archive a twitch channel (creates channel in database and download profile image)
@@ -39,22 +45,22 @@ type ArchiveVodRequest struct {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/archive/channel [post]
 //	@Security		ApiKeyCookieAuth
-func (h *Handler) ArchiveTwitchChannel(c echo.Context) error {
-	acr := new(ArchiveChannelRequest)
-	if err := c.Bind(acr); err != nil {
+func (h *Handler) ArchiveChannel(c echo.Context) error {
+	body := new(ArchiveChannelRequest)
+	if err := c.Bind(body); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if err := c.Validate(acr); err != nil {
+	if err := c.Validate(body); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	channel, err := h.Service.ArchiveService.ArchiveTwitchChannel(acr.ChannelName)
+	channel, err := h.Service.ArchiveService.ArchiveChannel(c.Request().Context(), body.ChannelName)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, channel)
 }
 
-// ArchiveTwitchVod godoc
+// ArchiveVideo godoc
 //
 //	@Summary		Archive a twitch vod
 //	@Description	Archive a twitch vod
@@ -67,19 +73,52 @@ func (h *Handler) ArchiveTwitchChannel(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/archive/vod [post]
 //	@Security		ApiKeyCookieAuth
-func (h *Handler) ArchiveTwitchVod(c echo.Context) error {
-	avr := new(ArchiveVodRequest)
-	if err := c.Bind(avr); err != nil {
+func (h *Handler) ArchiveVideo(c echo.Context) error {
+	body := new(ArchiveVideoRequest)
+	if err := c.Bind(body); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if err := c.Validate(avr); err != nil {
+	if err := c.Validate(body); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	vod, err := h.Service.ArchiveService.ArchiveTwitchVod(avr.VodID, string(avr.Quality), avr.Chat, avr.RenderChat)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+
+	if body.VideoId == "" && body.ChannelId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "either channel_id or video_id must be set")
 	}
-	return c.JSON(http.StatusOK, vod)
+
+	if body.VideoId != "" && body.ChannelId != "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "either channel_id or video_id must be set")
+	}
+
+	if body.ChannelId != "" {
+		// validate channel id
+		parsedChannelId, err := uuid.Parse(body.ChannelId)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
+		err = h.Service.ArchiveService.ArchiveLivestream(c.Request().Context(), archive.ArchiveVideoInput{
+			ChannelId:   parsedChannelId,
+			Quality:     body.Quality,
+			ArchiveChat: body.ArchiveChat,
+			RenderChat:  body.RenderChat,
+		})
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	} else if body.VideoId != "" {
+		err := h.Service.ArchiveService.ArchiveVideo(c.Request().Context(), archive.ArchiveVideoInput{
+			VideoId:     body.VideoId,
+			Quality:     body.Quality,
+			ArchiveChat: body.ArchiveChat,
+			RenderChat:  body.RenderChat,
+		})
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.JSON(http.StatusOK, nil)
 }
 
 // debug route to test converting chat files
@@ -108,7 +147,10 @@ func (h *Handler) ConvertTwitchChat(c echo.Context) error {
 
 	t := time.Unix(seconds, nanoseconds)
 
-	err = utils.ConvertTwitchLiveChatToTDLChat(body.LiveChatPath, body.ChannelName, body.VideoID, body.VideoExternalID, body.ChannelID, t, body.PreviousVideoID)
+	envConfig := config.GetEnvConfig()
+	outPath := fmt.Sprintf("%s/%s-chat-convert.json", envConfig.TempDir, body.VideoID)
+
+	err = utils.ConvertTwitchLiveChatToTDLChat(body.LiveChatPath, outPath, body.ChannelName, body.VideoID, body.VideoExternalID, body.ChannelID, t, body.PreviousVideoID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

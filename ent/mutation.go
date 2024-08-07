@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"github.com/zibbp/ganymede/ent/blockedvideos"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/live"
@@ -37,6 +38,7 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
+	TypeBlockedVideos  = "BlockedVideos"
 	TypeChannel        = "Channel"
 	TypeChapter        = "Chapter"
 	TypeLive           = "Live"
@@ -50,6 +52,338 @@ const (
 	TypeUser           = "User"
 	TypeVod            = "Vod"
 )
+
+// BlockedVideosMutation represents an operation that mutates the BlockedVideos nodes in the graph.
+type BlockedVideosMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *string
+	created_at    *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*BlockedVideos, error)
+	predicates    []predicate.BlockedVideos
+}
+
+var _ ent.Mutation = (*BlockedVideosMutation)(nil)
+
+// blockedvideosOption allows management of the mutation configuration using functional options.
+type blockedvideosOption func(*BlockedVideosMutation)
+
+// newBlockedVideosMutation creates new mutation for the BlockedVideos entity.
+func newBlockedVideosMutation(c config, op Op, opts ...blockedvideosOption) *BlockedVideosMutation {
+	m := &BlockedVideosMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBlockedVideos,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBlockedVideosID sets the ID field of the mutation.
+func withBlockedVideosID(id string) blockedvideosOption {
+	return func(m *BlockedVideosMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BlockedVideos
+		)
+		m.oldValue = func(ctx context.Context) (*BlockedVideos, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BlockedVideos.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBlockedVideos sets the old BlockedVideos of the mutation.
+func withBlockedVideos(node *BlockedVideos) blockedvideosOption {
+	return func(m *BlockedVideosMutation) {
+		m.oldValue = func(context.Context) (*BlockedVideos, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BlockedVideosMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BlockedVideosMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BlockedVideos entities.
+func (m *BlockedVideosMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BlockedVideosMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BlockedVideosMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BlockedVideos.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BlockedVideosMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BlockedVideosMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BlockedVideos entity.
+// If the BlockedVideos object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BlockedVideosMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BlockedVideosMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// Where appends a list predicates to the BlockedVideosMutation builder.
+func (m *BlockedVideosMutation) Where(ps ...predicate.BlockedVideos) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BlockedVideosMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BlockedVideosMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BlockedVideos, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BlockedVideosMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BlockedVideosMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BlockedVideos).
+func (m *BlockedVideosMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BlockedVideosMutation) Fields() []string {
+	fields := make([]string, 0, 1)
+	if m.created_at != nil {
+		fields = append(fields, blockedvideos.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BlockedVideosMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case blockedvideos.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BlockedVideosMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case blockedvideos.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown BlockedVideos field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BlockedVideosMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case blockedvideos.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BlockedVideos field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BlockedVideosMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BlockedVideosMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BlockedVideosMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown BlockedVideos numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BlockedVideosMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BlockedVideosMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BlockedVideosMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown BlockedVideos nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BlockedVideosMutation) ResetField(name string) error {
+	switch name {
+	case blockedvideos.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown BlockedVideos field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BlockedVideosMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BlockedVideosMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BlockedVideosMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BlockedVideosMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BlockedVideosMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BlockedVideosMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BlockedVideosMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BlockedVideos unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BlockedVideosMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BlockedVideos edge %s", name)
+}
 
 // ChannelMutation represents an operation that mutates the Channel nodes in the graph.
 type ChannelMutation struct {
@@ -1729,36 +2063,37 @@ func (m *ChapterMutation) ResetEdge(name string) error {
 // LiveMutation represents an operation that mutates the Live nodes in the graph.
 type LiveMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *uuid.UUID
-	watch_live          *bool
-	watch_vod           *bool
-	download_archives   *bool
-	download_highlights *bool
-	download_uploads    *bool
-	download_sub_only   *bool
-	is_live             *bool
-	archive_chat        *bool
-	resolution          *string
-	last_live           *time.Time
-	render_chat         *bool
-	video_age           *int64
-	addvideo_age        *int64
-	updated_at          *time.Time
-	created_at          *time.Time
-	clearedFields       map[string]struct{}
-	channel             *uuid.UUID
-	clearedchannel      bool
-	categories          map[uuid.UUID]struct{}
-	removedcategories   map[uuid.UUID]struct{}
-	clearedcategories   bool
-	title_regex         map[uuid.UUID]struct{}
-	removedtitle_regex  map[uuid.UUID]struct{}
-	clearedtitle_regex  bool
-	done                bool
-	oldValue            func(context.Context) (*Live, error)
-	predicates          []predicate.Live
+	op                       Op
+	typ                      string
+	id                       *uuid.UUID
+	watch_live               *bool
+	watch_vod                *bool
+	download_archives        *bool
+	download_highlights      *bool
+	download_uploads         *bool
+	download_sub_only        *bool
+	is_live                  *bool
+	archive_chat             *bool
+	resolution               *string
+	last_live                *time.Time
+	render_chat              *bool
+	video_age                *int64
+	addvideo_age             *int64
+	apply_categories_to_live *bool
+	updated_at               *time.Time
+	created_at               *time.Time
+	clearedFields            map[string]struct{}
+	channel                  *uuid.UUID
+	clearedchannel           bool
+	categories               map[uuid.UUID]struct{}
+	removedcategories        map[uuid.UUID]struct{}
+	clearedcategories        bool
+	title_regex              map[uuid.UUID]struct{}
+	removedtitle_regex       map[uuid.UUID]struct{}
+	clearedtitle_regex       bool
+	done                     bool
+	oldValue                 func(context.Context) (*Live, error)
+	predicates               []predicate.Live
 }
 
 var _ ent.Mutation = (*LiveMutation)(nil)
@@ -2330,6 +2665,42 @@ func (m *LiveMutation) ResetVideoAge() {
 	m.addvideo_age = nil
 }
 
+// SetApplyCategoriesToLive sets the "apply_categories_to_live" field.
+func (m *LiveMutation) SetApplyCategoriesToLive(b bool) {
+	m.apply_categories_to_live = &b
+}
+
+// ApplyCategoriesToLive returns the value of the "apply_categories_to_live" field in the mutation.
+func (m *LiveMutation) ApplyCategoriesToLive() (r bool, exists bool) {
+	v := m.apply_categories_to_live
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldApplyCategoriesToLive returns the old "apply_categories_to_live" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldApplyCategoriesToLive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldApplyCategoriesToLive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldApplyCategoriesToLive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldApplyCategoriesToLive: %w", err)
+	}
+	return oldValue.ApplyCategoriesToLive, nil
+}
+
+// ResetApplyCategoriesToLive resets all changes to the "apply_categories_to_live" field.
+func (m *LiveMutation) ResetApplyCategoriesToLive() {
+	m.apply_categories_to_live = nil
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *LiveMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -2583,7 +2954,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 15)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -2619,6 +2990,9 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.video_age != nil {
 		fields = append(fields, live.FieldVideoAge)
+	}
+	if m.apply_categories_to_live != nil {
+		fields = append(fields, live.FieldApplyCategoriesToLive)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, live.FieldUpdatedAt)
@@ -2658,6 +3032,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.RenderChat()
 	case live.FieldVideoAge:
 		return m.VideoAge()
+	case live.FieldApplyCategoriesToLive:
+		return m.ApplyCategoriesToLive()
 	case live.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case live.FieldCreatedAt:
@@ -2695,6 +3071,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldRenderChat(ctx)
 	case live.FieldVideoAge:
 		return m.OldVideoAge(ctx)
+	case live.FieldApplyCategoriesToLive:
+		return m.OldApplyCategoriesToLive(ctx)
 	case live.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case live.FieldCreatedAt:
@@ -2791,6 +3169,13 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetVideoAge(v)
+		return nil
+	case live.FieldApplyCategoriesToLive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetApplyCategoriesToLive(v)
 		return nil
 	case live.FieldUpdatedAt:
 		v, ok := value.(time.Time)
@@ -2914,6 +3299,9 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldVideoAge:
 		m.ResetVideoAge()
+		return nil
+	case live.FieldApplyCategoriesToLive:
+		m.ResetApplyCategoriesToLive()
 		return nil
 	case live.FieldUpdatedAt:
 		m.ResetUpdatedAt()
@@ -5845,6 +6233,7 @@ type QueueMutation struct {
 	task_chat_render            *utils.TaskStatus
 	task_chat_move              *utils.TaskStatus
 	chat_start                  *time.Time
+	archive_chat                *bool
 	render_chat                 *bool
 	workflow_id                 *string
 	workflow_run_id             *string
@@ -6681,6 +7070,55 @@ func (m *QueueMutation) ResetChatStart() {
 	delete(m.clearedFields, queue.FieldChatStart)
 }
 
+// SetArchiveChat sets the "archive_chat" field.
+func (m *QueueMutation) SetArchiveChat(b bool) {
+	m.archive_chat = &b
+}
+
+// ArchiveChat returns the value of the "archive_chat" field in the mutation.
+func (m *QueueMutation) ArchiveChat() (r bool, exists bool) {
+	v := m.archive_chat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldArchiveChat returns the old "archive_chat" field's value of the Queue entity.
+// If the Queue object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *QueueMutation) OldArchiveChat(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldArchiveChat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldArchiveChat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldArchiveChat: %w", err)
+	}
+	return oldValue.ArchiveChat, nil
+}
+
+// ClearArchiveChat clears the value of the "archive_chat" field.
+func (m *QueueMutation) ClearArchiveChat() {
+	m.archive_chat = nil
+	m.clearedFields[queue.FieldArchiveChat] = struct{}{}
+}
+
+// ArchiveChatCleared returns if the "archive_chat" field was cleared in this mutation.
+func (m *QueueMutation) ArchiveChatCleared() bool {
+	_, ok := m.clearedFields[queue.FieldArchiveChat]
+	return ok
+}
+
+// ResetArchiveChat resets all changes to the "archive_chat" field.
+func (m *QueueMutation) ResetArchiveChat() {
+	m.archive_chat = nil
+	delete(m.clearedFields, queue.FieldArchiveChat)
+}
+
 // SetRenderChat sets the "render_chat" field.
 func (m *QueueMutation) SetRenderChat(b bool) {
 	m.render_chat = &b
@@ -6973,7 +7411,7 @@ func (m *QueueMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *QueueMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 22)
 	if m.live_archive != nil {
 		fields = append(fields, queue.FieldLiveArchive)
 	}
@@ -7021,6 +7459,9 @@ func (m *QueueMutation) Fields() []string {
 	}
 	if m.chat_start != nil {
 		fields = append(fields, queue.FieldChatStart)
+	}
+	if m.archive_chat != nil {
+		fields = append(fields, queue.FieldArchiveChat)
 	}
 	if m.render_chat != nil {
 		fields = append(fields, queue.FieldRenderChat)
@@ -7077,6 +7518,8 @@ func (m *QueueMutation) Field(name string) (ent.Value, bool) {
 		return m.TaskChatMove()
 	case queue.FieldChatStart:
 		return m.ChatStart()
+	case queue.FieldArchiveChat:
+		return m.ArchiveChat()
 	case queue.FieldRenderChat:
 		return m.RenderChat()
 	case queue.FieldWorkflowID:
@@ -7128,6 +7571,8 @@ func (m *QueueMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldTaskChatMove(ctx)
 	case queue.FieldChatStart:
 		return m.OldChatStart(ctx)
+	case queue.FieldArchiveChat:
+		return m.OldArchiveChat(ctx)
 	case queue.FieldRenderChat:
 		return m.OldRenderChat(ctx)
 	case queue.FieldWorkflowID:
@@ -7259,6 +7704,13 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetChatStart(v)
 		return nil
+	case queue.FieldArchiveChat:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetArchiveChat(v)
+		return nil
 	case queue.FieldRenderChat:
 		v, ok := value.(bool)
 		if !ok {
@@ -7357,6 +7809,9 @@ func (m *QueueMutation) ClearedFields() []string {
 	if m.FieldCleared(queue.FieldChatStart) {
 		fields = append(fields, queue.FieldChatStart)
 	}
+	if m.FieldCleared(queue.FieldArchiveChat) {
+		fields = append(fields, queue.FieldArchiveChat)
+	}
 	if m.FieldCleared(queue.FieldRenderChat) {
 		fields = append(fields, queue.FieldRenderChat)
 	}
@@ -7412,6 +7867,9 @@ func (m *QueueMutation) ClearField(name string) error {
 		return nil
 	case queue.FieldChatStart:
 		m.ClearChatStart()
+		return nil
+	case queue.FieldArchiveChat:
+		m.ClearArchiveChat()
 		return nil
 	case queue.FieldRenderChat:
 		m.ClearRenderChat()
@@ -7477,6 +7935,9 @@ func (m *QueueMutation) ResetField(name string) error {
 		return nil
 	case queue.FieldChatStart:
 		m.ResetChatStart()
+		return nil
+	case queue.FieldArchiveChat:
+		m.ResetArchiveChat()
 		return nil
 	case queue.FieldRenderChat:
 		m.ResetRenderChat()
@@ -8937,7 +9398,8 @@ type VodMutation struct {
 	typ                         string
 	id                          *uuid.UUID
 	ext_id                      *string
-	platform                    *utils.VodPlatform
+	ext_stream_id               *string
+	platform                    *utils.VideoPlatform
 	_type                       *utils.VodType
 	title                       *string
 	duration                    *int
@@ -9130,13 +9592,62 @@ func (m *VodMutation) ResetExtID() {
 	m.ext_id = nil
 }
 
+// SetExtStreamID sets the "ext_stream_id" field.
+func (m *VodMutation) SetExtStreamID(s string) {
+	m.ext_stream_id = &s
+}
+
+// ExtStreamID returns the value of the "ext_stream_id" field in the mutation.
+func (m *VodMutation) ExtStreamID() (r string, exists bool) {
+	v := m.ext_stream_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExtStreamID returns the old "ext_stream_id" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldExtStreamID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExtStreamID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExtStreamID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExtStreamID: %w", err)
+	}
+	return oldValue.ExtStreamID, nil
+}
+
+// ClearExtStreamID clears the value of the "ext_stream_id" field.
+func (m *VodMutation) ClearExtStreamID() {
+	m.ext_stream_id = nil
+	m.clearedFields[vod.FieldExtStreamID] = struct{}{}
+}
+
+// ExtStreamIDCleared returns if the "ext_stream_id" field was cleared in this mutation.
+func (m *VodMutation) ExtStreamIDCleared() bool {
+	_, ok := m.clearedFields[vod.FieldExtStreamID]
+	return ok
+}
+
+// ResetExtStreamID resets all changes to the "ext_stream_id" field.
+func (m *VodMutation) ResetExtStreamID() {
+	m.ext_stream_id = nil
+	delete(m.clearedFields, vod.FieldExtStreamID)
+}
+
 // SetPlatform sets the "platform" field.
-func (m *VodMutation) SetPlatform(up utils.VodPlatform) {
+func (m *VodMutation) SetPlatform(up utils.VideoPlatform) {
 	m.platform = &up
 }
 
 // Platform returns the value of the "platform" field in the mutation.
-func (m *VodMutation) Platform() (r utils.VodPlatform, exists bool) {
+func (m *VodMutation) Platform() (r utils.VideoPlatform, exists bool) {
 	v := m.platform
 	if v == nil {
 		return
@@ -9147,7 +9658,7 @@ func (m *VodMutation) Platform() (r utils.VodPlatform, exists bool) {
 // OldPlatform returns the old "platform" field's value of the Vod entity.
 // If the Vod object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *VodMutation) OldPlatform(ctx context.Context) (v utils.VodPlatform, err error) {
+func (m *VodMutation) OldPlatform(ctx context.Context) (v utils.VideoPlatform, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldPlatform is only allowed on UpdateOne operations")
 	}
@@ -10814,9 +11325,12 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 32)
+	fields := make([]string, 0, 33)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
+	}
+	if m.ext_stream_id != nil {
+		fields = append(fields, vod.FieldExtStreamID)
 	}
 	if m.platform != nil {
 		fields = append(fields, vod.FieldPlatform)
@@ -10921,6 +11435,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case vod.FieldExtID:
 		return m.ExtID()
+	case vod.FieldExtStreamID:
+		return m.ExtStreamID()
 	case vod.FieldPlatform:
 		return m.Platform()
 	case vod.FieldType:
@@ -10994,6 +11510,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 	switch name {
 	case vod.FieldExtID:
 		return m.OldExtID(ctx)
+	case vod.FieldExtStreamID:
+		return m.OldExtStreamID(ctx)
 	case vod.FieldPlatform:
 		return m.OldPlatform(ctx)
 	case vod.FieldType:
@@ -11072,8 +11590,15 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetExtID(v)
 		return nil
+	case vod.FieldExtStreamID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExtStreamID(v)
+		return nil
 	case vod.FieldPlatform:
-		v, ok := value.(utils.VodPlatform)
+		v, ok := value.(utils.VideoPlatform)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -11358,6 +11883,9 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *VodMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(vod.FieldExtStreamID) {
+		fields = append(fields, vod.FieldExtStreamID)
+	}
 	if m.FieldCleared(vod.FieldResolution) {
 		fields = append(fields, vod.FieldResolution)
 	}
@@ -11426,6 +11954,9 @@ func (m *VodMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *VodMutation) ClearField(name string) error {
 	switch name {
+	case vod.FieldExtStreamID:
+		m.ClearExtStreamID()
+		return nil
 	case vod.FieldResolution:
 		m.ClearResolution()
 		return nil
@@ -11490,6 +12021,9 @@ func (m *VodMutation) ResetField(name string) error {
 	switch name {
 	case vod.FieldExtID:
 		m.ResetExtID()
+		return nil
+	case vod.FieldExtStreamID:
+		m.ResetExtStreamID()
 		return nil
 	case vod.FieldPlatform:
 		m.ResetPlatform()
