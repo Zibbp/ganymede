@@ -22,8 +22,5 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
-      - name: Create directories
-        run: sudo mkdir -p /vods && sudo chmod 777 /vods && sudo mkdir -p /logs && sudo chmod 777 /logs
-
       - name: Run Tests
-        run: go test -v ./...
+        run: make test

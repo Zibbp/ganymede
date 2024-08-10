@@ -28,6 +28,12 @@ ent_generate:
 go_update_packages:
 	go get -u ./... && go mod tidy
 
+lint:
+	golangci-lint run
+
+test:
+	go test -v ./...
+
 river-webui:
 	curl -L https://github.com/riverqueue/riverui/releases/latest/download/riverui_linux_amd64.gz | gzip -d > /tmp/riverui
 	chmod +x /tmp/riverui

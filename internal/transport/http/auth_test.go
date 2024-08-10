@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -20,8 +21,8 @@ type MockAuthService struct {
 	mock.Mock
 }
 
-func (m *MockAuthService) Register(c echo.Context, userDto user.User) (*ent.User, error) {
-	args := m.Called(c, userDto)
+func (m *MockAuthService) Register(ctx context.Context, userDto user.User) (*ent.User, error) {
+	args := m.Called(ctx, userDto)
 	return args.Get(0).(*ent.User), args.Error(1)
 }
 
