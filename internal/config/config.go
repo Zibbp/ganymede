@@ -65,7 +65,11 @@ var configFile string
 
 func init() {
 	env := GetEnvConfig()
-	configFile = env.ConfigDir + "/config.json"
+	configDir := os.Getenv("CONFIG_DIR")
+	if configDir == "" {
+		configDir = env.ConfigDir
+	}
+	configFile = configDir + "/config.json"
 }
 
 // Init initializes and returns the configuration
