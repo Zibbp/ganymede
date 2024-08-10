@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -11,7 +12,7 @@ import (
 )
 
 type AuthService interface {
-	Register(c echo.Context, userDto user.User) (*ent.User, error)
+	Register(ctx context.Context, userDto user.User) (*ent.User, error)
 	Login(c echo.Context, userDto user.User) (*ent.User, error)
 	Refresh(c echo.Context, refreshToken string) error
 	Me(c *auth.CustomContext) (*ent.User, error)
@@ -65,7 +66,7 @@ func (h *Handler) Register(c echo.Context) error {
 		Password: rr.Password,
 	}
 
-	u, err := h.Service.AuthService.Register(c, userDto)
+	u, err := h.Service.AuthService.Register(c.Request().Context(), userDto)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

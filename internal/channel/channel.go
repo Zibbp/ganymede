@@ -119,20 +119,7 @@ func (s *Service) UpdateChannel(cId uuid.UUID, channelDto Channel) (*ent.Channel
 func (s *Service) CheckChannelExists(cName string) bool {
 	_, err := s.Store.Client.Channel.Query().Where(channel.Name(cName)).Only(context.Background())
 	if err != nil {
-		// if channel not found
-		if _, ok := err.(*ent.NotFoundError); ok {
-			return false
-		}
-		log.Error().Err(err).Msg("error checking channel exists")
-		return false
-	}
-
-	return true
-}
-
-func (s *Service) CheckChannelExistsNoContext(cName string) bool {
-	_, err := s.Store.Client.Channel.Query().Where(channel.Name(cName)).Only(context.Background())
-	if err != nil {
+		fmt.Println(err)
 		// if channel not found
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return false

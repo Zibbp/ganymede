@@ -80,7 +80,7 @@ type ChangePassword struct {
 	NewPassword string `json:"new_password"`
 }
 
-func (s *Service) Register(c echo.Context, user user.User) (*ent.User, error) {
+func (s *Service) Register(ctx context.Context, user user.User) (*ent.User, error) {
 	if !config.Get().RegistrationEnabled {
 		return nil, fmt.Errorf("registration is disabled")
 	}
@@ -90,7 +90,7 @@ func (s *Service) Register(c echo.Context, user user.User) (*ent.User, error) {
 		return nil, fmt.Errorf("error hashing password: %v", err)
 	}
 
-	u, err := s.Store.Client.User.Create().SetUsername(user.Username).SetPassword(string(hashedPassword)).Save(c.Request().Context())
+	u, err := s.Store.Client.User.Create().SetUsername(user.Username).SetPassword(string(hashedPassword)).Save(ctx)
 	if err != nil {
 		if _, ok := err.(*ent.ConstraintError); ok {
 			return nil, fmt.Errorf("user already exists")

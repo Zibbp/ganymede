@@ -3,8 +3,6 @@ package http
 import (
 	"context"
 	"net/http"
-	"os"
-	"os/signal"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -279,20 +277,30 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	blockedGroup.GET("/:id", h.IsVideoBlocked)
 }
 
-func (h *Handler) Serve() error {
+func (h *Handler) Serve(ctx context.Context) error {
+	// Run the server in a goroutine
+	serverErrCh := make(chan error, 1)
 	go func() {
 		if err := h.Server.Start(":4000"); err != nil && err != http.ErrServerClosed {
+			serverErrCh <- err
+		}
+		close(serverErrCh)
+	}()
+
+	// Listen for the context to be canceled or an error to occur in the server
+	select {
+	case <-ctx.Done():
+		log.Info().Msg("Context canceled, shutting down the server")
+	case err := <-serverErrCh:
+		if err != nil {
 			log.Fatal().Err(err).Msg("failed to start server")
 		}
-	}()
-	// Wait for interrupt signal to gracefully shutdown the server with a timeout of 10 seconds.
-	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	}
+
+	// Shutdown the server with a timeout of 10 seconds
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := h.Server.Shutdown(ctx); err != nil {
+	if err := h.Server.Shutdown(shutdownCtx); err != nil {
 		log.Fatal().Err(err).Msg("failed to shutdown server")
 	}
 
