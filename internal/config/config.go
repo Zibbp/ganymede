@@ -63,17 +63,10 @@ var (
 
 var configFile string
 
-func init() {
-	env := GetEnvConfig()
-	configDir := os.Getenv("CONFIG_DIR")
-	if configDir == "" {
-		configDir = env.ConfigDir
-	}
-	configFile = configDir + "/config.json"
-}
-
 // Init initializes and returns the configuration
 func Init() (*Config, error) {
+	env := GetEnvConfig()
+	configFile = env.ConfigDir + "/config.json"
 	once.Do(func() {
 		instance = &Config{}
 		initErr = instance.loadConfig()
@@ -85,9 +78,7 @@ func Init() (*Config, error) {
 func (c *Config) loadConfig() error {
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		c.setDefaults()
-		if err := SaveConfig(); err != nil {
-			return err
-		}
+		return SaveConfig()
 	}
 
 	file, err := os.ReadFile(configFile)
