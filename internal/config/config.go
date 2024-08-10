@@ -85,7 +85,9 @@ func Init() (*Config, error) {
 func (c *Config) loadConfig() error {
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		c.setDefaults()
-		return SaveConfig()
+		if err := SaveConfig(); err != nil {
+			return err
+		}
 	}
 
 	file, err := os.ReadFile(configFile)
