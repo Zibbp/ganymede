@@ -11,7 +11,8 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "eamodio.gitlens",
-        "github.copilot"
+        "github.copilot",
+        "yzhang.markdown-all-in-one"
       ]
     }
   },
