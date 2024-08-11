@@ -13,10 +13,13 @@ import (
 )
 
 type Service struct {
+	Store *database.Database
 }
 
-func NewService() *Service {
-	return &Service{}
+func NewService(store *database.Database) *Service {
+	return &Service{
+		Store: store,
+	}
 }
 
 type Chapter struct {
@@ -28,7 +31,7 @@ type Chapter struct {
 }
 
 func (s *Service) CreateChapter(c Chapter, videoId uuid.UUID) (*ent.Chapter, error) {
-	dbVideo, err := database.DB().Client.Vod.Query().Where(vod.ID(videoId)).First(context.Background())
+	dbVideo, err := s.Store.Client.Vod.Query().Where(vod.ID(videoId)).First(context.Background())
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return nil, fmt.Errorf("video not found")
@@ -36,7 +39,7 @@ func (s *Service) CreateChapter(c Chapter, videoId uuid.UUID) (*ent.Chapter, err
 		return nil, fmt.Errorf("error getting video: %v", err)
 	}
 
-	dbChapter, err := database.DB().Client.Chapter.Create().SetType(c.Type).SetTitle(c.Title).SetStart(c.Start).SetEnd(c.End).SetVod(dbVideo).Save(context.Background())
+	dbChapter, err := s.Store.Client.Chapter.Create().SetType(c.Type).SetTitle(c.Title).SetStart(c.Start).SetEnd(c.End).SetVod(dbVideo).Save(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("error creating chapter: %v", err)
 	}
@@ -45,7 +48,7 @@ func (s *Service) CreateChapter(c Chapter, videoId uuid.UUID) (*ent.Chapter, err
 }
 
 func (s *Service) GetVideoChapters(videoId uuid.UUID) ([]*ent.Chapter, error) {
-	chapters, err := database.DB().Client.Chapter.Query().Where(entChapter.HasVodWith(vod.ID(videoId))).All(context.Background())
+	chapters, err := s.Store.Client.Chapter.Query().Where(entChapter.HasVodWith(vod.ID(videoId))).All(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("error getting chapters: %v", err)
 	}

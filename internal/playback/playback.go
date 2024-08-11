@@ -32,6 +32,8 @@ type GetPlayback struct {
 	Vod      *ent.Vod      `json:"vod"`
 }
 
+var ErrorPlaybackNotFound = fmt.Errorf("playback not found")
+
 func (s *Service) UpdateProgress(c *auth.CustomContext, vID uuid.UUID, time int) error {
 	uID := c.User.ID
 
@@ -64,7 +66,7 @@ func (s *Service) GetProgress(c *auth.CustomContext, vID uuid.UUID) (*ent.Playba
 	playbackEntry, err := s.Store.Client.Playback.Query().Where(playback.UserID(uID)).Where(playback.VodID(vID)).Only(c.Request().Context())
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
-			return nil, fmt.Errorf("playback not found")
+			return nil, ErrorPlaybackNotFound
 		}
 		return nil, fmt.Errorf("error getting playback: %v", err)
 	}

@@ -2,7 +2,8 @@
   "build": { "dockerfile": "Dockerfile" },
   "features": {
     "ghcr.io/jungaretti/features/make:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
   "customizations": {
     "vscode": {
@@ -10,7 +11,8 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "eamodio.gitlens",
-        "github.copilot"
+        "github.copilot",
+        "yzhang.markdown-all-in-one"
       ]
     }
   },
@@ -35,5 +37,5 @@
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
   "workspaceFolder": "/workspace",
-  "postAttachCommand": "go install github.com/joho/godotenv/cmd/godotenv@latest && go install github.com/cosmtrek/air@latest"
+  "postAttachCommand": "make dev_setup"
 }

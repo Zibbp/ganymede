@@ -1,18 +1,18 @@
 package http
 
 import (
+	"context"
 	"net/http"
-	"os"
 
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/auth"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/user"
 )
 
 type AuthService interface {
-	Register(c echo.Context, userDto user.User) (*ent.User, error)
+	Register(ctx context.Context, userDto user.User) (*ent.User, error)
 	Login(c echo.Context, userDto user.User) (*ent.User, error)
 	Refresh(c echo.Context, refreshToken string) error
 	Me(c *auth.CustomContext) (*ent.User, error)
@@ -53,10 +53,6 @@ type ChangePasswordRequest struct {
 //	@Failure		500			{object}	utils.ErrorResponse
 //	@Router			/auth/register [post]
 func (h *Handler) Register(c echo.Context) error {
-	// Check if registration is enabled
-	if !viper.Get("registration_enabled").(bool) {
-		return echo.NewHTTPError(http.StatusForbidden, "registration is disabled")
-	}
 	rr := new(RegisterRequest)
 	if err := c.Bind(rr); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -70,7 +66,7 @@ func (h *Handler) Register(c echo.Context) error {
 		Password: rr.Password,
 	}
 
-	u, err := h.Service.AuthService.Register(c, userDto)
+	u, err := h.Service.AuthService.Register(c.Request().Context(), userDto)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -124,8 +120,8 @@ func (h *Handler) Login(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/login [get]
 func (h *Handler) OAuthLogin(c echo.Context) error {
-	oAuthEnabled := viper.GetBool("oauth_enabled")
-	if !oAuthEnabled {
+	env := config.GetEnvConfig()
+	if !env.OAuthEnabled {
 		return echo.NewHTTPError(http.StatusForbidden, "OAuth is disabled")
 	}
 	// Redirect to OAuth provider
@@ -240,11 +236,12 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/callback [get]
 func (h *Handler) OAuthCallback(c echo.Context) error {
+	env := config.GetEnvApplicationConfig()
 	err := h.Service.AuthService.OAuthCallback(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.Redirect(http.StatusFound, os.Getenv("FRONTEND_HOST"))
+	return c.Redirect(http.StatusFound, env.FrontendHost)
 }
 
 // OAuthTokenRefresh godoc
@@ -287,10 +284,10 @@ func (h *Handler) OAuthTokenRefresh(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/logout [get]
 func (h *Handler) OAuthLogout(c echo.Context) error {
-
+	env := config.GetEnvApplicationConfig()
 	err := h.Service.AuthService.OAuthLogout(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.Redirect(http.StatusFound, os.Getenv("FRONTEND_HOST"))
+	return c.Redirect(http.StatusFound, env.FrontendHost)
 }

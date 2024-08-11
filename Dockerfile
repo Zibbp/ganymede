@@ -1,70 +1,72 @@
-FROM golang:1.22-bookworm AS build-stage-01
+ARG TWITCHDOWNLOADER_VERSION="1.55.0"
 
-RUN mkdir /app
-ADD . /app
+# Build stage
+FROM --platform=$BUILDPLATFORM golang:1.22-bookworm AS build
 WORKDIR /app
+COPY . .
+RUN make build_server build_worker
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -X main.Version=${VERSION} -X main.BuildTime=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X main.GitHash=`git rev-parse HEAD`" -o ganymede-api cmd/server/main.go
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -X main.Version=${VERSION} -X main.BuildTime=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X main.GitHash=`git rev-parse HEAD`" -o ganymede-worker cmd/worker/main.go
-
-FROM debian:bookworm-slim AS build-stage-02
-
-RUN apt update && apt install -y git wget unzip
-
+# Tools stage
+FROM --platform=$BUILDPLATFORM debian:bookworm-slim AS tools
 WORKDIR /tmp
-RUN wget https://github.com/lay295/TwitchDownloader/releases/download/1.54.3/TwitchDownloaderCLI-1.54.3-Linux-x64.zip && unzip TwitchDownloaderCLI-1.54.3-Linux-x64.zip 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+unzip git ca-certificates curl \
+&& rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/xenova/chat-downloader.git
+# Download TwitchDownloader for the correct platform
+ARG TWITCHDOWNLOADER_VERSION
+ENV TWITCHDOWNLOADER_URL=https://github.com/lay295/TwitchDownloader/releases/download/${TWITCHDOWNLOADER_VERSION}/TwitchDownloaderCLI-${TWITCHDOWNLOADER_VERSION}-Linux
+RUN if [ "$BUILDPLATFORM" = "arm64" ]; then \
+        export TWITCHDOWNLOADER_URL=${TWITCHDOWNLOADER_URL}Arm; \
+    fi && \
+    export TWITCHDOWNLOADER_URL=${TWITCHDOWNLOADER_URL}-x64.zip && \
+    echo "Download URL: $TWITCHDOWNLOADER_URL" && \
+    curl -L $TWITCHDOWNLOADER_URL -o twitchdownloader.zip && \
+    unzip twitchdownloader.zip && \
+    rm twitchdownloader.zip
+RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
 
-FROM debian:bookworm-slim AS production
-
-# install packages
-RUN apt update && apt install -y python3 python3-pip fontconfig ffmpeg tzdata curl procps
-RUN ln -sf python3 /usr/bin/python
-
-# RUN apk add --update --no-cache python3 fontconfig icu-libs python3-dev gcc g++ ffmpeg bash tzdata shadow su-exec py3-pip && ln -sf python3 /usr/bin/python
-RUN pip3 install --no-cache --upgrade pip streamlink --break-system-packages
-
-## Installing su-exec in debain/ubuntu container.
-RUN  set -ex; \
-     \
-     curl -o /usr/local/bin/su-exec.c https://raw.githubusercontent.com/ncopa/su-exec/master/su-exec.c; \
-     \
-     gcc -Wall \
-         /usr/local/bin/su-exec.c -o/usr/local/bin/su-exec; \
-     chown root:root /usr/local/bin/su-exec; \
-     chmod 0755 /usr/local/bin/su-exec; \
-     rm /usr/local/bin/su-exec.c; \
-     \
-## Remove the su-exec dependency. It is no longer needed after building.
-     apt-get purge -y --auto-remove curl libc-dev
-
-# setup user
-RUN useradd -u 911 -d /data abc && \
-    usermod -a -G users abc
-
-# Install chat-downloader
-COPY --from=build-stage-02 /tmp/chat-downloader /tmp/chat-downloader
-RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
-
-# Install fallback fonts for chat rendering
-RUN apt install -y  fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-inter
-
-RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
-
-# TwitchDownloaderCLI
-COPY --from=build-stage-02 /tmp/TwitchDownloaderCLI /usr/local/bin/
-RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
-
+# Production stage
+FROM --platform=$BUILDPLATFORM debian:bookworm-slim
 WORKDIR /opt/app
 
-COPY --from=build-stage-01 /app/ganymede-api .
-COPY --from=build-stage-01 /app/ganymede-worker .
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip fontconfig ffmpeg tzdata procps \
+    fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-inter \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf python3 /usr/bin/python
 
-EXPOSE 4000
+# Install pip packages
+RUN pip3 install --no-cache-dir --upgrade pip streamlink --break-system-packages
 
-# copy entrypoint
+# Install gosu
+RUN curl -LO https://github.com/tianon/gosu/releases/latest/download/gosu-$(dpkg --print-architecture | awk -F- '{ print $NF }') \
+    && chmod 0755 gosu-$(dpkg --print-architecture | awk -F- '{ print $NF }') \
+    && mv gosu-$(dpkg --print-architecture | awk -F- '{ print $NF }') /usr/local/bin/gosu
+
+# Setup user
+RUN useradd -u 911 -d /data abc && usermod -a -G users abc
+
+# Copy and install chat-downloader
+COPY --from=tools /tmp/chat-downloader /tmp/chat-downloader
+RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
+
+# Setup fonts
+RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
+
+# Copy TwitchDownloaderCLI
+COPY --from=tools /tmp/TwitchDownloaderCLI /usr/local/bin/
+RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
+
+# Copy application files
+COPY --from=build /app/ganymede-api .
+COPY --from=build /app/ganymede-worker .
+
+# Setup entrypoint
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+EXPOSE 4000
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

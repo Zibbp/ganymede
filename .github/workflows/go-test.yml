@@ -22,11 +22,8 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
-      - name: Create directories
-        run: sudo mkdir -p /vods && sudo chmod 777 /vods && sudo mkdir -p /logs && sudo chmod 777 /logs
-
       - name: Run Tests
-        run: go test -v ./...
         env:
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+        run: make test

@@ -3,17 +3,17 @@ package auth
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	"github.com/zibbp/ganymede/ent"
 	entUser "github.com/zibbp/ganymede/ent/user"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -30,13 +30,15 @@ type Service struct {
 }
 
 func NewService(store *database.Database) *Service {
-	oAuthEnabled := viper.GetBool("oauth_enabled")
-	if oAuthEnabled {
+	ctx := context.Background()
+	env := config.GetEnvConfig()
+
+	if env.OAuthEnabled {
 		// Fetch environment variables
-		providerURL := os.Getenv("OAUTH_PROVIDER_URL")
-		oauthClientID := os.Getenv("OAUTH_CLIENT_ID")
-		oauthClientSecret := os.Getenv("OAUTH_CLIENT_SECRET")
-		oauthRedirectURL := os.Getenv("OAUTH_REDIRECT_URL")
+		providerURL := env.OAuthProviderURL
+		oauthClientID := env.OAuthClientID
+		oauthClientSecret := env.OAuthClientSecret
+		oauthRedirectURL := env.OAuthRedirectURL
 		if providerURL == "" || oauthClientID == "" || oauthClientSecret == "" || oauthRedirectURL == "" {
 			log.Fatal().Msg("missing environment variables for oauth authentication")
 		}
@@ -53,7 +55,7 @@ func NewService(store *database.Database) *Service {
 			Scopes:       []string{oidc.ScopeOpenID, "profile", oidc.ScopeOfflineAccess},
 		}
 
-		err = FetchJWKS()
+		err = FetchJWKS(ctx)
 		if err != nil {
 			log.Fatal().Err(err).Msg("error fetching jwks")
 		}
@@ -78,14 +80,17 @@ type ChangePassword struct {
 	NewPassword string `json:"new_password"`
 }
 
-func (s *Service) Register(c echo.Context, user user.User) (*ent.User, error) {
+func (s *Service) Register(ctx context.Context, user user.User) (*ent.User, error) {
+	if !config.Get().RegistrationEnabled {
+		return nil, fmt.Errorf("registration is disabled")
+	}
 	// hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err != nil {
 		return nil, fmt.Errorf("error hashing password: %v", err)
 	}
 
-	u, err := s.Store.Client.User.Create().SetUsername(user.Username).SetPassword(string(hashedPassword)).Save(c.Request().Context())
+	u, err := s.Store.Client.User.Create().SetUsername(user.Username).SetPassword(string(hashedPassword)).Save(ctx)
 	if err != nil {
 		if _, ok := err.(*ent.ConstraintError); ok {
 			return nil, fmt.Errorf("user already exists")
@@ -111,11 +116,23 @@ func (s *Service) Login(c echo.Context, uDto user.User) (*ent.User, error) {
 		Role:     u.Role,
 	}
 
-	// Generate JWT and set cookie
-	err = GenerateTokensAndSetCookies(&uDto, c)
+	// generate access token
+	accessToken, exp, err := generateJWTToken(&uDto, time.Now().Add(1*time.Hour), []byte(GetJWTSecret()))
 	if err != nil {
-		return nil, fmt.Errorf("error generating tokens: %v", err)
+		return nil, fmt.Errorf("error generating access token: %v", err)
 	}
+
+	// set access token cookie
+	setTokenCookie(c, accessTokenCookieName, accessToken, exp)
+
+	// generate refresh token
+	refreshToken, exp, err := generateJWTToken(&uDto, time.Now().Add(30*24*time.Hour), []byte(GetJWTRefreshSecret()))
+	if err != nil {
+		return nil, fmt.Errorf("error generating refresh token: %v", err)
+	}
+
+	// set refresh token cookie
+	setTokenCookie(c, refreshTokenCookieName, refreshToken, exp)
 
 	return u, nil
 }
@@ -146,11 +163,15 @@ func (s *Service) Refresh(c echo.Context, refreshToken string) error {
 			return fmt.Errorf("error getting user: %v", err)
 		}
 
-		// Generate JWT and set cookie
-		err = GenerateTokensAndSetCookies(&user.User{ID: u.ID, Username: u.Username, Role: u.Role}, c)
+		// generate access token
+		accessToken, exp, err := generateJWTToken(&user.User{ID: u.ID, Username: u.Username, Role: u.Role}, time.Now().Add(1*time.Hour), []byte(GetJWTSecret()))
 		if err != nil {
-			return fmt.Errorf("error generating tokens: %v", err)
+			return fmt.Errorf("error generating access token: %v", err)
 		}
+
+		// set access token cookie
+		setTokenCookie(c, accessTokenCookieName, accessToken, exp)
+
 		return nil
 	}
 

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -9,8 +10,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/riverqueue/river/rivertype"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/chat"
+	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
@@ -27,32 +30,33 @@ type VodService interface {
 	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error)
-	GetVodChatEmotes(c echo.Context, vodID uuid.UUID) (*chat.GanymedeEmotes, error)
-	GetVodChatBadges(c echo.Context, vodID uuid.UUID) (*chat.GanymedeBadges, error)
+	GetChatEmotes(ctx context.Context, vodID uuid.UUID) (*platform.Emotes, error)
+	GetChatBadges(ctx context.Context, vodID uuid.UUID) (*platform.Badges, error)
 	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error)
 	LockVod(c echo.Context, vID uuid.UUID, status bool) error
+	GenerateStaticThumbnail(ctx context.Context, videoID uuid.UUID) (*rivertype.JobInsertResult, error)
 }
 
 type CreateVodRequest struct {
-	ID               string            `json:"id"`
-	ChannelID        string            `json:"channel_id" validate:"required"`
-	ExtID            string            `json:"ext_id" validate:"min=1"`
-	Platform         utils.VodPlatform `json:"platform" validate:"required,oneof=twitch youtube"`
-	Type             utils.VodType     `json:"type" validate:"required,oneof=archive live highlight upload clip"`
-	Title            string            `json:"title" validate:"required,min=1"`
-	Duration         int               `json:"duration" validate:"required"`
-	Views            int               `json:"views" validate:"required"`
-	Resolution       string            `json:"resolution"`
-	Processing       bool              `json:"processing"`
-	ThumbnailPath    string            `json:"thumbnail_path"`
-	WebThumbnailPath string            `json:"web_thumbnail_path" validate:"required,min=1"`
-	VideoPath        string            `json:"video_path" validate:"required,min=1"`
-	ChatPath         string            `json:"chat_path"`
-	ChatVideoPath    string            `json:"chat_video_path"`
-	InfoPath         string            `json:"info_path"`
-	CaptionPath      string            `json:"caption_path"`
-	StreamedAt       string            `json:"streamed_at" validate:"required"`
-	Locked           bool              `json:"locked"`
+	ID               string              `json:"id"`
+	ChannelID        string              `json:"channel_id" validate:"required"`
+	ExtID            string              `json:"ext_id" validate:"min=1"`
+	Platform         utils.VideoPlatform `json:"platform" validate:"required,oneof=twitch youtube"`
+	Type             utils.VodType       `json:"type" validate:"required,oneof=archive live highlight upload clip"`
+	Title            string              `json:"title" validate:"required,min=1"`
+	Duration         int                 `json:"duration" validate:"required"`
+	Views            int                 `json:"views" validate:"required"`
+	Resolution       string              `json:"resolution"`
+	Processing       bool                `json:"processing"`
+	ThumbnailPath    string              `json:"thumbnail_path"`
+	WebThumbnailPath string              `json:"web_thumbnail_path" validate:"required,min=1"`
+	VideoPath        string              `json:"video_path" validate:"required,min=1"`
+	ChatPath         string              `json:"chat_path"`
+	ChatVideoPath    string              `json:"chat_video_path"`
+	InfoPath         string              `json:"info_path"`
+	CaptionPath      string              `json:"caption_path"`
+	StreamedAt       string              `json:"streamed_at" validate:"required"`
+	Locked           bool                `json:"locked"`
 }
 
 // CreateVod godoc
@@ -485,7 +489,7 @@ func (h *Handler) GetVodChatComments(c echo.Context) error {
 	return c.JSON(http.StatusOK, v)
 }
 
-// GetVodChatEmotes godoc
+// GetChatEmotes godoc
 //
 //	@Summary		Get vod chat emotes
 //	@Description	Get vod chat emotes
@@ -498,13 +502,13 @@ func (h *Handler) GetVodChatComments(c echo.Context) error {
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/chat/emotes [get]
-func (h *Handler) GetVodChatEmotes(c echo.Context) error {
+func (h *Handler) GetChatEmotes(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	emotes, err := h.Service.VodService.GetVodChatEmotes(c, vID)
+	emotes, err := h.Service.VodService.GetChatEmotes(c.Request().Context(), vID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -512,7 +516,7 @@ func (h *Handler) GetVodChatEmotes(c echo.Context) error {
 	return c.JSON(http.StatusOK, emotes)
 }
 
-// GetVodChatBadges godoc
+// GetChatBadges godoc
 //
 //	@Summary		Get vod chat badges
 //	@Description	Get vod chat badges
@@ -525,13 +529,13 @@ func (h *Handler) GetVodChatEmotes(c echo.Context) error {
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/chat/badges [get]
-func (h *Handler) GetVodChatBadges(c echo.Context) error {
+func (h *Handler) GetChatBadges(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	badges, err := h.Service.VodService.GetVodChatBadges(c, vID)
+	badges, err := h.Service.VodService.GetChatBadges(c.Request().Context(), vID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -596,4 +600,16 @@ func (h *Handler) LockVod(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, nil)
+}
+
+func (h *Handler) GenerateStaticThumbnail(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	job, err := h.Service.VodService.GenerateStaticThumbnail(c.Request().Context(), vID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return SuccessResponse(c, nil, fmt.Sprintf("job created: %d", job.Job.ID))
 }

@@ -8,18 +8,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/MicahParks/keyfunc"
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/go-jose/go-jose/v4"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/kv"
 	"golang.org/x/oauth2"
-	"gopkg.in/square/go-jose.v2"
 )
 
 type OAuthClaims struct {
@@ -189,7 +189,7 @@ func clearCookie(c echo.Context, name string) {
 }
 
 func CheckOAuthAccessToken(c echo.Context, accessToken string) (*UserInfo, error) {
-	clientID := os.Getenv("OAUTH_CLIENT_ID")
+	env := config.GetEnvConfig()
 	// Get JWKS from KV store
 	jwksString := kv.DB().Get("jwks")
 	if jwksString == "" {
@@ -215,7 +215,7 @@ func CheckOAuthAccessToken(c echo.Context, accessToken string) (*UserInfo, error
 
 	// Check aud
 	aud := token.Claims.(jwt.MapClaims)["aud"]
-	if aud != clientID {
+	if aud != env.OAuthClientID {
 		return nil, fmt.Errorf("invalid aud claim")
 	}
 
@@ -241,7 +241,8 @@ func randString(nByte int) (string, error) {
 }
 
 func setCallbackCookie(c echo.Context, name, value string) {
-	cookieDomain := os.Getenv("COOKIE_DOMAIN")
+	env := config.GetEnvConfig()
+	cookieDomain := env.CookieDomain
 	cookie := new(http.Cookie)
 	cookie.Name = name
 	cookie.Value = value
@@ -258,7 +259,8 @@ func setCallbackCookie(c echo.Context, name, value string) {
 }
 
 func setOauthCookie(c echo.Context, name, value string, time time.Time) {
-	cookieDomain := os.Getenv("COOKIE_DOMAIN")
+	env := config.GetEnvConfig()
+	cookieDomain := env.CookieDomain
 	cookie := new(http.Cookie)
 	cookie.Name = name
 	cookie.Value = value
@@ -274,11 +276,12 @@ func setOauthCookie(c echo.Context, name, value string, time time.Time) {
 	c.SetCookie(cookie)
 }
 
-func FetchJWKS() error {
-	providerURL := os.Getenv("OAUTH_PROVIDER_URL")
+func FetchJWKS(ctx context.Context) error {
+	env := config.GetEnvConfig()
+	providerURL := env.OAuthProviderURL
 	provider, err := oidc.NewProvider(context.Background(), providerURL)
 	if err != nil {
-		log.Fatal().Err(err).Msg("error creating oauth provider")
+		return err
 	}
 
 	// Get JWKS uri
@@ -290,34 +293,34 @@ func FetchJWKS() error {
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", claims.JWKSURI, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", claims.JWKSURI, nil)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to create JWKS request")
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 	jwksResp, err := client.Do(req)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to fetch JWKS")
+		return fmt.Errorf("failed to fetch JWKS: %w", err)
 	}
 	defer jwksResp.Body.Close()
 	body, err := io.ReadAll(jwksResp.Body)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to read JWKS response")
+		return fmt.Errorf("failed to read body: %w", err)
 	}
 	var jwks jose.JSONWebKeySet
 	err = json.Unmarshal(body, &jwks)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to decode JWKS response")
+		return fmt.Errorf("failed to unmarshal JWKS: %w", err)
 	}
 
 	// jwks to string
 	jwksString, err := json.Marshal(jwks)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to encode JWKS")
+		return fmt.Errorf("failed to marshal JWKS: %w", err)
 	}
 
 	kv.DB().Set("jwks", string(jwksString))
 
-	log.Debug().Msg("JWKS fetched and set")
+	log.Debug().Msg("fetched jwks")
 
 	return nil
 }

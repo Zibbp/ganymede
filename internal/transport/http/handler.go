@@ -3,8 +3,6 @@ package http
 import (
 	"context"
 	"net/http"
-	"os"
-	"os/signal"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -12,31 +10,32 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	_ "github.com/zibbp/ganymede/docs"
 	"github.com/zibbp/ganymede/internal/auth"
-	"github.com/zibbp/ganymede/internal/channel"
+	"github.com/zibbp/ganymede/internal/config"
+	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type Services struct {
-	AuthService      AuthService
-	ChannelService   ChannelService
-	VodService       VodService
-	QueueService     QueueService
-	TwitchService    TwitchService
-	ArchiveService   ArchiveService
-	AdminService     AdminService
-	UserService      UserService
-	ConfigService    ConfigService
-	LiveService      LiveService
-	SchedulerService SchedulerService
-	PlaybackService  PlaybackService
-	MetricsService   MetricsService
-	PlaylistService  PlaylistService
-	TaskService      TaskService
-	ChapterService   ChapterService
+	AuthService         AuthService
+	ChannelService      ChannelService
+	VodService          VodService
+	QueueService        QueueService
+	ArchiveService      ArchiveService
+	AdminService        AdminService
+	UserService         UserService
+	LiveService         LiveService
+	SchedulerService    SchedulerService
+	PlaybackService     PlaybackService
+	MetricsService      MetricsService
+	PlaylistService     PlaylistService
+	TaskService         TaskService
+	ChapterService      ChapterService
+	CategoryService     CategoryService
+	BlockedVideoService BlockedVideoService
+	PlatformTwitch      platform.Platform
 }
 
 type Handler struct {
@@ -44,36 +43,40 @@ type Handler struct {
 	Service Services
 }
 
-func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, twitchService TwitchService, archiveService ArchiveService, adminService AdminService, userService UserService, configService ConfigService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService) *Handler {
+func NewHandler(authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform) *Handler {
 	log.Debug().Msg("creating new handler")
+	env := config.GetEnvApplicationConfig()
 
 	h := &Handler{
 		Server: echo.New(),
 		Service: Services{
-			AuthService:      authService,
-			ChannelService:   channelService,
-			VodService:       vodService,
-			QueueService:     queueService,
-			TwitchService:    twitchService,
-			ArchiveService:   archiveService,
-			AdminService:     adminService,
-			UserService:      userService,
-			ConfigService:    configService,
-			LiveService:      liveService,
-			SchedulerService: schedulerService,
-			PlaybackService:  playbackService,
-			MetricsService:   metricsService,
-			PlaylistService:  playlistService,
-			TaskService:      taskService,
-			ChapterService:   chapterService,
+			AuthService:         authService,
+			ChannelService:      channelService,
+			VodService:          vodService,
+			QueueService:        queueService,
+			ArchiveService:      archiveService,
+			AdminService:        adminService,
+			UserService:         userService,
+			LiveService:         liveService,
+			SchedulerService:    schedulerService,
+			PlaybackService:     playbackService,
+			MetricsService:      metricsService,
+			PlaylistService:     playlistService,
+			TaskService:         taskService,
+			ChapterService:      chapterService,
+			CategoryService:     categoryService,
+			BlockedVideoService: blockedVideoService,
+			PlatformTwitch:      platformTwitch,
 		},
 	}
 
 	// Middleware
 	h.Server.Validator = &utils.CustomValidator{Validator: validator.New()}
 
+	h.Server.HideBanner = true
+
 	h.Server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{os.Getenv("FRONTEND_HOST")},
+		AllowOrigins:     []string{env.FrontendHost},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 		AllowCredentials: true,
 	}))
@@ -81,23 +84,7 @@ func NewHandler(authService AuthService, channelService ChannelService, vodServi
 	h.mapRoutes()
 
 	// Start scheduler
-	h.Service.SchedulerService.StartAppScheduler()
-	// Start schedules as a goroutine
-	// to avoid blocking application start
-	// and to wait for twitch api auth
 	go h.Service.SchedulerService.StartLiveScheduler()
-	if viper.GetBool("oauth_enabled") {
-		go h.Service.SchedulerService.StartJwksScheduler()
-	}
-	go h.Service.SchedulerService.StartWatchVideoScheduler()
-	go h.Service.SchedulerService.StartTwitchCategoriesScheduler()
-	go h.Service.SchedulerService.StartPruneVideoScheduler()
-
-	// Populate channel external ids
-	go func() {
-		time.Sleep(5 * time.Second)
-		channel.PopulateExternalChannelID()
-	}()
 
 	return h
 }
@@ -114,7 +101,10 @@ func (h *Handler) mapRoutes() {
 	})
 
 	h.Server.GET("/metrics", func(c echo.Context) error {
-		r := h.GatherMetrics()
+		r, err := h.GatherMetrics()
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
 
 		handler := promhttp.HandlerFor(r, promhttp.HandlerOpts{})
 		handler.ServeHTTP(c.Response(), c.Request())
@@ -122,7 +112,8 @@ func (h *Handler) mapRoutes() {
 	})
 
 	// Static files
-	h.Server.Static("/static/vods", "/vods")
+	envConfig := config.GetEnvConfig()
+	h.Server.Static(envConfig.VideosDir, envConfig.VideosDir)
 
 	// Swagger
 	h.Server.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -180,9 +171,10 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.GET("/:id/chat", h.GetVodChatComments)
 	vodGroup.GET("/:id/chat/seek", h.GetNumberOfVodChatCommentsFromTime)
 	vodGroup.GET("/:id/chat/userid", h.GetUserIdFromChat)
-	vodGroup.GET("/:id/chat/emotes", h.GetVodChatEmotes)
-	vodGroup.GET("/:id/chat/badges", h.GetVodChatBadges)
+	vodGroup.GET("/:id/chat/emotes", h.GetChatEmotes)
+	vodGroup.GET("/:id/chat/badges", h.GetChatBadges)
 	vodGroup.POST("/:id/lock", h.LockVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	vodGroup.POST("/:id/generate-static-thumbnail", h.GenerateStaticThumbnail, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 
 	// Queue
 	queueGroup := e.Group("/queue")
@@ -193,18 +185,19 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	queueGroup.DELETE("/:id", h.DeleteQueueItem, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	queueGroup.GET("/:id/tail", h.ReadQueueLogFile, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	queueGroup.POST("/:id/stop", h.StopQueueItem, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
+	queueGroup.POST("/task/start", h.StartQueueTask, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Twitch
 	twitchGroup := e.Group("/twitch")
-	twitchGroup.GET("/channel", h.GetTwitchUser)
-	twitchGroup.GET("/vod", h.GetTwitchVod)
-	twitchGroup.GET("/gql/video", h.GQLGetTwitchVideo)
-	twitchGroup.GET("/categories", h.GetTwitchCategories)
+	twitchGroup.GET("/channel", h.GetTwitchChannel)
+	twitchGroup.GET("/video", h.GetTwitchVideo)
+	// twitchGroup.GET("/gql/video", h.GQLGetTwitchVideo)
+	// twitchGroup.GET("/categories", h.GetTwitchCategories)
 
 	// Archive
 	archiveGroup := e.Group("/archive")
-	archiveGroup.POST("/channel", h.ArchiveTwitchChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	archiveGroup.POST("/vod", h.ArchiveTwitchVod, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	archiveGroup.POST("/channel", h.ArchiveChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	archiveGroup.POST("/video", h.ArchiveVideo, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 	archiveGroup.POST("/convert-twitch-live-chat", h.ConvertTwitchChat, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// Admin
@@ -223,10 +216,6 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	configGroup := e.Group("/config")
 	configGroup.GET("", h.GetConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 	configGroup.PUT("", h.UpdateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	configGroup.GET("/notification", h.GetNotificationConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	configGroup.PUT("/notification", h.UpdateNotificationConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	configGroup.GET("/storage", h.GetStorageTemplateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
-	configGroup.PUT("/storage", h.UpdateStorageTemplateConfig, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
 	// Live
 	liveGroup := e.Group("/live")
@@ -236,8 +225,8 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
 	liveGroup.GET("/check", h.Check, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	liveGroup.GET("/vod", h.CheckVodWatchedChannels, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
-	liveGroup.POST("/archive", h.ArchiveLiveChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
+	// liveGroup.GET("/vod", h.CheckVodWatchedChannels, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	// liveGroup.POST("/archive", h.ArchiveLiveChannel, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
 
 	// Playback
 	playbackGroup := e.Group("/playback")
@@ -271,36 +260,47 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	notificationGroup := e.Group("/notification")
 	notificationGroup.POST("/test", h.TestNotification, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.AdminRole))
 
-	// Workflows
-	workflowGroup := e.Group("/workflows")
-	workflowGroup.GET("/active", h.GetActiveWorkflows, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	workflowGroup.GET("/closed", h.GetClosedWorkflows, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	workflowGroup.GET("/:workflowId/:runId", h.GetWorkflowById, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	workflowGroup.GET("/:workflowId/:runId/history", h.GetWorkflowHistory, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	workflowGroup.GET("/:workflowId/:runId/video_id", h.GetVideoIdFromWorkflow, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	workflowGroup.POST("/start", h.StartWorkflow, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-	workflowGroup.POST("/restart", h.RestartArchiveWorkflow, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.ArchiverRole))
-
 	// Chapter
 	chapterGroup := e.Group("/chapter")
 	chapterGroup.GET("/video/:videoId", h.GetVideoChapters)
 	chapterGroup.GET("/video/:videoId/webvtt", h.GetWebVTTChapters)
+
+	// Category
+	categoryGroup := e.Group("/category")
+	categoryGroup.GET("", h.GetCategories)
+
+	// Blocked
+	blockedGroup := e.Group("/blocked-video")
+	blockedGroup.GET("", h.GetBlockedVideos)
+	blockedGroup.POST("/:id", h.CreateBlockedVideo, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	blockedGroup.DELETE("/:id", h.DeleteBlockedVideo, auth.GuardMiddleware, auth.GetUserMiddleware, auth.UserRoleMiddleware(utils.EditorRole))
+	blockedGroup.GET("/:id", h.IsVideoBlocked)
 }
 
-func (h *Handler) Serve() error {
+func (h *Handler) Serve(ctx context.Context) error {
+	// Run the server in a goroutine
+	serverErrCh := make(chan error, 1)
 	go func() {
 		if err := h.Server.Start(":4000"); err != nil && err != http.ErrServerClosed {
+			serverErrCh <- err
+		}
+		close(serverErrCh)
+	}()
+
+	// Listen for the context to be canceled or an error to occur in the server
+	select {
+	case <-ctx.Done():
+		log.Info().Msg("Context canceled, shutting down the server")
+	case err := <-serverErrCh:
+		if err != nil {
 			log.Fatal().Err(err).Msg("failed to start server")
 		}
-	}()
-	// Wait for interrupt signal to gracefully shutdown the server with a timeout of 10 seconds.
-	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	}
+
+	// Shutdown the server with a timeout of 10 seconds
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := h.Server.Shutdown(ctx); err != nil {
+	if err := h.Server.Shutdown(shutdownCtx); err != nil {
 		log.Fatal().Err(err).Msg("failed to shutdown server")
 	}
 

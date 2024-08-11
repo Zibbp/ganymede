@@ -1,8 +1,9 @@
 package admin
 
 import (
+	"context"
 	"fmt"
-	"github.com/labstack/echo/v4"
+
 	"github.com/zibbp/ganymede/internal/database"
 )
 
@@ -19,13 +20,13 @@ type GetStatsResp struct {
 	ChannelCount int `json:"channel_count"`
 }
 
-func (s *Service) GetStats(c echo.Context) (GetStatsResp, error) {
+func (s *Service) GetStats(ctx context.Context) (GetStatsResp, error) {
 
-	vC, err := s.Store.Client.Vod.Query().Count(c.Request().Context())
+	vC, err := s.Store.Client.Vod.Query().Count(ctx)
 	if err != nil {
 		return GetStatsResp{}, fmt.Errorf("error getting vod count: %v", err)
 	}
-	cC, err := s.Store.Client.Channel.Query().Count(c.Request().Context())
+	cC, err := s.Store.Client.Channel.Query().Count(ctx)
 	if err != nil {
 		return GetStatsResp{}, fmt.Errorf("error getting channel count: %v", err)
 	}

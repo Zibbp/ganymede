@@ -8,6 +8,17 @@ import (
 )
 
 var (
+	// BlockedVideosColumns holds the columns for the "blocked_videos" table.
+	BlockedVideosColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// BlockedVideosTable holds the schema information for the "blocked_videos" table.
+	BlockedVideosTable = &schema.Table{
+		Name:       "blocked_videos",
+		Columns:    BlockedVideosColumns,
+		PrimaryKey: []*schema.Column{BlockedVideosColumns[0]},
+	}
 	// ChannelsColumns holds the columns for the "channels" table.
 	ChannelsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -64,6 +75,7 @@ var (
 		{Name: "last_live", Type: field.TypeTime},
 		{Name: "render_chat", Type: field.TypeBool, Default: true},
 		{Name: "video_age", Type: field.TypeInt64, Default: 0},
+		{Name: "apply_categories_to_live", Type: field.TypeBool, Default: false},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "channel_live", Type: field.TypeUUID},
@@ -76,7 +88,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[15]},
+				Columns:    []*schema.Column{LivesColumns[16]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -195,6 +207,7 @@ var (
 		{Name: "task_chat_render", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "task_chat_move", Type: field.TypeEnum, Nullable: true, Enums: []string{"success", "running", "pending", "failed"}, Default: "pending"},
 		{Name: "chat_start", Type: field.TypeTime, Nullable: true},
+		{Name: "archive_chat", Type: field.TypeBool, Nullable: true, Default: true},
 		{Name: "render_chat", Type: field.TypeBool, Nullable: true, Default: true},
 		{Name: "workflow_id", Type: field.TypeString, Nullable: true},
 		{Name: "workflow_run_id", Type: field.TypeString, Nullable: true},
@@ -210,7 +223,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "queues_vods_queue",
-				Columns:    []*schema.Column{QueuesColumns[22]},
+				Columns:    []*schema.Column{QueuesColumns[23]},
 				RefColumns: []*schema.Column{VodsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -253,6 +266,7 @@ var (
 	VodsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "ext_id", Type: field.TypeString},
+		{Name: "ext_stream_id", Type: field.TypeString, Nullable: true},
 		{Name: "platform", Type: field.TypeEnum, Enums: []string{"twitch", "youtube"}, Default: "twitch"},
 		{Name: "type", Type: field.TypeEnum, Enums: []string{"archive", "live", "highlight", "upload", "clip"}, Default: "archive"},
 		{Name: "title", Type: field.TypeString},
@@ -294,7 +308,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[33]},
+				Columns:    []*schema.Column{VodsColumns[34]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -327,6 +341,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		BlockedVideosTable,
 		ChannelsTable,
 		ChaptersTable,
 		LivesTable,

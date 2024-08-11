@@ -19,8 +19,9 @@ type Vod struct {
 func (Vod) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
-		field.String("ext_id"),
-		field.Enum("platform").GoType(utils.VodPlatform("")).Default(string(utils.PlatformTwitch)).Comment("The platform the VOD is from, takes an enum."),
+		field.String("ext_id").Comment("The ID of the video on the external platform."),
+		field.String("ext_stream_id").Optional().Comment("The ID of the stream on the external platform, if applicable."),
+		field.Enum("platform").GoType(utils.VideoPlatform("")).Default(string(utils.PlatformTwitch)).Comment("The platform the VOD is from, takes an enum."),
 		field.Enum("type").GoType(utils.VodType("")).Default(string(utils.Archive)).Comment("The type of VOD, takes an enum."),
 		field.String("title"),
 		field.Int("duration").Default(1),

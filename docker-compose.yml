@@ -5,37 +5,43 @@ services:
     image: ghcr.io/zibbp/ganymede:latest
     restart: unless-stopped
     depends_on:
-      - ganymede-temporal
+      - ganymede-db
     environment:
+      - DEBUG=false
       - TZ=America/Chicago # Set to your timezone
+      # Data paths in container; update the mounted volume paths as well
+      - VIDEOS_DIR=/data/videos
+      - TEMP_DIR=/data/temp
+      - LOGS_DIR=/data/logs
+      - CONFIG_DIR=/data/config
+      # Database settings
       - DB_HOST=ganymede-db
       - DB_PORT=5432
       - DB_USER=ganymede
       - DB_PASS=PASSWORD
       - DB_NAME=ganymede-prd
       - DB_SSL=disable
-      - JWT_SECRET=SECRET
-      - JWT_REFRESH_SECRET=SECRET
-      - TWITCH_CLIENT_ID=
-      - TWITCH_CLIENT_SECRET=
-      - FRONTEND_HOST=http://IP:PORT
-      # OPTIONAL
+      - JWT_SECRET=SECRET # set as a random string
+      - JWT_REFRESH_SECRET=SECRET # set as a random string
+      - TWITCH_CLIENT_ID= # from your twitch application
+      - TWITCH_CLIENT_SECRET= # from your twitch application
+      - FRONTEND_HOST=http://IP:PORT # URL to the frontend service. Needs to be the 'public' url that you visit.
+      # Worker settings. Max number of tasks to run in parallel per type.
+      - MAX_CHAT_DOWNLOAD_EXECUTIONS=3
+      - MAX_CHAT_RENDER_EXECUTIONS=2
+      - MAX_VIDEO_DOWNLOAD_EXECUTIONS=2
+      - MAX_VIDEO_CONVERT_EXECUTIONS=3
+      # Optional OAuth settings
+      # - OAUTH_ENABLED=false
       # - OAUTH_PROVIDER_URL=
       # - OAUTH_CLIENT_ID=
       # - OAUTH_CLIENT_SECRET=
       # - OAUTH_REDIRECT_URL=http://IP:PORT/api/v1/auth/oauth/callback # Points to the API service
-      - TEMPORAL_URL=ganymede-temporal:7233
-      # WORKER
-      - MAX_CHAT_DOWNLOAD_EXECUTIONS=5
-      - MAX_CHAT_RENDER_EXECUTIONS=3
-      - MAX_VIDEO_DOWNLOAD_EXECUTIONS=5
-      - MAX_VIDEO_CONVERT_EXECUTIONS=3
     volumes:
-      - /path/to/vod/storage:/vods
-      - ./logs:/logs
-      - ./data:/data
-      # Uncomment below to persist temp files
-      #- ./tmp:/tmp
+      - /path/to/vod/storage:/data/videos # update VIDEOS_DIR env var
+      - ./temp:/data/temp # update TEMP_DIR env var
+      - ./logs:/data/logs # queue logs
+      - ./config:/data/config # config and other miscellaneous files
     ports:
       - 4800:4000
   ganymede-frontend:
@@ -43,36 +49,13 @@ services:
     image: ghcr.io/zibbp/ganymede-frontend:latest
     restart: unless-stopped
     environment:
-      - API_URL=http://IP:PORT # Points to the API service
-      - CDN_URL=http://IP:PORT # Points to the CDN service
+      - API_URL=http://IP:PORT # Points to the API service; the container must be able to access this URL internally
+      - CDN_URL=http://IP:PORT # Points to the nginx service
       - SHOW_SSO_LOGIN_BUTTON=true # show/hide SSO login button on login page
       - FORCE_SSO_AUTH=false # force SSO auth for all users (bypasses login page and redirects to SSO)
       - REQUIRE_LOGIN=false # require login to view videos
     ports:
       - 4801:3000
-  ganymede-temporal:
-    image: temporalio/auto-setup:1.23
-    container_name: ganymede-temporal
-    depends_on:
-      - ganymede-db
-    environment:
-      - DB=postgres12 # this tells temporal to use postgres (not the db name)
-      - DB_PORT=5432
-      - POSTGRES_USER=ganymede
-      - POSTGRES_PWD=PASSWORD
-      - POSTGRES_SEEDS=ganymede-db # name of the db service
-    ports:
-      - 7233:7233
-  # -- Uncomment below to enable temporal web ui --
-  # ganymede-temporal-ui:
-  #   image: temporalio/ui:latest
-  #   container_name: ganymede-temporal-ui
-  #   depends_on:
-  #     - ganymede-temporal
-  #   environment:
-  #     - TEMPORAL_ADDRESS=ganymede-temporal:7233
-  #   ports:
-  #     - 8233:8080
   ganymede-db:
     container_name: ganymede-db
     image: postgres:14
@@ -84,11 +67,19 @@ services:
       - POSTGRES_DB=ganymede-prd
     ports:
       - 4803:5432
+  # Nginx is not really required, it provides nice-to-have caching. The API container will serve the VIDEO_DIR env var path if you want to use that instead (e.g. VIDEOS_DIR=/data/videos would be served at IP:4800/data/videos/channel/channel.jpg).
   ganymede-nginx:
     container_name: ganymede-nginx
     image: nginx
     volumes:
       - /path/to/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /pah/to/vod/stoage:/mnt/vods
+      - /pah/to/vod/stoage:/data/videos
     ports:
       - 4802:8080
+  # River UI is a frontend for the task system that Ganymede uses. This provides a more in-depth look at the task queue.
+  ganymede-river-ui:
+    image: ghcr.io/riverqueue/riverui:0.3
+    environment:
+      - DATABASE_URL=postgres://ganymede:DB_PASSWORD@ganymede-db:5432/ganymede-prd # update with env settings from the ganymede-db container. If you're using the default database settings then just update the DB_PASSWORD env var.
+    ports:
+      - 4804:8080

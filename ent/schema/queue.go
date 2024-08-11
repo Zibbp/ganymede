@@ -35,6 +35,7 @@ func (Queue) Fields() []ent.Field {
 		field.Enum("task_chat_render").GoType(utils.TaskStatus("")).Default(string(utils.Pending)).Optional(),
 		field.Enum("task_chat_move").GoType(utils.TaskStatus("")).Default(string(utils.Pending)).Optional(),
 		field.Time("chat_start").Optional(),
+		field.Bool("archive_chat").Optional().Default(true),
 		field.Bool("render_chat").Optional().Default(true),
 		field.String("workflow_id").Optional(),
 		field.String("workflow_run_id").Optional(),

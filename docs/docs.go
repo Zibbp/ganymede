@@ -4597,7 +4597,7 @@ const docTemplate = `{
                     "description": "The platform the VOD is from, takes an enum.",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/utils.VodPlatform"
+                            "$ref": "#/definitions/utils.VideoPlatform"
                         }
                     ]
                 },
@@ -4985,7 +4985,7 @@ const docTemplate = `{
                     ],
                     "allOf": [
                         {
-                            "$ref": "#/definitions/utils.VodPlatform"
+                            "$ref": "#/definitions/utils.VideoPlatform"
                         }
                     ]
                 },
@@ -5692,7 +5692,7 @@ const docTemplate = `{
                 "Failed"
             ]
         },
-        "utils.VodPlatform": {
+        "utils.VideoPlatform": {
             "type": "string",
             "enum": [
                 "twitch",
