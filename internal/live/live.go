@@ -249,7 +249,7 @@ OUTER:
 				// stream is live
 				log.Debug().Str("channel", lwc.Edges.Channel.Name).Msg("stream is live; checking for restrictions before archiving")
 				// check for any user-constraints before archiving
-				if lwc.Edges.TitleRegex != nil && len(lwc.Edges.TitleRegex) > 0 {
+				if len(lwc.Edges.TitleRegex) > 0 {
 					// run regexes against title
 					for _, titleRegex := range lwc.Edges.TitleRegex {
 						regex, err := regexp.Compile(titleRegex.Regex)
