@@ -130,7 +130,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 					continue
 				}
 				// check if there are any title regexes that need to be tested
-				if watch.Edges.TitleRegex != nil && len(watch.Edges.TitleRegex) > 0 {
+				if len(watch.Edges.TitleRegex) > 0 {
 					// run regexes against title
 					for _, titleRegex := range watch.Edges.TitleRegex {
 						regex, err := regexp.Compile(titleRegex.Regex)
