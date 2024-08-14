@@ -27,7 +27,7 @@ RUN if [ "$BUILDPLATFORM" = "arm64" ]; then \
 RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
 
 # Production stage
-FROM --platform=$BUILDPLATFORM debian:bookworm-slim
+FROM debian:bookworm-slim
 WORKDIR /opt/app
 
 # Install dependencies
