@@ -17,13 +17,15 @@ unzip git ca-certificates curl \
 ARG TWITCHDOWNLOADER_VERSION
 ENV TWITCHDOWNLOADER_URL=https://github.com/lay295/TwitchDownloader/releases/download/${TWITCHDOWNLOADER_VERSION}/TwitchDownloaderCLI-${TWITCHDOWNLOADER_VERSION}-Linux-x64.zip
 
-RUN if [ "$ARCH" = "arm64" ]; then \
-        TWITCHDOWNLOADER_URL=https://github.com/lay295/TwitchDownloader/releases/download/${TWITCHDOWNLOADER_VERSION}/TwitchDownloaderCLI-${TWITCHDOWNLOADER_VERSION}-LinuxArm64.zip \
+
+RUN if [ "$BUILDPLATFORM" = "arm64" ]; then \
+TWITCHDOWNLOADER_URL=https://github.com/lay295/TwitchDownloader/releases/download/${TWITCHDOWNLOADER_VERSION}/TwitchDownloaderCLI-${TWITCHDOWNLOADER_VERSION}-LinuxArm64.zip; \
     fi && \
     echo "Download URL: $TWITCHDOWNLOADER_URL" && \
     curl -L $TWITCHDOWNLOADER_URL -o twitchdownloader.zip && \
     unzip twitchdownloader.zip && \
     rm twitchdownloader.zip
+
 RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
 
 # Production stage
