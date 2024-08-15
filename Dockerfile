@@ -15,12 +15,13 @@ unzip git ca-certificates curl \
 
 # Download TwitchDownloader for the correct platform
 ARG TWITCHDOWNLOADER_VERSION
-ENV TWITCHDOWNLOADER_URL=https://github.com/lay295/TwitchDownloader/releases/download/${TWITCHDOWNLOADER_VERSION}/TwitchDownloaderCLI-${TWITCHDOWNLOADER_VERSION}-Linux
-RUN if [ "$BUILDPLATFORM" = "arm64" ]; then \
-        export TWITCHDOWNLOADER_URL=${TWITCHDOWNLOADER_URL}Arm; \
-    fi && \
-    export TWITCHDOWNLOADER_URL=${TWITCHDOWNLOADER_URL}-x64.zip && \
-    echo "Download URL: $TWITCHDOWNLOADER_URL" && \
+ENV TWITCHDOWNLOADER_URL=https://github.com/lay295/TwitchDownloader/releases/download/${TWITCHDOWNLOADER_VERSION}/TwitchDownloaderCLI-${TWITCHDOWNLOADER_VERSION}-Linux-x64.zip
+
+RUN if [ "$ARCH" = "arm64" ]; then
+    export TWITCHDOWNLOADER_URL=https://github.com/lay295/TwitchDownloader/releases/download/${TWITCHDOWNLOADER_VERSION}/TwitchDownloaderCLI-${TWITCHDOWNLOADER_VERSION}-LinuxArm64.zip
+    fi
+
+RUN echo "Download URL: $TWITCHDOWNLOADER_URL" && \
     curl -L $TWITCHDOWNLOADER_URL -o twitchdownloader.zip && \
     unzip twitchdownloader.zip && \
     rm twitchdownloader.zip
