@@ -1,13 +1,13 @@
 ARG TWITCHDOWNLOADER_VERSION="1.55.0"
 
 # Build stage
-FROM --platform=$BUILDPLATFORM golang:1.22-bookworm AS build
+FROM golang:1.22-bookworm AS build
 WORKDIR /app
 COPY . .
 RUN make build_server build_worker
 
 # Tools stage
-FROM --platform=$BUILDPLATFORM debian:bookworm-slim AS tools
+FROM debian:bookworm-slim AS tools
 WORKDIR /tmp
 RUN apt-get update && apt-get install -y --no-install-recommends \
 unzip git ca-certificates curl \
