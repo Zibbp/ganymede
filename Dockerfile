@@ -1,13 +1,13 @@
 ARG TWITCHDOWNLOADER_VERSION="1.55.0"
 
 # Build stage
-FROM --platform=$BUILDPLATFORM golang:1.22-bookworm AS build
+FROM golang:1.22-bookworm AS build
 WORKDIR /app
 COPY . .
 RUN make build_server build_worker
 
 # Tools stage
-FROM --platform=$BUILDPLATFORM debian:bookworm-slim AS tools
+FROM debian:bookworm-slim AS tools
 WORKDIR /tmp
 RUN apt-get update && apt-get install -y --no-install-recommends \
 unzip git ca-certificates curl \
@@ -15,15 +15,17 @@ unzip git ca-certificates curl \
 
 # Download TwitchDownloader for the correct platform
 ARG TWITCHDOWNLOADER_VERSION
-ENV TWITCHDOWNLOADER_URL=https://github.com/lay295/TwitchDownloader/releases/download/${TWITCHDOWNLOADER_VERSION}/TwitchDownloaderCLI-${TWITCHDOWNLOADER_VERSION}-Linux
-RUN if [ "$BUILDPLATFORM" = "arm64" ]; then \
-        export TWITCHDOWNLOADER_URL=${TWITCHDOWNLOADER_URL}Arm; \
+ENV TWITCHDOWNLOADER_URL=https://github.com/lay295/TwitchDownloader/releases/download/${TWITCHDOWNLOADER_VERSION}/TwitchDownloaderCLI-${TWITCHDOWNLOADER_VERSION}-Linux-x64.zip
+
+
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+TWITCHDOWNLOADER_URL=https://github.com/lay295/TwitchDownloader/releases/download/${TWITCHDOWNLOADER_VERSION}/TwitchDownloaderCLI-${TWITCHDOWNLOADER_VERSION}-LinuxArm64.zip; \
     fi && \
-    export TWITCHDOWNLOADER_URL=${TWITCHDOWNLOADER_URL}-x64.zip && \
     echo "Download URL: $TWITCHDOWNLOADER_URL" && \
     curl -L $TWITCHDOWNLOADER_URL -o twitchdownloader.zip && \
     unzip twitchdownloader.zip && \
     rm twitchdownloader.zip
+
 RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
 
 # Production stage
