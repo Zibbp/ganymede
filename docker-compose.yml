@@ -26,6 +26,7 @@ services:
       - TWITCH_CLIENT_ID= # from your twitch application
       - TWITCH_CLIENT_SECRET= # from your twitch application
       - FRONTEND_HOST=http://IP:PORT # URL to the frontend service. Needs to be the 'public' url that you visit.
+      #- COOKIE_DOMAIN= # Optional domain that the cookies will be set to. Should be the top level domain with a reverse proxy (e.g. `domain.com`).
       # Worker settings. Max number of tasks to run in parallel per type.
       - MAX_CHAT_DOWNLOAD_EXECUTIONS=3
       - MAX_CHAT_RENDER_EXECUTIONS=2
