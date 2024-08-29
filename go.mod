@@ -14,7 +14,7 @@ require (
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/prometheus/client_golang v1.19.1
+	github.com/prometheus/client_golang v1.20.2
 	github.com/riverqueue/river v0.11.2
 	github.com/riverqueue/river/rivertype v0.11.2
 	github.com/rs/zerolog v1.33.0
@@ -58,7 +58,7 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.4 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
