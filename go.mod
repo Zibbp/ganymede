@@ -15,7 +15,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.20.2
-	github.com/riverqueue/river v0.11.2
+	github.com/riverqueue/river v0.11.4
 	github.com/riverqueue/river/rivertype v0.11.4
 	github.com/rs/zerolog v1.33.0
 	github.com/sethvargo/go-envconfig v1.1.0
@@ -72,8 +72,8 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
-	github.com/riverqueue/river/riverdriver v0.11.2 // indirect
-	github.com/riverqueue/river/rivershared v0.11.2 // indirect
+	github.com/riverqueue/river/riverdriver v0.11.4 // indirect
+	github.com/riverqueue/river/rivershared v0.11.4 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
@@ -120,7 +120,7 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.11.2
+	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.11.4
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.9.0
 	github.com/swaggo/echo-swagger v1.4.1
