@@ -37,5 +37,5 @@
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
   "workspaceFolder": "/workspace",
-  "postAttachCommand": "make dev_setup"
+  "postAttachCommand": "sudo chown -R vscode:vscode /go && make dev_setup"
 }

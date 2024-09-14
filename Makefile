@@ -38,4 +38,4 @@ river-webui:
 	curl -L https://github.com/riverqueue/riverui/releases/latest/download/riverui_linux_amd64.gz | gzip -d > /tmp/riverui
 	chmod +x /tmp/riverui
 	@export $(shell grep -v '^#' .env | xargs) && \
-	VITE_RIVER_API_BASE_URL=http://localhost:8080/api DATABASE_URL=postgres://$$DB_USER:$$DB_PASS@dev.tycho:$$DB_PORT/$$DB_NAME /tmp/riverui
+	VITE_RIVER_API_BASE_URL=http://localhost:8080/api DATABASE_URL=postgres://$$DB_USER:$$DB_PASS@$$DB_HOST:$$DB_PORT/$$DB_NAME /tmp/riverui

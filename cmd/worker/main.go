@@ -40,7 +40,7 @@ func main() {
 
 	log.Info().Str("commit", utils.Commit).Str("build_time", utils.BuildTime).Msg("starting worker")
 
-	dbString := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s", envAppConfig.DB_USER, envAppConfig.DB_PASS, envAppConfig.DB_HOST, envAppConfig.DB_PORT, envAppConfig.DB_NAME, envAppConfig.DB_SSL)
+	dbString := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s sslrootcert=%s", envAppConfig.DB_USER, envAppConfig.DB_PASS, envAppConfig.DB_HOST, envAppConfig.DB_PORT, envAppConfig.DB_NAME, envAppConfig.DB_SSL, envAppConfig.DB_SSL_ROOT_CERT)
 
 	db := database.NewDatabase(ctx, database.DatabaseConnectionInput{
 		DBString: dbString,
