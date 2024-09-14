@@ -24,35 +24,6 @@ type Database struct {
 	ConnPool *pgxpool.Pool
 }
 
-func InitializeDatabase(input DatabaseConnectionInput) {
-	client, err := ent.Open("postgres", input.DBString)
-
-	if err != nil {
-		log.Fatal().Err(err).Msg("error connecting to database")
-	}
-
-	if !input.IsWorker {
-		// Run auto migration
-		if err := client.Schema.Create(context.Background()); err != nil {
-			log.Fatal().Err(err).Msg("error running auto migration")
-		}
-		// check if any users exist
-		users, err := client.User.Query().All(context.Background())
-		if err != nil {
-			log.Panic().Err(err).Msg("error querying users")
-		}
-		// if no users exist, seed database
-		if len(users) == 0 {
-			// seed database
-			log.Debug().Msg("seeding database")
-			if err := seedDatabase(client); err != nil {
-				log.Panic().Err(err).Msg("error seeding database")
-			}
-		}
-	}
-	db = &Database{Client: client}
-}
-
 func DB() *Database {
 	return db
 }

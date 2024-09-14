@@ -21,6 +21,7 @@ services:
       - DB_PASS=PASSWORD
       - DB_NAME=ganymede-prd
       - DB_SSL=disable
+      #- DB_SSL_ROOT_CERT= # path to cert in the container if DB_SSL is not disabled
       - JWT_SECRET=SECRET # set as a random string
       - JWT_REFRESH_SECRET=SECRET # set as a random string
       - TWITCH_CLIENT_ID= # from your twitch application
