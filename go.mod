@@ -1,9 +1,10 @@
 module github.com/zibbp/ganymede
 
 go 1.22.5
+toolchain go1.23.1
 
 require (
-	entgo.io/ent v0.13.1
+	entgo.io/ent v0.14.1
 	github.com/MicahParks/keyfunc v1.9.0
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/go-co-op/gocron v1.37.0
@@ -87,7 +88,7 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/tools v0.23.0 // indirect
+	golang.org/x/tools v0.24.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
@@ -124,7 +125,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/zclconf/go-cty v1.15.0 // indirect
 	golang.org/x/mod v0.20.0 // indirect
-	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
