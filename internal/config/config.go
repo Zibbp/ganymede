@@ -56,7 +56,6 @@ type ProxyListItem struct {
 
 var (
 	instance *Config
-	once     sync.Once
 	mutex    sync.RWMutex
 	initErr  error
 )
@@ -67,10 +66,9 @@ var configFile string
 func Init() (*Config, error) {
 	env := GetEnvConfig()
 	configFile = env.ConfigDir + "/config.json"
-	once.Do(func() {
-		instance = &Config{}
-		initErr = instance.loadConfig()
-	})
+	instance = &Config{}
+	initErr = instance.loadConfig()
+
 	return instance, initErr
 }
 
@@ -168,5 +166,15 @@ func saveConfigUnsafe() error {
 
 // Get returns the configuration
 func Get() *Config {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	// Reload the configuration from file each time
+	instance := &Config{}
+	err := instance.loadConfig()
+	if err != nil {
+		return nil
+	}
+
 	return instance
 }
