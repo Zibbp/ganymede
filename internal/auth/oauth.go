@@ -214,8 +214,39 @@ func CheckOAuthAccessToken(c echo.Context, accessToken string) (*UserInfo, error
 	}
 
 	// Check aud
-	aud := token.Claims.(jwt.MapClaims)["aud"]
-	if aud != env.OAuthClientID {
+	audClaim, ok := token.Claims.(jwt.MapClaims)["aud"]
+	if !ok {
+		return nil, fmt.Errorf("missing aud claim")
+	}
+
+	validAud := false
+
+	switch v := audClaim.(type) {
+	case string:
+		if v == env.OAuthClientID {
+			validAud = true
+		}
+	case []interface{}:
+		for _, a := range v {
+			if s, ok := a.(string); ok && s == env.OAuthClientID {
+				validAud = true
+				break
+			}
+		}
+	case []string:
+		for _, a := range v {
+			if a == env.OAuthClientID {
+				validAud = true
+				break
+			}
+		}
+	case nil:
+		return nil, fmt.Errorf("aud claim is nil")
+	default:
+		return nil, fmt.Errorf("unexpected aud claim type: %T", v)
+	}
+
+	if !validAud {
 		return nil, fmt.Errorf("invalid aud claim")
 	}
 
