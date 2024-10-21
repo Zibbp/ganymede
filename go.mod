@@ -8,7 +8,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/go-co-op/gocron v1.37.0
 	github.com/go-jose/go-jose/v4 v4.0.4
-	github.com/go-playground/validator/v10 v10.22.0
+	github.com/go-playground/validator/v10 v10.22.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.12.0
