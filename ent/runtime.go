@@ -112,14 +112,26 @@ func init() {
 	liveDescApplyCategoriesToLive := liveFields[13].Descriptor()
 	// live.DefaultApplyCategoriesToLive holds the default value on creation for the apply_categories_to_live field.
 	live.DefaultApplyCategoriesToLive = liveDescApplyCategoriesToLive.Default.(bool)
+	// liveDescClipsWatch is the schema descriptor for clips_watch field.
+	liveDescClipsWatch := liveFields[14].Descriptor()
+	// live.DefaultClipsWatch holds the default value on creation for the clips_watch field.
+	live.DefaultClipsWatch = liveDescClipsWatch.Default.(bool)
+	// liveDescClipsLimit is the schema descriptor for clips_limit field.
+	liveDescClipsLimit := liveFields[15].Descriptor()
+	// live.DefaultClipsLimit holds the default value on creation for the clips_limit field.
+	live.DefaultClipsLimit = liveDescClipsLimit.Default.(int)
+	// liveDescClipsIntervalDays is the schema descriptor for clips_interval_days field.
+	liveDescClipsIntervalDays := liveFields[16].Descriptor()
+	// live.DefaultClipsIntervalDays holds the default value on creation for the clips_interval_days field.
+	live.DefaultClipsIntervalDays = liveDescClipsIntervalDays.Default.(int)
 	// liveDescUpdatedAt is the schema descriptor for updated_at field.
-	liveDescUpdatedAt := liveFields[14].Descriptor()
+	liveDescUpdatedAt := liveFields[18].Descriptor()
 	// live.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	live.DefaultUpdatedAt = liveDescUpdatedAt.Default.(func() time.Time)
 	// live.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	live.UpdateDefaultUpdatedAt = liveDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// liveDescCreatedAt is the schema descriptor for created_at field.
-	liveDescCreatedAt := liveFields[15].Descriptor()
+	liveDescCreatedAt := liveFields[19].Descriptor()
 	// live.DefaultCreatedAt holds the default value on creation for the created_at field.
 	live.DefaultCreatedAt = liveDescCreatedAt.Default.(func() time.Time)
 	// liveDescID is the schema descriptor for id field.

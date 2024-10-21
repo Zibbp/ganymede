@@ -121,6 +121,26 @@ func ApplyCategoriesToLive(v bool) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldApplyCategoriesToLive, v))
 }
 
+// ClipsWatch applies equality check predicate on the "clips_watch" field. It's identical to ClipsWatchEQ.
+func ClipsWatch(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipsWatch, v))
+}
+
+// ClipsLimit applies equality check predicate on the "clips_limit" field. It's identical to ClipsLimitEQ.
+func ClipsLimit(v int) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipsLimit, v))
+}
+
+// ClipsIntervalDays applies equality check predicate on the "clips_interval_days" field. It's identical to ClipsIntervalDaysEQ.
+func ClipsIntervalDays(v int) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipsIntervalDays, v))
+}
+
+// ClipsLastChecked applies equality check predicate on the "clips_last_checked" field. It's identical to ClipsLastCheckedEQ.
+func ClipsLastChecked(v time.Time) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipsLastChecked, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldUpdatedAt, v))
@@ -384,6 +404,146 @@ func ApplyCategoriesToLiveEQ(v bool) predicate.Live {
 // ApplyCategoriesToLiveNEQ applies the NEQ predicate on the "apply_categories_to_live" field.
 func ApplyCategoriesToLiveNEQ(v bool) predicate.Live {
 	return predicate.Live(sql.FieldNEQ(FieldApplyCategoriesToLive, v))
+}
+
+// ClipsWatchEQ applies the EQ predicate on the "clips_watch" field.
+func ClipsWatchEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipsWatch, v))
+}
+
+// ClipsWatchNEQ applies the NEQ predicate on the "clips_watch" field.
+func ClipsWatchNEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldClipsWatch, v))
+}
+
+// ClipsLimitEQ applies the EQ predicate on the "clips_limit" field.
+func ClipsLimitEQ(v int) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipsLimit, v))
+}
+
+// ClipsLimitNEQ applies the NEQ predicate on the "clips_limit" field.
+func ClipsLimitNEQ(v int) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldClipsLimit, v))
+}
+
+// ClipsLimitIn applies the In predicate on the "clips_limit" field.
+func ClipsLimitIn(vs ...int) predicate.Live {
+	return predicate.Live(sql.FieldIn(FieldClipsLimit, vs...))
+}
+
+// ClipsLimitNotIn applies the NotIn predicate on the "clips_limit" field.
+func ClipsLimitNotIn(vs ...int) predicate.Live {
+	return predicate.Live(sql.FieldNotIn(FieldClipsLimit, vs...))
+}
+
+// ClipsLimitGT applies the GT predicate on the "clips_limit" field.
+func ClipsLimitGT(v int) predicate.Live {
+	return predicate.Live(sql.FieldGT(FieldClipsLimit, v))
+}
+
+// ClipsLimitGTE applies the GTE predicate on the "clips_limit" field.
+func ClipsLimitGTE(v int) predicate.Live {
+	return predicate.Live(sql.FieldGTE(FieldClipsLimit, v))
+}
+
+// ClipsLimitLT applies the LT predicate on the "clips_limit" field.
+func ClipsLimitLT(v int) predicate.Live {
+	return predicate.Live(sql.FieldLT(FieldClipsLimit, v))
+}
+
+// ClipsLimitLTE applies the LTE predicate on the "clips_limit" field.
+func ClipsLimitLTE(v int) predicate.Live {
+	return predicate.Live(sql.FieldLTE(FieldClipsLimit, v))
+}
+
+// ClipsIntervalDaysEQ applies the EQ predicate on the "clips_interval_days" field.
+func ClipsIntervalDaysEQ(v int) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipsIntervalDays, v))
+}
+
+// ClipsIntervalDaysNEQ applies the NEQ predicate on the "clips_interval_days" field.
+func ClipsIntervalDaysNEQ(v int) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldClipsIntervalDays, v))
+}
+
+// ClipsIntervalDaysIn applies the In predicate on the "clips_interval_days" field.
+func ClipsIntervalDaysIn(vs ...int) predicate.Live {
+	return predicate.Live(sql.FieldIn(FieldClipsIntervalDays, vs...))
+}
+
+// ClipsIntervalDaysNotIn applies the NotIn predicate on the "clips_interval_days" field.
+func ClipsIntervalDaysNotIn(vs ...int) predicate.Live {
+	return predicate.Live(sql.FieldNotIn(FieldClipsIntervalDays, vs...))
+}
+
+// ClipsIntervalDaysGT applies the GT predicate on the "clips_interval_days" field.
+func ClipsIntervalDaysGT(v int) predicate.Live {
+	return predicate.Live(sql.FieldGT(FieldClipsIntervalDays, v))
+}
+
+// ClipsIntervalDaysGTE applies the GTE predicate on the "clips_interval_days" field.
+func ClipsIntervalDaysGTE(v int) predicate.Live {
+	return predicate.Live(sql.FieldGTE(FieldClipsIntervalDays, v))
+}
+
+// ClipsIntervalDaysLT applies the LT predicate on the "clips_interval_days" field.
+func ClipsIntervalDaysLT(v int) predicate.Live {
+	return predicate.Live(sql.FieldLT(FieldClipsIntervalDays, v))
+}
+
+// ClipsIntervalDaysLTE applies the LTE predicate on the "clips_interval_days" field.
+func ClipsIntervalDaysLTE(v int) predicate.Live {
+	return predicate.Live(sql.FieldLTE(FieldClipsIntervalDays, v))
+}
+
+// ClipsLastCheckedEQ applies the EQ predicate on the "clips_last_checked" field.
+func ClipsLastCheckedEQ(v time.Time) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipsLastChecked, v))
+}
+
+// ClipsLastCheckedNEQ applies the NEQ predicate on the "clips_last_checked" field.
+func ClipsLastCheckedNEQ(v time.Time) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldClipsLastChecked, v))
+}
+
+// ClipsLastCheckedIn applies the In predicate on the "clips_last_checked" field.
+func ClipsLastCheckedIn(vs ...time.Time) predicate.Live {
+	return predicate.Live(sql.FieldIn(FieldClipsLastChecked, vs...))
+}
+
+// ClipsLastCheckedNotIn applies the NotIn predicate on the "clips_last_checked" field.
+func ClipsLastCheckedNotIn(vs ...time.Time) predicate.Live {
+	return predicate.Live(sql.FieldNotIn(FieldClipsLastChecked, vs...))
+}
+
+// ClipsLastCheckedGT applies the GT predicate on the "clips_last_checked" field.
+func ClipsLastCheckedGT(v time.Time) predicate.Live {
+	return predicate.Live(sql.FieldGT(FieldClipsLastChecked, v))
+}
+
+// ClipsLastCheckedGTE applies the GTE predicate on the "clips_last_checked" field.
+func ClipsLastCheckedGTE(v time.Time) predicate.Live {
+	return predicate.Live(sql.FieldGTE(FieldClipsLastChecked, v))
+}
+
+// ClipsLastCheckedLT applies the LT predicate on the "clips_last_checked" field.
+func ClipsLastCheckedLT(v time.Time) predicate.Live {
+	return predicate.Live(sql.FieldLT(FieldClipsLastChecked, v))
+}
+
+// ClipsLastCheckedLTE applies the LTE predicate on the "clips_last_checked" field.
+func ClipsLastCheckedLTE(v time.Time) predicate.Live {
+	return predicate.Live(sql.FieldLTE(FieldClipsLastChecked, v))
+}
+
+// ClipsLastCheckedIsNil applies the IsNil predicate on the "clips_last_checked" field.
+func ClipsLastCheckedIsNil() predicate.Live {
+	return predicate.Live(sql.FieldIsNull(FieldClipsLastChecked))
+}
+
+// ClipsLastCheckedNotNil applies the NotNil predicate on the "clips_last_checked" field.
+func ClipsLastCheckedNotNil() predicate.Live {
+	return predicate.Live(sql.FieldNotNull(FieldClipsLastChecked))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

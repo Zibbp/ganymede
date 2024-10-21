@@ -2080,6 +2080,12 @@ type LiveMutation struct {
 	video_age                *int64
 	addvideo_age             *int64
 	apply_categories_to_live *bool
+	clips_watch              *bool
+	clips_limit              *int
+	addclips_limit           *int
+	clips_interval_days      *int
+	addclips_interval_days   *int
+	clips_last_checked       *time.Time
 	updated_at               *time.Time
 	created_at               *time.Time
 	clearedFields            map[string]struct{}
@@ -2701,6 +2707,203 @@ func (m *LiveMutation) ResetApplyCategoriesToLive() {
 	m.apply_categories_to_live = nil
 }
 
+// SetClipsWatch sets the "clips_watch" field.
+func (m *LiveMutation) SetClipsWatch(b bool) {
+	m.clips_watch = &b
+}
+
+// ClipsWatch returns the value of the "clips_watch" field in the mutation.
+func (m *LiveMutation) ClipsWatch() (r bool, exists bool) {
+	v := m.clips_watch
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsWatch returns the old "clips_watch" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsWatch(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsWatch is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsWatch requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsWatch: %w", err)
+	}
+	return oldValue.ClipsWatch, nil
+}
+
+// ResetClipsWatch resets all changes to the "clips_watch" field.
+func (m *LiveMutation) ResetClipsWatch() {
+	m.clips_watch = nil
+}
+
+// SetClipsLimit sets the "clips_limit" field.
+func (m *LiveMutation) SetClipsLimit(i int) {
+	m.clips_limit = &i
+	m.addclips_limit = nil
+}
+
+// ClipsLimit returns the value of the "clips_limit" field in the mutation.
+func (m *LiveMutation) ClipsLimit() (r int, exists bool) {
+	v := m.clips_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsLimit returns the old "clips_limit" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsLimit(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsLimit is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsLimit requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsLimit: %w", err)
+	}
+	return oldValue.ClipsLimit, nil
+}
+
+// AddClipsLimit adds i to the "clips_limit" field.
+func (m *LiveMutation) AddClipsLimit(i int) {
+	if m.addclips_limit != nil {
+		*m.addclips_limit += i
+	} else {
+		m.addclips_limit = &i
+	}
+}
+
+// AddedClipsLimit returns the value that was added to the "clips_limit" field in this mutation.
+func (m *LiveMutation) AddedClipsLimit() (r int, exists bool) {
+	v := m.addclips_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetClipsLimit resets all changes to the "clips_limit" field.
+func (m *LiveMutation) ResetClipsLimit() {
+	m.clips_limit = nil
+	m.addclips_limit = nil
+}
+
+// SetClipsIntervalDays sets the "clips_interval_days" field.
+func (m *LiveMutation) SetClipsIntervalDays(i int) {
+	m.clips_interval_days = &i
+	m.addclips_interval_days = nil
+}
+
+// ClipsIntervalDays returns the value of the "clips_interval_days" field in the mutation.
+func (m *LiveMutation) ClipsIntervalDays() (r int, exists bool) {
+	v := m.clips_interval_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsIntervalDays returns the old "clips_interval_days" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsIntervalDays(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsIntervalDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsIntervalDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsIntervalDays: %w", err)
+	}
+	return oldValue.ClipsIntervalDays, nil
+}
+
+// AddClipsIntervalDays adds i to the "clips_interval_days" field.
+func (m *LiveMutation) AddClipsIntervalDays(i int) {
+	if m.addclips_interval_days != nil {
+		*m.addclips_interval_days += i
+	} else {
+		m.addclips_interval_days = &i
+	}
+}
+
+// AddedClipsIntervalDays returns the value that was added to the "clips_interval_days" field in this mutation.
+func (m *LiveMutation) AddedClipsIntervalDays() (r int, exists bool) {
+	v := m.addclips_interval_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetClipsIntervalDays resets all changes to the "clips_interval_days" field.
+func (m *LiveMutation) ResetClipsIntervalDays() {
+	m.clips_interval_days = nil
+	m.addclips_interval_days = nil
+}
+
+// SetClipsLastChecked sets the "clips_last_checked" field.
+func (m *LiveMutation) SetClipsLastChecked(t time.Time) {
+	m.clips_last_checked = &t
+}
+
+// ClipsLastChecked returns the value of the "clips_last_checked" field in the mutation.
+func (m *LiveMutation) ClipsLastChecked() (r time.Time, exists bool) {
+	v := m.clips_last_checked
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsLastChecked returns the old "clips_last_checked" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsLastChecked(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsLastChecked is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsLastChecked requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsLastChecked: %w", err)
+	}
+	return oldValue.ClipsLastChecked, nil
+}
+
+// ClearClipsLastChecked clears the value of the "clips_last_checked" field.
+func (m *LiveMutation) ClearClipsLastChecked() {
+	m.clips_last_checked = nil
+	m.clearedFields[live.FieldClipsLastChecked] = struct{}{}
+}
+
+// ClipsLastCheckedCleared returns if the "clips_last_checked" field was cleared in this mutation.
+func (m *LiveMutation) ClipsLastCheckedCleared() bool {
+	_, ok := m.clearedFields[live.FieldClipsLastChecked]
+	return ok
+}
+
+// ResetClipsLastChecked resets all changes to the "clips_last_checked" field.
+func (m *LiveMutation) ResetClipsLastChecked() {
+	m.clips_last_checked = nil
+	delete(m.clearedFields, live.FieldClipsLastChecked)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *LiveMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -2954,7 +3157,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 19)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -2993,6 +3196,18 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.apply_categories_to_live != nil {
 		fields = append(fields, live.FieldApplyCategoriesToLive)
+	}
+	if m.clips_watch != nil {
+		fields = append(fields, live.FieldClipsWatch)
+	}
+	if m.clips_limit != nil {
+		fields = append(fields, live.FieldClipsLimit)
+	}
+	if m.clips_interval_days != nil {
+		fields = append(fields, live.FieldClipsIntervalDays)
+	}
+	if m.clips_last_checked != nil {
+		fields = append(fields, live.FieldClipsLastChecked)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, live.FieldUpdatedAt)
@@ -3034,6 +3249,14 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.VideoAge()
 	case live.FieldApplyCategoriesToLive:
 		return m.ApplyCategoriesToLive()
+	case live.FieldClipsWatch:
+		return m.ClipsWatch()
+	case live.FieldClipsLimit:
+		return m.ClipsLimit()
+	case live.FieldClipsIntervalDays:
+		return m.ClipsIntervalDays()
+	case live.FieldClipsLastChecked:
+		return m.ClipsLastChecked()
 	case live.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case live.FieldCreatedAt:
@@ -3073,6 +3296,14 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldVideoAge(ctx)
 	case live.FieldApplyCategoriesToLive:
 		return m.OldApplyCategoriesToLive(ctx)
+	case live.FieldClipsWatch:
+		return m.OldClipsWatch(ctx)
+	case live.FieldClipsLimit:
+		return m.OldClipsLimit(ctx)
+	case live.FieldClipsIntervalDays:
+		return m.OldClipsIntervalDays(ctx)
+	case live.FieldClipsLastChecked:
+		return m.OldClipsLastChecked(ctx)
 	case live.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case live.FieldCreatedAt:
@@ -3177,6 +3408,34 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetApplyCategoriesToLive(v)
 		return nil
+	case live.FieldClipsWatch:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsWatch(v)
+		return nil
+	case live.FieldClipsLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsLimit(v)
+		return nil
+	case live.FieldClipsIntervalDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsIntervalDays(v)
+		return nil
+	case live.FieldClipsLastChecked:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsLastChecked(v)
+		return nil
 	case live.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -3202,6 +3461,12 @@ func (m *LiveMutation) AddedFields() []string {
 	if m.addvideo_age != nil {
 		fields = append(fields, live.FieldVideoAge)
 	}
+	if m.addclips_limit != nil {
+		fields = append(fields, live.FieldClipsLimit)
+	}
+	if m.addclips_interval_days != nil {
+		fields = append(fields, live.FieldClipsIntervalDays)
+	}
 	return fields
 }
 
@@ -3212,6 +3477,10 @@ func (m *LiveMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case live.FieldVideoAge:
 		return m.AddedVideoAge()
+	case live.FieldClipsLimit:
+		return m.AddedClipsLimit()
+	case live.FieldClipsIntervalDays:
+		return m.AddedClipsIntervalDays()
 	}
 	return nil, false
 }
@@ -3228,6 +3497,20 @@ func (m *LiveMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddVideoAge(v)
 		return nil
+	case live.FieldClipsLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClipsLimit(v)
+		return nil
+	case live.FieldClipsIntervalDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClipsIntervalDays(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Live numeric field %s", name)
 }
@@ -3238,6 +3521,9 @@ func (m *LiveMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(live.FieldResolution) {
 		fields = append(fields, live.FieldResolution)
+	}
+	if m.FieldCleared(live.FieldClipsLastChecked) {
+		fields = append(fields, live.FieldClipsLastChecked)
 	}
 	return fields
 }
@@ -3255,6 +3541,9 @@ func (m *LiveMutation) ClearField(name string) error {
 	switch name {
 	case live.FieldResolution:
 		m.ClearResolution()
+		return nil
+	case live.FieldClipsLastChecked:
+		m.ClearClipsLastChecked()
 		return nil
 	}
 	return fmt.Errorf("unknown Live nullable field %s", name)
@@ -3302,6 +3591,18 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldApplyCategoriesToLive:
 		m.ResetApplyCategoriesToLive()
+		return nil
+	case live.FieldClipsWatch:
+		m.ResetClipsWatch()
+		return nil
+	case live.FieldClipsLimit:
+		m.ResetClipsLimit()
+		return nil
+	case live.FieldClipsIntervalDays:
+		m.ResetClipsIntervalDays()
+		return nil
+	case live.FieldClipsLastChecked:
+		m.ResetClipsLastChecked()
 		return nil
 	case live.FieldUpdatedAt:
 		m.ResetUpdatedAt()
