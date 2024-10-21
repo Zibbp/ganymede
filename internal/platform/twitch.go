@@ -601,3 +601,69 @@ func twitchTemplateEmoteURL(id, format, themeMode string, scale string) string {
 func ArchiveVideoActivity(ctx context.Context, input dto.ArchiveVideoInput) error {
 	return nil
 }
+
+// GetChannelClips gets a Twitch channel's clip with some filter options. Twitch returns the clips sorted by view count descending.
+func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string, filter ClipsFilter) ([]ClipInfo, error) {
+
+	// todo: allow more than 100 clips
+	if filter.Limit > 100 {
+		return nil, fmt.Errorf("clips limited to a max of 100")
+	}
+	limitStr := strconv.Itoa(filter.Limit)
+	params := url.Values{
+		"broadcaster_id": []string{channelId},
+		"started_at":     []string{filter.StartedAt.Format(time.RFC3339)},
+		"ended_at":       []string{filter.EndedAt.Format(time.RFC3339)},
+		"first":          []string{limitStr},
+	}
+
+	body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp TwitchGetClipsResponse
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	var clips []TwitchClip
+	clips = append(clips, resp.Data...)
+
+	var info []ClipInfo
+	for _, clip := range clips {
+		// parse dates
+		createdAt, err := time.Parse(time.RFC3339, clip.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		offset := 0
+		if clip.VodOffset != nil {
+			if vodOffset, ok := clip.VodOffset.(int); ok {
+				offset = vodOffset
+			}
+		}
+
+		info = append(info, ClipInfo{
+			ID:           clip.ID,
+			URL:          clip.URL,
+			ChannelID:    clip.BroadcasterID,
+			ChannelName:  &clip.BroadcasterName,
+			CreatorID:    &clip.CreatorID,
+			CreatorName:  &clip.CreatorName,
+			VideoID:      clip.VideoID,
+			GameID:       &clip.GameID,
+			Language:     &clip.Language,
+			Title:        clip.Title,
+			ViewCount:    clip.ViewCount,
+			CreatedAt:    createdAt,
+			ThumbnailURL: clip.ThumbnailURL,
+			Duration:     int(clip.Duration),
+			VodOffset:    &offset,
+		})
+	}
+
+	return info, nil
+}

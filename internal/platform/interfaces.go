@@ -64,6 +64,24 @@ type ChannelInfo struct {
 	CreatedAt       time.Time `json:"created_at"`
 }
 
+type ClipInfo struct {
+	ID           string    `json:"id"`
+	URL          string    `json:"url"`
+	ChannelID    string    `json:"channel_id"`
+	ChannelName  *string   `json:"channel_name"`
+	CreatorID    *string   `json:"creator_id"`
+	CreatorName  *string   `json:"creator_name"`
+	VideoID      string    `json:"video_id"`
+	GameID       *string   `json:"game_id"`
+	Language     *string   `json:"language"`
+	Title        string    `json:"title"`
+	ViewCount    int       `json:"view_count"`
+	CreatedAt    time.Time `json:"created_at"`
+	ThumbnailURL string    `json:"thumbnail_url"`
+	Duration     int       `json:"duration"`
+	VodOffset    *int      `json:"vod_offset"`
+}
+
 type Category struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -93,6 +111,13 @@ const (
 	retryDelay       = 5 * time.Second
 )
 
+// ClipsFilter a filter used when fetching clips from the platform
+type ClipsFilter struct {
+	StartedAt time.Time // start date
+	EndedAt   time.Time // end date
+	Limit     int       // number of clips to return
+}
+
 type Platform interface {
 	Authenticate(ctx context.Context) (*ConnectionInfo, error)
 	GetVideo(ctx context.Context, id string, withChapters bool, withMutedSegments bool) (*VideoInfo, error)
@@ -105,4 +130,5 @@ type Platform interface {
 	GetChannelBadges(ctx context.Context, channelId string) ([]Badge, error)
 	GetGlobalEmotes(ctx context.Context) ([]Emote, error)
 	GetChannelEmotes(ctx context.Context, channelId string) ([]Emote, error)
+	GetChannelClips(ctx context.Context, channelId string, filter ClipsFilter) ([]ClipInfo, error)
 }
