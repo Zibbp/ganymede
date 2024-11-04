@@ -131,4 +131,5 @@ type Platform interface {
 	GetGlobalEmotes(ctx context.Context) ([]Emote, error)
 	GetChannelEmotes(ctx context.Context, channelId string) ([]Emote, error)
 	GetChannelClips(ctx context.Context, channelId string, filter ClipsFilter) ([]ClipInfo, error)
+	GetClip(ctx context.Context, id string) (*ClipInfo, error)
 }

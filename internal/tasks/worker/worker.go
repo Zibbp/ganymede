@@ -106,6 +106,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks.GenerateStaticThubmnailWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.TaskCheckChannelForNewClipsWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 
@@ -199,6 +202,16 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
 
+		// check watched channels for new clips
+		// runs once a day at midnight
+		river.NewPeriodicJob(
+			midnightCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.TaskCheckChannelForNewClipsArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
+		),
+
 		// prune videos
 		// runs once a day at midnight
 		river.NewPeriodicJob(
@@ -216,7 +229,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.ImportCategoriesArgs{}, nil
 			},
-			&river.PeriodicJobOpts{RunOnStart: true},
+			&river.PeriodicJobOpts{RunOnStart: false},
 		),
 
 		// authenticate to platform

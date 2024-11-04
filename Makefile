@@ -1,6 +1,9 @@
 dev_setup:
 	go install github.com/joho/godotenv/cmd/godotenv@latest
 	go install github.com/air-verse/air@latest
+	mkdir /data/videos
+	mkdir /data/config
+	mkdir /data/logs
 
 build_server:
 	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=$(shell git rev-parse HEAD) -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ganymede-api cmd/server/main.go

@@ -667,3 +667,60 @@ func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string
 
 	return info, nil
 }
+
+// GetClip gets a Twitch clip given it's ID
+func (c *TwitchConnection) GetClip(ctx context.Context, id string) (*ClipInfo, error) {
+	params := url.Values{
+		"id": []string{id},
+	}
+
+	body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp TwitchGetClipsResponse
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	var clips []TwitchClip
+	clips = append(clips, resp.Data...)
+
+	var info ClipInfo
+	for _, clip := range clips {
+		// parse dates
+		createdAt, err := time.Parse(time.RFC3339, clip.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		offset := 0
+		if clip.VodOffset != nil {
+			if vodOffset, ok := clip.VodOffset.(int); ok {
+				offset = vodOffset
+			}
+		}
+
+		info = ClipInfo{
+			ID:           clip.ID,
+			URL:          clip.URL,
+			ChannelID:    clip.BroadcasterID,
+			ChannelName:  &clip.BroadcasterName,
+			CreatorID:    &clip.CreatorID,
+			CreatorName:  &clip.CreatorName,
+			VideoID:      clip.VideoID,
+			GameID:       &clip.GameID,
+			Language:     &clip.Language,
+			Title:        clip.Title,
+			ViewCount:    clip.ViewCount,
+			CreatedAt:    createdAt,
+			ThumbnailURL: clip.ThumbnailURL,
+			Duration:     int(clip.Duration),
+			VodOffset:    &offset,
+		}
+	}
+
+	return &info, nil
+}
