@@ -88,6 +88,21 @@ func (s *Service) GetChannelByName(cName string) (*ent.Channel, error) {
 	return cha, nil
 }
 
+// GetChannelByExtId returns the channel by it's external (platform) ID.
+func (s *Service) GetChannelByExtId(id string) (*ent.Channel, error) {
+	cha, err := s.Store.Client.Channel.Query().Where(channel.ExtID(id)).Only(context.Background())
+	if err != nil {
+		// if channel not found
+		if _, ok := err.(*ent.NotFoundError); ok {
+			return nil, fmt.Errorf("channel not found")
+		}
+		log.Debug().Err(err).Msg("error getting channel")
+		return nil, fmt.Errorf("error getting channel: %v", err)
+	}
+
+	return cha, nil
+}
+
 func (s *Service) DeleteChannel(channelID uuid.UUID) error {
 	err := s.Store.Client.Channel.DeleteOneID(channelID).Exec(context.Background())
 	if err != nil {
@@ -118,6 +133,22 @@ func (s *Service) UpdateChannel(cId uuid.UUID, channelDto Channel) (*ent.Channel
 
 func (s *Service) CheckChannelExists(cName string) bool {
 	_, err := s.Store.Client.Channel.Query().Where(channel.Name(cName)).Only(context.Background())
+	if err != nil {
+		fmt.Println(err)
+		// if channel not found
+		if _, ok := err.(*ent.NotFoundError); ok {
+			return false
+		}
+		log.Error().Err(err).Msg("error checking channel exists")
+		return false
+	}
+
+	return true
+}
+
+// CheckChannelExistsByExtId returns a bool whether a channel exists using the external (platform) ID
+func (s *Service) CheckChannelExistsByExtId(id string) bool {
+	_, err := s.Store.Client.Channel.Query().Where(channel.ExtID(id)).Only(context.Background())
 	if err != nil {
 		fmt.Println(err)
 		// if channel not found

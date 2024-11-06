@@ -19,6 +19,8 @@ const (
 	FieldID = "id"
 	// FieldExtID holds the string denoting the ext_id field in the database.
 	FieldExtID = "ext_id"
+	// FieldClipExtVodID holds the string denoting the clip_ext_vod_id field in the database.
+	FieldClipExtVodID = "clip_ext_vod_id"
 	// FieldExtStreamID holds the string denoting the ext_stream_id field in the database.
 	FieldExtStreamID = "ext_stream_id"
 	// FieldPlatform holds the string denoting the platform field in the database.
@@ -29,6 +31,8 @@ const (
 	FieldTitle = "title"
 	// FieldDuration holds the string denoting the duration field in the database.
 	FieldDuration = "duration"
+	// FieldClipVodOffset holds the string denoting the clip_vod_offset field in the database.
+	FieldClipVodOffset = "clip_vod_offset"
 	// FieldViews holds the string denoting the views field in the database.
 	FieldViews = "views"
 	// FieldResolution holds the string denoting the resolution field in the database.
@@ -134,11 +138,13 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldExtID,
+	FieldClipExtVodID,
 	FieldExtStreamID,
 	FieldPlatform,
 	FieldType,
 	FieldTitle,
 	FieldDuration,
+	FieldClipVodOffset,
 	FieldViews,
 	FieldResolution,
 	FieldProcessing,
@@ -255,6 +261,11 @@ func ByExtID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExtID, opts...).ToFunc()
 }
 
+// ByClipExtVodID orders the results by the clip_ext_vod_id field.
+func ByClipExtVodID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClipExtVodID, opts...).ToFunc()
+}
+
 // ByExtStreamID orders the results by the ext_stream_id field.
 func ByExtStreamID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExtStreamID, opts...).ToFunc()
@@ -278,6 +289,11 @@ func ByTitle(opts ...sql.OrderTermOption) OrderOption {
 // ByDuration orders the results by the duration field.
 func ByDuration(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDuration, opts...).ToFunc()
+}
+
+// ByClipVodOffset orders the results by the clip_vod_offset field.
+func ByClipVodOffset(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClipVodOffset, opts...).ToFunc()
 }
 
 // ByViews orders the results by the views field.

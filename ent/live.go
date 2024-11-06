@@ -45,6 +45,14 @@ type Live struct {
 	VideoAge int64 `json:"video_age,omitempty"`
 	// Whether the categories should be applied to livestreams.
 	ApplyCategoriesToLive bool `json:"apply_categories_to_live,omitempty"`
+	// Whether to download clips on a schedule.
+	ClipsWatch bool `json:"clips_watch,omitempty"`
+	// The number of clips to archive.
+	ClipsLimit int `json:"clips_limit,omitempty"`
+	// How often channel should be checked for clips to archive in days.
+	ClipsIntervalDays int `json:"clips_interval_days,omitempty"`
+	// Time when clips were last checked.
+	ClipsLastChecked time.Time `json:"clips_last_checked,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -103,13 +111,13 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive:
+		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive, live.FieldClipsWatch:
 			values[i] = new(sql.NullBool)
-		case live.FieldVideoAge:
+		case live.FieldVideoAge, live.FieldClipsLimit, live.FieldClipsIntervalDays:
 			values[i] = new(sql.NullInt64)
 		case live.FieldResolution:
 			values[i] = new(sql.NullString)
-		case live.FieldLastLive, live.FieldUpdatedAt, live.FieldCreatedAt:
+		case live.FieldLastLive, live.FieldClipsLastChecked, live.FieldUpdatedAt, live.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case live.FieldID:
 			values[i] = new(uuid.UUID)
@@ -213,6 +221,30 @@ func (l *Live) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field apply_categories_to_live", values[i])
 			} else if value.Valid {
 				l.ApplyCategoriesToLive = value.Bool
+			}
+		case live.FieldClipsWatch:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field clips_watch", values[i])
+			} else if value.Valid {
+				l.ClipsWatch = value.Bool
+			}
+		case live.FieldClipsLimit:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field clips_limit", values[i])
+			} else if value.Valid {
+				l.ClipsLimit = int(value.Int64)
+			}
+		case live.FieldClipsIntervalDays:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field clips_interval_days", values[i])
+			} else if value.Valid {
+				l.ClipsIntervalDays = int(value.Int64)
+			}
+		case live.FieldClipsLastChecked:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field clips_last_checked", values[i])
+			} else if value.Valid {
+				l.ClipsLastChecked = value.Time
 			}
 		case live.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -322,6 +354,18 @@ func (l *Live) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("apply_categories_to_live=")
 	builder.WriteString(fmt.Sprintf("%v", l.ApplyCategoriesToLive))
+	builder.WriteString(", ")
+	builder.WriteString("clips_watch=")
+	builder.WriteString(fmt.Sprintf("%v", l.ClipsWatch))
+	builder.WriteString(", ")
+	builder.WriteString("clips_limit=")
+	builder.WriteString(fmt.Sprintf("%v", l.ClipsLimit))
+	builder.WriteString(", ")
+	builder.WriteString("clips_interval_days=")
+	builder.WriteString(fmt.Sprintf("%v", l.ClipsIntervalDays))
+	builder.WriteString(", ")
+	builder.WriteString("clips_last_checked=")
+	builder.WriteString(l.ClipsLastChecked.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(l.UpdatedAt.Format(time.ANSIC))

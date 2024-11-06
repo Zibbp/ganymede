@@ -34,6 +34,9 @@ type AddWatchedChannelRequest struct {
 	ApplyCategoriesToLive bool                `json:"apply_categories_to_live" validate:"boolean"`
 	MaxAge                int64               `json:"max_age"`
 	Regex                 []AddLiveTitleRegex `json:"regex"`
+	ClipsWatch            bool                `json:"clips_watch" validate:"boolean"`
+	ClipsLimit            int                 `json:"clips_limit" validate:"number,gte=1"`
+	ClipsIntervalDays     int                 `json:"clips_interval_days" validate:"number,gte=1"`
 }
 
 type AddLiveTitleRegex struct {
@@ -56,6 +59,9 @@ type AddMultipleWatchedChannelRequest struct {
 	Categories            []string `json:"categories"`
 	ApplyCategoriesToLive bool     `json:"apply_categories_to_live"`
 	MaxAge                int64    `json:"max_age"`
+	ClipsWatch            bool     `json:"clips_watch" validate:"boolean"`
+	ClipsLimit            int      `json:"clips_limit" validate:"number,gte=1"`
+	ClipsIntervalDays     int      `json:"clips_interval_days" validate:"number,gte=1"`
 }
 
 type UpdateWatchedChannelRequest struct {
@@ -72,6 +78,9 @@ type UpdateWatchedChannelRequest struct {
 	ApplyCategoriesToLive bool                `json:"apply_categories_to_live" validate:"boolean"`
 	MaxAge                int64               `json:"max_age"`
 	Regex                 []AddLiveTitleRegex `json:"regex"`
+	ClipsWatch            bool                `json:"clips_watch" validate:"boolean"`
+	ClipsLimit            int                 `json:"clips_limit" validate:"number,gte=1"`
+	ClipsIntervalDays     int                 `json:"clips_interval_days" validate:"number,gte=1"`
 }
 
 type ConvertChatRequest struct {
@@ -155,6 +164,9 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		Categories:            ccr.Categories,
 		ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
 		MaxAge:                ccr.MaxAge,
+		ClipsWatch:            ccr.ClipsWatch,
+		ClipsLimit:            ccr.ClipsLimit,
+		ClipsIntervalDays:     ccr.ClipsIntervalDays,
 	}
 
 	for _, regex := range ccr.Regex {
@@ -224,6 +236,9 @@ func (h *Handler) AddMultipleLiveWatchedChannel(c echo.Context) error {
 			Categories:            ccr.Categories,
 			ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
 			MaxAge:                ccr.MaxAge,
+			ClipsWatch:            ccr.ClipsWatch,
+			ClipsLimit:            ccr.ClipsLimit,
+			ClipsIntervalDays:     ccr.ClipsIntervalDays,
 		}
 		l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 		if err != nil {
@@ -281,6 +296,9 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		Categories:            ccr.Categories,
 		ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
 		MaxAge:                ccr.MaxAge,
+		ClipsWatch:            ccr.ClipsWatch,
+		ClipsLimit:            ccr.ClipsLimit,
+		ClipsIntervalDays:     ccr.ClipsIntervalDays,
 	}
 
 	for _, regex := range ccr.Regex {

@@ -32,8 +32,19 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	defer file.Close()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
 
+	videoURL := fmt.Sprintf("https://twitch.tv/videos/%s", video.ExtID)
+	// clip requires a different URL schema
+	if video.Type == utils.Clip {
+		vC := video.QueryChannel()
+		channel, err := vC.Only(ctx)
+		if err != nil {
+			return err
+		}
+		videoURL = fmt.Sprintf("https://twitch.tv/%s/clip/%s", channel.DisplayName, video.ExtID)
+	}
+
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, fmt.Sprintf("https://twitch.tv/videos/%s", video.ExtID), fmt.Sprintf("%s,best", video.Resolution), "--force-progress", "--force")
+	cmdArgs = append(cmdArgs, videoURL, fmt.Sprintf("%s,best", video.Resolution), "--force-progress", "--force")
 
 	// check if user has twitch token set
 	// if so, set token in streamlink command

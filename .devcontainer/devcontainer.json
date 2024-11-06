@@ -20,18 +20,8 @@
   "appPort": ["0.0.0.0:4000:4000"],
   "mounts": [
     {
-      "source": "${localWorkspaceFolder}/dev/vods",
-      "target": "/vods",
-      "type": "bind"
-    },
-    {
-      "source": "${localWorkspaceFolder}/dev/data",
+      "source": "${localWorkspaceFolder}/dev",
       "target": "/data",
-      "type": "bind"
-    },
-    {
-      "source": "${localWorkspaceFolder}/dev/logs",
-      "target": "/logs",
       "type": "bind"
     }
   ],

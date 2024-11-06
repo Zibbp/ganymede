@@ -177,6 +177,11 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 		if err != nil {
 			return err
 		}
+	} else if dbItems.Video.Type == utils.Clip {
+		info, err = platformService.GetClip(ctx, dbItems.Video.ExtID)
+		if err != nil {
+			return err
+		}
 	} else {
 		videoInfo, err := platformService.GetVideo(ctx, dbItems.Video.ExtID, true, true)
 		if err != nil {
@@ -305,6 +310,8 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 	}
 
 	var thumbnailUrl string
+	var fullResThumbnailUrl string
+	var webResThumbnailUrl string
 
 	if dbItems.Queue.LiveArchive {
 		info, err := platformService.GetLiveStream(ctx, dbItems.Channel.Name)
@@ -312,17 +319,26 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 			return err
 		}
 		thumbnailUrl = info.ThumbnailURL
+		fullResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive)
+		webResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive)
 
+	} else if dbItems.Video.Type == utils.Clip {
+		info, err := platformService.GetClip(ctx, dbItems.Video.ExtID)
+		if err != nil {
+			return err
+		}
+		thumbnailUrl = info.ThumbnailURL
+		fullResThumbnailUrl = thumbnailUrl
+		webResThumbnailUrl = thumbnailUrl
 	} else {
 		info, err := platformService.GetVideo(ctx, dbItems.Video.ExtID, false, false)
 		if err != nil {
 			return err
 		}
 		thumbnailUrl = info.ThumbnailURL
+		fullResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive)
+		webResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive)
 	}
-
-	fullResThumbnailUrl := replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive)
-	webResThumbnailUrl := replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive)
 
 	err = utils.DownloadAndSaveFile(fullResThumbnailUrl, dbItems.Video.ThumbnailPath)
 	if err != nil {

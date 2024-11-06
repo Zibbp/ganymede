@@ -49,6 +49,26 @@ func (vu *VodUpdate) SetNillableExtID(s *string) *VodUpdate {
 	return vu
 }
 
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (vu *VodUpdate) SetClipExtVodID(s string) *VodUpdate {
+	vu.mutation.SetClipExtVodID(s)
+	return vu
+}
+
+// SetNillableClipExtVodID sets the "clip_ext_vod_id" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableClipExtVodID(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetClipExtVodID(*s)
+	}
+	return vu
+}
+
+// ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
+func (vu *VodUpdate) ClearClipExtVodID() *VodUpdate {
+	vu.mutation.ClearClipExtVodID()
+	return vu
+}
+
 // SetExtStreamID sets the "ext_stream_id" field.
 func (vu *VodUpdate) SetExtStreamID(s string) *VodUpdate {
 	vu.mutation.SetExtStreamID(s)
@@ -129,6 +149,33 @@ func (vu *VodUpdate) SetNillableDuration(i *int) *VodUpdate {
 // AddDuration adds i to the "duration" field.
 func (vu *VodUpdate) AddDuration(i int) *VodUpdate {
 	vu.mutation.AddDuration(i)
+	return vu
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (vu *VodUpdate) SetClipVodOffset(i int) *VodUpdate {
+	vu.mutation.ResetClipVodOffset()
+	vu.mutation.SetClipVodOffset(i)
+	return vu
+}
+
+// SetNillableClipVodOffset sets the "clip_vod_offset" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableClipVodOffset(i *int) *VodUpdate {
+	if i != nil {
+		vu.SetClipVodOffset(*i)
+	}
+	return vu
+}
+
+// AddClipVodOffset adds i to the "clip_vod_offset" field.
+func (vu *VodUpdate) AddClipVodOffset(i int) *VodUpdate {
+	vu.mutation.AddClipVodOffset(i)
+	return vu
+}
+
+// ClearClipVodOffset clears the value of the "clip_vod_offset" field.
+func (vu *VodUpdate) ClearClipVodOffset() *VodUpdate {
+	vu.mutation.ClearClipVodOffset()
 	return vu
 }
 
@@ -834,6 +881,12 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.ExtID(); ok {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 	}
+	if value, ok := vu.mutation.ClipExtVodID(); ok {
+		_spec.SetField(vod.FieldClipExtVodID, field.TypeString, value)
+	}
+	if vu.mutation.ClipExtVodIDCleared() {
+		_spec.ClearField(vod.FieldClipExtVodID, field.TypeString)
+	}
 	if value, ok := vu.mutation.ExtStreamID(); ok {
 		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
 	}
@@ -854,6 +907,15 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := vu.mutation.AddedDuration(); ok {
 		_spec.AddField(vod.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.ClipVodOffset(); ok {
+		_spec.SetField(vod.FieldClipVodOffset, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.AddedClipVodOffset(); ok {
+		_spec.AddField(vod.FieldClipVodOffset, field.TypeInt, value)
+	}
+	if vu.mutation.ClipVodOffsetCleared() {
+		_spec.ClearField(vod.FieldClipVodOffset, field.TypeInt)
 	}
 	if value, ok := vu.mutation.Views(); ok {
 		_spec.SetField(vod.FieldViews, field.TypeInt, value)
@@ -1220,6 +1282,26 @@ func (vuo *VodUpdateOne) SetNillableExtID(s *string) *VodUpdateOne {
 	return vuo
 }
 
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (vuo *VodUpdateOne) SetClipExtVodID(s string) *VodUpdateOne {
+	vuo.mutation.SetClipExtVodID(s)
+	return vuo
+}
+
+// SetNillableClipExtVodID sets the "clip_ext_vod_id" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableClipExtVodID(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetClipExtVodID(*s)
+	}
+	return vuo
+}
+
+// ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
+func (vuo *VodUpdateOne) ClearClipExtVodID() *VodUpdateOne {
+	vuo.mutation.ClearClipExtVodID()
+	return vuo
+}
+
 // SetExtStreamID sets the "ext_stream_id" field.
 func (vuo *VodUpdateOne) SetExtStreamID(s string) *VodUpdateOne {
 	vuo.mutation.SetExtStreamID(s)
@@ -1300,6 +1382,33 @@ func (vuo *VodUpdateOne) SetNillableDuration(i *int) *VodUpdateOne {
 // AddDuration adds i to the "duration" field.
 func (vuo *VodUpdateOne) AddDuration(i int) *VodUpdateOne {
 	vuo.mutation.AddDuration(i)
+	return vuo
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (vuo *VodUpdateOne) SetClipVodOffset(i int) *VodUpdateOne {
+	vuo.mutation.ResetClipVodOffset()
+	vuo.mutation.SetClipVodOffset(i)
+	return vuo
+}
+
+// SetNillableClipVodOffset sets the "clip_vod_offset" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableClipVodOffset(i *int) *VodUpdateOne {
+	if i != nil {
+		vuo.SetClipVodOffset(*i)
+	}
+	return vuo
+}
+
+// AddClipVodOffset adds i to the "clip_vod_offset" field.
+func (vuo *VodUpdateOne) AddClipVodOffset(i int) *VodUpdateOne {
+	vuo.mutation.AddClipVodOffset(i)
+	return vuo
+}
+
+// ClearClipVodOffset clears the value of the "clip_vod_offset" field.
+func (vuo *VodUpdateOne) ClearClipVodOffset() *VodUpdateOne {
+	vuo.mutation.ClearClipVodOffset()
 	return vuo
 }
 
@@ -2035,6 +2144,12 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	if value, ok := vuo.mutation.ExtID(); ok {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 	}
+	if value, ok := vuo.mutation.ClipExtVodID(); ok {
+		_spec.SetField(vod.FieldClipExtVodID, field.TypeString, value)
+	}
+	if vuo.mutation.ClipExtVodIDCleared() {
+		_spec.ClearField(vod.FieldClipExtVodID, field.TypeString)
+	}
 	if value, ok := vuo.mutation.ExtStreamID(); ok {
 		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
 	}
@@ -2055,6 +2170,15 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if value, ok := vuo.mutation.AddedDuration(); ok {
 		_spec.AddField(vod.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.ClipVodOffset(); ok {
+		_spec.SetField(vod.FieldClipVodOffset, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.AddedClipVodOffset(); ok {
+		_spec.AddField(vod.FieldClipVodOffset, field.TypeInt, value)
+	}
+	if vuo.mutation.ClipVodOffsetCleared() {
+		_spec.ClearField(vod.FieldClipVodOffset, field.TypeInt)
 	}
 	if value, ok := vuo.mutation.Views(); ok {
 		_spec.SetField(vod.FieldViews, field.TypeInt, value)

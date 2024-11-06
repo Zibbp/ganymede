@@ -41,6 +41,14 @@ const (
 	FieldVideoAge = "video_age"
 	// FieldApplyCategoriesToLive holds the string denoting the apply_categories_to_live field in the database.
 	FieldApplyCategoriesToLive = "apply_categories_to_live"
+	// FieldClipsWatch holds the string denoting the clips_watch field in the database.
+	FieldClipsWatch = "clips_watch"
+	// FieldClipsLimit holds the string denoting the clips_limit field in the database.
+	FieldClipsLimit = "clips_limit"
+	// FieldClipsIntervalDays holds the string denoting the clips_interval_days field in the database.
+	FieldClipsIntervalDays = "clips_interval_days"
+	// FieldClipsLastChecked holds the string denoting the clips_last_checked field in the database.
+	FieldClipsLastChecked = "clips_last_checked"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -92,6 +100,10 @@ var Columns = []string{
 	FieldRenderChat,
 	FieldVideoAge,
 	FieldApplyCategoriesToLive,
+	FieldClipsWatch,
+	FieldClipsLimit,
+	FieldClipsIntervalDays,
+	FieldClipsLastChecked,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -144,6 +156,12 @@ var (
 	DefaultVideoAge int64
 	// DefaultApplyCategoriesToLive holds the default value on creation for the "apply_categories_to_live" field.
 	DefaultApplyCategoriesToLive bool
+	// DefaultClipsWatch holds the default value on creation for the "clips_watch" field.
+	DefaultClipsWatch bool
+	// DefaultClipsLimit holds the default value on creation for the "clips_limit" field.
+	DefaultClipsLimit int
+	// DefaultClipsIntervalDays holds the default value on creation for the "clips_interval_days" field.
+	DefaultClipsIntervalDays int
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
@@ -225,6 +243,26 @@ func ByVideoAge(opts ...sql.OrderTermOption) OrderOption {
 // ByApplyCategoriesToLive orders the results by the apply_categories_to_live field.
 func ByApplyCategoriesToLive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldApplyCategoriesToLive, opts...).ToFunc()
+}
+
+// ByClipsWatch orders the results by the clips_watch field.
+func ByClipsWatch(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClipsWatch, opts...).ToFunc()
+}
+
+// ByClipsLimit orders the results by the clips_limit field.
+func ByClipsLimit(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClipsLimit, opts...).ToFunc()
+}
+
+// ByClipsIntervalDays orders the results by the clips_interval_days field.
+func ByClipsIntervalDays(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClipsIntervalDays, opts...).ToFunc()
+}
+
+// ByClipsLastChecked orders the results by the clips_last_checked field.
+func ByClipsLastChecked(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClipsLastChecked, opts...).ToFunc()
 }
 
 // ByUpdatedAt orders the results by the updated_at field.

@@ -99,6 +99,31 @@ type TwitchCategory struct {
 	IgdbID    string `json:"igdb_id"`
 }
 
+type TwitchClip struct {
+	ID              string  `json:"id"`
+	URL             string  `json:"url"`
+	EmbedURL        string  `json:"embed_url"`
+	BroadcasterID   string  `json:"broadcaster_id"`
+	BroadcasterName string  `json:"broadcaster_name"`
+	CreatorID       string  `json:"creator_id"`
+	CreatorName     string  `json:"creator_name"`
+	VideoID         string  `json:"video_id"`
+	GameID          string  `json:"game_id"`
+	Language        string  `json:"language"`
+	Title           string  `json:"title"`
+	ViewCount       int     `json:"view_count"`
+	CreatedAt       string  `json:"created_at"`
+	ThumbnailURL    string  `json:"thumbnail_url"`
+	Duration        float64 `json:"duration"`
+	VodOffset       any     `json:"vod_offset"`
+	IsFeatured      bool    `json:"is_featured"`
+}
+
+type TwitchGetClipsResponse struct {
+	Data       []TwitchClip     `json:"data"`
+	Pagination TwitchPagination `json:"pagination"`
+}
+
 type TwitchPagination struct {
 	Cursor string `json:"cursor"`
 }
