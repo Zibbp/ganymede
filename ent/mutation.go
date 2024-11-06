@@ -9699,12 +9699,15 @@ type VodMutation struct {
 	typ                         string
 	id                          *uuid.UUID
 	ext_id                      *string
+	clip_ext_vod_id             *string
 	ext_stream_id               *string
 	platform                    *utils.VideoPlatform
 	_type                       *utils.VodType
 	title                       *string
 	duration                    *int
 	addduration                 *int
+	clip_vod_offset             *int
+	addclip_vod_offset          *int
 	views                       *int
 	addviews                    *int
 	resolution                  *string
@@ -9891,6 +9894,55 @@ func (m *VodMutation) OldExtID(ctx context.Context) (v string, err error) {
 // ResetExtID resets all changes to the "ext_id" field.
 func (m *VodMutation) ResetExtID() {
 	m.ext_id = nil
+}
+
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (m *VodMutation) SetClipExtVodID(s string) {
+	m.clip_ext_vod_id = &s
+}
+
+// ClipExtVodID returns the value of the "clip_ext_vod_id" field in the mutation.
+func (m *VodMutation) ClipExtVodID() (r string, exists bool) {
+	v := m.clip_ext_vod_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipExtVodID returns the old "clip_ext_vod_id" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldClipExtVodID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipExtVodID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipExtVodID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipExtVodID: %w", err)
+	}
+	return oldValue.ClipExtVodID, nil
+}
+
+// ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
+func (m *VodMutation) ClearClipExtVodID() {
+	m.clip_ext_vod_id = nil
+	m.clearedFields[vod.FieldClipExtVodID] = struct{}{}
+}
+
+// ClipExtVodIDCleared returns if the "clip_ext_vod_id" field was cleared in this mutation.
+func (m *VodMutation) ClipExtVodIDCleared() bool {
+	_, ok := m.clearedFields[vod.FieldClipExtVodID]
+	return ok
+}
+
+// ResetClipExtVodID resets all changes to the "clip_ext_vod_id" field.
+func (m *VodMutation) ResetClipExtVodID() {
+	m.clip_ext_vod_id = nil
+	delete(m.clearedFields, vod.FieldClipExtVodID)
 }
 
 // SetExtStreamID sets the "ext_stream_id" field.
@@ -10104,6 +10156,76 @@ func (m *VodMutation) AddedDuration() (r int, exists bool) {
 func (m *VodMutation) ResetDuration() {
 	m.duration = nil
 	m.addduration = nil
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (m *VodMutation) SetClipVodOffset(i int) {
+	m.clip_vod_offset = &i
+	m.addclip_vod_offset = nil
+}
+
+// ClipVodOffset returns the value of the "clip_vod_offset" field in the mutation.
+func (m *VodMutation) ClipVodOffset() (r int, exists bool) {
+	v := m.clip_vod_offset
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipVodOffset returns the old "clip_vod_offset" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldClipVodOffset(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipVodOffset is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipVodOffset requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipVodOffset: %w", err)
+	}
+	return oldValue.ClipVodOffset, nil
+}
+
+// AddClipVodOffset adds i to the "clip_vod_offset" field.
+func (m *VodMutation) AddClipVodOffset(i int) {
+	if m.addclip_vod_offset != nil {
+		*m.addclip_vod_offset += i
+	} else {
+		m.addclip_vod_offset = &i
+	}
+}
+
+// AddedClipVodOffset returns the value that was added to the "clip_vod_offset" field in this mutation.
+func (m *VodMutation) AddedClipVodOffset() (r int, exists bool) {
+	v := m.addclip_vod_offset
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearClipVodOffset clears the value of the "clip_vod_offset" field.
+func (m *VodMutation) ClearClipVodOffset() {
+	m.clip_vod_offset = nil
+	m.addclip_vod_offset = nil
+	m.clearedFields[vod.FieldClipVodOffset] = struct{}{}
+}
+
+// ClipVodOffsetCleared returns if the "clip_vod_offset" field was cleared in this mutation.
+func (m *VodMutation) ClipVodOffsetCleared() bool {
+	_, ok := m.clearedFields[vod.FieldClipVodOffset]
+	return ok
+}
+
+// ResetClipVodOffset resets all changes to the "clip_vod_offset" field.
+func (m *VodMutation) ResetClipVodOffset() {
+	m.clip_vod_offset = nil
+	m.addclip_vod_offset = nil
+	delete(m.clearedFields, vod.FieldClipVodOffset)
 }
 
 // SetViews sets the "views" field.
@@ -11626,9 +11748,12 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 33)
+	fields := make([]string, 0, 35)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
+	}
+	if m.clip_ext_vod_id != nil {
+		fields = append(fields, vod.FieldClipExtVodID)
 	}
 	if m.ext_stream_id != nil {
 		fields = append(fields, vod.FieldExtStreamID)
@@ -11644,6 +11769,9 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.duration != nil {
 		fields = append(fields, vod.FieldDuration)
+	}
+	if m.clip_vod_offset != nil {
+		fields = append(fields, vod.FieldClipVodOffset)
 	}
 	if m.views != nil {
 		fields = append(fields, vod.FieldViews)
@@ -11736,6 +11864,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case vod.FieldExtID:
 		return m.ExtID()
+	case vod.FieldClipExtVodID:
+		return m.ClipExtVodID()
 	case vod.FieldExtStreamID:
 		return m.ExtStreamID()
 	case vod.FieldPlatform:
@@ -11746,6 +11876,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.Title()
 	case vod.FieldDuration:
 		return m.Duration()
+	case vod.FieldClipVodOffset:
+		return m.ClipVodOffset()
 	case vod.FieldViews:
 		return m.Views()
 	case vod.FieldResolution:
@@ -11811,6 +11943,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 	switch name {
 	case vod.FieldExtID:
 		return m.OldExtID(ctx)
+	case vod.FieldClipExtVodID:
+		return m.OldClipExtVodID(ctx)
 	case vod.FieldExtStreamID:
 		return m.OldExtStreamID(ctx)
 	case vod.FieldPlatform:
@@ -11821,6 +11955,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldTitle(ctx)
 	case vod.FieldDuration:
 		return m.OldDuration(ctx)
+	case vod.FieldClipVodOffset:
+		return m.OldClipVodOffset(ctx)
 	case vod.FieldViews:
 		return m.OldViews(ctx)
 	case vod.FieldResolution:
@@ -11891,6 +12027,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetExtID(v)
 		return nil
+	case vod.FieldClipExtVodID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipExtVodID(v)
+		return nil
 	case vod.FieldExtStreamID:
 		v, ok := value.(string)
 		if !ok {
@@ -11925,6 +12068,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDuration(v)
+		return nil
+	case vod.FieldClipVodOffset:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipVodOffset(v)
 		return nil
 	case vod.FieldViews:
 		v, ok := value.(int)
@@ -12126,6 +12276,9 @@ func (m *VodMutation) AddedFields() []string {
 	if m.addduration != nil {
 		fields = append(fields, vod.FieldDuration)
 	}
+	if m.addclip_vod_offset != nil {
+		fields = append(fields, vod.FieldClipVodOffset)
+	}
 	if m.addviews != nil {
 		fields = append(fields, vod.FieldViews)
 	}
@@ -12142,6 +12295,8 @@ func (m *VodMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case vod.FieldDuration:
 		return m.AddedDuration()
+	case vod.FieldClipVodOffset:
+		return m.AddedClipVodOffset()
 	case vod.FieldViews:
 		return m.AddedViews()
 	case vod.FieldLocalViews:
@@ -12161,6 +12316,13 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddDuration(v)
+		return nil
+	case vod.FieldClipVodOffset:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClipVodOffset(v)
 		return nil
 	case vod.FieldViews:
 		v, ok := value.(int)
@@ -12184,8 +12346,14 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *VodMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(vod.FieldClipExtVodID) {
+		fields = append(fields, vod.FieldClipExtVodID)
+	}
 	if m.FieldCleared(vod.FieldExtStreamID) {
 		fields = append(fields, vod.FieldExtStreamID)
+	}
+	if m.FieldCleared(vod.FieldClipVodOffset) {
+		fields = append(fields, vod.FieldClipVodOffset)
 	}
 	if m.FieldCleared(vod.FieldResolution) {
 		fields = append(fields, vod.FieldResolution)
@@ -12255,8 +12423,14 @@ func (m *VodMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *VodMutation) ClearField(name string) error {
 	switch name {
+	case vod.FieldClipExtVodID:
+		m.ClearClipExtVodID()
+		return nil
 	case vod.FieldExtStreamID:
 		m.ClearExtStreamID()
+		return nil
+	case vod.FieldClipVodOffset:
+		m.ClearClipVodOffset()
 		return nil
 	case vod.FieldResolution:
 		m.ClearResolution()
@@ -12323,6 +12497,9 @@ func (m *VodMutation) ResetField(name string) error {
 	case vod.FieldExtID:
 		m.ResetExtID()
 		return nil
+	case vod.FieldClipExtVodID:
+		m.ResetClipExtVodID()
+		return nil
 	case vod.FieldExtStreamID:
 		m.ResetExtStreamID()
 		return nil
@@ -12337,6 +12514,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldDuration:
 		m.ResetDuration()
+		return nil
+	case vod.FieldClipVodOffset:
+		m.ResetClipVodOffset()
 		return nil
 	case vod.FieldViews:
 		m.ResetViews()

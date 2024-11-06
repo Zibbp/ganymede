@@ -20,11 +20,13 @@ func (Vod) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.String("ext_id").Comment("The ID of the video on the external platform."),
+		field.String("clip_ext_vod_id").Optional().Comment("The external VOD ID of a clip."),
 		field.String("ext_stream_id").Optional().Comment("The ID of the stream on the external platform, if applicable."),
 		field.Enum("platform").GoType(utils.VideoPlatform("")).Default(string(utils.PlatformTwitch)).Comment("The platform the VOD is from, takes an enum."),
 		field.Enum("type").GoType(utils.VodType("")).Default(string(utils.Archive)).Comment("The type of VOD, takes an enum."),
 		field.String("title"),
 		field.Int("duration").Default(1),
+		field.Int("clip_vod_offset").Optional().Comment("The offset in seconds to where the clip starts in the VOD."),
 		field.Int("views").Default(1),
 		field.String("resolution").Optional(),
 		field.Bool("processing").Default(false).Comment("Whether the VOD is currently processing."),

@@ -364,6 +364,11 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) error
 	liveChatPath := ""
 	liveChatConvertPath := ""
 
+	// Disable chat archive if the clip doesn't have a VOD to fetch the chat from
+	if clip.VideoID == "" {
+		input.ArchiveChat = false
+	}
+
 	if input.ArchiveChat {
 		chatPath = fmt.Sprintf("%s/%s-chat.json", rootVideoPath, fileName)
 		chatVideoPath = fmt.Sprintf("%s/%s-chat.mp4", rootVideoPath, fileName)
@@ -377,10 +382,12 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) error
 	vodDTO := vod.Vod{
 		ID:                  vUUID,
 		ExtID:               clip.ID,
+		ClipExtVodID:        clip.VideoID,
 		Platform:            "twitch",
 		Type:                utils.Clip,
 		Title:               clip.Title,
 		Duration:            clip.Duration,
+		ClipVodOffset:       *clip.VodOffset,
 		Views:               int(clip.ViewCount),
 		Resolution:          input.Quality.String(),
 		Processing:          true,

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/dto"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -696,10 +697,22 @@ func (c *TwitchConnection) GetClip(ctx context.Context, id string) (*ClipInfo, e
 			return nil, err
 		}
 
+		// Parse clip vod offset
 		offset := 0
 		if clip.VodOffset != nil {
-			if vodOffset, ok := clip.VodOffset.(int); ok {
-				offset = vodOffset
+			switch v := clip.VodOffset.(type) {
+			case int:
+				offset = v
+			case float64: // If VodOffset might be a float
+				offset = int(v) // Convert to int
+			case string:
+				if parsed, err := strconv.Atoi(v); err == nil {
+					offset = parsed
+				} else {
+					log.Warn().Msgf("failed to convert VodOffset string to int: %v", err)
+				}
+			default:
+				log.Warn().Msgf("VodOffset is an unsupported type, unable to convert:  %T\n", v)
 			}
 		}
 

@@ -30,6 +30,11 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 
 	for _, watchedChannel := range channels {
 
+		if watchedChannel.ClipsLimit == 0 || watchedChannel.ClipsIntervalDays == 0 {
+			logger.Error().Err(err).Str("channel", watchedChannel.Edges.Channel.Name).Msg("clip limit and clips interval must be greater than 0")
+			continue
+		}
+
 		// Check if clips need to be checked for channel
 		now := time.Now()
 		lastChecked := watchedChannel.ClipsLastChecked
