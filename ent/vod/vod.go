@@ -93,6 +93,8 @@ const (
 	EdgeChapters = "chapters"
 	// EdgeMutedSegments holds the string denoting the muted_segments edge name in mutations.
 	EdgeMutedSegments = "muted_segments"
+	// EdgeMultistreamInfo holds the string denoting the multistream_info edge name in mutations.
+	EdgeMultistreamInfo = "multistream_info"
 	// Table holds the table name of the vod in the database.
 	Table = "vods"
 	// ChannelTable is the table that holds the channel relation/edge.
@@ -128,6 +130,13 @@ const (
 	MutedSegmentsInverseTable = "muted_segments"
 	// MutedSegmentsColumn is the table column denoting the muted_segments relation/edge.
 	MutedSegmentsColumn = "vod_muted_segments"
+	// MultistreamInfoTable is the table that holds the multistream_info relation/edge.
+	MultistreamInfoTable = "multistream_infos"
+	// MultistreamInfoInverseTable is the table name for the MultistreamInfo entity.
+	// It exists in this package in order to avoid circular dependency with the "multistreaminfo" package.
+	MultistreamInfoInverseTable = "multistream_infos"
+	// MultistreamInfoColumn is the table column denoting the multistream_info relation/edge.
+	MultistreamInfoColumn = "multistream_info_vod"
 )
 
 // Columns holds all SQL columns for vod fields.
@@ -470,6 +479,20 @@ func ByMutedSegments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMutedSegmentsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByMultistreamInfoCount orders the results by multistream_info count.
+func ByMultistreamInfoCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMultistreamInfoStep(), opts...)
+	}
+}
+
+// ByMultistreamInfo orders the results by multistream_info terms.
+func ByMultistreamInfo(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMultistreamInfoStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newChannelStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -503,5 +526,12 @@ func newMutedSegmentsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MutedSegmentsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MutedSegmentsTable, MutedSegmentsColumn),
+	)
+}
+func newMultistreamInfoStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MultistreamInfoInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, MultistreamInfoTable, MultistreamInfoColumn),
 	)
 }

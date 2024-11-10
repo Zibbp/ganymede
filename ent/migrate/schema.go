@@ -136,6 +136,33 @@ var (
 			},
 		},
 	}
+	// MultistreamInfosColumns holds the columns for the "multistream_infos" table.
+	MultistreamInfosColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "delay_ms", Type: field.TypeInt, Nullable: true},
+		{Name: "multistream_info_vod", Type: field.TypeUUID},
+		{Name: "playlist_multistream_info", Type: field.TypeUUID},
+	}
+	// MultistreamInfosTable holds the schema information for the "multistream_infos" table.
+	MultistreamInfosTable = &schema.Table{
+		Name:       "multistream_infos",
+		Columns:    MultistreamInfosColumns,
+		PrimaryKey: []*schema.Column{MultistreamInfosColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "multistream_infos_vods_vod",
+				Columns:    []*schema.Column{MultistreamInfosColumns[2]},
+				RefColumns: []*schema.Column{VodsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "multistream_infos_playlists_multistream_info",
+				Columns:    []*schema.Column{MultistreamInfosColumns[3]},
+				RefColumns: []*schema.Column{PlaylistsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// MutedSegmentsColumns holds the columns for the "muted_segments" table.
 	MutedSegmentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -347,6 +374,7 @@ var (
 		LivesTable,
 		LiveCategoriesTable,
 		LiveTitleRegexesTable,
+		MultistreamInfosTable,
 		MutedSegmentsTable,
 		PlaybacksTable,
 		PlaylistsTable,
@@ -363,6 +391,8 @@ func init() {
 	LivesTable.ForeignKeys[0].RefTable = ChannelsTable
 	LiveCategoriesTable.ForeignKeys[0].RefTable = LivesTable
 	LiveTitleRegexesTable.ForeignKeys[0].RefTable = LivesTable
+	MultistreamInfosTable.ForeignKeys[0].RefTable = VodsTable
+	MultistreamInfosTable.ForeignKeys[1].RefTable = PlaylistsTable
 	MutedSegmentsTable.ForeignKeys[0].RefTable = VodsTable
 	QueuesTable.ForeignKeys[0].RefTable = VodsTable
 	VodsTable.ForeignKeys[0].RefTable = ChannelsTable

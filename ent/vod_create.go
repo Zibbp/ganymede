@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
+	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -549,6 +550,21 @@ func (vc *VodCreate) AddMutedSegments(m ...*MutedSegment) *VodCreate {
 	return vc.AddMutedSegmentIDs(ids...)
 }
 
+// AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
+func (vc *VodCreate) AddMultistreamInfoIDs(ids ...int) *VodCreate {
+	vc.mutation.AddMultistreamInfoIDs(ids...)
+	return vc
+}
+
+// AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
+func (vc *VodCreate) AddMultistreamInfo(m ...*MultistreamInfo) *VodCreate {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return vc.AddMultistreamInfoIDs(ids...)
+}
+
 // Mutation returns the VodMutation object of the builder.
 func (vc *VodCreate) Mutation() *VodMutation {
 	return vc.mutation
@@ -929,6 +945,22 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := vc.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   vod.MultistreamInfoTable,
+			Columns: []string{vod.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

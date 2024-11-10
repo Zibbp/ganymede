@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
+	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
@@ -24,16 +25,17 @@ import (
 // VodQuery is the builder for querying Vod entities.
 type VodQuery struct {
 	config
-	ctx               *QueryContext
-	order             []vod.OrderOption
-	inters            []Interceptor
-	predicates        []predicate.Vod
-	withChannel       *ChannelQuery
-	withQueue         *QueueQuery
-	withPlaylists     *PlaylistQuery
-	withChapters      *ChapterQuery
-	withMutedSegments *MutedSegmentQuery
-	withFKs           bool
+	ctx                 *QueryContext
+	order               []vod.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.Vod
+	withChannel         *ChannelQuery
+	withQueue           *QueueQuery
+	withPlaylists       *PlaylistQuery
+	withChapters        *ChapterQuery
+	withMutedSegments   *MutedSegmentQuery
+	withMultistreamInfo *MultistreamInfoQuery
+	withFKs             bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -173,6 +175,28 @@ func (vq *VodQuery) QueryMutedSegments() *MutedSegmentQuery {
 			sqlgraph.From(vod.Table, vod.FieldID, selector),
 			sqlgraph.To(mutedsegment.Table, mutedsegment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, vod.MutedSegmentsTable, vod.MutedSegmentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMultistreamInfo chains the current query on the "multistream_info" edge.
+func (vq *VodQuery) QueryMultistreamInfo() *MultistreamInfoQuery {
+	query := (&MultistreamInfoClient{config: vq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := vq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := vq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vod.Table, vod.FieldID, selector),
+			sqlgraph.To(multistreaminfo.Table, multistreaminfo.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, vod.MultistreamInfoTable, vod.MultistreamInfoColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
 		return fromU, nil
@@ -367,16 +391,17 @@ func (vq *VodQuery) Clone() *VodQuery {
 		return nil
 	}
 	return &VodQuery{
-		config:            vq.config,
-		ctx:               vq.ctx.Clone(),
-		order:             append([]vod.OrderOption{}, vq.order...),
-		inters:            append([]Interceptor{}, vq.inters...),
-		predicates:        append([]predicate.Vod{}, vq.predicates...),
-		withChannel:       vq.withChannel.Clone(),
-		withQueue:         vq.withQueue.Clone(),
-		withPlaylists:     vq.withPlaylists.Clone(),
-		withChapters:      vq.withChapters.Clone(),
-		withMutedSegments: vq.withMutedSegments.Clone(),
+		config:              vq.config,
+		ctx:                 vq.ctx.Clone(),
+		order:               append([]vod.OrderOption{}, vq.order...),
+		inters:              append([]Interceptor{}, vq.inters...),
+		predicates:          append([]predicate.Vod{}, vq.predicates...),
+		withChannel:         vq.withChannel.Clone(),
+		withQueue:           vq.withQueue.Clone(),
+		withPlaylists:       vq.withPlaylists.Clone(),
+		withChapters:        vq.withChapters.Clone(),
+		withMutedSegments:   vq.withMutedSegments.Clone(),
+		withMultistreamInfo: vq.withMultistreamInfo.Clone(),
 		// clone intermediate query.
 		sql:  vq.sql.Clone(),
 		path: vq.path,
@@ -435,6 +460,17 @@ func (vq *VodQuery) WithMutedSegments(opts ...func(*MutedSegmentQuery)) *VodQuer
 		opt(query)
 	}
 	vq.withMutedSegments = query
+	return vq
+}
+
+// WithMultistreamInfo tells the query-builder to eager-load the nodes that are connected to
+// the "multistream_info" edge. The optional arguments are used to configure the query builder of the edge.
+func (vq *VodQuery) WithMultistreamInfo(opts ...func(*MultistreamInfoQuery)) *VodQuery {
+	query := (&MultistreamInfoClient{config: vq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	vq.withMultistreamInfo = query
 	return vq
 }
 
@@ -517,12 +553,13 @@ func (vq *VodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vod, err
 		nodes       = []*Vod{}
 		withFKs     = vq.withFKs
 		_spec       = vq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			vq.withChannel != nil,
 			vq.withQueue != nil,
 			vq.withPlaylists != nil,
 			vq.withChapters != nil,
 			vq.withMutedSegments != nil,
+			vq.withMultistreamInfo != nil,
 		}
 	)
 	if vq.withChannel != nil {
@@ -579,6 +616,13 @@ func (vq *VodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vod, err
 		if err := vq.loadMutedSegments(ctx, query, nodes,
 			func(n *Vod) { n.Edges.MutedSegments = []*MutedSegment{} },
 			func(n *Vod, e *MutedSegment) { n.Edges.MutedSegments = append(n.Edges.MutedSegments, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := vq.withMultistreamInfo; query != nil {
+		if err := vq.loadMultistreamInfo(ctx, query, nodes,
+			func(n *Vod) { n.Edges.MultistreamInfo = []*MultistreamInfo{} },
+			func(n *Vod, e *MultistreamInfo) { n.Edges.MultistreamInfo = append(n.Edges.MultistreamInfo, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -763,6 +807,37 @@ func (vq *VodQuery) loadMutedSegments(ctx context.Context, query *MutedSegmentQu
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "vod_muted_segments" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (vq *VodQuery) loadMultistreamInfo(ctx context.Context, query *MultistreamInfoQuery, nodes []*Vod, init func(*Vod), assign func(*Vod, *MultistreamInfo)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Vod)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.MultistreamInfo(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(vod.MultistreamInfoColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.multistream_info_vod
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "multistream_info_vod" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "multistream_info_vod" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

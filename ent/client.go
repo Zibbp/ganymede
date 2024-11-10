@@ -22,6 +22,7 @@ import (
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/livetitleregex"
+	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
@@ -48,6 +49,8 @@ type Client struct {
 	LiveCategory *LiveCategoryClient
 	// LiveTitleRegex is the client for interacting with the LiveTitleRegex builders.
 	LiveTitleRegex *LiveTitleRegexClient
+	// MultistreamInfo is the client for interacting with the MultistreamInfo builders.
+	MultistreamInfo *MultistreamInfoClient
 	// MutedSegment is the client for interacting with the MutedSegment builders.
 	MutedSegment *MutedSegmentClient
 	// Playback is the client for interacting with the Playback builders.
@@ -79,6 +82,7 @@ func (c *Client) init() {
 	c.Live = NewLiveClient(c.config)
 	c.LiveCategory = NewLiveCategoryClient(c.config)
 	c.LiveTitleRegex = NewLiveTitleRegexClient(c.config)
+	c.MultistreamInfo = NewMultistreamInfoClient(c.config)
 	c.MutedSegment = NewMutedSegmentClient(c.config)
 	c.Playback = NewPlaybackClient(c.config)
 	c.Playlist = NewPlaylistClient(c.config)
@@ -176,21 +180,22 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		BlockedVideos:  NewBlockedVideosClient(cfg),
-		Channel:        NewChannelClient(cfg),
-		Chapter:        NewChapterClient(cfg),
-		Live:           NewLiveClient(cfg),
-		LiveCategory:   NewLiveCategoryClient(cfg),
-		LiveTitleRegex: NewLiveTitleRegexClient(cfg),
-		MutedSegment:   NewMutedSegmentClient(cfg),
-		Playback:       NewPlaybackClient(cfg),
-		Playlist:       NewPlaylistClient(cfg),
-		Queue:          NewQueueClient(cfg),
-		TwitchCategory: NewTwitchCategoryClient(cfg),
-		User:           NewUserClient(cfg),
-		Vod:            NewVodClient(cfg),
+		ctx:             ctx,
+		config:          cfg,
+		BlockedVideos:   NewBlockedVideosClient(cfg),
+		Channel:         NewChannelClient(cfg),
+		Chapter:         NewChapterClient(cfg),
+		Live:            NewLiveClient(cfg),
+		LiveCategory:    NewLiveCategoryClient(cfg),
+		LiveTitleRegex:  NewLiveTitleRegexClient(cfg),
+		MultistreamInfo: NewMultistreamInfoClient(cfg),
+		MutedSegment:    NewMutedSegmentClient(cfg),
+		Playback:        NewPlaybackClient(cfg),
+		Playlist:        NewPlaylistClient(cfg),
+		Queue:           NewQueueClient(cfg),
+		TwitchCategory:  NewTwitchCategoryClient(cfg),
+		User:            NewUserClient(cfg),
+		Vod:             NewVodClient(cfg),
 	}, nil
 }
 
@@ -208,21 +213,22 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		BlockedVideos:  NewBlockedVideosClient(cfg),
-		Channel:        NewChannelClient(cfg),
-		Chapter:        NewChapterClient(cfg),
-		Live:           NewLiveClient(cfg),
-		LiveCategory:   NewLiveCategoryClient(cfg),
-		LiveTitleRegex: NewLiveTitleRegexClient(cfg),
-		MutedSegment:   NewMutedSegmentClient(cfg),
-		Playback:       NewPlaybackClient(cfg),
-		Playlist:       NewPlaylistClient(cfg),
-		Queue:          NewQueueClient(cfg),
-		TwitchCategory: NewTwitchCategoryClient(cfg),
-		User:           NewUserClient(cfg),
-		Vod:            NewVodClient(cfg),
+		ctx:             ctx,
+		config:          cfg,
+		BlockedVideos:   NewBlockedVideosClient(cfg),
+		Channel:         NewChannelClient(cfg),
+		Chapter:         NewChapterClient(cfg),
+		Live:            NewLiveClient(cfg),
+		LiveCategory:    NewLiveCategoryClient(cfg),
+		LiveTitleRegex:  NewLiveTitleRegexClient(cfg),
+		MultistreamInfo: NewMultistreamInfoClient(cfg),
+		MutedSegment:    NewMutedSegmentClient(cfg),
+		Playback:        NewPlaybackClient(cfg),
+		Playlist:        NewPlaylistClient(cfg),
+		Queue:           NewQueueClient(cfg),
+		TwitchCategory:  NewTwitchCategoryClient(cfg),
+		User:            NewUserClient(cfg),
+		Vod:             NewVodClient(cfg),
 	}, nil
 }
 
@@ -253,8 +259,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
-		c.MutedSegment, c.Playback, c.Playlist, c.Queue, c.TwitchCategory, c.User,
-		c.Vod,
+		c.MultistreamInfo, c.MutedSegment, c.Playback, c.Playlist, c.Queue,
+		c.TwitchCategory, c.User, c.Vod,
 	} {
 		n.Use(hooks...)
 	}
@@ -265,8 +271,8 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
-		c.MutedSegment, c.Playback, c.Playlist, c.Queue, c.TwitchCategory, c.User,
-		c.Vod,
+		c.MultistreamInfo, c.MutedSegment, c.Playback, c.Playlist, c.Queue,
+		c.TwitchCategory, c.User, c.Vod,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -287,6 +293,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.LiveCategory.mutate(ctx, m)
 	case *LiveTitleRegexMutation:
 		return c.LiveTitleRegex.mutate(ctx, m)
+	case *MultistreamInfoMutation:
+		return c.MultistreamInfo.mutate(ctx, m)
 	case *MutedSegmentMutation:
 		return c.MutedSegment.mutate(ctx, m)
 	case *PlaybackMutation:
@@ -1232,6 +1240,171 @@ func (c *LiveTitleRegexClient) mutate(ctx context.Context, m *LiveTitleRegexMuta
 	}
 }
 
+// MultistreamInfoClient is a client for the MultistreamInfo schema.
+type MultistreamInfoClient struct {
+	config
+}
+
+// NewMultistreamInfoClient returns a client for the MultistreamInfo from the given config.
+func NewMultistreamInfoClient(c config) *MultistreamInfoClient {
+	return &MultistreamInfoClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `multistreaminfo.Hooks(f(g(h())))`.
+func (c *MultistreamInfoClient) Use(hooks ...Hook) {
+	c.hooks.MultistreamInfo = append(c.hooks.MultistreamInfo, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `multistreaminfo.Intercept(f(g(h())))`.
+func (c *MultistreamInfoClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MultistreamInfo = append(c.inters.MultistreamInfo, interceptors...)
+}
+
+// Create returns a builder for creating a MultistreamInfo entity.
+func (c *MultistreamInfoClient) Create() *MultistreamInfoCreate {
+	mutation := newMultistreamInfoMutation(c.config, OpCreate)
+	return &MultistreamInfoCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MultistreamInfo entities.
+func (c *MultistreamInfoClient) CreateBulk(builders ...*MultistreamInfoCreate) *MultistreamInfoCreateBulk {
+	return &MultistreamInfoCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MultistreamInfoClient) MapCreateBulk(slice any, setFunc func(*MultistreamInfoCreate, int)) *MultistreamInfoCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MultistreamInfoCreateBulk{err: fmt.Errorf("calling to MultistreamInfoClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MultistreamInfoCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MultistreamInfoCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MultistreamInfo.
+func (c *MultistreamInfoClient) Update() *MultistreamInfoUpdate {
+	mutation := newMultistreamInfoMutation(c.config, OpUpdate)
+	return &MultistreamInfoUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MultistreamInfoClient) UpdateOne(mi *MultistreamInfo) *MultistreamInfoUpdateOne {
+	mutation := newMultistreamInfoMutation(c.config, OpUpdateOne, withMultistreamInfo(mi))
+	return &MultistreamInfoUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MultistreamInfoClient) UpdateOneID(id int) *MultistreamInfoUpdateOne {
+	mutation := newMultistreamInfoMutation(c.config, OpUpdateOne, withMultistreamInfoID(id))
+	return &MultistreamInfoUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MultistreamInfo.
+func (c *MultistreamInfoClient) Delete() *MultistreamInfoDelete {
+	mutation := newMultistreamInfoMutation(c.config, OpDelete)
+	return &MultistreamInfoDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MultistreamInfoClient) DeleteOne(mi *MultistreamInfo) *MultistreamInfoDeleteOne {
+	return c.DeleteOneID(mi.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MultistreamInfoClient) DeleteOneID(id int) *MultistreamInfoDeleteOne {
+	builder := c.Delete().Where(multistreaminfo.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MultistreamInfoDeleteOne{builder}
+}
+
+// Query returns a query builder for MultistreamInfo.
+func (c *MultistreamInfoClient) Query() *MultistreamInfoQuery {
+	return &MultistreamInfoQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMultistreamInfo},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MultistreamInfo entity by its id.
+func (c *MultistreamInfoClient) Get(ctx context.Context, id int) (*MultistreamInfo, error) {
+	return c.Query().Where(multistreaminfo.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MultistreamInfoClient) GetX(ctx context.Context, id int) *MultistreamInfo {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryVod queries the vod edge of a MultistreamInfo.
+func (c *MultistreamInfoClient) QueryVod(mi *MultistreamInfo) *VodQuery {
+	query := (&VodClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := mi.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(multistreaminfo.Table, multistreaminfo.FieldID, id),
+			sqlgraph.To(vod.Table, vod.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, multistreaminfo.VodTable, multistreaminfo.VodColumn),
+		)
+		fromV = sqlgraph.Neighbors(mi.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPlaylist queries the playlist edge of a MultistreamInfo.
+func (c *MultistreamInfoClient) QueryPlaylist(mi *MultistreamInfo) *PlaylistQuery {
+	query := (&PlaylistClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := mi.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(multistreaminfo.Table, multistreaminfo.FieldID, id),
+			sqlgraph.To(playlist.Table, playlist.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, multistreaminfo.PlaylistTable, multistreaminfo.PlaylistColumn),
+		)
+		fromV = sqlgraph.Neighbors(mi.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MultistreamInfoClient) Hooks() []Hook {
+	return c.hooks.MultistreamInfo
+}
+
+// Interceptors returns the client interceptors.
+func (c *MultistreamInfoClient) Interceptors() []Interceptor {
+	return c.inters.MultistreamInfo
+}
+
+func (c *MultistreamInfoClient) mutate(ctx context.Context, m *MultistreamInfoMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MultistreamInfoCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MultistreamInfoUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MultistreamInfoUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MultistreamInfoDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MultistreamInfo mutation op: %q", m.Op())
+	}
+}
+
 // MutedSegmentClient is a client for the MutedSegment schema.
 type MutedSegmentClient struct {
 	config
@@ -1631,6 +1804,22 @@ func (c *PlaylistClient) QueryVods(pl *Playlist) *VodQuery {
 			sqlgraph.From(playlist.Table, playlist.FieldID, id),
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, playlist.VodsTable, playlist.VodsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMultistreamInfo queries the multistream_info edge of a Playlist.
+func (c *PlaylistClient) QueryMultistreamInfo(pl *Playlist) *MultistreamInfoQuery {
+	query := (&MultistreamInfoClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(playlist.Table, playlist.FieldID, id),
+			sqlgraph.To(multistreaminfo.Table, multistreaminfo.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, playlist.MultistreamInfoTable, playlist.MultistreamInfoColumn),
 		)
 		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
 		return fromV, nil
@@ -2266,6 +2455,22 @@ func (c *VodClient) QueryMutedSegments(v *Vod) *MutedSegmentQuery {
 	return query
 }
 
+// QueryMultistreamInfo queries the multistream_info edge of a Vod.
+func (c *VodClient) QueryMultistreamInfo(v *Vod) *MultistreamInfoQuery {
+	query := (&MultistreamInfoClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vod.Table, vod.FieldID, id),
+			sqlgraph.To(multistreaminfo.Table, multistreaminfo.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, vod.MultistreamInfoTable, vod.MultistreamInfoColumn),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *VodClient) Hooks() []Hook {
 	return c.hooks.Vod
@@ -2295,11 +2500,12 @@ func (c *VodClient) mutate(ctx context.Context, m *VodMutation) (Value, error) {
 type (
 	hooks struct {
 		BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
-		MutedSegment, Playback, Playlist, Queue, TwitchCategory, User, Vod []ent.Hook
+		MultistreamInfo, MutedSegment, Playback, Playlist, Queue, TwitchCategory, User,
+		Vod []ent.Hook
 	}
 	inters struct {
 		BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
-		MutedSegment, Playback, Playlist, Queue, TwitchCategory, User,
+		MultistreamInfo, MutedSegment, Playback, Playlist, Queue, TwitchCategory, User,
 		Vod []ent.Interceptor
 	}
 )
