@@ -184,7 +184,7 @@ func (h *Handler) UpdatePlaylist(c echo.Context) error {
 	return c.JSON(http.StatusOK, updatedPlaylist)
 }
 
-// SetVodDelayOnPlaylist godoc
+// SetVodDelayOnPlaylistMultistream godoc
 //
 //	@Summary		Set delay of vod in playlist for multistream
 //	@Description	Set delay of vod in playlist for multistream
@@ -198,7 +198,7 @@ func (h *Handler) UpdatePlaylist(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/playlist/{id} [put]
 //	@Security		ApiKeyCookieAuth
-func (h *Handler) SetVodDelayOnPlaylist(c echo.Context) error {
+func (h *Handler) SetVodDelayOnPlaylistMultistream(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
