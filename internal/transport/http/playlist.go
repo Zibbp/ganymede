@@ -13,8 +13,9 @@ type PlaylistService interface {
 	CreatePlaylist(c echo.Context, playlistDto playlist.Playlist) (*ent.Playlist, error)
 	AddVodToPlaylist(c echo.Context, playlistID uuid.UUID, vodID uuid.UUID) error
 	GetPlaylists(c echo.Context) ([]*ent.Playlist, error)
-	GetPlaylist(c echo.Context, playlistID uuid.UUID) (*ent.Playlist, error)
+	GetPlaylist(c echo.Context, playlistID uuid.UUID, withMultistreamInfo bool) (*ent.Playlist, error)
 	UpdatePlaylist(c echo.Context, playlistID uuid.UUID, playlistDto playlist.Playlist) (*ent.Playlist, error)
+	SetVodDelayOnPlaylist(c echo.Context, playlistID uuid.UUID, vodId uuid.UUID, delayMs int) error
 	DeletePlaylist(c echo.Context, playlistID uuid.UUID) error
 	DeleteVodFromPlaylist(c echo.Context, playlistID uuid.UUID, vodID uuid.UUID) error
 }
@@ -26,6 +27,11 @@ type CreatePlaylistRequest struct {
 
 type AddVodToPlaylistRequest struct {
 	VodID string `json:"vod_id" validate:"required"`
+}
+
+type SetVodDelayPlaylistRequest struct {
+	VodID   string `json:"vod_id" validate:"required"`
+	DelayMs int    `json:"delay_ms"`
 }
 
 // CreatePlaylist godoc
@@ -123,17 +129,18 @@ func (h *Handler) GetPlaylists(c echo.Context) error {
 //	@Tags			Playlist
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string	true	"playlist id"
-//	@Success		200	{object}	ent.Playlist
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Param			id						path		string	true	"playlist id"
+//	@Param			with_multistream_info	query		boolean	false	"include multistream info"
+//	@Success		200						{object}	ent.Playlist
+//	@Failure		400						{object}	utils.ErrorResponse
+//	@Failure		500						{object}	utils.ErrorResponse
 //	@Router			/playlist/{id} [get]
 func (h *Handler) GetPlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
 	}
-	rPlaylist, err := h.Service.PlaylistService.GetPlaylist(c, pID)
+	rPlaylist, err := h.Service.PlaylistService.GetPlaylist(c, pID, c.QueryParams().Get("with_multistream_info") == "true")
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -175,6 +182,43 @@ func (h *Handler) UpdatePlaylist(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, updatedPlaylist)
+}
+
+// SetVodDelayOnPlaylist godoc
+//
+//	@Summary		Set delay of vod in playlist for multistream
+//	@Description	Set delay of vod in playlist for multistream
+//	@Tags			Playlist
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string						true	"playlist id"
+//	@Param			delay	body		SetVodDelayPlaylistRequest	true	"delay"
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/playlist/{id} [put]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) SetVodDelayOnPlaylist(c echo.Context) error {
+	pID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
+	}
+	svdpr := new(SetVodDelayPlaylistRequest)
+	if err := c.Bind(svdpr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(svdpr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	vID, err := uuid.Parse(svdpr.VodID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
+	}
+	err = h.Service.PlaylistService.SetVodDelayOnPlaylist(c, pID, vID, svdpr.DelayMs)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "ok")
 }
 
 // DeletePlaylist godoc

@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -105,6 +106,21 @@ func (pu *PlaylistUpdate) AddVods(v ...*Vod) *PlaylistUpdate {
 	return pu.AddVodIDs(ids...)
 }
 
+// AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
+func (pu *PlaylistUpdate) AddMultistreamInfoIDs(ids ...int) *PlaylistUpdate {
+	pu.mutation.AddMultistreamInfoIDs(ids...)
+	return pu
+}
+
+// AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
+func (pu *PlaylistUpdate) AddMultistreamInfo(m ...*MultistreamInfo) *PlaylistUpdate {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return pu.AddMultistreamInfoIDs(ids...)
+}
+
 // Mutation returns the PlaylistMutation object of the builder.
 func (pu *PlaylistUpdate) Mutation() *PlaylistMutation {
 	return pu.mutation
@@ -129,6 +145,27 @@ func (pu *PlaylistUpdate) RemoveVods(v ...*Vod) *PlaylistUpdate {
 		ids[i] = v[i].ID
 	}
 	return pu.RemoveVodIDs(ids...)
+}
+
+// ClearMultistreamInfo clears all "multistream_info" edges to the MultistreamInfo entity.
+func (pu *PlaylistUpdate) ClearMultistreamInfo() *PlaylistUpdate {
+	pu.mutation.ClearMultistreamInfo()
+	return pu
+}
+
+// RemoveMultistreamInfoIDs removes the "multistream_info" edge to MultistreamInfo entities by IDs.
+func (pu *PlaylistUpdate) RemoveMultistreamInfoIDs(ids ...int) *PlaylistUpdate {
+	pu.mutation.RemoveMultistreamInfoIDs(ids...)
+	return pu
+}
+
+// RemoveMultistreamInfo removes "multistream_info" edges to MultistreamInfo entities.
+func (pu *PlaylistUpdate) RemoveMultistreamInfo(m ...*MultistreamInfo) *PlaylistUpdate {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return pu.RemoveMultistreamInfoIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -239,6 +276,51 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if pu.mutation.MultistreamInfoCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.MultistreamInfoTable,
+			Columns: []string{playlist.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !pu.mutation.MultistreamInfoCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.MultistreamInfoTable,
+			Columns: []string{playlist.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.MultistreamInfoTable,
+			Columns: []string{playlist.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{playlist.Label}
@@ -334,6 +416,21 @@ func (puo *PlaylistUpdateOne) AddVods(v ...*Vod) *PlaylistUpdateOne {
 	return puo.AddVodIDs(ids...)
 }
 
+// AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
+func (puo *PlaylistUpdateOne) AddMultistreamInfoIDs(ids ...int) *PlaylistUpdateOne {
+	puo.mutation.AddMultistreamInfoIDs(ids...)
+	return puo
+}
+
+// AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
+func (puo *PlaylistUpdateOne) AddMultistreamInfo(m ...*MultistreamInfo) *PlaylistUpdateOne {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return puo.AddMultistreamInfoIDs(ids...)
+}
+
 // Mutation returns the PlaylistMutation object of the builder.
 func (puo *PlaylistUpdateOne) Mutation() *PlaylistMutation {
 	return puo.mutation
@@ -358,6 +455,27 @@ func (puo *PlaylistUpdateOne) RemoveVods(v ...*Vod) *PlaylistUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return puo.RemoveVodIDs(ids...)
+}
+
+// ClearMultistreamInfo clears all "multistream_info" edges to the MultistreamInfo entity.
+func (puo *PlaylistUpdateOne) ClearMultistreamInfo() *PlaylistUpdateOne {
+	puo.mutation.ClearMultistreamInfo()
+	return puo
+}
+
+// RemoveMultistreamInfoIDs removes the "multistream_info" edge to MultistreamInfo entities by IDs.
+func (puo *PlaylistUpdateOne) RemoveMultistreamInfoIDs(ids ...int) *PlaylistUpdateOne {
+	puo.mutation.RemoveMultistreamInfoIDs(ids...)
+	return puo
+}
+
+// RemoveMultistreamInfo removes "multistream_info" edges to MultistreamInfo entities.
+func (puo *PlaylistUpdateOne) RemoveMultistreamInfo(m ...*MultistreamInfo) *PlaylistUpdateOne {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return puo.RemoveMultistreamInfoIDs(ids...)
 }
 
 // Where appends a list predicates to the PlaylistUpdate builder.
@@ -491,6 +609,51 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if puo.mutation.MultistreamInfoCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.MultistreamInfoTable,
+			Columns: []string{playlist.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !puo.mutation.MultistreamInfoCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.MultistreamInfoTable,
+			Columns: []string{playlist.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.MultistreamInfoTable,
+			Columns: []string{playlist.MultistreamInfoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
