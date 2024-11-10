@@ -52,7 +52,7 @@ services:
     restart: unless-stopped
     environment:
       - API_URL=http://IP:PORT # Points to the API service; the container must be able to access this URL internally
-      - CDN_URL=http://IP:PORT # Points to the nginx service
+      - CDN_URL=http://IP:PORT # Can point to your nginx service, or set same as API_URL if nginx is not used
       - SHOW_SSO_LOGIN_BUTTON=true # show/hide SSO login button on login page
       - FORCE_SSO_AUTH=false # force SSO auth for all users (bypasses login page and redirects to SSO)
       - REQUIRE_LOGIN=false # require login to view videos
