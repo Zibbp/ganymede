@@ -159,7 +159,7 @@ var (
 				Symbol:     "multistream_infos_playlists_multistream_info",
 				Columns:    []*schema.Column{MultistreamInfosColumns[3]},
 				RefColumns: []*schema.Column{PlaylistsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
