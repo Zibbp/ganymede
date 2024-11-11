@@ -26,10 +26,11 @@ type EnvConfig struct {
 	DEBUG        bool   `env:"DEBUG, default=false"`
 	CookieDomain string `env:"COOKIE_DOMAIN, default="`
 	// customizable paths
-	VideosDir string `env:"VIDEOS_DIR, default=/data/videos"`
-	TempDir   string `env:"TEMP_DIR, default=/data/temp"`
-	ConfigDir string `env:"CONFIG_DIR, default=/data/config"`
-	LogsDir   string `env:"LOGS_DIR, default=/data/logs"`
+	VideosDir            string `env:"VIDEOS_DIR, default=/data/videos"`
+	TempDir              string `env:"TEMP_DIR, default=/data/temp"`
+	ConfigDir            string `env:"CONFIG_DIR, default=/data/config"`
+	LogsDir              string `env:"LOGS_DIR, default=/data/logs"`
+	PathMigrationEnabled bool   `env:"PATH_MIGRATION_ENABLED, default=true"`
 	// platform variables
 	TwitchClientId     string `env:"TWITCH_CLIENT_ID, default="`
 	TwitchClientSecret string `env:"TWITCH_CLIENT_SECRET, default="`
