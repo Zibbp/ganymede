@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
@@ -30,6 +31,6 @@ func (Playlist) Fields() []ent.Field {
 func (Playlist) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("vods", Vod.Type),
-		edge.To("multistream_info", MultistreamInfo.Type),
+		edge.To("multistream_info", MultistreamInfo.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }
