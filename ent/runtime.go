@@ -17,6 +17,7 @@ import (
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/schema"
+	"github.com/zibbp/ganymede/ent/sessions"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -232,6 +233,16 @@ func init() {
 	queueDescID := queueFields[0].Descriptor()
 	// queue.DefaultID holds the default value on creation for the id field.
 	queue.DefaultID = queueDescID.Default.(func() uuid.UUID)
+	sessionsFields := schema.Sessions{}.Fields()
+	_ = sessionsFields
+	// sessionsDescToken is the schema descriptor for token field.
+	sessionsDescToken := sessionsFields[0].Descriptor()
+	// sessions.TokenValidator is a validator for the "token" field. It is called by the builders before save.
+	sessions.TokenValidator = sessionsDescToken.Validators[0].(func(string) error)
+	// sessionsDescData is the schema descriptor for data field.
+	sessionsDescData := sessionsFields[1].Descriptor()
+	// sessions.DataValidator is a validator for the "data" field. It is called by the builders before save.
+	sessions.DataValidator = sessionsDescData.Validators[0].(func([]byte) error)
 	twitchcategoryFields := schema.TwitchCategory{}.Fields()
 	_ = twitchcategoryFields
 	// twitchcategoryDescUpdatedAt is the schema descriptor for updated_at field.

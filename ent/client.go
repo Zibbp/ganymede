@@ -26,6 +26,7 @@ import (
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/ent/sessions"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -56,6 +57,8 @@ type Client struct {
 	Playlist *PlaylistClient
 	// Queue is the client for interacting with the Queue builders.
 	Queue *QueueClient
+	// Sessions is the client for interacting with the Sessions builders.
+	Sessions *SessionsClient
 	// TwitchCategory is the client for interacting with the TwitchCategory builders.
 	TwitchCategory *TwitchCategoryClient
 	// User is the client for interacting with the User builders.
@@ -83,6 +86,7 @@ func (c *Client) init() {
 	c.Playback = NewPlaybackClient(c.config)
 	c.Playlist = NewPlaylistClient(c.config)
 	c.Queue = NewQueueClient(c.config)
+	c.Sessions = NewSessionsClient(c.config)
 	c.TwitchCategory = NewTwitchCategoryClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Vod = NewVodClient(c.config)
@@ -188,6 +192,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Playback:       NewPlaybackClient(cfg),
 		Playlist:       NewPlaylistClient(cfg),
 		Queue:          NewQueueClient(cfg),
+		Sessions:       NewSessionsClient(cfg),
 		TwitchCategory: NewTwitchCategoryClient(cfg),
 		User:           NewUserClient(cfg),
 		Vod:            NewVodClient(cfg),
@@ -220,6 +225,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Playback:       NewPlaybackClient(cfg),
 		Playlist:       NewPlaylistClient(cfg),
 		Queue:          NewQueueClient(cfg),
+		Sessions:       NewSessionsClient(cfg),
 		TwitchCategory: NewTwitchCategoryClient(cfg),
 		User:           NewUserClient(cfg),
 		Vod:            NewVodClient(cfg),
@@ -253,8 +259,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
-		c.MutedSegment, c.Playback, c.Playlist, c.Queue, c.TwitchCategory, c.User,
-		c.Vod,
+		c.MutedSegment, c.Playback, c.Playlist, c.Queue, c.Sessions, c.TwitchCategory,
+		c.User, c.Vod,
 	} {
 		n.Use(hooks...)
 	}
@@ -265,8 +271,8 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
-		c.MutedSegment, c.Playback, c.Playlist, c.Queue, c.TwitchCategory, c.User,
-		c.Vod,
+		c.MutedSegment, c.Playback, c.Playlist, c.Queue, c.Sessions, c.TwitchCategory,
+		c.User, c.Vod,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -295,6 +301,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Playlist.mutate(ctx, m)
 	case *QueueMutation:
 		return c.Queue.mutate(ctx, m)
+	case *SessionsMutation:
+		return c.Sessions.mutate(ctx, m)
 	case *TwitchCategoryMutation:
 		return c.TwitchCategory.mutate(ctx, m)
 	case *UserMutation:
@@ -1812,6 +1820,139 @@ func (c *QueueClient) mutate(ctx context.Context, m *QueueMutation) (Value, erro
 	}
 }
 
+// SessionsClient is a client for the Sessions schema.
+type SessionsClient struct {
+	config
+}
+
+// NewSessionsClient returns a client for the Sessions from the given config.
+func NewSessionsClient(c config) *SessionsClient {
+	return &SessionsClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sessions.Hooks(f(g(h())))`.
+func (c *SessionsClient) Use(hooks ...Hook) {
+	c.hooks.Sessions = append(c.hooks.Sessions, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sessions.Intercept(f(g(h())))`.
+func (c *SessionsClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Sessions = append(c.inters.Sessions, interceptors...)
+}
+
+// Create returns a builder for creating a Sessions entity.
+func (c *SessionsClient) Create() *SessionsCreate {
+	mutation := newSessionsMutation(c.config, OpCreate)
+	return &SessionsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Sessions entities.
+func (c *SessionsClient) CreateBulk(builders ...*SessionsCreate) *SessionsCreateBulk {
+	return &SessionsCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SessionsClient) MapCreateBulk(slice any, setFunc func(*SessionsCreate, int)) *SessionsCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SessionsCreateBulk{err: fmt.Errorf("calling to SessionsClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SessionsCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SessionsCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Sessions.
+func (c *SessionsClient) Update() *SessionsUpdate {
+	mutation := newSessionsMutation(c.config, OpUpdate)
+	return &SessionsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SessionsClient) UpdateOne(s *Sessions) *SessionsUpdateOne {
+	mutation := newSessionsMutation(c.config, OpUpdateOne, withSessions(s))
+	return &SessionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SessionsClient) UpdateOneID(id int) *SessionsUpdateOne {
+	mutation := newSessionsMutation(c.config, OpUpdateOne, withSessionsID(id))
+	return &SessionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Sessions.
+func (c *SessionsClient) Delete() *SessionsDelete {
+	mutation := newSessionsMutation(c.config, OpDelete)
+	return &SessionsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SessionsClient) DeleteOne(s *Sessions) *SessionsDeleteOne {
+	return c.DeleteOneID(s.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SessionsClient) DeleteOneID(id int) *SessionsDeleteOne {
+	builder := c.Delete().Where(sessions.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SessionsDeleteOne{builder}
+}
+
+// Query returns a query builder for Sessions.
+func (c *SessionsClient) Query() *SessionsQuery {
+	return &SessionsQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSessions},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Sessions entity by its id.
+func (c *SessionsClient) Get(ctx context.Context, id int) (*Sessions, error) {
+	return c.Query().Where(sessions.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SessionsClient) GetX(ctx context.Context, id int) *Sessions {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SessionsClient) Hooks() []Hook {
+	return c.hooks.Sessions
+}
+
+// Interceptors returns the client interceptors.
+func (c *SessionsClient) Interceptors() []Interceptor {
+	return c.inters.Sessions
+}
+
+func (c *SessionsClient) mutate(ctx context.Context, m *SessionsMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SessionsCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SessionsUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SessionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SessionsDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Sessions mutation op: %q", m.Op())
+	}
+}
+
 // TwitchCategoryClient is a client for the TwitchCategory schema.
 type TwitchCategoryClient struct {
 	config
@@ -2295,11 +2436,12 @@ func (c *VodClient) mutate(ctx context.Context, m *VodMutation) (Value, error) {
 type (
 	hooks struct {
 		BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
-		MutedSegment, Playback, Playlist, Queue, TwitchCategory, User, Vod []ent.Hook
+		MutedSegment, Playback, Playlist, Queue, Sessions, TwitchCategory, User,
+		Vod []ent.Hook
 	}
 	inters struct {
 		BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
-		MutedSegment, Playback, Playlist, Queue, TwitchCategory, User,
+		MutedSegment, Playback, Playlist, Queue, Sessions, TwitchCategory, User,
 		Vod []ent.Interceptor
 	}
 )

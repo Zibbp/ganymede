@@ -229,6 +229,26 @@ var (
 			},
 		},
 	}
+	// SessionsColumns holds the columns for the "sessions" table.
+	SessionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "token", Type: field.TypeString, Unique: true, Size: 2147483647},
+		{Name: "data", Type: field.TypeBytes},
+		{Name: "expiry", Type: field.TypeTime},
+	}
+	// SessionsTable holds the schema information for the "sessions" table.
+	SessionsTable = &schema.Table{
+		Name:       "sessions",
+		Columns:    SessionsColumns,
+		PrimaryKey: []*schema.Column{SessionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sessions_expiry",
+				Unique:  false,
+				Columns: []*schema.Column{SessionsColumns[3]},
+			},
+		},
+	}
 	// TwitchCategoriesColumns holds the columns for the "twitch_categories" table.
 	TwitchCategoriesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -351,6 +371,7 @@ var (
 		PlaybacksTable,
 		PlaylistsTable,
 		QueuesTable,
+		SessionsTable,
 		TwitchCategoriesTable,
 		UsersTable,
 		VodsTable,

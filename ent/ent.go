@@ -22,6 +22,7 @@ import (
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/ent/sessions"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -95,6 +96,7 @@ func checkColumn(table, column string) error {
 			playback.Table:       playback.ValidColumn,
 			playlist.Table:       playlist.ValidColumn,
 			queue.Table:          queue.ValidColumn,
+			sessions.Table:       sessions.ValidColumn,
 			twitchcategory.Table: twitchcategory.ValidColumn,
 			user.Table:           user.ValidColumn,
 			vod.Table:            vod.ValidColumn,
