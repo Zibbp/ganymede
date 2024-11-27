@@ -75,11 +75,6 @@ func NewService(store *database.Database) *Service {
 	}
 }
 
-type ChangePassword struct {
-	OldPassword string `json:"old_password"`
-	NewPassword string `json:"new_password"`
-}
-
 func (s *Service) Register(ctx context.Context, user user.User) (*ent.User, error) {
 	if !config.Get().RegistrationEnabled {
 		return nil, fmt.Errorf("registration is disabled")
@@ -100,8 +95,8 @@ func (s *Service) Register(ctx context.Context, user user.User) (*ent.User, erro
 	return u, nil
 }
 
-func (s *Service) Login(c echo.Context, uDto user.User) (*ent.User, error) {
-	u, err := s.Store.Client.User.Query().Where(entUser.Username(uDto.Username)).Only(c.Request().Context())
+func (s *Service) Login(ctx context.Context, uDto user.User) (*ent.User, error) {
+	u, err := s.Store.Client.User.Query().Where(entUser.Username(uDto.Username)).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("invalid credentials")
 	}
@@ -110,29 +105,29 @@ func (s *Service) Login(c echo.Context, uDto user.User) (*ent.User, error) {
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	uDto = user.User{
-		ID:       u.ID,
-		Username: u.Username,
-		Role:     u.Role,
-	}
+	// uDto = user.User{
+	// 	ID:       u.ID,
+	// 	Username: u.Username,
+	// 	Role:     u.Role,
+	// }
 
-	// generate access token
-	accessToken, exp, err := generateJWTToken(&uDto, time.Now().Add(1*time.Hour), []byte(GetJWTSecret()))
-	if err != nil {
-		return nil, fmt.Errorf("error generating access token: %v", err)
-	}
+	// // generate access token
+	// accessToken, exp, err := generateJWTToken(&uDto, time.Now().Add(1*time.Hour), []byte(GetJWTSecret()))
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error generating access token: %v", err)
+	// }
 
-	// set access token cookie
-	setTokenCookie(c, accessTokenCookieName, accessToken, exp)
+	// // set access token cookie
+	// setTokenCookie(c, accessTokenCookieName, accessToken, exp)
 
-	// generate refresh token
-	refreshToken, exp, err := generateJWTToken(&uDto, time.Now().Add(30*24*time.Hour), []byte(GetJWTRefreshSecret()))
-	if err != nil {
-		return nil, fmt.Errorf("error generating refresh token: %v", err)
-	}
+	// // generate refresh token
+	// refreshToken, exp, err := generateJWTToken(&uDto, time.Now().Add(30*24*time.Hour), []byte(GetJWTRefreshSecret()))
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error generating refresh token: %v", err)
+	// }
 
-	// set refresh token cookie
-	setTokenCookie(c, refreshTokenCookieName, refreshToken, exp)
+	// // set refresh token cookie
+	// setTokenCookie(c, refreshTokenCookieName, refreshToken, exp)
 
 	return u, nil
 }
@@ -178,26 +173,30 @@ func (s *Service) Refresh(c echo.Context, refreshToken string) error {
 	return err
 }
 
-func (s *Service) Me(c *CustomContext) (*ent.User, error) {
-	return c.User, nil
-}
+func (s *Service) ChangePassword(ctx context.Context, userId uuid.UUID, oldPassword, newPassword string) error {
+	// sanity check
+	if oldPassword == newPassword {
+		return fmt.Errorf("new password must be different from old password")
+	}
 
-func (s *Service) ChangePassword(c *CustomContext, passwordDto ChangePassword) error {
-	u, err := s.Store.Client.User.Query().Where(entUser.ID(c.User.ID)).Only(c.Request().Context())
+	// fetch user
+	u, err := s.Store.Client.User.Query().Where(entUser.ID(userId)).Only(ctx)
 	if err != nil {
 		return fmt.Errorf("error getting user: %v", err)
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(passwordDto.OldPassword))
+
+	// validate old password is correct
+	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(oldPassword))
 	if err != nil {
 		return fmt.Errorf("invalid credentials")
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(passwordDto.NewPassword), 14)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), 14)
 	if err != nil {
 		return fmt.Errorf("error hashing password: %v", err)
 	}
 
-	_, err = s.Store.Client.User.Update().Where(entUser.ID(c.User.ID)).SetPassword(string(hashedPassword)).Save(c.Request().Context())
+	_, err = u.Update().SetPassword(string(hashedPassword)).Save(ctx)
 	if err != nil {
 		return fmt.Errorf("error changing password: %v", err)
 	}

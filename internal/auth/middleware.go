@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -8,7 +10,6 @@ import (
 	entUser "github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
-	"net/http"
 )
 
 type CustomContext struct {
