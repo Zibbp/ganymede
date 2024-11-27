@@ -5,6 +5,8 @@ go 1.22.5
 require (
 	entgo.io/ent v0.13.1
 	github.com/MicahParks/keyfunc v1.9.0
+	github.com/alexedwards/scs/v2 v2.8.0
+	github.com/canidam/echo-scs-session v1.0.0
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/go-co-op/gocron v1.37.0
 	github.com/go-jose/go-jose/v4 v4.0.4
@@ -31,6 +33,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
+	github.com/alexedwards/scs/pgxstore v0.0.0-20240316134038-7e11d57e8885 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/containerd/containerd v1.7.18 // indirect

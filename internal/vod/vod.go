@@ -21,6 +21,7 @@ import (
 	"github.com/zibbp/ganymede/ent/channel"
 	entChapter "github.com/zibbp/ganymede/ent/chapter"
 	entMutedSegment "github.com/zibbp/ganymede/ent/mutedsegment"
+	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/cache"
 	"github.com/zibbp/ganymede/internal/chat"
@@ -124,7 +125,7 @@ func (s *Service) GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod,
 	return v, nil
 }
 
-func (s *Service) GetVod(vodID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool) (*ent.Vod, error) {
+func (s *Service) GetVod(vodID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool, withQueue bool) (*ent.Vod, error) {
 	q := s.Store.Client.Vod.Query()
 	q.Where(vod.ID(vodID))
 
@@ -136,6 +137,9 @@ func (s *Service) GetVod(vodID uuid.UUID, withChannel bool, withChapters bool, w
 	}
 	if withMutedSegments {
 		q.WithMutedSegments()
+	}
+	if withQueue {
+		q.WithQueue()
 	}
 
 	v, err := q.Only(context.Background())
@@ -317,8 +321,12 @@ func (s *Service) GetVodPlaylists(c echo.Context, vodID uuid.UUID) ([]*ent.Playl
 	return v.Edges.Playlists, nil
 }
 
-func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType) (Pagination, error) {
+func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID) (Pagination, error) {
 	var pagination Pagination
+
+	if channelId != uuid.Nil && playlistId != uuid.Nil {
+		return pagination, fmt.Errorf("either channelid or playlistid can be specified, not both")
+	}
 
 	// Query builder
 	vodQuery := s.Store.Client.Vod.Query()
@@ -326,6 +334,11 @@ func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, chann
 	// If channel id is not nil
 	if channelId != uuid.Nil {
 		vodQuery = vodQuery.Where(vod.HasChannelWith(channel.ID(channelId)))
+	}
+
+	// If playlist id is not nil
+	if playlistId != uuid.Nil {
+		vodQuery = vodQuery.Where(vod.HasPlaylistsWith(playlist.ID(playlistId)))
 	}
 
 	// If types is not nil
@@ -346,6 +359,11 @@ func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, chann
 	// If channel id is not nil
 	if channelId != uuid.Nil {
 		totalCountQuery = totalCountQuery.Where(vod.HasChannelWith(channel.ID(channelId)))
+	}
+
+	// If playlist id is not nil
+	if playlistId != uuid.Nil {
+		totalCountQuery = totalCountQuery.Where(vod.HasPlaylistsWith(playlist.ID(playlistId)))
 	}
 
 	// If types is not nil

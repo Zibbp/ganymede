@@ -22,12 +22,12 @@ type VodService interface {
 	CreateVod(vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	GetVods(c echo.Context) ([]*ent.Vod, error)
 	GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error)
-	GetVod(vID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool) (*ent.Vod, error)
+	GetVod(vID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool, withQueue bool) (*ent.Vod, error)
 	DeleteVod(c echo.Context, vID uuid.UUID, deleteFiles bool) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	SearchVods(c echo.Context, query string, limit int, offset int) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
-	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType) (vod.Pagination, error)
+	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error)
 	GetChatEmotes(ctx context.Context, vodID uuid.UUID) (*platform.Emotes, error)
@@ -97,7 +97,7 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
-		_, err = h.Service.VodService.GetVod(vID, false, false, false)
+		_, err = h.Service.VodService.GetVod(vID, false, false, false, false)
 		if err == nil {
 			return echo.NewHTTPError(http.StatusConflict, "vod already exists")
 		}
@@ -189,6 +189,7 @@ func (h *Handler) GetVod(c echo.Context) error {
 	withChannel := false
 	withChapters := false
 	withMutedSegments := false
+	withQueue := false
 
 	wC := c.QueryParam("with_channel")
 	if wC == "true" {
@@ -205,7 +206,12 @@ func (h *Handler) GetVod(c echo.Context) error {
 		withMutedSegments = true
 	}
 
-	v, err := h.Service.VodService.GetVod(vID, withChannel, withChapters, withMutedSegments)
+	wQueue := c.QueryParam("with_queue")
+	if wQueue == "true" {
+		withQueue = true
+	}
+
+	v, err := h.Service.VodService.GetVod(vID, withChannel, withChapters, withMutedSegments, withQueue)
 	if err != nil {
 		if err.Error() == "vod not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
@@ -367,13 +373,13 @@ func (h *Handler) SearchVods(c echo.Context) error {
 func (h *Handler) GetVodPlaylists(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	v, err := h.Service.VodService.GetVodPlaylists(c, vID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, v)
+	return SuccessResponse(c, v, "playlists video is in")
 }
 
 // GetVodsPagination godoc
@@ -402,9 +408,17 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 
 	cID := c.QueryParam("channel_id")
 	cUUID := uuid.Nil
-
 	if cID != "" {
 		cUUID, err = uuid.Parse(cID)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	playlistId := c.QueryParam("playlist_id")
+	playlistUUID := uuid.Nil
+	if playlistId != "" {
+		playlistUUID, err = uuid.Parse(playlistId)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
@@ -418,7 +432,7 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 		}
 	}
 
-	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types)
+	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types, playlistUUID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -468,25 +482,25 @@ func (h *Handler) GetUserIdFromChat(c echo.Context) error {
 func (h *Handler) GetVodChatComments(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	start := c.QueryParam("start")
 	end := c.QueryParam("end")
 	startFloat, err := strconv.ParseFloat(start, 64)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid start: %w", err).Error())
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid start: %w", err).Error())
 	}
 	endFloat, err := strconv.ParseFloat(end, 64)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid end: %w", err).Error())
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid end: %w", err).Error())
 	}
 
 	v, err := h.Service.VodService.GetVodChatComments(c, vID, startFloat, endFloat)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, v)
+	return SuccessResponse(c, v, fmt.Sprintf("comments for %s %f - %f", vID, startFloat, endFloat))
 }
 
 // GetChatEmotes godoc
@@ -505,15 +519,15 @@ func (h *Handler) GetVodChatComments(c echo.Context) error {
 func (h *Handler) GetChatEmotes(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	emotes, err := h.Service.VodService.GetChatEmotes(c.Request().Context(), vID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, emotes)
+	return SuccessResponse(c, emotes.Emotes, "video emotes")
 }
 
 // GetChatBadges godoc
@@ -532,15 +546,15 @@ func (h *Handler) GetChatEmotes(c echo.Context) error {
 func (h *Handler) GetChatBadges(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	badges, err := h.Service.VodService.GetChatBadges(c.Request().Context(), vID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, badges)
+	return SuccessResponse(c, badges.Badges, "video badges")
 }
 
 // GetNumberOfVodChatComments godoc
@@ -561,28 +575,28 @@ func (h *Handler) GetChatBadges(c echo.Context) error {
 func (h *Handler) GetNumberOfVodChatCommentsFromTime(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	start := c.QueryParam("start")
 	count := c.QueryParam("count")
 	startFloat, err := strconv.ParseFloat(start, 64)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid start: %w", err).Error())
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid start: %w", err).Error())
 	}
 	countInt, err := strconv.Atoi(count)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid count: %w", err).Error())
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid count: %w", err).Error())
 	}
 	if countInt < 1 {
-		return echo.NewHTTPError(http.StatusBadRequest, "count must be greater than 0")
+		return ErrorResponse(c, http.StatusBadRequest, "count must be greater than 0")
 	}
 
 	v, err := h.Service.VodService.GetNumberOfVodChatCommentsFromTime(c, vID, startFloat, int64(countInt))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, v)
+	return SuccessResponse(c, v, fmt.Sprintf("comments for %s from %f", vID, startFloat))
 }
 
 func (h *Handler) LockVod(c echo.Context) error {

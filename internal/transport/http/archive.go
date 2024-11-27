@@ -48,16 +48,16 @@ type ArchiveVideoRequest struct {
 func (h *Handler) ArchiveChannel(c echo.Context) error {
 	body := new(ArchiveChannelRequest)
 	if err := c.Bind(body); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(body); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	channel, err := h.Service.ArchiveService.ArchiveChannel(c.Request().Context(), body.ChannelName)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, channel)
+	return SuccessResponse(c, channel, "twitch channel created")
 }
 
 // ArchiveVideo godoc
@@ -76,25 +76,25 @@ func (h *Handler) ArchiveChannel(c echo.Context) error {
 func (h *Handler) ArchiveVideo(c echo.Context) error {
 	body := new(ArchiveVideoRequest)
 	if err := c.Bind(body); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(body); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	if body.VideoId == "" && body.ChannelId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "either channel_id or video_id must be set")
+		return ErrorResponse(c, http.StatusBadRequest, "either channel_id or video_id must be set")
 	}
 
 	if body.VideoId != "" && body.ChannelId != "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "either channel_id or video_id must be set")
+		return ErrorResponse(c, http.StatusBadRequest, "either channel_id or video_id must be set")
 	}
 
 	if body.ChannelId != "" {
 		// validate channel id
 		parsedChannelId, err := uuid.Parse(body.ChannelId)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return ErrorResponse(c, http.StatusBadRequest, err.Error())
 		}
 
 		err = h.Service.ArchiveService.ArchiveLivestream(c.Request().Context(), archive.ArchiveVideoInput{
@@ -104,7 +104,7 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 			RenderChat:  body.RenderChat,
 		})
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		}
 	} else if body.VideoId != "" {
 		err := h.Service.ArchiveService.ArchiveVideo(c.Request().Context(), archive.ArchiveVideoInput{
@@ -114,11 +114,11 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 			RenderChat:  body.RenderChat,
 		})
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		}
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return SuccessResponse(c, "", "archive started")
 }
 
 // debug route to test converting chat files

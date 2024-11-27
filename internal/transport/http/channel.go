@@ -225,7 +225,7 @@ func (h *Handler) GetChannelByName(c echo.Context) error {
 }
 
 func (h *Handler) UpdateChannelImage(c echo.Context) error {
-	id := c.QueryParam("id")
+	id := c.Param("id")
 	cUUID, err := uuid.Parse(id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())

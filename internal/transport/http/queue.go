@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -69,10 +70,10 @@ type UpdateQueueRequest struct {
 func (h *Handler) CreateQueueItem(c echo.Context) error {
 	cqt := new(CreateQueueRequest)
 	if err := c.Bind(cqt); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(cqt); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	vID, err := uuid.Parse(cqt.VodID)
 	if err != nil {
@@ -83,9 +84,9 @@ func (h *Handler) CreateQueueItem(c echo.Context) error {
 
 	que, err := h.Service.QueueService.CreateQueueItem(cqtDto, vID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusCreated, que)
+	return SuccessResponse(c, que, "created queue entry")
 }
 
 // GetQueueItems godoc
@@ -112,15 +113,15 @@ func (h *Handler) GetQueueItems(c echo.Context) error {
 	if len(processing) > 0 {
 		qFilter, err := h.Service.QueueService.GetQueueItemsFilter(c, pro)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		}
-		return c.JSON(http.StatusOK, qFilter)
+		return SuccessResponse(c, qFilter, "queue items")
 	}
 	q, err := h.Service.QueueService.GetQueueItems(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, q)
+	return SuccessResponse(c, q, "queue items")
 }
 
 // GetQueueItem godoc
@@ -139,13 +140,13 @@ func (h *Handler) GetQueueItems(c echo.Context) error {
 func (h *Handler) GetQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	q, err := h.Service.QueueService.GetQueueItem(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, q)
+	return SuccessResponse(c, q, "queue item")
 }
 
 // UpdateQueueItem godoc
@@ -165,14 +166,14 @@ func (h *Handler) GetQueueItem(c echo.Context) error {
 func (h *Handler) UpdateQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	uqr := new(UpdateQueueRequest)
 	if err := c.Bind(uqr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(uqr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	queueDto := queue.Queue{
@@ -195,9 +196,9 @@ func (h *Handler) UpdateQueueItem(c echo.Context) error {
 
 	que, err := h.Service.QueueService.UpdateQueueItem(queueDto, id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, que)
+	return SuccessResponse(c, que, "updated queue item")
 }
 
 // DeleteQueueItem godoc
@@ -216,13 +217,13 @@ func (h *Handler) UpdateQueueItem(c echo.Context) error {
 func (h *Handler) DeleteQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	err = h.Service.QueueService.DeleteQueueItem(c, id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.NoContent(http.StatusNoContent)
+	return SuccessResponse(c, "", "queue item deleted")
 }
 
 // ReadQueueLogFile godoc
@@ -244,24 +245,24 @@ func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 
 	uuid, err := utils.IsValidUUID(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 
 	logType := c.QueryParam("type")
 	if len(logType) == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "type is required: video, video-convert, chat, chat-render, or chat-convert")
+		return ErrorResponse(c, http.StatusBadRequest, "type is required: video, video-convert, chat, chat-render, or chat-convert")
 	}
 	// Validate logType
 	validLogType, err := utils.ValidateLogType(logType)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	log, err := h.Service.QueueService.ReadLogFile(c, uuid, validLogType)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, string(log))
+	return SuccessResponse(c, string(log), fmt.Sprintf("%s log file for %s", logType, uuid))
 }
 
 // StopQueueItem godoc
@@ -282,14 +283,14 @@ func (h *Handler) StopQueueItem(c echo.Context) error {
 
 	uuid, err := utils.IsValidUUID(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 
 	err = h.Service.QueueService.StopQueueItem(c.Request().Context(), uuid)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.NoContent(http.StatusNoContent)
+	return SuccessResponse(c, "", "queue item stopped")
 }
 
 // StartQueueTask godoc
@@ -307,10 +308,10 @@ func (h *Handler) StopQueueItem(c echo.Context) error {
 func (h *Handler) StartQueueTask(c echo.Context) error {
 	body := new(StartQueueTaskRequest)
 	if err := c.Bind(body); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(body); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	_, err := h.Service.QueueService.StartQueueTask(c.Request().Context(), queue.StartQueueTaskInput{
@@ -320,8 +321,8 @@ func (h *Handler) StartQueueTask(c echo.Context) error {
 	})
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.NoContent(http.StatusOK)
+	return SuccessResponse(c, "", fmt.Sprintf("started %s for %s", body.TaskName, body.QueueId))
 }

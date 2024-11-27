@@ -159,7 +159,7 @@ func Run(ctx context.Context) error {
 		return err
 	}
 
-	httpHandler := transportHttp.NewHandler(app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.SchedulerService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.PlatformTwitch)
+	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.SchedulerService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.PlatformTwitch)
 
 	if err := httpHandler.Serve(ctx); err != nil {
 		return err
