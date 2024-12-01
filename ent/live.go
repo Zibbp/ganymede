@@ -18,37 +18,37 @@ import (
 type Live struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	ID uuid.UUID `json:"id"`
 	// Watch live streams
-	WatchLive bool `json:"watch_live,omitempty"`
+	WatchLive bool `json:"watch_live"`
 	// Watch new VODs
-	WatchVod bool `json:"watch_vod,omitempty"`
+	WatchVod bool `json:"watch_vod"`
 	// Download archives
-	DownloadArchives bool `json:"download_archives,omitempty"`
+	DownloadArchives bool `json:"download_archives"`
 	// Download highlights
-	DownloadHighlights bool `json:"download_highlights,omitempty"`
+	DownloadHighlights bool `json:"download_highlights"`
 	// Download uploads
-	DownloadUploads bool `json:"download_uploads,omitempty"`
+	DownloadUploads bool `json:"download_uploads"`
 	// Download sub only VODs
-	DownloadSubOnly bool `json:"download_sub_only,omitempty"`
+	DownloadSubOnly bool `json:"download_sub_only"`
 	// Whether the channel is currently live.
-	IsLive bool `json:"is_live,omitempty"`
+	IsLive bool `json:"is_live"`
 	// Whether the chat archive is enabled.
-	ArchiveChat bool `json:"archive_chat,omitempty"`
+	ArchiveChat bool `json:"archive_chat"`
 	// Resolution holds the value of the "resolution" field.
-	Resolution string `json:"resolution,omitempty"`
+	Resolution string `json:"resolution"`
 	// The time the channel last went live.
-	LastLive time.Time `json:"last_live,omitempty"`
+	LastLive time.Time `json:"last_live"`
 	// Whether the chat should be rendered.
-	RenderChat bool `json:"render_chat,omitempty"`
+	RenderChat bool `json:"render_chat"`
 	// Restrict fetching videos to a certain age.
-	VideoAge int64 `json:"video_age,omitempty"`
+	VideoAge int64 `json:"video_age"`
 	// Whether the categories should be applied to livestreams.
-	ApplyCategoriesToLive bool `json:"apply_categories_to_live,omitempty"`
+	ApplyCategoriesToLive bool `json:"apply_categories_to_live"`
 	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at"`
 	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the LiveQuery when eager-loading is set.
 	Edges        LiveEdges `json:"edges"`

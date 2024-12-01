@@ -372,7 +372,7 @@ func (lq *LiveQuery) WithTitleRegex(opts ...func(*LiveTitleRegexQuery)) *LiveQue
 // Example:
 //
 //	var v []struct {
-//		WatchLive bool `json:"watch_live,omitempty"`
+//		WatchLive bool `json:"watch_live"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -395,7 +395,7 @@ func (lq *LiveQuery) GroupBy(field string, fields ...string) *LiveGroupBy {
 // Example:
 //
 //	var v []struct {
-//		WatchLive bool `json:"watch_live,omitempty"`
+//		WatchLive bool `json:"watch_live"`
 //	}
 //
 //	client.Live.Query().

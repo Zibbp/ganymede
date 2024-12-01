@@ -20,7 +20,7 @@ type Live struct {
 
 // Fields of the Live.
 func (Live) Fields() []ent.Field {
-	return []ent.Field{
+	fields := []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.Bool("watch_live").Default(true).Comment("Watch live streams"),
 		field.Bool("watch_vod").Default(false).Comment("Watch new VODs"),
@@ -38,6 +38,10 @@ func (Live) Fields() []ent.Field {
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}
+	for _, f := range fields {
+		f.Descriptor().Tag = `json:"` + f.Descriptor().Name + `"`
+	}
+	return fields
 }
 
 // Edges of the Live.
