@@ -8,15 +8,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
-	"time"
 
-	"github.com/MicahParks/keyfunc"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/kv"
 	"golang.org/x/oauth2"
@@ -24,6 +22,16 @@ import (
 
 type OAuthClaims struct {
 	jwt.RegisteredClaims
+}
+
+type OIDCCLaims struct {
+	Sub               string   `json:"sub"`
+	Nonce             string   `json:"nonce"`
+	Name              string   `json:"name"`
+	GivenName         string   `json:"given_name"`
+	PreferredUsername string   `json:"preferred_username"`
+	Nickname          string   `json:"nickname"`
+	Groups            []string `json:"groups"`
 }
 
 type UserInfo struct {
@@ -43,138 +51,135 @@ type OAuthResponse struct {
 	UserInfo    UserInfo
 }
 
-func (s *Service) OAuthRedirect(c echo.Context) error {
-	state, err := randString(32)
-	if err != nil {
-		return err
-	}
-	nonce, err := randString(32)
-	if err != nil {
-		return err
-	}
-	setCallbackCookie(c, "oauth_state", state)
-	setCallbackCookie(c, "oauth_nonce", nonce)
+func generateSecureRandomString() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return base64.URLEncoding.EncodeToString(b)
+}
 
-	url := s.OAuth.Config.AuthCodeURL(state, oidc.Nonce(nonce))
-	err = c.Redirect(http.StatusTemporaryRedirect, url)
+func (s *Service) OAuthRedirect(c echo.Context) error {
+	// generate state and nonce
+	state := generateSecureRandomString()
+	nonce := generateSecureRandomString()
+
+	stateCookie := new(http.Cookie)
+	stateCookie.Name = "oidc_state"
+	stateCookie.Value = state
+	stateCookie.Path = "/"
+	stateCookie.HttpOnly = true
+	stateCookie.SameSite = http.SameSiteLaxMode
+	c.SetCookie(stateCookie)
+
+	nonceCookie := new(http.Cookie)
+	nonceCookie.Name = "oidc_nonce"
+	nonceCookie.Value = nonce
+	nonceCookie.Path = "/"
+	nonceCookie.HttpOnly = true
+	nonceCookie.SameSite = http.SameSiteLaxMode
+	c.SetCookie(nonceCookie)
+
+	authURL := s.OAuth.Config.AuthCodeURL(state,
+		oauth2.SetAuthURLParam("nonce", nonce),
+		oauth2.AccessTypeOffline,
+	)
+	err := c.Redirect(http.StatusTemporaryRedirect, authURL)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Service) OAuthCallback(c echo.Context) error {
-	state, err := c.Cookie("oauth_state")
+func (s *Service) OAuthCallback(c echo.Context) (*ent.User, error) {
+	// Retrieve and validate state
+	stateCookie, err := c.Cookie("oidc_state")
 	if err != nil {
-		return fmt.Errorf("state cookie not found: %w", err)
+		return nil, fmt.Errorf("state cookie not found: %w", err)
 	}
-	// Validate state
-	if state.Value != c.QueryParam("state") {
-		return fmt.Errorf("invalid oauth state, expected '%s', got '%s'", state.Value, c.QueryParam("state"))
+
+	// Retrieve and validate nonce
+	nonceCookie, err := c.Cookie("oidc_nonce")
+	if err != nil {
+		return nil, fmt.Errorf("nonce cookie not found: %w", err)
 	}
-	// Exchange code for token
+
+	// Verify state to prevent CSRF
+	urlState := c.QueryParam("state")
+	if urlState != stateCookie.Value {
+		return nil, fmt.Errorf("invalid state parameter")
+	}
+
+	// Exchange authorization code for tokens
 	oauth2Token, err := s.OAuth.Config.Exchange(c.Request().Context(), c.QueryParam("code"))
 	if err != nil {
-		return fmt.Errorf("failed to exchange token: %w", err)
+		return nil, fmt.Errorf("failed to exchange token: %w", err)
 	}
 
-	verifier := s.OAuth.Provider.Verifier(&oidc.Config{ClientID: s.OAuth.Config.ClientID})
-
+	// Extract the ID token
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		return fmt.Errorf("no id_token field in oauth2 token")
+		return nil, fmt.Errorf("no ID token")
 	}
 
+	// Verify ID token
+	verifier := s.OAuth.Provider.Verifier(&oidc.Config{ClientID: s.OAuth.Config.ClientID})
 	idToken, err := verifier.Verify(c.Request().Context(), rawIDToken)
 	if err != nil {
-		return fmt.Errorf("failed to verify ID token: %w", err)
+		return nil, fmt.Errorf("failed to verify ID token: %w", err)
 	}
-	nonce, err := c.Cookie("oauth_nonce")
+
+	var claims OIDCCLaims
+
+	if err := idToken.Claims(&claims); err != nil {
+		return nil, fmt.Errorf("failed to parse claims: %w", err)
+	}
+
+	// Debug claims in dev
+	if s.EnvConfig.Development {
+		debugOidcClaims(idToken)
+	}
+
+	// Verify nonce to prevent replay attack
+	if claims.Nonce != nonceCookie.Value {
+		return nil, fmt.Errorf("invalid nonce")
+	}
+
+	// Clear cookies
+	clearCookie(c, "oidc_state")
+	clearCookie(c, "oidc_nonce")
+
+	// assert required fields
+	if claims.PreferredUsername == "" {
+		return nil, fmt.Errorf("preferred_username required, ensure your idP is returning this claim")
+	}
+
+	// create or update user
+	user, err := s.OAuthUserCheck(c.Request().Context(), claims)
 	if err != nil {
-		return fmt.Errorf("nonce cookie not found: %w", err)
+		return nil, fmt.Errorf("error creating or updating users: %v", err)
 	}
 
-	if idToken.Nonce != nonce.Value {
-		return fmt.Errorf("invalid nonce, expected '%s', got '%s'", nonce.Value, idToken.Nonce)
-	}
-
-	resp := struct {
-		OAuth2Token   *oauth2.Token
-		IDTokenClaims *json.RawMessage
-	}{oauth2Token, new(json.RawMessage)}
-	if err := idToken.Claims(&resp.IDTokenClaims); err != nil {
-		return fmt.Errorf("failed to decode ID token claims: %w", err)
-	}
-
-	// Do we need to verify the token??
-	// Verify
-	//err = idToken.VerifyAccessToken(oauth2Token.AccessToken)
-	//if err != nil {
-	//	return fmt.Errorf("failed to verify access token: %w", err)
-	//}
-
-	// User check
-	var userInfo UserInfo
-	err = idToken.Claims(&userInfo)
-
-	// some providers don't return nickname
-	if userInfo.NickName == "" {
-		userInfo.NickName = userInfo.PreferredUsername
-	}
-	if userInfo.Sub == "" || userInfo.NickName == "" {
-		return fmt.Errorf("invalid user info: %w", err)
-	}
-
-	err = s.OAuthUserCheck(c, userInfo)
-	if err != nil {
-		return fmt.Errorf("failed to check user: %w", err)
-	}
-
-	// Get access token expiry
-	accessTokenExpire := time.Now().Add(time.Duration(oauth2Token.Expiry.Unix()-time.Now().Unix()) * time.Second)
-	// Get refresh token expiry
-	refreshTokenExpire := time.Now().Add(30 * 24 * time.Hour)
-
-	// Set cookies
-	setOauthCookie(c, "oauth_access_token", oauth2Token.AccessToken, accessTokenExpire)
-	setOauthCookie(c, "oauth_refresh_token", oauth2Token.RefreshToken, refreshTokenExpire)
-
-	return nil
+	return user, nil
 }
 
-func (s *Service) OAuthTokenRefresh(c echo.Context, refreshToken string) error {
-	token := &oauth2.Token{
-		RefreshToken: refreshToken,
+func debugOidcClaims(idToken *oidc.IDToken) error {
+	var claimsDebug map[string]interface{}
+
+	// Extract all claims into the map
+	if err := idToken.Claims(&claimsDebug); err != nil {
+		return fmt.Errorf("failed to parse claims: %v", err)
 	}
 
-	newToken, err := s.OAuth.Config.TokenSource(c.Request().Context(), token).Token()
+	// Pretty print all claims
+	fmt.Println("=== DEBUG: ALL TOKEN CLAIMS ===")
+
+	// Use JSON marshaling for a nice, readable output
+	prettyJSON, err := json.MarshalIndent(claimsDebug, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to refresh token: %w", err)
-	}
-	accessTokenExpire := time.Now().Add(time.Duration(newToken.Expiry.Unix()-time.Now().Unix()) * time.Second)
-	refreshTokenExpire := time.Now().Add(30 * 24 * time.Hour)
-	setOauthCookie(c, "oauth_access_token", newToken.AccessToken, accessTokenExpire)
-	setOauthCookie(c, "oauth_refresh_token", newToken.RefreshToken, refreshTokenExpire)
-	return nil
-}
-
-func (s *Service) OAuthLogout(c echo.Context) error {
-	// Session end
-	// https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
-
-	var endpoints struct {
-		RevocationEndpoint string `json:"revocation_endpoint"`
-		EndSessionEndpoint string `json:"end_session_endpoint"`
-	}
-	err := s.OAuth.Provider.Claims(&endpoints)
-	if err != nil {
-		return fmt.Errorf("failed to get endpoints: %w", err)
+		return fmt.Errorf("failed to format claims: %v", err)
 	}
 
-	clearCookie(c, "oauth_access_token")
-	clearCookie(c, "oauth_refresh_token")
-	clearCookie(c, "oauth_state")
-	clearCookie(c, "oauth_nonce")
+	fmt.Println(string(prettyJSON))
+	fmt.Println("=== END OF CLAIMS ===")
 
 	return nil
 }
@@ -183,96 +188,8 @@ func clearCookie(c echo.Context, name string) {
 	cookie := new(http.Cookie)
 	cookie.Name = name
 	cookie.Value = ""
-	cookie.Expires = time.Now().Add(-1 * time.Hour)
+	cookie.MaxAge = -1
 	cookie.Path = "/"
-	c.SetCookie(cookie)
-}
-
-func CheckOAuthAccessToken(c echo.Context, accessToken string) (*UserInfo, error) {
-	env := config.GetEnvConfig()
-	// Get JWKS from KV store
-	jwksString := kv.DB().Get("jwks")
-	if jwksString == "" {
-		return nil, fmt.Errorf("jwks not found")
-	}
-	// Parse JWKS
-	jwks, err := keyfunc.NewJSON(json.RawMessage(jwksString))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse jwks: %w", err)
-	}
-	// Remove new line characters from access token
-	newAccessToken := strings.Replace(accessToken, "\n", "", -1)
-
-	// Parse token - this will also verify the signature
-	token, err := jwt.Parse(newAccessToken, jwks.Keyfunc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse access token: %w", err)
-	}
-
-	if !token.Valid {
-		return nil, fmt.Errorf("invalid access token")
-	}
-
-	// Check aud
-	aud := token.Claims.(jwt.MapClaims)["aud"]
-	if aud != env.OAuthClientID {
-		return nil, fmt.Errorf("invalid aud claim")
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, fmt.Errorf("failed to parse claims")
-	}
-
-	userInfo := UserInfo{
-		Sub:      claims["sub"].(string),
-		NickName: claims["nickname"].(string),
-	}
-
-	return &userInfo, nil
-}
-
-func randString(nByte int) (string, error) {
-	b := make([]byte, nByte)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
-		return "", err
-	}
-	return base64.RawURLEncoding.EncodeToString(b), nil
-}
-
-func setCallbackCookie(c echo.Context, name, value string) {
-	env := config.GetEnvConfig()
-	cookieDomain := env.CookieDomain
-	cookie := new(http.Cookie)
-	cookie.Name = name
-	cookie.Value = value
-	cookie.Expires = time.Now().Add(1 * time.Hour)
-	cookie.Path = "/"
-	// Http-only helps mitigate the risk of client side script accessing the protected cookie.
-	cookie.HttpOnly = false
-	cookie.SameSite = http.SameSiteLaxMode
-	if cookieDomain != "" {
-		cookie.Domain = cookieDomain
-	}
-
-	c.SetCookie(cookie)
-}
-
-func setOauthCookie(c echo.Context, name, value string, time time.Time) {
-	env := config.GetEnvConfig()
-	cookieDomain := env.CookieDomain
-	cookie := new(http.Cookie)
-	cookie.Name = name
-	cookie.Value = value
-	cookie.Expires = time
-	cookie.Path = "/"
-	// Http-only helps mitigate the risk of client side script accessing the protected cookie.
-	cookie.HttpOnly = false
-	cookie.SameSite = http.SameSiteLaxMode
-	if cookieDomain != "" {
-		cookie.Domain = cookieDomain
-	}
-
 	c.SetCookie(cookie)
 }
 

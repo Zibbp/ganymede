@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -17,9 +18,7 @@ type AuthService interface {
 	Refresh(c echo.Context, refreshToken string) error
 	ChangePassword(ctx context.Context, userId uuid.UUID, oldPassword, newPassword string) error
 	OAuthRedirect(c echo.Context) error
-	OAuthCallback(c echo.Context) error
-	OAuthTokenRefresh(c echo.Context, refreshToken string) error
-	OAuthLogout(c echo.Context) error
+	OAuthCallback(c echo.Context) (*ent.User, error)
 }
 
 type RegisterRequest struct {
@@ -104,6 +103,10 @@ func (h *Handler) Login(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
+	if err := h.SessionManager.RenewToken(c.Request().Context()); err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+
 	h.SessionManager.Put(c.Request().Context(), "user_id", u.ID.String())
 
 	return SuccessResponse(c, u, "successfully logged in")
@@ -132,42 +135,14 @@ func (h *Handler) Logout(c echo.Context) error {
 func (h *Handler) OAuthLogin(c echo.Context) error {
 	env := config.GetEnvConfig()
 	if !env.OAuthEnabled {
-		return echo.NewHTTPError(http.StatusForbidden, "OAuth is disabled")
+		return ErrorResponse(c, http.StatusForbidden, "OAuth is disabled")
 	}
 	// Redirect to OAuth provider
 	err := h.Service.AuthService.OAuthRedirect(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, "oAuth redirect")
-}
-
-// Refresh godoc
-//
-//	@Summary		Refresh access-token and refresh-token
-//	@Description	Refresh access-token and refresh-token (sets access-token and refresh-token cookies)
-//	@Tags			auth
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		401	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/auth/refresh [post]
-func (h *Handler) Refresh(c echo.Context) error {
-
-	refreshCookie, err := c.Cookie("refresh-token")
-	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-	}
-	refreshToken := refreshCookie.Value
-
-	err = h.Service.AuthService.Refresh(c, refreshToken)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-	}
-
-	return c.JSON(http.StatusOK, "tokens refreshed")
 }
 
 // Me godoc
@@ -236,57 +211,13 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 //	@Router			/auth/oauth/callback [get]
 func (h *Handler) OAuthCallback(c echo.Context) error {
 	env := config.GetEnvApplicationConfig()
-	err := h.Service.AuthService.OAuthCallback(c)
+	user, err := h.Service.AuthService.OAuthCallback(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	return c.Redirect(http.StatusFound, env.FrontendHost)
-}
-
-// OAuthTokenRefresh godoc
-//
-//	@Summary		Refresh access-token and refresh-token
-//	@Description	Refresh access-token and refresh-token (sets access-token and refresh-token cookies)
-//	@Tags			auth
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		401	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/auth/oauth/refresh [get]
-func (h *Handler) OAuthTokenRefresh(c echo.Context) error {
-	refreshCookie, err := c.Cookie("oauth_refresh_token")
-	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-	}
-	refreshToken := refreshCookie.Value
-
-	err = h.Service.AuthService.OAuthTokenRefresh(c, refreshToken)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, "tokens refreshed")
-}
+	h.SessionManager.Put(c.Request().Context(), "user_id", user.ID.String())
 
-// OAuthLogout godoc
-//
-//	@Summary		Logout
-//	@Description	Logout
-//	@Tags			auth
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		401	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/auth/oauth/logout [get]
-func (h *Handler) OAuthLogout(c echo.Context) error {
-	env := config.GetEnvApplicationConfig()
-	err := h.Service.AuthService.OAuthLogout(c)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	return c.Redirect(http.StatusFound, env.FrontendHost)
+	// redirect to frontend /oauth page to set state in frontend
+	return c.Redirect(http.StatusFound, fmt.Sprintf("%s/oauth", env.FrontendHost))
 }

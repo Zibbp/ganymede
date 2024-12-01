@@ -16,6 +16,19 @@ func (Role) Values() (kinds []string) {
 	return
 }
 
+// IsValidRole checks if a string is a valid Role.
+func IsValidRole(role string) bool {
+	validRoles := map[string]struct{}{
+		string(AdminRole):    {},
+		string(EditorRole):   {},
+		string(ArchiverRole): {},
+		string(UserRole):     {},
+	}
+
+	_, exists := validRoles[role]
+	return exists
+}
+
 type VideoPlatform string
 
 const (

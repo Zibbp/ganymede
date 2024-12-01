@@ -23,6 +23,7 @@ type EnvApplicationConfig struct {
 // EnvConfig represents the environment variables for the application
 type EnvConfig struct {
 	// application
+	Development  bool   `env:"DEVELOPMENT"`
 	DEBUG        bool   `env:"DEBUG, default=false"`
 	CookieDomain string `env:"COOKIE_DOMAIN, default="`
 	// customizable paths

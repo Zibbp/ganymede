@@ -27,9 +27,10 @@ type Service struct {
 		Provider *oidc.Provider
 		Config   oauth2.Config
 	}
+	EnvConfig *config.EnvConfig
 }
 
-func NewService(store *database.Database) *Service {
+func NewService(store *database.Database, envConfig *config.EnvConfig) *Service {
 	ctx := context.Background()
 	env := config.GetEnvConfig()
 
@@ -52,7 +53,11 @@ func NewService(store *database.Database) *Service {
 			ClientSecret: oauthClientSecret,
 			RedirectURL:  oauthRedirectURL,
 			Endpoint:     provider.Endpoint(),
-			Scopes:       []string{oidc.ScopeOpenID, "profile", oidc.ScopeOfflineAccess},
+			Scopes: []string{
+				oidc.ScopeOpenID,
+				"profile",
+				"groups",
+			},
 		}
 
 		err = FetchJWKS(ctx)
@@ -69,6 +74,7 @@ func NewService(store *database.Database) *Service {
 				Provider: provider,
 				Config:   config,
 			},
+			EnvConfig: envConfig,
 		}
 	} else {
 		return &Service{Store: store}
@@ -204,48 +210,64 @@ func (s *Service) ChangePassword(ctx context.Context, userId uuid.UUID, oldPassw
 	return nil
 }
 
-func (s *Service) OAuthUserCheck(c echo.Context, idTokenClaims UserInfo) error {
-	// Check if user exists, if not create it or update it
-	log.Debug().Msgf("Checking if oauth user exists: %v", idTokenClaims.NickName)
-	u, err := s.Store.Client.User.Query().Where(entUser.Sub(idTokenClaims.Sub)).Only(c.Request().Context())
-	if err != nil {
-		if ent.IsNotFound(err) {
-			log.Debug().Msgf("OAuth user not found, creating user: %v", idTokenClaims.NickName)
-			role := utils.Role("user")
-			// Check what groups the user is in
-			var groups []string
-			groups = append(groups, idTokenClaims.Groups...)
-			// If groups contain ganymede-*
-			if len(groups) > 0 {
-				for _, group := range groups {
-					if strings.Contains(group, "ganymede-") {
-						// Extract the role from the group
-						groupRole := strings.Replace(group, "ganymede-", "", 1)
+// OAuthUserCheck checks if the user from an OIDC flow needs to be created or updated.
+func (s *Service) OAuthUserCheck(ctx context.Context, userClaims OIDCCLaims) (*ent.User, error) {
+	log.Debug().Msgf("Checking if OAuth user exists: %v", userClaims.PreferredUsername)
 
-						// Check if role is exists in utils.Role enum
-						// TODO: make this use utils.Role enum
-						if groupRole == "admin" || groupRole == "editor" || groupRole == "archiver" || groupRole == "user" {
-							log.Debug().Msgf("Found Ganymede role in user group %v", group)
-							role = utils.Role(groupRole)
-						}
-					}
+	// Check if user exists
+	user, err := s.Store.Client.User.Query().Where(entUser.Sub(userClaims.Sub)).Only(ctx)
+	if err != nil {
+		if !ent.IsNotFound(err) {
+			return nil, fmt.Errorf("failed to query user: %w", err)
+		}
+
+		log.Debug().Msgf("OAuth user not found, creating user: %v", userClaims.PreferredUsername)
+
+		// Determine role from groups
+		role := utils.UserRole
+		for _, group := range userClaims.Groups {
+			if strings.HasPrefix(group, "ganymede-") {
+				groupRole := strings.TrimPrefix(group, "ganymede-")
+				if utils.IsValidRole(groupRole) {
+					log.Debug().Msgf("Found Ganymede role in user group %v", group)
+					role = utils.Role(groupRole)
+					break
 				}
 			}
-
-			// Create user
-			_, err = s.Store.Client.User.Create().SetSub(idTokenClaims.Sub).SetUsername(idTokenClaims.NickName).SetRole(utils.Role(role)).SetOauth(true).Save(c.Request().Context())
-			if err != nil {
-				return fmt.Errorf("failed to create user: %w", err)
-			}
-		} else {
-			return fmt.Errorf("failed to query user: %w", err)
 		}
-	} else {
-		// Update user
-		_, err = s.Store.Client.User.UpdateOne(u).SetUsername(idTokenClaims.NickName).Save(c.Request().Context())
-		if err != nil {
-			return fmt.Errorf("failed to update user: %w", err)
+
+		// Create new user
+		if _, err := s.Store.Client.User.Create().
+			SetSub(userClaims.Sub).
+			SetUsername(userClaims.PreferredUsername).
+			SetRole(role).
+			SetOauth(true).
+			Save(ctx); err != nil {
+			return nil, fmt.Errorf("failed to create user: %w", err)
+		}
+		return user, nil
+	}
+
+	// Determine role from groups
+	newRole := utils.UserRole
+	for _, group := range userClaims.Groups {
+		if strings.HasPrefix(group, "ganymede-") {
+			groupRole := strings.TrimPrefix(group, "ganymede-")
+			if utils.IsValidRole(groupRole) {
+				log.Debug().Msgf("Found Ganymede role in user group %v", group)
+				newRole = utils.Role(groupRole)
+				break
+			}
 		}
 	}
-	return nil
+
+	// Update existing user
+	if _, err := s.Store.Client.User.UpdateOne(user).
+		SetUsername(userClaims.PreferredUsername).
+		SetRole(newRole).
+		Save(ctx); err != nil {
+		return nil, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	return user, nil
 }
