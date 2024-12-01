@@ -112,7 +112,7 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 		}
 	}
 
-	authService := auth.NewService(db)
+	authService := auth.NewService(db, &envConfig)
 	channelService := channel.NewService(db, platformTwitch)
 	vodService := vod.NewService(db, riverClient, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
