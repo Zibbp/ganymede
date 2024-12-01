@@ -15,7 +15,7 @@ type CategoryService interface {
 func (h *Handler) GetCategories(c echo.Context) error {
 	categories, err := h.Service.CategoryService.GetCategories(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, categories)
+	return SuccessResponse(c, categories, "twitch categories")
 }

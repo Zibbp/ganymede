@@ -16,7 +16,7 @@ type BlockedVideoService interface {
 }
 
 type ID struct {
-	ID string `json:"id" validate:"required,alphanum"`
+	ID string `json:"id" validate:"required"`
 }
 
 func (h *Handler) IsVideoBlocked(c echo.Context) error {
@@ -24,14 +24,14 @@ func (h *Handler) IsVideoBlocked(c echo.Context) error {
 
 	err := h.Server.Validator.Validate(ID{ID: id})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	blocked, err := h.Service.BlockedVideoService.IsVideoBlocked(c.Request().Context(), id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, blocked)
+	return SuccessResponse(c, blocked, "is video blocked")
 }
 
 func (h *Handler) CreateBlockedVideo(c echo.Context) error {
@@ -39,14 +39,14 @@ func (h *Handler) CreateBlockedVideo(c echo.Context) error {
 
 	err := h.Server.Validator.Validate(ID{ID: id})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	err = h.Service.BlockedVideoService.CreateBlockedVideo(c.Request().Context(), id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, nil)
+	return SuccessResponse(c, "", "blocked video")
 }
 
 func (h *Handler) DeleteBlockedVideo(c echo.Context) error {
@@ -54,20 +54,20 @@ func (h *Handler) DeleteBlockedVideo(c echo.Context) error {
 
 	err := h.Server.Validator.Validate(ID{ID: id})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	err = h.Service.BlockedVideoService.DeleteBlockedVideo(c.Request().Context(), id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, nil)
+	return SuccessResponse(c, "", "unblocked video")
 }
 
 func (h *Handler) GetBlockedVideos(c echo.Context) error {
 	videos, err := h.Service.BlockedVideoService.GetBlockedVideos(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, videos)
+	return SuccessResponse(c, videos, "blocked videos")
 }

@@ -75,19 +75,19 @@ type CreateVodRequest struct {
 func (h *Handler) CreateVod(c echo.Context) error {
 	var req CreateVodRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	cUUID, err := uuid.Parse(req.ChannelID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	// Parse streamed at time
 	streamedAt, err := time.Parse(time.RFC3339, req.StreamedAt)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	var vodID uuid.UUID
 	if req.ID == "" {
@@ -95,11 +95,11 @@ func (h *Handler) CreateVod(c echo.Context) error {
 	} else {
 		vID, err := uuid.Parse(req.ID)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return ErrorResponse(c, http.StatusBadRequest, err.Error())
 		}
 		_, err = h.Service.VodService.GetVod(vID, false, false, false, false)
 		if err == nil {
-			return echo.NewHTTPError(http.StatusConflict, "vod already exists")
+			return ErrorResponse(c, http.StatusConflict, "vod already exists")
 		}
 		vodID = vID
 	}
@@ -127,9 +127,9 @@ func (h *Handler) CreateVod(c echo.Context) error {
 
 	v, err := h.Service.VodService.CreateVod(cvrDto, cUUID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, v)
+	return SuccessResponse(c, v, "video created")
 }
 
 // GetVods godoc
@@ -149,19 +149,19 @@ func (h *Handler) GetVods(c echo.Context) error {
 	if cID == "" {
 		v, err := h.Service.VodService.GetVods(c)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		}
-		return c.JSON(http.StatusOK, v)
+		return SuccessResponse(c, v, "videos")
 	}
 	cUUID, err := uuid.Parse(cID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid channel id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid channel id")
 	}
 	v, err := h.Service.VodService.GetVodsByChannel(c, cUUID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, v)
+	return SuccessResponse(c, v, "videos")
 }
 
 // GetVod godoc
@@ -183,7 +183,7 @@ func (h *Handler) GetVods(c echo.Context) error {
 func (h *Handler) GetVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	withChannel := false
@@ -214,11 +214,11 @@ func (h *Handler) GetVod(c echo.Context) error {
 	v, err := h.Service.VodService.GetVod(vID, withChannel, withChapters, withMutedSegments, withQueue)
 	if err != nil {
 		if err.Error() == "vod not found" {
-			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+			return ErrorResponse(c, http.StatusNotFound, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, v)
+	return SuccessResponse(c, v, "video")
 }
 
 // DeleteVod godoc
@@ -239,7 +239,7 @@ func (h *Handler) GetVod(c echo.Context) error {
 func (h *Handler) DeleteVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	// get query param of delete_files if exists
 	deleteFiles := false
@@ -250,9 +250,9 @@ func (h *Handler) DeleteVod(c echo.Context) error {
 	err = h.Service.VodService.DeleteVod(c, vID, deleteFiles)
 	if err != nil {
 		if err.Error() == "vod not found" {
-			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+			return ErrorResponse(c, http.StatusNotFound, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
 }
@@ -275,23 +275,23 @@ func (h *Handler) DeleteVod(c echo.Context) error {
 func (h *Handler) UpdateVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	var req CreateVodRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	cUUID, err := uuid.Parse(req.ChannelID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	// Parse streamed at time
 	streamedAt, err := time.Parse(time.RFC3339, req.StreamedAt)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	cvrDto := vod.Vod{
 		ExtID:            req.ExtID,
@@ -316,11 +316,11 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 	v, err := h.Service.VodService.UpdateVod(c, vID, cvrDto, cUUID)
 	if err != nil {
 		if err.Error() == "vod not found" {
-			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+			return ErrorResponse(c, http.StatusNotFound, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, v)
+	return SuccessResponse(c, v, "video updated")
 }
 
 // SearchVods godoc
@@ -340,21 +340,21 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 func (h *Handler) SearchVods(c echo.Context) error {
 	q := c.QueryParam("q")
 	if q == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "q is required")
+		return ErrorResponse(c, http.StatusBadRequest, "q is required")
 	}
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid limit: %w", err).Error())
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid limit: %w", err).Error())
 	}
 	offset, err := strconv.Atoi(c.QueryParam("offset"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid offset: %w", err).Error())
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid offset: %w", err).Error())
 	}
 	v, err := h.Service.VodService.SearchVods(c, q, limit, offset)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, v)
+	return SuccessResponse(c, v, "videos")
 }
 
 // GetVodPlaylists godoc
@@ -399,11 +399,11 @@ func (h *Handler) GetVodPlaylists(c echo.Context) error {
 func (h *Handler) GetVodsPagination(c echo.Context) error {
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid limit: %w", err).Error())
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid limit: %w", err).Error())
 	}
 	offset, err := strconv.Atoi(c.QueryParam("offset"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid offset: %w", err).Error())
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid offset: %w", err).Error())
 	}
 
 	cID := c.QueryParam("channel_id")
@@ -411,7 +411,7 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 	if cID != "" {
 		cUUID, err = uuid.Parse(cID)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return ErrorResponse(c, http.StatusBadRequest, err.Error())
 		}
 	}
 
@@ -420,7 +420,7 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 	if playlistId != "" {
 		playlistUUID, err = uuid.Parse(playlistId)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return ErrorResponse(c, http.StatusBadRequest, err.Error())
 		}
 	}
 
@@ -434,9 +434,9 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 
 	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types, playlistUUID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, v)
+	return SuccessResponse(c, v, "paginated videos")
 }
 
 // GetUserIdFromChat godoc
@@ -455,13 +455,13 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 func (h *Handler) GetUserIdFromChat(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	v, err := h.Service.VodService.GetUserIdFromChat(c, vID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, v)
+	return SuccessResponse(c, v, "user id from chat")
 }
 
 // GetVodChatComments godoc
@@ -602,7 +602,7 @@ func (h *Handler) GetNumberOfVodChatCommentsFromTime(c echo.Context) error {
 func (h *Handler) LockVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	status := true
 	param := c.QueryParam("locked")
@@ -611,19 +611,19 @@ func (h *Handler) LockVod(c echo.Context) error {
 	}
 	err = h.Service.VodService.LockVod(c, vID, status)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, nil)
+	return SuccessResponse(c, "", "video locked")
 }
 
 func (h *Handler) GenerateStaticThumbnail(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	job, err := h.Service.VodService.GenerateStaticThumbnail(c.Request().Context(), vID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 	return SuccessResponse(c, nil, fmt.Sprintf("job created: %d", job.Job.ID))
 }
