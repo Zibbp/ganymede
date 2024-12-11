@@ -1,0 +1,12 @@
+.actionButton {
+  cursor: pointer;
+}
+.actionButtons {
+  display: flex;
+}
+.queueDrawer {
+  overflow-y: scroll;
+}
+.link {
+  color: var(--mantine-color-blue-6);
+}

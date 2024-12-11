@@ -1,0 +1,8 @@
+.errBadge {
+  background-color: var(--mantine-color-red-6);
+  width: auto;
+  padding: 0.25rem;
+  color: var(--mantine-color-white);
+  border-radius: 0.25rem;
+  text-align: center;
+}

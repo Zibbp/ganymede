@@ -1,0 +1,10 @@
+.logPage {
+  background-color: black;
+  color: white;
+  overflow-y: scroll;
+  height: calc(100vh - rem(56px));
+  max-height: calc(100vh - rem(56px));
+}
+.logLine {
+  white-space: pre;
+}

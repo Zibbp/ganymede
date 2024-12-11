@@ -1,0 +1,28 @@
+.mediaPlayer {
+  height: calc(100vh - rem(56px) - 60px);
+
+  video {
+    height: calc(100vh - rem(56px) - 60px);
+  }
+
+  @media (max-width: em(1000px)) {
+    height: 100%;
+    video {
+      height: 100%;
+    }
+  }
+}
+
+.mediaPlayerTheaterMode {
+  height: 100vh;
+
+  video {
+    height: 100vh;
+  }
+
+  width: 100%;
+}
+
+.mediaPlayerPoster {
+  object-fit: contain;
+}
