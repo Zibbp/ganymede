@@ -63,5 +63,6 @@ func (Vod) Edges() []ent.Edge {
 		edge.From("playlists", Playlist.Type).Ref("vods"),
 		edge.To("chapters", Chapter.Type),
 		edge.To("muted_segments", MutedSegment.Type),
+		edge.From("multistream_info", MultistreamInfo.Type).Ref("vod"),
 	}
 }

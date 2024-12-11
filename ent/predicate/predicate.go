@@ -24,6 +24,9 @@ type LiveCategory func(*sql.Selector)
 // LiveTitleRegex is the predicate function for livetitleregex builders.
 type LiveTitleRegex func(*sql.Selector)
 
+// MultistreamInfo is the predicate function for multistreaminfo builders.
+type MultistreamInfo func(*sql.Selector)
+
 // MutedSegment is the predicate function for mutedsegment builders.
 type MutedSegment func(*sql.Selector)
 

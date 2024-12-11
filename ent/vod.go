@@ -106,9 +106,11 @@ type VodEdges struct {
 	Chapters []*Chapter `json:"chapters,omitempty"`
 	// MutedSegments holds the value of the muted_segments edge.
 	MutedSegments []*MutedSegment `json:"muted_segments,omitempty"`
+	// MultistreamInfo holds the value of the multistream_info edge.
+	MultistreamInfo []*MultistreamInfo `json:"multistream_info,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -158,6 +160,15 @@ func (e VodEdges) MutedSegmentsOrErr() ([]*MutedSegment, error) {
 		return e.MutedSegments, nil
 	}
 	return nil, &NotLoadedError{edge: "muted_segments"}
+}
+
+// MultistreamInfoOrErr returns the MultistreamInfo value or an error if the edge
+// was not loaded in eager-loading.
+func (e VodEdges) MultistreamInfoOrErr() ([]*MultistreamInfo, error) {
+	if e.loadedTypes[5] {
+		return e.MultistreamInfo, nil
+	}
+	return nil, &NotLoadedError{edge: "multistream_info"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -439,6 +450,11 @@ func (v *Vod) QueryChapters() *ChapterQuery {
 // QueryMutedSegments queries the "muted_segments" edge of the Vod entity.
 func (v *Vod) QueryMutedSegments() *MutedSegmentQuery {
 	return NewVodClient(v.config).QueryMutedSegments(v)
+}
+
+// QueryMultistreamInfo queries the "multistream_info" edge of the Vod entity.
+func (v *Vod) QueryMultistreamInfo() *MultistreamInfoQuery {
+	return NewVodClient(v.config).QueryMultistreamInfo(v)
 }
 
 // Update returns a builder for updating this Vod.

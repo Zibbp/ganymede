@@ -27,6 +27,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// EdgeVods holds the string denoting the vods edge name in mutations.
 	EdgeVods = "vods"
+	// EdgeMultistreamInfo holds the string denoting the multistream_info edge name in mutations.
+	EdgeMultistreamInfo = "multistream_info"
 	// Table holds the table name of the playlist in the database.
 	Table = "playlists"
 	// VodsTable is the table that holds the vods relation/edge. The primary key declared below.
@@ -34,6 +36,13 @@ const (
 	// VodsInverseTable is the table name for the Vod entity.
 	// It exists in this package in order to avoid circular dependency with the "vod" package.
 	VodsInverseTable = "vods"
+	// MultistreamInfoTable is the table that holds the multistream_info relation/edge.
+	MultistreamInfoTable = "multistream_infos"
+	// MultistreamInfoInverseTable is the table name for the MultistreamInfo entity.
+	// It exists in this package in order to avoid circular dependency with the "multistreaminfo" package.
+	MultistreamInfoInverseTable = "multistream_infos"
+	// MultistreamInfoColumn is the table column denoting the multistream_info relation/edge.
+	MultistreamInfoColumn = "playlist_multistream_info"
 )
 
 // Columns holds all SQL columns for playlist fields.
@@ -119,10 +128,31 @@ func ByVods(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newVodsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByMultistreamInfoCount orders the results by multistream_info count.
+func ByMultistreamInfoCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMultistreamInfoStep(), opts...)
+	}
+}
+
+// ByMultistreamInfo orders the results by multistream_info terms.
+func ByMultistreamInfo(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMultistreamInfoStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newVodsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(VodsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, VodsTable, VodsPrimaryKey...),
+	)
+}
+func newMultistreamInfoStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MultistreamInfoInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MultistreamInfoTable, MultistreamInfoColumn),
 	)
 }

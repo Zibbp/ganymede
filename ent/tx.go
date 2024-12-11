@@ -24,6 +24,8 @@ type Tx struct {
 	LiveCategory *LiveCategoryClient
 	// LiveTitleRegex is the client for interacting with the LiveTitleRegex builders.
 	LiveTitleRegex *LiveTitleRegexClient
+	// MultistreamInfo is the client for interacting with the MultistreamInfo builders.
+	MultistreamInfo *MultistreamInfoClient
 	// MutedSegment is the client for interacting with the MutedSegment builders.
 	MutedSegment *MutedSegmentClient
 	// Playback is the client for interacting with the Playback builders.
@@ -177,6 +179,7 @@ func (tx *Tx) init() {
 	tx.Live = NewLiveClient(tx.config)
 	tx.LiveCategory = NewLiveCategoryClient(tx.config)
 	tx.LiveTitleRegex = NewLiveTitleRegexClient(tx.config)
+	tx.MultistreamInfo = NewMultistreamInfoClient(tx.config)
 	tx.MutedSegment = NewMutedSegmentClient(tx.config)
 	tx.Playback = NewPlaybackClient(tx.config)
 	tx.Playlist = NewPlaylistClient(tx.config)
