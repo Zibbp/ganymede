@@ -14,7 +14,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	if os.Getenv("development") == "true" {
+	if os.Getenv("DEVELOPMENT") == "true" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 	log.Info().Str("commit", utils.Commit).Str("build_time", utils.BuildTime).Msg("starting server")

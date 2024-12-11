@@ -3,6 +3,9 @@ package http
 import (
 	"context"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/scs/pgxstore"
@@ -50,12 +53,16 @@ type Handler struct {
 var sessionManager *scs.SessionManager
 
 func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform) *Handler {
-	log.Debug().Msg("creating new handler")
-	env := config.GetEnvApplicationConfig()
+	log.Debug().Msg("creating route handler")
+	envAppConfig := config.GetEnvApplicationConfig()
+	envConfig := config.GetEnvConfig()
 
 	sessionManager = scs.New()
 	sessionManager.Store = pgxstore.New(database.ConnPool)
-	sessionManager.Lifetime = 24 * time.Hour
+	// 30 days session lifetime
+	sessionManager.Lifetime = (24 * time.Hour) * 30
+	// Expire session if no activity for 7 days
+	sessionManager.IdleTimeout = (24 * time.Hour) * 7
 
 	h := &Handler{
 		Server: echo.New(),
@@ -81,6 +88,7 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 		SessionManager: sessionManager,
 	}
 
+	// Use sessions
 	h.Server.Use(session.LoadAndSave(sessionManager))
 
 	// Middleware
@@ -88,11 +96,32 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 
 	h.Server.HideBanner = true
 
+	// If frontend is external then allow cors
 	h.Server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{env.FrontendHost},
+		AllowOrigins:     []string{envAppConfig.FrontendHost},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 		AllowCredentials: true,
 	}))
+
+	// Enable request logging in debug
+	if envConfig.DEBUG {
+		logger := log.Logger
+		h.Server.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+			LogURI:    true,
+			LogStatus: true,
+			LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+				if !strings.Contains(v.URI, "/api") {
+					return nil
+				}
+				logger.Info().
+					Str("URI", v.URI).
+					Int("status", v.Status).
+					Msg("request")
+
+				return nil
+			},
+		}))
+	}
 
 	h.mapRoutes()
 
@@ -105,14 +134,12 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 func (h *Handler) mapRoutes() {
 	log.Debug().Msg("mapping routes")
 
-	h.Server.GET("/", func(c echo.Context) error {
-		return c.String(200, "Ganymede API")
-	})
-
+	// Basic health route
 	h.Server.GET("/health", func(c echo.Context) error {
 		return c.String(200, "OK")
 	})
 
+	// Setup Prometheus metrics route
 	h.Server.GET("/metrics", func(c echo.Context) error {
 		r, err := h.GatherMetrics()
 		if err != nil {
@@ -124,43 +151,33 @@ func (h *Handler) mapRoutes() {
 		return nil
 	})
 
-	// Static files
+	// Static files if not using nginx
 	envConfig := config.GetEnvConfig()
 	h.Server.Static(envConfig.VideosDir, envConfig.VideosDir)
 
 	// Swagger
 	h.Server.GET("/swagger/*", echoSwagger.WrapHandler)
 
+	// Proxy frontend server
+	frontendURL, _ := url.Parse("http://127.0.0.1:3000")
+	h.Server.Any("/*", echo.WrapHandler(http.StripPrefix("/", httputil.NewSingleHostReverseProxy(frontendURL))))
+
+	// create v1 group and setup v1 routes
 	v1 := h.Server.Group("/api/v1")
 	groupV1Routes(v1, h)
 }
 
 func groupV1Routes(e *echo.Group, h *Handler) {
 
-	//AuthGuardMiddleware := middleware.JWTWithConfig(middleware.JWTConfig{
-	//	Claims:                  &auth.Claims{},
-	//	SigningKey:              []byte(auth.GetJWTSecret()),
-	//	TokenLookup:             "cookie:access-token",
-	//	ErrorHandlerWithContext: auth.JWTErrorChecker,
-	//})
-
-	// Demo route for testing JWT and roles
-	e.GET("/demo", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "Demo Route")
-	}, AuthGuardMiddleware)
-
 	// Auth
 	authGroup := e.Group("/auth")
 	authGroup.POST("/register", h.Register)
 	authGroup.POST("/login", h.Login)
 	authGroup.POST("/logout", h.Logout, AuthGuardMiddleware)
-	authGroup.POST("/refresh", h.Refresh)
 	authGroup.GET("/me", h.Me, AuthGuardMiddleware, AuthGetUserMiddleware)
 	authGroup.POST("/change-password", h.ChangePassword, AuthGuardMiddleware, AuthGetUserMiddleware)
 	authGroup.GET("/oauth/login", h.OAuthLogin)
 	authGroup.GET("/oauth/callback", h.OAuthCallback)
-	authGroup.GET("/oauth/refresh", h.OAuthTokenRefresh)
-	authGroup.GET("/oauth/logout", h.OAuthLogout)
 
 	// Channel
 	channelGroup := e.Group("/channel")
@@ -235,7 +252,6 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	liveGroup := e.Group("/live")
 	liveGroup.GET("", h.GetLiveWatchedChannels, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	liveGroup.POST("", h.AddLiveWatchedChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	liveGroup.POST("/multiple", h.AddMultipleLiveWatchedChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	liveGroup.GET("/check", h.Check, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))

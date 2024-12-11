@@ -3,7 +3,10 @@
   "features": {
     "ghcr.io/jungaretti/features/make:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/guiyomh/features/golangci-lint:0": {},
+    "ghcr.io/devcontainers/features/python:1": {}
   },
   "customizations": {
     "vscode": {
@@ -11,8 +14,13 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "eamodio.gitlens",
-        "github.copilot",
-        "yzhang.markdown-all-in-one"
+        "yzhang.markdown-all-in-one",
+        "esbenp.prettier-vscode",
+        "naumovs.color-highlight",
+        "ms-vscode-remote.remote-containers",
+        "burkeholland.simple-react-snippets",
+        "vunguyentuan.vscode-css-variables",
+        "vunguyentuan.vscode-postcss"
       ]
     }
   },
@@ -20,22 +28,28 @@
   "appPort": ["0.0.0.0:4000:4000"],
   "mounts": [
     {
-      "source": "${localWorkspaceFolder}/dev/vods",
-      "target": "/vods",
+      "source": "${localWorkspaceFolder}/dev/videos",
+      "target": "/data/videos",
       "type": "bind"
     },
     {
-      "source": "${localWorkspaceFolder}/dev/data",
-      "target": "/data",
+      "source": "${localWorkspaceFolder}/dev/temp",
+      "target": "/data/temp",
       "type": "bind"
     },
     {
       "source": "${localWorkspaceFolder}/dev/logs",
-      "target": "/logs",
+      "target": "/data/logs",
+      "type": "bind"
+    },
+    {
+      "source": "${localWorkspaceFolder}/dev/config",
+      "target": "/data/config",
       "type": "bind"
     }
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
   "workspaceFolder": "/workspace",
+  "postCreateCommand": "pip install streamlink chat-downloader --break-system-packages",
   "postAttachCommand": "sudo chown -R vscode:vscode /go && make dev_setup"
 }

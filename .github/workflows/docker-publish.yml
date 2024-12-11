@@ -9,9 +9,7 @@ on:
     branches: ["main"]
 
 env:
-  # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -34,7 +32,7 @@ jobs:
 
       # Login into GitHub Container Registry except on PR
       - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
+        # if: github.event_name != 'pull_request' # TODO: enable
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -51,7 +49,7 @@ jobs:
             latest=auto
           tags: |
             type=semver,pattern={{version}}
-            type=raw,value=dev
+            type=raw,value=v4 # TODO: change back to dev
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -60,3 +58,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           context: .
+          # cache builds in github actions
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # better compression
+          outputs: type=image,oci-mediatypes=true,compression=zstd,compression-level=3,force-compression=true

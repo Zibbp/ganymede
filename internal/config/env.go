@@ -17,7 +17,7 @@ type EnvApplicationConfig struct {
 	DB_SSL_ROOT_CERT string `env:"DB_SSL_ROOT_CERT, default="`
 	JWTSecret        string `env:"JWT_SECRET, required"`
 	JWTRefreshSecret string `env:"JWT_REFRESH_SECRET, required"`
-	FrontendHost     string `env:"FRONTEND_HOST, required"`
+	FrontendHost     string `env:"FRONTEND_HOST, default="`
 }
 
 // EnvConfig represents the environment variables for the application

@@ -1,6 +1,7 @@
 dev_setup:
 	go install github.com/joho/godotenv/cmd/godotenv@latest
 	go install github.com/air-verse/air@latest
+	cd frontend && npm install
 
 build_server:
 	go build -ldflags='-X github.com/zibbp/ganymede/internal/utils.Commit=$(shell git rev-parse HEAD) -X github.com/zibbp/ganymede/internal/utils.BuildTime=$(shell date -u "+%Y-%m-%d_%H:%M:%S")' -o ganymede-api cmd/server/main.go
@@ -21,6 +22,9 @@ dev_server:
 dev_worker:
 	rm -f ./tmp/worker
 	air -c ./.worker.air.toml
+
+dev_web:
+	cd frontend && npm run dev
 
 ent_generate:
 	go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/upsert ./ent/schema

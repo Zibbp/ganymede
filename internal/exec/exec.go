@@ -33,7 +33,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, fmt.Sprintf("https://twitch.tv/videos/%s", video.ExtID), fmt.Sprintf("%s,best", video.Resolution), "--force-progress", "--force")
+	cmdArgs = append(cmdArgs, fmt.Sprintf("https://twitch.tv/videos/%s", video.ExtID), fmt.Sprintf("%s,best", video.Resolution), "--progress=force", "--force")
 
 	// check if user has twitch token set
 	// if so, set token in streamlink command
@@ -151,7 +151,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, streamUrl, fmt.Sprintf("%s,best", video.Resolution), "--force-progress", "--force")
+	cmdArgs = append(cmdArgs, streamUrl, fmt.Sprintf("%s,best", video.Resolution), "--progress=force", "--force")
 
 	// pass proxy header
 	if proxyHeader != "" {

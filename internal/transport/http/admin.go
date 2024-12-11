@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -27,9 +28,9 @@ type AdminService interface {
 func (h *Handler) GetStats(c echo.Context) error {
 	resp, err := h.Service.AdminService.GetStats(c.Request().Context())
 	if err != nil {
-		return err
+		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error retrieving stats: %v", err))
 	}
-	return c.JSON(http.StatusOK, resp)
+	return SuccessResponse(c, resp, "Statistics")
 }
 
 // GetInfo godoc
@@ -46,7 +47,7 @@ func (h *Handler) GetStats(c echo.Context) error {
 func (h *Handler) GetInfo(c echo.Context) error {
 	resp, err := h.Service.AdminService.GetInfo(c.Request().Context())
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error retrieving Ganymede information: %v", err))
 	}
-	return c.JSON(http.StatusOK, resp)
+	return SuccessResponse(c, resp, "Ganymede information")
 }

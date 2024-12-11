@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -37,9 +38,9 @@ type UpdateChannelRequest struct {
 func (h *Handler) GetUsers(c echo.Context) error {
 	users, err := h.Service.UserService.AdminGetUsers(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, users)
+	return SuccessResponse(c, users, "users")
 }
 
 // GetUser godoc
@@ -58,13 +59,13 @@ func (h *Handler) GetUsers(c echo.Context) error {
 func (h *Handler) GetUser(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	u, err := h.Service.UserService.AdminGetUser(c, id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, u)
+	return SuccessResponse(c, u, "user")
 }
 
 // UpdateUser godoc
@@ -84,14 +85,14 @@ func (h *Handler) GetUser(c echo.Context) error {
 func (h *Handler) UpdateUser(c echo.Context) error {
 	uID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	usr := new(UpdateChannelRequest)
 	if err := c.Bind(usr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(usr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	uDto := user.User{
 		ID:       uID,
@@ -100,9 +101,9 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	}
 	u, err := h.Service.UserService.AdminUpdateUser(c, uDto)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, u)
+	return SuccessResponse(c, u, "user updated")
 }
 
 // DeleteUser godoc
@@ -121,11 +122,26 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 func (h *Handler) DeleteUser(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	err = h.Service.UserService.AdminDeleteUser(c, id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
+
+	// destroy sessions
+	err = h.SessionManager.Iterate(c.Request().Context(), func(ctx context.Context) error {
+		userID := sessionManager.GetString(ctx, "user_id")
+
+		if userID == id.String() {
+			return sessionManager.Destroy(ctx)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return ErrorResponse(c, 500, "error deleting user sessions")
+	}
+
 	return c.NoContent(http.StatusOK)
 }

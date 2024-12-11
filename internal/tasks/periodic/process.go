@@ -54,7 +54,7 @@ func (w SaveVideoChaptersWorker) Work(ctx context.Context, job *river.Job[SaveVi
 	}
 
 	for _, video := range videos {
-		if video.Type == utils.Live {
+		if video.Type == utils.Live || video.Type == utils.Clip {
 			continue
 		}
 		if video.ExtID == "" {

@@ -34,7 +34,7 @@ func main() {
 		log.Panic().Err(err).Msg("Error initializing server config")
 	}
 
-	if os.Getenv("development") == "true" {
+	if os.Getenv("DEVELOPMENT") == "true" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
