@@ -15,8 +15,6 @@ type EnvApplicationConfig struct {
 	DB_NAME          string `env:"DB_NAME, required"`
 	DB_SSL           string `env:"DB_SSL, default=disable"`
 	DB_SSL_ROOT_CERT string `env:"DB_SSL_ROOT_CERT, default="`
-	JWTSecret        string `env:"JWT_SECRET, required"`
-	JWTRefreshSecret string `env:"JWT_REFRESH_SECRET, required"`
 	FrontendHost     string `env:"FRONTEND_HOST, default="`
 }
 

@@ -4,12 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	entUser "github.com/zibbp/ganymede/ent/user"
@@ -136,47 +133,6 @@ func (s *Service) Login(ctx context.Context, uDto user.User) (*ent.User, error) 
 	// setTokenCookie(c, refreshTokenCookieName, refreshToken, exp)
 
 	return u, nil
-}
-
-func (s *Service) Refresh(c echo.Context, refreshToken string) error {
-
-	tkn, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(GetJWTRefreshSecret()), nil
-	})
-	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			return fmt.Errorf("invalid refresh token")
-		}
-		return fmt.Errorf("error parsing refresh token: %v", err)
-	}
-
-	if claims, ok := tkn.Claims.(jwt.MapClaims); ok && tkn.Valid {
-		uID := claims["user_id"].(string)
-		uUUID, err := uuid.Parse(uID)
-		if err != nil {
-			return fmt.Errorf("error parsing user id: %v", err)
-		}
-		u, err := s.Store.Client.User.Query().Where(entUser.ID(uUUID)).Only(c.Request().Context())
-		if err != nil {
-			return fmt.Errorf("error getting user: %v", err)
-		}
-
-		// generate access token
-		accessToken, exp, err := generateJWTToken(&user.User{ID: u.ID, Username: u.Username, Role: u.Role}, time.Now().Add(1*time.Hour), []byte(GetJWTSecret()))
-		if err != nil {
-			return fmt.Errorf("error generating access token: %v", err)
-		}
-
-		// set access token cookie
-		setTokenCookie(c, accessTokenCookieName, accessToken, exp)
-
-		return nil
-	}
-
-	return err
 }
 
 func (s *Service) ChangePassword(ctx context.Context, userId uuid.UUID, oldPassword, newPassword string) error {

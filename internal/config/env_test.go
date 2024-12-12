@@ -34,8 +34,6 @@ func TestGetEnvRequiredConfig(t *testing.T) {
 	assert.Equal(t, "postgres", env.DB_USER)
 	assert.Equal(t, "password", env.DB_PASS)
 	assert.Equal(t, "ganymede", env.DB_NAME)
-	assert.Equal(t, "secret", env.JWTSecret)
-	assert.Equal(t, "refresh_secret", env.JWTRefreshSecret)
 	assert.Equal(t, "localhost", env.FrontendHost)
 
 	os.Unsetenv("DB_HOST")
@@ -43,8 +41,6 @@ func TestGetEnvRequiredConfig(t *testing.T) {
 	os.Unsetenv("DB_USER")
 	os.Unsetenv("DB_PASS")
 	os.Unsetenv("DB_NAME")
-	os.Unsetenv("JWT_SECRET")
-	os.Unsetenv("JWT_REFRESH_SECRET")
 	os.Unsetenv("FRONTEND_HOST")
 }
 

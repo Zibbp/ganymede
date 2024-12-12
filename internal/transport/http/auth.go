@@ -15,7 +15,6 @@ import (
 type AuthService interface {
 	Register(ctx context.Context, userDto user.User) (*ent.User, error)
 	Login(ctx context.Context, userDto user.User) (*ent.User, error)
-	Refresh(c echo.Context, refreshToken string) error
 	ChangePassword(ctx context.Context, userId uuid.UUID, oldPassword, newPassword string) error
 	OAuthRedirect(c echo.Context) error
 	OAuthCallback(c echo.Context) (*ent.User, error)
