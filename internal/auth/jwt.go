@@ -80,25 +80,6 @@ func setTokenCookie(c echo.Context, name string, token string, expiration time.T
 	c.SetCookie(cookie)
 }
 
-// checkAccessToken checks if the JWT access token is valid.
-func checkAccessToken(accessToken string) (*Claims, error) {
-	// Parse the token.
-	token, err := jwt.ParseWithClaims(accessToken, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(GetJWTSecret()), nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// Validate the token and return the custom claims.
-	claims, ok := token.Claims.(*Claims)
-	if !ok || !token.Valid {
-		return nil, err
-	}
-
-	return claims, nil
-}
-
 // JWTErrorChecker will be executed when user try to access a protected path.
 func JWTErrorChecker(err error, c echo.Context) error {
 	// Redirects to the signIn form.

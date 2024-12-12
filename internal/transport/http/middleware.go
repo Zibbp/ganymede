@@ -95,7 +95,10 @@ func userFromContext(c echo.Context) *ent.User {
 	userStr := c.Get("user")
 	user, ok := userStr.(*ent.User)
 	if !ok {
-		ErrorInvalidAccessTokenResponse(c)
+		err := ErrorInvalidAccessTokenResponse(c)
+		if err != nil {
+			return nil
+		}
 	}
 	return user
 }

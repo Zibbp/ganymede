@@ -51,16 +51,25 @@ type OAuthResponse struct {
 	UserInfo    UserInfo
 }
 
-func generateSecureRandomString() string {
+func generateSecureRandomString() (string, error) {
 	b := make([]byte, 32)
-	rand.Read(b)
-	return base64.URLEncoding.EncodeToString(b)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
 }
 
 func (s *Service) OAuthRedirect(c echo.Context) error {
 	// generate state and nonce
-	state := generateSecureRandomString()
-	nonce := generateSecureRandomString()
+	state, err := generateSecureRandomString()
+	if err != nil {
+		return err
+	}
+	nonce, err := generateSecureRandomString()
+	if err != nil {
+		return err
+	}
 
 	stateCookie := new(http.Cookie)
 	stateCookie.Name = "oidc_state"
@@ -82,7 +91,7 @@ func (s *Service) OAuthRedirect(c echo.Context) error {
 		oauth2.SetAuthURLParam("nonce", nonce),
 		oauth2.AccessTypeOffline,
 	)
-	err := c.Redirect(http.StatusTemporaryRedirect, authURL)
+	err = c.Redirect(http.StatusTemporaryRedirect, authURL)
 	if err != nil {
 		return err
 	}
@@ -135,7 +144,10 @@ func (s *Service) OAuthCallback(c echo.Context) (*ent.User, error) {
 
 	// Debug claims in dev
 	if s.EnvConfig.Development {
-		debugOidcClaims(idToken)
+		err := debugOidcClaims(idToken)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Verify nonce to prevent replay attack
