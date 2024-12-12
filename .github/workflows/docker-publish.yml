@@ -56,6 +56,7 @@ jobs:
         with:
           platforms: linux/amd64 # TODO: enable arm
           # push: ${{ github.event_name != 'pull_request' }} # TODO: enable
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           context: .
           # cache builds in github actions
