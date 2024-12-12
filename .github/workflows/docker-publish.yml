@@ -55,10 +55,11 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64 # TODO: enable arm
-          push: ${{ github.event_name != 'pull_request' }}
+          # push: ${{ github.event_name != 'pull_request' }} # TODO: enable
           tags: ${{ steps.meta.outputs.tags }}
           context: .
           # cache builds in github actions
           cache-from: type=gha
           cache-to: type=gha,mode=max
           # better compression
+          outputs: type=image,oci-mediatypes=true,compression=zstd,compression-level=3,force-compression=true
