@@ -136,10 +136,12 @@ func (s *Service) SetVodDelayOnPlaylist(c echo.Context, playlistID uuid.UUID, vo
 	if err != nil {
 		return fmt.Errorf("playlist not found")
 	}
+
 	// If one day, we need to store more than just the delay, we should remove the deletion here
 	if delayMs == 0 {
 		return s.deleteMultistreamInfo(c, playlistID, vodID)
 	}
+
 	// Check if vod exists in playlist before creating new data
 	found := false
 	for _, vod := range dbPlaylist.Edges.Vods {
@@ -151,12 +153,14 @@ func (s *Service) SetVodDelayOnPlaylist(c echo.Context, playlistID uuid.UUID, vo
 	if !found {
 		return fmt.Errorf("vod not found in playlist")
 	}
+
 	dbMultistreamInfo, err := s.Store.Client.MultistreamInfo.Query().Where(
 		multistreaminfo.And(
 			multistreaminfo.HasPlaylistWith(playlist.ID(playlistID)),
 			multistreaminfo.HasVodWith(vod.ID(vodID)),
 		),
 	).Only(c.Request().Context())
+
 	if err != nil && ent.IsNotFound(err) {
 		_, err = s.Store.Client.MultistreamInfo.Create().SetDelayMs(delayMs).SetPlaylistID(playlistID).SetVodID(vodID).Save(c.Request().Context())
 		if err != nil {
@@ -170,6 +174,7 @@ func (s *Service) SetVodDelayOnPlaylist(c echo.Context, playlistID uuid.UUID, vo
 	}
 	return nil
 }
+
 func (s *Service) deleteMultistreamInfo(c echo.Context, playlistID uuid.UUID, vodID uuid.UUID) error {
 	_, err := s.Store.Client.MultistreamInfo.Delete().Where(
 		multistreaminfo.And(
@@ -177,6 +182,7 @@ func (s *Service) deleteMultistreamInfo(c echo.Context, playlistID uuid.UUID, vo
 			multistreaminfo.HasVodWith(vod.ID(vodID)),
 		),
 	).Exec(c.Request().Context())
+
 	if err != nil {
 		return fmt.Errorf("error deleting multistream info: %v", err)
 	}

@@ -78,12 +78,14 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	})
 
 	// application migrations
-	// check if VideosDir changed
-	if err := db.VideosDirMigrate(ctx, envConfig.VideosDir); err != nil {
-		return nil, fmt.Errorf("error migrating videos dir: %v", err)
-	}
-	if err := db.TempDirMigrate(ctx, envConfig.TempDir); err != nil {
-		return nil, fmt.Errorf("error migrating videos dir: %v", err)
+	if envConfig.PathMigrationEnabled {
+		// check if VideosDir changed
+		if err := db.VideosDirMigrate(ctx, envConfig.VideosDir); err != nil {
+			return nil, fmt.Errorf("error migrating videos dir: %v", err)
+		}
+		if err := db.TempDirMigrate(ctx, envConfig.TempDir); err != nil {
+			return nil, fmt.Errorf("error migrating videos dir: %v", err)
+		}
 	}
 
 	// Initialize river client
