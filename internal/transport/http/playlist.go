@@ -221,43 +221,6 @@ func (h *Handler) SetVodDelayOnPlaylistMultistream(c echo.Context) error {
 	return c.JSON(http.StatusOK, "ok")
 }
 
-// SetVodDelayOnPlaylistMultistream godoc
-//
-//	@Summary		Set delay of vod in playlist for multistream
-//	@Description	Set delay of vod in playlist for multistream
-//	@Tags			Playlist
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		string						true	"playlist id"
-//	@Param			delay	body		SetVodDelayPlaylistRequest	true	"delay"
-//	@Success		200		{object}	string
-//	@Failure		400		{object}	utils.ErrorResponse
-//	@Failure		500		{object}	utils.ErrorResponse
-//	@Router			/playlist/{id} [put]
-//	@Security		ApiKeyCookieAuth
-func (h *Handler) SetVodDelayOnPlaylistMultistream(c echo.Context) error {
-	pID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
-	}
-	svdpr := new(SetVodDelayPlaylistRequest)
-	if err := c.Bind(svdpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	if err := c.Validate(svdpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	vID, err := uuid.Parse(svdpr.VodID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
-	}
-	err = h.Service.PlaylistService.SetVodDelayOnPlaylist(c, pID, vID, svdpr.DelayMs)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	return c.JSON(http.StatusOK, "ok")
-}
-
 // DeletePlaylist godoc
 //
 //	@Summary		Delete playlist
