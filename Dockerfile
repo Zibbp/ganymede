@@ -73,7 +73,7 @@ WORKDIR /opt/app
 
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip fontconfig ffmpeg tzdata procps \
+    python3 python3-pip fontconfig ffmpeg tzdata procps supervisor \
     fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-inter \
     curl \
     && rm -rf /var/lib/apt/lists/* \
@@ -138,6 +138,7 @@ ENV HOSTNAME="0.0.0.0"
 # Setup entrypoint
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY supervisord.conf /opt/app/supervisord.conf
 
 EXPOSE 4000
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
