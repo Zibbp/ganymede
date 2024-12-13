@@ -9,6 +9,12 @@ import { Navbar } from './layout/Navbar';
 import useSettingsStore from './store/useSettingsStore';
 import { useEffect } from 'react';
 import useAuthStore from './store/useAuthStore'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 const CONTAINER_SIZES: Record<string, string> = {
   xxs: rem(300),
@@ -26,6 +32,7 @@ const CONTAINER_SIZES: Record<string, string> = {
 };
 
 const theme = createTheme({
+  fontFamily: inter.style.fontFamily,
   breakpoints: {
     xs: "30em",
     sm: "48em",
