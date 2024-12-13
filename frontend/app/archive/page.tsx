@@ -1,5 +1,5 @@
 "use client"
-import { Card, Center, Container, Title, Text, TextInput, Divider, Select, Group, Switch, Button } from "@mantine/core";
+import { Card, Center, Container, Title, Text, TextInput, Divider, Select, Group, Switch, Button, rem } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { Channel, useFetchChannels } from "../hooks/useChannels";
@@ -13,6 +13,10 @@ interface SelectOption {
 }
 
 const ArchivePage = () => {
+  useEffect(() => {
+    document.title = "Archive";
+  }, []);
+
   // State management with proper typing
   const [archiveInput, setArchiveInput] = useInputState("");
   const [archiveSubmitLoading, setArchiveSubmitLoading] = useState(false);
@@ -28,7 +32,7 @@ const ArchivePage = () => {
 
   // Quality options using the enum
   const qualityOptions: SelectOption[] = Object.entries(VideoQuality).map(([key, value]) => ({
-    label: key.replace('Quality', ''),
+    label: key.replace('quality', ''),
     value: value
   }));
 
@@ -135,7 +139,7 @@ const ArchivePage = () => {
                   value={archiveQuality}
                   onChange={(value) => setArchiveQuality(value as VideoQuality)}
                   data={qualityOptions}
-                  className="w-1/3"
+                  w={rem(200)}
                 />
                 <Switch
                   checked={archiveChat}
