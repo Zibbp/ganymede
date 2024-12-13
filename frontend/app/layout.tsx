@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <PublicEnvScript />
-        <ColorSchemeScript />
+        <ColorSchemeScript defaultColorScheme='dark' />
       </head>
       <body>
 
