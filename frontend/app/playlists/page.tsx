@@ -68,13 +68,15 @@ const PlaylistsPage = () => {
       <Container size={"7xl"}>
         <Group justify="space-between">
           <Title>Playlists</Title>
-          <div>
-            <Button variant="default" onClick={() => {
-              setPlaylistEditMode(PlaylistEditFormMode.Create)
-              setPlaylist(null)
-              openPlaylistDrawer()
-            }}>Create Playlist</Button>
-          </div>
+          {hasPermission(UserRole.Editor) && (
+            <div>
+              <Button variant="default" onClick={() => {
+                setPlaylistEditMode(PlaylistEditFormMode.Create)
+                setPlaylist(null)
+                openPlaylistDrawer()
+              }}>Create Playlist</Button>
+            </div>
+          )}
         </Group>
 
         {/* table */}
