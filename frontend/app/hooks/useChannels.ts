@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import useAxios from "./useAxios";
+import useAxios, { ApiResponse } from "./useAxios";
 import { AxiosInstance } from "axios";
 
 export interface Channel {
@@ -15,13 +15,17 @@ export interface Channel {
 }
 
 const fetchChannels = async (): Promise<Array<Channel>> => {
-  const response = await useAxios.get<Array<Channel>>("/api/v1/channel");
-  return response.data;
+  const response = await useAxios.get<ApiResponse<Array<Channel>>>(
+    "/api/v1/channel"
+  );
+  return response.data.data;
 };
 
 const fetchChannelByName = async (name: string): Promise<Channel> => {
-  const response = await useAxios.get<Channel>(`/api/v1/channel/name/${name}`);
-  return response.data;
+  const response = await useAxios.get<ApiResponse<Channel>>(
+    `/api/v1/channel/name/${name}`
+  );
+  return response.data.data;
 };
 
 const useFetchChannels = () => {
