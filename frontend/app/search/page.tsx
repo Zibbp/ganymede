@@ -6,8 +6,7 @@ import { useSearchVideos, VideoType } from "../hooks/useVideos";
 import useSettingsStore from "../store/useSettingsStore";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import VideoGrid from "../components/videos/Grid";
-import { Center, Container, rem, TextInput, Title } from "@mantine/core";
-import { IconSearch } from "@tabler/icons-react";
+import { Center, Container, Title } from "@mantine/core";
 
 const SearchPage = () => {
   const searchParams = useSearchParams();
