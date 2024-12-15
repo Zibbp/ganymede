@@ -1,7 +1,7 @@
 "use client"
-import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
+import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconChevronDown, IconMoon, IconSearch, IconSun, IconUserCircle } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronUp, IconMoon, IconSearch, IconSun, IconUserCircle } from '@tabler/icons-react';
 import classes from './Navbar.module.css';
 import useAuthStore from '../store/useAuthStore';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ import cx from "clsx"
 import Image from 'next/image';
 import { authLogout, UserRole } from '../hooks/useAuthentication';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface NavLink {
   link: string;
@@ -49,102 +50,137 @@ const links: NavLink[] = [
 ];
 
 export function Navbar() {
-  const { isLoggedIn, user, logout, hasPermission } = useAuthStore()
+  const { isLoggedIn, user, logout, hasPermission } = useAuthStore();
 
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
 
-  const router = useRouter()
+  const router = useRouter();
 
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
+  const [adminLinksOpened, { toggle: toggleAdminLinks }] = useDisclosure(false);
+  const [searchQuery, setSearchQuery] = useState("")
 
   const handleLogout = async () => {
     try {
-      await authLogout() // server side logout to clear session and cookies
-      logout() // clear store
-      router.push("/")
-
+      await authLogout(); // server-side logout to clear session and cookies
+      logout(); // clear store
+      router.push("/");
     } catch (error) {
-      console.error("Error logging out", error)
+      console.error("Error logging out", error);
     }
-  }
+  };
 
-  const items = links.filter(link => {
-    // If link doesn't require auth, always show
+  const filteredLinks = links.filter(link => {
     if (!link.auth) return true;
-
-    // If link requires auth, check if logged in and has required role
     if (isLoggedIn && (!link.role || hasPermission(link.role))) {
-      // If it's a dropdown menu, filter its items too
       if (link.links) {
         link.links = link.links.filter(subLink =>
           !subLink.auth || (isLoggedIn && (!subLink.role || hasPermission(subLink.role)))
         );
-
-        // Only show the main menu if it has any visible sub-items
         return link.links.length > 0;
       }
       return true;
     }
-
     return false;
-  }).map((link) => {
-    const menuItems = link.links?.map((item) => (
-      <Menu.Item key={item.label} component={Link} href={item.link}>
-        {item.label}
-      </Menu.Item>
-    ));
-
-    if (menuItems) {
-      return (
-        <Menu key={link.label} trigger="hover" transitionProps={{ exitDuration: 0 }} withinPortal>
-          {/* @ts-expect-error fine */}
-          <Menu.Target>
-            <a
-              href={link.link}
-              className={classes.link}
-              onClick={(event) => event.preventDefault()}
-            >
-              <Center>
-                <span className={classes.linkLabel}>{link.label}</span>
-                <IconChevronDown size="0.9rem" stroke={1.5} />
-              </Center>
-            </a>
-          </Menu.Target>
-          <Menu.Dropdown>{menuItems}</Menu.Dropdown>
-        </Menu>
-      );
-    }
-
-    return (
-      <Link
-        key={link.label}
-        href={link.link}
-        className={classes.link}
-      >
-        {link.label}
-      </Link>
-    );
   });
+
+  const renderLinks = (links: NavLink[], className: string) => {
+    return links.map(link => {
+      if (link.links) {
+        return (
+          <Menu key={link.label} trigger="hover" transitionProps={{ exitDuration: 0 }} withinPortal>
+            {/* @ts-expect-error fine */}
+            <Menu.Target>
+              <a
+                href={link.link}
+                className={className}
+                onClick={(event) => event.preventDefault()}
+              >
+                <Center>
+                  <span className={classes.linkLabel}>{link.label}</span>
+                  <IconChevronDown size="0.9rem" stroke={1.5} />
+                </Center>
+              </a>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {link.links.map(subLink => (
+                <Menu.Item key={subLink.label} component={Link} href={subLink.link}>
+                  {subLink.label}
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+        );
+      }
+
+      return (
+        <Link key={link.label} href={link.link} className={className}>
+          {link.label}
+        </Link>
+      );
+    });
+  };
+
+  const renderDrawerLinks = (links: NavLink[], className: string) => {
+    return links.map(link => {
+      if (link.links) {
+        return (
+          <div key={link.label}>
+            <UnstyledButton
+              onClick={toggleAdminLinks}
+              className={cx(className, classes.collapseToggle)}
+            >
+              <Group>
+                <span>{link.label}</span>
+                {adminLinksOpened ? <IconChevronUp size="0.9rem" /> : <IconChevronDown size="0.9rem" />}
+              </Group>
+            </UnstyledButton>
+            <Collapse in={adminLinksOpened}>
+              <div className={classes.collapseContent}>
+                {link.links.map(subLink => (
+                  <Link key={subLink.label} href={subLink.link} className={classes.link}>
+                    {subLink.label}
+                  </Link>
+                ))}
+              </div>
+            </Collapse>
+          </div>
+        );
+      }
+
+      return (
+        <Link key={link.label} href={link.link} className={className}>
+          {link.label}
+        </Link>
+      );
+    });
+  };
+
+  const mainLinks = renderLinks(filteredLinks, classes.link);
+
+  const drawerLinks = renderDrawerLinks(filteredLinks, classes.link);
 
   return (
     <header className={classes.header}>
       <div className={classes.inner}>
-        <Group gap={5} >
+        <Group gap={5}>
           <Image src="/images/ganymede_logo.png" height={32} width={32} alt="Ganymede logo" />
-          <Group visibleFrom="sm">
-            {items}
-          </Group>
+          <Group visibleFrom="sm">{mainLinks}</Group>
         </Group>
         <Group gap={5} visibleFrom="sm">
-
           <TextInput
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.currentTarget.value)}
             leftSectionPointerEvents="none"
             leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
             placeholder="Search"
+            onKeyUp={(e) => {
+              if (e.key === "Enter") {
+                router.push(`/search?q=${encodeURI(searchQuery)}`)
+              }
+            }}
           />
-
-
           <ActionIcon
             onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
             variant="default"
@@ -154,10 +190,7 @@ export function Navbar() {
             <IconSun className={cx(classes.icon, classes.light)} stroke={1.5} />
             <IconMoon className={cx(classes.icon, classes.dark)} stroke={1.5} />
           </ActionIcon>
-
-          {isLoggedIn && (
-
-
+          {isLoggedIn ? (
             <Menu shadow="md" width={200}>
               {/* @ts-expect-error fine */}
               <Menu.Target>
@@ -175,22 +208,17 @@ export function Navbar() {
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
-          )}
-
-          {!isLoggedIn && (
+          ) : (
             <div>
-
-              <Button component={Link} href="/login" variant="default" mr={5}>Log in</Button>
-              <Button variant="default" >Sign up</Button>
-
-
+              <Button component={Link} href="/login" variant="default" mr={5}>
+                Log in
+              </Button>
+              <Button component={Link} href="/register" variant="default">Sign up</Button>
             </div>
           )}
-
         </Group>
         <Burger opened={drawerOpened} onClick={toggleDrawer} size="sm" hiddenFrom="sm" />
       </div>
-
       <Drawer
         opened={drawerOpened}
         onClose={closeDrawer}
@@ -202,22 +230,25 @@ export function Navbar() {
       >
         <ScrollArea h={`calc(100vh - ${rem(80)})`} mx="-md">
           <Divider my="sm" />
-
-          <a href="#" className={classes.link}>
-            Home
-          </a>
-
-
-
+          {drawerLinks}
           <Divider my="sm" />
-
           <Group justify="center" grow pb="xl" px="md">
-            <Button variant="default">Log in</Button>
-            <Button>Sign up</Button>
+            {isLoggedIn ? (
+              <>
+                <Button component={Link} href={`/profile`}>Profile</Button>
+                <Button onClick={handleLogout}>Logout</Button>
+              </>
+            ) : (
+              <>
+                <Button component={Link} href="/login" variant="default">
+                  Log in
+                </Button>
+                <Button component={Link} href="/register" variant="default">Sign up</Button>
+              </>
+            )}
           </Group>
         </ScrollArea>
       </Drawer>
-
     </header>
   );
 }

@@ -19,7 +19,6 @@ const useSettingsStore = create<SettingsState>()(
       chatPlaybackSmoothScroll: false,
       videoTheaterMode: false,
 
-      // Action to update the videoLimit
       setVideoLimit: (limit: number) => set({ videoLimit: limit }),
 
       setChatPlaybackSmoothScroll: (smooth: boolean) =>
@@ -32,7 +31,7 @@ const useSettingsStore = create<SettingsState>()(
       name: "settings-storage",
       partialize: (state) => ({
         videoLimit: state.videoLimit,
-        chatPlaybackSmoothScroll: false,
+        chatPlaybackSmoothScroll: state.chatPlaybackSmoothScroll,
       }),
     }
   )

@@ -35,7 +35,7 @@ const useAuthStore = create<AuthState>()(
       // Initial state
       user: null,
       isLoggedIn: false,
-      isLoading: false,
+      isLoading: true,
       error: null,
 
       // Fetch user data from API

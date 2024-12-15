@@ -1,5 +1,5 @@
 'use client'
-import { useToggle, upperFirst } from '@mantine/hooks';
+import { upperFirst } from '@mantine/hooks';
 import { useForm, zodResolver } from '@mantine/form';
 import {
   TextInput,
@@ -14,22 +14,32 @@ import {
   Box,
 } from '@mantine/core';
 import { z } from 'zod';
-import { authLogin } from '@/app/hooks/useAuthentication';
+import { authLogin, authRegister } from '@/app/hooks/useAuthentication';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/app/store/useAuthStore';
 import { env } from 'next-runtime-env';
+import { showNotification } from '@mantine/notifications';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 const schema = z.object({
   username: z.string().min(3, { message: "Username should have at least 3 characters" }),
   password: z.string().min(8, { message: "Password should have at least 8 characters" })
 })
 
+export enum AuthFormType {
+  Login = "login",
+  Register = "register"
+}
 
+type Props = {
+  type: AuthFormType
+}
 
-export function AuthenticationForm() {
+export function AuthenticationForm({ type }: Props) {
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { fetchUser } = useAuthStore();
-  const [type, toggle] = useToggle(['login', 'register']);
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
@@ -40,13 +50,41 @@ export function AuthenticationForm() {
     validate: zodResolver(schema),
   });
 
-  const handleLogin = async (username: string, password: string) => {
-    try {
-      await authLogin(username, password)
-      await fetchUser()
-      router.push('/')
-    } catch (error) {
-      console.error(`Error logging in: ${error instanceof Error ? error.message : String(error)}`)
+  // If force SSO is enabled redirect immediately
+  useEffect(() => {
+    if (env('NEXT_PUBLIC_FORCE_SSO_AUTH') == "true") {
+      handleSSOLogin()
+    }
+  }, [])
+
+  const handleAuth = async (username: string, password: string) => {
+    if (type == AuthFormType.Login) {
+      try {
+        setLoading(true)
+        await authLogin(username, password)
+        await fetchUser()
+        showNotification({
+          message: "Logged in"
+        })
+        router.push('/')
+      } catch (error) {
+        console.error(`Error logging in: ${error instanceof Error ? error.message : String(error)}`)
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      try {
+        setLoading(true)
+        await authRegister(username, password)
+        router.push('/login')
+        showNotification({
+          message: "Successfully registered, please sign in."
+        })
+      } catch (error) {
+        console.error(`Error registering in: ${error instanceof Error ? error.message : String(error)}`)
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -72,7 +110,7 @@ export function AuthenticationForm() {
         <Box mt="md" mb="md"></Box>
       )}
 
-      <form onSubmit={form.onSubmit((values) => handleLogin(values.username, values.password))}>
+      <form onSubmit={form.onSubmit((values) => handleAuth(values.username, values.password))}>
         <Stack>
           <TextInput
             label="Username"
@@ -92,12 +130,18 @@ export function AuthenticationForm() {
         </Stack>
 
         <Group justify="space-between" mt="xl">
-          <Anchor component="button" type="button" c="dimmed" onClick={() => toggle()} size="xs">
-            {type === 'register'
-              ? 'Already have an account? Login'
-              : "Don't have an account? Register"}
-          </Anchor>
-          <Button type="submit" radius="xl">
+
+          {(type == AuthFormType.Login) && (
+            <Anchor component={Link} href="/register" type="button" c="dimmed" size="xs">
+              {"Don't have an account? Register"}
+            </Anchor>
+          )}
+          {(type == AuthFormType.Register) && (
+            <Anchor component={Link} href="/login" type="button" c="dimmed" size="xs">
+              {"Already have an account? Login"}
+            </Anchor>
+          )}
+          <Button type="submit" loading={loading}>
             {upperFirst(type)}
           </Button>
         </Group>

@@ -9,6 +9,9 @@ import ChatPlayer from "@/app/components/videos/ChatPlayer";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import useSettingsStore from "@/app/store/useSettingsStore";
 import { useFullscreen } from "@mantine/hooks";
+import { env } from "next-runtime-env";
+import VideoLoginRequired from "@/app/components/videos/LoginRequired";
+import useAuthStore from "@/app/store/useAuthStore";
 
 interface Params {
   id: string;
@@ -16,19 +19,33 @@ interface Params {
 
 const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const { id } = React.use(params);
+  const { isLoggedIn } = useAuthStore()
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { ref, toggle, fullscreen } = useFullscreen();
 
-
   const { data, isPending, isError } = useFetchVideo({ id, with_channel: true, with_chapters: true, with_muted_segments: true })
+
+  // check if login is required
+  const isLoginRequired = () => {
+    if (
+      env('NEXT_PUBLIC_REQUIRE_LOGIN') == "true" && !isLoggedIn
+    ) {
+      return true
+    }
+    return false
+  }
 
   if (isPending) {
     return <GanymedeLoadingText message="Loading Video" />
   }
   if (isError) {
     return <div>Error loading video</div>
+  }
+
+  if (isLoginRequired()) {
+    return <VideoLoginRequired video={data} />
   }
 
   return (

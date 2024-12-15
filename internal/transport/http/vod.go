@@ -25,7 +25,7 @@ type VodService interface {
 	GetVod(vID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool, withQueue bool) (*ent.Vod, error)
 	DeleteVod(c echo.Context, vID uuid.UUID, deleteFiles bool) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
-	SearchVods(c echo.Context, query string, limit int, offset int) (vod.Pagination, error)
+	SearchVods(c echo.Context, query string, limit int, offset int, types []utils.VodType) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
 	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
@@ -350,7 +350,15 @@ func (h *Handler) SearchVods(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid offset: %w", err).Error())
 	}
-	v, err := h.Service.VodService.SearchVods(c, q, limit, offset)
+	vTypes := c.QueryParam("types")
+	var types []utils.VodType
+	if vTypes != "" {
+		for _, vType := range strings.Split(vTypes, ",") {
+			types = append(types, utils.VodType(vType))
+		}
+	}
+
+	v, err := h.Service.VodService.SearchVods(c, q, limit, offset, types)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

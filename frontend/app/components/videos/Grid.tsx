@@ -40,7 +40,6 @@ const VideoGrid = <T extends Video>({
   const [totalVideoCount, setTotalVideoCount] = useState(0);
   const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
 
-  // Update local state when prop changes
   useEffect(() => {
     setLocalLimit(videoLimit);
   }, [videoLimit]);
@@ -77,7 +76,7 @@ const VideoGrid = <T extends Video>({
     const videoTypesArray = convertToVideoTypes(selectedStrings);
     onVideoTypeChange(videoTypesArray)
     setVideoTypes(videoTypesArray)
-    onPageChange(1); // Reset to first page when changing filters
+    onPageChange(1);
   };
 
 

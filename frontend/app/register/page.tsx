@@ -6,7 +6,7 @@ const Loginpage = () => {
   return (
     <div>
       <Container mt={25}>
-        <AuthenticationForm type={AuthFormType.Login} />
+        <AuthenticationForm type={AuthFormType.Register} />
       </Container>
     </div>
   );

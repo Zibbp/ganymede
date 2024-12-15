@@ -286,17 +286,29 @@ func (s *Service) CheckVodExists(extID string) (bool, error) {
 	return true, nil
 }
 
-func (s *Service) SearchVods(c echo.Context, term string, limit int, offset int) (Pagination, error) {
+func (s *Service) SearchVods(c echo.Context, term string, limit int, offset int, types []utils.VodType) (Pagination, error) {
 
 	var pagination Pagination
 
-	v, err := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term)).Order(ent.Desc(vod.FieldStreamedAt)).WithChannel().Limit(limit).Offset(offset).All(c.Request().Context())
+	queryBuilder := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term)).Order(ent.Desc(vod.FieldStreamedAt)).WithChannel().Limit(limit).Offset(offset)
+
+	if len(types) > 0 {
+		queryBuilder = queryBuilder.Where(vod.TypeIn(types...))
+	}
+
+	v, err := queryBuilder.All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error searching vods")
 		return pagination, fmt.Errorf("error searching vods: %v", err)
 	}
 
-	totalCount, err := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term)).Count(c.Request().Context())
+	countQueryBuilder := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term))
+
+	if len(types) > 0 {
+		countQueryBuilder = countQueryBuilder.Where(vod.TypeIn(types...))
+	}
+
+	totalCount, err := countQueryBuilder.Count(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting total vod count")
 		return pagination, fmt.Errorf("error getting total vod count: %v", err)

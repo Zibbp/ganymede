@@ -2,10 +2,12 @@ import {
   useMutation,
   UseMutationOptions,
   useQuery,
+  useQueryClient,
   UseQueryOptions,
 } from "@tanstack/react-query";
 import { ApiResponse } from "@/app/hooks/useAxios";
 import { AxiosInstance } from "axios";
+import { Video } from "./useVideos";
 
 export interface Playback {
   id: string;
@@ -24,6 +26,16 @@ export interface NullResponse {
 export enum PlaybackStatus {
   InProgress = "in_progress",
   Finished = "finished",
+}
+
+export interface LastPlaybackResponse {
+  playback: Playback[];
+  data: LastPlayback[];
+}
+
+interface LastPlayback {
+  playback: Playback;
+  vod: Video;
 }
 
 const fetchPlaybackForVideo = async (
@@ -142,10 +154,88 @@ const useSetPlaybackProgressForVideo = () => {
   });
 };
 
+const getLastPlaybackVideos = async (
+  axiosPrivate: AxiosInstance,
+  count: number
+): Promise<LastPlaybackResponse> => {
+  const response = await axiosPrivate.get<ApiResponse<LastPlaybackResponse>>(
+    `/api/v1/playback/last`,
+    {
+      params: {
+        limit: count,
+      },
+    }
+  );
+  return response.data.data;
+};
+
+const useGetLastPlaybackVideos = (
+  axiosPrivate: AxiosInstance,
+  count: number
+) => {
+  return useQuery({
+    queryKey: ["playback-videos", count],
+    queryFn: () => getLastPlaybackVideos(axiosPrivate, count),
+  });
+};
+
+const markVideoAsWatched = async (
+  axiosPrivate: AxiosInstance,
+  videoId: string
+): Promise<ApiResponse<NullResponse>> => {
+  const response = await axiosPrivate.post(`/api/v1/playback/status`, {
+    vod_id: videoId,
+    status: PlaybackStatus.Finished,
+  });
+  return response.data;
+};
+
+export interface MarkVideoAsWatchedInput {
+  axiosPrivate: AxiosInstance;
+  videoId: string;
+}
+
+export interface DeletePlaybackInput {
+  axiosPrivate: AxiosInstance;
+  videoId: string;
+}
+
+const useMarkVideoAsWatched = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<NullResponse>, Error, MarkVideoAsWatchedInput>(
+    {
+      mutationFn: ({ axiosPrivate, videoId }) =>
+        markVideoAsWatched(axiosPrivate, videoId),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+      },
+    }
+  );
+};
+
+const deletePlayback = async (axiosPrivate: AxiosInstance, videoId: string) => {
+  const response = await axiosPrivate.delete(`/api/v1/playback/${videoId}`);
+  return response.data;
+};
+
+const useDeletePlayback = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<NullResponse>, Error, DeletePlaybackInput>({
+    mutationFn: ({ axiosPrivate, videoId }) =>
+      deletePlayback(axiosPrivate, videoId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+    },
+  });
+};
+
 export {
   useFetchPlaybackForVideo,
   fetchPlaybackForVideo,
   useStartPlaybackForVideo,
   useUpdatePlaybackProgressForVideo,
   useSetPlaybackProgressForVideo,
+  useGetLastPlaybackVideos,
+  useMarkVideoAsWatched,
+  useDeletePlayback,
 };

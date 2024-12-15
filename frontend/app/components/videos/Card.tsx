@@ -67,7 +67,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
         }} />
       )}
 
-      <Link href={`/vods/${video.id}`}>
+      <Link href={`/videos/${video.id}`}>
 
         <Card.Section>
           <Image
@@ -116,7 +116,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
       )}
 
       {/* Title */}
-      <Link href={video.processing ? `#` : `/vods/${video.id}`}>
+      <Link href={video.processing ? `#` : `/videos/${video.id}`}>
         <Tooltip label={video.title} openDelay={250} withinPortal>
           <Title lineClamp={1} order={4} mt="xs">
             {video.title}

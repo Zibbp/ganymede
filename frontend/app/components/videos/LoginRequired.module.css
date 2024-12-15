@@ -1,0 +1,25 @@
+.container {
+  width: 100%;
+  height: calc(100vh - rem(56px));
+  max-height: calc(100vh - rem(56px));
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px);
+  -webkit-filter: blur(8px);
+}
+.textContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--mantine-color-white);
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  background-origin: var(--mantine-radius-sm);
+}

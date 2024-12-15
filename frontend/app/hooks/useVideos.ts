@@ -145,20 +145,31 @@ type FetchVideosFilterOptions =
       types: Array<VideoType>;
       limit: number;
       offset: number;
+    }
+  | {
+      limit: number;
+      offset: number;
     };
 
 const fetchVideosFilter = async (
   limit: number,
   offset: number,
-  types: Array<VideoType>,
+  types?: Array<VideoType>,
   channel_id?: string,
   playlist_id?: string
 ): Promise<PaginationResponse<Array<Video>>> => {
-  // Validate that exactly one of channel_id or playlist_id is provided
-  if ((channel_id && playlist_id) || (!channel_id && !playlist_id)) {
-    throw new Error(
-      "Exactly one of channel_id or playlist_id must be provided"
-    );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const queryParams: { [key: string]: any } = {};
+
+  // Add query parameters conditionally based on whether they are provided
+  if (channel_id) {
+    queryParams.channel_id = channel_id;
+  }
+  if (playlist_id) {
+    queryParams.playlist_id = playlist_id;
+  }
+  if (types && types.length > 0) {
+    queryParams.types = types.join(",");
   }
 
   const response = await useAxios.get<
@@ -167,20 +178,26 @@ const fetchVideosFilter = async (
     params: {
       limit,
       offset,
-      channel_id,
-      types: types.join(","),
-      playlist_id,
+      ...queryParams, // Spread the conditional query parameters
     },
   });
+
   return response.data.data;
 };
 
 const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
+  // @ts-expect-error fine
   const { limit, offset, types, channel_id, playlist_id } = params;
 
-  const queryKey = channel_id
-    ? ["channel_videos", channel_id, limit, offset, types]
-    : ["playlist_videos", playlist_id, limit, offset, types];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let queryKey: any[];
+  if (channel_id) {
+    queryKey = ["channel_videos", channel_id, limit, offset, types];
+  } else if (playlist_id) {
+    queryKey = ["playlist_videos", playlist_id, limit, offset, types];
+  } else {
+    queryKey = ["videos", limit, offset, types]; // Fetch videos without channel_id or playlist_id
+  }
 
   return useQuery<PaginationResponse<Array<Video>>, Error>({
     queryKey,
@@ -196,6 +213,46 @@ const useFetchVideo = (params: FetchVideoOptions) => {
     queryKey: ["video", id, with_channel, with_chapters, with_muted_segments],
     queryFn: () =>
       fetchVideo(id, with_channel, with_chapters, with_muted_segments),
+  });
+};
+
+const searchVideos = async (
+  limit: number,
+  offset: number,
+  query: string,
+  types?: Array<VideoType>
+): Promise<PaginationResponse<Array<Video>>> => {
+  const queryParams: { [key: string]: unknown } = {};
+  if (types && types.length > 0) {
+    queryParams.types = types.join(",");
+  }
+  const response = await useAxios.get<
+    ApiResponse<PaginationResponse<Array<Video>>>
+  >("/api/v1/vod/search", {
+    params: {
+      limit,
+      offset,
+      q: query,
+      ...queryParams,
+    },
+  });
+
+  return response.data.data;
+};
+
+interface SearchVideosOptions {
+  types: Array<VideoType>;
+  limit: number;
+  offset: number;
+  query: string;
+}
+
+const useSearchVideos = (params: SearchVideosOptions) => {
+  const { limit, offset, types, query } = params;
+  return useQuery<PaginationResponse<Array<Video>>, Error>({
+    queryKey: ["search", limit, offset, types, query],
+    queryFn: () => searchVideos(limit, offset, query, types),
+    placeholderData: keepPreviousData, // previous data is kept until the new data is swapped in. This prevents flashing when changing pages, filtering, etc.
   });
 };
 
@@ -312,6 +369,66 @@ const useEditVideo = () => {
   });
 };
 
+const lockVideo = async (
+  axiosPrivate: AxiosInstance,
+  videoId: string,
+  locked: boolean
+) => {
+  const response = await axiosPrivate.post(
+    `/api/v1/vod/${videoId}/lock`,
+    {},
+    {
+      params: {
+        locked: locked,
+      },
+    }
+  );
+  return response.data;
+};
+
+const useLockVideo = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<NullResponse>,
+    Error,
+    {
+      axiosPrivate: AxiosInstance;
+      videoId: string;
+      locked: boolean;
+    }
+  >({
+    mutationFn: ({ axiosPrivate, videoId, locked }) =>
+      lockVideo(axiosPrivate, videoId, locked),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["video"] });
+    },
+  });
+};
+
+const generateStaticThumbnail = async (
+  axiosPrivate: AxiosInstance,
+  videoId: string
+) => {
+  const response = await axiosPrivate.post(
+    `/api/v1/vod/${videoId}/generate-static-thumbnail`
+  );
+  return response.data;
+};
+
+const useGenerateStaticThumbnail = () => {
+  return useMutation<
+    ApiResponse<NullResponse>,
+    Error,
+    {
+      axiosPrivate: AxiosInstance;
+      videoId: string;
+    }
+  >({
+    mutationFn: ({ axiosPrivate, videoId }) =>
+      generateStaticThumbnail(axiosPrivate, videoId),
+  });
+};
+
 export {
   fetchVideosFilter,
   useFetchVideosFilter,
@@ -322,4 +439,7 @@ export {
   useGetVideosNoPaginate,
   useCreateVideo,
   useEditVideo,
+  useLockVideo,
+  useGenerateStaticThumbnail,
+  useSearchVideos,
 };
