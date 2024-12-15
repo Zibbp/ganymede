@@ -18,7 +18,7 @@ const QueueHeader = ({ queue }: Params) => {
             <Image
               src={
                 (env('NEXT_PUBLIC_CDN_URL') ?? '') +
-                escapeURL(queue.edges.vod.thumbnail_path)
+                escapeURL(queue.edges.vod.web_thumbnail_path)
               }
               w={160}
               alt={queue.edges.vod.title}
