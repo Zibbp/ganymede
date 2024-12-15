@@ -19,15 +19,15 @@ func (h *Handler) GetVideoChapters(c echo.Context) error {
 	// parse uuid
 	vid, err := uuid.Parse(videoId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	chapters, err := h.Service.ChapterService.GetVideoChapters(vid)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, chapters)
+	return SuccessResponse(c, chapters, "video chapters")
 }
 
 func (h *Handler) GetWebVTTChapters(c echo.Context) error {
@@ -36,17 +36,17 @@ func (h *Handler) GetWebVTTChapters(c echo.Context) error {
 	// parse uuid
 	vid, err := uuid.Parse(videoId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	chapters, err := h.Service.ChapterService.GetVideoChapters(vid)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
 	webVtt, err := h.Service.ChapterService.CreateWebVtt(chapters)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
 	return c.String(http.StatusOK, webVtt)

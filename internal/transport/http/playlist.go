@@ -201,24 +201,24 @@ func (h *Handler) UpdatePlaylist(c echo.Context) error {
 func (h *Handler) SetVodDelayOnPlaylistMultistream(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid playlist id")
 	}
 	svdpr := new(SetVodDelayPlaylistRequest)
 	if err := c.Bind(svdpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(svdpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	vID, err := uuid.Parse(svdpr.VodID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid vod id")
 	}
 	err = h.Service.PlaylistService.SetVodDelayOnPlaylist(c, pID, vID, svdpr.DelayMs)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "ok")
+	return SuccessResponse(c, "", "ok")
 }
 
 // DeletePlaylist godoc

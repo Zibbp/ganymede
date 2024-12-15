@@ -15,7 +15,6 @@ import VideoEventBus from '@/app/util/VideoEventBus';
 import VideoPlayerTheaterModeIcon from './PlayerTheaterModeIcon';
 import useSettingsStore from '@/app/store/useSettingsStore';
 
-
 interface Params {
   video: Video;
 }
@@ -169,6 +168,11 @@ const VideoPlayer = ({ video }: Params) => {
     >
       <MediaProvider>
         <Poster className={`${classes.mediaPlayerPoster} vds-poster`} src={videoPoster} alt={video.title} />
+        <Track
+          src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}/api/v1/chapter/video/${video.id}/webvtt`}
+          kind="chapters"
+          default={true}
+        />
         <Track
           src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}/api/v1/chapter/video/${video.id}/webvtt`}
           kind="chapters"

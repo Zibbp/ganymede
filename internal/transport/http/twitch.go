@@ -27,13 +27,13 @@ type TwitchService interface {
 func (h *Handler) GetTwitchChannel(c echo.Context) error {
 	name := c.QueryParam("name")
 	if name == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "channel name query param is required")
+		return ErrorResponse(c, http.StatusBadRequest, "channel name query param is required")
 	}
 	channel, err := h.Service.PlatformTwitch.GetChannel(c.Request().Context(), name)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, channel)
+	return SuccessResponse(c, channel, "channel")
 }
 
 // GetTwitchVideo godoc
@@ -51,14 +51,14 @@ func (h *Handler) GetTwitchChannel(c echo.Context) error {
 func (h *Handler) GetTwitchVideo(c echo.Context) error {
 	vodID := c.QueryParam("id")
 	if vodID == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "id query param is required")
+		return ErrorResponse(c, http.StatusBadRequest, "id query param is required")
 	}
 	vod, err := h.Service.PlatformTwitch.GetVideo(c.Request().Context(), vodID, true, true)
 	if err != nil {
 		if err.Error() == "vod not found" {
-			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+			return ErrorResponse(c, http.StatusNotFound, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, vod)
+	return SuccessResponse(c, vod, "video")
 }
