@@ -76,6 +76,10 @@ var (
 		{Name: "render_chat", Type: field.TypeBool, Default: true},
 		{Name: "video_age", Type: field.TypeInt64, Default: 0},
 		{Name: "apply_categories_to_live", Type: field.TypeBool, Default: false},
+		{Name: "clips_watch", Type: field.TypeBool, Default: false},
+		{Name: "clips_limit", Type: field.TypeInt, Default: 0},
+		{Name: "clips_interval_days", Type: field.TypeInt, Default: 0},
+		{Name: "clips_last_checked", Type: field.TypeTime, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "channel_live", Type: field.TypeUUID},
@@ -88,7 +92,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[16]},
+				Columns:    []*schema.Column{LivesColumns[20]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -313,11 +317,13 @@ var (
 	VodsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "ext_id", Type: field.TypeString},
+		{Name: "clip_ext_vod_id", Type: field.TypeString, Nullable: true},
 		{Name: "ext_stream_id", Type: field.TypeString, Nullable: true},
 		{Name: "platform", Type: field.TypeEnum, Enums: []string{"twitch", "youtube"}, Default: "twitch"},
 		{Name: "type", Type: field.TypeEnum, Enums: []string{"archive", "live", "highlight", "upload", "clip"}, Default: "archive"},
 		{Name: "title", Type: field.TypeString},
 		{Name: "duration", Type: field.TypeInt, Default: 1},
+		{Name: "clip_vod_offset", Type: field.TypeInt, Nullable: true},
 		{Name: "views", Type: field.TypeInt, Default: 1},
 		{Name: "resolution", Type: field.TypeString, Nullable: true},
 		{Name: "processing", Type: field.TypeBool, Default: false},
@@ -355,7 +361,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[34]},
+				Columns:    []*schema.Column{VodsColumns[36]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

@@ -227,6 +227,82 @@ func (lu *LiveUpdate) SetNillableApplyCategoriesToLive(b *bool) *LiveUpdate {
 	return lu
 }
 
+// SetClipsWatch sets the "clips_watch" field.
+func (lu *LiveUpdate) SetClipsWatch(b bool) *LiveUpdate {
+	lu.mutation.SetClipsWatch(b)
+	return lu
+}
+
+// SetNillableClipsWatch sets the "clips_watch" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableClipsWatch(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetClipsWatch(*b)
+	}
+	return lu
+}
+
+// SetClipsLimit sets the "clips_limit" field.
+func (lu *LiveUpdate) SetClipsLimit(i int) *LiveUpdate {
+	lu.mutation.ResetClipsLimit()
+	lu.mutation.SetClipsLimit(i)
+	return lu
+}
+
+// SetNillableClipsLimit sets the "clips_limit" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableClipsLimit(i *int) *LiveUpdate {
+	if i != nil {
+		lu.SetClipsLimit(*i)
+	}
+	return lu
+}
+
+// AddClipsLimit adds i to the "clips_limit" field.
+func (lu *LiveUpdate) AddClipsLimit(i int) *LiveUpdate {
+	lu.mutation.AddClipsLimit(i)
+	return lu
+}
+
+// SetClipsIntervalDays sets the "clips_interval_days" field.
+func (lu *LiveUpdate) SetClipsIntervalDays(i int) *LiveUpdate {
+	lu.mutation.ResetClipsIntervalDays()
+	lu.mutation.SetClipsIntervalDays(i)
+	return lu
+}
+
+// SetNillableClipsIntervalDays sets the "clips_interval_days" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableClipsIntervalDays(i *int) *LiveUpdate {
+	if i != nil {
+		lu.SetClipsIntervalDays(*i)
+	}
+	return lu
+}
+
+// AddClipsIntervalDays adds i to the "clips_interval_days" field.
+func (lu *LiveUpdate) AddClipsIntervalDays(i int) *LiveUpdate {
+	lu.mutation.AddClipsIntervalDays(i)
+	return lu
+}
+
+// SetClipsLastChecked sets the "clips_last_checked" field.
+func (lu *LiveUpdate) SetClipsLastChecked(t time.Time) *LiveUpdate {
+	lu.mutation.SetClipsLastChecked(t)
+	return lu
+}
+
+// SetNillableClipsLastChecked sets the "clips_last_checked" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableClipsLastChecked(t *time.Time) *LiveUpdate {
+	if t != nil {
+		lu.SetClipsLastChecked(*t)
+	}
+	return lu
+}
+
+// ClearClipsLastChecked clears the value of the "clips_last_checked" field.
+func (lu *LiveUpdate) ClearClipsLastChecked() *LiveUpdate {
+	lu.mutation.ClearClipsLastChecked()
+	return lu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lu *LiveUpdate) SetUpdatedAt(t time.Time) *LiveUpdate {
 	lu.mutation.SetUpdatedAt(t)
@@ -427,6 +503,27 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := lu.mutation.ApplyCategoriesToLive(); ok {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
+	}
+	if value, ok := lu.mutation.ClipsWatch(); ok {
+		_spec.SetField(live.FieldClipsWatch, field.TypeBool, value)
+	}
+	if value, ok := lu.mutation.ClipsLimit(); ok {
+		_spec.SetField(live.FieldClipsLimit, field.TypeInt, value)
+	}
+	if value, ok := lu.mutation.AddedClipsLimit(); ok {
+		_spec.AddField(live.FieldClipsLimit, field.TypeInt, value)
+	}
+	if value, ok := lu.mutation.ClipsIntervalDays(); ok {
+		_spec.SetField(live.FieldClipsIntervalDays, field.TypeInt, value)
+	}
+	if value, ok := lu.mutation.AddedClipsIntervalDays(); ok {
+		_spec.AddField(live.FieldClipsIntervalDays, field.TypeInt, value)
+	}
+	if value, ok := lu.mutation.ClipsLastChecked(); ok {
+		_spec.SetField(live.FieldClipsLastChecked, field.TypeTime, value)
+	}
+	if lu.mutation.ClipsLastCheckedCleared() {
+		_spec.ClearField(live.FieldClipsLastChecked, field.TypeTime)
 	}
 	if value, ok := lu.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -765,6 +862,82 @@ func (luo *LiveUpdateOne) SetNillableApplyCategoriesToLive(b *bool) *LiveUpdateO
 	return luo
 }
 
+// SetClipsWatch sets the "clips_watch" field.
+func (luo *LiveUpdateOne) SetClipsWatch(b bool) *LiveUpdateOne {
+	luo.mutation.SetClipsWatch(b)
+	return luo
+}
+
+// SetNillableClipsWatch sets the "clips_watch" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableClipsWatch(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetClipsWatch(*b)
+	}
+	return luo
+}
+
+// SetClipsLimit sets the "clips_limit" field.
+func (luo *LiveUpdateOne) SetClipsLimit(i int) *LiveUpdateOne {
+	luo.mutation.ResetClipsLimit()
+	luo.mutation.SetClipsLimit(i)
+	return luo
+}
+
+// SetNillableClipsLimit sets the "clips_limit" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableClipsLimit(i *int) *LiveUpdateOne {
+	if i != nil {
+		luo.SetClipsLimit(*i)
+	}
+	return luo
+}
+
+// AddClipsLimit adds i to the "clips_limit" field.
+func (luo *LiveUpdateOne) AddClipsLimit(i int) *LiveUpdateOne {
+	luo.mutation.AddClipsLimit(i)
+	return luo
+}
+
+// SetClipsIntervalDays sets the "clips_interval_days" field.
+func (luo *LiveUpdateOne) SetClipsIntervalDays(i int) *LiveUpdateOne {
+	luo.mutation.ResetClipsIntervalDays()
+	luo.mutation.SetClipsIntervalDays(i)
+	return luo
+}
+
+// SetNillableClipsIntervalDays sets the "clips_interval_days" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableClipsIntervalDays(i *int) *LiveUpdateOne {
+	if i != nil {
+		luo.SetClipsIntervalDays(*i)
+	}
+	return luo
+}
+
+// AddClipsIntervalDays adds i to the "clips_interval_days" field.
+func (luo *LiveUpdateOne) AddClipsIntervalDays(i int) *LiveUpdateOne {
+	luo.mutation.AddClipsIntervalDays(i)
+	return luo
+}
+
+// SetClipsLastChecked sets the "clips_last_checked" field.
+func (luo *LiveUpdateOne) SetClipsLastChecked(t time.Time) *LiveUpdateOne {
+	luo.mutation.SetClipsLastChecked(t)
+	return luo
+}
+
+// SetNillableClipsLastChecked sets the "clips_last_checked" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableClipsLastChecked(t *time.Time) *LiveUpdateOne {
+	if t != nil {
+		luo.SetClipsLastChecked(*t)
+	}
+	return luo
+}
+
+// ClearClipsLastChecked clears the value of the "clips_last_checked" field.
+func (luo *LiveUpdateOne) ClearClipsLastChecked() *LiveUpdateOne {
+	luo.mutation.ClearClipsLastChecked()
+	return luo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (luo *LiveUpdateOne) SetUpdatedAt(t time.Time) *LiveUpdateOne {
 	luo.mutation.SetUpdatedAt(t)
@@ -995,6 +1168,27 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 	}
 	if value, ok := luo.mutation.ApplyCategoriesToLive(); ok {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
+	}
+	if value, ok := luo.mutation.ClipsWatch(); ok {
+		_spec.SetField(live.FieldClipsWatch, field.TypeBool, value)
+	}
+	if value, ok := luo.mutation.ClipsLimit(); ok {
+		_spec.SetField(live.FieldClipsLimit, field.TypeInt, value)
+	}
+	if value, ok := luo.mutation.AddedClipsLimit(); ok {
+		_spec.AddField(live.FieldClipsLimit, field.TypeInt, value)
+	}
+	if value, ok := luo.mutation.ClipsIntervalDays(); ok {
+		_spec.SetField(live.FieldClipsIntervalDays, field.TypeInt, value)
+	}
+	if value, ok := luo.mutation.AddedClipsIntervalDays(); ok {
+		_spec.AddField(live.FieldClipsIntervalDays, field.TypeInt, value)
+	}
+	if value, ok := luo.mutation.ClipsLastChecked(); ok {
+		_spec.SetField(live.FieldClipsLastChecked, field.TypeTime, value)
+	}
+	if luo.mutation.ClipsLastCheckedCleared() {
+		_spec.ClearField(live.FieldClipsLastChecked, field.TypeTime)
 	}
 	if value, ok := luo.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)

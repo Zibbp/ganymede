@@ -2084,6 +2084,12 @@ type LiveMutation struct {
 	video_age                *int64
 	addvideo_age             *int64
 	apply_categories_to_live *bool
+	clips_watch              *bool
+	clips_limit              *int
+	addclips_limit           *int
+	clips_interval_days      *int
+	addclips_interval_days   *int
+	clips_last_checked       *time.Time
 	updated_at               *time.Time
 	created_at               *time.Time
 	clearedFields            map[string]struct{}
@@ -2705,6 +2711,203 @@ func (m *LiveMutation) ResetApplyCategoriesToLive() {
 	m.apply_categories_to_live = nil
 }
 
+// SetClipsWatch sets the "clips_watch" field.
+func (m *LiveMutation) SetClipsWatch(b bool) {
+	m.clips_watch = &b
+}
+
+// ClipsWatch returns the value of the "clips_watch" field in the mutation.
+func (m *LiveMutation) ClipsWatch() (r bool, exists bool) {
+	v := m.clips_watch
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsWatch returns the old "clips_watch" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsWatch(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsWatch is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsWatch requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsWatch: %w", err)
+	}
+	return oldValue.ClipsWatch, nil
+}
+
+// ResetClipsWatch resets all changes to the "clips_watch" field.
+func (m *LiveMutation) ResetClipsWatch() {
+	m.clips_watch = nil
+}
+
+// SetClipsLimit sets the "clips_limit" field.
+func (m *LiveMutation) SetClipsLimit(i int) {
+	m.clips_limit = &i
+	m.addclips_limit = nil
+}
+
+// ClipsLimit returns the value of the "clips_limit" field in the mutation.
+func (m *LiveMutation) ClipsLimit() (r int, exists bool) {
+	v := m.clips_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsLimit returns the old "clips_limit" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsLimit(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsLimit is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsLimit requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsLimit: %w", err)
+	}
+	return oldValue.ClipsLimit, nil
+}
+
+// AddClipsLimit adds i to the "clips_limit" field.
+func (m *LiveMutation) AddClipsLimit(i int) {
+	if m.addclips_limit != nil {
+		*m.addclips_limit += i
+	} else {
+		m.addclips_limit = &i
+	}
+}
+
+// AddedClipsLimit returns the value that was added to the "clips_limit" field in this mutation.
+func (m *LiveMutation) AddedClipsLimit() (r int, exists bool) {
+	v := m.addclips_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetClipsLimit resets all changes to the "clips_limit" field.
+func (m *LiveMutation) ResetClipsLimit() {
+	m.clips_limit = nil
+	m.addclips_limit = nil
+}
+
+// SetClipsIntervalDays sets the "clips_interval_days" field.
+func (m *LiveMutation) SetClipsIntervalDays(i int) {
+	m.clips_interval_days = &i
+	m.addclips_interval_days = nil
+}
+
+// ClipsIntervalDays returns the value of the "clips_interval_days" field in the mutation.
+func (m *LiveMutation) ClipsIntervalDays() (r int, exists bool) {
+	v := m.clips_interval_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsIntervalDays returns the old "clips_interval_days" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsIntervalDays(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsIntervalDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsIntervalDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsIntervalDays: %w", err)
+	}
+	return oldValue.ClipsIntervalDays, nil
+}
+
+// AddClipsIntervalDays adds i to the "clips_interval_days" field.
+func (m *LiveMutation) AddClipsIntervalDays(i int) {
+	if m.addclips_interval_days != nil {
+		*m.addclips_interval_days += i
+	} else {
+		m.addclips_interval_days = &i
+	}
+}
+
+// AddedClipsIntervalDays returns the value that was added to the "clips_interval_days" field in this mutation.
+func (m *LiveMutation) AddedClipsIntervalDays() (r int, exists bool) {
+	v := m.addclips_interval_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetClipsIntervalDays resets all changes to the "clips_interval_days" field.
+func (m *LiveMutation) ResetClipsIntervalDays() {
+	m.clips_interval_days = nil
+	m.addclips_interval_days = nil
+}
+
+// SetClipsLastChecked sets the "clips_last_checked" field.
+func (m *LiveMutation) SetClipsLastChecked(t time.Time) {
+	m.clips_last_checked = &t
+}
+
+// ClipsLastChecked returns the value of the "clips_last_checked" field in the mutation.
+func (m *LiveMutation) ClipsLastChecked() (r time.Time, exists bool) {
+	v := m.clips_last_checked
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsLastChecked returns the old "clips_last_checked" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsLastChecked(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsLastChecked is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsLastChecked requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsLastChecked: %w", err)
+	}
+	return oldValue.ClipsLastChecked, nil
+}
+
+// ClearClipsLastChecked clears the value of the "clips_last_checked" field.
+func (m *LiveMutation) ClearClipsLastChecked() {
+	m.clips_last_checked = nil
+	m.clearedFields[live.FieldClipsLastChecked] = struct{}{}
+}
+
+// ClipsLastCheckedCleared returns if the "clips_last_checked" field was cleared in this mutation.
+func (m *LiveMutation) ClipsLastCheckedCleared() bool {
+	_, ok := m.clearedFields[live.FieldClipsLastChecked]
+	return ok
+}
+
+// ResetClipsLastChecked resets all changes to the "clips_last_checked" field.
+func (m *LiveMutation) ResetClipsLastChecked() {
+	m.clips_last_checked = nil
+	delete(m.clearedFields, live.FieldClipsLastChecked)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *LiveMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -2958,7 +3161,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 19)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -2997,6 +3200,18 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.apply_categories_to_live != nil {
 		fields = append(fields, live.FieldApplyCategoriesToLive)
+	}
+	if m.clips_watch != nil {
+		fields = append(fields, live.FieldClipsWatch)
+	}
+	if m.clips_limit != nil {
+		fields = append(fields, live.FieldClipsLimit)
+	}
+	if m.clips_interval_days != nil {
+		fields = append(fields, live.FieldClipsIntervalDays)
+	}
+	if m.clips_last_checked != nil {
+		fields = append(fields, live.FieldClipsLastChecked)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, live.FieldUpdatedAt)
@@ -3038,6 +3253,14 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.VideoAge()
 	case live.FieldApplyCategoriesToLive:
 		return m.ApplyCategoriesToLive()
+	case live.FieldClipsWatch:
+		return m.ClipsWatch()
+	case live.FieldClipsLimit:
+		return m.ClipsLimit()
+	case live.FieldClipsIntervalDays:
+		return m.ClipsIntervalDays()
+	case live.FieldClipsLastChecked:
+		return m.ClipsLastChecked()
 	case live.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case live.FieldCreatedAt:
@@ -3077,6 +3300,14 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldVideoAge(ctx)
 	case live.FieldApplyCategoriesToLive:
 		return m.OldApplyCategoriesToLive(ctx)
+	case live.FieldClipsWatch:
+		return m.OldClipsWatch(ctx)
+	case live.FieldClipsLimit:
+		return m.OldClipsLimit(ctx)
+	case live.FieldClipsIntervalDays:
+		return m.OldClipsIntervalDays(ctx)
+	case live.FieldClipsLastChecked:
+		return m.OldClipsLastChecked(ctx)
 	case live.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case live.FieldCreatedAt:
@@ -3181,6 +3412,34 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetApplyCategoriesToLive(v)
 		return nil
+	case live.FieldClipsWatch:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsWatch(v)
+		return nil
+	case live.FieldClipsLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsLimit(v)
+		return nil
+	case live.FieldClipsIntervalDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsIntervalDays(v)
+		return nil
+	case live.FieldClipsLastChecked:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsLastChecked(v)
+		return nil
 	case live.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -3206,6 +3465,12 @@ func (m *LiveMutation) AddedFields() []string {
 	if m.addvideo_age != nil {
 		fields = append(fields, live.FieldVideoAge)
 	}
+	if m.addclips_limit != nil {
+		fields = append(fields, live.FieldClipsLimit)
+	}
+	if m.addclips_interval_days != nil {
+		fields = append(fields, live.FieldClipsIntervalDays)
+	}
 	return fields
 }
 
@@ -3216,6 +3481,10 @@ func (m *LiveMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case live.FieldVideoAge:
 		return m.AddedVideoAge()
+	case live.FieldClipsLimit:
+		return m.AddedClipsLimit()
+	case live.FieldClipsIntervalDays:
+		return m.AddedClipsIntervalDays()
 	}
 	return nil, false
 }
@@ -3232,6 +3501,20 @@ func (m *LiveMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddVideoAge(v)
 		return nil
+	case live.FieldClipsLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClipsLimit(v)
+		return nil
+	case live.FieldClipsIntervalDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClipsIntervalDays(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Live numeric field %s", name)
 }
@@ -3242,6 +3525,9 @@ func (m *LiveMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(live.FieldResolution) {
 		fields = append(fields, live.FieldResolution)
+	}
+	if m.FieldCleared(live.FieldClipsLastChecked) {
+		fields = append(fields, live.FieldClipsLastChecked)
 	}
 	return fields
 }
@@ -3259,6 +3545,9 @@ func (m *LiveMutation) ClearField(name string) error {
 	switch name {
 	case live.FieldResolution:
 		m.ClearResolution()
+		return nil
+	case live.FieldClipsLastChecked:
+		m.ClearClipsLastChecked()
 		return nil
 	}
 	return fmt.Errorf("unknown Live nullable field %s", name)
@@ -3306,6 +3595,18 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldApplyCategoriesToLive:
 		m.ResetApplyCategoriesToLive()
+		return nil
+	case live.FieldClipsWatch:
+		m.ResetClipsWatch()
+		return nil
+	case live.FieldClipsLimit:
+		m.ResetClipsLimit()
+		return nil
+	case live.FieldClipsIntervalDays:
+		m.ResetClipsIntervalDays()
+		return nil
+	case live.FieldClipsLastChecked:
+		m.ResetClipsLastChecked()
 		return nil
 	case live.FieldUpdatedAt:
 		m.ResetUpdatedAt()
@@ -10430,12 +10731,15 @@ type VodMutation struct {
 	typ                         string
 	id                          *uuid.UUID
 	ext_id                      *string
+	clip_ext_vod_id             *string
 	ext_stream_id               *string
 	platform                    *utils.VideoPlatform
 	_type                       *utils.VodType
 	title                       *string
 	duration                    *int
 	addduration                 *int
+	clip_vod_offset             *int
+	addclip_vod_offset          *int
 	views                       *int
 	addviews                    *int
 	resolution                  *string
@@ -10625,6 +10929,55 @@ func (m *VodMutation) OldExtID(ctx context.Context) (v string, err error) {
 // ResetExtID resets all changes to the "ext_id" field.
 func (m *VodMutation) ResetExtID() {
 	m.ext_id = nil
+}
+
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (m *VodMutation) SetClipExtVodID(s string) {
+	m.clip_ext_vod_id = &s
+}
+
+// ClipExtVodID returns the value of the "clip_ext_vod_id" field in the mutation.
+func (m *VodMutation) ClipExtVodID() (r string, exists bool) {
+	v := m.clip_ext_vod_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipExtVodID returns the old "clip_ext_vod_id" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldClipExtVodID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipExtVodID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipExtVodID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipExtVodID: %w", err)
+	}
+	return oldValue.ClipExtVodID, nil
+}
+
+// ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
+func (m *VodMutation) ClearClipExtVodID() {
+	m.clip_ext_vod_id = nil
+	m.clearedFields[vod.FieldClipExtVodID] = struct{}{}
+}
+
+// ClipExtVodIDCleared returns if the "clip_ext_vod_id" field was cleared in this mutation.
+func (m *VodMutation) ClipExtVodIDCleared() bool {
+	_, ok := m.clearedFields[vod.FieldClipExtVodID]
+	return ok
+}
+
+// ResetClipExtVodID resets all changes to the "clip_ext_vod_id" field.
+func (m *VodMutation) ResetClipExtVodID() {
+	m.clip_ext_vod_id = nil
+	delete(m.clearedFields, vod.FieldClipExtVodID)
 }
 
 // SetExtStreamID sets the "ext_stream_id" field.
@@ -10838,6 +11191,76 @@ func (m *VodMutation) AddedDuration() (r int, exists bool) {
 func (m *VodMutation) ResetDuration() {
 	m.duration = nil
 	m.addduration = nil
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (m *VodMutation) SetClipVodOffset(i int) {
+	m.clip_vod_offset = &i
+	m.addclip_vod_offset = nil
+}
+
+// ClipVodOffset returns the value of the "clip_vod_offset" field in the mutation.
+func (m *VodMutation) ClipVodOffset() (r int, exists bool) {
+	v := m.clip_vod_offset
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipVodOffset returns the old "clip_vod_offset" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldClipVodOffset(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipVodOffset is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipVodOffset requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipVodOffset: %w", err)
+	}
+	return oldValue.ClipVodOffset, nil
+}
+
+// AddClipVodOffset adds i to the "clip_vod_offset" field.
+func (m *VodMutation) AddClipVodOffset(i int) {
+	if m.addclip_vod_offset != nil {
+		*m.addclip_vod_offset += i
+	} else {
+		m.addclip_vod_offset = &i
+	}
+}
+
+// AddedClipVodOffset returns the value that was added to the "clip_vod_offset" field in this mutation.
+func (m *VodMutation) AddedClipVodOffset() (r int, exists bool) {
+	v := m.addclip_vod_offset
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearClipVodOffset clears the value of the "clip_vod_offset" field.
+func (m *VodMutation) ClearClipVodOffset() {
+	m.clip_vod_offset = nil
+	m.addclip_vod_offset = nil
+	m.clearedFields[vod.FieldClipVodOffset] = struct{}{}
+}
+
+// ClipVodOffsetCleared returns if the "clip_vod_offset" field was cleared in this mutation.
+func (m *VodMutation) ClipVodOffsetCleared() bool {
+	_, ok := m.clearedFields[vod.FieldClipVodOffset]
+	return ok
+}
+
+// ResetClipVodOffset resets all changes to the "clip_vod_offset" field.
+func (m *VodMutation) ResetClipVodOffset() {
+	m.clip_vod_offset = nil
+	m.addclip_vod_offset = nil
+	delete(m.clearedFields, vod.FieldClipVodOffset)
 }
 
 // SetViews sets the "views" field.
@@ -12414,9 +12837,12 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 33)
+	fields := make([]string, 0, 35)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
+	}
+	if m.clip_ext_vod_id != nil {
+		fields = append(fields, vod.FieldClipExtVodID)
 	}
 	if m.ext_stream_id != nil {
 		fields = append(fields, vod.FieldExtStreamID)
@@ -12432,6 +12858,9 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.duration != nil {
 		fields = append(fields, vod.FieldDuration)
+	}
+	if m.clip_vod_offset != nil {
+		fields = append(fields, vod.FieldClipVodOffset)
 	}
 	if m.views != nil {
 		fields = append(fields, vod.FieldViews)
@@ -12524,6 +12953,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case vod.FieldExtID:
 		return m.ExtID()
+	case vod.FieldClipExtVodID:
+		return m.ClipExtVodID()
 	case vod.FieldExtStreamID:
 		return m.ExtStreamID()
 	case vod.FieldPlatform:
@@ -12534,6 +12965,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.Title()
 	case vod.FieldDuration:
 		return m.Duration()
+	case vod.FieldClipVodOffset:
+		return m.ClipVodOffset()
 	case vod.FieldViews:
 		return m.Views()
 	case vod.FieldResolution:
@@ -12599,6 +13032,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 	switch name {
 	case vod.FieldExtID:
 		return m.OldExtID(ctx)
+	case vod.FieldClipExtVodID:
+		return m.OldClipExtVodID(ctx)
 	case vod.FieldExtStreamID:
 		return m.OldExtStreamID(ctx)
 	case vod.FieldPlatform:
@@ -12609,6 +13044,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldTitle(ctx)
 	case vod.FieldDuration:
 		return m.OldDuration(ctx)
+	case vod.FieldClipVodOffset:
+		return m.OldClipVodOffset(ctx)
 	case vod.FieldViews:
 		return m.OldViews(ctx)
 	case vod.FieldResolution:
@@ -12679,6 +13116,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetExtID(v)
 		return nil
+	case vod.FieldClipExtVodID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipExtVodID(v)
+		return nil
 	case vod.FieldExtStreamID:
 		v, ok := value.(string)
 		if !ok {
@@ -12713,6 +13157,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDuration(v)
+		return nil
+	case vod.FieldClipVodOffset:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipVodOffset(v)
 		return nil
 	case vod.FieldViews:
 		v, ok := value.(int)
@@ -12914,6 +13365,9 @@ func (m *VodMutation) AddedFields() []string {
 	if m.addduration != nil {
 		fields = append(fields, vod.FieldDuration)
 	}
+	if m.addclip_vod_offset != nil {
+		fields = append(fields, vod.FieldClipVodOffset)
+	}
 	if m.addviews != nil {
 		fields = append(fields, vod.FieldViews)
 	}
@@ -12930,6 +13384,8 @@ func (m *VodMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case vod.FieldDuration:
 		return m.AddedDuration()
+	case vod.FieldClipVodOffset:
+		return m.AddedClipVodOffset()
 	case vod.FieldViews:
 		return m.AddedViews()
 	case vod.FieldLocalViews:
@@ -12949,6 +13405,13 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddDuration(v)
+		return nil
+	case vod.FieldClipVodOffset:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClipVodOffset(v)
 		return nil
 	case vod.FieldViews:
 		v, ok := value.(int)
@@ -12972,8 +13435,14 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *VodMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(vod.FieldClipExtVodID) {
+		fields = append(fields, vod.FieldClipExtVodID)
+	}
 	if m.FieldCleared(vod.FieldExtStreamID) {
 		fields = append(fields, vod.FieldExtStreamID)
+	}
+	if m.FieldCleared(vod.FieldClipVodOffset) {
+		fields = append(fields, vod.FieldClipVodOffset)
 	}
 	if m.FieldCleared(vod.FieldResolution) {
 		fields = append(fields, vod.FieldResolution)
@@ -13043,8 +13512,14 @@ func (m *VodMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *VodMutation) ClearField(name string) error {
 	switch name {
+	case vod.FieldClipExtVodID:
+		m.ClearClipExtVodID()
+		return nil
 	case vod.FieldExtStreamID:
 		m.ClearExtStreamID()
+		return nil
+	case vod.FieldClipVodOffset:
+		m.ClearClipVodOffset()
 		return nil
 	case vod.FieldResolution:
 		m.ClearResolution()
@@ -13111,6 +13586,9 @@ func (m *VodMutation) ResetField(name string) error {
 	case vod.FieldExtID:
 		m.ResetExtID()
 		return nil
+	case vod.FieldClipExtVodID:
+		m.ResetClipExtVodID()
+		return nil
 	case vod.FieldExtStreamID:
 		m.ResetExtStreamID()
 		return nil
@@ -13125,6 +13603,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldDuration:
 		m.ResetDuration()
+		return nil
+	case vod.FieldClipVodOffset:
+		m.ResetClipVodOffset()
 		return nil
 	case vod.FieldViews:
 		m.ResetViews()

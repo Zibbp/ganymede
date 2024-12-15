@@ -23,6 +23,8 @@ type Vod struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// The ID of the video on the external platform.
 	ExtID string `json:"ext_id,omitempty"`
+	// The external VOD ID of a clip. This is only populated if the clip is linked to a video.
+	ClipExtVodID string `json:"clip_ext_vod_id,omitempty"`
 	// The ID of the stream on the external platform, if applicable.
 	ExtStreamID string `json:"ext_stream_id,omitempty"`
 	// The platform the VOD is from, takes an enum.
@@ -33,6 +35,8 @@ type Vod struct {
 	Title string `json:"title,omitempty"`
 	// Duration holds the value of the "duration" field.
 	Duration int `json:"duration,omitempty"`
+	// The offset in seconds to where the clip starts in the VOD. This is only populdated if the video is a clip.
+	ClipVodOffset int `json:"clip_vod_offset,omitempty"`
 	// Views holds the value of the "views" field.
 	Views int `json:"views,omitempty"`
 	// Resolution holds the value of the "resolution" field.
@@ -178,9 +182,9 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case vod.FieldProcessing, vod.FieldLocked:
 			values[i] = new(sql.NullBool)
-		case vod.FieldDuration, vod.FieldViews, vod.FieldLocalViews:
+		case vod.FieldDuration, vod.FieldClipVodOffset, vod.FieldViews, vod.FieldLocalViews:
 			values[i] = new(sql.NullInt64)
-		case vod.FieldExtID, vod.FieldExtStreamID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath:
+		case vod.FieldExtID, vod.FieldClipExtVodID, vod.FieldExtStreamID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath:
 			values[i] = new(sql.NullString)
 		case vod.FieldStreamedAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -215,6 +219,12 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				v.ExtID = value.String
 			}
+		case vod.FieldClipExtVodID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field clip_ext_vod_id", values[i])
+			} else if value.Valid {
+				v.ClipExtVodID = value.String
+			}
 		case vod.FieldExtStreamID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ext_stream_id", values[i])
@@ -244,6 +254,12 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field duration", values[i])
 			} else if value.Valid {
 				v.Duration = int(value.Int64)
+			}
+		case vod.FieldClipVodOffset:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field clip_vod_offset", values[i])
+			} else if value.Valid {
+				v.ClipVodOffset = int(value.Int64)
 			}
 		case vod.FieldViews:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -483,6 +499,9 @@ func (v *Vod) String() string {
 	builder.WriteString("ext_id=")
 	builder.WriteString(v.ExtID)
 	builder.WriteString(", ")
+	builder.WriteString("clip_ext_vod_id=")
+	builder.WriteString(v.ClipExtVodID)
+	builder.WriteString(", ")
 	builder.WriteString("ext_stream_id=")
 	builder.WriteString(v.ExtStreamID)
 	builder.WriteString(", ")
@@ -497,6 +516,9 @@ func (v *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("duration=")
 	builder.WriteString(fmt.Sprintf("%v", v.Duration))
+	builder.WriteString(", ")
+	builder.WriteString("clip_vod_offset=")
+	builder.WriteString(fmt.Sprintf("%v", v.ClipVodOffset))
 	builder.WriteString(", ")
 	builder.WriteString("views=")
 	builder.WriteString(fmt.Sprintf("%v", v.Views))

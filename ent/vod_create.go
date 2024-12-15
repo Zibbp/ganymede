@@ -37,6 +37,20 @@ func (vc *VodCreate) SetExtID(s string) *VodCreate {
 	return vc
 }
 
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (vc *VodCreate) SetClipExtVodID(s string) *VodCreate {
+	vc.mutation.SetClipExtVodID(s)
+	return vc
+}
+
+// SetNillableClipExtVodID sets the "clip_ext_vod_id" field if the given value is not nil.
+func (vc *VodCreate) SetNillableClipExtVodID(s *string) *VodCreate {
+	if s != nil {
+		vc.SetClipExtVodID(*s)
+	}
+	return vc
+}
+
 // SetExtStreamID sets the "ext_stream_id" field.
 func (vc *VodCreate) SetExtStreamID(s string) *VodCreate {
 	vc.mutation.SetExtStreamID(s)
@@ -95,6 +109,20 @@ func (vc *VodCreate) SetDuration(i int) *VodCreate {
 func (vc *VodCreate) SetNillableDuration(i *int) *VodCreate {
 	if i != nil {
 		vc.SetDuration(*i)
+	}
+	return vc
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (vc *VodCreate) SetClipVodOffset(i int) *VodCreate {
+	vc.mutation.SetClipVodOffset(i)
+	return vc
+}
+
+// SetNillableClipVodOffset sets the "clip_vod_offset" field if the given value is not nil.
+func (vc *VodCreate) SetNillableClipVodOffset(i *int) *VodCreate {
+	if i != nil {
+		vc.SetClipVodOffset(*i)
 	}
 	return vc
 }
@@ -743,6 +771,10 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 		_node.ExtID = value
 	}
+	if value, ok := vc.mutation.ClipExtVodID(); ok {
+		_spec.SetField(vod.FieldClipExtVodID, field.TypeString, value)
+		_node.ClipExtVodID = value
+	}
 	if value, ok := vc.mutation.ExtStreamID(); ok {
 		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
 		_node.ExtStreamID = value
@@ -762,6 +794,10 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 	if value, ok := vc.mutation.Duration(); ok {
 		_spec.SetField(vod.FieldDuration, field.TypeInt, value)
 		_node.Duration = value
+	}
+	if value, ok := vc.mutation.ClipVodOffset(); ok {
+		_spec.SetField(vod.FieldClipVodOffset, field.TypeInt, value)
+		_node.ClipVodOffset = value
 	}
 	if value, ok := vc.mutation.Views(); ok {
 		_spec.SetField(vod.FieldViews, field.TypeInt, value)
@@ -1032,6 +1068,24 @@ func (u *VodUpsert) UpdateExtID() *VodUpsert {
 	return u
 }
 
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (u *VodUpsert) SetClipExtVodID(v string) *VodUpsert {
+	u.Set(vod.FieldClipExtVodID, v)
+	return u
+}
+
+// UpdateClipExtVodID sets the "clip_ext_vod_id" field to the value that was provided on create.
+func (u *VodUpsert) UpdateClipExtVodID() *VodUpsert {
+	u.SetExcluded(vod.FieldClipExtVodID)
+	return u
+}
+
+// ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
+func (u *VodUpsert) ClearClipExtVodID() *VodUpsert {
+	u.SetNull(vod.FieldClipExtVodID)
+	return u
+}
+
 // SetExtStreamID sets the "ext_stream_id" field.
 func (u *VodUpsert) SetExtStreamID(v string) *VodUpsert {
 	u.Set(vod.FieldExtStreamID, v)
@@ -1101,6 +1155,30 @@ func (u *VodUpsert) UpdateDuration() *VodUpsert {
 // AddDuration adds v to the "duration" field.
 func (u *VodUpsert) AddDuration(v int) *VodUpsert {
 	u.Add(vod.FieldDuration, v)
+	return u
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (u *VodUpsert) SetClipVodOffset(v int) *VodUpsert {
+	u.Set(vod.FieldClipVodOffset, v)
+	return u
+}
+
+// UpdateClipVodOffset sets the "clip_vod_offset" field to the value that was provided on create.
+func (u *VodUpsert) UpdateClipVodOffset() *VodUpsert {
+	u.SetExcluded(vod.FieldClipVodOffset)
+	return u
+}
+
+// AddClipVodOffset adds v to the "clip_vod_offset" field.
+func (u *VodUpsert) AddClipVodOffset(v int) *VodUpsert {
+	u.Add(vod.FieldClipVodOffset, v)
+	return u
+}
+
+// ClearClipVodOffset clears the value of the "clip_vod_offset" field.
+func (u *VodUpsert) ClearClipVodOffset() *VodUpsert {
+	u.SetNull(vod.FieldClipVodOffset)
 	return u
 }
 
@@ -1601,6 +1679,27 @@ func (u *VodUpsertOne) UpdateExtID() *VodUpsertOne {
 	})
 }
 
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (u *VodUpsertOne) SetClipExtVodID(v string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetClipExtVodID(v)
+	})
+}
+
+// UpdateClipExtVodID sets the "clip_ext_vod_id" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateClipExtVodID() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateClipExtVodID()
+	})
+}
+
+// ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
+func (u *VodUpsertOne) ClearClipExtVodID() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearClipExtVodID()
+	})
+}
+
 // SetExtStreamID sets the "ext_stream_id" field.
 func (u *VodUpsertOne) SetExtStreamID(v string) *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
@@ -1682,6 +1781,34 @@ func (u *VodUpsertOne) AddDuration(v int) *VodUpsertOne {
 func (u *VodUpsertOne) UpdateDuration() *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.UpdateDuration()
+	})
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (u *VodUpsertOne) SetClipVodOffset(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetClipVodOffset(v)
+	})
+}
+
+// AddClipVodOffset adds v to the "clip_vod_offset" field.
+func (u *VodUpsertOne) AddClipVodOffset(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.AddClipVodOffset(v)
+	})
+}
+
+// UpdateClipVodOffset sets the "clip_vod_offset" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateClipVodOffset() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateClipVodOffset()
+	})
+}
+
+// ClearClipVodOffset clears the value of the "clip_vod_offset" field.
+func (u *VodUpsertOne) ClearClipVodOffset() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearClipVodOffset()
 	})
 }
 
@@ -2421,6 +2548,27 @@ func (u *VodUpsertBulk) UpdateExtID() *VodUpsertBulk {
 	})
 }
 
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (u *VodUpsertBulk) SetClipExtVodID(v string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetClipExtVodID(v)
+	})
+}
+
+// UpdateClipExtVodID sets the "clip_ext_vod_id" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateClipExtVodID() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateClipExtVodID()
+	})
+}
+
+// ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
+func (u *VodUpsertBulk) ClearClipExtVodID() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearClipExtVodID()
+	})
+}
+
 // SetExtStreamID sets the "ext_stream_id" field.
 func (u *VodUpsertBulk) SetExtStreamID(v string) *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
@@ -2502,6 +2650,34 @@ func (u *VodUpsertBulk) AddDuration(v int) *VodUpsertBulk {
 func (u *VodUpsertBulk) UpdateDuration() *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.UpdateDuration()
+	})
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (u *VodUpsertBulk) SetClipVodOffset(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetClipVodOffset(v)
+	})
+}
+
+// AddClipVodOffset adds v to the "clip_vod_offset" field.
+func (u *VodUpsertBulk) AddClipVodOffset(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.AddClipVodOffset(v)
+	})
+}
+
+// UpdateClipVodOffset sets the "clip_vod_offset" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateClipVodOffset() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateClipVodOffset()
+	})
+}
+
+// ClearClipVodOffset clears the value of the "clip_vod_offset" field.
+func (u *VodUpsertBulk) ClearClipVodOffset() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearClipVodOffset()
 	})
 }
 
