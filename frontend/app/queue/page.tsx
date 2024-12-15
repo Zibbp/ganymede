@@ -15,6 +15,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { showNotification } from "@mantine/notifications";
 
 const QueuePage = () => {
+  useEffect(() => {
+    document.title = "Queue";
+  }, []);
+
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [records, setRecords] = useState<Queue[]>([]);

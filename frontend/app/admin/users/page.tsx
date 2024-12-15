@@ -15,6 +15,9 @@ import AdminUserDrawerContent from "@/app/components/admin/user/DrawerContent";
 import DeleteUserModalContent from "@/app/components/admin/user/DeleteModalContent";
 
 const AdminUsersPage = () => {
+  useEffect(() => {
+    document.title = "Admin - Users";
+  }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<User[]>([]);

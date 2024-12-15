@@ -19,6 +19,9 @@ interface SelectOption {
 
 
 const AdminSettingsPage = () => {
+  useEffect(() => {
+    document.title = "Admin - Settings";
+  }, []);
   const [notificationsOpened, { toggle: toggleNotifications }] = useDisclosure(false);
   const [storageTemplateOpened, { toggle: toggleStorageTemplate }] = useDisclosure(false);
   const [channelSelect, setChannelSelect] = useState<SelectOption[]>([]);

@@ -6,7 +6,7 @@ import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { useGetQueueItem } from "@/app/hooks/useQueue";
 import { Center } from "@mantine/core";
-import React from "react";
+import React, { useEffect } from "react";
 import classes from "./QueueIdPage.module.css"
 import QueueChatTimeline from "@/app/components/queue/ChatTimeline";
 
@@ -16,6 +16,9 @@ interface Params {
 
 const QueueIdPage = ({ params }: { params: Promise<Params> }) => {
   const { id } = React.use(params);
+  useEffect(() => {
+    document.title = `Queue - ${id}`;
+  }, [id]);
 
   const axiosPrivate = useAxiosPrivate()
 

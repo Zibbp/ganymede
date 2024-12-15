@@ -2,12 +2,15 @@
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Card, Container, Title, Text, Tooltip, ActionIcon, Group, Box } from "@mantine/core";
 import classes from "./AdminTasksPage.module.css"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IconPlayerPlay } from "@tabler/icons-react";
 import { Task, useStartTask } from "@/app/hooks/useTasks";
 import { showNotification } from "@mantine/notifications";
 
 const AdminTasksPage = () => {
+  useEffect(() => {
+    document.title = "Admin - Tasks";
+  }, []);
   const axiosPrivate = useAxiosPrivate()
   const [loading, setLoading] = useState(false)
 

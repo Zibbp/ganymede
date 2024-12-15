@@ -8,6 +8,9 @@ import { useDisclosure } from "@mantine/hooks";
 import AuthChangePassword from "../components/auth/ChangePassword";
 
 const ProfilePage = () => {
+  useEffect(() => {
+    document.title = "Profile";
+  }, []);
   const { user, isLoading, isLoggedIn } = useAuthStore()
   const router = useRouter();
 

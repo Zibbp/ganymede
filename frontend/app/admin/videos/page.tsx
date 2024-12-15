@@ -15,6 +15,9 @@ import DeleteVideoModalContent from "@/app/components/admin/video/DeleteModalCon
 import MultiDeleteVideoModalContent from "@/app/components/admin/video/MultiDeleteModalContent";
 
 const AdminVideosPage = () => {
+  useEffect(() => {
+    document.title = "Admin - Videos";
+  }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<Video[]>([]);

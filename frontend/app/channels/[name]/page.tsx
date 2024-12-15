@@ -3,7 +3,7 @@ import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import ChannelVideos from "@/app/components/videos/ChannelVideos";
 import { useFetchChannelByName } from "@/app/hooks/useChannels";
 import { Center, Container, Title } from "@mantine/core";
-import React from "react";
+import React, { useEffect } from "react";
 
 interface Params {
   name: string;
@@ -11,6 +11,9 @@ interface Params {
 
 const ChannelPage = ({ params }: { params: Promise<Params> }) => {
   const { name } = React.use(params);
+  useEffect(() => {
+    document.title = `${name}`;
+  }, [name]);
 
   const { data: channel, isPending, isError } = useFetchChannelByName(name)
 

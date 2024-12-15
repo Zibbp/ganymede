@@ -13,6 +13,9 @@ import AdminWatchedChannelDrawerContent, { WatchedChannelEditMode } from "@/app/
 import DeleteWatchedChannelModalContent from "@/app/components/admin/watched/DeleteModalContent";
 
 const AdminWatchChannelsPage = () => {
+  useEffect(() => {
+    document.title = "Admin - Watched Channels";
+  }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<WatchedChannel[]>([]);

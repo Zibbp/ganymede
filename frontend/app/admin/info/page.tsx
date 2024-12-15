@@ -5,8 +5,12 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Card, Container, Flex, Title, Text, Code } from "@mantine/core";
 import Link from "next/link";
 import classes from "./AdminInformationPage.module.css"
+import { useEffect } from "react";
 
 const AdminInformationPage = () => {
+  useEffect(() => {
+    document.title = "Admin - Info";
+  }, []);
   const axiosPrivate = useAxiosPrivate()
 
   const { data, isPending, isError } = useGetGanymedeInformation(axiosPrivate)

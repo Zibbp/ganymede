@@ -3,8 +3,13 @@ import { Container, SimpleGrid } from "@mantine/core";
 import ChannelCard from "../components/channel/Card";
 import { useFetchChannels } from "../hooks/useChannels";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
+import { useEffect } from "react";
 
 const ChannelsPage = () => {
+
+  useEffect(() => {
+    document.title = "Channels";
+  }, []);
 
   const { data: channels, isPending, isError } = useFetchChannels()
 

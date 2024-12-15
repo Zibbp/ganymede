@@ -15,6 +15,9 @@ import PlatformChannelDrawerContent from "@/app/components/admin/channel/Platfor
 import DeleteChannelModalContent from "@/app/components/admin/channel/DeleteModalContent";
 
 const AdminChannelsPage = () => {
+  useEffect(() => {
+    document.title = "Admin - Channels";
+  }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<Channel[]>([]);

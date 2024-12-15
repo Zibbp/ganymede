@@ -9,13 +9,17 @@ import { DataTable } from 'mantine-datatable';
 import Link from "next/link"
 import { useDisclosure } from "@mantine/hooks";
 import PlaylistEditForm, { PlaylistEditFormMode } from "../components/playlist/EditForm";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { showNotification } from "@mantine/notifications";
 import { useAxiosPrivate } from "../hooks/useAxios";
 import { useQueryClient } from "@tanstack/react-query";
 
 
 const PlaylistsPage = () => {
+  useEffect(() => {
+    document.title = "Playlists";
+  }, []);
+
   const hasPermission = useAuthStore(state => state.hasPermission);
 
   const { data: playlists, isPending, isError } = useGetPlaylists()

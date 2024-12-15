@@ -12,6 +12,10 @@ const SearchPage = () => {
   const searchParams = useSearchParams();
   const queryParam = searchParams.get("q");
 
+  useEffect(() => {
+    document.title = `Search - ${queryParam}`;
+  }, [queryParam]);
+
   // State and ref for search query
   const [searchQuery, setSearchQuery] = useState(queryParam || "");
   const defaultSearchQuery = useRef("");

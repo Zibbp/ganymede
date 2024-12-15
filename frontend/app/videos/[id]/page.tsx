@@ -1,6 +1,6 @@
 "use client"
 import { useFetchVideo } from "@/app/hooks/useVideos";
-import React from "react";
+import React, { useEffect } from "react";
 import classes from "./VideoPage.module.css"
 import { Box } from "@mantine/core";
 import VideoPlayer from "@/app/components/videos/Player";
@@ -26,6 +26,10 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const { ref, toggle, fullscreen } = useFullscreen();
 
   const { data, isPending, isError } = useFetchVideo({ id, with_channel: true, with_chapters: true, with_muted_segments: true })
+
+  useEffect(() => {
+    document.title = `${data?.title}`;
+  }, [data?.title]);
 
   // check if login is required
   const isLoginRequired = () => {

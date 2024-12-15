@@ -15,6 +15,9 @@ import DeleteQueueModalContent from "@/app/components/admin/queue/DeleteModalCon
 import Link from "next/link";
 
 const AdminQueuePage = () => {
+  useEffect(() => {
+    document.title = "Admin - Queue";
+  }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<Queue[]>([]);

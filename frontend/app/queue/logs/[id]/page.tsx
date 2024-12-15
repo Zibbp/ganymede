@@ -13,6 +13,10 @@ interface Params {
 
 const QueueLogsPage = ({ params }: { params: Promise<Params> }) => {
   const { id } = React.use(params);
+  useEffect(() => {
+    document.title = `Queue Logs - ${id}`;
+  }, [id]);
+
   const searchParams = useSearchParams()
   const logEndRef = useRef<HTMLDivElement>(null);
   const logType: QueueLogType = (searchParams.get('log') as QueueLogType) ?? 'video';

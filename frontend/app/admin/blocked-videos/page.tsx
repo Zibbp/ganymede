@@ -15,6 +15,9 @@ import DeleteBlockedVideoModalContent from "@/app/components/admin/blocked-video
 import AdminBlockedVideosDrawerContent from "@/app/components/admin/blocked-videos/DrawerContent";
 
 const AdminBlockedVideosPage = () => {
+  useEffect(() => {
+    document.title = "Admin - Blocked Videos";
+  }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<BlockedVideo[]>([]);
