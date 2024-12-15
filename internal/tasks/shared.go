@@ -33,6 +33,7 @@ var (
 	TaskGenerateStaticThumbnails = "generate_static_thumbnails"
 	TaskArchiveWatchdog          = "archive_watchdog"
 	TaskCheckChannelForNewVideos = "check_channel_for_new_videos"
+	TaskCheckChannelForNewClips  = "check_channel_for_new_clips"
 	TaskPruneVideos              = "prune_videos"
 	TaskImportVideos             = "import_videos"
 	TaskAuthenticatePlatform     = "authenticate_platform"

@@ -12,6 +12,40 @@ interface SelectOption {
   value: string;
 }
 
+function extractTwitchId(input: string): string {
+  // Regex patterns for various inputs
+  const clipUrlRegex = /\/clip\/(?<id>[a-zA-Z0-9-_]+)/; // Extract full clip ID from URL
+  const videoUrlRegex = /\/videos\/(?<id>\d+)/; // Extract video ID from URL
+  const clipIdRegex = /^[a-zA-Z]+(?:[a-zA-Z0-9-]+)?$/; // Match standalone clip IDs
+  const videoIdRegex = /^\d+$/; // Match standalone video IDs (numeric)
+
+  // Check for a clip URL
+  const clipUrlMatch = input.match(clipUrlRegex);
+  if (clipUrlMatch?.groups?.id) {
+    return clipUrlMatch.groups.id;
+  }
+
+  // Check for a video URL
+  const videoUrlMatch = input.match(videoUrlRegex);
+  if (videoUrlMatch?.groups?.id) {
+    return videoUrlMatch.groups.id;
+  }
+
+  // Check for standalone clip IDs
+  if (clipIdRegex.test(input)) {
+    return input; // If input is already a valid clip ID, return it
+  }
+
+  // Check for standalone video IDs
+  if (videoIdRegex.test(input)) {
+    return input; // If input is already a valid video ID, return it
+  }
+
+  // Return null if no valid ID is found
+  return "invalid";
+}
+
+
 const ArchivePage = () => {
   useEffect(() => {
     document.title = "Archive";
@@ -73,7 +107,7 @@ const ArchivePage = () => {
 
       await useArchiveVideoMutate.mutateAsync({
         axiosPrivate,
-        video_id: archiveInput,
+        video_id: extractTwitchId(archiveInput),
         channel_id: channelId,
         quality: archiveQuality,
         archive_chat: archiveChat,
@@ -166,7 +200,6 @@ const ArchivePage = () => {
                 Archive
               </Button>
             </Card>
-            {/* {twitchVodInfo?.id && <VodPreview video={twitchVodInfo} />} */}
           </div>
         </Center>
       </Container>

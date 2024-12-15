@@ -63,6 +63,44 @@ func (w CheckChannelsForNewVideosWorker) Work(ctx context.Context, job *river.Jo
 	return nil
 }
 
+// Check watched channels for new clips
+type TaskCheckChannelForNewClipsArgs struct{}
+
+func (TaskCheckChannelForNewClipsArgs) Kind() string { return tasks.TaskCheckChannelForNewClips }
+
+func (w TaskCheckChannelForNewClipsArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w TaskCheckChannelForNewClipsArgs) Timeout(job *river.Job[TaskCheckChannelForNewClipsArgs]) time.Duration {
+	return 10 * time.Minute
+}
+
+type TaskCheckChannelForNewClipsWorker struct {
+	river.WorkerDefaults[TaskCheckChannelForNewClipsArgs]
+}
+
+func (w TaskCheckChannelForNewClipsWorker) Work(ctx context.Context, job *river.Job[TaskCheckChannelForNewClipsArgs]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	liveService, err := liveServiceFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = liveService.CheckWatchedChannelClips(ctx, logger)
+	if err != nil {
+		return err
+	}
+
+	logger.Info().Msg("task completed")
+
+	return nil
+}
+
 // Prune videos
 type PruneVideosArgs struct{}
 

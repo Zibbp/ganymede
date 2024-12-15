@@ -2,7 +2,7 @@ import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/default/layouts/video.css';
 import { MediaPlayer, MediaPlayerInstance, MediaProvider, MediaSrc, Poster, Track, VideoMimeType } from '@vidstack/react';
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default';
-import { Video } from '@/app/hooks/useVideos';
+import { Video, VideoType } from '@/app/hooks/useVideos';
 import classes from "./Player.module.css"
 import { useEffect, useRef, useState } from 'react';
 import { env } from 'next-runtime-env';
@@ -139,16 +139,24 @@ const VideoPlayer = ({ video }: Params) => {
   useEffect(() => {
     const ticketInterval = setInterval(() => {
       if (player.current == null) return;
+
+      let time = player.current.state.currentTime
+      // Clip chats are offset with the position of the clip in the VOD
+      // Append the offset to the current player time to account for this
+      if (video.type == VideoType.Clip && video.clip_vod_offset) {
+        time = time + video.clip_vod_offset
+      };
+
       VideoEventBus.setData({
         isPaused: player.current.state.paused,
         isPlaying: player.current.state.playing,
-        time: player.current.state.currentTime
+        time: time
       })
     }, 100);
     return () => {
       clearInterval(ticketInterval);
     };
-  }, [player]);
+  }, [player, video.clip_vod_offset, video.type]);
 
   return (
     <MediaPlayer

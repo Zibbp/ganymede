@@ -2084,7 +2084,7 @@ type LiveMutation struct {
 	video_age                *int64
 	addvideo_age             *int64
 	apply_categories_to_live *bool
-	clips_watch              *bool
+	watch_clips              *bool
 	clips_limit              *int
 	addclips_limit           *int
 	clips_interval_days      *int
@@ -2711,40 +2711,40 @@ func (m *LiveMutation) ResetApplyCategoriesToLive() {
 	m.apply_categories_to_live = nil
 }
 
-// SetClipsWatch sets the "clips_watch" field.
-func (m *LiveMutation) SetClipsWatch(b bool) {
-	m.clips_watch = &b
+// SetWatchClips sets the "watch_clips" field.
+func (m *LiveMutation) SetWatchClips(b bool) {
+	m.watch_clips = &b
 }
 
-// ClipsWatch returns the value of the "clips_watch" field in the mutation.
-func (m *LiveMutation) ClipsWatch() (r bool, exists bool) {
-	v := m.clips_watch
+// WatchClips returns the value of the "watch_clips" field in the mutation.
+func (m *LiveMutation) WatchClips() (r bool, exists bool) {
+	v := m.watch_clips
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldClipsWatch returns the old "clips_watch" field's value of the Live entity.
+// OldWatchClips returns the old "watch_clips" field's value of the Live entity.
 // If the Live object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *LiveMutation) OldClipsWatch(ctx context.Context) (v bool, err error) {
+func (m *LiveMutation) OldWatchClips(ctx context.Context) (v bool, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldClipsWatch is only allowed on UpdateOne operations")
+		return v, errors.New("OldWatchClips is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldClipsWatch requires an ID field in the mutation")
+		return v, errors.New("OldWatchClips requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldClipsWatch: %w", err)
+		return v, fmt.Errorf("querying old value for OldWatchClips: %w", err)
 	}
-	return oldValue.ClipsWatch, nil
+	return oldValue.WatchClips, nil
 }
 
-// ResetClipsWatch resets all changes to the "clips_watch" field.
-func (m *LiveMutation) ResetClipsWatch() {
-	m.clips_watch = nil
+// ResetWatchClips resets all changes to the "watch_clips" field.
+func (m *LiveMutation) ResetWatchClips() {
+	m.watch_clips = nil
 }
 
 // SetClipsLimit sets the "clips_limit" field.
@@ -3201,8 +3201,8 @@ func (m *LiveMutation) Fields() []string {
 	if m.apply_categories_to_live != nil {
 		fields = append(fields, live.FieldApplyCategoriesToLive)
 	}
-	if m.clips_watch != nil {
-		fields = append(fields, live.FieldClipsWatch)
+	if m.watch_clips != nil {
+		fields = append(fields, live.FieldWatchClips)
 	}
 	if m.clips_limit != nil {
 		fields = append(fields, live.FieldClipsLimit)
@@ -3253,8 +3253,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.VideoAge()
 	case live.FieldApplyCategoriesToLive:
 		return m.ApplyCategoriesToLive()
-	case live.FieldClipsWatch:
-		return m.ClipsWatch()
+	case live.FieldWatchClips:
+		return m.WatchClips()
 	case live.FieldClipsLimit:
 		return m.ClipsLimit()
 	case live.FieldClipsIntervalDays:
@@ -3300,8 +3300,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldVideoAge(ctx)
 	case live.FieldApplyCategoriesToLive:
 		return m.OldApplyCategoriesToLive(ctx)
-	case live.FieldClipsWatch:
-		return m.OldClipsWatch(ctx)
+	case live.FieldWatchClips:
+		return m.OldWatchClips(ctx)
 	case live.FieldClipsLimit:
 		return m.OldClipsLimit(ctx)
 	case live.FieldClipsIntervalDays:
@@ -3412,12 +3412,12 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetApplyCategoriesToLive(v)
 		return nil
-	case live.FieldClipsWatch:
+	case live.FieldWatchClips:
 		v, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetClipsWatch(v)
+		m.SetWatchClips(v)
 		return nil
 	case live.FieldClipsLimit:
 		v, ok := value.(int)
@@ -3596,8 +3596,8 @@ func (m *LiveMutation) ResetField(name string) error {
 	case live.FieldApplyCategoriesToLive:
 		m.ResetApplyCategoriesToLive()
 		return nil
-	case live.FieldClipsWatch:
-		m.ResetClipsWatch()
+	case live.FieldWatchClips:
+		m.ResetWatchClips()
 		return nil
 	case live.FieldClipsLimit:
 		m.ResetClipsLimit()

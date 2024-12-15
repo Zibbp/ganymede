@@ -22,7 +22,8 @@ type VodService interface {
 	CreateVod(vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	GetVods(c echo.Context) ([]*ent.Vod, error)
 	GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error)
-	GetVod(vID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool, withQueue bool) (*ent.Vod, error)
+	GetVod(ctx context.Context, vID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool, withQueue bool) (*ent.Vod, error)
+	GetVodByExternalId(ctx context.Context, externalId string) (*ent.Vod, error)
 	DeleteVod(c echo.Context, vID uuid.UUID, deleteFiles bool) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	SearchVods(c echo.Context, query string, limit int, offset int, types []utils.VodType) (vod.Pagination, error)
@@ -97,7 +98,7 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		if err != nil {
 			return ErrorResponse(c, http.StatusBadRequest, err.Error())
 		}
-		_, err = h.Service.VodService.GetVod(vID, false, false, false, false)
+		_, err = h.Service.VodService.GetVod(c.Request().Context(), vID, false, false, false, false)
 		if err == nil {
 			return ErrorResponse(c, http.StatusConflict, "vod already exists")
 		}
@@ -181,9 +182,28 @@ func (h *Handler) GetVods(c echo.Context) error {
 //		@Failure		500				{object}	utils.ErrorResponse
 //		@Router			/vod/{id} [get]
 func (h *Handler) GetVod(c echo.Context) error {
-	vID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	var id string
+	var videoUUID uuid.UUID
+
+	if c.Param("id") != "" {
+		id = c.Param("id")
+
+		vUUID, err := uuid.Parse(id)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid UUID provided: "+err.Error())
+		}
+		videoUUID = vUUID
+	} else if c.Param("external_id") != "" {
+		id = c.Param("external_id")
+
+		v, err := h.Service.VodService.GetVodByExternalId(c.Request().Context(), id)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "VOD not found by external ID: "+err.Error())
+		}
+		videoUUID = v.ID
+	} else {
+		// If neither "id" nor "external_id" is provided, return an error
+		return echo.NewHTTPError(http.StatusBadRequest, "Either 'id' or 'external_id' must be provided")
 	}
 
 	withChannel := false
@@ -211,7 +231,7 @@ func (h *Handler) GetVod(c echo.Context) error {
 		withQueue = true
 	}
 
-	v, err := h.Service.VodService.GetVod(vID, withChannel, withChapters, withMutedSegments, withQueue)
+	v, err := h.Service.VodService.GetVod(c.Request().Context(), videoUUID, withChannel, withChapters, withMutedSegments, withQueue)
 	if err != nil {
 		if err.Error() == "vod not found" {
 			return ErrorResponse(c, http.StatusNotFound, err.Error())

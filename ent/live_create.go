@@ -209,16 +209,16 @@ func (lc *LiveCreate) SetNillableApplyCategoriesToLive(b *bool) *LiveCreate {
 	return lc
 }
 
-// SetClipsWatch sets the "clips_watch" field.
-func (lc *LiveCreate) SetClipsWatch(b bool) *LiveCreate {
-	lc.mutation.SetClipsWatch(b)
+// SetWatchClips sets the "watch_clips" field.
+func (lc *LiveCreate) SetWatchClips(b bool) *LiveCreate {
+	lc.mutation.SetWatchClips(b)
 	return lc
 }
 
-// SetNillableClipsWatch sets the "clips_watch" field if the given value is not nil.
-func (lc *LiveCreate) SetNillableClipsWatch(b *bool) *LiveCreate {
+// SetNillableWatchClips sets the "watch_clips" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableWatchClips(b *bool) *LiveCreate {
 	if b != nil {
-		lc.SetClipsWatch(*b)
+		lc.SetWatchClips(*b)
 	}
 	return lc
 }
@@ -435,9 +435,9 @@ func (lc *LiveCreate) defaults() {
 		v := live.DefaultApplyCategoriesToLive
 		lc.mutation.SetApplyCategoriesToLive(v)
 	}
-	if _, ok := lc.mutation.ClipsWatch(); !ok {
-		v := live.DefaultClipsWatch
-		lc.mutation.SetClipsWatch(v)
+	if _, ok := lc.mutation.WatchClips(); !ok {
+		v := live.DefaultWatchClips
+		lc.mutation.SetWatchClips(v)
 	}
 	if _, ok := lc.mutation.ClipsLimit(); !ok {
 		v := live.DefaultClipsLimit
@@ -499,8 +499,8 @@ func (lc *LiveCreate) check() error {
 	if _, ok := lc.mutation.ApplyCategoriesToLive(); !ok {
 		return &ValidationError{Name: "apply_categories_to_live", err: errors.New(`ent: missing required field "Live.apply_categories_to_live"`)}
 	}
-	if _, ok := lc.mutation.ClipsWatch(); !ok {
-		return &ValidationError{Name: "clips_watch", err: errors.New(`ent: missing required field "Live.clips_watch"`)}
+	if _, ok := lc.mutation.WatchClips(); !ok {
+		return &ValidationError{Name: "watch_clips", err: errors.New(`ent: missing required field "Live.watch_clips"`)}
 	}
 	if _, ok := lc.mutation.ClipsLimit(); !ok {
 		return &ValidationError{Name: "clips_limit", err: errors.New(`ent: missing required field "Live.clips_limit"`)}
@@ -605,9 +605,9 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
 		_node.ApplyCategoriesToLive = value
 	}
-	if value, ok := lc.mutation.ClipsWatch(); ok {
-		_spec.SetField(live.FieldClipsWatch, field.TypeBool, value)
-		_node.ClipsWatch = value
+	if value, ok := lc.mutation.WatchClips(); ok {
+		_spec.SetField(live.FieldWatchClips, field.TypeBool, value)
+		_node.WatchClips = value
 	}
 	if value, ok := lc.mutation.ClipsLimit(); ok {
 		_spec.SetField(live.FieldClipsLimit, field.TypeInt, value)
@@ -898,15 +898,15 @@ func (u *LiveUpsert) UpdateApplyCategoriesToLive() *LiveUpsert {
 	return u
 }
 
-// SetClipsWatch sets the "clips_watch" field.
-func (u *LiveUpsert) SetClipsWatch(v bool) *LiveUpsert {
-	u.Set(live.FieldClipsWatch, v)
+// SetWatchClips sets the "watch_clips" field.
+func (u *LiveUpsert) SetWatchClips(v bool) *LiveUpsert {
+	u.Set(live.FieldWatchClips, v)
 	return u
 }
 
-// UpdateClipsWatch sets the "clips_watch" field to the value that was provided on create.
-func (u *LiveUpsert) UpdateClipsWatch() *LiveUpsert {
-	u.SetExcluded(live.FieldClipsWatch)
+// UpdateWatchClips sets the "watch_clips" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateWatchClips() *LiveUpsert {
+	u.SetExcluded(live.FieldWatchClips)
 	return u
 }
 
@@ -1223,17 +1223,17 @@ func (u *LiveUpsertOne) UpdateApplyCategoriesToLive() *LiveUpsertOne {
 	})
 }
 
-// SetClipsWatch sets the "clips_watch" field.
-func (u *LiveUpsertOne) SetClipsWatch(v bool) *LiveUpsertOne {
+// SetWatchClips sets the "watch_clips" field.
+func (u *LiveUpsertOne) SetWatchClips(v bool) *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
-		s.SetClipsWatch(v)
+		s.SetWatchClips(v)
 	})
 }
 
-// UpdateClipsWatch sets the "clips_watch" field to the value that was provided on create.
-func (u *LiveUpsertOne) UpdateClipsWatch() *LiveUpsertOne {
+// UpdateWatchClips sets the "watch_clips" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateWatchClips() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
-		s.UpdateClipsWatch()
+		s.UpdateWatchClips()
 	})
 }
 
@@ -1728,17 +1728,17 @@ func (u *LiveUpsertBulk) UpdateApplyCategoriesToLive() *LiveUpsertBulk {
 	})
 }
 
-// SetClipsWatch sets the "clips_watch" field.
-func (u *LiveUpsertBulk) SetClipsWatch(v bool) *LiveUpsertBulk {
+// SetWatchClips sets the "watch_clips" field.
+func (u *LiveUpsertBulk) SetWatchClips(v bool) *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
-		s.SetClipsWatch(v)
+		s.SetWatchClips(v)
 	})
 }
 
-// UpdateClipsWatch sets the "clips_watch" field to the value that was provided on create.
-func (u *LiveUpsertBulk) UpdateClipsWatch() *LiveUpsertBulk {
+// UpdateWatchClips sets the "watch_clips" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateWatchClips() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
-		s.UpdateClipsWatch()
+		s.UpdateWatchClips()
 	})
 }
 

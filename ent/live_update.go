@@ -227,16 +227,16 @@ func (lu *LiveUpdate) SetNillableApplyCategoriesToLive(b *bool) *LiveUpdate {
 	return lu
 }
 
-// SetClipsWatch sets the "clips_watch" field.
-func (lu *LiveUpdate) SetClipsWatch(b bool) *LiveUpdate {
-	lu.mutation.SetClipsWatch(b)
+// SetWatchClips sets the "watch_clips" field.
+func (lu *LiveUpdate) SetWatchClips(b bool) *LiveUpdate {
+	lu.mutation.SetWatchClips(b)
 	return lu
 }
 
-// SetNillableClipsWatch sets the "clips_watch" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableClipsWatch(b *bool) *LiveUpdate {
+// SetNillableWatchClips sets the "watch_clips" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableWatchClips(b *bool) *LiveUpdate {
 	if b != nil {
-		lu.SetClipsWatch(*b)
+		lu.SetWatchClips(*b)
 	}
 	return lu
 }
@@ -504,8 +504,8 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := lu.mutation.ApplyCategoriesToLive(); ok {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.ClipsWatch(); ok {
-		_spec.SetField(live.FieldClipsWatch, field.TypeBool, value)
+	if value, ok := lu.mutation.WatchClips(); ok {
+		_spec.SetField(live.FieldWatchClips, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.ClipsLimit(); ok {
 		_spec.SetField(live.FieldClipsLimit, field.TypeInt, value)
@@ -862,16 +862,16 @@ func (luo *LiveUpdateOne) SetNillableApplyCategoriesToLive(b *bool) *LiveUpdateO
 	return luo
 }
 
-// SetClipsWatch sets the "clips_watch" field.
-func (luo *LiveUpdateOne) SetClipsWatch(b bool) *LiveUpdateOne {
-	luo.mutation.SetClipsWatch(b)
+// SetWatchClips sets the "watch_clips" field.
+func (luo *LiveUpdateOne) SetWatchClips(b bool) *LiveUpdateOne {
+	luo.mutation.SetWatchClips(b)
 	return luo
 }
 
-// SetNillableClipsWatch sets the "clips_watch" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableClipsWatch(b *bool) *LiveUpdateOne {
+// SetNillableWatchClips sets the "watch_clips" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableWatchClips(b *bool) *LiveUpdateOne {
 	if b != nil {
-		luo.SetClipsWatch(*b)
+		luo.SetWatchClips(*b)
 	}
 	return luo
 }
@@ -1169,8 +1169,8 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 	if value, ok := luo.mutation.ApplyCategoriesToLive(); ok {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.ClipsWatch(); ok {
-		_spec.SetField(live.FieldClipsWatch, field.TypeBool, value)
+	if value, ok := luo.mutation.WatchClips(); ok {
+		_spec.SetField(live.FieldWatchClips, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.ClipsLimit(); ok {
 		_spec.SetField(live.FieldClipsLimit, field.TypeInt, value)

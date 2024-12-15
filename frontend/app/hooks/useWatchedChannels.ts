@@ -20,6 +20,9 @@ export interface WatchedChannel {
   render_chat: boolean;
   max_age: number;
   apply_categories_to_live: boolean;
+  watch_clips: boolean;
+  clips_limit: number;
+  clips_interval_days: number;
   updated_at: string;
   created_at: string;
   edges: WatchedChannelEdges;
@@ -71,6 +74,9 @@ const editWatchedChannel = async (
     max_age: watchedChannel.max_age,
     regex: watchedChannel.edges.title_regex,
     apply_categories_to_live: watchedChannel.apply_categories_to_live,
+    watch_clips: watchedChannel.watch_clips,
+    clips_limit: watchedChannel.clips_limit,
+    clips_interval_days: watchedChannel.clips_interval_days,
   });
   return response.data.data;
 };
@@ -96,6 +102,9 @@ const createWatchedChannel = async (
     max_age: watchedChannel.max_age,
     regex: watchedChannel.edges.title_regex,
     apply_categories_to_live: watchedChannel.apply_categories_to_live,
+    watch_clips: watchedChannel.watch_clips,
+    clips_limit: watchedChannel.clips_limit,
+    clips_interval_days: watchedChannel.clips_interval_days,
   });
   return response.data.data;
 };

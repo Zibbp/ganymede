@@ -194,6 +194,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.POST("", h.CreateVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	vodGroup.GET("", h.GetVods)
 	vodGroup.GET("/:id", h.GetVod)
+	vodGroup.GET("/external_id/:external_id", h.GetVod)
 	vodGroup.GET("/search", h.SearchVods)
 	vodGroup.PUT("/:id", h.UpdateVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	vodGroup.DELETE("/:id", h.DeleteVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))

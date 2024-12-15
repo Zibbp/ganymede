@@ -121,9 +121,9 @@ func ApplyCategoriesToLive(v bool) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldApplyCategoriesToLive, v))
 }
 
-// ClipsWatch applies equality check predicate on the "clips_watch" field. It's identical to ClipsWatchEQ.
-func ClipsWatch(v bool) predicate.Live {
-	return predicate.Live(sql.FieldEQ(FieldClipsWatch, v))
+// WatchClips applies equality check predicate on the "watch_clips" field. It's identical to WatchClipsEQ.
+func WatchClips(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldWatchClips, v))
 }
 
 // ClipsLimit applies equality check predicate on the "clips_limit" field. It's identical to ClipsLimitEQ.
@@ -406,14 +406,14 @@ func ApplyCategoriesToLiveNEQ(v bool) predicate.Live {
 	return predicate.Live(sql.FieldNEQ(FieldApplyCategoriesToLive, v))
 }
 
-// ClipsWatchEQ applies the EQ predicate on the "clips_watch" field.
-func ClipsWatchEQ(v bool) predicate.Live {
-	return predicate.Live(sql.FieldEQ(FieldClipsWatch, v))
+// WatchClipsEQ applies the EQ predicate on the "watch_clips" field.
+func WatchClipsEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldWatchClips, v))
 }
 
-// ClipsWatchNEQ applies the NEQ predicate on the "clips_watch" field.
-func ClipsWatchNEQ(v bool) predicate.Live {
-	return predicate.Live(sql.FieldNEQ(FieldClipsWatch, v))
+// WatchClipsNEQ applies the NEQ predicate on the "watch_clips" field.
+func WatchClipsNEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldWatchClips, v))
 }
 
 // ClipsLimitEQ applies the EQ predicate on the "clips_limit" field.

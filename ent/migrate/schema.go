@@ -76,7 +76,7 @@ var (
 		{Name: "render_chat", Type: field.TypeBool, Default: true},
 		{Name: "video_age", Type: field.TypeInt64, Default: 0},
 		{Name: "apply_categories_to_live", Type: field.TypeBool, Default: false},
-		{Name: "clips_watch", Type: field.TypeBool, Default: false},
+		{Name: "watch_clips", Type: field.TypeBool, Default: false},
 		{Name: "clips_limit", Type: field.TypeInt, Default: 0},
 		{Name: "clips_interval_days", Type: field.TypeInt, Default: 0},
 		{Name: "clips_last_checked", Type: field.TypeTime, Nullable: true},

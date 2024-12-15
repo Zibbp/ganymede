@@ -46,7 +46,7 @@ type Live struct {
 	// Whether the categories should be applied to livestreams.
 	ApplyCategoriesToLive bool `json:"apply_categories_to_live"`
 	// Whether to download clips on a schedule.
-	ClipsWatch bool `json:"clips_watch"`
+	WatchClips bool `json:"watch_clips"`
 	// The number of clips to archive.
 	ClipsLimit int `json:"clips_limit"`
 	// How often channel should be checked for clips to archive in days.
@@ -111,7 +111,7 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive, live.FieldClipsWatch:
+		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive, live.FieldWatchClips:
 			values[i] = new(sql.NullBool)
 		case live.FieldVideoAge, live.FieldClipsLimit, live.FieldClipsIntervalDays:
 			values[i] = new(sql.NullInt64)
@@ -222,11 +222,11 @@ func (l *Live) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				l.ApplyCategoriesToLive = value.Bool
 			}
-		case live.FieldClipsWatch:
+		case live.FieldWatchClips:
 			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field clips_watch", values[i])
+				return fmt.Errorf("unexpected type %T for field watch_clips", values[i])
 			} else if value.Valid {
-				l.ClipsWatch = value.Bool
+				l.WatchClips = value.Bool
 			}
 		case live.FieldClipsLimit:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -355,8 +355,8 @@ func (l *Live) String() string {
 	builder.WriteString("apply_categories_to_live=")
 	builder.WriteString(fmt.Sprintf("%v", l.ApplyCategoriesToLive))
 	builder.WriteString(", ")
-	builder.WriteString("clips_watch=")
-	builder.WriteString(fmt.Sprintf("%v", l.ClipsWatch))
+	builder.WriteString("watch_clips=")
+	builder.WriteString(fmt.Sprintf("%v", l.WatchClips))
 	builder.WriteString(", ")
 	builder.WriteString("clips_limit=")
 	builder.WriteString(fmt.Sprintf("%v", l.ClipsLimit))

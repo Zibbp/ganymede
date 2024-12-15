@@ -113,10 +113,10 @@ func init() {
 	liveDescApplyCategoriesToLive := liveFields[13].Descriptor()
 	// live.DefaultApplyCategoriesToLive holds the default value on creation for the apply_categories_to_live field.
 	live.DefaultApplyCategoriesToLive = liveDescApplyCategoriesToLive.Default.(bool)
-	// liveDescClipsWatch is the schema descriptor for clips_watch field.
-	liveDescClipsWatch := liveFields[14].Descriptor()
-	// live.DefaultClipsWatch holds the default value on creation for the clips_watch field.
-	live.DefaultClipsWatch = liveDescClipsWatch.Default.(bool)
+	// liveDescWatchClips is the schema descriptor for watch_clips field.
+	liveDescWatchClips := liveFields[14].Descriptor()
+	// live.DefaultWatchClips holds the default value on creation for the watch_clips field.
+	live.DefaultWatchClips = liveDescWatchClips.Default.(bool)
 	// liveDescClipsLimit is the schema descriptor for clips_limit field.
 	liveDescClipsLimit := liveFields[15].Descriptor()
 	// live.DefaultClipsLimit holds the default value on creation for the clips_limit field.

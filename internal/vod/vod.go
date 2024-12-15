@@ -46,10 +46,12 @@ type Vod struct {
 	ID                      uuid.UUID           `json:"id"`
 	ExtID                   string              `json:"ext_id"`
 	ExtStreamID             string              `json:"ext_stream_id"`
+	ClipExtVodID            string              `json:"clip_ext_vod_id"`
 	Platform                utils.VideoPlatform `json:"platform"`
 	Type                    utils.VodType       `json:"type"`
 	Title                   string              `json:"title"`
 	Duration                int                 `json:"duration"`
+	ClipVodOffset           int                 `json:"clip_vod_offset"`
 	Views                   int                 `json:"views"`
 	Resolution              string              `json:"resolution"`
 	Processing              bool                `json:"processing"`
@@ -93,7 +95,7 @@ type MutedSegment struct {
 }
 
 func (s *Service) CreateVod(vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.Create().SetID(vodDto.ID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetExtStreamID(vodDto.ExtStreamID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).SetCaptionPath(vodDto.CaptionPath).SetStreamedAt(vodDto.StreamedAt).SetFolderName(vodDto.FolderName).SetFileName(vodDto.FileName).SetLocked(vodDto.Locked).SetTmpVideoDownloadPath(vodDto.TmpVideoDownloadPath).SetTmpVideoConvertPath(vodDto.TmpVideoConvertPath).SetTmpChatDownloadPath(vodDto.TmpChatDownloadPath).SetTmpLiveChatDownloadPath(vodDto.TmpLiveChatDownloadPath).SetTmpLiveChatConvertPath(vodDto.TmpLiveChatConvertPath).SetTmpChatRenderPath(vodDto.TmpChatRenderPath).SetLiveChatPath(vodDto.LiveChatPath).SetLiveChatConvertPath(vodDto.LiveChatConvertPath).SetVideoHlsPath(vodDto.VideoHLSPath).SetTmpVideoHlsPath(vodDto.TmpVideoHLSPath).Save(context.Background())
+	v, err := s.Store.Client.Vod.Create().SetID(vodDto.ID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetExtStreamID(vodDto.ExtStreamID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).SetCaptionPath(vodDto.CaptionPath).SetStreamedAt(vodDto.StreamedAt).SetFolderName(vodDto.FolderName).SetFileName(vodDto.FileName).SetLocked(vodDto.Locked).SetTmpVideoDownloadPath(vodDto.TmpVideoDownloadPath).SetTmpVideoConvertPath(vodDto.TmpVideoConvertPath).SetTmpChatDownloadPath(vodDto.TmpChatDownloadPath).SetTmpLiveChatDownloadPath(vodDto.TmpLiveChatDownloadPath).SetTmpLiveChatConvertPath(vodDto.TmpLiveChatConvertPath).SetTmpChatRenderPath(vodDto.TmpChatRenderPath).SetLiveChatPath(vodDto.LiveChatPath).SetLiveChatConvertPath(vodDto.LiveChatConvertPath).SetVideoHlsPath(vodDto.VideoHLSPath).SetTmpVideoHlsPath(vodDto.TmpVideoHLSPath).SetClipVodOffset(vodDto.ClipVodOffset).SetClipExtVodID(vodDto.ClipExtVodID).Save(context.Background())
 	if err != nil {
 		log.Debug().Err(err).Msg("error creating vod")
 		if _, ok := err.(*ent.ConstraintError); ok {
@@ -125,7 +127,22 @@ func (s *Service) GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod,
 	return v, nil
 }
 
-func (s *Service) GetVod(vodID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool, withQueue bool) (*ent.Vod, error) {
+// GetVodByExternalId gets a VOD by it's external (platform) ID. For more advanced usage use GetVod().
+func (s *Service) GetVodByExternalId(ctx context.Context, externalId string) (*ent.Vod, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ExtID(externalId)).Only(ctx)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod")
+		// if vod not found
+		if _, ok := err.(*ent.NotFoundError); ok {
+			return nil, fmt.Errorf("vod not found")
+		}
+		return nil, fmt.Errorf("error getting vod: %v", err)
+	}
+
+	return v, nil
+}
+
+func (s *Service) GetVod(ctx context.Context, vodID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool, withQueue bool) (*ent.Vod, error) {
 	q := s.Store.Client.Vod.Query()
 	q.Where(vod.ID(vodID))
 
@@ -142,7 +159,7 @@ func (s *Service) GetVod(vodID uuid.UUID, withChannel bool, withChapters bool, w
 		q.WithQueue()
 	}
 
-	v, err := q.Only(context.Background())
+	v, err := q.Only(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vod")
 		// if vod not found
@@ -257,7 +274,7 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) e
 }
 
 func (s *Service) UpdateVod(c echo.Context, vodID uuid.UUID, vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
-	v, err := s.Store.Client.Vod.UpdateOneID(vodID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).SetCaptionPath(vodDto.CaptionPath).SetStreamedAt(vodDto.StreamedAt).SetLocked(vodDto.Locked).Save(c.Request().Context())
+	v, err := s.Store.Client.Vod.UpdateOneID(vodID).SetChannelID(cUUID).SetExtID(vodDto.ExtID).SetExtID(vodDto.ExtID).SetPlatform(vodDto.Platform).SetType(vodDto.Type).SetTitle(vodDto.Title).SetDuration(vodDto.Duration).SetViews(vodDto.Views).SetResolution(vodDto.Resolution).SetProcessing(vodDto.Processing).SetThumbnailPath(vodDto.ThumbnailPath).SetWebThumbnailPath(vodDto.WebThumbnailPath).SetVideoPath(vodDto.VideoPath).SetChatPath(vodDto.ChatPath).SetChatVideoPath(vodDto.ChatVideoPath).SetInfoPath(vodDto.InfoPath).SetCaptionPath(vodDto.CaptionPath).SetStreamedAt(vodDto.StreamedAt).SetLocked(vodDto.Locked).SetClipVodOffset(vodDto.ClipVodOffset).SetClipExtVodID(vodDto.ClipExtVodID).Save(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error updating vod")
 

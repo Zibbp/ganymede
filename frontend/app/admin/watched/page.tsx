@@ -152,6 +152,14 @@ const AdminWatchChannelsPage = () => {
                   return watch_vod ? "✅" : "❌";
                 },
               },
+              {
+                accessor: "watch_clips",
+                title: "Watch Clips",
+                sortable: true,
+                render: ({ watch_clips }) => {
+                  return watch_clips ? "✅" : "❌";
+                },
+              },
 
               {
                 accessor: "actions",

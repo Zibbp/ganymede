@@ -80,6 +80,24 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5}>
             <Box>
+              <Text fw={"bold"}>Check watched channels for clips to archive</Text>
+              <Text size="xs">Occurs daily at 00:00.</Text>
+            </Box>
+            <Tooltip label="Start Task">
+              <ActionIcon
+                onClick={() => startTask(Task.CheckClips)}
+                loading={loading}
+                color="green"
+                variant="filled"
+                size="lg"
+              >
+                <IconPlayerPlay size={24} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+
+          <Group justify="space-between" py={5}>
+            <Box>
               <Text fw={"bold"}>Storage Template Migration</Text>
               <Text size="xs">Apply storage template to existing files. Read the <a className={classes.link} target="_blank" href="https://github.com/Zibbp/ganymede/wiki/Storage-Templates-and-Migration">docs</a> before starting.</Text>
             </Box>

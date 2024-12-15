@@ -41,8 +41,8 @@ const (
 	FieldVideoAge = "video_age"
 	// FieldApplyCategoriesToLive holds the string denoting the apply_categories_to_live field in the database.
 	FieldApplyCategoriesToLive = "apply_categories_to_live"
-	// FieldClipsWatch holds the string denoting the clips_watch field in the database.
-	FieldClipsWatch = "clips_watch"
+	// FieldWatchClips holds the string denoting the watch_clips field in the database.
+	FieldWatchClips = "watch_clips"
 	// FieldClipsLimit holds the string denoting the clips_limit field in the database.
 	FieldClipsLimit = "clips_limit"
 	// FieldClipsIntervalDays holds the string denoting the clips_interval_days field in the database.
@@ -100,7 +100,7 @@ var Columns = []string{
 	FieldRenderChat,
 	FieldVideoAge,
 	FieldApplyCategoriesToLive,
-	FieldClipsWatch,
+	FieldWatchClips,
 	FieldClipsLimit,
 	FieldClipsIntervalDays,
 	FieldClipsLastChecked,
@@ -156,8 +156,8 @@ var (
 	DefaultVideoAge int64
 	// DefaultApplyCategoriesToLive holds the default value on creation for the "apply_categories_to_live" field.
 	DefaultApplyCategoriesToLive bool
-	// DefaultClipsWatch holds the default value on creation for the "clips_watch" field.
-	DefaultClipsWatch bool
+	// DefaultWatchClips holds the default value on creation for the "watch_clips" field.
+	DefaultWatchClips bool
 	// DefaultClipsLimit holds the default value on creation for the "clips_limit" field.
 	DefaultClipsLimit int
 	// DefaultClipsIntervalDays holds the default value on creation for the "clips_interval_days" field.
@@ -245,9 +245,9 @@ func ByApplyCategoriesToLive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldApplyCategoriesToLive, opts...).ToFunc()
 }
 
-// ByClipsWatch orders the results by the clips_watch field.
-func ByClipsWatch(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldClipsWatch, opts...).ToFunc()
+// ByWatchClips orders the results by the watch_clips field.
+func ByWatchClips(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWatchClips, opts...).ToFunc()
 }
 
 // ByClipsLimit orders the results by the clips_limit field.

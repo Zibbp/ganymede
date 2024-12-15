@@ -34,6 +34,9 @@ type AddWatchedChannelRequest struct {
 	ApplyCategoriesToLive bool                `json:"apply_categories_to_live" validate:"boolean"`
 	MaxAge                int64               `json:"max_age"`
 	Regex                 []AddLiveTitleRegex `json:"regex"`
+	WatchClips            bool                `json:"watch_clips" validate:"boolean"`
+	ClipsLimit            int                 `json:"clips_limit" validate:"number,gte=1"`
+	ClipsIntervalDays     int                 `json:"clips_interval_days" validate:"number,gte=1"`
 }
 
 type AddLiveTitleRegex struct {
@@ -56,6 +59,9 @@ type UpdateWatchedChannelRequest struct {
 	ApplyCategoriesToLive bool                `json:"apply_categories_to_live" validate:"boolean"`
 	MaxAge                int64               `json:"max_age"`
 	Regex                 []AddLiveTitleRegex `json:"regex"`
+	WatchClips            bool                `json:"watch_clips" validate:"boolean"`
+	ClipsLimit            int                 `json:"clips_limit" validate:"number,gte=1"`
+	ClipsIntervalDays     int                 `json:"clips_interval_days" validate:"number,gte=1"`
 }
 
 type ConvertChatRequest struct {
@@ -68,10 +74,13 @@ type ConvertChatRequest struct {
 }
 
 type ArchiveLiveChannelRequest struct {
-	ChannelID   string `json:"channel_id" validate:"required"`
-	Resolution  string `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
-	ArchiveChat bool   `json:"archive_chat"`
-	RenderChat  bool   `json:"render_chat"`
+	ChannelID         string `json:"channel_id" validate:"required"`
+	Resolution        string `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
+	ArchiveChat       bool   `json:"archive_chat"`
+	RenderChat        bool   `json:"render_chat"`
+	WatchClips        bool   `json:"watch_clips" validate:"boolean"`
+	ClipsLimit        int    `json:"clips_limit" validate:"number,gte=1"`
+	ClipsIntervalDays int    `json:"clips_interval_days" validate:"number,gte=1"`
 }
 
 // GetLiveWatchedChannels godoc
@@ -139,6 +148,9 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		Categories:            ccr.Categories,
 		ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
 		MaxAge:                ccr.MaxAge,
+		WatchClips:            ccr.WatchClips,
+		ClipsLimit:            ccr.ClipsLimit,
+		ClipsIntervalDays:     ccr.ClipsIntervalDays,
 	}
 
 	for _, regex := range ccr.Regex {
@@ -206,6 +218,9 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		Categories:            ccr.Categories,
 		ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
 		MaxAge:                ccr.MaxAge,
+		WatchClips:            ccr.WatchClips,
+		ClipsLimit:            ccr.ClipsLimit,
+		ClipsIntervalDays:     ccr.ClipsIntervalDays,
 	}
 
 	for _, regex := range ccr.Regex {
@@ -262,62 +277,3 @@ func (h *Handler) Check(c echo.Context) error {
 	}
 	return SuccessResponse(c, "", "deleted watched channel")
 }
-
-// CheckVodWatchedChannels godoc
-//
-//	@Summary		Check watched channels
-//	@Description	Check watched channels if they are live. This is what runs every X seconds in the config.
-//	@Tags			Live
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/live/check [get]
-//	@Security		ApiKeyCookieAuth
-// func (h *Handler) CheckVodWatchedChannels(c echo.Context) error {
-// 	go h.Service.LiveService.CheckVodWatchedChannels()
-
-// 	return c.JSON(http.StatusOK, "ok")
-// }
-
-// ArchiveLiveChannel godoc
-//
-//	@Summary		Archive a channel's live stream
-//	@Description	Adhoc archive a channel's live stream.
-//	@Tags			Live
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/live/archive [post]
-//	@Security		ApiKeyCookieAuth
-// func (h *Handler) ArchiveLiveChannel(c echo.Context) error {
-// 	alcr := new(ArchiveLiveChannelRequest)
-// 	if err := c.Bind(alcr); err != nil {
-// 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
-// 	}
-// 	if err := c.Validate(alcr); err != nil {
-// 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
-// 	}
-// 	// validate channel uuid
-// 	cID, err := uuid.Parse(alcr.ChannelID)
-// 	if err != nil {
-// 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
-// 	}
-
-// 	archiveLiveDto := live.ArchiveLive{
-// 		ChannelID:   cID,
-// 		Resolution:  alcr.Resolution,
-// 		ArchiveChat: alcr.ArchiveChat,
-// 		RenderChat:  alcr.RenderChat,
-// 	}
-
-// 	err = h.Service.LiveService.ArchiveLiveChannel(c, archiveLiveDto)
-// 	if err != nil {
-// 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
-// 	}
-
-// 	return c.JSON(http.StatusOK, "ok")
-// }

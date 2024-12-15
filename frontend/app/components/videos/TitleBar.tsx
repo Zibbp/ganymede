@@ -1,7 +1,7 @@
 "use client"
-import { Video } from "@/app/hooks/useVideos";
+import { useGetVideoByExternalId, Video } from "@/app/hooks/useVideos";
 import { escapeURL } from "@/app/util/util";
-import { Avatar, Box, Divider, Tooltip, Text, Group, Badge } from "@mantine/core";
+import { Avatar, Box, Divider, Tooltip, Text, Group, Badge, Button } from "@mantine/core";
 import { env } from "next-runtime-env";
 import classes from "./TitleBar.module.css";
 import { IconCalendarEvent, IconUser, IconUsers } from "@tabler/icons-react";
@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import VideoMenu from "./Menu";
 import useAuthStore from "@/app/store/useAuthStore";
 import { UserRole } from "@/app/hooks/useAuthentication";
+import Link from "next/link";
 
 interface Params {
   video: Video;
@@ -16,6 +17,8 @@ interface Params {
 
 const VideoTitleBar = ({ video }: Params) => {
   const hasPermission = useAuthStore(state => state.hasPermission);
+
+  const { data: clipFullVideo } = useGetVideoByExternalId(video.clip_ext_vod_id)
 
   return (
     <div className={classes.titleBarContainer}>
@@ -40,6 +43,12 @@ const VideoTitleBar = ({ video }: Params) => {
         <div className={classes.titleBarRight}>
 
           <div className={classes.titleBarBadge}>
+
+            {clipFullVideo && (
+              <Group mr={15}>
+                <Button variant="default" size="xs" component={Link} href={`/videos/${clipFullVideo.id}?t=${video.clip_vod_offset}`}>Go To Full Video</Button>
+              </Group>
+            )}
 
             {video.views && (
               <Group mr={15}>

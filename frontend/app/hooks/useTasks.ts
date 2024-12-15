@@ -4,6 +4,7 @@ import { AxiosInstance } from "axios";
 export enum Task {
   CheckLive = "check_live",
   CheckVod = "check_vod",
+  CheckClips = "check_clips",
   GetJWKS = "get_jwks",
   StorageMigration = "storage_migration",
   PruneVideo = "prune_videos",

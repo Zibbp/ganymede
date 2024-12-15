@@ -61,6 +61,9 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       download_sub_only: watchedChannel?.download_sub_only ?? false,
       max_age: watchedChannel?.max_age || 7,
       apply_categories_to_live: watchedChannel?.apply_categories_to_live ?? false,
+      watch_clips: watchedChannel?.watch_clips ?? false,
+      clips_limit: watchedChannel?.clips_limit || 5,
+      clips_interval_days: watchedChannel?.clips_interval_days || 7,
       live_title_regexes: [],
       categories: [] as string[],
     },
@@ -120,6 +123,9 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           download_sub_only: formValues.download_sub_only,
           max_age: formValues.max_age,
           apply_categories_to_live: formValues.apply_categories_to_live,
+          watch_clips: formValues.watch_clips,
+          clips_limit: formValues.clips_limit,
+          clips_interval_days: formValues.clips_interval_days,
           is_live: false, // Default value
           edges: {
             channel: { id: formValues.channel_id } as Channel,
@@ -131,7 +137,6 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           created_at: ""
         };
 
-        // Call the mutation to create the watched channel
         await createWatchedChannelMutation.mutateAsync({
           axiosPrivate,
           channelId: formValues.channel_id,
@@ -146,7 +151,6 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
 
         handleClose();
       } else if (mode === WatchedChannelEditMode.Edit && watchedChannel) {
-        // Existing edit implementation
         const updatedWatchedChannel: WatchedChannel = {
           ...watchedChannel,
           watch_live: formValues.watch_live,
@@ -160,6 +164,9 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           download_sub_only: formValues.download_sub_only,
           max_age: formValues.max_age,
           apply_categories_to_live: formValues.apply_categories_to_live,
+          watch_clips: formValues.watch_clips,
+          clips_limit: formValues.clips_limit,
+          clips_interval_days: formValues.clips_interval_days,
           edges: {
             ...watchedChannel.edges,
             title_regex: liveTitleRegexes
@@ -308,6 +315,41 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
               {...form.getInputProps('download_sub_only', { type: "checkbox" })}
             />
           </Box>
+        </div>
+
+        <Divider my="sm" size="md" />
+
+        <div>
+          <Title order={3}>Channel Clips</Title>
+          <Text>Archive past channel clips.</Text>
+          <Text size="xs" >
+            Check watched channel every <code>interval</code> days archiving the top <code>number</code> of clips. No restrictions (categories, age, title, regex, etc) are applied to this.
+          </Text>
+
+          <Checkbox
+            my={5}
+            label="Watch Clips"
+            key={form.key('watch_clips')}
+            {...form.getInputProps('watch_clips', { type: "checkbox" })}
+          />
+
+
+          <NumberInput
+            label="Number of Clips"
+            description="Number of clips to archive."
+            key={form.key('clips_limit')}
+            {...form.getInputProps('clips_limit')}
+            min={1}
+          />
+
+          <NumberInput
+            label="Interval Days"
+            description="How often channel is checked for clips to archive (in days)."
+            key={form.key('clips_interval_days')}
+            {...form.getInputProps('clips_interval_days')}
+            min={1}
+          />
+
         </div>
 
         <Divider my="sm" size="md" />

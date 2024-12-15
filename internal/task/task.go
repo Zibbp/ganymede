@@ -45,6 +45,13 @@ func (s *Service) StartTask(ctx context.Context, task string) error {
 		}
 		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
 
+	case "check_clips":
+		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.TaskCheckChannelForNewClipsArgs{}, nil)
+		if err != nil {
+			return fmt.Errorf("error inserting task: %v", err)
+		}
+		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
+
 	case "get_jwks":
 		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.FetchJWKSArgs{}, nil)
 		if err != nil {

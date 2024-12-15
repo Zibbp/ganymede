@@ -21,10 +21,12 @@ export interface PaginationResponse<T> {
 export interface Video {
   id: string;
   ext_id: string;
+  clip_ext_vod_id?: string;
   platform: Platform;
   type: VideoType;
   title: string;
   duration: number;
+  clip_vod_offset?: number;
   views: number;
   resolution: string;
   thumbnail_path: string;
@@ -429,6 +431,25 @@ const useGenerateStaticThumbnail = () => {
   });
 };
 
+const getVideoByExternalId = async (extId: string): Promise<Video> => {
+  const response = await useAxios.get<ApiResponse<Video>>(
+    `/api/v1/vod/external_id/${extId}`
+  );
+  return response.data.data;
+};
+
+const useGetVideoByExternalId = (extId?: string) => {
+  return useQuery({
+    queryKey: ["video", extId],
+    queryFn: () => getVideoByExternalId(extId!),
+    enabled: !!extId,
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchIntervalInBackground: false,
+    retry: false,
+  });
+};
+
 export {
   fetchVideosFilter,
   useFetchVideosFilter,
@@ -442,4 +463,5 @@ export {
   useLockVideo,
   useGenerateStaticThumbnail,
   useSearchVideos,
+  useGetVideoByExternalId,
 };
