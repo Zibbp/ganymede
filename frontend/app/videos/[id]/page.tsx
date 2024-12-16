@@ -58,7 +58,18 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   }
 
   return (
-    <div className={classes.page}>
+    <div>
+      {/* Hide navbar. I don't like doing this but the navbar ruins the experience */}
+      <style jsx>{`
+        :global(html)::-webkit-scrollbar {
+          display: none;
+        }
+        :global(html) {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+        }
+      `}</style>
+
       {/* Player and chat section */}
       <Box className={classes.container}>
         {/* Player */}
