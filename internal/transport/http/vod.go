@@ -36,6 +36,7 @@ type VodService interface {
 	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error)
 	LockVod(c echo.Context, vID uuid.UUID, status bool) error
 	GenerateStaticThumbnail(ctx context.Context, videoID uuid.UUID) (*rivertype.JobInsertResult, error)
+	GetVodClips(ctx context.Context, id uuid.UUID) ([]*ent.Vod, error)
 }
 
 type CreateVodRequest struct {
@@ -654,4 +655,18 @@ func (h *Handler) GenerateStaticThumbnail(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 	return SuccessResponse(c, nil, fmt.Sprintf("job created: %d", job.Job.ID))
+}
+
+func (h *Handler) GetVodClips(c echo.Context) error {
+	id := c.Param("id")
+	videoId, err := uuid.Parse(id)
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, "Invalid video ID")
+	}
+	clips, err := h.Service.VodService.GetVodClips(c.Request().Context(), videoId)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+
+	return SuccessResponse(c, clips, "clips for video")
 }

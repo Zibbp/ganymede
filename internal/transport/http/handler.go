@@ -199,6 +199,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.PUT("/:id", h.UpdateVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	vodGroup.DELETE("/:id", h.DeleteVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 	vodGroup.GET("/:id/playlist", h.GetVodPlaylists)
+	vodGroup.GET("/:id/clips", h.GetVodClips)
 	vodGroup.GET("/paginate", h.GetVodsPagination)
 	vodGroup.GET("/:id/chat", h.GetVodChatComments)
 	vodGroup.GET("/:id/chat/seek", h.GetNumberOfVodChatCommentsFromTime)

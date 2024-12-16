@@ -450,6 +450,20 @@ const useGetVideoByExternalId = (extId?: string) => {
   });
 };
 
+const getVideoClips = async (id: string): Promise<Video[]> => {
+  const response = await useAxios.get<ApiResponse<Array<Video>>>(
+    `/api/v1/vod/${id}/clips`
+  );
+  return response.data.data;
+};
+
+const useGetVideoClips = (id: string) => {
+  return useQuery({
+    queryKey: ["video_clips", id],
+    queryFn: () => getVideoClips(id),
+  });
+};
+
 export {
   fetchVideosFilter,
   useFetchVideosFilter,
@@ -464,4 +478,5 @@ export {
   useGenerateStaticThumbnail,
   useSearchVideos,
   useGetVideoByExternalId,
+  useGetVideoClips,
 };

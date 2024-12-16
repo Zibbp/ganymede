@@ -421,6 +421,19 @@ func (s *Service) GenerateStaticThumbnail(ctx context.Context, videoID uuid.UUID
 	}, nil)
 }
 
+func (s *Service) GetVodClips(ctx context.Context, id uuid.UUID) ([]*ent.Vod, error) {
+	video, err := s.Store.Client.Vod.Query().Where(vod.ID(id)).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	clips, err := s.Store.Client.Vod.Query().Where(vod.ClipExtVodID(video.ExtID)).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return clips, nil
+}
+
 func (s *Service) GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error) {
 	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
 	if err != nil {

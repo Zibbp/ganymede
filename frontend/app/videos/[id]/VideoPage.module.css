@@ -44,3 +44,10 @@
   height: 100vh;
   max-height: 100vh;
 }
+
+/* I don't like hiding the scrollbar but having it visible ruins the chat player, even a custom small one */
+html::-webkit-scrollbar {
+  display: none;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}

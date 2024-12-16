@@ -1,8 +1,8 @@
 "use client"
-import { useFetchVideo } from "@/app/hooks/useVideos";
+import { useFetchVideo, useGetVideoClips } from "@/app/hooks/useVideos";
 import React, { useEffect } from "react";
 import classes from "./VideoPage.module.css"
-import { Box } from "@mantine/core";
+import { Box, Container } from "@mantine/core";
 import VideoPlayer from "@/app/components/videos/Player";
 import VideoTitleBar from "@/app/components/videos/TitleBar";
 import ChatPlayer from "@/app/components/videos/ChatPlayer";
@@ -12,6 +12,7 @@ import { useFullscreen } from "@mantine/hooks";
 import { env } from "next-runtime-env";
 import VideoLoginRequired from "@/app/components/videos/LoginRequired";
 import useAuthStore from "@/app/store/useAuthStore";
+import VideoPageClips from "@/app/components/videos/VideoClips";
 
 interface Params {
   id: string;
@@ -26,6 +27,10 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const { ref, toggle, fullscreen } = useFullscreen();
 
   const { data, isPending, isError } = useFetchVideo({ id, with_channel: true, with_chapters: true, with_muted_segments: true })
+
+  // need to fetch clips here to dynamically render the clips section
+  const { data: videoClips, isPending: videoClipsPending, isError: videoClipsError } = useGetVideoClips(id)
+
 
   useEffect(() => {
     document.title = `${data?.title}`;
@@ -53,7 +58,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   }
 
   return (
-    <div>
+    <div className={classes.page}>
       {/* Player and chat section */}
       <Box className={classes.container}>
         {/* Player */}
@@ -84,6 +89,18 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
 
       {/* Title bar */}
       {!videoTheaterMode && <VideoTitleBar video={data} />}
+
+
+      {/* Video clips */}
+      <Container size="7xl" fluid={true} >
+        {videoClipsError && (
+          <div>Error loading clips</div>
+        )}
+        {((!videoClipsPending) && (videoClips && videoClips.length > 0)) && (
+          <VideoPageClips clips={videoClips} />
+        )}
+      </Container>
+
     </div>
   );
 }
