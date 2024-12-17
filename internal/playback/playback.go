@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
@@ -35,7 +36,7 @@ type GetPlayback struct {
 var ErrorPlaybackNotFound = fmt.Errorf("playback not found")
 
 func (s *Service) UpdateProgress(ctx context.Context, userId uuid.UUID, videoId uuid.UUID, time int) error {
-	check, err := s.Store.Client.Playback.Query().Where(playback.UserID(userId)).Where(playback.VodID(videoId)).First(ctx)
+	check, err := s.Store.Client.Playback.Query().Where(playback.UserID(userId)).Where(playback.VodID(videoId)).Order(playback.ByUpdatedAt(sql.OrderAsc())).First(ctx)
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
 
@@ -59,7 +60,7 @@ func (s *Service) UpdateProgress(ctx context.Context, userId uuid.UUID, videoId 
 }
 
 func (s *Service) GetProgress(ctx context.Context, userId uuid.UUID, videoId uuid.UUID) (*ent.Playback, error) {
-	playbackEntry, err := s.Store.Client.Playback.Query().Where(playback.UserID(userId)).Where(playback.VodID(videoId)).First(ctx)
+	playbackEntry, err := s.Store.Client.Playback.Query().Where(playback.UserID(userId)).Where(playback.VodID(videoId)).Order(playback.ByUpdatedAt(sql.OrderAsc())).First(ctx)
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return nil, ErrorPlaybackNotFound
@@ -80,7 +81,7 @@ func (s *Service) GetAllProgress(ctx context.Context, userId uuid.UUID) ([]*ent.
 }
 
 func (s *Service) UpdateStatus(ctx context.Context, userId uuid.UUID, videoId uuid.UUID, status string) error {
-	_, err := s.Store.Client.Playback.Query().Where(playback.UserID(userId)).Where(playback.VodID(videoId)).First(ctx)
+	_, err := s.Store.Client.Playback.Query().Where(playback.UserID(userId)).Where(playback.VodID(videoId)).Order(playback.ByUpdatedAt(sql.OrderAsc())).First(ctx)
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
 
@@ -132,7 +133,7 @@ func (s *Service) GetLastPlaybacks(ctx context.Context, userId uuid.UUID, limit 
 
 	// Process the fetched playbacks
 	for _, playbackEntry := range playbackEntries {
-		vod, err := s.Store.Client.Vod.Query().Where(entVod.ID(playbackEntry.VodID)).WithChannel().First(ctx)
+		vod, err := s.Store.Client.Vod.Query().Where(entVod.ID(playbackEntry.VodID)).WithChannel().Only(ctx)
 		if err != nil {
 			// Skip if vod not found
 			continue
@@ -160,7 +161,7 @@ func (s *Service) GetLastPlaybacks(ctx context.Context, userId uuid.UUID, limit 
 }
 
 func (s *Service) StartPlayback(c echo.Context, videoId uuid.UUID) error {
-	video, err := s.Store.Client.Vod.Query().Where(entVod.ID(videoId)).WithChannel().First(c.Request().Context())
+	video, err := s.Store.Client.Vod.Query().Where(entVod.ID(videoId)).WithChannel().Only(c.Request().Context())
 	if err != nil {
 		return fmt.Errorf("error getting video: %v", err)
 	}

@@ -203,13 +203,6 @@ var (
 		Name:       "playbacks",
 		Columns:    PlaybacksColumns,
 		PrimaryKey: []*schema.Column{PlaybacksColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "playback_vod_id_user_id",
-				Unique:  true,
-				Columns: []*schema.Column{PlaybacksColumns[1], PlaybacksColumns[2]},
-			},
-		},
 	}
 	// PlaylistsColumns holds the columns for the "playlists" table.
 	PlaylistsColumns = []*schema.Column{

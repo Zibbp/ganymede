@@ -5,7 +5,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
-	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -31,10 +30,4 @@ func (Playback) Fields() []ent.Field {
 // Edges of the Playback.
 func (Playback) Edges() []ent.Edge {
 	return nil
-}
-
-func (Playback) Indexes() []ent.Index {
-	return []ent.Index{
-		index.Fields("vod_id", "user_id").Unique(),
-	}
 }
