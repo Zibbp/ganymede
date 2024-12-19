@@ -131,7 +131,10 @@ func (w GenerateSpriteThumbnailWorker) Work(ctx context.Context, job *river.Job[
 	rootVideoPath := fmt.Sprintf("%s/%s/%s", env.VideosDir, channel.Name, video.FolderName)
 	spritesDirectory := fmt.Sprintf("%s/sprites", rootVideoPath)
 
-	os.MkdirAll(spritesDirectory, os.ModePerm)
+	err = os.MkdirAll(spritesDirectory, os.ModePerm)
+	if err != nil {
+		return err
+	}
 
 	thumbnailWidth := 220
 	thumbnailHeight := 124

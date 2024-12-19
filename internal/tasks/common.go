@@ -256,9 +256,7 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 
 // getBasePath returns provided url except for everything after the last /
 func getBasePath(url string) string {
-	if strings.HasSuffix(url, "/") {
-		url = strings.TrimSuffix(url, "/")
-	}
+	url = strings.TrimSuffix(url, "/")
 	lastSlashIndex := strings.LastIndex(url, "/")
 	if lastSlashIndex == -1 {
 		return url
