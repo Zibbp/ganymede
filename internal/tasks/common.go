@@ -367,8 +367,9 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 		return err
 	}
 
-	// download sprite (seek preview) thumbnails
-	if dbItems.Video.Platform == utils.PlatformTwitch {
+	// download sprite (seek preview) thumbnails if available
+	// only available for archives
+	if dbItems.Video.Type == utils.Archive && dbItems.Video.Platform == utils.PlatformTwitch {
 		// get video
 		videoInfo, err := platformService.GetVideo(ctx, dbItems.Video.ExtID, true, true)
 		if err != nil {
