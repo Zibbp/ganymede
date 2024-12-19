@@ -242,7 +242,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.AuthenticatePlatformArgs{}, nil
 			},
-			&river.PeriodicJobOpts{RunOnStart: false},
+			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 	}
 
