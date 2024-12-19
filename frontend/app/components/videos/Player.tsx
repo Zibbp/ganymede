@@ -181,16 +181,12 @@ const VideoPlayer = ({ video }: Params) => {
           kind="chapters"
           default={true}
         />
-        <Track
-          src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}/api/v1/chapter/video/${video.id}/webvtt`}
-          kind="chapters"
-          default={true}
-        />
       </MediaProvider>
       <DefaultVideoLayout icons={defaultLayoutIcons} noScrubGesture={false}
         slots={{
           beforeFullscreenButton: <VideoPlayerTheaterModeIcon />,
         }}
+        thumbnails={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}/api/v1/vod/${video.id}/thumbnails/vtt`}
       />
     </MediaPlayer>
   );

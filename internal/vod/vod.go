@@ -421,6 +421,12 @@ func (s *Service) GenerateStaticThumbnail(ctx context.Context, videoID uuid.UUID
 	}, nil)
 }
 
+func (s *Service) GenerateSpriteThumbnails(ctx context.Context, videoID uuid.UUID) (*rivertype.JobInsertResult, error) {
+	return s.RiverClient.Client.Insert(ctx, tasks.GenerateSpriteThumbnailArgs{
+		VideoId: videoID.String(),
+	}, nil)
+}
+
 func (s *Service) GetVodClips(ctx context.Context, id uuid.UUID) ([]*ent.Vod, error) {
 	video, err := s.Store.Client.Vod.Query().Where(vod.ID(id)).Only(ctx)
 	if err != nil {

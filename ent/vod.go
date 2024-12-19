@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -85,6 +86,20 @@ type Vod struct {
 	Locked bool `json:"locked,omitempty"`
 	// LocalViews holds the value of the "local_views" field.
 	LocalViews int `json:"local_views,omitempty"`
+	// SpriteThumbnailsEnabled holds the value of the "sprite_thumbnails_enabled" field.
+	SpriteThumbnailsEnabled bool `json:"sprite_thumbnails_enabled,omitempty"`
+	// SpriteThumbnailsImages holds the value of the "sprite_thumbnails_images" field.
+	SpriteThumbnailsImages []string `json:"sprite_thumbnails_images,omitempty"`
+	// SpriteThumbnailsInterval holds the value of the "sprite_thumbnails_interval" field.
+	SpriteThumbnailsInterval int `json:"sprite_thumbnails_interval,omitempty"`
+	// SpriteThumbnailsWidth holds the value of the "sprite_thumbnails_width" field.
+	SpriteThumbnailsWidth int `json:"sprite_thumbnails_width,omitempty"`
+	// SpriteThumbnailsHeight holds the value of the "sprite_thumbnails_height" field.
+	SpriteThumbnailsHeight int `json:"sprite_thumbnails_height,omitempty"`
+	// SpriteThumbnailsRows holds the value of the "sprite_thumbnails_rows" field.
+	SpriteThumbnailsRows int `json:"sprite_thumbnails_rows,omitempty"`
+	// SpriteThumbnailsColumns holds the value of the "sprite_thumbnails_columns" field.
+	SpriteThumbnailsColumns int `json:"sprite_thumbnails_columns,omitempty"`
 	// The time the VOD was streamed.
 	StreamedAt time.Time `json:"streamed_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -180,9 +195,11 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case vod.FieldProcessing, vod.FieldLocked:
+		case vod.FieldSpriteThumbnailsImages:
+			values[i] = new([]byte)
+		case vod.FieldProcessing, vod.FieldLocked, vod.FieldSpriteThumbnailsEnabled:
 			values[i] = new(sql.NullBool)
-		case vod.FieldDuration, vod.FieldClipVodOffset, vod.FieldViews, vod.FieldLocalViews:
+		case vod.FieldDuration, vod.FieldClipVodOffset, vod.FieldViews, vod.FieldLocalViews, vod.FieldSpriteThumbnailsInterval, vod.FieldSpriteThumbnailsWidth, vod.FieldSpriteThumbnailsHeight, vod.FieldSpriteThumbnailsRows, vod.FieldSpriteThumbnailsColumns:
 			values[i] = new(sql.NullInt64)
 		case vod.FieldExtID, vod.FieldClipExtVodID, vod.FieldExtStreamID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath:
 			values[i] = new(sql.NullString)
@@ -405,6 +422,50 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				v.LocalViews = int(value.Int64)
 			}
+		case vod.FieldSpriteThumbnailsEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_enabled", values[i])
+			} else if value.Valid {
+				v.SpriteThumbnailsEnabled = value.Bool
+			}
+		case vod.FieldSpriteThumbnailsImages:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_images", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &v.SpriteThumbnailsImages); err != nil {
+					return fmt.Errorf("unmarshal field sprite_thumbnails_images: %w", err)
+				}
+			}
+		case vod.FieldSpriteThumbnailsInterval:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_interval", values[i])
+			} else if value.Valid {
+				v.SpriteThumbnailsInterval = int(value.Int64)
+			}
+		case vod.FieldSpriteThumbnailsWidth:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_width", values[i])
+			} else if value.Valid {
+				v.SpriteThumbnailsWidth = int(value.Int64)
+			}
+		case vod.FieldSpriteThumbnailsHeight:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_height", values[i])
+			} else if value.Valid {
+				v.SpriteThumbnailsHeight = int(value.Int64)
+			}
+		case vod.FieldSpriteThumbnailsRows:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_rows", values[i])
+			} else if value.Valid {
+				v.SpriteThumbnailsRows = int(value.Int64)
+			}
+		case vod.FieldSpriteThumbnailsColumns:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_columns", values[i])
+			} else if value.Valid {
+				v.SpriteThumbnailsColumns = int(value.Int64)
+			}
 		case vod.FieldStreamedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field streamed_at", values[i])
@@ -591,6 +652,27 @@ func (v *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("local_views=")
 	builder.WriteString(fmt.Sprintf("%v", v.LocalViews))
+	builder.WriteString(", ")
+	builder.WriteString("sprite_thumbnails_enabled=")
+	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("sprite_thumbnails_images=")
+	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsImages))
+	builder.WriteString(", ")
+	builder.WriteString("sprite_thumbnails_interval=")
+	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsInterval))
+	builder.WriteString(", ")
+	builder.WriteString("sprite_thumbnails_width=")
+	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsWidth))
+	builder.WriteString(", ")
+	builder.WriteString("sprite_thumbnails_height=")
+	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsHeight))
+	builder.WriteString(", ")
+	builder.WriteString("sprite_thumbnails_rows=")
+	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsRows))
+	builder.WriteString(", ")
+	builder.WriteString("sprite_thumbnails_columns=")
+	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsColumns))
 	builder.WriteString(", ")
 	builder.WriteString("streamed_at=")
 	builder.WriteString(v.StreamedAt.Format(time.ANSIC))

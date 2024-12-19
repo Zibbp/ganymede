@@ -161,6 +161,17 @@ type TwitchGlobalEmoteResponse struct {
 	Template string `json:"template"`
 }
 
+type TwitchSpriteManifest []struct {
+	Count    int      `json:"count"`
+	Width    int      `json:"width"`
+	Rows     int      `json:"rows"`
+	Images   []string `json:"images"`
+	Interval int      `json:"interval"`
+	Quality  string   `json:"quality"`
+	Cols     int      `json:"cols"`
+	Height   int      `json:"height"`
+}
+
 // authenticate sends a POST request to Twitch for authentication using client credentials. An AuthenTokenResponse is returned on success containing the access token.
 func twitchAuthenticate(clientId string, clientSecret string) (*AuthTokenResponse, error) {
 	client := &http.Client{}

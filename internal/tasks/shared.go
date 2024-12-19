@@ -31,6 +31,7 @@ var allow_fail_tag = "allow_fail"
 var (
 	TaskUpdateStreamVideoId      = "update_stream_video_id"
 	TaskGenerateStaticThumbnails = "generate_static_thumbnails"
+	TaskGenerateSpriteThumbnails = "generate_sprite_thumbnails"
 	TaskArchiveWatchdog          = "archive_watchdog"
 	TaskCheckChannelForNewVideos = "check_channel_for_new_videos"
 	TaskCheckChannelForNewClips  = "check_channel_for_new_clips"

@@ -11,9 +11,10 @@ import {
   IconLockOpen,
   IconShare,
   IconLock,
+  IconMovie,
 } from '@tabler/icons-react';
 import VideoInfoModalContent from './modals/InfoModalContent';
-import { useGenerateStaticThumbnail, useLockVideo, Video } from '@/app/hooks/useVideos';
+import { useGenerateSpriteThumbnails, useGenerateStaticThumbnail, useLockVideo, Video } from '@/app/hooks/useVideos';
 import PlaylistManageDrawerContent from '../playlist/ManageDrawerContent';
 import { useAxiosPrivate } from '@/app/hooks/useAxios';
 import { useDeletePlayback, useMarkVideoAsWatched } from '@/app/hooks/usePlayback';
@@ -45,6 +46,7 @@ const VideoMenu = ({ video }: Props) => {
   const deletePlaybackMutate = useDeletePlayback()
   const lockVideoMutate = useLockVideo()
   const generateStaticThumbnailMutate = useGenerateStaticThumbnail()
+  const generateSpriteThumbnailsMutate = useGenerateSpriteThumbnails()
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
 
   const handleMarkAsWatched = async () => {
@@ -100,6 +102,19 @@ const VideoMenu = ({ video }: Props) => {
       })
       showNotification({
         message: `Queued task to generate static thumbnail`
+      })
+    } catch (error) {
+      console.error(error)
+    }
+  }
+  const handleGenerateSpriteThumbnails = async () => {
+    try {
+      await generateSpriteThumbnailsMutate.mutateAsync({
+        axiosPrivate,
+        videoId: video.id
+      })
+      showNotification({
+        message: `Queued task to generate sprite thumbnails`
       })
     } catch (error) {
       console.error(error)
@@ -176,6 +191,9 @@ const VideoMenu = ({ video }: Props) => {
           )}
           <Menu.Item leftSection={<IconPhoto style={{ width: rem(14), height: rem(14) }} />} onClick={handleGenerateStaticThumbnail}>
             Regenerate Thumbnail
+          </Menu.Item>
+          <Menu.Item leftSection={<IconMovie style={{ width: rem(14), height: rem(14) }} />} onClick={handleGenerateSpriteThumbnails}>
+            Generate Sprite Thumbnails
           </Menu.Item>
           <Menu.Item leftSection={<IconShare style={{ width: rem(14), height: rem(14) }} />} onClick={handleShareVideo}>
             Share

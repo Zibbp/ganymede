@@ -431,6 +431,30 @@ const useGenerateStaticThumbnail = () => {
   });
 };
 
+const generateSpriteThumbnails = async (
+  axiosPrivate: AxiosInstance,
+  videoId: string
+) => {
+  const response = await axiosPrivate.post(
+    `/api/v1/vod/${videoId}/generate-sprite-thumbnails`
+  );
+  return response.data;
+};
+
+const useGenerateSpriteThumbnails = () => {
+  return useMutation<
+    ApiResponse<NullResponse>,
+    Error,
+    {
+      axiosPrivate: AxiosInstance;
+      videoId: string;
+    }
+  >({
+    mutationFn: ({ axiosPrivate, videoId }) =>
+      generateSpriteThumbnails(axiosPrivate, videoId),
+  });
+};
+
 const getVideoByExternalId = async (extId: string): Promise<Video> => {
   const response = await useAxios.get<ApiResponse<Video>>(
     `/api/v1/vod/external_id/${extId}`
@@ -479,4 +503,5 @@ export {
   useSearchVideos,
   useGetVideoByExternalId,
   useGetVideoClips,
+  useGenerateSpriteThumbnails,
 };

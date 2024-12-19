@@ -25,6 +25,7 @@ type TwitchGQLVideo struct {
 	Game                TwitchGQLGame             `json:"game"`
 	Title               string                    `json:"title"`
 	CreatedAt           string                    `json:"createdAt"`
+	SeekPreviewsURL     string                    `json:"seekPreviewsURL"` // storyboard thumbnails manifest
 }
 
 type TwitchGQLGame struct {
@@ -175,7 +176,7 @@ func (c *TwitchConnection) TwitchGQLGetMutedSegments(id string) ([]TwitchGQLMute
 }
 
 func (c *TwitchConnection) TwitchGQLGetVideo(id string) (*TwitchGQLVideo, error) {
-	body := fmt.Sprintf(`{"query": "query{video(id:\"%s\"){broadcastType,resourceRestriction{id,type},game{id,name},title,createdAt}}"}`, id)
+	body := fmt.Sprintf(`{"query": "query{video(id:\"%s\"){broadcastType,resourceRestriction{id,type},game{id,name},title,createdAt,seekPreviewsURL}}"}`, id)
 	respBytes, err := twitchGQLRequest(body)
 	if err != nil {
 		return nil, fmt.Errorf("error getting video muted segments: %w", err)

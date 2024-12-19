@@ -36,6 +36,7 @@ type VodService interface {
 	GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error)
 	LockVod(c echo.Context, vID uuid.UUID, status bool) error
 	GenerateStaticThumbnail(ctx context.Context, videoID uuid.UUID) (*rivertype.JobInsertResult, error)
+	GenerateSpriteThumbnails(ctx context.Context, videoID uuid.UUID) (*rivertype.JobInsertResult, error)
 	GetVodClips(ctx context.Context, id uuid.UUID) ([]*ent.Vod, error)
 }
 
@@ -669,4 +670,113 @@ func (h *Handler) GetVodClips(c echo.Context) error {
 	}
 
 	return SuccessResponse(c, clips, "clips for video")
+}
+
+func (h *Handler) GetVodSpriteThumbnails(c echo.Context) error {
+	var id string
+	var videoUUID uuid.UUID
+
+	id = c.Param("id")
+
+	videoUUID, err := uuid.Parse(id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid UUID provided: "+err.Error())
+	}
+
+	video, err := h.Service.VodService.GetVod(c.Request().Context(), videoUUID, false, false, false, false)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+
+	if !video.SpriteThumbnailsEnabled {
+		return ErrorResponse(c, http.StatusBadRequest, "Video does not have sprite thumbnails enabled.")
+	}
+
+	spriteMetata := SpriteMetadata{
+		Duration:       video.Duration,
+		SpriteImages:   video.SpriteThumbnailsImages,
+		SpriteInterval: video.SpriteThumbnailsInterval,
+		SpriteRows:     video.SpriteThumbnailsRows,
+		SpriteColumns:  video.SpriteThumbnailsColumns,
+		SpriteHeight:   video.SpriteThumbnailsHeight,
+		SpriteWidth:    video.SpriteThumbnailsWidth,
+	}
+	webvtt, err := GenerateThumbnailsVTT(spriteMetata)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+
+	return c.String(http.StatusOK, webvtt)
+}
+
+type SpriteMetadata struct {
+	Duration       int
+	SpriteImages   []string
+	SpriteInterval int
+	SpriteRows     int
+	SpriteColumns  int
+	SpriteHeight   int
+	SpriteWidth    int
+}
+
+func GenerateThumbnailsVTT(metadata SpriteMetadata) (string, error) {
+	var builder strings.Builder
+
+	// Write VTT header
+	builder.WriteString("WEBVTT\n\n")
+
+	// Calculate frame dimensions
+	totalFrames := metadata.Duration / metadata.SpriteInterval
+
+	frameIndex := 0
+
+	// Generate VTT entries
+	for _, imagePath := range metadata.SpriteImages {
+		for row := 0; row < metadata.SpriteRows; row++ {
+			for col := 0; col < metadata.SpriteColumns; col++ {
+				start := frameIndex * metadata.SpriteInterval
+				end := start + metadata.SpriteInterval
+				if frameIndex >= totalFrames {
+					break
+				}
+
+				startTime := formatTimestamp(start)
+				endTime := formatTimestamp(end)
+				x := col * metadata.SpriteWidth
+				y := row * metadata.SpriteHeight
+
+				entry := fmt.Sprintf("%s --> %s\n%s#xywh=%d,%d,%d,%d\n\n",
+					startTime, endTime, imagePath, x, y, metadata.SpriteWidth, metadata.SpriteHeight)
+
+				builder.WriteString(entry)
+
+				frameIndex++
+			}
+		}
+		if frameIndex >= totalFrames {
+			break
+		}
+	}
+
+	return builder.String(), nil
+}
+
+func formatTimestamp(seconds int) string {
+	hours := seconds / 3600
+	minutes := (seconds % 3600) / 60
+	secs := seconds % 60
+	milliseconds := 0
+	return fmt.Sprintf("%02d:%02d:%02d.%03d", hours, minutes, secs, milliseconds)
+}
+
+func (h *Handler) GenerateSpriteThumbnails(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+	job, err := h.Service.VodService.GenerateSpriteThumbnails(c.Request().Context(), vID)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+	return SuccessResponse(c, nil, fmt.Sprintf("job created: %d", job.Job.ID))
 }

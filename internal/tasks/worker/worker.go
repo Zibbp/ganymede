@@ -106,6 +106,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks.GenerateStaticThubmnailWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks.GenerateSpriteThumbnailWorker{}); err != nil {
+		return rc, err
+	}
 	if err := river.AddWorkerSafely(workers, &tasks_periodic.TaskCheckChannelForNewClipsWorker{}); err != nil {
 		return rc, err
 	}

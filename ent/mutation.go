@@ -10727,68 +10727,81 @@ func (m *UserMutation) ResetEdge(name string) error {
 // VodMutation represents an operation that mutates the Vod nodes in the graph.
 type VodMutation struct {
 	config
-	op                          Op
-	typ                         string
-	id                          *uuid.UUID
-	ext_id                      *string
-	clip_ext_vod_id             *string
-	ext_stream_id               *string
-	platform                    *utils.VideoPlatform
-	_type                       *utils.VodType
-	title                       *string
-	duration                    *int
-	addduration                 *int
-	clip_vod_offset             *int
-	addclip_vod_offset          *int
-	views                       *int
-	addviews                    *int
-	resolution                  *string
-	processing                  *bool
-	thumbnail_path              *string
-	web_thumbnail_path          *string
-	video_path                  *string
-	video_hls_path              *string
-	chat_path                   *string
-	live_chat_path              *string
-	live_chat_convert_path      *string
-	chat_video_path             *string
-	info_path                   *string
-	caption_path                *string
-	folder_name                 *string
-	file_name                   *string
-	tmp_video_download_path     *string
-	tmp_video_convert_path      *string
-	tmp_chat_download_path      *string
-	tmp_live_chat_download_path *string
-	tmp_live_chat_convert_path  *string
-	tmp_chat_render_path        *string
-	tmp_video_hls_path          *string
-	locked                      *bool
-	local_views                 *int
-	addlocal_views              *int
-	streamed_at                 *time.Time
-	updated_at                  *time.Time
-	created_at                  *time.Time
-	clearedFields               map[string]struct{}
-	channel                     *uuid.UUID
-	clearedchannel              bool
-	queue                       *uuid.UUID
-	clearedqueue                bool
-	playlists                   map[uuid.UUID]struct{}
-	removedplaylists            map[uuid.UUID]struct{}
-	clearedplaylists            bool
-	chapters                    map[uuid.UUID]struct{}
-	removedchapters             map[uuid.UUID]struct{}
-	clearedchapters             bool
-	muted_segments              map[uuid.UUID]struct{}
-	removedmuted_segments       map[uuid.UUID]struct{}
-	clearedmuted_segments       bool
-	multistream_info            map[int]struct{}
-	removedmultistream_info     map[int]struct{}
-	clearedmultistream_info     bool
-	done                        bool
-	oldValue                    func(context.Context) (*Vod, error)
-	predicates                  []predicate.Vod
+	op                             Op
+	typ                            string
+	id                             *uuid.UUID
+	ext_id                         *string
+	clip_ext_vod_id                *string
+	ext_stream_id                  *string
+	platform                       *utils.VideoPlatform
+	_type                          *utils.VodType
+	title                          *string
+	duration                       *int
+	addduration                    *int
+	clip_vod_offset                *int
+	addclip_vod_offset             *int
+	views                          *int
+	addviews                       *int
+	resolution                     *string
+	processing                     *bool
+	thumbnail_path                 *string
+	web_thumbnail_path             *string
+	video_path                     *string
+	video_hls_path                 *string
+	chat_path                      *string
+	live_chat_path                 *string
+	live_chat_convert_path         *string
+	chat_video_path                *string
+	info_path                      *string
+	caption_path                   *string
+	folder_name                    *string
+	file_name                      *string
+	tmp_video_download_path        *string
+	tmp_video_convert_path         *string
+	tmp_chat_download_path         *string
+	tmp_live_chat_download_path    *string
+	tmp_live_chat_convert_path     *string
+	tmp_chat_render_path           *string
+	tmp_video_hls_path             *string
+	locked                         *bool
+	local_views                    *int
+	addlocal_views                 *int
+	sprite_thumbnails_enabled      *bool
+	sprite_thumbnails_images       *[]string
+	appendsprite_thumbnails_images []string
+	sprite_thumbnails_interval     *int
+	addsprite_thumbnails_interval  *int
+	sprite_thumbnails_width        *int
+	addsprite_thumbnails_width     *int
+	sprite_thumbnails_height       *int
+	addsprite_thumbnails_height    *int
+	sprite_thumbnails_rows         *int
+	addsprite_thumbnails_rows      *int
+	sprite_thumbnails_columns      *int
+	addsprite_thumbnails_columns   *int
+	streamed_at                    *time.Time
+	updated_at                     *time.Time
+	created_at                     *time.Time
+	clearedFields                  map[string]struct{}
+	channel                        *uuid.UUID
+	clearedchannel                 bool
+	queue                          *uuid.UUID
+	clearedqueue                   bool
+	playlists                      map[uuid.UUID]struct{}
+	removedplaylists               map[uuid.UUID]struct{}
+	clearedplaylists               bool
+	chapters                       map[uuid.UUID]struct{}
+	removedchapters                map[uuid.UUID]struct{}
+	clearedchapters                bool
+	muted_segments                 map[uuid.UUID]struct{}
+	removedmuted_segments          map[uuid.UUID]struct{}
+	clearedmuted_segments          bool
+	multistream_info               map[int]struct{}
+	removedmultistream_info        map[int]struct{}
+	clearedmultistream_info        bool
+	done                           bool
+	oldValue                       func(context.Context) (*Vod, error)
+	predicates                     []predicate.Vod
 }
 
 var _ ent.Mutation = (*VodMutation)(nil)
@@ -12401,6 +12414,457 @@ func (m *VodMutation) ResetLocalViews() {
 	m.addlocal_views = nil
 }
 
+// SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
+func (m *VodMutation) SetSpriteThumbnailsEnabled(b bool) {
+	m.sprite_thumbnails_enabled = &b
+}
+
+// SpriteThumbnailsEnabled returns the value of the "sprite_thumbnails_enabled" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsEnabled() (r bool, exists bool) {
+	v := m.sprite_thumbnails_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsEnabled returns the old "sprite_thumbnails_enabled" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsEnabled: %w", err)
+	}
+	return oldValue.SpriteThumbnailsEnabled, nil
+}
+
+// ResetSpriteThumbnailsEnabled resets all changes to the "sprite_thumbnails_enabled" field.
+func (m *VodMutation) ResetSpriteThumbnailsEnabled() {
+	m.sprite_thumbnails_enabled = nil
+}
+
+// SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
+func (m *VodMutation) SetSpriteThumbnailsImages(s []string) {
+	m.sprite_thumbnails_images = &s
+	m.appendsprite_thumbnails_images = nil
+}
+
+// SpriteThumbnailsImages returns the value of the "sprite_thumbnails_images" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsImages() (r []string, exists bool) {
+	v := m.sprite_thumbnails_images
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsImages returns the old "sprite_thumbnails_images" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsImages(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsImages is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsImages requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsImages: %w", err)
+	}
+	return oldValue.SpriteThumbnailsImages, nil
+}
+
+// AppendSpriteThumbnailsImages adds s to the "sprite_thumbnails_images" field.
+func (m *VodMutation) AppendSpriteThumbnailsImages(s []string) {
+	m.appendsprite_thumbnails_images = append(m.appendsprite_thumbnails_images, s...)
+}
+
+// AppendedSpriteThumbnailsImages returns the list of values that were appended to the "sprite_thumbnails_images" field in this mutation.
+func (m *VodMutation) AppendedSpriteThumbnailsImages() ([]string, bool) {
+	if len(m.appendsprite_thumbnails_images) == 0 {
+		return nil, false
+	}
+	return m.appendsprite_thumbnails_images, true
+}
+
+// ClearSpriteThumbnailsImages clears the value of the "sprite_thumbnails_images" field.
+func (m *VodMutation) ClearSpriteThumbnailsImages() {
+	m.sprite_thumbnails_images = nil
+	m.appendsprite_thumbnails_images = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsImages] = struct{}{}
+}
+
+// SpriteThumbnailsImagesCleared returns if the "sprite_thumbnails_images" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsImagesCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsImages]
+	return ok
+}
+
+// ResetSpriteThumbnailsImages resets all changes to the "sprite_thumbnails_images" field.
+func (m *VodMutation) ResetSpriteThumbnailsImages() {
+	m.sprite_thumbnails_images = nil
+	m.appendsprite_thumbnails_images = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsImages)
+}
+
+// SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
+func (m *VodMutation) SetSpriteThumbnailsInterval(i int) {
+	m.sprite_thumbnails_interval = &i
+	m.addsprite_thumbnails_interval = nil
+}
+
+// SpriteThumbnailsInterval returns the value of the "sprite_thumbnails_interval" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsInterval() (r int, exists bool) {
+	v := m.sprite_thumbnails_interval
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsInterval returns the old "sprite_thumbnails_interval" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsInterval(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsInterval is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsInterval requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsInterval: %w", err)
+	}
+	return oldValue.SpriteThumbnailsInterval, nil
+}
+
+// AddSpriteThumbnailsInterval adds i to the "sprite_thumbnails_interval" field.
+func (m *VodMutation) AddSpriteThumbnailsInterval(i int) {
+	if m.addsprite_thumbnails_interval != nil {
+		*m.addsprite_thumbnails_interval += i
+	} else {
+		m.addsprite_thumbnails_interval = &i
+	}
+}
+
+// AddedSpriteThumbnailsInterval returns the value that was added to the "sprite_thumbnails_interval" field in this mutation.
+func (m *VodMutation) AddedSpriteThumbnailsInterval() (r int, exists bool) {
+	v := m.addsprite_thumbnails_interval
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSpriteThumbnailsInterval clears the value of the "sprite_thumbnails_interval" field.
+func (m *VodMutation) ClearSpriteThumbnailsInterval() {
+	m.sprite_thumbnails_interval = nil
+	m.addsprite_thumbnails_interval = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsInterval] = struct{}{}
+}
+
+// SpriteThumbnailsIntervalCleared returns if the "sprite_thumbnails_interval" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsIntervalCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsInterval]
+	return ok
+}
+
+// ResetSpriteThumbnailsInterval resets all changes to the "sprite_thumbnails_interval" field.
+func (m *VodMutation) ResetSpriteThumbnailsInterval() {
+	m.sprite_thumbnails_interval = nil
+	m.addsprite_thumbnails_interval = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsInterval)
+}
+
+// SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
+func (m *VodMutation) SetSpriteThumbnailsWidth(i int) {
+	m.sprite_thumbnails_width = &i
+	m.addsprite_thumbnails_width = nil
+}
+
+// SpriteThumbnailsWidth returns the value of the "sprite_thumbnails_width" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsWidth() (r int, exists bool) {
+	v := m.sprite_thumbnails_width
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsWidth returns the old "sprite_thumbnails_width" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsWidth(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsWidth is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsWidth requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsWidth: %w", err)
+	}
+	return oldValue.SpriteThumbnailsWidth, nil
+}
+
+// AddSpriteThumbnailsWidth adds i to the "sprite_thumbnails_width" field.
+func (m *VodMutation) AddSpriteThumbnailsWidth(i int) {
+	if m.addsprite_thumbnails_width != nil {
+		*m.addsprite_thumbnails_width += i
+	} else {
+		m.addsprite_thumbnails_width = &i
+	}
+}
+
+// AddedSpriteThumbnailsWidth returns the value that was added to the "sprite_thumbnails_width" field in this mutation.
+func (m *VodMutation) AddedSpriteThumbnailsWidth() (r int, exists bool) {
+	v := m.addsprite_thumbnails_width
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSpriteThumbnailsWidth clears the value of the "sprite_thumbnails_width" field.
+func (m *VodMutation) ClearSpriteThumbnailsWidth() {
+	m.sprite_thumbnails_width = nil
+	m.addsprite_thumbnails_width = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsWidth] = struct{}{}
+}
+
+// SpriteThumbnailsWidthCleared returns if the "sprite_thumbnails_width" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsWidthCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsWidth]
+	return ok
+}
+
+// ResetSpriteThumbnailsWidth resets all changes to the "sprite_thumbnails_width" field.
+func (m *VodMutation) ResetSpriteThumbnailsWidth() {
+	m.sprite_thumbnails_width = nil
+	m.addsprite_thumbnails_width = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsWidth)
+}
+
+// SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
+func (m *VodMutation) SetSpriteThumbnailsHeight(i int) {
+	m.sprite_thumbnails_height = &i
+	m.addsprite_thumbnails_height = nil
+}
+
+// SpriteThumbnailsHeight returns the value of the "sprite_thumbnails_height" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsHeight() (r int, exists bool) {
+	v := m.sprite_thumbnails_height
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsHeight returns the old "sprite_thumbnails_height" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsHeight(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsHeight is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsHeight requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsHeight: %w", err)
+	}
+	return oldValue.SpriteThumbnailsHeight, nil
+}
+
+// AddSpriteThumbnailsHeight adds i to the "sprite_thumbnails_height" field.
+func (m *VodMutation) AddSpriteThumbnailsHeight(i int) {
+	if m.addsprite_thumbnails_height != nil {
+		*m.addsprite_thumbnails_height += i
+	} else {
+		m.addsprite_thumbnails_height = &i
+	}
+}
+
+// AddedSpriteThumbnailsHeight returns the value that was added to the "sprite_thumbnails_height" field in this mutation.
+func (m *VodMutation) AddedSpriteThumbnailsHeight() (r int, exists bool) {
+	v := m.addsprite_thumbnails_height
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSpriteThumbnailsHeight clears the value of the "sprite_thumbnails_height" field.
+func (m *VodMutation) ClearSpriteThumbnailsHeight() {
+	m.sprite_thumbnails_height = nil
+	m.addsprite_thumbnails_height = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsHeight] = struct{}{}
+}
+
+// SpriteThumbnailsHeightCleared returns if the "sprite_thumbnails_height" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsHeightCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsHeight]
+	return ok
+}
+
+// ResetSpriteThumbnailsHeight resets all changes to the "sprite_thumbnails_height" field.
+func (m *VodMutation) ResetSpriteThumbnailsHeight() {
+	m.sprite_thumbnails_height = nil
+	m.addsprite_thumbnails_height = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsHeight)
+}
+
+// SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
+func (m *VodMutation) SetSpriteThumbnailsRows(i int) {
+	m.sprite_thumbnails_rows = &i
+	m.addsprite_thumbnails_rows = nil
+}
+
+// SpriteThumbnailsRows returns the value of the "sprite_thumbnails_rows" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsRows() (r int, exists bool) {
+	v := m.sprite_thumbnails_rows
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsRows returns the old "sprite_thumbnails_rows" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsRows(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsRows is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsRows requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsRows: %w", err)
+	}
+	return oldValue.SpriteThumbnailsRows, nil
+}
+
+// AddSpriteThumbnailsRows adds i to the "sprite_thumbnails_rows" field.
+func (m *VodMutation) AddSpriteThumbnailsRows(i int) {
+	if m.addsprite_thumbnails_rows != nil {
+		*m.addsprite_thumbnails_rows += i
+	} else {
+		m.addsprite_thumbnails_rows = &i
+	}
+}
+
+// AddedSpriteThumbnailsRows returns the value that was added to the "sprite_thumbnails_rows" field in this mutation.
+func (m *VodMutation) AddedSpriteThumbnailsRows() (r int, exists bool) {
+	v := m.addsprite_thumbnails_rows
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSpriteThumbnailsRows clears the value of the "sprite_thumbnails_rows" field.
+func (m *VodMutation) ClearSpriteThumbnailsRows() {
+	m.sprite_thumbnails_rows = nil
+	m.addsprite_thumbnails_rows = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsRows] = struct{}{}
+}
+
+// SpriteThumbnailsRowsCleared returns if the "sprite_thumbnails_rows" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsRowsCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsRows]
+	return ok
+}
+
+// ResetSpriteThumbnailsRows resets all changes to the "sprite_thumbnails_rows" field.
+func (m *VodMutation) ResetSpriteThumbnailsRows() {
+	m.sprite_thumbnails_rows = nil
+	m.addsprite_thumbnails_rows = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsRows)
+}
+
+// SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
+func (m *VodMutation) SetSpriteThumbnailsColumns(i int) {
+	m.sprite_thumbnails_columns = &i
+	m.addsprite_thumbnails_columns = nil
+}
+
+// SpriteThumbnailsColumns returns the value of the "sprite_thumbnails_columns" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsColumns() (r int, exists bool) {
+	v := m.sprite_thumbnails_columns
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsColumns returns the old "sprite_thumbnails_columns" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsColumns(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsColumns is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsColumns requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsColumns: %w", err)
+	}
+	return oldValue.SpriteThumbnailsColumns, nil
+}
+
+// AddSpriteThumbnailsColumns adds i to the "sprite_thumbnails_columns" field.
+func (m *VodMutation) AddSpriteThumbnailsColumns(i int) {
+	if m.addsprite_thumbnails_columns != nil {
+		*m.addsprite_thumbnails_columns += i
+	} else {
+		m.addsprite_thumbnails_columns = &i
+	}
+}
+
+// AddedSpriteThumbnailsColumns returns the value that was added to the "sprite_thumbnails_columns" field in this mutation.
+func (m *VodMutation) AddedSpriteThumbnailsColumns() (r int, exists bool) {
+	v := m.addsprite_thumbnails_columns
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSpriteThumbnailsColumns clears the value of the "sprite_thumbnails_columns" field.
+func (m *VodMutation) ClearSpriteThumbnailsColumns() {
+	m.sprite_thumbnails_columns = nil
+	m.addsprite_thumbnails_columns = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsColumns] = struct{}{}
+}
+
+// SpriteThumbnailsColumnsCleared returns if the "sprite_thumbnails_columns" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsColumnsCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsColumns]
+	return ok
+}
+
+// ResetSpriteThumbnailsColumns resets all changes to the "sprite_thumbnails_columns" field.
+func (m *VodMutation) ResetSpriteThumbnailsColumns() {
+	m.sprite_thumbnails_columns = nil
+	m.addsprite_thumbnails_columns = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsColumns)
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (m *VodMutation) SetStreamedAt(t time.Time) {
 	m.streamed_at = &t
@@ -12837,7 +13301,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 35)
+	fields := make([]string, 0, 42)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -12934,6 +13398,27 @@ func (m *VodMutation) Fields() []string {
 	if m.local_views != nil {
 		fields = append(fields, vod.FieldLocalViews)
 	}
+	if m.sprite_thumbnails_enabled != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsEnabled)
+	}
+	if m.sprite_thumbnails_images != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsImages)
+	}
+	if m.sprite_thumbnails_interval != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsInterval)
+	}
+	if m.sprite_thumbnails_width != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsWidth)
+	}
+	if m.sprite_thumbnails_height != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsHeight)
+	}
+	if m.sprite_thumbnails_rows != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsRows)
+	}
+	if m.sprite_thumbnails_columns != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsColumns)
+	}
 	if m.streamed_at != nil {
 		fields = append(fields, vod.FieldStreamedAt)
 	}
@@ -13015,6 +13500,20 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.Locked()
 	case vod.FieldLocalViews:
 		return m.LocalViews()
+	case vod.FieldSpriteThumbnailsEnabled:
+		return m.SpriteThumbnailsEnabled()
+	case vod.FieldSpriteThumbnailsImages:
+		return m.SpriteThumbnailsImages()
+	case vod.FieldSpriteThumbnailsInterval:
+		return m.SpriteThumbnailsInterval()
+	case vod.FieldSpriteThumbnailsWidth:
+		return m.SpriteThumbnailsWidth()
+	case vod.FieldSpriteThumbnailsHeight:
+		return m.SpriteThumbnailsHeight()
+	case vod.FieldSpriteThumbnailsRows:
+		return m.SpriteThumbnailsRows()
+	case vod.FieldSpriteThumbnailsColumns:
+		return m.SpriteThumbnailsColumns()
 	case vod.FieldStreamedAt:
 		return m.StreamedAt()
 	case vod.FieldUpdatedAt:
@@ -13094,6 +13593,20 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldLocked(ctx)
 	case vod.FieldLocalViews:
 		return m.OldLocalViews(ctx)
+	case vod.FieldSpriteThumbnailsEnabled:
+		return m.OldSpriteThumbnailsEnabled(ctx)
+	case vod.FieldSpriteThumbnailsImages:
+		return m.OldSpriteThumbnailsImages(ctx)
+	case vod.FieldSpriteThumbnailsInterval:
+		return m.OldSpriteThumbnailsInterval(ctx)
+	case vod.FieldSpriteThumbnailsWidth:
+		return m.OldSpriteThumbnailsWidth(ctx)
+	case vod.FieldSpriteThumbnailsHeight:
+		return m.OldSpriteThumbnailsHeight(ctx)
+	case vod.FieldSpriteThumbnailsRows:
+		return m.OldSpriteThumbnailsRows(ctx)
+	case vod.FieldSpriteThumbnailsColumns:
+		return m.OldSpriteThumbnailsColumns(ctx)
 	case vod.FieldStreamedAt:
 		return m.OldStreamedAt(ctx)
 	case vod.FieldUpdatedAt:
@@ -13333,6 +13846,55 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetLocalViews(v)
 		return nil
+	case vod.FieldSpriteThumbnailsEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsEnabled(v)
+		return nil
+	case vod.FieldSpriteThumbnailsImages:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsImages(v)
+		return nil
+	case vod.FieldSpriteThumbnailsInterval:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsInterval(v)
+		return nil
+	case vod.FieldSpriteThumbnailsWidth:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsWidth(v)
+		return nil
+	case vod.FieldSpriteThumbnailsHeight:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsHeight(v)
+		return nil
+	case vod.FieldSpriteThumbnailsRows:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsRows(v)
+		return nil
+	case vod.FieldSpriteThumbnailsColumns:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsColumns(v)
+		return nil
 	case vod.FieldStreamedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -13374,6 +13936,21 @@ func (m *VodMutation) AddedFields() []string {
 	if m.addlocal_views != nil {
 		fields = append(fields, vod.FieldLocalViews)
 	}
+	if m.addsprite_thumbnails_interval != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsInterval)
+	}
+	if m.addsprite_thumbnails_width != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsWidth)
+	}
+	if m.addsprite_thumbnails_height != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsHeight)
+	}
+	if m.addsprite_thumbnails_rows != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsRows)
+	}
+	if m.addsprite_thumbnails_columns != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsColumns)
+	}
 	return fields
 }
 
@@ -13390,6 +13967,16 @@ func (m *VodMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedViews()
 	case vod.FieldLocalViews:
 		return m.AddedLocalViews()
+	case vod.FieldSpriteThumbnailsInterval:
+		return m.AddedSpriteThumbnailsInterval()
+	case vod.FieldSpriteThumbnailsWidth:
+		return m.AddedSpriteThumbnailsWidth()
+	case vod.FieldSpriteThumbnailsHeight:
+		return m.AddedSpriteThumbnailsHeight()
+	case vod.FieldSpriteThumbnailsRows:
+		return m.AddedSpriteThumbnailsRows()
+	case vod.FieldSpriteThumbnailsColumns:
+		return m.AddedSpriteThumbnailsColumns()
 	}
 	return nil, false
 }
@@ -13426,6 +14013,41 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddLocalViews(v)
+		return nil
+	case vod.FieldSpriteThumbnailsInterval:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSpriteThumbnailsInterval(v)
+		return nil
+	case vod.FieldSpriteThumbnailsWidth:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSpriteThumbnailsWidth(v)
+		return nil
+	case vod.FieldSpriteThumbnailsHeight:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSpriteThumbnailsHeight(v)
+		return nil
+	case vod.FieldSpriteThumbnailsRows:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSpriteThumbnailsRows(v)
+		return nil
+	case vod.FieldSpriteThumbnailsColumns:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSpriteThumbnailsColumns(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Vod numeric field %s", name)
@@ -13497,6 +14119,24 @@ func (m *VodMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(vod.FieldTmpVideoHlsPath) {
 		fields = append(fields, vod.FieldTmpVideoHlsPath)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsImages) {
+		fields = append(fields, vod.FieldSpriteThumbnailsImages)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsInterval) {
+		fields = append(fields, vod.FieldSpriteThumbnailsInterval)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsWidth) {
+		fields = append(fields, vod.FieldSpriteThumbnailsWidth)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsHeight) {
+		fields = append(fields, vod.FieldSpriteThumbnailsHeight)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsRows) {
+		fields = append(fields, vod.FieldSpriteThumbnailsRows)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsColumns) {
+		fields = append(fields, vod.FieldSpriteThumbnailsColumns)
 	}
 	return fields
 }
@@ -13574,6 +14214,24 @@ func (m *VodMutation) ClearField(name string) error {
 		return nil
 	case vod.FieldTmpVideoHlsPath:
 		m.ClearTmpVideoHlsPath()
+		return nil
+	case vod.FieldSpriteThumbnailsImages:
+		m.ClearSpriteThumbnailsImages()
+		return nil
+	case vod.FieldSpriteThumbnailsInterval:
+		m.ClearSpriteThumbnailsInterval()
+		return nil
+	case vod.FieldSpriteThumbnailsWidth:
+		m.ClearSpriteThumbnailsWidth()
+		return nil
+	case vod.FieldSpriteThumbnailsHeight:
+		m.ClearSpriteThumbnailsHeight()
+		return nil
+	case vod.FieldSpriteThumbnailsRows:
+		m.ClearSpriteThumbnailsRows()
+		return nil
+	case vod.FieldSpriteThumbnailsColumns:
+		m.ClearSpriteThumbnailsColumns()
 		return nil
 	}
 	return fmt.Errorf("unknown Vod nullable field %s", name)
@@ -13678,6 +14336,27 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldLocalViews:
 		m.ResetLocalViews()
+		return nil
+	case vod.FieldSpriteThumbnailsEnabled:
+		m.ResetSpriteThumbnailsEnabled()
+		return nil
+	case vod.FieldSpriteThumbnailsImages:
+		m.ResetSpriteThumbnailsImages()
+		return nil
+	case vod.FieldSpriteThumbnailsInterval:
+		m.ResetSpriteThumbnailsInterval()
+		return nil
+	case vod.FieldSpriteThumbnailsWidth:
+		m.ResetSpriteThumbnailsWidth()
+		return nil
+	case vod.FieldSpriteThumbnailsHeight:
+		m.ResetSpriteThumbnailsHeight()
+		return nil
+	case vod.FieldSpriteThumbnailsRows:
+		m.ResetSpriteThumbnailsRows()
+		return nil
+	case vod.FieldSpriteThumbnailsColumns:
+		m.ResetSpriteThumbnailsColumns()
 		return nil
 	case vod.FieldStreamedAt:
 		m.ResetStreamedAt()

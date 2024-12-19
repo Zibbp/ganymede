@@ -447,6 +447,96 @@ func (vc *VodCreate) SetNillableLocalViews(i *int) *VodCreate {
 	return vc
 }
 
+// SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
+func (vc *VodCreate) SetSpriteThumbnailsEnabled(b bool) *VodCreate {
+	vc.mutation.SetSpriteThumbnailsEnabled(b)
+	return vc
+}
+
+// SetNillableSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field if the given value is not nil.
+func (vc *VodCreate) SetNillableSpriteThumbnailsEnabled(b *bool) *VodCreate {
+	if b != nil {
+		vc.SetSpriteThumbnailsEnabled(*b)
+	}
+	return vc
+}
+
+// SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
+func (vc *VodCreate) SetSpriteThumbnailsImages(s []string) *VodCreate {
+	vc.mutation.SetSpriteThumbnailsImages(s)
+	return vc
+}
+
+// SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
+func (vc *VodCreate) SetSpriteThumbnailsInterval(i int) *VodCreate {
+	vc.mutation.SetSpriteThumbnailsInterval(i)
+	return vc
+}
+
+// SetNillableSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field if the given value is not nil.
+func (vc *VodCreate) SetNillableSpriteThumbnailsInterval(i *int) *VodCreate {
+	if i != nil {
+		vc.SetSpriteThumbnailsInterval(*i)
+	}
+	return vc
+}
+
+// SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
+func (vc *VodCreate) SetSpriteThumbnailsWidth(i int) *VodCreate {
+	vc.mutation.SetSpriteThumbnailsWidth(i)
+	return vc
+}
+
+// SetNillableSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field if the given value is not nil.
+func (vc *VodCreate) SetNillableSpriteThumbnailsWidth(i *int) *VodCreate {
+	if i != nil {
+		vc.SetSpriteThumbnailsWidth(*i)
+	}
+	return vc
+}
+
+// SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
+func (vc *VodCreate) SetSpriteThumbnailsHeight(i int) *VodCreate {
+	vc.mutation.SetSpriteThumbnailsHeight(i)
+	return vc
+}
+
+// SetNillableSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field if the given value is not nil.
+func (vc *VodCreate) SetNillableSpriteThumbnailsHeight(i *int) *VodCreate {
+	if i != nil {
+		vc.SetSpriteThumbnailsHeight(*i)
+	}
+	return vc
+}
+
+// SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
+func (vc *VodCreate) SetSpriteThumbnailsRows(i int) *VodCreate {
+	vc.mutation.SetSpriteThumbnailsRows(i)
+	return vc
+}
+
+// SetNillableSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field if the given value is not nil.
+func (vc *VodCreate) SetNillableSpriteThumbnailsRows(i *int) *VodCreate {
+	if i != nil {
+		vc.SetSpriteThumbnailsRows(*i)
+	}
+	return vc
+}
+
+// SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
+func (vc *VodCreate) SetSpriteThumbnailsColumns(i int) *VodCreate {
+	vc.mutation.SetSpriteThumbnailsColumns(i)
+	return vc
+}
+
+// SetNillableSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field if the given value is not nil.
+func (vc *VodCreate) SetNillableSpriteThumbnailsColumns(i *int) *VodCreate {
+	if i != nil {
+		vc.SetSpriteThumbnailsColumns(*i)
+	}
+	return vc
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vc *VodCreate) SetStreamedAt(t time.Time) *VodCreate {
 	vc.mutation.SetStreamedAt(t)
@@ -656,6 +746,10 @@ func (vc *VodCreate) defaults() {
 		v := vod.DefaultLocalViews
 		vc.mutation.SetLocalViews(v)
 	}
+	if _, ok := vc.mutation.SpriteThumbnailsEnabled(); !ok {
+		v := vod.DefaultSpriteThumbnailsEnabled
+		vc.mutation.SetSpriteThumbnailsEnabled(v)
+	}
 	if _, ok := vc.mutation.StreamedAt(); !ok {
 		v := vod.DefaultStreamedAt()
 		vc.mutation.SetStreamedAt(v)
@@ -718,6 +812,9 @@ func (vc *VodCreate) check() error {
 	}
 	if _, ok := vc.mutation.LocalViews(); !ok {
 		return &ValidationError{Name: "local_views", err: errors.New(`ent: missing required field "Vod.local_views"`)}
+	}
+	if _, ok := vc.mutation.SpriteThumbnailsEnabled(); !ok {
+		return &ValidationError{Name: "sprite_thumbnails_enabled", err: errors.New(`ent: missing required field "Vod.sprite_thumbnails_enabled"`)}
 	}
 	if _, ok := vc.mutation.StreamedAt(); !ok {
 		return &ValidationError{Name: "streamed_at", err: errors.New(`ent: missing required field "Vod.streamed_at"`)}
@@ -894,6 +991,34 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 	if value, ok := vc.mutation.LocalViews(); ok {
 		_spec.SetField(vod.FieldLocalViews, field.TypeInt, value)
 		_node.LocalViews = value
+	}
+	if value, ok := vc.mutation.SpriteThumbnailsEnabled(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsEnabled, field.TypeBool, value)
+		_node.SpriteThumbnailsEnabled = value
+	}
+	if value, ok := vc.mutation.SpriteThumbnailsImages(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsImages, field.TypeJSON, value)
+		_node.SpriteThumbnailsImages = value
+	}
+	if value, ok := vc.mutation.SpriteThumbnailsInterval(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsInterval, field.TypeInt, value)
+		_node.SpriteThumbnailsInterval = value
+	}
+	if value, ok := vc.mutation.SpriteThumbnailsWidth(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsWidth, field.TypeInt, value)
+		_node.SpriteThumbnailsWidth = value
+	}
+	if value, ok := vc.mutation.SpriteThumbnailsHeight(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsHeight, field.TypeInt, value)
+		_node.SpriteThumbnailsHeight = value
+	}
+	if value, ok := vc.mutation.SpriteThumbnailsRows(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsRows, field.TypeInt, value)
+		_node.SpriteThumbnailsRows = value
+	}
+	if value, ok := vc.mutation.SpriteThumbnailsColumns(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
+		_node.SpriteThumbnailsColumns = value
 	}
 	if value, ok := vc.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
@@ -1587,6 +1712,156 @@ func (u *VodUpsert) UpdateLocalViews() *VodUpsert {
 // AddLocalViews adds v to the "local_views" field.
 func (u *VodUpsert) AddLocalViews(v int) *VodUpsert {
 	u.Add(vod.FieldLocalViews, v)
+	return u
+}
+
+// SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
+func (u *VodUpsert) SetSpriteThumbnailsEnabled(v bool) *VodUpsert {
+	u.Set(vod.FieldSpriteThumbnailsEnabled, v)
+	return u
+}
+
+// UpdateSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field to the value that was provided on create.
+func (u *VodUpsert) UpdateSpriteThumbnailsEnabled() *VodUpsert {
+	u.SetExcluded(vod.FieldSpriteThumbnailsEnabled)
+	return u
+}
+
+// SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
+func (u *VodUpsert) SetSpriteThumbnailsImages(v []string) *VodUpsert {
+	u.Set(vod.FieldSpriteThumbnailsImages, v)
+	return u
+}
+
+// UpdateSpriteThumbnailsImages sets the "sprite_thumbnails_images" field to the value that was provided on create.
+func (u *VodUpsert) UpdateSpriteThumbnailsImages() *VodUpsert {
+	u.SetExcluded(vod.FieldSpriteThumbnailsImages)
+	return u
+}
+
+// ClearSpriteThumbnailsImages clears the value of the "sprite_thumbnails_images" field.
+func (u *VodUpsert) ClearSpriteThumbnailsImages() *VodUpsert {
+	u.SetNull(vod.FieldSpriteThumbnailsImages)
+	return u
+}
+
+// SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
+func (u *VodUpsert) SetSpriteThumbnailsInterval(v int) *VodUpsert {
+	u.Set(vod.FieldSpriteThumbnailsInterval, v)
+	return u
+}
+
+// UpdateSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field to the value that was provided on create.
+func (u *VodUpsert) UpdateSpriteThumbnailsInterval() *VodUpsert {
+	u.SetExcluded(vod.FieldSpriteThumbnailsInterval)
+	return u
+}
+
+// AddSpriteThumbnailsInterval adds v to the "sprite_thumbnails_interval" field.
+func (u *VodUpsert) AddSpriteThumbnailsInterval(v int) *VodUpsert {
+	u.Add(vod.FieldSpriteThumbnailsInterval, v)
+	return u
+}
+
+// ClearSpriteThumbnailsInterval clears the value of the "sprite_thumbnails_interval" field.
+func (u *VodUpsert) ClearSpriteThumbnailsInterval() *VodUpsert {
+	u.SetNull(vod.FieldSpriteThumbnailsInterval)
+	return u
+}
+
+// SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
+func (u *VodUpsert) SetSpriteThumbnailsWidth(v int) *VodUpsert {
+	u.Set(vod.FieldSpriteThumbnailsWidth, v)
+	return u
+}
+
+// UpdateSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field to the value that was provided on create.
+func (u *VodUpsert) UpdateSpriteThumbnailsWidth() *VodUpsert {
+	u.SetExcluded(vod.FieldSpriteThumbnailsWidth)
+	return u
+}
+
+// AddSpriteThumbnailsWidth adds v to the "sprite_thumbnails_width" field.
+func (u *VodUpsert) AddSpriteThumbnailsWidth(v int) *VodUpsert {
+	u.Add(vod.FieldSpriteThumbnailsWidth, v)
+	return u
+}
+
+// ClearSpriteThumbnailsWidth clears the value of the "sprite_thumbnails_width" field.
+func (u *VodUpsert) ClearSpriteThumbnailsWidth() *VodUpsert {
+	u.SetNull(vod.FieldSpriteThumbnailsWidth)
+	return u
+}
+
+// SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
+func (u *VodUpsert) SetSpriteThumbnailsHeight(v int) *VodUpsert {
+	u.Set(vod.FieldSpriteThumbnailsHeight, v)
+	return u
+}
+
+// UpdateSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field to the value that was provided on create.
+func (u *VodUpsert) UpdateSpriteThumbnailsHeight() *VodUpsert {
+	u.SetExcluded(vod.FieldSpriteThumbnailsHeight)
+	return u
+}
+
+// AddSpriteThumbnailsHeight adds v to the "sprite_thumbnails_height" field.
+func (u *VodUpsert) AddSpriteThumbnailsHeight(v int) *VodUpsert {
+	u.Add(vod.FieldSpriteThumbnailsHeight, v)
+	return u
+}
+
+// ClearSpriteThumbnailsHeight clears the value of the "sprite_thumbnails_height" field.
+func (u *VodUpsert) ClearSpriteThumbnailsHeight() *VodUpsert {
+	u.SetNull(vod.FieldSpriteThumbnailsHeight)
+	return u
+}
+
+// SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
+func (u *VodUpsert) SetSpriteThumbnailsRows(v int) *VodUpsert {
+	u.Set(vod.FieldSpriteThumbnailsRows, v)
+	return u
+}
+
+// UpdateSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field to the value that was provided on create.
+func (u *VodUpsert) UpdateSpriteThumbnailsRows() *VodUpsert {
+	u.SetExcluded(vod.FieldSpriteThumbnailsRows)
+	return u
+}
+
+// AddSpriteThumbnailsRows adds v to the "sprite_thumbnails_rows" field.
+func (u *VodUpsert) AddSpriteThumbnailsRows(v int) *VodUpsert {
+	u.Add(vod.FieldSpriteThumbnailsRows, v)
+	return u
+}
+
+// ClearSpriteThumbnailsRows clears the value of the "sprite_thumbnails_rows" field.
+func (u *VodUpsert) ClearSpriteThumbnailsRows() *VodUpsert {
+	u.SetNull(vod.FieldSpriteThumbnailsRows)
+	return u
+}
+
+// SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
+func (u *VodUpsert) SetSpriteThumbnailsColumns(v int) *VodUpsert {
+	u.Set(vod.FieldSpriteThumbnailsColumns, v)
+	return u
+}
+
+// UpdateSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field to the value that was provided on create.
+func (u *VodUpsert) UpdateSpriteThumbnailsColumns() *VodUpsert {
+	u.SetExcluded(vod.FieldSpriteThumbnailsColumns)
+	return u
+}
+
+// AddSpriteThumbnailsColumns adds v to the "sprite_thumbnails_columns" field.
+func (u *VodUpsert) AddSpriteThumbnailsColumns(v int) *VodUpsert {
+	u.Add(vod.FieldSpriteThumbnailsColumns, v)
+	return u
+}
+
+// ClearSpriteThumbnailsColumns clears the value of the "sprite_thumbnails_columns" field.
+func (u *VodUpsert) ClearSpriteThumbnailsColumns() *VodUpsert {
+	u.SetNull(vod.FieldSpriteThumbnailsColumns)
 	return u
 }
 
@@ -2285,6 +2560,181 @@ func (u *VodUpsertOne) AddLocalViews(v int) *VodUpsertOne {
 func (u *VodUpsertOne) UpdateLocalViews() *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.UpdateLocalViews()
+	})
+}
+
+// SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
+func (u *VodUpsertOne) SetSpriteThumbnailsEnabled(v bool) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsEnabled(v)
+	})
+}
+
+// UpdateSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateSpriteThumbnailsEnabled() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsEnabled()
+	})
+}
+
+// SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
+func (u *VodUpsertOne) SetSpriteThumbnailsImages(v []string) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsImages(v)
+	})
+}
+
+// UpdateSpriteThumbnailsImages sets the "sprite_thumbnails_images" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateSpriteThumbnailsImages() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsImages()
+	})
+}
+
+// ClearSpriteThumbnailsImages clears the value of the "sprite_thumbnails_images" field.
+func (u *VodUpsertOne) ClearSpriteThumbnailsImages() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsImages()
+	})
+}
+
+// SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
+func (u *VodUpsertOne) SetSpriteThumbnailsInterval(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsInterval(v)
+	})
+}
+
+// AddSpriteThumbnailsInterval adds v to the "sprite_thumbnails_interval" field.
+func (u *VodUpsertOne) AddSpriteThumbnailsInterval(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.AddSpriteThumbnailsInterval(v)
+	})
+}
+
+// UpdateSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateSpriteThumbnailsInterval() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsInterval()
+	})
+}
+
+// ClearSpriteThumbnailsInterval clears the value of the "sprite_thumbnails_interval" field.
+func (u *VodUpsertOne) ClearSpriteThumbnailsInterval() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsInterval()
+	})
+}
+
+// SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
+func (u *VodUpsertOne) SetSpriteThumbnailsWidth(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsWidth(v)
+	})
+}
+
+// AddSpriteThumbnailsWidth adds v to the "sprite_thumbnails_width" field.
+func (u *VodUpsertOne) AddSpriteThumbnailsWidth(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.AddSpriteThumbnailsWidth(v)
+	})
+}
+
+// UpdateSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateSpriteThumbnailsWidth() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsWidth()
+	})
+}
+
+// ClearSpriteThumbnailsWidth clears the value of the "sprite_thumbnails_width" field.
+func (u *VodUpsertOne) ClearSpriteThumbnailsWidth() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsWidth()
+	})
+}
+
+// SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
+func (u *VodUpsertOne) SetSpriteThumbnailsHeight(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsHeight(v)
+	})
+}
+
+// AddSpriteThumbnailsHeight adds v to the "sprite_thumbnails_height" field.
+func (u *VodUpsertOne) AddSpriteThumbnailsHeight(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.AddSpriteThumbnailsHeight(v)
+	})
+}
+
+// UpdateSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateSpriteThumbnailsHeight() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsHeight()
+	})
+}
+
+// ClearSpriteThumbnailsHeight clears the value of the "sprite_thumbnails_height" field.
+func (u *VodUpsertOne) ClearSpriteThumbnailsHeight() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsHeight()
+	})
+}
+
+// SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
+func (u *VodUpsertOne) SetSpriteThumbnailsRows(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsRows(v)
+	})
+}
+
+// AddSpriteThumbnailsRows adds v to the "sprite_thumbnails_rows" field.
+func (u *VodUpsertOne) AddSpriteThumbnailsRows(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.AddSpriteThumbnailsRows(v)
+	})
+}
+
+// UpdateSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateSpriteThumbnailsRows() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsRows()
+	})
+}
+
+// ClearSpriteThumbnailsRows clears the value of the "sprite_thumbnails_rows" field.
+func (u *VodUpsertOne) ClearSpriteThumbnailsRows() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsRows()
+	})
+}
+
+// SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
+func (u *VodUpsertOne) SetSpriteThumbnailsColumns(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsColumns(v)
+	})
+}
+
+// AddSpriteThumbnailsColumns adds v to the "sprite_thumbnails_columns" field.
+func (u *VodUpsertOne) AddSpriteThumbnailsColumns(v int) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.AddSpriteThumbnailsColumns(v)
+	})
+}
+
+// UpdateSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateSpriteThumbnailsColumns() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsColumns()
+	})
+}
+
+// ClearSpriteThumbnailsColumns clears the value of the "sprite_thumbnails_columns" field.
+func (u *VodUpsertOne) ClearSpriteThumbnailsColumns() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsColumns()
 	})
 }
 
@@ -3154,6 +3604,181 @@ func (u *VodUpsertBulk) AddLocalViews(v int) *VodUpsertBulk {
 func (u *VodUpsertBulk) UpdateLocalViews() *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.UpdateLocalViews()
+	})
+}
+
+// SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
+func (u *VodUpsertBulk) SetSpriteThumbnailsEnabled(v bool) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsEnabled(v)
+	})
+}
+
+// UpdateSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateSpriteThumbnailsEnabled() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsEnabled()
+	})
+}
+
+// SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
+func (u *VodUpsertBulk) SetSpriteThumbnailsImages(v []string) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsImages(v)
+	})
+}
+
+// UpdateSpriteThumbnailsImages sets the "sprite_thumbnails_images" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateSpriteThumbnailsImages() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsImages()
+	})
+}
+
+// ClearSpriteThumbnailsImages clears the value of the "sprite_thumbnails_images" field.
+func (u *VodUpsertBulk) ClearSpriteThumbnailsImages() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsImages()
+	})
+}
+
+// SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
+func (u *VodUpsertBulk) SetSpriteThumbnailsInterval(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsInterval(v)
+	})
+}
+
+// AddSpriteThumbnailsInterval adds v to the "sprite_thumbnails_interval" field.
+func (u *VodUpsertBulk) AddSpriteThumbnailsInterval(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.AddSpriteThumbnailsInterval(v)
+	})
+}
+
+// UpdateSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateSpriteThumbnailsInterval() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsInterval()
+	})
+}
+
+// ClearSpriteThumbnailsInterval clears the value of the "sprite_thumbnails_interval" field.
+func (u *VodUpsertBulk) ClearSpriteThumbnailsInterval() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsInterval()
+	})
+}
+
+// SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
+func (u *VodUpsertBulk) SetSpriteThumbnailsWidth(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsWidth(v)
+	})
+}
+
+// AddSpriteThumbnailsWidth adds v to the "sprite_thumbnails_width" field.
+func (u *VodUpsertBulk) AddSpriteThumbnailsWidth(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.AddSpriteThumbnailsWidth(v)
+	})
+}
+
+// UpdateSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateSpriteThumbnailsWidth() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsWidth()
+	})
+}
+
+// ClearSpriteThumbnailsWidth clears the value of the "sprite_thumbnails_width" field.
+func (u *VodUpsertBulk) ClearSpriteThumbnailsWidth() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsWidth()
+	})
+}
+
+// SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
+func (u *VodUpsertBulk) SetSpriteThumbnailsHeight(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsHeight(v)
+	})
+}
+
+// AddSpriteThumbnailsHeight adds v to the "sprite_thumbnails_height" field.
+func (u *VodUpsertBulk) AddSpriteThumbnailsHeight(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.AddSpriteThumbnailsHeight(v)
+	})
+}
+
+// UpdateSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateSpriteThumbnailsHeight() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsHeight()
+	})
+}
+
+// ClearSpriteThumbnailsHeight clears the value of the "sprite_thumbnails_height" field.
+func (u *VodUpsertBulk) ClearSpriteThumbnailsHeight() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsHeight()
+	})
+}
+
+// SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
+func (u *VodUpsertBulk) SetSpriteThumbnailsRows(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsRows(v)
+	})
+}
+
+// AddSpriteThumbnailsRows adds v to the "sprite_thumbnails_rows" field.
+func (u *VodUpsertBulk) AddSpriteThumbnailsRows(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.AddSpriteThumbnailsRows(v)
+	})
+}
+
+// UpdateSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateSpriteThumbnailsRows() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsRows()
+	})
+}
+
+// ClearSpriteThumbnailsRows clears the value of the "sprite_thumbnails_rows" field.
+func (u *VodUpsertBulk) ClearSpriteThumbnailsRows() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsRows()
+	})
+}
+
+// SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
+func (u *VodUpsertBulk) SetSpriteThumbnailsColumns(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetSpriteThumbnailsColumns(v)
+	})
+}
+
+// AddSpriteThumbnailsColumns adds v to the "sprite_thumbnails_columns" field.
+func (u *VodUpsertBulk) AddSpriteThumbnailsColumns(v int) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.AddSpriteThumbnailsColumns(v)
+	})
+}
+
+// UpdateSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateSpriteThumbnailsColumns() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateSpriteThumbnailsColumns()
+	})
+}
+
+// ClearSpriteThumbnailsColumns clears the value of the "sprite_thumbnails_columns" field.
+func (u *VodUpsertBulk) ClearSpriteThumbnailsColumns() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearSpriteThumbnailsColumns()
 	})
 }
 

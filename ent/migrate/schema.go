@@ -348,6 +348,13 @@ var (
 		{Name: "tmp_video_hls_path", Type: field.TypeString, Nullable: true},
 		{Name: "locked", Type: field.TypeBool, Default: false},
 		{Name: "local_views", Type: field.TypeInt, Default: 0},
+		{Name: "sprite_thumbnails_enabled", Type: field.TypeBool, Default: false},
+		{Name: "sprite_thumbnails_images", Type: field.TypeJSON, Nullable: true},
+		{Name: "sprite_thumbnails_interval", Type: field.TypeInt, Nullable: true},
+		{Name: "sprite_thumbnails_width", Type: field.TypeInt, Nullable: true},
+		{Name: "sprite_thumbnails_height", Type: field.TypeInt, Nullable: true},
+		{Name: "sprite_thumbnails_rows", Type: field.TypeInt, Nullable: true},
+		{Name: "sprite_thumbnails_columns", Type: field.TypeInt, Nullable: true},
 		{Name: "streamed_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
@@ -361,7 +368,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[36]},
+				Columns:    []*schema.Column{VodsColumns[43]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

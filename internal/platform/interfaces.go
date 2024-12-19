@@ -8,26 +8,27 @@ import (
 )
 
 type VideoInfo struct {
-	ID            string            `json:"id"`
-	StreamID      string            `json:"stream_id"`
-	UserID        string            `json:"user_id"`
-	UserLogin     string            `json:"user_login"`
-	UserName      string            `json:"user_name"`
-	Title         string            `json:"title"`
-	Description   string            `json:"description"`
-	CreatedAt     time.Time         `json:"created_at"`
-	PublishedAt   time.Time         `json:"published_at"`
-	URL           string            `json:"url"`
-	ThumbnailURL  string            `json:"thumbnail_url"`
-	Viewable      string            `json:"viewable"`
-	ViewCount     int64             `json:"view_count"`
-	Language      string            `json:"language"`
-	Type          string            `json:"type"`
-	Duration      time.Duration     `json:"duration"`
-	Category      *string           `json:"category"`    // the default/main category of the video
-	Restriction   *string           `json:"restriction"` // video restriction
-	Chapters      []chapter.Chapter `json:"chapters"`
-	MutedSegments []MutedSegment    `json:"muted_segments"`
+	ID                          string            `json:"id"`
+	StreamID                    string            `json:"stream_id"`
+	UserID                      string            `json:"user_id"`
+	UserLogin                   string            `json:"user_login"`
+	UserName                    string            `json:"user_name"`
+	Title                       string            `json:"title"`
+	Description                 string            `json:"description"`
+	CreatedAt                   time.Time         `json:"created_at"`
+	PublishedAt                 time.Time         `json:"published_at"`
+	URL                         string            `json:"url"`
+	ThumbnailURL                string            `json:"thumbnail_url"`
+	Viewable                    string            `json:"viewable"`
+	ViewCount                   int64             `json:"view_count"`
+	Language                    string            `json:"language"`
+	Type                        string            `json:"type"`
+	Duration                    time.Duration     `json:"duration"`
+	Category                    *string           `json:"category"`    // the default/main category of the video
+	Restriction                 *string           `json:"restriction"` // video restriction
+	Chapters                    []chapter.Chapter `json:"chapters"`
+	MutedSegments               []MutedSegment    `json:"muted_segments"`
+	SpriteThumbnailsManifestUrl *string           `json:"sprite_thumbnails_manifest_url"`
 }
 
 type VideoRestriction string
