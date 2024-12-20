@@ -1,6 +1,8 @@
 package platform
 
-import "context"
+import (
+	"context"
+)
 
 type TwitchConnection struct {
 	ClientId     string
@@ -9,7 +11,6 @@ type TwitchConnection struct {
 }
 
 func (c *TwitchConnection) Authenticate(ctx context.Context) (*ConnectionInfo, error) {
-
 	info := ConnectionInfo{
 		ClientId:     c.ClientId,
 		ClientSecret: c.ClientSecret,
@@ -21,6 +22,5 @@ func (c *TwitchConnection) Authenticate(ctx context.Context) (*ConnectionInfo, e
 	}
 	info.AccessToken = authResponse.AccessToken
 	c.AccessToken = authResponse.AccessToken
-
 	return &info, nil
 }

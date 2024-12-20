@@ -33,7 +33,6 @@ type Services struct {
 	AdminService        AdminService
 	UserService         UserService
 	LiveService         LiveService
-	SchedulerService    SchedulerService
 	PlaybackService     PlaybackService
 	MetricsService      MetricsService
 	PlaylistService     PlaylistService
@@ -52,7 +51,7 @@ type Handler struct {
 
 var sessionManager *scs.SessionManager
 
-func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, schedulerService SchedulerService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform) *Handler {
+func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform) *Handler {
 	log.Debug().Msg("creating route handler")
 	envAppConfig := config.GetEnvApplicationConfig()
 	envConfig := config.GetEnvConfig()
@@ -75,7 +74,6 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 			AdminService:        adminService,
 			UserService:         userService,
 			LiveService:         liveService,
-			SchedulerService:    schedulerService,
 			PlaybackService:     playbackService,
 			MetricsService:      metricsService,
 			PlaylistService:     playlistService,
@@ -124,9 +122,6 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 	}
 
 	h.mapRoutes()
-
-	// Start scheduler
-	go h.Service.SchedulerService.StartLiveScheduler()
 
 	return h
 }

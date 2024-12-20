@@ -23,7 +23,6 @@ import (
 	"github.com/zibbp/ganymede/internal/playback"
 	"github.com/zibbp/ganymede/internal/playlist"
 	"github.com/zibbp/ganymede/internal/queue"
-	"github.com/zibbp/ganymede/internal/scheduler"
 	"github.com/zibbp/ganymede/internal/task"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
@@ -44,7 +43,6 @@ type Application struct {
 	QueueService      *queue.Service
 	UserService       *user.Service
 	LiveService       *live.Service
-	SchedulerService  *scheduler.Service
 	PlaybackService   *playback.Service
 	MetricsService    *metrics.Service
 	PlaylistService   *playlist.Service
@@ -123,7 +121,6 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
 	liveService := live.NewService(db, archiveService, platformTwitch)
-	schedulerService := scheduler.NewService(liveService, archiveService)
 	playbackService := playback.NewService(db)
 	metricsService := metrics.NewService(db, riverClient)
 	playlistService := playlist.NewService(db)
@@ -143,7 +140,6 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 		AdminService:      adminService,
 		UserService:       userService,
 		LiveService:       liveService,
-		SchedulerService:  schedulerService,
 		PlaybackService:   playbackService,
 		MetricsService:    metricsService,
 		PlaylistService:   playlistService,
@@ -161,7 +157,7 @@ func Run(ctx context.Context) error {
 		return err
 	}
 
-	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.SchedulerService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.PlatformTwitch)
+	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.PlatformTwitch)
 
 	if err := httpHandler.Serve(ctx); err != nil {
 		return err

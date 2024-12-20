@@ -112,6 +112,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks_periodic.TaskCheckChannelForNewClipsWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.CheckChannelsForLivestreamsWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 
@@ -177,12 +180,20 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 	if err != nil {
 		return nil, err
 	}
+	testCron, err := cron.ParseStandard("* * * * *")
+	if err != nil {
+		return nil, err
+	}
 
 	// put services in ctx for workers
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.LiveServiceKey, liveService)
 
-	// check videos interval
+	// get interval configs
+	configCheckLiveInterval := config.Get().LiveCheckInterval
 	configCheckVideoInterval := config.Get().VideoCheckInterval
+	if configCheckLiveInterval < 15 {
+		log.Warn().Msg("Live check interval should not be less than 15 seconds.")
+	}
 
 	periodicJobs := []*river.PeriodicJob{
 		// archive watchdog
@@ -193,6 +204,16 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 				return tasks.WatchdogArgs{}, nil
 			},
 			&river.PeriodicJobOpts{RunOnStart: true},
+		),
+
+		// check watched channels for live streams
+		// run at specified interval
+		river.NewPeriodicJob(
+			river.PeriodicInterval(time.Duration(configCheckLiveInterval)*time.Second),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.CheckChannelsForLivestreamsArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: false},
 		),
 
 		// check watched channels for new videos
@@ -238,7 +259,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		// authenticate to platform
 		// runs once a day at midnight
 		river.NewPeriodicJob(
-			midnightCron,
+			testCron,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.AuthenticatePlatformArgs{}, nil
 			},
