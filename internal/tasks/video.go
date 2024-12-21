@@ -330,15 +330,15 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 			return err
 		}
 	}
-	// queue task to generate sprite thumbnails if enabled
-	if !dbItems.Video.SpriteThumbnailsEnabled && config.Get().Archive.GenerateSpriteThumbnails {
-		_, err = client.Insert(ctx, GenerateSpriteThumbnailArgs{
-			VideoId: dbItems.Video.ID.String(),
-		}, nil)
-		if err != nil {
-			return err
-		}
-	}
+	// // queue task to generate sprite thumbnails if enabled
+	// if !dbItems.Video.SpriteThumbnailsEnabled && config.Get().Archive.GenerateSpriteThumbnails {
+	// 	_, err = client.Insert(ctx, GenerateSpriteThumbnailArgs{
+	// 		VideoId: dbItems.Video.ID.String(),
+	// 	}, nil)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }

@@ -187,6 +187,24 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
+          <Group justify="space-between" py={5}>
+            <Box>
+              <Text fw={"bold"}>[EXPERIMENTAL] Generate Sprite Thumbnails</Text>
+              <Text size="xs">Generate preview thumbnails seen when hovering over the player progress bar for all videos.</Text>
+            </Box>
+            <Tooltip label="Start Task">
+              <ActionIcon
+                onClick={() => startTask(Task.GenerateSpriteThumbnails)}
+                loading={loading}
+                color="green"
+                variant="filled"
+                size="lg"
+              >
+                <IconPlayerPlay size={24} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+
 
         </Card>
       </Container>

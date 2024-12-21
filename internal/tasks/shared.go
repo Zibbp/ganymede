@@ -44,15 +44,16 @@ var (
 )
 
 var (
-	QueueVideoDownload    = "video-download"
-	QueueVideoPostProcess = "video-postprocess"
-	QueueChatDownload     = "chat-download"
-	QueueChatRender       = "chat-render"
+	QueueVideoDownload       = "video-download"
+	QueueVideoPostProcess    = "video-postprocess"
+	QueueChatDownload        = "chat-download"
+	QueueChatRender          = "chat-render"
+	GenerateThumbnailSprites = "generate-thumbnail-sprites"
 )
 
 type ArchiveVideoInput struct {
-	QueueId       uuid.UUID
-	HeartBeatTime time.Time // do not set this field
+	QueueId       uuid.UUID `json:"queue_id"`
+	HeartBeatTime time.Time `json:"heartbeat_time"` // do not set this field
 }
 
 type GetDatabaseItemsResponse struct {

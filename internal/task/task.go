@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
@@ -88,6 +89,20 @@ func (s *Service) StartTask(ctx context.Context, task string) error {
 		}
 		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
 
+	case "generate_sprite_thumbnails":
+		videos, err := s.Store.Client.Vod.Query().Where(vod.SpriteThumbnailsEnabledEQ(false)).All(ctx)
+		if err != nil {
+			return fmt.Errorf("error getting videos: %v", err)
+		}
+
+		for _, video := range videos {
+			_, err := s.RiverClient.Client.Insert(ctx, tasks.GenerateSpriteThumbnailArgs{VideoId: video.ID.String()}, nil)
+			if err != nil {
+				return fmt.Errorf("error inserting task: %v", err)
+			}
+		}
+
+		log.Info().Msgf("created %d sprite thumbnail tasks", len(videos))
 	}
 
 	return nil

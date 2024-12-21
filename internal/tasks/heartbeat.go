@@ -19,6 +19,7 @@ type RiverJobRow struct {
 }
 
 type RiverJobArgs struct {
+	VideoId  string            `json:"video_id"`
 	Input    ArchiveVideoInput `json:"input"`
 	Continue bool              `json:"continue"`
 }
@@ -98,7 +99,7 @@ func getRiverJobById(ctx context.Context, conn *pgxpool.Pool, id int64) (*RiverJ
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("no riber job found with id %d", id)
+			return nil, fmt.Errorf("no river job found with id %d", id)
 		}
 		return nil, fmt.Errorf("error querying for river job: %w", err)
 	}

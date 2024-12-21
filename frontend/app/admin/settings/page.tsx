@@ -44,7 +44,6 @@ const AdminSettingsPage = () => {
       },
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
-        generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true,
       },
       notifications: {
         video_success_webhook_url: data?.notifications.video_success_webhook_url || "",
@@ -92,7 +91,7 @@ const AdminSettingsPage = () => {
 
     const transformedChannels: SelectOption[] = channels.map((channel: Channel) => ({
       label: channel.name,
-      value: channel.id,
+      value: channel.name,
     }));
 
     setChannelSelect(transformedChannels);
@@ -338,15 +337,6 @@ const AdminSettingsPage = () => {
             </Collapse>
 
             <Title mt={10} order={3}>Archive</Title>
-
-            <Checkbox
-              mt={10}
-              label="Generate Sprite Thumbnails"
-              description="Generate preview thumbnails seen when hovering over the video player progress bar."
-              key={form.key('archive.generate_sprite_thumbnails')}
-              {...form.getInputProps('archive.generate_sprite_thumbnails', { type: "checkbox" })}
-              mr={15}
-            />
 
             <Checkbox
               mt={10}

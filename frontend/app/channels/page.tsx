@@ -19,7 +19,7 @@ const ChannelsPage = () => {
   if (isError) return <div>Error loading channels</div>
 
   return (
-    <Container size="7xl" px="xl" >
+    <Container size="7xl" px="xl" mt={10}>
       <SimpleGrid
         cols={{ base: 1, sm: 3, lg: 6, xl: 8 }}
         verticalSpacing={{ base: 'md', sm: 'xl' }}

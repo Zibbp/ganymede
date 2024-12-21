@@ -14,7 +14,6 @@ export interface Config {
   };
   archive: {
     save_as_hls: boolean;
-    generate_sprite_thumbnails: boolean;
   };
   notifications: Notification;
   storage_templates: StorageTemplate;

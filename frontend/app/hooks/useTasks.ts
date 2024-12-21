@@ -10,6 +10,7 @@ export enum Task {
   PruneVideo = "prune_videos",
   SaveChapters = "save_chapters",
   UpdateStreamVodIds = "update_stream_vod_ids",
+  GenerateSpriteThumbnails = "generate_sprite_thumbnails",
 }
 
 const startTask = async (
