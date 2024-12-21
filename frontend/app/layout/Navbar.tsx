@@ -166,9 +166,9 @@ export function Navbar() {
       <div className={classes.inner}>
         <Group gap={5}>
           <Image src="/images/ganymede_logo.png" height={32} width={32} alt="Ganymede logo" />
-          <Group visibleFrom="sm">{mainLinks}</Group>
+          <Group visibleFrom="md">{mainLinks}</Group>
         </Group>
-        <Group gap={5} visibleFrom="sm">
+        <Group gap={5} visibleFrom="md">
           <TextInput
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.currentTarget.value)}
@@ -217,7 +217,7 @@ export function Navbar() {
             </div>
           )}
         </Group>
-        <Burger opened={drawerOpened} onClick={toggleDrawer} size="sm" hiddenFrom="sm" />
+        <Burger opened={drawerOpened} onClick={toggleDrawer} size="md" hiddenFrom="md" />
       </div>
       <Drawer
         opened={drawerOpened}
@@ -225,13 +225,13 @@ export function Navbar() {
         size="100%"
         padding="md"
         title="Navigation"
-        hiddenFrom="sm"
+        hiddenFrom="md"
         zIndex={1000000}
       >
         <ScrollArea h={`calc(100vh - ${rem(80)})`} mx="-md">
-          <Divider my="sm" />
+          <Divider my="md" />
           {drawerLinks}
-          <Divider my="sm" />
+          <Divider my="md" />
           <Group justify="center" grow pb="xl" px="md">
             {isLoggedIn ? (
               <>

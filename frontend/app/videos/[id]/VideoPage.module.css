@@ -44,3 +44,21 @@
   height: 100vh;
   max-height: 100vh;
 }
+
+.containerMobile {
+  display: flex;
+  width: 100vw;
+
+  @media (max-aspect-ratio: 1/1) {
+    /* Portrait mode */
+    flex-direction: column;
+    height: calc(100vh - 60px);
+    max-height: calc(100vh - 60px);
+  }
+}
+
+.chatColumnMobile {
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 100%;
+}

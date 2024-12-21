@@ -2,13 +2,13 @@
 import { useFetchVideo, useGetVideoClips } from "@/app/hooks/useVideos";
 import React, { useEffect } from "react";
 import classes from "./VideoPage.module.css"
-import { Box, Container } from "@mantine/core";
+import { Box, Container, useMantineTheme } from "@mantine/core";
 import VideoPlayer from "@/app/components/videos/Player";
 import VideoTitleBar from "@/app/components/videos/TitleBar";
 import ChatPlayer from "@/app/components/videos/ChatPlayer";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import useSettingsStore from "@/app/store/useSettingsStore";
-import { useFullscreen } from "@mantine/hooks";
+import { useFullscreen, useMediaQuery } from "@mantine/hooks";
 import { env } from "next-runtime-env";
 import VideoLoginRequired from "@/app/components/videos/LoginRequired";
 import useAuthStore from "@/app/store/useAuthStore";
@@ -19,8 +19,11 @@ interface Params {
 }
 
 const VideoPage = ({ params }: { params: Promise<Params> }) => {
+  const theme = useMantineTheme()
   const { id } = React.use(params);
   const { isLoggedIn } = useAuthStore()
+
+  const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -30,6 +33,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
 
   // need to fetch clips here to dynamically render the clips section
   const { data: videoClips, isPending: videoClipsPending, isError: videoClipsError } = useGetVideoClips(id)
+
 
 
   useEffect(() => {
@@ -55,6 +59,31 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
 
   if (isLoginRequired()) {
     return <VideoLoginRequired video={data} />
+  }
+
+  if (isMobile) {
+    return (
+      <Box className={classes.containerMobile}>
+
+        {/* Video player */}
+        <div>
+          <VideoPlayer video={data} />
+        </div>
+
+        {/* Chat player */}
+        {data.chat_path && (
+          <div className={classes.chatColumnMobile}>
+            <ChatPlayer video={data} />
+          </div>
+        )}
+
+        {/* Title bar */}
+        {!videoTheaterMode && <VideoTitleBar video={data} />}
+
+        {/* Items below the player are not available in mobile */}
+
+      </Box>
+    )
   }
 
   return (
