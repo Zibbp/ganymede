@@ -51,7 +51,7 @@ func GenerateThumbnails(config GenerateThumbnailsInput) error {
 		ffmpegArgs := []string{
 			"-hide_banner", "-an", "-ss", strconv.Itoa(t), "-i", config.Video,
 			"-frames:v", "1",
-			"-q:v", "15",
+			"-q:v", "10",
 			"-vf", fmt.Sprintf("scale=%d:%d", config.Width, config.Height),
 			"-y",
 			outputPath,

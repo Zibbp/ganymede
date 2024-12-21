@@ -319,5 +319,26 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		return err
 	}
 
+	// Queue extra tasks that are not critical to the archive process
+	// queue task to regenerate thumbnail if livestream
+	client := river.ClientFromContext[pgx.Tx](ctx)
+	if dbItems.Video.Type == utils.Live {
+		_, err = client.Insert(ctx, GenerateStaticThumbnailArgs{
+			VideoId: dbItems.Video.ID.String(),
+		}, nil)
+		if err != nil {
+			return err
+		}
+	}
+	// queue task to generate sprite thumbnails if enabled
+	if !dbItems.Video.SpriteThumbnailsEnabled && config.Get().Archive.GenerateSpriteThumbnails {
+		_, err = client.Insert(ctx, GenerateSpriteThumbnailArgs{
+			VideoId: dbItems.Video.ID.String(),
+		}, nil)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

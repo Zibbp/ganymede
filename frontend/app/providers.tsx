@@ -82,7 +82,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   // Attempt to authenticate user on initial page load
   useEffect(() => {
-    console.log('foo')
     fetchUser()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

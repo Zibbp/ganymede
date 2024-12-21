@@ -140,11 +140,17 @@ func (w GenerateSpriteThumbnailWorker) Work(ctx context.Context, job *river.Job[
 	thumbnailHeight := 124
 	spriteTilesX := 5
 	spriteTilesY := 10
-	thumbnailInterval := 60  // default to thumbnails every 60 seconds
-	if video.Duration < 60 { // thumbnails every 2 seconds for <60 seconds
-		thumbnailInterval = 2
-	} else if video.Duration < 1800 { // thumbnails every 30 seconds for <30 minutes
-		thumbnailInterval = 30
+	thumbnailInterval := 60 // default to thumbnails every 60 seconds
+
+	switch {
+	case video.Duration < 60:
+		thumbnailInterval = 1 // thumbnails every 1 second for <60 seconds
+	case video.Duration < 300:
+		thumbnailInterval = 2 // thumbnails every 2 seconds for <5 minutes
+	case video.Duration < 900:
+		thumbnailInterval = 10 // thumbnails every 10 seconds for <15 minutes
+	case video.Duration < 1800:
+		thumbnailInterval = 30 // thumbnails every 30 seconds for <30 minutes
 	}
 
 	logger.Debug().Str("video_id", video.ID.String()).Str("thumbnails", tmpThumbnailsDirectory).Str("sprites", spritesDirectory).Msg("sprite thumbnail paths")

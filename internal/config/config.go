@@ -17,7 +17,8 @@ type Config struct {
 		StreamlinkLive string `json:"streamlink_live"`
 	} `json:"parameters"`
 	Archive struct {
-		SaveAsHls bool `json:"save_as_hls"`
+		GenerateSpriteThumbnails bool `json:"generate_sprite_thumbnails"`
+		SaveAsHls                bool `json:"save_as_hls"`
 	} `json:"archive"`
 	Notification     Notification    `json:"notifications"`
 	StorageTemplates StorageTemplate `json:"storage_templates"`
@@ -62,19 +63,9 @@ var (
 
 var configFile string
 
-// Init initializes and returns the configuration
-func Init() (*Config, error) {
-	env := GetEnvConfig()
-	configFile = env.ConfigDir + "/config.json"
-	instance = &Config{}
-	initErr = instance.loadConfig()
-
-	return instance, initErr
-}
-
-// LoadConfig loads the configuration from the JSON file or creates a default one
 func (c *Config) loadConfig() error {
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		// If config file does not exist, set defaults and save the config
 		c.setDefaults()
 		return SaveConfig()
 	}
@@ -89,7 +80,125 @@ func (c *Config) loadConfig() error {
 		return err
 	}
 
+	// Merge the defaults
+	mergeDefaults(&Config{}, c)
+
 	return nil
+}
+
+// Get returns the configuration.
+func Get() *Config {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	if instance == nil {
+		instance = &Config{}
+		err := instance.loadConfig()
+		if err != nil {
+			return nil
+		}
+	}
+
+	return instance
+}
+
+// Init initializes and returns the configuration
+func Init() (*Config, error) {
+	env := GetEnvConfig()
+	configFile = env.ConfigDir + "/config.json"
+	instance = &Config{}
+	initErr = instance.loadConfig()
+
+	// Merge defaults
+	mergeDefaults(&Config{}, instance)
+
+	return instance, initErr
+}
+
+func mergeDefaults(defaults, current *Config) {
+	if current.LiveCheckInterval == 0 {
+		current.LiveCheckInterval = defaults.LiveCheckInterval
+	}
+	if current.VideoCheckInterval == 0 {
+		current.VideoCheckInterval = defaults.VideoCheckInterval
+	}
+	if current.RegistrationEnabled == false {
+		current.RegistrationEnabled = defaults.RegistrationEnabled
+	}
+
+	if current.Parameters.TwitchToken == "" {
+		current.Parameters.TwitchToken = defaults.Parameters.TwitchToken
+	}
+	if current.Parameters.VideoConvert == "" {
+		current.Parameters.VideoConvert = defaults.Parameters.VideoConvert
+	}
+	if current.Parameters.ChatRender == "" {
+		current.Parameters.ChatRender = defaults.Parameters.ChatRender
+	}
+	if current.Parameters.StreamlinkLive == "" {
+		current.Parameters.StreamlinkLive = defaults.Parameters.StreamlinkLive
+	}
+
+	if !current.Archive.GenerateSpriteThumbnails {
+		current.Archive.GenerateSpriteThumbnails = defaults.Archive.GenerateSpriteThumbnails
+	}
+	if !current.Archive.SaveAsHls {
+		current.Archive.SaveAsHls = defaults.Archive.SaveAsHls
+	}
+
+	if current.Notification.VideoSuccessWebhookUrl == "" {
+		current.Notification.VideoSuccessWebhookUrl = defaults.Notification.VideoSuccessWebhookUrl
+	}
+	if current.Notification.VideoSuccessTemplate == "" {
+		current.Notification.VideoSuccessTemplate = defaults.Notification.VideoSuccessTemplate
+	}
+	if !current.Notification.VideoSuccessEnabled {
+		current.Notification.VideoSuccessEnabled = defaults.Notification.VideoSuccessEnabled
+	}
+	if current.Notification.LiveSuccessWebhookUrl == "" {
+		current.Notification.LiveSuccessWebhookUrl = defaults.Notification.LiveSuccessWebhookUrl
+	}
+	if current.Notification.LiveSuccessTemplate == "" {
+		current.Notification.LiveSuccessTemplate = defaults.Notification.LiveSuccessTemplate
+	}
+	if !current.Notification.LiveSuccessEnabled {
+		current.Notification.LiveSuccessEnabled = defaults.Notification.LiveSuccessEnabled
+	}
+	if current.Notification.ErrorWebhookUrl == "" {
+		current.Notification.ErrorWebhookUrl = defaults.Notification.ErrorWebhookUrl
+	}
+	if current.Notification.ErrorTemplate == "" {
+		current.Notification.ErrorTemplate = defaults.Notification.ErrorTemplate
+	}
+	if !current.Notification.ErrorEnabled {
+		current.Notification.ErrorEnabled = defaults.Notification.ErrorEnabled
+	}
+	if current.Notification.IsLiveWebhookUrl == "" {
+		current.Notification.IsLiveWebhookUrl = defaults.Notification.IsLiveWebhookUrl
+	}
+	if current.Notification.IsLiveTemplate == "" {
+		current.Notification.IsLiveTemplate = defaults.Notification.IsLiveTemplate
+	}
+	if !current.Notification.IsLiveEnabled {
+		current.Notification.IsLiveEnabled = defaults.Notification.IsLiveEnabled
+	}
+
+	if current.StorageTemplates.FolderTemplate == "" {
+		current.StorageTemplates.FolderTemplate = defaults.StorageTemplates.FolderTemplate
+	}
+	if current.StorageTemplates.FileTemplate == "" {
+		current.StorageTemplates.FileTemplate = defaults.StorageTemplates.FileTemplate
+	}
+
+	if len(current.Livestream.Proxies) == 0 {
+		current.Livestream.Proxies = defaults.Livestream.Proxies
+	}
+	if !current.Livestream.ProxyEnabled {
+		current.Livestream.ProxyEnabled = defaults.Livestream.ProxyEnabled
+	}
+	if current.Livestream.ProxyParameters == "" {
+		current.Livestream.ProxyParameters = defaults.Livestream.ProxyParameters
+	}
 }
 
 func (c *Config) setDefaults() {
@@ -101,6 +210,7 @@ func (c *Config) setDefaults() {
 	c.Parameters.ChatRender = "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13"
 	c.Parameters.StreamlinkLive = "--twitch-low-latency,--twitch-disable-hosting"
 	c.Archive.SaveAsHls = false
+	c.Archive.GenerateSpriteThumbnails = true
 
 	// notifications
 	c.Notification.VideoSuccessWebhookUrl = ""
@@ -162,19 +272,4 @@ func saveConfigUnsafe() error {
 	}
 
 	return os.WriteFile(configFile, file, 0644)
-}
-
-// Get returns the configuration
-func Get() *Config {
-	mutex.RLock()
-	defer mutex.RUnlock()
-
-	// Reload the configuration from file each time
-	instance := &Config{}
-	err := instance.loadConfig()
-	if err != nil {
-		return nil
-	}
-
-	return instance
 }

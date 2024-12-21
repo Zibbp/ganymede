@@ -41,8 +41,7 @@ function extractTwitchId(input: string): string {
     return input; // If input is already a valid video ID, return it
   }
 
-  // Return null if no valid ID is found
-  return "invalid";
+  return ""
 }
 
 
