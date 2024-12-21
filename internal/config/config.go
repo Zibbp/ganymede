@@ -122,7 +122,7 @@ func mergeDefaults(defaults, current *Config) {
 	if current.VideoCheckInterval == 0 {
 		current.VideoCheckInterval = defaults.VideoCheckInterval
 	}
-	if current.RegistrationEnabled == false {
+	if !current.RegistrationEnabled {
 		current.RegistrationEnabled = defaults.RegistrationEnabled
 	}
 
