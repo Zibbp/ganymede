@@ -78,6 +78,7 @@ func (GenerateSpriteThumbnailArgs) Kind() string { return TaskGenerateSpriteThum
 func (args GenerateSpriteThumbnailArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 1,
+		Queue:       QueueGenerateThumbnailSprites,
 	}
 }
 

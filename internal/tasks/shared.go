@@ -44,11 +44,11 @@ var (
 )
 
 var (
-	QueueVideoDownload       = "video-download"
-	QueueVideoPostProcess    = "video-postprocess"
-	QueueChatDownload        = "chat-download"
-	QueueChatRender          = "chat-render"
-	GenerateThumbnailSprites = "generate-thumbnail-sprites"
+	QueueVideoDownload            = "video-download"
+	QueueVideoPostProcess         = "video-postprocess"
+	QueueChatDownload             = "chat-download"
+	QueueChatRender               = "chat-render"
+	QueueGenerateThumbnailSprites = "generate-thumbnail-sprites"
 )
 
 type ArchiveVideoInput struct {

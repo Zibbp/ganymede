@@ -131,12 +131,12 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	// create river client
 	riverClient, err := river.NewClient(rc.RiverPgxDriver, &river.Config{
 		Queues: map[string]river.QueueConfig{
-			river.QueueDefault:             {MaxWorkers: 100}, // non-resource intensive tasks or time sensitive tasks (live videos and chat)
-			tasks.QueueVideoDownload:       {MaxWorkers: input.VideoDownloadWorkers},
-			tasks.QueueVideoPostProcess:    {MaxWorkers: input.VideoPostProcessWorkers},
-			tasks.QueueChatDownload:        {MaxWorkers: input.ChatDownloadWorkers},
-			tasks.QueueChatRender:          {MaxWorkers: input.ChatRenderWorkers},
-			tasks.GenerateThumbnailSprites: {MaxWorkers: 1},
+			river.QueueDefault:                  {MaxWorkers: 100}, // non-resource intensive tasks or time sensitive tasks (live videos and chat)
+			tasks.QueueVideoDownload:            {MaxWorkers: input.VideoDownloadWorkers},
+			tasks.QueueVideoPostProcess:         {MaxWorkers: input.VideoPostProcessWorkers},
+			tasks.QueueChatDownload:             {MaxWorkers: input.ChatDownloadWorkers},
+			tasks.QueueChatRender:               {MaxWorkers: input.ChatRenderWorkers},
+			tasks.QueueGenerateThumbnailSprites: {MaxWorkers: 1},
 		},
 		Workers:              workers,
 		JobTimeout:           -1,
