@@ -22,6 +22,7 @@ import (
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
+	"riverqueue.com/riverui"
 )
 
 type Services struct {
@@ -47,11 +48,12 @@ type Handler struct {
 	Server         *echo.Echo
 	Service        Services
 	SessionManager *scs.SessionManager
+	RiverUIServer  *riverui.Server
 }
 
 var sessionManager *scs.SessionManager
 
-func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform) *Handler {
+func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform, riverUIServer *riverui.Server) *Handler {
 	log.Debug().Msg("creating route handler")
 	envAppConfig := config.GetEnvApplicationConfig()
 	envConfig := config.GetEnvConfig()
@@ -84,6 +86,7 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 			PlatformTwitch:      platformTwitch,
 		},
 		SessionManager: sessionManager,
+		RiverUIServer:  riverUIServer,
 	}
 
 	// Use sessions
@@ -149,6 +152,10 @@ func (h *Handler) mapRoutes() {
 	// Static files if not using nginx
 	envConfig := config.GetEnvConfig()
 	h.Server.Static(envConfig.VideosDir, envConfig.VideosDir)
+
+	// RiverUI
+	h.Server.Any("/riverui/", echo.WrapHandler(h.RiverUIServer), AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	h.Server.Any("/riverui/*", echo.WrapHandler(h.RiverUIServer), AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 
 	// Swagger
 	h.Server.GET("/swagger/*", echoSwagger.WrapHandler)

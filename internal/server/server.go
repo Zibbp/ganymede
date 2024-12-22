@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -28,6 +30,7 @@ import (
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/vod"
+	"riverqueue.com/riverui"
 )
 
 type Application struct {
@@ -50,6 +53,7 @@ type Application struct {
 	ChapterService    *chapter.Service
 	CategoryService   *category.Service
 	BlockedVodService *blocked.Service
+	RiverUIServer     *riverui.Server
 }
 
 func SetupApplication(ctx context.Context) (*Application, error) {
@@ -99,6 +103,24 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 		return nil, fmt.Errorf("error running migrations: %v", err)
 	}
 
+	// Setup RiverUI server
+	riverUIOpts := &riverui.ServerOpts{
+		Client: riverClient.Client,
+		DB:     riverClient.PgxPool,
+		Logger: slog.New(slog.NewTextHandler(os.Stderr, nil)),
+		Prefix: "/riverui",
+	}
+	riverUIServer, err := riverui.NewServer(riverUIOpts)
+	if err != nil {
+		return nil, fmt.Errorf("error creating riverui server: %v", err)
+	}
+
+	go func() {
+		if err := riverUIServer.Start(ctx); err != nil {
+			log.Error().Err(err).Msg("error running riverui server")
+		}
+	}()
+
 	var platformTwitch platform.Platform
 	// setup twitch platform
 	if envConfig.TwitchClientId != "" && envConfig.TwitchClientSecret != "" {
@@ -147,6 +169,7 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 		ChapterService:    chapterService,
 		CategoryService:   categoryService,
 		PlatformTwitch:    platformTwitch,
+		RiverUIServer:     riverUIServer,
 	}, nil
 }
 
@@ -157,7 +180,7 @@ func Run(ctx context.Context) error {
 		return err
 	}
 
-	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.PlatformTwitch)
+	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.PlatformTwitch, app.RiverUIServer)
 
 	if err := httpHandler.Serve(ctx); err != nil {
 		return err

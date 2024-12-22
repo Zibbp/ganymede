@@ -30,6 +30,7 @@ const links: NavLink[] = [
   },
   { link: '/playlists', label: 'Playlists' },
   { link: '/queue', label: 'Queue', auth: true, role: UserRole.Editor },
+  { link: '/riverui//', label: 'Tasks', auth: true, role: UserRole.Editor },
   {
     link: '#',
     label: 'Admin',
