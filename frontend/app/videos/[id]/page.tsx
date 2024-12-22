@@ -1,5 +1,5 @@
 "use client"
-import { useFetchVideo, useGetVideoClips } from "@/app/hooks/useVideos";
+import { useFetchVideo, useGetVideoClips, VideoType } from "@/app/hooks/useVideos";
 import React, { useEffect } from "react";
 import classes from "./VideoPage.module.css"
 import { Box, Container, useMantineTheme } from "@mantine/core";
@@ -142,7 +142,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
       </Container>
 
       {/* Chat Histogram */}
-      {(data.chat_path && !isMobile && showChatHistogram) && (
+      {(data.chat_path && (data.type != VideoType.Clip) && !isMobile && showChatHistogram) && (
         <Container size="7xl" fluid={true} >
           <VideoChatHistogram videoId={data.id} />
         </Container>
