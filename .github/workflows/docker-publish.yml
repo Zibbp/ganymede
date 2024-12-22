@@ -54,7 +54,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64 # TODO: enable arm
+          platforms: linux/amd64,linux/arm64
           # push: ${{ github.event_name != 'pull_request' }} # TODO: enable
           push: true
           tags: ${{ steps.meta.outputs.tags }}
