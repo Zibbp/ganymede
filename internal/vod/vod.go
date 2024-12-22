@@ -484,42 +484,17 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 		return nil, fmt.Errorf("error getting vod chat: %v", err)
 	}
 
-	var chatData *chat.ChatNoEmotes
 	var comments []chat.Comment
 	cacheData, exists := cache.Cache().Get(v.ID.String())
-	if exists {
-		comments = cacheData.([]chat.Comment)
-	} else {
-		data, err := utils.ReadChatFile(v.ChatPath)
+	if !exists {
+		err = loadChatIntoCache(v)
 		if err != nil {
-			log.Debug().Err(err).Msg("error getting vod chat")
-			return nil, fmt.Errorf("error getting vod chat: %v", err)
+			log.Debug().Err(err).Msg("error loading chat into cache")
+			return nil, fmt.Errorf("error loading chat into cache: %v", err)
 		}
-		err = json.Unmarshal(data, &chatData)
-		if err != nil {
-			log.Debug().Err(err).Msg("error getting vod chat")
-			return nil, fmt.Errorf("error getting vod chat: %v", err)
-		}
-
-		comments = chatData.Comments
-		chatData = nil
-		runtime.GC()
-
-		// Sort the comments by their content offset seconds
-		sort.Slice(comments, func(i, j int) bool {
-			return comments[i].ContentOffsetSeconds < comments[j].ContentOffsetSeconds
-		})
-
-		// Set cache
-		err = cache.Cache().Set(v.ID.String(), comments, 10*time.Minute)
-		if err != nil {
-			log.Debug().Err(err).Msg("error setting cache")
-			return nil, fmt.Errorf("error setting cache: %v", err)
-		}
-
-		runtime.GC()
-
+		cacheData, _ = cache.Cache().Get(v.ID.String())
 	}
+	comments = cacheData.([]chat.Comment)
 
 	// Reset the cache
 	err = cache.Cache().Set(v.ID.String(), comments, 10*time.Minute)
@@ -542,12 +517,47 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 	}
 
 	// Cleanup
-	chatData = nil
 	comments = nil
 
 	defer runtime.GC()
 
 	return &filteredComments, nil
+}
+
+func loadChatIntoCache(vod *ent.Vod) error {
+	var chatData *chat.ChatNoEmotes
+	var comments []chat.Comment
+
+	data, err := utils.ReadChatFile(vod.ChatPath)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat")
+		return fmt.Errorf("error getting vod chat: %v", err)
+	}
+	err = json.Unmarshal(data, &chatData)
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat")
+		return fmt.Errorf("error getting vod chat: %v", err)
+	}
+
+	comments = chatData.Comments
+	chatData = nil
+	runtime.GC()
+
+	// Sort the comments by their content offset seconds
+	sort.Slice(comments, func(i, j int) bool {
+		return comments[i].ContentOffsetSeconds < comments[j].ContentOffsetSeconds
+	})
+
+	// Set cache
+	err = cache.Cache().Set(vod.ID.String(), comments, 10*time.Minute)
+	if err != nil {
+		log.Debug().Err(err).Msg("error setting cache")
+		return fmt.Errorf("error setting cache: %v", err)
+	}
+
+	runtime.GC()
+
+	return nil
 }
 
 func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.UUID, start float64, commentCount int64) (*[]chat.Comment, error) {
@@ -557,43 +567,18 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 		return nil, fmt.Errorf("error getting vod chat: %v", err)
 	}
 
-	var chatData *chat.ChatNoEmotes
 	var comments []chat.Comment
 
 	cacheData, exists := cache.Cache().Get(v.ID.String())
-
-	if exists {
-		comments = cacheData.([]chat.Comment)
-	} else {
-		data, err := utils.ReadChatFile(v.ChatPath)
+	if !exists {
+		err = loadChatIntoCache(v)
 		if err != nil {
-			log.Debug().Err(err).Msg("error getting vod chat")
-			return nil, fmt.Errorf("error getting vod chat: %v", err)
+			log.Debug().Err(err).Msg("error loading chat into cache")
+			return nil, fmt.Errorf("error loading chat into cache: %v", err)
 		}
-		err = json.Unmarshal(data, &chatData)
-		if err != nil {
-			log.Debug().Err(err).Msg("error getting vod chat")
-			return nil, fmt.Errorf("error getting vod chat: %v", err)
-		}
-
-		comments = chatData.Comments
-		chatData = nil
-		runtime.GC()
-
-		// Sort the comments by their content offset seconds
-		sort.Slice(comments, func(i, j int) bool {
-			return comments[i].ContentOffsetSeconds < comments[j].ContentOffsetSeconds
-		})
-
-		err = cache.Cache().Set(v.ID.String(), comments, 10*time.Minute)
-		if err != nil {
-			log.Debug().Err(err).Msg("error setting cache")
-			return nil, fmt.Errorf("error setting cache: %v", err)
-		}
-
-		runtime.GC()
-
+		cacheData, _ = cache.Cache().Get(v.ID.String())
 	}
+	comments = cacheData.([]chat.Comment)
 
 	// Reset the cache
 	err = cache.Cache().Set(v.ID.String(), comments, 10*time.Minute)
@@ -623,7 +608,6 @@ func (s *Service) GetNumberOfVodChatCommentsFromTime(c echo.Context, vodID uuid.
 	}
 
 	// Cleanup
-	chatData = nil
 	comments = nil
 	defer runtime.GC()
 
@@ -934,6 +918,7 @@ func (s *Service) GetChatBadges(ctx context.Context, vodID uuid.UUID) (*platform
 	return &badgeResp, nil
 }
 
+// LockVod locks or unlocks a VOD
 func (s *Service) LockVod(c echo.Context, vID uuid.UUID, status bool) error {
 	_, err := s.Store.Client.Vod.UpdateOneID(vID).SetLocked(status).Save(c.Request().Context())
 	if err != nil {
@@ -967,4 +952,54 @@ func getStreamerIdFromInterface(id interface{}) (string, error) {
 		return "", fmt.Errorf("unsupported streamer id type: %T", streamerId)
 	}
 	return streamerId, nil
+}
+
+// GetVodChatHistogram returns a histogram of chat messages for a VOD
+func (s *Service) GetVodChatHistogram(ctx context.Context, videoId uuid.UUID, resolutionSeconds float64) (map[int]int, error) {
+	if resolutionSeconds <= 0 {
+		return nil, fmt.Errorf("resolutionSeconds must be greater than 0")
+	}
+
+	video, err := s.Store.Client.Vod.Query().Where(vod.ID(videoId)).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheData, exists := cache.Cache().Get(video.ID.String())
+	if !exists {
+		err = loadChatIntoCache(video)
+		if err != nil {
+			log.Debug().Err(err).Msg("error loading chat into cache")
+			return nil, fmt.Errorf("error loading chat into cache: %v", err)
+		}
+		cacheData, _ = cache.Cache().Get(video.ID.String())
+	}
+	comments := cacheData.([]chat.Comment)
+
+	histogram := make(map[int]int)
+
+	// Populate histogram with bucket start times as keys
+	for _, comment := range comments {
+		if comment.ContentOffsetSeconds < 0 || comment.ContentOffsetSeconds > float64(video.Duration) {
+			continue
+		}
+
+		// Calculate the bucket's start time as an integer
+		bucketStart := int(math.Floor(comment.ContentOffsetSeconds/resolutionSeconds) * resolutionSeconds)
+		histogram[bucketStart]++
+	}
+
+	// Convert the histogram to a sorted map
+	sortedHistogram := make(map[int]int)
+	keys := make([]int, 0, len(histogram))
+	for k := range histogram {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys) // Sort the bucket start times
+
+	for _, k := range keys {
+		sortedHistogram[k] = histogram[k]
+	}
+
+	return sortedHistogram, nil
 }

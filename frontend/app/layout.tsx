@@ -1,6 +1,7 @@
 import '@mantine/core/styles.layer.css';
 import '@mantine/notifications/styles.layer.css';
 import '@mantine/carousel/styles.layer.css';
+import '@mantine/charts/styles.layer.css';
 import 'mantine-datatable/styles.layer.css';
 import '@/app/global.css'
 

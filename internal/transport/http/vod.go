@@ -38,6 +38,7 @@ type VodService interface {
 	GenerateStaticThumbnail(ctx context.Context, videoID uuid.UUID) (*rivertype.JobInsertResult, error)
 	GenerateSpriteThumbnails(ctx context.Context, videoID uuid.UUID) (*rivertype.JobInsertResult, error)
 	GetVodClips(ctx context.Context, id uuid.UUID) ([]*ent.Vod, error)
+	GetVodChatHistogram(ctx context.Context, vodID uuid.UUID, resolutionSeconds float64) (map[int]int, error)
 }
 
 type CreateVodRequest struct {
@@ -779,4 +780,17 @@ func (h *Handler) GenerateSpriteThumbnails(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 	return SuccessResponse(c, nil, fmt.Sprintf("job created: %d", job.Job.ID))
+}
+
+func (h *Handler) GetVodChatHistogram(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+	histogram, err := h.Service.VodService.GetVodChatHistogram(c.Request().Context(), vID, 60)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+
+	return SuccessResponse(c, histogram, "chat histogram")
 }

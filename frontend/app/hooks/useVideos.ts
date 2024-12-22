@@ -110,6 +110,10 @@ export interface CreateVodRequest {
   locked: boolean;
 }
 
+export interface ChatHistogramData {
+  [timestamp: string]: number;
+}
+
 type FetchVideoOptions = {
   id: string;
   with_channel: boolean;
@@ -488,6 +492,26 @@ const useGetVideoClips = (id: string) => {
   });
 };
 
+const getVideoChatHistogram = async (
+  id: string
+): Promise<ChatHistogramData> => {
+  const response = await useAxios.get<ApiResponse<ChatHistogramData>>(
+    `/api/v1/vod/${id}/chat/histogram`
+  );
+  return response.data.data;
+};
+
+const useGetVideoChatHistogram = (id: string) => {
+  return useQuery({
+    queryKey: ["video_chat_histogram", id],
+    queryFn: () => getVideoChatHistogram(id),
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchIntervalInBackground: false,
+  });
+};
+
 export {
   fetchVideosFilter,
   useFetchVideosFilter,
@@ -504,4 +528,5 @@ export {
   useGetVideoByExternalId,
   useGetVideoClips,
   useGenerateSpriteThumbnails,
+  useGetVideoChatHistogram,
 };

@@ -27,6 +27,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.34.0
 	golang.org/x/crypto v0.31.0
 	golang.org/x/oauth2 v0.24.0
+	riverqueue.com/riverui v0.7.0
 )
 
 require (
@@ -104,7 +105,6 @@ require (
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	riverqueue.com/riverui v0.7.0 // indirect
 )
 
 require (
@@ -118,7 +118,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
-	github.com/jackc/pgx/v5 v5.7.1
+	github.com/jackc/pgx/v5 v5.7.2
 	github.com/knadh/koanf v1.5.0
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect

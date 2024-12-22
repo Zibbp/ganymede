@@ -5,9 +5,11 @@ interface SettingsState {
   videoLimit: number;
   chatPlaybackSmoothScroll: boolean;
   videoTheaterMode: boolean;
+  showChatHistogram: boolean;
   setVideoLimit: (limit: number) => void;
   setChatPlaybackSmoothScroll: (smooth: boolean) => void;
   setVideoTheaterMode: (theaterMode: boolean) => void;
+  setShowChatHistogram: (show: boolean) => void;
 }
 
 // Create the store with persist middleware
@@ -18,6 +20,7 @@ const useSettingsStore = create<SettingsState>()(
       videoLimit: 24,
       chatPlaybackSmoothScroll: false,
       videoTheaterMode: false,
+      showChatHistogram: true,
 
       setVideoLimit: (limit: number) => set({ videoLimit: limit }),
 
@@ -26,12 +29,15 @@ const useSettingsStore = create<SettingsState>()(
 
       setVideoTheaterMode: (theaterMode: boolean) =>
         set({ videoTheaterMode: theaterMode }),
+
+      setShowChatHistogram: (show: boolean) => set({ showChatHistogram: show }),
     }),
     {
       name: "settings-storage",
       partialize: (state) => ({
         videoLimit: state.videoLimit,
         chatPlaybackSmoothScroll: state.chatPlaybackSmoothScroll,
+        showChatHistogram: state.showChatHistogram,
       }),
     }
   )

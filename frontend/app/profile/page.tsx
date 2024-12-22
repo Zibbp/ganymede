@@ -19,12 +19,17 @@ const ProfilePage = () => {
   const {
     chatPlaybackSmoothScroll,
     setChatPlaybackSmoothScroll,
+    showChatHistogram,
+    setShowChatHistogram
   } = useSettingsStore();
 
-  // Handler to toggle the value
   const toggleSmoothScroll = () => {
     setChatPlaybackSmoothScroll(!chatPlaybackSmoothScroll);
   };
+
+  const toggleChatHistogram = () => {
+    setShowChatHistogram(!showChatHistogram);
+  }
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -55,6 +60,12 @@ const ProfilePage = () => {
                 description="Enable smooth scrolling for new chat messages. May look bad if there is a large volume of messages per second."
                 checked={chatPlaybackSmoothScroll}
                 onChange={toggleSmoothScroll}
+              />
+              <Checkbox
+                label="Show Chat Histogram"
+                description="Display a visual representation of chat message throughout the video below the video player."
+                checked={showChatHistogram}
+                onChange={toggleChatHistogram}
               />
             </Box>
 

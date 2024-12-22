@@ -13,6 +13,7 @@ import { env } from "next-runtime-env";
 import VideoLoginRequired from "@/app/components/videos/LoginRequired";
 import useAuthStore from "@/app/store/useAuthStore";
 import VideoPageClips from "@/app/components/videos/VideoClips";
+import VideoChatHistogram from "@/app/components/videos/ChatHistogram";
 
 interface Params {
   id: string;
@@ -26,6 +27,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
+  const showChatHistogram = useSettingsStore((state) => state.showChatHistogram);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { ref, toggle, fullscreen } = useFullscreen();
 
@@ -33,8 +35,6 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
 
   // need to fetch clips here to dynamically render the clips section
   const { data: videoClips, isPending: videoClipsPending, isError: videoClipsError } = useGetVideoClips(id)
-
-
 
   useEffect(() => {
     document.title = `${data?.title}`;
@@ -56,6 +56,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   if (isError) {
     return <div>Error loading video</div>
   }
+
 
   if (isLoginRequired()) {
     return <VideoLoginRequired video={data} />
@@ -130,7 +131,6 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
       {/* Title bar */}
       {!videoTheaterMode && <VideoTitleBar video={data} />}
 
-
       {/* Video clips */}
       <Container size="7xl" fluid={true} >
         {videoClipsError && (
@@ -140,6 +140,13 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
           <VideoPageClips clips={videoClips} />
         )}
       </Container>
+
+      {/* Chat Histogram */}
+      {(data.chat_path && !isMobile && showChatHistogram) && (
+        <Container size="7xl" fluid={true} >
+          <VideoChatHistogram videoId={data.id} />
+        </Container>
+      )}
 
     </div>
   );
