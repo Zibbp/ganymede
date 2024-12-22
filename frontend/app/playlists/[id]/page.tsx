@@ -4,7 +4,9 @@ import VideoGrid from "@/app/components/videos/Grid";
 import { useGetPlaylist } from "@/app/hooks/usePlaylist";
 import { useFetchVideosFilter, VideoType } from "@/app/hooks/useVideos";
 import useSettingsStore from "@/app/store/useSettingsStore";
-import { Center, Container, Title, Text } from "@mantine/core";
+import { Center, Container, Title, Text, Button } from "@mantine/core";
+import { IconBorderAll } from "@tabler/icons-react";
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 interface Params {
   id: string;
@@ -16,7 +18,7 @@ const PlaylistPage = ({ params }: { params: Promise<Params> }) => {
     data: playlist,
     isPending: playlistPending,
     isError: playlistError
-  } = useGetPlaylist(id);
+  } = useGetPlaylist(id, false);
 
   useEffect(() => {
     document.title = `${playlist?.name}`;
@@ -54,6 +56,14 @@ const PlaylistPage = ({ params }: { params: Promise<Params> }) => {
       </Center>
       <Center>
         <Text>{playlist.description}</Text>
+      </Center>
+      <Center>
+        <Button
+          component={Link}
+          href={`/playlists/multistream/${playlist.id}`}
+          leftSection={<IconBorderAll size={14} />} variant="default">
+          Multistream View
+        </Button>
       </Center>
       <VideoGrid
         videos={videos.data}

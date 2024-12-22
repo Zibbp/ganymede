@@ -7,6 +7,7 @@ import {
 import useAxios, { ApiResponse } from "./useAxios";
 import { AxiosInstance } from "axios";
 import { NullResponse } from "./usePlayback";
+import { Video } from "./useVideos";
 
 export interface Playlist {
   id: string;
@@ -15,19 +16,43 @@ export interface Playlist {
   thumbnail_path: string;
   updated_at: string;
   created_at: string;
+  edges: PlaylistEdges;
 }
 
-const getPlaylist = async (id: string): Promise<Playlist> => {
+export interface PlaylistEdges {
+  vods: Array<Video>;
+  multistream_info: Array<PlaylistMultistreamInfo>;
+}
+
+export interface PlaylistMultistreamInfo {
+  id: string;
+  delay_ms: number;
+  edges: PlaylistMultistreamInfoEdges;
+}
+
+export interface PlaylistMultistreamInfoEdges {
+  vod: Video;
+}
+
+const getPlaylist = async (
+  id: string,
+  withMultistreamInfo: boolean
+): Promise<Playlist> => {
   const response = await useAxios.get<ApiResponse<Playlist>>(
-    `/api/v1/playlist/${id}`
+    `/api/v1/playlist/${id}`,
+    {
+      params: {
+        with_multistream_info: withMultistreamInfo,
+      },
+    }
   );
   return response.data.data;
 };
 
-const useGetPlaylist = (id: string) => {
+const useGetPlaylist = (id: string, withMultistreamInfo: boolean) => {
   return useQuery({
-    queryKey: ["playlist", id],
-    queryFn: () => getPlaylist(id),
+    queryKey: ["playlist", id, withMultistreamInfo],
+    queryFn: () => getPlaylist(id, withMultistreamInfo),
     placeholderData: keepPreviousData,
   });
 };
@@ -189,6 +214,36 @@ const useRemoveVideoFromPlaylist = () => {
   );
 };
 
+const updateMultistreamVideoOffset = async (
+  axiosPrivate: AxiosInstance,
+  playlistId: string,
+  videoId: string,
+  delayMs: number
+): Promise<NullResponse> => {
+  const response = await axiosPrivate.put(
+    `/api/v1/playlist/${playlistId}/multistream/delay`,
+    {
+      vod_id: videoId,
+      delay_ms: delayMs,
+    }
+  );
+  return response.data;
+};
+
+interface UpdateMultistreamVideoOffsetInput {
+  axiosPrivate: AxiosInstance;
+  playlistId: string;
+  videoId: string;
+  delayMs: number;
+}
+
+const useUpdateMultistreamVideoOffset = () => {
+  return useMutation<NullResponse, Error, UpdateMultistreamVideoOffsetInput>({
+    mutationFn: ({ axiosPrivate, playlistId, videoId, delayMs }) =>
+      updateMultistreamVideoOffset(axiosPrivate, playlistId, videoId, delayMs),
+  });
+};
+
 export {
   useGetPlaylists,
   useCreatePlaylist,
@@ -197,4 +252,5 @@ export {
   useGetPlaylist,
   useAddVideoToPlaylist,
   useRemoveVideoFromPlaylist,
+  useUpdateMultistreamVideoOffset,
 };

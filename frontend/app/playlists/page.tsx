@@ -116,6 +116,8 @@ const PlaylistsPage = () => {
                       setPlaylist(playlist)
                       openPlaylistDrawer()
                     }}
+                    title="Edit"
+                    aria-label="Edit"
                   >
                     <IconEdit size={16} />
                   </ActionIcon>
@@ -127,6 +129,8 @@ const PlaylistsPage = () => {
                       setPlaylist(playlist)
                       openDeleteModal()
                     }}
+                    title="Delete"
+                    arria-label="Delete"
                   >
                     <IconTrash size={16} />
                   </ActionIcon>
