@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -209,7 +208,6 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/callback [get]
 func (h *Handler) OAuthCallback(c echo.Context) error {
-	env := config.GetEnvApplicationConfig()
 	user, err := h.Service.AuthService.OAuthCallback(c)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -218,5 +216,5 @@ func (h *Handler) OAuthCallback(c echo.Context) error {
 	h.SessionManager.Put(c.Request().Context(), "user_id", user.ID.String())
 
 	// redirect to frontend /oauth page to set state in frontend
-	return c.Redirect(http.StatusFound, fmt.Sprintf("%s/oauth", env.FrontendHost))
+	return c.Redirect(http.StatusFound, "/")
 }

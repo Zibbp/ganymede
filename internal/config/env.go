@@ -15,15 +15,13 @@ type EnvApplicationConfig struct {
 	DB_NAME          string `env:"DB_NAME, required"`
 	DB_SSL           string `env:"DB_SSL, default=disable"`
 	DB_SSL_ROOT_CERT string `env:"DB_SSL_ROOT_CERT, default="`
-	FrontendHost     string `env:"FRONTEND_HOST, default="`
 }
 
 // EnvConfig represents the environment variables for the application
 type EnvConfig struct {
 	// application
-	Development  bool   `env:"DEVELOPMENT"`
-	DEBUG        bool   `env:"DEBUG, default=false"`
-	CookieDomain string `env:"COOKIE_DOMAIN, default="`
+	Development bool `env:"DEVELOPMENT"`
+	DEBUG       bool `env:"DEBUG, default=false"`
 	// customizable paths
 	VideosDir            string `env:"VIDEOS_DIR, default=/data/videos"`
 	TempDir              string `env:"TEMP_DIR, default=/data/temp"`

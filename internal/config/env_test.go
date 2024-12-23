@@ -34,7 +34,6 @@ func TestGetEnvRequiredConfig(t *testing.T) {
 	assert.Equal(t, "postgres", env.DB_USER)
 	assert.Equal(t, "password", env.DB_PASS)
 	assert.Equal(t, "ganymede", env.DB_NAME)
-	assert.Equal(t, "localhost", env.FrontendHost)
 
 	os.Unsetenv("DB_HOST")
 	os.Unsetenv("DB_PORT")

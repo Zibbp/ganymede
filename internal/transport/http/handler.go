@@ -55,7 +55,6 @@ var sessionManager *scs.SessionManager
 
 func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform, riverUIServer *riverui.Server) *Handler {
 	log.Debug().Msg("creating route handler")
-	envAppConfig := config.GetEnvApplicationConfig()
 	envConfig := config.GetEnvConfig()
 
 	sessionManager = scs.New()
@@ -99,7 +98,6 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 
 	// If frontend is external then allow cors
 	h.Server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{envAppConfig.FrontendHost},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 		AllowCredentials: true,
 	}))
