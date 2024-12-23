@@ -1,7 +1,7 @@
 version: "3.3"
 services:
-  ganymede-api:
-    container_name: ganymede-api
+  ganymede:
+    container_name: ganymede
     image: ghcr.io/zibbp/ganymede:latest
     restart: unless-stopped
     depends_on:
@@ -21,13 +21,9 @@ services:
       - DB_PASS=PASSWORD
       - DB_NAME=ganymede-prd
       - DB_SSL=disable
-      #- DB_SSL_ROOT_CERT= # path to cert in the container if DB_SSL is not disabled
-      - JWT_SECRET=SECRET # set as a random string
-      - JWT_REFRESH_SECRET=SECRET # set as a random string
+      # - DB_SSL_ROOT_CERT= # path to cert in the container if DB_SSL is not disabled
       - TWITCH_CLIENT_ID= # from your twitch application
       - TWITCH_CLIENT_SECRET= # from your twitch application
-      - FRONTEND_HOST=http://IP:PORT # URL to the frontend service. Needs to be the 'public' url that you visit.
-      #- COOKIE_DOMAIN= # Optional domain that the cookies will be set to. Should be the top level domain with a reverse proxy (e.g. `domain.com`).
       # Worker settings. Max number of tasks to run in parallel per type.
       - MAX_CHAT_DOWNLOAD_EXECUTIONS=3
       - MAX_CHAT_RENDER_EXECUTIONS=2
@@ -39,6 +35,10 @@ services:
       # - OAUTH_CLIENT_ID=
       # - OAUTH_CLIENT_SECRET=
       # - OAUTH_REDIRECT_URL=http://IP:PORT/api/v1/auth/oauth/callback # Points to the API service
+      # Optional Frontend settings
+      - SHOW_SSO_LOGIN_BUTTON=true
+      - FORCE_SSO_AUTH=false
+      - REQUIRE_LOGIN=false
     volumes:
       - /path/to/vod/storage:/data/videos # update VIDEOS_DIR env var
       - ./temp:/data/temp # update TEMP_DIR env var
@@ -46,18 +46,12 @@ services:
       - ./config:/data/config # config and other miscellaneous files
     ports:
       - 4800:4000
-  ganymede-frontend:
-    container_name: ganymede-frontend
-    image: ghcr.io/zibbp/ganymede-frontend:latest
-    restart: unless-stopped
-    environment:
-      - API_URL=http://IP:PORT # Points to the API service; the container must be able to access this URL internally
-      - CDN_URL=http://IP:PORT # Can point to your nginx service, or set same as API_URL if nginx is not used
-      - SHOW_SSO_LOGIN_BUTTON=true # show/hide SSO login button on login page
-      - FORCE_SSO_AUTH=false # force SSO auth for all users (bypasses login page and redirects to SSO)
-      - REQUIRE_LOGIN=false # require login to view videos
-    ports:
-      - 4801:3000
+    healthcheck:
+      test: curl --fail http://localhost:4000/health || exit 1
+      interval: 60s
+      retries: 5
+      start_period: 60s
+      timeout: 10s
   ganymede-db:
     container_name: ganymede-db
     image: postgres:14
@@ -68,20 +62,11 @@ services:
       - POSTGRES_USER=ganymede
       - POSTGRES_DB=ganymede-prd
     ports:
-      - 4803:5432
-  # Nginx is not really required, it provides nice-to-have caching. The API container will serve the VIDEO_DIR env var path if you want to use that instead (e.g. VIDEOS_DIR=/data/videos would be served at IP:4800/data/videos/channel/channel.jpg).
-  ganymede-nginx:
-    container_name: ganymede-nginx
-    image: nginx
-    volumes:
-      - /path/to/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /pah/to/vod/stoage:/data/videos
-    ports:
-      - 4802:8080
-  # River UI is a frontend for the task system that Ganymede uses. This provides a more in-depth look at the task queue.
-  ganymede-river-ui:
-    image: ghcr.io/riverqueue/riverui:0.3
-    environment:
-      - DATABASE_URL=postgres://ganymede:DB_PASSWORD@ganymede-db:5432/ganymede-prd # update with env settings from the ganymede-db container. If you're using the default database settings then just update the DB_PASSWORD env var.
-    ports:
-      - 4804:8080
+      - 4801:5432
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "{{ ganymede_db_name }}"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 60s
