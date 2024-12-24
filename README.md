@@ -130,12 +130,12 @@ The `docker-compose.yml` file has comments for each environment variable. Below 
 
 ##### API
 
-| Volume         | Description                                                                                                                                                                                      | Example                      |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
-| `/data/videos` | Mount for video storage. This **must** match the `VIDEOS_DIR` environment variable.                                                                                                              | `/mnt/nas/vods:/data/videos` |
-| `/data/logs`   | Mount to store task logs. This **must** match the `LOGS_DIR` environment variable.                                                                                                               | `./logs:/data/logs`          |
-| `/data/temp`   | Mount to store temporay files during the archive process. This is mounted to the host so files are recoverable in the event of a crash. This **must** match the `TEMP_DIR` environment variable. | `./temp:/data/temp`          |
-| `/data/config` | Mount to store the config. This **must** match the `CONFIG_DIR` environment variable.                                                                                                            | `./config:/data/config`      |
+| Volume         | Description                                                                                                                                                                                       | Example                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `/data/videos` | Mount for video storage. This **must** match the `VIDEOS_DIR` environment variable.                                                                                                               | `/mnt/nas/vods:/data/videos` |
+| `/data/logs`   | Mount to store task logs. This **must** match the `LOGS_DIR` environment variable.                                                                                                                | `./logs:/data/logs`          |
+| `/data/temp`   | Mount to store temporary files during the archive process. This is mounted to the host so files are recoverable in the event of a crash. This **must** match the `TEMP_DIR` environment variable. | `./temp:/data/temp`          |
+| `/data/config` | Mount to store the config. This **must** match the `CONFIG_DIR` environment variable.                                                                                                             | `./config:/data/config`      |
 
 ## Acknowledgements
 
