@@ -32,7 +32,7 @@ type AddWatchedChannelRequest struct {
 	DownloadSubOnly       bool                `json:"download_sub_only" validate:"boolean"`
 	Categories            []string            `json:"categories"`
 	ApplyCategoriesToLive bool                `json:"apply_categories_to_live" validate:"boolean"`
-	MaxAge                int64               `json:"max_age"`
+	VideoAge              int64               `json:"video_age"` // retrict fetching videos to a certain age
 	Regex                 []AddLiveTitleRegex `json:"regex"`
 	WatchClips            bool                `json:"watch_clips" validate:"boolean"`
 	ClipsLimit            int                 `json:"clips_limit" validate:"number,gte=1"`
@@ -57,7 +57,7 @@ type UpdateWatchedChannelRequest struct {
 	DownloadSubOnly       bool                `json:"download_sub_only" validate:"boolean"`
 	Categories            []string            `json:"categories"`
 	ApplyCategoriesToLive bool                `json:"apply_categories_to_live" validate:"boolean"`
-	MaxAge                int64               `json:"max_age"`
+	VideoAge              int64               `json:"video_age"` // retrict fetching videos to a certain age
 	Regex                 []AddLiveTitleRegex `json:"regex"`
 	WatchClips            bool                `json:"watch_clips" validate:"boolean"`
 	ClipsLimit            int                 `json:"clips_limit" validate:"number,gte=1"`
@@ -147,7 +147,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		DownloadSubOnly:       ccr.DownloadSubOnly,
 		Categories:            ccr.Categories,
 		ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
-		MaxAge:                ccr.MaxAge,
+		VideoAge:              ccr.VideoAge,
 		WatchClips:            ccr.WatchClips,
 		ClipsLimit:            ccr.ClipsLimit,
 		ClipsIntervalDays:     ccr.ClipsIntervalDays,
@@ -217,7 +217,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		DownloadSubOnly:       ccr.DownloadSubOnly,
 		Categories:            ccr.Categories,
 		ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
-		MaxAge:                ccr.MaxAge,
+		VideoAge:              ccr.VideoAge,
 		WatchClips:            ccr.WatchClips,
 		ClipsLimit:            ccr.ClipsLimit,
 		ClipsIntervalDays:     ccr.ClipsIntervalDays,

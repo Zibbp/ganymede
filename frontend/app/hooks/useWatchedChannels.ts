@@ -18,7 +18,7 @@ export interface WatchedChannel {
   resolution: string;
   last_live: string;
   render_chat: boolean;
-  max_age: number;
+  video_age: number;
   apply_categories_to_live: boolean;
   watch_clips: boolean;
   clips_limit: number;
@@ -71,7 +71,7 @@ const editWatchedChannel = async (
     render_chat: watchedChannel.render_chat,
     download_sub_only: watchedChannel.download_sub_only,
     categories: categories,
-    max_age: watchedChannel.max_age,
+    video_age: watchedChannel.video_age,
     regex: watchedChannel.edges.title_regex,
     apply_categories_to_live: watchedChannel.apply_categories_to_live,
     watch_clips: watchedChannel.watch_clips,
@@ -99,7 +99,7 @@ const createWatchedChannel = async (
     render_chat: watchedChannel.render_chat,
     download_sub_only: watchedChannel.download_sub_only,
     categories: categories,
-    max_age: watchedChannel.max_age,
+    video_age: watchedChannel.video_age,
     regex: watchedChannel.edges.title_regex,
     apply_categories_to_live: watchedChannel.apply_categories_to_live,
     watch_clips: watchedChannel.watch_clips,
