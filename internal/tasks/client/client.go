@@ -69,9 +69,12 @@ func (rc *RiverClient) Stop() error {
 
 // Run river database migrations
 func (rc *RiverClient) RunMigrations() error {
-	migrator := rivermigrate.New(rc.RiverPgxDriver, nil)
+	migrator, err := rivermigrate.New(rc.RiverPgxDriver, nil)
+	if err != nil {
+		return fmt.Errorf("error creating river migrations: %v", err)
+	}
 
-	_, err := migrator.Migrate(rc.Ctx, rivermigrate.DirectionUp, &rivermigrate.MigrateOpts{})
+	_, err = migrator.Migrate(rc.Ctx, rivermigrate.DirectionUp, &rivermigrate.MigrateOpts{})
 	if err != nil {
 		return fmt.Errorf("error running river migrations: %v", err)
 	}

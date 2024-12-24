@@ -9,9 +9,7 @@ on:
     branches: ["main"]
 
 env:
-  # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -60,3 +58,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           context: .
+          # cache builds in github actions
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # better compression
+          outputs: type=image,oci-mediatypes=true,compression=zstd,compression-level=3,force-compression=true

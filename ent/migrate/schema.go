@@ -76,6 +76,10 @@ var (
 		{Name: "render_chat", Type: field.TypeBool, Default: true},
 		{Name: "video_age", Type: field.TypeInt64, Default: 0},
 		{Name: "apply_categories_to_live", Type: field.TypeBool, Default: false},
+		{Name: "watch_clips", Type: field.TypeBool, Default: false},
+		{Name: "clips_limit", Type: field.TypeInt, Default: 0},
+		{Name: "clips_interval_days", Type: field.TypeInt, Default: 0},
+		{Name: "clips_last_checked", Type: field.TypeTime, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "channel_live", Type: field.TypeUUID},
@@ -88,7 +92,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[16]},
+				Columns:    []*schema.Column{LivesColumns[20]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -256,6 +260,26 @@ var (
 			},
 		},
 	}
+	// SessionsColumns holds the columns for the "sessions" table.
+	SessionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "token", Type: field.TypeString, Unique: true, Size: 2147483647},
+		{Name: "data", Type: field.TypeBytes},
+		{Name: "expiry", Type: field.TypeTime},
+	}
+	// SessionsTable holds the schema information for the "sessions" table.
+	SessionsTable = &schema.Table{
+		Name:       "sessions",
+		Columns:    SessionsColumns,
+		PrimaryKey: []*schema.Column{SessionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sessions_expiry",
+				Unique:  false,
+				Columns: []*schema.Column{SessionsColumns[3]},
+			},
+		},
+	}
 	// TwitchCategoriesColumns holds the columns for the "twitch_categories" table.
 	TwitchCategoriesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -293,11 +317,13 @@ var (
 	VodsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "ext_id", Type: field.TypeString},
+		{Name: "clip_ext_vod_id", Type: field.TypeString, Nullable: true},
 		{Name: "ext_stream_id", Type: field.TypeString, Nullable: true},
 		{Name: "platform", Type: field.TypeEnum, Enums: []string{"twitch", "youtube"}, Default: "twitch"},
 		{Name: "type", Type: field.TypeEnum, Enums: []string{"archive", "live", "highlight", "upload", "clip"}, Default: "archive"},
 		{Name: "title", Type: field.TypeString},
 		{Name: "duration", Type: field.TypeInt, Default: 1},
+		{Name: "clip_vod_offset", Type: field.TypeInt, Nullable: true},
 		{Name: "views", Type: field.TypeInt, Default: 1},
 		{Name: "resolution", Type: field.TypeString, Nullable: true},
 		{Name: "processing", Type: field.TypeBool, Default: false},
@@ -322,6 +348,13 @@ var (
 		{Name: "tmp_video_hls_path", Type: field.TypeString, Nullable: true},
 		{Name: "locked", Type: field.TypeBool, Default: false},
 		{Name: "local_views", Type: field.TypeInt, Default: 0},
+		{Name: "sprite_thumbnails_enabled", Type: field.TypeBool, Default: false},
+		{Name: "sprite_thumbnails_images", Type: field.TypeJSON, Nullable: true},
+		{Name: "sprite_thumbnails_interval", Type: field.TypeInt, Nullable: true},
+		{Name: "sprite_thumbnails_width", Type: field.TypeInt, Nullable: true},
+		{Name: "sprite_thumbnails_height", Type: field.TypeInt, Nullable: true},
+		{Name: "sprite_thumbnails_rows", Type: field.TypeInt, Nullable: true},
+		{Name: "sprite_thumbnails_columns", Type: field.TypeInt, Nullable: true},
 		{Name: "streamed_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
@@ -335,7 +368,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[34]},
+				Columns:    []*schema.Column{VodsColumns[43]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -379,6 +412,7 @@ var (
 		PlaybacksTable,
 		PlaylistsTable,
 		QueuesTable,
+		SessionsTable,
 		TwitchCategoriesTable,
 		UsersTable,
 		VodsTable,

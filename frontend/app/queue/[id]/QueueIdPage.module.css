@@ -1,0 +1,7 @@
+.timelineBottom {
+  display: flex;
+  gap: 25rem;
+  @media (max-width: $mantine-breakpoint-sm) {
+    display: block;
+  }
+}

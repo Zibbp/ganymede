@@ -1,0 +1,73 @@
+.timelineGrid {
+  position: relative;
+  flex-shrink: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 1rem 1rem 1rem;
+}
+
+.timelineStreamerColumn {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.timelineBar {
+  position: relative;
+  height: 0.75rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.timelineBar:before {
+  content: "";
+  background: var(--mantine-color-violet-9);
+  opacity: 0.25;
+  position: absolute;
+  inset: 0;
+}
+
+.timelineBarActive {
+  pointer-events: none;
+  background-color: var(--mantine-color-violet-9);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--bar-start);
+  width: var(--bar-length);
+}
+
+.gridInput {
+  width: 4.5rem;
+}
+
+.offsetInput {
+  width: 4.5rem;
+}
+
+.playheadContainer {
+  position: absolute;
+  grid-column: 2 / 3;
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--playhead-position);
+  transform: translateX(-50%);
+  width: 0.125rem;
+  background-color: var(--mantine-color-grape-5);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.playheadPreview {
+  background-color: var(--mantine-color-pink-5);
+  opacity: 0.75;
+}

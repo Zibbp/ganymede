@@ -76,15 +76,15 @@ func (s *Service) GetPlaylist(c echo.Context, playlistID uuid.UUID, withMultistr
 		playlistQuery.WithMultistreamInfo(func(miq *ent.MultistreamInfoQuery) { miq.WithVod() })
 	}
 	rPlaylist, err := playlistQuery.Order(ent.Desc(playlist.FieldCreatedAt)).Only(c.Request().Context())
+	if err != nil {
+		return nil, fmt.Errorf("error getting playlist: %v", err)
+	}
 	// Order VODs by date streamed
 	tmpVods := rPlaylist.Edges.Vods
 	sort.Slice(tmpVods, func(i, j int) bool {
 		return tmpVods[i].StreamedAt.After(tmpVods[j].StreamedAt)
 	})
 	rPlaylist.Edges.Vods = tmpVods
-	if err != nil {
-		return nil, fmt.Errorf("error getting playlist: %v", err)
-	}
 
 	return rPlaylist, nil
 }
@@ -172,7 +172,6 @@ func (s *Service) SetVodDelayOnPlaylist(c echo.Context, playlistID uuid.UUID, vo
 			return fmt.Errorf("error updating multistream info: %v", err)
 		}
 	}
-
 	return nil
 }
 

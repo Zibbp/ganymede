@@ -19,6 +19,8 @@ const (
 	FieldID = "id"
 	// FieldExtID holds the string denoting the ext_id field in the database.
 	FieldExtID = "ext_id"
+	// FieldClipExtVodID holds the string denoting the clip_ext_vod_id field in the database.
+	FieldClipExtVodID = "clip_ext_vod_id"
 	// FieldExtStreamID holds the string denoting the ext_stream_id field in the database.
 	FieldExtStreamID = "ext_stream_id"
 	// FieldPlatform holds the string denoting the platform field in the database.
@@ -29,6 +31,8 @@ const (
 	FieldTitle = "title"
 	// FieldDuration holds the string denoting the duration field in the database.
 	FieldDuration = "duration"
+	// FieldClipVodOffset holds the string denoting the clip_vod_offset field in the database.
+	FieldClipVodOffset = "clip_vod_offset"
 	// FieldViews holds the string denoting the views field in the database.
 	FieldViews = "views"
 	// FieldResolution holds the string denoting the resolution field in the database.
@@ -77,6 +81,20 @@ const (
 	FieldLocked = "locked"
 	// FieldLocalViews holds the string denoting the local_views field in the database.
 	FieldLocalViews = "local_views"
+	// FieldSpriteThumbnailsEnabled holds the string denoting the sprite_thumbnails_enabled field in the database.
+	FieldSpriteThumbnailsEnabled = "sprite_thumbnails_enabled"
+	// FieldSpriteThumbnailsImages holds the string denoting the sprite_thumbnails_images field in the database.
+	FieldSpriteThumbnailsImages = "sprite_thumbnails_images"
+	// FieldSpriteThumbnailsInterval holds the string denoting the sprite_thumbnails_interval field in the database.
+	FieldSpriteThumbnailsInterval = "sprite_thumbnails_interval"
+	// FieldSpriteThumbnailsWidth holds the string denoting the sprite_thumbnails_width field in the database.
+	FieldSpriteThumbnailsWidth = "sprite_thumbnails_width"
+	// FieldSpriteThumbnailsHeight holds the string denoting the sprite_thumbnails_height field in the database.
+	FieldSpriteThumbnailsHeight = "sprite_thumbnails_height"
+	// FieldSpriteThumbnailsRows holds the string denoting the sprite_thumbnails_rows field in the database.
+	FieldSpriteThumbnailsRows = "sprite_thumbnails_rows"
+	// FieldSpriteThumbnailsColumns holds the string denoting the sprite_thumbnails_columns field in the database.
+	FieldSpriteThumbnailsColumns = "sprite_thumbnails_columns"
 	// FieldStreamedAt holds the string denoting the streamed_at field in the database.
 	FieldStreamedAt = "streamed_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -143,11 +161,13 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldExtID,
+	FieldClipExtVodID,
 	FieldExtStreamID,
 	FieldPlatform,
 	FieldType,
 	FieldTitle,
 	FieldDuration,
+	FieldClipVodOffset,
 	FieldViews,
 	FieldResolution,
 	FieldProcessing,
@@ -172,6 +192,13 @@ var Columns = []string{
 	FieldTmpVideoHlsPath,
 	FieldLocked,
 	FieldLocalViews,
+	FieldSpriteThumbnailsEnabled,
+	FieldSpriteThumbnailsImages,
+	FieldSpriteThumbnailsInterval,
+	FieldSpriteThumbnailsWidth,
+	FieldSpriteThumbnailsHeight,
+	FieldSpriteThumbnailsRows,
+	FieldSpriteThumbnailsColumns,
 	FieldStreamedAt,
 	FieldUpdatedAt,
 	FieldCreatedAt,
@@ -215,6 +242,8 @@ var (
 	DefaultLocked bool
 	// DefaultLocalViews holds the default value on creation for the "local_views" field.
 	DefaultLocalViews int
+	// DefaultSpriteThumbnailsEnabled holds the default value on creation for the "sprite_thumbnails_enabled" field.
+	DefaultSpriteThumbnailsEnabled bool
 	// DefaultStreamedAt holds the default value on creation for the "streamed_at" field.
 	DefaultStreamedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -264,6 +293,11 @@ func ByExtID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExtID, opts...).ToFunc()
 }
 
+// ByClipExtVodID orders the results by the clip_ext_vod_id field.
+func ByClipExtVodID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClipExtVodID, opts...).ToFunc()
+}
+
 // ByExtStreamID orders the results by the ext_stream_id field.
 func ByExtStreamID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExtStreamID, opts...).ToFunc()
@@ -287,6 +321,11 @@ func ByTitle(opts ...sql.OrderTermOption) OrderOption {
 // ByDuration orders the results by the duration field.
 func ByDuration(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDuration, opts...).ToFunc()
+}
+
+// ByClipVodOffset orders the results by the clip_vod_offset field.
+func ByClipVodOffset(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClipVodOffset, opts...).ToFunc()
 }
 
 // ByViews orders the results by the views field.
@@ -407,6 +446,36 @@ func ByLocked(opts ...sql.OrderTermOption) OrderOption {
 // ByLocalViews orders the results by the local_views field.
 func ByLocalViews(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLocalViews, opts...).ToFunc()
+}
+
+// BySpriteThumbnailsEnabled orders the results by the sprite_thumbnails_enabled field.
+func BySpriteThumbnailsEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSpriteThumbnailsEnabled, opts...).ToFunc()
+}
+
+// BySpriteThumbnailsInterval orders the results by the sprite_thumbnails_interval field.
+func BySpriteThumbnailsInterval(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSpriteThumbnailsInterval, opts...).ToFunc()
+}
+
+// BySpriteThumbnailsWidth orders the results by the sprite_thumbnails_width field.
+func BySpriteThumbnailsWidth(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSpriteThumbnailsWidth, opts...).ToFunc()
+}
+
+// BySpriteThumbnailsHeight orders the results by the sprite_thumbnails_height field.
+func BySpriteThumbnailsHeight(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSpriteThumbnailsHeight, opts...).ToFunc()
+}
+
+// BySpriteThumbnailsRows orders the results by the sprite_thumbnails_rows field.
+func BySpriteThumbnailsRows(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSpriteThumbnailsRows, opts...).ToFunc()
+}
+
+// BySpriteThumbnailsColumns orders the results by the sprite_thumbnails_columns field.
+func BySpriteThumbnailsColumns(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSpriteThumbnailsColumns, opts...).ToFunc()
 }
 
 // ByStreamedAt orders the results by the streamed_at field.

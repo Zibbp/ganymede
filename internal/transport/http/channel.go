@@ -47,10 +47,10 @@ type CreateChannelRequest struct {
 func (h *Handler) CreateChannel(c echo.Context) error {
 	ccr := new(CreateChannelRequest)
 	if err := c.Bind(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	if ccr.ExternalID == "" {
@@ -67,10 +67,10 @@ func (h *Handler) CreateChannel(c echo.Context) error {
 
 	cha, err := h.Service.ChannelService.CreateChannel(ccDto)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, cha)
+	return SuccessResponse(c, cha, "channel created")
 }
 
 // GetChannels godoc
@@ -87,10 +87,10 @@ func (h *Handler) CreateChannel(c echo.Context) error {
 func (h *Handler) GetChannels(c echo.Context) error {
 	channels, err := h.Service.ChannelService.GetChannels()
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, channels)
+	return SuccessResponse(c, channels, "channels")
 }
 
 // GetChannel godoc
@@ -110,16 +110,16 @@ func (h *Handler) GetChannel(c echo.Context) error {
 	id := c.Param("id")
 	cUUID, err := uuid.Parse(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	cha, err := h.Service.ChannelService.GetChannel(cUUID)
 	if err != nil {
 		if err.Error() == "channel not found" {
-			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+			return ErrorResponse(c, http.StatusNotFound, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, cha)
+	return SuccessResponse(c, cha, "channel")
 }
 
 // DeleteChannel godoc
@@ -140,14 +140,14 @@ func (h *Handler) DeleteChannel(c echo.Context) error {
 	id := c.Param("id")
 	cUUID, err := uuid.Parse(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	err = h.Service.ChannelService.DeleteChannel(cUUID)
 	if err != nil {
 		if err.Error() == "channel not found" {
-			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+			return ErrorResponse(c, http.StatusNotFound, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
 }
@@ -171,14 +171,14 @@ func (h *Handler) UpdateChannel(c echo.Context) error {
 	id := c.Param("id")
 	cUUID, err := uuid.Parse(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	ccr := new(CreateChannelRequest)
 	if err := c.Bind(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	ccDto := channel.Channel{
@@ -192,11 +192,11 @@ func (h *Handler) UpdateChannel(c echo.Context) error {
 	cha, err := h.Service.ChannelService.UpdateChannel(cUUID, ccDto)
 	if err != nil {
 		if err.Error() == "channel not found" {
-			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+			return ErrorResponse(c, http.StatusNotFound, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, cha)
+	return SuccessResponse(c, cha, "channel updated")
 }
 
 // GetChannelByName godoc
@@ -217,23 +217,23 @@ func (h *Handler) GetChannelByName(c echo.Context) error {
 	cha, err := h.Service.ChannelService.GetChannelByName(name)
 	if err != nil {
 		if err.Error() == "channel not found" {
-			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+			return ErrorResponse(c, http.StatusNotFound, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, cha)
+	return SuccessResponse(c, cha, "channel")
 }
 
 func (h *Handler) UpdateChannelImage(c echo.Context) error {
-	id := c.QueryParam("id")
+	id := c.Param("id")
 	cUUID, err := uuid.Parse(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	err = h.Service.ChannelService.UpdateChannelImage(c.Request().Context(), cUUID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "ok")
+	return SuccessResponse(c, "", "channel image updated")
 }

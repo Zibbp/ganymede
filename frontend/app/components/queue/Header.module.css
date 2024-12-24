@@ -1,0 +1,45 @@
+.queueHeader {
+  height: auto;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  background-color: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
+  );
+}
+.queueHeaderContents {
+  display: flex;
+
+  @media (max-width: $mantine-breakpoint-sm) {
+    flex-direction: column;
+  }
+}
+.queueHeaderTitle {
+  font-weight: 600;
+  font-size: 24px;
+}
+.queueHeaderHoverText {
+  font-weight: 600;
+  font-size: 18px;
+}
+.queueHeaderRight {
+  padding-left: 10px;
+}
+.liveArchive {
+  font-weight: 600;
+  font-size: 18px;
+  background-color: var(--mantine-color-red-8);
+  color: var(--mantine-color-gray-0);
+  padding: 2px;
+  border-radius: 4px;
+  margin-right: 7px;
+}
+.onHold {
+  font-weight: 600;
+  font-size: 18px;
+  background-color: var(--mantine-color-indigo-8);
+  color: var(--mantine-color-gray-0);
+  padding: 2px;
+  border-radius: 4px;
+  margin-right: 7px;
+}

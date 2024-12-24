@@ -18,37 +18,45 @@ import (
 type Live struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	ID uuid.UUID `json:"id"`
 	// Watch live streams
-	WatchLive bool `json:"watch_live,omitempty"`
+	WatchLive bool `json:"watch_live"`
 	// Watch new VODs
-	WatchVod bool `json:"watch_vod,omitempty"`
+	WatchVod bool `json:"watch_vod"`
 	// Download archives
-	DownloadArchives bool `json:"download_archives,omitempty"`
+	DownloadArchives bool `json:"download_archives"`
 	// Download highlights
-	DownloadHighlights bool `json:"download_highlights,omitempty"`
+	DownloadHighlights bool `json:"download_highlights"`
 	// Download uploads
-	DownloadUploads bool `json:"download_uploads,omitempty"`
+	DownloadUploads bool `json:"download_uploads"`
 	// Download sub only VODs
-	DownloadSubOnly bool `json:"download_sub_only,omitempty"`
+	DownloadSubOnly bool `json:"download_sub_only"`
 	// Whether the channel is currently live.
-	IsLive bool `json:"is_live,omitempty"`
+	IsLive bool `json:"is_live"`
 	// Whether the chat archive is enabled.
-	ArchiveChat bool `json:"archive_chat,omitempty"`
+	ArchiveChat bool `json:"archive_chat"`
 	// Resolution holds the value of the "resolution" field.
-	Resolution string `json:"resolution,omitempty"`
+	Resolution string `json:"resolution"`
 	// The time the channel last went live.
-	LastLive time.Time `json:"last_live,omitempty"`
+	LastLive time.Time `json:"last_live"`
 	// Whether the chat should be rendered.
-	RenderChat bool `json:"render_chat,omitempty"`
+	RenderChat bool `json:"render_chat"`
 	// Restrict fetching videos to a certain age.
-	VideoAge int64 `json:"video_age,omitempty"`
+	VideoAge int64 `json:"video_age"`
 	// Whether the categories should be applied to livestreams.
-	ApplyCategoriesToLive bool `json:"apply_categories_to_live,omitempty"`
+	ApplyCategoriesToLive bool `json:"apply_categories_to_live"`
+	// Whether to download clips on a schedule.
+	WatchClips bool `json:"watch_clips"`
+	// The number of clips to archive.
+	ClipsLimit int `json:"clips_limit"`
+	// How often channel should be checked for clips to archive in days.
+	ClipsIntervalDays int `json:"clips_interval_days"`
+	// Time when clips were last checked.
+	ClipsLastChecked time.Time `json:"clips_last_checked"`
 	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at"`
 	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the LiveQuery when eager-loading is set.
 	Edges        LiveEdges `json:"edges"`
@@ -103,13 +111,13 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive:
+		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive, live.FieldWatchClips:
 			values[i] = new(sql.NullBool)
-		case live.FieldVideoAge:
+		case live.FieldVideoAge, live.FieldClipsLimit, live.FieldClipsIntervalDays:
 			values[i] = new(sql.NullInt64)
 		case live.FieldResolution:
 			values[i] = new(sql.NullString)
-		case live.FieldLastLive, live.FieldUpdatedAt, live.FieldCreatedAt:
+		case live.FieldLastLive, live.FieldClipsLastChecked, live.FieldUpdatedAt, live.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case live.FieldID:
 			values[i] = new(uuid.UUID)
@@ -213,6 +221,30 @@ func (l *Live) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field apply_categories_to_live", values[i])
 			} else if value.Valid {
 				l.ApplyCategoriesToLive = value.Bool
+			}
+		case live.FieldWatchClips:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field watch_clips", values[i])
+			} else if value.Valid {
+				l.WatchClips = value.Bool
+			}
+		case live.FieldClipsLimit:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field clips_limit", values[i])
+			} else if value.Valid {
+				l.ClipsLimit = int(value.Int64)
+			}
+		case live.FieldClipsIntervalDays:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field clips_interval_days", values[i])
+			} else if value.Valid {
+				l.ClipsIntervalDays = int(value.Int64)
+			}
+		case live.FieldClipsLastChecked:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field clips_last_checked", values[i])
+			} else if value.Valid {
+				l.ClipsLastChecked = value.Time
 			}
 		case live.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -322,6 +354,18 @@ func (l *Live) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("apply_categories_to_live=")
 	builder.WriteString(fmt.Sprintf("%v", l.ApplyCategoriesToLive))
+	builder.WriteString(", ")
+	builder.WriteString("watch_clips=")
+	builder.WriteString(fmt.Sprintf("%v", l.WatchClips))
+	builder.WriteString(", ")
+	builder.WriteString("clips_limit=")
+	builder.WriteString(fmt.Sprintf("%v", l.ClipsLimit))
+	builder.WriteString(", ")
+	builder.WriteString("clips_interval_days=")
+	builder.WriteString(fmt.Sprintf("%v", l.ClipsIntervalDays))
+	builder.WriteString(", ")
+	builder.WriteString("clips_last_checked=")
+	builder.WriteString(l.ClipsLastChecked.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(l.UpdatedAt.Format(time.ANSIC))

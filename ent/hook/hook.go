@@ -141,6 +141,18 @@ func (f QueueFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QueueMutation", m)
 }
 
+// The SessionsFunc type is an adapter to allow the use of ordinary
+// function as Sessions mutator.
+type SessionsFunc func(context.Context, *ent.SessionsMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SessionsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SessionsMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SessionsMutation", m)
+}
+
 // The TwitchCategoryFunc type is an adapter to allow the use of ordinary
 // function as TwitchCategory mutator.
 type TwitchCategoryFunc func(context.Context, *ent.TwitchCategoryMutation) (ent.Value, error)

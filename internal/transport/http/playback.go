@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,17 +10,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
-	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/playback"
 )
 
 type PlaybackService interface {
-	UpdateProgress(c *auth.CustomContext, vID uuid.UUID, time int) error
-	GetProgress(c *auth.CustomContext, vID uuid.UUID) (*ent.Playback, error)
-	GetAllProgress(c *auth.CustomContext) ([]*ent.Playback, error)
-	UpdateStatus(c *auth.CustomContext, vID uuid.UUID, status string) error
-	DeleteProgress(c *auth.CustomContext, vID uuid.UUID) error
-	GetLastPlaybacks(c *auth.CustomContext, limit int) (*playback.GetPlaybackResp, error)
+	UpdateProgress(ctx context.Context, userId uuid.UUID, videoId uuid.UUID, time int) error
+	GetProgress(ctx context.Context, userId uuid.UUID, videoId uuid.UUID) (*ent.Playback, error)
+	GetAllProgress(ctx context.Context, userId uuid.UUID) ([]*ent.Playback, error)
+	UpdateStatus(ctx context.Context, userId uuid.UUID, videoId uuid.UUID, status string) error
+	DeleteProgress(ctx context.Context, userId uuid.UUID, videoId uuid.UUID) error
+	GetLastPlaybacks(ctx context.Context, userId uuid.UUID, limit int) (*playback.GetPlaybackResp, error)
 	StartPlayback(c echo.Context, videoId uuid.UUID) error
 }
 
@@ -47,23 +47,23 @@ type UpdateStatusRequest struct {
 //	@Router			/playback/progress [post]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateProgress(c echo.Context) error {
-	cc := c.(*auth.CustomContext)
+	user := userFromContext(c)
 	upr := new(UpdateProgressRequest)
 	if err := c.Bind(upr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(upr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	vID, err := uuid.Parse(upr.VodID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid vod id")
 	}
-	err = h.Service.PlaybackService.UpdateProgress(cc, vID, upr.Time)
+	err = h.Service.PlaybackService.UpdateProgress(c.Request().Context(), user.ID, vID, upr.Time)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "ok")
+	return SuccessResponse(c, "", "ok")
 }
 
 // GetProgress godoc
@@ -80,17 +80,17 @@ func (h *Handler) UpdateProgress(c echo.Context) error {
 //	@Router			/playback/progress/{id} [get]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) GetProgress(c echo.Context) error {
-	cc := c.(*auth.CustomContext)
+	user := userFromContext(c)
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid vod id")
 	}
-	playbackEntry, err := h.Service.PlaybackService.GetProgress(cc, vID)
+	playbackEntry, err := h.Service.PlaybackService.GetProgress(c.Request().Context(), user.ID, vID)
 	if err != nil {
 		if errors.Is(err, playback.ErrorPlaybackNotFound) {
 			return ErrorResponse(c, http.StatusOK, "playback not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
 	return SuccessResponse(c, playbackEntry, fmt.Sprintf("playback data for %s", vID))
@@ -108,12 +108,12 @@ func (h *Handler) GetProgress(c echo.Context) error {
 //	@Router			/playback [get]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) GetAllProgress(c echo.Context) error {
-	cc := c.(*auth.CustomContext)
-	playbackEntries, err := h.Service.PlaybackService.GetAllProgress(cc)
+	user := userFromContext(c)
+	playbackEntries, err := h.Service.PlaybackService.GetAllProgress(c.Request().Context(), user.ID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, playbackEntries)
+	return SuccessResponse(c, playbackEntries, "playback entries")
 }
 
 // UpdateStatus godoc
@@ -130,23 +130,24 @@ func (h *Handler) GetAllProgress(c echo.Context) error {
 //	@Router			/playback/status [post]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateStatus(c echo.Context) error {
-	cc := c.(*auth.CustomContext)
+	user := userFromContext(c)
 	usr := new(UpdateStatusRequest)
 	if err := c.Bind(usr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(usr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	vID, err := uuid.Parse(usr.VodID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid vod id")
 	}
-	err = h.Service.PlaybackService.UpdateStatus(cc, vID, usr.Status)
+	err = h.Service.PlaybackService.UpdateStatus(c.Request().Context(), user.ID, vID, usr.Status)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "ok")
+
+	return SuccessResponse(c, "", "ok")
 }
 
 // DeleteProgress godoc
@@ -163,31 +164,32 @@ func (h *Handler) UpdateStatus(c echo.Context) error {
 //	@Router			/playback/{id} [delete]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) DeleteProgress(c echo.Context) error {
-	cc := c.(*auth.CustomContext)
+	user := userFromContext(c)
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid vod id")
 	}
-	err = h.Service.PlaybackService.DeleteProgress(cc, vID)
+	err = h.Service.PlaybackService.DeleteProgress(c.Request().Context(), user.ID, vID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "ok")
+
+	return SuccessResponse(c, "", "ok")
 }
 
 func (h *Handler) GetLastPlaybacks(c echo.Context) error {
-	cc := c.(*auth.CustomContext)
-
+	user := userFromContext(c)
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid limit")
 	}
 
-	playbackEntries, err := h.Service.PlaybackService.GetLastPlaybacks(cc, limit)
+	playbackEntries, err := h.Service.PlaybackService.GetLastPlaybacks(c.Request().Context(), user.ID, limit)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, playbackEntries)
+
+	return SuccessResponse(c, playbackEntries, "playback entries")
 }
 
 // StartPlayback godoc
@@ -211,8 +213,8 @@ func (h *Handler) StartPlayback(c echo.Context) error {
 
 	err = h.Service.PlaybackService.StartPlayback(c, videoId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, "ok")
+	return SuccessResponse(c, "", "ok")
 }

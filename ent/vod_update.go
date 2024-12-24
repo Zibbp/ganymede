@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
@@ -47,6 +48,26 @@ func (vu *VodUpdate) SetNillableExtID(s *string) *VodUpdate {
 	if s != nil {
 		vu.SetExtID(*s)
 	}
+	return vu
+}
+
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (vu *VodUpdate) SetClipExtVodID(s string) *VodUpdate {
+	vu.mutation.SetClipExtVodID(s)
+	return vu
+}
+
+// SetNillableClipExtVodID sets the "clip_ext_vod_id" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableClipExtVodID(s *string) *VodUpdate {
+	if s != nil {
+		vu.SetClipExtVodID(*s)
+	}
+	return vu
+}
+
+// ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
+func (vu *VodUpdate) ClearClipExtVodID() *VodUpdate {
+	vu.mutation.ClearClipExtVodID()
 	return vu
 }
 
@@ -130,6 +151,33 @@ func (vu *VodUpdate) SetNillableDuration(i *int) *VodUpdate {
 // AddDuration adds i to the "duration" field.
 func (vu *VodUpdate) AddDuration(i int) *VodUpdate {
 	vu.mutation.AddDuration(i)
+	return vu
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (vu *VodUpdate) SetClipVodOffset(i int) *VodUpdate {
+	vu.mutation.ResetClipVodOffset()
+	vu.mutation.SetClipVodOffset(i)
+	return vu
+}
+
+// SetNillableClipVodOffset sets the "clip_vod_offset" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableClipVodOffset(i *int) *VodUpdate {
+	if i != nil {
+		vu.SetClipVodOffset(*i)
+	}
+	return vu
+}
+
+// AddClipVodOffset adds i to the "clip_vod_offset" field.
+func (vu *VodUpdate) AddClipVodOffset(i int) *VodUpdate {
+	vu.mutation.AddClipVodOffset(i)
+	return vu
+}
+
+// ClearClipVodOffset clears the value of the "clip_vod_offset" field.
+func (vu *VodUpdate) ClearClipVodOffset() *VodUpdate {
+	vu.mutation.ClearClipVodOffset()
 	return vu
 }
 
@@ -591,6 +639,173 @@ func (vu *VodUpdate) AddLocalViews(i int) *VodUpdate {
 	return vu
 }
 
+// SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
+func (vu *VodUpdate) SetSpriteThumbnailsEnabled(b bool) *VodUpdate {
+	vu.mutation.SetSpriteThumbnailsEnabled(b)
+	return vu
+}
+
+// SetNillableSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableSpriteThumbnailsEnabled(b *bool) *VodUpdate {
+	if b != nil {
+		vu.SetSpriteThumbnailsEnabled(*b)
+	}
+	return vu
+}
+
+// SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
+func (vu *VodUpdate) SetSpriteThumbnailsImages(s []string) *VodUpdate {
+	vu.mutation.SetSpriteThumbnailsImages(s)
+	return vu
+}
+
+// AppendSpriteThumbnailsImages appends s to the "sprite_thumbnails_images" field.
+func (vu *VodUpdate) AppendSpriteThumbnailsImages(s []string) *VodUpdate {
+	vu.mutation.AppendSpriteThumbnailsImages(s)
+	return vu
+}
+
+// ClearSpriteThumbnailsImages clears the value of the "sprite_thumbnails_images" field.
+func (vu *VodUpdate) ClearSpriteThumbnailsImages() *VodUpdate {
+	vu.mutation.ClearSpriteThumbnailsImages()
+	return vu
+}
+
+// SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
+func (vu *VodUpdate) SetSpriteThumbnailsInterval(i int) *VodUpdate {
+	vu.mutation.ResetSpriteThumbnailsInterval()
+	vu.mutation.SetSpriteThumbnailsInterval(i)
+	return vu
+}
+
+// SetNillableSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableSpriteThumbnailsInterval(i *int) *VodUpdate {
+	if i != nil {
+		vu.SetSpriteThumbnailsInterval(*i)
+	}
+	return vu
+}
+
+// AddSpriteThumbnailsInterval adds i to the "sprite_thumbnails_interval" field.
+func (vu *VodUpdate) AddSpriteThumbnailsInterval(i int) *VodUpdate {
+	vu.mutation.AddSpriteThumbnailsInterval(i)
+	return vu
+}
+
+// ClearSpriteThumbnailsInterval clears the value of the "sprite_thumbnails_interval" field.
+func (vu *VodUpdate) ClearSpriteThumbnailsInterval() *VodUpdate {
+	vu.mutation.ClearSpriteThumbnailsInterval()
+	return vu
+}
+
+// SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
+func (vu *VodUpdate) SetSpriteThumbnailsWidth(i int) *VodUpdate {
+	vu.mutation.ResetSpriteThumbnailsWidth()
+	vu.mutation.SetSpriteThumbnailsWidth(i)
+	return vu
+}
+
+// SetNillableSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableSpriteThumbnailsWidth(i *int) *VodUpdate {
+	if i != nil {
+		vu.SetSpriteThumbnailsWidth(*i)
+	}
+	return vu
+}
+
+// AddSpriteThumbnailsWidth adds i to the "sprite_thumbnails_width" field.
+func (vu *VodUpdate) AddSpriteThumbnailsWidth(i int) *VodUpdate {
+	vu.mutation.AddSpriteThumbnailsWidth(i)
+	return vu
+}
+
+// ClearSpriteThumbnailsWidth clears the value of the "sprite_thumbnails_width" field.
+func (vu *VodUpdate) ClearSpriteThumbnailsWidth() *VodUpdate {
+	vu.mutation.ClearSpriteThumbnailsWidth()
+	return vu
+}
+
+// SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
+func (vu *VodUpdate) SetSpriteThumbnailsHeight(i int) *VodUpdate {
+	vu.mutation.ResetSpriteThumbnailsHeight()
+	vu.mutation.SetSpriteThumbnailsHeight(i)
+	return vu
+}
+
+// SetNillableSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableSpriteThumbnailsHeight(i *int) *VodUpdate {
+	if i != nil {
+		vu.SetSpriteThumbnailsHeight(*i)
+	}
+	return vu
+}
+
+// AddSpriteThumbnailsHeight adds i to the "sprite_thumbnails_height" field.
+func (vu *VodUpdate) AddSpriteThumbnailsHeight(i int) *VodUpdate {
+	vu.mutation.AddSpriteThumbnailsHeight(i)
+	return vu
+}
+
+// ClearSpriteThumbnailsHeight clears the value of the "sprite_thumbnails_height" field.
+func (vu *VodUpdate) ClearSpriteThumbnailsHeight() *VodUpdate {
+	vu.mutation.ClearSpriteThumbnailsHeight()
+	return vu
+}
+
+// SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
+func (vu *VodUpdate) SetSpriteThumbnailsRows(i int) *VodUpdate {
+	vu.mutation.ResetSpriteThumbnailsRows()
+	vu.mutation.SetSpriteThumbnailsRows(i)
+	return vu
+}
+
+// SetNillableSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableSpriteThumbnailsRows(i *int) *VodUpdate {
+	if i != nil {
+		vu.SetSpriteThumbnailsRows(*i)
+	}
+	return vu
+}
+
+// AddSpriteThumbnailsRows adds i to the "sprite_thumbnails_rows" field.
+func (vu *VodUpdate) AddSpriteThumbnailsRows(i int) *VodUpdate {
+	vu.mutation.AddSpriteThumbnailsRows(i)
+	return vu
+}
+
+// ClearSpriteThumbnailsRows clears the value of the "sprite_thumbnails_rows" field.
+func (vu *VodUpdate) ClearSpriteThumbnailsRows() *VodUpdate {
+	vu.mutation.ClearSpriteThumbnailsRows()
+	return vu
+}
+
+// SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
+func (vu *VodUpdate) SetSpriteThumbnailsColumns(i int) *VodUpdate {
+	vu.mutation.ResetSpriteThumbnailsColumns()
+	vu.mutation.SetSpriteThumbnailsColumns(i)
+	return vu
+}
+
+// SetNillableSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableSpriteThumbnailsColumns(i *int) *VodUpdate {
+	if i != nil {
+		vu.SetSpriteThumbnailsColumns(*i)
+	}
+	return vu
+}
+
+// AddSpriteThumbnailsColumns adds i to the "sprite_thumbnails_columns" field.
+func (vu *VodUpdate) AddSpriteThumbnailsColumns(i int) *VodUpdate {
+	vu.mutation.AddSpriteThumbnailsColumns(i)
+	return vu
+}
+
+// ClearSpriteThumbnailsColumns clears the value of the "sprite_thumbnails_columns" field.
+func (vu *VodUpdate) ClearSpriteThumbnailsColumns() *VodUpdate {
+	vu.mutation.ClearSpriteThumbnailsColumns()
+	return vu
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vu *VodUpdate) SetStreamedAt(t time.Time) *VodUpdate {
 	vu.mutation.SetStreamedAt(t)
@@ -871,6 +1086,12 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.ExtID(); ok {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 	}
+	if value, ok := vu.mutation.ClipExtVodID(); ok {
+		_spec.SetField(vod.FieldClipExtVodID, field.TypeString, value)
+	}
+	if vu.mutation.ClipExtVodIDCleared() {
+		_spec.ClearField(vod.FieldClipExtVodID, field.TypeString)
+	}
 	if value, ok := vu.mutation.ExtStreamID(); ok {
 		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
 	}
@@ -891,6 +1112,15 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := vu.mutation.AddedDuration(); ok {
 		_spec.AddField(vod.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.ClipVodOffset(); ok {
+		_spec.SetField(vod.FieldClipVodOffset, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.AddedClipVodOffset(); ok {
+		_spec.AddField(vod.FieldClipVodOffset, field.TypeInt, value)
+	}
+	if vu.mutation.ClipVodOffsetCleared() {
+		_spec.ClearField(vod.FieldClipVodOffset, field.TypeInt)
 	}
 	if value, ok := vu.mutation.Views(); ok {
 		_spec.SetField(vod.FieldViews, field.TypeInt, value)
@@ -1023,6 +1253,65 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := vu.mutation.AddedLocalViews(); ok {
 		_spec.AddField(vod.FieldLocalViews, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.SpriteThumbnailsEnabled(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsEnabled, field.TypeBool, value)
+	}
+	if value, ok := vu.mutation.SpriteThumbnailsImages(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsImages, field.TypeJSON, value)
+	}
+	if value, ok := vu.mutation.AppendedSpriteThumbnailsImages(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, vod.FieldSpriteThumbnailsImages, value)
+		})
+	}
+	if vu.mutation.SpriteThumbnailsImagesCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsImages, field.TypeJSON)
+	}
+	if value, ok := vu.mutation.SpriteThumbnailsInterval(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsInterval, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.AddedSpriteThumbnailsInterval(); ok {
+		_spec.AddField(vod.FieldSpriteThumbnailsInterval, field.TypeInt, value)
+	}
+	if vu.mutation.SpriteThumbnailsIntervalCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsInterval, field.TypeInt)
+	}
+	if value, ok := vu.mutation.SpriteThumbnailsWidth(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsWidth, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.AddedSpriteThumbnailsWidth(); ok {
+		_spec.AddField(vod.FieldSpriteThumbnailsWidth, field.TypeInt, value)
+	}
+	if vu.mutation.SpriteThumbnailsWidthCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsWidth, field.TypeInt)
+	}
+	if value, ok := vu.mutation.SpriteThumbnailsHeight(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsHeight, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.AddedSpriteThumbnailsHeight(); ok {
+		_spec.AddField(vod.FieldSpriteThumbnailsHeight, field.TypeInt, value)
+	}
+	if vu.mutation.SpriteThumbnailsHeightCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsHeight, field.TypeInt)
+	}
+	if value, ok := vu.mutation.SpriteThumbnailsRows(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsRows, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.AddedSpriteThumbnailsRows(); ok {
+		_spec.AddField(vod.FieldSpriteThumbnailsRows, field.TypeInt, value)
+	}
+	if vu.mutation.SpriteThumbnailsRowsCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsRows, field.TypeInt)
+	}
+	if value, ok := vu.mutation.SpriteThumbnailsColumns(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
+	}
+	if value, ok := vu.mutation.AddedSpriteThumbnailsColumns(); ok {
+		_spec.AddField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
+	}
+	if vu.mutation.SpriteThumbnailsColumnsCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsColumns, field.TypeInt)
 	}
 	if value, ok := vu.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
@@ -1302,6 +1591,26 @@ func (vuo *VodUpdateOne) SetNillableExtID(s *string) *VodUpdateOne {
 	return vuo
 }
 
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (vuo *VodUpdateOne) SetClipExtVodID(s string) *VodUpdateOne {
+	vuo.mutation.SetClipExtVodID(s)
+	return vuo
+}
+
+// SetNillableClipExtVodID sets the "clip_ext_vod_id" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableClipExtVodID(s *string) *VodUpdateOne {
+	if s != nil {
+		vuo.SetClipExtVodID(*s)
+	}
+	return vuo
+}
+
+// ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
+func (vuo *VodUpdateOne) ClearClipExtVodID() *VodUpdateOne {
+	vuo.mutation.ClearClipExtVodID()
+	return vuo
+}
+
 // SetExtStreamID sets the "ext_stream_id" field.
 func (vuo *VodUpdateOne) SetExtStreamID(s string) *VodUpdateOne {
 	vuo.mutation.SetExtStreamID(s)
@@ -1382,6 +1691,33 @@ func (vuo *VodUpdateOne) SetNillableDuration(i *int) *VodUpdateOne {
 // AddDuration adds i to the "duration" field.
 func (vuo *VodUpdateOne) AddDuration(i int) *VodUpdateOne {
 	vuo.mutation.AddDuration(i)
+	return vuo
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (vuo *VodUpdateOne) SetClipVodOffset(i int) *VodUpdateOne {
+	vuo.mutation.ResetClipVodOffset()
+	vuo.mutation.SetClipVodOffset(i)
+	return vuo
+}
+
+// SetNillableClipVodOffset sets the "clip_vod_offset" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableClipVodOffset(i *int) *VodUpdateOne {
+	if i != nil {
+		vuo.SetClipVodOffset(*i)
+	}
+	return vuo
+}
+
+// AddClipVodOffset adds i to the "clip_vod_offset" field.
+func (vuo *VodUpdateOne) AddClipVodOffset(i int) *VodUpdateOne {
+	vuo.mutation.AddClipVodOffset(i)
+	return vuo
+}
+
+// ClearClipVodOffset clears the value of the "clip_vod_offset" field.
+func (vuo *VodUpdateOne) ClearClipVodOffset() *VodUpdateOne {
+	vuo.mutation.ClearClipVodOffset()
 	return vuo
 }
 
@@ -1843,6 +2179,173 @@ func (vuo *VodUpdateOne) AddLocalViews(i int) *VodUpdateOne {
 	return vuo
 }
 
+// SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
+func (vuo *VodUpdateOne) SetSpriteThumbnailsEnabled(b bool) *VodUpdateOne {
+	vuo.mutation.SetSpriteThumbnailsEnabled(b)
+	return vuo
+}
+
+// SetNillableSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsEnabled(b *bool) *VodUpdateOne {
+	if b != nil {
+		vuo.SetSpriteThumbnailsEnabled(*b)
+	}
+	return vuo
+}
+
+// SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
+func (vuo *VodUpdateOne) SetSpriteThumbnailsImages(s []string) *VodUpdateOne {
+	vuo.mutation.SetSpriteThumbnailsImages(s)
+	return vuo
+}
+
+// AppendSpriteThumbnailsImages appends s to the "sprite_thumbnails_images" field.
+func (vuo *VodUpdateOne) AppendSpriteThumbnailsImages(s []string) *VodUpdateOne {
+	vuo.mutation.AppendSpriteThumbnailsImages(s)
+	return vuo
+}
+
+// ClearSpriteThumbnailsImages clears the value of the "sprite_thumbnails_images" field.
+func (vuo *VodUpdateOne) ClearSpriteThumbnailsImages() *VodUpdateOne {
+	vuo.mutation.ClearSpriteThumbnailsImages()
+	return vuo
+}
+
+// SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
+func (vuo *VodUpdateOne) SetSpriteThumbnailsInterval(i int) *VodUpdateOne {
+	vuo.mutation.ResetSpriteThumbnailsInterval()
+	vuo.mutation.SetSpriteThumbnailsInterval(i)
+	return vuo
+}
+
+// SetNillableSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsInterval(i *int) *VodUpdateOne {
+	if i != nil {
+		vuo.SetSpriteThumbnailsInterval(*i)
+	}
+	return vuo
+}
+
+// AddSpriteThumbnailsInterval adds i to the "sprite_thumbnails_interval" field.
+func (vuo *VodUpdateOne) AddSpriteThumbnailsInterval(i int) *VodUpdateOne {
+	vuo.mutation.AddSpriteThumbnailsInterval(i)
+	return vuo
+}
+
+// ClearSpriteThumbnailsInterval clears the value of the "sprite_thumbnails_interval" field.
+func (vuo *VodUpdateOne) ClearSpriteThumbnailsInterval() *VodUpdateOne {
+	vuo.mutation.ClearSpriteThumbnailsInterval()
+	return vuo
+}
+
+// SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
+func (vuo *VodUpdateOne) SetSpriteThumbnailsWidth(i int) *VodUpdateOne {
+	vuo.mutation.ResetSpriteThumbnailsWidth()
+	vuo.mutation.SetSpriteThumbnailsWidth(i)
+	return vuo
+}
+
+// SetNillableSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsWidth(i *int) *VodUpdateOne {
+	if i != nil {
+		vuo.SetSpriteThumbnailsWidth(*i)
+	}
+	return vuo
+}
+
+// AddSpriteThumbnailsWidth adds i to the "sprite_thumbnails_width" field.
+func (vuo *VodUpdateOne) AddSpriteThumbnailsWidth(i int) *VodUpdateOne {
+	vuo.mutation.AddSpriteThumbnailsWidth(i)
+	return vuo
+}
+
+// ClearSpriteThumbnailsWidth clears the value of the "sprite_thumbnails_width" field.
+func (vuo *VodUpdateOne) ClearSpriteThumbnailsWidth() *VodUpdateOne {
+	vuo.mutation.ClearSpriteThumbnailsWidth()
+	return vuo
+}
+
+// SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
+func (vuo *VodUpdateOne) SetSpriteThumbnailsHeight(i int) *VodUpdateOne {
+	vuo.mutation.ResetSpriteThumbnailsHeight()
+	vuo.mutation.SetSpriteThumbnailsHeight(i)
+	return vuo
+}
+
+// SetNillableSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsHeight(i *int) *VodUpdateOne {
+	if i != nil {
+		vuo.SetSpriteThumbnailsHeight(*i)
+	}
+	return vuo
+}
+
+// AddSpriteThumbnailsHeight adds i to the "sprite_thumbnails_height" field.
+func (vuo *VodUpdateOne) AddSpriteThumbnailsHeight(i int) *VodUpdateOne {
+	vuo.mutation.AddSpriteThumbnailsHeight(i)
+	return vuo
+}
+
+// ClearSpriteThumbnailsHeight clears the value of the "sprite_thumbnails_height" field.
+func (vuo *VodUpdateOne) ClearSpriteThumbnailsHeight() *VodUpdateOne {
+	vuo.mutation.ClearSpriteThumbnailsHeight()
+	return vuo
+}
+
+// SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
+func (vuo *VodUpdateOne) SetSpriteThumbnailsRows(i int) *VodUpdateOne {
+	vuo.mutation.ResetSpriteThumbnailsRows()
+	vuo.mutation.SetSpriteThumbnailsRows(i)
+	return vuo
+}
+
+// SetNillableSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsRows(i *int) *VodUpdateOne {
+	if i != nil {
+		vuo.SetSpriteThumbnailsRows(*i)
+	}
+	return vuo
+}
+
+// AddSpriteThumbnailsRows adds i to the "sprite_thumbnails_rows" field.
+func (vuo *VodUpdateOne) AddSpriteThumbnailsRows(i int) *VodUpdateOne {
+	vuo.mutation.AddSpriteThumbnailsRows(i)
+	return vuo
+}
+
+// ClearSpriteThumbnailsRows clears the value of the "sprite_thumbnails_rows" field.
+func (vuo *VodUpdateOne) ClearSpriteThumbnailsRows() *VodUpdateOne {
+	vuo.mutation.ClearSpriteThumbnailsRows()
+	return vuo
+}
+
+// SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
+func (vuo *VodUpdateOne) SetSpriteThumbnailsColumns(i int) *VodUpdateOne {
+	vuo.mutation.ResetSpriteThumbnailsColumns()
+	vuo.mutation.SetSpriteThumbnailsColumns(i)
+	return vuo
+}
+
+// SetNillableSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsColumns(i *int) *VodUpdateOne {
+	if i != nil {
+		vuo.SetSpriteThumbnailsColumns(*i)
+	}
+	return vuo
+}
+
+// AddSpriteThumbnailsColumns adds i to the "sprite_thumbnails_columns" field.
+func (vuo *VodUpdateOne) AddSpriteThumbnailsColumns(i int) *VodUpdateOne {
+	vuo.mutation.AddSpriteThumbnailsColumns(i)
+	return vuo
+}
+
+// ClearSpriteThumbnailsColumns clears the value of the "sprite_thumbnails_columns" field.
+func (vuo *VodUpdateOne) ClearSpriteThumbnailsColumns() *VodUpdateOne {
+	vuo.mutation.ClearSpriteThumbnailsColumns()
+	return vuo
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vuo *VodUpdateOne) SetStreamedAt(t time.Time) *VodUpdateOne {
 	vuo.mutation.SetStreamedAt(t)
@@ -2153,6 +2656,12 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	if value, ok := vuo.mutation.ExtID(); ok {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 	}
+	if value, ok := vuo.mutation.ClipExtVodID(); ok {
+		_spec.SetField(vod.FieldClipExtVodID, field.TypeString, value)
+	}
+	if vuo.mutation.ClipExtVodIDCleared() {
+		_spec.ClearField(vod.FieldClipExtVodID, field.TypeString)
+	}
 	if value, ok := vuo.mutation.ExtStreamID(); ok {
 		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
 	}
@@ -2173,6 +2682,15 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if value, ok := vuo.mutation.AddedDuration(); ok {
 		_spec.AddField(vod.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.ClipVodOffset(); ok {
+		_spec.SetField(vod.FieldClipVodOffset, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.AddedClipVodOffset(); ok {
+		_spec.AddField(vod.FieldClipVodOffset, field.TypeInt, value)
+	}
+	if vuo.mutation.ClipVodOffsetCleared() {
+		_spec.ClearField(vod.FieldClipVodOffset, field.TypeInt)
 	}
 	if value, ok := vuo.mutation.Views(); ok {
 		_spec.SetField(vod.FieldViews, field.TypeInt, value)
@@ -2305,6 +2823,65 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if value, ok := vuo.mutation.AddedLocalViews(); ok {
 		_spec.AddField(vod.FieldLocalViews, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.SpriteThumbnailsEnabled(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsEnabled, field.TypeBool, value)
+	}
+	if value, ok := vuo.mutation.SpriteThumbnailsImages(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsImages, field.TypeJSON, value)
+	}
+	if value, ok := vuo.mutation.AppendedSpriteThumbnailsImages(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, vod.FieldSpriteThumbnailsImages, value)
+		})
+	}
+	if vuo.mutation.SpriteThumbnailsImagesCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsImages, field.TypeJSON)
+	}
+	if value, ok := vuo.mutation.SpriteThumbnailsInterval(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsInterval, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.AddedSpriteThumbnailsInterval(); ok {
+		_spec.AddField(vod.FieldSpriteThumbnailsInterval, field.TypeInt, value)
+	}
+	if vuo.mutation.SpriteThumbnailsIntervalCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsInterval, field.TypeInt)
+	}
+	if value, ok := vuo.mutation.SpriteThumbnailsWidth(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsWidth, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.AddedSpriteThumbnailsWidth(); ok {
+		_spec.AddField(vod.FieldSpriteThumbnailsWidth, field.TypeInt, value)
+	}
+	if vuo.mutation.SpriteThumbnailsWidthCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsWidth, field.TypeInt)
+	}
+	if value, ok := vuo.mutation.SpriteThumbnailsHeight(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsHeight, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.AddedSpriteThumbnailsHeight(); ok {
+		_spec.AddField(vod.FieldSpriteThumbnailsHeight, field.TypeInt, value)
+	}
+	if vuo.mutation.SpriteThumbnailsHeightCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsHeight, field.TypeInt)
+	}
+	if value, ok := vuo.mutation.SpriteThumbnailsRows(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsRows, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.AddedSpriteThumbnailsRows(); ok {
+		_spec.AddField(vod.FieldSpriteThumbnailsRows, field.TypeInt, value)
+	}
+	if vuo.mutation.SpriteThumbnailsRowsCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsRows, field.TypeInt)
+	}
+	if value, ok := vuo.mutation.SpriteThumbnailsColumns(); ok {
+		_spec.SetField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
+	}
+	if value, ok := vuo.mutation.AddedSpriteThumbnailsColumns(); ok {
+		_spec.AddField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
+	}
+	if vuo.mutation.SpriteThumbnailsColumnsCleared() {
+		_spec.ClearField(vod.FieldSpriteThumbnailsColumns, field.TypeInt)
 	}
 	if value, ok := vuo.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)

@@ -20,7 +20,7 @@ type Live struct {
 
 // Fields of the Live.
 func (Live) Fields() []ent.Field {
-	return []ent.Field{
+	fields := []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.Bool("watch_live").Default(true).Comment("Watch live streams"),
 		field.Bool("watch_vod").Default(false).Comment("Watch new VODs"),
@@ -35,9 +35,17 @@ func (Live) Fields() []ent.Field {
 		field.Bool("render_chat").Default(true).Comment("Whether the chat should be rendered."),
 		field.Int64("video_age").Default(0).Comment("Restrict fetching videos to a certain age."),
 		field.Bool("apply_categories_to_live").Default(false).Comment("Whether the categories should be applied to livestreams."),
+		field.Bool("watch_clips").Default(false).Comment("Whether to download clips on a schedule."),
+		field.Int("clips_limit").Default(0).Comment("The number of clips to archive."),
+		field.Int("clips_interval_days").Default(0).Comment("How often channel should be checked for clips to archive in days."),
+		field.Time("clips_last_checked").Comment("Time when clips were last checked.").Optional(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}
+	for _, f := range fields {
+		f.Descriptor().Tag = `json:"` + f.Descriptor().Name + `"`
+	}
+	return fields
 }
 
 // Edges of the Live.

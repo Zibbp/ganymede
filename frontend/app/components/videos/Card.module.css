@@ -1,0 +1,55 @@
+.card {
+  position: relative;
+  background-color: transparent;
+}
+
+.processingOverlay {
+  position: absolute;
+  top: 35%;
+  transform: translateY(-50%);
+  z-index: 50;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  text-align: center;
+  opacity: 2;
+}
+
+.videoImage {
+  pointer-events: none;
+  cursor: default;
+}
+
+.durationBadge {
+  position: absolute;
+  top: var(--mantine-spacing-sm);
+  left: var(--mantine-spacing-sm);
+  pointer-events: none;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.watchedIcon {
+  position: absolute;
+  top: var(--mantine-spacing-sm);
+  right: rem(12px);
+}
+
+.title {
+  margin-top: var(--mantine-spacing-xs);
+  margin-bottom: rem(2px);
+}
+
+.progressBar {
+  margin-top: rem(-5px);
+}
+
+.channelFooter {
+  margin-top: rem(5px);
+}
+
+.vodMenu {
+  margin-left: auto;
+  display: flex;
+}

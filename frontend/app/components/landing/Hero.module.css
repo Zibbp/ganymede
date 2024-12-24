@@ -1,0 +1,42 @@
+.root {
+  background-color: #1b1b1f;
+  background-size: cover;
+  background-position: center;
+  padding-top: calc(var(--mantine-spacing-xl) * 2);
+  padding-bottom: calc(var(--mantine-spacing-xl) * 2);
+}
+
+.logoBackground {
+  background-image: linear-gradient(
+    -45deg,
+    rgb(189, 0, 254) 50%,
+    rgb(71, 202, 255) 50%
+  );
+  filter: blur(45px);
+  height: 90px;
+  width: 90px;
+  position: absolute;
+}
+
+.logo {
+  z-index: 50;
+}
+
+.button {
+  color: var(--mantine-color-white);
+}
+
+.title {
+  color: var(--mantine-color-white);
+  font-family: Greycliff CF, var(--mantine-font-family);
+  font-weight: 900;
+  line-height: 1.05;
+  max-width: 500px;
+  font-size: 48px;
+
+  @media (max-width: $mantine-breakpoint-md) {
+    max-width: 100%;
+    font-size: 34px;
+    line-height: 1.15;
+  }
+}

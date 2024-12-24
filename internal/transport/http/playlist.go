@@ -50,10 +50,10 @@ type SetVodDelayPlaylistRequest struct {
 func (h *Handler) CreatePlaylist(c echo.Context) error {
 	cpr := new(CreatePlaylistRequest)
 	if err := c.Bind(cpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(cpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	playlistDto := playlist.Playlist{
 		Name:        cpr.Name,
@@ -61,9 +61,9 @@ func (h *Handler) CreatePlaylist(c echo.Context) error {
 	}
 	createdPlaylist, err := h.Service.PlaylistService.CreatePlaylist(c, playlistDto)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, createdPlaylist)
+	return SuccessResponse(c, createdPlaylist, "created playlist")
 
 }
 
@@ -84,24 +84,24 @@ func (h *Handler) CreatePlaylist(c echo.Context) error {
 func (h *Handler) AddVodToPlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid playlist id")
 	}
 	avtpr := new(AddVodToPlaylistRequest)
 	if err := c.Bind(avtpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(avtpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	vID, err := uuid.Parse(avtpr.VodID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid vod id")
 	}
 	err = h.Service.PlaylistService.AddVodToPlaylist(c, pID, vID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "ok")
+	return SuccessResponse(c, "", "video added to playlist")
 }
 
 // GetPlaylists godoc
@@ -117,9 +117,9 @@ func (h *Handler) AddVodToPlaylist(c echo.Context) error {
 func (h *Handler) GetPlaylists(c echo.Context) error {
 	playlists, err := h.Service.PlaylistService.GetPlaylists(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, playlists)
+	return SuccessResponse(c, playlists, "playlists")
 }
 
 // GetPlaylist godoc
@@ -138,13 +138,13 @@ func (h *Handler) GetPlaylists(c echo.Context) error {
 func (h *Handler) GetPlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid playlist id")
 	}
 	rPlaylist, err := h.Service.PlaylistService.GetPlaylist(c, pID, c.QueryParams().Get("with_multistream_info") == "true")
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, rPlaylist)
+	return SuccessResponse(c, rPlaylist, "playlist")
 }
 
 // UpdatePlaylist godoc
@@ -164,14 +164,14 @@ func (h *Handler) GetPlaylist(c echo.Context) error {
 func (h *Handler) UpdatePlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid playlist id")
 	}
 	upr := new(CreatePlaylistRequest)
 	if err := c.Bind(upr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(upr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	playlistDto := playlist.Playlist{
 		Name:        upr.Name,
@@ -179,9 +179,9 @@ func (h *Handler) UpdatePlaylist(c echo.Context) error {
 	}
 	updatedPlaylist, err := h.Service.PlaylistService.UpdatePlaylist(c, pID, playlistDto)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, updatedPlaylist)
+	return SuccessResponse(c, updatedPlaylist, "playlist updated")
 }
 
 // SetVodDelayOnPlaylistMultistream godoc
@@ -201,24 +201,24 @@ func (h *Handler) UpdatePlaylist(c echo.Context) error {
 func (h *Handler) SetVodDelayOnPlaylistMultistream(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid playlist id")
 	}
 	svdpr := new(SetVodDelayPlaylistRequest)
 	if err := c.Bind(svdpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(svdpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	vID, err := uuid.Parse(svdpr.VodID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid vod id")
 	}
 	err = h.Service.PlaylistService.SetVodDelayOnPlaylist(c, pID, vID, svdpr.DelayMs)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "ok")
+	return SuccessResponse(c, "", "ok")
 }
 
 // DeletePlaylist godoc
@@ -237,13 +237,13 @@ func (h *Handler) SetVodDelayOnPlaylistMultistream(c echo.Context) error {
 func (h *Handler) DeletePlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid playlist id")
 	}
 	err = h.Service.PlaylistService.DeletePlaylist(c, pID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "ok")
+	return SuccessResponse(c, "", "playlist deleted")
 }
 
 // DeleteVodFromPlaylist godoc
@@ -263,22 +263,22 @@ func (h *Handler) DeletePlaylist(c echo.Context) error {
 func (h *Handler) DeleteVodFromPlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid playlist id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid playlist id")
 	}
 	avtpr := new(AddVodToPlaylistRequest)
 	if err := c.Bind(avtpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(avtpr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	vID, err := uuid.Parse(avtpr.VodID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid vod id")
+		return ErrorResponse(c, http.StatusBadRequest, "invalid vod id")
 	}
 	err = h.Service.PlaylistService.DeleteVodFromPlaylist(c, pID, vID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "ok")
+	return SuccessResponse(c, "", "video removed from playlist")
 }

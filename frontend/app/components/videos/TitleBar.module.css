@@ -1,0 +1,33 @@
+.titleBarContainer {
+  width: 100%;
+  height: 60px;
+  position: relative;
+  overflow-x: auto;
+}
+.titleBar {
+  display: flex;
+  position: absolute;
+  margin: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.titleBarRight {
+  margin-left: auto;
+  float: right;
+  display: flex;
+}
+.titleBarBadge {
+  display: flex;
+  align-items: center;
+  margin-right: 5px;
+}
+.typeBadge {
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  border-radius: 5px;
+}

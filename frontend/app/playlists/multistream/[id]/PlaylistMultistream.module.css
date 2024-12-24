@@ -1,0 +1,129 @@
+.pageWrapper {
+  height: calc(100vh - 60px);
+  display: flex;
+}
+
+.videosGrid {
+  flex: 1;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  grid-template-columns: repeat(var(--grid-columns-count), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--grid-rows-count), minmax(0, 1fr));
+
+  &.dropEnabled .dropTile {
+    pointer-events: auto;
+    opacity: 0.25;
+  }
+
+  &.dropEnabled > :not(.dropTile) {
+    pointer-events: none;
+  }
+
+  &.resizeMode > * {
+    pointer-events: none;
+  }
+}
+
+.resizeOverlay {
+  position: absolute;
+  left: calc(100% * var(--tile-x) / var(--grid-columns-count));
+  top: calc(100% * var(--tile-y) / var(--grid-rows-count));
+  width: calc(100% * var(--tile-width) / var(--grid-columns-count));
+  height: calc(100% * var(--tile-height) / var(--grid-rows-count));
+  opacity: 0.2;
+  background: var(--mantine-color-violet-5);
+  pointer-events: none;
+  transition: all 0.2s;
+  z-index: 150;
+}
+
+.resizableTile {
+  position: relative;
+
+  & > .topLeftHandle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1rem;
+    height: 1rem;
+    user-select: none;
+    touch-action: none;
+    cursor: move;
+    z-index: 150;
+  }
+
+  & > .bottomRightHandle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 1rem;
+    height: 1rem;
+    user-select: none;
+    touch-action: none;
+    cursor: nwse-resize;
+    z-index: 150;
+  }
+
+  & > .topRightHandle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1rem;
+    height: 1rem;
+    user-select: none;
+    touch-action: none;
+    cursor: not-allowed;
+    z-index: 150;
+  }
+}
+
+.playerTile {
+  grid-column: var(--tile-x);
+  grid-row: var(--tile-y);
+}
+
+.streamerOffline {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 0.125rem solid var(--mantine-color-dark-5);
+}
+
+.dropTile {
+  opacity: 0;
+  background: var(--mantine-color-dark-7);
+  border: 0.125rem solid var(--mantine-color-dark-5);
+  grid-column: var(--tile-x);
+  grid-row: var(--tile-y);
+  pointer-events: none;
+  transition: all 0.2s;
+  z-index: 150;
+}
+
+.dropTileHovered {
+  opacity: 0.5;
+  background: var(--mantine-color-violet-5);
+  border: 0.125rem solid var(--mantine-color-violet-7);
+}
+
+.timelineOpenButtonContainer {
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 150;
+  width: 100vw;
+
+  & > * {
+    pointer-events: auto;
+  }
+}
+
+.timelineOpenButton {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}

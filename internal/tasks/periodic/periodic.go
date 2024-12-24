@@ -25,10 +25,48 @@ func liveServiceFromContext(ctx context.Context) (*live.Service, error) {
 	return liveService, nil
 }
 
+// Check watched channels for live streams
+type CheckChannelsForLivestreamsArgs struct{}
+
+func (CheckChannelsForLivestreamsArgs) Kind() string { return tasks.TaskCheckChannelsForLivestreams }
+
+func (w CheckChannelsForLivestreamsArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w CheckChannelsForLivestreamsArgs) Timeout(job *river.Job[CheckChannelsForLivestreamsArgs]) time.Duration {
+	return 10 * time.Minute
+}
+
+type CheckChannelsForLivestreamsWorker struct {
+	river.WorkerDefaults[CheckChannelsForLivestreamsArgs]
+}
+
+func (w CheckChannelsForLivestreamsWorker) Work(ctx context.Context, job *river.Job[CheckChannelsForLivestreamsArgs]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	liveService, err := liveServiceFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = liveService.Check(ctx)
+	if err != nil {
+		return err
+	}
+
+	logger.Info().Msg("task completed")
+
+	return nil
+}
+
 // Check watched channels for new videos
 type CheckChannelsForNewVideosArgs struct{}
 
-func (CheckChannelsForNewVideosArgs) Kind() string { return tasks.TaskCheckChannelForNewVideos }
+func (CheckChannelsForNewVideosArgs) Kind() string { return tasks.TaskCheckChannelsForNewVideos }
 
 func (w CheckChannelsForNewVideosArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
@@ -54,6 +92,44 @@ func (w CheckChannelsForNewVideosWorker) Work(ctx context.Context, job *river.Jo
 	}
 
 	err = liveService.CheckVodWatchedChannels(ctx, logger)
+	if err != nil {
+		return err
+	}
+
+	logger.Info().Msg("task completed")
+
+	return nil
+}
+
+// Check watched channels for new clips
+type TaskCheckChannelForNewClipsArgs struct{}
+
+func (TaskCheckChannelForNewClipsArgs) Kind() string { return tasks.TaskCheckChannelsForNewClips }
+
+func (w TaskCheckChannelForNewClipsArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w TaskCheckChannelForNewClipsArgs) Timeout(job *river.Job[TaskCheckChannelForNewClipsArgs]) time.Duration {
+	return 10 * time.Minute
+}
+
+type TaskCheckChannelForNewClipsWorker struct {
+	river.WorkerDefaults[TaskCheckChannelForNewClipsArgs]
+}
+
+func (w TaskCheckChannelForNewClipsWorker) Work(ctx context.Context, job *river.Job[TaskCheckChannelForNewClipsArgs]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	liveService, err := liveServiceFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = liveService.CheckWatchedChannelClips(ctx, logger)
 	if err != nil {
 		return err
 	}

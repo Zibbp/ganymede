@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/dto"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -57,23 +58,24 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters
 	}
 
 	info := VideoInfo{
-		ID:           videoResponse.Data[0].ID,
-		StreamID:     videoResponse.Data[0].StreamID,
-		UserID:       videoResponse.Data[0].UserID,
-		UserLogin:    videoResponse.Data[0].UserLogin,
-		UserName:     videoResponse.Data[0].UserName,
-		Title:        videoResponse.Data[0].Title,
-		Description:  videoResponse.Data[0].Description,
-		CreatedAt:    createdAt,
-		PublishedAt:  publishedAt,
-		URL:          videoResponse.Data[0].URL,
-		ThumbnailURL: videoResponse.Data[0].ThumbnailURL,
-		Viewable:     videoResponse.Data[0].Viewable,
-		ViewCount:    videoResponse.Data[0].ViewCount,
-		Language:     videoResponse.Data[0].Language,
-		Type:         videoResponse.Data[0].Type,
-		Duration:     duration,
-		Category:     &gqlVideo.Game.Name,
+		ID:                          videoResponse.Data[0].ID,
+		StreamID:                    videoResponse.Data[0].StreamID,
+		UserID:                      videoResponse.Data[0].UserID,
+		UserLogin:                   videoResponse.Data[0].UserLogin,
+		UserName:                    videoResponse.Data[0].UserName,
+		Title:                       videoResponse.Data[0].Title,
+		Description:                 videoResponse.Data[0].Description,
+		CreatedAt:                   createdAt,
+		PublishedAt:                 publishedAt,
+		URL:                         videoResponse.Data[0].URL,
+		ThumbnailURL:                videoResponse.Data[0].ThumbnailURL,
+		Viewable:                    videoResponse.Data[0].Viewable,
+		ViewCount:                   videoResponse.Data[0].ViewCount,
+		Language:                    videoResponse.Data[0].Language,
+		Type:                        videoResponse.Data[0].Type,
+		Duration:                    duration,
+		Category:                    &gqlVideo.Game.Name,
+		SpriteThumbnailsManifestUrl: &gqlVideo.SeekPreviewsURL,
 	}
 
 	// get chapters
@@ -600,4 +602,143 @@ func twitchTemplateEmoteURL(id, format, themeMode string, scale string) string {
 
 func ArchiveVideoActivity(ctx context.Context, input dto.ArchiveVideoInput) error {
 	return nil
+}
+
+// GetChannelClips gets a Twitch channel's clip with some filter options. Twitch returns the clips sorted by view count descending.
+func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string, filter ClipsFilter) ([]ClipInfo, error) {
+
+	// todo: allow more than 100 clips
+	if filter.Limit > 100 {
+		return nil, fmt.Errorf("clips limited to a max of 100")
+	}
+	limitStr := strconv.Itoa(filter.Limit)
+	params := url.Values{
+		"broadcaster_id": []string{channelId},
+		"started_at":     []string{filter.StartedAt.Format(time.RFC3339)},
+		"ended_at":       []string{filter.EndedAt.Format(time.RFC3339)},
+		"first":          []string{limitStr},
+	}
+
+	body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp TwitchGetClipsResponse
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	var clips []TwitchClip
+	clips = append(clips, resp.Data...)
+
+	var info []ClipInfo
+	for _, clip := range clips {
+		// parse dates
+		createdAt, err := time.Parse(time.RFC3339, clip.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		offset := 0
+		if clip.VodOffset != nil {
+			if vodOffset, ok := clip.VodOffset.(int); ok {
+				offset = vodOffset
+			}
+		}
+
+		info = append(info, ClipInfo{
+			ID:           clip.ID,
+			URL:          clip.URL,
+			ChannelID:    clip.BroadcasterID,
+			ChannelName:  &clip.BroadcasterName,
+			CreatorID:    &clip.CreatorID,
+			CreatorName:  &clip.CreatorName,
+			VideoID:      clip.VideoID,
+			GameID:       &clip.GameID,
+			Language:     &clip.Language,
+			Title:        clip.Title,
+			ViewCount:    clip.ViewCount,
+			CreatedAt:    createdAt,
+			ThumbnailURL: clip.ThumbnailURL,
+			Duration:     int(clip.Duration),
+			VodOffset:    &offset,
+		})
+	}
+
+	return info, nil
+}
+
+// GetClip gets a Twitch clip given it's ID
+func (c *TwitchConnection) GetClip(ctx context.Context, id string) (*ClipInfo, error) {
+	params := url.Values{
+		"id": []string{id},
+	}
+
+	body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp TwitchGetClipsResponse
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	var clips []TwitchClip
+	clips = append(clips, resp.Data...)
+
+	if len(clips) == 0 {
+		return nil, fmt.Errorf("clip not found")
+	}
+
+	var info ClipInfo
+	for _, clip := range clips {
+		// parse dates
+		createdAt, err := time.Parse(time.RFC3339, clip.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		// Parse clip vod offset
+		offset := 0
+		if clip.VodOffset != nil {
+			switch v := clip.VodOffset.(type) {
+			case int:
+				offset = v
+			case float64: // If VodOffset might be a float
+				offset = int(v) // Convert to int
+			case string:
+				if parsed, err := strconv.Atoi(v); err == nil {
+					offset = parsed
+				} else {
+					log.Warn().Msgf("failed to convert VodOffset string to int: %v", err)
+				}
+			default:
+				log.Warn().Msgf("VodOffset is an unsupported type, unable to convert:  %T\n", v)
+			}
+		}
+
+		info = ClipInfo{
+			ID:           clip.ID,
+			URL:          clip.URL,
+			ChannelID:    clip.BroadcasterID,
+			ChannelName:  &clip.BroadcasterName,
+			CreatorID:    &clip.CreatorID,
+			CreatorName:  &clip.CreatorName,
+			VideoID:      clip.VideoID,
+			GameID:       &clip.GameID,
+			Language:     &clip.Language,
+			Title:        clip.Title,
+			ViewCount:    clip.ViewCount,
+			CreatedAt:    createdAt,
+			ThumbnailURL: clip.ThumbnailURL,
+			Duration:     int(clip.Duration),
+			VodOffset:    &offset,
+		}
+	}
+
+	return &info, nil
 }

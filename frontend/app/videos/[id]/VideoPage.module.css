@@ -1,0 +1,64 @@
+.container {
+  display: flex;
+}
+
+.leftColumn {
+  flex-grow: 1;
+  width: calc(100vw - 340px);
+}
+
+.leftColumnNoChat {
+  flex-grow: 1;
+  width: 100vw;
+}
+
+.rightColumn {
+  min-width: 340px;
+  width: 340px;
+  max-width: 340px;
+}
+
+.videoPlayer {
+  width: 100%;
+  height: calc(100vh - rem(56px) - 60px);
+  max-height: calc(100vh - rem(56px) - 60px);
+
+  @media (max-width: em(1000px)) {
+    height: auto !important;
+    max-height: auto !important;
+  }
+}
+.videoPlayerTheaterMode {
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+.chatColumn {
+  width: 100%;
+  height: calc(100vh - rem(56px) - 60px);
+  max-height: calc(100vh - rem(56px) - 60px);
+}
+.chatColumnTheaterMode {
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+.containerMobile {
+  display: flex;
+  width: 100vw;
+
+  @media (max-aspect-ratio: 1/1) {
+    /* Portrait mode */
+    flex-direction: column;
+    height: calc(100vh - 60px);
+    max-height: calc(100vh - 60px);
+  }
+}
+
+.chatColumnMobile {
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 100%;
+}

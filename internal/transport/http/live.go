@@ -34,28 +34,15 @@ type AddWatchedChannelRequest struct {
 	ApplyCategoriesToLive bool                `json:"apply_categories_to_live" validate:"boolean"`
 	MaxAge                int64               `json:"max_age"`
 	Regex                 []AddLiveTitleRegex `json:"regex"`
+	WatchClips            bool                `json:"watch_clips" validate:"boolean"`
+	ClipsLimit            int                 `json:"clips_limit" validate:"number,gte=1"`
+	ClipsIntervalDays     int                 `json:"clips_interval_days" validate:"number,gte=1"`
 }
 
 type AddLiveTitleRegex struct {
 	Regex         string `json:"regex" validate:"required"`
 	Negative      bool   `json:"negative" validate:"boolean"`
 	ApplyToVideos bool   `json:"apply_to_videos" validate:"boolean"`
-}
-
-type AddMultipleWatchedChannelRequest struct {
-	WatchLive             bool     `json:"watch_live" `
-	WatchVod              bool     `json:"watch_vod" `
-	DownloadArchives      bool     `json:"download_archives" `
-	DownloadHighlights    bool     `json:"download_highlights" `
-	DownloadUploads       bool     `json:"download_uploads"`
-	ChannelID             []string `json:"channel_id" validate:"required"`
-	Resolution            string   `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
-	ArchiveChat           bool     `json:"archive_chat"`
-	RenderChat            bool     `json:"render_chat"`
-	DownloadSubOnly       bool     `json:"download_sub_only"`
-	Categories            []string `json:"categories"`
-	ApplyCategoriesToLive bool     `json:"apply_categories_to_live"`
-	MaxAge                int64    `json:"max_age"`
 }
 
 type UpdateWatchedChannelRequest struct {
@@ -72,6 +59,9 @@ type UpdateWatchedChannelRequest struct {
 	ApplyCategoriesToLive bool                `json:"apply_categories_to_live" validate:"boolean"`
 	MaxAge                int64               `json:"max_age"`
 	Regex                 []AddLiveTitleRegex `json:"regex"`
+	WatchClips            bool                `json:"watch_clips" validate:"boolean"`
+	ClipsLimit            int                 `json:"clips_limit" validate:"number,gte=1"`
+	ClipsIntervalDays     int                 `json:"clips_interval_days" validate:"number,gte=1"`
 }
 
 type ConvertChatRequest struct {
@@ -84,10 +74,13 @@ type ConvertChatRequest struct {
 }
 
 type ArchiveLiveChannelRequest struct {
-	ChannelID   string `json:"channel_id" validate:"required"`
-	Resolution  string `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
-	ArchiveChat bool   `json:"archive_chat"`
-	RenderChat  bool   `json:"render_chat"`
+	ChannelID         string `json:"channel_id" validate:"required"`
+	Resolution        string `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
+	ArchiveChat       bool   `json:"archive_chat"`
+	RenderChat        bool   `json:"render_chat"`
+	WatchClips        bool   `json:"watch_clips" validate:"boolean"`
+	ClipsLimit        int    `json:"clips_limit" validate:"number,gte=1"`
+	ClipsIntervalDays int    `json:"clips_interval_days" validate:"number,gte=1"`
 }
 
 // GetLiveWatchedChannels godoc
@@ -104,10 +97,10 @@ type ArchiveLiveChannelRequest struct {
 func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
 	channels, err := h.Service.LiveService.GetLiveWatchedChannels(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, channels)
+	return SuccessResponse(c, channels, "wathed channels")
 }
 
 // AddLiveWatchedChannel godoc
@@ -126,18 +119,18 @@ func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
 func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 	ccr := new(AddWatchedChannelRequest)
 	if err := c.Bind(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	cUUID, err := uuid.Parse(ccr.ChannelID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	if len(ccr.Categories) == 0 && ccr.ApplyCategoriesToLive {
-		return echo.NewHTTPError(http.StatusBadRequest, "categories cannot be empty if apply_categories_to_live is true")
+		return ErrorResponse(c, http.StatusBadRequest, "categories cannot be empty if apply_categories_to_live is true")
 	}
 
 	liveDto := live.Live{
@@ -155,11 +148,14 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		Categories:            ccr.Categories,
 		ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
 		MaxAge:                ccr.MaxAge,
+		WatchClips:            ccr.WatchClips,
+		ClipsLimit:            ccr.ClipsLimit,
+		ClipsIntervalDays:     ccr.ClipsIntervalDays,
 	}
 
 	for _, regex := range ccr.Regex {
 		if err := c.Validate(regex); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return ErrorResponse(c, http.StatusBadRequest, err.Error())
 		}
 		liveDto.TitleRegex = append(liveDto.TitleRegex, ent.LiveTitleRegex{
 			Negative:      regex.Negative,
@@ -170,69 +166,10 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 
 	l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, l)
-}
-
-// AddMultipleLiveWatchedChannel godoc
-//
-//	@Summary		Add multiple watched channels at once
-//	@Description	This is useful to add multiple channels at once if they all have the same settings
-//	@Tags			Live
-//	@Accept			json
-//	@Produce		json
-//	@Param			body	body		AddMultipleWatchedChannelRequest	true	"Add watched channel"
-//	@Success		200		{object}	ent.Live
-//	@Failure		400		{object}	utils.ErrorResponse
-//	@Failure		500		{object}	utils.ErrorResponse
-//	@Router			/live/multiple [post]
-//	@Security		ApiKeyCookieAuth
-func (h *Handler) AddMultipleLiveWatchedChannel(c echo.Context) error {
-	ccr := new(AddMultipleWatchedChannelRequest)
-	if err := c.Bind(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	if err := c.Validate(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	var response []*ent.Live
-	for _, cID := range ccr.ChannelID {
-		cUUID, err := uuid.Parse(cID)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-
-		if len(ccr.Categories) == 0 && ccr.ApplyCategoriesToLive {
-			return echo.NewHTTPError(http.StatusBadRequest, "categories cannot be empty if apply_categories_to_live is true")
-		}
-
-		liveDto := live.Live{
-			ID:                    cUUID,
-			WatchLive:             ccr.WatchLive,
-			WatchVod:              ccr.WatchVod,
-			DownloadArchives:      ccr.DownloadArchives,
-			DownloadHighlights:    ccr.DownloadHighlights,
-			DownloadUploads:       ccr.DownloadUploads,
-			IsLive:                false,
-			ArchiveChat:           ccr.ArchiveChat,
-			Resolution:            ccr.Resolution,
-			RenderChat:            ccr.RenderChat,
-			DownloadSubOnly:       ccr.DownloadSubOnly,
-			Categories:            ccr.Categories,
-			ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
-			MaxAge:                ccr.MaxAge,
-		}
-		l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-		response = append(response, l)
-	}
-
-	return c.JSON(http.StatusOK, response)
+	return SuccessResponse(c, l, "created watched channel")
 }
 
 // UpdateLiveWatchedChannel godoc
@@ -253,18 +190,18 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 	id := c.Param("id")
 	lID, err := uuid.Parse(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	ccr := new(UpdateWatchedChannelRequest)
 	if err := c.Bind(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := c.Validate(ccr); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	if len(ccr.Categories) == 0 && ccr.ApplyCategoriesToLive {
-		return echo.NewHTTPError(http.StatusBadRequest, "categories cannot be empty if apply_categories_to_live is true")
+		return ErrorResponse(c, http.StatusBadRequest, "categories cannot be empty if apply_categories_to_live is true")
 	}
 
 	liveDto := live.Live{
@@ -281,11 +218,14 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		Categories:            ccr.Categories,
 		ApplyCategoriesToLive: ccr.ApplyCategoriesToLive,
 		MaxAge:                ccr.MaxAge,
+		WatchClips:            ccr.WatchClips,
+		ClipsLimit:            ccr.ClipsLimit,
+		ClipsIntervalDays:     ccr.ClipsIntervalDays,
 	}
 
 	for _, regex := range ccr.Regex {
 		if err := c.Validate(regex); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return ErrorResponse(c, http.StatusBadRequest, err.Error())
 		}
 		liveDto.TitleRegex = append(liveDto.TitleRegex, ent.LiveTitleRegex{
 			Negative:      regex.Negative,
@@ -296,10 +236,10 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 
 	l, err := h.Service.LiveService.UpdateLiveWatchedChannel(c, liveDto)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, l)
+	return SuccessResponse(c, l, "updated watched channel")
 }
 
 // DeleteLiveWatchedChannel godoc
@@ -319,12 +259,12 @@ func (h *Handler) DeleteLiveWatchedChannel(c echo.Context) error {
 	id := c.Param("id")
 	lID, err := uuid.Parse(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	err = h.Service.LiveService.DeleteLiveWatchedChannel(c, lID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -333,66 +273,7 @@ func (h *Handler) DeleteLiveWatchedChannel(c echo.Context) error {
 func (h *Handler) Check(c echo.Context) error {
 	err := h.Service.LiveService.Check(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "ok")
+	return SuccessResponse(c, "", "deleted watched channel")
 }
-
-// CheckVodWatchedChannels godoc
-//
-//	@Summary		Check watched channels
-//	@Description	Check watched channels if they are live. This is what runs every X seconds in the config.
-//	@Tags			Live
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/live/check [get]
-//	@Security		ApiKeyCookieAuth
-// func (h *Handler) CheckVodWatchedChannels(c echo.Context) error {
-// 	go h.Service.LiveService.CheckVodWatchedChannels()
-
-// 	return c.JSON(http.StatusOK, "ok")
-// }
-
-// ArchiveLiveChannel godoc
-//
-//	@Summary		Archive a channel's live stream
-//	@Description	Adhoc archive a channel's live stream.
-//	@Tags			Live
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/live/archive [post]
-//	@Security		ApiKeyCookieAuth
-// func (h *Handler) ArchiveLiveChannel(c echo.Context) error {
-// 	alcr := new(ArchiveLiveChannelRequest)
-// 	if err := c.Bind(alcr); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-// 	}
-// 	if err := c.Validate(alcr); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-// 	}
-// 	// validate channel uuid
-// 	cID, err := uuid.Parse(alcr.ChannelID)
-// 	if err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-// 	}
-
-// 	archiveLiveDto := live.ArchiveLive{
-// 		ChannelID:   cID,
-// 		Resolution:  alcr.Resolution,
-// 		ArchiveChat: alcr.ArchiveChat,
-// 		RenderChat:  alcr.RenderChat,
-// 	}
-
-// 	err = h.Service.LiveService.ArchiveLiveChannel(c, archiveLiveDto)
-// 	if err != nil {
-// 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-// 	}
-
-// 	return c.JSON(http.StatusOK, "ok")
-// }

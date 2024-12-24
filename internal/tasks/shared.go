@@ -29,27 +29,31 @@ var archive_tag = "archive"
 var allow_fail_tag = "allow_fail"
 
 var (
-	TaskUpdateStreamVideoId      = "update_stream_video_id"
-	TaskGenerateStaticThumbnails = "generate_static_thumbnails"
-	TaskArchiveWatchdog          = "archive_watchdog"
-	TaskCheckChannelForNewVideos = "check_channel_for_new_videos"
-	TaskPruneVideos              = "prune_videos"
-	TaskImportVideos             = "import_videos"
-	TaskAuthenticatePlatform     = "authenticate_platform"
-	TaskFetchJWKS                = "fetch_jwks"
-	TaskSaveVideoChapters        = "save_video_chapters"
+	TaskUpdateStreamVideoId         = "update_stream_video_id"
+	TaskGenerateStaticThumbnails    = "generate_static_thumbnails"
+	TaskGenerateSpriteThumbnails    = "generate_sprite_thumbnails"
+	TaskArchiveWatchdog             = "archive_watchdog"
+	TaskCheckChannelsForLivestreams = "chanel_channels_for_livestreams"
+	TaskCheckChannelsForNewVideos   = "check_channels_for_new_videos"
+	TaskCheckChannelsForNewClips    = "check_channels_for_new_clips"
+	TaskPruneVideos                 = "prune_videos"
+	TaskImportVideos                = "import_videos"
+	TaskAuthenticatePlatform        = "authenticate_platform"
+	TaskFetchJWKS                   = "fetch_jwks"
+	TaskSaveVideoChapters           = "save_video_chapters"
 )
 
 var (
-	QueueVideoDownload    = "video-download"
-	QueueVideoPostProcess = "video-postprocess"
-	QueueChatDownload     = "chat-download"
-	QueueChatRender       = "chat-render"
+	QueueVideoDownload            = "video-download"
+	QueueVideoPostProcess         = "video-postprocess"
+	QueueChatDownload             = "chat-download"
+	QueueChatRender               = "chat-render"
+	QueueGenerateThumbnailSprites = "generate-thumbnail-sprites"
 )
 
 type ArchiveVideoInput struct {
-	QueueId       uuid.UUID
-	HeartBeatTime time.Time // do not set this field
+	QueueId       uuid.UUID `json:"queue_id"`
+	HeartBeatTime time.Time `json:"heartbeat_time"` // do not set this field
 }
 
 type GetDatabaseItemsResponse struct {

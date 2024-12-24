@@ -62,6 +62,11 @@ func ExtID(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldExtID, v))
 }
 
+// ClipExtVodID applies equality check predicate on the "clip_ext_vod_id" field. It's identical to ClipExtVodIDEQ.
+func ClipExtVodID(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldClipExtVodID, v))
+}
+
 // ExtStreamID applies equality check predicate on the "ext_stream_id" field. It's identical to ExtStreamIDEQ.
 func ExtStreamID(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldExtStreamID, v))
@@ -75,6 +80,11 @@ func Title(v string) predicate.Vod {
 // Duration applies equality check predicate on the "duration" field. It's identical to DurationEQ.
 func Duration(v int) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldDuration, v))
+}
+
+// ClipVodOffset applies equality check predicate on the "clip_vod_offset" field. It's identical to ClipVodOffsetEQ.
+func ClipVodOffset(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldClipVodOffset, v))
 }
 
 // Views applies equality check predicate on the "views" field. It's identical to ViewsEQ.
@@ -197,6 +207,36 @@ func LocalViews(v int) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldLocalViews, v))
 }
 
+// SpriteThumbnailsEnabled applies equality check predicate on the "sprite_thumbnails_enabled" field. It's identical to SpriteThumbnailsEnabledEQ.
+func SpriteThumbnailsEnabled(v bool) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsEnabled, v))
+}
+
+// SpriteThumbnailsInterval applies equality check predicate on the "sprite_thumbnails_interval" field. It's identical to SpriteThumbnailsIntervalEQ.
+func SpriteThumbnailsInterval(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsInterval, v))
+}
+
+// SpriteThumbnailsWidth applies equality check predicate on the "sprite_thumbnails_width" field. It's identical to SpriteThumbnailsWidthEQ.
+func SpriteThumbnailsWidth(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsWidth, v))
+}
+
+// SpriteThumbnailsHeight applies equality check predicate on the "sprite_thumbnails_height" field. It's identical to SpriteThumbnailsHeightEQ.
+func SpriteThumbnailsHeight(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsHeight, v))
+}
+
+// SpriteThumbnailsRows applies equality check predicate on the "sprite_thumbnails_rows" field. It's identical to SpriteThumbnailsRowsEQ.
+func SpriteThumbnailsRows(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsRows, v))
+}
+
+// SpriteThumbnailsColumns applies equality check predicate on the "sprite_thumbnails_columns" field. It's identical to SpriteThumbnailsColumnsEQ.
+func SpriteThumbnailsColumns(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsColumns, v))
+}
+
 // StreamedAt applies equality check predicate on the "streamed_at" field. It's identical to StreamedAtEQ.
 func StreamedAt(v time.Time) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldStreamedAt, v))
@@ -275,6 +315,81 @@ func ExtIDEqualFold(v string) predicate.Vod {
 // ExtIDContainsFold applies the ContainsFold predicate on the "ext_id" field.
 func ExtIDContainsFold(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldContainsFold(FieldExtID, v))
+}
+
+// ClipExtVodIDEQ applies the EQ predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldClipExtVodID, v))
+}
+
+// ClipExtVodIDNEQ applies the NEQ predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDNEQ(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldClipExtVodID, v))
+}
+
+// ClipExtVodIDIn applies the In predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldClipExtVodID, vs...))
+}
+
+// ClipExtVodIDNotIn applies the NotIn predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDNotIn(vs ...string) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldClipExtVodID, vs...))
+}
+
+// ClipExtVodIDGT applies the GT predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDGT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldClipExtVodID, v))
+}
+
+// ClipExtVodIDGTE applies the GTE predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDGTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldClipExtVodID, v))
+}
+
+// ClipExtVodIDLT applies the LT predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDLT(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldClipExtVodID, v))
+}
+
+// ClipExtVodIDLTE applies the LTE predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDLTE(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldClipExtVodID, v))
+}
+
+// ClipExtVodIDContains applies the Contains predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDContains(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContains(FieldClipExtVodID, v))
+}
+
+// ClipExtVodIDHasPrefix applies the HasPrefix predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDHasPrefix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasPrefix(FieldClipExtVodID, v))
+}
+
+// ClipExtVodIDHasSuffix applies the HasSuffix predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDHasSuffix(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldHasSuffix(FieldClipExtVodID, v))
+}
+
+// ClipExtVodIDIsNil applies the IsNil predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldClipExtVodID))
+}
+
+// ClipExtVodIDNotNil applies the NotNil predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldClipExtVodID))
+}
+
+// ClipExtVodIDEqualFold applies the EqualFold predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDEqualFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldEqualFold(FieldClipExtVodID, v))
+}
+
+// ClipExtVodIDContainsFold applies the ContainsFold predicate on the "clip_ext_vod_id" field.
+func ClipExtVodIDContainsFold(v string) predicate.Vod {
+	return predicate.Vod(sql.FieldContainsFold(FieldClipExtVodID, v))
 }
 
 // ExtStreamIDEQ applies the EQ predicate on the "ext_stream_id" field.
@@ -515,6 +630,56 @@ func DurationLT(v int) predicate.Vod {
 // DurationLTE applies the LTE predicate on the "duration" field.
 func DurationLTE(v int) predicate.Vod {
 	return predicate.Vod(sql.FieldLTE(FieldDuration, v))
+}
+
+// ClipVodOffsetEQ applies the EQ predicate on the "clip_vod_offset" field.
+func ClipVodOffsetEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldClipVodOffset, v))
+}
+
+// ClipVodOffsetNEQ applies the NEQ predicate on the "clip_vod_offset" field.
+func ClipVodOffsetNEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldClipVodOffset, v))
+}
+
+// ClipVodOffsetIn applies the In predicate on the "clip_vod_offset" field.
+func ClipVodOffsetIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldClipVodOffset, vs...))
+}
+
+// ClipVodOffsetNotIn applies the NotIn predicate on the "clip_vod_offset" field.
+func ClipVodOffsetNotIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldClipVodOffset, vs...))
+}
+
+// ClipVodOffsetGT applies the GT predicate on the "clip_vod_offset" field.
+func ClipVodOffsetGT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldClipVodOffset, v))
+}
+
+// ClipVodOffsetGTE applies the GTE predicate on the "clip_vod_offset" field.
+func ClipVodOffsetGTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldClipVodOffset, v))
+}
+
+// ClipVodOffsetLT applies the LT predicate on the "clip_vod_offset" field.
+func ClipVodOffsetLT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldClipVodOffset, v))
+}
+
+// ClipVodOffsetLTE applies the LTE predicate on the "clip_vod_offset" field.
+func ClipVodOffsetLTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldClipVodOffset, v))
+}
+
+// ClipVodOffsetIsNil applies the IsNil predicate on the "clip_vod_offset" field.
+func ClipVodOffsetIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldClipVodOffset))
+}
+
+// ClipVodOffsetNotNil applies the NotNil predicate on the "clip_vod_offset" field.
+func ClipVodOffsetNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldClipVodOffset))
 }
 
 // ViewsEQ applies the EQ predicate on the "views" field.
@@ -2095,6 +2260,276 @@ func LocalViewsLT(v int) predicate.Vod {
 // LocalViewsLTE applies the LTE predicate on the "local_views" field.
 func LocalViewsLTE(v int) predicate.Vod {
 	return predicate.Vod(sql.FieldLTE(FieldLocalViews, v))
+}
+
+// SpriteThumbnailsEnabledEQ applies the EQ predicate on the "sprite_thumbnails_enabled" field.
+func SpriteThumbnailsEnabledEQ(v bool) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsEnabled, v))
+}
+
+// SpriteThumbnailsEnabledNEQ applies the NEQ predicate on the "sprite_thumbnails_enabled" field.
+func SpriteThumbnailsEnabledNEQ(v bool) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldSpriteThumbnailsEnabled, v))
+}
+
+// SpriteThumbnailsImagesIsNil applies the IsNil predicate on the "sprite_thumbnails_images" field.
+func SpriteThumbnailsImagesIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldSpriteThumbnailsImages))
+}
+
+// SpriteThumbnailsImagesNotNil applies the NotNil predicate on the "sprite_thumbnails_images" field.
+func SpriteThumbnailsImagesNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldSpriteThumbnailsImages))
+}
+
+// SpriteThumbnailsIntervalEQ applies the EQ predicate on the "sprite_thumbnails_interval" field.
+func SpriteThumbnailsIntervalEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsInterval, v))
+}
+
+// SpriteThumbnailsIntervalNEQ applies the NEQ predicate on the "sprite_thumbnails_interval" field.
+func SpriteThumbnailsIntervalNEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldSpriteThumbnailsInterval, v))
+}
+
+// SpriteThumbnailsIntervalIn applies the In predicate on the "sprite_thumbnails_interval" field.
+func SpriteThumbnailsIntervalIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldSpriteThumbnailsInterval, vs...))
+}
+
+// SpriteThumbnailsIntervalNotIn applies the NotIn predicate on the "sprite_thumbnails_interval" field.
+func SpriteThumbnailsIntervalNotIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldSpriteThumbnailsInterval, vs...))
+}
+
+// SpriteThumbnailsIntervalGT applies the GT predicate on the "sprite_thumbnails_interval" field.
+func SpriteThumbnailsIntervalGT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldSpriteThumbnailsInterval, v))
+}
+
+// SpriteThumbnailsIntervalGTE applies the GTE predicate on the "sprite_thumbnails_interval" field.
+func SpriteThumbnailsIntervalGTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldSpriteThumbnailsInterval, v))
+}
+
+// SpriteThumbnailsIntervalLT applies the LT predicate on the "sprite_thumbnails_interval" field.
+func SpriteThumbnailsIntervalLT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldSpriteThumbnailsInterval, v))
+}
+
+// SpriteThumbnailsIntervalLTE applies the LTE predicate on the "sprite_thumbnails_interval" field.
+func SpriteThumbnailsIntervalLTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldSpriteThumbnailsInterval, v))
+}
+
+// SpriteThumbnailsIntervalIsNil applies the IsNil predicate on the "sprite_thumbnails_interval" field.
+func SpriteThumbnailsIntervalIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldSpriteThumbnailsInterval))
+}
+
+// SpriteThumbnailsIntervalNotNil applies the NotNil predicate on the "sprite_thumbnails_interval" field.
+func SpriteThumbnailsIntervalNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldSpriteThumbnailsInterval))
+}
+
+// SpriteThumbnailsWidthEQ applies the EQ predicate on the "sprite_thumbnails_width" field.
+func SpriteThumbnailsWidthEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsWidth, v))
+}
+
+// SpriteThumbnailsWidthNEQ applies the NEQ predicate on the "sprite_thumbnails_width" field.
+func SpriteThumbnailsWidthNEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldSpriteThumbnailsWidth, v))
+}
+
+// SpriteThumbnailsWidthIn applies the In predicate on the "sprite_thumbnails_width" field.
+func SpriteThumbnailsWidthIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldSpriteThumbnailsWidth, vs...))
+}
+
+// SpriteThumbnailsWidthNotIn applies the NotIn predicate on the "sprite_thumbnails_width" field.
+func SpriteThumbnailsWidthNotIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldSpriteThumbnailsWidth, vs...))
+}
+
+// SpriteThumbnailsWidthGT applies the GT predicate on the "sprite_thumbnails_width" field.
+func SpriteThumbnailsWidthGT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldSpriteThumbnailsWidth, v))
+}
+
+// SpriteThumbnailsWidthGTE applies the GTE predicate on the "sprite_thumbnails_width" field.
+func SpriteThumbnailsWidthGTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldSpriteThumbnailsWidth, v))
+}
+
+// SpriteThumbnailsWidthLT applies the LT predicate on the "sprite_thumbnails_width" field.
+func SpriteThumbnailsWidthLT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldSpriteThumbnailsWidth, v))
+}
+
+// SpriteThumbnailsWidthLTE applies the LTE predicate on the "sprite_thumbnails_width" field.
+func SpriteThumbnailsWidthLTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldSpriteThumbnailsWidth, v))
+}
+
+// SpriteThumbnailsWidthIsNil applies the IsNil predicate on the "sprite_thumbnails_width" field.
+func SpriteThumbnailsWidthIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldSpriteThumbnailsWidth))
+}
+
+// SpriteThumbnailsWidthNotNil applies the NotNil predicate on the "sprite_thumbnails_width" field.
+func SpriteThumbnailsWidthNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldSpriteThumbnailsWidth))
+}
+
+// SpriteThumbnailsHeightEQ applies the EQ predicate on the "sprite_thumbnails_height" field.
+func SpriteThumbnailsHeightEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsHeight, v))
+}
+
+// SpriteThumbnailsHeightNEQ applies the NEQ predicate on the "sprite_thumbnails_height" field.
+func SpriteThumbnailsHeightNEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldSpriteThumbnailsHeight, v))
+}
+
+// SpriteThumbnailsHeightIn applies the In predicate on the "sprite_thumbnails_height" field.
+func SpriteThumbnailsHeightIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldSpriteThumbnailsHeight, vs...))
+}
+
+// SpriteThumbnailsHeightNotIn applies the NotIn predicate on the "sprite_thumbnails_height" field.
+func SpriteThumbnailsHeightNotIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldSpriteThumbnailsHeight, vs...))
+}
+
+// SpriteThumbnailsHeightGT applies the GT predicate on the "sprite_thumbnails_height" field.
+func SpriteThumbnailsHeightGT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldSpriteThumbnailsHeight, v))
+}
+
+// SpriteThumbnailsHeightGTE applies the GTE predicate on the "sprite_thumbnails_height" field.
+func SpriteThumbnailsHeightGTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldSpriteThumbnailsHeight, v))
+}
+
+// SpriteThumbnailsHeightLT applies the LT predicate on the "sprite_thumbnails_height" field.
+func SpriteThumbnailsHeightLT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldSpriteThumbnailsHeight, v))
+}
+
+// SpriteThumbnailsHeightLTE applies the LTE predicate on the "sprite_thumbnails_height" field.
+func SpriteThumbnailsHeightLTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldSpriteThumbnailsHeight, v))
+}
+
+// SpriteThumbnailsHeightIsNil applies the IsNil predicate on the "sprite_thumbnails_height" field.
+func SpriteThumbnailsHeightIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldSpriteThumbnailsHeight))
+}
+
+// SpriteThumbnailsHeightNotNil applies the NotNil predicate on the "sprite_thumbnails_height" field.
+func SpriteThumbnailsHeightNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldSpriteThumbnailsHeight))
+}
+
+// SpriteThumbnailsRowsEQ applies the EQ predicate on the "sprite_thumbnails_rows" field.
+func SpriteThumbnailsRowsEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsRows, v))
+}
+
+// SpriteThumbnailsRowsNEQ applies the NEQ predicate on the "sprite_thumbnails_rows" field.
+func SpriteThumbnailsRowsNEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldSpriteThumbnailsRows, v))
+}
+
+// SpriteThumbnailsRowsIn applies the In predicate on the "sprite_thumbnails_rows" field.
+func SpriteThumbnailsRowsIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldSpriteThumbnailsRows, vs...))
+}
+
+// SpriteThumbnailsRowsNotIn applies the NotIn predicate on the "sprite_thumbnails_rows" field.
+func SpriteThumbnailsRowsNotIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldSpriteThumbnailsRows, vs...))
+}
+
+// SpriteThumbnailsRowsGT applies the GT predicate on the "sprite_thumbnails_rows" field.
+func SpriteThumbnailsRowsGT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldSpriteThumbnailsRows, v))
+}
+
+// SpriteThumbnailsRowsGTE applies the GTE predicate on the "sprite_thumbnails_rows" field.
+func SpriteThumbnailsRowsGTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldSpriteThumbnailsRows, v))
+}
+
+// SpriteThumbnailsRowsLT applies the LT predicate on the "sprite_thumbnails_rows" field.
+func SpriteThumbnailsRowsLT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldSpriteThumbnailsRows, v))
+}
+
+// SpriteThumbnailsRowsLTE applies the LTE predicate on the "sprite_thumbnails_rows" field.
+func SpriteThumbnailsRowsLTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldSpriteThumbnailsRows, v))
+}
+
+// SpriteThumbnailsRowsIsNil applies the IsNil predicate on the "sprite_thumbnails_rows" field.
+func SpriteThumbnailsRowsIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldSpriteThumbnailsRows))
+}
+
+// SpriteThumbnailsRowsNotNil applies the NotNil predicate on the "sprite_thumbnails_rows" field.
+func SpriteThumbnailsRowsNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldSpriteThumbnailsRows))
+}
+
+// SpriteThumbnailsColumnsEQ applies the EQ predicate on the "sprite_thumbnails_columns" field.
+func SpriteThumbnailsColumnsEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldSpriteThumbnailsColumns, v))
+}
+
+// SpriteThumbnailsColumnsNEQ applies the NEQ predicate on the "sprite_thumbnails_columns" field.
+func SpriteThumbnailsColumnsNEQ(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldSpriteThumbnailsColumns, v))
+}
+
+// SpriteThumbnailsColumnsIn applies the In predicate on the "sprite_thumbnails_columns" field.
+func SpriteThumbnailsColumnsIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldSpriteThumbnailsColumns, vs...))
+}
+
+// SpriteThumbnailsColumnsNotIn applies the NotIn predicate on the "sprite_thumbnails_columns" field.
+func SpriteThumbnailsColumnsNotIn(vs ...int) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldSpriteThumbnailsColumns, vs...))
+}
+
+// SpriteThumbnailsColumnsGT applies the GT predicate on the "sprite_thumbnails_columns" field.
+func SpriteThumbnailsColumnsGT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldSpriteThumbnailsColumns, v))
+}
+
+// SpriteThumbnailsColumnsGTE applies the GTE predicate on the "sprite_thumbnails_columns" field.
+func SpriteThumbnailsColumnsGTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldSpriteThumbnailsColumns, v))
+}
+
+// SpriteThumbnailsColumnsLT applies the LT predicate on the "sprite_thumbnails_columns" field.
+func SpriteThumbnailsColumnsLT(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldSpriteThumbnailsColumns, v))
+}
+
+// SpriteThumbnailsColumnsLTE applies the LTE predicate on the "sprite_thumbnails_columns" field.
+func SpriteThumbnailsColumnsLTE(v int) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldSpriteThumbnailsColumns, v))
+}
+
+// SpriteThumbnailsColumnsIsNil applies the IsNil predicate on the "sprite_thumbnails_columns" field.
+func SpriteThumbnailsColumnsIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldSpriteThumbnailsColumns))
+}
+
+// SpriteThumbnailsColumnsNotNil applies the NotNil predicate on the "sprite_thumbnails_columns" field.
+func SpriteThumbnailsColumnsNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldSpriteThumbnailsColumns))
 }
 
 // StreamedAtEQ applies the EQ predicate on the "streamed_at" field.

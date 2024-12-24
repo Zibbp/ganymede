@@ -2,7 +2,11 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -177,6 +181,11 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 		if err != nil {
 			return err
 		}
+	} else if dbItems.Video.Type == utils.Clip {
+		info, err = platformService.GetClip(ctx, dbItems.Video.ExtID)
+		if err != nil {
+			return err
+		}
 	} else {
 		videoInfo, err := platformService.GetVideo(ctx, dbItems.Video.ExtID, true, true)
 		if err != nil {
@@ -245,6 +254,16 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 	return nil
 }
 
+// getBasePath returns provided url except for everything after the last /
+func getBasePath(url string) string {
+	url = strings.TrimSuffix(url, "/")
+	lastSlashIndex := strings.LastIndex(url, "/")
+	if lastSlashIndex == -1 {
+		return url
+	}
+	return url[:lastSlashIndex]
+}
+
 // //////////////////////
 // Download Thumbnails //
 // //////////////////////
@@ -272,6 +291,7 @@ type DownloadTumbnailsWorker struct {
 }
 
 func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[DownloadThumbnailArgs]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
 	// get store from context
 	store, err := StoreFromContext(ctx)
 	if err != nil {
@@ -294,6 +314,8 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 		conn:   store.ConnPool,
 	})
 
+	envConfig := config.GetEnvConfig()
+
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {
 		return err
@@ -305,24 +327,36 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 	}
 
 	var thumbnailUrl string
+	var fullResThumbnailUrl string
+	var webResThumbnailUrl string
 
+	// create the correct URL for each thumbnail type
 	if dbItems.Queue.LiveArchive {
 		info, err := platformService.GetLiveStream(ctx, dbItems.Channel.Name)
 		if err != nil {
 			return err
 		}
 		thumbnailUrl = info.ThumbnailURL
+		fullResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive)
+		webResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive)
 
+	} else if dbItems.Video.Type == utils.Clip {
+		info, err := platformService.GetClip(ctx, dbItems.Video.ExtID)
+		if err != nil {
+			return err
+		}
+		thumbnailUrl = info.ThumbnailURL
+		fullResThumbnailUrl = thumbnailUrl
+		webResThumbnailUrl = thumbnailUrl
 	} else {
 		info, err := platformService.GetVideo(ctx, dbItems.Video.ExtID, false, false)
 		if err != nil {
 			return err
 		}
 		thumbnailUrl = info.ThumbnailURL
+		fullResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive)
+		webResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive)
 	}
-
-	fullResThumbnailUrl := replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive)
-	webResThumbnailUrl := replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive)
 
 	err = utils.DownloadAndSaveFile(fullResThumbnailUrl, dbItems.Video.ThumbnailPath)
 	if err != nil {
@@ -331,6 +365,74 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 	err = utils.DownloadAndSaveFile(webResThumbnailUrl, dbItems.Video.WebThumbnailPath)
 	if err != nil {
 		return err
+	}
+
+	// download sprite (seek preview) thumbnails if available
+	// only available for archives
+	if dbItems.Video.Type == utils.Archive && dbItems.Video.Platform == utils.PlatformTwitch {
+		// get video
+		videoInfo, err := platformService.GetVideo(ctx, dbItems.Video.ExtID, true, true)
+		if err != nil {
+			return err
+		}
+
+		if videoInfo.SpriteThumbnailsManifestUrl != nil {
+			logger.Debug().Msg("twitch video has sprite thumbnails, attempting to parse and download")
+
+			// download manifest
+			res, err := http.Get(*videoInfo.SpriteThumbnailsManifestUrl)
+			if err != nil {
+				return fmt.Errorf("error downloading sprite thumbnails manifest: %v", err)
+			}
+			if res.Body != nil {
+				defer res.Body.Close()
+			}
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				return fmt.Errorf("error reading download body: %v", err)
+			}
+			spriteManifest := platform.TwitchSpriteManifest{}
+			err = json.Unmarshal(body, &spriteManifest)
+			if err != nil {
+				return fmt.Errorf("error unmarsharling sprite thumbnails manifest: %v", err)
+			}
+			// attempt to find high quality thumbnails
+			for _, manifest := range spriteManifest {
+				if manifest.Quality == "high" {
+					// set paths
+					rootVideoPath := fmt.Sprintf("%s/%s/%s", envConfig.VideosDir, dbItems.Channel.Name, dbItems.Video.FolderName)
+
+					spritesPath := fmt.Sprintf("%s/sprites", rootVideoPath)
+					err = utils.CreateDirectory(spritesPath)
+					if err != nil {
+						return fmt.Errorf("error creating sprites path: %v", err)
+					}
+
+					var spritePaths []string
+
+					// get the base url
+					baseUrl := getBasePath(*videoInfo.SpriteThumbnailsManifestUrl)
+
+					// download each sprite to rootVideoPath/sprites/name
+					for _, image := range manifest.Images {
+						spritePath := fmt.Sprintf("%s/%s", spritesPath, image)
+						spriteUrl := fmt.Sprintf("%s/%s", baseUrl, image)
+						logger.Debug().Str("url", spriteUrl).Msg("downloading thumbnail sprite")
+						err = utils.DownloadAndSaveFile(spriteUrl, spritePath)
+						if err != nil {
+							return fmt.Errorf("error downloading sprite thumbnail image: %v", err)
+						}
+						spritePaths = append(spritePaths, spritePath)
+					}
+
+					// enable sprite thumbnails for video
+					_, err = dbItems.Video.Update().SetSpriteThumbnailsEnabled(true).SetSpriteThumbnailsImages(spritePaths).SetSpriteThumbnailsInterval(manifest.Interval).SetSpriteThumbnailsRows(manifest.Rows).SetSpriteThumbnailsColumns(manifest.Cols).SetSpriteThumbnailsWidth(manifest.Width).SetSpriteThumbnailsHeight(manifest.Height).Save(ctx)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
 	}
 
 	// set queue status to completed

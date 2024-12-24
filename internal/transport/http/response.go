@@ -27,3 +27,11 @@ func ErrorResponse(c echo.Context, statusCode int, message string) error {
 		Message: message,
 	})
 }
+
+func ErrorInvalidAccessTokenResponse(c echo.Context) error {
+	return ErrorResponse(c, http.StatusUnauthorized, "Invalid access token")
+}
+
+func ErrorUnauthorizedResponse(c echo.Context) error {
+	return ErrorResponse(c, http.StatusForbidden, "You are not authorized to access this resource")
+}

@@ -26,7 +26,7 @@ func (h *Handler) TestNotification(c echo.Context) error {
 
 	notificationType := c.QueryParam("type")
 	if notificationType == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "type is required")
+		return ErrorResponse(c, http.StatusBadRequest, "type is required")
 	}
 
 	testChannel := ent.Channel{
@@ -62,8 +62,8 @@ func (h *Handler) TestNotification(c echo.Context) error {
 	case "is_live":
 		notification.SendLiveNotification(&testChannel, &testVod, &testQueue)
 	default:
-		return echo.NewHTTPError(http.StatusBadRequest, "type is invalid")
+		return ErrorResponse(c, http.StatusBadRequest, "type is invalid")
 	}
 
-	return c.JSON(http.StatusOK, "ok")
+	return SuccessResponse(c, "", "sent")
 }

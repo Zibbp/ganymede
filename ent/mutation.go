@@ -24,6 +24,7 @@ import (
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/ent/sessions"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -50,6 +51,7 @@ const (
 	TypePlayback        = "Playback"
 	TypePlaylist        = "Playlist"
 	TypeQueue           = "Queue"
+	TypeSessions        = "Sessions"
 	TypeTwitchCategory  = "TwitchCategory"
 	TypeUser            = "User"
 	TypeVod             = "Vod"
@@ -2082,6 +2084,12 @@ type LiveMutation struct {
 	video_age                *int64
 	addvideo_age             *int64
 	apply_categories_to_live *bool
+	watch_clips              *bool
+	clips_limit              *int
+	addclips_limit           *int
+	clips_interval_days      *int
+	addclips_interval_days   *int
+	clips_last_checked       *time.Time
 	updated_at               *time.Time
 	created_at               *time.Time
 	clearedFields            map[string]struct{}
@@ -2703,6 +2711,203 @@ func (m *LiveMutation) ResetApplyCategoriesToLive() {
 	m.apply_categories_to_live = nil
 }
 
+// SetWatchClips sets the "watch_clips" field.
+func (m *LiveMutation) SetWatchClips(b bool) {
+	m.watch_clips = &b
+}
+
+// WatchClips returns the value of the "watch_clips" field in the mutation.
+func (m *LiveMutation) WatchClips() (r bool, exists bool) {
+	v := m.watch_clips
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWatchClips returns the old "watch_clips" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldWatchClips(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWatchClips is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWatchClips requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWatchClips: %w", err)
+	}
+	return oldValue.WatchClips, nil
+}
+
+// ResetWatchClips resets all changes to the "watch_clips" field.
+func (m *LiveMutation) ResetWatchClips() {
+	m.watch_clips = nil
+}
+
+// SetClipsLimit sets the "clips_limit" field.
+func (m *LiveMutation) SetClipsLimit(i int) {
+	m.clips_limit = &i
+	m.addclips_limit = nil
+}
+
+// ClipsLimit returns the value of the "clips_limit" field in the mutation.
+func (m *LiveMutation) ClipsLimit() (r int, exists bool) {
+	v := m.clips_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsLimit returns the old "clips_limit" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsLimit(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsLimit is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsLimit requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsLimit: %w", err)
+	}
+	return oldValue.ClipsLimit, nil
+}
+
+// AddClipsLimit adds i to the "clips_limit" field.
+func (m *LiveMutation) AddClipsLimit(i int) {
+	if m.addclips_limit != nil {
+		*m.addclips_limit += i
+	} else {
+		m.addclips_limit = &i
+	}
+}
+
+// AddedClipsLimit returns the value that was added to the "clips_limit" field in this mutation.
+func (m *LiveMutation) AddedClipsLimit() (r int, exists bool) {
+	v := m.addclips_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetClipsLimit resets all changes to the "clips_limit" field.
+func (m *LiveMutation) ResetClipsLimit() {
+	m.clips_limit = nil
+	m.addclips_limit = nil
+}
+
+// SetClipsIntervalDays sets the "clips_interval_days" field.
+func (m *LiveMutation) SetClipsIntervalDays(i int) {
+	m.clips_interval_days = &i
+	m.addclips_interval_days = nil
+}
+
+// ClipsIntervalDays returns the value of the "clips_interval_days" field in the mutation.
+func (m *LiveMutation) ClipsIntervalDays() (r int, exists bool) {
+	v := m.clips_interval_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsIntervalDays returns the old "clips_interval_days" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsIntervalDays(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsIntervalDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsIntervalDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsIntervalDays: %w", err)
+	}
+	return oldValue.ClipsIntervalDays, nil
+}
+
+// AddClipsIntervalDays adds i to the "clips_interval_days" field.
+func (m *LiveMutation) AddClipsIntervalDays(i int) {
+	if m.addclips_interval_days != nil {
+		*m.addclips_interval_days += i
+	} else {
+		m.addclips_interval_days = &i
+	}
+}
+
+// AddedClipsIntervalDays returns the value that was added to the "clips_interval_days" field in this mutation.
+func (m *LiveMutation) AddedClipsIntervalDays() (r int, exists bool) {
+	v := m.addclips_interval_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetClipsIntervalDays resets all changes to the "clips_interval_days" field.
+func (m *LiveMutation) ResetClipsIntervalDays() {
+	m.clips_interval_days = nil
+	m.addclips_interval_days = nil
+}
+
+// SetClipsLastChecked sets the "clips_last_checked" field.
+func (m *LiveMutation) SetClipsLastChecked(t time.Time) {
+	m.clips_last_checked = &t
+}
+
+// ClipsLastChecked returns the value of the "clips_last_checked" field in the mutation.
+func (m *LiveMutation) ClipsLastChecked() (r time.Time, exists bool) {
+	v := m.clips_last_checked
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsLastChecked returns the old "clips_last_checked" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsLastChecked(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsLastChecked is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsLastChecked requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsLastChecked: %w", err)
+	}
+	return oldValue.ClipsLastChecked, nil
+}
+
+// ClearClipsLastChecked clears the value of the "clips_last_checked" field.
+func (m *LiveMutation) ClearClipsLastChecked() {
+	m.clips_last_checked = nil
+	m.clearedFields[live.FieldClipsLastChecked] = struct{}{}
+}
+
+// ClipsLastCheckedCleared returns if the "clips_last_checked" field was cleared in this mutation.
+func (m *LiveMutation) ClipsLastCheckedCleared() bool {
+	_, ok := m.clearedFields[live.FieldClipsLastChecked]
+	return ok
+}
+
+// ResetClipsLastChecked resets all changes to the "clips_last_checked" field.
+func (m *LiveMutation) ResetClipsLastChecked() {
+	m.clips_last_checked = nil
+	delete(m.clearedFields, live.FieldClipsLastChecked)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *LiveMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -2956,7 +3161,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 19)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -2995,6 +3200,18 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.apply_categories_to_live != nil {
 		fields = append(fields, live.FieldApplyCategoriesToLive)
+	}
+	if m.watch_clips != nil {
+		fields = append(fields, live.FieldWatchClips)
+	}
+	if m.clips_limit != nil {
+		fields = append(fields, live.FieldClipsLimit)
+	}
+	if m.clips_interval_days != nil {
+		fields = append(fields, live.FieldClipsIntervalDays)
+	}
+	if m.clips_last_checked != nil {
+		fields = append(fields, live.FieldClipsLastChecked)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, live.FieldUpdatedAt)
@@ -3036,6 +3253,14 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.VideoAge()
 	case live.FieldApplyCategoriesToLive:
 		return m.ApplyCategoriesToLive()
+	case live.FieldWatchClips:
+		return m.WatchClips()
+	case live.FieldClipsLimit:
+		return m.ClipsLimit()
+	case live.FieldClipsIntervalDays:
+		return m.ClipsIntervalDays()
+	case live.FieldClipsLastChecked:
+		return m.ClipsLastChecked()
 	case live.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case live.FieldCreatedAt:
@@ -3075,6 +3300,14 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldVideoAge(ctx)
 	case live.FieldApplyCategoriesToLive:
 		return m.OldApplyCategoriesToLive(ctx)
+	case live.FieldWatchClips:
+		return m.OldWatchClips(ctx)
+	case live.FieldClipsLimit:
+		return m.OldClipsLimit(ctx)
+	case live.FieldClipsIntervalDays:
+		return m.OldClipsIntervalDays(ctx)
+	case live.FieldClipsLastChecked:
+		return m.OldClipsLastChecked(ctx)
 	case live.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case live.FieldCreatedAt:
@@ -3179,6 +3412,34 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetApplyCategoriesToLive(v)
 		return nil
+	case live.FieldWatchClips:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWatchClips(v)
+		return nil
+	case live.FieldClipsLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsLimit(v)
+		return nil
+	case live.FieldClipsIntervalDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsIntervalDays(v)
+		return nil
+	case live.FieldClipsLastChecked:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsLastChecked(v)
+		return nil
 	case live.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -3204,6 +3465,12 @@ func (m *LiveMutation) AddedFields() []string {
 	if m.addvideo_age != nil {
 		fields = append(fields, live.FieldVideoAge)
 	}
+	if m.addclips_limit != nil {
+		fields = append(fields, live.FieldClipsLimit)
+	}
+	if m.addclips_interval_days != nil {
+		fields = append(fields, live.FieldClipsIntervalDays)
+	}
 	return fields
 }
 
@@ -3214,6 +3481,10 @@ func (m *LiveMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case live.FieldVideoAge:
 		return m.AddedVideoAge()
+	case live.FieldClipsLimit:
+		return m.AddedClipsLimit()
+	case live.FieldClipsIntervalDays:
+		return m.AddedClipsIntervalDays()
 	}
 	return nil, false
 }
@@ -3230,6 +3501,20 @@ func (m *LiveMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddVideoAge(v)
 		return nil
+	case live.FieldClipsLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClipsLimit(v)
+		return nil
+	case live.FieldClipsIntervalDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClipsIntervalDays(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Live numeric field %s", name)
 }
@@ -3240,6 +3525,9 @@ func (m *LiveMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(live.FieldResolution) {
 		fields = append(fields, live.FieldResolution)
+	}
+	if m.FieldCleared(live.FieldClipsLastChecked) {
+		fields = append(fields, live.FieldClipsLastChecked)
 	}
 	return fields
 }
@@ -3257,6 +3545,9 @@ func (m *LiveMutation) ClearField(name string) error {
 	switch name {
 	case live.FieldResolution:
 		m.ClearResolution()
+		return nil
+	case live.FieldClipsLastChecked:
+		m.ClearClipsLastChecked()
 		return nil
 	}
 	return fmt.Errorf("unknown Live nullable field %s", name)
@@ -3304,6 +3595,18 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldApplyCategoriesToLive:
 		m.ResetApplyCategoriesToLive()
+		return nil
+	case live.FieldWatchClips:
+		m.ResetWatchClips()
+		return nil
+	case live.FieldClipsLimit:
+		m.ResetClipsLimit()
+		return nil
+	case live.FieldClipsIntervalDays:
+		m.ResetClipsIntervalDays()
+		return nil
+	case live.FieldClipsLastChecked:
+		m.ResetClipsLastChecked()
 		return nil
 	case live.FieldUpdatedAt:
 		m.ResetUpdatedAt()
@@ -8628,6 +8931,440 @@ func (m *QueueMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Queue edge %s", name)
 }
 
+// SessionsMutation represents an operation that mutates the Sessions nodes in the graph.
+type SessionsMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	token         *string
+	data          *[]byte
+	expiry        *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*Sessions, error)
+	predicates    []predicate.Sessions
+}
+
+var _ ent.Mutation = (*SessionsMutation)(nil)
+
+// sessionsOption allows management of the mutation configuration using functional options.
+type sessionsOption func(*SessionsMutation)
+
+// newSessionsMutation creates new mutation for the Sessions entity.
+func newSessionsMutation(c config, op Op, opts ...sessionsOption) *SessionsMutation {
+	m := &SessionsMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSessions,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSessionsID sets the ID field of the mutation.
+func withSessionsID(id int) sessionsOption {
+	return func(m *SessionsMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Sessions
+		)
+		m.oldValue = func(ctx context.Context) (*Sessions, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Sessions.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSessions sets the old Sessions of the mutation.
+func withSessions(node *Sessions) sessionsOption {
+	return func(m *SessionsMutation) {
+		m.oldValue = func(context.Context) (*Sessions, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SessionsMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SessionsMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SessionsMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SessionsMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Sessions.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetToken sets the "token" field.
+func (m *SessionsMutation) SetToken(s string) {
+	m.token = &s
+}
+
+// Token returns the value of the "token" field in the mutation.
+func (m *SessionsMutation) Token() (r string, exists bool) {
+	v := m.token
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldToken returns the old "token" field's value of the Sessions entity.
+// If the Sessions object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SessionsMutation) OldToken(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldToken is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldToken requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldToken: %w", err)
+	}
+	return oldValue.Token, nil
+}
+
+// ResetToken resets all changes to the "token" field.
+func (m *SessionsMutation) ResetToken() {
+	m.token = nil
+}
+
+// SetData sets the "data" field.
+func (m *SessionsMutation) SetData(b []byte) {
+	m.data = &b
+}
+
+// Data returns the value of the "data" field in the mutation.
+func (m *SessionsMutation) Data() (r []byte, exists bool) {
+	v := m.data
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldData returns the old "data" field's value of the Sessions entity.
+// If the Sessions object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SessionsMutation) OldData(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldData is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldData requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldData: %w", err)
+	}
+	return oldValue.Data, nil
+}
+
+// ResetData resets all changes to the "data" field.
+func (m *SessionsMutation) ResetData() {
+	m.data = nil
+}
+
+// SetExpiry sets the "expiry" field.
+func (m *SessionsMutation) SetExpiry(t time.Time) {
+	m.expiry = &t
+}
+
+// Expiry returns the value of the "expiry" field in the mutation.
+func (m *SessionsMutation) Expiry() (r time.Time, exists bool) {
+	v := m.expiry
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiry returns the old "expiry" field's value of the Sessions entity.
+// If the Sessions object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SessionsMutation) OldExpiry(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiry is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiry requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiry: %w", err)
+	}
+	return oldValue.Expiry, nil
+}
+
+// ResetExpiry resets all changes to the "expiry" field.
+func (m *SessionsMutation) ResetExpiry() {
+	m.expiry = nil
+}
+
+// Where appends a list predicates to the SessionsMutation builder.
+func (m *SessionsMutation) Where(ps ...predicate.Sessions) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SessionsMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SessionsMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Sessions, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SessionsMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SessionsMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Sessions).
+func (m *SessionsMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SessionsMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.token != nil {
+		fields = append(fields, sessions.FieldToken)
+	}
+	if m.data != nil {
+		fields = append(fields, sessions.FieldData)
+	}
+	if m.expiry != nil {
+		fields = append(fields, sessions.FieldExpiry)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SessionsMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case sessions.FieldToken:
+		return m.Token()
+	case sessions.FieldData:
+		return m.Data()
+	case sessions.FieldExpiry:
+		return m.Expiry()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SessionsMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case sessions.FieldToken:
+		return m.OldToken(ctx)
+	case sessions.FieldData:
+		return m.OldData(ctx)
+	case sessions.FieldExpiry:
+		return m.OldExpiry(ctx)
+	}
+	return nil, fmt.Errorf("unknown Sessions field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SessionsMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case sessions.FieldToken:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetToken(v)
+		return nil
+	case sessions.FieldData:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetData(v)
+		return nil
+	case sessions.FieldExpiry:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiry(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Sessions field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SessionsMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SessionsMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SessionsMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Sessions numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SessionsMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SessionsMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SessionsMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Sessions nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SessionsMutation) ResetField(name string) error {
+	switch name {
+	case sessions.FieldToken:
+		m.ResetToken()
+		return nil
+	case sessions.FieldData:
+		m.ResetData()
+		return nil
+	case sessions.FieldExpiry:
+		m.ResetExpiry()
+		return nil
+	}
+	return fmt.Errorf("unknown Sessions field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SessionsMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SessionsMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SessionsMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SessionsMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SessionsMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SessionsMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SessionsMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Sessions unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SessionsMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Sessions edge %s", name)
+}
+
 // TwitchCategoryMutation represents an operation that mutates the TwitchCategory nodes in the graph.
 type TwitchCategoryMutation struct {
 	config
@@ -9990,65 +10727,81 @@ func (m *UserMutation) ResetEdge(name string) error {
 // VodMutation represents an operation that mutates the Vod nodes in the graph.
 type VodMutation struct {
 	config
-	op                          Op
-	typ                         string
-	id                          *uuid.UUID
-	ext_id                      *string
-	ext_stream_id               *string
-	platform                    *utils.VideoPlatform
-	_type                       *utils.VodType
-	title                       *string
-	duration                    *int
-	addduration                 *int
-	views                       *int
-	addviews                    *int
-	resolution                  *string
-	processing                  *bool
-	thumbnail_path              *string
-	web_thumbnail_path          *string
-	video_path                  *string
-	video_hls_path              *string
-	chat_path                   *string
-	live_chat_path              *string
-	live_chat_convert_path      *string
-	chat_video_path             *string
-	info_path                   *string
-	caption_path                *string
-	folder_name                 *string
-	file_name                   *string
-	tmp_video_download_path     *string
-	tmp_video_convert_path      *string
-	tmp_chat_download_path      *string
-	tmp_live_chat_download_path *string
-	tmp_live_chat_convert_path  *string
-	tmp_chat_render_path        *string
-	tmp_video_hls_path          *string
-	locked                      *bool
-	local_views                 *int
-	addlocal_views              *int
-	streamed_at                 *time.Time
-	updated_at                  *time.Time
-	created_at                  *time.Time
-	clearedFields               map[string]struct{}
-	channel                     *uuid.UUID
-	clearedchannel              bool
-	queue                       *uuid.UUID
-	clearedqueue                bool
-	playlists                   map[uuid.UUID]struct{}
-	removedplaylists            map[uuid.UUID]struct{}
-	clearedplaylists            bool
-	chapters                    map[uuid.UUID]struct{}
-	removedchapters             map[uuid.UUID]struct{}
-	clearedchapters             bool
-	muted_segments              map[uuid.UUID]struct{}
-	removedmuted_segments       map[uuid.UUID]struct{}
-	clearedmuted_segments       bool
-	multistream_info            map[int]struct{}
-	removedmultistream_info     map[int]struct{}
-	clearedmultistream_info     bool
-	done                        bool
-	oldValue                    func(context.Context) (*Vod, error)
-	predicates                  []predicate.Vod
+	op                             Op
+	typ                            string
+	id                             *uuid.UUID
+	ext_id                         *string
+	clip_ext_vod_id                *string
+	ext_stream_id                  *string
+	platform                       *utils.VideoPlatform
+	_type                          *utils.VodType
+	title                          *string
+	duration                       *int
+	addduration                    *int
+	clip_vod_offset                *int
+	addclip_vod_offset             *int
+	views                          *int
+	addviews                       *int
+	resolution                     *string
+	processing                     *bool
+	thumbnail_path                 *string
+	web_thumbnail_path             *string
+	video_path                     *string
+	video_hls_path                 *string
+	chat_path                      *string
+	live_chat_path                 *string
+	live_chat_convert_path         *string
+	chat_video_path                *string
+	info_path                      *string
+	caption_path                   *string
+	folder_name                    *string
+	file_name                      *string
+	tmp_video_download_path        *string
+	tmp_video_convert_path         *string
+	tmp_chat_download_path         *string
+	tmp_live_chat_download_path    *string
+	tmp_live_chat_convert_path     *string
+	tmp_chat_render_path           *string
+	tmp_video_hls_path             *string
+	locked                         *bool
+	local_views                    *int
+	addlocal_views                 *int
+	sprite_thumbnails_enabled      *bool
+	sprite_thumbnails_images       *[]string
+	appendsprite_thumbnails_images []string
+	sprite_thumbnails_interval     *int
+	addsprite_thumbnails_interval  *int
+	sprite_thumbnails_width        *int
+	addsprite_thumbnails_width     *int
+	sprite_thumbnails_height       *int
+	addsprite_thumbnails_height    *int
+	sprite_thumbnails_rows         *int
+	addsprite_thumbnails_rows      *int
+	sprite_thumbnails_columns      *int
+	addsprite_thumbnails_columns   *int
+	streamed_at                    *time.Time
+	updated_at                     *time.Time
+	created_at                     *time.Time
+	clearedFields                  map[string]struct{}
+	channel                        *uuid.UUID
+	clearedchannel                 bool
+	queue                          *uuid.UUID
+	clearedqueue                   bool
+	playlists                      map[uuid.UUID]struct{}
+	removedplaylists               map[uuid.UUID]struct{}
+	clearedplaylists               bool
+	chapters                       map[uuid.UUID]struct{}
+	removedchapters                map[uuid.UUID]struct{}
+	clearedchapters                bool
+	muted_segments                 map[uuid.UUID]struct{}
+	removedmuted_segments          map[uuid.UUID]struct{}
+	clearedmuted_segments          bool
+	multistream_info               map[int]struct{}
+	removedmultistream_info        map[int]struct{}
+	clearedmultistream_info        bool
+	done                           bool
+	oldValue                       func(context.Context) (*Vod, error)
+	predicates                     []predicate.Vod
 }
 
 var _ ent.Mutation = (*VodMutation)(nil)
@@ -10189,6 +10942,55 @@ func (m *VodMutation) OldExtID(ctx context.Context) (v string, err error) {
 // ResetExtID resets all changes to the "ext_id" field.
 func (m *VodMutation) ResetExtID() {
 	m.ext_id = nil
+}
+
+// SetClipExtVodID sets the "clip_ext_vod_id" field.
+func (m *VodMutation) SetClipExtVodID(s string) {
+	m.clip_ext_vod_id = &s
+}
+
+// ClipExtVodID returns the value of the "clip_ext_vod_id" field in the mutation.
+func (m *VodMutation) ClipExtVodID() (r string, exists bool) {
+	v := m.clip_ext_vod_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipExtVodID returns the old "clip_ext_vod_id" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldClipExtVodID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipExtVodID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipExtVodID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipExtVodID: %w", err)
+	}
+	return oldValue.ClipExtVodID, nil
+}
+
+// ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
+func (m *VodMutation) ClearClipExtVodID() {
+	m.clip_ext_vod_id = nil
+	m.clearedFields[vod.FieldClipExtVodID] = struct{}{}
+}
+
+// ClipExtVodIDCleared returns if the "clip_ext_vod_id" field was cleared in this mutation.
+func (m *VodMutation) ClipExtVodIDCleared() bool {
+	_, ok := m.clearedFields[vod.FieldClipExtVodID]
+	return ok
+}
+
+// ResetClipExtVodID resets all changes to the "clip_ext_vod_id" field.
+func (m *VodMutation) ResetClipExtVodID() {
+	m.clip_ext_vod_id = nil
+	delete(m.clearedFields, vod.FieldClipExtVodID)
 }
 
 // SetExtStreamID sets the "ext_stream_id" field.
@@ -10402,6 +11204,76 @@ func (m *VodMutation) AddedDuration() (r int, exists bool) {
 func (m *VodMutation) ResetDuration() {
 	m.duration = nil
 	m.addduration = nil
+}
+
+// SetClipVodOffset sets the "clip_vod_offset" field.
+func (m *VodMutation) SetClipVodOffset(i int) {
+	m.clip_vod_offset = &i
+	m.addclip_vod_offset = nil
+}
+
+// ClipVodOffset returns the value of the "clip_vod_offset" field in the mutation.
+func (m *VodMutation) ClipVodOffset() (r int, exists bool) {
+	v := m.clip_vod_offset
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipVodOffset returns the old "clip_vod_offset" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldClipVodOffset(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipVodOffset is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipVodOffset requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipVodOffset: %w", err)
+	}
+	return oldValue.ClipVodOffset, nil
+}
+
+// AddClipVodOffset adds i to the "clip_vod_offset" field.
+func (m *VodMutation) AddClipVodOffset(i int) {
+	if m.addclip_vod_offset != nil {
+		*m.addclip_vod_offset += i
+	} else {
+		m.addclip_vod_offset = &i
+	}
+}
+
+// AddedClipVodOffset returns the value that was added to the "clip_vod_offset" field in this mutation.
+func (m *VodMutation) AddedClipVodOffset() (r int, exists bool) {
+	v := m.addclip_vod_offset
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearClipVodOffset clears the value of the "clip_vod_offset" field.
+func (m *VodMutation) ClearClipVodOffset() {
+	m.clip_vod_offset = nil
+	m.addclip_vod_offset = nil
+	m.clearedFields[vod.FieldClipVodOffset] = struct{}{}
+}
+
+// ClipVodOffsetCleared returns if the "clip_vod_offset" field was cleared in this mutation.
+func (m *VodMutation) ClipVodOffsetCleared() bool {
+	_, ok := m.clearedFields[vod.FieldClipVodOffset]
+	return ok
+}
+
+// ResetClipVodOffset resets all changes to the "clip_vod_offset" field.
+func (m *VodMutation) ResetClipVodOffset() {
+	m.clip_vod_offset = nil
+	m.addclip_vod_offset = nil
+	delete(m.clearedFields, vod.FieldClipVodOffset)
 }
 
 // SetViews sets the "views" field.
@@ -11542,6 +12414,457 @@ func (m *VodMutation) ResetLocalViews() {
 	m.addlocal_views = nil
 }
 
+// SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
+func (m *VodMutation) SetSpriteThumbnailsEnabled(b bool) {
+	m.sprite_thumbnails_enabled = &b
+}
+
+// SpriteThumbnailsEnabled returns the value of the "sprite_thumbnails_enabled" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsEnabled() (r bool, exists bool) {
+	v := m.sprite_thumbnails_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsEnabled returns the old "sprite_thumbnails_enabled" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsEnabled: %w", err)
+	}
+	return oldValue.SpriteThumbnailsEnabled, nil
+}
+
+// ResetSpriteThumbnailsEnabled resets all changes to the "sprite_thumbnails_enabled" field.
+func (m *VodMutation) ResetSpriteThumbnailsEnabled() {
+	m.sprite_thumbnails_enabled = nil
+}
+
+// SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
+func (m *VodMutation) SetSpriteThumbnailsImages(s []string) {
+	m.sprite_thumbnails_images = &s
+	m.appendsprite_thumbnails_images = nil
+}
+
+// SpriteThumbnailsImages returns the value of the "sprite_thumbnails_images" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsImages() (r []string, exists bool) {
+	v := m.sprite_thumbnails_images
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsImages returns the old "sprite_thumbnails_images" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsImages(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsImages is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsImages requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsImages: %w", err)
+	}
+	return oldValue.SpriteThumbnailsImages, nil
+}
+
+// AppendSpriteThumbnailsImages adds s to the "sprite_thumbnails_images" field.
+func (m *VodMutation) AppendSpriteThumbnailsImages(s []string) {
+	m.appendsprite_thumbnails_images = append(m.appendsprite_thumbnails_images, s...)
+}
+
+// AppendedSpriteThumbnailsImages returns the list of values that were appended to the "sprite_thumbnails_images" field in this mutation.
+func (m *VodMutation) AppendedSpriteThumbnailsImages() ([]string, bool) {
+	if len(m.appendsprite_thumbnails_images) == 0 {
+		return nil, false
+	}
+	return m.appendsprite_thumbnails_images, true
+}
+
+// ClearSpriteThumbnailsImages clears the value of the "sprite_thumbnails_images" field.
+func (m *VodMutation) ClearSpriteThumbnailsImages() {
+	m.sprite_thumbnails_images = nil
+	m.appendsprite_thumbnails_images = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsImages] = struct{}{}
+}
+
+// SpriteThumbnailsImagesCleared returns if the "sprite_thumbnails_images" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsImagesCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsImages]
+	return ok
+}
+
+// ResetSpriteThumbnailsImages resets all changes to the "sprite_thumbnails_images" field.
+func (m *VodMutation) ResetSpriteThumbnailsImages() {
+	m.sprite_thumbnails_images = nil
+	m.appendsprite_thumbnails_images = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsImages)
+}
+
+// SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
+func (m *VodMutation) SetSpriteThumbnailsInterval(i int) {
+	m.sprite_thumbnails_interval = &i
+	m.addsprite_thumbnails_interval = nil
+}
+
+// SpriteThumbnailsInterval returns the value of the "sprite_thumbnails_interval" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsInterval() (r int, exists bool) {
+	v := m.sprite_thumbnails_interval
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsInterval returns the old "sprite_thumbnails_interval" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsInterval(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsInterval is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsInterval requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsInterval: %w", err)
+	}
+	return oldValue.SpriteThumbnailsInterval, nil
+}
+
+// AddSpriteThumbnailsInterval adds i to the "sprite_thumbnails_interval" field.
+func (m *VodMutation) AddSpriteThumbnailsInterval(i int) {
+	if m.addsprite_thumbnails_interval != nil {
+		*m.addsprite_thumbnails_interval += i
+	} else {
+		m.addsprite_thumbnails_interval = &i
+	}
+}
+
+// AddedSpriteThumbnailsInterval returns the value that was added to the "sprite_thumbnails_interval" field in this mutation.
+func (m *VodMutation) AddedSpriteThumbnailsInterval() (r int, exists bool) {
+	v := m.addsprite_thumbnails_interval
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSpriteThumbnailsInterval clears the value of the "sprite_thumbnails_interval" field.
+func (m *VodMutation) ClearSpriteThumbnailsInterval() {
+	m.sprite_thumbnails_interval = nil
+	m.addsprite_thumbnails_interval = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsInterval] = struct{}{}
+}
+
+// SpriteThumbnailsIntervalCleared returns if the "sprite_thumbnails_interval" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsIntervalCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsInterval]
+	return ok
+}
+
+// ResetSpriteThumbnailsInterval resets all changes to the "sprite_thumbnails_interval" field.
+func (m *VodMutation) ResetSpriteThumbnailsInterval() {
+	m.sprite_thumbnails_interval = nil
+	m.addsprite_thumbnails_interval = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsInterval)
+}
+
+// SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
+func (m *VodMutation) SetSpriteThumbnailsWidth(i int) {
+	m.sprite_thumbnails_width = &i
+	m.addsprite_thumbnails_width = nil
+}
+
+// SpriteThumbnailsWidth returns the value of the "sprite_thumbnails_width" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsWidth() (r int, exists bool) {
+	v := m.sprite_thumbnails_width
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsWidth returns the old "sprite_thumbnails_width" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsWidth(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsWidth is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsWidth requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsWidth: %w", err)
+	}
+	return oldValue.SpriteThumbnailsWidth, nil
+}
+
+// AddSpriteThumbnailsWidth adds i to the "sprite_thumbnails_width" field.
+func (m *VodMutation) AddSpriteThumbnailsWidth(i int) {
+	if m.addsprite_thumbnails_width != nil {
+		*m.addsprite_thumbnails_width += i
+	} else {
+		m.addsprite_thumbnails_width = &i
+	}
+}
+
+// AddedSpriteThumbnailsWidth returns the value that was added to the "sprite_thumbnails_width" field in this mutation.
+func (m *VodMutation) AddedSpriteThumbnailsWidth() (r int, exists bool) {
+	v := m.addsprite_thumbnails_width
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSpriteThumbnailsWidth clears the value of the "sprite_thumbnails_width" field.
+func (m *VodMutation) ClearSpriteThumbnailsWidth() {
+	m.sprite_thumbnails_width = nil
+	m.addsprite_thumbnails_width = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsWidth] = struct{}{}
+}
+
+// SpriteThumbnailsWidthCleared returns if the "sprite_thumbnails_width" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsWidthCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsWidth]
+	return ok
+}
+
+// ResetSpriteThumbnailsWidth resets all changes to the "sprite_thumbnails_width" field.
+func (m *VodMutation) ResetSpriteThumbnailsWidth() {
+	m.sprite_thumbnails_width = nil
+	m.addsprite_thumbnails_width = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsWidth)
+}
+
+// SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
+func (m *VodMutation) SetSpriteThumbnailsHeight(i int) {
+	m.sprite_thumbnails_height = &i
+	m.addsprite_thumbnails_height = nil
+}
+
+// SpriteThumbnailsHeight returns the value of the "sprite_thumbnails_height" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsHeight() (r int, exists bool) {
+	v := m.sprite_thumbnails_height
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsHeight returns the old "sprite_thumbnails_height" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsHeight(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsHeight is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsHeight requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsHeight: %w", err)
+	}
+	return oldValue.SpriteThumbnailsHeight, nil
+}
+
+// AddSpriteThumbnailsHeight adds i to the "sprite_thumbnails_height" field.
+func (m *VodMutation) AddSpriteThumbnailsHeight(i int) {
+	if m.addsprite_thumbnails_height != nil {
+		*m.addsprite_thumbnails_height += i
+	} else {
+		m.addsprite_thumbnails_height = &i
+	}
+}
+
+// AddedSpriteThumbnailsHeight returns the value that was added to the "sprite_thumbnails_height" field in this mutation.
+func (m *VodMutation) AddedSpriteThumbnailsHeight() (r int, exists bool) {
+	v := m.addsprite_thumbnails_height
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSpriteThumbnailsHeight clears the value of the "sprite_thumbnails_height" field.
+func (m *VodMutation) ClearSpriteThumbnailsHeight() {
+	m.sprite_thumbnails_height = nil
+	m.addsprite_thumbnails_height = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsHeight] = struct{}{}
+}
+
+// SpriteThumbnailsHeightCleared returns if the "sprite_thumbnails_height" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsHeightCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsHeight]
+	return ok
+}
+
+// ResetSpriteThumbnailsHeight resets all changes to the "sprite_thumbnails_height" field.
+func (m *VodMutation) ResetSpriteThumbnailsHeight() {
+	m.sprite_thumbnails_height = nil
+	m.addsprite_thumbnails_height = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsHeight)
+}
+
+// SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
+func (m *VodMutation) SetSpriteThumbnailsRows(i int) {
+	m.sprite_thumbnails_rows = &i
+	m.addsprite_thumbnails_rows = nil
+}
+
+// SpriteThumbnailsRows returns the value of the "sprite_thumbnails_rows" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsRows() (r int, exists bool) {
+	v := m.sprite_thumbnails_rows
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsRows returns the old "sprite_thumbnails_rows" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsRows(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsRows is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsRows requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsRows: %w", err)
+	}
+	return oldValue.SpriteThumbnailsRows, nil
+}
+
+// AddSpriteThumbnailsRows adds i to the "sprite_thumbnails_rows" field.
+func (m *VodMutation) AddSpriteThumbnailsRows(i int) {
+	if m.addsprite_thumbnails_rows != nil {
+		*m.addsprite_thumbnails_rows += i
+	} else {
+		m.addsprite_thumbnails_rows = &i
+	}
+}
+
+// AddedSpriteThumbnailsRows returns the value that was added to the "sprite_thumbnails_rows" field in this mutation.
+func (m *VodMutation) AddedSpriteThumbnailsRows() (r int, exists bool) {
+	v := m.addsprite_thumbnails_rows
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSpriteThumbnailsRows clears the value of the "sprite_thumbnails_rows" field.
+func (m *VodMutation) ClearSpriteThumbnailsRows() {
+	m.sprite_thumbnails_rows = nil
+	m.addsprite_thumbnails_rows = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsRows] = struct{}{}
+}
+
+// SpriteThumbnailsRowsCleared returns if the "sprite_thumbnails_rows" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsRowsCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsRows]
+	return ok
+}
+
+// ResetSpriteThumbnailsRows resets all changes to the "sprite_thumbnails_rows" field.
+func (m *VodMutation) ResetSpriteThumbnailsRows() {
+	m.sprite_thumbnails_rows = nil
+	m.addsprite_thumbnails_rows = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsRows)
+}
+
+// SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
+func (m *VodMutation) SetSpriteThumbnailsColumns(i int) {
+	m.sprite_thumbnails_columns = &i
+	m.addsprite_thumbnails_columns = nil
+}
+
+// SpriteThumbnailsColumns returns the value of the "sprite_thumbnails_columns" field in the mutation.
+func (m *VodMutation) SpriteThumbnailsColumns() (r int, exists bool) {
+	v := m.sprite_thumbnails_columns
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpriteThumbnailsColumns returns the old "sprite_thumbnails_columns" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldSpriteThumbnailsColumns(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpriteThumbnailsColumns is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpriteThumbnailsColumns requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpriteThumbnailsColumns: %w", err)
+	}
+	return oldValue.SpriteThumbnailsColumns, nil
+}
+
+// AddSpriteThumbnailsColumns adds i to the "sprite_thumbnails_columns" field.
+func (m *VodMutation) AddSpriteThumbnailsColumns(i int) {
+	if m.addsprite_thumbnails_columns != nil {
+		*m.addsprite_thumbnails_columns += i
+	} else {
+		m.addsprite_thumbnails_columns = &i
+	}
+}
+
+// AddedSpriteThumbnailsColumns returns the value that was added to the "sprite_thumbnails_columns" field in this mutation.
+func (m *VodMutation) AddedSpriteThumbnailsColumns() (r int, exists bool) {
+	v := m.addsprite_thumbnails_columns
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSpriteThumbnailsColumns clears the value of the "sprite_thumbnails_columns" field.
+func (m *VodMutation) ClearSpriteThumbnailsColumns() {
+	m.sprite_thumbnails_columns = nil
+	m.addsprite_thumbnails_columns = nil
+	m.clearedFields[vod.FieldSpriteThumbnailsColumns] = struct{}{}
+}
+
+// SpriteThumbnailsColumnsCleared returns if the "sprite_thumbnails_columns" field was cleared in this mutation.
+func (m *VodMutation) SpriteThumbnailsColumnsCleared() bool {
+	_, ok := m.clearedFields[vod.FieldSpriteThumbnailsColumns]
+	return ok
+}
+
+// ResetSpriteThumbnailsColumns resets all changes to the "sprite_thumbnails_columns" field.
+func (m *VodMutation) ResetSpriteThumbnailsColumns() {
+	m.sprite_thumbnails_columns = nil
+	m.addsprite_thumbnails_columns = nil
+	delete(m.clearedFields, vod.FieldSpriteThumbnailsColumns)
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (m *VodMutation) SetStreamedAt(t time.Time) {
 	m.streamed_at = &t
@@ -11978,9 +13301,12 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 33)
+	fields := make([]string, 0, 42)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
+	}
+	if m.clip_ext_vod_id != nil {
+		fields = append(fields, vod.FieldClipExtVodID)
 	}
 	if m.ext_stream_id != nil {
 		fields = append(fields, vod.FieldExtStreamID)
@@ -11996,6 +13322,9 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.duration != nil {
 		fields = append(fields, vod.FieldDuration)
+	}
+	if m.clip_vod_offset != nil {
+		fields = append(fields, vod.FieldClipVodOffset)
 	}
 	if m.views != nil {
 		fields = append(fields, vod.FieldViews)
@@ -12069,6 +13398,27 @@ func (m *VodMutation) Fields() []string {
 	if m.local_views != nil {
 		fields = append(fields, vod.FieldLocalViews)
 	}
+	if m.sprite_thumbnails_enabled != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsEnabled)
+	}
+	if m.sprite_thumbnails_images != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsImages)
+	}
+	if m.sprite_thumbnails_interval != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsInterval)
+	}
+	if m.sprite_thumbnails_width != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsWidth)
+	}
+	if m.sprite_thumbnails_height != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsHeight)
+	}
+	if m.sprite_thumbnails_rows != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsRows)
+	}
+	if m.sprite_thumbnails_columns != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsColumns)
+	}
 	if m.streamed_at != nil {
 		fields = append(fields, vod.FieldStreamedAt)
 	}
@@ -12088,6 +13438,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case vod.FieldExtID:
 		return m.ExtID()
+	case vod.FieldClipExtVodID:
+		return m.ClipExtVodID()
 	case vod.FieldExtStreamID:
 		return m.ExtStreamID()
 	case vod.FieldPlatform:
@@ -12098,6 +13450,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.Title()
 	case vod.FieldDuration:
 		return m.Duration()
+	case vod.FieldClipVodOffset:
+		return m.ClipVodOffset()
 	case vod.FieldViews:
 		return m.Views()
 	case vod.FieldResolution:
@@ -12146,6 +13500,20 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.Locked()
 	case vod.FieldLocalViews:
 		return m.LocalViews()
+	case vod.FieldSpriteThumbnailsEnabled:
+		return m.SpriteThumbnailsEnabled()
+	case vod.FieldSpriteThumbnailsImages:
+		return m.SpriteThumbnailsImages()
+	case vod.FieldSpriteThumbnailsInterval:
+		return m.SpriteThumbnailsInterval()
+	case vod.FieldSpriteThumbnailsWidth:
+		return m.SpriteThumbnailsWidth()
+	case vod.FieldSpriteThumbnailsHeight:
+		return m.SpriteThumbnailsHeight()
+	case vod.FieldSpriteThumbnailsRows:
+		return m.SpriteThumbnailsRows()
+	case vod.FieldSpriteThumbnailsColumns:
+		return m.SpriteThumbnailsColumns()
 	case vod.FieldStreamedAt:
 		return m.StreamedAt()
 	case vod.FieldUpdatedAt:
@@ -12163,6 +13531,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 	switch name {
 	case vod.FieldExtID:
 		return m.OldExtID(ctx)
+	case vod.FieldClipExtVodID:
+		return m.OldClipExtVodID(ctx)
 	case vod.FieldExtStreamID:
 		return m.OldExtStreamID(ctx)
 	case vod.FieldPlatform:
@@ -12173,6 +13543,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldTitle(ctx)
 	case vod.FieldDuration:
 		return m.OldDuration(ctx)
+	case vod.FieldClipVodOffset:
+		return m.OldClipVodOffset(ctx)
 	case vod.FieldViews:
 		return m.OldViews(ctx)
 	case vod.FieldResolution:
@@ -12221,6 +13593,20 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldLocked(ctx)
 	case vod.FieldLocalViews:
 		return m.OldLocalViews(ctx)
+	case vod.FieldSpriteThumbnailsEnabled:
+		return m.OldSpriteThumbnailsEnabled(ctx)
+	case vod.FieldSpriteThumbnailsImages:
+		return m.OldSpriteThumbnailsImages(ctx)
+	case vod.FieldSpriteThumbnailsInterval:
+		return m.OldSpriteThumbnailsInterval(ctx)
+	case vod.FieldSpriteThumbnailsWidth:
+		return m.OldSpriteThumbnailsWidth(ctx)
+	case vod.FieldSpriteThumbnailsHeight:
+		return m.OldSpriteThumbnailsHeight(ctx)
+	case vod.FieldSpriteThumbnailsRows:
+		return m.OldSpriteThumbnailsRows(ctx)
+	case vod.FieldSpriteThumbnailsColumns:
+		return m.OldSpriteThumbnailsColumns(ctx)
 	case vod.FieldStreamedAt:
 		return m.OldStreamedAt(ctx)
 	case vod.FieldUpdatedAt:
@@ -12242,6 +13628,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetExtID(v)
+		return nil
+	case vod.FieldClipExtVodID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipExtVodID(v)
 		return nil
 	case vod.FieldExtStreamID:
 		v, ok := value.(string)
@@ -12277,6 +13670,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDuration(v)
+		return nil
+	case vod.FieldClipVodOffset:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipVodOffset(v)
 		return nil
 	case vod.FieldViews:
 		v, ok := value.(int)
@@ -12446,6 +13846,55 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetLocalViews(v)
 		return nil
+	case vod.FieldSpriteThumbnailsEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsEnabled(v)
+		return nil
+	case vod.FieldSpriteThumbnailsImages:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsImages(v)
+		return nil
+	case vod.FieldSpriteThumbnailsInterval:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsInterval(v)
+		return nil
+	case vod.FieldSpriteThumbnailsWidth:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsWidth(v)
+		return nil
+	case vod.FieldSpriteThumbnailsHeight:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsHeight(v)
+		return nil
+	case vod.FieldSpriteThumbnailsRows:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsRows(v)
+		return nil
+	case vod.FieldSpriteThumbnailsColumns:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpriteThumbnailsColumns(v)
+		return nil
 	case vod.FieldStreamedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -12478,11 +13927,29 @@ func (m *VodMutation) AddedFields() []string {
 	if m.addduration != nil {
 		fields = append(fields, vod.FieldDuration)
 	}
+	if m.addclip_vod_offset != nil {
+		fields = append(fields, vod.FieldClipVodOffset)
+	}
 	if m.addviews != nil {
 		fields = append(fields, vod.FieldViews)
 	}
 	if m.addlocal_views != nil {
 		fields = append(fields, vod.FieldLocalViews)
+	}
+	if m.addsprite_thumbnails_interval != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsInterval)
+	}
+	if m.addsprite_thumbnails_width != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsWidth)
+	}
+	if m.addsprite_thumbnails_height != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsHeight)
+	}
+	if m.addsprite_thumbnails_rows != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsRows)
+	}
+	if m.addsprite_thumbnails_columns != nil {
+		fields = append(fields, vod.FieldSpriteThumbnailsColumns)
 	}
 	return fields
 }
@@ -12494,10 +13961,22 @@ func (m *VodMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case vod.FieldDuration:
 		return m.AddedDuration()
+	case vod.FieldClipVodOffset:
+		return m.AddedClipVodOffset()
 	case vod.FieldViews:
 		return m.AddedViews()
 	case vod.FieldLocalViews:
 		return m.AddedLocalViews()
+	case vod.FieldSpriteThumbnailsInterval:
+		return m.AddedSpriteThumbnailsInterval()
+	case vod.FieldSpriteThumbnailsWidth:
+		return m.AddedSpriteThumbnailsWidth()
+	case vod.FieldSpriteThumbnailsHeight:
+		return m.AddedSpriteThumbnailsHeight()
+	case vod.FieldSpriteThumbnailsRows:
+		return m.AddedSpriteThumbnailsRows()
+	case vod.FieldSpriteThumbnailsColumns:
+		return m.AddedSpriteThumbnailsColumns()
 	}
 	return nil, false
 }
@@ -12514,6 +13993,13 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddDuration(v)
 		return nil
+	case vod.FieldClipVodOffset:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClipVodOffset(v)
+		return nil
 	case vod.FieldViews:
 		v, ok := value.(int)
 		if !ok {
@@ -12528,6 +14014,41 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddLocalViews(v)
 		return nil
+	case vod.FieldSpriteThumbnailsInterval:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSpriteThumbnailsInterval(v)
+		return nil
+	case vod.FieldSpriteThumbnailsWidth:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSpriteThumbnailsWidth(v)
+		return nil
+	case vod.FieldSpriteThumbnailsHeight:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSpriteThumbnailsHeight(v)
+		return nil
+	case vod.FieldSpriteThumbnailsRows:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSpriteThumbnailsRows(v)
+		return nil
+	case vod.FieldSpriteThumbnailsColumns:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSpriteThumbnailsColumns(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Vod numeric field %s", name)
 }
@@ -12536,8 +14057,14 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *VodMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(vod.FieldClipExtVodID) {
+		fields = append(fields, vod.FieldClipExtVodID)
+	}
 	if m.FieldCleared(vod.FieldExtStreamID) {
 		fields = append(fields, vod.FieldExtStreamID)
+	}
+	if m.FieldCleared(vod.FieldClipVodOffset) {
+		fields = append(fields, vod.FieldClipVodOffset)
 	}
 	if m.FieldCleared(vod.FieldResolution) {
 		fields = append(fields, vod.FieldResolution)
@@ -12593,6 +14120,24 @@ func (m *VodMutation) ClearedFields() []string {
 	if m.FieldCleared(vod.FieldTmpVideoHlsPath) {
 		fields = append(fields, vod.FieldTmpVideoHlsPath)
 	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsImages) {
+		fields = append(fields, vod.FieldSpriteThumbnailsImages)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsInterval) {
+		fields = append(fields, vod.FieldSpriteThumbnailsInterval)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsWidth) {
+		fields = append(fields, vod.FieldSpriteThumbnailsWidth)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsHeight) {
+		fields = append(fields, vod.FieldSpriteThumbnailsHeight)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsRows) {
+		fields = append(fields, vod.FieldSpriteThumbnailsRows)
+	}
+	if m.FieldCleared(vod.FieldSpriteThumbnailsColumns) {
+		fields = append(fields, vod.FieldSpriteThumbnailsColumns)
+	}
 	return fields
 }
 
@@ -12607,8 +14152,14 @@ func (m *VodMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *VodMutation) ClearField(name string) error {
 	switch name {
+	case vod.FieldClipExtVodID:
+		m.ClearClipExtVodID()
+		return nil
 	case vod.FieldExtStreamID:
 		m.ClearExtStreamID()
+		return nil
+	case vod.FieldClipVodOffset:
+		m.ClearClipVodOffset()
 		return nil
 	case vod.FieldResolution:
 		m.ClearResolution()
@@ -12664,6 +14215,24 @@ func (m *VodMutation) ClearField(name string) error {
 	case vod.FieldTmpVideoHlsPath:
 		m.ClearTmpVideoHlsPath()
 		return nil
+	case vod.FieldSpriteThumbnailsImages:
+		m.ClearSpriteThumbnailsImages()
+		return nil
+	case vod.FieldSpriteThumbnailsInterval:
+		m.ClearSpriteThumbnailsInterval()
+		return nil
+	case vod.FieldSpriteThumbnailsWidth:
+		m.ClearSpriteThumbnailsWidth()
+		return nil
+	case vod.FieldSpriteThumbnailsHeight:
+		m.ClearSpriteThumbnailsHeight()
+		return nil
+	case vod.FieldSpriteThumbnailsRows:
+		m.ClearSpriteThumbnailsRows()
+		return nil
+	case vod.FieldSpriteThumbnailsColumns:
+		m.ClearSpriteThumbnailsColumns()
+		return nil
 	}
 	return fmt.Errorf("unknown Vod nullable field %s", name)
 }
@@ -12674,6 +14243,9 @@ func (m *VodMutation) ResetField(name string) error {
 	switch name {
 	case vod.FieldExtID:
 		m.ResetExtID()
+		return nil
+	case vod.FieldClipExtVodID:
+		m.ResetClipExtVodID()
 		return nil
 	case vod.FieldExtStreamID:
 		m.ResetExtStreamID()
@@ -12689,6 +14261,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldDuration:
 		m.ResetDuration()
+		return nil
+	case vod.FieldClipVodOffset:
+		m.ResetClipVodOffset()
 		return nil
 	case vod.FieldViews:
 		m.ResetViews()
@@ -12761,6 +14336,27 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldLocalViews:
 		m.ResetLocalViews()
+		return nil
+	case vod.FieldSpriteThumbnailsEnabled:
+		m.ResetSpriteThumbnailsEnabled()
+		return nil
+	case vod.FieldSpriteThumbnailsImages:
+		m.ResetSpriteThumbnailsImages()
+		return nil
+	case vod.FieldSpriteThumbnailsInterval:
+		m.ResetSpriteThumbnailsInterval()
+		return nil
+	case vod.FieldSpriteThumbnailsWidth:
+		m.ResetSpriteThumbnailsWidth()
+		return nil
+	case vod.FieldSpriteThumbnailsHeight:
+		m.ResetSpriteThumbnailsHeight()
+		return nil
+	case vod.FieldSpriteThumbnailsRows:
+		m.ResetSpriteThumbnailsRows()
+		return nil
+	case vod.FieldSpriteThumbnailsColumns:
+		m.ResetSpriteThumbnailsColumns()
 		return nil
 	case vod.FieldStreamedAt:
 		m.ResetStreamedAt()

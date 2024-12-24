@@ -106,6 +106,15 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks.GenerateStaticThubmnailWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks.GenerateSpriteThumbnailWorker{}); err != nil {
+		return rc, err
+	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.TaskCheckChannelForNewClipsWorker{}); err != nil {
+		return rc, err
+	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.CheckChannelsForLivestreamsWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 
@@ -122,11 +131,12 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	// create river client
 	riverClient, err := river.NewClient(rc.RiverPgxDriver, &river.Config{
 		Queues: map[string]river.QueueConfig{
-			river.QueueDefault:          {MaxWorkers: 100}, // non-resource intensive tasks or time sensitive tasks (live videos and chat)
-			tasks.QueueVideoDownload:    {MaxWorkers: input.VideoDownloadWorkers},
-			tasks.QueueVideoPostProcess: {MaxWorkers: input.VideoPostProcessWorkers},
-			tasks.QueueChatDownload:     {MaxWorkers: input.ChatDownloadWorkers},
-			tasks.QueueChatRender:       {MaxWorkers: input.ChatRenderWorkers},
+			river.QueueDefault:                  {MaxWorkers: 100}, // non-resource intensive tasks or time sensitive tasks (live videos and chat)
+			tasks.QueueVideoDownload:            {MaxWorkers: input.VideoDownloadWorkers},
+			tasks.QueueVideoPostProcess:         {MaxWorkers: input.VideoPostProcessWorkers},
+			tasks.QueueChatDownload:             {MaxWorkers: input.ChatDownloadWorkers},
+			tasks.QueueChatRender:               {MaxWorkers: input.ChatRenderWorkers},
+			tasks.QueueGenerateThumbnailSprites: {MaxWorkers: 1},
 		},
 		Workers:              workers,
 		JobTimeout:           -1,
@@ -175,8 +185,12 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 	// put services in ctx for workers
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.LiveServiceKey, liveService)
 
-	// check videos interval
+	// get interval configs
+	configCheckLiveInterval := config.Get().LiveCheckInterval
 	configCheckVideoInterval := config.Get().VideoCheckInterval
+	if configCheckLiveInterval < 15 {
+		log.Warn().Msg("Live check interval should not be less than 15 seconds.")
+	}
 
 	periodicJobs := []*river.PeriodicJob{
 		// archive watchdog
@@ -189,6 +203,16 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 
+		// check watched channels for live streams
+		// run at specified interval
+		river.NewPeriodicJob(
+			river.PeriodicInterval(time.Duration(configCheckLiveInterval)*time.Second),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.CheckChannelsForLivestreamsArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: false},
+		),
+
 		// check watched channels for new videos
 		// run at specified interval
 		river.NewPeriodicJob(
@@ -197,6 +221,16 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 				return tasks_periodic.CheckChannelsForNewVideosArgs{}, nil
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
+		),
+
+		// check watched channels for new clips
+		// runs once a day at midnight
+		river.NewPeriodicJob(
+			midnightCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.TaskCheckChannelForNewClipsArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 
 		// prune videos
@@ -226,7 +260,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.AuthenticatePlatformArgs{}, nil
 			},
-			&river.PeriodicJobOpts{RunOnStart: false},
+			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 	}
 

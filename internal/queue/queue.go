@@ -136,7 +136,7 @@ func (s *Service) ReadLogFile(c echo.Context, qID uuid.UUID, logType string) ([]
 		return nil, err
 	}
 	path := fmt.Sprintf("%s/%s-%s.log", env.LogsDir, q.Edges.Vod.ID, logType)
-	logLines, err := utils.ReadLastLines(path, 20)
+	logLines, err := utils.ReadLastLines(path, 30)
 	if err != nil {
 		return nil, err
 	}

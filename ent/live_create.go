@@ -209,6 +209,62 @@ func (lc *LiveCreate) SetNillableApplyCategoriesToLive(b *bool) *LiveCreate {
 	return lc
 }
 
+// SetWatchClips sets the "watch_clips" field.
+func (lc *LiveCreate) SetWatchClips(b bool) *LiveCreate {
+	lc.mutation.SetWatchClips(b)
+	return lc
+}
+
+// SetNillableWatchClips sets the "watch_clips" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableWatchClips(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetWatchClips(*b)
+	}
+	return lc
+}
+
+// SetClipsLimit sets the "clips_limit" field.
+func (lc *LiveCreate) SetClipsLimit(i int) *LiveCreate {
+	lc.mutation.SetClipsLimit(i)
+	return lc
+}
+
+// SetNillableClipsLimit sets the "clips_limit" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableClipsLimit(i *int) *LiveCreate {
+	if i != nil {
+		lc.SetClipsLimit(*i)
+	}
+	return lc
+}
+
+// SetClipsIntervalDays sets the "clips_interval_days" field.
+func (lc *LiveCreate) SetClipsIntervalDays(i int) *LiveCreate {
+	lc.mutation.SetClipsIntervalDays(i)
+	return lc
+}
+
+// SetNillableClipsIntervalDays sets the "clips_interval_days" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableClipsIntervalDays(i *int) *LiveCreate {
+	if i != nil {
+		lc.SetClipsIntervalDays(*i)
+	}
+	return lc
+}
+
+// SetClipsLastChecked sets the "clips_last_checked" field.
+func (lc *LiveCreate) SetClipsLastChecked(t time.Time) *LiveCreate {
+	lc.mutation.SetClipsLastChecked(t)
+	return lc
+}
+
+// SetNillableClipsLastChecked sets the "clips_last_checked" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableClipsLastChecked(t *time.Time) *LiveCreate {
+	if t != nil {
+		lc.SetClipsLastChecked(*t)
+	}
+	return lc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lc *LiveCreate) SetUpdatedAt(t time.Time) *LiveCreate {
 	lc.mutation.SetUpdatedAt(t)
@@ -379,6 +435,18 @@ func (lc *LiveCreate) defaults() {
 		v := live.DefaultApplyCategoriesToLive
 		lc.mutation.SetApplyCategoriesToLive(v)
 	}
+	if _, ok := lc.mutation.WatchClips(); !ok {
+		v := live.DefaultWatchClips
+		lc.mutation.SetWatchClips(v)
+	}
+	if _, ok := lc.mutation.ClipsLimit(); !ok {
+		v := live.DefaultClipsLimit
+		lc.mutation.SetClipsLimit(v)
+	}
+	if _, ok := lc.mutation.ClipsIntervalDays(); !ok {
+		v := live.DefaultClipsIntervalDays
+		lc.mutation.SetClipsIntervalDays(v)
+	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		v := live.DefaultUpdatedAt()
 		lc.mutation.SetUpdatedAt(v)
@@ -430,6 +498,15 @@ func (lc *LiveCreate) check() error {
 	}
 	if _, ok := lc.mutation.ApplyCategoriesToLive(); !ok {
 		return &ValidationError{Name: "apply_categories_to_live", err: errors.New(`ent: missing required field "Live.apply_categories_to_live"`)}
+	}
+	if _, ok := lc.mutation.WatchClips(); !ok {
+		return &ValidationError{Name: "watch_clips", err: errors.New(`ent: missing required field "Live.watch_clips"`)}
+	}
+	if _, ok := lc.mutation.ClipsLimit(); !ok {
+		return &ValidationError{Name: "clips_limit", err: errors.New(`ent: missing required field "Live.clips_limit"`)}
+	}
+	if _, ok := lc.mutation.ClipsIntervalDays(); !ok {
+		return &ValidationError{Name: "clips_interval_days", err: errors.New(`ent: missing required field "Live.clips_interval_days"`)}
 	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Live.updated_at"`)}
@@ -527,6 +604,22 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := lc.mutation.ApplyCategoriesToLive(); ok {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
 		_node.ApplyCategoriesToLive = value
+	}
+	if value, ok := lc.mutation.WatchClips(); ok {
+		_spec.SetField(live.FieldWatchClips, field.TypeBool, value)
+		_node.WatchClips = value
+	}
+	if value, ok := lc.mutation.ClipsLimit(); ok {
+		_spec.SetField(live.FieldClipsLimit, field.TypeInt, value)
+		_node.ClipsLimit = value
+	}
+	if value, ok := lc.mutation.ClipsIntervalDays(); ok {
+		_spec.SetField(live.FieldClipsIntervalDays, field.TypeInt, value)
+		_node.ClipsIntervalDays = value
+	}
+	if value, ok := lc.mutation.ClipsLastChecked(); ok {
+		_spec.SetField(live.FieldClipsLastChecked, field.TypeTime, value)
+		_node.ClipsLastChecked = value
 	}
 	if value, ok := lc.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -805,6 +898,72 @@ func (u *LiveUpsert) UpdateApplyCategoriesToLive() *LiveUpsert {
 	return u
 }
 
+// SetWatchClips sets the "watch_clips" field.
+func (u *LiveUpsert) SetWatchClips(v bool) *LiveUpsert {
+	u.Set(live.FieldWatchClips, v)
+	return u
+}
+
+// UpdateWatchClips sets the "watch_clips" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateWatchClips() *LiveUpsert {
+	u.SetExcluded(live.FieldWatchClips)
+	return u
+}
+
+// SetClipsLimit sets the "clips_limit" field.
+func (u *LiveUpsert) SetClipsLimit(v int) *LiveUpsert {
+	u.Set(live.FieldClipsLimit, v)
+	return u
+}
+
+// UpdateClipsLimit sets the "clips_limit" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateClipsLimit() *LiveUpsert {
+	u.SetExcluded(live.FieldClipsLimit)
+	return u
+}
+
+// AddClipsLimit adds v to the "clips_limit" field.
+func (u *LiveUpsert) AddClipsLimit(v int) *LiveUpsert {
+	u.Add(live.FieldClipsLimit, v)
+	return u
+}
+
+// SetClipsIntervalDays sets the "clips_interval_days" field.
+func (u *LiveUpsert) SetClipsIntervalDays(v int) *LiveUpsert {
+	u.Set(live.FieldClipsIntervalDays, v)
+	return u
+}
+
+// UpdateClipsIntervalDays sets the "clips_interval_days" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateClipsIntervalDays() *LiveUpsert {
+	u.SetExcluded(live.FieldClipsIntervalDays)
+	return u
+}
+
+// AddClipsIntervalDays adds v to the "clips_interval_days" field.
+func (u *LiveUpsert) AddClipsIntervalDays(v int) *LiveUpsert {
+	u.Add(live.FieldClipsIntervalDays, v)
+	return u
+}
+
+// SetClipsLastChecked sets the "clips_last_checked" field.
+func (u *LiveUpsert) SetClipsLastChecked(v time.Time) *LiveUpsert {
+	u.Set(live.FieldClipsLastChecked, v)
+	return u
+}
+
+// UpdateClipsLastChecked sets the "clips_last_checked" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateClipsLastChecked() *LiveUpsert {
+	u.SetExcluded(live.FieldClipsLastChecked)
+	return u
+}
+
+// ClearClipsLastChecked clears the value of the "clips_last_checked" field.
+func (u *LiveUpsert) ClearClipsLastChecked() *LiveUpsert {
+	u.SetNull(live.FieldClipsLastChecked)
+	return u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (u *LiveUpsert) SetUpdatedAt(v time.Time) *LiveUpsert {
 	u.Set(live.FieldUpdatedAt, v)
@@ -1061,6 +1220,83 @@ func (u *LiveUpsertOne) SetApplyCategoriesToLive(v bool) *LiveUpsertOne {
 func (u *LiveUpsertOne) UpdateApplyCategoriesToLive() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateApplyCategoriesToLive()
+	})
+}
+
+// SetWatchClips sets the "watch_clips" field.
+func (u *LiveUpsertOne) SetWatchClips(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetWatchClips(v)
+	})
+}
+
+// UpdateWatchClips sets the "watch_clips" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateWatchClips() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateWatchClips()
+	})
+}
+
+// SetClipsLimit sets the "clips_limit" field.
+func (u *LiveUpsertOne) SetClipsLimit(v int) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetClipsLimit(v)
+	})
+}
+
+// AddClipsLimit adds v to the "clips_limit" field.
+func (u *LiveUpsertOne) AddClipsLimit(v int) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.AddClipsLimit(v)
+	})
+}
+
+// UpdateClipsLimit sets the "clips_limit" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateClipsLimit() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateClipsLimit()
+	})
+}
+
+// SetClipsIntervalDays sets the "clips_interval_days" field.
+func (u *LiveUpsertOne) SetClipsIntervalDays(v int) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetClipsIntervalDays(v)
+	})
+}
+
+// AddClipsIntervalDays adds v to the "clips_interval_days" field.
+func (u *LiveUpsertOne) AddClipsIntervalDays(v int) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.AddClipsIntervalDays(v)
+	})
+}
+
+// UpdateClipsIntervalDays sets the "clips_interval_days" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateClipsIntervalDays() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateClipsIntervalDays()
+	})
+}
+
+// SetClipsLastChecked sets the "clips_last_checked" field.
+func (u *LiveUpsertOne) SetClipsLastChecked(v time.Time) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetClipsLastChecked(v)
+	})
+}
+
+// UpdateClipsLastChecked sets the "clips_last_checked" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateClipsLastChecked() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateClipsLastChecked()
+	})
+}
+
+// ClearClipsLastChecked clears the value of the "clips_last_checked" field.
+func (u *LiveUpsertOne) ClearClipsLastChecked() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.ClearClipsLastChecked()
 	})
 }
 
@@ -1489,6 +1725,83 @@ func (u *LiveUpsertBulk) SetApplyCategoriesToLive(v bool) *LiveUpsertBulk {
 func (u *LiveUpsertBulk) UpdateApplyCategoriesToLive() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateApplyCategoriesToLive()
+	})
+}
+
+// SetWatchClips sets the "watch_clips" field.
+func (u *LiveUpsertBulk) SetWatchClips(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetWatchClips(v)
+	})
+}
+
+// UpdateWatchClips sets the "watch_clips" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateWatchClips() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateWatchClips()
+	})
+}
+
+// SetClipsLimit sets the "clips_limit" field.
+func (u *LiveUpsertBulk) SetClipsLimit(v int) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetClipsLimit(v)
+	})
+}
+
+// AddClipsLimit adds v to the "clips_limit" field.
+func (u *LiveUpsertBulk) AddClipsLimit(v int) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.AddClipsLimit(v)
+	})
+}
+
+// UpdateClipsLimit sets the "clips_limit" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateClipsLimit() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateClipsLimit()
+	})
+}
+
+// SetClipsIntervalDays sets the "clips_interval_days" field.
+func (u *LiveUpsertBulk) SetClipsIntervalDays(v int) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetClipsIntervalDays(v)
+	})
+}
+
+// AddClipsIntervalDays adds v to the "clips_interval_days" field.
+func (u *LiveUpsertBulk) AddClipsIntervalDays(v int) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.AddClipsIntervalDays(v)
+	})
+}
+
+// UpdateClipsIntervalDays sets the "clips_interval_days" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateClipsIntervalDays() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateClipsIntervalDays()
+	})
+}
+
+// SetClipsLastChecked sets the "clips_last_checked" field.
+func (u *LiveUpsertBulk) SetClipsLastChecked(v time.Time) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetClipsLastChecked(v)
+	})
+}
+
+// UpdateClipsLastChecked sets the "clips_last_checked" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateClipsLastChecked() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateClipsLastChecked()
+	})
+}
+
+// ClearClipsLastChecked clears the value of the "clips_last_checked" field.
+func (u *LiveUpsertBulk) ClearClipsLastChecked() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.ClearClipsLastChecked()
 	})
 }
 

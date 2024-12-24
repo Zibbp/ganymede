@@ -1,0 +1,20 @@
+.chatMessage {
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+.message {
+  font-weight: 400;
+  line-height: 20px;
+  font-size: 14px;
+}
+.emoteImage {
+  padding-right: 2px;
+  vertical-align: middle;
+}
+.badge {
+  padding-right: 2px;
+  vertical-align: middle;
+}
