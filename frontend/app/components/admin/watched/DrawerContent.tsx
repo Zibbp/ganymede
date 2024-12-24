@@ -59,7 +59,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       channel_id: watchedChannel?.edges.channel.id || "",
       render_chat: watchedChannel?.render_chat ?? true,
       download_sub_only: watchedChannel?.download_sub_only ?? false,
-      max_age: watchedChannel?.max_age || 7,
+      video_age: watchedChannel?.video_age || 0,
       apply_categories_to_live: watchedChannel?.apply_categories_to_live ?? false,
       watch_clips: watchedChannel?.watch_clips ?? false,
       clips_limit: watchedChannel?.clips_limit || 5,
@@ -121,7 +121,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           archive_chat: formValues.archive_chat,
           render_chat: formValues.render_chat,
           download_sub_only: formValues.download_sub_only,
-          max_age: formValues.max_age,
+          video_age: formValues.video_age,
           apply_categories_to_live: formValues.apply_categories_to_live,
           watch_clips: formValues.watch_clips,
           clips_limit: formValues.clips_limit,
@@ -162,7 +162,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           archive_chat: formValues.archive_chat,
           render_chat: formValues.render_chat,
           download_sub_only: formValues.download_sub_only,
-          max_age: formValues.max_age,
+          video_age: formValues.video_age,
           apply_categories_to_live: formValues.apply_categories_to_live,
           watch_clips: formValues.watch_clips,
           clips_limit: formValues.clips_limit,
@@ -360,8 +360,8 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           <NumberInput
             label="Max Video Age (days)"
             description="Archive videos that are not older than this number of days (0 to archive all)."
-            key={form.key('max_age')}
-            {...form.getInputProps('max_age')}
+            key={form.key('video_age')}
+            {...form.getInputProps('video_age')}
           />
 
           <Group mt={5}>
