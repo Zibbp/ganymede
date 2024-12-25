@@ -61,5 +61,3 @@ jobs:
           # cache builds in github actions
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # better compression
-          outputs: type=image,oci-mediatypes=true,compression=zstd,compression-level=3,force-compression=true
