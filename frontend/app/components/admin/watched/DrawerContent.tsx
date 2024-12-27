@@ -322,8 +322,8 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
         <div>
           <Title order={3}>Channel Clips</Title>
           <Text>Archive past channel clips.</Text>
-          <Text size="xs" >
-            Check watched channel every <code>interval</code> days archiving the top <code>number</code> of clips. No restrictions (categories, age, title, regex, etc) are applied to this.
+          <Text size="xs">
+            This feature is meant to archive the most popular (view count) clips the past <code>interval</code> days. For example, if you set number of clips to 5 and interval to 7, the top 5 clips from the past 7 days will be archived. It will not run again until 7 days have passed. No restrictions (categories, age, title, regex, etc) are applied to this.
           </Text>
 
           <Checkbox
@@ -344,7 +344,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
 
           <NumberInput
             label="Interval Days"
-            description="How often channel is checked for clips to archive (in days)."
+            description="How often channel is checked for clips to archive (in days). This also limits the clip search to the last interval days."
             key={form.key('clips_interval_days')}
             {...form.getInputProps('clips_interval_days')}
             min={1}
