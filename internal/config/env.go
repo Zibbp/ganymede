@@ -29,8 +29,8 @@ type EnvConfig struct {
 	LogsDir              string `env:"LOGS_DIR, default=/data/logs"`
 	PathMigrationEnabled bool   `env:"PATH_MIGRATION_ENABLED, default=true"`
 	// platform variables
-	TwitchClientId     string `env:"TWITCH_CLIENT_ID, default="`
-	TwitchClientSecret string `env:"TWITCH_CLIENT_SECRET, default="`
+	TwitchClientId     string `env:"TWITCH_CLIENT_ID, required"`
+	TwitchClientSecret string `env:"TWITCH_CLIENT_SECRET, required"`
 
 	// worker config
 	MaxChatDownloadExecutions  int `env:"MAX_CHAT_DOWNLOAD_EXECUTIONS, default=3"`
