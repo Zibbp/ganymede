@@ -653,8 +653,6 @@ func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string
 			return nil, err
 		}
 
-		fmt.Println(resp.Pagination)
-
 		clips = append(clips, resp.Data...)
 		cursor = resp.Pagination.Cursor
 

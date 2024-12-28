@@ -293,7 +293,7 @@ func ReadLastLines(path string, lines int) ([]byte, error) {
 	c := exec.Command("bash", "-c", cmd)
 	out, err := c.Output()
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msgf("error reading last lines: %v - supplied path: %s", err, path)
 		return nil, fmt.Errorf("error reading last lines: %v - supplied path: %s", err, path)
 	}
 	return out, nil

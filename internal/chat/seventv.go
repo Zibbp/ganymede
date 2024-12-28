@@ -192,7 +192,6 @@ func Get7TVGlobalEmotes(ctx context.Context) ([]platform.Emote, error) {
 }
 
 func Get7TVChannelEmotes(ctx context.Context, channelId string) ([]platform.Emote, error) {
-	fmt.Println("foooo")
 	client := &http.Client{}
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("https://7tv.io/v3/users/twitch/%s", channelId), nil)
 	if err != nil {
