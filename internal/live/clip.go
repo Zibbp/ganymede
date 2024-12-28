@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -75,7 +74,7 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 			startedAt = now.AddDate(0, 0, -watchedChannel.ClipsIntervalDays)
 		}
 
-		log.Info().Str("limit", strconv.Itoa(watchedChannel.ClipsLimit)).Str("started_at", startedAt.String()).Msgf("getting clips for channel %s", watchedChannel.Edges.Channel.Name)
+		logger.Info().Str("limit", strconv.Itoa(watchedChannel.ClipsLimit)).Str("started_at", startedAt.String()).Msgf("getting clips for channel %s", watchedChannel.Edges.Channel.Name)
 
 		// Get clips
 		clips, err := s.PlatformTwitch.GetChannelClips(ctx, watchedChannel.Edges.Channel.ExtID, platform.ClipsFilter{
@@ -88,7 +87,7 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 			continue
 		}
 
-		log.Info().Str("channel", watchedChannel.Edges.Channel.Name).Int("clips", len(clips)).Msg("got clips")
+		logger.Info().Str("channel", watchedChannel.Edges.Channel.Name).Int("clips", len(clips)).Msg("got clips")
 
 		// Fetch all videos from DB
 		dbVideos, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(watchedChannel.Edges.Channel.ID))).All(context.Background())
@@ -111,7 +110,7 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 				}
 				err = s.ArchiveService.ArchiveClip(ctx, input)
 				if err != nil {
-					log.Error().Err(err).Str("clip_id", clip.ID).Msgf("error archiving clip")
+					logger.Error().Err(err).Str("clip_id", clip.ID).Msgf("error archiving clip")
 					continue
 				}
 				logger.Info().Str("clip_id", clip.ID).Msgf("archiving clip")
