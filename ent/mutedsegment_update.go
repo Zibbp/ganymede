@@ -122,7 +122,7 @@ func (msu *MutedSegmentUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (msu *MutedSegmentUpdate) check() error {
-	if _, ok := msu.mutation.VodID(); msu.mutation.VodCleared() && !ok {
+	if msu.mutation.VodCleared() && len(msu.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MutedSegment.vod"`)
 	}
 	return nil
@@ -307,7 +307,7 @@ func (msuo *MutedSegmentUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (msuo *MutedSegmentUpdateOne) check() error {
-	if _, ok := msuo.mutation.VodID(); msuo.mutation.VodCleared() && !ok {
+	if msuo.mutation.VodCleared() && len(msuo.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MutedSegment.vod"`)
 	}
 	return nil

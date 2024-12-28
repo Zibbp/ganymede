@@ -303,6 +303,20 @@ func (lu *LiveUpdate) ClearClipsLastChecked() *LiveUpdate {
 	return lu
 }
 
+// SetClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field.
+func (lu *LiveUpdate) SetClipsIgnoreLastChecked(b bool) *LiveUpdate {
+	lu.mutation.SetClipsIgnoreLastChecked(b)
+	return lu
+}
+
+// SetNillableClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableClipsIgnoreLastChecked(b *bool) *LiveUpdate {
+	if b != nil {
+		lu.SetClipsIgnoreLastChecked(*b)
+	}
+	return lu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lu *LiveUpdate) SetUpdatedAt(t time.Time) *LiveUpdate {
 	lu.mutation.SetUpdatedAt(t)
@@ -441,7 +455,7 @@ func (lu *LiveUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (lu *LiveUpdate) check() error {
-	if _, ok := lu.mutation.ChannelID(); lu.mutation.ChannelCleared() && !ok {
+	if lu.mutation.ChannelCleared() && len(lu.mutation.ChannelIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Live.channel"`)
 	}
 	return nil
@@ -524,6 +538,9 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if lu.mutation.ClipsLastCheckedCleared() {
 		_spec.ClearField(live.FieldClipsLastChecked, field.TypeTime)
+	}
+	if value, ok := lu.mutation.ClipsIgnoreLastChecked(); ok {
+		_spec.SetField(live.FieldClipsIgnoreLastChecked, field.TypeBool, value)
 	}
 	if value, ok := lu.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -938,6 +955,20 @@ func (luo *LiveUpdateOne) ClearClipsLastChecked() *LiveUpdateOne {
 	return luo
 }
 
+// SetClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field.
+func (luo *LiveUpdateOne) SetClipsIgnoreLastChecked(b bool) *LiveUpdateOne {
+	luo.mutation.SetClipsIgnoreLastChecked(b)
+	return luo
+}
+
+// SetNillableClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableClipsIgnoreLastChecked(b *bool) *LiveUpdateOne {
+	if b != nil {
+		luo.SetClipsIgnoreLastChecked(*b)
+	}
+	return luo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (luo *LiveUpdateOne) SetUpdatedAt(t time.Time) *LiveUpdateOne {
 	luo.mutation.SetUpdatedAt(t)
@@ -1089,7 +1120,7 @@ func (luo *LiveUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (luo *LiveUpdateOne) check() error {
-	if _, ok := luo.mutation.ChannelID(); luo.mutation.ChannelCleared() && !ok {
+	if luo.mutation.ChannelCleared() && len(luo.mutation.ChannelIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Live.channel"`)
 	}
 	return nil
@@ -1189,6 +1220,9 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 	}
 	if luo.mutation.ClipsLastCheckedCleared() {
 		_spec.ClearField(live.FieldClipsLastChecked, field.TypeTime)
+	}
+	if value, ok := luo.mutation.ClipsIgnoreLastChecked(); ok {
+		_spec.SetField(live.FieldClipsIgnoreLastChecked, field.TypeBool, value)
 	}
 	if value, ok := luo.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)

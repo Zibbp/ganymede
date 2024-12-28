@@ -517,7 +517,7 @@ func (qu *QueueUpdate) check() error {
 			return &ValidationError{Name: "task_chat_move", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_move": %w`, err)}
 		}
 	}
-	if _, ok := qu.mutation.VodID(); qu.mutation.VodCleared() && !ok {
+	if qu.mutation.VodCleared() && len(qu.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Queue.vod"`)
 	}
 	return nil
@@ -1191,7 +1191,7 @@ func (quo *QueueUpdateOne) check() error {
 			return &ValidationError{Name: "task_chat_move", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_move": %w`, err)}
 		}
 	}
-	if _, ok := quo.mutation.VodID(); quo.mutation.VodCleared() && !ok {
+	if quo.mutation.VodCleared() && len(quo.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Queue.vod"`)
 	}
 	return nil

@@ -101,7 +101,7 @@ func (lcc *LiveCategoryCreate) check() error {
 	if _, ok := lcc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "LiveCategory.name"`)}
 	}
-	if _, ok := lcc.mutation.LiveID(); !ok {
+	if len(lcc.mutation.LiveIDs()) == 0 {
 		return &ValidationError{Name: "live", err: errors.New(`ent: missing required edge "LiveCategory.live"`)}
 	}
 	return nil

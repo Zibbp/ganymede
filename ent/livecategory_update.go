@@ -94,7 +94,7 @@ func (lcu *LiveCategoryUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (lcu *LiveCategoryUpdate) check() error {
-	if _, ok := lcu.mutation.LiveID(); lcu.mutation.LiveCleared() && !ok {
+	if lcu.mutation.LiveCleared() && len(lcu.mutation.LiveIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "LiveCategory.live"`)
 	}
 	return nil
@@ -242,7 +242,7 @@ func (lcuo *LiveCategoryUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (lcuo *LiveCategoryUpdateOne) check() error {
-	if _, ok := lcuo.mutation.LiveID(); lcuo.mutation.LiveCleared() && !ok {
+	if lcuo.mutation.LiveCleared() && len(lcuo.mutation.LiveIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "LiveCategory.live"`)
 	}
 	return nil

@@ -148,7 +148,7 @@ func (cc *ChapterCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (cc *ChapterCreate) check() error {
-	if _, ok := cc.mutation.VodID(); !ok {
+	if len(cc.mutation.VodIDs()) == 0 {
 		return &ValidationError{Name: "vod", err: errors.New(`ent: missing required edge "Chapter.vod"`)}
 	}
 	return nil

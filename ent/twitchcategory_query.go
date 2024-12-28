@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -60,7 +61,7 @@ func (tcq *TwitchCategoryQuery) Order(o ...twitchcategory.OrderOption) *TwitchCa
 // First returns the first TwitchCategory entity from the query.
 // Returns a *NotFoundError when no TwitchCategory was found.
 func (tcq *TwitchCategoryQuery) First(ctx context.Context) (*TwitchCategory, error) {
-	nodes, err := tcq.Limit(1).All(setContextOp(ctx, tcq.ctx, "First"))
+	nodes, err := tcq.Limit(1).All(setContextOp(ctx, tcq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +84,7 @@ func (tcq *TwitchCategoryQuery) FirstX(ctx context.Context) *TwitchCategory {
 // Returns a *NotFoundError when no TwitchCategory ID was found.
 func (tcq *TwitchCategoryQuery) FirstID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = tcq.Limit(1).IDs(setContextOp(ctx, tcq.ctx, "FirstID")); err != nil {
+	if ids, err = tcq.Limit(1).IDs(setContextOp(ctx, tcq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -106,7 +107,7 @@ func (tcq *TwitchCategoryQuery) FirstIDX(ctx context.Context) string {
 // Returns a *NotSingularError when more than one TwitchCategory entity is found.
 // Returns a *NotFoundError when no TwitchCategory entities are found.
 func (tcq *TwitchCategoryQuery) Only(ctx context.Context) (*TwitchCategory, error) {
-	nodes, err := tcq.Limit(2).All(setContextOp(ctx, tcq.ctx, "Only"))
+	nodes, err := tcq.Limit(2).All(setContextOp(ctx, tcq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +135,7 @@ func (tcq *TwitchCategoryQuery) OnlyX(ctx context.Context) *TwitchCategory {
 // Returns a *NotFoundError when no entities are found.
 func (tcq *TwitchCategoryQuery) OnlyID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = tcq.Limit(2).IDs(setContextOp(ctx, tcq.ctx, "OnlyID")); err != nil {
+	if ids, err = tcq.Limit(2).IDs(setContextOp(ctx, tcq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -159,7 +160,7 @@ func (tcq *TwitchCategoryQuery) OnlyIDX(ctx context.Context) string {
 
 // All executes the query and returns a list of TwitchCategories.
 func (tcq *TwitchCategoryQuery) All(ctx context.Context) ([]*TwitchCategory, error) {
-	ctx = setContextOp(ctx, tcq.ctx, "All")
+	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryAll)
 	if err := tcq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -181,7 +182,7 @@ func (tcq *TwitchCategoryQuery) IDs(ctx context.Context) (ids []string, err erro
 	if tcq.ctx.Unique == nil && tcq.path != nil {
 		tcq.Unique(true)
 	}
-	ctx = setContextOp(ctx, tcq.ctx, "IDs")
+	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryIDs)
 	if err = tcq.Select(twitchcategory.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -199,7 +200,7 @@ func (tcq *TwitchCategoryQuery) IDsX(ctx context.Context) []string {
 
 // Count returns the count of the given query.
 func (tcq *TwitchCategoryQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, tcq.ctx, "Count")
+	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryCount)
 	if err := tcq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -217,7 +218,7 @@ func (tcq *TwitchCategoryQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (tcq *TwitchCategoryQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, tcq.ctx, "Exist")
+	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryExist)
 	switch _, err := tcq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -449,7 +450,7 @@ func (tcgb *TwitchCategoryGroupBy) Aggregate(fns ...AggregateFunc) *TwitchCatego
 
 // Scan applies the selector query and scans the result into the given value.
 func (tcgb *TwitchCategoryGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tcgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, tcgb.build.ctx, ent.OpQueryGroupBy)
 	if err := tcgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -497,7 +498,7 @@ func (tcs *TwitchCategorySelect) Aggregate(fns ...AggregateFunc) *TwitchCategory
 
 // Scan applies the selector query and scans the result into the given value.
 func (tcs *TwitchCategorySelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tcs.ctx, "Select")
+	ctx = setContextOp(ctx, tcs.ctx, ent.OpQuerySelect)
 	if err := tcs.prepareQuery(ctx); err != nil {
 		return err
 	}

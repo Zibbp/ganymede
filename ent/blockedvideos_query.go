@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -60,7 +61,7 @@ func (bvq *BlockedVideosQuery) Order(o ...blockedvideos.OrderOption) *BlockedVid
 // First returns the first BlockedVideos entity from the query.
 // Returns a *NotFoundError when no BlockedVideos was found.
 func (bvq *BlockedVideosQuery) First(ctx context.Context) (*BlockedVideos, error) {
-	nodes, err := bvq.Limit(1).All(setContextOp(ctx, bvq.ctx, "First"))
+	nodes, err := bvq.Limit(1).All(setContextOp(ctx, bvq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +84,7 @@ func (bvq *BlockedVideosQuery) FirstX(ctx context.Context) *BlockedVideos {
 // Returns a *NotFoundError when no BlockedVideos ID was found.
 func (bvq *BlockedVideosQuery) FirstID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = bvq.Limit(1).IDs(setContextOp(ctx, bvq.ctx, "FirstID")); err != nil {
+	if ids, err = bvq.Limit(1).IDs(setContextOp(ctx, bvq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -106,7 +107,7 @@ func (bvq *BlockedVideosQuery) FirstIDX(ctx context.Context) string {
 // Returns a *NotSingularError when more than one BlockedVideos entity is found.
 // Returns a *NotFoundError when no BlockedVideos entities are found.
 func (bvq *BlockedVideosQuery) Only(ctx context.Context) (*BlockedVideos, error) {
-	nodes, err := bvq.Limit(2).All(setContextOp(ctx, bvq.ctx, "Only"))
+	nodes, err := bvq.Limit(2).All(setContextOp(ctx, bvq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +135,7 @@ func (bvq *BlockedVideosQuery) OnlyX(ctx context.Context) *BlockedVideos {
 // Returns a *NotFoundError when no entities are found.
 func (bvq *BlockedVideosQuery) OnlyID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = bvq.Limit(2).IDs(setContextOp(ctx, bvq.ctx, "OnlyID")); err != nil {
+	if ids, err = bvq.Limit(2).IDs(setContextOp(ctx, bvq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -159,7 +160,7 @@ func (bvq *BlockedVideosQuery) OnlyIDX(ctx context.Context) string {
 
 // All executes the query and returns a list of BlockedVideosSlice.
 func (bvq *BlockedVideosQuery) All(ctx context.Context) ([]*BlockedVideos, error) {
-	ctx = setContextOp(ctx, bvq.ctx, "All")
+	ctx = setContextOp(ctx, bvq.ctx, ent.OpQueryAll)
 	if err := bvq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -181,7 +182,7 @@ func (bvq *BlockedVideosQuery) IDs(ctx context.Context) (ids []string, err error
 	if bvq.ctx.Unique == nil && bvq.path != nil {
 		bvq.Unique(true)
 	}
-	ctx = setContextOp(ctx, bvq.ctx, "IDs")
+	ctx = setContextOp(ctx, bvq.ctx, ent.OpQueryIDs)
 	if err = bvq.Select(blockedvideos.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -199,7 +200,7 @@ func (bvq *BlockedVideosQuery) IDsX(ctx context.Context) []string {
 
 // Count returns the count of the given query.
 func (bvq *BlockedVideosQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, bvq.ctx, "Count")
+	ctx = setContextOp(ctx, bvq.ctx, ent.OpQueryCount)
 	if err := bvq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -217,7 +218,7 @@ func (bvq *BlockedVideosQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (bvq *BlockedVideosQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, bvq.ctx, "Exist")
+	ctx = setContextOp(ctx, bvq.ctx, ent.OpQueryExist)
 	switch _, err := bvq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -449,7 +450,7 @@ func (bvgb *BlockedVideosGroupBy) Aggregate(fns ...AggregateFunc) *BlockedVideos
 
 // Scan applies the selector query and scans the result into the given value.
 func (bvgb *BlockedVideosGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, bvgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, bvgb.build.ctx, ent.OpQueryGroupBy)
 	if err := bvgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -497,7 +498,7 @@ func (bvs *BlockedVideosSelect) Aggregate(fns ...AggregateFunc) *BlockedVideosSe
 
 // Scan applies the selector query and scans the result into the given value.
 func (bvs *BlockedVideosSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, bvs.ctx, "Select")
+	ctx = setContextOp(ctx, bvs.ctx, ent.OpQuerySelect)
 	if err := bvs.prepareQuery(ctx); err != nil {
 		return err
 	}

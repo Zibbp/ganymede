@@ -94,10 +94,10 @@ func (mic *MultistreamInfoCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (mic *MultistreamInfoCreate) check() error {
-	if _, ok := mic.mutation.VodID(); !ok {
+	if len(mic.mutation.VodIDs()) == 0 {
 		return &ValidationError{Name: "vod", err: errors.New(`ent: missing required edge "MultistreamInfo.vod"`)}
 	}
-	if _, ok := mic.mutation.PlaylistID(); !ok {
+	if len(mic.mutation.PlaylistIDs()) == 0 {
 		return &ValidationError{Name: "playlist", err: errors.New(`ent: missing required edge "MultistreamInfo.playlist"`)}
 	}
 	return nil

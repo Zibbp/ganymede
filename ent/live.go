@@ -53,6 +53,8 @@ type Live struct {
 	ClipsIntervalDays int `json:"clips_interval_days"`
 	// Time when clips were last checked.
 	ClipsLastChecked time.Time `json:"clips_last_checked"`
+	// Ignore last checked time and check all clips.
+	ClipsIgnoreLastChecked bool `json:"clips_ignore_last_checked"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -111,7 +113,7 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive, live.FieldWatchClips:
+		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive, live.FieldWatchClips, live.FieldClipsIgnoreLastChecked:
 			values[i] = new(sql.NullBool)
 		case live.FieldVideoAge, live.FieldClipsLimit, live.FieldClipsIntervalDays:
 			values[i] = new(sql.NullInt64)
@@ -246,6 +248,12 @@ func (l *Live) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				l.ClipsLastChecked = value.Time
 			}
+		case live.FieldClipsIgnoreLastChecked:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field clips_ignore_last_checked", values[i])
+			} else if value.Valid {
+				l.ClipsIgnoreLastChecked = value.Bool
+			}
 		case live.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
@@ -366,6 +374,9 @@ func (l *Live) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("clips_last_checked=")
 	builder.WriteString(l.ClipsLastChecked.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("clips_ignore_last_checked=")
+	builder.WriteString(fmt.Sprintf("%v", l.ClipsIgnoreLastChecked))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(l.UpdatedAt.Format(time.ANSIC))

@@ -125,14 +125,18 @@ func init() {
 	liveDescClipsIntervalDays := liveFields[16].Descriptor()
 	// live.DefaultClipsIntervalDays holds the default value on creation for the clips_interval_days field.
 	live.DefaultClipsIntervalDays = liveDescClipsIntervalDays.Default.(int)
+	// liveDescClipsIgnoreLastChecked is the schema descriptor for clips_ignore_last_checked field.
+	liveDescClipsIgnoreLastChecked := liveFields[18].Descriptor()
+	// live.DefaultClipsIgnoreLastChecked holds the default value on creation for the clips_ignore_last_checked field.
+	live.DefaultClipsIgnoreLastChecked = liveDescClipsIgnoreLastChecked.Default.(bool)
 	// liveDescUpdatedAt is the schema descriptor for updated_at field.
-	liveDescUpdatedAt := liveFields[18].Descriptor()
+	liveDescUpdatedAt := liveFields[19].Descriptor()
 	// live.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	live.DefaultUpdatedAt = liveDescUpdatedAt.Default.(func() time.Time)
 	// live.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	live.UpdateDefaultUpdatedAt = liveDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// liveDescCreatedAt is the schema descriptor for created_at field.
-	liveDescCreatedAt := liveFields[19].Descriptor()
+	liveDescCreatedAt := liveFields[20].Descriptor()
 	// live.DefaultCreatedAt holds the default value on creation for the created_at field.
 	live.DefaultCreatedAt = liveDescCreatedAt.Default.(func() time.Time)
 	// liveDescID is the schema descriptor for id field.

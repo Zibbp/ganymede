@@ -265,6 +265,20 @@ func (lc *LiveCreate) SetNillableClipsLastChecked(t *time.Time) *LiveCreate {
 	return lc
 }
 
+// SetClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field.
+func (lc *LiveCreate) SetClipsIgnoreLastChecked(b bool) *LiveCreate {
+	lc.mutation.SetClipsIgnoreLastChecked(b)
+	return lc
+}
+
+// SetNillableClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableClipsIgnoreLastChecked(b *bool) *LiveCreate {
+	if b != nil {
+		lc.SetClipsIgnoreLastChecked(*b)
+	}
+	return lc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lc *LiveCreate) SetUpdatedAt(t time.Time) *LiveCreate {
 	lc.mutation.SetUpdatedAt(t)
@@ -447,6 +461,10 @@ func (lc *LiveCreate) defaults() {
 		v := live.DefaultClipsIntervalDays
 		lc.mutation.SetClipsIntervalDays(v)
 	}
+	if _, ok := lc.mutation.ClipsIgnoreLastChecked(); !ok {
+		v := live.DefaultClipsIgnoreLastChecked
+		lc.mutation.SetClipsIgnoreLastChecked(v)
+	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		v := live.DefaultUpdatedAt()
 		lc.mutation.SetUpdatedAt(v)
@@ -508,13 +526,16 @@ func (lc *LiveCreate) check() error {
 	if _, ok := lc.mutation.ClipsIntervalDays(); !ok {
 		return &ValidationError{Name: "clips_interval_days", err: errors.New(`ent: missing required field "Live.clips_interval_days"`)}
 	}
+	if _, ok := lc.mutation.ClipsIgnoreLastChecked(); !ok {
+		return &ValidationError{Name: "clips_ignore_last_checked", err: errors.New(`ent: missing required field "Live.clips_ignore_last_checked"`)}
+	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Live.updated_at"`)}
 	}
 	if _, ok := lc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Live.created_at"`)}
 	}
-	if _, ok := lc.mutation.ChannelID(); !ok {
+	if len(lc.mutation.ChannelIDs()) == 0 {
 		return &ValidationError{Name: "channel", err: errors.New(`ent: missing required edge "Live.channel"`)}
 	}
 	return nil
@@ -620,6 +641,10 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := lc.mutation.ClipsLastChecked(); ok {
 		_spec.SetField(live.FieldClipsLastChecked, field.TypeTime, value)
 		_node.ClipsLastChecked = value
+	}
+	if value, ok := lc.mutation.ClipsIgnoreLastChecked(); ok {
+		_spec.SetField(live.FieldClipsIgnoreLastChecked, field.TypeBool, value)
+		_node.ClipsIgnoreLastChecked = value
 	}
 	if value, ok := lc.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -964,6 +989,18 @@ func (u *LiveUpsert) ClearClipsLastChecked() *LiveUpsert {
 	return u
 }
 
+// SetClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field.
+func (u *LiveUpsert) SetClipsIgnoreLastChecked(v bool) *LiveUpsert {
+	u.Set(live.FieldClipsIgnoreLastChecked, v)
+	return u
+}
+
+// UpdateClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateClipsIgnoreLastChecked() *LiveUpsert {
+	u.SetExcluded(live.FieldClipsIgnoreLastChecked)
+	return u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (u *LiveUpsert) SetUpdatedAt(v time.Time) *LiveUpsert {
 	u.Set(live.FieldUpdatedAt, v)
@@ -1297,6 +1334,20 @@ func (u *LiveUpsertOne) UpdateClipsLastChecked() *LiveUpsertOne {
 func (u *LiveUpsertOne) ClearClipsLastChecked() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
 		s.ClearClipsLastChecked()
+	})
+}
+
+// SetClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field.
+func (u *LiveUpsertOne) SetClipsIgnoreLastChecked(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetClipsIgnoreLastChecked(v)
+	})
+}
+
+// UpdateClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateClipsIgnoreLastChecked() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateClipsIgnoreLastChecked()
 	})
 }
 
@@ -1802,6 +1853,20 @@ func (u *LiveUpsertBulk) UpdateClipsLastChecked() *LiveUpsertBulk {
 func (u *LiveUpsertBulk) ClearClipsLastChecked() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
 		s.ClearClipsLastChecked()
+	})
+}
+
+// SetClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field.
+func (u *LiveUpsertBulk) SetClipsIgnoreLastChecked(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetClipsIgnoreLastChecked(v)
+	})
+}
+
+// UpdateClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateClipsIgnoreLastChecked() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateClipsIgnoreLastChecked()
 	})
 }
 

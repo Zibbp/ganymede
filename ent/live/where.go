@@ -141,6 +141,11 @@ func ClipsLastChecked(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldClipsLastChecked, v))
 }
 
+// ClipsIgnoreLastChecked applies equality check predicate on the "clips_ignore_last_checked" field. It's identical to ClipsIgnoreLastCheckedEQ.
+func ClipsIgnoreLastChecked(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipsIgnoreLastChecked, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldUpdatedAt, v))
@@ -544,6 +549,16 @@ func ClipsLastCheckedIsNil() predicate.Live {
 // ClipsLastCheckedNotNil applies the NotNil predicate on the "clips_last_checked" field.
 func ClipsLastCheckedNotNil() predicate.Live {
 	return predicate.Live(sql.FieldNotNull(FieldClipsLastChecked))
+}
+
+// ClipsIgnoreLastCheckedEQ applies the EQ predicate on the "clips_ignore_last_checked" field.
+func ClipsIgnoreLastCheckedEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipsIgnoreLastChecked, v))
+}
+
+// ClipsIgnoreLastCheckedNEQ applies the NEQ predicate on the "clips_ignore_last_checked" field.
+func ClipsIgnoreLastCheckedNEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldClipsIgnoreLastChecked, v))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

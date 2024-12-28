@@ -107,10 +107,10 @@ func (miu *MultistreamInfoUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (miu *MultistreamInfoUpdate) check() error {
-	if _, ok := miu.mutation.VodID(); miu.mutation.VodCleared() && !ok {
+	if miu.mutation.VodCleared() && len(miu.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MultistreamInfo.vod"`)
 	}
-	if _, ok := miu.mutation.PlaylistID(); miu.mutation.PlaylistCleared() && !ok {
+	if miu.mutation.PlaylistCleared() && len(miu.mutation.PlaylistIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MultistreamInfo.playlist"`)
 	}
 	return nil
@@ -277,10 +277,10 @@ func (miuo *MultistreamInfoUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (miuo *MultistreamInfoUpdateOne) check() error {
-	if _, ok := miuo.mutation.VodID(); miuo.mutation.VodCleared() && !ok {
+	if miuo.mutation.VodCleared() && len(miuo.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MultistreamInfo.vod"`)
 	}
-	if _, ok := miuo.mutation.PlaylistID(); miuo.mutation.PlaylistCleared() && !ok {
+	if miuo.mutation.PlaylistCleared() && len(miuo.mutation.PlaylistIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MultistreamInfo.playlist"`)
 	}
 	return nil
