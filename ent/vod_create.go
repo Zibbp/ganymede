@@ -825,7 +825,7 @@ func (vc *VodCreate) check() error {
 	if _, ok := vc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Vod.created_at"`)}
 	}
-	if _, ok := vc.mutation.ChannelID(); !ok {
+	if len(vc.mutation.ChannelIDs()) == 0 {
 		return &ValidationError{Name: "channel", err: errors.New(`ent: missing required edge "Vod.channel"`)}
 	}
 	return nil

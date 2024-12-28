@@ -49,6 +49,8 @@ const (
 	FieldClipsIntervalDays = "clips_interval_days"
 	// FieldClipsLastChecked holds the string denoting the clips_last_checked field in the database.
 	FieldClipsLastChecked = "clips_last_checked"
+	// FieldClipsIgnoreLastChecked holds the string denoting the clips_ignore_last_checked field in the database.
+	FieldClipsIgnoreLastChecked = "clips_ignore_last_checked"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -104,6 +106,7 @@ var Columns = []string{
 	FieldClipsLimit,
 	FieldClipsIntervalDays,
 	FieldClipsLastChecked,
+	FieldClipsIgnoreLastChecked,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -162,6 +165,8 @@ var (
 	DefaultClipsLimit int
 	// DefaultClipsIntervalDays holds the default value on creation for the "clips_interval_days" field.
 	DefaultClipsIntervalDays int
+	// DefaultClipsIgnoreLastChecked holds the default value on creation for the "clips_ignore_last_checked" field.
+	DefaultClipsIgnoreLastChecked bool
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
@@ -263,6 +268,11 @@ func ByClipsIntervalDays(opts ...sql.OrderTermOption) OrderOption {
 // ByClipsLastChecked orders the results by the clips_last_checked field.
 func ByClipsLastChecked(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldClipsLastChecked, opts...).ToFunc()
+}
+
+// ByClipsIgnoreLastChecked orders the results by the clips_ignore_last_checked field.
+func ByClipsIgnoreLastChecked(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClipsIgnoreLastChecked, opts...).ToFunc()
 }
 
 // ByUpdatedAt orders the results by the updated_at field.

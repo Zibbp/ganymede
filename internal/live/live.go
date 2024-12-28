@@ -33,25 +33,26 @@ type Service struct {
 }
 
 type Live struct {
-	ID                    uuid.UUID            `json:"id"`
-	WatchLive             bool                 `json:"watch_live"`
-	WatchVod              bool                 `json:"watch_vod"`
-	DownloadArchives      bool                 `json:"download_archives"`
-	DownloadHighlights    bool                 `json:"download_highlights"`
-	DownloadUploads       bool                 `json:"download_uploads"`
-	IsLive                bool                 `json:"is_live"`
-	ArchiveChat           bool                 `json:"archive_chat"`
-	Resolution            string               `json:"resolution"`
-	LastLive              time.Time            `json:"last_live"`
-	RenderChat            bool                 `json:"render_chat"`
-	DownloadSubOnly       bool                 `json:"download_sub_only"`
-	Categories            []string             `json:"categories"`
-	ApplyCategoriesToLive bool                 `json:"apply_categories_to_live"`
-	VideoAge              int64                `json:"video_age"` // Restrict fetching videos to a certain age.
-	TitleRegex            []ent.LiveTitleRegex `json:"title_regex"`
-	WatchClips            bool                 `json:"watch_clips"`
-	ClipsLimit            int                  `json:"clips_limit"`
-	ClipsIntervalDays     int                  `json:"clips_interval_days"`
+	ID                     uuid.UUID            `json:"id"`
+	WatchLive              bool                 `json:"watch_live"`
+	WatchVod               bool                 `json:"watch_vod"`
+	DownloadArchives       bool                 `json:"download_archives"`
+	DownloadHighlights     bool                 `json:"download_highlights"`
+	DownloadUploads        bool                 `json:"download_uploads"`
+	IsLive                 bool                 `json:"is_live"`
+	ArchiveChat            bool                 `json:"archive_chat"`
+	Resolution             string               `json:"resolution"`
+	LastLive               time.Time            `json:"last_live"`
+	RenderChat             bool                 `json:"render_chat"`
+	DownloadSubOnly        bool                 `json:"download_sub_only"`
+	Categories             []string             `json:"categories"`
+	ApplyCategoriesToLive  bool                 `json:"apply_categories_to_live"`
+	VideoAge               int64                `json:"video_age"` // Restrict fetching videos to a certain age.
+	TitleRegex             []ent.LiveTitleRegex `json:"title_regex"`
+	WatchClips             bool                 `json:"watch_clips"`
+	ClipsLimit             int                  `json:"clips_limit"`
+	ClipsIntervalDays      int                  `json:"clips_interval_days"`
+	ClipsIgnoreLastChecked bool                 `json:"clips_ignore_last_checked"`
 }
 
 type ConvertChat struct {
@@ -92,7 +93,7 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 		return nil, fmt.Errorf("channel already watched")
 	}
 
-	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetWatchClips(liveDto.WatchClips).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).Save(c.Request().Context())
+	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetWatchClips(liveDto.WatchClips).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).Save(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error adding watched channel: %v", err)
 	}
@@ -118,7 +119,7 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 }
 
 func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live, error) {
-	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetWatchClips(liveDto.WatchClips).Save(c.Request().Context())
+	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).SetWatchClips(liveDto.WatchClips).Save(c.Request().Context())
 	if err != nil {
 		return nil, fmt.Errorf("error updating watched channel: %v", err)
 	}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -86,7 +87,7 @@ func (msq *MutedSegmentQuery) QueryVod() *VodQuery {
 // First returns the first MutedSegment entity from the query.
 // Returns a *NotFoundError when no MutedSegment was found.
 func (msq *MutedSegmentQuery) First(ctx context.Context) (*MutedSegment, error) {
-	nodes, err := msq.Limit(1).All(setContextOp(ctx, msq.ctx, "First"))
+	nodes, err := msq.Limit(1).All(setContextOp(ctx, msq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +110,7 @@ func (msq *MutedSegmentQuery) FirstX(ctx context.Context) *MutedSegment {
 // Returns a *NotFoundError when no MutedSegment ID was found.
 func (msq *MutedSegmentQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = msq.Limit(1).IDs(setContextOp(ctx, msq.ctx, "FirstID")); err != nil {
+	if ids, err = msq.Limit(1).IDs(setContextOp(ctx, msq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -132,7 +133,7 @@ func (msq *MutedSegmentQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one MutedSegment entity is found.
 // Returns a *NotFoundError when no MutedSegment entities are found.
 func (msq *MutedSegmentQuery) Only(ctx context.Context) (*MutedSegment, error) {
-	nodes, err := msq.Limit(2).All(setContextOp(ctx, msq.ctx, "Only"))
+	nodes, err := msq.Limit(2).All(setContextOp(ctx, msq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +161,7 @@ func (msq *MutedSegmentQuery) OnlyX(ctx context.Context) *MutedSegment {
 // Returns a *NotFoundError when no entities are found.
 func (msq *MutedSegmentQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = msq.Limit(2).IDs(setContextOp(ctx, msq.ctx, "OnlyID")); err != nil {
+	if ids, err = msq.Limit(2).IDs(setContextOp(ctx, msq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -185,7 +186,7 @@ func (msq *MutedSegmentQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of MutedSegments.
 func (msq *MutedSegmentQuery) All(ctx context.Context) ([]*MutedSegment, error) {
-	ctx = setContextOp(ctx, msq.ctx, "All")
+	ctx = setContextOp(ctx, msq.ctx, ent.OpQueryAll)
 	if err := msq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -207,7 +208,7 @@ func (msq *MutedSegmentQuery) IDs(ctx context.Context) (ids []uuid.UUID, err err
 	if msq.ctx.Unique == nil && msq.path != nil {
 		msq.Unique(true)
 	}
-	ctx = setContextOp(ctx, msq.ctx, "IDs")
+	ctx = setContextOp(ctx, msq.ctx, ent.OpQueryIDs)
 	if err = msq.Select(mutedsegment.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -225,7 +226,7 @@ func (msq *MutedSegmentQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (msq *MutedSegmentQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, msq.ctx, "Count")
+	ctx = setContextOp(ctx, msq.ctx, ent.OpQueryCount)
 	if err := msq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +244,7 @@ func (msq *MutedSegmentQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (msq *MutedSegmentQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, msq.ctx, "Exist")
+	ctx = setContextOp(ctx, msq.ctx, ent.OpQueryExist)
 	switch _, err := msq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -537,7 +538,7 @@ func (msgb *MutedSegmentGroupBy) Aggregate(fns ...AggregateFunc) *MutedSegmentGr
 
 // Scan applies the selector query and scans the result into the given value.
 func (msgb *MutedSegmentGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, msgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, msgb.build.ctx, ent.OpQueryGroupBy)
 	if err := msgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -585,7 +586,7 @@ func (mss *MutedSegmentSelect) Aggregate(fns ...AggregateFunc) *MutedSegmentSele
 
 // Scan applies the selector query and scans the result into the given value.
 func (mss *MutedSegmentSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, mss.ctx, "Select")
+	ctx = setContextOp(ctx, mss.ctx, ent.OpQuerySelect)
 	if err := mss.prepareQuery(ctx); err != nil {
 		return err
 	}

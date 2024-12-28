@@ -549,7 +549,7 @@ func (qc *QueueCreate) check() error {
 	if _, ok := qc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Queue.created_at"`)}
 	}
-	if _, ok := qc.mutation.VodID(); !ok {
+	if len(qc.mutation.VodIDs()) == 0 {
 		return &ValidationError{Name: "vod", err: errors.New(`ent: missing required edge "Queue.vod"`)}
 	}
 	return nil

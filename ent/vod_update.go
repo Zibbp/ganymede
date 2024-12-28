@@ -1065,7 +1065,7 @@ func (vu *VodUpdate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Vod.type": %w`, err)}
 		}
 	}
-	if _, ok := vu.mutation.ChannelID(); vu.mutation.ChannelCleared() && !ok {
+	if vu.mutation.ChannelCleared() && len(vu.mutation.ChannelIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Vod.channel"`)
 	}
 	return nil
@@ -2618,7 +2618,7 @@ func (vuo *VodUpdateOne) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Vod.type": %w`, err)}
 		}
 	}
-	if _, ok := vuo.mutation.ChannelID(); vuo.mutation.ChannelCleared() && !ok {
+	if vuo.mutation.ChannelCleared() && len(vuo.mutation.ChannelIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Vod.channel"`)
 	}
 	return nil

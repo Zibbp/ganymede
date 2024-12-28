@@ -174,7 +174,7 @@ func (cu *ChapterUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (cu *ChapterUpdate) check() error {
-	if _, ok := cu.mutation.VodID(); cu.mutation.VodCleared() && !ok {
+	if cu.mutation.VodCleared() && len(cu.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Chapter.vod"`)
 	}
 	return nil
@@ -429,7 +429,7 @@ func (cuo *ChapterUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (cuo *ChapterUpdateOne) check() error {
-	if _, ok := cuo.mutation.VodID(); cuo.mutation.VodCleared() && !ok {
+	if cuo.mutation.VodCleared() && len(cuo.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Chapter.vod"`)
 	}
 	return nil

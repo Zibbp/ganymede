@@ -2067,43 +2067,44 @@ func (m *ChapterMutation) ResetEdge(name string) error {
 // LiveMutation represents an operation that mutates the Live nodes in the graph.
 type LiveMutation struct {
 	config
-	op                       Op
-	typ                      string
-	id                       *uuid.UUID
-	watch_live               *bool
-	watch_vod                *bool
-	download_archives        *bool
-	download_highlights      *bool
-	download_uploads         *bool
-	download_sub_only        *bool
-	is_live                  *bool
-	archive_chat             *bool
-	resolution               *string
-	last_live                *time.Time
-	render_chat              *bool
-	video_age                *int64
-	addvideo_age             *int64
-	apply_categories_to_live *bool
-	watch_clips              *bool
-	clips_limit              *int
-	addclips_limit           *int
-	clips_interval_days      *int
-	addclips_interval_days   *int
-	clips_last_checked       *time.Time
-	updated_at               *time.Time
-	created_at               *time.Time
-	clearedFields            map[string]struct{}
-	channel                  *uuid.UUID
-	clearedchannel           bool
-	categories               map[uuid.UUID]struct{}
-	removedcategories        map[uuid.UUID]struct{}
-	clearedcategories        bool
-	title_regex              map[uuid.UUID]struct{}
-	removedtitle_regex       map[uuid.UUID]struct{}
-	clearedtitle_regex       bool
-	done                     bool
-	oldValue                 func(context.Context) (*Live, error)
-	predicates               []predicate.Live
+	op                        Op
+	typ                       string
+	id                        *uuid.UUID
+	watch_live                *bool
+	watch_vod                 *bool
+	download_archives         *bool
+	download_highlights       *bool
+	download_uploads          *bool
+	download_sub_only         *bool
+	is_live                   *bool
+	archive_chat              *bool
+	resolution                *string
+	last_live                 *time.Time
+	render_chat               *bool
+	video_age                 *int64
+	addvideo_age              *int64
+	apply_categories_to_live  *bool
+	watch_clips               *bool
+	clips_limit               *int
+	addclips_limit            *int
+	clips_interval_days       *int
+	addclips_interval_days    *int
+	clips_last_checked        *time.Time
+	clips_ignore_last_checked *bool
+	updated_at                *time.Time
+	created_at                *time.Time
+	clearedFields             map[string]struct{}
+	channel                   *uuid.UUID
+	clearedchannel            bool
+	categories                map[uuid.UUID]struct{}
+	removedcategories         map[uuid.UUID]struct{}
+	clearedcategories         bool
+	title_regex               map[uuid.UUID]struct{}
+	removedtitle_regex        map[uuid.UUID]struct{}
+	clearedtitle_regex        bool
+	done                      bool
+	oldValue                  func(context.Context) (*Live, error)
+	predicates                []predicate.Live
 }
 
 var _ ent.Mutation = (*LiveMutation)(nil)
@@ -2908,6 +2909,42 @@ func (m *LiveMutation) ResetClipsLastChecked() {
 	delete(m.clearedFields, live.FieldClipsLastChecked)
 }
 
+// SetClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field.
+func (m *LiveMutation) SetClipsIgnoreLastChecked(b bool) {
+	m.clips_ignore_last_checked = &b
+}
+
+// ClipsIgnoreLastChecked returns the value of the "clips_ignore_last_checked" field in the mutation.
+func (m *LiveMutation) ClipsIgnoreLastChecked() (r bool, exists bool) {
+	v := m.clips_ignore_last_checked
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipsIgnoreLastChecked returns the old "clips_ignore_last_checked" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipsIgnoreLastChecked(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipsIgnoreLastChecked is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipsIgnoreLastChecked requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipsIgnoreLastChecked: %w", err)
+	}
+	return oldValue.ClipsIgnoreLastChecked, nil
+}
+
+// ResetClipsIgnoreLastChecked resets all changes to the "clips_ignore_last_checked" field.
+func (m *LiveMutation) ResetClipsIgnoreLastChecked() {
+	m.clips_ignore_last_checked = nil
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *LiveMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -3161,7 +3198,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 20)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -3213,6 +3250,9 @@ func (m *LiveMutation) Fields() []string {
 	if m.clips_last_checked != nil {
 		fields = append(fields, live.FieldClipsLastChecked)
 	}
+	if m.clips_ignore_last_checked != nil {
+		fields = append(fields, live.FieldClipsIgnoreLastChecked)
+	}
 	if m.updated_at != nil {
 		fields = append(fields, live.FieldUpdatedAt)
 	}
@@ -3261,6 +3301,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.ClipsIntervalDays()
 	case live.FieldClipsLastChecked:
 		return m.ClipsLastChecked()
+	case live.FieldClipsIgnoreLastChecked:
+		return m.ClipsIgnoreLastChecked()
 	case live.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case live.FieldCreatedAt:
@@ -3308,6 +3350,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldClipsIntervalDays(ctx)
 	case live.FieldClipsLastChecked:
 		return m.OldClipsLastChecked(ctx)
+	case live.FieldClipsIgnoreLastChecked:
+		return m.OldClipsIgnoreLastChecked(ctx)
 	case live.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case live.FieldCreatedAt:
@@ -3439,6 +3483,13 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetClipsLastChecked(v)
+		return nil
+	case live.FieldClipsIgnoreLastChecked:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipsIgnoreLastChecked(v)
 		return nil
 	case live.FieldUpdatedAt:
 		v, ok := value.(time.Time)
@@ -3607,6 +3658,9 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldClipsLastChecked:
 		m.ResetClipsLastChecked()
+		return nil
+	case live.FieldClipsIgnoreLastChecked:
+		m.ResetClipsIgnoreLastChecked()
 		return nil
 	case live.FieldUpdatedAt:
 		m.ResetUpdatedAt()

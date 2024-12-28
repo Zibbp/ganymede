@@ -122,7 +122,7 @@ func (ltru *LiveTitleRegexUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (ltru *LiveTitleRegexUpdate) check() error {
-	if _, ok := ltru.mutation.LiveID(); ltru.mutation.LiveCleared() && !ok {
+	if ltru.mutation.LiveCleared() && len(ltru.mutation.LiveIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "LiveTitleRegex.live"`)
 	}
 	return nil
@@ -304,7 +304,7 @@ func (ltruo *LiveTitleRegexUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (ltruo *LiveTitleRegexUpdateOne) check() error {
-	if _, ok := ltruo.mutation.LiveID(); ltruo.mutation.LiveCleared() && !ok {
+	if ltruo.mutation.LiveCleared() && len(ltruo.mutation.LiveIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "LiveTitleRegex.live"`)
 	}
 	return nil

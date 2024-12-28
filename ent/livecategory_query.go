@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -86,7 +87,7 @@ func (lcq *LiveCategoryQuery) QueryLive() *LiveQuery {
 // First returns the first LiveCategory entity from the query.
 // Returns a *NotFoundError when no LiveCategory was found.
 func (lcq *LiveCategoryQuery) First(ctx context.Context) (*LiveCategory, error) {
-	nodes, err := lcq.Limit(1).All(setContextOp(ctx, lcq.ctx, "First"))
+	nodes, err := lcq.Limit(1).All(setContextOp(ctx, lcq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +110,7 @@ func (lcq *LiveCategoryQuery) FirstX(ctx context.Context) *LiveCategory {
 // Returns a *NotFoundError when no LiveCategory ID was found.
 func (lcq *LiveCategoryQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = lcq.Limit(1).IDs(setContextOp(ctx, lcq.ctx, "FirstID")); err != nil {
+	if ids, err = lcq.Limit(1).IDs(setContextOp(ctx, lcq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -132,7 +133,7 @@ func (lcq *LiveCategoryQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one LiveCategory entity is found.
 // Returns a *NotFoundError when no LiveCategory entities are found.
 func (lcq *LiveCategoryQuery) Only(ctx context.Context) (*LiveCategory, error) {
-	nodes, err := lcq.Limit(2).All(setContextOp(ctx, lcq.ctx, "Only"))
+	nodes, err := lcq.Limit(2).All(setContextOp(ctx, lcq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +161,7 @@ func (lcq *LiveCategoryQuery) OnlyX(ctx context.Context) *LiveCategory {
 // Returns a *NotFoundError when no entities are found.
 func (lcq *LiveCategoryQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = lcq.Limit(2).IDs(setContextOp(ctx, lcq.ctx, "OnlyID")); err != nil {
+	if ids, err = lcq.Limit(2).IDs(setContextOp(ctx, lcq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -185,7 +186,7 @@ func (lcq *LiveCategoryQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of LiveCategories.
 func (lcq *LiveCategoryQuery) All(ctx context.Context) ([]*LiveCategory, error) {
-	ctx = setContextOp(ctx, lcq.ctx, "All")
+	ctx = setContextOp(ctx, lcq.ctx, ent.OpQueryAll)
 	if err := lcq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -207,7 +208,7 @@ func (lcq *LiveCategoryQuery) IDs(ctx context.Context) (ids []uuid.UUID, err err
 	if lcq.ctx.Unique == nil && lcq.path != nil {
 		lcq.Unique(true)
 	}
-	ctx = setContextOp(ctx, lcq.ctx, "IDs")
+	ctx = setContextOp(ctx, lcq.ctx, ent.OpQueryIDs)
 	if err = lcq.Select(livecategory.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -225,7 +226,7 @@ func (lcq *LiveCategoryQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (lcq *LiveCategoryQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, lcq.ctx, "Count")
+	ctx = setContextOp(ctx, lcq.ctx, ent.OpQueryCount)
 	if err := lcq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +244,7 @@ func (lcq *LiveCategoryQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (lcq *LiveCategoryQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, lcq.ctx, "Exist")
+	ctx = setContextOp(ctx, lcq.ctx, ent.OpQueryExist)
 	switch _, err := lcq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -537,7 +538,7 @@ func (lcgb *LiveCategoryGroupBy) Aggregate(fns ...AggregateFunc) *LiveCategoryGr
 
 // Scan applies the selector query and scans the result into the given value.
 func (lcgb *LiveCategoryGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, lcgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, lcgb.build.ctx, ent.OpQueryGroupBy)
 	if err := lcgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -585,7 +586,7 @@ func (lcs *LiveCategorySelect) Aggregate(fns ...AggregateFunc) *LiveCategorySele
 
 // Scan applies the selector query and scans the result into the given value.
 func (lcs *LiveCategorySelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, lcs.ctx, "Select")
+	ctx = setContextOp(ctx, lcs.ctx, ent.OpQuerySelect)
 	if err := lcs.prepareQuery(ctx); err != nil {
 		return err
 	}

@@ -207,7 +207,6 @@ func (h *Handler) GetLastPlaybacks(c echo.Context) error {
 func (h *Handler) StartPlayback(c echo.Context) error {
 	videoId, err := uuid.Parse(c.QueryParam("video_id"))
 	if err != nil {
-		fmt.Println(err)
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid video id")
 	}
 

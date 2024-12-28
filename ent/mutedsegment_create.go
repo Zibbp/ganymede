@@ -110,7 +110,7 @@ func (msc *MutedSegmentCreate) check() error {
 	if _, ok := msc.mutation.End(); !ok {
 		return &ValidationError{Name: "end", err: errors.New(`ent: missing required field "MutedSegment.end"`)}
 	}
-	if _, ok := msc.mutation.VodID(); !ok {
+	if len(msc.mutation.VodIDs()) == 0 {
 		return &ValidationError{Name: "vod", err: errors.New(`ent: missing required edge "MutedSegment.vod"`)}
 	}
 	return nil

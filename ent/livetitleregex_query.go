@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -86,7 +87,7 @@ func (ltrq *LiveTitleRegexQuery) QueryLive() *LiveQuery {
 // First returns the first LiveTitleRegex entity from the query.
 // Returns a *NotFoundError when no LiveTitleRegex was found.
 func (ltrq *LiveTitleRegexQuery) First(ctx context.Context) (*LiveTitleRegex, error) {
-	nodes, err := ltrq.Limit(1).All(setContextOp(ctx, ltrq.ctx, "First"))
+	nodes, err := ltrq.Limit(1).All(setContextOp(ctx, ltrq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +110,7 @@ func (ltrq *LiveTitleRegexQuery) FirstX(ctx context.Context) *LiveTitleRegex {
 // Returns a *NotFoundError when no LiveTitleRegex ID was found.
 func (ltrq *LiveTitleRegexQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = ltrq.Limit(1).IDs(setContextOp(ctx, ltrq.ctx, "FirstID")); err != nil {
+	if ids, err = ltrq.Limit(1).IDs(setContextOp(ctx, ltrq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -132,7 +133,7 @@ func (ltrq *LiveTitleRegexQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one LiveTitleRegex entity is found.
 // Returns a *NotFoundError when no LiveTitleRegex entities are found.
 func (ltrq *LiveTitleRegexQuery) Only(ctx context.Context) (*LiveTitleRegex, error) {
-	nodes, err := ltrq.Limit(2).All(setContextOp(ctx, ltrq.ctx, "Only"))
+	nodes, err := ltrq.Limit(2).All(setContextOp(ctx, ltrq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +161,7 @@ func (ltrq *LiveTitleRegexQuery) OnlyX(ctx context.Context) *LiveTitleRegex {
 // Returns a *NotFoundError when no entities are found.
 func (ltrq *LiveTitleRegexQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = ltrq.Limit(2).IDs(setContextOp(ctx, ltrq.ctx, "OnlyID")); err != nil {
+	if ids, err = ltrq.Limit(2).IDs(setContextOp(ctx, ltrq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -185,7 +186,7 @@ func (ltrq *LiveTitleRegexQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of LiveTitleRegexes.
 func (ltrq *LiveTitleRegexQuery) All(ctx context.Context) ([]*LiveTitleRegex, error) {
-	ctx = setContextOp(ctx, ltrq.ctx, "All")
+	ctx = setContextOp(ctx, ltrq.ctx, ent.OpQueryAll)
 	if err := ltrq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -207,7 +208,7 @@ func (ltrq *LiveTitleRegexQuery) IDs(ctx context.Context) (ids []uuid.UUID, err 
 	if ltrq.ctx.Unique == nil && ltrq.path != nil {
 		ltrq.Unique(true)
 	}
-	ctx = setContextOp(ctx, ltrq.ctx, "IDs")
+	ctx = setContextOp(ctx, ltrq.ctx, ent.OpQueryIDs)
 	if err = ltrq.Select(livetitleregex.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -225,7 +226,7 @@ func (ltrq *LiveTitleRegexQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (ltrq *LiveTitleRegexQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, ltrq.ctx, "Count")
+	ctx = setContextOp(ctx, ltrq.ctx, ent.OpQueryCount)
 	if err := ltrq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +244,7 @@ func (ltrq *LiveTitleRegexQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (ltrq *LiveTitleRegexQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, ltrq.ctx, "Exist")
+	ctx = setContextOp(ctx, ltrq.ctx, ent.OpQueryExist)
 	switch _, err := ltrq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -537,7 +538,7 @@ func (ltrgb *LiveTitleRegexGroupBy) Aggregate(fns ...AggregateFunc) *LiveTitleRe
 
 // Scan applies the selector query and scans the result into the given value.
 func (ltrgb *LiveTitleRegexGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ltrgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, ltrgb.build.ctx, ent.OpQueryGroupBy)
 	if err := ltrgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -585,7 +586,7 @@ func (ltrs *LiveTitleRegexSelect) Aggregate(fns ...AggregateFunc) *LiveTitleRege
 
 // Scan applies the selector query and scans the result into the given value.
 func (ltrs *LiveTitleRegexSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ltrs.ctx, "Select")
+	ctx = setContextOp(ctx, ltrs.ctx, ent.OpQuerySelect)
 	if err := ltrs.prepareQuery(ctx); err != nil {
 		return err
 	}

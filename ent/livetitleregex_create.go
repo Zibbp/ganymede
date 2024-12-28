@@ -143,7 +143,7 @@ func (ltrc *LiveTitleRegexCreate) check() error {
 	if _, ok := ltrc.mutation.ApplyToVideos(); !ok {
 		return &ValidationError{Name: "apply_to_videos", err: errors.New(`ent: missing required field "LiveTitleRegex.apply_to_videos"`)}
 	}
-	if _, ok := ltrc.mutation.LiveID(); !ok {
+	if len(ltrc.mutation.LiveIDs()) == 0 {
 		return &ValidationError{Name: "live", err: errors.New(`ent: missing required edge "LiveTitleRegex.live"`)}
 	}
 	return nil

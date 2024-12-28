@@ -1,13 +1,15 @@
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Channel, useFetchChannels } from "@/app/hooks/useChannels";
 import { WatchedChannel, WatchedChannelTitleRegex, useCreateWatchedChannel, useEditWatchedChannel } from "@/app/hooks/useWatchedChannels";
-import { ActionIcon, Button, NumberInput, TextInput, Tooltip, Text, Divider, Checkbox, Select, Title, Box, Group, Grid, MultiSelect } from "@mantine/core";
+import { ActionIcon, Button, NumberInput, TextInput, Tooltip, Text, Divider, Checkbox, Select, Title, Box, Group, Grid, MultiSelect, Collapse } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import classes from "./Watched.module.css"
 import { getTwitchCategories } from "@/app/hooks/useCategory";
+import { useDisclosure } from "@mantine/hooks";
+import Link from "next/link";
 
 type Props = {
   watchedChannel: WatchedChannel | null
@@ -42,6 +44,8 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
 
   const [channelSelect, setChannelSelect] = useState<SelectOption[]>([]);
 
+  const [clipMoreInfoOpened, { toggle: clipMoreInfoToggle }] = useDisclosure(false);
+
   // Initialize edit watched channel mutation
   const editWatchedChannelMutation = useEditWatchedChannel();
 
@@ -64,6 +68,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       watch_clips: watchedChannel?.watch_clips ?? false,
       clips_limit: watchedChannel?.clips_limit || 5,
       clips_interval_days: watchedChannel?.clips_interval_days || 7,
+      clips_ignore_last_checked: watchedChannel?.clips_ignore_last_checked ?? false,
       live_title_regexes: [],
       categories: [] as string[],
     },
@@ -126,6 +131,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           watch_clips: formValues.watch_clips,
           clips_limit: formValues.clips_limit,
           clips_interval_days: formValues.clips_interval_days,
+          clips_ignore_last_checked: formValues.clips_ignore_last_checked,
           is_live: false, // Default value
           edges: {
             channel: { id: formValues.channel_id } as Channel,
@@ -167,6 +173,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           watch_clips: formValues.watch_clips,
           clips_limit: formValues.clips_limit,
           clips_interval_days: formValues.clips_interval_days,
+          clips_ignore_last_checked: formValues.clips_ignore_last_checked,
           edges: {
             ...watchedChannel.edges,
             title_regex: liveTitleRegexes
@@ -213,6 +220,8 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
 
   return (
     <div>
+      <Text>Read the <Link className={classes.link} target="_blank" href="https://github.com/Zibbp/ganymede/wiki/Watched-Channels">watched channel wiki page</Link> for more information about each feature.</Text>
+
       <form onSubmit={form.onSubmit(() => {
         handleSubmitForm()
       })}>
@@ -323,8 +332,18 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           <Title order={3}>Channel Clips</Title>
           <Text>Archive past channel clips.</Text>
           <Text size="xs">
-            This feature is meant to archive the most popular (view count) clips the past <code>interval</code> days. For example, if you set number of clips to 5 and interval to 7, the top 5 clips from the past 7 days will be archived. It will not run again until 7 days have passed. No restrictions (categories, age, title, regex, etc) are applied to this.
+            This feature is meant to archive the most popular (view count) clips from the past <code>interval</code> days. For example, if you set number of clips to 5 and interval to 7, the top 5 clips from the past 7 days will be archived. It will not run again until 7 days have passed. No restrictions (categories, age, title, regex, etc) are applied to this.
           </Text>
+
+          <Link href="#">
+            <Text c="blue" mt={5} size="xs" onClick={clipMoreInfoToggle}>More Information</Text>
+          </Link>
+          <Collapse in={clipMoreInfoOpened}>
+            <Text size="xs" mt={5}>
+              If you want to perform a one-time import of a channel&apos;s most popular clips, set the interval to a large number (1000) and the number of clips to a large number (250). This will import the top 250 clips from the past 1000 days. It is recommended to change the interval and number of clips to a lower number after the initial import.
+            </Text>
+          </Collapse>
+
 
           <Checkbox
             my={5}
@@ -348,6 +367,14 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
             key={form.key('clips_interval_days')}
             {...form.getInputProps('clips_interval_days')}
             min={1}
+          />
+
+          <Checkbox
+            mt={10}
+            label="Ignore Last Checked Date"
+            description="Clips are only checked if the last checked date is older than the interval days. If this is checked, the last checked date is ignored and all clips from the last interval days are checked."
+            key={form.key('clips_ignore_last_checked')}
+            {...form.getInputProps('clips_ignore_last_checked', { type: "checkbox" })}
           />
 
         </div>

@@ -607,11 +607,14 @@ func ArchiveVideoActivity(ctx context.Context, input dto.ArchiveVideoInput) erro
 // GetChannelClips gets a Twitch channel's clip with some filter options. Twitch returns the clips sorted by view count descending.
 func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string, filter ClipsFilter) ([]ClipInfo, error) {
 
-	// todo: allow more than 100 clips
-	if filter.Limit > 100 {
-		return nil, fmt.Errorf("clips limited to a max of 100")
+	internalLimit := filter.Limit
+
+	// set limit to 100 if limit is 0 or greater than 100
+	if filter.Limit == 0 || filter.Limit > 100 {
+		internalLimit = 100
 	}
-	limitStr := strconv.Itoa(filter.Limit)
+
+	limitStr := strconv.Itoa(internalLimit)
 	params := url.Values{
 		"broadcaster_id": []string{channelId},
 		"started_at":     []string{filter.StartedAt.Format(time.RFC3339)},
@@ -632,6 +635,34 @@ func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string
 
 	var clips []TwitchClip
 	clips = append(clips, resp.Data...)
+
+	// pagination
+	cursor := resp.Pagination.Cursor
+	for cursor != "" {
+		params.Del("after")
+		params.Set("after", cursor)
+
+		body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		var resp TwitchGetClipsResponse
+		err = json.Unmarshal(body, &resp)
+		if err != nil {
+			return nil, err
+		}
+
+		clips = append(clips, resp.Data...)
+		cursor = resp.Pagination.Cursor
+
+		// break if limit is reached except if limit is 0 (all clips)
+		if filter.Limit != 0 {
+			if len(clips) >= filter.Limit {
+				break
+			}
+		}
+	}
 
 	var info []ClipInfo
 	for _, clip := range clips {
@@ -665,6 +696,11 @@ func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string
 			Duration:     int(clip.Duration),
 			VodOffset:    &offset,
 		})
+	}
+
+	// get exact number of clips if limit is set
+	if filter.Limit != 0 && filter.Limit < len(info) {
+		info = info[:filter.Limit]
 	}
 
 	return info, nil

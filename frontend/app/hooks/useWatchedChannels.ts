@@ -23,6 +23,7 @@ export interface WatchedChannel {
   watch_clips: boolean;
   clips_limit: number;
   clips_interval_days: number;
+  clips_ignore_last_checked: boolean;
   updated_at: string;
   created_at: string;
   edges: WatchedChannelEdges;
@@ -77,6 +78,7 @@ const editWatchedChannel = async (
     watch_clips: watchedChannel.watch_clips,
     clips_limit: watchedChannel.clips_limit,
     clips_interval_days: watchedChannel.clips_interval_days,
+    clips_ignore_last_checked: watchedChannel.clips_ignore_last_checked,
   });
   return response.data.data;
 };
@@ -105,6 +107,7 @@ const createWatchedChannel = async (
     watch_clips: watchedChannel.watch_clips,
     clips_limit: watchedChannel.clips_limit,
     clips_interval_days: watchedChannel.clips_interval_days,
+    clips_ignore_last_checked: watchedChannel.clips_ignore_last_checked,
   });
   return response.data.data;
 };
