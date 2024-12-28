@@ -2,6 +2,7 @@ package live
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -36,28 +37,45 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 			continue
 		}
 
-		// Check if clips need to be checked for channel
 		now := time.Now()
-		lastChecked := watchedChannel.ClipsLastChecked
+		// Check if channel clips should be checked
+		if !watchedChannel.ClipsIgnoreLastChecked {
+			// Check if clips need to be checked for channel
+			lastChecked := watchedChannel.ClipsLastChecked
 
-		// Round times down to the nearest hour to avoid partial hour comparisons
-		roundedNow := now.Truncate(time.Hour)
-		roundedLastChecked := lastChecked.Truncate(time.Hour)
+			// Round times down to the nearest hour to avoid partial hour comparisons
+			roundedNow := now.Truncate(time.Hour)
+			roundedLastChecked := lastChecked.Truncate(time.Hour)
 
-		// Calculate full hours between checks
-		diffHours := roundedNow.Sub(roundedLastChecked).Hours()
-		channelIntervalHours := watchedChannel.ClipsIntervalDays * 24
+			// Calculate full hours between checks
+			diffHours := roundedNow.Sub(roundedLastChecked).Hours()
+			// Calculate channel interval in hours
+			// Default to 24 hours if not set (archiving all clips)
+			var channelIntervalHours int
+			if watchedChannel.ClipsIntervalDays == 0 {
+				channelIntervalHours = 24
+			} else {
+				channelIntervalHours = watchedChannel.ClipsIntervalDays * 24
+			}
 
-		if diffHours < float64(channelIntervalHours) {
-			logger.Info().
-				Str("channel", watchedChannel.Edges.Channel.DisplayName).
-				Float64("hours_passed", diffHours).
-				Int("hours_required", channelIntervalHours).
-				Msg("skipping clip check, not enough time has passed")
-			continue
+			if diffHours < float64(channelIntervalHours) {
+				logger.Info().
+					Str("channel", watchedChannel.Edges.Channel.DisplayName).
+					Float64("hours_passed", diffHours).
+					Int("hours_required", channelIntervalHours).
+					Msg("skipping clip check, not enough time has passed")
+				continue
+			}
 		}
 
-		startedAt := now.AddDate(0, 0, -watchedChannel.ClipsIntervalDays)
+		var startedAt time.Time
+		if watchedChannel.ClipsIntervalDays == 0 {
+			startedAt = time.Time{}
+		} else {
+			startedAt = now.AddDate(0, 0, -watchedChannel.ClipsIntervalDays)
+		}
+
+		log.Info().Str("limit", strconv.Itoa(watchedChannel.ClipsLimit)).Str("started_at", startedAt.String()).Msgf("getting clips for channel %s", watchedChannel.Edges.Channel.Name)
 
 		// Get clips
 		clips, err := s.PlatformTwitch.GetChannelClips(ctx, watchedChannel.Edges.Channel.ExtID, platform.ClipsFilter{
@@ -70,6 +88,8 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 			continue
 		}
 
+		log.Info().Str("channel", watchedChannel.Edges.Channel.Name).Int("clips", len(clips)).Msg("got clips")
+
 		// Fetch all videos from DB
 		dbVideos, err := s.Store.Client.Vod.Query().Where(vod.HasChannelWith(channel.ID(watchedChannel.Edges.Channel.ID))).All(context.Background())
 		if err != nil {
@@ -79,6 +99,7 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 
 		// Check if video is already in DB
 		for _, clip := range clips {
+			logger.Debug().Str("clip_id", clip.ID).Msg("checking if clip should be archived")
 			// Video is not in DB
 			if !contains(dbVideos, clip.ID) {
 				// Archive clip
@@ -94,6 +115,8 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 					continue
 				}
 				logger.Info().Str("clip_id", clip.ID).Msgf("archiving clip")
+			} else {
+				logger.Debug().Str("clip_id", clip.ID).Msgf("clip already archived")
 			}
 		}
 
