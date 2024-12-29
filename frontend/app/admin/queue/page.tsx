@@ -1,5 +1,5 @@
 "use client"
-import { ActionIcon, Container, Group, TextInput, Title, Box, Drawer, Modal, Tooltip, Text } from "@mantine/core";
+import { ActionIcon, Container, Group, TextInput, Title, Box, Drawer, Modal, Tooltip, Text, Button } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useState } from "react";
@@ -13,6 +13,7 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import AdminQueueDrawerContent from "@/app/components/admin/queue/DrawerContent";
 import DeleteQueueModalContent from "@/app/components/admin/queue/DeleteModalContent";
 import Link from "next/link";
+import MultiDeleteQueueModalContent from "@/app/components/admin/queue/MultiDeleteModalContext";
 
 const AdminQueuePage = () => {
   useEffect(() => {
@@ -32,6 +33,9 @@ const AdminQueuePage = () => {
 
   const [queueDrawerOpened, { open: openQueueDrawer, close: closeQueueDrawer }] = useDisclosure(false);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
+  const [multiDeleteModalOpened, { open: openMultiDeleteModal, close: closeMultiDeleteModal }] = useDisclosure(false);
+
+  const [activeQueueItems, setActiveQueueItems] = useState<Queue[] | null>([]);
 
   const axiosPrivate = useAxiosPrivate()
   const { data: queues, isPending, isError } = useGetQueueItems(axiosPrivate, false)
@@ -84,6 +88,26 @@ const AdminQueuePage = () => {
       <Container size="7xl">
         <Group justify="space-between" mt={2} >
           <Title>Manage Queue</Title>
+          <Box>
+            {(activeQueueItems && activeQueueItems.length >= 1) && (
+              <Button
+                mx={10}
+                leftSection={<IconTrash size={16} />}
+                color="red"
+                disabled={!activeQueueItems.length}
+                onClick={() => {
+                  openMultiDeleteModal();
+                }}
+              >
+                {activeQueueItems.length
+                  ? `Delete ${activeQueueItems.length === 1
+                    ? "one selected queue item"
+                    : `${activeQueueItems.length} selected queue items`
+                  }`
+                  : "Select queue items to delete"}
+              </Button>
+            )}
+          </Box>
         </Group>
 
         <Box mt={5}>
@@ -204,6 +228,8 @@ const AdminQueuePage = () => {
             onRecordsPerPageChange={setPerPage}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
+            selectedRecords={activeQueueItems ?? []}
+            onSelectedRecordsChange={setActiveQueueItems}
           />
         </Box>
       </Container>
@@ -218,6 +244,12 @@ const AdminQueuePage = () => {
       <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Queue">
         {activeQueue && (
           <DeleteQueueModalContent queue={activeQueue} handleClose={closeDeleteModal} />
+        )}
+      </Modal>
+
+      <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title="Delete Queue Items">
+        {activeQueueItems && (
+          <MultiDeleteQueueModalContent queues={activeQueueItems} handleClose={closeMultiDeleteModal} />
         )}
       </Modal>
 

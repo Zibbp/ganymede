@@ -13,6 +13,7 @@ import { BlockedVideo, useGetBlockedVideos } from "@/app/hooks/useBlockedVideos"
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import DeleteBlockedVideoModalContent from "@/app/components/admin/blocked-videos/DeleteModalContent";
 import AdminBlockedVideosDrawerContent from "@/app/components/admin/blocked-videos/DrawerContent";
+import MultiDeleteBlockedVideoModalContent from "@/app/components/admin/blocked-videos/MultiDeleteModalContent";
 
 const AdminBlockedVideosPage = () => {
   useEffect(() => {
@@ -32,6 +33,10 @@ const AdminBlockedVideosPage = () => {
 
   const [blockedVideoDrawerOpened, { open: openBlockedVideoDrawer, close: closeBlockedVideoDrawer }] = useDisclosure(false);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
+  const [multiDeleteModalOpened, { open: openMultiDeleteModal, close: closeMultiDeleteModal }] = useDisclosure(false);
+
+  const [activeBlockedVideos, setActiveBlockedVideos] = useState<BlockedVideo[] | null>([]);
+
   const axiosPrivate = useAxiosPrivate()
 
   const { data: blockedVideos, isPending, isError } = useGetBlockedVideos(axiosPrivate)
@@ -80,6 +85,24 @@ const AdminBlockedVideosPage = () => {
         <Group justify="space-between" mt={2} >
           <Title>Manage Blocked Videos</Title>
           <Box>
+            {(activeBlockedVideos && activeBlockedVideos.length >= 1) && (
+              <Button
+                mx={10}
+                leftSection={<IconTrash size={16} />}
+                color="red"
+                disabled={!activeBlockedVideos.length}
+                onClick={() => {
+                  openMultiDeleteModal();
+                }}
+              >
+                {activeBlockedVideos.length
+                  ? `Delete ${activeBlockedVideos.length === 1
+                    ? "one selected blocked video"
+                    : `${activeBlockedVideos.length} selected blocked videos`
+                  }`
+                  : "Select blocked videos to delete"}
+              </Button>
+            )}
             <Button
               onClick={() => {
                 setActiveBlockedVideo(null)
@@ -148,6 +171,8 @@ const AdminBlockedVideosPage = () => {
             onRecordsPerPageChange={setPerPage}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
+            selectedRecords={activeBlockedVideos ?? []}
+            onSelectedRecordsChange={setActiveBlockedVideos}
           />
         </Box>
       </Container>
@@ -159,6 +184,12 @@ const AdminBlockedVideosPage = () => {
       <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Channel">
         {activeBlockedVideo && (
           <DeleteBlockedVideoModalContent blockedVideo={activeBlockedVideo} handleClose={closeDeleteModal} />
+        )}
+      </Modal>
+
+      <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title="Delete Queue Items">
+        {activeBlockedVideos && (
+          <MultiDeleteBlockedVideoModalContent blockedVideos={activeBlockedVideos} handleClose={closeMultiDeleteModal} />
         )}
       </Modal>
 

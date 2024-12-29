@@ -99,7 +99,7 @@ const AdminVideosPage = () => {
         <Group justify="space-between" mt={2} >
           <Title>Manage Videos</Title>
           <Box>
-            {(activeVideos && activeVideos.length > 1) && (
+            {(activeVideos && activeVideos.length >= 1) && (
               <Button
                 mx={10}
                 leftSection={<IconTrash size={16} />}
