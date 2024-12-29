@@ -99,7 +99,7 @@ const AdminVideosPage = () => {
         <Group justify="space-between" mt={2} >
           <Title>Manage Videos</Title>
           <Box>
-            {(activeVideos && activeVideos.length > 1) && (
+            {(activeVideos && activeVideos.length >= 1) && (
               <Button
                 mx={10}
                 leftSection={<IconTrash size={16} />}
@@ -178,7 +178,12 @@ const AdminVideosPage = () => {
               },
               { accessor: "title", title: "Title", sortable: true, },
               { accessor: "type", title: "Type", sortable: true },
-
+              {
+                accessor: "locked", title: "Locked", sortable: true,
+                render: ({ locked }) => {
+                  return locked ? "✅" : "❌";
+                },
+              },
               {
                 accessor: "streamed_at",
                 title: "Streamed At",

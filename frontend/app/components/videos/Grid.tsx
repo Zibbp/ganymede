@@ -1,4 +1,3 @@
-// VideoGrid.tsx
 import { Box, Center, Group, Pagination, SimpleGrid, ActionIcon, NumberInput, MultiSelect, Text } from "@mantine/core";
 import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { useRef, useState, useEffect } from "react";
@@ -9,6 +8,7 @@ import GanymedeLoadingText from "../utils/GanymedeLoadingText";
 
 export type VideoGridProps<T extends Video> = {
   videos: T[];
+  totalCount: number;
   totalPages: number;
   currentPage: number;
   onPageChange: (page: number) => void;
@@ -23,6 +23,7 @@ export type VideoGridProps<T extends Video> = {
 
 const VideoGrid = <T extends Video>({
   videos,
+  totalCount,
   totalPages,
   currentPage,
   onPageChange,
@@ -37,7 +38,6 @@ const VideoGrid = <T extends Video>({
   const handlersRef = useRef<NumberInputHandlers>(null);
   // Local state to handle the input value while typing
   const [localLimit, setLocalLimit] = useState(videoLimit);
-  const [totalVideoCount, setTotalVideoCount] = useState(0);
   const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
 
   useEffect(() => {
@@ -54,11 +54,6 @@ const VideoGrid = <T extends Video>({
       onVideoLimitChange(numValue);
     }
   };
-
-  useEffect(() => {
-    if (!videos) return;
-    setTotalVideoCount(videos.length);
-  }, [videos]);
 
   // Convert the enum VideoType to an array for the multiselector
   const selectorVideoTypes = Object.values(VideoType).map((type) => ({
@@ -110,7 +105,7 @@ const VideoGrid = <T extends Video>({
           />
         </Box>
         <div>
-          <Text>{totalVideoCount.toLocaleString()} Videos</Text>
+          <Text>{totalCount.toLocaleString()} Videos</Text>
         </div>
       </Group>
 

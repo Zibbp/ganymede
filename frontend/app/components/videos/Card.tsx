@@ -11,7 +11,7 @@ import { escapeURL } from "@/app/util/util";
 import { PlaybackStatus, useFetchPlaybackForVideo } from "@/app/hooks/usePlayback";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import useAuthStore from "@/app/store/useAuthStore";
-import { IconCircleCheck } from "@tabler/icons-react";
+import { IconCircleCheck, IconLock } from "@tabler/icons-react";
 import VideoMenu from "./Menu";
 import { UserRole } from "@/app/hooks/useAuthentication";
 
@@ -106,14 +106,34 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
         </Text>
       </Badge>
 
-      {/* Watched icon */}
-      {showProgress && playbackIsWatched && (
-        <Tooltip label="You have watched this video">
-          <ThemeIcon className={classes.watchedIcon} radius="xl" color="green">
-            <IconCircleCheck />
-          </ThemeIcon>
-        </Tooltip>
-      )}
+      <Flex
+        gap="xs"
+        justify="flex-start"
+        align="flex-start"
+        direction="column"
+        wrap="wrap"
+        className={classes.watchedIcon}
+      >
+        {/* Watched icon */}
+        {showProgress && playbackIsWatched && (
+          <Tooltip label="You have watched this video">
+            <ThemeIcon radius="xl" color="green">
+              <IconCircleCheck />
+            </ThemeIcon>
+          </Tooltip>
+        )}
+
+        {/* Locked icon */}
+        {video.locked && (
+          <Tooltip label="Video is locked">
+            <ThemeIcon radius="xl" color="gray">
+              <IconLock />
+            </ThemeIcon>
+          </Tooltip>
+        )}
+      </Flex>
+
+
 
       {/* Title */}
       <Link href={video.processing ? `#` : `/videos/${video.id}`}>
