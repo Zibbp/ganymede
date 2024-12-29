@@ -178,7 +178,12 @@ const AdminVideosPage = () => {
               },
               { accessor: "title", title: "Title", sortable: true, },
               { accessor: "type", title: "Type", sortable: true },
-
+              {
+                accessor: "locked", title: "Locked", sortable: true,
+                render: ({ locked }) => {
+                  return locked ? "✅" : "❌";
+                },
+              },
               {
                 accessor: "streamed_at",
                 title: "Streamed At",

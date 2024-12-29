@@ -406,7 +406,8 @@ const useLockVideo = () => {
     mutationFn: ({ axiosPrivate, videoId, locked }) =>
       lockVideo(axiosPrivate, videoId, locked),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["video"] });
+      // @ts-expect-error fine
+      queryClient.invalidateQueries(["channel_videos"]);
     },
   });
 };

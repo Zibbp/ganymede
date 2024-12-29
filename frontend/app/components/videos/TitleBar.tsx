@@ -1,10 +1,10 @@
 "use client"
 import { useGetVideoByExternalId, Video } from "@/app/hooks/useVideos";
 import { escapeURL } from "@/app/util/util";
-import { Avatar, Box, Divider, Tooltip, Text, Group, Badge, Button } from "@mantine/core";
+import { Avatar, Box, Divider, Tooltip, Text, Group, Badge, Button, rem } from "@mantine/core";
 import { env } from "next-runtime-env";
 import classes from "./TitleBar.module.css";
-import { IconCalendarEvent, IconUser, IconUsers } from "@tabler/icons-react";
+import { IconCalendarEvent, IconLock, IconUser, IconUsers } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import VideoMenu from "./Menu";
 import useAuthStore from "@/app/store/useAuthStore";
@@ -91,6 +91,18 @@ const VideoTitleBar = ({ video }: Params) => {
                 </div>
               </Tooltip>
             </Group>
+
+            {video.locked && (
+              <Group mr={5}>
+                <Tooltip label={`Video is locked`} openDelay={250}>
+                  <div className={classes.titleBarBadge}>
+                    <Badge variant="default" leftSection={<IconLock style={{ width: rem(12), height: rem(12) }} />}>
+                      Locked
+                    </Badge>
+                  </div>
+                </Tooltip>
+              </Group>
+            )}
 
             <Group>
               <Tooltip label={`Video Type`} openDelay={250}>
