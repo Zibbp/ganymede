@@ -88,6 +88,13 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 		RiverUIServer:  riverUIServer,
 	}
 
+	// Enable gzip compression for API routes
+	h.Server.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Skipper: func(c echo.Context) bool {
+			return !strings.Contains(c.Request().URL.Path, "/api")
+		},
+	}))
+
 	// Use sessions
 	h.Server.Use(session.LoadAndSave(sessionManager))
 
