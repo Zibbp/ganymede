@@ -36,6 +36,7 @@ const ChannelVideos = ({ channel }: Props) => {
     <div>
       <VideoGrid
         videos={videos.data}
+        totalCount={videos.total_count}
         totalPages={videos.pages}
         currentPage={activePage}
         onPageChange={setActivePage}
