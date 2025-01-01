@@ -25,6 +25,20 @@ type Props = {
   showChannel: boolean;
 }
 
+// durationToTime converts the provided video duration in seconds to 'HH:mm:ss'
+// dayjs.duration doesn't work well with longer >=24 hour durations
+function durationToTime(seconds: number) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  const formattedHours = String(hours).padStart(2, '0');
+  const formattedMinutes = String(minutes).padStart(2, '0');
+  const formattedSeconds = String(secs).padStart(2, '0');
+
+  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+}
+
 const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = true }: Props) => {
   const { isLoggedIn, hasPermission } = useAuthStore()
   const [thumbnailError, setThumbnailError] = useState(false);
@@ -100,9 +114,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
       {/* Duration badge */}
       <Badge py={0} px={5} className={classes.durationBadge} radius="md">
         <Text>
-          {dayjs
-            .duration(video.duration, "seconds")
-            .format("HH:mm:ss")}
+          {durationToTime(video.duration)}
         </Text>
       </Badge>
 
