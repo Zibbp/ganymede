@@ -131,7 +131,7 @@ const AdminSettingsPage = () => {
             handleSubmitForm()
           })}>
             <Title>Settings</Title>
-            <Text>Visit the <a href="https://github.com/Zibbp/ganymede/wiki/Application-Settings" target="_blank">wiki</a> for documentation about each setting.</Text>
+            <Text>Visit the <a className={classes.link} href="https://github.com/Zibbp/ganymede/wiki/Application-Settings" target="_blank">wiki</a> for documentation about each setting.</Text>
 
             <Title order={3}>Application</Title>
             <Checkbox

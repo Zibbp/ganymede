@@ -8,7 +8,7 @@ import '@/app/global.css'
 import { ColorSchemeScript } from '@mantine/core';
 import type { Metadata } from "next";
 import Providers from './providers';
-import { PublicEnvScript } from 'next-runtime-env';
+import { EnvScript, PublicEnvScript } from 'next-runtime-env';
 
 export const metadata: Metadata = {
   title: "Ganymede",
@@ -25,6 +25,15 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <PublicEnvScript />
+        <EnvScript
+          env={{
+            NEXT_PUBLIC_SHOW_SSO_LOGIN_BUTTON: process.env.SHOW_SSO_LOGIN_BUTTON,
+            NEXT_PUBLIC_FORCE_SSO_AUTH: process.env.FORCE_SSO_AUTH,
+            NEXT_PUBLIC_REQUIRE_LOGIN: process.env.REQUIRE_LOGIN,
+            NEXT_PUBLIC_API_URL: process.env.API_URL,
+            NEXT_PUBLIC_CDN_URL: process.env.CDN_URL,
+          }}
+        />
         <ColorSchemeScript defaultColorScheme='dark' />
       </head>
       <body>
