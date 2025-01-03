@@ -6,16 +6,28 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/zibbp/ganymede/internal/channel"
+	"github.com/zibbp/ganymede/internal/server"
 	"github.com/zibbp/ganymede/tests"
 )
 
-func TestGetStats(t *testing.T) {
-	ctx := context.Background()
+type AdminTest struct {
+	App *server.Application
+}
+
+// TestAdmin tests the admin service. This function runs all the tests to avoid spinning up multiple containers.
+func TestAdmin(t *testing.T) {
 	app, err := tests.Setup(t)
 	assert.NoError(t, err)
 
-	// create a channel for to test\
-	_, err = app.ChannelService.CreateChannel(channel.Channel{
+	adminTest := AdminTest{App: app}
+
+	t.Run("TestGetStats", adminTest.GetStatsTest)
+
+}
+
+// GetStatsTest tests the GetStats function
+func (s *AdminTest) GetStatsTest(t *testing.T) {
+	_, err := s.App.ChannelService.CreateChannel(channel.Channel{
 		ExtID:       "123456789",
 		Name:        "test_channel",
 		DisplayName: "Test Channel",
@@ -23,8 +35,7 @@ func TestGetStats(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// test GetStats
-	stats, err := app.AdminService.GetStats(ctx)
+	stats, err := s.App.AdminService.GetStats(context.Background())
 	assert.NoError(t, err)
 	assert.Equal(t, 0, stats.VodCount)
 	assert.Equal(t, 1, stats.ChannelCount)
