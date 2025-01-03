@@ -2,9 +2,11 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -321,10 +323,14 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 }
 
 func (h *Handler) Serve(ctx context.Context) error {
+	appPort := os.Getenv("APP_PORT")
+	if appPort == "" {
+		appPort = "4000"
+	}
 	// Run the server in a goroutine
 	serverErrCh := make(chan error, 1)
 	go func() {
-		if err := h.Server.Start(":4000"); err != nil && err != http.ErrServerClosed {
+		if err := h.Server.Start(fmt.Sprintf(":%s", appPort)); err != nil && err != http.ErrServerClosed {
 			serverErrCh <- err
 		}
 		close(serverErrCh)

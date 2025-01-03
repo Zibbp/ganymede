@@ -17,7 +17,9 @@ func main() {
 	if os.Getenv("DEVELOPMENT") == "true" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
+
 	log.Info().Str("commit", utils.Commit).Str("build_time", utils.BuildTime).Msg("starting server")
+
 	if err := server.Run(ctx); err != nil {
 		log.Fatal().Err(err).Msg("failed to run")
 	}
