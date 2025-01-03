@@ -18,8 +18,8 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.20.5
-	github.com/riverqueue/river v0.14.3
-	github.com/riverqueue/river/rivertype v0.14.3
+	github.com/riverqueue/river v0.15.0
+	github.com/riverqueue/river/rivertype v0.15.0
 	github.com/rs/zerolog v1.33.0
 	github.com/sethvargo/go-envconfig v1.1.0
 	github.com/swaggo/swag v1.16.4
@@ -47,7 +47,6 @@ require (
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.7 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -67,9 +66,6 @@ require (
 	github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683 // indirect
 	github.com/magiconair/properties v1.8.9 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
-	github.com/mitchellh/copystructure v1.2.0 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.6.0 // indirect
@@ -81,8 +77,8 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
-	github.com/riverqueue/river/riverdriver v0.14.3 // indirect
-	github.com/riverqueue/river/rivershared v0.14.3 // indirect
+	github.com/riverqueue/river/riverdriver v0.15.0 // indirect
+	github.com/riverqueue/river/rivershared v0.15.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.24.5 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
@@ -119,7 +115,6 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
 	github.com/jackc/pgx/v5 v5.7.2
-	github.com/knadh/koanf v1.5.0
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -131,7 +126,7 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.61.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.14.3
+	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.15.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/echo-swagger v1.4.1
