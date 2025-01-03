@@ -9,6 +9,8 @@ import (
 
 func TestGetEnvConfig(t *testing.T) {
 	os.Setenv("VIDEOS_DIR", "/custom/videos")
+	os.Setenv("TWITCH_CLIENT_ID", "client_id")
+	os.Setenv("TWITCH_CLIENT_SECRET", "client_secret")
 
 	env := GetEnvConfig()
 
