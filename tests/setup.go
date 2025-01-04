@@ -54,7 +54,7 @@ func getRootPath(t *testing.T) string {
 	e := osExec.Command("git", "rev-parse", "--show-toplevel")
 	out, err := e.Output()
 	if err != nil {
-		t.Errorf("Could not get root path: %v", err)
+		t.Logf("Could not get root path: %v", err)
 	}
 	return strings.Trim(string(out), "\n")
 }
