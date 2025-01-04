@@ -11,12 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/zibbp/ganymede:dev
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
+      options: --privileged
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
 
       - name: Set up Go
         uses: actions/setup-go@v5
