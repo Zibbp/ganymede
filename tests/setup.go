@@ -66,7 +66,7 @@ func setupEnvironment(t *testing.T, postgresHost string, postgresPort string) {
 	t.Log(envPath)
 
 	// Set the environment variables specific to the test
-	os.Setenv("TESTS_LOGGING", "false") // Disable logging for tests
+	os.Setenv("TESTS_LOGGING", "true") // Disable logging for tests
 	os.Setenv("DEBUG", "false")
 	os.Setenv("DB_HOST", postgresHost)
 	os.Setenv("DB_PORT", postgresPort)
