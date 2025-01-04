@@ -121,8 +121,11 @@ func Setup(t *testing.T) (*server.Application, error) {
 	postgresPort, err := postgresContainer.MappedPort(ctx, "5432")
 	assert.NoError(t, err)
 
+	postgresIp, err := postgresContainer.ContainerIP(ctx)
+	assert.NoError(t, err)
+
 	// Setup env vars
-	setupEnvironment(t, "localhost", postgresPort.Port())
+	setupEnvironment(t, postgresIp, postgresPort.Port())
 
 	// Create the application. This does not start the HTTP server
 	app, err := server.SetupApplication(ctx)

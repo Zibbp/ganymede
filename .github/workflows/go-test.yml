@@ -31,5 +31,7 @@ jobs:
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
         run: |
-          apt update && apt install -y docker make git
+          apt update && apt install -y make git
+          docker ps
           make test
+          docker ps
