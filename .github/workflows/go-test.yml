@@ -9,8 +9,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    # container:
-    # image: ghcr.io/zibbp/ganymede:dev
+    container:
+      image: ghcr.io/zibbp/ganymede:dev
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
 
     steps:
       - name: Checkout repository
@@ -29,5 +31,5 @@ jobs:
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
         run: |
-          apt update && apt install -y make git
+          apt update && apt install -y docker make git
           make test
