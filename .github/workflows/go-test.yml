@@ -9,8 +9,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/zibbp/ganymede:dev
+    # container:
+    # image: ghcr.io/zibbp/ganymede:dev
 
     steps:
       - name: Checkout repository
