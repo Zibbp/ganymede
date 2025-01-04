@@ -124,6 +124,8 @@ func Setup(t *testing.T) (*server.Application, error) {
 	postgresIp, err := postgresContainer.ContainerIP(ctx)
 	assert.NoError(t, err)
 
+	t.Log("Postgres IP:", postgresIp)
+
 	// Setup env vars
 	setupEnvironment(t, postgresIp, postgresPort.Port())
 
