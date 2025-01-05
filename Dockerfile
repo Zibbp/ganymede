@@ -67,6 +67,26 @@ RUN \
     else echo "Lockfile not found." && exit 1; \
     fi
 
+#
+# Tests stage. Inclues depedencies required for tests
+#
+FROM golang:1.23-bookworm AS tests
+
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip ffmpeg make git
+
+RUN pip3 install --upgrade pip streamlink --break-system-packages
+
+# Copy and install chat-downloader
+COPY --from=tools /tmp/chat-downloader /tmp/chat-downloader
+RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
+
+# Setup fonts
+RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
+
+# Copy TwitchDownloaderCLI
+COPY --from=tools /tmp/TwitchDownloaderCLI /usr/local/bin/
+RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
+
 # Production stage
 FROM debian:bookworm-slim
 WORKDIR /opt/app

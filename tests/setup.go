@@ -121,7 +121,7 @@ func Setup(t *testing.T) (*server.Application, error) {
 	postgresPort, err := postgresContainer.MappedPort(ctx, "5432")
 	assert.NoError(t, err)
 
-	postgresIp, err := postgresContainer.ContainerIP(ctx)
+	postgresIp, err := postgresContainer.Host(ctx)
 	assert.NoError(t, err)
 
 	t.Log("Postgres IP:", postgresIp)
