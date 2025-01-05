@@ -40,6 +40,6 @@ jobs:
         run: |
           docker run \
           -v /var/run/docker.sock:/var/run/docker.sock \
-          -v /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}:/opt/app
+          -v /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}:/opt/app \
           "${{ steps.docker_build_test_image.outputs.imageid }}" \
           bash -c "cd /opt/app && make test"
