@@ -172,8 +172,13 @@ func SetupHTTP(t *testing.T) (*httpexpect.Expect, error) {
 	postgresPort, err := postgresContainer.MappedPort(ctx, "5432")
 	assert.NoError(t, err)
 
+	postgresIp, err := postgresContainer.Host(ctx)
+	assert.NoError(t, err)
+
+	t.Log("Postgres IP:", postgresIp)
+
 	// Setup env vars
-	setupEnvironment(t, "localhost", postgresPort.Port())
+	setupEnvironment(t, postgresIp, postgresPort.Port())
 
 	// Get free port for Ganymede to run on
 	port, err := getFreePort()
