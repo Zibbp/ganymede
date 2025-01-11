@@ -1,4 +1,4 @@
-name: Go Test
+name: Tests
 
 on:
   push:
@@ -12,6 +12,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-22.04
+    environment: Tests
 
     steps:
       - name: Checkout repository
@@ -36,6 +37,7 @@ jobs:
       - name: Create docker network
         run: docker network create ${{ env.TESTCONTAINER_DOCKER_NETWORK }}
 
+      # Instead of having to manually install all dependencies, build the docker container and run tests in there
       - name: Run tests
         run: |
           docker run \
