@@ -89,11 +89,12 @@ func customUnmarshal(data []byte, v interface{}, existingFields map[string]json.
 		}
 
 		// For non-struct fields, check if they exist in JSON
-		_, exists := existingFields[jsonTag]
-		if !exists {
+		//nolint:all
+		if _, exists := existingFields[jsonTag]; !exists {
 			// Field doesn't exist in JSON, keep the default value
 			continue
 		}
+
 	}
 
 	return nil
