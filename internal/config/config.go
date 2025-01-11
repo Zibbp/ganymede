@@ -35,10 +35,8 @@ type Config struct {
 
 // UnmarshalJSON implements custom JSON unmarshaling for Config
 func (c *Config) UnmarshalJSON(data []byte) error {
-	// Create a shadow type to avoid infinite recursion
 	type ConfigAlias Config
 
-	// Set defaults first
 	c.setDefaults()
 
 	// Create a map to check which fields actually exist in JSON
@@ -47,10 +45,8 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Create temporary structure for unmarshaling
 	alias := (*ConfigAlias)(c)
 
-	// Custom unmarshaling for top-level fields
 	if err := customUnmarshal(data, alias, jsonMap); err != nil {
 		return err
 	}
@@ -93,7 +89,8 @@ func customUnmarshal(data []byte, v interface{}, existingFields map[string]json.
 		}
 
 		// For non-struct fields, check if they exist in JSON
-		if _, exists := existingFields[jsonTag]; !exists {
+		_, exists := existingFields[jsonTag]
+		if !exists {
 			// Field doesn't exist in JSON, keep the default value
 			continue
 		}
@@ -102,7 +99,6 @@ func customUnmarshal(data []byte, v interface{}, existingFields map[string]json.
 	return nil
 }
 
-// Rest of your existing types...
 type Notification struct {
 	VideoSuccessWebhookUrl string `json:"video_success_webhook_url"`
 	VideoSuccessTemplate   string `json:"video_success_template"`
@@ -136,6 +132,7 @@ var (
 
 var configFile string
 
+// Init initializes the config, creating if necessary, and returning.
 func Init() (*Config, error) {
 	env := GetEnvConfig()
 	configFile = env.ConfigDir + "/config.json"
@@ -145,6 +142,7 @@ func Init() (*Config, error) {
 	return instance, initErr
 }
 
+// loadConfig loads the config from disk
 func (c *Config) loadConfig() error {
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		c.setDefaults()
@@ -166,7 +164,7 @@ func (c *Config) loadConfig() error {
 	return nil
 }
 
-// Your existing setDefaults method remains the same
+// setDefaults sets default config values.
 func (c *Config) setDefaults() {
 	c.LiveCheckInterval = 300
 	c.VideoCheckInterval = 180
@@ -212,7 +210,7 @@ func (c *Config) setDefaults() {
 	c.Livestream.ProxyWhitelist = []string{}
 }
 
-// Rest of your existing methods remain the same
+// UpdateConfig updates the config on disk.
 func UpdateConfig(newConfig *Config) error {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -221,6 +219,7 @@ func UpdateConfig(newConfig *Config) error {
 	return saveConfigUnsafe()
 }
 
+// UpdateConfig updates the config on disk.
 func SaveConfig() error {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -236,6 +235,7 @@ func saveConfigUnsafe() error {
 	return os.WriteFile(configFile, file, 0644)
 }
 
+// Get returns the config
 func Get() *Config {
 	mutex.RLock()
 	defer mutex.RUnlock()
