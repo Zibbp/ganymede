@@ -88,6 +88,7 @@ func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 		VideoPostProcessWorkers: envConfig.MaxVideoConvertExecutions,
 		ChatDownloadWorkers:     envConfig.MaxChatDownloadExecutions,
 		ChatRenderWorkers:       envConfig.MaxChatRenderExecutions,
+		SpriteThumbnailWorkers:  envConfig.MaxVideoSpriteThumbnailExecutions,
 	})
 	if err != nil {
 		return nil, err
