@@ -7,6 +7,7 @@ import (
 	"github.com/sethvargo/go-envconfig"
 )
 
+// EnvApplicationConfig represents the 'core' environment variables for the application.
 type EnvApplicationConfig struct {
 	DB_HOST          string `env:"DB_HOST, required"`
 	DB_PORT          string `env:"DB_PORT, required"`
@@ -17,7 +18,7 @@ type EnvApplicationConfig struct {
 	DB_SSL_ROOT_CERT string `env:"DB_SSL_ROOT_CERT, default="`
 }
 
-// EnvConfig represents the environment variables for the application
+// EnvConfig represents the 'application' environment variables for the application.
 type EnvConfig struct {
 	// application
 	Development bool `env:"DEVELOPMENT"`
@@ -33,10 +34,11 @@ type EnvConfig struct {
 	TwitchClientSecret string `env:"TWITCH_CLIENT_SECRET, required"`
 
 	// worker config
-	MaxChatDownloadExecutions  int `env:"MAX_CHAT_DOWNLOAD_EXECUTIONS, default=3"`
-	MaxChatRenderExecutions    int `env:"MAX_CHAT_RENDER_EXECUTIONS, default=2"`
-	MaxVideoDownloadExecutions int `env:"MAX_VIDEO_DOWNLOAD_EXECUTIONS, default=2"`
-	MaxVideoConvertExecutions  int `env:"MAX_VIDEO_CONVERT_EXECUTIONS, default=3"`
+	MaxChatDownloadExecutions         int `env:"MAX_CHAT_DOWNLOAD_EXECUTIONS, default=3"`
+	MaxChatRenderExecutions           int `env:"MAX_CHAT_RENDER_EXECUTIONS, default=2"`
+	MaxVideoDownloadExecutions        int `env:"MAX_VIDEO_DOWNLOAD_EXECUTIONS, default=2"`
+	MaxVideoConvertExecutions         int `env:"MAX_VIDEO_CONVERT_EXECUTIONS, default=3"`
+	MaxVideoSpriteThumbnailExecutions int `env:"MAX_VIDEO_SPRITE_THUMBNAIL_EXECUTIONS, default=2"`
 
 	// oauth OIDC
 	OAuthEnabled      bool   `env:"OAUTH_ENABLED, default=false"`

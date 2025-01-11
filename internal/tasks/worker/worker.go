@@ -29,6 +29,7 @@ type RiverWorkerInput struct {
 	VideoPostProcessWorkers int
 	ChatDownloadWorkers     int
 	ChatRenderWorkers       int
+	SpriteThumbnailWorkers  int
 }
 
 type RiverWorkerClient struct {
@@ -136,7 +137,7 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 			tasks.QueueVideoPostProcess:         {MaxWorkers: input.VideoPostProcessWorkers},
 			tasks.QueueChatDownload:             {MaxWorkers: input.ChatDownloadWorkers},
 			tasks.QueueChatRender:               {MaxWorkers: input.ChatRenderWorkers},
-			tasks.QueueGenerateThumbnailSprites: {MaxWorkers: 1},
+			tasks.QueueGenerateThumbnailSprites: {MaxWorkers: input.SpriteThumbnailWorkers},
 		},
 		Workers:              workers,
 		JobTimeout:           -1,
@@ -147,7 +148,7 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 		return rc, fmt.Errorf("error creating river client: %v", err)
 	}
 
-	log.Info().Str("default_workers", "100").Str("download_workers", strconv.Itoa(input.VideoDownloadWorkers)).Str("post_process_workers", strconv.Itoa(input.VideoPostProcessWorkers)).Str("chat_download_workers", strconv.Itoa(input.ChatDownloadWorkers)).Str("chat_render_workers", strconv.Itoa(input.ChatRenderWorkers)).Msg("created river client")
+	log.Info().Str("default_workers", "100").Str("download_workers", strconv.Itoa(input.VideoDownloadWorkers)).Str("post_process_workers", strconv.Itoa(input.VideoPostProcessWorkers)).Str("chat_download_workers", strconv.Itoa(input.ChatDownloadWorkers)).Str("chat_render_workers", strconv.Itoa(input.ChatRenderWorkers)).Str("sprite_thumbnail_workers", strconv.Itoa(input.SpriteThumbnailWorkers)).Msg("created river client")
 
 	rc.Client = riverClient
 
