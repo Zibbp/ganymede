@@ -1,0 +1,50 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request_target: # run in the context of base branch for secrets
+    types: [opened, synchronize, reopened]
+
+env:
+  TESTCONTAINER_DOCKER_NETWORK: ganymede-tests
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build test docker image
+        id: docker_build_test_image
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64
+          push: false
+          load: true
+          target: tests
+
+      - name: get-name
+        run: |
+          echo "REPO_NAME=$(basename ${{ github.repository }})" >> $GITHUB_ENV
+
+      - name: Create docker network
+        run: docker network create ${{ env.TESTCONTAINER_DOCKER_NETWORK }}
+
+      # Instead of having to manually install all dependencies, build the docker container and run tests in there
+      - name: Run tests
+        run: |
+          docker run \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}:/opt/app \
+          -e TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }} \
+          -e TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }} \
+          "${{ steps.docker_build_test_image.outputs.imageid }}" \
+          bash -c "cd /opt/app && make test"

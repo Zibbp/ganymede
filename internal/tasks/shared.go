@@ -80,6 +80,7 @@ func StoreFromContext(ctx context.Context) (*database.Database, error) {
 func PlatformFromContext(ctx context.Context) (platform.Platform, error) {
 	platform, exists := ctx.Value(tasks_shared.PlatformTwitchKey).(platform.Platform)
 	if !exists || platform == nil {
+		log.Error().Msg("platform not found in context, this usually means the platform authentication failed, check your platform client_id and client_secret.")
 		return nil, errors.New("platform not found in context")
 	}
 
