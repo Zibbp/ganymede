@@ -11,7 +11,7 @@ export interface ApiResponse<T> {
 }
 
 const useAxios = axios.create({
-  baseURL: env("NEXT_PUBLIC_CDN_URL"),
+  baseURL: env("NEXT_PUBLIC_API_URL"),
   headers: {
     "Content-Type": "application/json",
   },
