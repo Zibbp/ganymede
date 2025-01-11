@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"reflect"
 	"sync"
@@ -159,8 +158,6 @@ func (c *Config) loadConfig() error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(c.Archive.GenerateSpriteThumbnails)
 
 	return nil
 }
