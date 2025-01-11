@@ -3,8 +3,8 @@ name: Tests
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  pull_request_target: # run in the context of base branch for secrets
+    types: [opened, synchronize, reopened]
 
 env:
   TESTCONTAINER_DOCKER_NETWORK: ganymede-tests
@@ -12,11 +12,12 @@ env:
 jobs:
   test:
     runs-on: ubuntu-22.04
-    environment: Tests
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
