@@ -78,6 +78,11 @@ const AdminQueuePage = () => {
     openDeleteModal()
   };
 
+  const handleMultiDeleteModalCallback = () => {
+    closeMultiDeleteModal()
+    setActiveQueueItems([])
+  }
+
   if (isPending) return (
     <GanymedeLoadingText message="Loading queue items" />
   )
@@ -249,7 +254,7 @@ const AdminQueuePage = () => {
 
       <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title="Delete Queue Items">
         {activeQueueItems && (
-          <MultiDeleteQueueModalContent queues={activeQueueItems} handleClose={closeMultiDeleteModal} />
+          <MultiDeleteQueueModalContent queues={activeQueueItems} handleClose={handleMultiDeleteModalCallback} />
         )}
       </Modal>
 
