@@ -2,7 +2,7 @@
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText"
 import { useAxiosPrivate } from "@/app/hooks/useAxios"
 import { Config, NotificationType, ProxyListItem, useEditConfig, useGetConfig, useTestNotification } from "@/app/hooks/useConfig"
-import { ActionIcon, Button, Card, Checkbox, Code, Collapse, Container, Flex, MultiSelect, Text, Textarea, TextInput, Title } from "@mantine/core"
+import { ActionIcon, Button, Card, Checkbox, Code, Collapse, Container, Flex, MultiSelect, NumberInput, Text, Textarea, TextInput, Title } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { useDisclosure } from "@mantine/hooks"
 import Link from "next/link"
@@ -35,6 +35,8 @@ const AdminSettingsPage = () => {
   const form = useForm({
     mode: "controlled",
     initialValues: {
+      live_check_interval_seconds: data?.live_check_interval_seconds || 300,
+      video_check_interval_minutes: data?.video_check_interval_minutes || 180,
       registration_enabled: data?.registration_enabled ?? true,
       parameters: {
         twitch_token: data?.parameters.twitch_token || "",
@@ -44,6 +46,7 @@ const AdminSettingsPage = () => {
       },
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
+        generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true
       },
       notifications: {
         video_success_webhook_url: data?.notifications.video_success_webhook_url || "",
@@ -338,11 +341,40 @@ const AdminSettingsPage = () => {
 
             <Title mt={10} order={3}>Archive</Title>
 
-            <Checkbox
+            <NumberInput
+              label="Live Stream Check Interval Seconds"
+              description="How often watched channels are checked for live streams in seconds. REQUIRES RESTART!"
+              placeholder="300"
+              key={form.key('live_check_interval_seconds')}
+              {...form.getInputProps('live_check_interval_seconds')}
+              min={5}
+            />
+
+            <NumberInput
               mt={10}
+              label="Video Check Interval Minutes"
+              description="How often watched channels are checked for videos in minutes. REQUIRES RESTART!"
+              placeholder="180"
+              key={form.key('video_check_interval_minutes')}
+              {...form.getInputProps('video_check_interval_minutes')}
+              min={1}
+            />
+
+
+            <Checkbox
+              mt={15}
               label="Convert MP4 to HLS"
               key={form.key('archive.save_as_hls')}
               {...form.getInputProps('archive.save_as_hls', { type: "checkbox" })}
+              mr={15}
+            />
+
+            <Checkbox
+              mt={15}
+              label="Generate Sprite Thumbnails"
+              description="Preview thumbnail when scrubbing a video's timeline. These are generated after the video is archived."
+              key={form.key('archive.generate_sprite_thumbnails')}
+              {...form.getInputProps('archive.generate_sprite_thumbnails', { type: "checkbox" })}
               mr={15}
             />
 

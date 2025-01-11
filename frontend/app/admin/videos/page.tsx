@@ -88,6 +88,11 @@ const AdminVideosPage = () => {
     openDeleteModal()
   };
 
+  const handleMultiDeleteModalCallback = () => {
+    closeMultiDeleteModal()
+    setActiveVideos([])
+  }
+
   if (isPending) return (
     <GanymedeLoadingText message="Loading Videos" />
   )
@@ -254,7 +259,7 @@ const AdminVideosPage = () => {
       </Modal>
       <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title="Delete Videos">
         {activeVideos && (
-          <MultiDeleteVideoModalContent videos={activeVideos} handleClose={closeMultiDeleteModal} />
+          <MultiDeleteVideoModalContent videos={activeVideos} handleClose={handleMultiDeleteModalCallback} />
         )}
       </Modal>
 

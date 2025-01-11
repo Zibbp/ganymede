@@ -74,6 +74,11 @@ const AdminBlockedVideosPage = () => {
     openDeleteModal()
   };
 
+  const handleMultiDeleteModalCallback = () => {
+    closeMultiDeleteModal()
+    setActiveBlockedVideos([])
+  }
+
   if (isPending) return (
     <GanymedeLoadingText message="Loading Blocked Videos" />
   )
@@ -189,7 +194,7 @@ const AdminBlockedVideosPage = () => {
 
       <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title="Delete Queue Items">
         {activeBlockedVideos && (
-          <MultiDeleteBlockedVideoModalContent blockedVideos={activeBlockedVideos} handleClose={closeMultiDeleteModal} />
+          <MultiDeleteBlockedVideoModalContent blockedVideos={activeBlockedVideos} handleClose={handleMultiDeleteModalCallback} />
         )}
       </Modal>
 

@@ -84,6 +84,7 @@ func main() {
 		VideoPostProcessWorkers: envConfig.MaxVideoConvertExecutions,
 		ChatDownloadWorkers:     envConfig.MaxChatDownloadExecutions,
 		ChatRenderWorkers:       envConfig.MaxChatRenderExecutions,
+		SpriteThumbnailWorkers:  envConfig.MaxVideoSpriteThumbnailExecutions,
 	})
 	if err != nil {
 		log.Panic().Err(err).Msg("Error creating river worker")

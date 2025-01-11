@@ -5,6 +5,8 @@ import { User } from "./useAuthentication";
 import { NullResponse } from "./usePlayback";
 
 export interface Config {
+  live_check_interval_seconds: number;
+  video_check_interval_minutes: number;
   registration_enabled: boolean;
   parameters: {
     twitch_token: string;
@@ -14,6 +16,7 @@ export interface Config {
   };
   archive: {
     save_as_hls: boolean;
+    generate_sprite_thumbnails: boolean;
   };
   notifications: Notification;
   storage_templates: StorageTemplate;

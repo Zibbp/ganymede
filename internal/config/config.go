@@ -3,30 +3,100 @@ package config
 import (
 	"encoding/json"
 	"os"
+	"reflect"
 	"sync"
 )
 
+// Config is the main application configuration saved to disk.
 type Config struct {
-	LiveCheckInterval   int  `json:"live_check_interval_seconds"`
-	VideoCheckInterval  int  `json:"video_check_interval_minutes"`
-	RegistrationEnabled bool `json:"registration_enabled"`
+	LiveCheckInterval   int  `json:"live_check_interval_seconds"`  // How often in seconds watched channels are checked for live streams.
+	VideoCheckInterval  int  `json:"video_check_interval_minutes"` // How often in minutes watched channels are checked for new videos.
+	RegistrationEnabled bool `json:"registration_enabled"`         // Enable registration.
 	Parameters          struct {
-		TwitchToken    string `json:"twitch_token"`
-		VideoConvert   string `json:"video_convert"`
-		ChatRender     string `json:"chat_render"`
-		StreamlinkLive string `json:"streamlink_live"`
+		TwitchToken    string `json:"twitch_token"`    // Twitch token for ad-free live streams or subscriber-only videos/
+		VideoConvert   string `json:"video_convert"`   // Video convert FFmpeg arguments.
+		ChatRender     string `json:"chat_render"`     // Chater render TwitchDownloaderCLI arguments.
+		StreamlinkLive string `json:"streamlink_live"` // Streamlink live stream download arguments.
 	} `json:"parameters"`
 	Archive struct {
-		SaveAsHls bool `json:"save_as_hls"`
+		SaveAsHls                bool `json:"save_as_hls"`                // Save as HLS rather than mp4.
+		GenerateSpriteThumbnails bool `json:"generate_sprite_thumbnails"` // Generate sprite thumbnails (seen when scrubbing the video).
 	} `json:"archive"`
-	Notification     Notification    `json:"notifications"`
-	StorageTemplates StorageTemplate `json:"storage_templates"`
+	Notification     Notification    `json:"notifications"`     // Notification templates.
+	StorageTemplates StorageTemplate `json:"storage_templates"` // Storage templates.
 	Livestream       struct {
-		Proxies         []ProxyListItem `json:"proxies"`
-		ProxyEnabled    bool            `json:"proxy_enabled"`
-		ProxyParameters string          `json:"proxy_parameters"`
-		ProxyWhitelist  []string        `json:"proxy_whitelist"`
+		Proxies         []ProxyListItem `json:"proxies"`          // List of proxies for download live streams.
+		ProxyEnabled    bool            `json:"proxy_enabled"`    // Enable downloading live stream through proxy.
+		ProxyParameters string          `json:"proxy_parameters"` // Proxy parameters.
+		ProxyWhitelist  []string        `json:"proxy_whitelist"`  // Whitelist channels from proxy.
 	} `json:"livestream"`
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for Config
+func (c *Config) UnmarshalJSON(data []byte) error {
+	type ConfigAlias Config
+
+	c.setDefaults()
+
+	// Create a map to check which fields actually exist in JSON
+	var jsonMap map[string]json.RawMessage
+	if err := json.Unmarshal(data, &jsonMap); err != nil {
+		return err
+	}
+
+	alias := (*ConfigAlias)(c)
+
+	if err := customUnmarshal(data, alias, jsonMap); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// customUnmarshal handles the recursive unmarshaling of structs
+func customUnmarshal(data []byte, v interface{}, existingFields map[string]json.RawMessage) error {
+	// Regular unmarshal for fields that exist in JSON
+	if err := json.Unmarshal(data, v); err != nil {
+		return err
+	}
+
+	// Use reflection to check and preserve default values for missing fields
+	val := reflect.ValueOf(v).Elem()
+	typ := val.Type()
+
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		jsonTag := field.Tag.Get("json")
+		if jsonTag == "" {
+			continue
+		}
+
+		// Handle nested structs recursively
+		if field.Type.Kind() == reflect.Struct {
+			if rawData, exists := existingFields[jsonTag]; exists {
+				var nestedFields map[string]json.RawMessage
+				if err := json.Unmarshal(rawData, &nestedFields); err != nil {
+					continue
+				}
+
+				fieldVal := val.Field(i).Addr().Interface()
+				if err := customUnmarshal(rawData, fieldVal, nestedFields); err != nil {
+					return err
+				}
+			}
+			continue
+		}
+
+		// For non-struct fields, check if they exist in JSON
+		//nolint:all
+		if _, exists := existingFields[jsonTag]; !exists {
+			// Field doesn't exist in JSON, keep the default value
+			continue
+		}
+
+	}
+
+	return nil
 }
 
 type Notification struct {
@@ -62,7 +132,7 @@ var (
 
 var configFile string
 
-// Init initializes and returns the configuration
+// Init initializes the config, creating if necessary, and returning.
 func Init() (*Config, error) {
 	env := GetEnvConfig()
 	configFile = env.ConfigDir + "/config.json"
@@ -72,7 +142,7 @@ func Init() (*Config, error) {
 	return instance, initErr
 }
 
-// LoadConfig loads the configuration from the JSON file or creates a default one
+// loadConfig loads the config from disk
 func (c *Config) loadConfig() error {
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		c.setDefaults()
@@ -92,6 +162,7 @@ func (c *Config) loadConfig() error {
 	return nil
 }
 
+// setDefaults sets default config values.
 func (c *Config) setDefaults() {
 	c.LiveCheckInterval = 300
 	c.VideoCheckInterval = 180
@@ -101,6 +172,7 @@ func (c *Config) setDefaults() {
 	c.Parameters.ChatRender = "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13"
 	c.Parameters.StreamlinkLive = "--twitch-low-latency,--twitch-disable-hosting"
 	c.Archive.SaveAsHls = false
+	c.Archive.GenerateSpriteThumbnails = true
 
 	// notifications
 	c.Notification.VideoSuccessWebhookUrl = ""
@@ -136,25 +208,22 @@ func (c *Config) setDefaults() {
 	c.Livestream.ProxyWhitelist = []string{}
 }
 
+// UpdateConfig updates the config on disk.
 func UpdateConfig(newConfig *Config) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	// Make a deep copy of the new config
 	*instance = *newConfig
-
-	// Call SaveConfig without the mutex
 	return saveConfigUnsafe()
 }
 
-// SaveConfig saves the current configuration to the JSON file
+// UpdateConfig updates the config on disk.
 func SaveConfig() error {
 	mutex.Lock()
 	defer mutex.Unlock()
 	return saveConfigUnsafe()
 }
 
-// saveConfigUnsafe saves the config without locking the mutex
 func saveConfigUnsafe() error {
 	file, err := json.MarshalIndent(instance, "", "  ")
 	if err != nil {
@@ -164,12 +233,11 @@ func saveConfigUnsafe() error {
 	return os.WriteFile(configFile, file, 0644)
 }
 
-// Get returns the configuration
+// Get returns the config
 func Get() *Config {
 	mutex.RLock()
 	defer mutex.RUnlock()
 
-	// Reload the configuration from file each time
 	instance := &Config{}
 	err := instance.loadConfig()
 	if err != nil {

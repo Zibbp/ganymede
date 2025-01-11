@@ -2,10 +2,12 @@ package tasks
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -251,6 +253,8 @@ type MoveVideoWorker struct {
 }
 
 func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+
 	// get store from context
 	store, err := StoreFromContext(ctx)
 	if err != nil {
@@ -320,9 +324,11 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 	}
 
 	// Queue extra tasks that are not critical to the archive process
-	// queue task to regenerate thumbnail if livestream
+
+	// Queue task to regenerate thumbnail if livestream
 	client := river.ClientFromContext[pgx.Tx](ctx)
 	if dbItems.Video.Type == utils.Live {
+		logger.Debug().Msg("queueing task to regenerate static thumbnail")
 		_, err = client.Insert(ctx, GenerateStaticThumbnailArgs{
 			VideoId: dbItems.Video.ID.String(),
 		}, nil)
@@ -330,15 +336,17 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 			return err
 		}
 	}
-	// // queue task to generate sprite thumbnails if enabled
-	// if !dbItems.Video.SpriteThumbnailsEnabled && config.Get().Archive.GenerateSpriteThumbnails {
-	// 	_, err = client.Insert(ctx, GenerateSpriteThumbnailArgs{
-	// 		VideoId: dbItems.Video.ID.String(),
-	// 	}, nil)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
+
+	// Queue task to generate sprite thumbnails if enabled
+	if !dbItems.Video.SpriteThumbnailsEnabled && config.Get().Archive.GenerateSpriteThumbnails {
+		logger.Debug().Msg("queueing task to generate sprite thumbnails")
+		_, err = client.Insert(ctx, GenerateSpriteThumbnailArgs{
+			VideoId: dbItems.Video.ID.String(),
+		}, nil)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
