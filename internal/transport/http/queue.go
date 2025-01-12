@@ -103,20 +103,20 @@ func (h *Handler) CreateQueueItem(c echo.Context) error {
 //	@Router			/queue [get]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) GetQueueItems(c echo.Context) error {
-	var pro bool
-	processing := c.QueryParam("processing")
-	if processing == "true" {
-		pro = true
-	} else {
-		pro = false
+	processing := false
+	processingParam := c.QueryParam("processing")
+	if processingParam == "true" {
+		processing = true
 	}
-	if len(processing) > 0 {
-		qFilter, err := h.Service.QueueService.GetQueueItemsFilter(c, pro)
+
+	if processing {
+		qFilter, err := h.Service.QueueService.GetQueueItemsFilter(c, processing)
 		if err != nil {
 			return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		}
 		return SuccessResponse(c, qFilter, "queue items")
 	}
+
 	q, err := h.Service.QueueService.GetQueueItems(c)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
