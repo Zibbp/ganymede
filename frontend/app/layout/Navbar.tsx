@@ -192,7 +192,6 @@ export function Navbar() {
           </ActionIcon>
           {isLoggedIn ? (
             <Menu shadow="md" width={200}>
-              {/* @ts-expect-error fine */}
               <Menu.Target>
                 <ActionIcon variant="default" aria-label="Profile" size="lg">
                   <IconUserCircle style={{ width: '70%', height: '70%' }} stroke={1.5} />
