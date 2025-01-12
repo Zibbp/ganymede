@@ -60,7 +60,7 @@ const SyncedVideoPlayer = ({ src, vodId, title, poster, time, playing, muted }: 
       <MediaProvider ref={mediaProvider}>
         <Poster className={`${classes.ganymedePoster} vds-poster`} src={poster} alt={title} />
         <Track
-          src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}/api/v1/chapter/video/${vodId}/webvtt`}
+          src={`${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/chapter/video/${vodId}/webvtt`}
           kind="chapters"
           default={true}
         />
