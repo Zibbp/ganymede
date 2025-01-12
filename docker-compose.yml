@@ -28,6 +28,7 @@ services:
       - MAX_CHAT_RENDER_EXECUTIONS=2
       - MAX_VIDEO_DOWNLOAD_EXECUTIONS=2
       - MAX_VIDEO_CONVERT_EXECUTIONS=3
+      - MAX_VIDEO_SPRITE_THUMBNAIL_EXECUTIONS=2
       # Optional OAuth settings
       # - OAUTH_ENABLED=false
       # - OAUTH_PROVIDER_URL=
@@ -38,6 +39,7 @@ services:
       - SHOW_SSO_LOGIN_BUTTON=true
       - FORCE_SSO_AUTH=false
       - REQUIRE_LOGIN=false
+      # - CDN_URL= # Set this if you are hosting static files through another service (nginx, S3, etc). By default this does not need to be configured as Ganymede serves the static files.
     volumes:
       - /path/to/vod/storage:/data/videos # update VIDEOS_DIR env var
       - ./temp:/data/temp # update TEMP_DIR env var
