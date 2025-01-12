@@ -13,6 +13,7 @@ import (
 	"github.com/riverqueue/river/rivertype"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/chat"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
@@ -731,6 +732,8 @@ func GenerateThumbnailsVTT(metadata SpriteMetadata) (string, error) {
 
 	frameIndex := 0
 
+	cdnUrl := config.GetEnvConfig().CDN_URL
+
 	// Generate VTT entries
 	for _, imagePath := range metadata.SpriteImages {
 		for row := 0; row < metadata.SpriteRows; row++ {
@@ -746,8 +749,8 @@ func GenerateThumbnailsVTT(metadata SpriteMetadata) (string, error) {
 				x := col * metadata.SpriteWidth
 				y := row * metadata.SpriteHeight
 
-				entry := fmt.Sprintf("%s --> %s\n%s#xywh=%d,%d,%d,%d\n\n",
-					startTime, endTime, imagePath, x, y, metadata.SpriteWidth, metadata.SpriteHeight)
+				entry := fmt.Sprintf("%s --> %s\n%s%s#xywh=%d,%d,%d,%d\n\n",
+					startTime, endTime, cdnUrl, imagePath, x, y, metadata.SpriteWidth, metadata.SpriteHeight)
 
 				builder.WriteString(entry)
 

@@ -177,7 +177,7 @@ const VideoPlayer = ({ video }: Params) => {
       <MediaProvider>
         <Poster className={`${classes.mediaPlayerPoster} vds-poster`} src={videoPoster} alt={video.title} />
         <Track
-          src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}/api/v1/chapter/video/${video.id}/webvtt`}
+          src={`${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/chapter/video/${video.id}/webvtt`}
           kind="chapters"
           default={true}
         />
@@ -186,7 +186,7 @@ const VideoPlayer = ({ video }: Params) => {
         slots={{
           beforeFullscreenButton: <VideoPlayerTheaterModeIcon />,
         }}
-        thumbnails={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}/api/v1/vod/${video.id}/thumbnails/vtt`}
+        thumbnails={`${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/vod/${video.id}/thumbnails/vtt`}
       />
     </MediaPlayer>
   );

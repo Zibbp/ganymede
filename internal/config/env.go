@@ -46,6 +46,9 @@ type EnvConfig struct {
 	OAuthClientID     string `env:"OAUTH_CLIENT_ID, default="`
 	OAuthClientSecret string `env:"OAUTH_CLIENT_SECRET, default="`
 	OAuthRedirectURL  string `env:"OAUTH_REDIRECT_URL, default="`
+
+	// frontend
+	CDN_URL string `env:"CDN_URL, default="` // Populate if using an external host for the static files (Nginx, S3, etc). By default Ganymede will serve the VIDEOS_DIR directory.
 }
 
 // GetEnvConfig returns the environment variables for the application
