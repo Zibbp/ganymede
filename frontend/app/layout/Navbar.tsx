@@ -91,7 +91,6 @@ export function Navbar() {
       if (link.links) {
         return (
           <Menu key={link.label} trigger="hover" transitionProps={{ exitDuration: 0 }} withinPortal>
-            {/* @ts-expect-error fine */}
             <Menu.Target>
               <a
                 href={link.link}

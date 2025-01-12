@@ -159,7 +159,6 @@ const VideoMenu = ({ video }: Props) => {
   return (
     <div>
       <Menu shadow="md" width={200} position="top-end">
-        {/* @ts-expect-error valid */}
         <Menu.Target>
           <ActionIcon color="gray" variant="subtle">
             <IconMenu2 size="1rem" />
