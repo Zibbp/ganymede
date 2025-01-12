@@ -79,9 +79,13 @@ The API container can be run as a non root user. To do so add `PUID` and `PGID` 
 
 Note: On startup the container will `chown` the config, temp, and logs directory. It will not recursively `chown` the `/data/videos` directory. Ensure the mounted `/data/videos` directory is readable by the set user.
 
+### Config
+
+A configuration file is generate on initial start of Ganymede. By default the configuration is at `/data/config/config.json`. See the [config.go](https://github.com/Zibbp/ganymede/blob/main/internal/config/config.go) file for a full list of configuration settings. Most of the settings can be configured in the Web UI by navigating to Admin > Settings.
+
 ### Environment Variables
 
-The `docker-compose.yml` file has comments for each environment variable. Below is a list of all environment variables and their descriptions.
+The `docker-compose.yml` file has comments for each environment variable. Below is a list of all environment variables and their descriptions. See the [env.go](https://github.com/Zibbp/ganymede/blob/main/internal/config/env.go) file for a full list of all environment variables.
 
 ##### Server
 
