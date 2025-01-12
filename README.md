@@ -85,40 +85,41 @@ A configuration file is generate on initial start of Ganymede. By default the co
 
 ### Environment Variables
 
-The `docker-compose.yml` file has comments for each environment variable. Below is a list of all environment variables and their descriptions. See the [env.go](https://github.com/Zibbp/ganymede/blob/main/internal/config/env.go) file for a full list of all environment variables.
+The `docker-compose.yml` file has comments for each environment variable. Below is a list of all environment variables and their descriptions. See the [env.go](https://github.com/Zibbp/ganymede/blob/main/internal/config/env.go) file for a full list of all environment variables and their default values.
 
 ##### Server
 
-| ENV Name                        | Description                                                                                                                   |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `DEBUG`                         | Enable debug logging `true` or `false`.                                                                                       |
-| `VIDEOS_DIR`                    | Path inside the container to the videos directory. Default: `/data/videos`.                                                   |
-| `TEMP_DIR`                      | Path inside the container where temporary files are stored during archiving. Default: `/data/temp`.                           |
-| `LOGS_DIR`                      | Path inside the container where log files are stored. Default: `/data/logs`.                                                  |
-| `CONFIG_DIR`                    | Path inside the container where the config is stored. Default: `/data/config`.                                                |
-| `PATH_MIGRATION_ENABLED`        | Enable path migration at startup. Default: `true`.                                                                            |
-| `TZ`                            | Timezone.                                                                                                                     |
-| `DB_HOST`                       | Host of the database.                                                                                                         |
-| `DB_PORT`                       | Port of the database.                                                                                                         |
-| `DB_USER`                       | Username for the database.                                                                                                    |
-| `DB_PASS`                       | Password for the database.                                                                                                    |
-| `DB_NAME`                       | Name of the database.                                                                                                         |
-| `DB_SSL`                        | Whether to use SSL. Default: `disable`. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.     |
-| `DB_SSL_ROOT_CERT`              | _Optional_ Path to DB SSL root certificate. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information. |
-| `TWITCH_CLIENT_ID`              | Twitch application client ID.                                                                                                 |
-| `TWITCH_CLIENT_SECRET`          | Twitch application client secret.                                                                                             |
-| `OAUTH_ENABLED`                 | _Optional_ Wheter OAuth is enabled `true` or `false`. Must have the other OAuth variables set if this is enabled.             |
-| `OAUTH_PROVIDER_URL`            | _Optional_ OAuth provider URL. See https://github.com/Zibbp/ganymede/wiki/SSO---OpenID-Connect                                |
-| `OAUTH_CLIENT_ID`               | _Optional_ OAuth client ID.                                                                                                   |
-| `OAUTH_CLIENT_SECRET`           | _Optional_ OAuth client secret.                                                                                               |
-| `OAUTH_REDIRECT_URL`            | _Optional_ OAuth redirect URL, points to the API. Example: `http://localhost:4000/api/v1/auth/oauth/callback`.                |
-| `MAX_CHAT_DOWNLOAD_EXECUTIONS`  | Maximum number of chat downloads that can be running at once. Live streams bypass this limit.                                 |
-| `MAX_CHAT_RENDER_EXECUTIONS`    | Maximum number of chat renders that can be running at once.                                                                   |
-| `MAX_VIDEO_DOWNLOAD_EXECUTIONS` | Maximum number of video downloads that can be running at once. Live streams bypass this limit.                                |
-| `MAX_VIDEO_CONVERT_EXECUTIONS`  | Maximum number of video conversions that can be running at once.                                                              |
-| `SHOW_SSO_LOGIN_BUTTON`         | Frontend: `true/false` Show a "login via sso" button on the login page.                                                       |
-| `FORCE_SSO_AUTH`                | Frontend: `true/false` Force users to login via SSO by bypassing the login page.                                              |
-| `REQUIRE_LOGIN`                 | Frontend: `true/false` Require users to be logged in to view videos.                                                          |
+| ENV Name                                | Description                                                                                                                   |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `DEBUG`                                 | Enable debug logging `true` or `false`.                                                                                       |
+| `VIDEOS_DIR`                            | Path inside the container to the videos directory. Default: `/data/videos`.                                                   |
+| `TEMP_DIR`                              | Path inside the container where temporary files are stored during archiving. Default: `/data/temp`.                           |
+| `LOGS_DIR`                              | Path inside the container where log files are stored. Default: `/data/logs`.                                                  |
+| `CONFIG_DIR`                            | Path inside the container where the config is stored. Default: `/data/config`.                                                |
+| `PATH_MIGRATION_ENABLED`                | Enable path migration at startup. Default: `true`.                                                                            |
+| `TZ`                                    | Timezone.                                                                                                                     |
+| `DB_HOST`                               | Host of the database.                                                                                                         |
+| `DB_PORT`                               | Port of the database.                                                                                                         |
+| `DB_USER`                               | Username for the database.                                                                                                    |
+| `DB_PASS`                               | Password for the database.                                                                                                    |
+| `DB_NAME`                               | Name of the database.                                                                                                         |
+| `DB_SSL`                                | Whether to use SSL. Default: `disable`. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information.     |
+| `DB_SSL_ROOT_CERT`                      | _Optional_ Path to DB SSL root certificate. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information. |
+| `TWITCH_CLIENT_ID`                      | Twitch application client ID.                                                                                                 |
+| `TWITCH_CLIENT_SECRET`                  | Twitch application client secret.                                                                                             |
+| `OAUTH_ENABLED`                         | _Optional_ Wheter OAuth is enabled `true` or `false`. Must have the other OAuth variables set if this is enabled.             |
+| `OAUTH_PROVIDER_URL`                    | _Optional_ OAuth provider URL. See https://github.com/Zibbp/ganymede/wiki/SSO---OpenID-Connect                                |
+| `OAUTH_CLIENT_ID`                       | _Optional_ OAuth client ID.                                                                                                   |
+| `OAUTH_CLIENT_SECRET`                   | _Optional_ OAuth client secret.                                                                                               |
+| `OAUTH_REDIRECT_URL`                    | _Optional_ OAuth redirect URL, points to the API. Example: `http://localhost:4000/api/v1/auth/oauth/callback`.                |
+| `MAX_CHAT_DOWNLOAD_EXECUTIONS`          | Maximum number of chat downloads that can be running at once. Live streams bypass this limit.                                 |
+| `MAX_CHAT_RENDER_EXECUTIONS`            | Maximum number of chat renders that can be running at once.                                                                   |
+| `MAX_VIDEO_DOWNLOAD_EXECUTIONS`         | Maximum number of video downloads that can be running at once. Live streams bypass this limit.                                |
+| `MAX_VIDEO_CONVERT_EXECUTIONS`          | Maximum number of video conversions that can be running at once.                                                              |
+| `MAX_VIDEO_SPRITE_THUMBNAIL_EXECUTIONS` | Maximum number of video sprite thumbnail generation jobs that can be running at once. This is not very CPU intensive.         |
+| `SHOW_SSO_LOGIN_BUTTON`                 | Frontend: `true/false` Show a "login via sso" button on the login page.                                                       |
+| `FORCE_SSO_AUTH`                        | Frontend: `true/false` Force users to login via SSO by bypassing the login page.                                              |
+| `REQUIRE_LOGIN`                         | Frontend: `true/false` Require users to be logged in to view videos.                                                          |
 
 ##### DB
 
