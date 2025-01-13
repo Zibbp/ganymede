@@ -25,7 +25,7 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/sethvargo/go-envconfig v1.1.0
 	github.com/swaggo/swag v1.16.4
-	github.com/testcontainers/testcontainers-go v0.34.0
+	github.com/testcontainers/testcontainers-go v0.35.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.34.0
 	golang.org/x/crypto v0.31.0
 	golang.org/x/oauth2 v0.25.0
