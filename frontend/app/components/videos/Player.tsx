@@ -4,7 +4,7 @@ import { MediaPlayer, MediaPlayerInstance, MediaProvider, MediaSrc, Poster, Trac
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default';
 import { Video, VideoType } from '@/app/hooks/useVideos';
 import classes from "./Player.module.css"
-import { useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useRef, useState } from 'react';
 import { env } from 'next-runtime-env';
 import { escapeURL } from '@/app/util/util';
 import { PlaybackStatus, useFetchPlaybackForVideo, useSetPlaybackProgressForVideo, useStartPlaybackForVideo, useUpdatePlaybackProgressForVideo } from '@/app/hooks/usePlayback';
@@ -17,14 +17,15 @@ import useSettingsStore from '@/app/store/useSettingsStore';
 
 interface Params {
   video: Video;
+  ref: RefObject<MediaPlayerInstance | null>;
 }
 
-const VideoPlayer = ({ video }: Params) => {
+const VideoPlayer = ({ video, ref }: Params) => {
   const searchParams = useSearchParams()
 
   const isLoggedIn = useAuthStore(state => state.isLoggedIn);
 
-  const player = useRef<MediaPlayerInstance>(null);
+  const player = ref;
   const [videoSource, setVideoSource] = useState<MediaSrc>();
   const [videoPoster, setVideoPoster] = useState<string>("");
 

@@ -1,6 +1,6 @@
 "use client"
 import { useFetchVideo, useGetVideoClips, VideoType } from "@/app/hooks/useVideos";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import classes from "./VideoPage.module.css"
 import { Box, Container, useMantineTheme } from "@mantine/core";
 import VideoPlayer from "@/app/components/videos/Player";
@@ -14,6 +14,7 @@ import VideoLoginRequired from "@/app/components/videos/LoginRequired";
 import useAuthStore from "@/app/store/useAuthStore";
 import VideoPageClips from "@/app/components/videos/VideoClips";
 import VideoChatHistogram from "@/app/components/videos/ChatHistogram";
+import { MediaPlayerInstance } from "@vidstack/react";
 
 interface Params {
   id: string;
@@ -23,7 +24,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const theme = useMantineTheme()
   const { id } = React.use(params);
   const { isLoggedIn } = useAuthStore()
-
+  const player = useRef<MediaPlayerInstance>(null);
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
@@ -68,7 +69,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
 
         {/* Video player */}
         <div>
-          <VideoPlayer video={data} />
+          <VideoPlayer video={data} ref={player} />
         </div>
 
         {/* Chat player */}
@@ -107,7 +108,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
           <div className={
             videoTheaterMode || fullscreen ? classes.videoPlayerTheaterMode : classes.videoPlayer
           }>
-            <VideoPlayer video={data} />
+            <VideoPlayer video={data} ref={player} />
           </div>
         </div>
 
@@ -144,7 +145,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
       {/* Chat Histogram */}
       {(data.chat_path && (data.type != VideoType.Clip) && !isMobile && showChatHistogram) && (
         <Container size="7xl" fluid={true} >
-          <VideoChatHistogram videoId={data.id} />
+          <VideoChatHistogram videoId={data.id} playerRef={player}  />
         </Container>
       )}
 
