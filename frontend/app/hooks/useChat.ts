@@ -152,11 +152,9 @@ const useGetChatForVideo = (videoId: string, start: number, end: number) => {
   return useQuery<Array<Comment>>({
     queryKey: ["video", "chat", videoId, start, end],
     queryFn: () => getChatForVideo(videoId, start, end),
-    refetchInterval: false,
     refetchOnMount: false,
-    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   });
 };
 

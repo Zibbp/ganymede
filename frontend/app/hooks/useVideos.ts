@@ -497,6 +497,11 @@ const useGetVideoClips = (id: string) => {
   return useQuery({
     queryKey: ["video_clips", id],
     queryFn: () => getVideoClips(id),
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchIntervalInBackground: false,
   });
 };
 
