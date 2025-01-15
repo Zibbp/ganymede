@@ -219,6 +219,11 @@ const useFetchVideo = (params: FetchVideoOptions) => {
     queryKey: ["video", id, with_channel, with_chapters, with_muted_segments],
     queryFn: () =>
       fetchVideo(id, with_channel, with_chapters, with_muted_segments),
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchIntervalInBackground: false,
   });
 };
 
@@ -474,6 +479,8 @@ const useGetVideoByExternalId = (extId?: string) => {
     enabled: !!extId,
     refetchInterval: false,
     refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     refetchIntervalInBackground: false,
     retry: false,
   });
@@ -490,6 +497,11 @@ const useGetVideoClips = (id: string) => {
   return useQuery({
     queryKey: ["video_clips", id],
     queryFn: () => getVideoClips(id),
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchIntervalInBackground: false,
   });
 };
 
@@ -508,6 +520,7 @@ const useGetVideoChatHistogram = (id: string) => {
     queryFn: () => getVideoChatHistogram(id),
     refetchInterval: false,
     refetchOnMount: false,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchIntervalInBackground: false,
   });

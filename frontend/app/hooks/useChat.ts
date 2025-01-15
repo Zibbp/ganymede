@@ -126,9 +126,11 @@ const useGetEmotesForVideo = (videoId: string) => {
   return useQuery<Array<Emote>>({
     queryKey: ["video", "emotes", videoId],
     queryFn: () => getEmotesForVideo(videoId),
+    refetchInterval: false,
     refetchOnMount: false,
-    refetchOnReconnect: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchIntervalInBackground: false,
   });
 };
 
@@ -178,9 +180,11 @@ const useGetSeekChatForVideo = (
   return useQuery<Array<Comment>>({
     queryKey: ["video", "chat", "seek", videoId, start, count],
     queryFn: () => getSeekChatForVideo(videoId, start, count),
+    refetchInterval: false,
     refetchOnMount: false,
-    refetchOnReconnect: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchIntervalInBackground: false,
   });
 };
 
@@ -193,9 +197,11 @@ const useGetBadgesForVideo = (videoId: string) => {
   return useQuery<Array<Badge>>({
     queryKey: ["video", "badges", videoId],
     queryFn: () => getBadgesForVideo(videoId),
+    refetchInterval: false,
     refetchOnMount: false,
-    refetchOnReconnect: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchIntervalInBackground: false,
   });
 };
 
