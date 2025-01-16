@@ -49,16 +49,12 @@ const AdminVideosPage = () => {
     if (debouncedQuery) {
       filteredData = filteredData.filter((video) => {
         return (
-          video.id.toString().includes(debouncedQuery) ||
-          video.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-          video.ext_id.toString().includes(debouncedQuery.toLowerCase()) ||
-          video.streamed_at.toString().includes(debouncedQuery.toLowerCase()) ||
-          video.edges.channel.name
-            .toLowerCase()
-            .includes(debouncedQuery.toLowerCase()) ||
-          video.edges.channel.id
-            .toString()
-            .includes(debouncedQuery.toLowerCase())
+          video.id?.toString().includes(debouncedQuery) ||
+          video.title?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+          video.ext_id?.toString().includes(debouncedQuery.toLowerCase()) ||
+          video.streamed_at?.toString().includes(debouncedQuery.toLowerCase()) ||
+          video.edges?.channel?.name?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+          video.edges?.channel?.id?.toString().includes(debouncedQuery.toLowerCase())
         );
       });
     }
