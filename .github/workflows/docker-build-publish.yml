@@ -68,7 +68,6 @@ jobs:
         with:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          tags: ${{ steps.meta.outputs.tags }}
           outputs: type=image,"name=${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
