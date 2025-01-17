@@ -47,11 +47,6 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          flavor: |
-            latest=auto
-          tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=dev
 
       # Login into GitHub Container Registry except on PR
       - name: Log into registry ${{ env.REGISTRY }}
