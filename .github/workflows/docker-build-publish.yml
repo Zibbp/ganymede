@@ -11,9 +11,11 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  OCI_IMAGE_NAME: ""
 
 jobs:
   build:
+    name: Build OCI Images
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -30,6 +32,12 @@ jobs:
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
+      - name: Set correct OCI image name
+        id: ociImageName
+        run: echo "::set-output name=lowerCaseValue::${OCI_IMAGE_NAME,,}"
+        env:
+          OCI_IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       # Checkout the repo
       - name: Checkout repository
@@ -63,7 +71,7 @@ jobs:
         with:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,"name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,"name=${{ steps.ociImageName.outputs.lowerCaseValue }}",push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
         run: |
