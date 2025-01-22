@@ -6,8 +6,6 @@ on:
     workflows: ["Docker Build & Publish"]
     types:
       - completed
-  pull_request:
-    branches: ["main"]
   workflow_dispatch:
 jobs:
   delete-untagged:
@@ -18,4 +16,3 @@ jobs:
       - uses: dataaxiom/ghcr-cleanup-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          dry-run: true

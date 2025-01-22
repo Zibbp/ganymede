@@ -58,7 +58,7 @@ jobs:
 
       # Login into GitHub Container Registry except on PR
       - name: Log into registry ${{ env.REGISTRY }}
-        # if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -69,11 +69,13 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
+          push: ${{ github.event_name != 'pull_request'}}
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,"name=${{ steps.ociImageName.outputs.lowerCaseValue }}",push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,"name=${{ steps.ociImageName.outputs.lowerCaseValue }}",push-by-digest=true,name-canonical=true
 
       - name: Export digest
+        if: github.event_name != 'pull_request'
         run: |
           mkdir -p ${{ runner.temp }}/digests
           digest="${{ steps.build.outputs.digest }}"
@@ -81,6 +83,7 @@ jobs:
 
       - name: Upload digest
         uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
@@ -89,6 +92,7 @@ jobs:
 
   merge:
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
     needs:
       - build
     steps:
