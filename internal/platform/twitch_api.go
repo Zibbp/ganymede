@@ -246,33 +246,44 @@ func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams
 		rateLimitRemaining := 0
 		rateLimitReset := time.Time{}
 
+		// Parse Ratelimit-Limit
 		if rateLimitStr := resp.Header.Get("Ratelimit-Limit"); rateLimitStr != "" {
-			if value, err := strconv.Atoi(rateLimitStr); err == nil {
-				rateLimit = value
-			} else {
-				fmt.Printf("Error parsing Ratelimit-Limit: %v\n", err)
-			}
-		}
-		if rateLimitRemainingStr := resp.Header.Get("Ratelimit-Remaining"); rateLimitRemainingStr != "" {
-			if value, err := strconv.Atoi(rateLimitRemainingStr); err == nil {
-				rateLimitRemaining = value
-			} else {
-				fmt.Printf("Error parsing Ratelimit-Remaining: %v\n", err)
-			}
-		}
-		if resp.Header.Get("Ratelimit-Reset") != "" {
-			unixTimeInt, err := strconv.ParseInt(resp.Header.Get("Ratelimit-Reset"), 10, 64)
+			value, err := strconv.Atoi(rateLimitStr)
 			if err != nil {
-				return nil, fmt.Errorf("failed to parse ratelimit reset time: %v", err)
+				fmt.Printf("Error parsing Ratelimit-Limit: %v\n", err)
+			} else {
+				rateLimit = value
 			}
-			unixTime := time.Unix(unixTimeInt, 0)
-			rateLimitReset = unixTime
 		}
 
+		// Parse Ratelimit-Remaining
+		if rateLimitRemainingStr := resp.Header.Get("Ratelimit-Remaining"); rateLimitRemainingStr != "" {
+			value, err := strconv.Atoi(rateLimitRemainingStr)
+			if err != nil {
+				fmt.Printf("Error parsing Ratelimit-Remaining: %v\n", err)
+			} else {
+				rateLimitRemaining = value
+			}
+		}
+
+		// Parse Ratelimit-Reset
+		if rateLimitResetStr := resp.Header.Get("Ratelimit-Reset"); rateLimitResetStr != "" {
+			unixTime, err := strconv.ParseInt(rateLimitResetStr, 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse Ratelimit-Reset: %v", err)
+			}
+			rateLimitReset = time.Unix(unixTime, 0)
+		}
+
+		// Check rate limit usage
 		if rateLimit > 0 && rateLimitRemaining > 0 {
 			usagePercentage := float64(rateLimit-rateLimitRemaining) / float64(rateLimit) * 100
 			if usagePercentage > 75 {
-				log.Warn().Int("rate_limit", rateLimit).Int("rate_limit_remaining", rateLimitRemaining).Str("rate_limit_expires", rateLimitReset.String()).Msgf("twitch rate limit usage is over 75%% - %d/%d remaining", rateLimitRemaining, rateLimit)
+				log.Warn().
+					Int("rate_limit", rateLimit).
+					Int("rate_limit_remaining", rateLimitRemaining).
+					Str("rate_limit_expires", rateLimitReset.String()).
+					Msgf("rate limit usage is over 75%% - %d/%d remaining", rateLimitRemaining, rateLimit)
 			}
 		}
 
