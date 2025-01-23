@@ -3,8 +3,8 @@ name: Tests
 on:
   push:
     branches: [main]
-  pull_request_target: # run in the context of base branch for secrets
-    types: [opened, synchronize, reopened]
+  pull_request:
+    branches: [main]
 
 env:
   TESTCONTAINER_DOCKER_NETWORK: ganymede-tests
