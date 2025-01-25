@@ -93,14 +93,14 @@ WORKDIR /opt/app
 
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip fontconfig ffmpeg tzdata procps supervisor \
+    python3 python3-pip fontconfig ffmpeg git tzdata procps supervisor \
     fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-inter \
     curl \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf python3 /usr/bin/python
 
 # Install pip packages
-RUN pip3 install --no-cache-dir --upgrade pip streamlink --break-system-packages
+RUN pip3 install --no-cache-dir --upgrade pip git+https://github.com/streamlink/streamlink.git@refs/pull/5769/head --break-system-packages
 
 # Install gosu
 RUN curl -LO https://github.com/tianon/gosu/releases/latest/download/gosu-$(dpkg --print-architecture | awk -F- '{ print $NF }') \
