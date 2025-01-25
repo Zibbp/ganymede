@@ -6,8 +6,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/chapter"
 )
 
@@ -238,6 +240,52 @@ func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams
 			return nil, fmt.Errorf("failed to make request: %v", err)
 		}
 		defer resp.Body.Close()
+
+		// Log rate limit usage if over threshold
+		rateLimit := 0
+		rateLimitRemaining := 0
+		rateLimitReset := time.Time{}
+
+		// Parse Ratelimit-Limit
+		if rateLimitStr := resp.Header.Get("Ratelimit-Limit"); rateLimitStr != "" {
+			value, err := strconv.Atoi(rateLimitStr)
+			if err != nil {
+				fmt.Printf("Error parsing Ratelimit-Limit: %v\n", err)
+			} else {
+				rateLimit = value
+			}
+		}
+
+		// Parse Ratelimit-Remaining
+		if rateLimitRemainingStr := resp.Header.Get("Ratelimit-Remaining"); rateLimitRemainingStr != "" {
+			value, err := strconv.Atoi(rateLimitRemainingStr)
+			if err != nil {
+				fmt.Printf("Error parsing Ratelimit-Remaining: %v\n", err)
+			} else {
+				rateLimitRemaining = value
+			}
+		}
+
+		// Parse Ratelimit-Reset
+		if rateLimitResetStr := resp.Header.Get("Ratelimit-Reset"); rateLimitResetStr != "" {
+			unixTime, err := strconv.ParseInt(rateLimitResetStr, 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse Ratelimit-Reset: %v", err)
+			}
+			rateLimitReset = time.Unix(unixTime, 0)
+		}
+
+		// Check rate limit usage
+		if rateLimit > 0 && rateLimitRemaining > 0 {
+			usagePercentage := float64(rateLimit-rateLimitRemaining) / float64(rateLimit) * 100
+			if usagePercentage > 75 {
+				log.Warn().
+					Int("rate_limit", rateLimit).
+					Int("rate_limit_remaining", rateLimitRemaining).
+					Str("rate_limit_expires", rateLimitReset.String()).
+					Msgf("rate limit usage is over 75%% - %d/%d remaining", rateLimitRemaining, rateLimit)
+			}
+		}
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
