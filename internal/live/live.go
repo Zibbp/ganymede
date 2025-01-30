@@ -299,11 +299,6 @@ OUTER:
 				}
 
 				log.Debug().Msgf("%s is now live", lwc.Edges.Channel.Name)
-				// Stream is online, update database
-				_, err := s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(true).Save(context.Background())
-				if err != nil {
-					log.Error().Err(err).Msg("error updating live watched channel")
-				}
 				// check if stream is already being archived
 				queueItems, err := database.DB().Client.Queue.Query().Where(queue.Processing(true)).WithVod().All(context.Background())
 				if err != nil {
@@ -324,7 +319,15 @@ OUTER:
 				})
 				if err != nil {
 					log.Error().Err(err).Msg("error archiving twitch livestream")
+					continue
 				}
+
+				// Stream is online and archive started, update database
+				_, err = s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(true).Save(context.Background())
+				if err != nil {
+					log.Error().Err(err).Msg("error updating live watched channel")
+				}
+
 				// Notification
 				// Fetch channel for notification
 				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(entVod.ByCreatedAt()).Limit(1).First(ctx)
