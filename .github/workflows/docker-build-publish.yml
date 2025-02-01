@@ -104,6 +104,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
+          push: true
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,"name=${{ steps.ociImageName.outputs.lowerCaseValue }}",push-by-digest=true,name-canonical=true
