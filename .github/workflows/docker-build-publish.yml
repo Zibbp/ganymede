@@ -65,16 +65,8 @@ jobs:
           else
             GIT_TAG="dev"
           fi
-
           echo "GIT_TAG=$GIT_TAG" >> "$GITHUB_OUTPUT"
 
-          GIT_TAG=$(git tag --sort=-committerdate | head -n 1)
-          if [ -n "$GIT_TAG" ]; then
-            if [[ "$GITHUB_REF" != refs/tags/* ]]; then
-              GIT_TAG=${GIT_TAG}-SNAPSHOT
-            fi
-            echo "GIT_TAG=$GIT_TAG" >> $GITHUB_OUTPUT
-          fi
           GIT_SHA=$(git rev-parse --short HEAD)
           echo "GIT_SHA=$GIT_SHA" >> $GITHUB_OUTPUT
 
