@@ -189,8 +189,8 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5}>
             <Box>
-              <Text fw={"bold"}>[EXPERIMENTAL] Generate Sprite Thumbnails</Text>
-              <Text size="xs">Generate preview thumbnails seen when hovering over the player progress bar for all videos.</Text>
+              <Text fw={"bold"}>Generate Sprite Thumbnails</Text>
+              <Text size="xs">Generate preview thumbnails seen when hovering over the player progress bar for all videos. This automatically runs after every video archive.</Text>
             </Box>
             <Tooltip label="Start Task">
               <ActionIcon
