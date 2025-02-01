@@ -53,7 +53,7 @@ const PlaylistManageDrawerContent = ({ videoId }: Params) => {
       queryClient.invalidateQueries({ queryKey: ["video", "playlists", videoId] })
 
       showNotification({
-        message: "Addded video to playlist"
+        message: "Added video to playlist"
       })
 
 

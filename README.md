@@ -142,6 +142,17 @@ The `docker-compose.yml` file has comments for each environment variable. Below 
 | `/data/temp`   | Mount to store temporary files during the archive process. This is mounted to the host so files are recoverable in the event of a crash. This **must** match the `TEMP_DIR` environment variable. | `./temp:/data/temp`          |
 | `/data/config` | Mount to store the config. This **must** match the `CONFIG_DIR` environment variable.                                                                                                             | `./config:/data/config`      |
 
+
+## Development
+
+A [devcontainer](https://containers.dev/) is included for development. This container includes all the necessary tools to develop Ganymede. Once setup, the [Makefile](/Makefile) can be used to run the development environment.
+
+- `make dev_server` - Starts the server.
+- `make dev_worker` - Starts the worker.
+- `make dev_web` - Starts the web server.
+
+View the [Makefile](/Makefile) for more commands.
+
 ## Acknowledgements
 
 - [TwitchDownloader](https://github.com/lay295/TwitchDownloader)
