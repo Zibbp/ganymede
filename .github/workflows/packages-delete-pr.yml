@@ -1,0 +1,15 @@
+name: Cleanup Pull Request Images
+on:
+  pull_request:
+    types: [closed]
+jobs:
+  delete-pr-images:
+    name: Cleanup PR Packages
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete image
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          delete-tags: pr-${{github.event.pull_request.number}}
