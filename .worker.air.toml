@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/worker"
-  cmd = "make build_dev_worker"
+  cmd = "GIT_SHA=$(git rev-parse --short HEAD) GIT_TAG=dev make build_dev_worker"
   delay = 1000
   exclude_dir = ["tmp", "dev", "frontend"]
   exclude_file = []

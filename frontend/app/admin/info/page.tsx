@@ -35,6 +35,10 @@ const AdminInformationPage = () => {
               <Code ml={5}>{data.commit_hash}</Code>
             </Flex>
             <Flex>
+              <Text>Tag:</Text>
+              <Code ml={5}>{data.tag}</Code>
+            </Flex>
+            <Flex>
               <Text>Build Date:</Text>
               <Code ml={5}>{data.build_time}</Code>
             </Flex>
