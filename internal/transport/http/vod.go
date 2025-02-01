@@ -29,7 +29,7 @@ type VodService interface {
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	SearchVods(c echo.Context, query string, limit int, offset int, types []utils.VodType) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
-	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID) (vod.Pagination, error)
+	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID, processing bool) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error)
 	GetChatEmotes(ctx context.Context, vodID uuid.UUID) (*platform.Emotes, error)
@@ -416,18 +416,21 @@ func (h *Handler) GetVodPlaylists(c echo.Context) error {
 
 // GetVodsPagination godoc
 //
-//	@Summary		Get vods pagination
-//	@Description	Get vods pagination
-//	@Tags			vods
-//	@Accept			json
-//	@Produce		json
-//	@Param			limit		query		integer	false	"Limit"		default(10)
-//	@Param			offset		query		integer	false	"Offset"	default(0)
-//	@Param			channel_id	query		string	false	"Channel ID"
-//	@Success		200			{object}	vod.Pagination
-//	@Failure		400			{object}	utils.ErrorResponse
-//	@Failure		500			{object}	utils.ErrorResponse
-//	@Router			/vod/pagination [get]
+//		@Summary		Get vods pagination
+//		@Description	Get vods pagination
+//		@Tags			vods
+//		@Accept			json
+//		@Produce		json
+//		@Param			limit		query		integer	false	"Limit"		default(10)
+//		@Param			offset		query		integer	false	"Offset"	default(0)
+//		@Param			channel_id	query		string	false	"Channel ID"
+//	 @Param			types		query		string	false	"Types"
+//		@Param			playlist_id	query		string	false	"Playlist ID"
+//		@Param			processing	query		string	false	"Processing. Set to false to exclude videos that are still processing."
+//		@Success		200			{object}	vod.Pagination
+//		@Failure		400			{object}	utils.ErrorResponse
+//		@Failure		500			{object}	utils.ErrorResponse
+//		@Router			/vod/pagination [get]
 func (h *Handler) GetVodsPagination(c echo.Context) error {
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil {
@@ -464,7 +467,13 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 		}
 	}
 
-	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types, playlistUUID)
+	// Default to true to include all videos. Only exclude processing videos is requested.
+	isProcessing := true
+	if c.QueryParam("processing") == "false" {
+		isProcessing = false
+	}
+
+	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types, playlistUUID, isProcessing)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

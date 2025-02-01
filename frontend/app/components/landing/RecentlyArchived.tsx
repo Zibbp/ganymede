@@ -12,7 +12,7 @@ const RecentlyArchived = ({ count }: Props) => {
   const theme = useMantineTheme()
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
-  const { data, isPending, isError } = useFetchVideosFilter({ limit: count, offset: 0 })
+  const { data, isPending, isError } = useFetchVideosFilter({ limit: count, offset: 0, is_processing: false })
 
   if (isPending) return (<div></div>)
   if (isError) return <div>Error loading recently archived videos</div>
