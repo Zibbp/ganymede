@@ -11,6 +11,7 @@ import (
 
 type InfoResp struct {
 	CommitHash      string `json:"commit_hash"`
+	Tag             string `json:"tag"`
 	BuildTime       string `json:"build_time"`
 	Uptime          string `json:"uptime"`
 	ProgramVersions `json:"program_versions"`
@@ -26,6 +27,7 @@ type ProgramVersions struct {
 func (s *Service) GetInfo(ctx context.Context) (InfoResp, error) {
 	var resp InfoResp
 	resp.CommitHash = utils.Commit
+	resp.Tag = utils.Tag
 	resp.BuildTime = utils.BuildTime
 	resp.Uptime = time.Since(utils.StartTime).String()
 

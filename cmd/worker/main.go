@@ -19,7 +19,7 @@ func main() {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
-	log.Info().Str("commit", utils.Commit).Str("build_time", utils.BuildTime).Msg("starting worker")
+	log.Info().Str("commit", utils.Commit).Str("tag", utils.Tag).Str("build_time", utils.BuildTime).Msg("starting worker")
 
 	// Set up the worker
 	riverWorkerClient, err := worker.SetupWorker(ctx)

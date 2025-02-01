@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export interface GanymedeInformation {
   commit_hash: string;
+  tag: string;
   build_time: string;
   uptime: string;
   program_versions: GanymedeProgramVersions;
