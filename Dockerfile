@@ -96,11 +96,6 @@ RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
 
 # Production stage
 FROM debian:bookworm-slim
-
-LABEL org.opencontainers.image.source="https://github.com/zibbp/ganymede"
-LABEL org.opencontainers.image.authors="Zibbp"
-LABEL org.opencontainers.image.description="Twitch Live Stream and VOD Archiving Platform"
-
 WORKDIR /opt/app
 
 # Install dependencies

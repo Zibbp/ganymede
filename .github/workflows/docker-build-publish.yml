@@ -99,6 +99,7 @@ jobs:
           push: true
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           outputs: type=image,"name=${{ steps.ociImageName.outputs.lowerCaseValue }}",push-by-digest=true,name-canonical=true
           build-args: |
             GIT_TAG=${{ steps.git-version.outputs.GIT_TAG }}
@@ -163,7 +164,6 @@ jobs:
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ steps.ociImageName.outputs.lowerCaseValue }}@sha256:%s ' *)
-          docker buildx imagetools annotate ${{ steps.ociImageName.outputs.lowerCaseValue }} --label org.opencontainers.image.source=https://github.com/zibbp/ganymede --label org.opencontainers.image.description="Twitch Live Stream and VOD Archiving Platform" --label org.opencontainers.image.authors="Zibbp"
 
       - name: Inspect image
         run: |
