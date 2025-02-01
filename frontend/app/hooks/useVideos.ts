@@ -155,6 +155,7 @@ type FetchVideosFilterOptions =
   | {
       limit: number;
       offset: number;
+      is_processing: boolean;
     };
 
 const fetchVideosFilter = async (
@@ -162,7 +163,8 @@ const fetchVideosFilter = async (
   offset: number,
   types?: Array<VideoType>,
   channel_id?: string,
-  playlist_id?: string
+  playlist_id?: string,
+  is_processing?: boolean
 ): Promise<PaginationResponse<Array<Video>>> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const queryParams: { [key: string]: any } = {};
@@ -176,6 +178,9 @@ const fetchVideosFilter = async (
   }
   if (types && types.length > 0) {
     queryParams.types = types.join(",");
+  }
+  if (typeof is_processing !== "undefined") {
+    queryParams.processing = is_processing;
   }
 
   const response = await useAxios.get<
@@ -193,22 +198,31 @@ const fetchVideosFilter = async (
 
 const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
   // @ts-expect-error fine
-  const { limit, offset, types, channel_id, playlist_id } = params;
+  const { limit, offset, types, channel_id, playlist_id, is_processing } =
+    params;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let queryKey: any[];
+  const processing = is_processing ?? true;
   if (channel_id) {
     queryKey = ["channel_videos", channel_id, limit, offset, types];
   } else if (playlist_id) {
     queryKey = ["playlist_videos", playlist_id, limit, offset, types];
   } else {
-    queryKey = ["videos", limit, offset, types]; // Fetch videos without channel_id or playlist_id
+    queryKey = ["videos", limit, offset, types, processing]; // Fetch videos without channel_id or playlist_id
   }
 
   return useQuery<PaginationResponse<Array<Video>>, Error>({
     queryKey,
     queryFn: () =>
-      fetchVideosFilter(limit, offset, types, channel_id, playlist_id),
+      fetchVideosFilter(
+        limit,
+        offset,
+        types,
+        channel_id,
+        playlist_id,
+        processing
+      ),
     placeholderData: keepPreviousData, // previous data is kept until the new data is swapped in. This prevents flashing when changing pages, filtering, etc.
   });
 };

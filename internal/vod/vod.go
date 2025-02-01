@@ -350,7 +350,7 @@ func (s *Service) GetVodPlaylists(c echo.Context, vodID uuid.UUID) ([]*ent.Playl
 	return v.Edges.Playlists, nil
 }
 
-func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID) (Pagination, error) {
+func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID, isProcessing bool) (Pagination, error) {
 	var pagination Pagination
 
 	if channelId != uuid.Nil && playlistId != uuid.Nil {
@@ -373,6 +373,11 @@ func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, chann
 	// If types is not nil
 	if len(types) > 0 {
 		vodQuery = vodQuery.Where(vod.TypeIn(types...))
+	}
+
+	// If processing is true
+	if !isProcessing {
+		vodQuery = vodQuery.Where(vod.Processing(isProcessing))
 	}
 
 	v, err := vodQuery.Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).WithChannel().All(c.Request().Context())
