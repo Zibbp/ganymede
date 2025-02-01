@@ -1,12 +1,15 @@
 ARG TWITCHDOWNLOADER_VERSION="1.55.1"
+ARG GIT_SHA
+ARG GIT_TAG
 
 #
 # API Build
 #
 FROM golang:1.23-bookworm AS build-api
+ENV GIT_SHA=$GIT_SHA
+ENV GIT_TAG=$GIT_TAG
 RUN apt update && apt install -y make git
 WORKDIR /app
-COPY .git .git
 COPY . .
 RUN make build_server build_worker
 
