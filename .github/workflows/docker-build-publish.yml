@@ -99,6 +99,7 @@ jobs:
           push: true
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           outputs: type=image,"name=${{ steps.ociImageName.outputs.lowerCaseValue }}",push-by-digest=true,name-canonical=true
           build-args: |
             GIT_TAG=${{ steps.git-version.outputs.GIT_TAG }}
