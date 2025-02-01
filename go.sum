@@ -243,8 +243,8 @@ github.com/riverqueue/river/riverdriver/riverpgxv5 v0.15.0 h1:IBNuPdflDav+sxd8ED
 github.com/riverqueue/river/riverdriver/riverpgxv5 v0.15.0/go.mod h1:b8CGkpQlpHacnULdaJk8+4Dnvj4lBeEaIOnd+UT3Ciw=
 github.com/riverqueue/river/rivershared v0.15.0 h1:hDClNzZHUJzF9wdg6FgFMjvaMV74zY9FZZPQmBaVVM0=
 github.com/riverqueue/river/rivershared v0.15.0/go.mod h1:5pyQTv4W6BVoazOvN1p4EQ3a3jopsSgcHB1NxVRQRgU=
-github.com/riverqueue/river/rivertype v0.15.0 h1:+TXRnvQv1ulV24uQnsuZmbb3yJdmbpizKQf0b0SM+f0=
-github.com/riverqueue/river/rivertype v0.15.0/go.mod h1:4vpt5ZSdZ35mFbRAV4oXgeRdH3Mq5h1pUzQTvaGfCUA=
+github.com/riverqueue/river/rivertype v0.16.0 h1:iDjNtCiUbXwLraqNEyQdH/OD80f1wTo8Ai6WHYCwRxs=
+github.com/riverqueue/river/rivertype v0.16.0/go.mod h1:DETcejveWlq6bAb8tHkbgJqmXWVLiFhTiEm8j7co1bE=
 github.com/robfig/cron/v3 v3.0.1 h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
