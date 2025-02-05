@@ -24,6 +24,8 @@ export enum WatchedChannelEditMode {
 
 const qualityOptions = [
   { label: "Best", value: "best" },
+  { label: "1440p60", value: "1440p60" },
+  { label: "1080p60", value: "1080p60" },
   { label: "720p60", value: "720p60" },
   { label: "480p", value: "480p30" },
   { label: "360p", value: "360p30" },

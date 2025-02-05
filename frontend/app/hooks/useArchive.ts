@@ -14,6 +14,8 @@ export interface ArchiveVideoInput {
 
 export enum VideoQuality {
   Best = "best",
+  quality1440p60 = "1440p60",
+  quality1080p60 = "1080p60",
   quality720p60 = "720p60",
   quality480p = "480p30",
   quality360p = "360p30",

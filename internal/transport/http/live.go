@@ -26,7 +26,7 @@ type AddWatchedChannelRequest struct {
 	DownloadHighlights     bool                `json:"download_highlights" validate:"boolean"`
 	DownloadUploads        bool                `json:"download_uploads" validate:"boolean"`
 	ChannelID              string              `json:"channel_id" validate:"required"`
-	Resolution             string              `json:"resolution" validate:"required,oneof=best source 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
+	Resolution             string              `json:"resolution" validate:"required,oneof=best source 1440p60 1080p60 720p60 480p 360p 160p 480p30 360p30 160p30 audio"`
 	ArchiveChat            bool                `json:"archive_chat" validate:"boolean"`
 	RenderChat             bool                `json:"render_chat" validate:"boolean"`
 	DownloadSubOnly        bool                `json:"download_sub_only" validate:"boolean"`
