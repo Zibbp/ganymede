@@ -20,7 +20,9 @@ const ProfilePage = () => {
     chatPlaybackSmoothScroll,
     setChatPlaybackSmoothScroll,
     showChatHistogram,
-    setShowChatHistogram
+    setShowChatHistogram,
+    showProcessingVideosInRecentlyArchived,
+    setShowProcessingVideosInRecentlyArchived
   } = useSettingsStore();
 
   const toggleSmoothScroll = () => {
@@ -29,6 +31,10 @@ const ProfilePage = () => {
 
   const toggleChatHistogram = () => {
     setShowChatHistogram(!showChatHistogram);
+  }
+
+  const toggleProcessingVideosInRecentlyArchived = () => {
+    setShowProcessingVideosInRecentlyArchived(!showProcessingVideosInRecentlyArchived);
   }
 
   useEffect(() => {
@@ -60,12 +66,21 @@ const ProfilePage = () => {
                 description="Enable smooth scrolling for new chat messages. May look bad if there is a large volume of messages per second."
                 checked={chatPlaybackSmoothScroll}
                 onChange={toggleSmoothScroll}
+                my={5}
               />
               <Checkbox
                 label="Show Chat Histogram"
                 description="Display a visual representation of chat message throughout the video below the video player."
                 checked={showChatHistogram}
                 onChange={toggleChatHistogram}
+                my={5}
+              />
+              <Checkbox
+                label="Show Processing Videos in Recently Archived Videos"
+                description="Display processing videos in the 'Recently Archived' videos section on the home page."
+                checked={showProcessingVideosInRecentlyArchived}
+                onChange={toggleProcessingVideosInRecentlyArchived}
+                my={5}
               />
             </Box>
 

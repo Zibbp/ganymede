@@ -6,10 +6,12 @@ interface SettingsState {
   chatPlaybackSmoothScroll: boolean;
   videoTheaterMode: boolean;
   showChatHistogram: boolean;
+  showProcessingVideosInRecentlyArchived: boolean;
   setVideoLimit: (limit: number) => void;
   setChatPlaybackSmoothScroll: (smooth: boolean) => void;
   setVideoTheaterMode: (theaterMode: boolean) => void;
   setShowChatHistogram: (show: boolean) => void;
+  setShowProcessingVideosInRecentlyArchived: (show: boolean) => void;
 }
 
 // Create the store with persist middleware
@@ -21,6 +23,7 @@ const useSettingsStore = create<SettingsState>()(
       chatPlaybackSmoothScroll: false,
       videoTheaterMode: false,
       showChatHistogram: true,
+      showProcessingVideosInRecentlyArchived: true,
 
       setVideoLimit: (limit: number) => set({ videoLimit: limit }),
 
@@ -31,6 +34,9 @@ const useSettingsStore = create<SettingsState>()(
         set({ videoTheaterMode: theaterMode }),
 
       setShowChatHistogram: (show: boolean) => set({ showChatHistogram: show }),
+
+      setShowProcessingVideosInRecentlyArchived: (show: boolean) =>
+        set({ showProcessingVideosInRecentlyArchived: show }),
     }),
     {
       name: "settings-storage",
@@ -38,6 +44,8 @@ const useSettingsStore = create<SettingsState>()(
         videoLimit: state.videoLimit,
         chatPlaybackSmoothScroll: state.chatPlaybackSmoothScroll,
         showChatHistogram: state.showChatHistogram,
+        showProcessingVideosInRecentlyArchived:
+          state.showProcessingVideosInRecentlyArchived,
       }),
     }
   )
