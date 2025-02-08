@@ -3,6 +3,7 @@ import { useMediaQuery } from "@mantine/hooks"
 import VideoCard from "../videos/Card"
 import { Carousel } from "@mantine/carousel";
 import { useFetchVideosFilter } from "@/app/hooks/useVideos"
+import useSettingsStore from "@/app/store/useSettingsStore";
 
 type Props = {
   count: number
@@ -12,7 +13,9 @@ const RecentlyArchived = ({ count }: Props) => {
   const theme = useMantineTheme()
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
-  const { data, isPending, isError } = useFetchVideosFilter({ limit: count, offset: 0, is_processing: false })
+  const showProcessingVideosInRecentlyArchived = useSettingsStore((state) => state.showProcessingVideosInRecentlyArchived);
+
+  const { data, isPending, isError } = useFetchVideosFilter({ limit: count, offset: 0, is_processing: showProcessingVideosInRecentlyArchived })
 
   if (isPending) return (<div></div>)
   if (isError) return <div>Error loading recently archived videos</div>
