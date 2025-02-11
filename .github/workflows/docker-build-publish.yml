@@ -87,7 +87,7 @@ jobs:
       # Login into GitHub Container Registry except on PR
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@v3
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' }}
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -97,7 +97,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          push: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          push: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' }}
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload digest
         uses: actions/upload-artifact@v4
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' }}
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
@@ -125,7 +125,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' }}
     steps:
       - name: Set correct OCI image name
         id: ociImageName
