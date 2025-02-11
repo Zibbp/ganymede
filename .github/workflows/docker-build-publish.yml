@@ -97,7 +97,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          push: github.event.pull_request.head.repo.full_name == github.repository
+          push: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
