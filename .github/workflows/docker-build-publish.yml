@@ -125,7 +125,9 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && !(github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') }}
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      (github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push')
     steps:
       - name: Set correct OCI image name
         id: ociImageName
