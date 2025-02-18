@@ -12,6 +12,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   OCI_IMAGE_NAME: ""
+  OCI_PUSH: ${{ vars.OCI_PUSH }}
 
 jobs:
   build:
@@ -87,7 +88,7 @@ jobs:
       # Login into GitHub Container Registry except on PR
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@v3
-        if: vars.OCI_PUSH == 'true'
+        if: env.OCI_PUSH == 'true'
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -97,7 +98,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          push: ${{ vars.OCI_PUSH == 'true' }}
+          push: ${{ env.OCI_PUSH == 'true' }}
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
@@ -114,6 +115,7 @@ jobs:
 
       - name: Upload digest
         uses: actions/upload-artifact@v4
+        if: env.OCI_PUSH == 'true'
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
