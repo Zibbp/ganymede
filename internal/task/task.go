@@ -17,6 +17,7 @@ import (
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type Service struct {
@@ -253,7 +254,7 @@ func (s *Service) StorageMigration() error {
 		}
 
 		// Live Chat file
-		if video.LiveChatPath != "" {
+		if video.Type == utils.Live && video.LiveChatPath != "" {
 			newPath := fmt.Sprintf("%s/%s-live-chat%s", newRootFolderPath, fileName, path.Ext(video.LiveChatPath))
 			if err := safeRename(video.LiveChatPath, newPath); err != nil {
 				log.Error().Err(err).Msgf("error renaming live chat for video %s", video.ID)
@@ -263,7 +264,7 @@ func (s *Service) StorageMigration() error {
 		}
 
 		// Live Chat Convert file
-		if video.LiveChatConvertPath != "" {
+		if video.Type == utils.Live && video.LiveChatConvertPath != "" {
 			newPath := fmt.Sprintf("%s/%s-live-chat-convert%s", newRootFolderPath, fileName, path.Ext(video.LiveChatConvertPath))
 			if err := safeRename(video.LiveChatConvertPath, newPath); err != nil {
 				log.Error().Err(err).Msgf("error renaming live chat convert for video %s", video.ID)
