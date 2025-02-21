@@ -97,9 +97,8 @@ jobs:
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v6
-        if: env.OCI_PUSH == 'true' && github.actor != 'dependabot[bot]'
         with:
-          push: ${{ env.OCI_PUSH == 'true' }}
+          push: ${{ env.OCI_PUSH == 'true' && github.actor != 'dependabot[bot]' }}
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
