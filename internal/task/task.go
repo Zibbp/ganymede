@@ -359,7 +359,9 @@ func (s *Service) StorageMigration() error {
 		// Save the updates.
 		if _, err := update.Save(context.Background()); err != nil {
 			log.Error().Err(err).Msgf("error updating database paths for video %s", video.ID)
-			tx.Rollback()
+			if err := tx.Rollback(); err != nil {
+				log.Error().Err(err).Msg("error rolling back transaction")
+			}
 			rollbackRenames(renames)
 			continue
 		}
