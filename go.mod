@@ -23,7 +23,7 @@ require (
 	github.com/riverqueue/river v0.16.0
 	github.com/riverqueue/river/rivertype v0.16.0
 	github.com/rs/zerolog v1.33.0
-	github.com/sethvargo/go-envconfig v1.1.0
+	github.com/sethvargo/go-envconfig v1.1.1
 	github.com/swaggo/swag v1.16.4
 	github.com/testcontainers/testcontainers-go v0.35.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.35.0
