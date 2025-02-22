@@ -177,8 +177,10 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 	if input.ArchiveChat {
 		chatPath = fmt.Sprintf("%s/%s-chat.json", rootVideoPath, fileName)
 		chatVideoPath = fmt.Sprintf("%s/%s-chat.mp4", rootVideoPath, fileName)
-		liveChatPath = fmt.Sprintf("%s/%s-live-chat.json", rootVideoPath, fileName)
-		liveChatConvertPath = fmt.Sprintf("%s/%s-chat-convert.json", rootVideoPath, fileName)
+		if utils.VodType(video.Type) == utils.Live {
+			liveChatPath = fmt.Sprintf("%s/%s-live-chat.json", rootVideoPath, fileName)
+			liveChatConvertPath = fmt.Sprintf("%s/%s-chat-convert.json", rootVideoPath, fileName)
+		}
 	}
 
 	videoExtension := "mp4"
@@ -372,8 +374,6 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) error
 	if input.ArchiveChat {
 		chatPath = fmt.Sprintf("%s/%s-chat.json", rootVideoPath, fileName)
 		chatVideoPath = fmt.Sprintf("%s/%s-chat.mp4", rootVideoPath, fileName)
-		liveChatPath = fmt.Sprintf("%s/%s-live-chat.json", rootVideoPath, fileName)
-		liveChatConvertPath = fmt.Sprintf("%s/%s-chat-convert.json", rootVideoPath, fileName)
 	}
 
 	videoExtension := "mp4"
