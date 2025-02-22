@@ -127,6 +127,7 @@ func rollbackRenames(ops []renameOperation) {
 	}
 }
 
+// StorageMigration migrates video files to a new storage template. Files are moved first and then the database is updated. If any step fails, the operation is rolled back.
 func (s *Service) StorageMigration() error {
 	// Get all videos from the database.
 	videos, err := s.Store.Client.Vod.Query().WithChannel().All(context.Background())
@@ -179,6 +180,10 @@ func (s *Service) StorageMigration() error {
 				// If the error is that the target already exists, we consider that acceptable.
 				if os.IsExist(err) {
 					return nil
+				} else if os.IsNotExist(err) {
+					// If the file doesn't exist, we'll just skip it. This can happen if the path is in the database yet the file doesn't really exist (e.g. live chat for VODs might be populated in old versions).
+					log.Warn().Msgf("file %s does not exist, skipping", oldPath)
+					return nil
 				}
 				return fmt.Errorf("failed to rename %s to %s: %w", oldPath, newPath, err)
 			}
@@ -196,7 +201,6 @@ func (s *Service) StorageMigration() error {
 			ext := path.Ext(video.VideoPath)
 			if ext == ".m3u8" {
 				oldHlsVideoRootPath := path.Dir(video.VideoPath)
-				// oldSpriteThumbnailRootPath := fmt.Sprintf("%s/sprites", spriteThumbnailRoot)
 				newHlsVideoRootPath := fmt.Sprintf("%s/%s-video_hls", newRootFolderPath, fileName)
 				if err := safeRename(oldHlsVideoRootPath, newHlsVideoRootPath); err != nil {
 					log.Error().Err(err).Msgf("error renaming hls video directory for video %s", video.ID)
@@ -243,7 +247,7 @@ func (s *Service) StorageMigration() error {
 			}
 		}
 
-		// Chat video file (note: same suffix as chat)
+		// Chat video file
 		if video.ChatVideoPath != "" {
 			newPath := fmt.Sprintf("%s/%s-chat%s", newRootFolderPath, fileName, path.Ext(video.ChatVideoPath))
 			if err := safeRename(video.ChatVideoPath, newPath); err != nil {
@@ -317,12 +321,12 @@ func (s *Service) StorageMigration() error {
 		update := tx.Vod.UpdateOne(video)
 		if video.VideoPath != "" {
 			ext := path.Ext(video.VideoPath)
-			if ext != ".m3u8" {
-				update = update.SetVideoPath(fmt.Sprintf("%s/%s-video%s", newRootFolderPath, fileName, ext))
-			} else if ext == ".m3u8" {
+			if ext == ".m3u8" {
 				newHlsVideoRootPath := fmt.Sprintf("%s/%s-video_hls", newRootFolderPath, fileName)
 				update = update.SetVideoPath(fmt.Sprintf("%s/%s-video.m3u8", newHlsVideoRootPath, video.ExtID))
 				update = update.SetVideoHlsPath(newHlsVideoRootPath)
+			} else {
+				update = update.SetVideoPath(fmt.Sprintf("%s/%s-video%s", newRootFolderPath, fileName, ext))
 			}
 		}
 		if video.ThumbnailPath != "" {
