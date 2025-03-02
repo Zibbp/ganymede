@@ -476,5 +476,5 @@ gotest.tools/v3 v3.5.1 h1:EENdUnS3pdur5nybKYIh2Vfgc8IUNBjxDPSjtiJcOzU=
 gotest.tools/v3 v3.5.1/go.mod h1:isy3WKz7GK6uNw/sbHzfKBLvlvXwUyV06n6brMxxopU=
 moul.io/http2curl/v2 v2.3.0 h1:9r3JfDzWPcbIklMOs2TnIFzDYvfAZvjeavG6EzP7jYs=
 moul.io/http2curl/v2 v2.3.0/go.mod h1:RW4hyBjTWSYDOxapodpNEtX0g5Eb16sxklBqmd2RHcE=
-riverqueue.com/riverui v0.8.0 h1:yBEDLffPPx6Vu6rcJyCDc6HQtALGBooQYdaXbtrFExI=
-riverqueue.com/riverui v0.8.0/go.mod h1:WuoPnsPleN0YYGHJjeX9/p9zy/3bBZmWq2B9mhW5EM8=
+riverqueue.com/riverui v0.8.1 h1:QMX+XzmrhMCZlQSdajuovHuh3VUlvqGZB5Pzt4yfhF0=
+riverqueue.com/riverui v0.8.1/go.mod h1:LKszaJyMtF1aQ9uUNt3n5wdt/EWEDEWZloUFAIPFNRU=
