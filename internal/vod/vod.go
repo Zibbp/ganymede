@@ -647,7 +647,7 @@ func (s *Service) GetChatEmotes(ctx context.Context, vodID uuid.UUID) (*platform
 
 	switch {
 	// check if emotes are embedded in the 'emotes' struct
-	case len(chatData.Emotes.FirstParty) > 0 && len(chatData.Emotes.ThirdParty) > 0:
+	case len(chatData.Emotes.FirstParty) > 0 || len(chatData.Emotes.ThirdParty) > 0:
 		log.Debug().Str("video_id", v.ID.String()).Msg("chat emotes are embedded in 'emotes' struct")
 		// Loop through first party emotes and add them to the emotes slice
 		for _, emote := range chatData.Emotes.FirstParty {
@@ -671,7 +671,7 @@ func (s *Service) GetChatEmotes(ctx context.Context, vodID uuid.UUID) (*platform
 				Type:   "embed",
 			})
 		}
-	case len(chatData.EmbeddedData.FirstParty) > 0 && len(chatData.EmbeddedData.ThirdParty) > 0:
+	case len(chatData.EmbeddedData.FirstParty) > 0 || len(chatData.EmbeddedData.ThirdParty) > 0:
 		log.Debug().Str("video_id", v.ID.String()).Msg("chat emotes are embedded in 'embeddedData' struct")
 		// Loop through first party emotes and add them to the emotes slice
 		for _, emote := range chatData.EmbeddedData.FirstParty {
