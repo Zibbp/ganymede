@@ -19,7 +19,7 @@ require (
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/prometheus/client_golang v1.21.0
+	github.com/prometheus/client_golang v1.21.1
 	github.com/riverqueue/river v0.18.0
 	github.com/riverqueue/river/rivertype v0.18.0
 	github.com/rs/zerolog v1.33.0
