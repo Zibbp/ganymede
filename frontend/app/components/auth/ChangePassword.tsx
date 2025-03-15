@@ -40,7 +40,7 @@ const AuthChangePassword = ({ handleClose }: Props) => {
       setLoading(true)
       await authChangePassword(password, newPassword, confirmNewPassword)
       showNotification({
-        message: "Passwor changed"
+        message: "Password changed"
       })
       handleClose()
     } catch (error) {
