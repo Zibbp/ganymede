@@ -265,22 +265,62 @@ const ChatPlayer = ({ video }: Params) => {
     addCustomComment("Time skip detected. Chat cleared.");
   }, [addCustomComment, setMessagesWithScroll]);
 
-  // Optimized chat processing with error boundary
+  // Tracking processed IDs
+  const processedIds = new Set<string>();
+  const processedIdsOrder: Array<string> = [];
+
+  // Function to add an ID to the processed set
+  const addProcessedId = (id: string) => {
+    if (processedIds.has(id)) return;
+
+    processedIds.add(id);
+    processedIdsOrder.push(id);
+
+    // Remove oldest IDs if size exceeds MAX_CHAT_MESSAGES * 2
+    while (processedIdsOrder.length > MAX_CHAT_MESSAGES * 2) {
+      const oldestId = processedIdsOrder.shift();
+      if (oldestId) {
+        processedIds.delete(oldestId);
+      }
+    }
+  };
+
+  // chatTick handles processing of chat messages
   const chatTick = useCallback(async (time: number) => {
     try {
+      // Collect new messages to add in one batch
+      const newMessagesToAdd: Array<Comment> = [];
+
+      // Process messages from the internal ref
       while (internalMessagesRef.current.length > 0) {
         const comment = internalMessagesRef.current[0];
+
+        // Stop if the message is in the future
         if (comment.content_offset_seconds > time) break;
 
+        // Remove the message from the queue
         internalMessagesRef.current.shift();
+
+        // Skip duplicates
+        if (processedIds.has(comment._id)) continue;
+
+        // Process the message (e.g. add badges and emotes)
         const processedComment = addBadgesToFormattedComment(comment);
         processedComment.ganymede_formatted_message = addEmotesToFormattedComment(processedComment);
 
-        setMessagesWithScroll(prev => {
-          const newMessages = [...prev, processedComment];
-          return newMessages.slice(-MAX_CHAT_MESSAGES);
+        // Add to batch and mark as processed
+        newMessagesToAdd.push(processedComment);
+        addProcessedId(comment._id);
+      }
+
+      // Update state once with all new messages
+      if (newMessagesToAdd.length > 0) {
+        setMessagesWithScroll((prev) => {
+          const updatedMessages = [...prev, ...newMessagesToAdd];
+          return updatedMessages.slice(-MAX_CHAT_MESSAGES);
         });
       }
+
     } catch (error) {
       handleError(error as Error, "Chat processing");
     }
