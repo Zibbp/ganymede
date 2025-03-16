@@ -15,14 +15,16 @@ const ChatMessage = ({ comment }: Params) => {
         {comment.ganymede_formatted_badges &&
           comment.ganymede_formatted_badges.map(
             (badge: GanymedeFormattedBadge) => (
-              <Tooltip key={badge._id} label={badge.title} position="top">
-                <img
-                  className={classes.badge}
-                  src={badge.url}
-                  height="18"
-                  alt={badge.title}
-                />
-              </Tooltip>
+              badge.url && (
+                <Tooltip key={badge._id} label={badge.title} position="top">
+                  <img
+                    className={classes.badge}
+                    src={badge.url}
+                    height="18"
+                    alt={badge.title}
+                  />
+                </Tooltip>
+              )
             )
           )}
       </span>
