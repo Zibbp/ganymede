@@ -389,6 +389,9 @@ const ChatPlayer = ({ video }: Params) => {
         clearChat();
         lastEndTimeRef.current = 0;
         lastCheckTimeRef.current = time;
+        // clear processed IDs to prevent duplicates
+        processedIds.clear();
+        processedIdsOrder.length = 0;
         getSeekChat(time, 50);
       }
 
