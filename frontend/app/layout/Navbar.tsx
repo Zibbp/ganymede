@@ -176,7 +176,7 @@ export function Navbar() {
             leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
             placeholder="Search"
             onKeyUp={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" && searchQuery) {
                 router.push(`/search?q=${encodeURI(searchQuery)}`)
               }
             }}
