@@ -22,6 +22,7 @@ interface NavLink {
 const links: NavLink[] = [
   { link: '/', label: 'Home' },
   { link: '/channels', label: 'Channels' },
+  { link: '/videos', label: 'Videos' },
   {
     link: '/archive',
     label: 'Archive',
