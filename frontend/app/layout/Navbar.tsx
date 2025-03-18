@@ -1,7 +1,7 @@
 "use client"
 import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconChevronDown, IconChevronUp, IconMoon, IconSearch, IconSun, IconUserCircle } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronUp, IconMoon, IconSearch, IconSun, IconUserCircle, IconX } from '@tabler/icons-react';
 import classes from './Navbar.module.css';
 import useAuthStore from '../store/useAuthStore';
 import Link from 'next/link';
@@ -176,10 +176,26 @@ export function Navbar() {
             leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
             placeholder="Search"
             onKeyUp={(e) => {
-              if (e.key === "Enter") {
-                router.push(`/search?q=${encodeURI(searchQuery)}`)
+              if (e.key === "Enter" && searchQuery) {
+                router.push(`/search?q=${encodeURI(searchQuery)}`);
               }
             }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery) {
+                router.push(`/search?q=${encodeURI(searchQuery)}`);
+              }
+            }}
+            enterKeyHint="search"
+            rightSection={
+              searchQuery && (
+                <IconX
+                  style={{ width: rem(16), height: rem(16), cursor: 'pointer' }}
+                  onClick={() => setSearchQuery('')} // Clear input
+                />
+              )
+            }
+            rightSectionPointerEvents="auto"
           />
           <ActionIcon
             onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
@@ -230,6 +246,37 @@ export function Navbar() {
         <ScrollArea h={`calc(100vh - ${rem(80)})`} mx="-md">
           <Divider my="md" />
           {drawerLinks}
+          <Divider my="md" />
+          <TextInput
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.currentTarget.value)}
+            leftSectionPointerEvents="none"
+            leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
+            placeholder="Search"
+            onKeyUp={(e) => {
+              if (e.key === "Enter" && searchQuery) {
+                router.push(`/search?q=${encodeURI(searchQuery)}`);
+                closeDrawer();
+              }
+            }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery) {
+                router.push(`/search?q=${encodeURI(searchQuery)}`);
+                closeDrawer();
+              }
+            }}
+            enterKeyHint="search"
+            rightSection={
+              searchQuery && (
+                <IconX
+                  style={{ width: rem(16), height: rem(16), cursor: 'pointer' }}
+                  onClick={() => setSearchQuery('')} // Clear input
+                />
+              )
+            }
+            rightSectionPointerEvents="auto"
+          />
           <Divider my="md" />
           <Group justify="center" grow pb="xl" px="md">
             {isLoggedIn ? (
