@@ -3,39 +3,47 @@ package utils
 import (
 	"fmt"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 )
 
-func PrintMemUsage() {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-	// For info on each, see: https://golang.org/pkg/runtime/#MemStats
-	fmt.Printf("Alloc = %v MiB", bToMb(m.Alloc))
-	fmt.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
-	fmt.Printf("\tSys = %v MiB", bToMb(m.Sys))
-	fmt.Printf("\tNumGC = %v\n", m.NumGC)
-}
-
-func bToMb(b uint64) uint64 {
-	return b / 1024 / 1024
-}
-
+// SanitizeFileName returns a sanitized version of the input string that is safe for use as a file name
 func SanitizeFileName(fileName string) string {
-	// Use ReplaceAll instead of regex for easier updating
-	// Replace the unwanted characters with _
-	fileName = strings.ReplaceAll(fileName, "/", "_")
-	fileName = strings.ReplaceAll(fileName, ":", "_")
-	fileName = strings.ReplaceAll(fileName, "*", "_")
-	fileName = strings.ReplaceAll(fileName, "?", "_")
-	fileName = strings.ReplaceAll(fileName, "\"", "_")
-	fileName = strings.ReplaceAll(fileName, "<", "_")
-	fileName = strings.ReplaceAll(fileName, ">", "_")
-	fileName = strings.ReplaceAll(fileName, "|", "_")
+	illegalChars := []string{
+		"/", "\\", ":", "*", "?", "\"", "<", ">", "|",
+		"\x00",
+		"%",
+		"&",
+		";",
+	}
 
-	//Replace any whitespace
+	// Replace all illegal characters with underscore
+	for _, char := range illegalChars {
+		fileName = strings.ReplaceAll(fileName, char, "_")
+	}
+
+	// Handle whitespace (space, tab, newline)
+	fileName = strings.TrimSpace(fileName)
 	fileName = strings.ReplaceAll(fileName, " ", "_")
+	fileName = strings.ReplaceAll(fileName, "\t", "_")
+	fileName = strings.ReplaceAll(fileName, "\n", "_")
+
+	// Collapse multiple consecutive underscores
+	for strings.Contains(fileName, "__") {
+		fileName = strings.ReplaceAll(fileName, "__", "_")
+	}
+
+	// Ensure reasonable length
+	if len(fileName) > 255 {
+		fileName = fileName[:255]
+	}
+
+	fileName = strings.Trim(fileName, "_")
+
+	// Handle empty result or reserved names
+	if fileName == "" || fileName == "." || fileName == ".." {
+		return "unnamed_file"
+	}
 
 	return fileName
 }
