@@ -330,7 +330,7 @@ OUTER:
 
 				// Notification
 				// Fetch channel for notification
-				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(entVod.ByCreatedAt()).Limit(1).First(ctx)
+				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).Limit(1).First(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error getting vod")
 					continue
