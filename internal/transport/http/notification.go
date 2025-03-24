@@ -60,7 +60,7 @@ func (h *Handler) TestNotification(c echo.Context) error {
 	case "error":
 		notification.SendErrorNotification(&testChannel, &testVod, &testQueue, failedTask)
 	case "is_live":
-		notification.SendLiveNotification(&testChannel, &testVod, &testQueue)
+		notification.SendLiveNotification(&testChannel, &testVod, &testQueue, "Demo Game")
 	default:
 		return ErrorResponse(c, http.StatusBadRequest, "type is invalid")
 	}

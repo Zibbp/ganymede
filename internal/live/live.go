@@ -335,7 +335,7 @@ OUTER:
 					log.Error().Err(err).Msg("error getting vod")
 					continue
 				}
-				go notification.SendLiveNotification(lwc.Edges.Channel, vod, vod.Edges.Queue)
+				go notification.SendLiveNotification(lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
 			}
 		} else {
 			if lwc.IsLive {

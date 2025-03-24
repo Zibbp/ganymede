@@ -56,7 +56,7 @@ func SendVideoArchiveSuccessNotification(channelItem *ent.Channel, vodItem *ent.
 		return
 	}
 
-	variableMap := getVariableMap(channelItem, vodItem, qItem, "")
+	variableMap := getVariableMap(channelItem, vodItem, qItem, "", nil)
 
 	res := notificationVariableRegex.FindAllStringSubmatch(videoSuccessTemplate, -1)
 	for _, match := range res {
@@ -100,7 +100,7 @@ func SendLiveArchiveSuccessNotification(channelItem *ent.Channel, vodItem *ent.V
 		return
 	}
 
-	variableMap := getVariableMap(channelItem, vodItem, qItem, "")
+	variableMap := getVariableMap(channelItem, vodItem, qItem, "", nil)
 
 	res := notificationVariableRegex.FindAllStringSubmatch(liveSuccessTemplate, -1)
 	for _, match := range res {
@@ -144,7 +144,7 @@ func SendErrorNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *en
 		return
 	}
 
-	variableMap := getVariableMap(channelItem, vodItem, qItem, failedTask)
+	variableMap := getVariableMap(channelItem, vodItem, qItem, failedTask, nil)
 
 	res := notificationVariableRegex.FindAllStringSubmatch(errorTemplate, -1)
 	for _, match := range res {
@@ -177,7 +177,7 @@ func SendErrorNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *en
 
 }
 
-func SendLiveNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue) {
+func SendLiveNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue, category string) {
 	// Get notification settings
 	liveWebhookUrl := config.Get().Notification.IsLiveWebhookUrl
 	liveTemplate := config.Get().Notification.IsLiveTemplate
@@ -188,7 +188,7 @@ func SendLiveNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent
 		return
 	}
 
-	variableMap := getVariableMap(channelItem, vodItem, qItem, "")
+	variableMap := getVariableMap(channelItem, vodItem, qItem, "", &category)
 
 	res := notificationVariableRegex.FindAllStringSubmatch(liveTemplate, -1)
 	for _, match := range res {
@@ -221,7 +221,11 @@ func SendLiveNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent
 
 }
 
-func getVariableMap(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue, failedTask string) map[string]interface{} {
+func getVariableMap(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue, failedTask string, category *string) map[string]interface{} {
+	categoryValue := ""
+	if category != nil {
+		categoryValue = *category
+	}
 	variables := map[string]interface{}{
 		// Channel variables
 		"channel_id":           channelItem.ID,
@@ -243,6 +247,8 @@ func getVariableMap(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue
 		"queue_created_at": qItem.CreatedAt,
 		// Error
 		"failed_task": failedTask,
+		// Live stream
+		"category": categoryValue,
 	}
 	return variables
 }
