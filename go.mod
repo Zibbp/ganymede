@@ -22,7 +22,7 @@ require (
 	github.com/prometheus/client_golang v1.21.1
 	github.com/riverqueue/river v0.19.0
 	github.com/riverqueue/river/rivertype v0.19.0
-	github.com/rs/zerolog v1.33.0
+	github.com/rs/zerolog v1.34.0
 	github.com/sethvargo/go-envconfig v1.1.1
 	github.com/swaggo/swag v1.16.4
 	github.com/testcontainers/testcontainers-go v0.35.0
