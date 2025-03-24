@@ -287,6 +287,12 @@ const AdminSettingsPage = () => {
                     "{{vod_id}} {{vod_ext_id}} {{vod_platform}} {{vod_type}} {{vod_title}} {{vod_duration}} {{vod_views}} {{vod_resolution}} {{vod_streamed_at}} {{vod_created_at}}"
                   }
                 </Code>
+                <Text>Live Stream</Text>
+                <Code>
+                  {
+                    "{{category}}"
+                  }
+                </Code>
                 <Text>Queue</Text>
                 <Code>{"{{queue_id}} {{queue_created_at}}"}</Code>
               </div>
