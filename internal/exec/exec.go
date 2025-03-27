@@ -22,6 +22,14 @@ import (
 )
 
 func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
+	// Get channel for video
+	vC := video.QueryChannel()
+	channel, err := vC.Only(ctx)
+	if err != nil {
+		return err
+	}
+	video.Edges.Channel = channel
+
 	env := config.GetEnvConfig()
 	// open log file
 	logFilePath := fmt.Sprintf("%s/%s-video.log", env.LogsDir, video.ID.String())
@@ -43,8 +51,20 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 		videoURL = fmt.Sprintf("https://twitch.tv/%s/clip/%s", channel.DisplayName, video.ExtID)
 	}
 
+	// If not best or audio, get the closest quality for the video
+	closestQuality := video.Resolution
+	if closestQuality != "best" && closestQuality != "audio" {
+		qualities, err := GetTwitchVideoQualityOptions(ctx, video)
+		if err != nil {
+			return fmt.Errorf("error getting video quality options: %w", err)
+		}
+		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities) // Use '=' instead of ':='
+
+		log.Info().Msgf("selected closest quality %s", closestQuality)
+	}
+
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, videoURL, fmt.Sprintf("%s,best", video.Resolution), "--progress=force", "--force")
+	cmdArgs = append(cmdArgs, videoURL, fmt.Sprintf("%s,best", closestQuality), "--progress=force", "--force")
 
 	// check if user has twitch token set
 	// if so, set token in streamlink command
@@ -95,7 +115,46 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
+// GetTwitchVideoQualityOptions returns a list of available quality options for a Twitch video.
+func GetTwitchVideoQualityOptions(ctx context.Context, video ent.Vod) ([]string, error) {
+	// Get video URL based on video type
+	var url string
+	switch video.Type {
+	case utils.Clip:
+		url = fmt.Sprintf("https://twitch.tv/%s/clip/%s", video.Edges.Channel.Name, video.ExtID)
+	case utils.Live:
+		url = fmt.Sprintf("https://twitch.tv/%s", video.Edges.Channel.Name)
+	default:
+		url = fmt.Sprintf("https://twitch.tv/videos/%s", video.ExtID)
+	}
+	args := []string{"--json", url}
+	cmd := osExec.CommandContext(ctx, "streamlink", args...)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		log.Error().Err(err).Str("stderr", stderr.String()).Str("stdout", stdout.String()).Msg("error running streamlink")
+		return nil, fmt.Errorf("error running streamlink: %w", err)
+	}
+
+	var data map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &data); err != nil {
+		log.Error().Err(err).Msg("error unmarshalling streamlink data")
+		return nil, err
+	}
+
+	qualities := make([]string, 0)
+	for key := range data["streams"].(map[string]interface{}) {
+		qualities = append(qualities, key)
+	}
+
+	return qualities, nil
+}
+
 func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Channel, startChat chan bool) error {
+	video.Edges.Channel = &channel
 	env := config.GetEnvConfig()
 	// open log file
 	logFilePath := fmt.Sprintf("%s/%s-video.log", env.LogsDir, video.ID.String())
@@ -153,16 +212,25 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		}
 	}
 
-	// streamlink livestreams do not use the 30 fps suffix
-	video.Resolution = strings.Replace(video.Resolution, "30", "", 1)
+	// If not best or audio, get the closest quality for the video
+	closestQuality := video.Resolution
+	if closestQuality != "best" && closestQuality != "audio" {
+		qualities, err := GetTwitchVideoQualityOptions(ctx, video)
+		if err != nil {
+			return fmt.Errorf("error getting video quality options: %w", err)
+		}
+		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities) // Use '=' instead of ':='
+
+		log.Info().Msgf("selected closest quality %s", closestQuality)
+	}
 
 	// streamlink livestreams expect 'audio_only' instead of 'audio'
-	if video.Resolution == "audio" {
-		video.Resolution = "audio_only"
+	if closestQuality == "audio" {
+		closestQuality = "audio_only"
 	}
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, streamUrl, fmt.Sprintf("%s,best", video.Resolution), "--progress=force", "--force")
+	cmdArgs = append(cmdArgs, streamUrl, fmt.Sprintf("%s,best", closestQuality), "--progress=force", "--force")
 
 	// pass proxy header
 	if proxyHeader != "" {

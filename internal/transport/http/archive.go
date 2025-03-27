@@ -29,7 +29,7 @@ type ArchiveChannelRequest struct {
 type ArchiveVideoRequest struct {
 	VideoId     string           `json:"video_id"`
 	ChannelId   string           `json:"channel_id"`
-	Quality     utils.VodQuality `json:"quality" validate:"required,oneof=best source 720p60 480p30 360p30 160p30 480p 360p 160p audio"`
+	Quality     utils.VodQuality `json:"quality" validate:"required,oneof=best 1080p 720p 480p 360p 160p audio"`
 	ArchiveChat bool             `json:"archive_chat"`
 	RenderChat  bool             `json:"render_chat"`
 }
