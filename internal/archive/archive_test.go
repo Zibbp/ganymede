@@ -67,7 +67,7 @@ func TestArchiveVideo(t *testing.T) {
 	// Archive the video
 	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
-		Quality:     utils.R720P60,
+		Quality:     utils.R720,
 		ArchiveChat: true,
 		RenderChat:  true,
 	})
@@ -145,7 +145,7 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	// Archive the video
 	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
-		Quality:     utils.R720P60,
+		Quality:     utils.R720,
 		ArchiveChat: false,
 		RenderChat:  false,
 	})
@@ -223,7 +223,7 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	// Archive the video
 	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
-		Quality:     utils.R720P60,
+		Quality:     utils.R720,
 		ArchiveChat: true,
 		RenderChat:  false,
 	})
@@ -306,7 +306,7 @@ func TestArchiveVideoHLS(t *testing.T) {
 	// Archive the video
 	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
-		Quality:     utils.R720P60,
+		Quality:     utils.R720,
 		ArchiveChat: false,
 		RenderChat:  false,
 	})
@@ -392,7 +392,7 @@ func TestArchiveClip(t *testing.T) {
 	// Archive the video
 	err = app.ArchiveService.ArchiveClip(context.Background(), archive.ArchiveClipInput{
 		ID:          TestTwitchClipId,
-		Quality:     utils.R720P60,
+		Quality:     utils.R720,
 		ArchiveChat: true,
 		RenderChat:  true,
 	})
@@ -470,7 +470,7 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	// Archive the video
 	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
-		Quality:     utils.R720P60,
+		Quality:     utils.R720,
 		ArchiveChat: false,
 		RenderChat:  false,
 	})

@@ -79,16 +79,18 @@ func (TaskStatus) Values() (kinds []string) {
 type VodQuality string
 
 const (
-	Best    VodQuality = "best"
-	Source  VodQuality = "source"
-	R720P60 VodQuality = "720p60"
-	R480P30 VodQuality = "480p30"
-	R360P30 VodQuality = "360p30"
-	R160P30 VodQuality = "160p30"
+	Best   VodQuality = "best"
+	Source VodQuality = "source"
+	R1080  VodQuality = "1080"
+	R720   VodQuality = "720"
+	R480   VodQuality = "480"
+	R360   VodQuality = "360"
+	R160   VodQuality = "160"
+	Audio  VodQuality = "audio"
 )
 
 func (VodQuality) Values() (kinds []string) {
-	for _, s := range []VodQuality{Best, Source, R720P60, R480P30, R360P30, R160P30} {
+	for _, s := range []VodQuality{Best, Source, R1080, R720, R480, R360, R160, Audio} {
 		kinds = append(kinds, string(s))
 	}
 	return
