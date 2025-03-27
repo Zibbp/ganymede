@@ -22,6 +22,14 @@ import (
 )
 
 func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
+	// Get channel for video
+	vC := video.QueryChannel()
+	channel, err := vC.Only(ctx)
+	if err != nil {
+		return err
+	}
+	video.Edges.Channel = channel
+
 	env := config.GetEnvConfig()
 	// open log file
 	logFilePath := fmt.Sprintf("%s/%s-video.log", env.LogsDir, video.ID.String())
@@ -109,13 +117,6 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 
 // GetTwitchVideoQualityOptions returns a list of available quality options for a Twitch video.
 func GetTwitchVideoQualityOptions(ctx context.Context, video ent.Vod) ([]string, error) {
-	// Get channel for video
-	vC := video.QueryChannel()
-	channel, err := vC.Only(ctx)
-	if err != nil {
-		return nil, err
-	}
-	video.Edges.Channel = channel
 	// Get video URL based on video type
 	var url string
 	switch video.Type {
@@ -153,6 +154,7 @@ func GetTwitchVideoQualityOptions(ctx context.Context, video ent.Vod) ([]string,
 }
 
 func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Channel, startChat chan bool) error {
+	video.Edges.Channel = &channel
 	env := config.GetEnvConfig()
 	// open log file
 	logFilePath := fmt.Sprintf("%s/%s-video.log", env.LogsDir, video.ID.String())
