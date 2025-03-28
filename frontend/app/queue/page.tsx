@@ -13,11 +13,14 @@ import { useDeleteVideo } from "../hooks/useVideos";
 import { useBlockVideo } from "../hooks/useBlockedVideos";
 import { useQueryClient } from "@tanstack/react-query";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 
 const QueuePage = () => {
   useEffect(() => {
     document.title = "Queue";
   }, []);
+
+  const t = useTranslations("QueuePage");
 
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -102,7 +105,7 @@ const QueuePage = () => {
       queryClient.invalidateQueries({ queryKey: ["queue"] })
 
       showNotification({
-        message: "Queue item has been cancelled"
+        message: t('cancel')
       })
 
       closeDeleteModal()
@@ -118,7 +121,7 @@ const QueuePage = () => {
   if (queueIsPending) return (
     <GanymedeLoadingText message="Loading Queue" />
   )
-  if (queueIsError) return <div>Error loading queue</div>
+  if (queueIsError) return <div>{t('error')}</div>
 
   return (
 
@@ -134,32 +137,32 @@ const QueuePage = () => {
           columns={[
             {
               accessor: "id",
-              title: "ID",
+              title: t('column.id'),
             },
-            { accessor: "edges.vod.edges.channel.name", title: "Channel" },
-            { accessor: "edges.vod.ext_id", title: "External ID" },
+            { accessor: "edges.vod.edges.channel.name", title: t('column.channel') },
+            { accessor: "edges.vod.ext_id", title: t('column.ext_id') },
             {
               accessor: "processing",
-              title: "Status",
+              title: t('column.status.status'),
               render: (value) => (
                 <div>
                   {checkFailed(value) && (
                     <div>
-                      <Tooltip label="Task in 'failed' state">
-                        <Text className={classes.errBadge}>ERROR</Text>
+                      <Tooltip label={t('column.status.failed')}>
+                        <Text className={classes.errBadge}>{t('column.status.error')}</Text>
                       </Tooltip>
                     </div>
                   )}
                   {value.processing && !checkFailed(value) && !value.on_hold && (
                     <div>
-                      <Tooltip label="Processing">
+                      <Tooltip label={t('column.status.processing')}>
                         <Loader mt={2} color="green" size="sm" />
                       </Tooltip>
                     </div>
                   )}
                   {value.processing && !checkFailed(value) && value.on_hold && (
                     <div>
-                      <Tooltip label="On Hold">
+                      <Tooltip label={t('column.status.hold')}>
                         <ThemeIcon variant="outline" color="orange">
                           <IconPlayerPause />
                         </ThemeIcon>
@@ -172,21 +175,21 @@ const QueuePage = () => {
 
             {
               accessor: "live_archive",
-              title: "Live Archive",
+              title: t('column.live_archive'),
               render: ({ live_archive }) => (
                 <Text>{live_archive ? "✅" : "❌"}</Text>
               ),
             },
             {
               accessor: "created_at",
-              title: "Created At",
+              title: t('column.created_at'),
               render: ({ created_at }) => (
                 <Text>{new Date(created_at).toLocaleString()}</Text>
               ),
             },
             {
               accessor: "actions",
-              title: "Actions",
+              title: t('column.actions.actions'),
               render: (record) => (
                 <div
                   style={{
@@ -196,13 +199,13 @@ const QueuePage = () => {
                   }}
                 >
                   <Link href={"/queue/" + record.id}>
-                    <Tooltip label="View queue item" withinPortal>
+                    <Tooltip label={t('column.actions.view')} withinPortal>
                       <ActionIcon variant="light">
                         <IconEye size="1.125rem" />
                       </ActionIcon>
                     </Tooltip>
                   </Link>
-                  <Tooltip label="Stop queue item" withinPortal>
+                  <Tooltip label={t('column.actions.stop')} withinPortal>
                     <ActionIcon
                       variant="light"
                       color="red"
@@ -226,15 +229,15 @@ const QueuePage = () => {
           onRecordsPerPageChange={setPerPage}
         />
       </Container>
-      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Cancel Queue Item">
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('modal.cancel.title')}>
         <div>
-          <Text>Are you sure you want to cancel the queue item?</Text>
-          <Text size="sm" fs="italic">For live archives this will stop the video and chat download then proceed with post-processing. For VOD archives this will stop all the tasks.</Text>
+          <Text>{t('modal.cancel.text')}</Text>
+          <Text size="sm" fs="italic">{t('modal.cancel.description')}</Text>
           <Switch
             mt={5}
             defaultChecked
             color="red"
-            label="Delete video and video files"
+            label={t('modal.cancel.delete')}
             checked={deleteVideoAndFiles}
             onChange={(event) => setDeleteVideoAndFiles(event.currentTarget.checked)}
           />
@@ -242,11 +245,11 @@ const QueuePage = () => {
             mt={5}
             defaultChecked
             color="violet"
-            label="Block video ID"
+            label={t('modal.cancel.block')}
             checked={blockVideoId}
             onChange={(event) => setBlockVideoId(event.currentTarget.checked)}
           />)}
-          <Button variant="filled" color="orange" fullWidth loading={cancelQueueLoading} mt={10} onClick={cancelQueueItem}>Cancel Queue Item</Button>
+          <Button variant="filled" color="orange" fullWidth loading={cancelQueueLoading} mt={10} onClick={cancelQueueItem}>{t('modal.cancel.title')}</Button>
         </div>
       </Modal>
     </div>

@@ -1,0 +1,63 @@
+{
+  "HomePage": {
+    "continueWatching": "Continue Watching",
+    "recentlyArchived": "Recently Archived"
+  },
+  "VideosPage": {
+    "title": "All Videos",
+    "error": "Error loading videos"
+  },
+  "VideoPage": {
+    "loading": "Loading video"
+  },
+  "SearchPage": {
+    "title": "Search",
+    "error": "Error loading search results",
+    "loading": "Loading search results"
+  },
+  "QueuePage": {
+    "title": "Queue",
+    "error": "Error loading queue",
+    "loading": "Loading queue",
+    "cancel": "Queue item has been canceled",
+    "column": {
+      "id": "ID",
+      "channel": "Channel",
+      "ext_id": "External ID",
+      "status": {
+        "status": "Status",
+        "failed": "Task in failed state",
+        "error": "ERROR",
+        "processing": "Processing",
+        "hold": "On hold"
+      },
+      "live_archive": "Live Archive",
+      "created_at": "Created At",
+      "actions": {
+        "actions": "Actions",
+        "view": "View queue item",
+        "stop": "Stop queue item"
+      }
+    },
+    "modal": {
+      "cancel": {
+        "title": "Cancel queue item",
+        "text": "Are you sure you want to cancel this queue item?",
+        "description": "For live archives this will stop the video and chat download then proceed with post-processing. For VOD archives this will stop all the tasks.",
+        "delete": "Delete video and video files",
+        "block": "Block video ID"
+      }
+    }
+  },
+  "LandingHeroComponent": {
+    "subtitle": "A platform to archive live streams and videos",
+    "channelsButton": "Channels",
+    "loginButton": "Login"
+  },
+  "LandingContinueWatchingComponent": {
+    "error": "Error loading last playback videos"
+  },
+  "LandingRecentlyArchivedComponent": {
+    "error": "Error loading recently archived videos"
+  }
+}

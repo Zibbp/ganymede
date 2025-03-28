@@ -1,7 +1,7 @@
 "use client"
-import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse } from '@mantine/core';
+import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconChevronDown, IconChevronUp, IconMoon, IconSearch, IconSun, IconUserCircle, IconX } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronUp, IconLanguage, IconMoon, IconSearch, IconSun, IconUserCircle, IconX } from '@tabler/icons-react';
 import classes from './Navbar.module.css';
 import useAuthStore from '../store/useAuthStore';
 import Link from 'next/link';
@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { authLogout, UserRole } from '../hooks/useAuthentication';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { setUserLocale } from '../services/locale';
 
 interface NavLink {
   link: string;
@@ -207,6 +208,24 @@ export function Navbar() {
             <IconSun className={cx(classes.icon, classes.light)} stroke={1.5} />
             <IconMoon className={cx(classes.icon, classes.dark)} stroke={1.5} />
           </ActionIcon>
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <Tooltip label="Language">
+                <ActionIcon variant="default" aria-label="Profile" size="lg">
+                  <IconLanguage style={{ width: '70%', height: '70%' }} stroke={1.5} />
+                </ActionIcon>
+              </Tooltip>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item onClick={() => setUserLocale('en')}>
+                English
+              </Menu.Item>
+              <Menu.Item onClick={() => setUserLocale('de')}>
+                German
+              </Menu.Item>
+
+            </Menu.Dropdown>
+          </Menu>
           {isLoggedIn ? (
             <Menu shadow="md" width={200}>
               <Menu.Target>

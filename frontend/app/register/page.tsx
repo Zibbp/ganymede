@@ -3,7 +3,7 @@ import { Container } from "@mantine/core";
 import { AuthenticationForm, AuthFormType } from "../components/authentication/AuthenticationForm";
 import { useEffect } from "react";
 
-const Loginpage = () => {
+const RegisterPage = () => {
   useEffect(() => {
     document.title = "Register";
   }, []);
@@ -16,4 +16,4 @@ const Loginpage = () => {
   );
 }
 
-export default Loginpage;
+export default RegisterPage;

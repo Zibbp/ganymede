@@ -15,6 +15,7 @@ import useAuthStore from "@/app/store/useAuthStore";
 import VideoPageClips from "@/app/components/videos/VideoClips";
 import VideoChatHistogram from "@/app/components/videos/ChatHistogram";
 import { MediaPlayerInstance } from "@vidstack/react";
+import { useTranslations } from "next-intl";
 
 interface Params {
   id: string;
@@ -26,6 +27,8 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const { isLoggedIn } = useAuthStore()
   const player = useRef<MediaPlayerInstance>(null);
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
+
+  const t = useTranslations("VideoPage");
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
   const showChatHistogram = useSettingsStore((state) => state.showChatHistogram);
@@ -52,7 +55,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   }
 
   if (isPending) {
-    return <GanymedeLoadingText message="Loading Video" />
+    return <GanymedeLoadingText message={t('loading')} />
   }
   if (isError) {
     return <div>Error loading video</div>
@@ -145,7 +148,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
       {/* Chat Histogram */}
       {(data.chat_path && (data.type != VideoType.Clip) && !isMobile && showChatHistogram) && (
         <Container size="7xl" fluid={true} >
-          <VideoChatHistogram videoId={data.id} playerRef={player}  />
+          <VideoChatHistogram videoId={data.id} playerRef={player} />
         </Container>
       )}
 

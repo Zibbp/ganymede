@@ -7,11 +7,14 @@ import { useEffect, useState } from "react";
 import { useFetchVideosFilter, VideoType } from "../hooks/useVideos";
 import useSettingsStore from "../store/useSettingsStore";
 import VideoGrid from "../components/videos/Grid";
+import { useTranslations } from "next-intl";
 
 const VideosPage = () => {
   useEffect(() => {
     document.title = "Videos";
   }, []);
+
+  const t = useTranslations("VideosPage");
 
   const [activePage, setActivePage] = useState(1);
   const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
@@ -31,13 +34,13 @@ const VideosPage = () => {
   }
 
   if (isError) {
-    return <div>Error loading videos</div>;
+    return <div>{t('error')}</div>;
   }
 
   return (
     <div>
       <Center mt={10}>
-        <Title>All Videos</Title>
+        <Title>{t('title')}</Title>
       </Center>
 
       <Container size="xl" px="xl" fluid={true}>

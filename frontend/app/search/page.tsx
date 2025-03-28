@@ -1,5 +1,4 @@
 "use client";
-
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useSearchVideos, VideoType } from "../hooks/useVideos";
@@ -7,13 +6,16 @@ import useSettingsStore from "../store/useSettingsStore";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import VideoGrid from "../components/videos/Grid";
 import { Center, Container, Title } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 const SearchPage = () => {
   const searchParams = useSearchParams();
   const queryParam = searchParams.get("q");
 
+  const t = useTranslations("SearchPage");
+
   useEffect(() => {
-    document.title = `Search - ${queryParam}`;
+    document.title = `${t('title')} - ${queryParam}`;
   }, [queryParam]);
 
   // State and ref for search query
@@ -42,17 +44,17 @@ const SearchPage = () => {
   });
 
   if (isPending) {
-    return <GanymedeLoadingText message="Loading Videos" />;
+    return <GanymedeLoadingText message={t('loading')} />;
   }
 
   if (isError) {
-    return <div>Error loading videos</div>;
+    return <div>{t('error')}</div>;
   }
 
   return (
     <div>
       <Center mt={10}>
-        <Title>Search</Title>
+        <Title>{t('title')}</Title>
       </Center>
 
 
