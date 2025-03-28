@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { makeEnvPublic } from "next-runtime-env";
+import createNextIntlPlugin from "next-intl/plugin";
 
 makeEnvPublic([
   "API_URL",
@@ -13,4 +14,5 @@ const nextConfig: NextConfig = {
   output: "standalone",
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin();
+export default withNextIntl(nextConfig);

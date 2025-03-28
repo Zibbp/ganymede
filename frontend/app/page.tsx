@@ -5,6 +5,7 @@ import { LandingHero } from "./components/landing/Hero";
 import ContinueWatching from "./components/landing/ContinueWatching";
 import RecentlyArchived from "./components/landing/RecentlyArchived";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 export default function Home() {
   const { isLoggedIn } = useAuthStore();
@@ -12,6 +13,8 @@ export default function Home() {
   useEffect(() => {
     document.title = "Ganymede";
   }, []);
+
+  const t = useTranslations("HomePage");
 
   return (
     <div>
@@ -24,7 +27,7 @@ export default function Home() {
       {isLoggedIn && (
         <Box>
           <Center>
-            <Title>Continue Watching</Title>
+            <Title>{t('continueWatching')}</Title>
           </Center>
           <Container mt={10} size={"7xl"}>
             <ContinueWatching count={4} />
@@ -34,7 +37,7 @@ export default function Home() {
 
       <Box>
         <Center>
-          <Title>Recently Archived</Title>
+          <Title>{t('recentlyArchived')}</Title>
         </Center>
         <Container mt={10} size={"7xl"}>
           <RecentlyArchived count={8} />
