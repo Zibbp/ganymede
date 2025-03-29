@@ -4,6 +4,7 @@ import VideoCard from "../videos/Card"
 import { Carousel } from "@mantine/carousel";
 import { useFetchVideosFilter } from "@/app/hooks/useVideos"
 import useSettingsStore from "@/app/store/useSettingsStore";
+import { useTranslations } from "next-intl";
 
 type Props = {
   count: number
@@ -17,8 +18,10 @@ const RecentlyArchived = ({ count }: Props) => {
 
   const { data, isPending, isError } = useFetchVideosFilter({ limit: count, offset: 0, is_processing: showProcessingVideosInRecentlyArchived })
 
+  const t = useTranslations("LandingRecentlyArchivedComponent")
+
   if (isPending) return (<div></div>)
-  if (isError) return <div>Error loading recently archived videos</div>
+  if (isError) return <div>{t('error')}</div>
 
   return (
     <div>

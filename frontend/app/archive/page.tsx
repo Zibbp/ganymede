@@ -6,6 +6,7 @@ import { Channel, useFetchChannels } from "../hooks/useChannels";
 import { showNotification } from "@mantine/notifications";
 import { useArchiveVideo, VideoQuality } from "../hooks/useArchive";
 import { useAxiosPrivate } from "../hooks/useAxios";
+import { useTranslations } from "next-intl";
 
 interface SelectOption {
   label: string;
@@ -46,8 +47,10 @@ function extractTwitchId(input: string): string {
 
 
 const ArchivePage = () => {
+  const t = useTranslations("ArchivePage");
+
   useEffect(() => {
-    document.title = "Archive";
+    document.title = t('title');
   }, []);
 
   // State management with proper typing
@@ -86,8 +89,8 @@ const ArchivePage = () => {
       // Input validation
       if (!archiveInput && !channelId) {
         showNotification({
-          title: "Input Required",
-          message: "Please enter a video ID or select a channel",
+          title: t('inputTitle'),
+          message: t('inputMessage'),
           color: "red",
         });
         return;
@@ -95,8 +98,8 @@ const ArchivePage = () => {
 
       if (archiveInput && channelId) {
         showNotification({
-          title: "Invalid Selection",
-          message: "Please either enter an ID or select a channel (not both)",
+          title: t('invalidTitle'),
+          message: t('invalidMessage'),
           color: "red",
         });
         return;
@@ -116,8 +119,8 @@ const ArchivePage = () => {
       setArchiveInput("")
 
       showNotification({
-        title: "Success",
-        message: "Video added to archive queue",
+        title: t('successTitle'),
+        message: t('successMessage'),
         color: "green",
       });
 
@@ -141,24 +144,24 @@ const ArchivePage = () => {
             >
               <Center>
                 <div>
-                  <Title>Archive</Title>
+                  <Title>{t('title')}</Title>
                 </div>
               </Center>
               <Center mb={10}>
                 <Text>
-                  Enter a video ID or select a channel to archive a livestream
+                  {t('message')}
                 </Text>
               </Center>
               <TextInput
                 value={archiveInput}
                 onChange={setArchiveInput}
-                placeholder="Video ID or URL"
+                placeholder={t('archiveVideoPlaceholder')}
                 disabled={channelsIsPending}
                 className="mb-4"
               />
               <Divider my="xs" label="Or" labelPosition="center" />
               <Select
-                placeholder="Select Channel"
+                placeholder={t('archiveChannelPlaceholder')}
                 data={channelData}
                 value={channelId}
                 onChange={(value) => setChannelId(value || "")}
@@ -168,7 +171,7 @@ const ArchivePage = () => {
               />
               <Group mt={5} mb={10}>
                 <Select
-                  placeholder="Resolution"
+                  placeholder={t('resolutionPlaceholder')}
                   value={archiveQuality}
                   onChange={(value) => setArchiveQuality(value as VideoQuality)}
                   data={qualityOptions}
@@ -177,13 +180,13 @@ const ArchivePage = () => {
                 <Switch
                   checked={archiveChat}
                   onChange={setArchiveChat}
-                  label="Archive Chat"
+                  label={t('archiveChat')}
                   color="violet"
                 />
                 <Switch
                   checked={renderChat}
                   onChange={setRenderChat}
-                  label="Render Chat"
+                  label={t('renderChat')}
                   color="violet"
                 />
               </Group>
@@ -196,7 +199,7 @@ const ArchivePage = () => {
                 loading={archiveSubmitLoading}
                 disabled={channelsIsPending || (!archiveInput && !channelId)}
               >
-                Archive
+                {t('archiveButton')}
               </Button>
             </Card>
           </div>

@@ -6,6 +6,7 @@ import { useFetchVideosFilter, VideoType } from "@/app/hooks/useVideos";
 import useSettingsStore from "@/app/store/useSettingsStore";
 import { Center, Container, Title, Text, Button } from "@mantine/core";
 import { IconBorderAll } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 interface Params {
@@ -14,6 +15,7 @@ interface Params {
 
 const PlaylistPage = ({ params }: { params: Promise<Params> }) => {
   const { id } = React.use(params);
+  const t = useTranslations("PlaylistsPage");
   const {
     data: playlist,
     isPending: playlistPending,
@@ -42,11 +44,11 @@ const PlaylistPage = ({ params }: { params: Promise<Params> }) => {
   });
 
   if (playlistPending || videosPending) {
-    return <GanymedeLoadingText message="Loading Videos" />;
+    return <GanymedeLoadingText message={t('loadingVideos')} />;
   }
 
   if (playlistError || videosError) {
-    return <div>Error loading channel</div>;
+    return <div>{t('errorLoadingVideos')}</div>;
   }
 
   return (

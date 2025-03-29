@@ -6,10 +6,12 @@ import { useEffect } from "react";
 import useSettingsStore from "../store/useSettingsStore";
 import { useDisclosure } from "@mantine/hooks";
 import AuthChangePassword from "../components/auth/ChangePassword";
+import { useTranslations } from "next-intl";
 
 const ProfilePage = () => {
+  const t = useTranslations("ProfilePage");
   useEffect(() => {
-    document.title = "Profile";
+    document.title = t('title');
   }, []);
   const { user, isLoading, isLoggedIn } = useAuthStore()
   const router = useRouter();
@@ -52,32 +54,32 @@ const ProfilePage = () => {
               <Title>{user?.username}</Title>
             </Center>
             <Center>
-              <Text mr={5}>Role:</Text><Text>{user?.role}</Text>
+              <Text mr={5}>{t('role')}:</Text><Text>{user?.role}</Text>
             </Center>
 
             <Divider my={20} />
 
-            <Title>Settings</Title>
-            <Text size="sm">Settings are persisted in local browser storage.</Text>
+            <Title>{t('settings.title')}</Title>
+            <Text size="sm">{t('settings.description')}</Text>
 
             <Box mt={10}>
               <Checkbox
-                label="Smooth chat scrolling"
-                description="Enable smooth scrolling for new chat messages. May look bad if there is a large volume of messages per second."
+                label={t('settings.smoothScroll')}
+                description={t('settings.smoothScrollDescription')}
                 checked={chatPlaybackSmoothScroll}
                 onChange={toggleSmoothScroll}
                 my={5}
               />
               <Checkbox
-                label="Show Chat Histogram"
-                description="Display a visual representation of chat message throughout the video below the video player."
+                label={t('settings.chatHistogram')}
+                description={t('settings.chatHistogramDescription')}
                 checked={showChatHistogram}
                 onChange={toggleChatHistogram}
                 my={5}
               />
               <Checkbox
-                label="Show Processing Videos in Recently Archived Videos"
-                description="Display processing videos in the 'Recently Archived' videos section on the home page."
+                label={t('settings.showProcessingVideos')}
+                description={t('settings.showProcessingVideosDescription')}
                 checked={showProcessingVideosInRecentlyArchived}
                 onChange={toggleProcessingVideosInRecentlyArchived}
                 my={5}
@@ -90,7 +92,7 @@ const ProfilePage = () => {
 
             {!user?.oauth && (
               <Button onClick={openPasswordDrawer} fullWidth>
-                Change Password
+                {t('changePassword.title')}
               </Button>
             )}
 
@@ -98,7 +100,7 @@ const ProfilePage = () => {
         </Card>
       </Container>
 
-      <Drawer opened={passwordDrawerOpened} onClose={closePasswordDrawer} position="right" title="Change Password">
+      <Drawer opened={passwordDrawerOpened} onClose={closePasswordDrawer} position="right" title={t('changePassword.title')}>
         <AuthChangePassword handleClose={closePasswordDrawer} />
       </Drawer>
 
