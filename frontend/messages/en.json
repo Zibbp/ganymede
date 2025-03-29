@@ -37,17 +37,133 @@
         "actions": "Actions",
         "view": "View queue item",
         "stop": "Stop queue item"
-      }
-    },
-    "modal": {
-      "cancel": {
-        "title": "Cancel queue item",
-        "text": "Are you sure you want to cancel this queue item?",
-        "description": "For live archives this will stop the video and chat download then proceed with post-processing. For VOD archives this will stop all the tasks.",
-        "delete": "Delete video and video files",
-        "block": "Block video ID"
+      },
+      "modal": {
+        "cancel": {
+          "title": "Cancel queue item",
+          "text": "Are you sure you want to cancel this queue item?",
+          "description": "For live archives this will stop the video and chat download then proceed with post-processing. For VOD archives this will stop all the tasks.",
+          "delete": "Delete video and video files",
+          "block": "Block video ID"
+        }
       }
     }
+  },
+  "QueueLogsPage": {
+    "title": "Queue Logs",
+    "loading": "Loading logs",
+    "error": "Error loading logs"
+  },
+  "ProfilePage": {
+    "title": "Profile",
+    "role": "Role",
+    "settings": {
+      "title": "Settings",
+      "description": "Settings are persisted in local browser storage",
+      "smoothScroll": "Smooth chat scrolling",
+      "smoothScrollDescription": "Enable smooth scrolling for new chat messages. May look bad if there is a large volume of messages per second.",
+      "chatHistogram": "Show chat histogram",
+      "chatHistogramDescription": "Display a visual representation of chat message throughout the video below the video player.",
+      "showProcessingVideos": "Show Processing Videos in Recently Archived Videos",
+      "showProcessingVideosDescription": "Display processing videos in the 'Recently Archived' videos section on the home page."
+    },
+    "changePassword": {
+      "title": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "submit": "Change Password",
+      "error": "Error changing password",
+      "success": "Password changed successfully"
+    }
+  },
+  "PlaylistsPage": {
+    "title": "Playlists",
+    "error": "Error loading playlists",
+    "loading": "Loading playlists",
+    "deleted": "Playlist has been deleted",
+    "errorDelete": "Error deleting playlist",
+    "create": "Create Playlist",
+    "playlist": {
+      "name": "Name",
+      "description": "Description",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "deletePlaylist": "Delete Playlist",
+    "loadingVideos": "Loading videos",
+    "errorLoadingVideos": "Error loading videos"
+  },
+  "NavbarLayout": {
+    "links": {
+      "home": "Home",
+      "channels": "Channels",
+      "videos": "Videos",
+      "archive": "Archive",
+      "playlists": "Playlists",
+      "queue": "Queue",
+      "tasks": "Tasks"
+    },
+    "adminLinks": {
+      "admin": "Admin",
+      "channels": "Channels",
+      "watchedChannels": "Watched Channels",
+      "videos": "Videos",
+      "blockedVideos": "Blocked Videos",
+      "queue": "Queue",
+      "users": "Users",
+      "settings": "Settings",
+      "tasks": "Tasks",
+      "information": "Information"
+    },
+    "errorLoggingOut": "Error logging out",
+    "search": "Search",
+    "language": "Language",
+    "loginButton": "Login",
+    "signUpButton": "Sign Up"
+  },
+  "ChannelsPage": {
+    "title": "Channels",
+    "loading": "Loading channels",
+    "error": "Error loading channels"
+  },
+  "ArchivePage": {
+    "title": "Archive",
+    "inputTitle": "Input required",
+    "inputMessage": "Please enter a video ID or select a channel",
+    "invalidTitle": "Invalid selection",
+    "invalidMessage": "Please either enter a video ID or select a channel (not both)",
+    "successTitle": "Success",
+    "successMessage": "Video has been added to the queue",
+    "message": "Enter a video ID or select a channel to archive a live stream.",
+    "archiveVideoPlaceholder": "Video ID or URL",
+    "archiveChannelPlaceholder": "Select a channel",
+    "resolutionPlaceholder": "Quality",
+    "archiveChat": "Archive Chat",
+    "renderChat": "Render Chat",
+    "archiveButton": "Archive"
+  },
+  "AdminBlockedVideosPage": {
+    "title": "Admin - Blocked Videos",
+    "loading": "Loading blocked videos",
+    "error": "Error loading blocked videos",
+    "header": "Manage Blocked Videos",
+    "delete": {
+      "delete": "Delete",
+      "one": "one selected blocked video",
+      "many": "selected blocked videos",
+      "select": "Select blocked videos to delete"
+    },
+    "add": "Add Blocked Video ID",
+    "body": "External playform video IDs that are blocked from being archived.",
+    "search": "Search blocked videos...",
+    "columns": {
+      "id": "ID",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    },
+    "addDrawer": "Add Blocked Video ID",
+    "deleteModal": "Delete Blocked Video ID"
   },
   "LandingHeroComponent": {
     "subtitle": "A platform to archive live streams and videos",

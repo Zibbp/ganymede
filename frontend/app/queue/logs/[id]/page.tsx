@@ -6,6 +6,7 @@ import { Box } from "@mantine/core";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useRef } from "react";
 import classes from "./QueueLogsPage.module.css"
+import { useTranslations } from "next-intl";
 
 interface Params {
   id: string;
@@ -13,8 +14,9 @@ interface Params {
 
 const QueueLogsPage = ({ params }: { params: Promise<Params> }) => {
   const { id } = React.use(params);
+  const t = useTranslations("QueueLogsPage");
   useEffect(() => {
-    document.title = `Queue Logs - ${id}`;
+    document.title = `${t('title')} - ${id}`;
   }, [id]);
 
   const searchParams = useSearchParams()
@@ -37,11 +39,11 @@ const QueueLogsPage = ({ params }: { params: Promise<Params> }) => {
   });
 
   if (isPending) {
-    return <GanymedeLoadingText message="Loading logs" />
+    return <GanymedeLoadingText message={t('loading')} />
   }
 
   if (isError) {
-    return <div>Error loading logs</div>
+    return <div>{t('error')}</div>
   }
 
   return (

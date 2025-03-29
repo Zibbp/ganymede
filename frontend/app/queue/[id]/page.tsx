@@ -9,6 +9,7 @@ import { Center } from "@mantine/core";
 import React, { useEffect } from "react";
 import classes from "./QueueIdPage.module.css"
 import QueueChatTimeline from "@/app/components/queue/ChatTimeline";
+import { useTranslations } from "next-intl";
 
 interface Params {
   id: string;
@@ -16,8 +17,9 @@ interface Params {
 
 const QueueIdPage = ({ params }: { params: Promise<Params> }) => {
   const { id } = React.use(params);
+  const t = useTranslations("QueuePage");
   useEffect(() => {
-    document.title = `Queue - ${id}`;
+    document.title = `${t('title')} - ${id}`;
   }, [id]);
 
   const axiosPrivate = useAxiosPrivate()
@@ -27,9 +29,9 @@ const QueueIdPage = ({ params }: { params: Promise<Params> }) => {
   })
 
   if (isPending) return (
-    <GanymedeLoadingText message="Loading Queue" />
+    <GanymedeLoadingText message={t('loading')} />
   )
-  if (isError) return <div>Error loading queue</div>
+  if (isError) return <div>{t('error')}</div>
 
   return (
     <div>
