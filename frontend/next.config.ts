@@ -8,6 +8,8 @@ makeEnvPublic([
   "SHOW_SSO_LOGIN_BUTTON",
   "FORCE_SSO_AUTH",
   "REQUIRE_LOGIN",
+  "SHOW_LOCALE_BUTTON",
+  "DEFAULT_LOCALE",
 ]);
 
 const nextConfig: NextConfig = {

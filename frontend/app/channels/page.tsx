@@ -4,19 +4,21 @@ import ChannelCard from "../components/channel/Card";
 import { useFetchChannels } from "../hooks/useChannels";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 const ChannelsPage = () => {
+  const t = useTranslations("ChannelsPage");
 
   useEffect(() => {
-    document.title = "Channels";
+    document.title = t('title');
   }, []);
 
   const { data: channels, isPending, isError } = useFetchChannels()
 
   if (isPending) return (
-    <GanymedeLoadingText message="Loading Channels" />
+    <GanymedeLoadingText message={t('loading')} />
   )
-  if (isError) return <div>Error loading channels</div>
+  if (isError) return <div>{t('error')}</div>
 
   return (
     <Container size="7xl" px="xl" mt={10}>

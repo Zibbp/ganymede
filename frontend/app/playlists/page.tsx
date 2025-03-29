@@ -13,11 +13,13 @@ import { useEffect, useState } from "react";
 import { showNotification } from "@mantine/notifications";
 import { useAxiosPrivate } from "../hooks/useAxios";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 
 const PlaylistsPage = () => {
+  const t = useTranslations("PlaylistsPage");
   useEffect(() => {
-    document.title = "Playlists";
+    document.title = t('title');
   }, []);
 
   const hasPermission = useAuthStore(state => state.hasPermission);
@@ -45,7 +47,7 @@ const PlaylistsPage = () => {
       setDeleteButtonLoading(false)
 
       showNotification({
-        message: `Playlist deleted`
+        message: t('deleted')
       })
 
       queryClient.invalidateQueries({ queryKey: ["queue"] })
@@ -53,7 +55,7 @@ const PlaylistsPage = () => {
       closeDeleteModal()
 
     } catch (error) {
-      console.error("Error deleting playlist", error)
+      console.error(t('errorDelete'), error)
       setDeleteButtonLoading(false)
     }
   };
@@ -63,22 +65,22 @@ const PlaylistsPage = () => {
   }
 
   if (isPending) return (
-    <GanymedeLoadingText message="Loading Playlists" />
+    <GanymedeLoadingText message={t('loading')} />
   )
-  if (isError) return <div>Error loading playlists</div>
+  if (isError) return <div>{t('error')}</div>
 
   return (
     <div>
       <Container size={"7xl"}>
         <Group justify="space-between">
-          <Title>Playlists</Title>
+          <Title>{t('title')}</Title>
           {hasPermission(UserRole.Editor) && (
             <div>
               <Button variant="default" onClick={() => {
                 setPlaylistEditMode(PlaylistEditFormMode.Create)
                 setPlaylist(null)
                 openPlaylistDrawer()
-              }}>Create Playlist</Button>
+              }}>{t('create')}</Button>
             </div>
           )}
         </Group>
@@ -89,7 +91,7 @@ const PlaylistsPage = () => {
           columns={[
             {
               accessor: "name",
-              title: "Name",
+              title: t('playlist.name'),
               render: ({ name, id }) => (
                 <Link href={`/playlists/${id}`}>
                   <Text>{name}</Text>
@@ -98,7 +100,7 @@ const PlaylistsPage = () => {
             },
             {
               accessor: "description",
-              title: "Description",
+              title: t('playlist.description'),
               render: ({ description }) => (
                 <Text lineClamp={1}>{description}</Text>
               ),
@@ -116,7 +118,7 @@ const PlaylistsPage = () => {
                       setPlaylist(playlist)
                       openPlaylistDrawer()
                     }}
-                    title="Edit"
+                    title={t('playlist.edit')}
                     aria-label="Edit"
                   >
                     <IconEdit size={16} />
@@ -129,7 +131,7 @@ const PlaylistsPage = () => {
                       setPlaylist(playlist)
                       openDeleteModal()
                     }}
-                    title="Delete"
+                    title={t('playlist.delete')}
                     arria-label="Delete"
                   >
                     <IconTrash size={16} />
@@ -143,14 +145,14 @@ const PlaylistsPage = () => {
 
       </Container>
 
-      <Drawer opened={playlistDrawerOpened} onClose={closePlaylistDrawer} position="right" title="Playlist">
+      <Drawer opened={playlistDrawerOpened} onClose={closePlaylistDrawer} position="right" title={t('title')}>
         <PlaylistEditForm mode={playlistEditMode} playlist={playlist} handleClose={closeDrawerCallback} />
       </Drawer>
 
-      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Playlist" centered>
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deletePlaylist')} centered>
         <div>
           <Code block>{JSON.stringify(playlist, null, 2)}</Code>
-          <Button mt={10} fullWidth color="red" variant="filled" loading={deleteButtonLoading} onClick={() => handleDelete(playlist?.id || "")}>Delete</Button>
+          <Button mt={10} fullWidth color="red" variant="filled" loading={deleteButtonLoading} onClick={() => handleDelete(playlist?.id || "")}>{t('playlist.delete')}</Button>
         </div>
       </Modal>
     </div>

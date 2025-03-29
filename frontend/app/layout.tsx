@@ -36,17 +36,19 @@ export default async function RootLayout({
             NEXT_PUBLIC_REQUIRE_LOGIN: process.env.REQUIRE_LOGIN,
             NEXT_PUBLIC_API_URL: process.env.API_URL,
             NEXT_PUBLIC_CDN_URL: process.env.CDN_URL,
+            NEXT_PUBLIC_SHOW_LOCALE_BUTTON: process.env.SHOW_LOCALE_BUTTON,
+            NEXT_PUBLIC_DEFAULT_LOCALE: process.env.DEFAULT_LOCALE,
           }}
         />
         <ColorSchemeScript defaultColorScheme='dark' />
       </head>
       <body>
 
-        <Providers>
-          <NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <Providers>
             {children}
-          </NextIntlClientProvider>
-        </Providers>
+          </Providers>
+        </NextIntlClientProvider>
 
       </body>
     </html>
