@@ -165,6 +165,66 @@
     "addDrawer": "Add Blocked Video ID",
     "deleteModal": "Delete Blocked Video ID"
   },
+  "AdminChannelsPage": {
+    "title": "Admin - Channels",
+    "loading": "Loading channels",
+    "error": "Error loading channels",
+    "header": "Manage Channels",
+    "createButton": "Create Channel",
+    "addTwitchChannel": "Add Twitch Channel",
+    "searchPlaceholder": "Search channels...",
+    "columns": {
+      "id": "ID",
+      "externalId": "External ID",
+      "name": "Name",
+      "displayName": "Display Name",
+      "videoRetention": "Video Retention",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    },
+    "drawer": "Channel",
+    "platformDrawer": "Platform Channel",
+    "deleteModal": "Delete Channel"
+  },
+  "AdminInformationPage": {
+    "title": "Admin - Info",
+    "loading": "Loading Ganymede information",
+    "error": "Error loading Ganymede information",
+    "server": {
+      "title": "Server Information",
+      "commit": "Commit",
+      "tag": "Tag",
+      "buildDate": "Build Date",
+      "uptime": "Uptime"
+    },
+    "packageVersions": "Package Versions"
+  },
+  "AdminQueuePage": {
+    "title": "Admin - Queue",
+    "loading": "Loading queue items",
+    "error": "Error loading queue items",
+    "header": "Manage Queue",
+    "delete": {
+      "delete": "delete",
+      "one": "one selected queue item",
+      "many": "selected queue items",
+      "select": "Select queue items to delete"
+    },
+    "searchPlaceholder": "Search queue items...",
+    "columns": {
+      "id": "ID",
+      "videoId": "Video ID",
+      "externalId": "External ID",
+      "processing": "Processing",
+      "onHold": "On Hold",
+      "liveArchive": "Live Archive",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    },
+    "drawer": "Queue Item",
+    "deleteModal": "Delete Queue Item",
+    "deleteMultiModal": "Delete Queue Item"
+  },
   "LandingHeroComponent": {
     "subtitle": "A platform to archive live streams and videos",
     "channelsButton": "Channels",

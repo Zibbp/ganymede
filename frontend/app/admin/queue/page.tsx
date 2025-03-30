@@ -14,10 +14,12 @@ import AdminQueueDrawerContent from "@/app/components/admin/queue/DrawerContent"
 import DeleteQueueModalContent from "@/app/components/admin/queue/DeleteModalContent";
 import Link from "next/link";
 import MultiDeleteQueueModalContent from "@/app/components/admin/queue/MultiDeleteModalContext";
+import { useTranslations } from "next-intl";
 
 const AdminQueuePage = () => {
+  const t = useTranslations('AdminQueuePage');
   useEffect(() => {
-    document.title = "Admin - Queue";
+    document.title = t('title');
   }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -84,15 +86,15 @@ const AdminQueuePage = () => {
   }
 
   if (isPending) return (
-    <GanymedeLoadingText message="Loading queue items" />
+    <GanymedeLoadingText message={t('loading')} />
   )
-  if (isError) return <div>Error loading queue items</div>
+  if (isError) return <div>{t('error')}</div>
 
   return (
     <div>
       <Container size="7xl">
         <Group justify="space-between" mt={2} >
-          <Title>Manage Queue</Title>
+          <Title>{t('header')}</Title>
           <Box>
             {(activeQueueItems && activeQueueItems.length >= 1) && (
               <Button
@@ -105,11 +107,11 @@ const AdminQueuePage = () => {
                 }}
               >
                 {activeQueueItems.length
-                  ? `Delete ${activeQueueItems.length === 1
-                    ? "one selected queue item"
-                    : `${activeQueueItems.length} selected queue items`
+                  ? `${t('delete.delete')} ${activeQueueItems.length === 1
+                    ? t('delete.one')
+                    : `${activeQueueItems.length} ${t('delete.many')}`
                   }`
-                  : "Select queue items to delete"}
+                  : t('delete.select')}
               </Button>
             )}
           </Box>
@@ -118,7 +120,7 @@ const AdminQueuePage = () => {
         <Box mt={5}>
           <div>
             <TextInput
-              placeholder="Search queue items..."
+              placeholder={t('searchPlaceholder')}
               leftSection={<IconSearch size={16} />}
               value={query}
               onChange={(e) => setQuery(e.currentTarget.value)}
@@ -135,7 +137,7 @@ const AdminQueuePage = () => {
             records={records}
             columns={[
               {
-                accessor: "id", title: "ID",
+                accessor: "id", title: t('columns.id'),
                 render: ({ id }) => (
                   <Tooltip label={id}>
                     <Text lineClamp={1}>{id}</Text>
@@ -143,7 +145,7 @@ const AdminQueuePage = () => {
                 ),
               },
               {
-                accessor: "edges.vod.id", title: "Video ID", sortable: true,
+                accessor: "edges.vod.id", title: t('columns.videoId'), sortable: true,
                 render: (queue) => (
                   <Tooltip label={queue.edges.vod.id}>
                     <Text lineClamp={1}>{queue.edges.vod.id}</Text>
@@ -152,7 +154,7 @@ const AdminQueuePage = () => {
               },
               {
                 accessor: "edges.vod.ext_id",
-                title: "External Video ID",
+                title: t('columns.externalId'),
                 sortable: true,
                 render: (queue) => (
                   <Tooltip label={queue.edges.vod.ext_id}>
@@ -162,7 +164,7 @@ const AdminQueuePage = () => {
               },
               {
                 accessor: "processing",
-                title: "Processing",
+                title: t('columns.processing'),
                 sortable: true,
                 render: ({ processing }) => {
                   return processing ? "✅" : "❌";
@@ -170,7 +172,7 @@ const AdminQueuePage = () => {
               },
               {
                 accessor: "on_hold",
-                title: "On Hold",
+                title: t('columns.onHold'),
                 sortable: true,
                 render: ({ on_hold }) => {
                   return on_hold ? "✅" : "❌";
@@ -178,7 +180,7 @@ const AdminQueuePage = () => {
               },
               {
                 accessor: "live_archive",
-                title: "Live Archive",
+                title: t('columns.liveArchive'),
                 sortable: true,
                 render: ({ live_archive }) => {
                   return live_archive ? "✅" : "❌";
@@ -186,7 +188,7 @@ const AdminQueuePage = () => {
               },
               {
                 accessor: "created_at",
-                title: "Created At",
+                title: t('columns.createdAt'),
                 sortable: true,
                 render: ({ created_at }) => (
                   <div>{dayjs(created_at).format("YYYY/MM/DD")}</div>
@@ -194,7 +196,7 @@ const AdminQueuePage = () => {
               },
               {
                 accessor: "actions",
-                title: "Actions",
+                title: t('columns.actions'),
                 width: "150px",
                 render: (queue) => (
                   <Group>
@@ -239,20 +241,20 @@ const AdminQueuePage = () => {
         </Box>
       </Container>
 
-      <Drawer opened={queueDrawerOpened} onClose={closeQueueDrawer} position="right" title="Queue">
+      <Drawer opened={queueDrawerOpened} onClose={closeQueueDrawer} position="right" title={t('drawer')}>
         {activeQueue && (
           <AdminQueueDrawerContent queue={activeQueue} handleClose={closeQueueDrawer} />
         )}
       </Drawer>
 
 
-      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Queue">
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deleteModal')}>
         {activeQueue && (
           <DeleteQueueModalContent queue={activeQueue} handleClose={closeDeleteModal} />
         )}
       </Modal>
 
-      <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title="Delete Queue Items">
+      <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title={t('deleteMultiModal')}>
         {activeQueueItems && (
           <MultiDeleteQueueModalContent queues={activeQueueItems} handleClose={handleMultiDeleteModalCallback} />
         )}
