@@ -80,7 +80,9 @@ const VideoTitleBar = ({ video }: Params) => {
 
             <Group mr={15}>
               <Tooltip
-                label={`Originally streamed at ${video.streamed_at}`}
+                label={`Streamed on ${new Date(
+                  video.streamed_at
+                ).toLocaleString()}`}
                 openDelay={250}
               >
                 <div className={classes.titleBarBadge}>
