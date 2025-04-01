@@ -11,6 +11,7 @@ import classes from "./AdminSettingsPage.module.css"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { Channel, useFetchChannels } from "@/app/hooks/useChannels"
 import { showNotification } from "@mantine/notifications"
+import { useTranslations } from "next-intl"
 
 interface SelectOption {
   label: string;
@@ -18,8 +19,9 @@ interface SelectOption {
 }
 
 const AdminSettingsPage = () => {
+  const t = useTranslations('AdminSettingsPage');
   useEffect(() => {
-    document.title = "Admin - Settings";
+    document.title = t('title');
   }, []);
   const [notificationsOpened, { toggle: toggleNotifications }] = useDisclosure(false);
   const [storageTemplateOpened, { toggle: toggleStorageTemplate }] = useDisclosure(false);
@@ -112,7 +114,7 @@ const AdminSettingsPage = () => {
       });
 
       showNotification({
-        message: "Settings Saved",
+        message: t('saveSuccess'),
         color: "green"
       });
 
@@ -122,9 +124,9 @@ const AdminSettingsPage = () => {
   }
 
   if (isPending) return (
-    <GanymedeLoadingText message="Loading settings" />
+    <GanymedeLoadingText message={t('loading')} />
   )
-  if (isError) return <div>Error loading settings</div>
+  if (isError) return <div>{t('error')}</div>
 
   return (
     <div>
@@ -133,13 +135,13 @@ const AdminSettingsPage = () => {
           <form onSubmit={form.onSubmit(() => {
             handleSubmitForm()
           })}>
-            <Title>Settings</Title>
-            <Text>Visit the <a className={classes.link} href="https://github.com/Zibbp/ganymede/wiki/Application-Settings" target="_blank">wiki</a> for documentation about each setting.</Text>
+            <Title>{t('header')}</Title>
+            <Text>{t('headerDescription.part1')} <a className={classes.link} href="https://github.com/Zibbp/ganymede/wiki/Application-Settings" target="_blank">{t('headerDescription.part2')}</a> {t('headerDescription.part3')}</Text>
 
-            <Title order={3}>Application</Title>
+            <Title order={3}>{t('applicationSettings.header')}</Title>
             <Checkbox
               mt={10}
-              label="Registration Enabled"
+              label={t('applicationSettings.registrationEnabledLabel')}
               key={form.key('registration_enabled')}
               {...form.getInputProps('registration_enabled', { type: "checkbox" })}
             />
@@ -153,41 +155,41 @@ const AdminSettingsPage = () => {
               variant="outline"
               color="orange"
             >
-              Notification Settings
+              {t('applicationSettings.notificationSettingsButton')}
             </Button>
 
             <Collapse in={notificationsOpened}>
               <Text>Must be a webhook URL or an Apprise HTTP URL, visit the <a href="https://github.com/Zibbp/ganymede/wiki/Notifications" target="_blank">wiki</a> for more information.</Text>
 
               {/* video archive success */}
-              <Title order={3}>Video Archive Success Notification</Title>
+              <Title order={3}>{t('applicationSettings.videoArchiveSuccessNotification')}</Title>
               <Flex>
                 <Checkbox
                   mt={10}
-                  label="Enabled"
+                  label={t('applicationSettings.enabledLabel')}
                   key={form.key('notifications.video_success_enabled')}
                   {...form.getInputProps('notifications.video_success_enabled', { type: "checkbox" })}
                   mr={15}
                 />
                 <Button variant="outline" color="violet"
                   onClick={() => testNotificationMutate.mutate({ axiosPrivate, type: NotificationType.VideoSuccess })}>
-                  Test
+                  {t('applicationSettings.testButton')}
                 </Button>
               </Flex>
               <TextInput
-                label="Webhook URL"
+                label={t('applicationSettings.webhookUrlLabel')}
                 placeholder="https://webhook.curl"
                 key={form.key('notifications.video_success_webhook_url')}
                 {...form.getInputProps('notifications.video_success_webhook_url')}
               />
               <Textarea
-                label="Template"
+                label={t('applicationSettings.templateLabel')}
                 placeholder=""
                 key={form.key('notifications.video_success_template')}
                 {...form.getInputProps('notifications.video_success_template')}
               />
 
-              <Text>Available variables to use in the template:</Text>
+              <Text>{t('applicationSettings.availableVariables')}:</Text>
               <div>
                 <Text>Channel</Text>
                 <Code>
@@ -204,34 +206,34 @@ const AdminSettingsPage = () => {
               </div>
 
               {/* live archive success */}
-              <Title order={3}>Live Archive Success Notification</Title>
+              <Title order={3}>{t('applicationSettings.liveArchiveSuccessNotification')}</Title>
               <Flex>
                 <Checkbox
                   mt={10}
-                  label="Enabled"
+                  label={t('applicationSettings.enabledLabel')}
                   key={form.key('notifications.live_success_enabled')}
                   {...form.getInputProps('notifications.live_success_enabled', { type: "checkbox" })}
                   mr={15}
                 />
                 <Button variant="outline" color="violet"
                   onClick={() => testNotificationMutate.mutate({ axiosPrivate, type: NotificationType.LiveSuccess })}>
-                  Test
+                  {t('applicationSettings.testButton')}
                 </Button>
               </Flex>
               <TextInput
-                label="Webhook URL"
+                label={t('applicationSettings.webhookUrlLabel')}
                 placeholder="https://webhook.curl"
                 key={form.key('notifications.live_success_webhook_url')}
                 {...form.getInputProps('notifications.live_success_webhook_url')}
               />
               <Textarea
-                label="Template"
+                label={t('applicationSettings.templateLabel')}
                 placeholder=""
                 key={form.key('notifications.live_success_template')}
                 {...form.getInputProps('notifications.live_success_template')}
               />
 
-              <Text>Available variables to use in the template:</Text>
+              <Text>{t('applicationSettings.availableVariables')}:</Text>
               <div>
                 <Text>Channel</Text>
                 <Code>
@@ -248,34 +250,34 @@ const AdminSettingsPage = () => {
               </div>
 
               {/* is live */}
-              <Title order={3}>Channel Is Live Notification</Title>
+              <Title order={3}>{t('applicationSettings.channelIsLiveNotification')}</Title>
               <Flex>
                 <Checkbox
                   mt={10}
-                  label="Enabled"
+                  label={t('applicationSettings.enabledLabel')}
                   key={form.key('notifications.is_live_enabled')}
                   {...form.getInputProps('notifications.is_live_enabled', { type: "checkbox" })}
                   mr={15}
                 />
                 <Button variant="outline" color="violet"
                   onClick={() => testNotificationMutate.mutate({ axiosPrivate, type: NotificationType.IsLive })}>
-                  Test
+                  {t('applicationSettings.testButton')}
                 </Button>
               </Flex>
               <TextInput
-                label="Webhook URL"
+                label={t('applicationSettings.webhookUrlLabel')}
                 placeholder="https://webhook.curl"
                 key={form.key('notifications.is_live_webhook_url')}
                 {...form.getInputProps('notifications.is_live_webhook_url')}
               />
               <Textarea
-                label="Template"
+                label={t('applicationSettings.templateLabel')}
                 placeholder=""
                 key={form.key('notifications.is_live_template')}
                 {...form.getInputProps('notifications.is_live_template')}
               />
 
-              <Text>Available variables to use in the template:</Text>
+              <Text>{t('applicationSettings.availableVariables')}:</Text>
               <div>
                 <Text>Channel</Text>
                 <Code>
@@ -298,34 +300,34 @@ const AdminSettingsPage = () => {
               </div>
 
               {/* error */}
-              <Title order={3}>Error Notification</Title>
+              <Title order={3}>{t('applicationSettings.errorNotification')}</Title>
               <Flex>
                 <Checkbox
                   mt={10}
-                  label="Enabled"
+                  label={t('applicationSettings.enabledLabel')}
                   key={form.key('notifications.error_enabled')}
                   {...form.getInputProps('notifications.error_enabled', { type: "checkbox" })}
                   mr={15}
                 />
                 <Button variant="outline" color="violet"
                   onClick={() => testNotificationMutate.mutate({ axiosPrivate, type: NotificationType.Error })}>
-                  Test
+                  {t('applicationSettings.testButton')}
                 </Button>
               </Flex>
               <TextInput
-                label="Webhook URL"
+                label={t('applicationSettings.webhookUrlLabel')}
                 placeholder="https://webhook.curl"
                 key={form.key('notifications.error_webhook_url')}
                 {...form.getInputProps('notifications.error_webhook_url')}
               />
               <Textarea
-                label="Template"
+                label={t('applicationSettings.templateLabel')}
                 placeholder=""
                 key={form.key('notifications.error_template')}
                 {...form.getInputProps('notifications.error_template')}
               />
 
-              <Text>Available variables to use in the template:</Text>
+              <Text>{t('applicationSettings.availableVariables')}:</Text>
               <div>
                 <Text>Task</Text>
                 <Code>{"{{failed_task}}"}</Code>
@@ -345,11 +347,11 @@ const AdminSettingsPage = () => {
 
             </Collapse>
 
-            <Title mt={10} order={3}>Archive</Title>
+            <Title mt={10} order={3}>{t('archiveSettings.header')}</Title>
 
             <NumberInput
-              label="Live Stream Check Interval Seconds"
-              description="How often watched channels are checked for live streams in seconds. REQUIRES RESTART!"
+              label={t('archiveSettings.livestreamCheckIntervalLabel')}
+              description={t('archiveSettings.livestreamCheckIntervalDescription')}
               placeholder="300"
               key={form.key('live_check_interval_seconds')}
               {...form.getInputProps('live_check_interval_seconds')}
@@ -358,8 +360,8 @@ const AdminSettingsPage = () => {
 
             <NumberInput
               mt={10}
-              label="Video Check Interval Minutes"
-              description="How often watched channels are checked for videos in minutes. REQUIRES RESTART!"
+              label={t('archiveSettings.videoCheckIntervalLabel')}
+              description={t('archiveSettings.videoCheckIntervalDescription')}
               placeholder="180"
               key={form.key('video_check_interval_minutes')}
               {...form.getInputProps('video_check_interval_minutes')}
@@ -369,7 +371,7 @@ const AdminSettingsPage = () => {
 
             <Checkbox
               mt={15}
-              label="Convert MP4 to HLS"
+              label={t('archiveSettings.mp4ToHLSConversionLabel')}
               key={form.key('archive.save_as_hls')}
               {...form.getInputProps('archive.save_as_hls', { type: "checkbox" })}
               mr={15}
@@ -377,8 +379,8 @@ const AdminSettingsPage = () => {
 
             <Checkbox
               mt={15}
-              label="Generate Sprite Thumbnails"
-              description="Preview thumbnail when scrubbing a video's timeline. These are generated after the video is archived."
+              label={t('archiveSettings.generateSpriteThumbnailsLabel')}
+              description={t('archiveSettings.generateSpriteThumbnailsDescription')}
               key={form.key('archive.generate_sprite_thumbnails')}
               {...form.getInputProps('archive.generate_sprite_thumbnails', { type: "checkbox" })}
               mr={15}
@@ -393,22 +395,17 @@ const AdminSettingsPage = () => {
               variant="outline"
               color="orange"
             >
-              Storage Template Settings
+              {t('archiveSettings.storageTemplateSettings')}
             </Button>
 
             <Collapse in={storageTemplateOpened}>
 
               <div>
                 <Text mb={10}>
-                  Customize how folders and files are named. This only applies to new
-                  files. To apply to existing files execute the migration task on the{" "}
-                  <Link className={classes.link} href="/admin/tasks">
-                    tasks
-                  </Link>{" "}
-                  page.
+                  {t('archiveSettings.storageTemplateSettingsDescription')}
                 </Text>
                 <div>
-                  <Title order={4}>Folder Template</Title>
+                  <Title order={4}>{t('archiveSettings.folderTemplateText')}</Title>
 
                   <Textarea
                     description="{{uuid}} is required to be present for the folder template."
@@ -420,7 +417,7 @@ const AdminSettingsPage = () => {
 
                 <div>
                   <Title mt={5} order={4}>
-                    File Template
+                    {t('archiveSettings.fileTemplateText')}
                   </Title>
 
                   <Textarea
@@ -450,7 +447,7 @@ const AdminSettingsPage = () => {
 
                 <div>
                   <Title mt={5} order={4}>
-                    Examples
+                    {t('archiveSettings.examples')}
                   </Title>
 
                   <Text>Folder</Text>
@@ -465,37 +462,37 @@ const AdminSettingsPage = () => {
 
             </Collapse>
 
-            <Title mt={10} order={3}>Video</Title>
+            <Title mt={10} order={3}>{t('videoSettings.header')}</Title>
 
             <TextInput
-              label="Twitch Token"
-              description="Supply your Twitch token for downloading ad-free livestreams and subscriber-only videos."
+              label={t('videoSettings.twitchTokenLabel')}
+              description={t('videoSettings.twitchTokenDescription')}
               key={form.key('parameters.twitch_token')}
               {...form.getInputProps('parameters.twitch_token')}
             />
 
             <TextInput
-              label="Video Convert FFmpeg Arguments"
-              description="Post-download video processing FFmpeg arguments."
+              label={t('videoSettings.convertFFmpegArgsLabel')}
+              description={t('videoSettings.convertFFmpegArgsDescription')}
               key={form.key('parameters.video_convert')}
               {...form.getInputProps('parameters.video_convert')}
             />
 
-            <Title mt={10} order={3}>Live Stream</Title>
+            <Title mt={10} order={3}>{t('videoSettings.liveStreamTitle')}</Title>
 
             <TextInput
-              label="Streamlink Parameters"
-              description="For live streams. Must be comma separated."
+              label={t('videoSettings.streamlinkArgsLabel')}
+              description={t('videoSettings.streamlinkArgsDescription')}
               key={form.key('parameters.streamlink_live')}
               {...form.getInputProps('parameters.streamlink_live')}
             />
 
-            <Title mt={5} order={5}>Proxy</Title>
-            <Text>Archive live streams through a proxy to prevent ads. Your Twitch token <b>is not sent</b> to the proxy.</Text>
+            <Title mt={5} order={5}>{t('videoSettings.proxySettings')}</Title>
+            <Text>{t('videoSettings.proxySettingsDescription')}</Text>
 
             <Checkbox
               mt={10}
-              label="Enable proxy"
+              label={t('videoSettings.proxyEnableLabel')}
               key={form.key('livestream.proxy_enabled')}
               {...form.getInputProps('livestream.proxy_enabled', { type: "checkbox" })}
               mr={15}
@@ -508,12 +505,12 @@ const AdminSettingsPage = () => {
                     <TextInput
                       className={classes.proxyInput}
                       placeholder="https://proxy.url"
-                      label="Proxy URL"
+                      label={t('videoSettings.proxyURLLabel')}
                       key={form.key(`livestream.proxies.${index}.url`)}
                       {...form.getInputProps(`livestream.proxies.${index}.url`)}
                     />
                     <TextInput
-                      label="Header"
+                      label={t('videoSettings.proxyHeaderLabel')}
                       className={classes.proxyInput}
                       key={form.key(`livestream.proxies.${index}.header`)}
                       {...form.getInputProps(`livestream.proxies.${index}.header`)}
@@ -537,23 +534,23 @@ const AdminSettingsPage = () => {
               mt={10}
               leftSection={<IconPlus size="1rem" />}
             >
-              Add
+              {t('videoSettings.proxyAddButton')}
             </Button>
 
             <MultiSelect
-              label="Whitelist Channels"
-              description="Select channels that are excluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to."
+              label={t('videoSettings.whitelistChannelsLabel')}
+              description={t('videoSettings.whitelistChannelsDescription')}
               data={channelSelect}
               key={form.key('livestream.proxy_whitelist')}
               {...form.getInputProps('livestream.proxy_whitelist')}
               searchable
             />
 
-            <Title mt={10} order={3}>Chat</Title>
+            <Title mt={10} order={3}>{t('chatSettings.header')}</Title>
 
             <TextInput
-              label="Chat Render Arguments"
-              description="TwitchDownloaderCLI chat render arguments."
+              label={t('chatSettings.chatRenderArgsLabel')}
+              description={t('chatSettings.chatRenderArgsDescription')}
               key={form.key('parameters.chat_render')}
               {...form.getInputProps('parameters.chat_render')}
             />
@@ -564,7 +561,7 @@ const AdminSettingsPage = () => {
               fullWidth
               loading={editConfigMutate.isPending}
             >
-              Save Settings
+              {t('submit')}
             </Button>
 
           </form>
