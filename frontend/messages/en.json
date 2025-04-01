@@ -225,6 +225,71 @@
     "deleteModal": "Delete Queue Item",
     "deleteMultiModal": "Delete Queue Item"
   },
+  "AdminSettingsPage": {
+    "title": "Admin - Settings",
+    "saveSuccess": "Settings saved successfully",
+    "loading": "Loading settings",
+    "error": "Error loading settings",
+    "header": "Manage Settings",
+    "headerDescription": {
+      "part1": "Visit the",
+      "part2": "wiki",
+      "part3": "for more information about each setting."
+    },
+    "applicationSettings": {
+      "header": "Application Settings",
+      "registrationEnabledLabel": "Registration Enabled",
+      "notificationSettingsButton": "Notification Settings",
+      "enabledLabel": "Enabled",
+      "testButton": "Test",
+      "webhookUrlLabel": "Webhook URL",
+      "templateLabel": "Template",
+      "availableVariables": "Available variables to use in the template:",
+      "videoArchiveSuccessNotification": "Video Archive Success Notification",
+      "liveArchiveSuccessNotification": "Live Archive Success Notification",
+      "channelIsLiveNotification": "Channel is Live Notification",
+      "errorNotification": "Error Notification"
+    },
+    "archiveSettings": {
+      "header": "Archive Settings",
+      "livestreamCheckIntervalLabel": "Livestream Check Interval Seconds",
+      "livestreamCheckIntervalDescription": "The interval in seconds to check for new live streams to archive. REQUIRES RESTART!",
+      "videoCheckIntervalLabel": "Video Check Interval Minutes",
+      "videoCheckIntervalDescription": "The interval in minutes to check for new videos to archive. REQUIRES RESTART!",
+      "mp4ToHLSConversionLabel": "Convert MP4 to HLS",
+      "generateSpriteThumbnailsLabel": "Generate Sprite Thumbnail",
+      "generateSpriteThumbnailsDescription": "Generate a sprite thumbnail for the video. These are preview thumbnails when hovering over the video timeline.",
+      "storageTemplateSettings": "Storage Template Settings",
+      "storageTemplateSettingsDescription": "Customize how folders and files are named. This only applied to new files. To apply to existing files execute the migration task on the tasks page.",
+      "folderTemplateText": "Folder Template",
+      "fileTemplateText": "File Template",
+      "examplesText": "Examples"
+    },
+    "videoSettings": {
+      "header": "Video Settings",
+      "twitchTokenLabel": "Twitch Token",
+      "twitchTokenDescription": "Supply your Twitch token for downloading ad-free live streams and subscriber-only VODs.",
+      "convertFFmpegArgsLabel": "Video Conver FFmpeg Arguments",
+      "convertFFmpegArgsDescription": "Custom FFmpeg arguments to use when converting the video. This is used for both live and VOD archives.",
+      "streamlinkArgsLabel": "Streamlink Arguments",
+      "streamlinkArgsDescription": "Custom Streamlink arguments to use when downloading the video. This is used for live streams.",
+      "liveStreamTitle": "Live Stream",
+      "proxySettings": "Proxy Settings",
+      "proxySettingsDescription": "Archive live streams through a proxy to prevent ads. Your Twitch token is not sent to the proxy.",
+      "proxyEnableLabel": "Enable Proxy",
+      "proxyURLLabel": "Proxy URL",
+      "proxyHeaderLabel": "Proxy Header",
+      "proxyAddButton": "Add",
+      "whitelistChannelsLabel": "Whitelist Channels",
+      "whitelistChannelsDescription": "Select channels that are execluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to."
+    },
+    "chatSettings": {
+      "header": "Chat Settings",
+      "chatRenderArgsLabel": "Chat Render Arguments",
+      "chatRenderArgsDescription": "TwitchDownloaderCLI chat render arguments."
+    },
+    "submit": "Save Settings"
+  },
   "LandingHeroComponent": {
     "subtitle": "A platform to archive live streams and videos",
     "channelsButton": "Channels",
