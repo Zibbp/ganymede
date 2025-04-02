@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import { IconPlayerPlay } from "@tabler/icons-react";
 import { Task, useStartTask } from "@/app/hooks/useTasks";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 
 const AdminTasksPage = () => {
+  const t = useTranslations('AdminTasksPage')
   useEffect(() => {
-    document.title = "Admin - Tasks";
+    document.title = t('title');
   }, []);
   const axiosPrivate = useAxiosPrivate()
   const [loading, setLoading] = useState(false)
@@ -26,7 +28,7 @@ const AdminTasksPage = () => {
       })
 
       showNotification({
-        message: "Task started, see container logs for more information."
+        message: t('taskStartedNotification')
       })
     } catch (error) {
       console.error(error)
@@ -40,14 +42,14 @@ const AdminTasksPage = () => {
       <Container mt={15}>
         <Card withBorder p="xl" radius={"sm"}>
 
-          <Title>Tasks</Title>
+          <Title>{t('header')}</Title>
 
           <Group justify="space-between" py={5}>
             <Box>
-              <Text fw={"bold"}>Check watched channels for live streams to archive</Text>
-              <Text size="xs">Occurs at interval set in the config.</Text>
+              <Text fw={"bold"}>{t('checkWatchedChannelsLive')}</Text>
+              <Text size="xs">{t('checkWatchedChannelsLiveDescription')}</Text>
             </Box>
-            <Tooltip label="Start Task">
+            <Tooltip label={t('startTaskButton')}>
               <ActionIcon
                 onClick={() => startTask(Task.CheckLive)}
                 loading={loading}
@@ -62,10 +64,10 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5}>
             <Box>
-              <Text fw={"bold"}>Check watched channels for videos to archive</Text>
-              <Text size="xs">Occurs at interval set in the config.</Text>
+              <Text fw={"bold"}>{t('checkWatchedChannelsVideo')}</Text>
+              <Text size="xs">{t('checkWatchedChannelsVideoDescription')}</Text>
             </Box>
-            <Tooltip label="Start Task">
+            <Tooltip label={t('startTaskButton')}>
               <ActionIcon
                 onClick={() => startTask(Task.CheckVod)}
                 loading={loading}
@@ -80,10 +82,10 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5}>
             <Box>
-              <Text fw={"bold"}>Check watched channels for clips to archive</Text>
-              <Text size="xs">Occurs daily at 00:00.</Text>
+              <Text fw={"bold"}>{t('checkWatchedChannelsClips')}</Text>
+              <Text size="xs">{t('checkWatchedChannelsClipsDescription')}</Text>
             </Box>
-            <Tooltip label="Start Task">
+            <Tooltip label={t('startTaskButton')}>
               <ActionIcon
                 onClick={() => startTask(Task.CheckClips)}
                 loading={loading}
@@ -98,10 +100,10 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5}>
             <Box>
-              <Text fw={"bold"}>Storage Template Migration</Text>
-              <Text size="xs">Apply storage template to existing files. Read the <a className={classes.link} target="_blank" href="https://github.com/Zibbp/ganymede/wiki/Storage-Templates-and-Migration">docs</a> before starting.</Text>
+              <Text fw={"bold"}>{t('storageTemplateMigration')}</Text>
+              <Text size="xs">{t('storageTemplateMigrationDescription')} <a className={classes.link} target="_blank" href="https://github.com/Zibbp/ganymede/wiki/Storage-Templates-and-Migration">Documentation</a>.</Text>
             </Box>
-            <Tooltip label="Start Task">
+            <Tooltip label={t('startTaskButton')}>
               <ActionIcon
                 onClick={() => startTask(Task.StorageMigration)}
                 loading={loading}
@@ -116,11 +118,10 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5}>
             <Box>
-              <Text fw={"bold"}>Prune Videos</Text>
-              <Text size="xs">Prune videos from channels that have retention settings configured.</Text>
-              <Text size="xs">Occurs daily at 00:00.</Text>
+              <Text fw={"bold"}>{t('pruneVideos')}</Text>
+              <Text size="xs">{t('pruneVideosDescription')}</Text>
             </Box>
-            <Tooltip label="Start Task">
+            <Tooltip label={t('startTaskButton')}>
               <ActionIcon
                 onClick={() => startTask(Task.PruneVideo)}
                 loading={loading}
@@ -135,10 +136,10 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5}>
             <Box>
-              <Text fw={"bold"}>Get JSON Web Key Sets (JWKS) From SSO Provider</Text>
-              <Text size="xs">Occurs daily at 00:00.</Text>
+              <Text fw={"bold"}>{t('jwks')}</Text>
+              <Text size="xs">{t('jwksDescription')}</Text>
             </Box>
-            <Tooltip label="Start Task">
+            <Tooltip label={t('startTaskButton')}>
               <ActionIcon
                 onClick={() => startTask(Task.GetJWKS)}
                 loading={loading}
@@ -153,10 +154,10 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5}>
             <Box>
-              <Text fw={"bold"}>Save Chapters for Twitch Videos</Text>
-              <Text size="xs">Save chapters for already archived Twitch videos (automatically does this for new archives).</Text>
+              <Text fw={"bold"}>{t('saveChaptersForVideos')}</Text>
+              <Text size="xs">{t('saveChaptersForVideosDescription')}</Text>
             </Box>
-            <Tooltip label="Start Task">
+            <Tooltip label={t('startTaskButton')}>
               <ActionIcon
                 onClick={() => startTask(Task.SaveChapters)}
                 loading={loading}
@@ -171,10 +172,10 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5}>
             <Box>
-              <Text fw={"bold"}>Update Live Stream Archives with Video IDs</Text>
-              <Text size="xs">Attempt to update live stream archives with their corresponding video ID (automatically does this after live archive finishes).</Text>
+              <Text fw={"bold"}>{t('updateLiveStreamIds')}</Text>
+              <Text size="xs">{t('updateLiveStreamIdsDescription')}</Text>
             </Box>
-            <Tooltip label="Start Task">
+            <Tooltip label={t('startTaskButton')}>
               <ActionIcon
                 onClick={() => startTask(Task.UpdateStreamVodIds)}
                 loading={loading}
@@ -189,10 +190,10 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5}>
             <Box>
-              <Text fw={"bold"}>Generate Sprite Thumbnails</Text>
-              <Text size="xs">Generate preview thumbnails seen when hovering over the player progress bar for all videos. This automatically runs after every video archive.</Text>
+              <Text fw={"bold"}>{t('generateSpriteThumbnails')}</Text>
+              <Text size="xs">{t('generateSpriteThumbnailsDescription')}</Text>
             </Box>
-            <Tooltip label="Start Task">
+            <Tooltip label={t('startTaskButton')}>
               <ActionIcon
                 onClick={() => startTask(Task.GenerateSpriteThumbnails)}
                 loading={loading}

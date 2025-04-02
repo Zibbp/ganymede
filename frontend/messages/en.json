@@ -290,6 +290,94 @@
     },
     "submit": "Save Settings"
   },
+  "AdminTasksPage": {
+    "title": "Admin - Tasks",
+    "taskStartedNotification": "Task started, see container logs for more information.",
+    "header": "Tasks",
+    "startTaskButton": "Start Task",
+    "checkWatchedChannelsLive": "Check watched channels ofr live streams to archive",
+    "checkWatchedChannelsLiveDescription": "Occurs at interval set in the config.",
+    "checkWatchedChannelsVideo": "Check watched channels for new videos to archive",
+    "checkWatchedChannelsVideoDescription": "Occurs at interval set in the config.",
+    "checkWatchedChannelsClips": "Check watched channels for new clips to archive",
+    "checkWatchedChannelsClipsDescription": "Occurs daily at 00:00.",
+    "storageTemplateMigration": "Storage Template Migration",
+    "storageTemplateMigrationDescription": "Apply storage template to existing files. Read the documentation before executing.",
+    "pruneVideos": "Prune Videos",
+    "pruneVideosDescription": "Delete videos that are older than the retention period set in the channel settings. Occurs daily at 00:00.",
+    "jwks": "Fetch JSON Web Key Sets (JWKS) from SSO provider",
+    "jwksDescription": "Occurs daily at 00:00.",
+    "saveChaptersForVideos": "Save Chapters for Videos",
+    "saveChaptersForVideosDescription": "Save chapters for videos that have been archived (automatically happens for new archives).",
+    "updateLiveStreamIds": "Update Live Stream IDs with Video IDs",
+    "updateLiveStreamIdsDescription": "Attempt to update live stream archives with their corresponding video ID (automatically does this after live archive finishes).",
+    "generateSpriteThumbnails": "Generate Sprite Thumbnails",
+    "generateSpriteThumbnailsDescription": "Generate preview thumbnails seen when hovering over the player progress bar for all videos. This automatically runs after every video archive."
+  },
+  "AdminUsersPage": {
+    "title": "Admin - Users",
+    "loading": "Loading users",
+    "error": "Error loading users",
+    "header": "Manage Users",
+    "searchPlaceholder": "Search users...",
+    "columns": {
+      "id": "ID",
+      "username": "Username",
+      "role": "Role",
+      "authMethod": "Auth Method",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    },
+    "drawer": "User",
+    "deleteModal": "Delete User"
+  },
+  "AdminVideosPage": {
+    "title": "Admin - Videos",
+    "loading": "Loading videos",
+    "error": "Error loading videos",
+    "header": "Manage Videos",
+    "delete": {
+      "delete": "Delete",
+      "one": "one selected video",
+      "many": "selected videos",
+      "select": "Select videos to delete"
+    },
+    "manuallyAddButton": "Manually Add Video",
+    "searchPlaceholder": "Search videos...",
+    "columns": {
+      "id": "ID",
+      "extId": "External ID",
+      "channel": "Channel",
+      "title": "Title",
+      "type": "Type",
+      "locked": "Locked",
+      "streamedAt": "Streamed At",
+      "archivedAt": "Archived At",
+      "actions": "Actions"
+    },
+    "drawer": "Video",
+    "deleteModal": "Delete Video",
+    "multiDeleteModal": "Delete Videos"
+  },
+  "AdminWatchedChannelsPage": {
+    "title": "Admin - Watched Channels",
+    "loading": "Loading watched channels",
+    "error": "Error loading watched channels",
+    "header": "Manage Watched Channels",
+    "addButton": "Add Watched Channel",
+    "searchPlaceholder": "Search watched channels...",
+    "columns": {
+      "id": "ID",
+      "channel": "Channel",
+      "watchLive": "Watch Live",
+      "isLive": "Is Live",
+      "watchVideos": "Watch Videos",
+      "watchClips": "Watch Clips",
+      "actions": "Actions"
+    },
+    "drawer": "Watched Channel",
+    "deleteModal": "Delete Watched Channel"
+  },
   "LandingHeroComponent": {
     "subtitle": "A platform to archive live streams and videos",
     "channelsButton": "Channels",
