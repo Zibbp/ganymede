@@ -3,6 +3,7 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Button, TextInput } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -15,6 +16,7 @@ const schema = z.object({
 })
 
 const PlatformChannelDrawerContent = ({ handleClose }: Props) => {
+  const t = useTranslations('AdminChannelsComponents')
   const useArchiveChannelMutate = useArchiveChannel()
   const axiosPrivate = useAxiosPrivate()
   const [loading, setLoading] = useState(false)
@@ -30,7 +32,6 @@ const PlatformChannelDrawerContent = ({ handleClose }: Props) => {
 
   const handleSubmitForm = async () => {
     const formValues = form.getValues()
-    console.debug(`Admin platform channel form submit - ${formValues}`)
 
     // archive platform channel
     try {
@@ -41,7 +42,7 @@ const PlatformChannelDrawerContent = ({ handleClose }: Props) => {
       })
 
       showNotification({
-        message: "Channel added"
+        message: t('addedNotification')
       })
 
       handleClose()
@@ -58,13 +59,13 @@ const PlatformChannelDrawerContent = ({ handleClose }: Props) => {
         handleSubmitForm()
       })}>
         <TextInput
-          label="Platform Channel Name"
+          label={t('platformChannelNameLabel')}
           placeholder="ganymede"
           key={form.key('channel_name')}
           {...form.getInputProps('channel_name')}
         />
 
-        <Button mt={10} type="submit" loading={loading} fullWidth>Add Channel</Button>
+        <Button mt={10} type="submit" loading={loading} fullWidth>{t('addButton')}</Button>
       </form>
     </div>
   );

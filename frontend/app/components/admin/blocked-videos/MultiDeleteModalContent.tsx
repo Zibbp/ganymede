@@ -2,6 +2,7 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { BlockedVideo, useUnblockVideo } from "@/app/hooks/useBlockedVideos";
 import { Button, Text } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
 }
 
 const MultiDeleteBlockedVideoModalContent = ({ blockedVideos, handleClose }: Props) => {
+  const t = useTranslations('AdminBlockedVideosComponents')
   const [loading, setLoading] = useState(false)
   const unblockVideoMutate = useUnblockVideo()
   const axiosPrivate = useAxiosPrivate()
@@ -26,7 +28,7 @@ const MultiDeleteBlockedVideoModalContent = ({ blockedVideos, handleClose }: Pro
       }))
 
       showNotification({
-        message: "Unblocked videos deleted"
+        message: t('multiUnblockedNotification')
       })
       handleClose()
     } catch (error) {
@@ -38,8 +40,8 @@ const MultiDeleteBlockedVideoModalContent = ({ blockedVideos, handleClose }: Pro
 
   return (
     <div>
-      <Text>Are you sure you want to unblock the {blockedVideos.length} selected blocked videos?</Text>
-      <Button mt={5} color="red" onClick={handleDeleteQueue} loading={loading} fullWidth>Unblock Videos</Button>
+      <Text>{t('multiUnblockText', { length: blockedVideos.length })}</Text>
+      <Button mt={5} color="red" onClick={handleDeleteQueue} loading={loading} fullWidth>{t('multiUnblockButton')}</Button>
     </div>
   );
 }
