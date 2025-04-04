@@ -3,6 +3,7 @@ import { Queue, QueueTaskStatus, useEditQueue } from "@/app/hooks/useQueue";
 import { Button, TextInput, Checkbox, Select } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -32,6 +33,7 @@ const schema = z.object({
 })
 
 const AdminQueueDrawerContent = ({ queue, handleClose }: Props) => {
+  const t = useTranslations('AdminQueueComponents')
   const axiosPrivate = useAxiosPrivate()
   const useEditQueueMutate = useEditQueue()
   const [loading, setLoading] = useState(false)
@@ -63,7 +65,6 @@ const AdminQueueDrawerContent = ({ queue, handleClose }: Props) => {
 
   const handleSubmitForm = async () => {
     const formValues = form.getValues()
-    console.debug(`Queue form submit - ${formValues}`)
 
     // @ts-expect-error uncessary
     const submitQueue: Queue = { ...formValues }
@@ -78,7 +79,7 @@ const AdminQueueDrawerContent = ({ queue, handleClose }: Props) => {
       })
 
       showNotification({
-        message: "Queue edited"
+        message: t('editNotification')
       })
 
       handleClose()
@@ -100,100 +101,100 @@ const AdminQueueDrawerContent = ({ queue, handleClose }: Props) => {
       })}>
         <TextInput
           disabled={true}
-          label="ID"
+          label={t('idLabel')}
           placeholder="Auto generated"
           key={form.key('id')}
           {...form.getInputProps('id')}
         />
 
         <Checkbox
-          label="Is Processing"
+          label={t('isProcessingLabel')}
           key={form.key('processing')}
           {...form.getInputProps('processing', { type: "checkbox" })}
         />
         <Checkbox
-          label="On Hold"
+          label={t('onHoldLabel')}
           key={form.key('on_hold')}
           {...form.getInputProps('on_hold', { type: "checkbox" })}
         />
         <Checkbox
-          label="Video Processing"
+          label={t('videoProcessingLabel')}
           key={form.key('video_processing')}
           {...form.getInputProps('video_processing', { type: "checkbox" })}
         />
         <Checkbox
-          label="Chat Processing"
+          label={t('chatProcessingLabel')}
           key={form.key('chat_processing')}
           {...form.getInputProps('chat_processing', { type: "checkbox" })}
         />
         <Checkbox
-          label="Live Archive"
+          label={t('liveArchiveLabel')}
           key={form.key('live_archive')}
           {...form.getInputProps('live_archive', { type: "checkbox" })}
         />
 
         <Select
-          label="Task Create Folder"
+          label={t('taskCreateFolderLabel')}
           data={selectorQueueTaskStatus}
           key={form.key('task_vod_create_folder')}
           {...form.getInputProps('task_vod_create_folder')}
         />
         <Select
-          label="Task Download Thumbnail"
+          label={t('taskDownloadThumbnailLabel')}
           data={selectorQueueTaskStatus}
           key={form.key('task_vod_download_thumbnail')}
           {...form.getInputProps('task_vod_download_thumbnail')}
         />
         <Select
-          label="Task Save Information"
+          label={t('taskSaveInformationLabel')}
           data={selectorQueueTaskStatus}
           key={form.key('task_vod_save_info')}
           {...form.getInputProps('task_vod_save_info')}
         />
         <Select
-          label="Task Video Download"
+          label={t('taskVideoDownloadLabel')}
           data={selectorQueueTaskStatus}
           key={form.key('task_video_download')}
           {...form.getInputProps('task_video_download')}
         />
         <Select
-          label="Task Video Convert"
+          label={t('taskVideoConvertLabel')}
           data={selectorQueueTaskStatus}
           key={form.key('task_video_convert')}
           {...form.getInputProps('task_video_convert')}
         />
         <Select
-          label="Task Video Move"
+          label={t('taskVideoMoveLabel')}
           data={selectorQueueTaskStatus}
           key={form.key('task_video_move')}
           {...form.getInputProps('task_video_move')}
         />
         <Select
-          label="Task Chat Download"
+          label={t('taskChatDownloadLabel')}
           data={selectorQueueTaskStatus}
           key={form.key('task_chat_download')}
           {...form.getInputProps('task_chat_download')}
         />
         <Select
-          label="Task Chat Convert"
+          label={t('taskChatConvertLabel')}
           data={selectorQueueTaskStatus}
           key={form.key('task_chat_convert')}
           {...form.getInputProps('task_chat_convert')}
         />
         <Select
-          label="Task Chat Render"
+          label={t('taskChatRenderLabel')}
           data={selectorQueueTaskStatus}
           key={form.key('task_chat_render')}
           {...form.getInputProps('task_chat_render')}
         />
         <Select
-          label="Task Chat Move"
+          label={t('taskChatMoveLabel')}
           data={selectorQueueTaskStatus}
           key={form.key('task_chat_move')}
           {...form.getInputProps('task_chat_move')}
         />
 
-        <Button mt={10} type="submit" loading={loading} fullWidth>Edit Queue Item</Button>
+        <Button mt={10} type="submit" loading={loading} fullWidth>{t('editButton')}</Button>
       </form>
 
     </div>

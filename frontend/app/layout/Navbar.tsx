@@ -1,7 +1,7 @@
 "use client"
-import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse } from '@mantine/core';
+import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconChevronDown, IconChevronUp, IconMoon, IconSearch, IconSun, IconUserCircle, IconX } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronUp, IconLanguage, IconMoon, IconSearch, IconSun, IconUserCircle, IconX } from '@tabler/icons-react';
 import classes from './Navbar.module.css';
 import useAuthStore from '../store/useAuthStore';
 import Link from 'next/link';
@@ -10,6 +10,9 @@ import Image from 'next/image';
 import { authLogout, UserRole } from '../hooks/useAuthentication';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { setUserLocale } from '../services/locale';
+import { useTranslations } from 'next-intl';
+import { env } from 'next-runtime-env';
 
 interface NavLink {
   link: string;
@@ -19,39 +22,8 @@ interface NavLink {
   links?: NavLink[];
 }
 
-const links: NavLink[] = [
-  { link: '/', label: 'Home' },
-  { link: '/channels', label: 'Channels' },
-  { link: '/videos', label: 'Videos' },
-  {
-    link: '/archive',
-    label: 'Archive',
-    auth: true,
-    role: UserRole.Editor
-  },
-  { link: '/playlists', label: 'Playlists' },
-  { link: '/queue', label: 'Queue', auth: true, role: UserRole.Editor },
-  { link: '/riverui//', label: 'Tasks', auth: true, role: UserRole.Editor },
-  {
-    link: '#',
-    label: 'Admin',
-    auth: true,
-    role: UserRole.Admin,
-    links: [
-      { link: '/admin/channels', label: 'Channels' },
-      { link: '/admin/watched', label: 'Watched Channels' },
-      { link: '/admin/videos', label: 'Videos' },
-      { link: '/admin/blocked-videos', label: 'Blocked Videos' },
-      { link: '/admin/queue', label: 'Queue' },
-      { link: '/admin/users', label: 'Users' },
-      { link: '/admin/settings', label: 'Settings' },
-      { link: '/admin/tasks', label: 'Tasks' },
-      { link: '/admin/info', label: 'Information' },
-    ],
-  }
-];
-
 export function Navbar() {
+  const t = useTranslations("NavbarLayout")
   const { isLoggedIn, user, logout, hasPermission } = useAuthStore();
 
   const { setColorScheme } = useMantineColorScheme();
@@ -63,13 +35,45 @@ export function Navbar() {
   const [adminLinksOpened, { toggle: toggleAdminLinks }] = useDisclosure(false);
   const [searchQuery, setSearchQuery] = useState("")
 
+  const links: NavLink[] = [
+    { link: '/', label: t('links.home') },
+    { link: '/channels', label: t('links.channels') },
+    { link: '/videos', label: t('links.videos') },
+    {
+      link: '/archive',
+      label: t('links.archive'),
+      auth: true,
+      role: UserRole.Editor
+    },
+    { link: '/playlists', label: t('links.playlists') },
+    { link: '/queue', label: t('links.queue'), auth: true, role: UserRole.Editor },
+    { link: '/riverui//', label: t('links.tasks'), auth: true, role: UserRole.Editor },
+    {
+      link: '#',
+      label: t('adminLinks.admin'),
+      auth: true,
+      role: UserRole.Admin,
+      links: [
+        { link: '/admin/channels', label: t('adminLinks.channels') },
+        { link: '/admin/watched', label: t('adminLinks.watchedChannels') },
+        { link: '/admin/videos', label: t('adminLinks.videos') },
+        { link: '/admin/blocked-videos', label: t('adminLinks.blockedVideos') },
+        { link: '/admin/queue', label: t('adminLinks.queue') },
+        { link: '/admin/users', label: t('adminLinks.users') },
+        { link: '/admin/settings', label: t('adminLinks.settings') },
+        { link: '/admin/tasks', label: t('adminLinks.tasks') },
+        { link: '/admin/info', label: t('adminLinks.information') },
+      ],
+    }
+  ];
+
   const handleLogout = async () => {
     try {
       await authLogout(); // server-side logout to clear session and cookies
       logout(); // clear store
       router.push("/");
     } catch (error) {
-      console.error("Error logging out", error);
+      console.error(t('errorLoggingOut'), error);
     }
   };
 
@@ -175,7 +179,7 @@ export function Navbar() {
             onChange={(event) => setSearchQuery(event.currentTarget.value)}
             leftSectionPointerEvents="none"
             leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
-            placeholder="Search"
+            placeholder={t('search')}
             onKeyUp={(e) => {
               if (e.key === "Enter" && searchQuery) {
                 router.push(`/search?q=${encodeURI(searchQuery)}`);
@@ -207,6 +211,27 @@ export function Navbar() {
             <IconSun className={cx(classes.icon, classes.light)} stroke={1.5} />
             <IconMoon className={cx(classes.icon, classes.dark)} stroke={1.5} />
           </ActionIcon>
+          {env('NEXT_PUBLIC_SHOW_LOCALE_BUTTON') == 'false' ? (
+            <></>
+          ) : (
+            <Menu shadow="md" width={200}>
+              <Menu.Target>
+                <Tooltip label={t('language')}>
+                  <ActionIcon variant="default" aria-label="Profile" size="lg">
+                    <IconLanguage style={{ width: '70%', height: '70%' }} stroke={1.5} />
+                  </ActionIcon>
+                </Tooltip>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item onClick={() => setUserLocale('en')}>
+                  English
+                </Menu.Item>
+                <Menu.Item onClick={() => setUserLocale('de')}>
+                  German
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          )}
           {isLoggedIn ? (
             <Menu shadow="md" width={200}>
               <Menu.Target>
@@ -227,9 +252,9 @@ export function Navbar() {
           ) : (
             <div>
               <Button component={Link} href="/login" variant="default" mr={5}>
-                Log in
+                {t('loginButton')}
               </Button>
-              <Button component={Link} href="/register" variant="default">Sign up</Button>
+              <Button component={Link} href="/register" variant="default">{t('signUpButton')}</Button>
             </div>
           )}
         </Group>
@@ -253,7 +278,7 @@ export function Navbar() {
             onChange={(event) => setSearchQuery(event.currentTarget.value)}
             leftSectionPointerEvents="none"
             leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
-            placeholder="Search"
+            placeholder={t('search')}
             onKeyUp={(e) => {
               if (e.key === "Enter" && searchQuery) {
                 router.push(`/search?q=${encodeURI(searchQuery)}`);
@@ -288,9 +313,9 @@ export function Navbar() {
             ) : (
               <>
                 <Button component={Link} href="/login" variant="default">
-                  Log in
+                  {t('loginButton')}
                 </Button>
-                <Button component={Link} href="/register" variant="default">Sign up</Button>
+                <Button component={Link} href="/register" variant="default">{t('signUpButton')}</Button>
               </>
             )}
           </Group>

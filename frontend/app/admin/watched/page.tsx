@@ -11,10 +11,12 @@ import { useState, useEffect } from "react";
 import classes from "./AdminWatchedChannelsPage.module.css"
 import AdminWatchedChannelDrawerContent, { WatchedChannelEditMode } from "@/app/components/admin/watched/DrawerContent";
 import DeleteWatchedChannelModalContent from "@/app/components/admin/watched/DeleteModalContent";
+import { useTranslations } from "next-intl";
 
 const AdminWatchChannelsPage = () => {
+  const t = useTranslations('AdminWatchedChannelsPage')
   useEffect(() => {
-    document.title = "Admin - Watched Channels";
+    document.title = t('title');
   }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -78,16 +80,16 @@ const AdminWatchChannelsPage = () => {
   };
 
   if (isPending) return (
-    <GanymedeLoadingText message="Loading Watched Channels" />
+    <GanymedeLoadingText message={t('loading')} />
   )
-  if (isError) return <div>Error loading watched channels</div>
+  if (isError) return <div>{t('error')}</div>
 
 
   return (
     <div>
       <Container size="7xl">
         <Group justify="space-between" mt={2} >
-          <Title>Manage Watched Channels</Title>
+          <Title>{t('header')}</Title>
           <Box>
             <Button
               onClick={() => {
@@ -98,7 +100,7 @@ const AdminWatchChannelsPage = () => {
               mr={5}
               variant="default"
             >
-              Add
+              {t('addButton')}
             </Button>
           </Box>
         </Group>
@@ -106,7 +108,7 @@ const AdminWatchChannelsPage = () => {
         <Box mt={5}>
           <div>
             <TextInput
-              placeholder="Search watched channels..."
+              placeholder={t('searchPlaceholder')}
               leftSection={<IconSearch size={16} />}
               value={query}
               onChange={(e) => setQuery(e.currentTarget.value)}
@@ -122,15 +124,15 @@ const AdminWatchChannelsPage = () => {
             highlightOnHover
             records={records}
             columns={[
-              { accessor: "id", title: "ID" },
+              { accessor: "id", title: t('columns.id') },
               {
                 accessor: "edges.channel.display_name",
-                title: "Channel",
+                title: t('columns.channel'),
                 sortable: true,
               },
               {
                 accessor: "watch_live",
-                title: "Watch Live",
+                title: t('columns.watchLive'),
                 sortable: true,
                 render: ({ watch_live }) => {
                   return watch_live ? "✅" : "❌";
@@ -138,7 +140,7 @@ const AdminWatchChannelsPage = () => {
               },
               {
                 accessor: "is_live",
-                title: "Is Live",
+                title: t('columns.isLive'),
                 sortable: true,
                 render: ({ is_live }) => {
                   return is_live ? "✅" : "❌";
@@ -146,7 +148,7 @@ const AdminWatchChannelsPage = () => {
               },
               {
                 accessor: "watch_vod",
-                title: "Watch Videos",
+                title: t('columns.watchVideos'),
                 sortable: true,
                 render: ({ watch_vod }) => {
                   return watch_vod ? "✅" : "❌";
@@ -154,7 +156,7 @@ const AdminWatchChannelsPage = () => {
               },
               {
                 accessor: "watch_clips",
-                title: "Watch Clips",
+                title: t('columns.watchClips'),
                 sortable: true,
                 render: ({ watch_clips }) => {
                   return watch_clips ? "✅" : "❌";
@@ -163,7 +165,7 @@ const AdminWatchChannelsPage = () => {
 
               {
                 accessor: "actions",
-                title: "Actions",
+                title: t('columns.actions'),
                 render: (watched) => (
                   <Group>
                     <ActionIcon
@@ -196,11 +198,11 @@ const AdminWatchChannelsPage = () => {
         </Box>
       </Container>
 
-      <Drawer opened={channelDrawerOpened} onClose={closeChannelDrawer} position="right" title="Channel">
+      <Drawer opened={channelDrawerOpened} onClose={closeChannelDrawer} position="right" title={t('drawer')}>
         <AdminWatchedChannelDrawerContent mode={drawerEditMode} watchedChannel={activeWatchedChannel} handleClose={closeChannelDrawer} />
       </Drawer>
 
-      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Channel">
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deleteModal')}>
         <DeleteWatchedChannelModalContent watchedChannel={activeWatchedChannel} handleClose={closeDeleteModal} />
       </Modal>
 

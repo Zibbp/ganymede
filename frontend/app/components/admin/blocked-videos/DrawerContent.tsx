@@ -3,6 +3,7 @@ import { BlockedVideo, useBlockVideo } from "@/app/hooks/useBlockedVideos";
 import { Button, TextInput } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 
 type Props = {
@@ -15,6 +16,7 @@ const schema = z.object({
 })
 
 const AdminBlockedVideosDrawerContent = ({ blockedVideo, handleClose }: Props) => {
+  const t = useTranslations('AdminBlockedVideosComponents')
   const axiosPrivate = useAxiosPrivate()
   const useBlockVideoMutate = useBlockVideo()
 
@@ -29,7 +31,6 @@ const AdminBlockedVideosDrawerContent = ({ blockedVideo, handleClose }: Props) =
 
   const handleSubmitForm = async () => {
     const formValues = form.getValues()
-    console.debug(`Admin blocked video form submit`, formValues)
 
     // create channel
     try {
@@ -39,7 +40,7 @@ const AdminBlockedVideosDrawerContent = ({ blockedVideo, handleClose }: Props) =
       })
 
       showNotification({
-        message: "Video blocked"
+        message: t('blockedNotification')
       })
 
       handleClose()
@@ -55,11 +56,11 @@ const AdminBlockedVideosDrawerContent = ({ blockedVideo, handleClose }: Props) =
       })}>
         <TextInput
           label="ID"
-          placeholder="External Platform Video ID"
+          placeholder={t('idPlaceholder')}
           key={form.key('id')}
           {...form.getInputProps('id')}
         />
-        <Button mt={10} type="submit" fullWidth>Block Video</Button>
+        <Button mt={10} type="submit" fullWidth>{t('blockButton')}</Button>
       </form>
     </div>
   );

@@ -13,10 +13,12 @@ import classes from "./AdminChannelsPage.module.css"
 import AdminChannelDrawerContent, { ChannelEditMode } from "@/app/components/admin/channel/DrawerContent";
 import PlatformChannelDrawerContent from "@/app/components/admin/channel/PlatformDrawerContent";
 import DeleteChannelModalContent from "@/app/components/admin/channel/DeleteModalContent";
+import { useTranslations } from "next-intl";
 
 const AdminChannelsPage = () => {
+  const t = useTranslations("AdminChannelsPage");
   useEffect(() => {
-    document.title = "Admin - Channels";
+    document.title = t('title');
   }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -81,15 +83,15 @@ const AdminChannelsPage = () => {
   };
 
   if (isPending) return (
-    <GanymedeLoadingText message="Loading Channels" />
+    <GanymedeLoadingText message={t('loading')} />
   )
-  if (isError) return <div>Error loading channels</div>
+  if (isError) return <div>{t('error')}</div>
 
   return (
     <div>
       <Container size="7xl">
         <Group justify="space-between" mt={2} >
-          <Title>Manage Channels</Title>
+          <Title>{t('header')}</Title>
           <Box>
             <Button
               onClick={() => {
@@ -100,13 +102,13 @@ const AdminChannelsPage = () => {
               mr={5}
               variant="default"
             >
-              Create Channel
+              {t('createButton')}
             </Button>
             <Button
               onClick={openPlatformChannelDrawer}
               color="violet"
             >
-              Add Twitch Channel
+              {t('addTwitchChannel')}
             </Button>
           </Box>
         </Group>
@@ -114,7 +116,7 @@ const AdminChannelsPage = () => {
         <Box mt={5}>
           <div>
             <TextInput
-              placeholder="Search channels..."
+              placeholder={t('searchPlaceholder')}
               leftSection={<IconSearch size={16} />}
               value={query}
               onChange={(e) => setQuery(e.currentTarget.value)}
@@ -130,13 +132,13 @@ const AdminChannelsPage = () => {
             highlightOnHover
             records={records}
             columns={[
-              { accessor: "id", title: "ID" },
-              { accessor: "ext_id", title: "External ID" },
-              { accessor: "name", title: "Name", sortable: true },
-              { accessor: "display_name", title: "Display Name", sortable: true },
+              { accessor: "id", title: t('columns.id') },
+              { accessor: "ext_id", title: t('columns.externalId') },
+              { accessor: "name", title: t('columns.name'), sortable: true },
+              { accessor: "display_name", title: t('columns.displayName'), sortable: true },
               {
                 accessor: "retention",
-                title: "Video Retention",
+                title: t('columns.videoRetention'),
                 sortable: false,
                 render: ({ retention }) => (
                   retention ? (
@@ -148,7 +150,7 @@ const AdminChannelsPage = () => {
               },
               {
                 accessor: "created_at",
-                title: "Created At",
+                title: t('columns.createdAt'),
                 sortable: true,
                 render: ({ created_at }) => (
                   <div>{dayjs(created_at).format("YYYY/MM/DD")}</div>
@@ -156,7 +158,7 @@ const AdminChannelsPage = () => {
               },
               {
                 accessor: "actions",
-                title: "Actions",
+                title: t('columns.actions'),
                 render: (channel) => (
                   <Group>
                     <ActionIcon
@@ -190,14 +192,14 @@ const AdminChannelsPage = () => {
         </Box>
       </Container>
 
-      <Drawer opened={channelDrawerOpened} onClose={closeChannelDrawer} position="right" title="Channel">
+      <Drawer opened={channelDrawerOpened} onClose={closeChannelDrawer} position="right" title={t('drawer')}>
         <AdminChannelDrawerContent mode={drawerEditMode} channel={activeChannel} handleClose={closeChannelDrawer} />
       </Drawer>
-      <Drawer opened={platformChannelDrawerOpened} onClose={closePlatformChannelDrawer} position="right" title="Platform Channel">
+      <Drawer opened={platformChannelDrawerOpened} onClose={closePlatformChannelDrawer} position="right" title={t('platformDrawer')}>
         <PlatformChannelDrawerContent handleClose={closePlatformChannelDrawer} />
       </Drawer>
 
-      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Channel">
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deleteModal')}>
         <DeleteChannelModalContent channel={activeChannel} handleClose={closeDeleteModal} />
       </Modal>
 

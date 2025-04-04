@@ -14,10 +14,12 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import DeleteBlockedVideoModalContent from "@/app/components/admin/blocked-videos/DeleteModalContent";
 import AdminBlockedVideosDrawerContent from "@/app/components/admin/blocked-videos/DrawerContent";
 import MultiDeleteBlockedVideoModalContent from "@/app/components/admin/blocked-videos/MultiDeleteModalContent";
+import { useTranslations } from "next-intl";
 
 const AdminBlockedVideosPage = () => {
+  const t = useTranslations("AdminBlockedVideosPage");
   useEffect(() => {
-    document.title = "Admin - Blocked Videos";
+    document.title = t('title');
   }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -80,15 +82,15 @@ const AdminBlockedVideosPage = () => {
   }
 
   if (isPending) return (
-    <GanymedeLoadingText message="Loading Blocked Videos" />
+    <GanymedeLoadingText message={t('loading')} />
   )
-  if (isError) return <div>Error loading blocked videos</div>
+  if (isError) return <div>{t('error')}</div>
 
   return (
     <div>
       <Container size="7xl">
         <Group justify="space-between" mt={2} >
-          <Title>Manage Blocked Videos</Title>
+          <Title>{t('header')}</Title>
           <Box>
             {(activeBlockedVideos && activeBlockedVideos.length >= 1) && (
               <Button
@@ -101,11 +103,11 @@ const AdminBlockedVideosPage = () => {
                 }}
               >
                 {activeBlockedVideos.length
-                  ? `Delete ${activeBlockedVideos.length === 1
-                    ? "one selected blocked video"
-                    : `${activeBlockedVideos.length} selected blocked videos`
+                  ? `${t('delete.delete')} ${activeBlockedVideos.length === 1
+                    ? "${t('delete.one')}"
+                    : `${activeBlockedVideos.length} ${t('delete.many')}`
                   }`
-                  : "Select blocked videos to delete"}
+                  : t('delete.select')}
               </Button>
             )}
             <Button
@@ -116,17 +118,17 @@ const AdminBlockedVideosPage = () => {
               mr={5}
               variant="default"
             >
-              Add Blocked Video ID
+              {t('add')}
             </Button>
           </Box>
         </Group>
 
-        <Text>External platform video IDs that are blocked from being archived.</Text>
+        <Text>{t('body')}</Text>
 
         <Box mt={5}>
           <div>
             <TextInput
-              placeholder="Search blocked videos..."
+              placeholder={t('search')}
               leftSection={<IconSearch size={16} />}
               value={query}
               onChange={(e) => setQuery(e.currentTarget.value)}
@@ -142,10 +144,10 @@ const AdminBlockedVideosPage = () => {
             highlightOnHover
             records={records}
             columns={[
-              { accessor: "id", title: "ID" },
+              { accessor: "id", title: t('columns.id') },
               {
                 accessor: "created_at",
-                title: "Created At",
+                title: t('columns.createdAt'),
                 sortable: true,
                 render: ({ created_at }) => (
                   <div>{dayjs(created_at).format("YYYY/MM/DD")}</div>
@@ -153,7 +155,7 @@ const AdminBlockedVideosPage = () => {
               },
               {
                 accessor: "actions",
-                title: "Actions",
+                title: t('columns.actions'),
                 render: (blockedVideo) => (
                   <Group>
                     <ActionIcon
@@ -182,17 +184,17 @@ const AdminBlockedVideosPage = () => {
         </Box>
       </Container>
 
-      <Drawer opened={blockedVideoDrawerOpened} onClose={closeBlockedVideoDrawer} position="right" title="Channel">
+      <Drawer opened={blockedVideoDrawerOpened} onClose={closeBlockedVideoDrawer} position="right" title={t('addDrawer')}>
         <AdminBlockedVideosDrawerContent blockedVideo={activeBlockedVideo} handleClose={closeBlockedVideoDrawer} />
       </Drawer>
 
-      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Channel">
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deleteModal')}>
         {activeBlockedVideo && (
           <DeleteBlockedVideoModalContent blockedVideo={activeBlockedVideo} handleClose={closeDeleteModal} />
         )}
       </Modal>
 
-      <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title="Delete Queue Items">
+      <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title={t('deleteModal')}>
         {activeBlockedVideos && (
           <MultiDeleteBlockedVideoModalContent blockedVideos={activeBlockedVideos} handleClose={handleMultiDeleteModalCallback} />
         )}

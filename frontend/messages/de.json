@@ -1,0 +1,63 @@
+{
+  "HomePage": {
+    "continueWatching": "Weiter zuschauen",
+    "recentlyArchived": "Kürzlich archiviert"
+  },
+  "VideosPage": {
+    "title": "Alle Videos",
+    "error": "Fehler laden Videos"
+  },
+  "VideoPage": {
+    "loading": "Video laden"
+  },
+  "SearchPage": {
+    "title": "Suchen",
+    "error": "Fehler laden Suchergebnisse",
+    "loading": "Suchergebnisse laden"
+  },
+  "QueuePage": {
+    "title": "Warteschlange",
+    "error": "Fehler laden Warteschlange",
+    "loading": "Ladenwarteschlange",
+    "cancel": "Warteschlangenelement wurde storniert",
+    "column": {
+      "id": "AUSWEIS",
+      "channel": "Kanal",
+      "ext_id": "Externe ID",
+      "status": {
+        "status": "Status",
+        "failed": "Aufgabe im gescheiterten Zustand",
+        "error": "FEHLER",
+        "processing": "Verarbeitung",
+        "hold": "In der Warteschleife"
+      },
+      "live_archive": "Live -Archiv",
+      "created_at": "Erstellt at",
+      "actions": {
+        "actions": "Aktionen",
+        "view": "Warteschlangenelement anzeigen",
+        "stop": "Stoppen Sie Warteschlangenelement"
+      }
+    },
+    "modal": {
+      "cancel": {
+        "title": "Warteschlangenelement abbrechen",
+        "text": "Sind Sie sicher, dass Sie diesen Warteschlangenelement stornieren möchten?",
+        "description": "Für Live-Archive wird das Video und den Chat-Download gestoppt und dann mit der Nachbearbeitung fortgesetzt. ",
+        "delete": "Video- und Videodateien löschen",
+        "block": "Blockvideo -ID blockieren"
+      }
+    }
+  },
+  "LandingHeroComponent": {
+    "subtitle": "Eine Plattform, um Live -Streams und Videos zu archivieren",
+    "channelsButton": "Kanäle",
+    "loginButton": "Login"
+  },
+  "LandingContinueWatchingComponent": {
+    "error": "Fehler laden Letzte Wiedergabevideos"
+  },
+  "LandingRecentlyArchivedComponent": {
+    "error": "Fehler laden kürzlich archivierte Videos"
+  }
+}
