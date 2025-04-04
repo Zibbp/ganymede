@@ -127,6 +127,9 @@ jobs:
     if: vars.OCI_PUSH == 'true' && github.actor != 'dependabot[bot]'
     needs:
       - build
+    concurrency:
+      group: ${{ github.ref }}
+      cancel-in-progress: false
     steps:
       - name: Set correct OCI image name
         id: ociImageName

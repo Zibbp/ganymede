@@ -8,6 +8,7 @@ on:
 
 env:
   TESTCONTAINER_DOCKER_NETWORK: ganymede-tests
+  SKIP_SECRET_TESTS: false
 
 jobs:
   test:
@@ -16,11 +17,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Set SKIP_SECRET_TESTS if running on a fork
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && github.actor != 'dependabot[bot]' }}
+        run: |
+          echo "Actor: $GITHUB_ACTOR"
+          echo "Event: $GITHUB_EVENT_NAME"
+          echo "PR head repo: ${{ github.event.pull_request.head.repo.full_name }}"
+          echo "Current repo: ${{ github.repository }}"
+          echo "SKIP_SECRET_TESTS=true" >> $GITHUB_ENV
 
       - name: Build test docker image
         id: docker_build_test_image
@@ -44,6 +52,7 @@ jobs:
           docker run \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}:/opt/app \
+          -e SKIP_SECRET_TESTS=${{ env.SKIP_SECRET_TESTS }} \
           -e TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }} \
           -e TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }} \
           "${{ steps.docker_build_test_image.outputs.imageid }}" \

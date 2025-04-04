@@ -102,6 +102,11 @@ func setupEnvironment(t *testing.T, postgresHost string, postgresPort string) {
 // A Postgres Testcontainer is used to provide a real database for further tersting.
 // Used for service tests in internal/<service>/<service>_test.go
 func Setup(t *testing.T) (*server.Application, error) {
+	// Skip tests that require secret environment variables (e.g. if running in CI against a fork)
+	if os.Getenv("SKIP_SECRET_TESTS") == "true" {
+		t.Skip("Skipping test that requires secret environment variables")
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -154,6 +159,10 @@ func Setup(t *testing.T) (*server.Application, error) {
 // SetupHTTP is similar to Setup but starts the HTTP server for testing end-to-end http requests.
 // Used for tests in internal/transport/http
 func SetupHTTP(t *testing.T) (*httpexpect.Expect, error) {
+	// Skip tests that require secret environment variables (e.g. if running in CI against a fork)
+	if os.Getenv("SKIP_SECRET_TESTS") == "true" {
+		t.Skip("Skipping test that requires secret environment variables")
+	}
 	ctx := context.Background()
 
 	postgresContainer, err := setupPostgresTestContainer(ctx)
