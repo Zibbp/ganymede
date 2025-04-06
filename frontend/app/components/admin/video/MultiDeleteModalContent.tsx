@@ -3,6 +3,7 @@ import { useBlockVideo } from "@/app/hooks/useBlockedVideos";
 import { useDeleteVideo, Video } from "@/app/hooks/useVideos";
 import { Button, Text, Flex, Checkbox } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
 }
 
 const MultiDeleteVideoModalContent = ({ videos, handleClose }: Props) => {
+  const t = useTranslations('AdminVideoComponents')
   const [loading, setLoading] = useState(false)
   const [deleteFiles, setDeleteFiles] = useState(false)
   const [blockVideo, setBlockVideo] = useState(false)
@@ -36,7 +38,7 @@ const MultiDeleteVideoModalContent = ({ videos, handleClose }: Props) => {
       }))
 
       showNotification({
-        message: "Videos deleted"
+        message: t('multiDeleteNotification')
       })
       handleClose()
     } catch (error) {
@@ -50,21 +52,21 @@ const MultiDeleteVideoModalContent = ({ videos, handleClose }: Props) => {
 
   return (
     <div>
-      <Text>Are you sure you want to delete the {videos.length} selected videos?</Text>
+      <Text>{t('multiDeleteConfirmText', { number: videos.length })}</Text>
       <Flex my={10}>
         <Checkbox
-          label="Delete files"
+          label={t('deleteFilesLabel')}
           checked={deleteFiles}
           onChange={(event) => setDeleteFiles(event.currentTarget.checked)}
           mr={10}
         />
         <Checkbox
-          label="Block external video ID"
+          label={t('blockExtIdLabel')}
           checked={blockVideo}
           onChange={(event) => setBlockVideo(event.currentTarget.checked)}
         />
       </Flex>
-      <Button mt={5} color="red" onClick={handleDeleteVideo} loading={loading} fullWidth>Delete Videos</Button>
+      <Button mt={5} color="red" onClick={handleDeleteVideo} loading={loading} fullWidth>{t('multiDeleteButton')}</Button>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEditUser } from "@/app/hooks/useUsers";
 import { Button, TextInput, Select } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -20,6 +21,7 @@ const schema = z.object({
 })
 
 const AdminUserDrawerContent = ({ user, handleClose }: Props) => {
+  const t = useTranslations('AdminUserComponents')
   const axiosPrivate = useAxiosPrivate()
   const useEditUserMutate = useEditUser()
   const [loading, setLoading] = useState(false)
@@ -39,7 +41,6 @@ const AdminUserDrawerContent = ({ user, handleClose }: Props) => {
 
   const handleSubmitForm = async () => {
     const formValues = form.getValues()
-    console.debug(`User form submit - ${formValues}`)
 
     // @ts-expect-error uncessary
     const submitUser: User = { ...formValues }
@@ -54,7 +55,7 @@ const AdminUserDrawerContent = ({ user, handleClose }: Props) => {
       })
 
       showNotification({
-        message: "User edited"
+        message: t('editNotification')
       })
 
       handleClose()
@@ -77,21 +78,21 @@ const AdminUserDrawerContent = ({ user, handleClose }: Props) => {
         <TextInput
           disabled={true}
           label="ID"
-          placeholder="Auto generated"
+          placeholder={t('idLabel')}
           key={form.key('id')}
           {...form.getInputProps('id')}
         />
 
         <TextInput
           withAsterisk
-          label="Username"
+          label={t('usernameLabel')}
           placeholder="ganymede"
           key={form.key('username')}
           {...form.getInputProps('username')}
         />
 
         <Select
-          label="Role"
+          label={t('roleLabel')}
           data={selectorUserRole}
           key={form.key('role')}
           {...form.getInputProps('role')}
@@ -99,12 +100,11 @@ const AdminUserDrawerContent = ({ user, handleClose }: Props) => {
 
         <TextInput
           disabled
-          label="Created At"
-          placeholder="ganymede"
+          label={t('createdAtLabel')}
           key={form.key('created_at')}
           {...form.getInputProps('created_at')}
         />
-        <Button mt={10} type="submit" loading={loading} fullWidth>Edit User</Button>
+        <Button mt={10} type="submit" loading={loading} fullWidth>{t('editButton')}</Button>
       </form>
 
     </div>

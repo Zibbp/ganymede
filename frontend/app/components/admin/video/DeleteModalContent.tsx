@@ -4,6 +4,7 @@ import { useDeleteVideo, Video } from "@/app/hooks/useVideos";
 import { escapeURL } from "@/app/util/util";
 import { Button, Code, Text, Image, Flex, Checkbox } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { env } from "next-runtime-env";
 import { useState } from "react";
 
@@ -13,6 +14,7 @@ type Props = {
 }
 
 const DeleteVideoModalContent = ({ video, handleClose }: Props) => {
+  const t = useTranslations('AdminVideoComponents')
   const [loading, setLoading] = useState(false)
   const [deleteFiles, setDeleteFiles] = useState(false)
   const [blockVideo, setBlockVideo] = useState(false)
@@ -35,7 +37,7 @@ const DeleteVideoModalContent = ({ video, handleClose }: Props) => {
       await deleteVideoMutate.mutateAsync({ axiosPrivate: axiosPrivate, id: video.id, deleteFiles: deleteFiles })
 
       showNotification({
-        message: "Video deleted"
+        message: t('deleteNotification')
       })
 
       handleClose()
@@ -50,7 +52,7 @@ const DeleteVideoModalContent = ({ video, handleClose }: Props) => {
 
   return (
     <div>
-      <Text>Are you sure you want to delete this video?</Text>
+      <Text>{t('deleteConfirmText')}</Text>
       <Code block mb={5}>
         <pre>ID: {video.id}</pre>
         <pre>External ID: {video.ext_id}</pre>
@@ -67,20 +69,20 @@ const DeleteVideoModalContent = ({ video, handleClose }: Props) => {
 
       <Flex my={10}>
         <Checkbox
-          label="Delete files"
+          label={t('deleteFilesLabel')}
           checked={deleteFiles}
           onChange={(event) => setDeleteFiles(event.currentTarget.checked)}
           mr={10}
         />
         <Checkbox
-          label="Block external video ID"
+          label={t('blockExtIdLabel')}
           checked={blockVideo}
           onChange={(event) => setBlockVideo(event.currentTarget.checked)}
         />
 
       </Flex>
 
-      <Button mt={5} color="red" onClick={handleDeleteVideo} loading={loading} fullWidth>Delete Video</Button>
+      <Button mt={5} color="red" onClick={handleDeleteVideo} loading={loading} fullWidth>{t('deleteButton')}</Button>
     </div>
   );
 }
