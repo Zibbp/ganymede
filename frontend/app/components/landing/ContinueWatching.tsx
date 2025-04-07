@@ -4,6 +4,7 @@ import { rem, SimpleGrid, useMantineTheme } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
 import VideoCard from "../videos/Card"
 import { Carousel } from "@mantine/carousel";
+import { useTranslations } from "next-intl"
 
 type Props = {
   count: number
@@ -14,10 +15,12 @@ const ContinueWatching = ({ count }: Props) => {
   const theme = useMantineTheme()
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
+  const t = useTranslations("LandingContinueWatchingComponent")
+
   const { data, isPending, isError } = useGetLastPlaybackVideos(axiosPrivate, count)
 
   if (isPending) return (<div></div>)
-  if (isError) return <div>Error loading last playback videos</div>
+  if (isError) return <div>{t('error')}</div>
 
 
   return (

@@ -4,6 +4,7 @@ import { ActionIcon, Button, NumberInput, TextInput, Tooltip, Text, Divider, Che
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { IconHelpCircle } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 
 type Props = {
@@ -26,6 +27,7 @@ const schema = z.object({
 })
 
 const AdminChannelDrawerContent = ({ channel, mode, handleClose }: Props) => {
+  const t = useTranslations('AdminChannelsComponents')
   const axiosPrivate = useAxiosPrivate()
   const useCreateChannelMutate = useCreateChannel()
   const useEditChannelMutate = useEditChannel()
@@ -48,7 +50,6 @@ const AdminChannelDrawerContent = ({ channel, mode, handleClose }: Props) => {
 
   const handleSubmitForm = async () => {
     const formValues = form.getValues()
-    console.debug(`Admin channel form submit - ${formValues}`)
 
     // @ts-expect-error partial channel
     const submitChannel: Channel = {
@@ -70,7 +71,7 @@ const AdminChannelDrawerContent = ({ channel, mode, handleClose }: Props) => {
         })
 
         showNotification({
-          message: "Channel created"
+          message: t('createNotification')
         })
 
         handleClose()
@@ -90,7 +91,7 @@ const AdminChannelDrawerContent = ({ channel, mode, handleClose }: Props) => {
         })
 
         showNotification({
-          message: "Channel edited"
+          message: t('editNotification')
         })
 
         handleClose()
@@ -110,7 +111,7 @@ const AdminChannelDrawerContent = ({ channel, mode, handleClose }: Props) => {
       })
 
       showNotification({
-        message: "Channel image updated from platform"
+        message: t('imageUpdateNotification')
       })
     } catch (error) {
       console.error(error)
@@ -125,43 +126,43 @@ const AdminChannelDrawerContent = ({ channel, mode, handleClose }: Props) => {
         <TextInput
           disabled={true}
           label="ID"
-          placeholder="Auto generated"
+          placeholder={t('idLabel')}
           key={form.key('id')}
           {...form.getInputProps('id')}
         />
         <TextInput
-          label="External Platform ID"
+          label={t('extIdLabel')}
           placeholder="123456789"
           key={form.key('external_id')}
           {...form.getInputProps('external_id')}
         />
         <TextInput
           withAsterisk
-          label="Name"
+          label={t('nameLabel')}
           placeholder="ganymede"
           key={form.key('name')}
           {...form.getInputProps('name')}
         />
         <TextInput
           withAsterisk
-          label="Display Name"
+          label={t('displayNameLabel')}
           placeholder="Ganymede"
           key={form.key('display_name')}
           {...form.getInputProps('display_name')}
         />
         <TextInput
           withAsterisk
-          label="Image Path"
+          label={t('imagePathLabel')}
           placeholder="/data/videos/ganymede/profile.jpg"
           key={form.key('image_path')}
           {...form.getInputProps('image_path')}
         />
 
         <div style={{ display: "flex" }}>
-          <Text>Retention settings</Text>
+          <Text>{t('videoRetentionSettingsHeader')}</Text>
           <Tooltip
             multiline
-            label="If this setting is enabled channel videos will be deleted (including files) after the specified number of days. 'Lock' a video to prevent it from being deleted."
+            label={t('videoRetentionLabel')}
           >
             <ActionIcon variant="transparent">
               <IconHelpCircle size="1.125rem" />
@@ -170,31 +171,31 @@ const AdminChannelDrawerContent = ({ channel, mode, handleClose }: Props) => {
         </div>
 
         <Checkbox
-          label="Enable Video Retention"
+          label={t('videoRetentionLabel')}
           key={form.key('retention')}
           {...form.getInputProps('retention', { type: "checkbox" })}
         />
 
         {form.values.retention && (
           <Text c="red" mt={5}>
-            Videos will be deleted after {form.values.retention_days} days!
+            {t('videoRetentionWarning', { number: form.values.retention_days })}
           </Text>
         )}
 
         <NumberInput
           disabled={!form.values.retention}
-          label="Retention Days"
+          label={t('videoRetentionDaysLabel')}
           placeholder="7"
           key={form.key('retention_days')}
           {...form.getInputProps('retention_days')}
         />
 
-        <Button mt={10} type="submit" fullWidth>{mode == ChannelEditMode.Create ? 'Create Channel' : 'Edit Channel'}</Button>
+        <Button mt={10} type="submit" fullWidth>{mode == ChannelEditMode.Create ? t('submitButton') : t('editButton')}</Button>
       </form>
       {channel && (
         <div>
           <Divider mt={10} />
-          <Button mt={10} fullWidth variant="default" onClick={handleUpdateChannelImage}>Update Image from Platform</Button>
+          <Button mt={10} fullWidth variant="default" onClick={handleUpdateChannelImage}>{t('imageUpdateButton')}</Button>
         </div>
       )}
     </div>

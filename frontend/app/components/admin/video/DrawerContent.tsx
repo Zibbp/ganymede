@@ -4,6 +4,7 @@ import { CreateVodRequest, Platform, useCreateVideo, useEditVideo, Video, VideoT
 import { Select, Button, NumberInput, TextInput, Checkbox, Flex } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
@@ -39,6 +40,7 @@ const schema = z.object({
 })
 
 const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
+  const t = useTranslations('AdminVideoComponents')
   const axiosPrivate = useAxiosPrivate()
   const [loading, setLoading] = useState(false)
 
@@ -75,7 +77,6 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
   const handleSubmitForm = async () => {
     setLoading(true)
     const formValues = form.getValues()
-    console.debug(`Admin video form submit - ${formValues}`)
 
     try {
 
@@ -101,7 +102,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
       }
 
       showNotification({
-        message: `Video ${mode == VideoEditMode.Create ? 'created' : 'edited'}`
+        message: `${t('editNotification')} ${mode == VideoEditMode.Create ? t('editNotificationCreated') : t('editNotificationEdited')}`
       })
 
       handleClose()
@@ -145,14 +146,14 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
       })}>
         <TextInput
           disabled={true}
-          label="ID"
+          label={t('idLabel')}
           placeholder="Auto generated"
           key={form.key('id')}
           {...form.getInputProps('id')}
           withAsterisk
         />
         <TextInput
-          label="External Platform ID"
+          label={t('extIdLabel')}
           placeholder="123456789"
           key={form.key('ext_id')}
           {...form.getInputProps('ext_id')}
@@ -160,7 +161,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
         />
 
         <Select
-          label="Channel"
+          label={t('channelLabel')}
           data={channelSelect}
           key={form.key('channel_id')}
           {...form.getInputProps('channel_id')}
@@ -177,12 +178,12 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
         >
 
           <Checkbox
-            label="Is Processing"
+            label={t('isProcessingLabel')}
             key={form.key('processing')}
             {...form.getInputProps('processing', { type: "checkbox" })}
           />
           <Checkbox
-            label="Locked"
+            label={t('lockedLabel')}
             key={form.key('locked')}
             {...form.getInputProps('locked', { type: "checkbox" })}
           />
@@ -192,14 +193,14 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
 
         <TextInput
           withAsterisk
-          label="Title"
+          label={t('titleLabel')}
           placeholder="An awesome title"
           key={form.key('title')}
           {...form.getInputProps('title')}
         />
 
         <Select
-          label="Type"
+          label={t('typeLabel')}
           data={selectorVideoTypes}
           key={form.key('type')}
           {...form.getInputProps('type')}
@@ -208,7 +209,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
         />
 
         <Select
-          label="Platform"
+          label={t('platformLabel')}
           data={selectorVideoPlatforms}
           key={form.key('platform')}
           {...form.getInputProps('platform')}
@@ -223,7 +224,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
           direction="row"
         >
           <NumberInput
-            label="Duration (seconds)"
+            label={t('durationLabel')}
             placeholder="0"
             key={form.key('duration')}
             {...form.getInputProps('duration')}
@@ -231,7 +232,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
             withAsterisk
           />
           <NumberInput
-            label="View Count"
+            label={t('viewCountLabel')}
             placeholder="0"
             key={form.key('views')}
             {...form.getInputProps('views')}
@@ -242,7 +243,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
 
         <TextInput
           withAsterisk
-          label="Resolution"
+          label={t('resolutionLabel')}
           placeholder="best"
           key={form.key('resolution')}
           {...form.getInputProps('resolution')}
@@ -250,52 +251,52 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
 
         <TextInput
           withAsterisk
-          label="Streamed At"
+          label={t('streamedAtLabel')}
           placeholder="2022-01-01"
           key={form.key('streamed_at')}
           {...form.getInputProps('streamed_at')}
         />
 
         <TextInput
-          label="Thumbnail Path"
+          label={t('thumbnailPathLabel')}
           placeholder="/data/videos/channel/123_456/123-thumbnail.jpg"
           key={form.key('thumbnail_path')}
           {...form.getInputProps('thumbnail_path')}
         />
         <TextInput
-          label="Web Thumbnail Path"
+          label={t('webThumbnailPathLabel')}
           placeholder="/data/videos/channel/123_456/123-web_thumbnail.jpg"
           key={form.key('web_thumbnail_path')}
           {...form.getInputProps('web_thumbnail_path')}
           withAsterisk
         />
         <TextInput
-          label="Video Path"
+          label={t('videoPathLabel')}
           placeholder="/data/videos/channel/123_456/123-video.mp4"
           key={form.key('video_path')}
           {...form.getInputProps('video_path')}
           withAsterisk
         />
         <TextInput
-          label="Chat Path"
+          label={t('chatPathLabel')}
           placeholder="/data/videos/channel/123_456/123-chat.json"
           key={form.key('chat_path')}
           {...form.getInputProps('chat_path')}
         />
         <TextInput
-          label="Chat Video Path"
+          label={t('chatVideoPathLabel')}
           placeholder="/data/videos/channel/123_456/123-chat.mp4"
           key={form.key('chat_video_path')}
           {...form.getInputProps('chat_video_path')}
         />
         <TextInput
-          label="Caption Path"
+          label={t('captionPathLabel')}
           placeholder="/data/videos/channel/123_456/123.vtt"
           key={form.key('caption_path')}
           {...form.getInputProps('caption_path')}
         />
         <TextInput
-          label="Info Path"
+          label={t('infoPathLabel')}
           placeholder="/data/videos/channel/123_456/123-info.json"
           key={form.key('info_path')}
           {...form.getInputProps('info_path')}
@@ -303,7 +304,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
 
 
 
-        <Button mt={10} type="submit" loading={loading} fullWidth>{mode == VideoEditMode.Create ? 'Create Video' : 'Edit Video'}</Button>
+        <Button mt={10} type="submit" loading={loading} fullWidth>{mode == VideoEditMode.Create ? t('submitButton') : t('editButton')}</Button>
       </form>
     </div>
   );

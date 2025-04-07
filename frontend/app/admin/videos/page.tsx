@@ -13,10 +13,12 @@ import { useGetVideosNoPaginate, Video } from "@/app/hooks/useVideos";
 import AdminVideoDrawerContent, { VideoEditMode } from "@/app/components/admin/video/DrawerContent";
 import DeleteVideoModalContent from "@/app/components/admin/video/DeleteModalContent";
 import MultiDeleteVideoModalContent from "@/app/components/admin/video/MultiDeleteModalContent";
+import { useTranslations } from "next-intl";
 
 const AdminVideosPage = () => {
+  const t = useTranslations('AdminVideosPage')
   useEffect(() => {
-    document.title = "Admin - Videos";
+    document.title = t('title');
   }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -90,15 +92,15 @@ const AdminVideosPage = () => {
   }
 
   if (isPending) return (
-    <GanymedeLoadingText message="Loading Videos" />
+    <GanymedeLoadingText message={t('loading')} />
   )
-  if (isError) return <div>Error loading videos</div>
+  if (isError) return <div>{t('error')}</div>
 
   return (
     <div>
       <Container size="7xl">
         <Group justify="space-between" mt={2} >
-          <Title>Manage Videos</Title>
+          <Title>{t('header')}</Title>
           <Box>
             {(activeVideos && activeVideos.length >= 1) && (
               <Button
@@ -111,11 +113,11 @@ const AdminVideosPage = () => {
                 }}
               >
                 {activeVideos.length
-                  ? `Delete ${activeVideos.length === 1
-                    ? "one selected vod"
-                    : `${activeVideos.length} selected videos`
+                  ? `${t('delete.delete')} ${activeVideos.length === 1
+                    ? t('delete.one')
+                    : `${activeVideos.length} ${t('delete.many')}`
                   }`
-                  : "Select vods to delete"}
+                  : t('delete.select')}
               </Button>
             )}
 
@@ -128,7 +130,7 @@ const AdminVideosPage = () => {
               mr={5}
               variant="default"
             >
-              Manually Add Video
+              ${t('manuallyAddButton')}
             </Button>
           </Box>
         </Group>
@@ -138,7 +140,7 @@ const AdminVideosPage = () => {
         <Box mt={5}>
           <div>
             <TextInput
-              placeholder="Search videos..."
+              placeholder={t('searchPlaceholder')}
               leftSection={<IconSearch size={16} />}
               value={query}
               onChange={(e) => setQuery(e.currentTarget.value)}
@@ -156,7 +158,7 @@ const AdminVideosPage = () => {
             columns={[
               {
                 accessor: "id",
-                title: "ID",
+                title: t('columns.id'),
                 width: 90,
                 render: ({ id }) => (
                   <Tooltip label={id}>
@@ -165,7 +167,7 @@ const AdminVideosPage = () => {
                 ),
               },
               {
-                accessor: "ext_id", title: "External ID",
+                accessor: "ext_id", title: t('columns.extId'),
                 render: ({ ext_id }) => (
                   <Tooltip label={ext_id}>
                     <Text lineClamp={1}>{ext_id}</Text>
@@ -174,20 +176,20 @@ const AdminVideosPage = () => {
               },
               {
                 accessor: "edges.channel.display_name",
-                title: "Channel",
+                title: t('columns.channel'),
                 sortable: true,
               },
-              { accessor: "title", title: "Title", sortable: true, },
-              { accessor: "type", title: "Type", sortable: true },
+              { accessor: "title", title: t('columns.title'), sortable: true, },
+              { accessor: "type", title: t('columns.type'), sortable: true },
               {
-                accessor: "locked", title: "Locked", sortable: true,
+                accessor: "locked", title: t('columns.locked'), sortable: true,
                 render: ({ locked }) => {
                   return locked ? "✅" : "❌";
                 },
               },
               {
                 accessor: "streamed_at",
-                title: "Streamed At",
+                title: t('columns.streamedAt'),
                 sortable: true,
                 render: ({ streamed_at }) => (
                   <div title={`${new Date(streamed_at).toLocaleString()}`}>
@@ -197,7 +199,7 @@ const AdminVideosPage = () => {
               },
               {
                 accessor: "created_at",
-                title: "Archived At",
+                title: t('columns.archivedAt'),
                 sortable: true,
                 render: ({ created_at }) => (
                   <div title={`${new Date(created_at).toLocaleString()}`}>
@@ -207,7 +209,7 @@ const AdminVideosPage = () => {
               },
               {
                 accessor: "actions",
-                title: "Actions",
+                title: t('columns.actions'),
                 render: (video) => (
                   <Flex>
                     <ActionIcon
@@ -244,16 +246,16 @@ const AdminVideosPage = () => {
         </Box>
       </Container>
 
-      <Drawer opened={videoDrawerOpened} onClose={closeVideoDrawer} position="right" size="lg" title="Video">
+      <Drawer opened={videoDrawerOpened} onClose={closeVideoDrawer} position="right" size="lg" title={t('drawer')}>
         <AdminVideoDrawerContent mode={drawerEditMode} video={activeVideo} handleClose={closeVideoDrawer} />
       </Drawer>
 
-      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Video">
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deleteModal')}>
         {activeVideo && (
           <DeleteVideoModalContent video={activeVideo} handleClose={closeDeleteModal} />
         )}
       </Modal>
-      <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title="Delete Videos">
+      <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title={t('multiDeleteModal')}>
         {activeVideos && (
           <MultiDeleteVideoModalContent videos={activeVideos} handleClose={handleMultiDeleteModalCallback} />
         )}

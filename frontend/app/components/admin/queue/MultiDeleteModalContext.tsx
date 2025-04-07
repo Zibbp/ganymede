@@ -2,6 +2,7 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Queue, useDeleteQueue } from "@/app/hooks/useQueue";
 import { Button, Text } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
 }
 
 const MultiDeleteQueueModalContent = ({ queues, handleClose }: Props) => {
+  const t = useTranslations('AdminQueueComponents')
   const [loading, setLoading] = useState(false)
   const deleteQueueMutate = useDeleteQueue()
   const axiosPrivate = useAxiosPrivate()
@@ -26,7 +28,7 @@ const MultiDeleteQueueModalContent = ({ queues, handleClose }: Props) => {
       }))
 
       showNotification({
-        message: "Queues deleted"
+        message: t('multiDeleteNotification')
       })
       handleClose()
     } catch (error) {
@@ -38,8 +40,8 @@ const MultiDeleteQueueModalContent = ({ queues, handleClose }: Props) => {
 
   return (
     <div>
-      <Text>Are you sure you want to delete the {queues.length} selected queue items?</Text>
-      <Button mt={5} color="red" onClick={handleDeleteQueue} loading={loading} fullWidth>Delete Queue Items</Button>
+      <Text>{t('multiDeleteConfirmText', { number: queues.length })}</Text>
+      <Button mt={5} color="red" onClick={handleDeleteQueue} loading={loading} fullWidth>{t('multiDeleteButton')}</Button>
     </div>
   );
 }

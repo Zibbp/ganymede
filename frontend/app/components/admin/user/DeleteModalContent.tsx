@@ -3,6 +3,7 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { useDeleteUser } from "@/app/hooks/useUsers";
 import { Button, Code, Text } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 
 
 const DeleteUserModalContent = ({ user, handleClose }: Props) => {
+  const t = useTranslations('AdminUserComponents')
   const [loading, setLoading] = useState(false)
 
   const deleteUserMutate = useDeleteUser()
@@ -24,7 +26,7 @@ const DeleteUserModalContent = ({ user, handleClose }: Props) => {
       await deleteUserMutate.mutateAsync({ axiosPrivate: axiosPrivate, userId: user.id })
 
       showNotification({
-        message: "User deleted"
+        message: t('deleteNotification')
       })
 
       handleClose()
@@ -37,11 +39,11 @@ const DeleteUserModalContent = ({ user, handleClose }: Props) => {
 
   return (
     <div>
-      <Text>Are you sure you want to delete this user?</Text>
+      <Text>{t('deleteConfirmText')}</Text>
 
       <Code block>{JSON.stringify(user, null, 2)}</Code>
 
-      <Button mt={5} color="red" onClick={handleDeleteQueue} loading={loading} fullWidth>Delete User</Button>
+      <Button mt={5} color="red" onClick={handleDeleteQueue} loading={loading} fullWidth>{t('deleteButton')}</Button>
     </div>
   );
 }

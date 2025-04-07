@@ -3,6 +3,7 @@ import { } from "@/app/hooks/useChannels";
 import { useDeleteWatchedChannel, WatchedChannel } from "@/app/hooks/useWatchedChannels";
 import { Button, Code, Text } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 
 
 const DeleteWatchedChannelModalContent = ({ watchedChannel, handleClose }: Props) => {
+  const t = useTranslations('AdminWatchedComponents')
   const [loading, setLoading] = useState(false)
 
   const deleteWatchedChannelMutate = useDeleteWatchedChannel()
@@ -25,7 +27,7 @@ const DeleteWatchedChannelModalContent = ({ watchedChannel, handleClose }: Props
       await deleteWatchedChannelMutate.mutateAsync({ axiosPrivate: axiosPrivate, watchedChannelId: watchedChannel.id })
 
       showNotification({
-        message: "Watched channel deleted"
+        message: t('deleteNotification')
       })
 
       handleClose()
@@ -38,9 +40,9 @@ const DeleteWatchedChannelModalContent = ({ watchedChannel, handleClose }: Props
 
   return (
     <div>
-      <Text>Are you sure you want to delete this watched channel?</Text>
+      <Text>{t('deleteConfirmText')}</Text>
       <Code block>{JSON.stringify(watchedChannel, null, 2)}</Code>
-      <Button mt={5} color="red" onClick={handleDeleteChannel} loading={loading} fullWidth>Delete Watched Channel</Button>
+      <Button mt={5} color="red" onClick={handleDeleteChannel} loading={loading} fullWidth>{t('deleteButton')}</Button>
     </div>
   );
 }

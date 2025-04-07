@@ -13,10 +13,12 @@ import { User } from "@/app/hooks/useAuthentication";
 import { useGetUsers } from "@/app/hooks/useUsers";
 import AdminUserDrawerContent from "@/app/components/admin/user/DrawerContent";
 import DeleteUserModalContent from "@/app/components/admin/user/DeleteModalContent";
+import { useTranslations } from "next-intl";
 
 const AdminUsersPage = () => {
+  const t = useTranslations('AdminUsersPage')
   useEffect(() => {
-    document.title = "Admin - Users";
+    document.title = t('title');
   }, []);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -76,21 +78,21 @@ const AdminUsersPage = () => {
   };
 
   if (isPending) return (
-    <GanymedeLoadingText message="Loading users" />
+    <GanymedeLoadingText message={t('loading')} />
   )
-  if (isError) return <div>Error loading users</div>
+  if (isError) return <div>{t('error')}</div>
 
   return (
     <div>
       <Container size="7xl">
         <Group justify="space-between" mt={2} >
-          <Title>Manage Users</Title>
+          <Title>{t('header')}</Title>
         </Group>
 
         <Box mt={5}>
           <div>
             <TextInput
-              placeholder="Search users..."
+              placeholder={t('searchPlaceholder')}
               leftSection={<IconSearch size={16} />}
               value={query}
               onChange={(e) => setQuery(e.currentTarget.value)}
@@ -107,7 +109,7 @@ const AdminUsersPage = () => {
             records={records}
             columns={[
               {
-                accessor: "id", title: "ID",
+                accessor: "id", title: t('columns.id'),
                 render: ({ id }) => (
                   <Tooltip label={id}>
                     <Text lineClamp={1}>{id}</Text>
@@ -116,17 +118,17 @@ const AdminUsersPage = () => {
               },
               {
                 accessor: "username",
-                title: "Username",
+                title: t('columns.username'),
                 sortable: true
               },
               {
                 accessor: "role",
-                title: "Role",
+                title: t('columns.role'),
                 sortable: true
               },
               {
                 accessor: "oauth",
-                title: "Auth Method",
+                title: t('columns.authMethod'),
                 sortable: true,
                 render: ({ oauth }) => {
                   return oauth ? "SSO" : "Local";
@@ -134,7 +136,7 @@ const AdminUsersPage = () => {
               },
               {
                 accessor: "created_at",
-                title: "Created At",
+                title: t('columns.createdAt'),
                 sortable: true,
                 render: ({ created_at }) => (
                   <div>{dayjs(created_at).format("YYYY/MM/DD")}</div>
@@ -142,7 +144,7 @@ const AdminUsersPage = () => {
               },
               {
                 accessor: "actions",
-                title: "Actions",
+                title: t('columns.actions'),
                 width: "150px",
                 render: (user) => (
                   <Group>
@@ -177,14 +179,14 @@ const AdminUsersPage = () => {
         </Box>
       </Container>
 
-      <Drawer opened={userDrawerOpened} onClose={closeUserDrawer} position="right" title="User">
+      <Drawer opened={userDrawerOpened} onClose={closeUserDrawer} position="right" title={t('drawer')}>
         {activeUser && (
           <AdminUserDrawerContent user={activeUser} handleClose={closeUserDrawer} />
         )}
       </Drawer>
 
 
-      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete User">
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deleteModal')}>
         {activeUser && (
           <DeleteUserModalContent user={activeUser} handleClose={closeDeleteModal} />
         )}

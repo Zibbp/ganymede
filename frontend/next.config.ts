@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { makeEnvPublic } from "next-runtime-env";
+import createNextIntlPlugin from "next-intl/plugin";
 
 makeEnvPublic([
   "API_URL",
@@ -7,10 +8,13 @@ makeEnvPublic([
   "SHOW_SSO_LOGIN_BUTTON",
   "FORCE_SSO_AUTH",
   "REQUIRE_LOGIN",
+  "SHOW_LOCALE_BUTTON",
+  "DEFAULT_LOCALE",
 ]);
 
 const nextConfig: NextConfig = {
   output: "standalone",
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin();
+export default withNextIntl(nextConfig);

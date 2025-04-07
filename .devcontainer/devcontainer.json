@@ -20,7 +20,8 @@
         "ms-vscode-remote.remote-containers",
         "burkeholland.simple-react-snippets",
         "vunguyentuan.vscode-css-variables",
-        "vunguyentuan.vscode-postcss"
+        "vunguyentuan.vscode-postcss",
+        "lokalise.i18n-ally"
       ]
     }
   },

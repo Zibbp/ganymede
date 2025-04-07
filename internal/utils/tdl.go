@@ -195,9 +195,27 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 					if err != nil {
 						return fmt.Errorf("failed to convert emote position: %v", err)
 					}
+					chatPos2, err := strconv.Atoi(emotePositions[1])
+					if err != nil {
+						return fmt.Errorf("failed to convert emote position: %v", err)
+					}
 					pos2 = pos1 + len(liveCommentEmote.Name)
 
-					slicedEmote := liveComment.Message[pos1:pos2]
+					var slicedEmote string
+
+					// Check if pos1 and pos2 are within bounds
+					if pos1 < 0 || pos2 > len(liveComment.Message) {
+						// Check if pos1 is negative and pos2 is within bounds
+						if pos1 < 0 || chatPos2 > len(liveComment.Message) {
+							log.Error().Str("message_id", liveComment.MessageID).Msg("emote position out of bounds, skipping emote")
+							continue
+						}
+						// If default chat pos2 is in bounds use it
+						log.Warn().Str("message_id", liveComment.MessageID).Msg("emote position out of bounds, using default chat pos2 instead")
+						slicedEmote = liveComment.Message[pos1:chatPos2]
+					} else {
+						slicedEmote = liveComment.Message[pos1:pos2]
+					}
 
 					// ensure that the sliced string equals the emote
 					// sometimes the output of chat-downloader will not include a unicode character when calculating positions causing an offset in positions

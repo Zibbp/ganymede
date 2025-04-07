@@ -10,6 +10,7 @@ import classes from "./Watched.module.css"
 import { getTwitchCategories } from "@/app/hooks/useCategory";
 import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 type Props = {
   watchedChannel: WatchedChannel | null
@@ -38,6 +39,7 @@ interface SelectOption {
 }
 
 const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }: Props) => {
+  const t = useTranslations('AdminWatchedComponents')
   const axiosPrivate = useAxiosPrivate()
   const [liveTitleRegexes, setLiveTitleRegexes] = useState<WatchedChannelTitleRegex[]>(
     watchedChannel?.edges.title_regex || []
@@ -152,7 +154,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
         });
 
         showNotification({
-          message: "Watched Channel Created",
+          message: t('createNotification'),
           color: "green"
         });
 
@@ -188,7 +190,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
         });
 
         showNotification({
-          message: "Watched Channel Updated",
+          message: t('editNotification'),
           color: "green"
         });
 
@@ -198,8 +200,8 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       console.error(error);
       showNotification({
         message: mode === WatchedChannelEditMode.Create
-          ? "Failed to create Watched Channel"
-          : "Failed to update Watched Channel",
+          ? t('failedCreateNotification')
+          : t('failedEditNotification'),
         color: "red"
       });
     }
@@ -221,14 +223,16 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
 
   return (
     <div>
-      <Text>Read the <Link className={classes.link} target="_blank" href="https://github.com/Zibbp/ganymede/wiki/Watched-Channels">watched channel wiki page</Link> for more information about each feature.</Text>
+      <Text>{t.rich('headerText', {
+        wiki: (chunks) => <a href="https://github.com/Zibbp/ganymede/wiki/Watched-Channels" target="_blank" className={classes.link}>{chunks}</a>,
+      })}</Text>
 
       <form onSubmit={form.onSubmit(() => {
         handleSubmitForm()
       })}>
         <TextInput
           disabled={true}
-          label="ID"
+          label={t('idLabel')}
           placeholder="Auto generated"
           key={form.key('id')}
           {...form.getInputProps('id')}
@@ -236,7 +240,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
 
         <Select
           disabled={mode == WatchedChannelEditMode.Edit}
-          label="Channel"
+          label={t('channelLabel')}
           data={channelSelect}
           key={form.key('channel_id')}
           {...form.getInputProps('channel_id')}
@@ -244,7 +248,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
         />
 
         <Select
-          label="Resolution"
+          label={t('resolutionLabel')}
           data={qualityOptions}
           key={form.key('resolution')}
           {...form.getInputProps('resolution')}
@@ -253,14 +257,14 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
 
         <Checkbox
           mt={10}
-          label="Archive Chat"
+          label={t('archiveChatLabel')}
           key={form.key('archive_chat')}
           {...form.getInputProps('archive_chat', { type: "checkbox" })}
         />
 
         <Checkbox
           mt={5}
-          label="Render Chat"
+          label={t('renderChatLabel')}
           key={form.key('render_chat')}
           {...form.getInputProps('render_chat', { type: "checkbox" })}
         />
@@ -268,12 +272,12 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
         <Divider my="sm" size="md" />
 
         <div>
-          <Title order={3}>Live Streams</Title>
-          <Text>Archive live streams as they are broadcasted.</Text>
+          <Title order={3}>{t('liveStreamsText')}</Title>
+          <Text>{t('liveStreamsDescription')}</Text>
 
           <Checkbox
             mt={5}
-            label="Watch Live Streams"
+            label={t('watchLiveLabel')}
             key={form.key('watch_live')}
             {...form.getInputProps('watch_live', { type: "checkbox" })}
           />
@@ -282,15 +286,15 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
         <Divider my="sm" size="md" />
 
         <div>
-          <Title order={3}>Channel Videos</Title>
-          <Text>Archive past channel videos.</Text>
+          <Title order={3}>{t('videosText')}</Title>
+          <Text>{t('videosDescription')}</Text>
           <Text size="xs" fs="italic">
-            Check for new videos occurs once a day.
+            {t('videosOccurance')}
           </Text>
 
           <Checkbox
             mt={5}
-            label="Watch Videos"
+            label={t('watchVideosLabel')}
             key={form.key('watch_vod')}
             {...form.getInputProps('watch_vod', { type: "checkbox" })}
           />
@@ -298,29 +302,29 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           <Box ml={30}>
             <Checkbox
               mt={5}
-              label="Download Archives"
-              description="Download past live streams"
+              label={t('downloadArchivesLabel')}
+              description={t('downloadArchivesDescription')}
               key={form.key('download_archives')}
               {...form.getInputProps('download_archives', { type: "checkbox" })}
             />
             <Checkbox
               mt={5}
-              label="Download Highlights"
-              description="Download past highlights"
+              label={t('downloadHighlightsLabel')}
+              description={t('downloadHighlightsDescription')}
               key={form.key('download_highlights')}
               {...form.getInputProps('download_highlights', { type: "checkbox" })}
             />
             <Checkbox
               mt={5}
-              label="Download Uploads"
-              description="Download past uploads"
+              label={t('downloadUploadsLabel')}
+              description={t('downloadUploadsDescription')}
               key={form.key('download_uploads')}
               {...form.getInputProps('download_uploads', { type: "checkbox" })}
             />
             <Checkbox
               mt={5}
-              label="Download Subscriber-only Videos"
-              description="Do not check this if you are not a subscriber. Must have Twitch token set in Admin > Settings to download subscriber-only videos."
+              label={t('downloadSubOnlyLabel')}
+              description={t('downloadSubOnlyDescription')}
               key={form.key('download_sub_only')}
               {...form.getInputProps('download_sub_only', { type: "checkbox" })}
             />
@@ -330,41 +334,41 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
         <Divider my="sm" size="md" />
 
         <div>
-          <Title order={3}>Channel Clips</Title>
-          <Text>Archive past channel clips.</Text>
+          <Title order={3}>{t('channelClipsText')}</Title>
+          <Text>{t('channelClipsDescription')}</Text>
           <Text size="xs">
-            This feature is meant to archive the most popular (view count) clips from the past <code>interval</code> days. For example, if you set number of clips to 5 and interval to 7, the top 5 clips from the past 7 days will be archived. It will not run again until 7 days have passed. No restrictions (categories, age, title, regex, etc) are applied to this.
+            {t('channelClipsDescription1')}
           </Text>
 
           <Link href="#">
-            <Text c="blue" mt={5} size="xs" onClick={clipMoreInfoToggle}>More Information</Text>
+            <Text c="blue" mt={5} size="xs" onClick={clipMoreInfoToggle}>{t('channelClipsMoreInformationButton')}</Text>
           </Link>
           <Collapse in={clipMoreInfoOpened}>
             <Text size="xs" mt={5}>
-              If you want to perform a one-time import of a channel&apos;s most popular clips, set the interval to a large number (1000) and the number of clips to a large number (250). This will import the top 250 clips from the past 1000 days. It is recommended to change the interval and number of clips to a lower number after the initial import.
+              {t('channelClipsMoreInformationText')}
             </Text>
           </Collapse>
 
 
           <Checkbox
             my={5}
-            label="Watch Clips"
+            label={t('watchClipsLabel')}
             key={form.key('watch_clips')}
             {...form.getInputProps('watch_clips', { type: "checkbox" })}
           />
 
 
           <NumberInput
-            label="Number of Clips"
-            description="Number of clips to archive."
+            label={t('numberOfClipsLabel')}
+            description={t('numberOfClipsDescription')}
             key={form.key('clips_limit')}
             {...form.getInputProps('clips_limit')}
             min={1}
           />
 
           <NumberInput
-            label="Interval Days"
-            description="How often channel is checked for clips to archive (in days). This also limits the clip search to the last interval days."
+            label={t('intervalDaysLabel')}
+            description={t('intervalDaysDescription')}
             key={form.key('clips_interval_days')}
             {...form.getInputProps('clips_interval_days')}
             min={1}
@@ -372,8 +376,8 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
 
           <Checkbox
             mt={10}
-            label="Ignore Last Checked Date"
-            description="Clips are only checked if the last checked date is older than the interval days. If this is checked, the last checked date is ignored and all clips from the last interval days are checked."
+            label={t('ignoreLastCheckedDateLabel')}
+            description={t('ignoreLastCheckedDateDescription')}
             key={form.key('clips_ignore_last_checked')}
             {...form.getInputProps('clips_ignore_last_checked', { type: "checkbox" })}
           />
@@ -383,18 +387,18 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
         <Divider my="sm" size="md" />
 
         <div>
-          <Title order={3}>Advanced</Title>
+          <Title order={3}>{t('advancedText')}</Title>
 
           <NumberInput
-            label="Max Video Age (days)"
-            description="Archive videos that are not older than this number of days (0 to archive all)."
+            label={t('maxVideoAgeLabel')}
+            description={t('maxVideoAgeDescription')}
             key={form.key('video_age')}
             {...form.getInputProps('video_age')}
           />
 
           <Group mt={5}>
-            <Title order={5}>Title Regex</Title>
-            <Tooltip label="Add title regex">
+            <Title order={5}>{t('titleRegexText')}</Title>
+            <Tooltip label={t('titleRegexAddTooltip')}>
               <ActionIcon size="sm" variant="filled" color="green" aria-label="Add Title Regex" onClick={() => {
                 const newRegex: WatchedChannelTitleRegex = {
                   apply_to_videos: false,
@@ -409,7 +413,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
             </Tooltip>
           </Group>
           <div>
-            <Text size="sm">Use regex to filter and match specific patterns in livestream and video titles. See <a className={classes.link} href="https://github.com/Zibbp/ganymede/wiki/Watched-Channel-Title-Regex" target="_blank">wiki</a> for more information.</Text>
+            <Text size="sm">{t.rich('titleRegexDescription', { wiki: (chunks) => <a href="https://github.com/Zibbp/ganymede/wiki/Watched-Channel-Title-Regex" target="_blank" className={classes.link}>{chunks}</a> })}</Text>
           </div>
 
           <div>
@@ -418,7 +422,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
                 <Grid grow>
                   <Grid.Col span={10}>
                     <TextInput
-                      label="Regex"
+                      label={t('titleRegexLabel')}
                       placeholder="(?i:rerun)"
                       value={regex.regex}  // Use the specific regex from the current item
                       onChange={(e) => {
@@ -434,8 +438,8 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
                     <Group mt={7}>
                       <Checkbox
                         defaultChecked
-                        label="Negative"
-                        description="Invert match"
+                        label={t('negativeLabel')}
+                        description={t('negativeDescription')}
                         checked={regex.negative}
                         onChange={(e) => {
                           const updatedRegexes = [...liveTitleRegexes];
@@ -445,8 +449,8 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
                       />
                       <Checkbox
                         defaultChecked
-                        label="Apply to video downloads"
-                        description="Applies to live streams only by default"
+                        label={t('applyToVideosLabel')}
+                        description={t('applyToVideosDescription')}
                         checked={regex.apply_to_videos}
                         onChange={(e) => {
                           const updatedRegexes = [...liveTitleRegexes];
@@ -476,14 +480,14 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
         <Divider my="sm" size="md" />
 
         <div>
-          <Title order={3}>Categories</Title>
-          <Text size="sm">Archive videso and live streams from select categories. Leave blank to archive all categories.</Text>
+          <Title order={3}>{t('categoriesText')}</Title>
+          <Text size="sm">{t('categoriesDescription')}</Text>
         </div>
 
         <Checkbox
           mt={5}
-          label="Apply to livestreams"
-          description="Apply category restrictions to livestreams"
+          label={t('categoriesApplyToLivestreamsLabel')}
+          description={t('categoriesApplyToLivestreamsDescription')}
           key={form.key('apply_categories_to_live')}
           {...form.getInputProps('apply_categories_to_live', { type: "checkbox" })}
         />
@@ -493,14 +497,14 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           {formattedTwitchCategories.length == 0 ? (
             <Button variant="filled" color="violet" onClick={() => handleGetTwitchCategories()}
               loading={twitchCategoriesLoading}
-            >Load categories</Button>
+            >{t('categoriesLoadButton')}</Button>
           ) : (
             <MultiSelect
               searchable
               limit={20}
               data={formattedTwitchCategories}
               comboboxProps={{ position: 'top', middlewares: { flip: false, shift: false } }}
-              placeholder="Search for a category"
+              placeholder={t('categoriesSearchPlaceholder')}
               clearable
               key={form.key('categories')}
               {...form.getInputProps('categories')}
@@ -514,7 +518,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           fullWidth
           loading={editWatchedChannelMutation.isPending}
         >
-          {mode === WatchedChannelEditMode.Create ? 'Create Watched Channel' : 'Save Watched Channel'}
+          {mode === WatchedChannelEditMode.Create ? t('submitButton') : t('editButton')}
         </Button>
       </form>
 
