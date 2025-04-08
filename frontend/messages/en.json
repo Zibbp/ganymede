@@ -155,7 +155,7 @@
       "select": "Select blocked videos to delete"
     },
     "add": "Add Blocked Video ID",
-    "body": "External playform video IDs that are blocked from being archived.",
+    "body": "External platform video IDs that are blocked from being archived.",
     "search": "Search blocked videos...",
     "columns": {
       "id": "ID",
@@ -269,7 +269,7 @@
       "header": "Video Settings",
       "twitchTokenLabel": "Twitch Token",
       "twitchTokenDescription": "Supply your Twitch token for downloading ad-free live streams and subscriber-only VODs.",
-      "convertFFmpegArgsLabel": "Video Conver FFmpeg Arguments",
+      "convertFFmpegArgsLabel": "Video Convert FFmpeg Arguments",
       "convertFFmpegArgsDescription": "Custom FFmpeg arguments to use when converting the video. This is used for both live and VOD archives.",
       "streamlinkArgsLabel": "Streamlink Arguments",
       "streamlinkArgsDescription": "Custom Streamlink arguments to use when downloading the video. This is used for live streams.",
@@ -281,7 +281,7 @@
       "proxyHeaderLabel": "Proxy Header",
       "proxyAddButton": "Add",
       "whitelistChannelsLabel": "Whitelist Channels",
-      "whitelistChannelsDescription": "Select channels that are execluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to."
+      "whitelistChannelsDescription": "Select channels that are excluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to."
     },
     "chatSettings": {
       "header": "Chat Settings",
@@ -395,7 +395,7 @@
     "deleteButton": "Delete Channel",
     "createNotification": "Channel created",
     "editNotification": "Channel edited",
-    "imageUpdateNotification": "Channel image updated from paltform",
+    "imageUpdateNotification": "Channel image updated from platform",
     "idLabel": "Auto Generated",
     "extIdLabel": "External Platform Channel ID",
     "nameLabel": "Channel Name",
@@ -456,7 +456,7 @@
     "deleteNotification": "Video deleted",
     "deleteConfirmText": "Are you sure you want to delete this video?",
     "deleteFilesLabel": "Delete video files",
-    "blockExtIdLabel": "Block extgernal video ID",
+    "blockExtIdLabel": "Block external video ID",
     "deleteButton": "Delete Video",
     "editNotification": "Video",
     "editNotificationCreated": "created",
@@ -505,7 +505,7 @@
     "watchLiveLabel": "Watch Live",
     "videosText": "Channel Videos",
     "videosDescription": "Archive past channel videos.",
-    "videosOccurance": "Check for new videos occurs once a day.",
+    "videosOccurrence": "Check for new videos occurs once a day.",
     "watchVideosLabel": "Watch Videos",
     "downloadArchivesLabel": "Download Archives",
     "downloadArchivesDescription": "Download past live streams",

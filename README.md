@@ -56,7 +56,7 @@ Visit the [docs](https://github.com/Zibbp/ganymede/tree/master/docs) folder for 
 - _Optional_ network mounted storage.
 - 50gb+ free storage, see [storage requirements](https://github.com/Zibbp/ganymede/wiki/Storage-Requirements).
 - A Twitch Application
-  - [Create an applicaton](https://dev.twitch.tv/console/apps/create).
+  - [Create an application](https://dev.twitch.tv/console/apps/create).
 
 ### Installation
 
@@ -107,7 +107,7 @@ The `docker-compose.yml` file has comments for each environment variable. Below 
 | `DB_SSL_ROOT_CERT`                      | _Optional_ Path to DB SSL root certificate. See [DB SSL](https://github.com/Zibbp/ganymede/wiki/DB-SSL) for more information. |
 | `TWITCH_CLIENT_ID`                      | Twitch application client ID.                                                                                                 |
 | `TWITCH_CLIENT_SECRET`                  | Twitch application client secret.                                                                                             |
-| `OAUTH_ENABLED`                         | _Optional_ Wheter OAuth is enabled `true` or `false`. Must have the other OAuth variables set if this is enabled.             |
+| `OAUTH_ENABLED`                         | _Optional_ Wether OAuth is enabled `true` or `false`. Must have the other OAuth variables set if this is enabled.             |
 | `OAUTH_PROVIDER_URL`                    | _Optional_ OAuth provider URL. See https://github.com/Zibbp/ganymede/wiki/SSO---OpenID-Connect                                |
 | `OAUTH_CLIENT_ID`                       | _Optional_ OAuth client ID.                                                                                                   |
 | `OAUTH_CLIENT_SECRET`                   | _Optional_ OAuth client secret.                                                                                               |

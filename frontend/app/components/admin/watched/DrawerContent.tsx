@@ -289,7 +289,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           <Title order={3}>{t('videosText')}</Title>
           <Text>{t('videosDescription')}</Text>
           <Text size="xs" fs="italic">
-            {t('videosOccurance')}
+            {t('videosOccurrence')}
           </Text>
 
           <Checkbox
