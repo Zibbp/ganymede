@@ -1,63 +1,561 @@
 {
   "HomePage": {
-    "continueWatching": "Weiter zuschauen",
+    "continueWatching": "Weiter ansehen",
     "recentlyArchived": "Kürzlich archiviert"
   },
   "VideosPage": {
     "title": "Alle Videos",
-    "error": "Fehler laden Videos"
+    "error": "Fehler beim Laden der Videos"
   },
   "VideoPage": {
     "loading": "Video laden"
   },
   "SearchPage": {
-    "title": "Suchen",
-    "error": "Fehler laden Suchergebnisse",
-    "loading": "Suchergebnisse laden"
+    "title": "Suche",
+    "error": "Fehler beim Laden der Suchergebnisse",
+    "loading": "Suchergebnisse werden geladen"
   },
   "QueuePage": {
     "title": "Warteschlange",
-    "error": "Fehler laden Warteschlange",
-    "loading": "Ladenwarteschlange",
-    "cancel": "Warteschlangenelement wurde storniert",
+    "error": "Fehler beim Laden der Warteschlange",
+    "loading": "Warteschlange wird geladen",
+    "cancel": "Warteschlangen-Element wurde abgebrochen",
     "column": {
-      "id": "AUSWEIS",
+      "id": "ID",
       "channel": "Kanal",
       "ext_id": "Externe ID",
       "status": {
         "status": "Status",
-        "failed": "Aufgabe im gescheiterten Zustand",
+        "failed": "Aufgabe im Fehlerzustand",
         "error": "FEHLER",
-        "processing": "Verarbeitung",
-        "hold": "In der Warteschleife"
+        "processing": "In Bearbeitung",
+        "hold": "In Wartestellung"
       },
-      "live_archive": "Live -Archiv",
-      "created_at": "Erstellt at",
+      "live_archive": "Live-Archiv",
+      "created_at": "Erstellt am",
       "actions": {
         "actions": "Aktionen",
-        "view": "Warteschlangenelement anzeigen",
-        "stop": "Stoppen Sie Warteschlangenelement"
-      }
-    },
-    "modal": {
-      "cancel": {
-        "title": "Warteschlangenelement abbrechen",
-        "text": "Sind Sie sicher, dass Sie diesen Warteschlangenelement stornieren möchten?",
-        "description": "Für Live-Archive wird das Video und den Chat-Download gestoppt und dann mit der Nachbearbeitung fortgesetzt. ",
-        "delete": "Video- und Videodateien löschen",
-        "block": "Blockvideo -ID blockieren"
+        "view": "Warteschlangen-Element anzeigen",
+        "stop": "Warteschlangen-Element stoppen"
+      },
+      "modal": {
+        "cancel": {
+          "title": "Warteschlangen-Element abbrechen",
+          "text": "Sind Sie sicher, dass Sie dieses Warteschlangen-Element abbrechen möchten?",
+          "description": "Bei Live-Archiven wird der Video- und Chat-Download gestoppt und die Nachbearbeitung gestartet. Bei VOD-Archiven werden alle Aufgaben gestoppt.",
+          "delete": "Video und Videodateien löschen",
+          "block": "Video-ID blockieren"
+        }
       }
     }
   },
+  "QueueLogsPage": {
+    "title": "Warteschlangenprotokolle",
+    "loading": "Protokolle werden geladen",
+    "error": "Fehler beim Laden der Protokolle"
+  },
+  "ProfilePage": {
+    "title": "Profil",
+    "role": "Rolle",
+    "settings": {
+      "title": "Einstellungen",
+      "description": "Einstellungen werden im lokalen Browser-Speicher gespeichert",
+      "smoothScroll": "Sanftes Chat-Scrollen",
+      "smoothScrollDescription": "Aktiviere sanftes Scrollen für neue Chat-Nachrichten. Kann bei einer großen Anzahl von Nachrichten pro Sekunde schlecht aussehen.",
+      "chatHistogram": "Chat-Histogramm anzeigen",
+      "chatHistogramDescription": "Zeige eine visuelle Darstellung der Chat-Nachrichten während des Videos unterhalb des Videoplayers an.",
+      "showProcessingVideos": "Verarbeitende Videos in 'Kürzlich archivierte' Videos anzeigen",
+      "showProcessingVideosDescription": "Verarbeitende Videos im Abschnitt 'Kürzlich archivierte' Videos auf der Startseite anzeigen."
+    },
+    "changePassword": {
+      "title": "Passwort ändern",
+      "currentPassword": "Aktuelles Passwort",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Passwort bestätigen",
+      "submit": "Passwort ändern",
+      "error": "Fehler beim Ändern des Passworts",
+      "success": "Passwort erfolgreich geändert"
+    }
+  },
+  "PlaylistsPage": {
+    "title": "Wiedergabelisten",
+    "error": "Fehler beim Laden der Wiedergabelisten",
+    "loading": "Wiedergabelisten werden geladen",
+    "deleted": "Wiedergabeliste wurde gelöscht",
+    "errorDelete": "Fehler beim Löschen der Wiedergabeliste",
+    "create": "Wiedergabeliste erstellen",
+    "playlist": {
+      "name": "Name",
+      "description": "Beschreibung",
+      "edit": "Bearbeiten",
+      "delete": "Löschen"
+    },
+    "deletePlaylist": "Wiedergabeliste löschen",
+    "loadingVideos": "Videos werden geladen",
+    "errorLoadingVideos": "Fehler beim Laden der Videos"
+  },
+  "NavbarLayout": {
+    "links": {
+      "home": "Startseite",
+      "channels": "Kanäle",
+      "videos": "Videos",
+      "archive": "Archiv",
+      "playlists": "Wiedergabelisten",
+      "queue": "Warteschlange",
+      "tasks": "Aufgaben"
+    },
+    "adminLinks": {
+      "admin": "Admin",
+      "channels": "Kanäle",
+      "watchedChannels": "Beobachtete Kanäle",
+      "videos": "Videos",
+      "blockedVideos": "Blockierte Videos",
+      "queue": "Warteschlange",
+      "users": "Benutzer",
+      "settings": "Einstellungen",
+      "tasks": "Aufgaben",
+      "information": "Informationen"
+    },
+    "errorLoggingOut": "Fehler beim Abmelden",
+    "search": "Suche",
+    "language": "Sprache",
+    "loginButton": "Anmelden",
+    "signUpButton": "Registrieren"
+  },
+  "ChannelsPage": {
+    "title": "Kanäle",
+    "loading": "Kanäle werden geladen",
+    "error": "Fehler beim Laden der Kanäle"
+  },
+  "ArchivePage": {
+    "title": "Archiv",
+    "inputTitle": "Eingabe erforderlich",
+    "inputMessage": "Bitte gib eine Video-ID ein oder wähle einen Kanal aus",
+    "invalidTitle": "Ungültige Auswahl",
+    "invalidMessage": "Bitte gib entweder eine Video-ID ein oder wähle einen Kanal aus (nicht beides)",
+    "successTitle": "Erfolg",
+    "successMessage": "Video wurde zur Warteschlange hinzugefügt",
+    "message": "Gib eine Video-ID ein oder wähle einen Kanal aus, um einen Live-Stream zu archivieren.",
+    "archiveVideoPlaceholder": "Video-ID oder URL",
+    "archiveChannelPlaceholder": "Wähle einen Kanal aus",
+    "resolutionPlaceholder": "Qualität",
+    "archiveChat": "Chat archivieren",
+    "renderChat": "Chat rendern",
+    "archiveButton": "Archivieren"
+  },
+  "AdminBlockedVideosPage": {
+    "title": "Admin - Blockierte Videos",
+    "loading": "Blockierte Videos werden geladen",
+    "error": "Fehler beim Laden der blockierten Videos",
+    "header": "Blockierte Videos verwalten",
+    "delete": {
+      "delete": "Löschen",
+      "one": "ein ausgewähltes blockiertes Video",
+      "many": "ausgewählte blockierte Videos",
+      "select": "Wähle blockierte Videos zum Löschen aus"
+    },
+    "add": "Blockierte Video-ID hinzufügen",
+    "body": "Externe Plattform-Video-IDs, die für die Archivierung blockiert sind.",
+    "search": "Blockierte Videos suchen...",
+    "columns": {
+      "id": "ID",
+      "createdAt": "Erstellt am",
+      "actions": "Aktionen"
+    },
+    "addDrawer": "Blockierte Video-ID hinzufügen",
+    "deleteModal": "Blockierte Video-ID löschen"
+  },
+  "AdminChannelsPage": {
+    "title": "Admin - Kanäle",
+    "loading": "Kanäle werden geladen",
+    "error": "Fehler beim Laden der Kanäle",
+    "header": "Kanäle verwalten",
+    "createButton": "Kanal erstellen",
+    "addTwitchChannel": "Twitch-Kanal hinzufügen",
+    "searchPlaceholder": "Kanäle suchen...",
+    "columns": {
+      "id": "ID",
+      "externalId": "Externe ID",
+      "name": "Name",
+      "displayName": "Anzeigename",
+      "videoRetention": "Videoaufbewahrung",
+      "createdAt": "Erstellt am",
+      "actions": "Aktionen"
+    },
+    "drawer": "Kanal",
+    "platformDrawer": "Plattformkanal",
+    "deleteModal": "Kanal löschen"
+  },
+  "AdminInformationPage": {
+    "title": "Admin - Info",
+    "loading": "Ganymede-Informationen werden geladen",
+    "error": "Fehler beim Laden der Ganymede-Informationen",
+    "server": {
+      "title": "Serverinformationen",
+      "commit": "Commit",
+      "tag": "Tag",
+      "buildDate": "Erstellungsdatum",
+      "uptime": "Betriebszeit"
+    },
+    "packageVersions": "Paketversionen"
+  },
+  "AdminQueuePage": {
+    "title": "Admin - Warteschlange",
+    "loading": "Warteschlangen-Elemente werden geladen",
+    "error": "Fehler beim Laden der Warteschlangen-Elemente",
+    "header": "Warteschlange verwalten",
+    "delete": {
+      "delete": "löschen",
+      "one": "ein ausgewähltes Warteschlangen-Element",
+      "many": "ausgewählte Warteschlangen-Elemente",
+      "select": "Wähle Warteschlangen-Elemente zum Löschen aus"
+    },
+    "searchPlaceholder": "Warteschlangen-Elemente suchen...",
+    "columns": {
+      "id": "ID",
+      "videoId": "Video-ID",
+      "externalId": "Externe ID",
+      "processing": "In Bearbeitung",
+      "onHold": "Pausiert",
+      "liveArchive": "Live-Archiv",
+      "createdAt": "Erstellt am",
+      "actions": "Aktionen"
+    },
+    "drawer": "Warteschlangen-Element",
+    "deleteModal": "Warteschlangen-Element löschen",
+    "deleteMultiModal": "Warteschlangen-Element löschen"
+  },
+  "AdminSettingsPage": {
+    "title": "Admin - Einstellungen",
+    "saveSuccess": "Einstellungen erfolgreich gespeichert",
+    "loading": "Einstellungen werden geladen",
+    "error": "Fehler beim Laden der Einstellungen",
+    "header": "Einstellungen verwalten",
+    "headerDescription": {
+      "part1": "Besuche das",
+      "part2": "Wiki",
+      "part3": "für weitere Informationen zu jeder Einstellung."
+    },
+    "applicationSettings": {
+      "header": "Anwendungseinstellungen",
+      "registrationEnabledLabel": "Registrierung aktiviert",
+      "notificationSettingsButton": "Benachrichtigungseinstellungen",
+      "enabledLabel": "Aktiviert",
+      "testButton": "Testen",
+      "webhookUrlLabel": "Webhook-URL",
+      "templateLabel": "Vorlage",
+      "availableVariables": "Verfügbare Variablen zur Verwendung in der Vorlage:",
+      "videoArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Videoarchivierung",
+      "liveArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Live-Archivierung",
+      "channelIsLiveNotification": "Kanal ist Live-Benachrichtigung",
+      "errorNotification": "Fehlerbenachrichtigung"
+    },
+    "archiveSettings": {
+      "header": "Archiv-Einstellungen",
+      "livestreamCheckIntervalLabel": "Livestream-Prüfintervall (Sekunden)",
+      "livestreamCheckIntervalDescription": "Das Intervall in Sekunden, um nach neuen Live-Streams zum Archivieren zu suchen. ERFORDERT NEUSTART!",
+      "videoCheckIntervalLabel": "Video-Prüfintervall (Minuten)",
+      "videoCheckIntervalDescription": "Das Intervall in Minuten, um nach neuen Videos zum Archivieren zu suchen. ERFORDERT NEUSTART!",
+      "mp4ToHLSConversionLabel": "MP4 in HLS konvertieren",
+      "generateSpriteThumbnailsLabel": "Sprite-Thumbnails generieren",
+      "generateSpriteThumbnailsDescription": "Generiere ein Sprite-Thumbnail für das Video. Dies sind Vorschaubilder, wenn du mit der Maus über die Video-Timeline fährst.",
+      "storageTemplateSettings": "Speichervorlagen-Einstellungen",
+      "storageTemplateSettingsDescription": "Passe die Benennung von Ordnern und Dateien an. Dies gilt nur für neue Dateien. Um dies auf bestehende Dateien anzuwenden, führe die Migrationsaufgabe auf der Aufgabenseite aus.",
+      "folderTemplateText": "Ordner-Vorlage",
+      "fileTemplateText": "Datei-Vorlage",
+      "examplesText": "Beispiele"
+    },
+    "videoSettings": {
+      "header": "Videoeinstellungen",
+      "twitchTokenLabel": "Twitch-Token",
+      "twitchTokenDescription": "Gib dein Twitch-Token an, um werbefreie Live-Streams und VODs nur für Abonnenten herunterzuladen.",
+      "convertFFmpegArgsLabel": "Video-Konvertierungs-FFmpeg-Argumente",
+      "convertFFmpegArgsDescription": "Benutzerdefinierte FFmpeg-Argumente, die bei der Konvertierung des Videos verwendet werden sollen. Dies wird sowohl für Live- als auch für VOD-Archive verwendet.",
+      "streamlinkArgsLabel": "Streamlink-Argumente",
+      "streamlinkArgsDescription": "Benutzerdefinierte Streamlink-Argumente, die beim Herunterladen des Videos verwendet werden sollen. Dies wird für Live-Streams verwendet.",
+      "liveStreamTitle": "Live-Stream",
+      "proxySettings": "Proxy-Einstellungen",
+      "proxySettingsDescription": "Archiviere Live-Streams über einen Proxy, um Werbung zu verhindern. Dein Twitch-Token wird nicht an den Proxy gesendet.",
+      "proxyEnableLabel": "Proxy aktivieren",
+      "proxyURLLabel": "Proxy-URL",
+      "proxyHeaderLabel": "Proxy-Header",
+      "proxyAddButton": "Hinzufügen",
+      "whitelistChannelsLabel": "Whitelist-Kanäle",
+      "whitelistChannelsDescription": "Wähle Kanäle aus, die von der Verwendung des Proxys ausgeschlossen sind, falls aktiviert. Stattdessen wird dein Twitch-Token verwendet. Wähle Kanäle aus, die du abonniert hast."
+    },
+    "chatSettings": {
+      "header": "Chat-Einstellungen",
+      "chatRenderArgsLabel": "Chat-Render-Argumente",
+      "chatRenderArgsDescription": "TwitchDownloaderCLI Chat-Render-Argumente."
+    },
+    "submit": "Einstellungen speichern"
+  },
+  "AdminTasksPage": {
+    "title": "Admin - Aufgaben",
+    "taskStartedNotification": "Aufgabe gestartet, siehe Container-Protokolle für weitere Informationen.",
+    "header": "Aufgaben",
+    "startTaskButton": "Aufgabe starten",
+    "checkWatchedChannelsLive": "Überprüfe beobachtete Kanäle auf neue Live-Streams zum Archivieren",
+    "checkWatchedChannelsLiveDescription": "Erfolgt im im Konfigurationssatz festgelegten Intervall.",
+    "checkWatchedChannelsVideo": "Überprüfe beobachtete Kanäle auf neue Videos zum Archivieren",
+    "checkWatchedChannelsVideoDescription": "Erfolgt im im Konfigurationssatz festgelegten Intervall.",
+    "checkWatchedChannelsClips": "Überprüfe beobachtete Kanäle auf neue Clips zum Archivieren",
+    "checkWatchedChannelsClipsDescription": "Erfolgt täglich um 00:00 Uhr.",
+    "storageTemplateMigration": "Speichervorlagen-Migration",
+    "storageTemplateMigrationDescription": "Wende die Speichervorlage auf bestehende Dateien an. Lies die Dokumentation, bevor du sie ausführst.",
+    "pruneVideos": "Videos bereinigen",
+    "pruneVideosDescription": "Lösche Videos, die älter als die in den Kanaleinstellungen festgelegte Aufbewahrungsdauer sind. Erfolgt täglich um 00:00 Uhr.",
+    "jwks": "JSON Web Key Sets (JWKS) vom SSO-Anbieter abrufen",
+    "jwksDescription": "Erfolgt täglich um 00:00 Uhr.",
+    "saveChaptersForVideos": "Kapitel für Videos speichern",
+    "saveChaptersForVideosDescription": "Speichere Kapitel für Videos, die archiviert wurden (geschieht automatisch für neue Archive).",
+    "updateLiveStreamIds": "Live-Stream-IDs mit Video-IDs aktualisieren",
+    "updateLiveStreamIdsDescription": "Versuche, Live-Stream-Archive mit ihrer entsprechenden Video-ID zu aktualisieren (geschieht automatisch, nachdem die Live-Archivierung abgeschlossen ist).",
+    "generateSpriteThumbnails": "Sprite-Thumbnails generieren",
+    "generateSpriteThumbnailsDescription": "Generiere Vorschaubilder, die beim Bewegen der Maus über die Fortschrittsanzeige des Players für alle Videos angezeigt werden. Dies wird automatisch nach jeder Videoarchivierung ausgeführt."
+  },
+  "AdminUsersPage": {
+    "title": "Admin - Benutzer",
+    "loading": "Benutzer werden geladen",
+    "error": "Fehler beim Laden der Benutzer",
+    "header": "Benutzer verwalten",
+    "searchPlaceholder": "Benutzer suchen...",
+    "columns": {
+      "id": "ID",
+      "username": "Benutzername",
+      "role": "Rolle",
+      "authMethod": "Authentifizierungsmethode",
+      "createdAt": "Erstellt am",
+      "actions": "Aktionen"
+    },
+    "drawer": "Benutzer",
+    "deleteModal": "Benutzer löschen"
+  },
+  "AdminVideosPage": {
+    "title": "Admin - Videos",
+    "loading": "Videos werden geladen",
+    "error": "Fehler beim Laden der Videos",
+    "header": "Videos verwalten",
+    "delete": {
+      "delete": "Löschen",
+      "one": "ein ausgewähltes Video",
+      "many": "ausgewählte Videos",
+      "select": "Wähle Videos zum Löschen aus"
+    },
+    "manuallyAddButton": "Video manuell hinzufügen",
+    "searchPlaceholder": "Videos suchen...",
+    "columns": {
+      "id": "ID",
+      "extId": "Externe ID",
+      "channel": "Kanal",
+      "title": "Titel",
+      "type": "Typ",
+      "locked": "Gesperrt",
+      "streamedAt": "Gestreamt am",
+      "archivedAt": "Archiviert am",
+      "actions": "Aktionen"
+    },
+    "drawer": "Video",
+    "deleteModal": "Video löschen",
+    "multiDeleteModal": "Videos löschen"
+  },
+  "AdminWatchedChannelsPage": {
+    "title": "Admin - Beobachtete Kanäle",
+    "loading": "Beobachtete Kanäle werden geladen",
+    "error": "Fehler beim Laden der beobachteten Kanäle",
+    "header": "Beobachtete Kanäle verwalten",
+    "addButton": "Beobachteten Kanal hinzufügen",
+    "searchPlaceholder": "Beobachtete Kanäle suchen...",
+    "columns": {
+      "id": "ID",
+      "channel": "Kanal",
+      "watchLive": "Live ansehen",
+      "isLive": "Ist Live",
+      "watchVideos": "Videos ansehen",
+      "watchClips": "Clips ansehen",
+      "actions": "Aktionen"
+    },
+    "drawer": "Beobachteter Kanal",
+    "deleteModal": "Beobachteten Kanal löschen"
+  },
+  "AdminBlockedVideosComponents": {
+    "unblockedNotification": "Video freigegeben",
+    "deleteConfirmText": "Bist du sicher, dass du dieses Video freigeben möchtest?",
+    "deleteButton": "Video freigeben",
+    "blockedNotification": "Video blockiert",
+    "idPlaceholder": "Externe Plattform Video-ID",
+    "blockButton": "Video blockieren",
+    "multiUnblockedNotification": "Videos freigegeben",
+    "multiUnblockText": "Bist du sicher, dass du die {length} ausgewählten blockierten Videos freigeben möchtest?",
+    "multiUnblockButton": "Videos freigeben"
+  },
+  "AdminChannelsComponents": {
+    "deleteNotification": "Kanal gelöscht",
+    "deleteConfirmText": "Bist du sicher, dass du diesen Kanal löschen möchtest?",
+    "deleteButton": "Kanal löschen",
+    "createNotification": "Kanal erstellt",
+    "editNotification": "Kanal bearbeitet",
+    "imageUpdateNotification": "Kanalbild von Plattform aktualisiert",
+    "idLabel": "Automatisch generiert",
+    "extIdLabel": "Externe Plattform Kanal-ID",
+    "nameLabel": "Kanalname",
+    "displayNameLabel": "Anzeigename",
+    "imagePathLabel": "Bildpfad",
+    "videoRetentionSettingsHeader": "Videoaufbewahrungs-Einstellungen",
+    "videoRetentionLabel": "Wenn diese Einstellung aktiviert ist, werden Kanalvideos (einschließlich Dateien) nach der angegebenen Anzahl von Tagen gelöscht. 'Sperre' ein Video, um zu verhindern, dass es gelöscht wird.",
+    "enableVideoRetention": "Videoaufbewahrung aktivieren",
+    "videoRetentionWarning": "Videos werden nach {number} Tagen gelöscht!",
+    "videoRetentionDaysLabel": "Anzahl der Tage, um Videos aufzubewahren",
+    "submitButton": "Kanal erstellen",
+    "editButton": "Kanal bearbeiten",
+    "imageUpdateButton": "Kanalbild von Plattform aktualisieren",
+    "addedNotification": "Kanal hinzugefügt",
+    "platformChannelNameLabel": "Plattformkanalname",
+    "addButton": "Kanal hinzufügen"
+  },
+  "AdminQueueComponents": {
+    "deleteNotification": "Warteschlange gelöscht",
+    "deleteConfirmText": "Bist du sicher, dass du dieses Warteschlangen-Element löschen möchtest?",
+    "deleteConfirmText2": "Diese Aktion löscht keine Dateien",
+    "deleteButton": "Warteschlange löschen",
+    "editNotification": "Warteschlange bearbeitet",
+    "idLabel": "Automatisch generiert",
+    "isProcessingLabel": "Wird verarbeitet",
+    "onHoldLabel": "Pausiert",
+    "videoProcessingLabel": "Videoverarbeitung",
+    "chatProcessingLabel": "Chatverarbeitung",
+    "liveArchiveLabel": "Live-Archiv",
+    "taskCreateFolderLabel": "Aufgabe Ordner erstellen",
+    "taskDownloadThumbnailLabel": "Aufgabe Thumbnail herunterladen",
+    "taskSaveInformationLabel": "Aufgabe Informationen speichern",
+    "taskVideoDownloadLabel": "Aufgabe Video herunterladen",
+    "taskVideoConvertLabel": "Aufgabe Video konvertieren",
+    "taskVideoMoveLabel": "Aufgabe Video verschieben",
+    "taskChatDownloadLabel": "Aufgabe Chat herunterladen",
+    "taskChatConvertLabel": "Aufgabe Chat konvertieren",
+    "taskChatRenderLabel": "Aufgabe Chat rendern",
+    "taskChatMoveLabel": "Aufgabe Chat verschieben",
+    "editButton": "Warteschlangen-Element bearbeiten",
+    "multiDeleteNotification": "Warteschlangen-Elemente gelöscht",
+    "multiDeleteConfirmText": "Bist du sicher, dass du die {number} ausgewählten Warteschlangen-Elemente löschen möchtest?",
+    "multiDeleteButton": "Warteschlangen-Elemente löschen"
+  },
+  "AdminUserComponents": {
+    "deleteNotification": "Benutzer gelöscht",
+    "deleteConfirmText": "Bist du sicher, dass du diesen Benutzer löschen möchtest?",
+    "deleteButton": "Benutzer löschen",
+    "editNotification": "Benutzer bearbeitet",
+    "idLabel": "Automatisch generiert",
+    "usernameLabel": "Benutzername",
+    "roleLabel": "Rolle",
+    "createdAtLabel": "Erstellt am",
+    "submitButton": "Benutzer erstellen",
+    "editButton": "Benutzer bearbeiten"
+  },
+  "AdminVideoComponents": {
+    "deleteNotification": "Video gelöscht",
+    "deleteConfirmText": "Bist du sicher, dass du dieses Video löschen möchtest?",
+    "deleteFilesLabel": "Videodateien löschen",
+    "blockExtIdLabel": "Externe Video-ID blockieren",
+    "deleteButton": "Video löschen",
+    "editNotification": "Video",
+    "editNotificationCreated": "erstellt",
+    "editNotificationEdited": "bearbeitet",
+    "idLabel": "Automatisch generiert",
+    "extIdLabel": "Externe Plattform Video-ID",
+    "channelLabel": "Kanal",
+    "isProcessingLabel": "Wird verarbeitet",
+    "lockedLabel": "Gesperrt",
+    "titleLabel": "Titel",
+    "typeLabel": "Typ",
+    "platformLabel": "Plattform",
+    "durationLabel": "Dauer (Sekunden)",
+    "viewCountLabel": "Anzahl der Aufrufe",
+    "resolutionLabel": "Auflösung",
+    "streamedAtLabel": "Gestreamt am",
+    "thumbnailPathLabel": "Thumbnail-Pfad",
+    "webThumbnailPathLabel": "Web-Thumbnail-Pfad",
+    "videoPathLabel": "Video-Pfad",
+    "chatPathLabel": "Chat-Pfad",
+    "chatVideoPathLabel": "Chat-Video-Pfad",
+    "captionPathLabel": "Untertitel-Pfad",
+    "infoPathLabel": "Info-Pfad",
+    "submitButton": "Video erstellen",
+    "editButton": "Video bearbeiten",
+    "multiDeleteNotification": "Videos gelöscht",
+    "multiDeleteConfirmText": "Bist du sicher, dass du die {number} ausgewählten Videos löschen möchtest?",
+    "multiDeleteButton": "Videos löschen"
+  },
+  "AdminWatchedComponents": {
+    "deleteNotification": "Beobachteter Kanal gelöscht",
+    "deleteConfirmText": "Bist du sicher, dass du diesen beobachteten Kanal löschen möchtest?",
+    "deleteButton": "Beobachteten Kanal löschen",
+    "editNotification": "Beobachteter Kanal bearbeitet",
+    "createNotification": "Beobachteter Kanal erstellt",
+    "failedCreateNotification": "Fehler beim Erstellen des beobachteten Kanals",
+    "failedEditNotification": "Fehler beim Bearbeiten des beobachteten Kanals",
+    "headerText": "Lies die Wiki-Seite zum beobachteten Kanal <wiki>Wiki-Seite</wiki>, um weitere Informationen zu den einzelnen Funktionen zu erhalten.",
+    "idLabel": "Automatisch generiert",
+    "channelLabel": "Kanal",
+    "resolutionLabel": "Qualität",
+    "archiveChatLabel": "Chat archivieren",
+    "renderChatLabel": "Chat rendern",
+    "liveStreamsText": "Live-Streams",
+    "liveStreamsDescription": "Archiviere Live-Streams, während sie gestreamt werden.",
+    "watchLiveLabel": "Live ansehen",
+    "videosText": "Kanalvideos",
+    "videosDescription": "Archiviere vergangene Kanalvideos.",
+    "videosOccurance": "Die Suche nach neuen Videos erfolgt einmal täglich.",
+    "watchVideosLabel": "Videos ansehen",
+    "downloadArchivesLabel": "Vergangene Live-Streams herunterladen",
+    "downloadArchivesDescription": "Vergangene Live-Streams herunterladen",
+    "downloadHighlightsLabel": "Highlights herunterladen",
+    "downloadHighlightsDescription": "Vergangene Highlights herunterladen",
+    "downloadUploadsLabel": "Uploads herunterladen",
+    "downloadUploadsDescription": "Vergangene Uploads herunterladen",
+    "downloadSubOnlyLabel": "Nur-Abonnenten-Videos herunterladen",
+    "downloadSubOnlyDescription": "Aktiviere dies nicht, wenn du kein Abonnent bist. Du musst ein Twitch-Token unter Admin > Einstellungen eingestellt haben, um Nur-Abonnenten-Videos herunterzuladen.",
+    "channelClipsText": "Kanal-Clips",
+    "channelClipsDescription": "Archiviere vergangene Kanal-Clips.",
+    "channelClipsDescription1": "Diese Funktion dient dazu, die beliebtesten (Anzahl der Aufrufe) Clips der letzten 'Intervall'-Tage zu archivieren. Wenn du beispielsweise die Anzahl der Clips auf 5 und das Intervall auf 7 festlegst, werden die Top 5 Clips der letzten 7 Tage archiviert. Sie wird erst nach 7 Tagen wieder ausgeführt. Es werden keine Einschränkungen (Kategorien, Alter, Titel, Regex usw.) angewendet.",
+    "channelClipsMoreInformationButton": "Weitere Informationen",
+    "channelClipsMoreInformationText": "Wenn du einen einmaligen Import der beliebtesten Clips eines Kanals durchführen möchtest, stelle das Intervall auf eine große Zahl (1000) und die Anzahl der Clips auf eine große Zahl (250) ein. Dadurch werden die Top 250 Clips der letzten 1000 Tage importiert. Es wird empfohlen, das Intervall und die Anzahl der Clips nach dem ersten Import auf eine niedrigere Zahl zu ändern.",
+    "watchClipsLabel": "Clips ansehen",
+    "numberOfClipsLabel": "Anzahl der Clips",
+    "numberOfClipsDescription": "Anzahl der zu archivierenden Clips.",
+    "intervalDaysLabel": "Intervall (Tage)",
+    "intervalDaysDescription": "Wie oft der Kanal auf zu archivierende Clips überprüft wird (in Tagen). Dies beschränkt die Clip-Suche auch auf die letzten Intervalltage.",
+    "ignoreLastCheckedDateLabel": "Datum der letzten Überprüfung ignorieren",
+    "ignoreLastCheckedDateDescription": "Clips werden nur überprüft, wenn das Datum der letzten Überprüfung älter als die Intervalltage ist. Wenn dies aktiviert ist, wird das Datum der letzten Überprüfung ignoriert und alle Clips der letzten Intervalltage werden überprüft.",
+    "advancedText": "Erweitert",
+    "maxVideoAgeLabel": "Maximales Videoalter (Tage)",
+    "maxVideoAgeDescription": "Archiviere Videos, die nicht älter als diese Anzahl von Tagen sind (0, um alle zu archivieren).",
+    "titleRegexText": "Titel-Regex",
+    "titleRegexAddTooltip": "Titel-Regex hinzufügen",
+    "titleRegexDescription": "Verwende Regex, um bestimmte Muster in Live-Stream- und Videotiteln zu filtern und abzugleichen. Siehe <wiki>das Wiki</wiki> für weitere Informationen.",
+    "titleRegexLabel": "Regex",
+    "negativeLabel": "Negativ",
+    "negativeDescription": "Übereinstimmung umkehren",
+    "applyToVideosLabel": "Auf Video-Downloads anwenden",
+    "applyToVideosDescription": "Wende diese Regex auf Video-Downloads an, gilt standardmäßig nur für Live-Streams",
+    "categoriesText": "Kategorien",
+    "categoriesDescription": "Archiviere Videos und Live-Streams aus ausgewählten Kategorien. Lasse dieses Feld leer, um alle Kategorien zu archivieren.",
+    "categoriesApplyToLivestreamsLabel": "Auf Live-Streams anwenden",
+    "categoriesApplyToLivestreamsDescription": "Kategoriebeschränkungen auf Live-Streams anwenden",
+    "categoriesLoadButton": "Kategorien laden",
+    "categoriesSearchPlaceholder": "Kategorien suchen...",
+    "submitButton": "Beobachteten Kanal erstellen",
+    "editButton": "Beobachteten Kanal bearbeiten"
+  },
   "LandingHeroComponent": {
-    "subtitle": "Eine Plattform, um Live -Streams und Videos zu archivieren",
+    "subtitle": "Eine Plattform zum Archivieren von Live-Streams und Videos",
     "channelsButton": "Kanäle",
-    "loginButton": "Login"
+    "loginButton": "Anmelden"
   },
   "LandingContinueWatchingComponent": {
-    "error": "Fehler laden Letzte Wiedergabevideos"
+    "error": "Fehler beim Laden der letzten Wiedergabevideos"
   },
   "LandingRecentlyArchivedComponent": {
-    "error": "Fehler laden kürzlich archivierte Videos"
+    "error": "Fehler beim Laden der kürzlich archivierten Videos"
   }
 }
