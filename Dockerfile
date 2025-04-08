@@ -3,7 +3,7 @@ ARG TWITCHDOWNLOADER_VERSION="1.55.2"
 #
 # API Build
 #
-FROM golang:1.23-bookworm AS build-api
+FROM golang:1.24-bookworm AS build-api
 ARG GIT_SHA
 ARG GIT_TAG
 ENV GIT_SHA=$GIT_SHA
@@ -77,7 +77,7 @@ RUN \
 #
 # Tests stage. Inclues depedencies required for tests
 #
-FROM golang:1.23-bookworm AS tests
+FROM golang:1.24-bookworm AS tests
 
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip ffmpeg make git
 
