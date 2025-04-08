@@ -155,7 +155,7 @@
       "select": "Select blocked videos to delete"
     },
     "add": "Add Blocked Video ID",
-    "body": "External playform video IDs that are blocked from being archived.",
+    "body": "External platform video IDs that are blocked from being archived.",
     "search": "Search blocked videos...",
     "columns": {
       "id": "ID",
@@ -505,7 +505,7 @@
     "watchLiveLabel": "Watch Live",
     "videosText": "Channel Videos",
     "videosDescription": "Archive past channel videos.",
-    "videosOccurance": "Check for new videos occurs once a day.",
+    "videosOccurrence": "Check for new videos occurs once a day.",
     "watchVideosLabel": "Watch Videos",
     "downloadArchivesLabel": "Download Archives",
     "downloadArchivesDescription": "Download past live streams",
