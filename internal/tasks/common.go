@@ -3,7 +3,6 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -249,16 +248,6 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 	}
 
 	return nil
-}
-
-// getBasePath returns provided url except for everything after the last /
-func getBasePath(url string) string {
-	url = strings.TrimSuffix(url, "/")
-	lastSlashIndex := strings.LastIndex(url, "/")
-	if lastSlashIndex == -1 {
-		return url
-	}
-	return url[:lastSlashIndex]
 }
 
 // //////////////////////
