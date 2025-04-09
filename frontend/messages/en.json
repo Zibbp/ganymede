@@ -37,15 +37,15 @@
         "actions": "Actions",
         "view": "View queue item",
         "stop": "Stop queue item"
-      },
-      "modal": {
-        "cancel": {
-          "title": "Cancel queue item",
-          "text": "Are you sure you want to cancel this queue item?",
-          "description": "For live archives this will stop the video and chat download then proceed with post-processing. For VOD archives this will stop all the tasks.",
-          "delete": "Delete video and video files",
-          "block": "Block video ID"
-        }
+      }
+    },
+    "modal": {
+      "cancel": {
+        "title": "Cancel queue item",
+        "text": "Are you sure you want to cancel this queue item?",
+        "description": "For live archives this will stop the video and chat download then proceed with post-processing. For VOD archives this will stop all the tasks.",
+        "delete": "Delete video and video files",
+        "block": "Block video ID"
       }
     }
   },
