@@ -5,12 +5,14 @@ import { useFetchVideosFilter, VideoType } from "@/app/hooks/useVideos";
 import useSettingsStore from "@/app/store/useSettingsStore";
 import VideoGrid from "./Grid";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";
+import { useTranslations } from "next-intl";
 
 type Props = {
   channel: Channel;
 };
 
 const ChannelVideos = ({ channel }: Props) => {
+  const t = useTranslations("VideoComponents");
   const [activePage, setActivePage] = useState(1);
   const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
 
@@ -25,11 +27,11 @@ const ChannelVideos = ({ channel }: Props) => {
   });
 
   if (isPending) {
-    return <GanymedeLoadingText message="Loading Videos" />;
+    return <GanymedeLoadingText message={t('loadingVideos')} />;
   }
 
   if (isError) {
-    return <div>Error loading channel</div>;
+    return <div>{t('errorLoadingVideos')}</div>;
   }
 
   return (

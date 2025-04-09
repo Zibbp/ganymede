@@ -4,12 +4,14 @@ import { env } from "next-runtime-env";
 import { escapeURL } from "@/app/util/util";
 import { Center } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 interface Params {
   video: Video;
 }
 
 const VideoLoginRequired = ({ video }: Params) => {
+  const t = useTranslations('VideoComponents')
   return (
     <div className={classes.container}>
       <div
@@ -25,7 +27,7 @@ const VideoLoginRequired = ({ video }: Params) => {
           <IconLock size={64} />
         </Center>
         <div className={classes.text}>
-          You must be logged in to view this video
+          {t('loginRequiredText')}
         </div>
       </div>
     </div>
