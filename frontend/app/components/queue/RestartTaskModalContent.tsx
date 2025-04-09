@@ -3,6 +3,7 @@ import { Queue, QueueTask, useStartQueueTask } from "@/app/hooks/useQueue";
 import { useState } from "react";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 
 interface Params {
   queue: Queue;
@@ -11,6 +12,7 @@ interface Params {
 }
 
 const QueueRestartTaskModalContent = ({ queue, task, closeModal }: Params) => {
+  const t = useTranslations('QueueComponents')
   const [checked, setChecked] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,7 +29,7 @@ const QueueRestartTaskModalContent = ({ queue, task, closeModal }: Params) => {
       })
 
       showNotification({
-        message: "Restarted queue task"
+        message: t('taskRestartedNotification')
       })
 
       closeModal()
@@ -42,12 +44,14 @@ const QueueRestartTaskModalContent = ({ queue, task, closeModal }: Params) => {
   return (
     <div>
       <div>
-        Restart queue task <Code>{task}</Code>?
+        {t.rich('taskRestartText', {
+          taskName: (chunks) => <code>{task}</code>,
+        })}
       </div>
       <div>
         <Switch
           mt={10}
-          label="Continue with subsequent tasks"
+          label={t('continueWithSubsequentTasksLabel')}
           checked={checked}
           onChange={(event) => setChecked(event.currentTarget.checked)}
         />
@@ -62,7 +66,7 @@ const QueueRestartTaskModalContent = ({ queue, task, closeModal }: Params) => {
           color="green"
           loading={isLoading}
         >
-          Restart Task
+          {t('restartTaskButton')}
         </Button>
       </div>
     </div>

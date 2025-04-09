@@ -4,12 +4,14 @@ import { env } from "next-runtime-env";
 import { Container, Divider, Flex, Image, Text, Tooltip } from "@mantine/core";
 import dayjs from "dayjs";
 import classes from "./Header.module.css"
+import { useTranslations } from "next-intl";
 
 interface Params {
   queue: Queue;
 }
 
 const QueueHeader = ({ queue }: Params) => {
+  const t = useTranslations('QueueComponents')
   return (
     <div className={classes.queueHeader}>
       <Container size="4xl">
@@ -33,7 +35,7 @@ const QueueHeader = ({ queue }: Params) => {
               </Tooltip>
             </div>
             <Flex>
-              <Tooltip label="External Platform Video ID">
+              <Tooltip label={t('externalPlatformVideoIdLabel')}>
                 <Text
                   className={classes.queueHeaderHoverText}
                 >
@@ -41,7 +43,7 @@ const QueueHeader = ({ queue }: Params) => {
                 </Text>
               </Tooltip>
               <Divider mx={5} orientation="vertical" />
-              <Tooltip label="Internal Ganymede Video ID">
+              <Tooltip label={t('ganymedeVideoIdLabel')}>
                 <Text
                   className={classes.queueHeaderHoverText}
                 >
@@ -56,7 +58,7 @@ const QueueHeader = ({ queue }: Params) => {
 
               {queue.on_hold && <Text className={classes.onHold}>On Hold</Text>}
 
-              <Tooltip label="Streamed At">
+              <Tooltip label={t('streamedAtLabel')}>
                 <Text
                   className={classes.queueHeaderHoverText}
                 >

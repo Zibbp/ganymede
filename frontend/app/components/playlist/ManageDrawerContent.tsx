@@ -7,6 +7,7 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { showNotification } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { IconTrash } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 interface Params {
   videoId: string;
 }
@@ -17,6 +18,7 @@ interface FormattedPlaylist {
 }
 
 const PlaylistManageDrawerContent = ({ videoId }: Params) => {
+  const t = useTranslations('PlaylistComponents')
   const [playlistsFormatted, setPlaylistsFormatted] = useState<FormattedPlaylist[]>([]);
   const [selectedPlaylistValue, setSelectedPlaylistValue] = useState<string | null>(null);
   const queryClient = useQueryClient()
@@ -53,7 +55,7 @@ const PlaylistManageDrawerContent = ({ videoId }: Params) => {
       queryClient.invalidateQueries({ queryKey: ["video", "playlists", videoId] })
 
       showNotification({
-        message: "Added video to playlist"
+        message: t('videoAddedToPlaylistNotification')
       })
 
 
@@ -69,7 +71,7 @@ const PlaylistManageDrawerContent = ({ videoId }: Params) => {
       queryClient.invalidateQueries({ queryKey: ["video", "playlists", videoId] })
 
       showNotification({
-        message: "Removed video from playlist"
+        message: t('videoRemovedFromPlaylistNotification')
       })
     } catch (error) {
       console.error(error)
@@ -78,11 +80,11 @@ const PlaylistManageDrawerContent = ({ videoId }: Params) => {
 
 
   if (isVideoPlaylistsPending || isPlaylistsPending) {
-    return <GanymedeLoadingText message="Loading Playlists" />;
+    return <GanymedeLoadingText message={t('loading')} />;
   }
 
   if (isVideoPlaylistsError || isPlaylistsError) {
-    return <div>Error loading playlists</div>;
+    return <div>{t('errorLoading')}</div>;
   }
 
   return (
@@ -92,11 +94,11 @@ const PlaylistManageDrawerContent = ({ videoId }: Params) => {
         value={selectedPlaylistValue}
         onChange={setSelectedPlaylistValue}
         searchable
-        placeholder="Add Video to Playlist"
+        placeholder={t('addVideoPlaylistsPlaceholder')}
         w="100%"
       />
 
-      <Button mt={10} onClick={addVideoToPlayist} fullWidth>Add to Playlist</Button>
+      <Button mt={10} onClick={addVideoToPlayist} fullWidth>{t('addVideoToPlaylistButton')}</Button>
 
       <Divider my="md" />
 
