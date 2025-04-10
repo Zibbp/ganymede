@@ -121,10 +121,10 @@ The `docker-compose.yml` file has comments for each environment variable. Below 
 | `MAX_VIDEO_DOWNLOAD_EXECUTIONS`         | Maximum number of video downloads that can be running at once. Live streams bypass this limit.                                  |
 | `MAX_VIDEO_CONVERT_EXECUTIONS`          | Maximum number of video conversions that can be running at once.                                                                |
 | `MAX_VIDEO_SPRITE_THUMBNAIL_EXECUTIONS` | Maximum number of video sprite thumbnail generation jobs that can be running at once. This is not very CPU intensive.           |
-| `SHOW_SSO_LOGIN_BUTTON`                 | Frontend: `true/false` Show a "login via sso" button on the login page.                                                         |
-| `FORCE_SSO_AUTH`                        | Frontend: `true/false` Force users to login via SSO by bypassing the login page.                                                |
-| `REQUIRE_LOGIN`                         | Frontend: `true/false` Require users to be logged in to view videos.                                                            |
-| `SHOW_LOCALE_BUTTON`                    | Frontend: `true/false` Show the locale/language button on the navbar.                                                           |
+| `SHOW_SSO_LOGIN_BUTTON`                 | Frontend: `true/false` Show a "login via sso" button on the login page (defaults to false).                                     |
+| `FORCE_SSO_AUTH`                        | Frontend: `true/false` Force users to login via SSO by bypassing the login page (defaults to false).                            |
+| `REQUIRE_LOGIN`                         | Frontend: `true/false` Require users to be logged in to view videos (defaults to false).                                        |
+| `SHOW_LOCALE_BUTTON`                    | Frontend: `true/false` Show the locale/language button on the navbar (defaults to true).                                        |
 | `DEFAULT_LOCALE`                        | Frontend: Sets the default locale/language. Must be the short code of the language. Example: `en` for English, `de` for German. |
 
 ##### DB
