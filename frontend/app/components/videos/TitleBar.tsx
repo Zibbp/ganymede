@@ -10,12 +10,14 @@ import VideoMenu from "./Menu";
 import useAuthStore from "@/app/store/useAuthStore";
 import { UserRole } from "@/app/hooks/useAuthentication";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface Params {
   video: Video;
 }
 
 const VideoTitleBar = ({ video }: Params) => {
+  const t = useTranslations("VideoComponents");
   const hasPermission = useAuthStore(state => state.hasPermission);
 
   const { data: clipFullVideo } = useGetVideoByExternalId(video.clip_ext_vod_id)
@@ -53,7 +55,7 @@ const VideoTitleBar = ({ video }: Params) => {
             {video.views && (
               <Group mr={15}>
                 <Tooltip
-                  label={`${video.views.toLocaleString()} source views`}
+                  label={`${video.views.toLocaleString()} ${t('sourceViewsTooltip')}`}
                   openDelay={250}
                 >
                   <div className={classes.titleBarBadge}>
@@ -67,7 +69,7 @@ const VideoTitleBar = ({ video }: Params) => {
             {video.local_views && (
               <Group mr={15}>
                 <Tooltip
-                  label={`${video.local_views.toLocaleString()} local views`}
+                  label={`${video.local_views.toLocaleString()} ${t('localViewsTooltip')}`}
                   openDelay={250}
                 >
                   <div className={classes.titleBarBadge}>
@@ -80,7 +82,7 @@ const VideoTitleBar = ({ video }: Params) => {
 
             <Group mr={15}>
               <Tooltip
-                label={`Streamed on ${new Date(
+                label={`${t('streamedOnTooltip')} ${new Date(
                   video.streamed_at
                 ).toLocaleString()}`}
                 openDelay={250}
@@ -96,10 +98,10 @@ const VideoTitleBar = ({ video }: Params) => {
 
             {video.locked && (
               <Group mr={5}>
-                <Tooltip label={`Video is locked`} openDelay={250}>
+                <Tooltip label={t('lockedText')} openDelay={250}>
                   <div className={classes.titleBarBadge}>
                     <Badge variant="default" leftSection={<IconLock style={{ width: rem(12), height: rem(12) }} />}>
-                      Locked
+                      {t('locked')}
                     </Badge>
                   </div>
                 </Tooltip>
@@ -107,7 +109,7 @@ const VideoTitleBar = ({ video }: Params) => {
             )}
 
             <Group>
-              <Tooltip label={`Video Type`} openDelay={250}>
+              <Tooltip label={t('videoTypeTooltip')} openDelay={250}>
                 <div className={classes.titleBarBadge}>
                   <Badge variant="default">
                     {video.type}

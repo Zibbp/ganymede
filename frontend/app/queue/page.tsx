@@ -16,11 +16,11 @@ import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 
 const QueuePage = () => {
+  const t = useTranslations("QueuePage");
   useEffect(() => {
     document.title = "Queue";
   }, []);
 
-  const t = useTranslations("QueuePage");
 
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);

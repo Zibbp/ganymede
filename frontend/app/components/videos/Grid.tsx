@@ -5,6 +5,7 @@ import type { NumberInputHandlers } from "@mantine/core";
 import VideoCard from "./Card";
 import { Video, VideoType } from "@/app/hooks/useVideos";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";
+import { useTranslations } from "next-intl";
 
 export type VideoGridProps<T extends Video> = {
   videos: T[];
@@ -35,6 +36,7 @@ const VideoGrid = <T extends Video>({
   showMenu = true,
   showProgress = true,
 }: VideoGridProps<T>) => {
+  const t = useTranslations("VideoComponents");
   const handlersRef = useRef<NumberInputHandlers>(null);
   // Local state to handle the input value while typing
   const [localLimit, setLocalLimit] = useState(videoLimit);
@@ -88,7 +90,7 @@ const VideoGrid = <T extends Video>({
   };
 
   if (isPending) {
-    return <GanymedeLoadingText message="Loading Videos" />;
+    return <GanymedeLoadingText message={t('loadingVideos')} />;
   }
 
   return (
@@ -99,13 +101,13 @@ const VideoGrid = <T extends Video>({
             data={selectorVideoTypes}
             value={videoTypes}
             onChange={(value) => handleSetVideoTypes(value)}
-            label="Filter by"
-            placeholder="Select video types"
+            label={t('filterByLabel')}
+            placeholder={t("filterByPlaceholder")}
             clearable
           />
         </Box>
         <div>
-          <Text>{totalCount.toLocaleString()} Videos</Text>
+          <Text>{t('videosCount', { count: totalCount.toLocaleString() })}</Text>
         </div>
       </Group>
 

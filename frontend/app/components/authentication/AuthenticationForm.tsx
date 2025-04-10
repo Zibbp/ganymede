@@ -21,11 +21,7 @@ import { env } from 'next-runtime-env';
 import { showNotification } from '@mantine/notifications';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
-const schema = z.object({
-  username: z.string().min(3, { message: "Username should have at least 3 characters" }),
-  password: z.string().min(8, { message: "Password should have at least 8 characters" })
-})
+import { useTranslations } from 'next-intl';
 
 export enum AuthFormType {
   Login = "login",
@@ -37,6 +33,14 @@ type Props = {
 }
 
 export function AuthenticationForm({ type }: Props) {
+  const t = useTranslations('AuthComponents')
+
+  const schema = z.object({
+    username: z.string().min(3, { message: t('usernameTooShort') }),
+    password: z.string().min(8, { message: t('passwordTooShort') })
+  })
+
+
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { fetchUser } = useAuthStore();
@@ -64,11 +68,11 @@ export function AuthenticationForm({ type }: Props) {
         await authLogin(username, password)
         await fetchUser()
         showNotification({
-          message: "Logged in"
+          message: t('loggedInNotification')
         })
         router.push('/')
       } catch (error) {
-        console.error(`Error logging in: ${error instanceof Error ? error.message : String(error)}`)
+        console.error(`${t('errorLoggingInNotification')}: ${error instanceof Error ? error.message : String(error)}`)
       } finally {
         setLoading(false)
       }
@@ -78,10 +82,10 @@ export function AuthenticationForm({ type }: Props) {
         await authRegister(username, password)
         router.push('/login')
         showNotification({
-          message: "Successfully registered, please sign in."
+          message: t('registerSuccessNotification')
         })
       } catch (error) {
-        console.error(`Error registering in: ${error instanceof Error ? error.message : String(error)}`)
+        console.error(`${t('errorRegisteringNotification')}: ${error instanceof Error ? error.message : String(error)}`)
       } finally {
         setLoading(false)
       }
@@ -95,16 +99,16 @@ export function AuthenticationForm({ type }: Props) {
   return (
     <Paper radius="md" p="xl" withBorder>
       <Text size="lg" fw={500}>
-        Welcome to Ganymede, {type} with
+        {t('welcomeText')}, {t(type)} {t('with')}
       </Text>
 
       {(env("NEXT_PUBLIC_SHOW_SSO_LOGIN_BUTTON") == "true") ? (
         <Box>
           <Group grow mb="md" mt="md">
-            <Button fullWidth onClick={handleSSOLogin}>Single Sign-On (SSO)</Button>
+            <Button fullWidth onClick={handleSSOLogin}>{t('ssoButton')}</Button>
           </Group>
 
-          <Divider label="Or continue with local credentials" labelPosition="center" my="lg" />
+          <Divider label={t('localCredentialsLabel')} labelPosition="center" my="lg" />
         </Box>
       ) : (
         <Box mt="md" mb="md"></Box>
@@ -113,16 +117,16 @@ export function AuthenticationForm({ type }: Props) {
       <form onSubmit={form.onSubmit((values) => handleAuth(values.username, values.password))}>
         <Stack>
           <TextInput
-            label="Username"
-            placeholder="Your username"
+            label={t('usernameLabel')}
+            placeholder={t('usernameDescription')}
             key={form.key('username')}
             {...form.getInputProps('username')}
             radius="md"
           />
 
           <PasswordInput
-            label="Password"
-            placeholder="Your password"
+            label={t('passwordLabel')}
+            placeholder={t('passwordDescription')}
             key={form.key('password')}
             {...form.getInputProps('password')}
             radius="md"
@@ -133,16 +137,16 @@ export function AuthenticationForm({ type }: Props) {
 
           {(type == AuthFormType.Login) && (
             <Anchor component={Link} href="/register" type="button" c="dimmed" size="xs">
-              {"Don't have an account? Register"}
+              {t('registerLinkText')}
             </Anchor>
           )}
           {(type == AuthFormType.Register) && (
             <Anchor component={Link} href="/login" type="button" c="dimmed" size="xs">
-              {"Already have an account? Login"}
+              {t('loginLinkText')}
             </Anchor>
           )}
           <Button type="submit" loading={loading}>
-            {upperFirst(type)}
+            {upperFirst(t(type))}
           </Button>
         </Group>
       </form>

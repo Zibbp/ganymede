@@ -6,12 +6,14 @@ import { Queue, QueueTask } from "@/app/hooks/useQueue";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 import QueueRestartTaskModalContent from "./RestartTaskModalContent";
+import { useTranslations } from "next-intl";
 
 interface Params {
   queue: Queue;
 }
 
 const QueueGeneralTimeline = ({ queue }: Params) => {
+  const t = useTranslations('QueueComponents')
   const [restartTaskModalOpened, { open: openRestartTaskModal, close: closeRestartTaskModal }] = useDisclosure(false);
 
   const [restartTaskName, setRestartTaskName] = useState<QueueTask | null>(null);
@@ -26,28 +28,28 @@ const QueueGeneralTimeline = ({ queue }: Params) => {
       <Timeline active={0} bulletSize={24} color="dark" lineWidth={3}>
         <Timeline.Item
           bullet={<QueueTimelineBullet status={queue.task_vod_create_folder} />}
-          title="Create Folder"
+          title={t('createFolderTitle')}
         >
           <Text size="sm">
             <span
               className={classes.restartText}
               onClick={() => restartTask(QueueTask.TaskVodCreateFolder)}
             >
-              restart
+              {t('restartButton')}
             </span>
           </Text>
         </Timeline.Item>
 
         <Timeline.Item
           bullet={<QueueTimelineBullet status={queue.task_vod_save_info} />}
-          title="Save Information"
+          title={t('saveInformationTitle')}
         >
           <Text size="sm">
             <span
               className={classes.restartText}
               onClick={() => restartTask(QueueTask.TaskVodSaveInfo)}
             >
-              restart
+              {t('restartButton')}
             </span>
           </Text>
         </Timeline.Item>
@@ -56,14 +58,14 @@ const QueueGeneralTimeline = ({ queue }: Params) => {
           bullet={
             <QueueTimelineBullet status={queue.task_vod_download_thumbnail} />
           }
-          title="Download Thumbnails"
+          title={t('downloadThumbnailsTitle')}
         >
           <Text size="sm">
             <span
               className={classes.restartText}
               onClick={() => restartTask(QueueTask.TaskVodDownloadThumbnail)}
             >
-              restart
+              {t('restartButton')}
             </span>
           </Text>
         </Timeline.Item>
@@ -71,7 +73,7 @@ const QueueGeneralTimeline = ({ queue }: Params) => {
       <Modal
         opened={restartTaskModalOpened}
         onClose={closeRestartTaskModal}
-        title="Restart Queue Task"
+        title={t("restartQueueTaskModalTitle")}
       >
         {restartTaskName !== null && (
           <QueueRestartTaskModalContent queue={queue} task={restartTaskName} closeModal={closeRestartTaskModal} />

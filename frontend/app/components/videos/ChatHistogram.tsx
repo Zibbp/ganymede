@@ -4,6 +4,7 @@ import { Title } from "@mantine/core";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";
 import { RefObject } from "react";
 import { MediaPlayerInstance } from "@vidstack/react";
+import { useTranslations } from "next-intl";
 
 type Props = {
   videoId: string;
@@ -11,13 +12,14 @@ type Props = {
 }
 
 const VideoChatHistogram = ({ videoId, playerRef }: Props) => {
+  const t = useTranslations('VideoComponents')
   const { data, isPending, isError } = useGetVideoChatHistogram(videoId)
 
   if (isPending) {
-    return <GanymedeLoadingText message="Loading Chat Histogram" />
+    return <GanymedeLoadingText message={t('loadingChatHistogram')} />
   }
   if (isError) {
-    return <div>Error loading chat histogram</div>
+    return <div>{t('errorLoadingChatHistogram')}</div>
   }
 
   const secondsToHHMM = (seconds: number): string => {
@@ -37,12 +39,12 @@ const VideoChatHistogram = ({ videoId, playerRef }: Props) => {
   }));
 
   if (!result.length) {
-    return <div>Error loading chat histogram</div>
+    return <div>{t('errorLoadingChatHistogram')}</div>
   }
 
   return (
     <div>
-      <Title my={5}>Chat Histogram</Title>
+      <Title my={5}>{t('chatHistogramTitle')}</Title>
       <BarChart
         h={300}
         data={result}

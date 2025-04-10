@@ -6,12 +6,14 @@ import { Queue, QueueLogType, QueueTask } from "@/app/hooks/useQueue";
 import { openQueueTaskLog } from "@/app/util/queue";
 import classes from "./Timeline.module.css"
 import QueueRestartTaskModalContent from "./RestartTaskModalContent";
+import { useTranslations } from "next-intl";
 
 interface Params {
   queue: Queue;
 }
 
 const QueueChatTimeline = ({ queue }: Params) => {
+  const t = useTranslations('QueueComponents')
   const [restartTaskModalOpened, { open: openRestartTaskModal, close: closeRestartTaskModal }] = useDisclosure(false);
 
   const [restartTaskName, setRestartTaskName] = useState<QueueTask | null>(null);
@@ -32,7 +34,7 @@ const QueueChatTimeline = ({ queue }: Params) => {
       >
         <Timeline.Item
           bullet={<QueueTimelineBullet status={queue.task_chat_download} />}
-          title="Chat Download"
+          title={t('chatDownloadTitle')}
         >
           <Text size="sm">
             {!queue.live_archive && (
@@ -41,7 +43,7 @@ const QueueChatTimeline = ({ queue }: Params) => {
                   className={classes.restartText}
                   onClick={() => restartTask(QueueTask.TaskChatDownload)}
                 >
-                  restart
+                  {t('restartButton')}
                 </span>
                 <span> - </span>
               </span>
@@ -50,7 +52,7 @@ const QueueChatTimeline = ({ queue }: Params) => {
               className={classes.restartText}
               onClick={() => openQueueTaskLog(queue.id, QueueLogType.Chat)}
             >
-              logs
+              {t('logsButton')}
             </span>
           </Text>
         </Timeline.Item>
@@ -58,7 +60,7 @@ const QueueChatTimeline = ({ queue }: Params) => {
         {queue.live_archive && (
           <Timeline.Item
             bullet={<QueueTimelineBullet status={queue.task_chat_convert} />}
-            title="Chat Convert"
+            title={t('chatConvertTitle')}
           >
             <Text size="sm">
               <span>
@@ -66,7 +68,7 @@ const QueueChatTimeline = ({ queue }: Params) => {
                   className={classes.restartText}
                   onClick={() => restartTask(QueueTask.TaskChatConvert)}
                 >
-                  restart
+                  {t('restartButton')}
                 </span>
                 <span> - </span>
               </span>
@@ -74,7 +76,7 @@ const QueueChatTimeline = ({ queue }: Params) => {
                 className={classes.restartText}
                 onClick={() => openQueueTaskLog(queue.id, QueueLogType.ChatConvert)}
               >
-                logs
+                {t('logsButton')}
               </span>
             </Text>
           </Timeline.Item>
@@ -82,7 +84,7 @@ const QueueChatTimeline = ({ queue }: Params) => {
 
         <Timeline.Item
           bullet={<QueueTimelineBullet status={queue.task_chat_render} />}
-          title="Chat Render"
+          title={t('chatRenderTitle')}
         >
           <Text size="sm">
             <span>
@@ -90,7 +92,7 @@ const QueueChatTimeline = ({ queue }: Params) => {
                 className={classes.restartText}
                 onClick={() => restartTask(QueueTask.TaskChatRender)}
               >
-                restart
+                {t('restartButton')}
               </span>
               <span> - </span>
             </span>
@@ -98,21 +100,21 @@ const QueueChatTimeline = ({ queue }: Params) => {
               className={classes.restartText}
               onClick={() => openQueueTaskLog(queue.id, QueueLogType.ChatRender)}
             >
-              logs
+              {t('logsButton')}
             </span>
           </Text>
         </Timeline.Item>
 
         <Timeline.Item
           bullet={<QueueTimelineBullet status={queue.task_chat_move} />}
-          title="Chat Move"
+          title={t('chatMoveTitle')}
         >
           <Text size="sm">
             <span
               className={classes.restartText}
               onClick={() => restartTask(QueueTask.TaskChatMove)}
             >
-              restart
+              {t('restartButton')}
             </span>
           </Text>
         </Timeline.Item>
@@ -121,7 +123,7 @@ const QueueChatTimeline = ({ queue }: Params) => {
       <Modal
         opened={restartTaskModalOpened}
         onClose={closeRestartTaskModal}
-        title="Restart Queue Task"
+        title={t('restartQueueTaskModalTitle')}
       >
         {restartTaskName !== null && (
           <QueueRestartTaskModalContent queue={queue} task={restartTaskName} closeModal={closeRestartTaskModal} />

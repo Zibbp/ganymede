@@ -1,5 +1,5 @@
 "use client"
-import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse, Tooltip } from '@mantine/core';
+import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse, Tooltip, Flex } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconChevronDown, IconChevronUp, IconLanguage, IconMoon, IconSearch, IconSun, IconUserCircle, IconX } from '@tabler/icons-react';
 import classes from './Navbar.module.css';
@@ -21,6 +21,12 @@ interface NavLink {
   role?: UserRole;
   links?: NavLink[];
 }
+
+// List of languages to be displayed in the language menu. Corresponds to the locales in "frontend/messages"
+const languages = [
+  { code: 'en', label: 'English' },
+  { code: 'de', label: 'German' },
+];
 
 export function Navbar() {
   const t = useTranslations("NavbarLayout")
@@ -165,6 +171,7 @@ export function Navbar() {
   const mainLinks = renderLinks(filteredLinks, classes.link);
 
   const drawerLinks = renderDrawerLinks(filteredLinks, classes.link);
+  const [drawerLanguageButtonOpened, { toggle: drawerLanguageButtonOpenedToggle }] = useDisclosure(false);
 
   return (
     <header className={classes.header}>
@@ -223,12 +230,12 @@ export function Navbar() {
                 </Tooltip>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Item onClick={() => setUserLocale('en')}>
-                  English
-                </Menu.Item>
-                <Menu.Item onClick={() => setUserLocale('de')}>
-                  German
-                </Menu.Item>
+                {languages.map((lang) => (
+                  <Menu.Item
+                    key={lang.code}
+                    onClick={() => setUserLocale(lang.code)}
+                  >{lang.label}</Menu.Item>
+                ))}
               </Menu.Dropdown>
             </Menu>
           )}
@@ -273,6 +280,7 @@ export function Navbar() {
           <Divider my="md" />
           {drawerLinks}
           <Divider my="md" />
+
           <TextInput
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.currentTarget.value)}
@@ -304,6 +312,28 @@ export function Navbar() {
             rightSectionPointerEvents="auto"
           />
           <Divider my="md" />
+          {env('NEXT_PUBLIC_SHOW_LOCALE_BUTTON') == 'false' ? (
+            <></>
+          ) : (
+            <Group pb="sm" px="md">
+
+              <Tooltip label={t('language')}>
+                <Button leftSection={<IconLanguage size={14} />} onClick={drawerLanguageButtonOpenedToggle} fullWidth>
+                  {t('language')}
+                </Button>
+              </Tooltip>
+
+              <Collapse in={drawerLanguageButtonOpened}>
+                {languages.map((lang) => (
+                  <Button variant="transparent" key={lang.code} onClick={() => setUserLocale(lang.code)}>
+                    {lang.label}
+                  </Button>
+                ))}
+              </Collapse>
+
+            </Group>
+
+          )}
           <Group justify="center" grow pb="xl" px="md">
             {isLoggedIn ? (
               <>

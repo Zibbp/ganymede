@@ -17,6 +17,7 @@ import ChatMessage from "./ChatMessage";
 import { uuidv4 } from "@/app/util/util";
 import VideoEventBus from "@/app/util/VideoEventBus";
 import useSettingsStore from "@/app/store/useSettingsStore";
+import { useTranslations } from "next-intl";
 
 // Constants moved to top level
 const CHAT_OFFSET_SIZE = 10;
@@ -45,6 +46,7 @@ interface ChatError {
 }
 
 const ChatPlayer = ({ video }: Params) => {
+  const t = useTranslations('VideoComponents')
   const [isReady, setIsReady] = useState(false);
   const [messages, setMessages] = useState<Comment[]>([]);
   const [error, setError] = useState<ChatError | null>(null);
@@ -262,7 +264,7 @@ const ChatPlayer = ({ video }: Params) => {
   const clearChat = useCallback(() => {
     setMessagesWithScroll([]);
     internalMessagesRef.current = [];
-    addCustomComment("Time skip detected. Chat cleared.");
+    addCustomComment(t('chatTimeSkipDetected'));
   }, [addCustomComment, setMessagesWithScroll]);
 
   // Tracking processed IDs
@@ -365,11 +367,13 @@ const ChatPlayer = ({ video }: Params) => {
       });
 
       setIsReady(true);
-      addCustomComment("Chat player ready.");
+      addCustomComment(t('chatPlayerReady'));
       addCustomComment(
-        `Chat playback contains ${chatMapsRef.current.generalBadgeMap.size.toLocaleString()} badges, ` +
-        `${chatMapsRef.current.subscriptionBadgeMap.size.toLocaleString()} subscription badges, and ` +
-        `${chatMapsRef.current.emoteMap.size.toLocaleString()} emotes.`
+        t.markup('chatPlayerReadyStats', {
+          lengthBadges: chatMapsRef.current.generalBadgeMap.size.toLocaleString(),
+          lengthSubBadges: chatMapsRef.current.subscriptionBadgeMap.size.toLocaleString(),
+          lengthEmotes: chatMapsRef.current.emoteMap.size.toLocaleString(),
+        })
       );
     } catch (error) {
       handleError(error as Error, "Chat initialization");
@@ -445,10 +449,10 @@ const ChatPlayer = ({ video }: Params) => {
             <Center>
               <Loader size="xl" />
             </Center>
-            <Text mt={5}>Loading Chat Playback</Text>
+            <Text mt={5}>{t('loadingChat')}</Text>
             {error && (
               <Text size="sm">
-                Error: {error.message}
+                {t('chatError')}: {error.message}
               </Text>
             )}
           </div>
