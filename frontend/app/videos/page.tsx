@@ -30,7 +30,7 @@ const VideosPage = () => {
   });
 
   if (isPending) {
-    return <GanymedeLoadingText message="Loading Videos" />;
+    return <GanymedeLoadingText message={t('loading')} />;
   }
 
   if (isError) {

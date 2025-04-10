@@ -24,12 +24,14 @@ import videoEventBusInstance from '@/app/util/VideoEventBus';
 import DeleteVideoModalContent from '../admin/video/DeleteModalContent';
 import useAuthStore from '@/app/store/useAuthStore';
 import { UserRole } from '@/app/hooks/useAuthentication';
+import { useTranslations } from 'next-intl';
 
 type Props = {
   video: Video
 }
 
 const VideoMenu = ({ video }: Props) => {
+  const t = useTranslations('VideoComponents')
   const [infoModalOpened, { open: infoModalOpen, close: infoModalClose }] = useDisclosure(false);
   const [playlistsDrawerOpened, { open: openPlaylistDrawer, close: closePlaylistDrawer }] = useDisclosure(false);
   const axiosPrivate = useAxiosPrivate()
@@ -56,7 +58,7 @@ const VideoMenu = ({ video }: Props) => {
         videoId: video.id
       })
       showNotification({
-        message: "Video marked as watched"
+        message: t('markedAsWatchedNotification')
       })
     } catch (error) {
       console.error(error)
@@ -69,7 +71,7 @@ const VideoMenu = ({ video }: Props) => {
         videoId: video.id
       })
       showNotification({
-        message: "Video marked as unwatched"
+        message: t('markedAsUnwatchedNotification')
       })
     } catch (error) {
       console.error(error)
@@ -83,7 +85,7 @@ const VideoMenu = ({ video }: Props) => {
         locked: lock
       })
       showNotification({
-        message: `Video has been ${lock ? "locked" : "unlocked"}`
+        message: `${t('videoLockedNotification', { status: lock ? t('locked') : t('unlocked') })}}`
       })
       if (lock == true) {
         isLocked.current = true;
@@ -101,7 +103,7 @@ const VideoMenu = ({ video }: Props) => {
         videoId: video.id
       })
       showNotification({
-        message: `Queued task to generate static thumbnail`
+        message: t('generateStaticThumbnailsNotification')
       })
     } catch (error) {
       console.error(error)
@@ -114,7 +116,7 @@ const VideoMenu = ({ video }: Props) => {
         videoId: video.id
       })
       showNotification({
-        message: `Queued task to generate sprite thumbnails`
+        message: t('generateSpriteThumbnailsNotification')
       })
     } catch (error) {
       console.error(error)
@@ -141,18 +143,18 @@ const VideoMenu = ({ video }: Props) => {
     try {
       navigator.clipboard.writeText(shareUrl);
       showNotification({
-        title: "Copied to Clipboard",
-        message: "The video url has been copied to your clipboard",
+        title: t('copiedToClipboardText'),
+        message: t('copiedToClipboardMessage'),
       });
 
     } catch (err) {
       console.error(err);
       showNotification({
-        title: "Error",
-        message: "The clipboard API requires HTTPS, falling back to a prompt",
+        title: t('error'),
+        message: t('clipboardAPIErrorNotification'),
         color: "red",
       });
-      prompt("Copy to clipboard: Ctrl+C, Enter", shareUrl);
+      prompt(t('clipboardPromptText'), shareUrl);
     }
   }
 
@@ -167,35 +169,35 @@ const VideoMenu = ({ video }: Props) => {
 
         <Menu.Dropdown>
           <Menu.Item onClick={openPlaylistDrawer} leftSection={<IconPlaylistAdd style={{ width: rem(14), height: rem(14) }} />}>
-            Playlists
+            {t('menu.playlists')}
           </Menu.Item>
           <Menu.Item leftSection={<IconInfoCircle style={{ width: rem(14), height: rem(14) }} />}
             onClick={infoModalOpen}>
-            Info
+            {t('menu.info')}
           </Menu.Item>
           <Menu.Item leftSection={<IconHourglassHigh style={{ width: rem(14), height: rem(14) }} />} onClick={handleMarkAsWatched}>
-            Mark as Watched
+            {t('menu.markAsWatched')}
           </Menu.Item>
           <Menu.Item leftSection={<IconHourglassEmpty style={{ width: rem(14), height: rem(14) }} />} onClick={handleMarkAsUnWatched}>
-            Mark as Unwatched
+            {t('menu.markAsUnwatched')}
           </Menu.Item>
           {isLocked.current ? (
             <Menu.Item leftSection={<IconLockOpen style={{ width: rem(14), height: rem(14) }} />} onClick={() => handleLockVideo(false)}>
-              Unlock
+              {t('menu.unlock')}
             </Menu.Item>
           ) : (
             <Menu.Item leftSection={<IconLock style={{ width: rem(14), height: rem(14) }} />} onClick={() => handleLockVideo(true)}>
-              Lock
+              {t('menu.lock')}
             </Menu.Item>
           )}
           <Menu.Item leftSection={<IconPhoto style={{ width: rem(14), height: rem(14) }} />} onClick={handleGenerateStaticThumbnail}>
-            Regenerate Thumbnail
+            {t('menu.regenerateThumbnails')}
           </Menu.Item>
           <Menu.Item leftSection={<IconMovie style={{ width: rem(14), height: rem(14) }} />} onClick={handleGenerateSpriteThumbnails}>
-            Generate Sprite Thumbnails
+            {t('menu.generateSpriteThumbnails')}
           </Menu.Item>
           <Menu.Item leftSection={<IconShare style={{ width: rem(14), height: rem(14) }} />} onClick={handleShareVideo}>
-            Share
+            {t('menu.share')}
           </Menu.Item>
 
           {hasPermission(UserRole.Admin) && (
@@ -206,7 +208,7 @@ const VideoMenu = ({ video }: Props) => {
                 leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
                 onClick={openDeleteModal}
               >
-                Delete
+                {t('menu.delete')}
               </Menu.Item>
             </>
           )}
@@ -218,16 +220,16 @@ const VideoMenu = ({ video }: Props) => {
         opened={infoModalOpened}
         onClose={infoModalClose}
         size="xl"
-        title="Video Information"
+        title={t('videoInformationModalTitle')}
       >
         <VideoInfoModalContent video={video} />
       </Modal>
 
-      <Drawer opened={playlistsDrawerOpened} onClose={closePlaylistDrawer} position="right" title="Manage Playlists">
+      <Drawer opened={playlistsDrawerOpened} onClose={closePlaylistDrawer} position="right" title={t('managePlaylistsDrawerTitle')}>
         <PlaylistManageDrawerContent videoId={video.id} />
       </Drawer>
 
-      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Video">
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deleteVideoModalTitle')}>
         <DeleteVideoModalContent video={video} handleClose={closeDeleteModal} />
       </Modal>
     </div>

@@ -5,10 +5,12 @@
   },
   "VideosPage": {
     "title": "All Videos",
-    "error": "Error loading videos"
+    "error": "Error loading videos",
+    "loading": "Loading videos"
   },
   "VideoPage": {
-    "loading": "Loading video"
+    "loading": "Loading video",
+    "error": "Error loading video"
   },
   "SearchPage": {
     "title": "Search",
@@ -125,7 +127,9 @@
   "ChannelsPage": {
     "title": "Channels",
     "loading": "Loading channels",
-    "error": "Error loading channels"
+    "error": "Error loading channels",
+    "loadingChannel": "Loading channel",
+    "errorLoadingChannel": "Error loading channel"
   },
   "ArchivePage": {
     "title": "Archive",
@@ -636,7 +640,40 @@
     "filterByLabel": "Filter by",
     "filterByPlaceholder": "Filter by video types",
     "videosCount": "{count} videos",
-    "loginRequiredText": "You must be logged in to watch this video"
+    "loginRequiredText": "You must be logged in to watch this video",
+    "markedAsWatchedNotification": "Video marked as watched",
+    "markedAsUnwatchedNotification": "Video marked as unwatched",
+    "videoLockedNotification": "Video has been {status}.",
+    "locked": "locked",
+    "unlocked": "unlocked",
+    "generateStaticThumbnailsNotification": "Queued task to generate static thumbnails",
+    "generateSpriteThumbnailsNotification": "Queue task to generate sprite thumbnails",
+    "copiedToClipboardText": "Copied to clipboard",
+    "copiedToClipboardMessage": "The video url has been copied to your clipboard",
+    "error": "Error",
+    "clipboardAPIErrorNotification": "The clipboard API requires HTTP, falling back to a prompt",
+    "clipboardPromptText": "Copy to clipboard: Ctrl+C, Enter",
+    "menu": {
+      "playlists": "Playlists",
+      "info": "Info",
+      "markAsWatched": "Mark as Watched",
+      "markAsUnwatched": "Mark as Unwatched",
+      "unlock": "Unlock Video",
+      "lock": "Lock Video",
+      "regenerateThumbnails": "Regenerate Thumbnails",
+      "generateSpriteThumbnails": "Generate Sprite Thumbnails",
+      "share": "Share",
+      "delete": "Delete Video"
+    },
+    "videoInformationModalTitle": "Video Information",
+    "managePlaylistsDrawerTitle": "Manage Playlists",
+    "deleteVideoModalTitle": "Delete Video",
+    "theaterModeIconTooltip": "Theater Mode",
+    "sourceViewsTooltip": "source views",
+    "localViewsTooltip": "local views",
+    "streamedOnTooltip": "Streamed on",
+    "videoTypeTooltip": "Video type",
+    "videoClipsTitle": "Video Clips"
   },
   "LandingHeroComponent": {
     "subtitle": "A platform to archive live streams and videos",
