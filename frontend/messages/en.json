@@ -481,7 +481,7 @@
   "AdminVideoComponents": {
     "validation": {
       "title": "Title must have at least 1 character",
-      "extId": "External ID must have at least 1 characters",
+      "extId": "External ID must have at least 1 character",
       "channelId": "Select a channel",
       "type": "Select a video type",
       "platform": "Select a platform",
@@ -680,7 +680,7 @@
     "locked": "locked",
     "unlocked": "unlocked",
     "generateStaticThumbnailsNotification": "Queued task to generate static thumbnails",
-    "generateSpriteThumbnailsNotification": "Queue task to generate sprite thumbnails",
+    "generateSpriteThumbnailsNotification": "Queued task to generate sprite thumbnails",
     "copiedToClipboardText": "Copied to clipboard",
     "copiedToClipboardMessage": "The video url has been copied to your clipboard",
     "error": "Error",
