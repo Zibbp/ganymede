@@ -4,18 +4,26 @@
     "recentlyArchived": "Kürzlich archiviert"
   },
   "VideosPage": {
+    "pageTitle": "Videos",
     "title": "Alle Videos",
-    "error": "Fehler beim Laden der Videos"
+    "error": "Fehler beim Laden der Videos",
+    "loading": "Videos werden geladen"
   },
   "VideoPage": {
-    "loading": "Video laden"
+    "loading": "Video laden",
+    "error": "Error loading video"
   },
   "SearchPage": {
     "title": "Suche",
     "error": "Fehler beim Laden der Suchergebnisse",
     "loading": "Suchergebnisse werden geladen"
   },
+  "AuthenticationPages": {
+    "registerPageTitle": "Registrieren",
+    "loginPageTitle": "Anmelden"
+  },
   "QueuePage": {
+    "pageTitle": "Warteschlange",
     "title": "Warteschlange",
     "error": "Fehler beim Laden der Warteschlange",
     "loading": "Warteschlange wird geladen",
@@ -125,7 +133,9 @@
   "ChannelsPage": {
     "title": "Kanäle",
     "loading": "Kanäle werden geladen",
-    "error": "Fehler beim Laden der Kanäle"
+    "error": "Fehler beim Laden der Kanäle",
+    "loadingChannel": "Loading channel",
+    "errorLoadingChannel": "Error loading channel"
   },
   "ArchivePage": {
     "title": "Archiv",
@@ -379,6 +389,9 @@
     "deleteModal": "Beobachteten Kanal löschen"
   },
   "AdminBlockedVideosComponents": {
+    "validation": {
+      "id": "ID muss mindestens 2 Zeichen haben"
+    },
     "unblockedNotification": "Video freigegeben",
     "deleteConfirmText": "Bist du sicher, dass du dieses Video freigeben möchtest?",
     "deleteButton": "Video freigeben",
@@ -390,6 +403,12 @@
     "multiUnblockButton": "Videos freigeben"
   },
   "AdminChannelsComponents": {
+    "validation": {
+      "displayName": "Anzeigename muss mindestens 2 Zeichen haben",
+      "name": "Name muss mindestens 2 Zeichen haben",
+      "imagePath": "Bildpfad muss mindestens 3 Zeichen haben",
+      "channelName": "Kanalname muss mindestens 3 Zeichen haben"
+    },
     "deleteNotification": "Kanal gelöscht",
     "deleteConfirmText": "Bist du sicher, dass du diesen Kanal löschen möchtest?",
     "deleteButton": "Kanal löschen",
@@ -414,6 +433,9 @@
     "addButton": "Kanal hinzufügen"
   },
   "AdminQueueComponents": {
+    "validation": {
+      "id": "ID muss mindestens 2 Zeichen haben"
+    },
     "deleteNotification": "Warteschlange gelöscht",
     "deleteConfirmText": "Bist du sicher, dass du dieses Warteschlangen-Element löschen möchtest?",
     "deleteConfirmText2": "Diese Aktion löscht keine Dateien",
@@ -441,6 +463,10 @@
     "multiDeleteButton": "Warteschlangen-Elemente löschen"
   },
   "AdminUserComponents": {
+    "validation": {
+      "id": "ID muss mindestens 2 Zeichen haben",
+      "username": "Benutzername muss mindestens 3 Zeichen haben"
+    },
     "deleteNotification": "Benutzer gelöscht",
     "deleteConfirmText": "Bist du sicher, dass du diesen Benutzer löschen möchtest?",
     "deleteButton": "Benutzer löschen",
@@ -453,6 +479,14 @@
     "editButton": "Benutzer bearbeiten"
   },
   "AdminVideoComponents": {
+    "validation": {
+      "title": "Titel muss mindestens 1 Zeichen",
+      "extId": "Externe ID muss mindestens 1 Zeichen",
+      "channelId": "Wähle einen Kanal",
+      "type": "Wähle einen Videotyp",
+      "platform": "Wähle eine Platform",
+      "duration": "Dauer muss mindestens eine Sekunde betragen"
+    },
     "deleteNotification": "Video gelöscht",
     "deleteConfirmText": "Bist du sicher, dass du dieses Video löschen möchtest?",
     "deleteFilesLabel": "Videodateien löschen",
@@ -505,7 +539,7 @@
     "watchLiveLabel": "Live ansehen",
     "videosText": "Kanalvideos",
     "videosDescription": "Archiviere vergangene Kanalvideos.",
-    "videosOccurance": "Die Suche nach neuen Videos erfolgt einmal täglich.",
+    "videosOccurrence": "Die Suche nach neuen Videos erfolgt einmal täglich.",
     "watchVideosLabel": "Videos ansehen",
     "downloadArchivesLabel": "Vergangene Live-Streams herunterladen",
     "downloadArchivesDescription": "Vergangene Live-Streams herunterladen",
@@ -546,6 +580,141 @@
     "categoriesSearchPlaceholder": "Kategorien suchen...",
     "submitButton": "Beobachteten Kanal erstellen",
     "editButton": "Beobachteten Kanal bearbeiten"
+  },
+  "AuthComponents": {
+    "validation": {
+      "password": "Passwort muss mindestens 8 Zeichen haben"
+    },
+    "passwordChangeSuccess": "Passwort erfolgreich geändert",
+    "passwordMustMatch": "Passwörter stimmen nicht überein",
+    "currentPasswordLabel": "Aktuelles Passwort",
+    "newPasswordLabel": "Neues Passwort",
+    "confirmPasswordLabel": "Passwort bestätigen",
+    "changePasswordButton": "Passwort ändern",
+    "usernameTooShort": "Benutzername sollte mindestens 3 Zeichen haben",
+    "passwordTooShort": "Passwort sollte mindestens 8 Zeichen haben",
+    "loggedInNotification": "Erfolgreich angemeldet",
+    "errorLoggingInNotification": "Fehler beim Anmelden",
+    "registerSuccessNotification": "Erfolgreich registriert, bitte Anmelden",
+    "errorRegisteringNotification": "Fehler bei der Registrierung",
+    "welcomeText": "Willkommen bei Ganymede",
+    "ssoButton": "Single Single On (SSO)",
+    "localCredentialsLabel": "Oder mit lokalen Anmeldeinformationen fortfahren",
+    "usernameLabel": "Benutzername",
+    "usernameDescription": "Dein Benutzername",
+    "passwordLabel": "Passwort",
+    "passwordDescription": "Dein Passwort",
+    "registerLinkText": "Kein Konto? Erstelle eins",
+    "loginLinkText": "Bereits ein Konto? Anmelden",
+    "loginButton": "Anmelden",
+    "registerButton": "Registrieren",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "with": "mit"
+  },
+  "PlaylistComponents": {
+    "playlist": "Widergabeliste",
+    "edited": "bearbeitet",
+    "created": "erstellt",
+    "errorCreatingNotification": "Fehler beim Erstellen der Wiedergabeliste",
+    "nameLabel": "Name",
+    "nameDescription": "Name der Wiedergabeliste",
+    "descriptionLabel": "Beschreibung",
+    "descriptionDescription": "Beschreibung der Wiedergabeliste",
+    "createPlaylistButton": "Erstelle Wiedergabeliste",
+    "editPlaylistButton": "Wiedergabeliste bearbeiten",
+    "videoAddedToPlaylistNotification": "Video zur Wiedergabeliste hinzugefügt",
+    "videoRemovedFromPlaylistNotification": "Video von Wiedergabeliste entfernt",
+    "loading": "Lade Wiedergabelisten",
+    "errorLoading": "Fehler beim Laden der Wiedergabelisten",
+    "addVideoPlaylistsPlaceholder": "Wähle eine Wiedergabeliste",
+    "addVideoToPlaylistButton": "Füge Video zur Wiedergabeliste hinzu"
+  },
+  "QueueComponents": {
+    "restartButton": "Neustarten",
+    "logsButton": "Protokolle",
+    "chatDownloadTitle": "Chat-Datei herunterladen",
+    "chatConvertTitle": "Chat konvertieren",
+    "chatRenderTitle": "Chat rendern",
+    "chatMoveTitle": "Chat verschieben",
+    "restartQueueTaskModalTitle": "Warteschlangenaufgabe neu starten",
+    "createFolderTitle": "Ordner erstellen",
+    "saveInformationTitle": "Informationen speichern",
+    "downloadThumbnailsTitle": "Vorschaubilder herunterladen",
+    "externalPlatformVideoIdLabel": "Externe Plattform Video-ID",
+    "ganymedeVideoIdLabel": "Ganymed Video-ID",
+    "streamedAtLabel": "Gestreamt am",
+    "taskRestartedNotification": "Aufgabe neu gestartet.",
+    "continueWithSubsequentTasksLabel": "Mit nachfolgenden Aufgaben fortfahren",
+    "restartTaskButton": "Aufgabe neu starten",
+    "videoDownloadTitle": "Video herunterladen",
+    "videoConvertTitle": "Video konvertieren",
+    "videoMoveTitle": "Video verschieben"
+  },
+  "VideoComponents": {
+    "loadingInformation": "Videoinformationen werden geladen",
+    "errorLoadingInformation": "Fehler beim Laden der Videoinformationen",
+    "processingOverlayText": "Verarbeitung",
+    "watched": "angeschaut",
+    "watchedVideoText": "Dieses Video hast du bereits angesehen",
+    "lockedText": "Video ist gesperrt",
+    "streamedOnText": "Gestreamt am",
+    "loadingVideos": "Videos werden geladen",
+    "errorLoadingVideos": "Fehler beim Laden der Videos",
+    "loadingChatHistogram": "Lade Chat-Histogramm",
+    "errorLoadingChatHistogram": "Fehler beim Laden des Chat-Histogramms",
+    "chatHistogramTitle": "Chat Histogramm",
+    "chatTimeSkipDetected": "Zeitsprung erkannt. Chat geleert.",
+    "chatPlayerReady": "Chat-Player bereit",
+    "chatPlayerReadyStats": "Chat-Wiedergabe enthält {lengthBadges} Badges, {lengthSubBadges} Abonnementen-Badges und {lengthEmotes} Emotes.",
+    "loadingChat": "Lade Chat-Wiedergabe",
+    "chatError": "Fehler",
+    "filterByLabel": "Nach Kriterium filtern",
+    "filterByPlaceholder": "Nach Videoarten filtern",
+    "videosCount": "{count} Videos",
+    "loginRequiredText": "Sie müssen angemeldet sein, um dieses Video anzusehen",
+    "markedAsWatchedNotification": "Video als angesehen markiert",
+    "markedAsUnwatchedNotification": "Video als nicht angesehen markiert",
+    "videoLockedNotification": "Das Video wurde {status}.",
+    "locked": "gesperrt",
+    "unlocked": "entsperrt",
+    "generateStaticThumbnailsNotification": "Aufgabe zum Erstellen von statischen Thumbnails zur Warteschlange hinzugefügt",
+    "generateSpriteThumbnailsNotification": "Aufgabe zum Erstellen von Sprite-Thumbnails zur Warteschlange hinzugefügt",
+    "copiedToClipboardText": "In Zwischenablage kopiert",
+    "copiedToClipboardMessage": "Video-URL wurde in die Zwischenablage kopiert",
+    "error": "Fehler",
+    "clipboardAPIErrorNotification": "Die Zwischenablage-API erfordert HTTP, falle auf eine Aufforderung zurück",
+    "clipboardPromptText": "In die Zwischenablage kopieren: Ctrl+C, Enter",
+    "menu": {
+      "playlists": "Wiedergabelisten",
+      "info": "Info",
+      "markAsWatched": "Als angesehen markieren",
+      "markAsUnwatched": "Als nicht angesehen markieren",
+      "unlock": "Video entsperren",
+      "lock": "Video sperren",
+      "regenerateThumbnails": "Thumbnails neu erstellen",
+      "generateSpriteThumbnails": "Sprite-Thumbnails erstellen",
+      "share": "Teilen",
+      "delete": "Video löschen"
+    },
+    "videoInformationModalTitle": "Videoinformationen",
+    "managePlaylistsDrawerTitle": "Wiedergabelisten verwalten",
+    "deleteVideoModalTitle": "Video löschen",
+    "theaterModeIconTooltip": "Theater Mode",
+    "sourceViewsTooltip": "Quell-views",
+    "localViewsTooltip": "Lokale views",
+    "streamedOnTooltip": "Gestreamt am",
+    "videoTypeTooltip": "Videotyp",
+    "videoClipsTitle": "Video-Clips"
+  },
+  "MultistreamComponents": {
+    "seekBackTooltip": "{seconds} Sekunden zurückspringen",
+    "seekForwardTooltip": "Vorwärtsspringen um {seconds} Sekunden",
+    "pause": "Pause",
+    "play": "Abspielen",
+    "offset": "Versatz",
+    "gridWidth": "Gitterbreite",
+    "gridHeight": "Gitterhöhe"
   },
   "LandingHeroComponent": {
     "subtitle": "Eine Plattform zum Archivieren von Live-Streams und Videos",
