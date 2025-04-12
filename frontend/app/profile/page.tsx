@@ -7,12 +7,11 @@ import useSettingsStore from "../store/useSettingsStore";
 import { useDisclosure } from "@mantine/hooks";
 import AuthChangePassword from "../components/auth/ChangePassword";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "../util/util";
 
 const ProfilePage = () => {
   const t = useTranslations("ProfilePage");
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'));
   const { user, isLoading, isLoggedIn } = useAuthStore()
   const router = useRouter();
 

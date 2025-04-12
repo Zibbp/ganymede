@@ -14,13 +14,12 @@ import { useBlockVideo } from "../hooks/useBlockedVideos";
 import { useQueryClient } from "@tanstack/react-query";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "../util/util";
 
 const QueuePage = () => {
-  useEffect(() => {
-    document.title = "Queue";
-  }, []);
-
   const t = useTranslations("QueuePage");
+  usePageTitle(t('pageTitle'))
+
 
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);

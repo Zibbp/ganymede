@@ -18,20 +18,20 @@ export enum ChannelEditMode {
   Edit = "edit",
 }
 
-const schema = z.object({
-  display_name: z.string().min(2, { message: "Display name should have at least 2 characters" }),
-  name: z.string().min(2, { message: "Name should have at least 2 characters" }),
-  image_path: z.string().min(3, { message: "Image path should have at least 3 characters" }),
-  retention: z.boolean(),
-  retention_days: z.number().min(1)
-})
-
 const AdminChannelDrawerContent = ({ channel, mode, handleClose }: Props) => {
   const t = useTranslations('AdminChannelsComponents')
   const axiosPrivate = useAxiosPrivate()
   const useCreateChannelMutate = useCreateChannel()
   const useEditChannelMutate = useEditChannel()
   const useUpdateChannelImageMutate = useUpdateChannelImage()
+
+  const schema = z.object({
+    display_name: z.string().min(2, { message: t('validation.displayName') }),
+    name: z.string().min(2, { message: t('validation.name') }),
+    image_path: z.string().min(3, { message: t('validation.imagePath') }),
+    retention: z.boolean(),
+    retention_days: z.number().min(1)
+  })
 
   const form = useForm({
     mode: "controlled",

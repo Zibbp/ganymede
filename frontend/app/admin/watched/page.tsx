@@ -12,12 +12,11 @@ import classes from "./AdminWatchedChannelsPage.module.css"
 import AdminWatchedChannelDrawerContent, { WatchedChannelEditMode } from "@/app/components/admin/watched/DrawerContent";
 import DeleteWatchedChannelModalContent from "@/app/components/admin/watched/DeleteModalContent";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "@/app/util/util";
 
 const AdminWatchChannelsPage = () => {
   const t = useTranslations('AdminWatchedChannelsPage')
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'))
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<WatchedChannel[]>([]);

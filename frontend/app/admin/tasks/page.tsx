@@ -7,12 +7,11 @@ import { IconPlayerPlay } from "@tabler/icons-react";
 import { Task, useStartTask } from "@/app/hooks/useTasks";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "@/app/util/util";
 
 const AdminTasksPage = () => {
   const t = useTranslations('AdminTasksPage')
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'))
   const axiosPrivate = useAxiosPrivate()
   const [loading, setLoading] = useState(false)
 

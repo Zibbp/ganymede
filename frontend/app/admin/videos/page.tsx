@@ -14,12 +14,11 @@ import AdminVideoDrawerContent, { VideoEditMode } from "@/app/components/admin/v
 import DeleteVideoModalContent from "@/app/components/admin/video/DeleteModalContent";
 import MultiDeleteVideoModalContent from "@/app/components/admin/video/MultiDeleteModalContent";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "@/app/util/util";
 
 const AdminVideosPage = () => {
   const t = useTranslations('AdminVideosPage')
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'))
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<Video[]>([]);

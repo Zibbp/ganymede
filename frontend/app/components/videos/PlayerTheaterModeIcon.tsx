@@ -2,8 +2,10 @@ import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconMaximize } from "@tabler/icons-react";
 import classes from "./PlayerTheaterModeIcon.module.css"
 import useSettingsStore from "@/app/store/useSettingsStore";
+import { useTranslations } from "next-intl";
 
 const VideoPlayerTheaterModeIcon = () => {
+  const t = useTranslations("VideoComponents")
   const { setVideoTheaterMode } = useSettingsStore()
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
 
@@ -12,7 +14,7 @@ const VideoPlayerTheaterModeIcon = () => {
   };
   return (
     <div className={classes.theaterIcon}>
-      <Tooltip label="Theater Mode" position="bottom">
+      <Tooltip label={t('theaterModeIconTooltip')} position="bottom">
         <ActionIcon
           size="xl"
           variant="transparent"

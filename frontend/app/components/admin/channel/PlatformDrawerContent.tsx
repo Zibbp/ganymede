@@ -11,15 +11,15 @@ type Props = {
   handleClose: () => void;
 }
 
-const schema = z.object({
-  channel_name: z.string().min(2, { message: "Channel name should have at least 2 characters" })
-})
-
 const PlatformChannelDrawerContent = ({ handleClose }: Props) => {
   const t = useTranslations('AdminChannelsComponents')
   const useArchiveChannelMutate = useArchiveChannel()
   const axiosPrivate = useAxiosPrivate()
   const [loading, setLoading] = useState(false)
+
+  const schema = z.object({
+    channel_name: z.string().min(2, { message: t('validation.channelName') })
+  })
 
   const form = useForm({
     mode: "controlled",

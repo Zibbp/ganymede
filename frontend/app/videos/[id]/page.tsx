@@ -58,7 +58,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
     return <GanymedeLoadingText message={t('loading')} />
   }
   if (isError) {
-    return <div>Error loading video</div>
+    return <div>{t('error')}</div>
   }
 
 
