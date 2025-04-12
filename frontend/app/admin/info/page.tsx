@@ -7,12 +7,11 @@ import Link from "next/link";
 import classes from "./AdminInformationPage.module.css"
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "@/app/util/util";
 
 const AdminInformationPage = () => {
   const t = useTranslations("AdminInformationPage");
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'));
   const axiosPrivate = useAxiosPrivate()
 
   const { data, isPending, isError } = useGetGanymedeInformation(axiosPrivate)

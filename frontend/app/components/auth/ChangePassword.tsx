@@ -6,12 +6,6 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
 
-const schema = z.object({
-  password: z.string().min(8, { message: "Password should have at least 8 characters" }),
-  new_password: z.string().min(8, { message: "Password should have at least 8 characters" }),
-  confirm_new_password: z.string().min(8, { message: "Password should have at least 8 characters" })
-})
-
 type Props = {
   handleClose: () => void;
 }
@@ -19,6 +13,13 @@ type Props = {
 const AuthChangePassword = ({ handleClose }: Props) => {
   const t = useTranslations('AuthComponents')
   const [loading, setLoading] = useState(false)
+
+  const schema = z.object({
+    password: z.string().min(8, { message: t('validation.password') }),
+    new_password: z.string().min(8, { message: t('validation.password') }),
+    confirm_new_password: z.string().min(8, { message: t('validation.password') })
+  })
+
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {

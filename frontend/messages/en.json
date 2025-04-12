@@ -4,6 +4,7 @@
     "recentlyArchived": "Recently Archived"
   },
   "VideosPage": {
+    "pageTitle": "Videos",
     "title": "All Videos",
     "error": "Error loading videos",
     "loading": "Loading videos"
@@ -17,7 +18,12 @@
     "error": "Error loading search results",
     "loading": "Loading search results"
   },
+  "AuthenticationPages": {
+    "registerPageTitle": "Register",
+    "loginPageTitle": "Login"
+  },
   "QueuePage": {
+    "pageTitle": "Queue",
     "title": "Queue",
     "error": "Error loading queue",
     "loading": "Loading queue",
@@ -383,6 +389,9 @@
     "deleteModal": "Delete Watched Channel"
   },
   "AdminBlockedVideosComponents": {
+    "validation": {
+      "id": "ID must have at least 2 characters"
+    },
     "unblockedNotification": "Video unblocked",
     "deleteConfirmText": "Are you sure you want to unblock this video?",
     "deleteButton": "Unblock Video",
@@ -394,6 +403,12 @@
     "multiUnblockButton": "Unblock Videos"
   },
   "AdminChannelsComponents": {
+    "validation": {
+      "displayName": "Display name must have at least 2 characters",
+      "name": "Name must have at least 2 characters",
+      "imagePath": "Image path must have at least 3 characters",
+      "channelName": "Channel name must have at least 2 characters"
+    },
     "deleteNotification": "Channel deleted",
     "deleteConfirmText": "Are you sure you want to delete this channel?",
     "deleteButton": "Delete Channel",
@@ -418,6 +433,9 @@
     "addButton": "Add Channel"
   },
   "AdminQueueComponents": {
+    "validation": {
+      "id": "ID must have at least 2 characters"
+    },
     "deleteNotification": "Queue delete",
     "deleteConfirmText": "Are you sure you want to delete this queue item?",
     "deleteConfirmText2": "This action does not delete any files",
@@ -445,6 +463,10 @@
     "multiDeleteButton": "Delete Queue Items"
   },
   "AdminUserComponents": {
+    "validation": {
+      "id": "ID must have at least 2 characters",
+      "username": "Username must have at least 3 characters"
+    },
     "deleteNotification": "User deleted",
     "deleteConfirmText": "Are you sure you want to delete this user?",
     "deleteButton": "Delete User",
@@ -457,6 +479,14 @@
     "editButton": "Edit User"
   },
   "AdminVideoComponents": {
+    "validation": {
+      "title": "Title must have at least 1 character",
+      "extId": "External ID must have at least 1 characters",
+      "channelId": "Select a channel",
+      "type": "Select a video type",
+      "platform": "Select a platform",
+      "duration": "Duration must be at least 1 second"
+    },
     "deleteNotification": "Video deleted",
     "deleteConfirmText": "Are you sure you want to delete this video?",
     "deleteFilesLabel": "Delete video files",
@@ -552,6 +582,9 @@
     "editButton": "Edit Watched Channel"
   },
   "AuthComponents": {
+    "validation": {
+      "password": "Password must have at least 8 characters"
+    },
     "passwordChangeSuccess": "Password changed successfully",
     "passwordMustMatch": "Passwords do not match",
     "currentPasswordLabel": "Current Password",
@@ -674,6 +707,15 @@
     "streamedOnTooltip": "Streamed on",
     "videoTypeTooltip": "Video type",
     "videoClipsTitle": "Video Clips"
+  },
+  "MultistreamComponents": {
+    "seekBackTooltip": "Seek back {seconds} seconds",
+    "seekForwardTooltip": "Seek forward {seconds} seconds",
+    "pause": "Pause",
+    "play": "Play",
+    "offset": "Offset",
+    "gridWidth": "Grid width",
+    "gridHeight": "Grid height"
   },
   "LandingHeroComponent": {
     "subtitle": "A platform to archive live streams and videos",

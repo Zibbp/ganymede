@@ -1,20 +1,16 @@
 'use client';
-import { Center, Container, SimpleGrid, Title } from "@mantine/core";
-import ChannelCard from "../components/channel/Card";
-import { useFetchChannels } from "../hooks/useChannels";
+import { Center, Container, Title } from "@mantine/core";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import { useEffect, useState } from "react";
 import { useFetchVideosFilter, VideoType } from "../hooks/useVideos";
 import useSettingsStore from "../store/useSettingsStore";
 import VideoGrid from "../components/videos/Grid";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "../util/util";
 
 const VideosPage = () => {
-  useEffect(() => {
-    document.title = "Videos";
-  }, []);
-
   const t = useTranslations("VideosPage");
+  usePageTitle(t('title'));
 
   const [activePage, setActivePage] = useState(1);
   const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);

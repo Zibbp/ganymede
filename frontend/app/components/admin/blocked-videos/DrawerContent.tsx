@@ -11,14 +11,14 @@ type Props = {
   handleClose: () => void;
 }
 
-const schema = z.object({
-  id: z.string().min(1, { message: "ID should have at least 2 characters" }),
-})
-
 const AdminBlockedVideosDrawerContent = ({ blockedVideo, handleClose }: Props) => {
   const t = useTranslations('AdminBlockedVideosComponents')
   const axiosPrivate = useAxiosPrivate()
   const useBlockVideoMutate = useBlockVideo()
+
+  const schema = z.object({
+    id: z.string().min(1, { message: t('validation.id') }),
+  })
 
   const form = useForm({
     mode: "controlled",

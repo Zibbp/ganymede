@@ -7,6 +7,7 @@ import { showNotification } from "@mantine/notifications";
 import { useArchiveVideo, VideoQuality } from "../hooks/useArchive";
 import { useAxiosPrivate } from "../hooks/useAxios";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "../util/util";
 
 interface SelectOption {
   label: string;
@@ -49,9 +50,7 @@ function extractTwitchId(input: string): string {
 const ArchivePage = () => {
   const t = useTranslations("ArchivePage");
 
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'));
 
   // State management with proper typing
   const [archiveInput, setArchiveInput] = useInputState("");

@@ -12,6 +12,7 @@ import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { Channel, useFetchChannels } from "@/app/hooks/useChannels"
 import { showNotification } from "@mantine/notifications"
 import { useTranslations } from "next-intl"
+import { usePageTitle } from "@/app/util/util"
 
 interface SelectOption {
   label: string;
@@ -20,9 +21,7 @@ interface SelectOption {
 
 const AdminSettingsPage = () => {
   const t = useTranslations('AdminSettingsPage');
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'))
   const [notificationsOpened, { toggle: toggleNotifications }] = useDisclosure(false);
   const [storageTemplateOpened, { toggle: toggleStorageTemplate }] = useDisclosure(false);
   const [channelSelect, setChannelSelect] = useState<SelectOption[]>([]);

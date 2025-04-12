@@ -13,18 +13,17 @@ type Props = {
   handleClose: () => void;
 }
 
-
-const schema = z.object({
-  id: z.string().min(2, { message: "ID should have at least 2 characters" }).max(50),
-  username: z.string().min(3, { message: "Username should have at least 3 characters" }),
-  role: z.nativeEnum(UserRole)
-})
-
 const AdminUserDrawerContent = ({ user, handleClose }: Props) => {
   const t = useTranslations('AdminUserComponents')
   const axiosPrivate = useAxiosPrivate()
   const useEditUserMutate = useEditUser()
   const [loading, setLoading] = useState(false)
+
+  const schema = z.object({
+    id: z.string().min(2, { message: t('validation.id') }).max(50),
+    username: z.string().min(3, { message: t('validation.username') }),
+    role: z.nativeEnum(UserRole)
+  })
 
   const form = useForm({
     mode: "controlled",
