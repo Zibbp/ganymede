@@ -174,7 +174,7 @@ const AdminVideosPage = () => {
         );
 
         showNotification({
-          message: `${t('videosLockedNotification', { status: locked ? t('locked') : t('unlocked') })}}`
+          message: `${t('videosLockedNotification', { status: locked ? t('locked') : t('unlocked') })}`
         });
       }
     } catch (error) {
