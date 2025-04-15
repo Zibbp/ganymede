@@ -1,5 +1,5 @@
 "use client"
-import { ActionIcon, Container, Group, TextInput, Text, Title, Box, Button, Drawer, Modal, Tooltip, Flex } from "@mantine/core";
+import { ActionIcon, Container, Group, TextInput, Text, Title, Box, Button, Drawer, Modal, Tooltip, Flex, Menu } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useState } from "react";
@@ -9,16 +9,20 @@ import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
 import classes from "./AdminVideosPage.module.css"
-import { useGetVideosNoPaginate, Video } from "@/app/hooks/useVideos";
+import { useGetVideosNoPaginate, useLockVideo, Video } from "@/app/hooks/useVideos";
 import AdminVideoDrawerContent, { VideoEditMode } from "@/app/components/admin/video/DrawerContent";
 import DeleteVideoModalContent from "@/app/components/admin/video/DeleteModalContent";
 import MultiDeleteVideoModalContent from "@/app/components/admin/video/MultiDeleteModalContent";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "@/app/util/util";
+import { useDeletePlayback, useMarkVideoAsWatched } from "@/app/hooks/usePlayback";
+import { useAxiosPrivate } from "@/app/hooks/useAxios";
+import { showNotification } from "@mantine/notifications";
 
 const AdminVideosPage = () => {
   const t = useTranslations('AdminVideosPage')
   usePageTitle(t('title'))
+  const axiosPrivate = useAxiosPrivate()
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<Video[]>([]);
@@ -36,8 +40,11 @@ const AdminVideosPage = () => {
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
   const [multiDeleteModalOpened, { open: openMultiDeleteModal, close: closeMultiDeleteModal }] = useDisclosure(false);
   const [activeVideos, setActiveVideos] = useState<Video[] | null>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState<boolean>(false);
 
-
+  const markAsWatchedMutate = useMarkVideoAsWatched()
+  const deletePlaybackMutate = useDeletePlayback()
+  const lockVideoMutate = useLockVideo()
 
   const { data: videos, isPending, isError } = useGetVideosNoPaginate()
 
@@ -90,6 +97,97 @@ const AdminVideosPage = () => {
     setActiveVideos([])
   }
 
+  // Bulk mark videos as watched
+  const handleMarkVideosAsWatched = async () => {
+    try {
+      setBulkActionLoading(true);
+
+      if (activeVideos && activeVideos.length > 0) {
+        await Promise.all(
+          activeVideos.map((video) =>
+            markAsWatchedMutate.mutateAsync({
+              axiosPrivate,
+              videoId: video.id,
+            })
+          )
+        );
+
+        showNotification({
+          message: t('markedVideosAsWatchedNotification')
+        });
+      }
+    } catch (error) {
+      showNotification({
+        title: t('notificationError'),
+        message: error instanceof Error ? error.message : String(error),
+      });
+      console.error(error);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  // Bulk mark videos as unwatched
+  const handleMarkVideosAsUnWatched = async () => {
+    try {
+      setBulkActionLoading(true);
+
+      if (activeVideos && activeVideos.length > 0) {
+        await Promise.all(
+          activeVideos.map((video) =>
+            deletePlaybackMutate.mutateAsync({
+              axiosPrivate,
+              videoId: video.id,
+            })
+          )
+        );
+
+        showNotification({
+          message: t('markedVideosAsUnWatchedNotification')
+        });
+      }
+    } catch (error) {
+      showNotification({
+        title: t('notificationError'),
+        message: error instanceof Error ? error.message : String(error),
+      });
+      console.error(error);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  // Bulk mark videos as locked or unlocked
+  const handleLockVideos = async (locked: boolean) => {
+    try {
+      setBulkActionLoading(true);
+
+      if (activeVideos && activeVideos.length > 0) {
+        await Promise.all(
+          activeVideos.map((video) =>
+            lockVideoMutate.mutateAsync({
+              axiosPrivate,
+              videoId: video.id,
+              locked: locked
+            })
+          )
+        );
+
+        showNotification({
+          message: `${t('videosLockedNotification', { status: locked ? t('locked') : t('unlocked') })}}`
+        });
+      }
+    } catch (error) {
+      showNotification({
+        title: t('notificationError'),
+        message: error instanceof Error ? error.message : String(error),
+      });
+      console.error(error);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
   if (isPending) return (
     <GanymedeLoadingText message={t('loading')} />
   )
@@ -102,22 +200,46 @@ const AdminVideosPage = () => {
           <Title>{t('header')}</Title>
           <Box>
             {(activeVideos && activeVideos.length >= 1) && (
-              <Button
-                mx={10}
-                leftSection={<IconTrash size={16} />}
-                color="red"
-                disabled={!activeVideos.length}
-                onClick={() => {
-                  openMultiDeleteModal();
-                }}
-              >
-                {activeVideos.length
-                  ? `${t('delete.delete')} ${activeVideos.length === 1
-                    ? t('delete.one')
-                    : `${activeVideos.length} ${t('delete.many')}`
-                  }`
-                  : t('delete.select')}
-              </Button>
+              <>
+                <Menu shadow="md" width={200}>
+                  <Menu.Target>
+                    <Button loading={bulkActionLoading}>{t('bulkActionsButton')}</Button>
+                  </Menu.Target>
+
+                  <Menu.Dropdown>
+                    <Menu.Item onClick={handleMarkVideosAsWatched}>
+                      {t('bulkActionMenu.markAsWatched')}
+                    </Menu.Item>
+                    <Menu.Item onClick={handleMarkVideosAsUnWatched}>
+                      {t('bulkActionMenu.markAsUnwatched')}
+                    </Menu.Item>
+                    <Menu.Item onClick={() => handleLockVideos(true)}>
+                      {t('bulkActionMenu.lock')}
+                    </Menu.Item>
+                    <Menu.Item onClick={() => handleLockVideos(false)}>
+                      {t('bulkActionMenu.unlock')}
+                    </Menu.Item>
+
+                  </Menu.Dropdown>
+                </Menu>
+
+                <Button
+                  mx={10}
+                  leftSection={<IconTrash size={16} />}
+                  color="red"
+                  disabled={!activeVideos.length}
+                  onClick={() => {
+                    openMultiDeleteModal();
+                  }}
+                >
+                  {activeVideos.length
+                    ? `${t('delete.delete')} ${activeVideos.length === 1
+                      ? t('delete.one')
+                      : `${activeVideos.length} ${t('delete.many')}`
+                    }`
+                    : t('delete.select')}
+                </Button>
+              </>
             )}
 
             <Button
@@ -129,7 +251,7 @@ const AdminVideosPage = () => {
               mr={5}
               variant="default"
             >
-              ${t('manuallyAddButton')}
+              {t('manuallyAddButton')}
             </Button>
           </Box>
         </Group>
@@ -260,7 +382,7 @@ const AdminVideosPage = () => {
         )}
       </Modal>
 
-    </div>
+    </div >
   );
 }
 

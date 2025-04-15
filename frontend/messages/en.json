@@ -367,7 +367,20 @@
     },
     "drawer": "Video",
     "deleteModal": "Delete Video",
-    "multiDeleteModal": "Delete Videos"
+    "multiDeleteModal": "Delete Videos",
+    "bulkActionsButton": "Bulk Actions",
+    "notificationError": "Error",
+    "markedVideosAsWatchedNotification": "Marked videos as watched",
+    "markedVideosAsUnWatchedNotification": "Marked videos as unwatched",
+    "videosLockedNotification": "Videos have been {status}",
+    "locked": "locked",
+    "unlocked": "unlocked",
+    "bulkActionMenu": {
+      "markAsWatched": "Mark as watched",
+      "markAsUnwatched": "Mark was unwatched",
+      "lock": "Lock videos",
+      "unlock": "Unlock videos"
+    }
   },
   "AdminWatchedChannelsPage": {
     "title": "Admin - Watched Channels",
