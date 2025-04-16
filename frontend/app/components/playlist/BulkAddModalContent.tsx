@@ -1,15 +1,16 @@
-import { useAddVideoToPlaylist, useGetPlaylists, useRemoveVideoFromPlaylist } from "@/app/hooks/usePlaylist";
-import { useGetPlaylistsForVideo } from "@/app/hooks/useVideos";
+import { useAddVideoToPlaylist, useGetPlaylists } from "@/app/hooks/usePlaylist";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";
-import { ActionIcon, Button, Divider, Flex, Text, Select } from "@mantine/core";
+import { Button, Select } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { showNotification } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
-import { IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { Video } from "@/app/hooks/useVideos";
+
 interface Params {
-  videoId: string;
+  videos: Video[];
+  handleClose: () => void;
 }
 
 interface FormattedPlaylist {
@@ -17,18 +18,16 @@ interface FormattedPlaylist {
   value: string;
 }
 
-const PlaylistManageDrawerContent = ({ videoId }: Params) => {
+const PlaylistBulkAddModalContent = ({ videos, handleClose }: Params) => {
   const t = useTranslations('PlaylistComponents')
   const [playlistsFormatted, setPlaylistsFormatted] = useState<FormattedPlaylist[]>([]);
   const [selectedPlaylistValue, setSelectedPlaylistValue] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false)
   const queryClient = useQueryClient()
 
   const axiosPrivate = useAxiosPrivate();
 
   const useAddVideoToPlaylistMutate = useAddVideoToPlaylist()
-  const useRemoveVideoFromPlaylistMutate = useRemoveVideoFromPlaylist()
-
-  const { data: videoPlaylists, isPending: isVideoPlaylistsPending, isError: isVideoPlaylistsError } = useGetPlaylistsForVideo(videoId)
 
   const { data: playlists, isPending: isPlaylistsPending, isError: isPlaylistsError } = useGetPlaylists()
 
@@ -50,40 +49,40 @@ const PlaylistManageDrawerContent = ({ videoId }: Params) => {
   const addVideoToPlayist = async () => {
     if (!selectedPlaylistValue) return;
     try {
-      await useAddVideoToPlaylistMutate.mutateAsync({ axiosPrivate, playlistId: selectedPlaylistValue, videoId: videoId })
+      setLoading(true)
+      if (videos && videos.length > 0) {
+        await Promise.all(
+          videos.map((video) =>
+            useAddVideoToPlaylistMutate.mutateAsync({ axiosPrivate, playlistId: selectedPlaylistValue, videoId: video.id })
+          )
+        )
+      }
 
       queryClient.invalidateQueries({ queryKey: ["playlist_videos"] })
 
       showNotification({
-        message: t('videoAddedToPlaylistNotification')
+        message: t('videosAddedToPlaylistNotification')
       })
 
-
+      handleClose()
     } catch (error) {
-      console.error(error)
-    }
-  }
-
-  const removeVideoFromPlaylist = async (playlistId: string) => {
-    try {
-      await useRemoveVideoFromPlaylistMutate.mutateAsync({ axiosPrivate, playlistId: playlistId, videoId: videoId })
-
-      queryClient.invalidateQueries({ queryKey: ["playlist_videos"] })
-
       showNotification({
-        message: t('videoRemovedFromPlaylistNotification')
-      })
-    } catch (error) {
-      console.error(error)
+        title: t('notificationError'),
+        message: error instanceof Error ? error.message : String(error),
+      });
+      console.error(error);
+    } finally {
+      setLoading(false)
     }
   }
 
 
-  if (isVideoPlaylistsPending || isPlaylistsPending) {
+
+  if (isPlaylistsPending) {
     return <GanymedeLoadingText message={t('loading')} />;
   }
 
-  if (isVideoPlaylistsError || isPlaylistsError) {
+  if (isPlaylistsError) {
     return <div>{t('errorLoading')}</div>;
   }
 
@@ -98,25 +97,10 @@ const PlaylistManageDrawerContent = ({ videoId }: Params) => {
         w="100%"
       />
 
-      <Button mt={10} onClick={addVideoToPlayist} fullWidth>{t('addVideoToPlaylistButton')}</Button>
-
-      <Divider my="md" />
-
-      {videoPlaylists.map((playlist) => (
-        <div key={playlist.id}>
-
-          <Flex>
-            <ActionIcon variant="light" color="red" aria-label="Settings" mr={5} my={5} onClick={() => removeVideoFromPlaylist(playlist.id)}>
-              <IconTrash style={{ width: '70%', height: '70%' }} stroke={1.5} />
-            </ActionIcon>
-            <Text>{playlist.name}</Text>
-          </Flex>
-
-        </div>
-      ))}
+      <Button mt={10} onClick={addVideoToPlayist} loading={loading} fullWidth>{t('addVideosToPlaylistButton')}</Button>
 
     </div>
   );
 }
 
-export default PlaylistManageDrawerContent;
+export default PlaylistBulkAddModalContent;
