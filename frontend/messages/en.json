@@ -379,8 +379,10 @@
       "markAsWatched": "Mark as watched",
       "markAsUnwatched": "Mark was unwatched",
       "lock": "Lock videos",
-      "unlock": "Unlock videos"
-    }
+      "unlock": "Unlock videos",
+      "playlist": "Add videos to playlist"
+    },
+    "addVideosToPlaylistModalTitle": "Add Videos to Playlist"
   },
   "AdminWatchedChannelsPage": {
     "title": "Admin - Watched Channels",
@@ -641,7 +643,10 @@
     "loading": "Loading playlists",
     "errorLoading": "Error loading playlists",
     "addVideoPlaylistsPlaceholder": "Select Playlist",
-    "addVideoToPlaylistButton": "Add Video to Playlist"
+    "addVideoToPlaylistButton": "Add video to playlist",
+    "videosAddedToPlaylistNotification": "Videos added to playlist",
+    "notificationError": "Error",
+    "addVideosToPlaylistButton": "Add videos to playlist"
   },
   "QueueComponents": {
     "restartButton": "restart",

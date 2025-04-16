@@ -18,6 +18,7 @@ import { usePageTitle } from "@/app/util/util";
 import { useDeletePlayback, useMarkVideoAsWatched } from "@/app/hooks/usePlayback";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { showNotification } from "@mantine/notifications";
+import PlaylistBulkAddModalContent from "@/app/components/playlist/BulkAddModalContent";
 
 const AdminVideosPage = () => {
   const t = useTranslations('AdminVideosPage')
@@ -39,6 +40,7 @@ const AdminVideosPage = () => {
   const [videoDrawerOpened, { open: openVideoDrawer, close: closeVideoDrawer }] = useDisclosure(false);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
   const [multiDeleteModalOpened, { open: openMultiDeleteModal, close: closeMultiDeleteModal }] = useDisclosure(false);
+  const [multiVideoPlaylistModal, { open: openMultiVideoPlaylistModal, close: closeMultiVideoPlaylistModal }] = useDisclosure(false);
   const [activeVideos, setActiveVideos] = useState<Video[] | null>([]);
   const [bulkActionLoading, setBulkActionLoading] = useState<boolean>(false);
 
@@ -95,6 +97,10 @@ const AdminVideosPage = () => {
   const handleMultiDeleteModalCallback = () => {
     closeMultiDeleteModal()
     setActiveVideos([])
+  }
+
+  const handleMultiVideoPlaylistModalCallback = () => {
+    closeMultiVideoPlaylistModal()
   }
 
   // Bulk mark videos as watched
@@ -219,6 +225,10 @@ const AdminVideosPage = () => {
                     <Menu.Item onClick={() => handleLockVideos(false)}>
                       {t('bulkActionMenu.unlock')}
                     </Menu.Item>
+                    <Menu.Item onClick={() => openMultiVideoPlaylistModal()}>
+                      {t('bulkActionMenu.playlist')}
+                    </Menu.Item>
+
 
                   </Menu.Dropdown>
                 </Menu>
@@ -379,6 +389,12 @@ const AdminVideosPage = () => {
       <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title={t('multiDeleteModal')}>
         {activeVideos && (
           <MultiDeleteVideoModalContent videos={activeVideos} handleClose={handleMultiDeleteModalCallback} />
+        )}
+      </Modal>
+
+      <Modal opened={multiVideoPlaylistModal} onClose={closeMultiVideoPlaylistModal} title={t('addVideosToPlaylistModalTitle')}>
+        {activeVideos && (
+          <PlaylistBulkAddModalContent videos={activeVideos} handleClose={handleMultiVideoPlaylistModalCallback} />
         )}
       </Modal>
 
