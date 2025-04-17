@@ -305,7 +305,7 @@
     "taskStartedNotification": "Task started, see container logs for more information.",
     "header": "Tasks",
     "startTaskButton": "Start Task",
-    "checkWatchedChannelsLive": "Check watched channels ofr live streams to archive",
+    "checkWatchedChannelsLive": "Check watched channels for live streams to archive",
     "checkWatchedChannelsLiveDescription": "Occurs at interval set in the config.",
     "checkWatchedChannelsVideo": "Check watched channels for new videos to archive",
     "checkWatchedChannelsVideoDescription": "Occurs at interval set in the config.",
