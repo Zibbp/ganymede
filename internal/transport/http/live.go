@@ -32,7 +32,7 @@ type AddWatchedChannelRequest struct {
 	DownloadSubOnly        bool                `json:"download_sub_only" validate:"boolean"`
 	Categories             []string            `json:"categories"`
 	ApplyCategoriesToLive  bool                `json:"apply_categories_to_live" validate:"boolean"`
-	VideoAge               int64               `json:"video_age"` // retrict fetching videos to a certain age
+	VideoAge               int64               `json:"video_age"` // restrict fetching videos to a certain age
 	Regex                  []AddLiveTitleRegex `json:"regex"`
 	WatchClips             bool                `json:"watch_clips" validate:"boolean"`
 	ClipsLimit             int                 `json:"clips_limit" validate:"number,gte=1"`

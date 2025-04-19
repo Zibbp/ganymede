@@ -22,6 +22,7 @@ import (
 	entChapter "github.com/zibbp/ganymede/ent/chapter"
 	entMutedSegment "github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playlist"
+	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/cache"
 	"github.com/zibbp/ganymede/internal/chat"
@@ -303,29 +304,33 @@ func (s *Service) CheckVodExists(extID string) (bool, error) {
 	return true, nil
 }
 
-func (s *Service) SearchVods(c echo.Context, term string, limit int, offset int, types []utils.VodType) (Pagination, error) {
+func (s *Service) SearchVods(ctx context.Context, limit int, offset int, types []utils.VodType, predicates []predicate.Vod) (Pagination, error) {
 
 	var pagination Pagination
 
-	queryBuilder := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term)).Order(ent.Desc(vod.FieldStreamedAt)).WithChannel().Limit(limit).Offset(offset)
+	queryBuilder := s.Store.Client.Vod.Query().
+		Where(vod.Or(predicates...)).
+		Order(ent.Desc(vod.FieldStreamedAt)).
+		WithChannel().
+		Limit(limit).
+		Offset(offset)
 
 	if len(types) > 0 {
 		queryBuilder = queryBuilder.Where(vod.TypeIn(types...))
 	}
 
-	v, err := queryBuilder.All(c.Request().Context())
+	vods, err := queryBuilder.All(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("error searching vods")
 		return pagination, fmt.Errorf("error searching vods: %v", err)
 	}
 
-	countQueryBuilder := s.Store.Client.Vod.Query().Where(vod.TitleContainsFold(term))
-
+	countQuery := s.Store.Client.Vod.Query().Where(vod.Or(predicates...))
 	if len(types) > 0 {
-		countQueryBuilder = countQueryBuilder.Where(vod.TypeIn(types...))
+		countQuery = countQuery.Where(vod.TypeIn(types...))
 	}
 
-	totalCount, err := countQueryBuilder.Count(c.Request().Context())
+	totalCount, err := countQuery.Count(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting total vod count")
 		return pagination, fmt.Errorf("error getting total vod count: %v", err)
@@ -335,7 +340,7 @@ func (s *Service) SearchVods(c echo.Context, term string, limit int, offset int,
 	pagination.Limit = limit
 	pagination.Offset = offset
 	pagination.Pages = int(math.Ceil(float64(totalCount) / float64(limit)))
-	pagination.Data = v
+	pagination.Data = vods
 
 	return pagination, nil
 }
