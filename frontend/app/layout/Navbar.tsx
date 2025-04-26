@@ -190,12 +190,14 @@ export function Navbar() {
             onKeyUp={(e) => {
               if (e.key === "Enter" && searchQuery) {
                 router.push(`/search?q=${encodeURI(searchQuery)}`);
+                setSearchQuery('');
               }
             }}
             onSubmit={(e) => {
               e.preventDefault();
               if (searchQuery) {
                 router.push(`/search?q=${encodeURI(searchQuery)}`);
+                setSearchQuery('');
               }
             }}
             enterKeyHint="search"

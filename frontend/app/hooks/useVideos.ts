@@ -78,6 +78,7 @@ export enum SearchField {
   Title = "title",
   Id = "id",
   ExtId = "ext_id",
+  Chapter = "chapter",
   ChannelName = "channel_name",
   ChannelId = "channel_id",
   ChannelExtId = "channel_ext_id",

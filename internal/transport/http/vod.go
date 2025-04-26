@@ -11,8 +11,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/riverqueue/river/rivertype"
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	entChannel "github.com/zibbp/ganymede/ent/channel"
+	entChapter "github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/predicate"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/chat"
@@ -71,7 +73,7 @@ type SearchQueryParams struct {
 	Q      string   `query:"q" validate:"required"`
 	Limit  int      `query:"limit" default:"10" validate:"number"`
 	Offset int      `query:"offset" default:"0" validate:"number"`
-	Fields []string `validate:"dive,oneof=title id ext_id channel_name channel_id channel_ext_id"`
+	Fields []string `validate:"dive,oneof=title id ext_id chapter channel_name channel_id channel_ext_id"`
 }
 
 // CreateVod godoc
@@ -422,9 +424,12 @@ func (h *Handler) SearchVods(c echo.Context) error {
 			if id, err := uuid.Parse(qp.Q); err == nil {
 				predicates = append(predicates, entVod.IDEQ(id))
 			} else {
+				log.Info().Msg("invalid id format in query")
 			}
 		case "ext_id":
 			predicates = append(predicates, entVod.ExtIDContainsFold(qp.Q))
+		case "chapter":
+			predicates = append(predicates, entVod.HasChaptersWith(entChapter.TitleContainsFold(qp.Q)))
 		case "channel_name":
 			predicates = append(predicates, entVod.HasChannelWith(entChannel.NameContainsFold(qp.Q)))
 		case "channel_id":
