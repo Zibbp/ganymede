@@ -66,34 +66,34 @@ func setupEnvironment(t *testing.T, postgresHost string, postgresPort string) {
 	t.Log(envPath)
 
 	// Set the environment variables specific to the test
-	os.Setenv("TESTS_LOGGING", "true") // Disable logging for tests
-	os.Setenv("DEBUG", "false")
-	os.Setenv("DB_HOST", postgresHost)
-	os.Setenv("DB_PORT", postgresPort)
-	os.Setenv("DB_NAME", TestPostgresDatabase)
-	os.Setenv("DB_USER", TestPostgresUser)
-	os.Setenv("DB_PASS", TestPostgresPassword)
+	assert.NoError(t, os.Setenv("TESTS_LOGGING", "true")) // Disable logging for tests
+	assert.NoError(t, os.Setenv("DEBUG", "false"))
+	assert.NoError(t, os.Setenv("DB_HOST", postgresHost))
+	assert.NoError(t, os.Setenv("DB_PORT", postgresPort))
+	assert.NoError(t, os.Setenv("DB_NAME", TestPostgresDatabase))
+	assert.NoError(t, os.Setenv("DB_USER", TestPostgresUser))
+	assert.NoError(t, os.Setenv("DB_PASS", TestPostgresPassword))
 
 	// Set paths
 	// set temporary directories
 	videosDir, err := os.MkdirTemp("/tmp", "ganymede-tests")
 	assert.NoError(t, err)
-	os.Setenv("VIDEOS_DIR", videosDir)
+	assert.NoError(t, os.Setenv("VIDEOS_DIR", videosDir))
 	t.Log("VIDEOS_DIR", videosDir)
 
 	tempDir, err := os.MkdirTemp("/tmp", "ganymede-tests")
 	assert.NoError(t, err)
-	os.Setenv("TEMP_DIR", tempDir)
+	assert.NoError(t, os.Setenv("TEMP_DIR", tempDir))
 	t.Log("TEMP_DIR", tempDir)
 
 	configDir, err := os.MkdirTemp("/tmp", "ganymede-tests")
 	assert.NoError(t, err)
-	os.Setenv("CONFIG_DIR", configDir)
+	assert.NoError(t, os.Setenv("CONFIG_DIR", configDir))
 	t.Log("CONFIG_DIR", configDir)
 
 	logsDir, err := os.MkdirTemp("/tmp", "ganymede-tests")
 	assert.NoError(t, err)
-	os.Setenv("LOGS_DIR", logsDir)
+	assert.NoError(t, os.Setenv("LOGS_DIR", logsDir))
 	t.Log("LOGS_DIR", logsDir)
 }
 
@@ -192,7 +192,7 @@ func SetupHTTP(t *testing.T) (*httpexpect.Expect, error) {
 	// Get free port for Ganymede to run on
 	port, err := getFreePort()
 	assert.NoError(t, err)
-	os.Setenv("APP_PORT", fmt.Sprintf("%d", port))
+	assert.NoError(t, os.Setenv("APP_PORT", fmt.Sprintf("%d", port)))
 
 	// Start the application
 	go func() {
@@ -241,7 +241,9 @@ func getFreePort() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer listener.Close()
+	defer func() {
+		_ = listener.Close()
+	}()
 
 	addr := listener.Addr().(*net.TCPAddr)
 	return addr.Port, nil

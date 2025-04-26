@@ -49,7 +49,7 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 		}
 		// Replace variable in template
 		folderString := fmt.Sprintf("%v", variableValue)
-		folderTemplate = strings.Replace(folderTemplate, match[0], folderString, -1)
+		folderTemplate = strings.ReplaceAll(folderTemplate, match[0], folderString)
 
 	}
 
@@ -81,7 +81,7 @@ func GetFileName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 		}
 		// Replace variable in template
 		fileString := fmt.Sprintf("%v", variableValue)
-		fileTemplate = strings.Replace(fileTemplate, match[0], fileString, -1)
+		fileTemplate = strings.ReplaceAll(fileTemplate, match[0], fileString)
 
 	}
 

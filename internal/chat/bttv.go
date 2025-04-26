@@ -42,7 +42,11 @@ func GetBTTVGlobalEmotes(ctx context.Context) ([]platform.Emote, error) {
 		return nil, fmt.Errorf("failed to get global emotes: %v", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("failed to close response body: %v\n", err)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -88,7 +92,11 @@ func GetBTTVChannelEmotes(ctx context.Context, channelId string) ([]platform.Emo
 		return nil, fmt.Errorf("failed to get channel emotes: %v", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("failed to close response body: %v", err)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

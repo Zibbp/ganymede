@@ -436,6 +436,7 @@ func (h *Handler) SearchVods(c echo.Context) error {
 			if id, err := uuid.Parse(qp.Q); err == nil {
 				predicates = append(predicates, entVod.HasChannelWith(entChannel.IDEQ(id)))
 			} else {
+				log.Info().Msg("invalid channel id format in query")
 			}
 		case "channel_ext_id":
 			predicates = append(predicates, entVod.HasChannelWith(entChannel.ExtIDContainsFold(qp.Q)))
@@ -534,10 +535,7 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 	}
 
 	// Default to true to include all videos. Only exclude processing videos is requested.
-	isProcessing := true
-	if c.QueryParam("processing") == "false" {
-		isProcessing = false
-	}
+	isProcessing := c.QueryParam("processing") != "false"
 
 	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types, playlistUUID, isProcessing)
 	if err != nil {

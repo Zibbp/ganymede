@@ -62,7 +62,11 @@ func OpenLiveChatFile(path string) ([]LiveComment, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open chat file: %v", err)
 	}
-	defer liveChatJsonFile.Close()
+	defer func() {
+		if err := liveChatJsonFile.Close(); err != nil {
+			fmt.Printf("failed to close chat file: %v", err)
+		}
+	}()
 	byteValue, _ := io.ReadAll(liveChatJsonFile)
 
 	var liveComments []LiveComment
