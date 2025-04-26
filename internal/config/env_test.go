@@ -8,26 +8,26 @@ import (
 )
 
 func TestGetEnvConfig(t *testing.T) {
-	os.Setenv("VIDEOS_DIR", "/custom/videos")
-	os.Setenv("TWITCH_CLIENT_ID", "client_id")
-	os.Setenv("TWITCH_CLIENT_SECRET", "client_secret")
+	assert.NoError(t, os.Setenv("VIDEOS_DIR", "/custom/videos"))
+	assert.NoError(t, os.Setenv("TWITCH_CLIENT_ID", "client_id"))
+	assert.NoError(t, os.Setenv("TWITCH_CLIENT_SECRET", "client_secret"))
 
 	env := GetEnvConfig()
 
 	assert.Equal(t, "/custom/videos", env.VideosDir)
 
-	os.Unsetenv("VIDEOS_DIR")
+	assert.NoError(t, os.Unsetenv("VIDEOS_DIR"))
 }
 
 func TestGetEnvRequiredConfig(t *testing.T) {
-	os.Setenv("DB_HOST", "localhost")
-	os.Setenv("DB_PORT", "5432")
-	os.Setenv("DB_USER", "postgres")
-	os.Setenv("DB_PASS", "password")
-	os.Setenv("DB_NAME", "ganymede")
-	os.Setenv("JWT_SECRET", "secret")
-	os.Setenv("JWT_REFRESH_SECRET", "refresh_secret")
-	os.Setenv("FRONTEND_HOST", "localhost")
+	assert.NoError(t, os.Setenv("DB_HOST", "localhost"))
+	assert.NoError(t, os.Setenv("DB_PORT", "5432"))
+	assert.NoError(t, os.Setenv("DB_USER", "postgres"))
+	assert.NoError(t, os.Setenv("DB_PASS", "password"))
+	assert.NoError(t, os.Setenv("DB_NAME", "ganymede"))
+	assert.NoError(t, os.Setenv("JWT_SECRET", "secret"))
+	assert.NoError(t, os.Setenv("JWT_REFRESH_SECRET", "refresh_secret"))
+	assert.NoError(t, os.Setenv("FRONTEND_HOST", "localhost"))
 
 	env := GetEnvApplicationConfig()
 
@@ -37,12 +37,12 @@ func TestGetEnvRequiredConfig(t *testing.T) {
 	assert.Equal(t, "password", env.DB_PASS)
 	assert.Equal(t, "ganymede", env.DB_NAME)
 
-	os.Unsetenv("DB_HOST")
-	os.Unsetenv("DB_PORT")
-	os.Unsetenv("DB_USER")
-	os.Unsetenv("DB_PASS")
-	os.Unsetenv("DB_NAME")
-	os.Unsetenv("FRONTEND_HOST")
+	assert.NoError(t, os.Unsetenv("DB_HOST"))
+	assert.NoError(t, os.Unsetenv("DB_PORT"))
+	assert.NoError(t, os.Unsetenv("DB_USER"))
+	assert.NoError(t, os.Unsetenv("DB_PASS"))
+	assert.NoError(t, os.Unsetenv("DB_NAME"))
+	assert.NoError(t, os.Unsetenv("FRONTEND_HOST"))
 }
 
 func TestGetEnvRequiredConfigMissing(t *testing.T) {

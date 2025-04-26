@@ -16,7 +16,16 @@
   "SearchPage": {
     "title": "Search",
     "error": "Error loading search results",
-    "loading": "Loading search results"
+    "loading": "Loading search results",
+    "searchInputPlaceholder": "Search videos...",
+    "advancedSearchButton": "Advanced Search",
+    "advancedSearchText1": "By default the search only searches the title of videos. This can be modified by searching a specific video field.",
+    "advancedSearchText2": "Use the <code>field:query</code> syntax to search a specific field.",
+    "advancedSearchText3": "Available fields:",
+    "advancedSearchText4": "Examples:",
+    "advancedSearchTextExample1": "Searching for videos with a title <code>title:my awesome video</code>",
+    "advancedSearchTextExample2": "Searching for videos in a chapter (category) <code>chapter:Path of Exile</code>",
+    "advancedSearchText5": "Note: For ID searches if the UUID fails to parse it will fallback to searching the title."
   },
   "AuthenticationPages": {
     "registerPageTitle": "Register",

@@ -230,7 +230,11 @@ func FetchJWKS(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch JWKS: %w", err)
 	}
-	defer jwksResp.Body.Close()
+	defer func() {
+		if err := jwksResp.Body.Close(); err != nil {
+			fmt.Printf("failed to close body: %v\n", err)
+		}
+	}()
 	body, err := io.ReadAll(jwksResp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read body: %w", err)

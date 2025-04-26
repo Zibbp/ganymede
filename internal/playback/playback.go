@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/playback"
-	entPlayback "github.com/zibbp/ganymede/ent/playback"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -120,7 +119,7 @@ func (s *Service) DeleteProgress(ctx context.Context, userId uuid.UUID, videoId 
 
 func (s *Service) GetLastPlaybacks(ctx context.Context, userId uuid.UUID, limit int) (*GetPlaybackResp, error) {
 	// Fetch all playbacks for the user
-	playbackEntries, err := s.Store.Client.Playback.Query().Where(playback.UserID(userId)).Where(entPlayback.StatusEQ("in_progress")).Order(ent.Desc(playback.FieldUpdatedAt)).All(ctx)
+	playbackEntries, err := s.Store.Client.Playback.Query().Where(playback.UserID(userId)).Where(playback.StatusEQ("in_progress")).Order(ent.Desc(playback.FieldUpdatedAt)).All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting last playbacks: %v", err)
 	}

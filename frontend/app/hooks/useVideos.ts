@@ -74,6 +74,16 @@ export enum VideoType {
   Upload = "upload",
 }
 
+export enum SearchField {
+  Title = "title",
+  Id = "id",
+  ExtId = "ext_id",
+  Chapter = "chapter",
+  ChannelName = "channel_name",
+  ChannelId = "channel_id",
+  ChannelExtId = "channel_ext_id",
+}
+
 export interface MutedSegment {
   id: string;
   start: number;
@@ -245,11 +255,15 @@ const searchVideos = async (
   limit: number,
   offset: number,
   query: string,
-  types?: Array<VideoType>
+  types?: Array<VideoType>,
+  fields?: Array<SearchField>
 ): Promise<PaginationResponse<Array<Video>>> => {
   const queryParams: { [key: string]: unknown } = {};
   if (types && types.length > 0) {
     queryParams.types = types.join(",");
+  }
+  if (fields && fields.length > 0) {
+    queryParams.fields = fields.join(",");
   }
   const response = await useAxios.get<
     ApiResponse<PaginationResponse<Array<Video>>>
@@ -267,17 +281,22 @@ const searchVideos = async (
 
 interface SearchVideosOptions {
   types: Array<VideoType>;
+  fields?: Array<SearchField>;
   limit: number;
   offset: number;
   query: string;
 }
 
-const useSearchVideos = (params: SearchVideosOptions) => {
-  const { limit, offset, types, query } = params;
+const useSearchVideos = (
+  params: SearchVideosOptions,
+  enabled: boolean = true
+) => {
+  const { limit, offset, types, query, fields } = params;
   return useQuery<PaginationResponse<Array<Video>>, Error>({
-    queryKey: ["search", limit, offset, types, query],
-    queryFn: () => searchVideos(limit, offset, query, types),
+    queryKey: ["search", limit, offset, types, query, fields],
+    queryFn: () => searchVideos(limit, offset, query, types, fields),
     placeholderData: keepPreviousData, // previous data is kept until the new data is swapped in. This prevents flashing when changing pages, filtering, etc.
+    enabled: enabled,
   });
 };
 

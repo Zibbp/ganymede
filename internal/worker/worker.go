@@ -12,7 +12,6 @@ import (
 	"github.com/zibbp/ganymede/internal/blocked"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
-	serverConfig "github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/platform"
@@ -26,7 +25,7 @@ import (
 func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 	envConfig := config.GetEnvConfig()
 	envAppConfig := config.GetEnvApplicationConfig()
-	_, err := serverConfig.Init()
+	_, err := config.Init()
 	if err != nil {
 		return nil, err
 	}

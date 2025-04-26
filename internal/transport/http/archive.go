@@ -127,7 +127,8 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 	} else if body.VideoId != "" {
 		idType := CheckIDType(body.VideoId)
 
-		if idType == "numeric" {
+		switch idType {
+		case "numeric":
 			err := h.Service.ArchiveService.ArchiveVideo(c.Request().Context(), archive.ArchiveVideoInput{
 				VideoId:     body.VideoId,
 				Quality:     body.Quality,
@@ -138,7 +139,7 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 				return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			}
 
-		} else if idType == "alphanumeric" {
+		case "alphanumeric":
 			err := h.Service.ArchiveService.ArchiveClip(c.Request().Context(), archive.ArchiveClipInput{
 				ID:          body.VideoId,
 				Quality:     body.Quality,
@@ -148,7 +149,8 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 			if err != nil {
 				return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			}
-		} else {
+
+		default:
 			return ErrorResponse(c, http.StatusBadRequest, "Unknown Video ID")
 		}
 

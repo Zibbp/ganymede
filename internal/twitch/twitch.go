@@ -20,7 +20,11 @@ func CheckUserAccessToken(ctx context.Context, accessToken string) error {
 		return fmt.Errorf("failed to check access token: %v", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("failed to close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to check access token: %v", resp)

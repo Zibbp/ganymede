@@ -14,7 +14,6 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
-	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -162,7 +161,7 @@ func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.L
 
 func (s *Service) DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error {
 	// delete watched channel and categories
-	v, err := s.Store.Client.Live.Query().Where(entLive.ID(lID)).WithCategories().Only(c.Request().Context())
+	v, err := s.Store.Client.Live.Query().Where(live.ID(lID)).WithCategories().Only(c.Request().Context())
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
 			return fmt.Errorf("watched channel not found")
