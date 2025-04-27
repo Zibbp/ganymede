@@ -433,6 +433,9 @@ func (s *Service) updateLiveStreamArchiveChapter(stream platform.LiveStreamInfo)
 		End:   seconds,
 		Title: lastChapter.Title,
 	}, lastChapter.ID)
+	if err != nil {
+		return err
+	}
 
 	// Create new chapter
 	_, err = s.ChapterService.CreateChapter(chapter.Chapter{
@@ -442,7 +445,6 @@ func (s *Service) updateLiveStreamArchiveChapter(stream platform.LiveStreamInfo)
 		Title: stream.GameName,
 	}, video.ID)
 	if err != nil {
-		log.Error().Err(err).Msg("error creating new chapter")
 		return err
 	}
 
