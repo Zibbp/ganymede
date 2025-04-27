@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 type GQLVideoResponse struct {
@@ -148,7 +150,7 @@ func gqlRequest(body string) ([]byte, error) {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			fmt.Printf("error closing response body: %v\n", err)
+			log.Debug().Err(err).Msg("error closing response body")
 		}
 	}()
 

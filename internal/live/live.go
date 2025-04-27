@@ -19,6 +19,7 @@ import (
 	"github.com/zibbp/ganymede/ent/queue"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
@@ -29,6 +30,7 @@ type Service struct {
 	Store          *database.Database
 	ArchiveService *archive.Service
 	PlatformTwitch platform.Platform
+	ChapterService *chapter.Service
 }
 
 type Live struct {
@@ -70,8 +72,8 @@ type ArchiveLive struct {
 	RenderChat  bool      `json:"render_chat"`
 }
 
-func NewService(store *database.Database, archiveService *archive.Service, platformTwitch platform.Platform) *Service {
-	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch}
+func NewService(store *database.Database, archiveService *archive.Service, platformTwitch platform.Platform, chapterService *chapter.Service) *Service {
+	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch, ChapterService: chapterService}
 }
 
 func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
@@ -248,9 +250,17 @@ OUTER:
 		// Check if LWC is in twitchStreams.Data
 		stream := channelInLiveStreamInfo(lwc.Edges.Channel.Name, streams)
 		if len(stream.ID) > 0 {
+			// Run chapter update - this needs to be done before additional checks to cover the case where a stream is being archived but fails restriction checks
+			// It also needs to run before live watched channel "isLive" check and this should run every time live streams are checked
+			err = s.updateLiveStreamArchiveChapter(stream)
+			if err != nil {
+				log.Error().Err(err).Msg("error updating live stream archive chapter")
+			}
+
 			if !lwc.IsLive {
 				// stream is live
 				log.Debug().Str("channel", lwc.Edges.Channel.Name).Msg("stream is live; checking for restrictions before archiving")
+
 				// check for any user-constraints before archiving
 				if len(lwc.Edges.TitleRegex) > 0 {
 					// run regexes against title
@@ -329,12 +339,24 @@ OUTER:
 
 				// Notification
 				// Fetch channel for notification
-				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).Limit(1).First(ctx)
+				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).First(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error getting vod")
 					continue
 				}
 				go notification.SendLiveNotification(lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
+
+				// Create initial chapter
+				_, err = s.ChapterService.CreateChapter(chapter.Chapter{
+					Type:  "GAME_CHANGE",
+					Start: 0,
+					End:   0,
+					Title: stream.GameName,
+				}, vod.ID)
+				if err != nil {
+					log.Error().Err(err).Msg("error creating initial chapter")
+				}
+
 			}
 		} else {
 			if lwc.IsLive {
@@ -358,4 +380,72 @@ func channelInLiveStreamInfo(a string, list []platform.LiveStreamInfo) platform.
 		}
 	}
 	return platform.LiveStreamInfo{}
+}
+
+// updateLiveStreamArchiveChapter updates the last chapter of a live stream archive if the category has changed.
+func (s *Service) updateLiveStreamArchiveChapter(stream platform.LiveStreamInfo) error {
+	// Get video
+	video, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).Order(ent.Desc(entVod.FieldCreatedAt)).First(context.Background())
+	if err != nil {
+		if _, ok := err.(*ent.NotFoundError); ok {
+			// Video not found, likely not archived yet because of restrictions
+			return nil
+		}
+		log.Error().Err(err).Msg("error getting video")
+		return err
+	}
+
+	// Get vod chapters
+	chapters, err := s.ChapterService.GetVideoChapters(video.ID)
+	if err != nil {
+		return err
+	}
+
+	// Get the last chapter by start time
+	var lastChapter *ent.Chapter
+	if len(chapters) == 1 {
+		lastChapter = chapters[0]
+	} else {
+		for _, chapter := range chapters {
+			if lastChapter == nil || chapter.Start > lastChapter.Start {
+				lastChapter = chapter
+			}
+		}
+	}
+
+	if lastChapter == nil {
+		log.Debug().Msgf("no chapters found for video %s", video.ID)
+		return nil
+	}
+
+	// Check if new chapter is needed
+	if lastChapter.Title == stream.GameName {
+		log.Debug().Msgf("no new chapter needed for video %s", video.ID)
+		return nil
+	}
+
+	// New chapter needed, update last chapter end time to current time
+	duration := time.Since(video.CreatedAt).Seconds()
+	seconds := int(duration)
+	lastChapter, err = s.ChapterService.UpdateChapter(chapter.Chapter{
+		Type:  lastChapter.Type,
+		Start: lastChapter.Start,
+		End:   seconds,
+		Title: lastChapter.Title,
+	}, lastChapter.ID)
+
+	// Create new chapter
+	_, err = s.ChapterService.CreateChapter(chapter.Chapter{
+		Type:  "GAME_CHANGE",
+		Start: lastChapter.End,
+		End:   0,
+		Title: stream.GameName,
+	}, video.ID)
+	if err != nil {
+		log.Error().Err(err).Msg("error creating new chapter")
+		return err
+	}
+
+	log.Info().Msgf("updated chapter %s -> %s for live stream %s", lastChapter.Title, stream.GameName, video.ID)
+	return nil
 }

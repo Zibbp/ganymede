@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 type LiveComment struct {
@@ -64,7 +66,7 @@ func OpenLiveChatFile(path string) ([]LiveComment, error) {
 	}
 	defer func() {
 		if err := liveChatJsonFile.Close(); err != nil {
-			fmt.Printf("failed to close chat file: %v", err)
+			log.Debug().Err(err).Msg("error closing chat file")
 		}
 	}()
 	byteValue, _ := io.ReadAll(liveChatJsonFile)

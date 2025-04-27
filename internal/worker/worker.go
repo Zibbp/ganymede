@@ -11,6 +11,7 @@ import (
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/blocked"
 	"github.com/zibbp/ganymede/internal/channel"
+	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
@@ -70,13 +71,14 @@ func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 		}
 	}
 
+	chapterService := chapter.NewService(db)
 	channelService := channel.NewService(db, platformTwitch)
 	vodService := vod.NewService(db, riverClient, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodsService := blocked.NewService(db)
 	// twitchService := twitch.NewService()
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodsService, riverClient, platformTwitch)
-	liveService := live.NewService(db, archiveService, platformTwitch)
+	liveService := live.NewService(db, archiveService, platformTwitch, chapterService)
 
 	// initialize river
 	riverWorkerClient, err := tasks_worker.NewRiverWorker(tasks_worker.RiverWorkerInput{

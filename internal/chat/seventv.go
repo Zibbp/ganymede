@@ -159,7 +159,7 @@ func Get7TVGlobalEmotes(ctx context.Context) ([]platform.Emote, error) {
 
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Error().Err(err)
+			log.Debug().Err(err).Msg("error closing response body")
 		}
 	}()
 
@@ -210,7 +210,7 @@ func Get7TVChannelEmotes(ctx context.Context, channelId string) ([]platform.Emot
 
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Error().Err(err)
+			log.Debug().Err(err).Msg("error closing response body")
 		}
 	}()
 

@@ -42,7 +42,7 @@ func sendWebhook(url string, body []byte) error {
 
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing response body")
+			log.Debug().Err(err).Msg("error closing response body")
 		}
 	}()
 
