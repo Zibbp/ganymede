@@ -35,7 +35,7 @@ const SearchPage = () => {
 
   const parseQuery = (q: SearchField) => {
     const m = q.match(/^(\w+):(.+)$/);
-    console.debug("parsedQuery", q, m);
+    console.log("parsedQuery", q, m);
     return m
       ? { field: m[1] as SearchField, query: m[2] }
       : { field: "title" as SearchField, query: q };
