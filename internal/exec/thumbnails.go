@@ -107,7 +107,7 @@ func CreateSprites(config CreateSpritesInput) ([]string, error) {
 			}
 			defer func() {
 				if err := file.Close(); err != nil {
-					log.Error().Err(err)
+					log.Debug().Err(err).Msg("failed to close thumbnail file")
 				}
 			}()
 
@@ -131,7 +131,7 @@ func CreateSprites(config CreateSpritesInput) ([]string, error) {
 		}
 		defer func() {
 			if err := spriteFile.Close(); err != nil {
-				fmt.Printf("failed to close sprite file %s: %v\n", spritePath, err)
+				log.Debug().Err(err).Msg("failed to close sprite file")
 			}
 		}()
 

@@ -47,6 +47,15 @@ func (s *Service) CreateChapter(c Chapter, videoId uuid.UUID) (*ent.Chapter, err
 	return dbChapter, nil
 }
 
+func (s *Service) UpdateChapter(c Chapter, chapterId uuid.UUID) (*ent.Chapter, error) {
+	dbChapter, err := s.Store.Client.Chapter.UpdateOneID(chapterId).SetType(c.Type).SetTitle(c.Title).SetStart(c.Start).SetEnd(c.End).Save(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("error updating chapter: %v", err)
+	}
+
+	return dbChapter, nil
+}
+
 func (s *Service) GetVideoChapters(videoId uuid.UUID) ([]*ent.Chapter, error) {
 	chapters, err := s.Store.Client.Chapter.Query().Where(entChapter.HasVodWith(vod.ID(videoId))).All(context.Background())
 	if err != nil {

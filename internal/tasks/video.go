@@ -172,6 +172,26 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		if err != nil {
 			return err
 		}
+
+		// Update last chapter end time for live stream archive
+		videoChapters, err := dbItems.Video.QueryChapters().All(ctx)
+		if err != nil {
+			return err
+		}
+		fmt.Println(videoChapters)
+
+		if len(videoChapters) > 0 {
+			for _, chapter := range videoChapters {
+				fmt.Println(chapter)
+				if chapter.End == 0 {
+					fmt.Println("updating chapter end time")
+					_, err = chapter.Update().SetEnd(duration).Save(ctx)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
 	}
 
 	// convert to HLS if needed

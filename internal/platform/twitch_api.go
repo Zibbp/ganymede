@@ -197,7 +197,7 @@ func twitchAuthenticate(clientId string, clientSecret string) (*AuthTokenRespons
 
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			fmt.Printf("failed to close response body: %v\n", err)
+			log.Debug().Err(err).Msg("error closing response body")
 		}
 	}()
 	if resp.StatusCode != http.StatusOK {
@@ -245,7 +245,7 @@ func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams
 		}
 		defer func() {
 			if err := resp.Body.Close(); err != nil {
-				fmt.Printf("failed to close response body: %v\n", err)
+				log.Debug().Err(err).Msg("error closing response body")
 			}
 		}()
 

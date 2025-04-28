@@ -42,7 +42,7 @@ func DownloadAndSaveFile(url, path string) error {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing response body")
+			log.Debug().Err(err).Msg("error closing response body")
 		}
 	}()
 
@@ -58,7 +58,7 @@ func DownloadAndSaveFile(url, path string) error {
 	}
 	defer func() {
 		if err := out.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing file")
+			log.Debug().Err(err).Msg("error closing file")
 		}
 	}()
 
@@ -81,7 +81,7 @@ func DownloadFile(url, path string) error {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing response body")
+			log.Debug().Err(err).Msg("error closing response body")
 		}
 	}()
 	if resp.StatusCode != http.StatusOK {
@@ -95,7 +95,7 @@ func DownloadFile(url, path string) error {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing file")
+			log.Debug().Err(err).Msg("error closing file")
 		}
 	}()
 
@@ -137,7 +137,7 @@ func MoveFile(ctx context.Context, source, dest string) error {
 	}
 	defer func() {
 		if err := srcFile.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing source file")
+			log.Debug().Msg("error closing source file")
 		}
 	}()
 
@@ -147,7 +147,7 @@ func MoveFile(ctx context.Context, source, dest string) error {
 	}
 	defer func() {
 		if err := destFile.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing destination file")
+			log.Debug().Err(err).Msg("error closing destination file")
 		}
 	}()
 
@@ -168,7 +168,7 @@ func MoveFile(ctx context.Context, source, dest string) error {
 	// Close files before attempting to remove the source
 	err = srcFile.Close()
 	if err != nil {
-		log.Error().Err(err).Msg("error closing source file after copy")
+		log.Debug().Msg("error closing source file after copy")
 	}
 	err = destFile.Close()
 	if err != nil {
@@ -213,7 +213,7 @@ func CopyFile(sourcePath, destPath string) error {
 	}
 	defer func() {
 		if err := outputFile.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing output file")
+			log.Debug().Err(err).Msg("error closing output file")
 		}
 	}()
 	_, err = io.Copy(outputFile, inputFile)
@@ -307,7 +307,7 @@ func MoveFolder(src string, dst string) error {
 		}
 		defer func() {
 			if err := srcFile.Close(); err != nil {
-				log.Error().Err(err).Msg("error closing source file")
+				log.Debug().Msg("error closing source file")
 			}
 		}()
 
@@ -318,7 +318,7 @@ func MoveFolder(src string, dst string) error {
 		}
 		defer func() {
 			if err := dstFile.Close(); err != nil {
-				log.Error().Err(err).Msg("error closing destination file")
+				log.Debug().Msg("error closing destination file")
 			}
 		}()
 

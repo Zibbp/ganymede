@@ -100,7 +100,7 @@ func GetFFZChannelEmotes(ctx context.Context, channelId string) ([]platform.Emot
 
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Error().Err(err)
+			log.Debug().Err(err).Msg("failed to close response body")
 		}
 	}()
 

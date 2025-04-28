@@ -39,7 +39,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close log file")
+			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
@@ -168,7 +168,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close log file")
+			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
@@ -326,7 +326,7 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close log file")
+			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
@@ -379,7 +379,7 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close log file")
+			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
 
@@ -431,7 +431,7 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close log file")
+			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
@@ -496,7 +496,7 @@ func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Chan
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close log file")
+			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chat downloader output to %s", logFilePath)
@@ -557,7 +557,7 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close log file")
+			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chat_downloader output to %s", logFilePath)
@@ -629,7 +629,7 @@ func checkLogForNoElements(logFilePath string) (bool, error) {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close log file")
+			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
 
@@ -673,7 +673,7 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close log file")
+			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging TwitchDownloader output to %s", logFilePath)
@@ -730,7 +730,7 @@ func checkLogForNoStreams(logFilePath string) (bool, error) {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error().Err(err)
+			log.Debug().Err(err)
 		}
 	}()
 
@@ -771,7 +771,7 @@ func ConvertTwitchVodVideo(v *ent.Vod) error {
 	}
 	defer func() {
 		if err := videoConvertLogfile.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing video convert logfile")
+			log.Debug().Err(err).Msg("error closing video convert logfile")
 		}
 	}()
 	cmd.Stdout = videoConvertLogfile
@@ -826,7 +826,7 @@ func testProxyServer(url string, header string) bool {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing response body for proxy server test")
+			log.Debug().Err(err).Msg("error closing response body for proxy server test")
 		}
 	}()
 	if resp.StatusCode != 200 {
