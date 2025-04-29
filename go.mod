@@ -26,7 +26,7 @@ require (
 	github.com/sethvargo/go-envconfig v1.2.0
 	github.com/swaggo/swag v1.16.4
 	github.com/testcontainers/testcontainers-go v0.37.0
-	github.com/testcontainers/testcontainers-go/modules/postgres v0.36.0
+	github.com/testcontainers/testcontainers-go/modules/postgres v0.37.0
 	golang.org/x/crypto v0.37.0
 	golang.org/x/oauth2 v0.29.0
 	riverqueue.com/riverui v0.9.0
