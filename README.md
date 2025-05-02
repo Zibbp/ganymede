@@ -46,7 +46,7 @@ For in-depth documentation on features visit the [wiki](https://github.com/Zibbp
 
 ## API
 
-Visit the [docs](https://github.com/Zibbp/ganymede/tree/master/docs) folder for the API docs.
+Visit the [docs](https://github.com/Zibbp/ganymede/tree/main/docs) folder for the API docs.
 
 ## Translations
 
@@ -167,4 +167,4 @@ View the [Makefile](/Makefile) for more commands.
 
 ## License
 
-[GNU General Public License v3.0](https://github.com/Zibbp/ganymede/blob/master/LICENSE)
+[GNU General Public License v3.0](https://github.com/Zibbp/ganymede/blob/main/LICENSE)
