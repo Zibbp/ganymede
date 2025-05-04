@@ -1,0 +1,41 @@
+name: Issue
+description: File an issue.
+labels: "bug"
+body:
+  - type: markdown
+    attributes:
+      value: Provide a general summary of the issue in the Title above.
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: Tell us what should happen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Current Behavior
+      description: Tell us what happens instead of the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Possible Solution
+      description: Optional, suggest a fix for the issue.
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Provide a set of steps to reproduce this bug. Include code to reproduce, if relevant.
+      value: |
+        1.
+        2.
+        3.
+        ...
+  - type: input
+    attributes:
+      label: Version
+      description: Provide the `tag` and `commit` from Admin > Info or the Docker image tag.
+  - type: textarea
+    attributes:
+      label: Server logs
+      description: Paste any relevant server logs of the bug/issue. Enable debug settings in `/data/config/config.json` to gather additional logs if necessary.
+      render: log
