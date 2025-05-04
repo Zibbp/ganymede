@@ -20,11 +20,11 @@ body:
   - type: textarea
     attributes:
       label: Possible Solution
-      description: Not obligatory, but suggest a fix for the issue.
+      description: Optional, suggest a fix for the issue.
   - type: textarea
     attributes:
       label: Steps to Reproduce
-      description: Provide a link to a live example, or an unambiguous set of steps to reproduce this bug. Include code to reproduce, if relevant.
+      description: Provide a set of steps to reproduce this bug. Include code to reproduce, if relevant.
       value: |
         1.
         2.

@@ -17,4 +17,4 @@ body:
   - type: textarea
     attributes:
       label: Possible Solution
-      description: Not obligatory, but suggest ideas how to implement the addition or change.
+      description: Optional, suggest how to implement the addition or change.
