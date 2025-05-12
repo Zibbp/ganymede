@@ -21,7 +21,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.22.0
 	github.com/riverqueue/river v0.21.0
-	github.com/riverqueue/river/rivertype v0.21.0
+	github.com/riverqueue/river/rivertype v0.22.0
 	github.com/rs/zerolog v1.34.0
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/swaggo/swag v1.16.4
