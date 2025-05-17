@@ -9,7 +9,7 @@ import (
 
 // Config is the main application configuration saved to disk.
 type Config struct {
-	LiveCheckInterval   int  `json:"live_check_interval_seconds"`  // How often in seconds watched channels are checked for live streams.
+	LiveCheckInterval   int  `json:"live_check_interval_seconds"`  // How often in seconds watched channels are checked for live streams. Recommended to not be less than 30 seconds.
 	VideoCheckInterval  int  `json:"video_check_interval_minutes"` // How often in minutes watched channels are checked for new videos.
 	RegistrationEnabled bool `json:"registration_enabled"`         // Enable registration.
 	Parameters          struct {
