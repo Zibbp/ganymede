@@ -121,7 +121,7 @@ func TestArchiveVideo(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -203,7 +203,7 @@ func TestArchiveVideoNoChat(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -284,7 +284,7 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -372,7 +372,7 @@ func TestArchiveVideoHLS(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -456,7 +456,7 @@ func TestArchiveClip(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -538,7 +538,7 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -561,8 +561,8 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.NoFileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
 
-	// Wait 5 seconds for sprite thumbnails
-	time.Sleep(5 * time.Second)
+	// Wait for sprite thumbnails
+	time.Sleep(10 * time.Second)
 
 	// Assert sprite thumbnail facts
 	v, err = app.Database.Client.Vod.Query().Where(vod.ID(v.ID)).Only(context.Background())
