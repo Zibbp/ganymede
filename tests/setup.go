@@ -67,7 +67,7 @@ func setupEnvironment(t *testing.T, postgresHost string, postgresPort string) {
 
 	// Set the environment variables specific to the test
 	assert.NoError(t, os.Setenv("TESTS_LOGGING", "true")) // Disable logging for tests
-	assert.NoError(t, os.Setenv("DEBUG", "false"))
+	assert.NoError(t, os.Setenv("DEBUG", "true"))
 	assert.NoError(t, os.Setenv("DB_HOST", postgresHost))
 	assert.NoError(t, os.Setenv("DB_PORT", postgresPort))
 	assert.NoError(t, os.Setenv("DB_NAME", TestPostgresDatabase))

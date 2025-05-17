@@ -62,7 +62,8 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 		if err != nil {
 			return fmt.Errorf("error getting video quality options: %w", err)
 		}
-		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities) // Use '=' instead of ':='
+		log.Debug().Str("video_id", video.ID.String()).Str("requested_quality", video.Resolution).Msgf("available qualities: %v", qualities)
+		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
 
 		log.Info().Msgf("selected closest quality %s", closestQuality)
 	}
@@ -227,7 +228,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		if err != nil {
 			return fmt.Errorf("error getting video quality options: %w", err)
 		}
-		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities) // Use '=' instead of ':='
+		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
 
 		log.Info().Msgf("selected closest quality %s", closestQuality)
 	}
