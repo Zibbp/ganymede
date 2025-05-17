@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 )
 
 // CheckUserAccessToken checks if the access token is valid by sending a GET request to the Twitch API
@@ -20,7 +22,11 @@ func CheckUserAccessToken(ctx context.Context, accessToken string) error {
 		return fmt.Errorf("failed to check access token: %v", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to check access token: %v", resp)

@@ -15,12 +15,11 @@ import DeleteBlockedVideoModalContent from "@/app/components/admin/blocked-video
 import AdminBlockedVideosDrawerContent from "@/app/components/admin/blocked-videos/DrawerContent";
 import MultiDeleteBlockedVideoModalContent from "@/app/components/admin/blocked-videos/MultiDeleteModalContent";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "@/app/util/util";
 
 const AdminBlockedVideosPage = () => {
   const t = useTranslations("AdminBlockedVideosPage");
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'))
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<BlockedVideo[]>([]);

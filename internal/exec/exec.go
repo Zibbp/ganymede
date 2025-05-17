@@ -37,7 +37,11 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
 
 	videoURL := fmt.Sprintf("https://twitch.tv/videos/%s", video.ExtID)
@@ -58,7 +62,8 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 		if err != nil {
 			return fmt.Errorf("error getting video quality options: %w", err)
 		}
-		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities) // Use '=' instead of ':='
+		log.Debug().Str("video_id", video.ID.String()).Str("requested_quality", video.Resolution).Msgf("available qualities: %v", qualities)
+		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
 
 		log.Info().Msgf("selected closest quality %s", closestQuality)
 	}
@@ -162,7 +167,11 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
 
 	configStreamlinkArgs := config.Get().Parameters.StreamlinkLive
@@ -219,7 +228,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		if err != nil {
 			return fmt.Errorf("error getting video quality options: %w", err)
 		}
-		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities) // Use '=' instead of ':='
+		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
 
 		log.Info().Msgf("selected closest quality %s", closestQuality)
 	}
@@ -316,7 +325,11 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
 
 	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(ffmpegArgs, " ")).Msgf("running ffmpeg")
@@ -365,7 +378,11 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
 
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
 
@@ -413,7 +430,11 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
 
 	var cmdArgs []string
@@ -474,7 +495,11 @@ func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Chan
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chat downloader output to %s", logFilePath)
 
 	var cmdArgs []string
@@ -531,7 +556,11 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chat_downloader output to %s", logFilePath)
 
 	var cmdArgs []string
@@ -599,7 +628,11 @@ func checkLogForNoElements(logFilePath string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to open log file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -639,7 +672,11 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging TwitchDownloader output to %s", logFilePath)
 
 	var cmdArgs []string
@@ -692,7 +729,11 @@ func checkLogForNoStreams(logFilePath string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to open log file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err)
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -729,7 +770,11 @@ func ConvertTwitchVodVideo(v *ent.Vod) error {
 		log.Error().Err(err).Msg("error creating video convert logfile")
 		return err
 	}
-	defer videoConvertLogfile.Close()
+	defer func() {
+		if err := videoConvertLogfile.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing video convert logfile")
+		}
+	}()
 	cmd.Stdout = videoConvertLogfile
 	cmd.Stderr = videoConvertLogfile
 
@@ -780,7 +825,11 @@ func testProxyServer(url string, header string) bool {
 		log.Error().Err(err).Msg("error making request for proxy server test")
 		return false
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing response body for proxy server test")
+		}
+	}()
 	if resp.StatusCode != 200 {
 		log.Error().Msgf("proxy server test returned status code %d", resp.StatusCode)
 		return false

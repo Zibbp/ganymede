@@ -11,7 +11,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/riverqueue/river/rivertype"
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
+	entChannel "github.com/zibbp/ganymede/ent/channel"
+	entChapter "github.com/zibbp/ganymede/ent/chapter"
+	"github.com/zibbp/ganymede/ent/predicate"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/chat"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/platform"
@@ -27,7 +32,7 @@ type VodService interface {
 	GetVodByExternalId(ctx context.Context, externalId string) (*ent.Vod, error)
 	DeleteVod(c echo.Context, vID uuid.UUID, deleteFiles bool) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
-	SearchVods(c echo.Context, query string, limit int, offset int, types []utils.VodType) (vod.Pagination, error)
+	SearchVods(ctx context.Context, limit int, offset int, types []utils.VodType, predicates []predicate.Vod) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
 	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID, processing bool) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
@@ -62,6 +67,13 @@ type CreateVodRequest struct {
 	CaptionPath      string              `json:"caption_path"`
 	StreamedAt       string              `json:"streamed_at" validate:"required"`
 	Locked           bool                `json:"locked"`
+}
+
+type SearchQueryParams struct {
+	Q      string   `query:"q" validate:"required"`
+	Limit  int      `query:"limit" default:"10" validate:"number"`
+	Offset int      `query:"offset" default:"0" validate:"number"`
+	Fields []string `validate:"dive,oneof=title id ext_id chapter channel_name channel_id channel_ext_id"`
 }
 
 // CreateVod godoc
@@ -362,18 +374,21 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/vod/search [get]
 func (h *Handler) SearchVods(c echo.Context) error {
-	q := c.QueryParam("q")
-	if q == "" {
-		return ErrorResponse(c, http.StatusBadRequest, "q is required")
-	}
+	// Parse query params
+	var qp SearchQueryParams
+	qp.Q = c.QueryParam("q")
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid limit: %w", err).Error())
 	}
+
+	qp.Limit = limit
 	offset, err := strconv.Atoi(c.QueryParam("offset"))
 	if err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid offset: %w", err).Error())
 	}
+
+	qp.Offset = offset
 	vTypes := c.QueryParam("types")
 	var types []utils.VodType
 	if vTypes != "" {
@@ -382,7 +397,59 @@ func (h *Handler) SearchVods(c echo.Context) error {
 		}
 	}
 
-	v, err := h.Service.VodService.SearchVods(c, q, limit, offset, types)
+	fieldsRaw := c.QueryParam("fields")
+	var fields []string
+	if fieldsRaw != "" {
+		fields = strings.Split(fieldsRaw, ",")
+	}
+	qp.Fields = fields
+
+	// Validate query params
+	if err := c.Validate(&qp); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+
+	// Default field to title if not provided
+	if len(qp.Fields) == 0 {
+		qp.Fields = []string{"title"}
+	}
+
+	// Create predicates based on the qp.Fields
+	var predicates []predicate.Vod
+	for _, field := range qp.Fields {
+		switch field {
+		case "title":
+			predicates = append(predicates, entVod.TitleContainsFold(qp.Q))
+		case "id":
+			if id, err := uuid.Parse(qp.Q); err == nil {
+				predicates = append(predicates, entVod.IDEQ(id))
+			} else {
+				log.Info().Msg("invalid id format in query")
+			}
+		case "ext_id":
+			predicates = append(predicates, entVod.ExtIDContainsFold(qp.Q))
+		case "chapter":
+			predicates = append(predicates, entVod.HasChaptersWith(entChapter.TitleContainsFold(qp.Q)))
+		case "channel_name":
+			predicates = append(predicates, entVod.HasChannelWith(entChannel.NameContainsFold(qp.Q)))
+		case "channel_id":
+			if id, err := uuid.Parse(qp.Q); err == nil {
+				predicates = append(predicates, entVod.HasChannelWith(entChannel.IDEQ(id)))
+			} else {
+				log.Info().Msg("invalid channel id format in query")
+			}
+		case "channel_ext_id":
+			predicates = append(predicates, entVod.HasChannelWith(entChannel.ExtIDContainsFold(qp.Q)))
+		default:
+		}
+	}
+
+	// Default to title if no predicates are provided
+	if len(predicates) == 0 {
+		predicates = append(predicates, entVod.TitleContainsFold(qp.Q))
+	}
+
+	v, err := h.Service.VodService.SearchVods(c.Request().Context(), limit, offset, types, predicates)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
@@ -468,10 +535,7 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 	}
 
 	// Default to true to include all videos. Only exclude processing videos is requested.
-	isProcessing := true
-	if c.QueryParam("processing") == "false" {
-		isProcessing = false
-	}
+	isProcessing := c.QueryParam("processing") != "false"
 
 	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types, playlistUUID, isProcessing)
 	if err != nil {

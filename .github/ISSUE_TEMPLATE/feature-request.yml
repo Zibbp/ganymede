@@ -1,0 +1,20 @@
+name: Feature Request
+description: File a feature request.
+labels: "enhancement"
+body:
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: Tell us how it should work.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Current Behavior
+      description: Explain the difference from current behavior.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Possible Solution
+      description: Optional, suggest how to implement the addition or change.

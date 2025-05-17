@@ -14,12 +14,11 @@ import { useGetUsers } from "@/app/hooks/useUsers";
 import AdminUserDrawerContent from "@/app/components/admin/user/DrawerContent";
 import DeleteUserModalContent from "@/app/components/admin/user/DeleteModalContent";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "@/app/util/util";
 
 const AdminUsersPage = () => {
   const t = useTranslations('AdminUsersPage')
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'))
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<User[]>([]);

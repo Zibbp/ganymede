@@ -14,13 +14,12 @@ import { showNotification } from "@mantine/notifications";
 import { useAxiosPrivate } from "../hooks/useAxios";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "../util/util";
 
 
 const PlaylistsPage = () => {
   const t = useTranslations("PlaylistsPage");
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'));
 
   const hasPermission = useAuthStore(state => state.hasPermission);
 
@@ -115,6 +114,7 @@ const PlaylistsPage = () => {
                     variant="subtle"
                     color="blue"
                     onClick={() => {
+                      setPlaylistEditMode(PlaylistEditFormMode.Edit)
                       setPlaylist(playlist)
                       openPlaylistDrawer()
                     }}

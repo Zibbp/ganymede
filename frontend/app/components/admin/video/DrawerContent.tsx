@@ -25,24 +25,24 @@ interface SelectOption {
   value: string;
 }
 
-const schema = z.object({
-  title: z.string().min(1, { message: "Title should have at least 1 characters" }),
-  ext_id: z.string().min(1, { message: "External ID should have at least 1 characters" }),
-  channel_id: z.string().min(1, { message: "Select a channel" }),
-  type: z.nativeEnum(VideoType, { message: "Select a video type" }),
-  platform: z.nativeEnum(Platform, { message: "Select a platform" }),
-  duration: z.number().min(1, { message: "Duration should be at least 1 second" }),
-  views: z.number().min(1),
-  resolution: z.string().min(1),
-  streamed_at: z.string().datetime(),
-  web_thumbnail_path: z.string().min(1),
-  video_path: z.string().min(1)
-})
-
 const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
   const t = useTranslations('AdminVideoComponents')
   const axiosPrivate = useAxiosPrivate()
   const [loading, setLoading] = useState(false)
+
+  const schema = z.object({
+    title: z.string().min(1, { message: t('validation.title') }),
+    ext_id: z.string().min(1, { message: t('validation.extId') }),
+    channel_id: z.string().min(1, { message: t('validation.channelId') }),
+    type: z.nativeEnum(VideoType, { message: t('validation.type') }),
+    platform: z.nativeEnum(Platform, { message: t('validation.platform') }),
+    duration: z.number().min(1, { message: t('validation.duration') }),
+    views: z.number().min(1),
+    resolution: z.string().min(1),
+    streamed_at: z.string().datetime(),
+    web_thumbnail_path: z.string().min(1),
+    video_path: z.string().min(1)
+  })
 
   const form = useForm({
     mode: "controlled",

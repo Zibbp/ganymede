@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/platform"
 )
 
@@ -156,7 +157,11 @@ func Get7TVGlobalEmotes(ctx context.Context) ([]platform.Emote, error) {
 		return nil, fmt.Errorf("failed to get global emotes: %v", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing response body")
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -203,7 +208,11 @@ func Get7TVChannelEmotes(ctx context.Context, channelId string) ([]platform.Emot
 		return nil, fmt.Errorf("failed to get channel emotes: %v", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing response body")
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

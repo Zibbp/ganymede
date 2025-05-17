@@ -195,7 +195,11 @@ func twitchAuthenticate(clientId string, clientSecret string) (*AuthTokenRespons
 		return nil, fmt.Errorf("failed to authenticate: %v", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing response body")
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to authenticate: %v", resp)
 	}
@@ -239,7 +243,11 @@ func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams
 		if err != nil {
 			return nil, fmt.Errorf("failed to make request: %v", err)
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				log.Debug().Err(err).Msg("error closing response body")
+			}
+		}()
 
 		// Log rate limit usage if over threshold
 		rateLimit := 0

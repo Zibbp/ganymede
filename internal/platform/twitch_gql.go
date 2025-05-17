@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/chapter"
 )
 
@@ -149,7 +150,11 @@ func twitchGQLRequest(body string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing response body")
+		}
+	}()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {

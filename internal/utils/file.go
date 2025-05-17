@@ -40,7 +40,11 @@ func DownloadAndSaveFile(url, path string) error {
 	if err != nil {
 		return fmt.Errorf("error making GET request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing response body")
+		}
+	}()
 
 	// Check if the response status code is OK (200)
 	if resp.StatusCode != http.StatusOK {
@@ -52,7 +56,11 @@ func DownloadAndSaveFile(url, path string) error {
 	if err != nil {
 		return fmt.Errorf("error creating file: %v", err)
 	}
-	defer out.Close()
+	defer func() {
+		if err := out.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing file")
+		}
+	}()
 
 	// Write the response body to the local file
 	_, err = io.Copy(out, resp.Body)
@@ -71,7 +79,11 @@ func DownloadFile(url, path string) error {
 	if err != nil {
 		return fmt.Errorf("error downloading file: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing response body")
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("error downloading file: %v", resp)
 	}
@@ -81,7 +93,11 @@ func DownloadFile(url, path string) error {
 	if err != nil {
 		return fmt.Errorf("error creating file: %v", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing file")
+		}
+	}()
 
 	// Write bytes to file
 	_, err = io.Copy(file, resp.Body)
@@ -119,25 +135,45 @@ func MoveFile(ctx context.Context, source, dest string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer func() {
+		if err := srcFile.Close(); err != nil {
+			log.Debug().Msg("error closing source file")
+		}
+	}()
 
 	destFile, err := os.Create(dest)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer destFile.Close()
+	defer func() {
+		if err := destFile.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing destination file")
+		}
+	}()
 
 	// Use io.Copy with context to respect cancellation
 	_, err = io.Copy(destFile, &contextReader{ctx: ctx, r: srcFile})
 	if err != nil {
-		destFile.Close()
-		os.Remove(dest) // Clean up the partially written file
+		err = destFile.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("error closing destination file after copy")
+		}
+		err = os.Remove(dest) // Clean up the partially written file
+		if err != nil {
+			log.Error().Err(err).Msg("error removing destination file after copy failure")
+		}
 		return fmt.Errorf("failed to copy file: %w", err)
 	}
 
 	// Close files before attempting to remove the source
-	srcFile.Close()
-	destFile.Close()
+	err = srcFile.Close()
+	if err != nil {
+		log.Debug().Msg("error closing source file after copy")
+	}
+	err = destFile.Close()
+	if err != nil {
+		log.Error().Err(err).Msg("error closing destination file after copy")
+	}
 
 	// Remove the source file
 	err = os.Remove(source)
@@ -169,12 +205,22 @@ func CopyFile(sourcePath, destPath string) error {
 	}
 	outputFile, err := os.Create(destPath)
 	if err != nil {
-		inputFile.Close()
+		cerr := inputFile.Close()
+		if cerr != nil {
+			log.Error().Err(err).Msg("error closing input file")
+		}
 		return fmt.Errorf("error creating file: %v", err)
 	}
-	defer outputFile.Close()
+	defer func() {
+		if err := outputFile.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing output file")
+		}
+	}()
 	_, err = io.Copy(outputFile, inputFile)
-	inputFile.Close()
+	cerr := inputFile.Close()
+	if cerr != nil {
+		log.Error().Err(err).Msg("error closing input file")
+	}
 	if err != nil {
 		return fmt.Errorf("writing to output file failed: %v", err)
 	}
@@ -259,14 +305,22 @@ func MoveFolder(src string, dst string) error {
 		if err != nil {
 			return err
 		}
-		defer srcFile.Close()
+		defer func() {
+			if err := srcFile.Close(); err != nil {
+				log.Debug().Msg("error closing source file")
+			}
+		}()
 
 		// Open the destination file for writing
 		dstFile, err := os.Create(dstPath)
 		if err != nil {
 			return err
 		}
-		defer dstFile.Close()
+		defer func() {
+			if err := dstFile.Close(); err != nil {
+				log.Debug().Msg("error closing destination file")
+			}
+		}()
 
 		// Copy the contents of the file
 		_, err = io.Copy(dstFile, srcFile)

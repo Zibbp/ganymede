@@ -12,31 +12,30 @@ type Props = {
   handleClose: () => void;
 }
 
-
-const schema = z.object({
-  id: z.string().min(2, { message: "ID should have at least 2 characters" }),
-  processing: z.boolean(),
-  on_hold: z.boolean(),
-  video_processing: z.boolean(),
-  chat_processing: z.boolean(),
-  live_archive: z.boolean(),
-
-  task_vod_create_folder: z.nativeEnum(QueueTaskStatus),
-  task_vod_download_thumbnail: z.nativeEnum(QueueTaskStatus),
-  task_vod_save_info: z.nativeEnum(QueueTaskStatus),
-  task_video_download: z.nativeEnum(QueueTaskStatus),
-  task_video_convert: z.nativeEnum(QueueTaskStatus),
-  task_video_move: z.nativeEnum(QueueTaskStatus),
-  task_chat_convert: z.nativeEnum(QueueTaskStatus),
-  task_chat_render: z.nativeEnum(QueueTaskStatus),
-  task_chat_move: z.nativeEnum(QueueTaskStatus),
-})
-
 const AdminQueueDrawerContent = ({ queue, handleClose }: Props) => {
   const t = useTranslations('AdminQueueComponents')
   const axiosPrivate = useAxiosPrivate()
   const useEditQueueMutate = useEditQueue()
   const [loading, setLoading] = useState(false)
+
+  const schema = z.object({
+    id: z.string().min(2, { message: t('validation.id') }),
+    processing: z.boolean(),
+    on_hold: z.boolean(),
+    video_processing: z.boolean(),
+    chat_processing: z.boolean(),
+    live_archive: z.boolean(),
+
+    task_vod_create_folder: z.nativeEnum(QueueTaskStatus),
+    task_vod_download_thumbnail: z.nativeEnum(QueueTaskStatus),
+    task_vod_save_info: z.nativeEnum(QueueTaskStatus),
+    task_video_download: z.nativeEnum(QueueTaskStatus),
+    task_video_convert: z.nativeEnum(QueueTaskStatus),
+    task_video_move: z.nativeEnum(QueueTaskStatus),
+    task_chat_convert: z.nativeEnum(QueueTaskStatus),
+    task_chat_render: z.nativeEnum(QueueTaskStatus),
+    task_chat_move: z.nativeEnum(QueueTaskStatus),
+  })
 
   const form = useForm({
     mode: "controlled",

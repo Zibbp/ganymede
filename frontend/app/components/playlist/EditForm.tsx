@@ -3,6 +3,7 @@ import { Playlist, useCreatePlaylist, useEditPlaylist } from "@/app/hooks/usePla
 import { Button, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type Props = {
@@ -17,6 +18,7 @@ export enum PlaylistEditFormMode {
 }
 
 const PlaylistEditForm = ({ playlist, mode, handleClose }: Props) => {
+  const t = useTranslations('PlaylistComponents')
   const [editButtonLoading, setEditButtonLoading] = useState(false)
 
   const axiosPrivate = useAxiosPrivate();
@@ -51,13 +53,13 @@ const PlaylistEditForm = ({ playlist, mode, handleClose }: Props) => {
       setEditButtonLoading(false)
 
       showNotification({
-        message: `Playlist ${mode == PlaylistEditFormMode.Edit ? "edited" : "created"}`
+        message: `${t('playlist')} ${mode == PlaylistEditFormMode.Edit ? t('edited') : t('created')}`,
       })
 
       handleClose()
 
     } catch (error) {
-      console.error("Error creating playlist", error)
+      console.error(t('errorCreatingNotification'), error)
       setEditButtonLoading(false)
     }
   };
@@ -66,19 +68,19 @@ const PlaylistEditForm = ({ playlist, mode, handleClose }: Props) => {
     <div>
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
-          label="Name"
-          description="Playlist name"
+          label={t('nameLabel')}
+          description={t('nameDescription')}
           key={form.key('name')}
           {...form.getInputProps('name')}
           required
         />
         <TextInput
-          label="Description"
-          description="Playlist description"
+          label={t('descriptionLabel')}
+          description={t('descriptionDescription')}
           key={form.key('description')}
           {...form.getInputProps('description')}
         />
-        <Button mt={10} type="submit" fullWidth loading={editButtonLoading}>{mode == PlaylistEditFormMode.Create ? 'Create Playlist' : 'Edit Playlist'}</Button>
+        <Button mt={10} type="submit" fullWidth loading={editButtonLoading}>{mode == PlaylistEditFormMode.Create ? t('createPlaylistButton') : t('editPlaylistButton')}</Button>
       </form>
     </div>
   );

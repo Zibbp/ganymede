@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { escapeURL } from "@/app/util/util";
 import { env } from "next-runtime-env";
 import { Video } from "@/app/hooks/useVideos";
+import { useTranslations } from "next-intl";
 
 export type MultistreamTimelineProps = {
   seek: (time: number) => void;
@@ -32,6 +33,7 @@ export type MultistreamTimelineProps = {
 }
 
 export const MultistreamTimeline = ({ vodPlaybackOffsets, globalTime, startDateMs, endDateMs, playStartAtDate, seek, pause, play, playing, playingVodForStreamer, streamers, setVodOffset, onStreamerDragStart, gridWidth, gridHeight, setGridWidth, setGridHeight }: MultistreamTimelineProps) => {
+  const t = useTranslations("MultistreamComponents");
   const [timelineTooltipText, setTimelineTooltipText] = useState<string>("");
   const [hoverPlayheadDate, setHoverPlayheadDate] = useState<number | null>(null);
   const timeAtMousePosition = (timelineBar: HTMLDivElement | null, event: React.MouseEvent) => {
@@ -83,61 +85,61 @@ export const MultistreamTimeline = ({ vodPlaybackOffsets, globalTime, startDateM
 
   return <Stack gap="sm">
     <Group justify="center" gap="xs">
-      <Tooltip label="Seek back 60 seconds" position="top">
+      <Tooltip label={t('seekBackTooltip', { seconds: "60" })} position="top">
         <ActionIcon
           size="sm"
           variant="subtle"
           color="violet"
-          aria-label="Seek back 60 seconds"
+          aria-label={t('seekBackTooltip', { seconds: "60" })}
           onClick={() => seek(getCurrentTime() - 60000)}
         ><IconRewindBackward60 /></ActionIcon>
       </Tooltip>
 
-      <Tooltip label="Seek back 5 seconds" position="top">
+      <Tooltip label={t('seekBackTooltip', { seconds: "5" })} position="top">
         <ActionIcon
           size="sm"
           variant="subtle"
           color="violet"
-          aria-label="Seek back 5 seconds"
+          aria-label={t('seekBackTooltip', { seconds: "5" })}
           onClick={() => seek(getCurrentTime() - 5000)}
         ><IconRewindBackward5 /></ActionIcon>
       </Tooltip>
 
-      <Tooltip label={playing ? "Pause" : "Play"} position="top">
+      <Tooltip label={playing ? t('pause') : t('play')} position="top">
         <ActionIcon
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           onClick={() => { playing ? pause() : play() }}
           size="md"
           variant="subtle"
           color="violet"
-          aria-label={playing ? "Pause" : "Play"}
+          aria-label={playing ? t('pause') : t('play')}
         >
           {playing ? <IconPlayerPauseFilled /> : <IconPlayerPlayFilled />}
         </ActionIcon>
       </Tooltip>
 
-      <Tooltip label="Seek forward 5 seconds" position="top">
+      <Tooltip label={t('seekForwardTooltip', { seconds: "5" })} position="top">
         <ActionIcon
           size="sm"
           variant="subtle"
           color="violet"
-          aria-label="Seek forward 5 seconds"
+          aria-label={t('seekForwardTooltip', { seconds: "5" })}
           onClick={() => seek(getCurrentTime() + 5000)}
         ><IconRewindForward5 /></ActionIcon>
       </Tooltip>
 
-      <Tooltip label="Seek forward 60 seconds" position="top">
+      <Tooltip label={t('seekForwardTooltip', { seconds: "60" })} position="top">
         <ActionIcon
           size="sm"
           variant="subtle"
           color="violet"
-          aria-label="Seek forward 60 seconds"
+          aria-label={t('seekForwardTooltip', { seconds: "60" })}
           onClick={() => seek(getCurrentTime() + 60000)}
         ><IconRewindForward60 /></ActionIcon>
       </Tooltip>
 
-      <NumberInput className={classes.gridInput} label="Grid width" value={gridWidth} onChange={(value) => setGridWidth(+value)} size="xs" step={1} min={1} />
-      <NumberInput className={classes.gridInput} label="Grid height" value={gridHeight} onChange={(value) => setGridHeight(+value)} size="xs" step={1} min={1} />
+      <NumberInput className={classes.gridInput} label={t('gridWidth')} value={gridWidth} onChange={(value) => setGridWidth(+value)} size="xs" step={1} min={1} />
+      <NumberInput className={classes.gridInput} label={t('gridHeight')} value={gridHeight} onChange={(value) => setGridHeight(+value)} size="xs" step={1} min={1} />
     </Group>
 
     <Center>

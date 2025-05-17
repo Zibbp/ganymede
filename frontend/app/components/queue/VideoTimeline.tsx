@@ -6,12 +6,14 @@ import QueueTimelineBullet from "./TimelineBullet";
 import QueueRestartTaskModalContent from "./RestartTaskModalContent";
 import { Queue, QueueLogType, QueueTask } from "@/app/hooks/useQueue";
 import { openQueueTaskLog } from "@/app/util/queue";
+import { useTranslations } from "next-intl";
 
 interface Params {
   queue: Queue;
 }
 
 const QueueVideoTimeline = ({ queue }: Params) => {
+  const t = useTranslations('QueueComponents')
   const [restartTaskModalOpened, { open: openRestartTaskModal, close: closeRestartTaskModal }] = useDisclosure(false);
 
   const [restartTaskName, setRestartTaskName] = useState<QueueTask | null>(null);
@@ -26,7 +28,7 @@ const QueueVideoTimeline = ({ queue }: Params) => {
       <Timeline active={0} bulletSize={24} color="dark" lineWidth={3}>
         <Timeline.Item
           bullet={<QueueTimelineBullet status={queue.task_video_download} />}
-          title="Video Download"
+          title={t('videoDownloadTitle')}
         >
           <Text size="sm">
             {!queue.live_archive && (
@@ -35,7 +37,7 @@ const QueueVideoTimeline = ({ queue }: Params) => {
                   className={classes.restartText}
                   onClick={() => restartTask(QueueTask.TaskVideoDownload)}
                 >
-                  restart
+                  {t('restartButton')}
                 </span>
                 <span> - </span>
               </span>
@@ -44,42 +46,42 @@ const QueueVideoTimeline = ({ queue }: Params) => {
               className={classes.restartText}
               onClick={() => openQueueTaskLog(queue.id, QueueLogType.Video)}
             >
-              logs
+              {t('logsButton')}
             </span>
           </Text>
         </Timeline.Item>
 
         <Timeline.Item
           bullet={<QueueTimelineBullet status={queue.task_video_convert} />}
-          title="Video Convert"
+          title={t('videoConvertTitle')}
         >
           <Text size="sm">
             <span
               className={classes.restartText}
               onClick={() => restartTask(QueueTask.TaskVideoConvert)}
             >
-              restart
+              {t('restartButton')}
             </span>
             <span> - </span>
             <span
               className={classes.restartText}
               onClick={() => openQueueTaskLog(queue.id, QueueLogType.VideoConvert)}
             >
-              logs
+              {t('logsButton')}
             </span>
           </Text>
         </Timeline.Item>
 
         <Timeline.Item
           bullet={<QueueTimelineBullet status={queue.task_video_move} />}
-          title="Video Move"
+          title={t('videoMoveTitle')}
         >
           <Text size="sm">
             <span
               className={classes.restartText}
               onClick={() => restartTask(QueueTask.TaskVideoMove)}
             >
-              restart
+              {t('restartButton')}
             </span>
           </Text>
         </Timeline.Item>
@@ -87,7 +89,7 @@ const QueueVideoTimeline = ({ queue }: Params) => {
       <Modal
         opened={restartTaskModalOpened}
         onClose={closeRestartTaskModal}
-        title="Restart Queue Task"
+        title={t('restartQueueTaskModalTitle')}
       >
         {restartTaskName !== null && (
           <QueueRestartTaskModalContent queue={queue} task={restartTaskName} closeModal={closeRestartTaskModal} />

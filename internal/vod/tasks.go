@@ -7,7 +7,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
-	"github.com/zibbp/ganymede/ent/channel"
 	entChannel "github.com/zibbp/ganymede/ent/channel"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
@@ -20,7 +19,7 @@ func PruneVideos(ctx context.Context, store *database.Database) error {
 	echoCtx.SetRequest(req.WithContext(ctx))
 
 	// fetch all channels that have retention enable
-	channels, err := store.Client.Channel.Query().Where(channel.Retention(true)).All(context.Background())
+	channels, err := store.Client.Channel.Query().Where(entChannel.Retention(true)).All(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("error fetching channels")
 		return err

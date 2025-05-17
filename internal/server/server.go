@@ -147,12 +147,12 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch)
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
-	liveService := live.NewService(db, archiveService, platformTwitch)
+	chapterService := chapter.NewService(db)
+	liveService := live.NewService(db, archiveService, platformTwitch, chapterService)
 	playbackService := playback.NewService(db)
 	metricsService := metrics.NewService(db, riverClient)
 	playlistService := playlist.NewService(db)
 	taskService := task.NewService(db, liveService, riverClient)
-	chapterService := chapter.NewService(db)
 	categoryService := category.NewService(db)
 
 	return &Application{

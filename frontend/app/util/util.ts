@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 export function escapeURL(str: string): string {
   return str.replace(/#/g, "%23");
 }
@@ -11,4 +13,10 @@ export function uuidv4() {
       (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))
     ).toString(16)
   );
+}
+
+export function usePageTitle(title: string) {
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
 }

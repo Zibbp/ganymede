@@ -1,17 +1,17 @@
 module github.com/zibbp/ganymede
 
-go 1.23.0
+go 1.24
 
-toolchain go1.24.1
+toolchain go1.24.2
 
 require (
 	entgo.io/ent v0.14.4
 	github.com/alexedwards/scs/pgxstore v0.0.0-20240316134038-7e11d57e8885
 	github.com/alexedwards/scs/v2 v2.8.0
 	github.com/canidam/echo-scs-session v1.0.0
-	github.com/coreos/go-oidc/v3 v3.13.0
+	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/gavv/httpexpect/v2 v2.17.0
-	github.com/go-jose/go-jose/v4 v4.0.5
+	github.com/go-jose/go-jose/v4 v4.1.0
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
@@ -19,17 +19,17 @@ require (
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/prometheus/client_golang v1.21.1
-	github.com/riverqueue/river v0.19.0
-	github.com/riverqueue/river/rivertype v0.19.0
+	github.com/prometheus/client_golang v1.22.0
+	github.com/riverqueue/river v0.22.0
+	github.com/riverqueue/river/rivertype v0.22.0
 	github.com/rs/zerolog v1.34.0
-	github.com/sethvargo/go-envconfig v1.1.1
+	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/swaggo/swag v1.16.4
-	github.com/testcontainers/testcontainers-go v0.36.0
-	github.com/testcontainers/testcontainers-go/modules/postgres v0.36.0
-	golang.org/x/crypto v0.36.0
-	golang.org/x/oauth2 v0.28.0
-	riverqueue.com/riverui v0.8.1
+	github.com/testcontainers/testcontainers-go v0.37.0
+	github.com/testcontainers/testcontainers-go/modules/postgres v0.37.0
+	golang.org/x/crypto v0.37.0
+	golang.org/x/oauth2 v0.30.0
+	riverqueue.com/riverui v0.9.0
 )
 
 require (
@@ -75,9 +75,9 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683 // indirect
-	github.com/magiconair/properties v1.8.9 // indirect
+	github.com/magiconair/properties v1.8.10 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
@@ -90,8 +90,9 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
-	github.com/riverqueue/river/riverdriver v0.19.0 // indirect
-	github.com/riverqueue/river/rivershared v0.19.0 // indirect
+	github.com/riverqueue/apiframe v0.0.0-20250408034821-b206bbbd0fb4 // indirect
+	github.com/riverqueue/river/riverdriver v0.22.0 // indirect
+	github.com/riverqueue/river/rivershared v0.22.0 // indirect
 	github.com/sanity-io/litter v1.5.5 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.1 // indirect
@@ -119,7 +120,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
@@ -150,7 +151,7 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.19.0
+	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.22.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/echo-swagger v1.4.1
@@ -158,10 +159,10 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/zclconf/go-cty v1.15.1 // indirect
 	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/text v0.24.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
+	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

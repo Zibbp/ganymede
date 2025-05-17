@@ -15,12 +15,11 @@ import DeleteQueueModalContent from "@/app/components/admin/queue/DeleteModalCon
 import Link from "next/link";
 import MultiDeleteQueueModalContent from "@/app/components/admin/queue/MultiDeleteModalContext";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "@/app/util/util";
 
 const AdminQueuePage = () => {
   const t = useTranslations('AdminQueuePage');
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'))
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [records, setRecords] = useState<Queue[]>([]);

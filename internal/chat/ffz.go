@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/platform"
 )
 
@@ -48,7 +49,11 @@ func GetFFZGlobalEmotes(ctx context.Context) ([]platform.Emote, error) {
 		return nil, fmt.Errorf("failed to get global emotes: %v", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("failed to close response body: %v\n", err)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -93,7 +98,11 @@ func GetFFZChannelEmotes(ctx context.Context, channelId string) ([]platform.Emot
 		return nil, fmt.Errorf("failed to get global emotes: %v", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close response body")
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

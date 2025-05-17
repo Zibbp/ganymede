@@ -40,7 +40,11 @@ func sendWebhook(url string, body []byte) error {
 		return fmt.Errorf("error sending webhook request: %w", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing response body")
+		}
+	}()
 
 	return nil
 }
@@ -66,8 +70,7 @@ func SendVideoArchiveSuccessNotification(channelItem *ent.Channel, vodItem *ent.
 		variableValue := variableMap[variableName]
 		// Replace variable in template
 		variableValueString := fmt.Sprintf("%v", variableValue)
-		videoSuccessTemplate = strings.Replace(videoSuccessTemplate, match[0], variableValueString, -1)
-
+		videoSuccessTemplate = strings.ReplaceAll(videoSuccessTemplate, match[0], variableValueString)
 	}
 
 	var webhookRequestBody = WebhookRequestBody{
@@ -110,7 +113,7 @@ func SendLiveArchiveSuccessNotification(channelItem *ent.Channel, vodItem *ent.V
 		variableValue := variableMap[variableName]
 		// Replace variable in template
 		variableValueString := fmt.Sprintf("%v", variableValue)
-		liveSuccessTemplate = strings.Replace(liveSuccessTemplate, match[0], variableValueString, -1)
+		liveSuccessTemplate = strings.ReplaceAll(liveSuccessTemplate, match[0], variableValueString)
 
 	}
 
@@ -154,7 +157,7 @@ func SendErrorNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *en
 		variableValue := variableMap[variableName]
 		// Replace variable in template
 		variableValueString := fmt.Sprintf("%v", variableValue)
-		errorTemplate = strings.Replace(errorTemplate, match[0], variableValueString, -1)
+		errorTemplate = strings.ReplaceAll(errorTemplate, match[0], variableValueString)
 
 	}
 
@@ -198,7 +201,7 @@ func SendLiveNotification(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent
 		variableValue := variableMap[variableName]
 		// Replace variable in template
 		variableValueString := fmt.Sprintf("%v", variableValue)
-		liveTemplate = strings.Replace(liveTemplate, match[0], variableValueString, -1)
+		liveTemplate = strings.ReplaceAll(liveTemplate, match[0], variableValueString)
 
 	}
 

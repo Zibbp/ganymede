@@ -7,12 +7,11 @@ import { IconPlayerPlay } from "@tabler/icons-react";
 import { Task, useStartTask } from "@/app/hooks/useTasks";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "@/app/util/util";
 
 const AdminTasksPage = () => {
   const t = useTranslations('AdminTasksPage')
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'))
   const axiosPrivate = useAxiosPrivate()
   const [loading, setLoading] = useState(false)
 
@@ -44,7 +43,7 @@ const AdminTasksPage = () => {
 
           <Title>{t('header')}</Title>
 
-          <Group justify="space-between" py={5}>
+          <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
               <Text fw={"bold"}>{t('checkWatchedChannelsLive')}</Text>
               <Text size="xs">{t('checkWatchedChannelsLiveDescription')}</Text>
@@ -62,7 +61,7 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
-          <Group justify="space-between" py={5}>
+          <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
               <Text fw={"bold"}>{t('checkWatchedChannelsVideo')}</Text>
               <Text size="xs">{t('checkWatchedChannelsVideoDescription')}</Text>
@@ -80,7 +79,7 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
-          <Group justify="space-between" py={5}>
+          <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
               <Text fw={"bold"}>{t('checkWatchedChannelsClips')}</Text>
               <Text size="xs">{t('checkWatchedChannelsClipsDescription')}</Text>
@@ -98,7 +97,7 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
-          <Group justify="space-between" py={5}>
+          <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
               <Text fw={"bold"}>{t('storageTemplateMigration')}</Text>
               <Text size="xs">{t('storageTemplateMigrationDescription')} <a className={classes.link} target="_blank" href="https://github.com/Zibbp/ganymede/wiki/Storage-Templates-and-Migration">Documentation</a>.</Text>
@@ -116,7 +115,7 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
-          <Group justify="space-between" py={5}>
+          <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
               <Text fw={"bold"}>{t('pruneVideos')}</Text>
               <Text size="xs">{t('pruneVideosDescription')}</Text>
@@ -134,7 +133,7 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
-          <Group justify="space-between" py={5}>
+          <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
               <Text fw={"bold"}>{t('jwks')}</Text>
               <Text size="xs">{t('jwksDescription')}</Text>
@@ -152,7 +151,7 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
-          <Group justify="space-between" py={5}>
+          <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
               <Text fw={"bold"}>{t('saveChaptersForVideos')}</Text>
               <Text size="xs">{t('saveChaptersForVideosDescription')}</Text>
@@ -170,7 +169,7 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
-          <Group justify="space-between" py={5}>
+          <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
               <Text fw={"bold"}>{t('updateLiveStreamIds')}</Text>
               <Text size="xs">{t('updateLiveStreamIdsDescription')}</Text>
@@ -188,7 +187,7 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
-          <Group justify="space-between" py={5}>
+          <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
               <Text fw={"bold"}>{t('generateSpriteThumbnails')}</Text>
               <Text size="xs">{t('generateSpriteThumbnailsDescription')}</Text>

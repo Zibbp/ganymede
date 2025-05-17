@@ -3,6 +3,7 @@ import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import ChannelVideos from "@/app/components/videos/ChannelVideos";
 import { useFetchChannelByName } from "@/app/hooks/useChannels";
 import { Center, Container, Title } from "@mantine/core";
+import { useTranslations } from "next-intl";
 import React, { useEffect } from "react";
 
 interface Params {
@@ -10,6 +11,7 @@ interface Params {
 }
 
 const ChannelPage = ({ params }: { params: Promise<Params> }) => {
+  const t = useTranslations('ChannelsPage')
   const { name } = React.use(params);
   useEffect(() => {
     document.title = `${name}`;
@@ -19,14 +21,14 @@ const ChannelPage = ({ params }: { params: Promise<Params> }) => {
 
   if (isPending) {
     return (
-      <GanymedeLoadingText message="Loading Channel" />
+      <GanymedeLoadingText message={t('loadingChannel')} />
     );
   }
 
   if (isError) {
     return (
       <Center>
-        <div>Error loading channel</div>
+        <div>{t('errorLoadingChannel')}</div>
       </Center>
     );
   }

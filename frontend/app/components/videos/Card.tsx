@@ -14,6 +14,7 @@ import useAuthStore from "@/app/store/useAuthStore";
 import { IconCircleCheck, IconLock } from "@tabler/icons-react";
 import VideoMenu from "./Menu";
 import { UserRole } from "@/app/hooks/useAuthentication";
+import { useTranslations } from "next-intl";
 
 dayjs.extend(duration);
 dayjs.extend(localizedFormat);
@@ -40,6 +41,7 @@ function durationToTime(seconds: number) {
 }
 
 const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = true }: Props) => {
+  const t = useTranslations('VideoComponents')
   const { isLoggedIn, hasPermission } = useAuthStore()
   const [thumbnailError, setThumbnailError] = useState(false);
 
@@ -72,7 +74,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
 
       {video.processing && (
         <LoadingOverlay visible zIndex={5} overlayProps={{ radius: "sm", blur: 1 }} loaderProps={{
-          children: <div><Text size="xl">Processing</Text>
+          children: <div><Text size="xl">{t('processingOverlayText')}</Text>
             <Center>
               <Box>
                 <Loader color="red" />
@@ -96,7 +98,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
             alt={video.title}
           />
           {showProgress && Math.round(playbackProgress) > 0 && !playbackIsWatched && (
-            <Tooltip label={`${Math.round(playbackProgress)}% watched`}>
+            <Tooltip label={`${Math.round(playbackProgress)}% ${t('watched')}`}>
               <Progress
                 className={classes.progressBar}
                 color="red"
@@ -128,7 +130,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
       >
         {/* Watched icon */}
         {showProgress && playbackIsWatched && (
-          <Tooltip label="You have watched this video">
+          <Tooltip label={t('watchedVideoText')}>
             <ThemeIcon radius="xl" color="green">
               <IconCircleCheck />
             </ThemeIcon>
@@ -137,7 +139,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
 
         {/* Locked icon */}
         {video.locked && (
-          <Tooltip label="Video is locked">
+          <Tooltip label={t('lockedText')}>
             <ThemeIcon radius="xl" color="gray">
               <IconLock />
             </ThemeIcon>
@@ -182,7 +184,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
         align="center" pt={2}>
 
         <Tooltip
-          label={`Streamed on ${new Date(
+          label={`${t('streamedOnText')} ${new Date(
             video.streamed_at
           ).toLocaleString()}`}
         >

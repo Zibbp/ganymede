@@ -5,13 +5,12 @@ import { useFetchChannels } from "../hooks/useChannels";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { usePageTitle } from "../util/util";
 
 const ChannelsPage = () => {
   const t = useTranslations("ChannelsPage");
 
-  useEffect(() => {
-    document.title = t('title');
-  }, []);
+  usePageTitle(t('title'));
 
   const { data: channels, isPending, isError } = useFetchChannels()
 

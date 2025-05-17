@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 type GenerateThumbnailsInput struct {
@@ -103,7 +105,11 @@ func CreateSprites(config CreateSpritesInput) ([]string, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to open thumbnail %s: %w", thumbPath, err)
 			}
-			defer file.Close()
+			defer func() {
+				if err := file.Close(); err != nil {
+					log.Debug().Err(err).Msg("failed to close thumbnail file")
+				}
+			}()
 
 			img, _, err := image.Decode(file)
 			if err != nil {
@@ -123,7 +129,11 @@ func CreateSprites(config CreateSpritesInput) ([]string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create sprite file %s: %w", spritePath, err)
 		}
-		defer spriteFile.Close()
+		defer func() {
+			if err := spriteFile.Close(); err != nil {
+				log.Debug().Err(err).Msg("failed to close sprite file")
+			}
+		}()
 
 		if err := jpeg.Encode(spriteFile, sprite, &jpeg.Options{Quality: 90}); err != nil {
 			return nil, fmt.Errorf("failed to save sprite image %s: %w", spritePath, err)

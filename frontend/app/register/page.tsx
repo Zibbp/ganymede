@@ -2,11 +2,12 @@
 import { Container } from "@mantine/core";
 import { AuthenticationForm, AuthFormType } from "../components/authentication/AuthenticationForm";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
+import { usePageTitle } from "../util/util";
 
 const RegisterPage = () => {
-  useEffect(() => {
-    document.title = "Register";
-  }, []);
+  const t = useTranslations("AuthenticationPages")
+  usePageTitle(t('registerPageTitle'))
   return (
     <div>
       <Container mt={25}>
