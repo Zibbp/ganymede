@@ -1,8 +1,8 @@
 module github.com/zibbp/ganymede
 
-go 1.23.0
+go 1.24
 
-toolchain go1.24.1
+toolchain go1.24.2
 
 require (
 	entgo.io/ent v0.14.4
@@ -11,7 +11,7 @@ require (
 	github.com/canidam/echo-scs-session v1.0.0
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/gavv/httpexpect/v2 v2.17.0
-	github.com/go-jose/go-jose/v4 v4.0.5
+	github.com/go-jose/go-jose/v4 v4.1.0
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
