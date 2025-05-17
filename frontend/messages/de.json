@@ -16,8 +16,16 @@
   "SearchPage": {
     "title": "Suche",
     "error": "Fehler beim Laden der Suchergebnisse",
-    "loading": "Suchergebnisse werden geladen"
-  },
+    "loading": "Suchergebnisse werden geladen",
+    "searchInputPlaceholder": "Videos suchen...",
+    "advancedSearchButton": "Erweiterte Suche",
+    "advancedSearchText1": "Standardmäßig durchsucht die Suche nur den Titel der Videos. Dies kann geändert werden, indem ein bestimmtes Video-Feld durchsucht wird.",
+    "advancedSearchText2": "Verwenden Sie die Syntax <code>field:Abfrage</code>, um nach einem bestimmten Feld zu suchen.",
+    "advancedSearchText3": "Verfügbare Felder:",
+    "advancedSearchText4": "Beispiele:",
+    "advancedSearchTextExample1": "Suche nach Videos mit dem Titel <code>title:mein großartiges Video</code>",
+    "advancedSearchTextExample2": "Suche nach Videos in einem Kapitel (Kategorie) <code>chapter:Path of Exile</code>",
+    "advancedSearchText5": "Hinweis: Bei ID-Suchen, wenn die UUID nicht ausgelesen werden konnte, wird stattdessen der Titel durchsucht."  },
   "AuthenticationPages": {
     "registerPageTitle": "Registrieren",
     "loginPageTitle": "Anmelden"
@@ -45,15 +53,15 @@
         "actions": "Aktionen",
         "view": "Warteschlangen-Element anzeigen",
         "stop": "Warteschlangen-Element stoppen"
-      },
-      "modal": {
-        "cancel": {
-          "title": "Warteschlangen-Element abbrechen",
-          "text": "Sind Sie sicher, dass Sie dieses Warteschlangen-Element abbrechen möchten?",
-          "description": "Bei Live-Archiven wird der Video- und Chat-Download gestoppt und die Nachbearbeitung gestartet. Bei VOD-Archiven werden alle Aufgaben gestoppt.",
-          "delete": "Video und Videodateien löschen",
-          "block": "Video-ID blockieren"
-        }
+      }
+    },
+    "modal": {
+      "cancel": {
+        "title": "Warteschlangen-Element abbrechen",
+        "text": "Sind Sie sicher, dass Sie dieses Warteschlangen-Element abbrechen möchten?",
+        "description": "Bei Live-Archiven wird der Video- und Chat-Download gestoppt und die Nachbearbeitung gestartet. Bei VOD-Archiven werden alle Aufgaben gestoppt.",
+        "delete": "Video und Videodateien löschen",
+        "block": "Video-ID blockieren"
       }
     }
   },
@@ -193,7 +201,7 @@
       "actions": "Aktionen"
     },
     "drawer": "Kanal",
-    "platformDrawer": "Plattformkanal",
+    "platformDrawer": "Plattform-Kanal",
     "deleteModal": "Kanal löschen"
   },
   "AdminInformationPage": {
@@ -367,7 +375,22 @@
     },
     "drawer": "Video",
     "deleteModal": "Video löschen",
-    "multiDeleteModal": "Videos löschen"
+    "multiDeleteModal": "Videos löschen",
+    "bulkActionsButton": "Massenaktionen",
+    "notificationError": "Fehler",
+    "markedVideosAsWatchedNotification": "Markierte Videos als angesehen",
+    "markedVideosAsUnWatchedNotification": "Markierte Videos als ungesehen",
+    "videosLockedNotification": "Videos wurden {status}",
+    "locked": "gesperrt",
+    "unlocked": "entsperren",
+    "bulkActionMenu": {
+      "markAsWatched": "Als angesehen markieren",
+      "markAsUnwatched": "Als ungesehen markieren",
+      "lock": "Videos sperren",
+      "unlock": "Videos entsperren",
+      "playlist": "Videos zur Playlist hinzufügen"
+    },
+    "addVideosToPlaylistModalTitle": "Füge Videos zur Wiedergabeliste hinzu"
   },
   "AdminWatchedChannelsPage": {
     "title": "Admin - Beobachtete Kanäle",
@@ -392,13 +415,13 @@
     "validation": {
       "id": "ID muss mindestens 2 Zeichen haben"
     },
-    "unblockedNotification": "Video freigegeben",
+    "unblockedNotification": "Video entsperren",
     "deleteConfirmText": "Bist du sicher, dass du dieses Video freigeben möchtest?",
     "deleteButton": "Video freigeben",
     "blockedNotification": "Video blockiert",
     "idPlaceholder": "Externe Plattform Video-ID",
     "blockButton": "Video blockieren",
-    "multiUnblockedNotification": "Videos freigegeben",
+    "multiUnblockedNotification": "Videos entsperren",
     "multiUnblockText": "Bist du sicher, dass du die {length} ausgewählten blockierten Videos freigeben möchtest?",
     "multiUnblockButton": "Videos freigeben"
   },
@@ -429,7 +452,7 @@
     "editButton": "Kanal bearbeiten",
     "imageUpdateButton": "Kanalbild von Plattform aktualisieren",
     "addedNotification": "Kanal hinzugefügt",
-    "platformChannelNameLabel": "Plattformkanalname",
+    "platformChannelNameLabel": "Plattform-Kanalname",
     "addButton": "Kanal hinzufügen"
   },
   "AdminQueueComponents": {
@@ -558,9 +581,9 @@
     "numberOfClipsLabel": "Anzahl der Clips",
     "numberOfClipsDescription": "Anzahl der zu archivierenden Clips.",
     "intervalDaysLabel": "Intervall (Tage)",
-    "intervalDaysDescription": "Wie oft der Kanal auf zu archivierende Clips überprüft wird (in Tagen). Dies beschränkt die Clip-Suche auch auf die letzten Intervalltage.",
+    "intervalDaysDescription": "Wie oft der Kanal auf zu archivierende Clips überprüft wird (in Tagen). Dies beschränkt die Clip-Suche auch auf die letzten Intervall-Tage.",
     "ignoreLastCheckedDateLabel": "Datum der letzten Überprüfung ignorieren",
-    "ignoreLastCheckedDateDescription": "Clips werden nur überprüft, wenn das Datum der letzten Überprüfung älter als die Intervalltage ist. Wenn dies aktiviert ist, wird das Datum der letzten Überprüfung ignoriert und alle Clips der letzten Intervalltage werden überprüft.",
+    "ignoreLastCheckedDateDescription": "Clips werden nur überprüft, wenn das Datum der letzten Überprüfung älter als die Intervall-Tage ist. Wenn dies aktiviert ist, wird das Datum der letzten Überprüfung ignoriert und alle Clips der letzten Intervall-Tage werden überprüft.",
     "advancedText": "Erweitert",
     "maxVideoAgeLabel": "Maximales Videoalter (Tage)",
     "maxVideoAgeDescription": "Archiviere Videos, die nicht älter als diese Anzahl von Tagen sind (0, um alle zu archivieren).",
@@ -613,7 +636,7 @@
     "with": "mit"
   },
   "PlaylistComponents": {
-    "playlist": "Widergabeliste",
+    "playlist": "Wiedergabeliste",
     "edited": "bearbeitet",
     "created": "erstellt",
     "errorCreatingNotification": "Fehler beim Erstellen der Wiedergabeliste",
@@ -628,7 +651,10 @@
     "loading": "Lade Wiedergabelisten",
     "errorLoading": "Fehler beim Laden der Wiedergabelisten",
     "addVideoPlaylistsPlaceholder": "Wähle eine Wiedergabeliste",
-    "addVideoToPlaylistButton": "Füge Video zur Wiedergabeliste hinzu"
+    "addVideoToPlaylistButton": "Füge Video zur Wiedergabeliste hinzu",
+    "videosAddedToPlaylistNotification": "Videos zur Wiedergabeliste hinzugefügt",
+    "notificationError": "Fehler",
+    "addVideosToPlaylistButton": "Videos zur Wiedergabeliste hinzufügen"
   },
   "QueueComponents": {
     "restartButton": "Neustarten",
@@ -645,6 +671,7 @@
     "ganymedeVideoIdLabel": "Ganymed Video-ID",
     "streamedAtLabel": "Gestreamt am",
     "taskRestartedNotification": "Aufgabe neu gestartet.",
+    "taskRestartText": "Warteschlangenaufgabe {taskName} neu starten?",
     "continueWithSubsequentTasksLabel": "Mit nachfolgenden Aufgaben fortfahren",
     "restartTaskButton": "Aufgabe neu starten",
     "videoDownloadTitle": "Video herunterladen",
@@ -666,7 +693,7 @@
     "chatHistogramTitle": "Chat Histogramm",
     "chatTimeSkipDetected": "Zeitsprung erkannt. Chat geleert.",
     "chatPlayerReady": "Chat-Player bereit",
-    "chatPlayerReadyStats": "Chat-Wiedergabe enthält {lengthBadges} Badges, {lengthSubBadges} Abonnementen-Badges und {lengthEmotes} Emotes.",
+    "chatPlayerReadyStats": "Chat-Wiedergabe enthält {lengthBadges} Badges, {lengthSubBadges} Abonnenten-Badges und {lengthEmotes} Emotes.",
     "loadingChat": "Lade Chat-Wiedergabe",
     "chatError": "Fehler",
     "filterByLabel": "Nach Kriterium filtern",
@@ -677,7 +704,7 @@
     "markedAsUnwatchedNotification": "Video als nicht angesehen markiert",
     "videoLockedNotification": "Das Video wurde {status}.",
     "locked": "gesperrt",
-    "unlocked": "entsperrt",
+    "unlocked": "entsperren",
     "generateStaticThumbnailsNotification": "Aufgabe zum Erstellen von statischen Thumbnails zur Warteschlange hinzugefügt",
     "generateSpriteThumbnailsNotification": "Aufgabe zum Erstellen von Sprite-Thumbnails zur Warteschlange hinzugefügt",
     "copiedToClipboardText": "In Zwischenablage kopiert",
