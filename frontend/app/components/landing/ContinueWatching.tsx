@@ -29,10 +29,12 @@ const ContinueWatching = ({ count }: Props) => {
         <Carousel
           slideSize={{ base: '100%', sm: '50%' }}
           slideGap={{ base: rem(4), sm: 'xl' }}
-          align="start"
-          slidesToScroll={isMobile ? 1 : 2}
           controlSize={40}
           withIndicators
+          emblaOptions={{
+            align: 'start',
+            slidesToScroll: isMobile ? 1 : 2
+          }}
         >
           {data.data && data.data.map((item) => (
             <Carousel.Slide key={item.vod.id}>
