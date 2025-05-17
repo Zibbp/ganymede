@@ -18,8 +18,10 @@ const VideoPageClips = ({ clips }: Params) => {
         withIndicators
         slideSize={{ base: '100%', sm: '50%', md: '33.333333%', lg: '25%', xl: '16.666666%' }}
         slideGap={{ base: 0, sm: 'md' }}
-        loop
-        align="start"
+        emblaOptions={{
+          align: "start",
+          loop: true,
+        }}
       >
         {clips.map((video) => (
           <Carousel.Slide key={video.id}>
