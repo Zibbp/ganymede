@@ -272,7 +272,7 @@
     "archiveSettings": {
       "header": "Archive Settings",
       "livestreamCheckIntervalLabel": "Livestream Check Interval Seconds",
-      "livestreamCheckIntervalDescription": "The interval in seconds to check for new live streams to archive. REQUIRES RESTART!",
+      "livestreamCheckIntervalDescription": "The interval in seconds to check for new live streams to archive. Recommended is 60 seconds, do not go less than 30 seconds. REQUIRES RESTART!",
       "videoCheckIntervalLabel": "Video Check Interval Minutes",
       "videoCheckIntervalDescription": "The interval in minutes to check for new videos to archive. REQUIRES RESTART!",
       "mp4ToHLSConversionLabel": "Convert MP4 to HLS",
