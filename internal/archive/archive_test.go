@@ -3,6 +3,7 @@ package archive_test
 import (
 	"context"
 	"os"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -28,6 +29,14 @@ var (
 	TestTwitchClipId             = "SarcasticDarkPanCoolCat-rgyYByzzfGqIwbWd"
 	TestArchiveTimeout           = 300 * time.Second
 )
+
+// isPlayableVideo checks if a video file is playable using ffprobe.
+func isPlayableVideo(path string) bool {
+	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+		"stream=codec_name", "-of", "default=noprint_wrappers=1:nokey=1", path)
+	err := cmd.Run()
+	return err == nil
+}
 
 // TestAdmin tests the admin service. This function runs all the tests to avoid spinning up multiple containers.
 func TestArchive(t *testing.T) {
@@ -112,7 +121,7 @@ func TestArchiveVideo(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -134,6 +143,10 @@ func TestArchiveVideo(t *testing.T) {
 	assert.FileExists(t, v.VideoPath)
 	assert.FileExists(t, v.ChatPath)
 	assert.FileExists(t, v.ChatVideoPath)
+
+	// Assert video is playable
+	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, isPlayableVideo(v.ChatVideoPath), "Video file is not playable")
 }
 
 // ArchiveVideo tests the full archive process for a video without chat downloading, processing, and rendering
@@ -190,7 +203,7 @@ func TestArchiveVideoNoChat(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -212,6 +225,9 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.FileExists(t, v.VideoPath)
 	assert.NoFileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
+
+	// Assert video is playable
+	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
 }
 
 // ArchiveVideo tests the full archive process for a video without chat rendering
@@ -268,7 +284,7 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -290,6 +306,9 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.FileExists(t, v.VideoPath)
 	assert.FileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
+
+	// Assert video is playable
+	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
 }
 
 // TestArchiveVideoHLS tests the full archive process for a video without chat downloading, processing, and rendering converting to HLS
@@ -353,7 +372,7 @@ func TestArchiveVideoHLS(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -437,7 +456,7 @@ func TestArchiveClip(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -459,6 +478,10 @@ func TestArchiveClip(t *testing.T) {
 	assert.FileExists(t, v.VideoPath)
 	assert.FileExists(t, v.ChatPath)
 	assert.FileExists(t, v.ChatVideoPath)
+
+	// Assert video is playable
+	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, isPlayableVideo(v.ChatVideoPath), "Video file is not playable")
 }
 
 // TestArchiveVideoWithSpriteThumbnails tests generate sprite thumbnails after a video is archived.
@@ -515,7 +538,7 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	// Assert queue item was updated
@@ -538,8 +561,8 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.NoFileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
 
-	// Wait 5 seconds for sprite thumbnails
-	time.Sleep(5 * time.Second)
+	// Wait for sprite thumbnails
+	time.Sleep(10 * time.Second)
 
 	// Assert sprite thumbnail facts
 	v, err = app.Database.Client.Vod.Query().Where(vod.ID(v.ID)).Only(context.Background())
