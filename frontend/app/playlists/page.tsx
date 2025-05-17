@@ -114,6 +114,7 @@ const PlaylistsPage = () => {
                     variant="subtle"
                     color="blue"
                     onClick={() => {
+                      setPlaylistEditMode(PlaylistEditFormMode.Edit)
                       setPlaylist(playlist)
                       openPlaylistDrawer()
                     }}
