@@ -29,7 +29,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.37.0
 	golang.org/x/crypto v0.37.0
 	golang.org/x/oauth2 v0.30.0
-	riverqueue.com/riverui v0.9.0
+	riverqueue.com/riverui v0.10.0
 )
 
 require (
