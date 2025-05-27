@@ -11,6 +11,7 @@ import { getTwitchCategories } from "@/app/hooks/useCategory";
 import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { metadata } from "@/app/layout";
 
 type Props = {
   watchedChannel: WatchedChannel | null
@@ -72,6 +73,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       clips_limit: watchedChannel?.clips_limit || 5,
       clips_interval_days: watchedChannel?.clips_interval_days || 7,
       clips_ignore_last_checked: watchedChannel?.clips_ignore_last_checked ?? false,
+      update_metadata_minutes: watchedChannel?.update_metadata_minutes || 15,
       live_title_regexes: [],
       categories: [] as string[],
     },
@@ -135,6 +137,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           clips_limit: formValues.clips_limit,
           clips_interval_days: formValues.clips_interval_days,
           clips_ignore_last_checked: formValues.clips_ignore_last_checked,
+          update_metadata_minutes: formValues.update_metadata_minutes,
           is_live: false, // Default value
           edges: {
             channel: { id: formValues.channel_id } as Channel,
@@ -177,6 +180,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           clips_limit: formValues.clips_limit,
           clips_interval_days: formValues.clips_interval_days,
           clips_ignore_last_checked: formValues.clips_ignore_last_checked,
+          update_metadata_minutes: formValues.update_metadata_minutes,
           edges: {
             ...watchedChannel.edges,
             title_regex: liveTitleRegexes
@@ -224,7 +228,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
   return (
     <div>
       <Text>{t.rich('headerText', {
-        wiki: (chunks) => <a href="https://github.com/Zibbp/ganymede/wiki/Watched-Channels" target="_blank" className={classes.link}>{chunks}</a>,
+        wiki: (chunks: string) => <a href="https://github.com/Zibbp/ganymede/wiki/Watched-Channels" target="_blank" className={classes.link}>{chunks}</a>,
       })}</Text>
 
       <form onSubmit={form.onSubmit(() => {
@@ -281,6 +285,18 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
             key={form.key('watch_live')}
             {...form.getInputProps('watch_live', { type: "checkbox" })}
           />
+
+          {form.values.watch_live && (
+            <NumberInput
+              mt={5}
+              label={t('updateMetadataLabel')}
+              description={t('updateMetadataDescription')}
+              key={form.key('update_metadata_minutes')}
+              {...form.getInputProps('update_metadata_minutes')}
+              min={1}
+            />
+          )}
+
         </div>
 
         <Divider my="sm" size="md" />
@@ -413,7 +429,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
             </Tooltip>
           </Group>
           <div>
-            <Text size="sm">{t.rich('titleRegexDescription', { wiki: (chunks) => <a href="https://github.com/Zibbp/ganymede/wiki/Watched-Channel-Title-Regex" target="_blank" className={classes.link}>{chunks}</a> })}</Text>
+            <Text size="sm">{t.rich('titleRegexDescription', { wiki: (chunks: string) => <a href="https://github.com/Zibbp/ganymede/wiki/Watched-Channel-Title-Regex" target="_blank" className={classes.link}>{chunks}</a> })}</Text>
           </div>
 
           <div>

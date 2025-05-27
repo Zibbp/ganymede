@@ -603,7 +603,9 @@
     "categoriesLoadButton": "Load Categories",
     "categoriesSearchPlaceholder": "Search categories...",
     "submitButton": "Create Watched Channel",
-    "editButton": "Edit Watched Channel"
+    "editButton": "Edit Watched Channel",
+    "updateMetadataLabel": "Update Metadata",
+    "updateMetadataDescription": "Update live stream metadata after X minutes of the live stream starting. This includes thumbnails and title. Set to 0 to disable."
   },
   "AuthComponents": {
     "validation": {
