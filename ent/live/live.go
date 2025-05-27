@@ -51,6 +51,8 @@ const (
 	FieldClipsLastChecked = "clips_last_checked"
 	// FieldClipsIgnoreLastChecked holds the string denoting the clips_ignore_last_checked field in the database.
 	FieldClipsIgnoreLastChecked = "clips_ignore_last_checked"
+	// FieldUpdateMetadataMinutes holds the string denoting the update_metadata_minutes field in the database.
+	FieldUpdateMetadataMinutes = "update_metadata_minutes"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -107,6 +109,7 @@ var Columns = []string{
 	FieldClipsIntervalDays,
 	FieldClipsLastChecked,
 	FieldClipsIgnoreLastChecked,
+	FieldUpdateMetadataMinutes,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -167,6 +170,10 @@ var (
 	DefaultClipsIntervalDays int
 	// DefaultClipsIgnoreLastChecked holds the default value on creation for the "clips_ignore_last_checked" field.
 	DefaultClipsIgnoreLastChecked bool
+	// DefaultUpdateMetadataMinutes holds the default value on creation for the "update_metadata_minutes" field.
+	DefaultUpdateMetadataMinutes int
+	// UpdateMetadataMinutesValidator is a validator for the "update_metadata_minutes" field. It is called by the builders before save.
+	UpdateMetadataMinutesValidator func(int) error
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
@@ -273,6 +280,11 @@ func ByClipsLastChecked(opts ...sql.OrderTermOption) OrderOption {
 // ByClipsIgnoreLastChecked orders the results by the clips_ignore_last_checked field.
 func ByClipsIgnoreLastChecked(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldClipsIgnoreLastChecked, opts...).ToFunc()
+}
+
+// ByUpdateMetadataMinutes orders the results by the update_metadata_minutes field.
+func ByUpdateMetadataMinutes(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdateMetadataMinutes, opts...).ToFunc()
 }
 
 // ByUpdatedAt orders the results by the updated_at field.

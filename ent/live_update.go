@@ -317,6 +317,27 @@ func (lu *LiveUpdate) SetNillableClipsIgnoreLastChecked(b *bool) *LiveUpdate {
 	return lu
 }
 
+// SetUpdateMetadataMinutes sets the "update_metadata_minutes" field.
+func (lu *LiveUpdate) SetUpdateMetadataMinutes(i int) *LiveUpdate {
+	lu.mutation.ResetUpdateMetadataMinutes()
+	lu.mutation.SetUpdateMetadataMinutes(i)
+	return lu
+}
+
+// SetNillableUpdateMetadataMinutes sets the "update_metadata_minutes" field if the given value is not nil.
+func (lu *LiveUpdate) SetNillableUpdateMetadataMinutes(i *int) *LiveUpdate {
+	if i != nil {
+		lu.SetUpdateMetadataMinutes(*i)
+	}
+	return lu
+}
+
+// AddUpdateMetadataMinutes adds i to the "update_metadata_minutes" field.
+func (lu *LiveUpdate) AddUpdateMetadataMinutes(i int) *LiveUpdate {
+	lu.mutation.AddUpdateMetadataMinutes(i)
+	return lu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lu *LiveUpdate) SetUpdatedAt(t time.Time) *LiveUpdate {
 	lu.mutation.SetUpdatedAt(t)
@@ -455,6 +476,11 @@ func (lu *LiveUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (lu *LiveUpdate) check() error {
+	if v, ok := lu.mutation.UpdateMetadataMinutes(); ok {
+		if err := live.UpdateMetadataMinutesValidator(v); err != nil {
+			return &ValidationError{Name: "update_metadata_minutes", err: fmt.Errorf(`ent: validator failed for field "Live.update_metadata_minutes": %w`, err)}
+		}
+	}
 	if lu.mutation.ChannelCleared() && len(lu.mutation.ChannelIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Live.channel"`)
 	}
@@ -541,6 +567,12 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := lu.mutation.ClipsIgnoreLastChecked(); ok {
 		_spec.SetField(live.FieldClipsIgnoreLastChecked, field.TypeBool, value)
+	}
+	if value, ok := lu.mutation.UpdateMetadataMinutes(); ok {
+		_spec.SetField(live.FieldUpdateMetadataMinutes, field.TypeInt, value)
+	}
+	if value, ok := lu.mutation.AddedUpdateMetadataMinutes(); ok {
+		_spec.AddField(live.FieldUpdateMetadataMinutes, field.TypeInt, value)
 	}
 	if value, ok := lu.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -969,6 +1001,27 @@ func (luo *LiveUpdateOne) SetNillableClipsIgnoreLastChecked(b *bool) *LiveUpdate
 	return luo
 }
 
+// SetUpdateMetadataMinutes sets the "update_metadata_minutes" field.
+func (luo *LiveUpdateOne) SetUpdateMetadataMinutes(i int) *LiveUpdateOne {
+	luo.mutation.ResetUpdateMetadataMinutes()
+	luo.mutation.SetUpdateMetadataMinutes(i)
+	return luo
+}
+
+// SetNillableUpdateMetadataMinutes sets the "update_metadata_minutes" field if the given value is not nil.
+func (luo *LiveUpdateOne) SetNillableUpdateMetadataMinutes(i *int) *LiveUpdateOne {
+	if i != nil {
+		luo.SetUpdateMetadataMinutes(*i)
+	}
+	return luo
+}
+
+// AddUpdateMetadataMinutes adds i to the "update_metadata_minutes" field.
+func (luo *LiveUpdateOne) AddUpdateMetadataMinutes(i int) *LiveUpdateOne {
+	luo.mutation.AddUpdateMetadataMinutes(i)
+	return luo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (luo *LiveUpdateOne) SetUpdatedAt(t time.Time) *LiveUpdateOne {
 	luo.mutation.SetUpdatedAt(t)
@@ -1120,6 +1173,11 @@ func (luo *LiveUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (luo *LiveUpdateOne) check() error {
+	if v, ok := luo.mutation.UpdateMetadataMinutes(); ok {
+		if err := live.UpdateMetadataMinutesValidator(v); err != nil {
+			return &ValidationError{Name: "update_metadata_minutes", err: fmt.Errorf(`ent: validator failed for field "Live.update_metadata_minutes": %w`, err)}
+		}
+	}
 	if luo.mutation.ChannelCleared() && len(luo.mutation.ChannelIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Live.channel"`)
 	}
@@ -1223,6 +1281,12 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 	}
 	if value, ok := luo.mutation.ClipsIgnoreLastChecked(); ok {
 		_spec.SetField(live.FieldClipsIgnoreLastChecked, field.TypeBool, value)
+	}
+	if value, ok := luo.mutation.UpdateMetadataMinutes(); ok {
+		_spec.SetField(live.FieldUpdateMetadataMinutes, field.TypeInt, value)
+	}
+	if value, ok := luo.mutation.AddedUpdateMetadataMinutes(); ok {
+		_spec.AddField(live.FieldUpdateMetadataMinutes, field.TypeInt, value)
 	}
 	if value, ok := luo.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)

@@ -81,6 +81,7 @@ var (
 		{Name: "clips_interval_days", Type: field.TypeInt, Default: 0},
 		{Name: "clips_last_checked", Type: field.TypeTime, Nullable: true},
 		{Name: "clips_ignore_last_checked", Type: field.TypeBool, Default: false},
+		{Name: "update_metadata_minutes", Type: field.TypeInt, Default: 15},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "channel_live", Type: field.TypeUUID},
@@ -93,7 +94,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[21]},
+				Columns:    []*schema.Column{LivesColumns[22]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
