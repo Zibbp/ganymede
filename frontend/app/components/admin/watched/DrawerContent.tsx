@@ -228,7 +228,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
   return (
     <div>
       <Text>{t.rich('headerText', {
-        wiki: (chunks: string) => <a href="https://github.com/Zibbp/ganymede/wiki/Watched-Channels" target="_blank" className={classes.link}>{chunks}</a>,
+        wiki: (chunks) => <a href="https://github.com/Zibbp/ganymede/wiki/Watched-Channels" target="_blank" className={classes.link}>{chunks}</a>,
       })}</Text>
 
       <form onSubmit={form.onSubmit(() => {
@@ -429,7 +429,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
             </Tooltip>
           </Group>
           <div>
-            <Text size="sm">{t.rich('titleRegexDescription', { wiki: (chunks: string) => <a href="https://github.com/Zibbp/ganymede/wiki/Watched-Channel-Title-Regex" target="_blank" className={classes.link}>{chunks}</a> })}</Text>
+            <Text size="sm">{t.rich('titleRegexDescription', { wiki: (chunks) => <a href="https://github.com/Zibbp/ganymede/wiki/Watched-Channel-Title-Regex" target="_blank" className={classes.link}>{chunks}</a> })}</Text>
           </div>
 
           <div>
