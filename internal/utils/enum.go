@@ -117,22 +117,23 @@ func (PlaybackStatus) Values() (kinds []string) {
 type TaskName string
 
 const (
-	TaskCreateFolder      TaskName = "task_vod_create_folder"
-	TaskDownloadThumbnail TaskName = "task_vod_download_thumbnail"
-	TaskSaveInfo          TaskName = "task_vod_save_info"
-	TaskDownloadVideo     TaskName = "task_video_download"
-	TaskDownloadLiveVideo TaskName = "task_live_video_download" // not used queue
-	TaskPostProcessVideo  TaskName = "task_video_convert"
-	TaskMoveVideo         TaskName = "task_video_move"
-	TaskDownloadChat      TaskName = "task_chat_download"
-	TaskDownloadLiveChat  TaskName = "task_live_chat_download" // not used queue
-	TaskConvertChat       TaskName = "task_chat_convert"
-	TaskRenderChat        TaskName = "task_chat_render"
-	TaskMoveChat          TaskName = "task_chat_move"
+	TaskCreateFolder             TaskName = "task_vod_create_folder"
+	TaskDownloadThumbnail        TaskName = "task_vod_download_thumbnail"
+	TaskSaveInfo                 TaskName = "task_vod_save_info"
+	TaskDownloadVideo            TaskName = "task_video_download"
+	TaskDownloadLiveVideo        TaskName = "task_live_video_download" // not used queue
+	TaskPostProcessVideo         TaskName = "task_video_convert"
+	TaskMoveVideo                TaskName = "task_video_move"
+	TaskDownloadChat             TaskName = "task_chat_download"
+	TaskDownloadLiveChat         TaskName = "task_live_chat_download" // not used queue
+	TaskConvertChat              TaskName = "task_chat_convert"
+	TaskRenderChat               TaskName = "task_chat_render"
+	TaskMoveChat                 TaskName = "task_chat_move"
+	TaskUpdateLiveStreamMetadata TaskName = "task_update_live_stream_metadata" // not used queue
 )
 
 func (TaskName) Values() (kinds []string) {
-	for _, s := range []TaskName{TaskCreateFolder, TaskDownloadThumbnail, TaskSaveInfo, TaskDownloadVideo, TaskPostProcessVideo, TaskMoveVideo, TaskDownloadChat, TaskConvertChat, TaskRenderChat, TaskMoveChat} {
+	for _, s := range []TaskName{TaskCreateFolder, TaskDownloadThumbnail, TaskSaveInfo, TaskDownloadVideo, TaskPostProcessVideo, TaskMoveVideo, TaskDownloadChat, TaskConvertChat, TaskRenderChat, TaskMoveChat, TaskUpdateLiveStreamMetadata} {
 		kinds = append(kinds, string(s))
 	}
 	return
@@ -160,6 +161,8 @@ func GetTaskName(s string) TaskName {
 		return TaskRenderChat
 	case string(TaskMoveChat):
 		return TaskMoveChat
+	case string(TaskUpdateLiveStreamMetadata):
+		return TaskUpdateLiveStreamMetadata
 	default:
 		return ""
 	}
