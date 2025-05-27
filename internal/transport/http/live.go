@@ -38,6 +38,7 @@ type AddWatchedChannelRequest struct {
 	ClipsLimit             int                 `json:"clips_limit" validate:"number,gte=1"`
 	ClipsIntervalDays      int                 `json:"clips_interval_days" validate:"number,gte=1"`
 	ClipsIgnoreLastChecked bool                `json:"clips_ignore_last_checked" validate:"boolean"`
+	UpdateMetadataMinutes  int                 `json:"update_metadata_minutes" validate:"number,gte=0"` // Queue metadata update X minutes after the stream is live. Set to 0 to disable.
 }
 
 type AddLiveTitleRegex struct {
@@ -64,6 +65,7 @@ type UpdateWatchedChannelRequest struct {
 	ClipsLimit             int                 `json:"clips_limit" validate:"number,gte=1"`
 	ClipsIntervalDays      int                 `json:"clips_interval_days" validate:"number,gte=1"`
 	ClipsIgnoreLastChecked bool                `json:"clips_ignore_last_checked" validate:"boolean"`
+	UpdateMetadataMinutes  int                 `json:"update_metadata_minutes" validate:"number,gte=0"` // Queue metadata update X minutes after the stream is live. Set to 0 to disable.
 }
 
 type ConvertChatRequest struct {
@@ -155,6 +157,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		ClipsLimit:             ccr.ClipsLimit,
 		ClipsIntervalDays:      ccr.ClipsIntervalDays,
 		ClipsIgnoreLastChecked: ccr.ClipsIgnoreLastChecked,
+		UpdateMetadataMinutes:  ccr.UpdateMetadataMinutes,
 	}
 
 	for _, regex := range ccr.Regex {
@@ -226,6 +229,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		ClipsLimit:             ccr.ClipsLimit,
 		ClipsIntervalDays:      ccr.ClipsIntervalDays,
 		ClipsIgnoreLastChecked: ccr.ClipsIgnoreLastChecked,
+		UpdateMetadataMinutes:  ccr.UpdateMetadataMinutes,
 	}
 
 	for _, regex := range ccr.Regex {

@@ -279,6 +279,20 @@ func (lc *LiveCreate) SetNillableClipsIgnoreLastChecked(b *bool) *LiveCreate {
 	return lc
 }
 
+// SetUpdateMetadataMinutes sets the "update_metadata_minutes" field.
+func (lc *LiveCreate) SetUpdateMetadataMinutes(i int) *LiveCreate {
+	lc.mutation.SetUpdateMetadataMinutes(i)
+	return lc
+}
+
+// SetNillableUpdateMetadataMinutes sets the "update_metadata_minutes" field if the given value is not nil.
+func (lc *LiveCreate) SetNillableUpdateMetadataMinutes(i *int) *LiveCreate {
+	if i != nil {
+		lc.SetUpdateMetadataMinutes(*i)
+	}
+	return lc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (lc *LiveCreate) SetUpdatedAt(t time.Time) *LiveCreate {
 	lc.mutation.SetUpdatedAt(t)
@@ -465,6 +479,10 @@ func (lc *LiveCreate) defaults() {
 		v := live.DefaultClipsIgnoreLastChecked
 		lc.mutation.SetClipsIgnoreLastChecked(v)
 	}
+	if _, ok := lc.mutation.UpdateMetadataMinutes(); !ok {
+		v := live.DefaultUpdateMetadataMinutes
+		lc.mutation.SetUpdateMetadataMinutes(v)
+	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		v := live.DefaultUpdatedAt()
 		lc.mutation.SetUpdatedAt(v)
@@ -528,6 +546,14 @@ func (lc *LiveCreate) check() error {
 	}
 	if _, ok := lc.mutation.ClipsIgnoreLastChecked(); !ok {
 		return &ValidationError{Name: "clips_ignore_last_checked", err: errors.New(`ent: missing required field "Live.clips_ignore_last_checked"`)}
+	}
+	if _, ok := lc.mutation.UpdateMetadataMinutes(); !ok {
+		return &ValidationError{Name: "update_metadata_minutes", err: errors.New(`ent: missing required field "Live.update_metadata_minutes"`)}
+	}
+	if v, ok := lc.mutation.UpdateMetadataMinutes(); ok {
+		if err := live.UpdateMetadataMinutesValidator(v); err != nil {
+			return &ValidationError{Name: "update_metadata_minutes", err: fmt.Errorf(`ent: validator failed for field "Live.update_metadata_minutes": %w`, err)}
+		}
 	}
 	if _, ok := lc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Live.updated_at"`)}
@@ -645,6 +671,10 @@ func (lc *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := lc.mutation.ClipsIgnoreLastChecked(); ok {
 		_spec.SetField(live.FieldClipsIgnoreLastChecked, field.TypeBool, value)
 		_node.ClipsIgnoreLastChecked = value
+	}
+	if value, ok := lc.mutation.UpdateMetadataMinutes(); ok {
+		_spec.SetField(live.FieldUpdateMetadataMinutes, field.TypeInt, value)
+		_node.UpdateMetadataMinutes = value
 	}
 	if value, ok := lc.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
@@ -1001,6 +1031,24 @@ func (u *LiveUpsert) UpdateClipsIgnoreLastChecked() *LiveUpsert {
 	return u
 }
 
+// SetUpdateMetadataMinutes sets the "update_metadata_minutes" field.
+func (u *LiveUpsert) SetUpdateMetadataMinutes(v int) *LiveUpsert {
+	u.Set(live.FieldUpdateMetadataMinutes, v)
+	return u
+}
+
+// UpdateUpdateMetadataMinutes sets the "update_metadata_minutes" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateUpdateMetadataMinutes() *LiveUpsert {
+	u.SetExcluded(live.FieldUpdateMetadataMinutes)
+	return u
+}
+
+// AddUpdateMetadataMinutes adds v to the "update_metadata_minutes" field.
+func (u *LiveUpsert) AddUpdateMetadataMinutes(v int) *LiveUpsert {
+	u.Add(live.FieldUpdateMetadataMinutes, v)
+	return u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (u *LiveUpsert) SetUpdatedAt(v time.Time) *LiveUpsert {
 	u.Set(live.FieldUpdatedAt, v)
@@ -1348,6 +1396,27 @@ func (u *LiveUpsertOne) SetClipsIgnoreLastChecked(v bool) *LiveUpsertOne {
 func (u *LiveUpsertOne) UpdateClipsIgnoreLastChecked() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateClipsIgnoreLastChecked()
+	})
+}
+
+// SetUpdateMetadataMinutes sets the "update_metadata_minutes" field.
+func (u *LiveUpsertOne) SetUpdateMetadataMinutes(v int) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetUpdateMetadataMinutes(v)
+	})
+}
+
+// AddUpdateMetadataMinutes adds v to the "update_metadata_minutes" field.
+func (u *LiveUpsertOne) AddUpdateMetadataMinutes(v int) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.AddUpdateMetadataMinutes(v)
+	})
+}
+
+// UpdateUpdateMetadataMinutes sets the "update_metadata_minutes" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateUpdateMetadataMinutes() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateUpdateMetadataMinutes()
 	})
 }
 
@@ -1867,6 +1936,27 @@ func (u *LiveUpsertBulk) SetClipsIgnoreLastChecked(v bool) *LiveUpsertBulk {
 func (u *LiveUpsertBulk) UpdateClipsIgnoreLastChecked() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateClipsIgnoreLastChecked()
+	})
+}
+
+// SetUpdateMetadataMinutes sets the "update_metadata_minutes" field.
+func (u *LiveUpsertBulk) SetUpdateMetadataMinutes(v int) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetUpdateMetadataMinutes(v)
+	})
+}
+
+// AddUpdateMetadataMinutes adds v to the "update_metadata_minutes" field.
+func (u *LiveUpsertBulk) AddUpdateMetadataMinutes(v int) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.AddUpdateMetadataMinutes(v)
+	})
+}
+
+// UpdateUpdateMetadataMinutes sets the "update_metadata_minutes" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateUpdateMetadataMinutes() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateUpdateMetadataMinutes()
 	})
 }
 

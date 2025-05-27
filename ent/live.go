@@ -55,6 +55,8 @@ type Live struct {
 	ClipsLastChecked time.Time `json:"clips_last_checked"`
 	// Ignore last checked time and check all clips.
 	ClipsIgnoreLastChecked bool `json:"clips_ignore_last_checked"`
+	// Queue metadata update X minutes after the stream is live. Set to 0 to disable.
+	UpdateMetadataMinutes int `json:"update_metadata_minutes"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -115,7 +117,7 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive, live.FieldWatchClips, live.FieldClipsIgnoreLastChecked:
 			values[i] = new(sql.NullBool)
-		case live.FieldVideoAge, live.FieldClipsLimit, live.FieldClipsIntervalDays:
+		case live.FieldVideoAge, live.FieldClipsLimit, live.FieldClipsIntervalDays, live.FieldUpdateMetadataMinutes:
 			values[i] = new(sql.NullInt64)
 		case live.FieldResolution:
 			values[i] = new(sql.NullString)
@@ -254,6 +256,12 @@ func (l *Live) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				l.ClipsIgnoreLastChecked = value.Bool
 			}
+		case live.FieldUpdateMetadataMinutes:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field update_metadata_minutes", values[i])
+			} else if value.Valid {
+				l.UpdateMetadataMinutes = int(value.Int64)
+			}
 		case live.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
@@ -377,6 +385,9 @@ func (l *Live) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("clips_ignore_last_checked=")
 	builder.WriteString(fmt.Sprintf("%v", l.ClipsIgnoreLastChecked))
+	builder.WriteString(", ")
+	builder.WriteString("update_metadata_minutes=")
+	builder.WriteString(fmt.Sprintf("%v", l.UpdateMetadataMinutes))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(l.UpdatedAt.Format(time.ANSIC))

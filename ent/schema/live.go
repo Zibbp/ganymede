@@ -40,6 +40,7 @@ func (Live) Fields() []ent.Field {
 		field.Int("clips_interval_days").Default(0).Comment("How often channel should be checked for clips to archive in days."),
 		field.Time("clips_last_checked").Comment("Time when clips were last checked.").Optional(),
 		field.Bool("clips_ignore_last_checked").Default(false).Comment("Ignore last checked time and check all clips."),
+		field.Int("update_metadata_minutes").Default(15).Min(0).Comment("Queue metadata update X minutes after the stream is live. Set to 0 to disable."),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}

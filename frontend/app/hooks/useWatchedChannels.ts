@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Category } from "./useCategory";
 import { ApiResponse } from "./useAxios";
 import { NullResponse } from "./usePlayback";
+import { update } from "lodash";
 
 export interface WatchedChannel {
   id: string;
@@ -24,6 +25,7 @@ export interface WatchedChannel {
   clips_limit: number;
   clips_interval_days: number;
   clips_ignore_last_checked: boolean;
+  update_metadata_minutes: number;
   updated_at: string;
   created_at: string;
   edges: WatchedChannelEdges;
@@ -79,6 +81,7 @@ const editWatchedChannel = async (
     clips_limit: watchedChannel.clips_limit,
     clips_interval_days: watchedChannel.clips_interval_days,
     clips_ignore_last_checked: watchedChannel.clips_ignore_last_checked,
+    update_metadata_minutes: watchedChannel.update_metadata_minutes,
   });
   return response.data.data;
 };
@@ -108,6 +111,7 @@ const createWatchedChannel = async (
     clips_limit: watchedChannel.clips_limit,
     clips_interval_days: watchedChannel.clips_interval_days,
     clips_ignore_last_checked: watchedChannel.clips_ignore_last_checked,
+    update_metadata_minutes: watchedChannel.update_metadata_minutes,
   });
   return response.data.data;
 };

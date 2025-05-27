@@ -146,6 +146,11 @@ func ClipsIgnoreLastChecked(v bool) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldClipsIgnoreLastChecked, v))
 }
 
+// UpdateMetadataMinutes applies equality check predicate on the "update_metadata_minutes" field. It's identical to UpdateMetadataMinutesEQ.
+func UpdateMetadataMinutes(v int) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldUpdateMetadataMinutes, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldUpdatedAt, v))
@@ -559,6 +564,46 @@ func ClipsIgnoreLastCheckedEQ(v bool) predicate.Live {
 // ClipsIgnoreLastCheckedNEQ applies the NEQ predicate on the "clips_ignore_last_checked" field.
 func ClipsIgnoreLastCheckedNEQ(v bool) predicate.Live {
 	return predicate.Live(sql.FieldNEQ(FieldClipsIgnoreLastChecked, v))
+}
+
+// UpdateMetadataMinutesEQ applies the EQ predicate on the "update_metadata_minutes" field.
+func UpdateMetadataMinutesEQ(v int) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldUpdateMetadataMinutes, v))
+}
+
+// UpdateMetadataMinutesNEQ applies the NEQ predicate on the "update_metadata_minutes" field.
+func UpdateMetadataMinutesNEQ(v int) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldUpdateMetadataMinutes, v))
+}
+
+// UpdateMetadataMinutesIn applies the In predicate on the "update_metadata_minutes" field.
+func UpdateMetadataMinutesIn(vs ...int) predicate.Live {
+	return predicate.Live(sql.FieldIn(FieldUpdateMetadataMinutes, vs...))
+}
+
+// UpdateMetadataMinutesNotIn applies the NotIn predicate on the "update_metadata_minutes" field.
+func UpdateMetadataMinutesNotIn(vs ...int) predicate.Live {
+	return predicate.Live(sql.FieldNotIn(FieldUpdateMetadataMinutes, vs...))
+}
+
+// UpdateMetadataMinutesGT applies the GT predicate on the "update_metadata_minutes" field.
+func UpdateMetadataMinutesGT(v int) predicate.Live {
+	return predicate.Live(sql.FieldGT(FieldUpdateMetadataMinutes, v))
+}
+
+// UpdateMetadataMinutesGTE applies the GTE predicate on the "update_metadata_minutes" field.
+func UpdateMetadataMinutesGTE(v int) predicate.Live {
+	return predicate.Live(sql.FieldGTE(FieldUpdateMetadataMinutes, v))
+}
+
+// UpdateMetadataMinutesLT applies the LT predicate on the "update_metadata_minutes" field.
+func UpdateMetadataMinutesLT(v int) predicate.Live {
+	return predicate.Live(sql.FieldLT(FieldUpdateMetadataMinutes, v))
+}
+
+// UpdateMetadataMinutesLTE applies the LTE predicate on the "update_metadata_minutes" field.
+func UpdateMetadataMinutesLTE(v int) predicate.Live {
+	return predicate.Live(sql.FieldLTE(FieldUpdateMetadataMinutes, v))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

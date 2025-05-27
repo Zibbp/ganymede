@@ -372,14 +372,21 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 				return err
 			}
 
-			_, err = client.Insert(ctx, &DownloadThumbnailsMinimalArgs{
-				Continue: false,
-				Input:    job.Args.Input,
-			}, &river.InsertOpts{
-				ScheduledAt: time.Now().Add(10 * time.Minute),
-			})
+			// Queue live stream metadata update job for in the future if the channel has it enabled
+			watchedChannel, err := dbItems.Channel.QueryLive().First(ctx)
 			if err != nil {
 				return err
+			}
+			if watchedChannel.UpdateMetadataMinutes > 0 {
+				_, err = client.Insert(ctx, &UpdateLiveStreamMetadataArgs{
+					Continue: false,
+					Input:    job.Args.Input,
+				}, &river.InsertOpts{
+					ScheduledAt: time.Now().Add(time.Duration(watchedChannel.UpdateMetadataMinutes) * time.Minute),
+				})
+				if err != nil {
+					return err
+				}
 			}
 
 		} else {
@@ -413,35 +420,35 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 }
 
 // //////////////////////////////
-// Minimal Download Thumbnails //
+// Update Live Stream Metadata //
 // //////////////////////////////
 //
-// Minimal version of the DownloadThumbnails task that is run X minutes after a live stream is archived.
+// Update live stream metadata task that is run X minutes after a live stream archive is started.
 //
-// This is used to prevent a blank thumbnail as Twitch is slow at generating them when the stream goes live.
-type DownloadThumbnailsMinimalArgs struct {
+// This is used to update the video metadata with the correct title and non-blank thumbnail.
+type UpdateLiveStreamMetadataArgs struct {
 	Continue bool              `json:"continue"`
 	Input    ArchiveVideoInput `json:"input"`
 }
 
-func (DownloadThumbnailsMinimalArgs) Kind() string { return string(utils.TaskDownloadThumbnail) }
+func (UpdateLiveStreamMetadataArgs) Kind() string { return string(utils.TaskUpdateLiveStreamMetadata) }
 
-func (args DownloadThumbnailsMinimalArgs) InsertOpts() river.InsertOpts {
+func (args UpdateLiveStreamMetadataArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 5,
 		Tags:        []string{archive_tag, allow_fail_tag},
 	}
 }
 
-func (w DownloadThumbnailsMinimalArgs) Timeout(job *river.Job[DownloadThumbnailsMinimalArgs]) time.Duration {
+func (w UpdateLiveStreamMetadataArgs) Timeout(job *river.Job[UpdateLiveStreamMetadataArgs]) time.Duration {
 	return 1 * time.Minute
 }
 
-type DownloadThumbnailsMinimalWorker struct {
-	river.WorkerDefaults[DownloadThumbnailsMinimalArgs]
+type UpdateLiveStreamMetadataWorker struct {
+	river.WorkerDefaults[UpdateLiveStreamMetadataArgs]
 }
 
-func (w DownloadThumbnailsMinimalWorker) Work(ctx context.Context, job *river.Job[DownloadThumbnailsMinimalArgs]) error {
+func (w UpdateLiveStreamMetadataWorker) Work(ctx context.Context, job *river.Job[UpdateLiveStreamMetadataArgs]) error {
 	// get store from context
 	store, err := StoreFromContext(ctx)
 	if err != nil {
@@ -458,31 +465,28 @@ func (w DownloadThumbnailsMinimalWorker) Work(ctx context.Context, job *river.Jo
 		return err
 	}
 
-	var thumbnailUrl string
+	client := river.ClientFromContext[pgx.Tx](ctx)
 
-	if dbItems.Queue.LiveArchive {
-		info, err := platformService.GetLiveStream(ctx, dbItems.Channel.Name)
-		if err != nil {
-			return err
-		}
-		thumbnailUrl = info.ThumbnailURL
-
-	} else {
-		info, err := platformService.GetVideo(ctx, dbItems.Video.ExtID, false, false)
-		if err != nil {
-			return err
-		}
-		thumbnailUrl = info.ThumbnailURL
-	}
-
-	fullResThumbnailUrl := replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive)
-	webResThumbnailUrl := replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive)
-
-	err = utils.DownloadAndSaveFile(fullResThumbnailUrl, dbItems.Video.ThumbnailPath)
+	// Queue thumbnail download job
+	_, err = client.Insert(ctx, &DownloadThumbnailArgs{Continue: false, Input: job.Args.Input}, nil)
 	if err != nil {
 		return err
 	}
-	err = utils.DownloadAndSaveFile(webResThumbnailUrl, dbItems.Video.WebThumbnailPath)
+
+	// Queue save info job
+	_, err = client.Insert(ctx, &SaveVideoInfoArgs{Continue: false, Input: job.Args.Input}, nil)
+	if err != nil {
+		return err
+	}
+
+	// Manually update the live stream metadata
+	info, err := platformService.GetLiveStream(ctx, dbItems.Channel.Name)
+	if err != nil {
+		return err
+	}
+
+	// Update the video metadata with the live stream info
+	_, err = dbItems.Video.Update().SetTitle(info.Title).Save(ctx)
 	if err != nil {
 		return err
 	}
