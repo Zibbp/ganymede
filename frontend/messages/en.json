@@ -605,7 +605,7 @@
     "submitButton": "Create Watched Channel",
     "editButton": "Edit Watched Channel",
     "updateMetadataLabel": "Update Metadata",
-    "updateMetadataDescription": "Update live stream metadata after X minutes of the live stream starting. This includes thumbnails and title. Set to 0 to disable."
+    "updateMetadataDescription": "Update live stream metadata after {minutes} minutes of the live stream archive starting. This includes thumbnails and title. Set to 0 to disable."
   },
   "AuthComponents": {
     "validation": {
