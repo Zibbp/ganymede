@@ -602,7 +602,9 @@
     "categoriesLoadButton": "Kategorien laden",
     "categoriesSearchPlaceholder": "Kategorien suchen...",
     "submitButton": "Beobachteten Kanal erstellen",
-    "editButton": "Beobachteten Kanal bearbeiten"
+    "editButton": "Beobachteten Kanal bearbeiten",
+    "updateMetadataLabel": "Metadaten aktualisieren",
+    "updateMetadataDescription": "Aktualisiere die Metadaten des Livestreams nach {minutes} Minuten, nachdem das Livestream-Archivieren gestartet wurde. Dazu gehören Thumbnails und Titel. Auf 0 setzen, um es zu deaktivieren."
   },
   "AuthComponents": {
     "validation": {
