@@ -22,8 +22,8 @@ export default function ForceLogin({ children }: { children: React.ReactNode }) 
   }, [isLoggedIn, isLoading, isAuthPage, router]);
 
   if (isForceLoginEnabled && !isAuthPage) {
-    if (isLoading) return null;
-    if (!isLoggedIn) return null;
+    if (isLoading) return <div></div>;
+    if (!isLoggedIn) return <div></div>;
   }
 
   return <>{children}</>;
