@@ -6,7 +6,7 @@ import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { date, z } from "zod";
+import { z } from "zod";
 
 type Props = {
   video: Video | null
