@@ -39,7 +39,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
     duration: z.number().min(1, { message: t('validation.duration') }),
     views: z.number().min(1),
     resolution: z.string().min(1),
-    streamed_at: z.string().datetime(),
+    streamed_at: z.string().datetime({ offset: true }),
     web_thumbnail_path: z.string().min(1),
     video_path: z.string().min(1)
   })
@@ -252,7 +252,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
         <TextInput
           withAsterisk
           label={t('streamedAtLabel')}
-          placeholder="2022-01-01"
+          placeholder={new Date().toISOString()}
           key={form.key('streamed_at')}
           {...form.getInputProps('streamed_at')}
         />
