@@ -11,6 +11,7 @@ import Providers from './providers';
 import { EnvScript, PublicEnvScript } from 'next-runtime-env';
 import { getLocale } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
+import ForceLogin from './components/authentication/ForceLogin';
 
 export const metadata: Metadata = {
   title: "Ganymede",
@@ -38,6 +39,7 @@ export default async function RootLayout({
             NEXT_PUBLIC_CDN_URL: process.env.CDN_URL,
             NEXT_PUBLIC_SHOW_LOCALE_BUTTON: process.env.SHOW_LOCALE_BUTTON,
             NEXT_PUBLIC_DEFAULT_LOCALE: process.env.DEFAULT_LOCALE,
+            NEXT_PUBLIC_FORCE_LOGIN: process.env.FORCE_LOGIN,
           }}
         />
         <ColorSchemeScript defaultColorScheme='dark' />
@@ -46,7 +48,8 @@ export default async function RootLayout({
 
         <NextIntlClientProvider>
           <Providers>
-            {children}
+            {/* ForceLogin prevents rendering the rest of the page if login is required */}
+            <ForceLogin>{children}</ForceLogin>
           </Providers>
         </NextIntlClientProvider>
 

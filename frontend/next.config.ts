@@ -10,6 +10,7 @@ makeEnvPublic([
   "REQUIRE_LOGIN",
   "SHOW_LOCALE_BUTTON",
   "DEFAULT_LOCALE",
+  "FORCE_LOGIN",
 ]);
 
 const nextConfig: NextConfig = {
