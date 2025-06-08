@@ -16,12 +16,12 @@ export default function ForceLogin({ children }: { children: React.ReactNode }) 
   const isForceLoginEnabled = env('NEXT_PUBLIC_REQUIRE_LOGIN')
 
   useEffect(() => {
-    if (isForceLoginEnabled && !isLoading && !isLoggedIn && !isAuthPage) {
+    if (isForceLoginEnabled == "true" && !isLoading && !isLoggedIn && !isAuthPage) {
       router.replace("/login");
     }
   }, [isLoggedIn, isLoading, isAuthPage, router]);
 
-  if (isForceLoginEnabled && !isAuthPage) {
+  if (isForceLoginEnabled == "true" && !isAuthPage) {
     if (isLoading) return <div></div>;
     if (!isLoggedIn) return <div></div>;
   }
