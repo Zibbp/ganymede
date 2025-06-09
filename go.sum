@@ -497,5 +497,5 @@ modernc.org/sqlite v1.37.0 h1:s1TMe7T3Q3ovQiK2Ouz4Jwh7dw4ZDqbebSDTlSJdfjI=
 modernc.org/sqlite v1.37.0/go.mod h1:5YiWv+YviqGMuGw4V+PNplcyaJ5v+vQd7TQOgkACoJM=
 moul.io/http2curl/v2 v2.3.0 h1:9r3JfDzWPcbIklMOs2TnIFzDYvfAZvjeavG6EzP7jYs=
 moul.io/http2curl/v2 v2.3.0/go.mod h1:RW4hyBjTWSYDOxapodpNEtX0g5Eb16sxklBqmd2RHcE=
-riverqueue.com/riverui v0.10.0 h1:+wg7hBxJ+0ZVeDW2R/DPZRByxG4+yo04zY9vxu4BGHo=
-riverqueue.com/riverui v0.10.0/go.mod h1:U6QAipKkvUqna5HlSHdyORgRi2uAleDhhJhsaxr6NBo=
+riverqueue.com/riverui v0.11.0 h1:98EGkSouZOFwrVlEFySMrGT43HusIEM/MYu12iPl174=
+riverqueue.com/riverui v0.11.0/go.mod h1:0u6dlpXTu9rh2YhTXqtYVCSkE8xoiSrVBOKOTrG6Qr4=
