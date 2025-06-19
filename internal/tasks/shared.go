@@ -33,7 +33,7 @@ var (
 	TaskGenerateStaticThumbnails    = "generate_static_thumbnails"
 	TaskGenerateSpriteThumbnails    = "generate_sprite_thumbnails"
 	TaskArchiveWatchdog             = "archive_watchdog"
-	TaskCheckChannelsForLivestreams = "chanel_channels_for_livestreams"
+	TaskCheckChannelsForLivestreams = "check_channels_for_livestreams"
 	TaskCheckChannelsForNewVideos   = "check_channels_for_new_videos"
 	TaskCheckChannelsForNewClips    = "check_channels_for_new_clips"
 	TaskPruneVideos                 = "prune_videos"

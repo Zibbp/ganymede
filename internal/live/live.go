@@ -317,7 +317,7 @@ OUTER:
 				for _, queueItem := range queueItems {
 					if queueItem.Edges.Vod.ExtID == stream.ID && queueItem.TaskVideoDownload == utils.Running {
 						log.Debug().Msgf("%s is already being archived", lwc.Edges.Channel.Name)
-						return nil
+						continue OUTER
 					}
 				}
 				// Archive stream
