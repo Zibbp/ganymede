@@ -784,7 +784,7 @@ func (c *TwitchConnection) GetClip(ctx context.Context, id string) (*ClipInfo, e
 func (c *TwitchConnection) CheckIfStreamIsLive(ctx context.Context, channelName string) (bool, error) {
 	token, err := c.TwitchGQLGetPlaybackAccessToken(channelName)
 	if err != nil {
-		log.Panic().Err(err).Msg("Error getting playback access token")
+		return false, fmt.Errorf("failed to get playback access token: %v", err)
 	}
 	// Construct the m3u8 URL for the stream
 	m3u8URL := fmt.Sprintf("https://usher.ttvnw.net/api/channel/hls/%s.m3u8?sig=%s&token=%s", channelName, token.Signature, token.Value)
