@@ -803,7 +803,7 @@ func (c *TwitchConnection) CheckIfStreamIsLive(ctx context.Context, channelName 
 	if err != nil {
 		return false, fmt.Errorf("failed to fetch m3u8 playlist: %v", err)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	// If the response status is not 200 or 403 the stream is not live
 	// This request is not authenticated, so it can return 403 if the stream is sub-only or geo-blocked
