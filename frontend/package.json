@@ -28,7 +28,7 @@
     "lodash": "^4.17.21",
     "mantine-datatable": "^7.17.1",
     "mantine-form-zod-resolver": "^1.1.0",
-    "next": "^15.3.2",
+    "next": "^15.3.4",
     "next-intl": "^4.1.0",
     "next-runtime-env": "^3.3.0",
     "react": "^19.1.0",
