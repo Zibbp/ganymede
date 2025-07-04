@@ -374,7 +374,8 @@
       "locked": "Locked",
       "streamedAt": "Streamed At",
       "archivedAt": "Archived At",
-      "actions": "Actions"
+      "actions": "Actions",
+      "storageSize": "Storage Size"
     },
     "drawer": "Video",
     "deleteModal": "Delete Video",
@@ -737,7 +738,8 @@
     "localViewsTooltip": "local views",
     "streamedOnTooltip": "Streamed on",
     "videoTypeTooltip": "Video type",
-    "videoClipsTitle": "Video Clips"
+    "videoClipsTitle": "Video Clips",
+    "storageSizeTooltip": "Storage Size"
   },
   "MultistreamComponents": {
     "seekBackTooltip": "Seek back {seconds} seconds",

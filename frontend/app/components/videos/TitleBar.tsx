@@ -1,10 +1,10 @@
 "use client"
 import { useGetVideoByExternalId, Video } from "@/app/hooks/useVideos";
-import { escapeURL } from "@/app/util/util";
+import { escapeURL, formatBytes } from "@/app/util/util";
 import { Avatar, Box, Divider, Tooltip, Text, Group, Badge, Button, rem } from "@mantine/core";
 import { env } from "next-runtime-env";
 import classes from "./TitleBar.module.css";
-import { IconCalendarEvent, IconLock, IconUser, IconUsers } from "@tabler/icons-react";
+import { IconCalendarEvent, IconDatabase, IconLock, IconUser, IconUsers } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import VideoMenu from "./Menu";
 import useAuthStore from "@/app/store/useAuthStore";
@@ -96,6 +96,20 @@ const VideoTitleBar = ({ video }: Params) => {
               </Tooltip>
             </Group>
 
+            <Group mr={15}>
+              <Tooltip
+                label={`${t('storageSizeTooltip')}`}
+                openDelay={250}
+              >
+                <div className={classes.titleBarBadge}>
+                  <Text mr={5}>
+                    {formatBytes(video.storage_size_bytes ?? 0, 0)}
+                  </Text>
+                  <IconDatabase size={20} />
+                </div>
+              </Tooltip>
+            </Group>
+
             {video.locked && (
               <Group mr={5}>
                 <Tooltip label={t('lockedText')} openDelay={250}>
@@ -127,7 +141,7 @@ const VideoTitleBar = ({ video }: Params) => {
 
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
