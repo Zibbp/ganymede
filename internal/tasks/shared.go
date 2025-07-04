@@ -424,14 +424,14 @@ func updateVideoStorageSize(ctx context.Context, logger zerolog.Logger, store *d
 		return nil // Skip if no video path
 	}
 	directory := filepath.Dir(video.VideoPath)
-	// If hls video need to go up one more directory as the hls files are in a subdirectory
+	// If VideoHlsPath is set, the actual video files are in a parent directory, so go up one more level.
 	if video.VideoHlsPath != "" {
 		directory = filepath.Dir(directory)
 	}
 	size, err := utils.GetSizeOfDirectory(directory)
 	if err != nil {
 		logger.Error().Err(err).Msgf("failed to get size of directory %s for video %s", directory, video.ID)
-		return fmt.Errorf("failed to get size of directory %s for video %s: %v", directory, video.ID, err)
+		return fmt.Errorf("failed to get size of directory %s for video %s: %w", directory, video.ID, err)
 	}
 	// Update the video storage size
 	if video.StorageSizeBytes != size {
@@ -464,16 +464,24 @@ func (w UpdateVideoStorageUsageWorker) Work(ctx context.Context, job *river.Job[
 			return err
 		}
 	} else {
-		videos, err := store.Client.Vod.Query().All(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to fetch videos: %v", err)
-		}
-		for _, video := range videos {
-			if err := updateVideoStorageSize(ctx, logger, store, video); err != nil {
-				// Only log and continue on error for individual videos
-				logger.Error().Err(err).Msgf("failed to update storage size for video %s", video.ID)
-				continue
+		const batchSize = 100
+		offset := 0
+		for {
+			videos, err := store.Client.Vod.Query().Limit(batchSize).Offset(offset).All(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to fetch videos: %v", err)
 			}
+			if len(videos) == 0 {
+				break
+			}
+			for _, video := range videos {
+				if err := updateVideoStorageSize(ctx, logger, store, video); err != nil {
+					// Only log and continue on error for individual videos
+					logger.Error().Err(err).Msgf("failed to update storage size for video %s", video.ID)
+					continue
+				}
+			}
+			offset += batchSize
 		}
 	}
 
