@@ -772,7 +772,9 @@
       "usedStorageDescription": "Total used storage",
       "availableStorageText": "Available Storage",
       "availableStorageDescription": "Total available storage",
-      "storageUsedText": "Storage Used"
+      "storageUsedText": "Storage Used",
+      "cpuCoresText": "CPU Cores",
+      "totalMemoryText": "Total Memory"
     },
     "videoStatistics": {
       "title": "Video Statistics",

@@ -1,18 +1,14 @@
 "use client"
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
-import { useGetGanymedeInformation, useGetGanymedeStorageDistribution, useGetGanymedeSystemOverview, useGetGanymedeVideoStatistics } from "@/app/hooks/useAdmin";
+import { useGetGanymedeStorageDistribution, useGetGanymedeSystemOverview, useGetGanymedeVideoStatistics } from "@/app/hooks/useAdmin";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
-import { Card, Container, Flex, Title, Text, Code, Paper, SimpleGrid, Group, RingProgress, Stack, Box, useMantineTheme } from "@mantine/core";
-import Link from "next/link";
+import { Container, Title, Text, Paper, SimpleGrid, Group, RingProgress, Stack, Box, useMantineTheme } from "@mantine/core";
 import classes from "./AdminOverviewPage.module.css"
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { formatBytes, usePageTitle } from "@/app/util/util";
 import { IconCpu, IconDatabase, IconDeviceDesktop, IconUser, IconVideo } from "@tabler/icons-react";
 import { PieChart } from "@mantine/charts";
-import { Video } from "@/app/hooks/useVideos";
-import VideoCard from "@/app/components/videos/Card";
-
 const colors = [
   'indigo.6', 'yellow.6', 'teal.6', 'gray.6',
   'red.6', 'green.6', 'blue.6', 'cyan.6', 'pink.6',
@@ -162,7 +158,7 @@ const AdminOverviewPage = () => {
             <Paper withBorder p="md" radius="md" key="CPU Cores">
               <Group justify="space-between">
                 <Text size="xs" c="dimmed" className={classes.title}>
-                  CPU Cores
+                  {t('system.cpuCoresText')}
                 </Text>
                 <IconCpu className={classes.icon} size={22} stroke={1.5} />
               </Group>
@@ -174,7 +170,7 @@ const AdminOverviewPage = () => {
             <Paper withBorder p="md" radius="md" key="Total Memory">
               <Group justify="space-between">
                 <Text size="xs" c="dimmed" className={classes.title}>
-                  Total Memory
+                  {t('system.totalMemoryText')}
                 </Text>
                 <IconDeviceDesktop className={classes.icon} size={22} stroke={1.5} />
               </Group>

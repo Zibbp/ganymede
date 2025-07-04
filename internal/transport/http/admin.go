@@ -51,7 +51,7 @@ func (h *Handler) GetSystemOverview(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error retrieving system overview: %v", err))
 	}
-	return SuccessResponse(c, resp, "System Overivew")
+	return SuccessResponse(c, resp, "System Overview")
 }
 
 // GetStorageDistribution godoc
