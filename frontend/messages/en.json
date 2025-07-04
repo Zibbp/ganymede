@@ -122,6 +122,7 @@
       "tasks": "Tasks"
     },
     "adminLinks": {
+      "overview": "Overview",
       "admin": "Admin",
       "channels": "Channels",
       "watchedChannels": "Watched Channels",
@@ -760,5 +761,31 @@
   },
   "LandingRecentlyArchivedComponent": {
     "error": "Error loading recently archived videos"
+  },
+  "AdminOverviewPage": {
+    "title": "Admin - Overview",
+    "loading": "Loading overview",
+    "error": "Error loading overview",
+    "system": {
+      "title": "System Overview",
+      "usedStorageText": "Used Storage",
+      "usedStorageDescription": "Total used storage",
+      "availableStorageText": "Available Storage",
+      "availableStorageDescription": "Total available storage",
+      "storageUsedText": "Storage Used"
+    },
+    "videoStatistics": {
+      "title": "Video Statistics",
+      "totalVideosText": "Total Videos",
+      "totalChannelsText": "Total Channels",
+      "channelVideosMapTitle": "Channel Videos",
+      "videoTypeMapTitle": "Video Types"
+    },
+    "storageDistribution": {
+      "title": "Storage Distribution",
+      "channelStorageDistributionText": "Channel Storage Distribution",
+      "topLargeVideosText": "Top Largest Videos",
+      "noLargeVideosText": "No videos found"
+    }
   }
 }

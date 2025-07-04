@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sys/unix"
 )
 
 // Create a directory given the path
@@ -392,4 +393,12 @@ func GetSizeOfDirectory(path string) (int64, error) {
 		return 0, fmt.Errorf("error getting size of folder: %v", err)
 	}
 	return size, nil
+}
+
+func GetFreeSpaceOfDirectory(path string) (int64, error) {
+	var stat unix.Statfs_t
+	if err := unix.Statfs(path, &stat); err != nil {
+		return 0, fmt.Errorf("error getting free space of directory: %v", err)
+	}
+	return int64(stat.Bavail) * int64(stat.Bsize), nil
 }
