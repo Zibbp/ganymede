@@ -538,13 +538,13 @@ func (vc *VodCreate) SetNillableSpriteThumbnailsColumns(i *int) *VodCreate {
 }
 
 // SetStorageSizeBytes sets the "storage_size_bytes" field.
-func (vc *VodCreate) SetStorageSizeBytes(i int) *VodCreate {
+func (vc *VodCreate) SetStorageSizeBytes(i int64) *VodCreate {
 	vc.mutation.SetStorageSizeBytes(i)
 	return vc
 }
 
 // SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
-func (vc *VodCreate) SetNillableStorageSizeBytes(i *int) *VodCreate {
+func (vc *VodCreate) SetNillableStorageSizeBytes(i *int64) *VodCreate {
 	if i != nil {
 		vc.SetStorageSizeBytes(*i)
 	}
@@ -1042,7 +1042,7 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		_node.SpriteThumbnailsColumns = value
 	}
 	if value, ok := vc.mutation.StorageSizeBytes(); ok {
-		_spec.SetField(vod.FieldStorageSizeBytes, field.TypeInt, value)
+		_spec.SetField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
 		_node.StorageSizeBytes = value
 	}
 	if value, ok := vc.mutation.StreamedAt(); ok {
@@ -1891,7 +1891,7 @@ func (u *VodUpsert) ClearSpriteThumbnailsColumns() *VodUpsert {
 }
 
 // SetStorageSizeBytes sets the "storage_size_bytes" field.
-func (u *VodUpsert) SetStorageSizeBytes(v int) *VodUpsert {
+func (u *VodUpsert) SetStorageSizeBytes(v int64) *VodUpsert {
 	u.Set(vod.FieldStorageSizeBytes, v)
 	return u
 }
@@ -1903,7 +1903,7 @@ func (u *VodUpsert) UpdateStorageSizeBytes() *VodUpsert {
 }
 
 // AddStorageSizeBytes adds v to the "storage_size_bytes" field.
-func (u *VodUpsert) AddStorageSizeBytes(v int) *VodUpsert {
+func (u *VodUpsert) AddStorageSizeBytes(v int64) *VodUpsert {
 	u.Add(vod.FieldStorageSizeBytes, v)
 	return u
 }
@@ -2782,14 +2782,14 @@ func (u *VodUpsertOne) ClearSpriteThumbnailsColumns() *VodUpsertOne {
 }
 
 // SetStorageSizeBytes sets the "storage_size_bytes" field.
-func (u *VodUpsertOne) SetStorageSizeBytes(v int) *VodUpsertOne {
+func (u *VodUpsertOne) SetStorageSizeBytes(v int64) *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.SetStorageSizeBytes(v)
 	})
 }
 
 // AddStorageSizeBytes adds v to the "storage_size_bytes" field.
-func (u *VodUpsertOne) AddStorageSizeBytes(v int) *VodUpsertOne {
+func (u *VodUpsertOne) AddStorageSizeBytes(v int64) *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.AddStorageSizeBytes(v)
 	})
@@ -3847,14 +3847,14 @@ func (u *VodUpsertBulk) ClearSpriteThumbnailsColumns() *VodUpsertBulk {
 }
 
 // SetStorageSizeBytes sets the "storage_size_bytes" field.
-func (u *VodUpsertBulk) SetStorageSizeBytes(v int) *VodUpsertBulk {
+func (u *VodUpsertBulk) SetStorageSizeBytes(v int64) *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.SetStorageSizeBytes(v)
 	})
 }
 
 // AddStorageSizeBytes adds v to the "storage_size_bytes" field.
-func (u *VodUpsertBulk) AddStorageSizeBytes(v int) *VodUpsertBulk {
+func (u *VodUpsertBulk) AddStorageSizeBytes(v int64) *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.AddStorageSizeBytes(v)
 	})

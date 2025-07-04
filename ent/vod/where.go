@@ -238,7 +238,7 @@ func SpriteThumbnailsColumns(v int) predicate.Vod {
 }
 
 // StorageSizeBytes applies equality check predicate on the "storage_size_bytes" field. It's identical to StorageSizeBytesEQ.
-func StorageSizeBytes(v int) predicate.Vod {
+func StorageSizeBytes(v int64) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldStorageSizeBytes, v))
 }
 
@@ -2538,42 +2538,42 @@ func SpriteThumbnailsColumnsNotNil() predicate.Vod {
 }
 
 // StorageSizeBytesEQ applies the EQ predicate on the "storage_size_bytes" field.
-func StorageSizeBytesEQ(v int) predicate.Vod {
+func StorageSizeBytesEQ(v int64) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldStorageSizeBytes, v))
 }
 
 // StorageSizeBytesNEQ applies the NEQ predicate on the "storage_size_bytes" field.
-func StorageSizeBytesNEQ(v int) predicate.Vod {
+func StorageSizeBytesNEQ(v int64) predicate.Vod {
 	return predicate.Vod(sql.FieldNEQ(FieldStorageSizeBytes, v))
 }
 
 // StorageSizeBytesIn applies the In predicate on the "storage_size_bytes" field.
-func StorageSizeBytesIn(vs ...int) predicate.Vod {
+func StorageSizeBytesIn(vs ...int64) predicate.Vod {
 	return predicate.Vod(sql.FieldIn(FieldStorageSizeBytes, vs...))
 }
 
 // StorageSizeBytesNotIn applies the NotIn predicate on the "storage_size_bytes" field.
-func StorageSizeBytesNotIn(vs ...int) predicate.Vod {
+func StorageSizeBytesNotIn(vs ...int64) predicate.Vod {
 	return predicate.Vod(sql.FieldNotIn(FieldStorageSizeBytes, vs...))
 }
 
 // StorageSizeBytesGT applies the GT predicate on the "storage_size_bytes" field.
-func StorageSizeBytesGT(v int) predicate.Vod {
+func StorageSizeBytesGT(v int64) predicate.Vod {
 	return predicate.Vod(sql.FieldGT(FieldStorageSizeBytes, v))
 }
 
 // StorageSizeBytesGTE applies the GTE predicate on the "storage_size_bytes" field.
-func StorageSizeBytesGTE(v int) predicate.Vod {
+func StorageSizeBytesGTE(v int64) predicate.Vod {
 	return predicate.Vod(sql.FieldGTE(FieldStorageSizeBytes, v))
 }
 
 // StorageSizeBytesLT applies the LT predicate on the "storage_size_bytes" field.
-func StorageSizeBytesLT(v int) predicate.Vod {
+func StorageSizeBytesLT(v int64) predicate.Vod {
 	return predicate.Vod(sql.FieldLT(FieldStorageSizeBytes, v))
 }
 
 // StorageSizeBytesLTE applies the LTE predicate on the "storage_size_bytes" field.
-func StorageSizeBytesLTE(v int) predicate.Vod {
+func StorageSizeBytesLTE(v int64) predicate.Vod {
 	return predicate.Vod(sql.FieldLTE(FieldStorageSizeBytes, v))
 }
 

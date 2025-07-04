@@ -326,7 +326,7 @@ func init() {
 	// vodDescStorageSizeBytes is the schema descriptor for storage_size_bytes field.
 	vodDescStorageSizeBytes := vodFields[40].Descriptor()
 	// vod.DefaultStorageSizeBytes holds the default value on creation for the storage_size_bytes field.
-	vod.DefaultStorageSizeBytes = vodDescStorageSizeBytes.Default.(int)
+	vod.DefaultStorageSizeBytes = vodDescStorageSizeBytes.Default.(int64)
 	// vodDescStreamedAt is the schema descriptor for streamed_at field.
 	vodDescStreamedAt := vodFields[41].Descriptor()
 	// vod.DefaultStreamedAt holds the default value on creation for the streamed_at field.

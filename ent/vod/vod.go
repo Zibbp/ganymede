@@ -248,7 +248,7 @@ var (
 	// DefaultSpriteThumbnailsEnabled holds the default value on creation for the "sprite_thumbnails_enabled" field.
 	DefaultSpriteThumbnailsEnabled bool
 	// DefaultStorageSizeBytes holds the default value on creation for the "storage_size_bytes" field.
-	DefaultStorageSizeBytes int
+	DefaultStorageSizeBytes int64
 	// DefaultStreamedAt holds the default value on creation for the "streamed_at" field.
 	DefaultStreamedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.

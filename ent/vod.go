@@ -101,7 +101,7 @@ type Vod struct {
 	// SpriteThumbnailsColumns holds the value of the "sprite_thumbnails_columns" field.
 	SpriteThumbnailsColumns int `json:"sprite_thumbnails_columns,omitempty"`
 	// The size of the VOD in bytes.
-	StorageSizeBytes int `json:"storage_size_bytes,omitempty"`
+	StorageSizeBytes int64 `json:"storage_size_bytes,omitempty"`
 	// The time the VOD was streamed.
 	StreamedAt time.Time `json:"streamed_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -472,7 +472,7 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field storage_size_bytes", values[i])
 			} else if value.Valid {
-				v.StorageSizeBytes = int(value.Int64)
+				v.StorageSizeBytes = value.Int64
 			}
 		case vod.FieldStreamedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
