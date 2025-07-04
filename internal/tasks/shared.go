@@ -41,6 +41,7 @@ var (
 	TaskAuthenticatePlatform        = "authenticate_platform"
 	TaskFetchJWKS                   = "fetch_jwks"
 	TaskSaveVideoChapters           = "save_video_chapters"
+	TaskUpdateVideoStorageUsage     = "update_video_storage_usage"
 )
 
 var (

@@ -3,6 +3,7 @@ package tasks_periodic
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/riverqueue/river"
@@ -13,6 +14,7 @@ import (
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
+	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
 
@@ -294,6 +296,75 @@ func (w FetchJWKSWorker) Work(ctx context.Context, job *river.Job[FetchJWKSArgs]
 	err := auth.FetchJWKS(ctx)
 	if err != nil {
 		return err
+	}
+
+	logger.Info().Msg("task completed")
+
+	return nil
+}
+
+// Update video storage usage
+type UpdateVideoStorageUsage struct{}
+
+func (UpdateVideoStorageUsage) Kind() string { return tasks.TaskUpdateVideoStorageUsage }
+
+func (w UpdateVideoStorageUsage) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w UpdateVideoStorageUsage) Timeout(job *river.Job[UpdateVideoStorageUsage]) time.Duration {
+	return 5 * time.Minute
+}
+
+type UpdateVideoStorageUsageWorker struct {
+	river.WorkerDefaults[UpdateVideoStorageUsage]
+}
+
+func (w UpdateVideoStorageUsageWorker) Work(ctx context.Context, job *river.Job[UpdateVideoStorageUsage]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	store, err := tasks.StoreFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Fetch all videos and update their storage size
+	// This updates all videos in the database to ensure their storage size is accurate if their files have changed (e.g. after an external re-encode)
+	videos, err := store.Client.Vod.Query().All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to fetch videos: %v", err)
+	}
+
+	for _, video := range videos {
+		if video.VideoPath == "" {
+			logger.Warn().Msgf("video %s has no video path, skipping storage size update", video.ID)
+		}
+		directory := filepath.Dir(video.VideoPath)
+		// If hls video need to go up one more directory as the hls files are in a subdirectory
+		if video.VideoHlsPath != "" {
+			directory = filepath.Dir(directory)
+		}
+
+		size, err := utils.GetSizeOfDirectory(directory)
+		if err != nil {
+			logger.Error().Err(err).Msgf("failed to get size of directory %s for video %s", directory, video.ID)
+			continue // Skip this video if we can't get the size
+		}
+
+		// Check if size needs to be updated
+		if video.StorageSizeBytes != size {
+			_, err = store.Client.Vod.UpdateOneID(video.ID).SetStorageSizeBytes(size).Save(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to update video %s storage size: %v", video.ID, err)
+			}
+
+			logger.Info().Msgf("updated video %s storage size to %d bytes", video.ID, size)
+		} else {
+			logger.Debug().Msgf("video %s storage size is already %d bytes, skipping update", video.ID, size)
+		}
 	}
 
 	logger.Info().Msg("task completed")

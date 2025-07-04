@@ -331,7 +331,9 @@
     "updateLiveStreamIds": "Update Live Stream IDs with Video IDs",
     "updateLiveStreamIdsDescription": "Attempt to update live stream archives with their corresponding video ID (automatically does this after live archive finishes).",
     "generateSpriteThumbnails": "Generate Sprite Thumbnails",
-    "generateSpriteThumbnailsDescription": "Generate preview thumbnails seen when hovering over the player progress bar for all videos. This automatically runs after every video archive."
+    "generateSpriteThumbnailsDescription": "Generate preview thumbnails seen when hovering over the player progress bar for all videos. This automatically runs after every video archive.",
+    "updateVideoStorageUsage": "Update Video Storage Usage",
+    "updateVideoStorageUsageDescription": "Update the storage usage for all videos. This is used to display the storage usage in the video list and statistics page."
   },
   "AdminUsersPage": {
     "title": "Admin - Users",

@@ -375,3 +375,21 @@ func DeleteFolder(path string) error {
 	}
 	return nil
 }
+
+// GetSizeOfDirectory calculates the total size of all files in a directory recursively.
+func GetSizeOfDirectory(path string) (int64, error) {
+	var size int64
+	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, fmt.Errorf("error getting size of folder: %v", err)
+	}
+	return size, nil
+}
