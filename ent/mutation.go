@@ -10920,6 +10920,8 @@ type VodMutation struct {
 	addsprite_thumbnails_rows      *int
 	sprite_thumbnails_columns      *int
 	addsprite_thumbnails_columns   *int
+	storage_size_bytes             *int
+	addstorage_size_bytes          *int
 	streamed_at                    *time.Time
 	updated_at                     *time.Time
 	created_at                     *time.Time
@@ -13006,6 +13008,62 @@ func (m *VodMutation) ResetSpriteThumbnailsColumns() {
 	delete(m.clearedFields, vod.FieldSpriteThumbnailsColumns)
 }
 
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (m *VodMutation) SetStorageSizeBytes(i int) {
+	m.storage_size_bytes = &i
+	m.addstorage_size_bytes = nil
+}
+
+// StorageSizeBytes returns the value of the "storage_size_bytes" field in the mutation.
+func (m *VodMutation) StorageSizeBytes() (r int, exists bool) {
+	v := m.storage_size_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStorageSizeBytes returns the old "storage_size_bytes" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldStorageSizeBytes(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStorageSizeBytes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStorageSizeBytes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStorageSizeBytes: %w", err)
+	}
+	return oldValue.StorageSizeBytes, nil
+}
+
+// AddStorageSizeBytes adds i to the "storage_size_bytes" field.
+func (m *VodMutation) AddStorageSizeBytes(i int) {
+	if m.addstorage_size_bytes != nil {
+		*m.addstorage_size_bytes += i
+	} else {
+		m.addstorage_size_bytes = &i
+	}
+}
+
+// AddedStorageSizeBytes returns the value that was added to the "storage_size_bytes" field in this mutation.
+func (m *VodMutation) AddedStorageSizeBytes() (r int, exists bool) {
+	v := m.addstorage_size_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStorageSizeBytes resets all changes to the "storage_size_bytes" field.
+func (m *VodMutation) ResetStorageSizeBytes() {
+	m.storage_size_bytes = nil
+	m.addstorage_size_bytes = nil
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (m *VodMutation) SetStreamedAt(t time.Time) {
 	m.streamed_at = &t
@@ -13442,7 +13500,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 42)
+	fields := make([]string, 0, 43)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -13560,6 +13618,9 @@ func (m *VodMutation) Fields() []string {
 	if m.sprite_thumbnails_columns != nil {
 		fields = append(fields, vod.FieldSpriteThumbnailsColumns)
 	}
+	if m.storage_size_bytes != nil {
+		fields = append(fields, vod.FieldStorageSizeBytes)
+	}
 	if m.streamed_at != nil {
 		fields = append(fields, vod.FieldStreamedAt)
 	}
@@ -13655,6 +13716,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.SpriteThumbnailsRows()
 	case vod.FieldSpriteThumbnailsColumns:
 		return m.SpriteThumbnailsColumns()
+	case vod.FieldStorageSizeBytes:
+		return m.StorageSizeBytes()
 	case vod.FieldStreamedAt:
 		return m.StreamedAt()
 	case vod.FieldUpdatedAt:
@@ -13748,6 +13811,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldSpriteThumbnailsRows(ctx)
 	case vod.FieldSpriteThumbnailsColumns:
 		return m.OldSpriteThumbnailsColumns(ctx)
+	case vod.FieldStorageSizeBytes:
+		return m.OldStorageSizeBytes(ctx)
 	case vod.FieldStreamedAt:
 		return m.OldStreamedAt(ctx)
 	case vod.FieldUpdatedAt:
@@ -14036,6 +14101,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSpriteThumbnailsColumns(v)
 		return nil
+	case vod.FieldStorageSizeBytes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStorageSizeBytes(v)
+		return nil
 	case vod.FieldStreamedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -14092,6 +14164,9 @@ func (m *VodMutation) AddedFields() []string {
 	if m.addsprite_thumbnails_columns != nil {
 		fields = append(fields, vod.FieldSpriteThumbnailsColumns)
 	}
+	if m.addstorage_size_bytes != nil {
+		fields = append(fields, vod.FieldStorageSizeBytes)
+	}
 	return fields
 }
 
@@ -14118,6 +14193,8 @@ func (m *VodMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedSpriteThumbnailsRows()
 	case vod.FieldSpriteThumbnailsColumns:
 		return m.AddedSpriteThumbnailsColumns()
+	case vod.FieldStorageSizeBytes:
+		return m.AddedStorageSizeBytes()
 	}
 	return nil, false
 }
@@ -14189,6 +14266,13 @@ func (m *VodMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddSpriteThumbnailsColumns(v)
+		return nil
+	case vod.FieldStorageSizeBytes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStorageSizeBytes(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Vod numeric field %s", name)
@@ -14498,6 +14582,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldSpriteThumbnailsColumns:
 		m.ResetSpriteThumbnailsColumns()
+		return nil
+	case vod.FieldStorageSizeBytes:
+		m.ResetStorageSizeBytes()
 		return nil
 	case vod.FieldStreamedAt:
 		m.ResetStreamedAt()
