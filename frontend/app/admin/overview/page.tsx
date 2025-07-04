@@ -234,16 +234,18 @@ const AdminOverviewPage = () => {
                 mx="auto"
                 data={channelVideoMapChartData} />
               <Stack gap={4} ml={0}>
-                {channelVideoMapChartData.map((item: { name: string; value: number; color: string }) => (
-                  <Group key={item.name} gap={6} align="center">
-                    <Box
-                      w={16}
-                      h={16}
-                      bg={theme.colors[item.color.split(".")[0]][parseInt(item.color.split(".")[1])]}
-                    />
-                    <Text size="sm">{item.name} ({item.value})</Text>
-                  </Group>
-                ))}
+                {[...channelVideoMapChartData]
+                  .sort((a, b) => b.value - a.value)
+                  .map((item: { name: string; value: number; color: string }) => (
+                    <Group key={item.name} gap={6} align="center">
+                      <Box
+                        w={16}
+                        h={16}
+                        bg={theme.colors[item.color.split(".")[0]][parseInt(item.color.split(".")[1])]}
+                      />
+                      <Text size="sm">{item.name} ({item.value})</Text>
+                    </Group>
+                  ))}
               </Stack>
             </Group>
           </Box>
@@ -263,16 +265,18 @@ const AdminOverviewPage = () => {
                 mx="auto"
                 data={videoTypesMapChartData} />
               <Stack gap={4} ml={0}>
-                {videoTypesMapChartData.map((item: any) => (
-                  <Group key={item.name} gap={6} align="center">
-                    <Box
-                      w={16}
-                      h={16}
-                      bg={theme.colors[item.color.split(".")[0]][parseInt(item.color.split(".")[1])]}
-                    />
-                    <Text size="sm">{item.name} ({item.value})</Text>
-                  </Group>
-                ))}
+                {[...videoTypesMapChartData]
+                  .sort((a, b) => b.value - a.value)
+                  .map((item: { name: string; value: number; color: string }) => (
+                    <Group key={item.name} gap={6} align="center">
+                      <Box
+                        w={16}
+                        h={16}
+                        bg={theme.colors[item.color.split(".")[0]][parseInt(item.color.split(".")[1])]}
+                      />
+                      <Text size="sm">{item.name} ({item.value})</Text>
+                    </Group>
+                  ))}
               </Stack>
             </Group>
           </Box>
@@ -299,16 +303,18 @@ const AdminOverviewPage = () => {
                 mx="auto"
                 data={channelStorageMapChartData} />
               <Stack gap={4} ml={0}>
-                {channelStorageMapChartData.map((item: any) => (
-                  <Group key={item.name} gap={6} align="center">
-                    <Box
-                      w={16}
-                      h={16}
-                      bg={theme.colors[item.color.split(".")[0]][parseInt(item.color.split(".")[1])]}
-                    />
-                    <Text size="sm">{item.name} ({formatBytes(item.value ?? 0, 1)})</Text>
-                  </Group>
-                ))}
+                {[...channelStorageMapChartData]
+                  .sort((a, b) => b.value - a.value)
+                  .map((item: { name: string; value: number; color: string }) => (
+                    <Group key={item.name} gap={6} align="center">
+                      <Box
+                        w={16}
+                        h={16}
+                        bg={theme.colors[item.color.split(".")[0]][parseInt(item.color.split(".")[1])]}
+                      />
+                      <Text size="sm">{item.name} ({formatBytes(item.value ?? 0, 1)})</Text>
+                    </Group>
+                  ))}
               </Stack>
             </Group>
           </Box>
