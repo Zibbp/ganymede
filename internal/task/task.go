@@ -106,7 +106,7 @@ func (s *Service) StartTask(ctx context.Context, task string) error {
 		log.Info().Msgf("created %d sprite thumbnail tasks", len(videos))
 
 	case "update_video_storage_usage":
-		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.UpdateVideoStorageUsage{}, nil)
+		task, err := s.RiverClient.Client.Insert(ctx, tasks.UpdateVideoStorageUsage{}, nil)
 		if err != nil {
 			return fmt.Errorf("error inserting task: %v", err)
 		}

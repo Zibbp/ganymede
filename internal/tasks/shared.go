@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -177,6 +178,14 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 			}
 
 			notification.SendLiveArchiveSuccessNotification(&dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+
+			// Queue task to calculate video storage usage
+			_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateVideoStorageUsage{
+				VideoID: &dbItems.Video.ID,
+			}, nil)
+			if err != nil {
+				log.Error().Err(err).Msg("error queuing video storage usage update task")
+			}
 		}
 	} else {
 		if dbItems.Queue.TaskVideoDownload == utils.Success && dbItems.Queue.TaskVideoConvert == utils.Success && dbItems.Queue.TaskVideoMove == utils.Success && dbItems.Queue.TaskChatDownload == utils.Success && dbItems.Queue.TaskChatRender == utils.Success && dbItems.Queue.TaskChatMove == utils.Success {
@@ -193,6 +202,14 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 			}
 
 			notification.SendVideoArchiveSuccessNotification(&dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+
+			// Queue task to calculate video storage usage
+			_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateVideoStorageUsage{
+				VideoID: &dbItems.Video.ID,
+			}, nil)
+			if err != nil {
+				log.Error().Err(err).Msg("error queuing video storage usage update task")
+			}
 		}
 	}
 
@@ -374,6 +391,107 @@ func setWatchChannelAsNotLive(ctx context.Context, store *database.Database, cha
 			return err
 		}
 	}
+
+	return nil
+}
+
+// Update video storage usage
+type UpdateVideoStorageUsage struct {
+	VideoID *uuid.UUID // Optional: if provided, only update this specific video
+}
+
+func (UpdateVideoStorageUsage) Kind() string { return TaskUpdateVideoStorageUsage }
+
+func (w UpdateVideoStorageUsage) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w UpdateVideoStorageUsage) Timeout(job *river.Job[UpdateVideoStorageUsage]) time.Duration {
+	return 5 * time.Minute
+}
+
+type UpdateVideoStorageUsageWorker struct {
+	river.WorkerDefaults[UpdateVideoStorageUsage]
+}
+
+func (w UpdateVideoStorageUsageWorker) Work(ctx context.Context, job *river.Job[UpdateVideoStorageUsage]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	store, err := StoreFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	// If a specific video ID is provided, only update that video
+	if job.Args.VideoID != nil {
+		video, err := store.Client.Vod.Get(ctx, *job.Args.VideoID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch video %s: %v", job.Args.VideoID, err)
+		}
+		if video.VideoPath == "" {
+			logger.Warn().Msgf("video %s has no video path, skipping storage size update", video.ID)
+			return nil // Skip if no video path
+		}
+		directory := filepath.Dir(video.VideoPath)
+		// If hls video need to go up one more directory as the hls files are in a subdirectory
+		if video.VideoHlsPath != "" {
+			directory = filepath.Dir(directory)
+		}
+		size, err := utils.GetSizeOfDirectory(directory)
+		if err != nil {
+			logger.Error().Err(err).Msgf("failed to get size of directory %s for video %s", directory, video.ID)
+			return fmt.Errorf("failed to get size of directory %s for video %s: %v", directory, video.ID, err)
+		}
+		// Update the video storage size
+		if video.StorageSizeBytes != size {
+			_, err = store.Client.Vod.UpdateOneID(video.ID).SetStorageSizeBytes(size).Save(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to update video %s storage size: %v", video.ID, err)
+			}
+			logger.Info().Msgf("updated video %s storage size to %d bytes", video.ID, size)
+		}
+	} else {
+		// Fetch all videos and update their storage size
+		// This updates all videos in the database to ensure their storage size is accurate if their files have changed (e.g. after an external re-encode)
+		videos, err := store.Client.Vod.Query().All(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to fetch videos: %v", err)
+		}
+
+		for _, video := range videos {
+			if video.VideoPath == "" {
+				logger.Warn().Msgf("video %s has no video path, skipping storage size update", video.ID)
+			}
+			directory := filepath.Dir(video.VideoPath)
+			// If hls video need to go up one more directory as the hls files are in a subdirectory
+			if video.VideoHlsPath != "" {
+				directory = filepath.Dir(directory)
+			}
+
+			size, err := utils.GetSizeOfDirectory(directory)
+			if err != nil {
+				logger.Error().Err(err).Msgf("failed to get size of directory %s for video %s", directory, video.ID)
+				continue // Skip this video if we can't get the size
+			}
+
+			// Check if size needs to be updated
+			if video.StorageSizeBytes != size {
+				_, err = store.Client.Vod.UpdateOneID(video.ID).SetStorageSizeBytes(size).Save(ctx)
+				if err != nil {
+					return fmt.Errorf("failed to update video %s storage size: %v", video.ID, err)
+				}
+
+				logger.Info().Msgf("updated video %s storage size to %d bytes", video.ID, size)
+			} else {
+				logger.Debug().Msgf("video %s storage size is already %d bytes, skipping update", video.ID, size)
+			}
+		}
+	}
+
+	logger.Info().Msg("task completed")
 
 	return nil
 }
