@@ -318,29 +318,6 @@ const AdminOverviewPage = () => {
               </Stack>
             </Group>
           </Box>
-
-          <Box>
-            {/* Top largest videos */}
-            {storageDistribution?.largest_videos && storageDistribution?.largest_videos.length > 0 ? (
-              <>
-                <Title order={4} mt={10} mb={0}>{t('storageDistribution.topLargeVideosText')}</Title>
-                <SimpleGrid cols={{ base: 1, xs: 2, md: 2 }} mt={10}>
-                  {storageDistribution?.largest_videos.map((video: Video) => (
-                    <VideoCard
-                      key={video.id}
-                      video={video}
-                      showProgress={false}
-                      showChannel={true}
-                      showMenu={false}
-
-                    />
-                  ))}
-                </SimpleGrid>
-              </>
-            ) : (
-              <Text mt={10} c="dimmed">{t('storageDistribution.noLargeVideosText')}</Text>
-            )}
-          </Box>
         </SimpleGrid>
       </Paper>
     </Container >
