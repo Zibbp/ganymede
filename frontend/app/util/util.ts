@@ -23,7 +23,7 @@ export function usePageTitle(title: string) {
 
 // https://stackoverflow.com/a/18650828
 export function formatBytes(bytes: number, decimals = 2) {
-  if (!+bytes) return "0 Bytes";
+  if (bytes <= 0) return "0 Bytes";
 
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;

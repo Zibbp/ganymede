@@ -34,7 +34,7 @@ export interface GanymedeSystemOverview {
 
 export interface GanymedeStorageDistribution {
   storage_distribution: Record<string, number>; // Map of channel names to total storage used
-  largest_videos: Video[]; // List of top 5 largest videos
+  largest_videos: Video[]; // List of top largest videos
 }
 
 const getGanymedeInformation = async (

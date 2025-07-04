@@ -85,7 +85,7 @@ const AdminOverviewPage = () => {
     setChannelStorageMapChartData(mapped);
   }, [storageDistribution]);
 
-  if (isPendingStorageDistribution || isErrorVideoStatistics || isPendingSystemOverview) return (
+  if (isPendingStorageDistribution || isPendingVideoStatistics || isPendingSystemOverview) return (
     <GanymedeLoadingText message={t('loading')} />
   )
   if (isErrorStorageDistribution || isErrorVideoStatistics || isErrorSystemOverview) return <div>{t('error')}</div>
@@ -139,10 +139,14 @@ const AdminOverviewPage = () => {
               </Group>
               <Group align="flex-end" >
                 <RingProgress
-                  label={<Text c="blue" fw={700} ta="center" size="xl">{((systemOverview.videos_directory_used_space ?? 0) / (systemOverview.videos_directory_free_space ?? 1 + systemOverview.videos_directory_used_space ?? 0) * 100).toFixed(2)}%</Text>}
+                  label={
+                    <Text c="blue" fw={700} ta="center" size="xl">
+                      {(((systemOverview.videos_directory_used_space ?? 0) / Math.max((systemOverview.videos_directory_used_space ?? 0) + (systemOverview.videos_directory_free_space ?? 0), 1)) * 100).toFixed(2)}%
+                    </Text>
+                  }
                   sections={[
                     {
-                      value: (systemOverview.videos_directory_used_space ?? 0) / (systemOverview.videos_directory_free_space ?? 1 + systemOverview.videos_directory_used_space ?? 0) * 100,
+                      value: ((systemOverview.videos_directory_used_space ?? 0) / Math.max((systemOverview.videos_directory_used_space ?? 0) + (systemOverview.videos_directory_free_space ?? 0), 1)) * 100,
                       color: 'blue',
                     },
                   ]}
@@ -230,7 +234,7 @@ const AdminOverviewPage = () => {
                 mx="auto"
                 data={channelVideoMapChartData} />
               <Stack gap={4} ml={0}>
-                {channelVideoMapChartData.map((item: any) => (
+                {channelVideoMapChartData.map((item: { name: string; value: number; color: string }) => (
                   <Group key={item.name} gap={6} align="center">
                     <Box
                       w={16}

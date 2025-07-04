@@ -27,7 +27,7 @@ type GetSystemOverviewResponse struct {
 
 type GetStorageDistributionResponse struct {
 	StorageDistribution map[string]int64 `json:"storage_distribution"` // Map of channel names to total storage used
-	LargestVideos       []*ent.Vod       `json:"largest_videos"`       // List of top 5 largest videos
+	LargestVideos       []*ent.Vod       `json:"largest_videos"`       // List of top largest videos
 }
 
 // GetVideoStatistics retrieves statistics about videos in the system.

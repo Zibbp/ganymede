@@ -63,7 +63,7 @@ func (h *Handler) GetSystemOverview(c echo.Context) error {
 //	@Produce		json
 //	@Success		200	{object}	admin.GetStorageDistributionResponse
 //	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/admin/storage [get]
+//	@Router			/admin/storage-distribution [get]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) GetStorageDistribution(c echo.Context) error {
 	resp, err := h.Service.AdminService.GetStorageDistribution(c.Request().Context())
