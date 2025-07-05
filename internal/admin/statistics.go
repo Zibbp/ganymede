@@ -27,7 +27,6 @@ type GetSystemOverviewResponse struct {
 
 type GetStorageDistributionResponse struct {
 	StorageDistribution map[string]int64 `json:"storage_distribution"` // Map of channel names to total storage used
-	LargestVideos       []*ent.Vod       `json:"largest_videos"`       // List of top largest videos
 }
 
 // GetVideoStatistics retrieves statistics about videos in the system.
@@ -107,6 +106,7 @@ func (s *Service) GetSystemOverview(ctx context.Context) (GetSystemOverviewRespo
 
 	var result []UsedSpaceResult
 
+	// TODO: improve this query to avoid loading all videos into memory
 	err = s.Store.Client.Vod.Query().
 		Aggregate(ent.Sum(entVod.FieldStorageSizeBytes)).
 		Scan(ctx, &result)
@@ -160,18 +160,6 @@ func (s *Service) GetStorageDistribution(ctx context.Context) (GetStorageDistrib
 	}
 
 	resp.StorageDistribution = storageDistribution
-
-	// Get top largest videos
-	largestVideos, err := s.Store.Client.Vod.Query().
-		Order(ent.Desc(entVod.FieldStorageSizeBytes)).
-		WithChannel().
-		Limit(4).
-		All(ctx)
-	if err != nil {
-		return resp, fmt.Errorf("error getting largest videos: %w", err)
-	}
-
-	resp.LargestVideos = largestVideos
 
 	return resp, nil
 }

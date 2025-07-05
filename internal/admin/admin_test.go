@@ -75,6 +75,5 @@ func (s *AdminTest) GetStorageDistributionTest(t *testing.T) {
 
 	resp, err := s.App.AdminService.GetStorageDistribution(context.Background())
 	assert.NoError(t, err)
-	assert.Equal(t, 0, len(resp.LargestVideos))
 	assert.Equal(t, int64(0), resp.StorageDistribution["test_channel2"])
 }

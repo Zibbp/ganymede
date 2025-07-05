@@ -70,7 +70,16 @@ const AdminVideosPage = () => {
     }
 
     // Apply sorting
-    const sortedData = sortBy(filteredData, sortStatus.columnAccessor);
+    let sortedData;
+    if (sortStatus.columnAccessor === "storage_size_bytes") {
+      sortedData = [...filteredData].sort((a, b) => {
+        const aVal = a.storage_size_bytes ?? 0;
+        const bVal = b.storage_size_bytes ?? 0;
+        return aVal - bVal;
+      });
+    } else {
+      sortedData = sortBy(filteredData, sortStatus.columnAccessor);
+    }
     filteredData = sortStatus.direction === "desc" ? sortedData.reverse() : sortedData;
 
     // Apply pagination

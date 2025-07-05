@@ -294,8 +294,6 @@ const AdminOverviewPage = () => {
                 labelsType="percent"
                 withLabels
                 size={250}
-                withTooltip
-                tooltipDataSource="segment"
                 mx="auto"
                 data={channelStorageMapChartData} />
               <Stack gap={4} ml={0}>

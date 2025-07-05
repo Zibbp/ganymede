@@ -24,6 +24,7 @@ func (Channel) Fields() []ent.Field {
 		field.String("image_path"),
 		field.Bool("retention").Default(false),
 		field.Int64("retention_days").Optional(),
+		field.Int64("storage_size_bytes").Default(0).Comment("Total storage size in bytes for the channel's videos."),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}

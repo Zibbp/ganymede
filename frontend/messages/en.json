@@ -190,6 +190,7 @@
     "loading": "Loading channels",
     "error": "Error loading channels",
     "header": "Manage Channels",
+    "storageSizeDisclaimerText": "Storage size is not updated instantly. A background task runs every hour to recalculate it.",
     "createButton": "Create Channel",
     "addTwitchChannel": "Add Twitch Channel",
     "searchPlaceholder": "Search channels...",
@@ -200,7 +201,8 @@
       "displayName": "Display Name",
       "videoRetention": "Video Retention",
       "createdAt": "Created At",
-      "actions": "Actions"
+      "actions": "Actions",
+      "storageSize": "Storage Size"
     },
     "drawer": "Channel",
     "platformDrawer": "Platform Channel",

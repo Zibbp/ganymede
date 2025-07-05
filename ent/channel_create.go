@@ -86,6 +86,20 @@ func (cc *ChannelCreate) SetNillableRetentionDays(i *int64) *ChannelCreate {
 	return cc
 }
 
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (cc *ChannelCreate) SetStorageSizeBytes(i int64) *ChannelCreate {
+	cc.mutation.SetStorageSizeBytes(i)
+	return cc
+}
+
+// SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
+func (cc *ChannelCreate) SetNillableStorageSizeBytes(i *int64) *ChannelCreate {
+	if i != nil {
+		cc.SetStorageSizeBytes(*i)
+	}
+	return cc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (cc *ChannelCreate) SetUpdatedAt(t time.Time) *ChannelCreate {
 	cc.mutation.SetUpdatedAt(t)
@@ -197,6 +211,10 @@ func (cc *ChannelCreate) defaults() {
 		v := channel.DefaultRetention
 		cc.mutation.SetRetention(v)
 	}
+	if _, ok := cc.mutation.StorageSizeBytes(); !ok {
+		v := channel.DefaultStorageSizeBytes
+		cc.mutation.SetStorageSizeBytes(v)
+	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		v := channel.DefaultUpdatedAt()
 		cc.mutation.SetUpdatedAt(v)
@@ -224,6 +242,9 @@ func (cc *ChannelCreate) check() error {
 	}
 	if _, ok := cc.mutation.Retention(); !ok {
 		return &ValidationError{Name: "retention", err: errors.New(`ent: missing required field "Channel.retention"`)}
+	}
+	if _, ok := cc.mutation.StorageSizeBytes(); !ok {
+		return &ValidationError{Name: "storage_size_bytes", err: errors.New(`ent: missing required field "Channel.storage_size_bytes"`)}
 	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Channel.updated_at"`)}
@@ -290,6 +311,10 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 	if value, ok := cc.mutation.RetentionDays(); ok {
 		_spec.SetField(channel.FieldRetentionDays, field.TypeInt64, value)
 		_node.RetentionDays = value
+	}
+	if value, ok := cc.mutation.StorageSizeBytes(); ok {
+		_spec.SetField(channel.FieldStorageSizeBytes, field.TypeInt64, value)
+		_node.StorageSizeBytes = value
 	}
 	if value, ok := cc.mutation.UpdatedAt(); ok {
 		_spec.SetField(channel.FieldUpdatedAt, field.TypeTime, value)
@@ -473,6 +498,24 @@ func (u *ChannelUpsert) ClearRetentionDays() *ChannelUpsert {
 	return u
 }
 
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (u *ChannelUpsert) SetStorageSizeBytes(v int64) *ChannelUpsert {
+	u.Set(channel.FieldStorageSizeBytes, v)
+	return u
+}
+
+// UpdateStorageSizeBytes sets the "storage_size_bytes" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdateStorageSizeBytes() *ChannelUpsert {
+	u.SetExcluded(channel.FieldStorageSizeBytes)
+	return u
+}
+
+// AddStorageSizeBytes adds v to the "storage_size_bytes" field.
+func (u *ChannelUpsert) AddStorageSizeBytes(v int64) *ChannelUpsert {
+	u.Add(channel.FieldStorageSizeBytes, v)
+	return u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (u *ChannelUpsert) SetUpdatedAt(v time.Time) *ChannelUpsert {
 	u.Set(channel.FieldUpdatedAt, v)
@@ -638,6 +681,27 @@ func (u *ChannelUpsertOne) UpdateRetentionDays() *ChannelUpsertOne {
 func (u *ChannelUpsertOne) ClearRetentionDays() *ChannelUpsertOne {
 	return u.Update(func(s *ChannelUpsert) {
 		s.ClearRetentionDays()
+	})
+}
+
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (u *ChannelUpsertOne) SetStorageSizeBytes(v int64) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetStorageSizeBytes(v)
+	})
+}
+
+// AddStorageSizeBytes adds v to the "storage_size_bytes" field.
+func (u *ChannelUpsertOne) AddStorageSizeBytes(v int64) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.AddStorageSizeBytes(v)
+	})
+}
+
+// UpdateStorageSizeBytes sets the "storage_size_bytes" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdateStorageSizeBytes() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateStorageSizeBytes()
 	})
 }
 
@@ -975,6 +1039,27 @@ func (u *ChannelUpsertBulk) UpdateRetentionDays() *ChannelUpsertBulk {
 func (u *ChannelUpsertBulk) ClearRetentionDays() *ChannelUpsertBulk {
 	return u.Update(func(s *ChannelUpsert) {
 		s.ClearRetentionDays()
+	})
+}
+
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (u *ChannelUpsertBulk) SetStorageSizeBytes(v int64) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetStorageSizeBytes(v)
+	})
+}
+
+// AddStorageSizeBytes adds v to the "storage_size_bytes" field.
+func (u *ChannelUpsertBulk) AddStorageSizeBytes(v int64) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.AddStorageSizeBytes(v)
+	})
+}
+
+// UpdateStorageSizeBytes sets the "storage_size_bytes" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdateStorageSizeBytes() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateStorageSizeBytes()
 	})
 }
 

@@ -122,6 +122,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks.UpdateVideoStorageUsageWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks.UpdateChannelStorageUsageWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 
@@ -278,6 +281,16 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 				return tasks.UpdateVideoStorageUsage{}, nil
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
+		),
+
+		// update channel storage usage
+		// runs every hour
+		river.NewPeriodicJob(
+			river.PeriodicInterval(1*time.Hour),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks.UpdateChannelStorageUsage{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 	}
 

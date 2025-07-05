@@ -28,6 +28,7 @@ var (
 		{Name: "image_path", Type: field.TypeString},
 		{Name: "retention", Type: field.TypeBool, Default: false},
 		{Name: "retention_days", Type: field.TypeInt64, Nullable: true},
+		{Name: "storage_size_bytes", Type: field.TypeInt64, Default: 0},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 	}

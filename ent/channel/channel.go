@@ -27,6 +27,8 @@ const (
 	FieldRetention = "retention"
 	// FieldRetentionDays holds the string denoting the retention_days field in the database.
 	FieldRetentionDays = "retention_days"
+	// FieldStorageSizeBytes holds the string denoting the storage_size_bytes field in the database.
+	FieldStorageSizeBytes = "storage_size_bytes"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -62,6 +64,7 @@ var Columns = []string{
 	FieldImagePath,
 	FieldRetention,
 	FieldRetentionDays,
+	FieldStorageSizeBytes,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -79,6 +82,8 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultRetention holds the default value on creation for the "retention" field.
 	DefaultRetention bool
+	// DefaultStorageSizeBytes holds the default value on creation for the "storage_size_bytes" field.
+	DefaultStorageSizeBytes int64
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
@@ -125,6 +130,11 @@ func ByRetention(opts ...sql.OrderTermOption) OrderOption {
 // ByRetentionDays orders the results by the retention_days field.
 func ByRetentionDays(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRetentionDays, opts...).ToFunc()
+}
+
+// ByStorageSizeBytes orders the results by the storage_size_bytes field.
+func ByStorageSizeBytes(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStorageSizeBytes, opts...).ToFunc()
 }
 
 // ByUpdatedAt orders the results by the updated_at field.

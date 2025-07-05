@@ -19,6 +19,7 @@ import (
 	entChannel "github.com/zibbp/ganymede/ent/channel"
 	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/queue"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/notification"
@@ -44,6 +45,7 @@ var (
 	TaskFetchJWKS                   = "fetch_jwks"
 	TaskSaveVideoChapters           = "save_video_chapters"
 	TaskUpdateVideoStorageUsage     = "update_video_storage_usage"
+	TaskUpdateChannelStorageUsage   = "update_channel_storage_usage"
 )
 
 var (
@@ -482,6 +484,82 @@ func (w UpdateVideoStorageUsageWorker) Work(ctx context.Context, job *river.Job[
 				}
 			}
 			offset += batchSize
+		}
+	}
+
+	// Queue task to update channel storage usage
+	_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateChannelStorageUsage{}, nil)
+	if err != nil {
+		logger.Error().Err(err).Msg("error queuing channel storage usage update task")
+		return fmt.Errorf("error queuing channel storage usage update task: %w", err)
+	}
+
+	logger.Info().Msg("task completed")
+	return nil
+}
+
+// Update channel storage usage
+type UpdateChannelStorageUsage struct {
+}
+
+func (UpdateChannelStorageUsage) Kind() string { return TaskUpdateChannelStorageUsage }
+
+func (w UpdateChannelStorageUsage) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w UpdateChannelStorageUsage) Timeout(job *river.Job[UpdateChannelStorageUsage]) time.Duration {
+	return 5 * time.Minute
+}
+
+type UpdateChannelStorageUsageWorker struct {
+	river.WorkerDefaults[UpdateChannelStorageUsage]
+}
+
+func (w UpdateChannelStorageUsageWorker) Work(ctx context.Context, job *river.Job[UpdateChannelStorageUsage]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	store, err := StoreFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	vods, err := store.Client.Vod.Query().
+		WithChannel().
+		Select(entVod.FieldStorageSizeBytes).
+		All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to fetch VODs with channels: %w", err)
+	}
+
+	channelStorageMap := make(map[uuid.UUID]int64)
+
+	for _, vod := range vods {
+		if vod.Edges.Channel != nil {
+			channelStorageMap[vod.Edges.Channel.ID] += vod.StorageSizeBytes
+		}
+	}
+
+	channels, err := store.Client.Channel.Query().All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to fetch channels: %w", err)
+	}
+
+	for _, channel := range channels {
+		totalStorage := channelStorageMap[channel.ID]
+		if channel.StorageSizeBytes != totalStorage {
+			if _, err := store.Client.Channel.
+				UpdateOneID(channel.ID).
+				SetStorageSizeBytes(totalStorage).
+				Save(ctx); err != nil {
+				return fmt.Errorf("failed to update channel %s storage: %w", channel.Name, err)
+			}
+			logger.Info().Msgf("updated channel %s storage size to %d", channel.Name, totalStorage)
+		} else {
+			logger.Debug().Msgf("channel %s storage size is already correct", channel.Name)
 		}
 	}
 
