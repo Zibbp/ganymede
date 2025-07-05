@@ -100,6 +100,8 @@ type Vod struct {
 	SpriteThumbnailsRows int `json:"sprite_thumbnails_rows,omitempty"`
 	// SpriteThumbnailsColumns holds the value of the "sprite_thumbnails_columns" field.
 	SpriteThumbnailsColumns int `json:"sprite_thumbnails_columns,omitempty"`
+	// The size of the VOD in bytes.
+	StorageSizeBytes int64 `json:"storage_size_bytes,omitempty"`
 	// The time the VOD was streamed.
 	StreamedAt time.Time `json:"streamed_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -199,7 +201,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case vod.FieldProcessing, vod.FieldLocked, vod.FieldSpriteThumbnailsEnabled:
 			values[i] = new(sql.NullBool)
-		case vod.FieldDuration, vod.FieldClipVodOffset, vod.FieldViews, vod.FieldLocalViews, vod.FieldSpriteThumbnailsInterval, vod.FieldSpriteThumbnailsWidth, vod.FieldSpriteThumbnailsHeight, vod.FieldSpriteThumbnailsRows, vod.FieldSpriteThumbnailsColumns:
+		case vod.FieldDuration, vod.FieldClipVodOffset, vod.FieldViews, vod.FieldLocalViews, vod.FieldSpriteThumbnailsInterval, vod.FieldSpriteThumbnailsWidth, vod.FieldSpriteThumbnailsHeight, vod.FieldSpriteThumbnailsRows, vod.FieldSpriteThumbnailsColumns, vod.FieldStorageSizeBytes:
 			values[i] = new(sql.NullInt64)
 		case vod.FieldExtID, vod.FieldClipExtVodID, vod.FieldExtStreamID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath:
 			values[i] = new(sql.NullString)
@@ -466,6 +468,12 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				v.SpriteThumbnailsColumns = int(value.Int64)
 			}
+		case vod.FieldStorageSizeBytes:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field storage_size_bytes", values[i])
+			} else if value.Valid {
+				v.StorageSizeBytes = value.Int64
+			}
 		case vod.FieldStreamedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field streamed_at", values[i])
@@ -673,6 +681,9 @@ func (v *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("sprite_thumbnails_columns=")
 	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsColumns))
+	builder.WriteString(", ")
+	builder.WriteString("storage_size_bytes=")
+	builder.WriteString(fmt.Sprintf("%v", v.StorageSizeBytes))
 	builder.WriteString(", ")
 	builder.WriteString("streamed_at=")
 	builder.WriteString(v.StreamedAt.Format(time.ANSIC))

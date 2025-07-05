@@ -30,6 +30,8 @@ type Channel struct {
 	Retention bool `json:"retention,omitempty"`
 	// RetentionDays holds the value of the "retention_days" field.
 	RetentionDays int64 `json:"retention_days,omitempty"`
+	// Total storage size in bytes for the channel's videos.
+	StorageSizeBytes int64 `json:"storage_size_bytes,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -76,7 +78,7 @@ func (*Channel) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case channel.FieldRetention:
 			values[i] = new(sql.NullBool)
-		case channel.FieldRetentionDays:
+		case channel.FieldRetentionDays, channel.FieldStorageSizeBytes:
 			values[i] = new(sql.NullInt64)
 		case channel.FieldExtID, channel.FieldName, channel.FieldDisplayName, channel.FieldImagePath:
 			values[i] = new(sql.NullString)
@@ -140,6 +142,12 @@ func (c *Channel) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field retention_days", values[i])
 			} else if value.Valid {
 				c.RetentionDays = value.Int64
+			}
+		case channel.FieldStorageSizeBytes:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field storage_size_bytes", values[i])
+			} else if value.Valid {
+				c.StorageSizeBytes = value.Int64
 			}
 		case channel.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -216,6 +224,9 @@ func (c *Channel) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("retention_days=")
 	builder.WriteString(fmt.Sprintf("%v", c.RetentionDays))
+	builder.WriteString(", ")
+	builder.WriteString("storage_size_bytes=")
+	builder.WriteString(fmt.Sprintf("%v", c.StorageSizeBytes))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))

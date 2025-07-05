@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sys/unix"
 )
 
 // Create a directory given the path
@@ -374,4 +375,30 @@ func DeleteFolder(path string) error {
 		return fmt.Errorf("error deleting folder: %v", err)
 	}
 	return nil
+}
+
+// GetSizeOfDirectory calculates the total size of all files in a directory recursively.
+func GetSizeOfDirectory(path string) (int64, error) {
+	var size int64
+	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, fmt.Errorf("error getting size of folder: %v", err)
+	}
+	return size, nil
+}
+
+func GetFreeSpaceOfDirectory(path string) (int64, error) {
+	var stat unix.Statfs_t
+	if err := unix.Statfs(path, &stat); err != nil {
+		return 0, fmt.Errorf("error getting free space of directory: %v", err)
+	}
+	return int64(stat.Bavail) * int64(stat.Bsize), nil
 }

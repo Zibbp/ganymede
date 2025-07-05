@@ -58,6 +58,7 @@ func (Vod) Fields() []ent.Field {
 		field.Int("sprite_thumbnails_height").Optional(),
 		field.Int("sprite_thumbnails_rows").Optional(),
 		field.Int("sprite_thumbnails_columns").Optional(),
+		field.Int64("storage_size_bytes").Default(0).Comment("The size of the VOD in bytes."),
 		field.Time("streamed_at").Default(time.Now).Comment("The time the VOD was streamed."),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),

@@ -28,6 +28,7 @@ var (
 		{Name: "image_path", Type: field.TypeString},
 		{Name: "retention", Type: field.TypeBool, Default: false},
 		{Name: "retention_days", Type: field.TypeInt64, Nullable: true},
+		{Name: "storage_size_bytes", Type: field.TypeInt64, Default: 0},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 	}
@@ -357,6 +358,7 @@ var (
 		{Name: "sprite_thumbnails_height", Type: field.TypeInt, Nullable: true},
 		{Name: "sprite_thumbnails_rows", Type: field.TypeInt, Nullable: true},
 		{Name: "sprite_thumbnails_columns", Type: field.TypeInt, Nullable: true},
+		{Name: "storage_size_bytes", Type: field.TypeInt64, Default: 0},
 		{Name: "streamed_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
@@ -370,7 +372,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[43]},
+				Columns:    []*schema.Column{VodsColumns[44]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

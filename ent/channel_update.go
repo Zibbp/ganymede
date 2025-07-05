@@ -134,6 +134,27 @@ func (cu *ChannelUpdate) ClearRetentionDays() *ChannelUpdate {
 	return cu
 }
 
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (cu *ChannelUpdate) SetStorageSizeBytes(i int64) *ChannelUpdate {
+	cu.mutation.ResetStorageSizeBytes()
+	cu.mutation.SetStorageSizeBytes(i)
+	return cu
+}
+
+// SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
+func (cu *ChannelUpdate) SetNillableStorageSizeBytes(i *int64) *ChannelUpdate {
+	if i != nil {
+		cu.SetStorageSizeBytes(*i)
+	}
+	return cu
+}
+
+// AddStorageSizeBytes adds i to the "storage_size_bytes" field.
+func (cu *ChannelUpdate) AddStorageSizeBytes(i int64) *ChannelUpdate {
+	cu.mutation.AddStorageSizeBytes(i)
+	return cu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (cu *ChannelUpdate) SetUpdatedAt(t time.Time) *ChannelUpdate {
 	cu.mutation.SetUpdatedAt(t)
@@ -288,6 +309,12 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if cu.mutation.RetentionDaysCleared() {
 		_spec.ClearField(channel.FieldRetentionDays, field.TypeInt64)
+	}
+	if value, ok := cu.mutation.StorageSizeBytes(); ok {
+		_spec.SetField(channel.FieldStorageSizeBytes, field.TypeInt64, value)
+	}
+	if value, ok := cu.mutation.AddedStorageSizeBytes(); ok {
+		_spec.AddField(channel.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
 	if value, ok := cu.mutation.UpdatedAt(); ok {
 		_spec.SetField(channel.FieldUpdatedAt, field.TypeTime, value)
@@ -505,6 +532,27 @@ func (cuo *ChannelUpdateOne) ClearRetentionDays() *ChannelUpdateOne {
 	return cuo
 }
 
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (cuo *ChannelUpdateOne) SetStorageSizeBytes(i int64) *ChannelUpdateOne {
+	cuo.mutation.ResetStorageSizeBytes()
+	cuo.mutation.SetStorageSizeBytes(i)
+	return cuo
+}
+
+// SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
+func (cuo *ChannelUpdateOne) SetNillableStorageSizeBytes(i *int64) *ChannelUpdateOne {
+	if i != nil {
+		cuo.SetStorageSizeBytes(*i)
+	}
+	return cuo
+}
+
+// AddStorageSizeBytes adds i to the "storage_size_bytes" field.
+func (cuo *ChannelUpdateOne) AddStorageSizeBytes(i int64) *ChannelUpdateOne {
+	cuo.mutation.AddStorageSizeBytes(i)
+	return cuo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (cuo *ChannelUpdateOne) SetUpdatedAt(t time.Time) *ChannelUpdateOne {
 	cuo.mutation.SetUpdatedAt(t)
@@ -689,6 +737,12 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 	}
 	if cuo.mutation.RetentionDaysCleared() {
 		_spec.ClearField(channel.FieldRetentionDays, field.TypeInt64)
+	}
+	if value, ok := cuo.mutation.StorageSizeBytes(); ok {
+		_spec.SetField(channel.FieldStorageSizeBytes, field.TypeInt64, value)
+	}
+	if value, ok := cuo.mutation.AddedStorageSizeBytes(); ok {
+		_spec.AddField(channel.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
 	if value, ok := cuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(channel.FieldUpdatedAt, field.TypeTime, value)

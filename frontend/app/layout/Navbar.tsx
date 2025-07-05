@@ -60,6 +60,7 @@ export function Navbar() {
       auth: true,
       role: UserRole.Admin,
       links: [
+        { link: '/admin/overview', label: t('adminLinks.overview') },
         { link: '/admin/channels', label: t('adminLinks.channels') },
         { link: '/admin/watched', label: t('adminLinks.watchedChannels') },
         { link: '/admin/videos', label: t('adminLinks.videos') },

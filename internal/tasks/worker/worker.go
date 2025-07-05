@@ -119,6 +119,12 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks_periodic.CheckChannelsForLivestreamsWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks.UpdateVideoStorageUsageWorker{}); err != nil {
+		return rc, err
+	}
+	if err := river.AddWorkerSafely(workers, &tasks.UpdateChannelStorageUsageWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 
@@ -263,6 +269,26 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 			midnightCron,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.AuthenticatePlatformArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
+		),
+
+		// update video storage usage
+		// runs once a day at midnight
+		river.NewPeriodicJob(
+			midnightCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks.UpdateVideoStorageUsage{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: false},
+		),
+
+		// update channel storage usage
+		// runs every hour
+		river.NewPeriodicJob(
+			river.PeriodicInterval(1*time.Hour),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks.UpdateChannelStorageUsage{}, nil
 			},
 			&river.PeriodicJobOpts{RunOnStart: true},
 		),

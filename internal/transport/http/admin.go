@@ -10,27 +10,67 @@ import (
 )
 
 type AdminService interface {
-	GetStats(ctx context.Context) (admin.GetStatsResp, error)
+	GetVideoStatistics(ctx context.Context) (admin.GetVideoStatisticsResponse, error)
+	GetSystemOverview(ctx context.Context) (admin.GetSystemOverviewResponse, error)
+	GetStorageDistribution(ctx context.Context) (admin.GetStorageDistributionResponse, error)
 	GetInfo(ctx context.Context) (admin.InfoResp, error)
 }
 
-// GetStats godoc
+// GetVideoStatistics godoc
 //
-//	@Summary		Get ganymede stats
-//	@Description	Get ganymede stats
+//	@Summary		Get Ganymede video statistics
+//	@Description	Get Ganymede video statistics
 //	@Tags			admin
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	admin.GetStatsResp
+//	@Success		200	{object}	admin.GetVideoStatisticsResponse
 //	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/admin/stats [get]
+//	@Router			/admin/video/statistics [get]
 //	@Security		ApiKeyCookieAuth
-func (h *Handler) GetStats(c echo.Context) error {
-	resp, err := h.Service.AdminService.GetStats(c.Request().Context())
+func (h *Handler) GetVideoStatistics(c echo.Context) error {
+	resp, err := h.Service.AdminService.GetVideoStatistics(c.Request().Context())
 	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error retrieving stats: %v", err))
+		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error retrieving video statistics: %v", err))
 	}
-	return SuccessResponse(c, resp, "Statistics")
+	return SuccessResponse(c, resp, "Video Statistics")
+}
+
+// GetSystemOverview godoc
+//
+//	@Summary		Get system overview
+//	@Description	Get system overview
+//	@Tags			admin
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	admin.GetSystemOverviewResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/admin/system/overview [get]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) GetSystemOverview(c echo.Context) error {
+	resp, err := h.Service.AdminService.GetSystemOverview(c.Request().Context())
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error retrieving system overview: %v", err))
+	}
+	return SuccessResponse(c, resp, "System Overview")
+}
+
+// GetStorageDistribution godoc
+//
+//	@Summary		Get storage distribution
+//	@Description	Get storage distribution
+//	@Tags			admin
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	admin.GetStorageDistributionResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/admin/storage-distribution [get]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) GetStorageDistribution(c echo.Context) error {
+	resp, err := h.Service.AdminService.GetStorageDistribution(c.Request().Context())
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error retrieving storage distribution: %v", err))
+	}
+	return SuccessResponse(c, resp, "Storage Distribution")
 }
 
 // GetInfo godoc

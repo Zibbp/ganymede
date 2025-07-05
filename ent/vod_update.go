@@ -806,6 +806,27 @@ func (vu *VodUpdate) ClearSpriteThumbnailsColumns() *VodUpdate {
 	return vu
 }
 
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (vu *VodUpdate) SetStorageSizeBytes(i int64) *VodUpdate {
+	vu.mutation.ResetStorageSizeBytes()
+	vu.mutation.SetStorageSizeBytes(i)
+	return vu
+}
+
+// SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
+func (vu *VodUpdate) SetNillableStorageSizeBytes(i *int64) *VodUpdate {
+	if i != nil {
+		vu.SetStorageSizeBytes(*i)
+	}
+	return vu
+}
+
+// AddStorageSizeBytes adds i to the "storage_size_bytes" field.
+func (vu *VodUpdate) AddStorageSizeBytes(i int64) *VodUpdate {
+	vu.mutation.AddStorageSizeBytes(i)
+	return vu
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vu *VodUpdate) SetStreamedAt(t time.Time) *VodUpdate {
 	vu.mutation.SetStreamedAt(t)
@@ -1312,6 +1333,12 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if vu.mutation.SpriteThumbnailsColumnsCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsColumns, field.TypeInt)
+	}
+	if value, ok := vu.mutation.StorageSizeBytes(); ok {
+		_spec.SetField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
+	}
+	if value, ok := vu.mutation.AddedStorageSizeBytes(); ok {
+		_spec.AddField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
 	if value, ok := vu.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
@@ -2346,6 +2373,27 @@ func (vuo *VodUpdateOne) ClearSpriteThumbnailsColumns() *VodUpdateOne {
 	return vuo
 }
 
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (vuo *VodUpdateOne) SetStorageSizeBytes(i int64) *VodUpdateOne {
+	vuo.mutation.ResetStorageSizeBytes()
+	vuo.mutation.SetStorageSizeBytes(i)
+	return vuo
+}
+
+// SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
+func (vuo *VodUpdateOne) SetNillableStorageSizeBytes(i *int64) *VodUpdateOne {
+	if i != nil {
+		vuo.SetStorageSizeBytes(*i)
+	}
+	return vuo
+}
+
+// AddStorageSizeBytes adds i to the "storage_size_bytes" field.
+func (vuo *VodUpdateOne) AddStorageSizeBytes(i int64) *VodUpdateOne {
+	vuo.mutation.AddStorageSizeBytes(i)
+	return vuo
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vuo *VodUpdateOne) SetStreamedAt(t time.Time) *VodUpdateOne {
 	vuo.mutation.SetStreamedAt(t)
@@ -2882,6 +2930,12 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if vuo.mutation.SpriteThumbnailsColumnsCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsColumns, field.TypeInt)
+	}
+	if value, ok := vuo.mutation.StorageSizeBytes(); ok {
+		_spec.SetField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
+	}
+	if value, ok := vuo.mutation.AddedStorageSizeBytes(); ok {
+		_spec.AddField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
 	if value, ok := vuo.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)

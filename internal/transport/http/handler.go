@@ -247,7 +247,9 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 
 	// Admin
 	adminGroup := e.Group("/admin")
-	adminGroup.GET("/stats", h.GetStats, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.GET("/video-statistics", h.GetVideoStatistics, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.GET("/system-overview", h.GetSystemOverview, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.GET("/storage-distribution", h.GetStorageDistribution, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 	adminGroup.GET("/info", h.GetInfo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 
 	// User

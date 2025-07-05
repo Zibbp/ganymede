@@ -53,6 +53,7 @@ export interface Video {
   local_views?: number;
   locked: boolean;
   caption_path: string;
+  storage_size_bytes?: number;
 }
 
 export interface VideoEdges {

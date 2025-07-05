@@ -10,6 +10,7 @@ export interface Channel {
   image_path: string;
   retention: boolean;
   retention_days: number;
+  storage_size_bytes: number;
   updated_at: Date;
   created_at: Date;
 }

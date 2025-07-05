@@ -95,6 +95,8 @@ const (
 	FieldSpriteThumbnailsRows = "sprite_thumbnails_rows"
 	// FieldSpriteThumbnailsColumns holds the string denoting the sprite_thumbnails_columns field in the database.
 	FieldSpriteThumbnailsColumns = "sprite_thumbnails_columns"
+	// FieldStorageSizeBytes holds the string denoting the storage_size_bytes field in the database.
+	FieldStorageSizeBytes = "storage_size_bytes"
 	// FieldStreamedAt holds the string denoting the streamed_at field in the database.
 	FieldStreamedAt = "streamed_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -199,6 +201,7 @@ var Columns = []string{
 	FieldSpriteThumbnailsHeight,
 	FieldSpriteThumbnailsRows,
 	FieldSpriteThumbnailsColumns,
+	FieldStorageSizeBytes,
 	FieldStreamedAt,
 	FieldUpdatedAt,
 	FieldCreatedAt,
@@ -244,6 +247,8 @@ var (
 	DefaultLocalViews int
 	// DefaultSpriteThumbnailsEnabled holds the default value on creation for the "sprite_thumbnails_enabled" field.
 	DefaultSpriteThumbnailsEnabled bool
+	// DefaultStorageSizeBytes holds the default value on creation for the "storage_size_bytes" field.
+	DefaultStorageSizeBytes int64
 	// DefaultStreamedAt holds the default value on creation for the "streamed_at" field.
 	DefaultStreamedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -476,6 +481,11 @@ func BySpriteThumbnailsRows(opts ...sql.OrderTermOption) OrderOption {
 // BySpriteThumbnailsColumns orders the results by the sprite_thumbnails_columns field.
 func BySpriteThumbnailsColumns(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSpriteThumbnailsColumns, opts...).ToFunc()
+}
+
+// ByStorageSizeBytes orders the results by the storage_size_bytes field.
+func ByStorageSizeBytes(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStorageSizeBytes, opts...).ToFunc()
 }
 
 // ByStreamedAt orders the results by the streamed_at field.

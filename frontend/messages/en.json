@@ -122,6 +122,7 @@
       "tasks": "Tasks"
     },
     "adminLinks": {
+      "overview": "Overview",
       "admin": "Admin",
       "channels": "Channels",
       "watchedChannels": "Watched Channels",
@@ -189,6 +190,7 @@
     "loading": "Loading channels",
     "error": "Error loading channels",
     "header": "Manage Channels",
+    "storageSizeDisclaimerText": "Storage size is not updated instantly. A background task runs every hour to recalculate it.",
     "createButton": "Create Channel",
     "addTwitchChannel": "Add Twitch Channel",
     "searchPlaceholder": "Search channels...",
@@ -199,7 +201,8 @@
       "displayName": "Display Name",
       "videoRetention": "Video Retention",
       "createdAt": "Created At",
-      "actions": "Actions"
+      "actions": "Actions",
+      "storageSize": "Storage Size"
     },
     "drawer": "Channel",
     "platformDrawer": "Platform Channel",
@@ -331,7 +334,9 @@
     "updateLiveStreamIds": "Update Live Stream IDs with Video IDs",
     "updateLiveStreamIdsDescription": "Attempt to update live stream archives with their corresponding video ID (automatically does this after live archive finishes).",
     "generateSpriteThumbnails": "Generate Sprite Thumbnails",
-    "generateSpriteThumbnailsDescription": "Generate preview thumbnails seen when hovering over the player progress bar for all videos. This automatically runs after every video archive."
+    "generateSpriteThumbnailsDescription": "Generate preview thumbnails seen when hovering over the player progress bar for all videos. This automatically runs after every video archive.",
+    "updateVideoStorageUsage": "Update Video Storage Usage",
+    "updateVideoStorageUsageDescription": "Update the storage usage for all videos. This is used to display the storage usage in the video list and statistics page."
   },
   "AdminUsersPage": {
     "title": "Admin - Users",
@@ -372,7 +377,8 @@
       "locked": "Locked",
       "streamedAt": "Streamed At",
       "archivedAt": "Archived At",
-      "actions": "Actions"
+      "actions": "Actions",
+      "storageSize": "Storage Size"
     },
     "drawer": "Video",
     "deleteModal": "Delete Video",
@@ -735,7 +741,8 @@
     "localViewsTooltip": "local views",
     "streamedOnTooltip": "Streamed on",
     "videoTypeTooltip": "Video type",
-    "videoClipsTitle": "Video Clips"
+    "videoClipsTitle": "Video Clips",
+    "storageSizeTooltip": "Storage Size"
   },
   "MultistreamComponents": {
     "seekBackTooltip": "Seek back {seconds} seconds",
@@ -756,5 +763,33 @@
   },
   "LandingRecentlyArchivedComponent": {
     "error": "Error loading recently archived videos"
+  },
+  "AdminOverviewPage": {
+    "title": "Admin - Overview",
+    "loading": "Loading overview",
+    "error": "Error loading overview",
+    "system": {
+      "title": "System Overview",
+      "usedStorageText": "Used Storage",
+      "usedStorageDescription": "Total used storage",
+      "availableStorageText": "Available Storage",
+      "availableStorageDescription": "Total available storage",
+      "storageUsedText": "Storage Used",
+      "cpuCoresText": "CPU Cores",
+      "totalMemoryText": "Total Memory"
+    },
+    "videoStatistics": {
+      "title": "Video Statistics",
+      "totalVideosText": "Total Videos",
+      "totalChannelsText": "Total Channels",
+      "channelVideosMapTitle": "Channel Videos",
+      "videoTypeMapTitle": "Video Types"
+    },
+    "storageDistribution": {
+      "title": "Storage Distribution",
+      "channelStorageDistributionText": "Channel Storage Distribution",
+      "topLargeVideosText": "Top Largest Videos",
+      "noLargeVideosText": "No videos found"
+    }
   }
 }

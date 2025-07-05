@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -12,11 +13,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	entChannel "github.com/zibbp/ganymede/ent/channel"
 	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/queue"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/notification"
@@ -41,6 +44,8 @@ var (
 	TaskAuthenticatePlatform        = "authenticate_platform"
 	TaskFetchJWKS                   = "fetch_jwks"
 	TaskSaveVideoChapters           = "save_video_chapters"
+	TaskUpdateVideoStorageUsage     = "update_video_storage_usage"
+	TaskUpdateChannelStorageUsage   = "update_channel_storage_usage"
 )
 
 var (
@@ -176,6 +181,14 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 			}
 
 			notification.SendLiveArchiveSuccessNotification(&dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+
+			// Queue task to calculate video storage usage
+			_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateVideoStorageUsage{
+				VideoID: &dbItems.Video.ID,
+			}, nil)
+			if err != nil {
+				log.Error().Err(err).Msg("error queuing video storage usage update task")
+			}
 		}
 	} else {
 		if dbItems.Queue.TaskVideoDownload == utils.Success && dbItems.Queue.TaskVideoConvert == utils.Success && dbItems.Queue.TaskVideoMove == utils.Success && dbItems.Queue.TaskChatDownload == utils.Success && dbItems.Queue.TaskChatRender == utils.Success && dbItems.Queue.TaskChatMove == utils.Success {
@@ -192,6 +205,14 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 			}
 
 			notification.SendVideoArchiveSuccessNotification(&dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+
+			// Queue task to calculate video storage usage
+			_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateVideoStorageUsage{
+				VideoID: &dbItems.Video.ID,
+			}, nil)
+			if err != nil {
+				log.Error().Err(err).Msg("error queuing video storage usage update task")
+			}
 		}
 	}
 
@@ -374,5 +395,174 @@ func setWatchChannelAsNotLive(ctx context.Context, store *database.Database, cha
 		}
 	}
 
+	return nil
+}
+
+// Update video storage usage
+type UpdateVideoStorageUsage struct {
+	VideoID *uuid.UUID // Optional: if provided, only update this specific video
+}
+
+func (UpdateVideoStorageUsage) Kind() string { return TaskUpdateVideoStorageUsage }
+
+func (w UpdateVideoStorageUsage) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w UpdateVideoStorageUsage) Timeout(job *river.Job[UpdateVideoStorageUsage]) time.Duration {
+	return 5 * time.Minute
+}
+
+type UpdateVideoStorageUsageWorker struct {
+	river.WorkerDefaults[UpdateVideoStorageUsage]
+}
+
+// updateVideoStorageSize helper to update storage size for a single video
+func updateVideoStorageSize(ctx context.Context, logger zerolog.Logger, store *database.Database, video *ent.Vod) error {
+	if video.VideoPath == "" {
+		logger.Warn().Msgf("video %s has no video path, skipping storage size update", video.ID)
+		return nil // Skip if no video path
+	}
+	directory := filepath.Dir(video.VideoPath)
+	// If VideoHlsPath is set, the actual video files are in a parent directory, so go up one more level.
+	if video.VideoHlsPath != "" {
+		directory = filepath.Dir(directory)
+	}
+	size, err := utils.GetSizeOfDirectory(directory)
+	if err != nil {
+		logger.Error().Err(err).Msgf("failed to get size of directory %s for video %s", directory, video.ID)
+		return fmt.Errorf("failed to get size of directory %s for video %s: %w", directory, video.ID, err)
+	}
+	// Update the video storage size
+	if video.StorageSizeBytes != size {
+		_, err = store.Client.Vod.UpdateOneID(video.ID).SetStorageSizeBytes(size).Save(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to update video %s storage size: %v", video.ID, err)
+		}
+		logger.Info().Msgf("updated video %s storage size to %d bytes", video.ID, size)
+	} else {
+		logger.Debug().Msgf("video %s storage size is already %d bytes, skipping update", video.ID, size)
+	}
+	return nil
+}
+
+func (w UpdateVideoStorageUsageWorker) Work(ctx context.Context, job *river.Job[UpdateVideoStorageUsage]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	store, err := StoreFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	if job.Args.VideoID != nil {
+		video, err := store.Client.Vod.Get(ctx, *job.Args.VideoID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch video %s: %v", job.Args.VideoID, err)
+		}
+		if err := updateVideoStorageSize(ctx, logger, store, video); err != nil {
+			return err
+		}
+	} else {
+		const batchSize = 100
+		offset := 0
+		for {
+			videos, err := store.Client.Vod.Query().Limit(batchSize).Offset(offset).All(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to fetch videos: %v", err)
+			}
+			if len(videos) == 0 {
+				break
+			}
+			for _, video := range videos {
+				if err := updateVideoStorageSize(ctx, logger, store, video); err != nil {
+					// Only log and continue on error for individual videos
+					logger.Error().Err(err).Msgf("failed to update storage size for video %s", video.ID)
+					continue
+				}
+			}
+			offset += batchSize
+		}
+	}
+
+	// Queue task to update channel storage usage
+	_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateChannelStorageUsage{}, nil)
+	if err != nil {
+		logger.Error().Err(err).Msg("error queuing channel storage usage update task")
+		return fmt.Errorf("error queuing channel storage usage update task: %w", err)
+	}
+
+	logger.Info().Msg("task completed")
+	return nil
+}
+
+// Update channel storage usage
+type UpdateChannelStorageUsage struct {
+}
+
+func (UpdateChannelStorageUsage) Kind() string { return TaskUpdateChannelStorageUsage }
+
+func (w UpdateChannelStorageUsage) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w UpdateChannelStorageUsage) Timeout(job *river.Job[UpdateChannelStorageUsage]) time.Duration {
+	return 5 * time.Minute
+}
+
+type UpdateChannelStorageUsageWorker struct {
+	river.WorkerDefaults[UpdateChannelStorageUsage]
+}
+
+func (w UpdateChannelStorageUsageWorker) Work(ctx context.Context, job *river.Job[UpdateChannelStorageUsage]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	store, err := StoreFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	vods, err := store.Client.Vod.Query().
+		WithChannel().
+		Select(entVod.FieldStorageSizeBytes).
+		All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to fetch VODs with channels: %w", err)
+	}
+
+	channelStorageMap := make(map[uuid.UUID]int64)
+
+	for _, vod := range vods {
+		if vod.Edges.Channel != nil {
+			channelStorageMap[vod.Edges.Channel.ID] += vod.StorageSizeBytes
+		}
+	}
+
+	channels, err := store.Client.Channel.Query().All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to fetch channels: %w", err)
+	}
+
+	for _, channel := range channels {
+		totalStorage := channelStorageMap[channel.ID]
+		if channel.StorageSizeBytes != totalStorage {
+			if _, err := store.Client.Channel.
+				UpdateOneID(channel.ID).
+				SetStorageSizeBytes(totalStorage).
+				Save(ctx); err != nil {
+				return fmt.Errorf("failed to update channel %s storage: %w", channel.Name, err)
+			}
+			logger.Info().Msgf("updated channel %s storage size to %d", channel.Name, totalStorage)
+		} else {
+			logger.Debug().Msgf("channel %s storage size is already correct", channel.Name)
+		}
+	}
+
+	logger.Info().Msg("task completed")
 	return nil
 }

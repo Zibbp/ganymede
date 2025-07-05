@@ -39,14 +39,18 @@ func init() {
 	channelDescRetention := channelFields[5].Descriptor()
 	// channel.DefaultRetention holds the default value on creation for the retention field.
 	channel.DefaultRetention = channelDescRetention.Default.(bool)
+	// channelDescStorageSizeBytes is the schema descriptor for storage_size_bytes field.
+	channelDescStorageSizeBytes := channelFields[7].Descriptor()
+	// channel.DefaultStorageSizeBytes holds the default value on creation for the storage_size_bytes field.
+	channel.DefaultStorageSizeBytes = channelDescStorageSizeBytes.Default.(int64)
 	// channelDescUpdatedAt is the schema descriptor for updated_at field.
-	channelDescUpdatedAt := channelFields[7].Descriptor()
+	channelDescUpdatedAt := channelFields[8].Descriptor()
 	// channel.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	channel.DefaultUpdatedAt = channelDescUpdatedAt.Default.(func() time.Time)
 	// channel.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	channel.UpdateDefaultUpdatedAt = channelDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// channelDescCreatedAt is the schema descriptor for created_at field.
-	channelDescCreatedAt := channelFields[8].Descriptor()
+	channelDescCreatedAt := channelFields[9].Descriptor()
 	// channel.DefaultCreatedAt holds the default value on creation for the created_at field.
 	channel.DefaultCreatedAt = channelDescCreatedAt.Default.(func() time.Time)
 	// channelDescID is the schema descriptor for id field.
@@ -323,18 +327,22 @@ func init() {
 	vodDescSpriteThumbnailsEnabled := vodFields[33].Descriptor()
 	// vod.DefaultSpriteThumbnailsEnabled holds the default value on creation for the sprite_thumbnails_enabled field.
 	vod.DefaultSpriteThumbnailsEnabled = vodDescSpriteThumbnailsEnabled.Default.(bool)
+	// vodDescStorageSizeBytes is the schema descriptor for storage_size_bytes field.
+	vodDescStorageSizeBytes := vodFields[40].Descriptor()
+	// vod.DefaultStorageSizeBytes holds the default value on creation for the storage_size_bytes field.
+	vod.DefaultStorageSizeBytes = vodDescStorageSizeBytes.Default.(int64)
 	// vodDescStreamedAt is the schema descriptor for streamed_at field.
-	vodDescStreamedAt := vodFields[40].Descriptor()
+	vodDescStreamedAt := vodFields[41].Descriptor()
 	// vod.DefaultStreamedAt holds the default value on creation for the streamed_at field.
 	vod.DefaultStreamedAt = vodDescStreamedAt.Default.(func() time.Time)
 	// vodDescUpdatedAt is the schema descriptor for updated_at field.
-	vodDescUpdatedAt := vodFields[41].Descriptor()
+	vodDescUpdatedAt := vodFields[42].Descriptor()
 	// vod.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	vod.DefaultUpdatedAt = vodDescUpdatedAt.Default.(func() time.Time)
 	// vod.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	vod.UpdateDefaultUpdatedAt = vodDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// vodDescCreatedAt is the schema descriptor for created_at field.
-	vodDescCreatedAt := vodFields[42].Descriptor()
+	vodDescCreatedAt := vodFields[43].Descriptor()
 	// vod.DefaultCreatedAt holds the default value on creation for the created_at field.
 	vod.DefaultCreatedAt = vodDescCreatedAt.Default.(func() time.Time)
 	// vodDescID is the schema descriptor for id field.

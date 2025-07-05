@@ -14,7 +14,7 @@ import AdminVideoDrawerContent, { VideoEditMode } from "@/app/components/admin/v
 import DeleteVideoModalContent from "@/app/components/admin/video/DeleteModalContent";
 import MultiDeleteVideoModalContent from "@/app/components/admin/video/MultiDeleteModalContent";
 import { useTranslations } from "next-intl";
-import { usePageTitle } from "@/app/util/util";
+import { formatBytes, usePageTitle } from "@/app/util/util";
 import { useDeletePlayback, useMarkVideoAsWatched } from "@/app/hooks/usePlayback";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { showNotification } from "@mantine/notifications";
@@ -70,7 +70,16 @@ const AdminVideosPage = () => {
     }
 
     // Apply sorting
-    const sortedData = sortBy(filteredData, sortStatus.columnAccessor);
+    let sortedData;
+    if (sortStatus.columnAccessor === "storage_size_bytes") {
+      sortedData = [...filteredData].sort((a, b) => {
+        const aVal = a.storage_size_bytes ?? 0;
+        const bVal = b.storage_size_bytes ?? 0;
+        return aVal - bVal;
+      });
+    } else {
+      sortedData = sortBy(filteredData, sortStatus.columnAccessor);
+    }
     filteredData = sortStatus.direction === "desc" ? sortedData.reverse() : sortedData;
 
     // Apply pagination
@@ -316,6 +325,12 @@ const AdminVideosPage = () => {
                 accessor: "locked", title: t('columns.locked'), sortable: true,
                 render: ({ locked }) => {
                   return locked ? "✅" : "❌";
+                },
+              },
+              {
+                accessor: "storage_size_bytes", title: t('columns.storageSize'), sortable: true,
+                render: ({ storage_size_bytes }) => {
+                  return formatBytes(storage_size_bytes ?? 0, 2);
                 },
               },
               {

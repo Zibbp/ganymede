@@ -1,6 +1,6 @@
 "use client"
 import { Channel, useFetchChannels } from "@/app/hooks/useChannels";
-import { ActionIcon, Container, Group, TextInput, Title, Box, Button, Drawer, Modal } from "@mantine/core";
+import { ActionIcon, Container, Group, TextInput, Title, Box, Button, Drawer, Modal, Text } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useState } from "react";
@@ -14,7 +14,7 @@ import AdminChannelDrawerContent, { ChannelEditMode } from "@/app/components/adm
 import PlatformChannelDrawerContent from "@/app/components/admin/channel/PlatformDrawerContent";
 import DeleteChannelModalContent from "@/app/components/admin/channel/DeleteModalContent";
 import { useTranslations } from "next-intl";
-import { usePageTitle } from "@/app/util/util";
+import { formatBytes, usePageTitle } from "@/app/util/util";
 
 const AdminChannelsPage = () => {
   const t = useTranslations("AdminChannelsPage");
@@ -56,7 +56,16 @@ const AdminChannelsPage = () => {
     }
 
     // Apply sorting
-    const sortedData = sortBy(filteredData, sortStatus.columnAccessor);
+    let sortedData;
+    if (sortStatus.columnAccessor === "storage_size_bytes") {
+      sortedData = [...filteredData].sort((a, b) => {
+        const aVal = a.storage_size_bytes ?? 0;
+        const bVal = b.storage_size_bytes ?? 0;
+        return aVal - bVal;
+      });
+    } else {
+      sortedData = sortBy(filteredData, sortStatus.columnAccessor);
+    }
     filteredData = sortStatus.direction === "desc" ? sortedData.reverse() : sortedData;
 
     // Apply pagination
@@ -111,6 +120,8 @@ const AdminChannelsPage = () => {
             </Button>
           </Box>
         </Group>
+        <Text>{t('storageSizeDisclaimerText')}</Text>
+
 
         <Box mt={5}>
           <div>
@@ -135,6 +146,12 @@ const AdminChannelsPage = () => {
               { accessor: "ext_id", title: t('columns.externalId') },
               { accessor: "name", title: t('columns.name'), sortable: true },
               { accessor: "display_name", title: t('columns.displayName'), sortable: true },
+              {
+                accessor: "storage_size_bytes", title: t('columns.storageSize'), sortable: true,
+                render: ({ storage_size_bytes }) => {
+                  return formatBytes(storage_size_bytes ?? 0, 2);
+                },
+              },
               {
                 accessor: "retention",
                 title: t('columns.videoRetention'),

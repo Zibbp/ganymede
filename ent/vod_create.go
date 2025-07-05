@@ -537,6 +537,20 @@ func (vc *VodCreate) SetNillableSpriteThumbnailsColumns(i *int) *VodCreate {
 	return vc
 }
 
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (vc *VodCreate) SetStorageSizeBytes(i int64) *VodCreate {
+	vc.mutation.SetStorageSizeBytes(i)
+	return vc
+}
+
+// SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
+func (vc *VodCreate) SetNillableStorageSizeBytes(i *int64) *VodCreate {
+	if i != nil {
+		vc.SetStorageSizeBytes(*i)
+	}
+	return vc
+}
+
 // SetStreamedAt sets the "streamed_at" field.
 func (vc *VodCreate) SetStreamedAt(t time.Time) *VodCreate {
 	vc.mutation.SetStreamedAt(t)
@@ -750,6 +764,10 @@ func (vc *VodCreate) defaults() {
 		v := vod.DefaultSpriteThumbnailsEnabled
 		vc.mutation.SetSpriteThumbnailsEnabled(v)
 	}
+	if _, ok := vc.mutation.StorageSizeBytes(); !ok {
+		v := vod.DefaultStorageSizeBytes
+		vc.mutation.SetStorageSizeBytes(v)
+	}
 	if _, ok := vc.mutation.StreamedAt(); !ok {
 		v := vod.DefaultStreamedAt()
 		vc.mutation.SetStreamedAt(v)
@@ -815,6 +833,9 @@ func (vc *VodCreate) check() error {
 	}
 	if _, ok := vc.mutation.SpriteThumbnailsEnabled(); !ok {
 		return &ValidationError{Name: "sprite_thumbnails_enabled", err: errors.New(`ent: missing required field "Vod.sprite_thumbnails_enabled"`)}
+	}
+	if _, ok := vc.mutation.StorageSizeBytes(); !ok {
+		return &ValidationError{Name: "storage_size_bytes", err: errors.New(`ent: missing required field "Vod.storage_size_bytes"`)}
 	}
 	if _, ok := vc.mutation.StreamedAt(); !ok {
 		return &ValidationError{Name: "streamed_at", err: errors.New(`ent: missing required field "Vod.streamed_at"`)}
@@ -1019,6 +1040,10 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 	if value, ok := vc.mutation.SpriteThumbnailsColumns(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
 		_node.SpriteThumbnailsColumns = value
+	}
+	if value, ok := vc.mutation.StorageSizeBytes(); ok {
+		_spec.SetField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
+		_node.StorageSizeBytes = value
 	}
 	if value, ok := vc.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
@@ -1862,6 +1887,24 @@ func (u *VodUpsert) AddSpriteThumbnailsColumns(v int) *VodUpsert {
 // ClearSpriteThumbnailsColumns clears the value of the "sprite_thumbnails_columns" field.
 func (u *VodUpsert) ClearSpriteThumbnailsColumns() *VodUpsert {
 	u.SetNull(vod.FieldSpriteThumbnailsColumns)
+	return u
+}
+
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (u *VodUpsert) SetStorageSizeBytes(v int64) *VodUpsert {
+	u.Set(vod.FieldStorageSizeBytes, v)
+	return u
+}
+
+// UpdateStorageSizeBytes sets the "storage_size_bytes" field to the value that was provided on create.
+func (u *VodUpsert) UpdateStorageSizeBytes() *VodUpsert {
+	u.SetExcluded(vod.FieldStorageSizeBytes)
+	return u
+}
+
+// AddStorageSizeBytes adds v to the "storage_size_bytes" field.
+func (u *VodUpsert) AddStorageSizeBytes(v int64) *VodUpsert {
+	u.Add(vod.FieldStorageSizeBytes, v)
 	return u
 }
 
@@ -2735,6 +2778,27 @@ func (u *VodUpsertOne) UpdateSpriteThumbnailsColumns() *VodUpsertOne {
 func (u *VodUpsertOne) ClearSpriteThumbnailsColumns() *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.ClearSpriteThumbnailsColumns()
+	})
+}
+
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (u *VodUpsertOne) SetStorageSizeBytes(v int64) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetStorageSizeBytes(v)
+	})
+}
+
+// AddStorageSizeBytes adds v to the "storage_size_bytes" field.
+func (u *VodUpsertOne) AddStorageSizeBytes(v int64) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.AddStorageSizeBytes(v)
+	})
+}
+
+// UpdateStorageSizeBytes sets the "storage_size_bytes" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateStorageSizeBytes() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateStorageSizeBytes()
 	})
 }
 
@@ -3779,6 +3843,27 @@ func (u *VodUpsertBulk) UpdateSpriteThumbnailsColumns() *VodUpsertBulk {
 func (u *VodUpsertBulk) ClearSpriteThumbnailsColumns() *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.ClearSpriteThumbnailsColumns()
+	})
+}
+
+// SetStorageSizeBytes sets the "storage_size_bytes" field.
+func (u *VodUpsertBulk) SetStorageSizeBytes(v int64) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetStorageSizeBytes(v)
+	})
+}
+
+// AddStorageSizeBytes adds v to the "storage_size_bytes" field.
+func (u *VodUpsertBulk) AddStorageSizeBytes(v int64) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.AddStorageSizeBytes(v)
+	})
+}
+
+// UpdateStorageSizeBytes sets the "storage_size_bytes" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateStorageSizeBytes() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateStorageSizeBytes()
 	})
 }
 

@@ -86,6 +86,11 @@ func RetentionDays(v int64) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldRetentionDays, v))
 }
 
+// StorageSizeBytes applies equality check predicate on the "storage_size_bytes" field. It's identical to StorageSizeBytesEQ.
+func StorageSizeBytes(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldStorageSizeBytes, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldUpdatedAt, v))
@@ -424,6 +429,46 @@ func RetentionDaysIsNil() predicate.Channel {
 // RetentionDaysNotNil applies the NotNil predicate on the "retention_days" field.
 func RetentionDaysNotNil() predicate.Channel {
 	return predicate.Channel(sql.FieldNotNull(FieldRetentionDays))
+}
+
+// StorageSizeBytesEQ applies the EQ predicate on the "storage_size_bytes" field.
+func StorageSizeBytesEQ(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldStorageSizeBytes, v))
+}
+
+// StorageSizeBytesNEQ applies the NEQ predicate on the "storage_size_bytes" field.
+func StorageSizeBytesNEQ(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldNEQ(FieldStorageSizeBytes, v))
+}
+
+// StorageSizeBytesIn applies the In predicate on the "storage_size_bytes" field.
+func StorageSizeBytesIn(vs ...int64) predicate.Channel {
+	return predicate.Channel(sql.FieldIn(FieldStorageSizeBytes, vs...))
+}
+
+// StorageSizeBytesNotIn applies the NotIn predicate on the "storage_size_bytes" field.
+func StorageSizeBytesNotIn(vs ...int64) predicate.Channel {
+	return predicate.Channel(sql.FieldNotIn(FieldStorageSizeBytes, vs...))
+}
+
+// StorageSizeBytesGT applies the GT predicate on the "storage_size_bytes" field.
+func StorageSizeBytesGT(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldGT(FieldStorageSizeBytes, v))
+}
+
+// StorageSizeBytesGTE applies the GTE predicate on the "storage_size_bytes" field.
+func StorageSizeBytesGTE(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldGTE(FieldStorageSizeBytes, v))
+}
+
+// StorageSizeBytesLT applies the LT predicate on the "storage_size_bytes" field.
+func StorageSizeBytesLT(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldLT(FieldStorageSizeBytes, v))
+}
+
+// StorageSizeBytesLTE applies the LTE predicate on the "storage_size_bytes" field.
+func StorageSizeBytesLTE(v int64) predicate.Channel {
+	return predicate.Channel(sql.FieldLTE(FieldStorageSizeBytes, v))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
