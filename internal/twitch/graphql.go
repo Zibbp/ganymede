@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type GQLVideoResponse struct {
@@ -142,7 +143,7 @@ func gqlRequest(body string) ([]byte, error) {
 	req.Header.Set("Referer", "https://www.twitch.tv/")
 	req.Header.Set("Sec-Fetch-Mode", "cors")
 	req.Header.Set("Sec-Fetch-Site", "same-site")
-	// req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36")
+	req.Header.Set("User-Agent", utils.ChromeUserAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {

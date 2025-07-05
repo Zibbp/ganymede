@@ -9,7 +9,21 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/chapter"
+	"github.com/zibbp/ganymede/internal/utils"
 )
+
+type TwitchGQLPlaybackAccessTokenResponse struct {
+	Data TwitchGQLPlaybackAccessTokenData `json:"data"`
+}
+
+type TwitchGQLPlaybackAccessTokenData struct {
+	StreamPlaybackAccessToken TwitchGQLPlaybackAccessToken `json:"streamPlaybackAccessToken"`
+}
+
+type TwitchGQLPlaybackAccessToken struct {
+	Value     string `json:"value"`
+	Signature string `json:"signature"`
+}
 
 type TwitchGQLVideoResponse struct {
 	Data       TwitchGQLVideoData `json:"data"`
@@ -144,7 +158,7 @@ func twitchGQLRequest(body string) ([]byte, error) {
 	req.Header.Set("Referer", "https://www.twitch.tv/")
 	req.Header.Set("Sec-Fetch-Mode", "cors")
 	req.Header.Set("Sec-Fetch-Site", "same-site")
-	// req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36")
+	req.Header.Set("User-Agent", utils.ChromeUserAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -210,6 +224,35 @@ func (c *TwitchConnection) TwitchGQLGetChapters(id string) ([]TwitchGQLChapterEd
 	}
 
 	return resp.Data.Video.Moments.Edges, nil
+}
+
+// TwitchGQLGetPlaybackAccessToken retrieves the playback access token for a live stream.
+func (c *TwitchConnection) TwitchGQLGetPlaybackAccessToken(channel string) (*TwitchGQLPlaybackAccessToken, error) {
+	// TODO: remove hardcoded options in the future if used for other functions
+	body := fmt.Sprintf(`{
+		"operationName": "PlaybackAccessToken",
+		"variables": {
+			"isLive": true,
+			"login": "%s",
+			"isVod": false,
+			"vodID": "",
+			"playerType": "site"
+		},
+		"query": "query PlaybackAccessToken($isLive: Boolean!, $login: String!, $isVod: Boolean!, $vodID: ID!, $playerType: String!) {\nstreamPlaybackAccessToken(channelName: $login, params: {platform: \"web\", playerBackend: \"mediaplayer\", playerType: $playerType}) @include(if: $isLive) {\nvalue\nsignature\n}\nvideoPlaybackAccessToken(id: $vodID, params: {platform: \"web\", playerBackend: \"mediaplayer\", playerType: $playerType}) @include(if: $isVod) {\nvalue\nsignature\n}\n}"
+	}`, channel)
+
+	respBytes, err := twitchGQLRequest(body)
+	if err != nil {
+		return nil, fmt.Errorf("error getting playback access token: %w", err)
+	}
+
+	var resp TwitchGQLPlaybackAccessTokenResponse
+	err = json.Unmarshal(respBytes, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling playback access token response: %w", err)
+	}
+
+	return &resp.Data.StreamPlaybackAccessToken, nil
 }
 
 // convertTwitchChaptersToChapters converts Twitch chapters to chapters. Twitch chapters are in milliseconds.

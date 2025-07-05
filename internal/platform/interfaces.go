@@ -133,4 +133,5 @@ type Platform interface {
 	GetChannelEmotes(ctx context.Context, channelId string) ([]Emote, error)
 	GetChannelClips(ctx context.Context, channelId string, filter ClipsFilter) ([]ClipInfo, error)
 	GetClip(ctx context.Context, id string) (*ClipInfo, error)
+	CheckIfStreamIsLive(ctx context.Context, channelName string) (bool, error)
 }
