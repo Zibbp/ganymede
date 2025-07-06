@@ -308,7 +308,6 @@ OUTER:
 					}
 				}
 
-				log.Debug().Msgf("%s is now live", lwc.Edges.Channel.Name)
 				// check if stream is already being archived
 				queueItems, err := database.DB().Client.Queue.Query().Where(queue.Processing(true)).WithVod().All(context.Background())
 				if err != nil {
@@ -320,6 +319,18 @@ OUTER:
 						continue OUTER
 					}
 				}
+
+				// Check if the stream is really live or if the API is just slow to update (GH#760)
+				isLive, err := s.PlatformTwitch.CheckIfStreamIsLive(ctx, lwc.Edges.Channel.Name)
+				if err != nil {
+					log.Error().Err(err).Msg("error checking if stream is live")
+					continue OUTER
+				}
+				if !isLive {
+					log.Info().Msgf("%s is not live, skipping archiving", lwc.Edges.Channel.Name)
+					continue OUTER
+				}
+
 				// Archive stream
 				err = s.ArchiveService.ArchiveLivestream(ctx, archive.ArchiveVideoInput{
 					ChannelId:   lwc.Edges.Channel.ID,
