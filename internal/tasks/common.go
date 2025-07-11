@@ -372,20 +372,29 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 				return err
 			}
 
-			// Queue live stream metadata update job for in the future if the channel has it enabled
-			watchedChannel, err := dbItems.Channel.QueryLive().First(ctx)
+			// Check if channel has a live edge
+			// If so queue a job to update the live stream metadata if enabled
+			hasLive, err := store.Client.Channel.Query().Where(entChannel.ID(dbItems.Channel.ID)).QueryLive().Exist(ctx)
 			if err != nil {
 				return err
 			}
-			if watchedChannel.UpdateMetadataMinutes > 0 {
-				_, err = client.Insert(ctx, &UpdateLiveStreamMetadataArgs{
-					Continue: false,
-					Input:    job.Args.Input,
-				}, &river.InsertOpts{
-					ScheduledAt: time.Now().Add(time.Duration(watchedChannel.UpdateMetadataMinutes) * time.Minute),
-				})
+
+			if hasLive {
+				// Queue live stream metadata update job for in the future if the channel has it enabled
+				watchedChannel, err := dbItems.Channel.QueryLive().First(ctx)
 				if err != nil {
 					return err
+				}
+				if watchedChannel.UpdateMetadataMinutes > 0 {
+					_, err = client.Insert(ctx, &UpdateLiveStreamMetadataArgs{
+						Continue: false,
+						Input:    job.Args.Input,
+					}, &river.InsertOpts{
+						ScheduledAt: time.Now().Add(time.Duration(watchedChannel.UpdateMetadataMinutes) * time.Minute),
+					})
+					if err != nil {
+						return err
+					}
 				}
 			}
 
