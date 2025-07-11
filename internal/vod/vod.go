@@ -208,6 +208,11 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) e
 
 		path := filepath.Dir(filepath.Clean(v.VideoPath))
 
+		// If video was converted to HLS need to use the HLS path
+		if v.VideoHlsPath != "" {
+			path = filepath.Dir(filepath.Clean(v.VideoHlsPath))
+		}
+
 		if err := utils.DeleteDirectory(path); err != nil {
 			log.Error().Err(err).Msg("error deleting directory")
 			return fmt.Errorf("error deleting directory: %v", err)
