@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -204,14 +205,25 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) e
 
 	// delete files
 	if deleteFiles {
-		log.Debug().Msgf("deleting files for vod %s", v.ID)
+		log.Info().Msgf("deleting files for vod %s", v.ID)
 
-		path := filepath.Dir(filepath.Clean(v.VideoPath))
-
-		// If video was converted to HLS need to use the HLS path
+		videoPath := v.VideoPath
 		if v.VideoHlsPath != "" {
-			path = filepath.Dir(filepath.Clean(v.VideoHlsPath))
+			videoPath = v.VideoHlsPath
 		}
+
+		path := filepath.Dir(filepath.Clean(videoPath))
+
+		// Make sure FolderName is present in the path before deleting
+		// This is to prevent accidental deletion of unrelated directories
+		if v.FolderName != "" {
+			if !strings.Contains(path, v.FolderName) {
+				log.Warn().Msgf("video folder_name not found in path, cowardly refusing to delete: %s. Delete video without deleting files then manually delete directory", path)
+				return fmt.Errorf("video folder_name not found in path, cowardly refusing to delete: %s. Delete video without deleting files then manually delete directory", path)
+			}
+		}
+
+		log.Info().Msgf("deleting directory %s", path)
 
 		if err := utils.DeleteDirectory(path); err != nil {
 			log.Error().Err(err).Msg("error deleting directory")
