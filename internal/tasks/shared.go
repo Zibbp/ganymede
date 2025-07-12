@@ -361,10 +361,9 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 				log.Error().Err(err).Msg("failed to delete video")
 				return nil
 			}
+			// return early to avoid further processing
+			return nil
 		}
-
-		// return early to avoid further processing
-		return nil
 	}
 
 	// if the job is an archive job, mark it as failed in the queue and send an error notification
