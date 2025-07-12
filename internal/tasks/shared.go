@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -20,12 +21,13 @@ import (
 	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/queue"
 	entVod "github.com/zibbp/ganymede/ent/vod"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
-	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
 	"github.com/zibbp/ganymede/internal/utils"
+	vods_utility "github.com/zibbp/ganymede/internal/vod/utility"
 )
 
 var archive_tag = "archive"
@@ -307,10 +309,63 @@ func containsAllTags(jobTags, filterTags []string) bool {
 	return true
 }
 
+// CustomErrorHandler implements river.ErrorHandler to handle errors and panics in jobs.
 type CustomErrorHandler struct{}
 
 func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRow, err error) *river.ErrorHandlerResult {
 	log.Error().Str("job_id", fmt.Sprintf("%d", job.ID)).Str("attempt", fmt.Sprintf("%d", job.Attempt)).Str("attempted_by", job.AttemptedBy[job.Attempt-1]).Str("args", string(job.EncodedArgs)).Err(err).Msg("task error")
+
+	// Check if this is a phantom live stream and cleanup (GH#760)
+	// This is behind an experimental flag
+	if config.Get().Experimental.BetterLiveStreamDetectionAndCleanup {
+		if errors.As(err, &platform.ErrorNoStreamsFound{}) {
+			// Job reported no stream found so we can clean up the live stream
+			log.Warn().Msgf("phantom live stream detected for job %d, cleaning up", job.ID)
+
+			// Unmarshal custom arguments
+			var args RiverJobArgs
+			if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
+				log.Error().Err(err).Msg("failed to unmarshal job arguments")
+				return nil
+			}
+
+			// Get store from context
+			store, err := StoreFromContext(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to get store from context")
+				return nil
+			}
+
+			// Query queue
+			q, err := store.Client.Queue.Query().Where(queue.ID(args.Input.QueueId)).WithVod().Only(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to query queue")
+				return nil
+			}
+
+			// Query channel
+			c, err := q.Edges.Vod.QueryChannel().Only(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to query channel")
+				return nil
+			}
+
+			// Set the watched channel as not live
+			if err := setWatchChannelAsNotLive(ctx, store, c.ID); err != nil {
+				log.Error().Err(err).Msg("failed to set watched channel as not live")
+				return nil
+			}
+
+			// Delete the video
+			if err := vods_utility.DeleteVod(ctx, store, q.Edges.Vod.ID, true); err != nil {
+				log.Error().Err(err).Msg("failed to delete video")
+				return nil
+			}
+		}
+
+		// return early to avoid further processing
+		return nil
+	}
 
 	// if the job is an archive job, mark it as failed in the queue and send an error notification
 	if utils.Contains(job.Tags, archive_tag) && !utils.Contains(job.Tags, allow_fail_tag) {

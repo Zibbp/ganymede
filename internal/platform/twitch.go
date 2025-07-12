@@ -133,7 +133,7 @@ func (c *TwitchConnection) GetLiveStream(ctx context.Context, channelName string
 	}
 
 	if len(resp.Data) == 0 {
-		return nil, fmt.Errorf("no streams found")
+		return nil, ErrorNoStreamsFound{}
 	}
 
 	startedAt, err := time.Parse(time.RFC3339, resp.Data[0].StartedAt)
