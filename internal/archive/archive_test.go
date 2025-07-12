@@ -46,17 +46,17 @@ func waitForArchiveCompletion(t *testing.T, app *server.Application, videoId uui
 	startTime := time.Now()
 	for {
 		if time.Since(startTime) >= timeout {
-			t.Errorf("Timeout reached while waiting for video to be archived")
+			t.Fatalf("Timeout reached while waiting for video to be archived")
 		}
 
 		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(videoId))).Only(context.Background())
 		if err != nil {
-			t.Errorf("Error querying queue item: %v", err)
+			t.Fatalf("Error querying queue item: %v", err)
 		}
 		runningJobsParams := river.NewJobListParams().States(rivertype.JobStateRunning).First(10000)
 		runningJobs, err := app.RiverClient.JobList(context.Background(), runningJobsParams)
 		if err != nil {
-			t.Errorf("Error listing running jobs: %v", err)
+			t.Fatalf("Error listing running jobs: %v", err)
 		}
 
 		if !q.Processing && len(runningJobs.Jobs) == 0 {

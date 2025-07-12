@@ -362,8 +362,10 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 				log.Error().Err(err).Msg("failed to delete video")
 				return nil
 			}
-			// return early to avoid further processing
-			return nil
+			// Stop the job from being retried
+			return &river.ErrorHandlerResult{
+				SetCancelled: true, // Set the job as cancelled
+			}
 		}
 	}
 
