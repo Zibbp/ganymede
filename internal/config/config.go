@@ -30,6 +30,9 @@ type Config struct {
 		ProxyParameters string          `json:"proxy_parameters"` // Proxy parameters.
 		ProxyWhitelist  []string        `json:"proxy_whitelist"`  // Whitelist channels from proxy.
 	} `json:"livestream"`
+	Experimental struct {
+		BetterLiveStreamDetectionAndCleanup bool `json:"better_live_stream_detection_and_cleanup"` // [EXPERIMENTAL] Enable better live stream detection and cleanup of phantom live streams.
+	} `json:"experimental"` // Experimental features.
 }
 
 // UnmarshalJSON implements custom JSON unmarshaling for Config
@@ -159,6 +162,16 @@ func (c *Config) loadConfig() error {
 		return err
 	}
 
+	// Unmarshal into c, preserving defaults for missing fields
+	if err = json.Unmarshal(file, c); err != nil {
+		return err
+	}
+
+	// Rewrite the file: this drops any removed fields and adds any new ones
+	if err = saveConfigUnsafe(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -206,6 +219,9 @@ func (c *Config) setDefaults() {
 	c.Livestream.ProxyEnabled = false
 	c.Livestream.ProxyParameters = "%3Fplayer%3Dtwitchweb%26type%3Dany%26allow_source%3Dtrue%26allow_audio_only%3Dtrue%26allow_spectre%3Dfalse%26fast_bread%3Dtrue"
 	c.Livestream.ProxyWhitelist = []string{}
+
+	// experimental
+	c.Experimental.BetterLiveStreamDetectionAndCleanup = false
 }
 
 // UpdateConfig updates the config on disk.
