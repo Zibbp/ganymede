@@ -19,14 +19,12 @@ import (
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
-	"github.com/zibbp/ganymede/internal/vod"
 )
 
 type RiverWorkerInput struct {
 	DB_URL                  string
 	DB                      *database.Database
 	PlatformTwitch          platform.Platform
-	VodService              vod.Service
 	VideoDownloadWorkers    int
 	VideoPostProcessWorkers int
 	ChatDownloadWorkers     int
@@ -168,9 +166,6 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 
 	// put platform in context for workers
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformTwitchKey, input.PlatformTwitch)
-
-	// put vod service in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.VodServiceKey, input.VodService)
 
 	return rc, nil
 }

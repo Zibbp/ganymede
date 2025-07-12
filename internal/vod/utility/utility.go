@@ -80,53 +80,34 @@ func DeleteVod(ctx context.Context, store *database.Database, vodID uuid.UUID, d
 		}
 
 		// attempt to delete temp files
-		if err := utils.DeleteFile(v.TmpVideoDownloadPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpVideoDownloadPath)
-			} else {
-				return err
+		tempFiles := []string{
+			v.TmpVideoDownloadPath,
+			v.TmpVideoConvertPath,
+			v.TmpChatDownloadPath,
+			v.TmpChatRenderPath,
+			v.TmpLiveChatConvertPath,
+			v.TmpLiveChatDownloadPath,
+		}
+		for _, path := range tempFiles {
+			if path != "" {
+				err := utils.DeleteFile(path)
+				if err != nil {
+					if errors.Is(err, os.ErrNotExist) {
+						log.Debug().Msgf("temp file %s does not exist", path)
+					} else {
+						return err
+					}
+				}
 			}
 		}
-		if err := utils.DeleteFile(v.TmpVideoConvertPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpVideoConvertPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteDirectory(v.TmpVideoHlsPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpVideoHlsPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteFile(v.TmpChatDownloadPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpChatDownloadPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteFile(v.TmpChatRenderPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpChatRenderPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteFile(v.TmpLiveChatConvertPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpLiveChatConvertPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteFile(v.TmpLiveChatDownloadPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpLiveChatDownloadPath)
-			} else {
-				return err
+		if v.TmpVideoHlsPath != "" {
+			err := utils.DeleteDirectory(v.TmpVideoHlsPath)
+			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					log.Debug().Msgf("temp directory %s does not exist", v.TmpVideoHlsPath)
+				} else {
+					return err
+				}
 			}
 		}
 
