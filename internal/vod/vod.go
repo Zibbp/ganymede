@@ -207,6 +207,8 @@ func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) e
 	if deleteFiles {
 		log.Info().Msgf("deleting files for vod %s", v.ID)
 
+		// Use the videopath for standard videos
+		// If HLS video use the path of the HLS directory
 		videoPath := v.VideoPath
 		if v.VideoHlsPath != "" {
 			videoPath = v.VideoHlsPath
