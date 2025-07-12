@@ -1,4 +1,5 @@
 ARG TWITCHDOWNLOADER_VERSION="1.55.7"
+ARG STREAMLINK_VERSION="7.4.0"
 
 #
 # API Build
@@ -19,6 +20,9 @@ RUN make build_server build_worker
 # API Tools
 #
 FROM debian:bookworm-slim AS tools
+
+ARG STREAMLINK_VERSION
+
 WORKDIR /tmp
 RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip git ca-certificates curl \
@@ -46,6 +50,7 @@ FROM node:22-alpine AS base-frontend
 
 # Install dependencies only when needed
 FROM node:22-alpine AS deps
+
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -61,6 +66,7 @@ RUN \
 # Frontend build
 #
 FROM node:22-alpine AS build-frontend
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY frontend/. .
@@ -79,9 +85,11 @@ RUN \
 #
 FROM golang:1.24-bookworm AS tests
 
+ARG STREAMLINK_VERSION
+
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip ffmpeg make git
 
-RUN pip3 install --upgrade pip streamlink --break-system-packages
+RUN pip3 install --upgrade pip streamlink==${STREAMLINK_VERSION} --break-system-packages
 
 # Copy and install chat-downloader
 COPY --from=tools /tmp/chat-downloader /tmp/chat-downloader
@@ -96,6 +104,9 @@ RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
 
 # Production stage
 FROM debian:bookworm-slim
+
+ARG STREAMLINK_VERSION
+
 WORKDIR /opt/app
 
 # Install dependencies
@@ -107,7 +118,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ln -sf python3 /usr/bin/python
 
 # Install pip packages
-RUN pip3 install --no-cache-dir --upgrade pip streamlink --break-system-packages
+RUN pip3 install --no-cache-dir --upgrade pip streamlink==${STREAMLINK_VERSION} --break-system-packages
 
 # Install gosu
 RUN curl -LO https://github.com/tianon/gosu/releases/latest/download/gosu-$(dpkg --print-architecture | awk -F- '{ print $NF }') \
