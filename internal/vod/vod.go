@@ -3,15 +3,11 @@ package vod
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
-	"os"
-	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,8 +16,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
-	entChapter "github.com/zibbp/ganymede/ent/chapter"
-	entMutedSegment "github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -32,6 +26,7 @@ import (
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	"github.com/zibbp/ganymede/internal/utils"
+	vods_utility "github.com/zibbp/ganymede/internal/vod/utility"
 )
 
 type Service struct {
@@ -174,123 +169,8 @@ func (s *Service) GetVod(ctx context.Context, vodID uuid.UUID, withChannel bool,
 	return v, nil
 }
 
-func (s *Service) DeleteVod(c echo.Context, vodID uuid.UUID, deleteFiles bool) error {
-	log.Debug().Msgf("deleting vod %s", vodID)
-	// delete vod and queue item
-	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).WithQueue().WithChannel().WithChapters().WithMutedSegments().Only(c.Request().Context())
-	if err != nil {
-		if _, ok := err.(*ent.NotFoundError); ok {
-			return fmt.Errorf("vod not found")
-		}
-		return fmt.Errorf("error deleting vod: %v", err)
-	}
-	if v.Edges.Queue != nil {
-		err = s.Store.Client.Queue.DeleteOneID(v.Edges.Queue.ID).Exec(c.Request().Context())
-		if err != nil {
-			return fmt.Errorf("error deleting queue item: %v", err)
-		}
-	}
-	if v.Edges.Chapters != nil {
-		_, err = s.Store.Client.Chapter.Delete().Where(entChapter.HasVodWith(vod.ID(vodID))).Exec(c.Request().Context())
-		if err != nil {
-			return fmt.Errorf("error deleting chapters: %v", err)
-		}
-	}
-	if v.Edges.MutedSegments != nil {
-		_, err = s.Store.Client.MutedSegment.Delete().Where(entMutedSegment.HasVodWith(vod.ID(vodID))).Exec(c.Request().Context())
-		if err != nil {
-			return fmt.Errorf("error deleting muted segments: %v", err)
-		}
-	}
-
-	// delete files
-	if deleteFiles {
-		log.Info().Msgf("deleting files for vod %s", v.ID)
-
-		// Use the videopath for standard videos
-		// If HLS video use the path of the HLS directory
-		videoPath := v.VideoPath
-		if v.VideoHlsPath != "" {
-			videoPath = v.VideoHlsPath
-		}
-
-		path := filepath.Dir(filepath.Clean(videoPath))
-
-		// Make sure FolderName is present in the path before deleting
-		// This is to prevent accidental deletion of unrelated directories
-		if v.FolderName != "" {
-			if !strings.Contains(path, v.FolderName) {
-				log.Warn().Msgf("video folder_name not found in path, cowardly refusing to delete: %s. Delete video without deleting files then manually delete directory", path)
-				return fmt.Errorf("video folder_name not found in path, cowardly refusing to delete: %s. Delete video without deleting files then manually delete directory", path)
-			}
-		}
-
-		log.Info().Msgf("deleting directory %s", path)
-
-		if err := utils.DeleteDirectory(path); err != nil {
-			log.Error().Err(err).Msg("error deleting directory")
-			return fmt.Errorf("error deleting directory: %v", err)
-		}
-
-		// attempt to delete temp files
-		if err := utils.DeleteFile(v.TmpVideoDownloadPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpVideoDownloadPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteFile(v.TmpVideoConvertPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpVideoConvertPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteDirectory(v.TmpVideoHlsPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpVideoHlsPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteFile(v.TmpChatDownloadPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpChatDownloadPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteFile(v.TmpChatRenderPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpChatRenderPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteFile(v.TmpLiveChatConvertPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpLiveChatConvertPath)
-			} else {
-				return err
-			}
-		}
-		if err := utils.DeleteFile(v.TmpLiveChatDownloadPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				log.Debug().Msgf("temp file %s does not exist", v.TmpLiveChatDownloadPath)
-			} else {
-				return err
-			}
-		}
-
-	}
-
-	err = s.Store.Client.Vod.DeleteOneID(vodID).Exec(c.Request().Context())
-	if err != nil {
-		log.Debug().Err(err).Msg("error deleting vod")
-		return fmt.Errorf("error deleting vod: %v", err)
-	}
-	return nil
+func (s *Service) DeleteVod(ctx context.Context, vodID uuid.UUID, deleteFiles bool) error {
+	return vods_utility.DeleteVod(ctx, s.Store, vodID, deleteFiles)
 }
 
 func (s *Service) UpdateVod(c echo.Context, vodID uuid.UUID, vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
