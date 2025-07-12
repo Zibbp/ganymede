@@ -110,11 +110,24 @@ func Init() (*Config, error) {
 	return instance, initialError
 }
 
-// Get returns the in-memory configuration. Init must be called beforehand.
+// Get reads the latest configuration from disk each time it is called.
+// Init must be called beforehand to ensure the config file path is set.
 func Get() *Config {
 	configMutex.RLock()
 	defer configMutex.RUnlock()
-	return instance
+
+	data, err := os.ReadFile(configFile)
+	if err != nil {
+		return instance
+	}
+
+	cfg := &Config{}
+	cfg.setDefaults()
+	if err := json.Unmarshal(data, cfg); err != nil {
+		return instance
+	}
+
+	return cfg
 }
 
 // UpdateConfig replaces the in-memory config and persists it to disk.
