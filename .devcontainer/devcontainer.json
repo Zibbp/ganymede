@@ -52,6 +52,6 @@
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
   "workspaceFolder": "/workspace",
-  "postCreateCommand": "pip install streamlink chat-downloader --break-system-packages",
+  "postCreateCommand": "pip install chat-downloader --break-system-packages",
   "postAttachCommand": "sudo chown -R vscode:vscode /go && make dev_setup"
 }
