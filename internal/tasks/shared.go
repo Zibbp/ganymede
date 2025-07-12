@@ -318,7 +318,8 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 	// Check if this is a phantom live stream and cleanup (GH#760)
 	// This is behind an experimental flag
 	if config.Get().Experimental.BetterLiveStreamDetectionAndCleanup {
-		if errors.As(err, &platform.ErrorNoStreamsFound{}) {
+		var e platform.ErrorNoStreamsFound
+		if errors.As(err, &e) {
 			// Job reported no stream found so we can clean up the live stream
 			log.Warn().Msgf("phantom live stream detected for job %d, cleaning up", job.ID)
 

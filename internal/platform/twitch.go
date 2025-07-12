@@ -133,7 +133,7 @@ func (c *TwitchConnection) GetLiveStream(ctx context.Context, channelName string
 	}
 
 	if len(resp.Data) == 0 {
-		return nil, ErrorNoStreamsFound{}
+		return nil, fmt.Errorf("failed to fetch stream for channel %s: %w", channelName, ErrorNoStreamsFound{})
 	}
 
 	startedAt, err := time.Parse(time.RFC3339, resp.Data[0].StartedAt)
@@ -177,7 +177,7 @@ func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelNames []st
 	}
 
 	if len(resp.Data) == 0 {
-		return nil, &ErrorNoStreamsFound{}
+		return nil, fmt.Errorf("failed to fetch stream for channels: %w", ErrorNoStreamsFound{})
 	}
 
 	streams := make([]LiveStreamInfo, 0, len(resp.Data))

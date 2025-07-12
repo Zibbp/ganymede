@@ -235,8 +235,9 @@ func (s *Service) Check(ctx context.Context) error {
 
 		twitchStreams, err := s.PlatformTwitch.GetLiveStreams(ctx, channels)
 		if err != nil {
-			if errors.Is(err, &platform.ErrorNoStreamsFound{}) {
-				log.Debug().Msg("no streams found")
+			var e platform.ErrorNoStreamsFound
+			if errors.As(err, &e) {
+				log.Debug().Msgf("live stream not found for channels: %s, skipping", strings.Join(channels, ", "))
 				continue
 			} else {
 				return fmt.Errorf("error getting live streams: %v", err)
