@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/rivertype"
 	"github.com/stretchr/testify/assert"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -36,6 +39,32 @@ func isPlayableVideo(path string) bool {
 		"stream=codec_name", "-of", "default=noprint_wrappers=1:nokey=1", path)
 	err := cmd.Run()
 	return err == nil
+}
+
+// waitForArchiveCompletion waits until the queue item is done processing and no running jobs remain.
+func waitForArchiveCompletion(t *testing.T, app *server.Application, videoId uuid.UUID, timeout time.Duration) {
+	startTime := time.Now()
+	for {
+		if time.Since(startTime) >= timeout {
+			t.Fatalf("Timeout reached while waiting for video to be archived")
+		}
+
+		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(videoId))).Only(context.Background())
+		if err != nil {
+			t.Fatalf("Error querying queue item: %v", err)
+		}
+		runningJobsParams := river.NewJobListParams().States(rivertype.JobStateRunning).First(10000)
+		runningJobs, err := app.RiverClient.JobList(context.Background(), runningJobsParams)
+		if err != nil {
+			t.Fatalf("Error listing running jobs: %v", err)
+		}
+
+		if !q.Processing && len(runningJobs.Jobs) == 0 {
+			break
+		}
+
+		time.Sleep(10 * time.Second)
+	}
 }
 
 // TestAdmin tests the admin service. This function runs all the tests to avoid spinning up multiple containers.
@@ -106,23 +135,7 @@ func TestArchiveVideo(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	startTime := time.Now()
-	for {
-		if time.Since(startTime) >= TestArchiveTimeout {
-			t.Errorf("Timeout reached while waiting for video to be archived")
-		}
-
-		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
-		if err != nil {
-			t.Errorf("Error querying queue item: %v", err)
-		}
-
-		if !q.Processing {
-			break
-		}
-
-		time.Sleep(10 * time.Second)
-	}
+	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -143,6 +156,8 @@ func TestArchiveVideo(t *testing.T) {
 	assert.FileExists(t, v.VideoPath)
 	assert.FileExists(t, v.ChatPath)
 	assert.FileExists(t, v.ChatVideoPath)
+
+	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
 	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
@@ -188,23 +203,7 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	startTime := time.Now()
-	for {
-		if time.Since(startTime) >= TestArchiveTimeout {
-			t.Errorf("Timeout reached while waiting for video to be archived")
-		}
-
-		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
-		if err != nil {
-			t.Errorf("Error querying queue item: %v", err)
-		}
-
-		if !q.Processing {
-			break
-		}
-
-		time.Sleep(10 * time.Second)
-	}
+	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -225,6 +224,8 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.FileExists(t, v.VideoPath)
 	assert.NoFileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
+
+	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
 	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
@@ -269,23 +270,7 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	startTime := time.Now()
-	for {
-		if time.Since(startTime) >= TestArchiveTimeout {
-			t.Errorf("Timeout reached while waiting for video to be archived")
-		}
-
-		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
-		if err != nil {
-			t.Errorf("Error querying queue item: %v", err)
-		}
-
-		if !q.Processing {
-			break
-		}
-
-		time.Sleep(10 * time.Second)
-	}
+	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -306,6 +291,8 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.FileExists(t, v.VideoPath)
 	assert.FileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
+
+	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
 	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
@@ -357,23 +344,7 @@ func TestArchiveVideoHLS(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	startTime := time.Now()
-	for {
-		if time.Since(startTime) >= TestArchiveTimeout {
-			t.Errorf("Timeout reached while waiting for video to be archived")
-		}
-
-		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
-		if err != nil {
-			t.Errorf("Error querying queue item: %v", err)
-		}
-
-		if !q.Processing {
-			break
-		}
-
-		time.Sleep(10 * time.Second)
-	}
+	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -393,6 +364,8 @@ func TestArchiveVideoHLS(t *testing.T) {
 	assert.FileExists(t, v.WebThumbnailPath)
 	assert.NoFileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
+
+	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	assert.DirExists(t, v.VideoHlsPath)
 
@@ -441,23 +414,7 @@ func TestArchiveClip(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	startTime := time.Now()
-	for {
-		if time.Since(startTime) >= TestArchiveTimeout {
-			t.Errorf("Timeout reached while waiting for video to be archived")
-		}
-
-		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
-		if err != nil {
-			t.Errorf("Error querying queue item: %v", err)
-		}
-
-		if !q.Processing {
-			break
-		}
-
-		time.Sleep(10 * time.Second)
-	}
+	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -478,6 +435,8 @@ func TestArchiveClip(t *testing.T) {
 	assert.FileExists(t, v.VideoPath)
 	assert.FileExists(t, v.ChatPath)
 	assert.FileExists(t, v.ChatVideoPath)
+
+	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
 	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
@@ -523,23 +482,7 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	startTime := time.Now()
-	for {
-		if time.Since(startTime) >= TestArchiveTimeout {
-			t.Errorf("Timeout reached while waiting for video to be archived")
-		}
-
-		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
-		if err != nil {
-			t.Errorf("Error querying queue item: %v", err)
-		}
-
-		if !q.Processing {
-			break
-		}
-
-		time.Sleep(10 * time.Second)
-	}
+	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -561,8 +504,7 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.NoFileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
 
-	// Wait for sprite thumbnails
-	time.Sleep(10 * time.Second)
+	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert sprite thumbnail facts
 	v, err = app.Database.Client.Vod.Query().Where(vod.ID(v.ID)).Only(context.Background())

@@ -47,7 +47,7 @@ func PruneVideos(ctx context.Context, store *database.Database) error {
 			if video.CreatedAt.Add(time.Duration(channel.RetentionDays) * 24 * time.Hour).Before(time.Now()) {
 				// delete video
 				log.Info().Str("video_id", video.ID.String()).Msg("deleting video as it is older than retention")
-				err := vodService.DeleteVod(echoCtx, video.ID, true)
+				err := vodService.DeleteVod(ctx, video.ID, true)
 				if err != nil {
 					log.Error().Err(err).Msgf("Error deleting video %s", video.ID)
 					continue

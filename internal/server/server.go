@@ -54,6 +54,7 @@ type Application struct {
 	CategoryService   *category.Service
 	BlockedVodService *blocked.Service
 	RiverUIServer     *riverui.Server
+	RiverClient       *tasks_client.RiverClient
 }
 
 func SetupApplication(ctx context.Context) (*Application, error) {
@@ -175,6 +176,7 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 		CategoryService:   categoryService,
 		PlatformTwitch:    platformTwitch,
 		RiverUIServer:     riverUIServer,
+		RiverClient:       riverClient,
 	}, nil
 }
 

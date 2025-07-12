@@ -30,7 +30,7 @@ type VodService interface {
 	GetVodsByChannel(c echo.Context, cUUID uuid.UUID) ([]*ent.Vod, error)
 	GetVod(ctx context.Context, vID uuid.UUID, withChannel bool, withChapters bool, withMutedSegments bool, withQueue bool) (*ent.Vod, error)
 	GetVodByExternalId(ctx context.Context, externalId string) (*ent.Vod, error)
-	DeleteVod(c echo.Context, vID uuid.UUID, deleteFiles bool) error
+	DeleteVod(ctx context.Context, vID uuid.UUID, deleteFiles bool) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	SearchVods(ctx context.Context, limit int, offset int, types []utils.VodType, predicates []predicate.Vod) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
@@ -283,7 +283,7 @@ func (h *Handler) DeleteVod(c echo.Context) error {
 	if dF == "true" {
 		deleteFiles = true
 	}
-	err = h.Service.VodService.DeleteVod(c, vID, deleteFiles)
+	err = h.Service.VodService.DeleteVod(c.Request().Context(), vID, deleteFiles)
 	if err != nil {
 		if err.Error() == "vod not found" {
 			return ErrorResponse(c, http.StatusNotFound, err.Error())
