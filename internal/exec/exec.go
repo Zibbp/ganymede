@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	osExec "os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -31,7 +32,8 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	video.Edges.Channel = channel
 
 	env := config.GetEnvConfig()
-	// open log file
+
+	// Open download log file
 	logFilePath := fmt.Sprintf("%s/%s-video.log", env.LogsDir, video.ID.String())
 	file, err := os.Create(logFilePath)
 	if err != nil {
@@ -42,54 +44,41 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
-	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
+	log.Debug().Str("video_id", video.ID.String()).Msgf("logging output to %s", logFilePath)
 
-	videoURL := fmt.Sprintf("https://twitch.tv/videos/%s", video.ExtID)
-	// clip requires a different URL schema
-	if video.Type == utils.Clip {
-		vC := video.QueryChannel()
-		channel, err := vC.Only(ctx)
-		if err != nil {
-			return err
-		}
-		videoURL = fmt.Sprintf("https://twitch.tv/%s/clip/%s", channel.DisplayName, video.ExtID)
-	}
+	// Create the Twitch URL based on video type
+	url := createTwitchURL(video.ExtID, video.Type, video.Edges.Channel.Name)
 
-	// If not best or audio, get the closest quality for the video
+	// Select the closest quality for the video
 	closestQuality := video.Resolution
-	if closestQuality != "best" && closestQuality != "audio" {
-		qualities, err := GetTwitchVideoQualityOptions(ctx, video)
-		if err != nil {
-			return fmt.Errorf("error getting video quality options: %w", err)
-		}
-		log.Debug().Str("video_id", video.ID.String()).Str("requested_quality", video.Resolution).Msgf("available qualities: %v", qualities)
-		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
-
-		log.Info().Msgf("selected closest quality %s", closestQuality)
+	qualities, err := GetVideoQualities(ctx, video)
+	if err != nil {
+		return fmt.Errorf("error getting video quality options: %w", err)
 	}
+	log.Debug().Str("video_id", video.ID.String()).Str("requested_quality", video.Resolution).Msgf("available qualities: %v", qualities)
+
+	closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
+	log.Info().Msgf("selected closest quality %s", closestQuality)
+
+	// Create yt-dlp quality string
+	qualityString := createQualityOption(closestQuality)
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, videoURL, fmt.Sprintf("%s,best", closestQuality), "--progress=force", "--force")
+	cmdArgs = append(cmdArgs, "-f", qualityString, url, "-o", video.TmpVideoDownloadPath, "--no-warnings", "--progress", "--newline", "--no-check-certificate")
 
-	// check if user has twitch token set
-	// if so, set token in streamlink command
-	twitchToken := config.Get().Parameters.TwitchToken
-	if twitchToken != "" {
-		cmdArgs = append(cmdArgs, fmt.Sprintf("--twitch-api-header=Authorization=OAuth %s", twitchToken))
+	// Create yt-dlp command
+	cmd, err := createYtDlpCommand(ctx, cmdArgs)
+	if err != nil {
+		return fmt.Errorf("error creating yt-dlp command: %w", err)
 	}
 
-	// output
-	cmdArgs = append(cmdArgs, "-o", video.TmpVideoDownloadPath)
-
-	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running streamlink")
-
-	cmd := osExec.CommandContext(ctx, "streamlink", cmdArgs...)
+	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmd.Args, " ")).Msgf("running yt-dlp")
 
 	cmd.Stderr = file
 	cmd.Stdout = file
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting streamlink: %w", err)
+		return fmt.Errorf("error starting yt-dlp: %w", err)
 	}
 
 	done := make(chan error)
@@ -102,7 +91,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	case <-ctx.Done():
 		// Context was cancelled, kill the process
 		if err := cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("failed to kill streamlink process: %v", err)
+			return fmt.Errorf("failed to kill yt-dlp process: %v", err)
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
@@ -110,14 +99,80 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 		// Command finished normally
 		if err != nil {
 			if exitError, ok := err.(*osExec.ExitError); ok {
-				log.Error().Err(err).Str("exitCode", strconv.Itoa(exitError.ExitCode())).Str("exit_error", exitError.Error()).Msg("error running streamlink")
-				return fmt.Errorf("error running streamlink")
+				log.Error().Err(err).Str("exitCode", strconv.Itoa(exitError.ExitCode())).Str("exit_error", exitError.Error()).Msg("error running yt-dlp")
+				return fmt.Errorf("error running yt-dlp")
 			}
-			return fmt.Errorf("error running streamlink: %w", err)
+			return fmt.Errorf("error running yt-dlp: %w", err)
 		}
 	}
 
 	return nil
+}
+
+// YtDlpGetVideoInfo retrieves video information using yt-dlp for a given video entity.
+func YtDlpGetVideoInfo(ctx context.Context, video ent.Vod) (*YTDLPVideoInfo, error) {
+	url := createTwitchURL(video.ExtID, video.Type, video.Edges.Channel.Name)
+
+	args := []string{"-q", "-j", url}
+	log.Info().Msgf("running yt-dlp with args: %s", strings.Join(args, " "))
+
+	cmd := osExec.CommandContext(ctx, "yt-dlp", args...)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		log.Error().Err(err).Str("stderr", stderr.String()).Str("stdout", stdout.String()).Msg("error running yt-dlp")
+		return nil, fmt.Errorf("error running yt-dlp: %w", err)
+	}
+	var videoInfo YTDLPVideoInfo
+	if err := json.Unmarshal(stdout.Bytes(), &videoInfo); err != nil {
+		log.Error().Err(err).Msg("error unmarshalling yt-dlp data")
+		return nil, fmt.Errorf("error unmarshalling yt-dlp data: %w", err)
+	}
+
+	return &videoInfo, nil
+}
+
+// GetVideoQualities retrieves the available video qualities for a given video entity using yt-dlp.
+func GetVideoQualities(ctx context.Context, video ent.Vod) ([]string, error) {
+	info, err := YtDlpGetVideoInfo(ctx, video)
+	if err != nil {
+		log.Error().Err(err).Msg("error getting video info")
+		return nil, fmt.Errorf("error getting video info: %w", err)
+	}
+
+	// Check if the video has formats
+	if len(info.Formats) == 0 {
+		log.Error().Msg("video has no formats")
+		return nil, fmt.Errorf("video has no formats")
+	}
+
+	// Extract unique qualities from the formats
+	qualities := make(map[string]struct{})
+	for _, format := range info.Formats {
+		if (format.Vbr != nil && *format.Vbr == 0) && (format.ABR != nil && *format.ABR == 0) {
+			// Skip formats without bitrate information
+			continue
+		}
+		if format.FormatID == "" {
+			// Skip formats without a format ID
+			continue
+		}
+		// use formatID as quality
+		qualities[format.FormatID] = struct{}{}
+	}
+
+	// Convert map keys to a slice
+	qualityList := make([]string, 0, len(qualities))
+	for quality := range qualities {
+		qualityList = append(qualityList, quality)
+	}
+
+	// Sort the qualities slice
+	sort.Strings(qualityList)
+	log.Debug().Str("video_id", video.ID.String()).Msgf("available qualities: %v", qualityList)
+	return qualityList, nil
+
 }
 
 // GetTwitchVideoQualityOptions returns a list of available quality options for a Twitch video.
