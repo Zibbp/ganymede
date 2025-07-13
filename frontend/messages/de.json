@@ -336,7 +336,7 @@
     "generateSpriteThumbnails": "Sprite-Thumbnails generieren",
     "generateSpriteThumbnailsDescription": "Generiere Vorschaubilder, die beim Bewegen der Maus über die Fortschrittsanzeige des Players für alle Videos angezeigt werden. Dies wird automatisch nach jeder Videoarchivierung ausgeführt.",
     "updateVideoStorageUsage": "Speichernutzung für Videos aktualisieren",
-    "updateVideoStorageUsageDescription": "Aktualisieren Sie die Speichernutzung für alle Videos. Dies wird verwendet, um die Speichernutzung in der Videoliste und auf der Statistikseite anzuzeigen."
+    "updateVideoStorageUsageDescription": "Aktualisiere die Speichernutzung für alle Videos. Dies wird verwendet, um die Speichernutzung in der Videoliste und auf der Statistikseite anzuzeigen."
   },
   "AdminUsersPage": {
     "title": "Admin - Benutzer",
@@ -771,9 +771,9 @@
     "system": {
       "title": "Systemübersicht",
       "usedStorageText": "Genutzter Speicherplatz",
-      "usedStorageDescription": "Gesamt genutzter Speicherplatz",
+      "usedStorageDescription": "Gesamter genutzter Speicherplatz",
       "availableStorageText": "Verfügbarer Speicherplatz",
-      "availableStorageDescription": "Gesamt verfügbarer Speicherplatz",
+      "availableStorageDescription": "Gesamter verfügbarer Speicherplatz",
       "storageUsedText": "Speicherplatz genutzt",
       "cpuCoresText": "CPU-Kerne",
       "totalMemoryText": "Gesamter Arbeitsspeicher"
@@ -788,7 +788,7 @@
     "storageDistribution": {
       "title": "Speicherverteilung",
       "channelStorageDistributionText": "Kanalspeicherverteilung",
-      "topLargeVideosText": "Top größte Videos",
+      "topLargeVideosText": "Größte Videos",
       "noLargeVideosText": "Keine Videos gefunden"
     }
   }
