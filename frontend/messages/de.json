@@ -25,7 +25,8 @@
     "advancedSearchText4": "Beispiele:",
     "advancedSearchTextExample1": "Suche nach Videos mit dem Titel <code>title:mein großartiges Video</code>",
     "advancedSearchTextExample2": "Suche nach Videos in einem Kapitel (Kategorie) <code>chapter:Path of Exile</code>",
-    "advancedSearchText5": "Hinweis: Bei ID-Suchen, wenn die UUID nicht ausgelesen werden konnte, wird stattdessen der Titel durchsucht."  },
+    "advancedSearchText5": "Hinweis: Bei ID-Suchen, wenn die UUID nicht ausgelesen werden konnte, wird stattdessen der Titel durchsucht."
+  },
   "AuthenticationPages": {
     "registerPageTitle": "Registrieren",
     "loginPageTitle": "Anmelden"
@@ -121,6 +122,7 @@
       "tasks": "Aufgaben"
     },
     "adminLinks": {
+      "overview": "Übersicht",
       "admin": "Admin",
       "channels": "Kanäle",
       "watchedChannels": "Beobachtete Kanäle",
@@ -188,6 +190,7 @@
     "loading": "Kanäle werden geladen",
     "error": "Fehler beim Laden der Kanäle",
     "header": "Kanäle verwalten",
+    "storageSizeDisclaimerText": "Die Speichergröße wird nicht sofort aktualisiert. Ein Hintergrundtask führt jede Stunde eine Neuberechnung durch.",
     "createButton": "Kanal erstellen",
     "addTwitchChannel": "Twitch-Kanal hinzufügen",
     "searchPlaceholder": "Kanäle suchen...",
@@ -198,7 +201,8 @@
       "displayName": "Anzeigename",
       "videoRetention": "Videoaufbewahrung",
       "createdAt": "Erstellt am",
-      "actions": "Aktionen"
+      "actions": "Aktionen",
+      "storageSize": "Speicherplatz"
     },
     "drawer": "Kanal",
     "platformDrawer": "Plattform-Kanal",
@@ -330,7 +334,9 @@
     "updateLiveStreamIds": "Live-Stream-IDs mit Video-IDs aktualisieren",
     "updateLiveStreamIdsDescription": "Versuche, Live-Stream-Archive mit ihrer entsprechenden Video-ID zu aktualisieren (geschieht automatisch, nachdem die Live-Archivierung abgeschlossen ist).",
     "generateSpriteThumbnails": "Sprite-Thumbnails generieren",
-    "generateSpriteThumbnailsDescription": "Generiere Vorschaubilder, die beim Bewegen der Maus über die Fortschrittsanzeige des Players für alle Videos angezeigt werden. Dies wird automatisch nach jeder Videoarchivierung ausgeführt."
+    "generateSpriteThumbnailsDescription": "Generiere Vorschaubilder, die beim Bewegen der Maus über die Fortschrittsanzeige des Players für alle Videos angezeigt werden. Dies wird automatisch nach jeder Videoarchivierung ausgeführt.",
+    "updateVideoStorageUsage": "Speichernutzung für Videos aktualisieren",
+    "updateVideoStorageUsageDescription": "Aktualisieren Sie die Speichernutzung für alle Videos. Dies wird verwendet, um die Speichernutzung in der Videoliste und auf der Statistikseite anzuzeigen."
   },
   "AdminUsersPage": {
     "title": "Admin - Benutzer",
@@ -371,7 +377,8 @@
       "locked": "Gesperrt",
       "streamedAt": "Gestreamt am",
       "archivedAt": "Archiviert am",
-      "actions": "Aktionen"
+      "actions": "Aktionen",
+      "storageSize": "Speicherplatz"
     },
     "drawer": "Video",
     "deleteModal": "Video löschen",
@@ -734,7 +741,8 @@
     "localViewsTooltip": "Lokale views",
     "streamedOnTooltip": "Gestreamt am",
     "videoTypeTooltip": "Videotyp",
-    "videoClipsTitle": "Video-Clips"
+    "videoClipsTitle": "Video-Clips",
+    "storageSizeTooltip": "Speicherplatz"
   },
   "MultistreamComponents": {
     "seekBackTooltip": "{seconds} Sekunden zurückspringen",
@@ -755,5 +763,33 @@
   },
   "LandingRecentlyArchivedComponent": {
     "error": "Fehler beim Laden der kürzlich archivierten Videos"
+  },
+  "AdminOverviewPage": {
+    "title": "Admin - Übersicht",
+    "loading": "Übersicht wird geladen",
+    "error": "Fehler beim Laden der Übersicht",
+    "system": {
+      "title": "Systemübersicht",
+      "usedStorageText": "Genutzter Speicherplatz",
+      "usedStorageDescription": "Gesamt genutzter Speicherplatz",
+      "availableStorageText": "Verfügbarer Speicherplatz",
+      "availableStorageDescription": "Gesamt verfügbarer Speicherplatz",
+      "storageUsedText": "Speicherplatz genutzt",
+      "cpuCoresText": "CPU-Kerne",
+      "totalMemoryText": "Gesamter Arbeitsspeicher"
+    },
+    "videoStatistics": {
+      "title": "Videostatistiken",
+      "totalVideosText": "Anzahl Videos",
+      "totalChannelsText": "Anzahl Kanäle",
+      "channelVideosMapTitle": "Kanalvideos",
+      "videoTypeMapTitle": "Videotypen"
+    },
+    "storageDistribution": {
+      "title": "Speicherverteilung",
+      "channelStorageDistributionText": "Kanalspeicherverteilung",
+      "topLargeVideosText": "Top größte Videos",
+      "noLargeVideosText": "Keine Videos gefunden"
+    }
   }
 }
