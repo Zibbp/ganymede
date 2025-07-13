@@ -43,20 +43,18 @@ function deepMerge(target, source) {
         throw new TypeError('Both arguments must be objects');
     }
 
-    for (let key in source) {
-        if (source.hasOwnProperty(key)) {
-            const srcValue = source[key];
-            const tgtValue = target[key];
+    for (const key of Object.keys(source)) {
+        const srcValue = source[key];
+        const tgtValue = target[key];
 
-            if (tgtValue && typeof tgtValue === 'object' && !Array.isArray(tgtValue) &&
-                srcValue && typeof srcValue === 'object' && !Array.isArray(srcValue)) {
+        if (tgtValue && typeof tgtValue === 'object' && !Array.isArray(tgtValue) &&
+            srcValue && typeof srcValue === 'object' && !Array.isArray(srcValue)) {
 
-                // Recursively merge nested objects
-                deepMerge(tgtValue, srcValue);
-            } else {
-                // Set the property if it doesn't exist in target or if it's not an object
-                target[key] = srcValue;
-            }
+            // Recursively merge nested objects
+            deepMerge(tgtValue, srcValue);
+        } else {
+            // Set the property if it doesn't exist in target or if it's not an object
+            target[key] = srcValue;
         }
     }
 
@@ -84,9 +82,9 @@ fs.readdirSync(localesDir).forEach((file) => {
     let newTargetLanguageObject = structuredClone(baseLanguageObject)
     deepMerge(newTargetLanguageObject, targetLanguageObject);
     fs.writeFileSync(
-      file = targetLanguageFile,
-      data = JSON.stringify(newTargetLanguageObject, null, 2),
-      options = { encoding: "utf-8" },
+      targetLanguageFile,
+      JSON.stringify(newTargetLanguageObject, null, 2),
+      { encoding: "utf-8" },
     );
     updatedTargetTranslationFiles.push(targetLanguageFile);
   }
