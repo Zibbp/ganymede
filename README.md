@@ -50,7 +50,7 @@ Visit the [docs](https://github.com/Zibbp/ganymede/tree/main/docs) folder for th
 
 ## Translations
 
-See the [messages](https://github.com/Zibbp/ganymede/tree/main/frontend/messages) directory for available translations. If you would like to add a new translation, please create a pull request with the new translation file. The file should be named `<language>.json` where `<language>` is the language code (e.g. `de.json` for German). Additionally the language needs to be added to the navbar in the `frontend/app/layout/Navbar.tsx` file in the `languages` array.
+See the [messages](https://github.com/Zibbp/ganymede/tree/main/frontend/messages) directory for available translations. If you would like to add a new translation, please create a pull request with the new translation file. The file should be named `<language>.json` where `<language>` is the language code (e.g. `de.json` for German). Additionally the language needs to be added to the navbar in the `frontend/app/layout/Navbar.tsx` file in the `languages` array. Use the `frontend/translation-coverage.js` script to see what has been translated or with the `-u` option to populate missing keys in translation files. 
 
 ## Installation
 
