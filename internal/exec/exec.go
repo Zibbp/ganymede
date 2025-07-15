@@ -9,23 +9,25 @@ import (
 	"net/http"
 	"os"
 	osExec "os/exec"
-	"sort"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/errors"
-	"github.com/zibbp/ganymede/internal/twitch"
+	"github.com/zibbp/ganymede/internal/exec/ytdlp"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
+// DownloadTwitchVideo downloads a Twitch video.
 func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
-	// Get channel for video
-	vC := video.QueryChannel()
-	channel, err := vC.Only(ctx)
+	// Get video channel
+	videoChannel := video.QueryChannel()
+	channel, err := videoChannel.Only(ctx)
 	if err != nil {
 		return err
 	}
@@ -47,27 +49,70 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging output to %s", logFilePath)
 
 	// Create the Twitch URL based on video type
-	url := createTwitchURL(video.ExtID, video.Type, video.Edges.Channel.Name)
+	url := utils.CreateTwitchURL(video.ExtID, video.Type, video.Edges.Channel.Name)
+
+	// Create yt-dlp service
+	ytDlpCookies := []ytdlp.YtDlpCookie{}
+	if config.Get().Parameters.TwitchToken != "" {
+		ytDlpCookies = append(ytDlpCookies, ytdlp.YtDlpCookie{
+			Domain: ".twitch.tv",
+			Name:   "auth-token",
+			Value:  config.Get().Parameters.TwitchToken,
+		})
+	}
+	ytdlpSvc := ytdlp.NewYtDlpService(ytdlp.YtDlpOptions{Cookies: ytDlpCookies})
 
 	// Select the closest quality for the video
 	closestQuality := video.Resolution
-	qualities, err := GetVideoQualities(ctx, video)
+	qualities, err := ytdlpSvc.GetVideoQualities(ctx, video)
 	if err != nil {
 		return fmt.Errorf("error getting video quality options: %w", err)
 	}
-	log.Debug().Str("video_id", video.ID.String()).Str("requested_quality", video.Resolution).Msgf("available qualities: %v", qualities)
 
 	closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
 	log.Info().Msgf("selected closest quality %s", closestQuality)
 
 	// Create yt-dlp quality string
-	qualityString := createQualityOption(closestQuality)
+	qualityString := ytdlpSvc.CreateQualityOption(closestQuality)
+
+	// Build output path
+	// yt-dlp will sometimes download two separate files for audio and video
+	// so we need to remove the extension and let yt-dlp add the extension
+	tmpVideoDownloadExt := filepath.Ext(video.TmpVideoDownloadPath)
+	tmpVideoDownloadPathNoExt := strings.TrimSuffix(video.TmpVideoDownloadPath, tmpVideoDownloadExt)
+
+	// Get user arguments from config
+	configYtDlpArgs := config.Get().Parameters.YtDlpVideo
+	configYtDlpArgsArr := strings.Split(configYtDlpArgs, ",")
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, "-f", qualityString, url, "-o", video.TmpVideoDownloadPath, "--no-warnings", "--progress", "--newline", "--no-check-certificate")
+	cmdArgs = append(cmdArgs,
+		"-f", qualityString,
+		url,
+		"-o", fmt.Sprintf("%s.%%(ext)s", tmpVideoDownloadPathNoExt),
+		"--merge-output-format", "mp4", "--no-part",
+		"--no-warnings", "--progress", "--newline", "--no-check-certificate",
+	)
+
+	// Sanitize config args before appending
+	for _, arg := range configYtDlpArgsArr {
+		if strings.TrimSpace(arg) != "" {
+			cmdArgs = append(cmdArgs, arg)
+		}
+	}
 
 	// Create yt-dlp command
-	cmd, err := createYtDlpCommand(ctx, cmdArgs)
+	cmd, cookieFile, err := ytdlpSvc.CreateCommand(ctx, cmdArgs)
+	defer func() {
+		if cookieFile != nil {
+			if err := cookieFile.Close(); err != nil {
+				log.Debug().Err(err).Msg("failed to close cookies file")
+			}
+			if err := os.Remove(cookieFile.Name()); err != nil {
+				log.Debug().Err(err).Msg("failed to remove cookies file")
+			}
+		}
+	}()
 	if err != nil {
 		return fmt.Errorf("error creating yt-dlp command: %w", err)
 	}
@@ -77,6 +122,9 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	cmd.Stderr = file
 	cmd.Stdout = file
 
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true, // Set the process group ID to allow killing child processes
+	}
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting yt-dlp: %w", err)
 	}
@@ -109,114 +157,11 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
-// YtDlpGetVideoInfo retrieves video information using yt-dlp for a given video entity.
-func YtDlpGetVideoInfo(ctx context.Context, video ent.Vod) (*YTDLPVideoInfo, error) {
-	url := createTwitchURL(video.ExtID, video.Type, video.Edges.Channel.Name)
-
-	args := []string{"-q", "-j", url}
-	log.Info().Msgf("running yt-dlp with args: %s", strings.Join(args, " "))
-
-	cmd := osExec.CommandContext(ctx, "yt-dlp", args...)
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
-		log.Error().Err(err).Str("stderr", stderr.String()).Str("stdout", stdout.String()).Msg("error running yt-dlp")
-		return nil, fmt.Errorf("error running yt-dlp: %w", err)
-	}
-	var videoInfo YTDLPVideoInfo
-	if err := json.Unmarshal(stdout.Bytes(), &videoInfo); err != nil {
-		log.Error().Err(err).Msg("error unmarshalling yt-dlp data")
-		return nil, fmt.Errorf("error unmarshalling yt-dlp data: %w", err)
-	}
-
-	return &videoInfo, nil
-}
-
-// GetVideoQualities retrieves the available video qualities for a given video entity using yt-dlp.
-func GetVideoQualities(ctx context.Context, video ent.Vod) ([]string, error) {
-	info, err := YtDlpGetVideoInfo(ctx, video)
-	if err != nil {
-		log.Error().Err(err).Msg("error getting video info")
-		return nil, fmt.Errorf("error getting video info: %w", err)
-	}
-
-	// Check if the video has formats
-	if len(info.Formats) == 0 {
-		log.Error().Msg("video has no formats")
-		return nil, fmt.Errorf("video has no formats")
-	}
-
-	// Extract unique qualities from the formats
-	qualities := make(map[string]struct{})
-	for _, format := range info.Formats {
-		if (format.Vbr != nil && *format.Vbr == 0) && (format.ABR != nil && *format.ABR == 0) {
-			// Skip formats without bitrate information
-			continue
-		}
-		if format.FormatID == "" {
-			// Skip formats without a format ID
-			continue
-		}
-		// use formatID as quality
-		qualities[format.FormatID] = struct{}{}
-	}
-
-	// Convert map keys to a slice
-	qualityList := make([]string, 0, len(qualities))
-	for quality := range qualities {
-		qualityList = append(qualityList, quality)
-	}
-
-	// Sort the qualities slice
-	sort.Strings(qualityList)
-	log.Debug().Str("video_id", video.ID.String()).Msgf("available qualities: %v", qualityList)
-	return qualityList, nil
-
-}
-
-// GetTwitchVideoQualityOptions returns a list of available quality options for a Twitch video.
-func GetTwitchVideoQualityOptions(ctx context.Context, video ent.Vod) ([]string, error) {
-	// Get video URL based on video type
-	var url string
-	switch video.Type {
-	case utils.Clip:
-		url = fmt.Sprintf("https://twitch.tv/%s/clip/%s", video.Edges.Channel.Name, video.ExtID)
-	case utils.Live:
-		url = fmt.Sprintf("https://twitch.tv/%s", video.Edges.Channel.Name)
-	default:
-		url = fmt.Sprintf("https://twitch.tv/videos/%s", video.ExtID)
-	}
-	args := []string{"--json", url}
-	cmd := osExec.CommandContext(ctx, "streamlink", args...)
-
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	if err := cmd.Run(); err != nil {
-		log.Error().Err(err).Str("stderr", stderr.String()).Str("stdout", stdout.String()).Msg("error running streamlink")
-		return nil, fmt.Errorf("error running streamlink: %w", err)
-	}
-
-	var data map[string]any
-	if err := json.Unmarshal(stdout.Bytes(), &data); err != nil {
-		log.Error().Err(err).Msg("error unmarshalling streamlink data")
-		return nil, err
-	}
-
-	qualities := make([]string, 0)
-	for key := range data["streams"].(map[string]interface{}) {
-		qualities = append(qualities, key)
-	}
-
-	return qualities, nil
-}
-
 func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Channel, startChat chan bool) error {
 	video.Edges.Channel = &channel
 	env := config.GetEnvConfig()
-	// open log file
+
+	// open video log file
 	logFilePath := fmt.Sprintf("%s/%s-video.log", env.LogsDir, video.ID.String())
 	file, err := os.Create(logFilePath)
 	if err != nil {
@@ -227,111 +172,133 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
-	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
 
-	configStreamlinkArgs := config.Get().Parameters.StreamlinkLive
+	log.Debug().Str("video_id", video.ID.String()).Msgf("logging yt-dlp output to %s", logFilePath)
 
-	configStreamlinkArgsArr := strings.Split(configStreamlinkArgs, ",")
+	// Get user arguments from config
+	configYtDlpArgs := config.Get().Parameters.YtDlpLive
+	configYtDlpArgsArr := strings.Split(configYtDlpArgs, ",")
 
-	proxyEnabled := false
-	proxyFound := false
-	streamUrl := fmt.Sprintf("https://twitch.tv/%s", channel.Name)
-	proxyHeader := ""
+	// proxyEnabled := false
+	// proxyFound := false
+	// proxyHeader := ""
 
+	url := utils.CreateTwitchURL(video.ExtID, video.Type, channel.Name)
+
+	// TODO: setup with yt-dlp
 	// check if user has proxies enable
-	proxyEnabled = config.Get().Livestream.ProxyEnabled
-	whitelistedChannels := config.Get().Livestream.ProxyWhitelist // list of channels that are whitelisted from using proxy
-	if proxyEnabled {
-		if utils.Contains(whitelistedChannels, channel.Name) {
-			log.Debug().Str("channel_name", channel.Name).Msg("channel is whitelisted, not using proxy")
-		} else {
-			proxyParams := config.Get().Livestream.ProxyParameters
-			proxyList := config.Get().Livestream.Proxies
+	// proxyEnabled = config.Get().Livestream.ProxyEnabled
+	// whitelistedChannels := config.Get().Livestream.ProxyWhitelist // list of channels that are whitelisted from using proxy
+	// if proxyEnabled {
+	// 	if utils.Contains(whitelistedChannels, channel.Name) {
+	// 		log.Debug().Str("channel_name", channel.Name).Msg("channel is whitelisted, not using proxy")
+	// 	} else {
+	// 		proxyParams := config.Get().Livestream.ProxyParameters
+	// 		proxyList := config.Get().Livestream.Proxies
 
-			log.Debug().Str("proxy_list", fmt.Sprintf("%v", proxyList)).Msg("proxy list")
-			// test proxies
-			for _, proxy := range proxyList {
-				proxyUrl := fmt.Sprintf("%s/playlist/%s.m3u8%s", proxy.URL, channel.Name, proxyParams)
-				if testProxyServer(proxyUrl, proxy.Header) {
-					log.Debug().Str("channel_name", channel.Name).Str("proxy_url", proxy.URL).Msg("proxy found")
-					proxyFound = true
-					streamUrl = fmt.Sprintf("hls://%s", proxyUrl)
-					proxyHeader = proxy.Header
-					break
-				}
-			}
-		}
-	}
+	// 		log.Debug().Str("proxy_list", fmt.Sprintf("%v", proxyList)).Msg("proxy list")
+	// 		// test proxies
+	// 		for _, proxy := range proxyList {
+	// 			proxyUrl := fmt.Sprintf("%s/playlist/%s.m3u8%s", proxy.URL, channel.Name, proxyParams)
+	// 			if testProxyServer(proxyUrl, proxy.Header) {
+	// 				log.Debug().Str("channel_name", channel.Name).Str("proxy_url", proxy.URL).Msg("proxy found")
+	// 				proxyFound = true
+	// 				url = fmt.Sprintf("hls://%s", proxyUrl)
+	// 				proxyHeader = proxy.Header
+	// 				break
+	// 			}
+	// 		}
+	// 	}
+	// }
 
-	twitchToken := ""
-	// check if user has twitch token set
-	configTwitchToken := config.Get().Parameters.TwitchToken
-	if configTwitchToken != "" {
-		// check if token is valid
-		err := twitch.CheckUserAccessToken(ctx, configTwitchToken)
-		if err != nil {
-			log.Error().Err(err).Msg("invalid twitch token")
-		} else {
-			twitchToken = configTwitchToken
-		}
+	// Create yt-dlp service
+	ytDlpCookies := []ytdlp.YtDlpCookie{}
+	if config.Get().Parameters.TwitchToken != "" {
+		ytDlpCookies = append(ytDlpCookies, ytdlp.YtDlpCookie{
+			Domain: ".twitch.tv",
+			Name:   "auth-token",
+			Value:  config.Get().Parameters.TwitchToken,
+		})
 	}
+	ytdlpSvc := ytdlp.NewYtDlpService(ytdlp.YtDlpOptions{Cookies: ytDlpCookies})
 
 	// If not best or audio, get the closest quality for the video
 	closestQuality := video.Resolution
-	if closestQuality != "best" && closestQuality != "audio" {
-		qualities, err := GetTwitchVideoQualityOptions(ctx, video)
-		if err != nil {
-			return fmt.Errorf("error getting video quality options: %w", err)
-		}
-		closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
-
-		log.Info().Msgf("selected closest quality %s", closestQuality)
+	qualities, err := ytdlpSvc.GetVideoQualities(ctx, video)
+	if err != nil {
+		return fmt.Errorf("error getting video quality options: %w", err)
 	}
 
-	// streamlink livestreams expect 'audio_only' instead of 'audio'
-	if closestQuality == "audio" {
-		closestQuality = "audio_only"
-	}
+	closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
+	log.Info().Msgf("selected closest quality %s", closestQuality)
+
+	// Create yt-dlp quality string
+	qualityString := ytdlpSvc.CreateQualityOption(closestQuality)
+
+	// Build output path
+	// yt-dlp will sometimes download two separate files for audio and video
+	// so we need to remove the extension and let yt-dlp add the extension
+	tmpVideoDownloadExt := filepath.Ext(video.TmpVideoDownloadPath)
+	tmpVideoDownloadPathNoExt := strings.TrimSuffix(video.TmpVideoDownloadPath, tmpVideoDownloadExt)
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, streamUrl, fmt.Sprintf("%s,best", closestQuality), "--progress=force", "--force")
+	cmdArgs = append(cmdArgs,
+		"-f", qualityString,
+		url,
+		"-o", fmt.Sprintf("%s.%%(ext)s", tmpVideoDownloadPathNoExt),
+		"--merge-output-format", "mp4", "--no-part",
+		"--no-warnings", "--progress", "--newline", "--no-check-certificate",
+	)
 
+	// TODO: setup with yt-dlp
 	// pass proxy header
-	if proxyHeader != "" {
-		cmdArgs = append(cmdArgs, "--add-headers", proxyHeader)
-	}
+	// if proxyHeader != "" {
+	// 	cmdArgs = append(cmdArgs, "--add-headers", proxyHeader)
+	// }
 
+	// TODO: setup with yt-dlp
 	// pass twitch token as header if available
 	// ! token is passed only if proxy is not enabled for security reasons
-	if twitchToken != "" && !proxyFound {
-		cmdArgs = append(cmdArgs, "--http-header", fmt.Sprintf("Authorization=OAuth %s", twitchToken))
-	}
+	// if twitchToken != "" && !proxyFound {
+	// 	cmdArgs = append(cmdArgs, "--http-header", fmt.Sprintf("Authorization=OAuth %s", twitchToken))
+	// }
 
-	// pass config args
-	cmdArgs = append(cmdArgs, configStreamlinkArgsArr...)
-
-	filteredArgs := make([]string, 0)
-	for _, arg := range cmdArgs {
-		if arg != "" {
-			filteredArgs = append(filteredArgs, arg) //nolint:staticcheck
+	// Sanitize config args before appending
+	for _, arg := range configYtDlpArgsArr {
+		if strings.TrimSpace(arg) != "" {
+			cmdArgs = append(cmdArgs, arg)
 		}
 	}
 
-	// output
-	filteredArgs = append(cmdArgs, "-o", video.TmpVideoDownloadPath)
+	// Create yt-dlp command
+	cmd, cookieFile, err := ytdlpSvc.CreateCommand(ctx, cmdArgs)
+	defer func() {
+		if cookieFile != nil {
+			if err := cookieFile.Close(); err != nil {
+				log.Debug().Err(err).Msg("failed to close cookies file")
+			}
+			if err := os.Remove(cookieFile.Name()); err != nil {
+				log.Debug().Err(err).Msg("failed to remove cookies file")
+			}
+		}
+	}()
+	if err != nil {
+		return fmt.Errorf("error creating yt-dlp command: %w", err)
+	}
 
-	log.Debug().Str("channel", channel.Name).Str("cmd", strings.Join(filteredArgs, " ")).Msgf("running streamlink")
+	log.Debug().Str("channel", channel.Name).Str("cmd", strings.Join(cmd.Args, " ")).Msgf("running yt-dlp")
 
 	// start chat download
 	startChat <- true
 
-	cmd := osExec.CommandContext(ctx, "streamlink", filteredArgs...)
-
 	cmd.Stderr = file
 	cmd.Stdout = file
 
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true, // Set the process group ID to allow killing child processes
+	}
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting streamlink: %w", err)
+		return fmt.Errorf("error starting yt-dlp: %w", err)
 	}
 
 	done := make(chan error)
@@ -342,23 +309,21 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	// Wait for the command to finish or context to be cancelled
 	select {
 	case <-ctx.Done():
-		// Context was cancelled, kill the process
-		if err := cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("failed to kill streamlink process: %v", err)
+		// Context was cancelled, kill only ffmpeg child process if running
+		if cmd.Process != nil {
+			_ = killYtDlp(cmd.Process.Pid)
 		}
+		cmd.Process.Wait()
 		<-done // Wait for copying to finish
 		return ctx.Err()
 	case err := <-done:
 		// Command finished normally
 		if err != nil {
-			// Streamlink will error when the stream goes offline - do not return an error
-			log.Info().Str("channel", channel.Name).Str("exit_error", err.Error()).Msg("finished downloading live video")
-			// Check if log output indicates no messages
-			noStreams, err := checkLogForNoStreams(logFilePath)
-			if err == nil && noStreams {
-				return utils.NewLiveVideoDownloadNoStreamError("no streams found")
+			if exitError, ok := err.(*osExec.ExitError); ok {
+				log.Error().Err(err).Str("exitCode", strconv.Itoa(exitError.ExitCode())).Str("exit_error", exitError.Error()).Msg("error running yt-dlp")
+				return fmt.Errorf("error running yt-dlp")
 			}
-			return nil
+			return fmt.Errorf("error running yt-dlp: %w", err)
 		}
 	}
 

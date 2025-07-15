@@ -2,21 +2,18 @@ package exec
 
 import (
 	"fmt"
+	"syscall"
 
-	"github.com/zibbp/ganymede/internal/utils"
+	"github.com/rs/zerolog/log"
 )
 
-// createTwitchURL generates a Twitch URL based on the video ID, video type, and channel name.
-func createTwitchURL(videoId string, videoType utils.VodType, channelName string) string {
-	var url string
-	switch videoType {
-	case utils.Clip:
-		url = fmt.Sprintf("https://twitch.tv/%s/clip/%s", channelName, videoId)
-	case utils.Live:
-		url = fmt.Sprintf("https://twitch.tv/%s", channelName)
-	default:
-		url = fmt.Sprintf("https://twitch.tv/videos/%s", videoId)
-
+// killYtDlp attempts to gracefully terminate the yt-dlp process by sending a SIGINT to its process group.
+func killYtDlp(pid int) error {
+	pgid, err := syscall.Getpgid(pid)
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to get process group ID for PID %d", pid)
+		return fmt.Errorf("failed to get process group ID for PID %d: %w", pid, err)
 	}
-	return url
+	log.Debug().Msgf("Process group ID for PID %d is %d", pid, pgid)
+	return syscall.Kill(-pgid, syscall.SIGINT)
 }

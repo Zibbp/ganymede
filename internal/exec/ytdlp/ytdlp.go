@@ -1,15 +1,29 @@
-package exec
+package ytdlp
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	osExec "os/exec"
 	"regexp"
+	"sort"
+	"strings"
 	"time"
 
-	"github.com/zibbp/ganymede/internal/config"
+	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/utils"
 )
+
+type YtDlpOptions struct {
+	Cookies []YtDlpCookie
+}
+
+type YtDlpService struct {
+	Options YtDlpOptions
+}
 
 type YTDLPVideoInfo struct {
 	ID                     string      `json:"id"`
@@ -97,7 +111,7 @@ type Format struct {
 	Fragments      []Fragment  `json:"fragments,omitempty"`
 	AudioEXT       string      `json:"audio_ext"`
 	VideoEXT       string      `json:"video_ext"`
-	Vbr            *int64      `json:"vbr"`
+	Vbr            *float64    `json:"vbr"`
 	ABR            *float64    `json:"abr"`
 	Tbr            *float64    `json:"tbr"`
 	Resolution     string      `json:"resolution"`
@@ -147,76 +161,172 @@ type Version struct {
 	Repository     string      `json:"repository"`
 }
 
-// createYtDlpCommand creates a yt-dlp command with the provided input arguments.
-func createYtDlpCommand(ctx context.Context, inputArgs []string) (*osExec.Cmd, error) {
+type YtDlpCookie struct {
+	Domain string `json:"domain"`
+	Name   string `json:"name"`
+	Value  string `json:"value"`
+}
+
+func NewYtDlpService(options YtDlpOptions) *YtDlpService {
+	return &YtDlpService{
+		Options: options,
+	}
+}
+
+// YtDlpGetVideoInfo retrieves video information using yt-dlp for a given video entity.
+func (s *YtDlpService) GetVideoInfo(ctx context.Context, video ent.Vod) (*YTDLPVideoInfo, error) {
+	url := utils.CreateTwitchURL(video.ExtID, video.Type, video.Edges.Channel.Name)
+
+	args := []string{"-q", "-j", url}
+	log.Info().Msgf("running yt-dlp with args: %s", strings.Join(args, " "))
+
+	cmd, cookieFile, err := s.CreateCommand(ctx, args)
+	defer func() {
+		if cookieFile != nil {
+			if err := cookieFile.Close(); err != nil {
+				log.Debug().Err(err).Msg("failed to close cookies file")
+			}
+			if err := os.Remove(cookieFile.Name()); err != nil {
+				log.Debug().Err(err).Msg("failed to remove cookies file")
+			}
+		}
+	}()
+	if err != nil {
+		return nil, fmt.Errorf("error creating yt-dlp command: %w", err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		log.Error().Err(err).Str("stderr", stderr.String()).Str("stdout", stdout.String()).Msg("error running yt-dlp")
+		return nil, fmt.Errorf("error running yt-dlp: %w", err)
+	}
+	var videoInfo YTDLPVideoInfo
+	if err := json.Unmarshal(stdout.Bytes(), &videoInfo); err != nil {
+		log.Error().Err(err).Msg("error unmarshalling yt-dlp data")
+		return nil, fmt.Errorf("error unmarshalling yt-dlp data: %w", err)
+	}
+
+	return &videoInfo, nil
+}
+
+// GetVideoQualities retrieves the available video qualities for a given video entity using yt-dlp.
+// This returns the raw format IDs as qualities.
+//
+// Example: [1080p60 1440p60__source_ 360p30 480p30 720p60 audio_only]
+func (s *YtDlpService) GetVideoQualities(ctx context.Context, video ent.Vod) ([]string, error) {
+	info, err := s.GetVideoInfo(ctx, video)
+	if err != nil {
+		log.Error().Err(err).Msg("error getting video info")
+		return nil, fmt.Errorf("error getting video info: %w", err)
+	}
+
+	// Check if the video has formats
+	if len(info.Formats) == 0 {
+		log.Error().Msg("video has no formats")
+		return nil, fmt.Errorf("video has no formats")
+	}
+
+	// Extract unique qualities from the formats
+	qualities := make(map[string]struct{})
+	for _, format := range info.Formats {
+		if (format.Vbr != nil && *format.Vbr == 0) && (format.ABR != nil && *format.ABR == 0) {
+			// Skip formats without bitrate information
+			continue
+		}
+		if format.FormatID == "" {
+			// Skip formats without a format ID
+			continue
+		}
+		// use formatID as quality
+		qualities[format.FormatID] = struct{}{}
+	}
+
+	// Convert map keys to a slice
+	qualityList := make([]string, 0, len(qualities))
+	for quality := range qualities {
+		qualityList = append(qualityList, quality)
+	}
+
+	// Sort the qualities slice
+	sort.Strings(qualityList)
+	log.Info().Str("video_id", video.ID.String()).Msgf("available qualities: %v", qualityList)
+	return qualityList, nil
+}
+
+// createYtDlpCommand creates a yt-dlp command with the provided input arguments and cookies.
+// It returns the command, a file handle for the cookies file, and any error encountered.
+func (s *YtDlpService) CreateCommand(ctx context.Context, inputArgs []string) (*osExec.Cmd, *os.File, error) {
 	args := []string{}
-	// Add the input arguments to the command
 	args = append(args, inputArgs...)
 
-	jsonConfig := config.Get()
-	envConfig := config.GetEnvConfig()
+	var cookiesFile *os.File
 
-	// Check if we need to create a cookies file if token is set in config
-	if jsonConfig.Parameters.TwitchToken != "" {
-		cookiesFile, err := createYtDlpTwitchCookies(ctx, envConfig.TempDir, jsonConfig.Parameters.TwitchToken)
+	if len(s.Options.Cookies) > 0 {
+		var err error
+		cookiesFile, err = createYtDlpCookiesFile(ctx, s.Options.Cookies)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create cookies file: %w", err)
+			return nil, nil, fmt.Errorf("failed to create cookies file: %w", err)
 		}
-		// Add the cookies file to the arguments
 		args = append(args, "--cookies", cookiesFile.Name())
 	}
 
-	// Create the yt-dlp command
 	cmd := osExec.CommandContext(ctx, "yt-dlp", args...)
 
-	return cmd, nil
+	return cmd, cookiesFile, nil
 }
 
-func createYtDlpTwitchCookies(ctx context.Context, tempDirectory string, token string) (*os.File, error) {
+// createYtDlpTwitchCookies creates a yt-dlp cookies file with the provided cookies.
+// Returns the file handle for the cookies file.
+func createYtDlpCookiesFile(ctx context.Context, cookies []YtDlpCookie) (*os.File, error) {
 	expiration := time.Now().Add(7 * 24 * time.Hour).Unix()
-
-	// Create the cookie string in Netscape format
-	cookie := fmt.Sprintf(`# Netscape HTTP Cookie File
-# This file is generated by yt-dlp.  Do not edit.
-
-.twitch.tv	TRUE	/	TRUE	%d	auth-token	%s
-`, expiration, token)
-
-	cookiesFile, err := os.CreateTemp(tempDirectory, "cookies-*.txt")
+	cookieStr := "# Netscape HTTP Cookie File\n# This file is generated by yt-dlp.  Do not edit.\n\n"
+	for _, c := range cookies {
+		cookieStr += fmt.Sprintf("%s\tTRUE\t/\tTRUE\t%d\t%s\t%s\n", c.Domain, expiration, c.Name, c.Value)
+	}
+	cookiesFile, err := os.CreateTemp("", "cookies-*.txt")
 	if err != nil {
 		return nil, err
 	}
-
-	defer cookiesFile.Close()
-
-	_, err = cookiesFile.WriteString(cookie)
+	_, err = cookiesFile.WriteString(cookieStr)
 	if err != nil {
+		cookiesFile.Close()
 		return nil, err
 	}
-
+	log.Debug().Msgf("created yt-dlp cookies file: %s", cookiesFile.Name())
 	return cookiesFile, nil
 }
 
-// createQualityOption creates a yt-dlp quality option string based on the provided quality input.
-func createQualityOption(quality string) string {
-	if quality == "best" {
-		return "bestvideo+bestaudio/best"
-	}
-	if quality == "audio" {
+// CreateQualityOption creates a yt-dlp format string for Twitch content,
+// which uses combined audio+video streams even for VODs.
+// This only supports 'single stream' format and not split video/audio formats.
+func (s *YtDlpService) CreateQualityOption(quality string) string {
+	// Strip odd yt-dlp quality suffixes like "__source_"
+	reSuffix := regexp.MustCompile(`__source_+$`)
+	quality = reSuffix.ReplaceAllString(quality, "")
+
+	switch quality {
+	case "best":
+		return "best"
+	case "audio", "audio_only":
 		return "bestaudio"
 	}
-	// Check for resolution+fps (e.g., 720p60)
+
+	// Match resolution+fps like "1080p60"
 	re := regexp.MustCompile(`^(\d+)[pP](\d+)$`)
 	if matches := re.FindStringSubmatch(quality); len(matches) == 3 {
 		res := matches[1]
 		fps := matches[2]
-		return fmt.Sprintf("bestvideo[height=%s][fps=%s]+bestaudio/best", res, fps)
+		return fmt.Sprintf("best[height=%s][fps=%s]", res, fps)
 	}
-	// Pure resolution (e.g., 720)
+
+	// Match pure resolution like "1080"
 	reRes := regexp.MustCompile(`^\d+$`)
 	if reRes.MatchString(quality) {
-		return fmt.Sprintf("bestvideo[height=%s]+bestaudio/best", quality)
+		return fmt.Sprintf("best[height=%s]", quality)
 	}
-	// fallback: less than or equal to resolution
-	return fmt.Sprintf("bestvideo[height<=?%s]+bestaudio/best[height<=?%s]", quality, quality)
+
+	// Fallback: match up to resolution
+	return fmt.Sprintf("best[height<=?%s]", quality)
 }
