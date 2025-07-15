@@ -7,7 +7,7 @@ toolchain go1.24.2
 require (
 	entgo.io/ent v0.14.4
 	github.com/alexedwards/scs/pgxstore v0.0.0-20240316134038-7e11d57e8885
-	github.com/alexedwards/scs/v2 v2.8.0
+	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/canidam/echo-scs-session v1.0.0
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/gavv/httpexpect/v2 v2.17.0
