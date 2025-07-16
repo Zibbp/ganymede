@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"os"
 	"sync"
+
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // Config is the main application configuration saved to disk and used in memory.
@@ -61,8 +63,9 @@ type StorageTemplate struct {
 
 // ProxyListItem defines a single proxy and optional header.
 type ProxyListItem struct {
-	URL    string `json:"url"`
-	Header string `json:"header"`
+	URL       string          `json:"url"`        // URL of the proxy server.
+	Header    string          `json:"header"`     // Optional header to send with the proxy request.
+	ProxyType utils.ProxyType `json:"proxy_type"` // Type of proxy to use.
 }
 
 var (
@@ -187,8 +190,7 @@ func (c *Config) setDefaults() {
 
 	// livestream proxies
 	c.Livestream.Proxies = []ProxyListItem{
-		{URL: "https://eu.luminous.dev", Header: ""},
-		{URL: "https://api.ttv.lol", Header: "x-donate-to:https://ttv.lol/donate"},
+		{URL: "https://eu.luminous.dev", Header: "", ProxyType: utils.ProxyTypeHLS},
 	}
 	c.Livestream.ProxyEnabled = false
 	c.Livestream.ProxyParameters = "%3Fplayer%3Dtwitchweb%26type%3Dany%26allow_source%3Dtrue%26allow_audio_only%3Dtrue%26allow_spectre%3Dfalse%26fast_bread%3Dtrue"

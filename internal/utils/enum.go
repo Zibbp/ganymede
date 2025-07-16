@@ -168,3 +168,17 @@ func GetTaskName(s string) TaskName {
 		return ""
 	}
 }
+
+type ProxyType string
+
+const (
+	ProxyTypeHLS  ProxyType = "hls"
+	ProxyTypeHTTP ProxyType = "http"
+)
+
+func (ProxyType) Values() (kinds []string) {
+	for _, s := range []ProxyType{ProxyTypeHLS, ProxyTypeHTTP} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}
