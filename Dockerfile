@@ -23,6 +23,7 @@ RUN make build_server build_worker
 FROM debian:bookworm-slim AS tools
 
 ARG STREAMLINK_VERSION
+ARG YT_DLP_VERSION
 
 WORKDIR /tmp
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -44,7 +45,7 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
 
 RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
 
-# Donwload and install yt-dlp
+# Download and install yt-dlp
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/yt-dlp -o /usr/local/bin/yt-dlp && \
     chmod +x /usr/local/bin/yt-dlp
 
