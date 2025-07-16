@@ -291,7 +291,11 @@ func createYtDlpCookiesFile(ctx context.Context, cookies []YtDlpCookie) (*os.Fil
 	}
 	_, err = cookiesFile.WriteString(cookieStr)
 	if err != nil {
-		cookiesFile.Close()
+		err := cookiesFile.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("failed to close cookies file after write error")
+		}
+
 		return nil, err
 	}
 	log.Debug().Msgf("created yt-dlp cookies file: %s", cookiesFile.Name())

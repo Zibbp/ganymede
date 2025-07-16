@@ -26,7 +26,7 @@ func TestCreateYtDlpCookiesFile(t *testing.T) {
 
 	file, err := createYtDlpCookiesFile(ctx, cookies)
 	assert.NoError(t, err)
-	defer os.Remove(file.Name())
+	defer assert.NoError(t, file.Close())
 
 	data, err := os.ReadFile(file.Name())
 	assert.NoError(t, err)
@@ -60,7 +60,7 @@ func TestYtDlpService_CreateCommand(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)
 	assert.NotNil(t, cookiesFile)
-	defer os.Remove(cookiesFile.Name())
+	defer assert.NoError(t, os.Remove(cookiesFile.Name()))
 
 	args := cmd.Args
 	assert.Contains(t, args, "--version")

@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	osExec "os/exec"
 	"path/filepath"
@@ -63,13 +62,12 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	ytdlpSvc := ytdlp.NewYtDlpService(ytdlp.YtDlpOptions{Cookies: ytDlpCookies})
 
 	// Select the closest quality for the video
-	closestQuality := video.Resolution
 	qualities, err := ytdlpSvc.GetVideoQualities(ctx, video)
 	if err != nil {
 		return fmt.Errorf("error getting video quality options: %w", err)
 	}
 
-	closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
+	closestQuality := utils.SelectClosestQuality(video.Resolution, qualities)
 	log.Info().Msgf("selected closest quality %s", closestQuality)
 
 	// Create yt-dlp quality string
@@ -222,14 +220,12 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 	ytdlpSvc := ytdlp.NewYtDlpService(ytdlp.YtDlpOptions{Cookies: ytDlpCookies})
 
-	// If not best or audio, get the closest quality for the video
-	closestQuality := video.Resolution
 	qualities, err := ytdlpSvc.GetVideoQualities(ctx, video)
 	if err != nil {
 		return fmt.Errorf("error getting video quality options: %w", err)
 	}
 
-	closestQuality = utils.SelectClosestQuality(video.Resolution, qualities)
+	closestQuality := utils.SelectClosestQuality(video.Resolution, qualities)
 	log.Info().Msgf("selected closest quality %s", closestQuality)
 
 	// Create yt-dlp quality string
@@ -311,9 +307,15 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	case <-ctx.Done():
 		// Context was cancelled, kill only ffmpeg child process if running
 		if cmd.Process != nil {
-			_ = killYtDlp(cmd.Process.Pid)
+			err := killYtDlp(cmd.Process.Pid)
+			if err != nil {
+				return fmt.Errorf("failed to kill yt-dlp process: %v", err)
+			}
 		}
-		cmd.Process.Wait()
+		_, err := cmd.Process.Wait()
+		if err != nil {
+			log.Error().Err(err).Msg("error waiting for yt-dlp process")
+		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
 	case err := <-done:
@@ -741,33 +743,33 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
-// checkLogForNoStreams returns true if the log file contains the expected message.
-//
-// Used to check if live stream download failed because no streams were found.
-func checkLogForNoStreams(logFilePath string) (bool, error) {
-	file, err := os.Open(logFilePath)
-	if err != nil {
-		return false, fmt.Errorf("failed to open log file: %w", err)
-	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Debug().Err(err)
-		}
-	}()
+// // checkLogForNoStreams returns true if the log file contains the expected message.
+// //
+// // Used to check if live stream download failed because no streams were found.
+// func checkLogForNoStreams(logFilePath string) (bool, error) {
+// 	file, err := os.Open(logFilePath)
+// 	if err != nil {
+// 		return false, fmt.Errorf("failed to open log file: %w", err)
+// 	}
+// 	defer func() {
+// 		if err := file.Close(); err != nil {
+// 			log.Debug().Err(err)
+// 		}
+// 	}()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "No playable streams found on this URL") {
-			return true, nil
-		}
-	}
+// 	scanner := bufio.NewScanner(file)
+// 	for scanner.Scan() {
+// 		if strings.Contains(scanner.Text(), "No playable streams found on this URL") {
+// 			return true, nil
+// 		}
+// 	}
 
-	if err := scanner.Err(); err != nil {
-		return false, fmt.Errorf("error reading log file: %w", err)
-	}
+// 	if err := scanner.Err(); err != nil {
+// 		return false, fmt.Errorf("error reading log file: %w", err)
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func ConvertTwitchVodVideo(v *ent.Vod) error {
 	env := config.GetEnvConfig()
@@ -825,38 +827,38 @@ func GetFfprobeData(path string) (map[string]interface{}, error) {
 // test proxy server by making http request to proxy server
 // if request is successful return true
 // timeout after 5 seconds
-func testProxyServer(url string, header string) bool {
-	log.Debug().Msgf("testing proxy server: %s", url)
-	client := &http.Client{
-		Timeout: 5 * time.Second,
-	}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Error().Err(err).Msg("error creating request for proxy server test")
-		return false
-	}
-	if header != "" {
-		log.Debug().Msgf("adding header %s to proxy server test", header)
-		splitHeader := strings.SplitN(header, ":", 2)
-		req.Header.Add(splitHeader[0], splitHeader[1])
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error().Err(err).Msg("error making request for proxy server test")
-		return false
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Debug().Err(err).Msg("error closing response body for proxy server test")
-		}
-	}()
-	if resp.StatusCode != 200 {
-		log.Error().Msgf("proxy server test returned status code %d", resp.StatusCode)
-		return false
-	}
-	log.Debug().Msg("proxy server test successful")
-	return true
-}
+// func testProxyServer(url string, header string) bool {
+// 	log.Debug().Msgf("testing proxy server: %s", url)
+// 	client := &http.Client{
+// 		Timeout: 5 * time.Second,
+// 	}
+// 	req, err := http.NewRequest("GET", url, nil)
+// 	if err != nil {
+// 		log.Error().Err(err).Msg("error creating request for proxy server test")
+// 		return false
+// 	}
+// 	if header != "" {
+// 		log.Debug().Msgf("adding header %s to proxy server test", header)
+// 		splitHeader := strings.SplitN(header, ":", 2)
+// 		req.Header.Add(splitHeader[0], splitHeader[1])
+// 	}
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		log.Error().Err(err).Msg("error making request for proxy server test")
+// 		return false
+// 	}
+// 	defer func() {
+// 		if err := resp.Body.Close(); err != nil {
+// 			log.Debug().Err(err).Msg("error closing response body for proxy server test")
+// 		}
+// 	}()
+// 	if resp.StatusCode != 200 {
+// 		log.Error().Msgf("proxy server test returned status code %d", resp.StatusCode)
+// 		return false
+// 	}
+// 	log.Debug().Msg("proxy server test successful")
+// 	return true
+// }
 
 // GenerateStaticThumbnail generates static thumbnail for video.
 //
