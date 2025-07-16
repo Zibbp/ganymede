@@ -60,7 +60,6 @@ func TestYtDlpService_CreateCommand(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)
 	assert.NotNil(t, cookiesFile)
-	defer assert.NoError(t, os.Remove(cookiesFile.Name()))
 
 	args := cmd.Args
 	assert.Contains(t, args, "--version")
@@ -100,10 +99,10 @@ func TestYTDLPVideoInfo_CreateQualityOption(t *testing.T) {
 		{"best", "best"},
 		{"audio", "bestaudio"},
 		{"audio_only", "bestaudio"},
-		{"1440p60__source_", "best[height=1440][fps=60]"},
-		{"1080p60__source_", "best[height=1080][fps=60]"},
-		{"720p60", "best[height=720][fps=60]"},
-		{"1080p30", "best[height=1080][fps=30]"},
+		{"1440p60__source_", "best[height=1440]"},
+		{"1080p60__source_", "best[height=1080]"},
+		{"720p60", "best[height=720]"},
+		{"1080p30", "best[height=1080]"},
 		{"720", "best[height=720]"},
 		{"1080", "best[height=1080]"},
 		{"480", "best[height=480]"},

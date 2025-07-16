@@ -321,8 +321,7 @@ func (s *YtDlpService) CreateQualityOption(quality string) string {
 	re := regexp.MustCompile(`^(\d+)[pP](\d+)$`)
 	if matches := re.FindStringSubmatch(quality); len(matches) == 3 {
 		res := matches[1]
-		fps := matches[2]
-		return fmt.Sprintf("best[height=%s][fps=%s]", res, fps)
+		return fmt.Sprintf("best[height=%s]", res)
 	}
 
 	// Match pure resolution like "1080"
