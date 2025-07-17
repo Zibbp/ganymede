@@ -4,7 +4,7 @@
     <img src=".github/ganymede-logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h2 align="center">Ganymede</h2>
+  <h2 align="center">Duckvod</h2>
 
   <p align="center">
     Ganymede is a Twitch VOD and Live Stream archiving platform with a real-time chat experience. Every archive includes a rendered chat for viewing outside of Ganymede. Files are saved in a friendly format allowing for use without Ganymede.
