@@ -1,11 +1,10 @@
 "use client"
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText"
 import { useAxiosPrivate } from "@/app/hooks/useAxios"
-import { Config, NotificationType, ProxyListItem, useEditConfig, useGetConfig, useTestNotification } from "@/app/hooks/useConfig"
-import { ActionIcon, Button, Card, Checkbox, Code, Collapse, Container, Flex, MultiSelect, NumberInput, Text, Textarea, TextInput, Title } from "@mantine/core"
+import { Config, NotificationType, ProxyListItem, ProxyType, useEditConfig, useGetConfig, useTestNotification } from "@/app/hooks/useConfig"
+import { ActionIcon, Button, Card, Checkbox, Code, Collapse, Container, Flex, MultiSelect, NumberInput, Select, Text, Textarea, TextInput, Title } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { useDisclosure } from "@mantine/hooks"
-import Link from "next/link"
 import { useEffect, useState } from "react"
 import classes from "./AdminSettingsPage.module.css"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
@@ -32,6 +31,12 @@ const AdminSettingsPage = () => {
   const editConfigMutate = useEditConfig()
 
   const { data, isPending, isError } = useGetConfig(axiosPrivate)
+
+  // Proxy types using the enum
+  const proxyTypes: { label: string; value: ProxyType }[] = Object.entries(ProxyType).map(([key, value]) => ({
+    label: key,
+    value: value
+  }));
 
   const form = useForm({
     mode: "controlled",
@@ -129,7 +134,7 @@ const AdminSettingsPage = () => {
 
   return (
     <div>
-      <Container mt={15}>
+      <Container mt={15} size="7xl">
         <Card withBorder p="xl" radius={"sm"}>
           <form onSubmit={form.onSubmit(() => {
             handleSubmitForm()
@@ -446,7 +451,7 @@ const AdminSettingsPage = () => {
 
                 <div>
                   <Title mt={5} order={4}>
-                    {t('archiveSettings.examples')}
+                    {t('archiveSettings.examplesText')}
                   </Title>
 
                   <Text>Folder</Text>
@@ -513,6 +518,13 @@ const AdminSettingsPage = () => {
                       className={classes.proxyInput}
                       key={form.key(`livestream.proxies.${index}.header`)}
                       {...form.getInputProps(`livestream.proxies.${index}.header`)}
+                    />
+                    <Select
+                      w={350}
+                      label={t('videoSettings.proxyTypeLabel')}
+                      key={form.key(`livestream.proxies.${index}.proxy_type`)}
+                      data={proxyTypes}
+                      {...form.getInputProps(`livestream.proxies.${index}.proxy_type`)}
                     />
                     <ActionIcon
                       color="red"

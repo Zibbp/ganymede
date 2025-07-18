@@ -29,10 +29,10 @@ type Config struct {
 	Notification     Notification    `json:"notifications"`     // Notification templates and settings.
 	StorageTemplates StorageTemplate `json:"storage_templates"` // Storage folder/file templates.
 	Livestream       struct {
-		Proxies         []ProxyListItem `json:"proxies"`          // List of proxies for live stream download.
-		ProxyEnabled    bool            `json:"proxy_enabled"`    // Enable proxy usage.
-		ProxyParameters string          `json:"proxy_parameters"` // Query parameters for proxy URL.
-		ProxyWhitelist  []string        `json:"proxy_whitelist"`  // Channels exempt from proxy.
+		Proxies         []ProxyListItem `json:"proxies" validate:"dive"` // List of proxies for live stream download.
+		ProxyEnabled    bool            `json:"proxy_enabled"`           // Enable proxy usage.
+		ProxyParameters string          `json:"proxy_parameters"`        // Query parameters for proxy URL.
+		ProxyWhitelist  []string        `json:"proxy_whitelist"`         // Channels exempt from proxy.
 	} `json:"livestream"`
 	Experimental struct {
 		BetterLiveStreamDetectionAndCleanup bool `json:"better_live_stream_detection_and_cleanup"` // [EXPERIMENTAL] Enable enhanced detection and cleanup.
@@ -63,9 +63,9 @@ type StorageTemplate struct {
 
 // ProxyListItem defines a single proxy and optional header.
 type ProxyListItem struct {
-	URL       string          `json:"url"`        // URL of the proxy server.
-	Header    string          `json:"header"`     // Optional header to send with the proxy request.
-	ProxyType utils.ProxyType `json:"proxy_type"` // Type of proxy to use.
+	URL       string          `json:"url" validate:"required,min=1"`        // URL of the proxy server.
+	Header    string          `json:"header"`                               // Optional header to send with the proxy request.
+	ProxyType utils.ProxyType `json:"proxy_type" validate:"required,min=1"` // Type of proxy to use.
 }
 
 var (
@@ -190,7 +190,7 @@ func (c *Config) setDefaults() {
 
 	// livestream proxies
 	c.Livestream.Proxies = []ProxyListItem{
-		{URL: "https://eu.luminous.dev", Header: "", ProxyType: utils.ProxyTypeHLS},
+		{URL: "https://eu.luminous.dev", Header: "", ProxyType: utils.ProxyTypeTwitchHLS},
 	}
 	c.Livestream.ProxyEnabled = false
 	c.Livestream.ProxyParameters = "%3Fplayer%3Dtwitchweb%26type%3Dany%26allow_source%3Dtrue%26allow_audio_only%3Dtrue%26allow_spectre%3Dfalse%26fast_bread%3Dtrue"

@@ -180,7 +180,7 @@ func (s *YtDlpService) GetVideoInfo(ctx context.Context, video ent.Vod) (*YTDLPV
 	args := []string{"-q", "-j", url}
 	log.Info().Msgf("running yt-dlp with args: %s", strings.Join(args, " "))
 
-	cmd, cookieFile, err := s.CreateCommand(ctx, args)
+	cmd, cookieFile, err := s.CreateCommand(ctx, args, true)
 	defer func() {
 		if cookieFile != nil {
 			if err := cookieFile.Close(); err != nil {
@@ -257,13 +257,13 @@ func (s *YtDlpService) GetVideoQualities(ctx context.Context, video ent.Vod) ([]
 
 // createYtDlpCommand creates a yt-dlp command with the provided input arguments and cookies.
 // It returns the command, a file handle for the cookies file, and any error encountered.
-func (s *YtDlpService) CreateCommand(ctx context.Context, inputArgs []string) (*osExec.Cmd, *os.File, error) {
+func (s *YtDlpService) CreateCommand(ctx context.Context, inputArgs []string, enableCookies bool) (*osExec.Cmd, *os.File, error) {
 	args := []string{}
 	args = append(args, inputArgs...)
 
 	var cookiesFile *os.File
 
-	if len(s.Options.Cookies) > 0 {
+	if len(s.Options.Cookies) > 0 && enableCookies {
 		var err error
 		cookiesFile, err = createYtDlpCookiesFile(ctx, s.Options.Cookies)
 		if err != nil {

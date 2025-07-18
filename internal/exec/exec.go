@@ -100,7 +100,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	}
 
 	// Create yt-dlp command
-	cmd, cookieFile, err := ytdlpSvc.CreateCommand(ctx, cmdArgs)
+	cmd, cookieFile, err := ytdlpSvc.CreateCommand(ctx, cmdArgs, true)
 	defer func() {
 		if cookieFile != nil {
 			if err := cookieFile.Close(); err != nil {
@@ -177,37 +177,49 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	configYtDlpArgs := config.Get().Parameters.YtDlpLive
 	configYtDlpArgsArr := strings.Split(configYtDlpArgs, ",")
 
-	// proxyEnabled := false
-	// proxyFound := false
-	// proxyHeader := ""
+	proxyEnabled := false                 // Whether to use a proxy
+	proxyFound := false                   // Whether a proxy was found
+	proxyType := utils.ProxyTypeTwitchHLS // The type of proxy to use, default is Twitch HLS
+	proxyHeader := ""                     // The header to use for the proxy if found
+	proxyHTTPUrl := ""                    // The http proxy URL to use if found
 
 	url := utils.CreateTwitchURL(video.ExtID, video.Type, channel.Name)
 
-	// TODO: setup with yt-dlp
-	// check if user has proxies enable
-	// proxyEnabled = config.Get().Livestream.ProxyEnabled
-	// whitelistedChannels := config.Get().Livestream.ProxyWhitelist // list of channels that are whitelisted from using proxy
-	// if proxyEnabled {
-	// 	if utils.Contains(whitelistedChannels, channel.Name) {
-	// 		log.Debug().Str("channel_name", channel.Name).Msg("channel is whitelisted, not using proxy")
-	// 	} else {
-	// 		proxyParams := config.Get().Livestream.ProxyParameters
-	// 		proxyList := config.Get().Livestream.Proxies
+	// Handle proxy setting
+	proxyEnabled = config.Get().Livestream.ProxyEnabled
+	whitelistedChannels := config.Get().Livestream.ProxyWhitelist // list of channels that are whitelisted from using proxy
+	if proxyEnabled {
+		if utils.Contains(whitelistedChannels, channel.Name) {
+			log.Debug().Str("channel_name", channel.Name).Msg("channel is whitelisted, not using proxy")
+		} else {
+			proxyParams := config.Get().Livestream.ProxyParameters
+			proxyList := config.Get().Livestream.Proxies
 
-	// 		log.Debug().Str("proxy_list", fmt.Sprintf("%v", proxyList)).Msg("proxy list")
-	// 		// test proxies
-	// 		for _, proxy := range proxyList {
-	// 			proxyUrl := fmt.Sprintf("%s/playlist/%s.m3u8%s", proxy.URL, channel.Name, proxyParams)
-	// 			if testProxyServer(proxyUrl, proxy.Header) {
-	// 				log.Debug().Str("channel_name", channel.Name).Str("proxy_url", proxy.URL).Msg("proxy found")
-	// 				proxyFound = true
-	// 				url = fmt.Sprintf("hls://%s", proxyUrl)
-	// 				proxyHeader = proxy.Header
-	// 				break
-	// 			}
-	// 		}
-	// 	}
-	// }
+			log.Debug().Str("proxy_list", fmt.Sprintf("%v", proxyList)).Msg("proxy list")
+
+			// Test proxies - the first one that works will be used
+			for _, proxy := range proxyList {
+				// proxyUrl is url that will be sent to yt-dlp for download
+				// this can be a direct URL or a proxy URL
+				proxyUrl := url
+				if proxy.ProxyType == utils.ProxyTypeTwitchHLS {
+					proxyUrl = fmt.Sprintf("%s/playlist/%s.m3u8%s", proxy.URL, channel.Name, proxyParams)
+				}
+				// Test the proxy server
+				if testProxyServer(proxy.URL, proxyUrl, proxy.Header, proxy.ProxyType) {
+					log.Debug().Str("channel_name", channel.Name).Str("proxy_url", proxy.URL).Msg("proxy found")
+					proxyFound = true
+					url = proxyUrl
+					proxyHeader = proxy.Header
+					proxyType = proxy.ProxyType
+					if proxy.ProxyType == utils.ProxyTypeHTTP {
+						proxyHTTPUrl = proxy.URL
+					}
+					break
+				}
+			}
+		}
+	}
 
 	// Create yt-dlp service
 	ytDlpCookies := []ytdlp.YtDlpCookie{}
@@ -246,18 +258,15 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		"--no-warnings", "--progress", "--newline", "--no-check-certificate",
 	)
 
-	// TODO: setup with yt-dlp
-	// pass proxy header
-	// if proxyHeader != "" {
-	// 	cmdArgs = append(cmdArgs, "--add-headers", proxyHeader)
-	// }
+	// Set proxy header if enabled
+	if proxyHeader != "" {
+		cmdArgs = append(cmdArgs, "--add-headers", proxyHeader)
+	}
 
-	// TODO: setup with yt-dlp
-	// pass twitch token as header if available
-	// ! token is passed only if proxy is not enabled for security reasons
-	// if twitchToken != "" && !proxyFound {
-	// 	cmdArgs = append(cmdArgs, "--http-header", fmt.Sprintf("Authorization=OAuth %s", twitchToken))
-	// }
+	// Set HTTP proxy if enabled
+	if proxyFound && proxyType == utils.ProxyTypeHTTP {
+		cmdArgs = append(cmdArgs, "--proxy", proxyHTTPUrl)
+	}
 
 	// Sanitize config args before appending
 	for _, arg := range configYtDlpArgsArr {
@@ -267,7 +276,9 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 
 	// Create yt-dlp command
-	cmd, cookieFile, err := ytdlpSvc.CreateCommand(ctx, cmdArgs)
+	// Only enable cookies if proxy is found - cookies are not set if proxy is used!
+	// This means the quality requested may not be the one downloaded because of the proxy
+	cmd, cookieFile, err := ytdlpSvc.CreateCommand(ctx, cmdArgs, proxyFound)
 	defer func() {
 		if cookieFile != nil {
 			if err := cookieFile.Close(); err != nil {
@@ -314,7 +325,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		}
 		_, err := cmd.Process.Wait()
 		if err != nil {
-			log.Error().Err(err).Msg("error waiting for yt-dlp process")
+			log.Debug().Err(err).Msg("error waiting for yt-dlp process")
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
@@ -823,42 +834,6 @@ func GetFfprobeData(path string) (map[string]interface{}, error) {
 	}
 	return data, nil
 }
-
-// test proxy server by making http request to proxy server
-// if request is successful return true
-// timeout after 5 seconds
-// func testProxyServer(url string, header string) bool {
-// 	log.Debug().Msgf("testing proxy server: %s", url)
-// 	client := &http.Client{
-// 		Timeout: 5 * time.Second,
-// 	}
-// 	req, err := http.NewRequest("GET", url, nil)
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("error creating request for proxy server test")
-// 		return false
-// 	}
-// 	if header != "" {
-// 		log.Debug().Msgf("adding header %s to proxy server test", header)
-// 		splitHeader := strings.SplitN(header, ":", 2)
-// 		req.Header.Add(splitHeader[0], splitHeader[1])
-// 	}
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("error making request for proxy server test")
-// 		return false
-// 	}
-// 	defer func() {
-// 		if err := resp.Body.Close(); err != nil {
-// 			log.Debug().Err(err).Msg("error closing response body for proxy server test")
-// 		}
-// 	}()
-// 	if resp.StatusCode != 200 {
-// 		log.Error().Msgf("proxy server test returned status code %d", resp.StatusCode)
-// 		return false
-// 	}
-// 	log.Debug().Msg("proxy server test successful")
-// 	return true
-// }
 
 // GenerateStaticThumbnail generates static thumbnail for video.
 //

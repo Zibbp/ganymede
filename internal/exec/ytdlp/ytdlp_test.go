@@ -56,7 +56,7 @@ func TestYtDlpService_CreateCommand(t *testing.T) {
 		Cookies: cookies,
 	})
 
-	cmd, cookiesFile, err := svc.CreateCommand(ctx, inputArgs)
+	cmd, cookiesFile, err := svc.CreateCommand(ctx, inputArgs, true)
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)
 	assert.NotNil(t, cookiesFile)
@@ -80,7 +80,7 @@ func TestYtDlpService_CreateCommand_NoCookies(t *testing.T) {
 	inputArgs := []string{"--help"}
 	svc := NewYtDlpService(YtDlpOptions{})
 
-	cmd, cookiesFile, err := svc.CreateCommand(ctx, inputArgs)
+	cmd, cookiesFile, err := svc.CreateCommand(ctx, inputArgs, true)
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)
 	assert.Nil(t, cookiesFile)

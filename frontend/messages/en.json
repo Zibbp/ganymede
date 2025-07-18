@@ -302,6 +302,7 @@
       "proxyURLLabel": "Proxy URL",
       "proxyHeaderLabel": "Proxy Header",
       "proxyAddButton": "Add",
+      "proxyTypeLabel": "Select Proxy Type",
       "whitelistChannelsLabel": "Whitelist Channels",
       "whitelistChannelsDescription": "Select channels that are excluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to."
     },

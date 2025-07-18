@@ -47,9 +47,15 @@ export interface StorageTemplate {
   file_template: string;
 }
 
+export enum ProxyType {
+  TwitchHLS = "twitch_hls",
+  HTTP = "http",
+}
+
 export interface ProxyListItem {
   url: string;
   header: string;
+  proxy_type: ProxyType;
 }
 
 const getConfig = async (axiosPrivate: AxiosInstance): Promise<Config> => {

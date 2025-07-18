@@ -172,12 +172,12 @@ func GetTaskName(s string) TaskName {
 type ProxyType string
 
 const (
-	ProxyTypeHLS  ProxyType = "hls"
-	ProxyTypeHTTP ProxyType = "http"
+	ProxyTypeTwitchHLS ProxyType = "twitch_hls"
+	ProxyTypeHTTP      ProxyType = "http"
 )
 
 func (ProxyType) Values() (kinds []string) {
-	for _, s := range []ProxyType{ProxyTypeHLS, ProxyTypeHTTP} {
+	for _, s := range []ProxyType{ProxyTypeTwitchHLS, ProxyTypeHTTP} {
 		kinds = append(kinds, string(s))
 	}
 	return
