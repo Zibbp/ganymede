@@ -55,6 +55,7 @@ func GenerateThumbnails(config GenerateThumbnailsInput) error {
 			"-ss", strconv.Itoa(t),
 			"-i", config.Video,
 			"-update", "1",
+			"-skip_frame", "nokey",
 			"-frames:v", "1",
 			"-q:v", "10",
 			"-vf", fmt.Sprintf("scale=%d:%d", config.Width, config.Height),
