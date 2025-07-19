@@ -188,18 +188,6 @@ func (s *Service) DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error 
 	return nil
 }
 
-//func  StartScheduler() {
-//	s := gocron.NewScheduler(time.UTC)
-//
-//	twitchAuthSchedule(s)
-//	s.StartAsync()
-//}
-//
-//func liveCheckSchedule(s *gocron.Scheduler) {
-//	log.Debug().Msg("setting up live check schedule")
-//	s.Every(5).Minutes().Do(Check)
-//}
-
 func (s *Service) Check(ctx context.Context) error {
 	log.Debug().Msg("checking live channels")
 	// get live watched channels from database

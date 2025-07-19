@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
 	"github.com/stretchr/testify/assert"
+	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
@@ -97,6 +99,8 @@ func (s *ArchiveTest) ArchiveChannelTest(t *testing.T) {
 }
 
 // ArchiveVideo tests the full archive process for a video with chat downloading, processing, and rendering
+// This asserts the files are created, the queue item is created, and the video is playable.
+// It also tests the deletion of the video and its associated files.
 func TestArchiveVideo(t *testing.T) {
 	// Setup the application
 	app, err := tests.Setup(t)
@@ -162,6 +166,60 @@ func TestArchiveVideo(t *testing.T) {
 	// Assert video is playable
 	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
 	assert.True(t, isPlayableVideo(v.ChatVideoPath), "Video file is not playable")
+
+	// Assert chat files is greater than 0 bytes
+	chatFileInfo, err := os.Stat(v.ChatPath)
+	assert.NoError(t, err)
+	assert.Greater(t, chatFileInfo.Size(), int64(0), "Chat file should not be empty")
+
+	// Assert info file is greater than 0 bytes
+	infoFileInfo, err := os.Stat(v.InfoPath)
+	assert.NoError(t, err)
+	assert.Greater(t, infoFileInfo.Size(), int64(0), "Info file should not be empty")
+
+	// Assert thumbnail is greater than 0 bytes
+	thumbnailFileInfo, err := os.Stat(v.ThumbnailPath)
+	assert.NoError(t, err)
+	assert.Greater(t, thumbnailFileInfo.Size(), int64(0), "Thumbnail file should not be empty")
+
+	// Assert web thumbnail is greater than 0 bytes
+	webThumbnailFileInfo, err := os.Stat(v.WebThumbnailPath)
+	assert.NoError(t, err)
+	assert.Greater(t, webThumbnailFileInfo.Size(), int64(0), "Web thumbnail file should not be empty")
+
+	// Assert sprite thumbnail facts
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+	assert.Len(t, v.SpriteThumbnailsImages, 1, "Sprite thumbnails should be generated for videos")
+
+	// Test delete and ensure directory is removed
+	videoDirectory := filepath.Dir(filepath.Clean(v.VideoPath))
+
+	err = app.VodService.DeleteVod(t.Context(), v.ID, true)
+	assert.NoError(t, err)
+
+	// Assert video directory is removed
+	_, err = os.Stat(videoDirectory)
+	assert.Error(t, err)
+	if !os.IsNotExist(err) {
+		t.Fatalf("Expected video directory %s to be removed, but it still exists: %v", videoDirectory, err)
+	}
+
+	// Assert video was deleted from database
+	_, err = app.Database.Client.Vod.Query().Where(vod.ID(v.ID)).Only(context.Background())
+	assert.Error(t, err)
+	if _, ok := err.(*ent.NotFoundError); !ok {
+		t.Fatalf("Expected vod to be deleted, but it still exists: %v", err)
+	}
+
+	// Assert queue item was deleted
+	_, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
+	assert.Error(t, err)
+	if _, ok := err.(*ent.NotFoundError); !ok {
+		t.Fatalf("Expected queue item to be deleted, but it still exists: %v", err)
+	}
+
 }
 
 // ArchiveVideo tests the full archive process for a video without chat downloading, processing, and rendering
@@ -367,12 +425,42 @@ func TestArchiveVideoHLS(t *testing.T) {
 
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
+	// Assert video is playable
+	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
+
 	assert.DirExists(t, v.VideoHlsPath)
 
 	// Assert number of files in HLS directory is greater than 0
 	files, err := os.ReadDir(v.VideoHlsPath)
 	assert.NoError(t, err)
 	assert.Greater(t, len(files), 0)
+
+	// Test delete and ensure directory is removed
+	videoDirectory := filepath.Dir(filepath.Clean(v.VideoHlsPath))
+
+	err = app.VodService.DeleteVod(t.Context(), v.ID, true)
+	assert.NoError(t, err)
+
+	// Assert video directory is removed
+	_, err = os.Stat(videoDirectory)
+	assert.Error(t, err)
+	if !os.IsNotExist(err) {
+		t.Fatalf("Expected video directory %s to be removed, but it still exists: %v", videoDirectory, err)
+	}
+
+	// Assert video was deleted from database
+	_, err = app.Database.Client.Vod.Query().Where(vod.ID(v.ID)).Only(context.Background())
+	assert.Error(t, err)
+	if _, ok := err.(*ent.NotFoundError); !ok {
+		t.Fatalf("Expected vod to be deleted, but it still exists: %v", err)
+	}
+
+	// Assert queue item was deleted
+	_, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
+	assert.Error(t, err)
+	if _, ok := err.(*ent.NotFoundError); !ok {
+		t.Fatalf("Expected queue item to be deleted, but it still exists: %v", err)
+	}
 }
 
 // ArchiveVideo tests the full archive process for a video with chat downloading, processing, and rendering
