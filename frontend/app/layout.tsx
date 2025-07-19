@@ -14,8 +14,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import ForceLogin from './components/authentication/ForceLogin';
 
 export const metadata: Metadata = {
-  title: "Ganymede",
-  description: "A platform to archive live streams and videos.",
+  title: "DuckVOD",
+  description: "Verpasste Quaks? Kein Problem! Auf DuckVOD findest du alle Live-Streams & Videos aus dem Ententeich, fein archiviert und jederzeit bereit zum Nachwatscheln.",
 };
 
 export default async function RootLayout({
