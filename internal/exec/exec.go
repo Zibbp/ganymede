@@ -238,7 +238,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 
 	closestQuality := utils.SelectClosestQuality(video.Resolution, qualities)
-	log.Info().Msgf("selected closest quality %s", closestQuality)
+	log.Info().Str("requested_quality", video.Resolution).Msgf("selected closest quality %s", closestQuality)
 
 	// Create yt-dlp quality string
 	qualityString := ytdlpSvc.CreateQualityOption(closestQuality)
@@ -278,7 +278,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	// Create yt-dlp command
 	// Only enable cookies if proxy is found - cookies are not set if proxy is used!
 	// This means the quality requested may not be the one downloaded because of the proxy
-	cmd, cookieFile, err := ytdlpSvc.CreateCommand(ctx, cmdArgs, proxyFound)
+	cmd, cookieFile, err := ytdlpSvc.CreateCommand(ctx, cmdArgs, !proxyFound)
 	defer func() {
 		if cookieFile != nil {
 			if err := cookieFile.Close(); err != nil {
