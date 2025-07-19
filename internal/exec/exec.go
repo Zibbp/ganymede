@@ -468,7 +468,7 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
-	log.Debug().Str("video_id", video.ID.String()).Msgf("logging streamlink output to %s", logFilePath)
+	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chatdownload output to %s", logFilePath)
 
 	var cmdArgs []string
 	cmdArgs = append(cmdArgs, "chatdownload", "--id", video.ExtID, "--embed-images", "--collision", "overwrite", "-o", video.TmpChatDownloadPath)
