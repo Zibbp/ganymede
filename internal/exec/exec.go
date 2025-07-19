@@ -782,44 +782,6 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 // 	return false, nil
 // }
 
-func ConvertTwitchVodVideo(v *ent.Vod) error {
-	env := config.GetEnvConfig()
-	// Fetch config params
-	ffmpegParams := config.Get().Parameters.VideoConvert
-	// Split supplied params into array
-	arr := strings.Fields(ffmpegParams)
-	// Generate args for exec
-	argArr := []string{"-y", "-hide_banner", "-i", v.TmpVideoDownloadPath}
-	// add each config param to arg
-	argArr = append(argArr, arr...)
-	// add output file
-	argArr = append(argArr, v.TmpVideoConvertPath)
-	log.Debug().Msgf("video convert args: %v", argArr)
-	// Execute ffmpeg
-	cmd := osExec.Command("ffmpeg", argArr...)
-
-	videoConvertLogfile, err := os.Create(fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, v.ID))
-	if err != nil {
-		log.Error().Err(err).Msg("error creating video convert logfile")
-		return err
-	}
-	defer func() {
-		if err := videoConvertLogfile.Close(); err != nil {
-			log.Debug().Err(err).Msg("error closing video convert logfile")
-		}
-	}()
-	cmd.Stdout = videoConvertLogfile
-	cmd.Stderr = videoConvertLogfile
-
-	if err := cmd.Run(); err != nil {
-		log.Error().Err(err).Msg("error running ffmpeg for vod video convert")
-		return err
-	}
-
-	log.Debug().Msgf("finished vod video convert for %s", v.ExtID)
-	return nil
-}
-
 func GetFfprobeData(path string) (map[string]interface{}, error) {
 	cmd := osExec.Command("ffprobe", "-hide_banner", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", path)
 	out, err := cmd.Output()
