@@ -12,7 +12,7 @@ import (
 
 type LiveService interface {
 	GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error)
-	AddLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
+	AddLiveWatchedChannel(ctx context.Context, liveDto live.Live) (*ent.Live, error)
 	DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error
 	UpdateLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
 	Check(ctx context.Context) error
@@ -171,7 +171,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		})
 	}
 
-	l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
+	l, err := h.Service.LiveService.AddLiveWatchedChannel(c.Request().Context(), liveDto)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

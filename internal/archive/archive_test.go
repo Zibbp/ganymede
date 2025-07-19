@@ -3,14 +3,10 @@ package archive_test
 import (
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/riverqueue/river"
-	"github.com/riverqueue/river/rivertype"
 	"github.com/stretchr/testify/assert"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/queue"
@@ -20,6 +16,7 @@ import (
 	"github.com/zibbp/ganymede/internal/server"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/tests"
+	tests_shared "github.com/zibbp/ganymede/tests/shared"
 )
 
 type ArchiveTest struct {
@@ -35,41 +32,7 @@ var (
 	TestArchiveTimeout           = 300 * time.Second
 )
 
-// isPlayableVideo checks if a video file is playable using ffprobe.
-func isPlayableVideo(path string) bool {
-	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
-		"stream=codec_name", "-of", "default=noprint_wrappers=1:nokey=1", path)
-	err := cmd.Run()
-	return err == nil
-}
-
-// waitForArchiveCompletion waits until the queue item is done processing and no running jobs remain.
-func waitForArchiveCompletion(t *testing.T, app *server.Application, videoId uuid.UUID, timeout time.Duration) {
-	startTime := time.Now()
-	for {
-		if time.Since(startTime) >= timeout {
-			t.Fatalf("Timeout reached while waiting for video to be archived")
-		}
-
-		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(videoId))).Only(context.Background())
-		if err != nil {
-			t.Fatalf("Error querying queue item: %v", err)
-		}
-		runningJobsParams := river.NewJobListParams().States(rivertype.JobStateRunning).First(10000)
-		runningJobs, err := app.RiverClient.JobList(context.Background(), runningJobsParams)
-		if err != nil {
-			t.Fatalf("Error listing running jobs: %v", err)
-		}
-
-		if !q.Processing && len(runningJobs.Jobs) == 0 {
-			break
-		}
-
-		time.Sleep(10 * time.Second)
-	}
-}
-
-// TestAdmin tests the admin service. This function runs all the tests to avoid spinning up multiple containers.
+// TestArchive runs all archive tests
 func TestArchive(t *testing.T) {
 	app, err := tests.Setup(t)
 	assert.NoError(t, err)
@@ -139,12 +102,12 @@ func TestArchiveVideo(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
 	assert.NoError(t, err)
-	assert.NotNil(t, v)
+	assert.NotNil(t, q)
 	assert.Equal(t, false, q.ChatProcessing)
 	assert.Equal(t, false, q.VideoProcessing)
 	assert.Equal(t, utils.Success, q.TaskChatDownload)
@@ -164,8 +127,8 @@ func TestArchiveVideo(t *testing.T) {
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
-	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
-	assert.True(t, isPlayableVideo(v.ChatVideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.ChatVideoPath), "Video file is not playable")
 
 	// Assert chat files is greater than 0 bytes
 	chatFileInfo, err := os.Stat(v.ChatPath)
@@ -261,7 +224,7 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -286,7 +249,7 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
-	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
 }
 
 // ArchiveVideo tests the full archive process for a video without chat rendering
@@ -328,7 +291,7 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -353,7 +316,7 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
-	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
 }
 
 // TestArchiveVideoHLS tests the full archive process for a video without chat downloading, processing, and rendering converting to HLS
@@ -402,7 +365,7 @@ func TestArchiveVideoHLS(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -426,7 +389,7 @@ func TestArchiveVideoHLS(t *testing.T) {
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
-	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
 
 	assert.DirExists(t, v.VideoHlsPath)
 
@@ -502,7 +465,7 @@ func TestArchiveClip(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -527,8 +490,8 @@ func TestArchiveClip(t *testing.T) {
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
-	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
-	assert.True(t, isPlayableVideo(v.ChatVideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.ChatVideoPath), "Video file is not playable")
 }
 
 // TestArchiveVideoWithSpriteThumbnails tests generate sprite thumbnails after a video is archived.
@@ -570,7 +533,7 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())

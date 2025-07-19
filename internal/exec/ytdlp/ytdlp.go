@@ -258,7 +258,11 @@ func (s *YtDlpService) GetVideoQualities(ctx context.Context, video ent.Vod) ([]
 // createYtDlpCommand creates a yt-dlp command with the provided input arguments and cookies.
 // It returns the command, a file handle for the cookies file, and any error encountered.
 func (s *YtDlpService) CreateCommand(ctx context.Context, inputArgs []string, enableCookies bool) (*osExec.Cmd, *os.File, error) {
-	args := []string{}
+	args := []string{
+		"--force-overwrites",
+		"--external-downloader-args",
+		"-loglevel warning -stats",
+	}
 	args = append(args, inputArgs...)
 
 	var cookiesFile *os.File
