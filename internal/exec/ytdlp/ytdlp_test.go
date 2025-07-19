@@ -107,7 +107,7 @@ func TestYTDLPVideoInfo_CreateQualityOption(t *testing.T) {
 		{"1080", "best[height=1080]/best"},
 		{"480", "best[height=480]/best"},
 		{"foo", "best[height<=?foo]/best"},
-		{"360p", "best[height<=?360p]/best"},
+		{"360p", "best[height=360]/best"},
 		{"", "best[height<=?]/best"},
 	}
 

@@ -532,6 +532,7 @@ const AdminSettingsPage = () => {
                       label={t('videoSettings.proxyTypeLabel')}
                       key={form.key(`livestream.proxies.${index}.proxy_type`)}
                       data={proxyTypes}
+                      defaultValue={ProxyType.TwitchHLS}
                       {...form.getInputProps(`livestream.proxies.${index}.proxy_type`)}
                     />
                     <ActionIcon

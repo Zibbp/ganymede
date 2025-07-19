@@ -323,9 +323,9 @@ func (s *YtDlpService) CreateQualityOption(quality string) string {
 	// Handle exact resolutions
 	// Always fallback to "best" if for some reason the quality is not recognized
 
-	// Match resolution+fps like "1080p60"
-	re := regexp.MustCompile(`^(\d+)[pP](\d+)$`)
-	if matches := re.FindStringSubmatch(quality); len(matches) == 3 {
+	// Match resolution from formats like "1080p60" or "1080p"
+	re := regexp.MustCompile(`^(\d+)[pP]`)
+	if matches := re.FindStringSubmatch(quality); len(matches) > 1 {
 		res := matches[1]
 		return fmt.Sprintf("best[height=%s]/best", res)
 	}
