@@ -4,10 +4,10 @@
     <img src=".github/ganymede-logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h2 align="center">Duckvod</h2>
+  <h2 align="center">Duckvod a Ganymede Fork</h2>
 
   <p align="center">
-    Ganymede is a Twitch VOD and Live Stream archiving platform with a real-time chat experience. Every archive includes a rendered chat for viewing outside of Ganymede. Files are saved in a friendly format allowing for use without Ganymede.
+DuckVOD ist eine Plattform zum Archivieren von Twitch-VODs und Livestreams mit einem Echtzeit-Chat-Erlebnis. Jedes Archiv enthält einen gerenderten Chat, der auch außerhalb von DuckVOD angesehen werden kann. Die Dateien werden in einem benutzerfreundlichen Format gespeichert, das eine Nutzung ohne DuckVOD ermöglicht.
   </p>
 </div>
 
@@ -21,7 +21,7 @@ https://github.com/user-attachments/assets/184451f1-e3ce-4329-8516-a9842648c01b
 
 ## About
 
-Ganymede allows archiving of past streams (VODs) and live streams with a real-time chat playback along with a archival-friendly rendered chat. All files are saved in a friendly way that doesn't require Ganymede to view them (see [file structure](https://github.com/Zibbp/ganymede/wiki/File-Structure)). Ganymede is the successor of [Ceres](https://github.com/Zibbp/Ceres).
+Ganymede ermöglicht das Archivieren vergangener Streams (VODs) und Livestreams mit einer Echtzeit-Chat-Wiedergabe sowie einer archivtauglich gerenderten Chatansicht. Alle Dateien werden in einem benutzerfreundlichen Format gespeichert, das keine Nutzung von Ganymede zur Ansicht erfordert (siehe [file structure](https://github.com/Zibbp/ganymede/wiki/File-Structure)). Ganymede ist der Nachfolger von [Ceres](https://github.com/Zibbp/Ceres).
 
 ## Features
 
