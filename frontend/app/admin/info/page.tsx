@@ -62,8 +62,8 @@ const AdminInformationPage = () => {
               <Code ml={5}>{data.program_versions.chat_downloader}</Code>
             </Flex>
             <Flex>
-              <Text component={Link} href="https://github.com/streamlink/streamlink" target="_blank" className={classes.link}>Streamlink:</Text>
-              <Code ml={5}>{data.program_versions.streamlink}</Code>
+              <Text component={Link} href="https://github.com/yt-dlp/yt-dlp" target="_blank" className={classes.link}>yt-dlp:</Text>
+              <Code ml={5}>{data.program_versions.yt_dlp}</Code>
             </Flex>
             <div>
               <Text component={Link} href="https://www.ffmpeg.org/" target="_blank" className={classes.link}>FFmpeg:</Text>

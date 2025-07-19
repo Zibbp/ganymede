@@ -163,7 +163,7 @@ View the [Makefile](/Makefile) for more commands.
 ## Acknowledgements
 
 - [TwitchDownloader](https://github.com/lay295/TwitchDownloader)
-- [Streamlink](https://streamlink.github.io/)
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp)
 - [Chat-Downloader](https://github.com/xenova/chat-downloader)
 
 ## License

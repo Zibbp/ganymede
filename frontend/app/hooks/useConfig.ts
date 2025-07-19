@@ -12,7 +12,8 @@ export interface Config {
     twitch_token: string;
     video_convert: string;
     chat_render: string;
-    streamlink_live: string;
+    yt_dlp_video: string;
+    yt_dlp_live: string;
   };
   archive: {
     save_as_hls: boolean;
@@ -47,9 +48,15 @@ export interface StorageTemplate {
   file_template: string;
 }
 
+export enum ProxyType {
+  TwitchHLS = "twitch_hls",
+  HTTP = "http",
+}
+
 export interface ProxyListItem {
   url: string;
   header: string;
+  proxy_type: ProxyType;
 }
 
 const getConfig = async (axiosPrivate: AxiosInstance): Promise<Config> => {

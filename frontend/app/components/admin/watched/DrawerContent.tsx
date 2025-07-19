@@ -12,6 +12,7 @@ import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { metadata } from "@/app/layout";
+import { VideoQuality } from "@/app/hooks/useArchive";
 
 type Props = {
   watchedChannel: WatchedChannel | null
@@ -19,25 +20,21 @@ type Props = {
   handleClose: () => void;
 }
 
+interface SelectOption {
+  label: string;
+  value: string;
+}
+
 export enum WatchedChannelEditMode {
   Create = "create",
   Edit = "edit",
 }
 
-const qualityOptions = [
-  { label: "Best", value: "best" },
-  { label: "1080p", value: "1080p" },
-  { label: "720p", value: "720p" },
-  { label: "480p", value: "480p" },
-  { label: "360p", value: "360p" },
-  { label: "160p", value: "160p" },
-  { label: "audio", value: "audio" }
-];
-
-interface SelectOption {
-  label: string;
-  value: string;
-}
+// Quality options using the enum
+const qualityOptions: SelectOption[] = Object.entries(VideoQuality).map(([key, value]) => ({
+  label: key.replace('quality', ''),
+  value: value
+}));
 
 const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }: Props) => {
   const t = useTranslations('AdminWatchedComponents')

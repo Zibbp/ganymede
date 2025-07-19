@@ -21,7 +21,7 @@ type ProgramVersions struct {
 	FFmpeg           string `json:"ffmpeg"`
 	TwitchDownloader string `json:"twitch_downloader"`
 	ChatDownloader   string `json:"chat_downloader"`
-	Streamlink       string `json:"streamlink"`
+	YtDlp            string `json:"yt_dlp"`
 }
 
 func (s *Service) GetInfo(ctx context.Context) (InfoResp, error) {
@@ -51,11 +51,11 @@ func (s *Service) GetInfo(ctx context.Context) (InfoResp, error) {
 	}
 	programVersion.ChatDownloader = chatDownloaderVersion
 
-	streamlinkVersion, err := getStreamlinkVersion()
+	ytdlpVersion, err := getYtDlpVersion()
 	if err != nil {
-		return resp, fmt.Errorf("error getting streamlink version: %v", err)
+		return resp, fmt.Errorf("error getting yt-dlp version: %v", err)
 	}
-	programVersion.Streamlink = streamlinkVersion
+	programVersion.YtDlp = ytdlpVersion
 
 	resp.ProgramVersions = programVersion
 	return resp, nil
@@ -91,11 +91,11 @@ func getChatDownloaderVersion() (string, error) {
 	return string(out), nil
 }
 
-func getStreamlinkVersion() (string, error) {
-	run := exec.Command("streamlink", "--version")
+func getYtDlpVersion() (string, error) {
+	run := exec.Command("yt-dlp", "--version")
 	out, err := run.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("error getting streamlink version: %v", err)
+		return "", fmt.Errorf("error getting yt-dlp version: %v", err)
 	}
 	return string(out), nil
 }

@@ -1,11 +1,10 @@
 "use client"
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText"
 import { useAxiosPrivate } from "@/app/hooks/useAxios"
-import { Config, NotificationType, ProxyListItem, useEditConfig, useGetConfig, useTestNotification } from "@/app/hooks/useConfig"
-import { ActionIcon, Button, Card, Checkbox, Code, Collapse, Container, Flex, MultiSelect, NumberInput, Text, Textarea, TextInput, Title } from "@mantine/core"
+import { Config, NotificationType, ProxyListItem, ProxyType, useEditConfig, useGetConfig, useTestNotification } from "@/app/hooks/useConfig"
+import { ActionIcon, Button, Card, Checkbox, Code, Collapse, Container, Flex, MultiSelect, NumberInput, Select, Text, Textarea, TextInput, Title } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { useDisclosure } from "@mantine/hooks"
-import Link from "next/link"
 import { useEffect, useState } from "react"
 import classes from "./AdminSettingsPage.module.css"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
@@ -33,6 +32,12 @@ const AdminSettingsPage = () => {
 
   const { data, isPending, isError } = useGetConfig(axiosPrivate)
 
+  // Proxy types using the enum
+  const proxyTypes: { label: string; value: ProxyType }[] = Object.entries(ProxyType).map(([key, value]) => ({
+    label: key,
+    value: value
+  }));
+
   const form = useForm({
     mode: "controlled",
     initialValues: {
@@ -43,7 +48,8 @@ const AdminSettingsPage = () => {
         twitch_token: data?.parameters.twitch_token || "",
         video_convert: data?.parameters.video_convert || "",
         chat_render: data?.parameters.chat_render || "",
-        streamlink_live: data?.parameters.streamlink_live || "",
+        yt_dlp_video: data?.parameters.yt_dlp_video || "",
+        yt_dlp_live: data?.parameters.yt_dlp_live || ""
       },
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
@@ -129,7 +135,7 @@ const AdminSettingsPage = () => {
 
   return (
     <div>
-      <Container mt={15}>
+      <Container mt={15} size="7xl">
         <Card withBorder p="xl" radius={"sm"}>
           <form onSubmit={form.onSubmit(() => {
             handleSubmitForm()
@@ -446,7 +452,7 @@ const AdminSettingsPage = () => {
 
                 <div>
                   <Title mt={5} order={4}>
-                    {t('archiveSettings.examples')}
+                    {t('archiveSettings.examplesText')}
                   </Title>
 
                   <Text>Folder</Text>
@@ -477,13 +483,20 @@ const AdminSettingsPage = () => {
               {...form.getInputProps('parameters.video_convert')}
             />
 
+            <TextInput
+              label={t('videoSettings.ytdlpVideoArgsLabel')}
+              description={t('videoSettings.ytdlpVideoArgsDescription')}
+              key={form.key('parameters.yt_dlp_video')}
+              {...form.getInputProps('parameters.yt_dlp_video')}
+            />
+
             <Title mt={10} order={3}>{t('videoSettings.liveStreamTitle')}</Title>
 
             <TextInput
-              label={t('videoSettings.streamlinkArgsLabel')}
-              description={t('videoSettings.streamlinkArgsDescription')}
-              key={form.key('parameters.streamlink_live')}
-              {...form.getInputProps('parameters.streamlink_live')}
+              label={t('videoSettings.ytdlpLiveArgsLabel')}
+              description={t('videoSettings.ytdlpLiveArgsDescription')}
+              key={form.key('parameters.yt_dlp_live')}
+              {...form.getInputProps('parameters.yt_dlp_live')}
             />
 
             <Title mt={5} order={5}>{t('videoSettings.proxySettings')}</Title>
@@ -513,6 +526,14 @@ const AdminSettingsPage = () => {
                       className={classes.proxyInput}
                       key={form.key(`livestream.proxies.${index}.header`)}
                       {...form.getInputProps(`livestream.proxies.${index}.header`)}
+                    />
+                    <Select
+                      w={350}
+                      label={t('videoSettings.proxyTypeLabel')}
+                      key={form.key(`livestream.proxies.${index}.proxy_type`)}
+                      data={proxyTypes}
+                      defaultValue={ProxyType.TwitchHLS}
+                      {...form.getInputProps(`livestream.proxies.${index}.proxy_type`)}
                     />
                     <ActionIcon
                       color="red"

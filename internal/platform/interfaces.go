@@ -120,18 +120,34 @@ const (
 )
 
 type Platform interface {
+	// Authenticate authenticates the user with the platform and returns connection information.
 	Authenticate(ctx context.Context) (*ConnectionInfo, error)
+	// GetVideo retrieves video information by its ID.
 	GetVideo(ctx context.Context, id string, withChapters bool, withMutedSegments bool) (*VideoInfo, error)
+	// GetLiveStream retrieves live stream information for a given channel name.
 	GetLiveStream(ctx context.Context, channelName string) (*LiveStreamInfo, error)
+	// GetLiveStreams retrieves live streams for multiple channel names.
 	GetLiveStreams(ctx context.Context, channelNames []string) ([]LiveStreamInfo, error)
+	// GetChannel retrieves channel information by its name.
 	GetChannel(ctx context.Context, channelName string) (*ChannelInfo, error)
+	// GetVideos retrieves videos for a given channel ID and video type.
 	GetVideos(ctx context.Context, channelId string, videoType VideoType, withChapters bool, withMutedSegments bool) ([]VideoInfo, error)
+	// GetCategories retrieves categories from the platform.
 	GetCategories(ctx context.Context) ([]Category, error)
+	// GetGlobalBadges retrieves global badges available on the platform.
 	GetGlobalBadges(ctx context.Context) ([]Badge, error)
+	// GetChannelBadges retrieves channel-specific badges for a given channel ID.
 	GetChannelBadges(ctx context.Context, channelId string) ([]Badge, error)
+	// GetGlobalEmotes retrieves global emotes available on the platform.
 	GetGlobalEmotes(ctx context.Context) ([]Emote, error)
+	// GetChannelEmotes retrieves channel-specific emotes for a given channel ID.
 	GetChannelEmotes(ctx context.Context, channelId string) ([]Emote, error)
+	// GetChannelClips retrieves clips for a given channel ID with optional filters.
 	GetChannelClips(ctx context.Context, channelId string, filter ClipsFilter) ([]ClipInfo, error)
+	// GetClip retrieves a clip by its ID.
 	GetClip(ctx context.Context, id string) (*ClipInfo, error)
+	// CheckIfStreamIsLive checks if a given channel is currently live.
 	CheckIfStreamIsLive(ctx context.Context, channelName string) (bool, error)
+	// GetStreams fetches live streams from the platform, sorted by viewership.
+	GetStreams(ctx context.Context, limit int) ([]LiveStreamInfo, error)
 }

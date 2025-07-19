@@ -15,7 +15,7 @@ export interface GanymedeProgramVersions {
   ffmpeg: string;
   twitch_downloader: string;
   chat_downloader: string;
-  streamlink: string;
+  yt_dlp: string;
 }
 
 export interface GanymedeVideoStatistics {

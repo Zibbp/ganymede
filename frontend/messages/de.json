@@ -293,8 +293,6 @@
       "twitchTokenDescription": "Gib dein Twitch-Token an, um werbefreie Live-Streams und VODs nur für Abonnenten herunterzuladen.",
       "convertFFmpegArgsLabel": "Video-Konvertierungs-FFmpeg-Argumente",
       "convertFFmpegArgsDescription": "Benutzerdefinierte FFmpeg-Argumente, die bei der Konvertierung des Videos verwendet werden sollen. Dies wird sowohl für Live- als auch für VOD-Archive verwendet.",
-      "streamlinkArgsLabel": "Streamlink-Argumente",
-      "streamlinkArgsDescription": "Benutzerdefinierte Streamlink-Argumente, die beim Herunterladen des Videos verwendet werden sollen. Dies wird für Live-Streams verwendet.",
       "liveStreamTitle": "Live-Stream",
       "proxySettings": "Proxy-Einstellungen",
       "proxySettingsDescription": "Archiviere Live-Streams über einen Proxy, um Werbung zu verhindern. Dein Twitch-Token wird nicht an den Proxy gesendet.",

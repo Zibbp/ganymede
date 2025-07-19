@@ -12,7 +12,7 @@ import (
 
 type LiveService interface {
 	GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error)
-	AddLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
+	AddLiveWatchedChannel(ctx context.Context, liveDto live.Live) (*ent.Live, error)
 	DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error
 	UpdateLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
 	Check(ctx context.Context) error
@@ -26,7 +26,7 @@ type AddWatchedChannelRequest struct {
 	DownloadHighlights     bool                `json:"download_highlights" validate:"boolean"`
 	DownloadUploads        bool                `json:"download_uploads" validate:"boolean"`
 	ChannelID              string              `json:"channel_id" validate:"required"`
-	Resolution             string              `json:"resolution" validate:"required,oneof=best 1080p 720p 480p 360p 160p audio"`
+	Resolution             string              `json:"resolution" validate:"required,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
 	ArchiveChat            bool                `json:"archive_chat" validate:"boolean"`
 	RenderChat             bool                `json:"render_chat" validate:"boolean"`
 	DownloadSubOnly        bool                `json:"download_sub_only" validate:"boolean"`
@@ -53,7 +53,7 @@ type UpdateWatchedChannelRequest struct {
 	DownloadArchives       bool                `json:"download_archives" validate:"boolean"`
 	DownloadHighlights     bool                `json:"download_highlights" validate:"boolean"`
 	DownloadUploads        bool                `json:"download_uploads" validate:"boolean"`
-	Resolution             string              `json:"resolution" validate:"required,oneof=best 1080p 720p 480p 360p 160p audio"`
+	Resolution             string              `json:"resolution" validate:"required,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
 	ArchiveChat            bool                `json:"archive_chat" validate:"boolean"`
 	RenderChat             bool                `json:"render_chat" validate:"boolean"`
 	DownloadSubOnly        bool                `json:"download_sub_only" validate:"boolean"`
@@ -79,7 +79,7 @@ type ConvertChatRequest struct {
 
 type ArchiveLiveChannelRequest struct {
 	ChannelID              string `json:"channel_id" validate:"required"`
-	Resolution             string `json:"resolution" validate:"required,oneof=best 1080p 720p 480p 360p 160p audio"`
+	Resolution             string `json:"resolution" validate:"required,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
 	ArchiveChat            bool   `json:"archive_chat"`
 	RenderChat             bool   `json:"render_chat"`
 	WatchClips             bool   `json:"watch_clips" validate:"boolean"`
@@ -171,7 +171,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		})
 	}
 
-	l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
+	l, err := h.Service.LiveService.AddLiveWatchedChannel(c.Request().Context(), liveDto)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

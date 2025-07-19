@@ -1,5 +1,5 @@
 ARG TWITCHDOWNLOADER_VERSION="1.55.7"
-ARG STREAMLINK_VERSION="7.4.0"
+ARG YT_DLP_VERSION="2025.06.30"
 
 #
 # API Build
@@ -21,7 +21,7 @@ RUN make build_server build_worker
 #
 FROM debian:bookworm-slim AS tools
 
-ARG STREAMLINK_VERSION
+ARG YT_DLP_VERSION
 
 WORKDIR /tmp
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -42,6 +42,10 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     rm twitchdownloader.zip
 
 RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
+
+# Download and install yt-dlp
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/yt-dlp -o /usr/local/bin/yt-dlp && \
+    chmod +x /usr/local/bin/yt-dlp
 
 #
 # Frontend base
@@ -85,11 +89,7 @@ RUN \
 #
 FROM golang:1.24-bookworm AS tests
 
-ARG STREAMLINK_VERSION
-
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip ffmpeg make git
-
-RUN pip3 install --upgrade pip streamlink==${STREAMLINK_VERSION} --break-system-packages
 
 # Copy and install chat-downloader
 COPY --from=tools /tmp/chat-downloader /tmp/chat-downloader
@@ -102,10 +102,11 @@ RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
 COPY --from=tools /tmp/TwitchDownloaderCLI /usr/local/bin/
 RUN chmod +x /usr/local/bin/TwitchDownloaderCLI
 
+# Copy and install yt-dlp
+COPY --from=tools /usr/local/bin/yt-dlp /usr/local/bin/yt-dlp
+
 # Production stage
 FROM debian:bookworm-slim
-
-ARG STREAMLINK_VERSION
 
 WORKDIR /opt/app
 
@@ -116,9 +117,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf python3 /usr/bin/python
-
-# Install pip packages
-RUN pip3 install --no-cache-dir --upgrade pip streamlink==${STREAMLINK_VERSION} --break-system-packages
 
 # Install gosu
 RUN curl -LO https://github.com/tianon/gosu/releases/latest/download/gosu-$(dpkg --print-architecture | awk -F- '{ print $NF }') \
@@ -145,6 +143,9 @@ RUN useradd -u 911 -d /data abc && usermod -a -G users abc
 # Copy and install chat-downloader
 COPY --from=tools /tmp/chat-downloader /tmp/chat-downloader
 RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
+
+# Copy and install yt-dlp
+COPY --from=tools /usr/local/bin/yt-dlp /usr/local/bin/yt-dlp
 
 # Setup fonts
 RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
