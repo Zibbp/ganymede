@@ -48,7 +48,8 @@ const AdminSettingsPage = () => {
         twitch_token: data?.parameters.twitch_token || "",
         video_convert: data?.parameters.video_convert || "",
         chat_render: data?.parameters.chat_render || "",
-        streamlink_live: data?.parameters.streamlink_live || "",
+        yt_dlp_video: data?.parameters.yt_dlp_video || "",
+        yt_dlp_live: data?.parameters.yt_dlp_live || ""
       },
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
@@ -482,13 +483,20 @@ const AdminSettingsPage = () => {
               {...form.getInputProps('parameters.video_convert')}
             />
 
+            <TextInput
+              label={t('videoSettings.ytdlpVideoArgsLabel')}
+              description={t('videoSettings.ytdlpVideoArgsDescription')}
+              key={form.key('parameters.yt_dlp_video')}
+              {...form.getInputProps('parameters.yt_dlp_video')}
+            />
+
             <Title mt={10} order={3}>{t('videoSettings.liveStreamTitle')}</Title>
 
             <TextInput
-              label={t('videoSettings.streamlinkArgsLabel')}
-              description={t('videoSettings.streamlinkArgsDescription')}
-              key={form.key('parameters.streamlink_live')}
-              {...form.getInputProps('parameters.streamlink_live')}
+              label={t('videoSettings.ytdlpLiveArgsLabel')}
+              description={t('videoSettings.ytdlpLiveArgsDescription')}
+              key={form.key('parameters.yt_dlp_live')}
+              {...form.getInputProps('parameters.yt_dlp_live')}
             />
 
             <Title mt={5} order={5}>{t('videoSettings.proxySettings')}</Title>

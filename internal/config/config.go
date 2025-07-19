@@ -15,12 +15,11 @@ type Config struct {
 	VideoCheckInterval  int  `json:"video_check_interval_minutes"` // How often in minutes watched channels are checked for new videos.
 	RegistrationEnabled bool `json:"registration_enabled"`         // Enable registration.
 	Parameters          struct {
-		TwitchToken    string `json:"twitch_token"`    // Twitch token for ad-free live streams or subscriber-only videos.
-		VideoConvert   string `json:"video_convert"`   // FFmpeg arguments for video conversion.
-		ChatRender     string `json:"chat_render"`     // TwitchDownloaderCLI arguments for chat rendering.
-		StreamlinkLive string `json:"streamlink_live"` // Streamlink arguments for live streams.
-		YtDlpVideo     string `json:"yt_dlp_video"`    // yt-dlp arguments for video downloads.
-		YtDlpLive      string `json:"yt_dlp_live"`     // yt-dlp arguments for live stream downloads.
+		TwitchToken  string `json:"twitch_token"`  // Twitch token for ad-free live streams or subscriber-only videos.
+		VideoConvert string `json:"video_convert"` // FFmpeg arguments for video conversion.
+		ChatRender   string `json:"chat_render"`   // TwitchDownloaderCLI arguments for chat rendering.
+		YtDlpVideo   string `json:"yt_dlp_video"`  // yt-dlp arguments for video downloads.
+		YtDlpLive    string `json:"yt_dlp_live"`   // yt-dlp arguments for live stream downloads.
 	} `json:"parameters"`
 	Archive struct {
 		SaveAsHls                bool `json:"save_as_hls"`                // Save as HLS rather than MP4.
@@ -163,7 +162,6 @@ func (c *Config) setDefaults() {
 	c.Parameters.TwitchToken = ""
 	c.Parameters.VideoConvert = "-c:v copy -c:a copy"
 	c.Parameters.ChatRender = "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13"
-	c.Parameters.StreamlinkLive = "--twitch-low-latency,--twitch-disable-hosting"
 	c.Parameters.YtDlpVideo = ""
 	c.Parameters.YtDlpLive = ""
 
