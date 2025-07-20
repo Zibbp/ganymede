@@ -52,10 +52,10 @@ func GenerateThumbnails(config GenerateThumbnailsInput) error {
 		outputPath := filepath.Join(config.ThumbnailDir, fmt.Sprintf(format, t))
 		ffmpegArgs := []string{
 			"-hide_banner", "-an",
+			"-skip_frame", "nokey",
 			"-ss", strconv.Itoa(t),
 			"-i", config.Video,
 			"-update", "1",
-			"-skip_frame", "nokey",
 			"-frames:v", "1",
 			"-q:v", "10",
 			"-vf", fmt.Sprintf("scale=%d:%d", config.Width, config.Height),
