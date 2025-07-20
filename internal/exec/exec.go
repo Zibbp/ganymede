@@ -754,45 +754,21 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
-// // checkLogForNoStreams returns true if the log file contains the expected message.
-// //
-// // Used to check if live stream download failed because no streams were found.
-// func checkLogForNoStreams(logFilePath string) (bool, error) {
-// 	file, err := os.Open(logFilePath)
-// 	if err != nil {
-// 		return false, fmt.Errorf("failed to open log file: %w", err)
-// 	}
-// 	defer func() {
-// 		if err := file.Close(); err != nil {
-// 			log.Debug().Err(err)
-// 		}
-// 	}()
-
-// 	scanner := bufio.NewScanner(file)
-// 	for scanner.Scan() {
-// 		if strings.Contains(scanner.Text(), "No playable streams found on this URL") {
-// 			return true, nil
-// 		}
-// 	}
-
-// 	if err := scanner.Err(); err != nil {
-// 		return false, fmt.Errorf("error reading log file: %w", err)
-// 	}
-
-// 	return false, nil
-// }
-
-func GetFfprobeData(path string) (map[string]interface{}, error) {
-	cmd := osExec.Command("ffprobe", "-hide_banner", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", path)
+// GetFfprobeData runs ffprobe on the given path and returns parsed JSON output.
+func GetFfprobeData(ctx context.Context, path string) (map[string]interface{}, error) {
+	cmd := osExec.CommandContext(ctx, "ffprobe",
+		"-hide_banner", "-v", "quiet",
+		"-print_format", "json",
+		"-show_format", "-show_streams", path,
+	)
 	out, err := cmd.Output()
 	if err != nil {
-		log.Error().Err(err).Msgf("error getting ffprobe data for %s - err: %v", path, err)
-		return nil, fmt.Errorf("error getting ffprobe data for %s - err: %w ", path, err)
+		return nil, fmt.Errorf("ffprobe failed for %s: %w", path, err)
 	}
+
 	var data map[string]interface{}
 	if err := json.Unmarshal(out, &data); err != nil {
-		log.Error().Err(err).Msg("error unmarshalling ffprobe data")
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal ffprobe output: %w", err)
 	}
 	return data, nil
 }

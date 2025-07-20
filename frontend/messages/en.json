@@ -737,6 +737,10 @@
       "delete": "Delete Video"
     },
     "videoInformationModalTitle": "Video Information",
+    "videoInformationModal": {
+      "informationTitle": "Video Information",
+      "ffprobeTitle": "FFprobe Data"
+    },
     "managePlaylistsDrawerTitle": "Manage Playlists",
     "deleteVideoModalTitle": "Delete Video",
     "theaterModeIconTooltip": "Theater Mode",

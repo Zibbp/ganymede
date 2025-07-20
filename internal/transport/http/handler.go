@@ -220,6 +220,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.POST("/:id/generate-static-thumbnail", h.GenerateStaticThumbnail, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	vodGroup.POST("/:id/generate-sprite-thumbnails", h.GenerateSpriteThumbnails, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	vodGroup.GET("/:id/thumbnails/vtt", h.GetVodSpriteThumbnails)
+	vodGroup.POST("/:id/ffprobe", h.GetFFprobe, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
 
 	// Queue
 	queueGroup := e.Group("/queue")
@@ -294,10 +295,6 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	playlistGroup.DELETE("/:id", h.DeletePlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	playlistGroup.PUT("/:id", h.UpdatePlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	playlistGroup.PUT("/:id/multistream/delay", h.SetVodDelayOnPlaylistMultistream, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-
-	// Exec
-	execGroup := e.Group("/exec")
-	execGroup.POST("/ffprobe", h.GetFfprobeData, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
 
 	// Task
 	taskGroup := e.Group("/task")
