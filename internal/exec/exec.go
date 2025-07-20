@@ -347,7 +347,7 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
 	configFfmpegArgs := config.Get().Parameters.VideoConvert
 	arr := strings.Fields(configFfmpegArgs)
-	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoDownloadPath}
+	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart"}
 
 	ffmpegArgs = append(ffmpegArgs, arr...)
 	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
