@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	osExec "os/exec"
@@ -254,8 +253,9 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		"-f", qualityString,
 		url,
 		"-o", fmt.Sprintf("%s.%%(ext)s", tmpVideoDownloadPathNoExt),
-		"--merge-output-format", "mp4", "--no-part",
+		"--no-part",
 		"--no-warnings", "--progress", "--newline", "--no-check-certificate",
+		"--fixup", "never",
 	)
 
 	// Set proxy header if enabled
@@ -681,22 +681,6 @@ func checkLogForNoElements(logFilePath string) (bool, error) {
 	return false, nil
 }
 
-func GetVideoDuration(ctx context.Context, path string) (int, error) {
-	cmd := osExec.CommandContext(ctx, "ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", path)
-
-	out, err := cmd.Output()
-	if err != nil {
-		return 0, fmt.Errorf("error running ffprobe: %w", err)
-	}
-	durationOut := strings.TrimSpace(string(out))
-
-	duration, err := strconv.ParseFloat(durationOut, 64)
-	if err != nil {
-		return 0, fmt.Errorf("error parsing duration: %w", err)
-	}
-	return int(duration), nil
-}
-
 func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
 	// open log file
@@ -752,25 +736,6 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 	}
 
 	return nil
-}
-
-// GetFfprobeData runs ffprobe on the given path and returns parsed JSON output.
-func GetFfprobeData(ctx context.Context, path string) (map[string]interface{}, error) {
-	cmd := osExec.CommandContext(ctx, "ffprobe",
-		"-hide_banner", "-v", "quiet",
-		"-print_format", "json",
-		"-show_format", "-show_streams", path,
-	)
-	out, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("ffprobe failed for %s: %w", path, err)
-	}
-
-	var data map[string]interface{}
-	if err := json.Unmarshal(out, &data); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal ffprobe output: %w", err)
-	}
-	return data, nil
 }
 
 // GenerateStaticThumbnail generates static thumbnail for video.
