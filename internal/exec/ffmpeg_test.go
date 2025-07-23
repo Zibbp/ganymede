@@ -97,8 +97,8 @@ func TestGetFfprobeData_BadJSON(t *testing.T) {
 		t.Fatalf("failed to write fake ffprobe: %v", err)
 	}
 	origPath := os.Getenv("PATH")
-	defer os.Setenv("PATH", origPath)
-	os.Setenv("PATH", tmpDir+":"+origPath)
+	defer os.Setenv("PATH", origPath)      //nolint:errcheck
+	os.Setenv("PATH", tmpDir+":"+origPath) //nolint:errcheck
 
 	ctx := context.Background()
 	_, err := GetFfprobeData(ctx, "dummy.mp4")
@@ -155,8 +155,8 @@ func TestGetFfprobeVideoData_BadJSON(t *testing.T) {
 		t.Fatalf("failed to write fake ffprobe: %v", err)
 	}
 	origPath := os.Getenv("PATH")
-	defer os.Setenv("PATH", origPath)
-	os.Setenv("PATH", tmpDir+":"+origPath)
+	defer os.Setenv("PATH", origPath)      //nolint:errcheck
+	os.Setenv("PATH", tmpDir+":"+origPath) //nolint:errcheck
 
 	ctx := context.Background()
 	_, err := GetFfprobeVideoData(ctx, "dummy.mp4")
@@ -175,8 +175,8 @@ func TestGetFfprobeVideoData_NoStreams(t *testing.T) {
 		t.Fatalf("failed to write fake ffprobe: %v", err)
 	}
 	origPath := os.Getenv("PATH")
-	defer os.Setenv("PATH", origPath)
-	os.Setenv("PATH", tmpDir+":"+origPath)
+	defer os.Setenv("PATH", origPath)      //nolint:errcheck
+	os.Setenv("PATH", tmpDir+":"+origPath) //nolint:errcheck
 
 	ctx := context.Background()
 	_, err := GetFfprobeVideoData(ctx, "dummy.mp4")
@@ -195,8 +195,8 @@ func TestGetFfprobeVideoData_NoFilename(t *testing.T) {
 		t.Fatalf("failed to write fake ffprobe: %v", err)
 	}
 	origPath := os.Getenv("PATH")
-	defer os.Setenv("PATH", origPath)
-	os.Setenv("PATH", tmpDir+":"+origPath)
+	defer os.Setenv("PATH", origPath)      //nolint:errcheck
+	os.Setenv("PATH", tmpDir+":"+origPath) //nolint:errcheck
 
 	ctx := context.Background()
 	_, err := GetFfprobeVideoData(ctx, "dummy.mp4")
