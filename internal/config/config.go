@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"os"
 	"sync"
+
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // Config is the main application configuration saved to disk and used in memory.
@@ -13,10 +15,11 @@ type Config struct {
 	VideoCheckInterval  int  `json:"video_check_interval_minutes"` // How often in minutes watched channels are checked for new videos.
 	RegistrationEnabled bool `json:"registration_enabled"`         // Enable registration.
 	Parameters          struct {
-		TwitchToken    string `json:"twitch_token"`    // Twitch token for ad-free live streams or subscriber-only videos.
-		VideoConvert   string `json:"video_convert"`   // FFmpeg arguments for video conversion.
-		ChatRender     string `json:"chat_render"`     // TwitchDownloaderCLI arguments for chat rendering.
-		StreamlinkLive string `json:"streamlink_live"` // Streamlink arguments for live streams.
+		TwitchToken  string `json:"twitch_token"`  // Twitch token for ad-free live streams or subscriber-only videos.
+		VideoConvert string `json:"video_convert"` // FFmpeg arguments for video conversion.
+		ChatRender   string `json:"chat_render"`   // TwitchDownloaderCLI arguments for chat rendering.
+		YtDlpVideo   string `json:"yt_dlp_video"`  // yt-dlp arguments for video downloads.
+		YtDlpLive    string `json:"yt_dlp_live"`   // yt-dlp arguments for live stream downloads.
 	} `json:"parameters"`
 	Archive struct {
 		SaveAsHls                bool `json:"save_as_hls"`                // Save as HLS rather than MP4.
@@ -25,10 +28,10 @@ type Config struct {
 	Notification     Notification    `json:"notifications"`     // Notification templates and settings.
 	StorageTemplates StorageTemplate `json:"storage_templates"` // Storage folder/file templates.
 	Livestream       struct {
-		Proxies         []ProxyListItem `json:"proxies"`          // List of proxies for live stream download.
-		ProxyEnabled    bool            `json:"proxy_enabled"`    // Enable proxy usage.
-		ProxyParameters string          `json:"proxy_parameters"` // Query parameters for proxy URL.
-		ProxyWhitelist  []string        `json:"proxy_whitelist"`  // Channels exempt from proxy.
+		Proxies         []ProxyListItem `json:"proxies" validate:"dive"` // List of proxies for live stream download.
+		ProxyEnabled    bool            `json:"proxy_enabled"`           // Enable proxy usage.
+		ProxyParameters string          `json:"proxy_parameters"`        // Query parameters for proxy URL.
+		ProxyWhitelist  []string        `json:"proxy_whitelist"`         // Channels exempt from proxy.
 	} `json:"livestream"`
 	Experimental struct {
 		BetterLiveStreamDetectionAndCleanup bool `json:"better_live_stream_detection_and_cleanup"` // [EXPERIMENTAL] Enable enhanced detection and cleanup.
@@ -59,8 +62,9 @@ type StorageTemplate struct {
 
 // ProxyListItem defines a single proxy and optional header.
 type ProxyListItem struct {
-	URL    string `json:"url"`
-	Header string `json:"header"`
+	URL       string          `json:"url" validate:"required,min=1"`        // URL of the proxy server.
+	Header    string          `json:"header"`                               // Optional header to send with the proxy request.
+	ProxyType utils.ProxyType `json:"proxy_type" validate:"required,min=1"` // Type of proxy to use.
 }
 
 var (
@@ -158,7 +162,8 @@ func (c *Config) setDefaults() {
 	c.Parameters.TwitchToken = ""
 	c.Parameters.VideoConvert = "-c:v copy -c:a copy"
 	c.Parameters.ChatRender = "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13"
-	c.Parameters.StreamlinkLive = "--twitch-low-latency,--twitch-disable-hosting"
+	c.Parameters.YtDlpVideo = ""
+	c.Parameters.YtDlpLive = ""
 
 	c.Archive.SaveAsHls = false
 	c.Archive.GenerateSpriteThumbnails = true
@@ -183,8 +188,7 @@ func (c *Config) setDefaults() {
 
 	// livestream proxies
 	c.Livestream.Proxies = []ProxyListItem{
-		{URL: "https://eu.luminous.dev", Header: ""},
-		{URL: "https://api.ttv.lol", Header: "x-donate-to:https://ttv.lol/donate"},
+		{URL: "https://eu.luminous.dev", Header: "", ProxyType: utils.ProxyTypeTwitchHLS},
 	}
 	c.Livestream.ProxyEnabled = false
 	c.Livestream.ProxyParameters = "%3Fplayer%3Dtwitchweb%26type%3Dany%26allow_source%3Dtrue%26allow_audio_only%3Dtrue%26allow_spectre%3Dfalse%26fast_bread%3Dtrue"

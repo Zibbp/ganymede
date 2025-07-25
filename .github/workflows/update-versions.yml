@@ -1,0 +1,67 @@
+name: Update Dependency Versions
+
+on:
+  schedule:
+    - cron: "0 21 * * 1" # every Monday at 6 AM UTC
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Update versions in Dockerfile
+        run: |
+          set -e
+
+          FILES=("Dockerfile" ".devcontainer/Dockerfile")
+
+          # Get latest GitHub releases
+          get_latest_release() {
+            curl --silent "https://api.github.com/repos/$1/releases/latest" | jq -r .tag_name
+          }
+
+          yt_dlp_ver=$(get_latest_release yt-dlp/yt-dlp)
+          twitch_ver=$(get_latest_release lay295/TwitchDownloader)
+
+          echo "Latest yt-dlp: $yt_dlp_ver"
+          echo "Latest twitchdownloader: $twitch_ver"
+
+          for FILE in "${FILES[@]}"; do
+            echo "Updating $FILE..."
+            sed -i -E "s/^(ARG YT_DLP_VERSION=\").*\"/\1$yt_dlp_ver\"/" "$FILE"
+            sed -i -E "s/^(ARG TWITCHDOWNLOADER_VERSION=\").*\"/\1$twitch_ver\"/" "$FILE"
+          done
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet; then
+            echo "No changes"
+          else
+            git diff
+            git checkout -b update-versions
+            git add Dockerfile
+            git commit -m "Update ARG versions in Dockerfile"
+            git push --set-upstream origin update-versions
+          fi
+
+      - name: Create pull request
+        if: ${{ !cancelled() && success() }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update ARG versions in Dockerfile
+          title: "Update ARG versions in Dockerfile"
+          body: |
+            Automatically updated versions of:
+            - yt-dlp
+            - TwitchDownloader
+          branch: update-versions

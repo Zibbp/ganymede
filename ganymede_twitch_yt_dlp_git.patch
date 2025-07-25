@@ -1,0 +1,99 @@
+diff --git a/yt_dlp/extractor/twitch.py b/yt_dlp/extractor/twitch.py
+index 1b6020204..9d1c747a7 100644
+--- a/yt_dlp/extractor/twitch.py
++++ b/yt_dlp/extractor/twitch.py
+@@ -5,6 +5,8 @@
+ import re
+ import urllib.parse
+ 
++import requests
++
+ from .common import InfoExtractor
+ from ..networking.exceptions import HTTPError
+ from ..utils import (
+@@ -135,18 +137,35 @@ def _prefer_source(self, formats):
+                         'format_note': 'Source',
+                     })
+ 
+-    def _download_base_gql(self, video_id, ops, note, fatal=True):
++    def _download_base_gql(self, video_id, ops, fatal=True):
+         headers = {
+-            'Content-Type': 'text/plain;charset=UTF-8',
+-            'Client-ID': self._CLIENT_ID,
++            "Client-ID":     "kimne78kx3ncx6brgo4mv6wki5h1ko",
++            "Accept":        "application/json",
++            "Content-Type":  "application/json",
++            "Origin":        "https://www.twitch.tv",
++            "Referer":       "https://www.twitch.tv",
+         }
+-        gql_auth = self._get_cookies('https://gql.twitch.tv').get('auth-token')
+-        if gql_auth:
+-            headers['Authorization'] = 'OAuth ' + gql_auth.value
+-        return self._download_json(
+-            'https://gql.twitch.tv/gql', video_id, note,
+-            data=json.dumps(ops).encode(),
+-            headers=headers, fatal=fatal)
++
++        cookies = self._get_cookies("https://www.twitch.tv")
++        auth = cookies.get("auth-token")
++        if auth:
++            headers["Authorization"] = "OAuth " + auth.value
++
++        resp = requests.post(
++            "https://gql.twitch.tv/gql",
++            headers=headers,
++            json=ops,
++            timeout=10
++        )
++
++        if fatal and not resp.ok:
++            resp.raise_for_status()
++
++        data = resp.json()
++        if "errors" in data:
++            print("Twitch GQL errors:", data["errors"])
++
++        return data
+ 
+     def _download_gql(self, video_id, ops, note, fatal=True):
+         for op in ops:
+@@ -160,21 +179,26 @@ def _download_gql(self, video_id, ops, note, fatal=True):
+ 
+     def _download_access_token(self, video_id, token_kind, param_name):
+         method = f'{token_kind}PlaybackAccessToken'
++        is_vod = token_kind.lower() == "video"
++        is_live = not is_vod
++
++        variables = {
++            "isLive":      is_live,
++            "login":       video_id if is_live else "",
++            "isVod":       is_vod,
++            "vodID":       video_id if is_vod else "",
++            "playerType":  "embed",
++        }
++
+         ops = {
+-            'query': '''{
+-              %s(
+-                %s: "%s",
+-                params: {
+-                  platform: "web",
+-                  playerBackend: "mediaplayer",
+-                  playerType: "site"
++            "operationName": "PlaybackAccessToken",
++            "variables":     variables,
++            "extensions": {
++                "persistedQuery": {
++                    "version":     1,
++                    "sha256Hash":  "0828119ded1c13477966434e15800ff57ddacf13ba1911c129dc2200705b0712"
+                 }
+-              )
+-              {
+-                value
+-                signature
+-              }
+-            }''' % (method, param_name, video_id),  # noqa: UP031
++            }
+         }
+         return self._download_base_gql(
+             video_id, ops,

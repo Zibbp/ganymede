@@ -81,6 +81,7 @@ type VodQuality string
 const (
 	Best   VodQuality = "best"
 	Source VodQuality = "source"
+	R1440  VodQuality = "1440"
 	R1080  VodQuality = "1080"
 	R720   VodQuality = "720"
 	R480   VodQuality = "480"
@@ -90,7 +91,7 @@ const (
 )
 
 func (VodQuality) Values() (kinds []string) {
-	for _, s := range []VodQuality{Best, Source, R1080, R720, R480, R360, R160, Audio} {
+	for _, s := range []VodQuality{Best, Source, R1440, R1080, R720, R480, R360, R160, Audio} {
 		kinds = append(kinds, string(s))
 	}
 	return
@@ -166,4 +167,18 @@ func GetTaskName(s string) TaskName {
 	default:
 		return ""
 	}
+}
+
+type ProxyType string
+
+const (
+	ProxyTypeTwitchHLS ProxyType = "twitch_hls"
+	ProxyTypeHTTP      ProxyType = "http"
+)
+
+func (ProxyType) Values() (kinds []string) {
+	for _, s := range []ProxyType{ProxyTypeTwitchHLS, ProxyTypeHTTP} {
+		kinds = append(kinds, string(s))
+	}
+	return
 }

@@ -86,7 +86,7 @@ func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
 	return watchedChannels, nil
 }
 
-func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live, error) {
+func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent.Live, error) {
 	// Check if channel is already in database
 	liveWatchedChannel, err := s.Store.Client.Live.Query().WithChannel().Where(live.HasChannelWith(channel.ID(liveDto.ID))).All(context.Background())
 	if err != nil {
@@ -96,14 +96,14 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 		return nil, fmt.Errorf("channel already watched")
 	}
 
-	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetWatchClips(liveDto.WatchClips).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).Save(c.Request().Context())
+	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetWatchClips(liveDto.WatchClips).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error adding watched channel: %v", err)
 	}
 	// If category is set, add to database
 	if len(liveDto.Categories) > 0 {
 		for _, category := range liveDto.Categories {
-			_, err := s.Store.Client.LiveCategory.Create().SetName(category).SetLive(l).Save(c.Request().Context())
+			_, err := s.Store.Client.LiveCategory.Create().SetName(category).SetLive(l).Save(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("error adding category: %v", err)
 			}
@@ -112,7 +112,7 @@ func (s *Service) AddLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live
 	// add title regexes
 	if len(liveDto.TitleRegex) > 0 {
 		for _, regex := range liveDto.TitleRegex {
-			_, err := s.Store.Client.LiveTitleRegex.Create().SetNegative(regex.Negative).SetApplyToVideos(regex.ApplyToVideos).SetRegex(regex.Regex).SetLive(l).Save(c.Request().Context())
+			_, err := s.Store.Client.LiveTitleRegex.Create().SetNegative(regex.Negative).SetApplyToVideos(regex.ApplyToVideos).SetRegex(regex.Regex).SetLive(l).Save(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("error adding title regex: %v", err)
 			}
@@ -187,18 +187,6 @@ func (s *Service) DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error 
 	}
 	return nil
 }
-
-//func  StartScheduler() {
-//	s := gocron.NewScheduler(time.UTC)
-//
-//	twitchAuthSchedule(s)
-//	s.StartAsync()
-//}
-//
-//func liveCheckSchedule(s *gocron.Scheduler) {
-//	log.Debug().Msg("setting up live check schedule")
-//	s.Every(5).Minutes().Do(Check)
-//}
 
 func (s *Service) Check(ctx context.Context) error {
 	log.Debug().Msg("checking live channels")

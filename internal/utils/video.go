@@ -23,15 +23,14 @@ func parseQuality(q string) Quality {
 	// If it doesn’t look like "123p" or "123p45", see if it's just digits:
 	if len(matches) == 0 {
 		if num, err := strconv.Atoi(q); err == nil {
-			// Treat "720" as Resolution=720, FPS=0
-			return Quality{Resolution: num, FPS: 0, Original: q}
+			// Treat "720" as Resolution=720, FPS=60 (default)
+			return Quality{Resolution: num, FPS: 60, Original: q}
 		}
 		return Quality{Original: q}
 	}
 
-	// (all your existing regex‐based parsing unchanged)
 	res, _ := strconv.Atoi(matches[1])
-	fps := 0
+	fps := 60 // Default to 60 if not provided
 	if len(matches) > 2 && matches[2] != "" {
 		fps, _ = strconv.Atoi(matches[2])
 	}

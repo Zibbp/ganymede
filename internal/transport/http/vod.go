@@ -19,6 +19,7 @@ import (
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/chat"
 	"github.com/zibbp/ganymede/internal/config"
+	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
@@ -782,6 +783,38 @@ func (h *Handler) GetVodSpriteThumbnails(c echo.Context) error {
 	}
 
 	return c.String(http.StatusOK, webvtt)
+}
+
+// GetFFprobe godoc
+//
+//	@Summary		Get ffprobe data for video
+//	@Description	Get ffprobe data for video
+//	@Tags			exec
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Vod ID"
+//	@Success		200	{object}	exec.FFprobeData
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/ffprobe [get]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) GetFFprobe(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+	video, err := h.Service.VodService.GetVod(c.Request().Context(), vID, false, false, false, false)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+
+	data, err := exec.GetFfprobeData(c.Request().Context(), video.VideoPath)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+
+	return SuccessResponse(c, data, "ffprobe data for video")
 }
 
 type SpriteMetadata struct {
