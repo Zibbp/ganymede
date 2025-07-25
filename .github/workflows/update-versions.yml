@@ -47,10 +47,15 @@ jobs:
             echo "No changes"
           else
             git diff
-            git checkout -b update-versions
+            # Delete existing branch if it exists
+            if git show-ref --verify --quiet refs/heads/ci-update-versions; then
+              git branch -D ci-update-versions
+            fi
+            # Create a new branch for the changes
+            git checkout -b ci-update-versions
             git add Dockerfile
             git commit -m "Update ARG versions in Dockerfile"
-            git push --set-upstream origin update-versions
+            git push --set-upstream origin ci-update-versions
           fi
 
       - name: Create pull request
