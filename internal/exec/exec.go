@@ -255,7 +255,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		"-o", fmt.Sprintf("%s.%%(ext)s", tmpVideoDownloadPathNoExt),
 		"--no-part",
 		"--no-warnings", "--progress", "--newline", "--no-check-certificate",
-		"--fixup", "never",
+		"--hls-use-mpegts",
 	)
 
 	// Set proxy header if enabled

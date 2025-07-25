@@ -1,5 +1,5 @@
 ARG TWITCHDOWNLOADER_VERSION="1.55.7"
-ARG YT_DLP_VERSION="2025.06.30"
+ARG YT_DLP_VERSION="2025.07.21"
 
 #
 # API Build
@@ -15,6 +15,27 @@ RUN apt update && apt install -y make git
 WORKDIR /app
 COPY . .
 RUN make build_server build_worker
+
+#
+# Build yt-dlp
+#
+FROM python:3.12-bookworm AS build-yt-dlp
+ARG YT_DLP_VERSION
+
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git build-essential libffi-dev libssl-dev python3-dev zip pandoc \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install requests --break-system-packages
+# Clone yt-dlp repository
+RUN git clone --depth 1 --branch ${YT_DLP_VERSION} https://github.com/yt-dlp/yt-dlp.git /app/yt-dlp
+# Copy patch for Twitch Ganymede 
+COPY ganymede_twitch_yt_dlp_git.patch /tmp/ganymede_twitch_yt_dlp_git.patch
+WORKDIR /app/yt-dlp
+RUN git apply /tmp/ganymede_twitch_yt_dlp_git.patch
+# Build
+RUN make
 
 #
 # API Tools
@@ -43,9 +64,8 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
 
 RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
 
-# Download and install yt-dlp
-RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/yt-dlp -o /usr/local/bin/yt-dlp && \
-    chmod +x /usr/local/bin/yt-dlp
+# Install yt-dlp
+COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
 
 #
 # Frontend base
@@ -144,8 +164,8 @@ RUN useradd -u 911 -d /data abc && usermod -a -G users abc
 COPY --from=tools /tmp/chat-downloader /tmp/chat-downloader
 RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
 
-# Copy and install yt-dlp
-COPY --from=tools /usr/local/bin/yt-dlp /usr/local/bin/yt-dlp
+# Install yt-dlp
+COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
 
 # Setup fonts
 RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
