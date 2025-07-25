@@ -53,8 +53,8 @@ jobs:
             fi
             # Create a new branch for the changes
             git checkout -b ci-update-versions
-            git add Dockerfile
-            git commit -m "Update ARG versions in Dockerfile"
+            git add -A
+            git commit -m "Update ARG package versions in Dockerfile"
             git push --set-upstream origin ci-update-versions
           fi
 
