@@ -55,7 +55,7 @@ jobs:
 
       - name: Create pull request
         if: ${{ !cancelled() && success() }}
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Update ARG versions in Dockerfile
@@ -64,4 +64,4 @@ jobs:
             Automatically updated versions of:
             - yt-dlp
             - TwitchDownloader
-          branch: update-versions
+          branch: main
