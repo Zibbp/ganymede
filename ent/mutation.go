@@ -22,6 +22,8 @@ import (
 	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
+	"github.com/zibbp/ganymede/ent/playlistrule"
+	"github.com/zibbp/ganymede/ent/playlistrulegroup"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/sessions"
@@ -40,21 +42,23 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeBlockedVideos   = "BlockedVideos"
-	TypeChannel         = "Channel"
-	TypeChapter         = "Chapter"
-	TypeLive            = "Live"
-	TypeLiveCategory    = "LiveCategory"
-	TypeLiveTitleRegex  = "LiveTitleRegex"
-	TypeMultistreamInfo = "MultistreamInfo"
-	TypeMutedSegment    = "MutedSegment"
-	TypePlayback        = "Playback"
-	TypePlaylist        = "Playlist"
-	TypeQueue           = "Queue"
-	TypeSessions        = "Sessions"
-	TypeTwitchCategory  = "TwitchCategory"
-	TypeUser            = "User"
-	TypeVod             = "Vod"
+	TypeBlockedVideos     = "BlockedVideos"
+	TypeChannel           = "Channel"
+	TypeChapter           = "Chapter"
+	TypeLive              = "Live"
+	TypeLiveCategory      = "LiveCategory"
+	TypeLiveTitleRegex    = "LiveTitleRegex"
+	TypeMultistreamInfo   = "MultistreamInfo"
+	TypeMutedSegment      = "MutedSegment"
+	TypePlayback          = "Playback"
+	TypePlaylist          = "Playlist"
+	TypePlaylistRule      = "PlaylistRule"
+	TypePlaylistRuleGroup = "PlaylistRuleGroup"
+	TypeQueue             = "Queue"
+	TypeSessions          = "Sessions"
+	TypeTwitchCategory    = "TwitchCategory"
+	TypeUser              = "User"
+	TypeVod               = "Vod"
 )
 
 // BlockedVideosMutation represents an operation that mutates the BlockedVideos nodes in the graph.
@@ -6591,6 +6595,9 @@ type PlaylistMutation struct {
 	multistream_info        map[int]struct{}
 	removedmultistream_info map[int]struct{}
 	clearedmultistream_info bool
+	rule_groups             map[uuid.UUID]struct{}
+	removedrule_groups      map[uuid.UUID]struct{}
+	clearedrule_groups      bool
 	done                    bool
 	oldValue                func(context.Context) (*Playlist, error)
 	predicates              []predicate.Playlist
@@ -7014,6 +7021,60 @@ func (m *PlaylistMutation) ResetMultistreamInfo() {
 	m.removedmultistream_info = nil
 }
 
+// AddRuleGroupIDs adds the "rule_groups" edge to the PlaylistRuleGroup entity by ids.
+func (m *PlaylistMutation) AddRuleGroupIDs(ids ...uuid.UUID) {
+	if m.rule_groups == nil {
+		m.rule_groups = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.rule_groups[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRuleGroups clears the "rule_groups" edge to the PlaylistRuleGroup entity.
+func (m *PlaylistMutation) ClearRuleGroups() {
+	m.clearedrule_groups = true
+}
+
+// RuleGroupsCleared reports if the "rule_groups" edge to the PlaylistRuleGroup entity was cleared.
+func (m *PlaylistMutation) RuleGroupsCleared() bool {
+	return m.clearedrule_groups
+}
+
+// RemoveRuleGroupIDs removes the "rule_groups" edge to the PlaylistRuleGroup entity by IDs.
+func (m *PlaylistMutation) RemoveRuleGroupIDs(ids ...uuid.UUID) {
+	if m.removedrule_groups == nil {
+		m.removedrule_groups = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.rule_groups, ids[i])
+		m.removedrule_groups[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRuleGroups returns the removed IDs of the "rule_groups" edge to the PlaylistRuleGroup entity.
+func (m *PlaylistMutation) RemovedRuleGroupsIDs() (ids []uuid.UUID) {
+	for id := range m.removedrule_groups {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RuleGroupsIDs returns the "rule_groups" edge IDs in the mutation.
+func (m *PlaylistMutation) RuleGroupsIDs() (ids []uuid.UUID) {
+	for id := range m.rule_groups {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRuleGroups resets all changes to the "rule_groups" edge.
+func (m *PlaylistMutation) ResetRuleGroups() {
+	m.rule_groups = nil
+	m.clearedrule_groups = false
+	m.removedrule_groups = nil
+}
+
 // Where appends a list predicates to the PlaylistMutation builder.
 func (m *PlaylistMutation) Where(ps ...predicate.Playlist) {
 	m.predicates = append(m.predicates, ps...)
@@ -7230,12 +7291,15 @@ func (m *PlaylistMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *PlaylistMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.vods != nil {
 		edges = append(edges, playlist.EdgeVods)
 	}
 	if m.multistream_info != nil {
 		edges = append(edges, playlist.EdgeMultistreamInfo)
+	}
+	if m.rule_groups != nil {
+		edges = append(edges, playlist.EdgeRuleGroups)
 	}
 	return edges
 }
@@ -7256,18 +7320,27 @@ func (m *PlaylistMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case playlist.EdgeRuleGroups:
+		ids := make([]ent.Value, 0, len(m.rule_groups))
+		for id := range m.rule_groups {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PlaylistMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedvods != nil {
 		edges = append(edges, playlist.EdgeVods)
 	}
 	if m.removedmultistream_info != nil {
 		edges = append(edges, playlist.EdgeMultistreamInfo)
+	}
+	if m.removedrule_groups != nil {
+		edges = append(edges, playlist.EdgeRuleGroups)
 	}
 	return edges
 }
@@ -7288,18 +7361,27 @@ func (m *PlaylistMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case playlist.EdgeRuleGroups:
+		ids := make([]ent.Value, 0, len(m.removedrule_groups))
+		for id := range m.removedrule_groups {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *PlaylistMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedvods {
 		edges = append(edges, playlist.EdgeVods)
 	}
 	if m.clearedmultistream_info {
 		edges = append(edges, playlist.EdgeMultistreamInfo)
+	}
+	if m.clearedrule_groups {
+		edges = append(edges, playlist.EdgeRuleGroups)
 	}
 	return edges
 }
@@ -7312,6 +7394,8 @@ func (m *PlaylistMutation) EdgeCleared(name string) bool {
 		return m.clearedvods
 	case playlist.EdgeMultistreamInfo:
 		return m.clearedmultistream_info
+	case playlist.EdgeRuleGroups:
+		return m.clearedrule_groups
 	}
 	return false
 }
@@ -7334,8 +7418,1312 @@ func (m *PlaylistMutation) ResetEdge(name string) error {
 	case playlist.EdgeMultistreamInfo:
 		m.ResetMultistreamInfo()
 		return nil
+	case playlist.EdgeRuleGroups:
+		m.ResetRuleGroups()
+		return nil
 	}
 	return fmt.Errorf("unknown Playlist edge %s", name)
+}
+
+// PlaylistRuleMutation represents an operation that mutates the PlaylistRule nodes in the graph.
+type PlaylistRuleMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	name          *string
+	field         *utils.PlaylistRuleField
+	operator      *utils.PlaylistRuleOperator
+	value         *string
+	position      *int
+	addposition   *int
+	enabled       *bool
+	clearedFields map[string]struct{}
+	group         *uuid.UUID
+	clearedgroup  bool
+	done          bool
+	oldValue      func(context.Context) (*PlaylistRule, error)
+	predicates    []predicate.PlaylistRule
+}
+
+var _ ent.Mutation = (*PlaylistRuleMutation)(nil)
+
+// playlistruleOption allows management of the mutation configuration using functional options.
+type playlistruleOption func(*PlaylistRuleMutation)
+
+// newPlaylistRuleMutation creates new mutation for the PlaylistRule entity.
+func newPlaylistRuleMutation(c config, op Op, opts ...playlistruleOption) *PlaylistRuleMutation {
+	m := &PlaylistRuleMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePlaylistRule,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPlaylistRuleID sets the ID field of the mutation.
+func withPlaylistRuleID(id uuid.UUID) playlistruleOption {
+	return func(m *PlaylistRuleMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PlaylistRule
+		)
+		m.oldValue = func(ctx context.Context) (*PlaylistRule, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PlaylistRule.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPlaylistRule sets the old PlaylistRule of the mutation.
+func withPlaylistRule(node *PlaylistRule) playlistruleOption {
+	return func(m *PlaylistRuleMutation) {
+		m.oldValue = func(context.Context) (*PlaylistRule, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PlaylistRuleMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PlaylistRuleMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of PlaylistRule entities.
+func (m *PlaylistRuleMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PlaylistRuleMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PlaylistRuleMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PlaylistRule.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *PlaylistRuleMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *PlaylistRuleMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the PlaylistRule entity.
+// If the PlaylistRule object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaylistRuleMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ClearName clears the value of the "name" field.
+func (m *PlaylistRuleMutation) ClearName() {
+	m.name = nil
+	m.clearedFields[playlistrule.FieldName] = struct{}{}
+}
+
+// NameCleared returns if the "name" field was cleared in this mutation.
+func (m *PlaylistRuleMutation) NameCleared() bool {
+	_, ok := m.clearedFields[playlistrule.FieldName]
+	return ok
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *PlaylistRuleMutation) ResetName() {
+	m.name = nil
+	delete(m.clearedFields, playlistrule.FieldName)
+}
+
+// SetFieldField sets the "field" field.
+func (m *PlaylistRuleMutation) SetFieldField(urf utils.PlaylistRuleField) {
+	m.field = &urf
+}
+
+// GetField returns the value of the "field" field in the mutation.
+func (m *PlaylistRuleMutation) GetField() (r utils.PlaylistRuleField, exists bool) {
+	v := m.field
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// GetOldField returns the old "field" field's value of the PlaylistRule entity.
+// If the PlaylistRule object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaylistRuleMutation) GetOldField(ctx context.Context) (v utils.PlaylistRuleField, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("GetOldField is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("GetOldField requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for GetOldField: %w", err)
+	}
+	return oldValue.Field, nil
+}
+
+// ResetFieldField resets all changes to the "field" field.
+func (m *PlaylistRuleMutation) ResetFieldField() {
+	m.field = nil
+}
+
+// SetOperator sets the "operator" field.
+func (m *PlaylistRuleMutation) SetOperator(uro utils.PlaylistRuleOperator) {
+	m.operator = &uro
+}
+
+// Operator returns the value of the "operator" field in the mutation.
+func (m *PlaylistRuleMutation) Operator() (r utils.PlaylistRuleOperator, exists bool) {
+	v := m.operator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOperator returns the old "operator" field's value of the PlaylistRule entity.
+// If the PlaylistRule object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaylistRuleMutation) OldOperator(ctx context.Context) (v utils.PlaylistRuleOperator, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOperator is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOperator requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOperator: %w", err)
+	}
+	return oldValue.Operator, nil
+}
+
+// ResetOperator resets all changes to the "operator" field.
+func (m *PlaylistRuleMutation) ResetOperator() {
+	m.operator = nil
+}
+
+// SetValue sets the "value" field.
+func (m *PlaylistRuleMutation) SetValue(s string) {
+	m.value = &s
+}
+
+// Value returns the value of the "value" field in the mutation.
+func (m *PlaylistRuleMutation) Value() (r string, exists bool) {
+	v := m.value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValue returns the old "value" field's value of the PlaylistRule entity.
+// If the PlaylistRule object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaylistRuleMutation) OldValue(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValue: %w", err)
+	}
+	return oldValue.Value, nil
+}
+
+// ResetValue resets all changes to the "value" field.
+func (m *PlaylistRuleMutation) ResetValue() {
+	m.value = nil
+}
+
+// SetPosition sets the "position" field.
+func (m *PlaylistRuleMutation) SetPosition(i int) {
+	m.position = &i
+	m.addposition = nil
+}
+
+// Position returns the value of the "position" field in the mutation.
+func (m *PlaylistRuleMutation) Position() (r int, exists bool) {
+	v := m.position
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPosition returns the old "position" field's value of the PlaylistRule entity.
+// If the PlaylistRule object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaylistRuleMutation) OldPosition(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPosition is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPosition requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPosition: %w", err)
+	}
+	return oldValue.Position, nil
+}
+
+// AddPosition adds i to the "position" field.
+func (m *PlaylistRuleMutation) AddPosition(i int) {
+	if m.addposition != nil {
+		*m.addposition += i
+	} else {
+		m.addposition = &i
+	}
+}
+
+// AddedPosition returns the value that was added to the "position" field in this mutation.
+func (m *PlaylistRuleMutation) AddedPosition() (r int, exists bool) {
+	v := m.addposition
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPosition resets all changes to the "position" field.
+func (m *PlaylistRuleMutation) ResetPosition() {
+	m.position = nil
+	m.addposition = nil
+}
+
+// SetEnabled sets the "enabled" field.
+func (m *PlaylistRuleMutation) SetEnabled(b bool) {
+	m.enabled = &b
+}
+
+// Enabled returns the value of the "enabled" field in the mutation.
+func (m *PlaylistRuleMutation) Enabled() (r bool, exists bool) {
+	v := m.enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnabled returns the old "enabled" field's value of the PlaylistRule entity.
+// If the PlaylistRule object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaylistRuleMutation) OldEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnabled: %w", err)
+	}
+	return oldValue.Enabled, nil
+}
+
+// ResetEnabled resets all changes to the "enabled" field.
+func (m *PlaylistRuleMutation) ResetEnabled() {
+	m.enabled = nil
+}
+
+// SetGroupID sets the "group" edge to the PlaylistRuleGroup entity by id.
+func (m *PlaylistRuleMutation) SetGroupID(id uuid.UUID) {
+	m.group = &id
+}
+
+// ClearGroup clears the "group" edge to the PlaylistRuleGroup entity.
+func (m *PlaylistRuleMutation) ClearGroup() {
+	m.clearedgroup = true
+}
+
+// GroupCleared reports if the "group" edge to the PlaylistRuleGroup entity was cleared.
+func (m *PlaylistRuleMutation) GroupCleared() bool {
+	return m.clearedgroup
+}
+
+// GroupID returns the "group" edge ID in the mutation.
+func (m *PlaylistRuleMutation) GroupID() (id uuid.UUID, exists bool) {
+	if m.group != nil {
+		return *m.group, true
+	}
+	return
+}
+
+// GroupIDs returns the "group" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// GroupID instead. It exists only for internal usage by the builders.
+func (m *PlaylistRuleMutation) GroupIDs() (ids []uuid.UUID) {
+	if id := m.group; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetGroup resets all changes to the "group" edge.
+func (m *PlaylistRuleMutation) ResetGroup() {
+	m.group = nil
+	m.clearedgroup = false
+}
+
+// Where appends a list predicates to the PlaylistRuleMutation builder.
+func (m *PlaylistRuleMutation) Where(ps ...predicate.PlaylistRule) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PlaylistRuleMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PlaylistRuleMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PlaylistRule, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PlaylistRuleMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PlaylistRuleMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PlaylistRule).
+func (m *PlaylistRuleMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PlaylistRuleMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.name != nil {
+		fields = append(fields, playlistrule.FieldName)
+	}
+	if m.field != nil {
+		fields = append(fields, playlistrule.FieldField)
+	}
+	if m.operator != nil {
+		fields = append(fields, playlistrule.FieldOperator)
+	}
+	if m.value != nil {
+		fields = append(fields, playlistrule.FieldValue)
+	}
+	if m.position != nil {
+		fields = append(fields, playlistrule.FieldPosition)
+	}
+	if m.enabled != nil {
+		fields = append(fields, playlistrule.FieldEnabled)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PlaylistRuleMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case playlistrule.FieldName:
+		return m.Name()
+	case playlistrule.FieldField:
+		return m.GetField()
+	case playlistrule.FieldOperator:
+		return m.Operator()
+	case playlistrule.FieldValue:
+		return m.Value()
+	case playlistrule.FieldPosition:
+		return m.Position()
+	case playlistrule.FieldEnabled:
+		return m.Enabled()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PlaylistRuleMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case playlistrule.FieldName:
+		return m.OldName(ctx)
+	case playlistrule.FieldField:
+		return m.GetOldField(ctx)
+	case playlistrule.FieldOperator:
+		return m.OldOperator(ctx)
+	case playlistrule.FieldValue:
+		return m.OldValue(ctx)
+	case playlistrule.FieldPosition:
+		return m.OldPosition(ctx)
+	case playlistrule.FieldEnabled:
+		return m.OldEnabled(ctx)
+	}
+	return nil, fmt.Errorf("unknown PlaylistRule field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PlaylistRuleMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case playlistrule.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case playlistrule.FieldField:
+		v, ok := value.(utils.PlaylistRuleField)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFieldField(v)
+		return nil
+	case playlistrule.FieldOperator:
+		v, ok := value.(utils.PlaylistRuleOperator)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOperator(v)
+		return nil
+	case playlistrule.FieldValue:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValue(v)
+		return nil
+	case playlistrule.FieldPosition:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPosition(v)
+		return nil
+	case playlistrule.FieldEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnabled(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRule field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PlaylistRuleMutation) AddedFields() []string {
+	var fields []string
+	if m.addposition != nil {
+		fields = append(fields, playlistrule.FieldPosition)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PlaylistRuleMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case playlistrule.FieldPosition:
+		return m.AddedPosition()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PlaylistRuleMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case playlistrule.FieldPosition:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPosition(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRule numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PlaylistRuleMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(playlistrule.FieldName) {
+		fields = append(fields, playlistrule.FieldName)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PlaylistRuleMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PlaylistRuleMutation) ClearField(name string) error {
+	switch name {
+	case playlistrule.FieldName:
+		m.ClearName()
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRule nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PlaylistRuleMutation) ResetField(name string) error {
+	switch name {
+	case playlistrule.FieldName:
+		m.ResetName()
+		return nil
+	case playlistrule.FieldField:
+		m.ResetFieldField()
+		return nil
+	case playlistrule.FieldOperator:
+		m.ResetOperator()
+		return nil
+	case playlistrule.FieldValue:
+		m.ResetValue()
+		return nil
+	case playlistrule.FieldPosition:
+		m.ResetPosition()
+		return nil
+	case playlistrule.FieldEnabled:
+		m.ResetEnabled()
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRule field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PlaylistRuleMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.group != nil {
+		edges = append(edges, playlistrule.EdgeGroup)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PlaylistRuleMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case playlistrule.EdgeGroup:
+		if id := m.group; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PlaylistRuleMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PlaylistRuleMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PlaylistRuleMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedgroup {
+		edges = append(edges, playlistrule.EdgeGroup)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PlaylistRuleMutation) EdgeCleared(name string) bool {
+	switch name {
+	case playlistrule.EdgeGroup:
+		return m.clearedgroup
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PlaylistRuleMutation) ClearEdge(name string) error {
+	switch name {
+	case playlistrule.EdgeGroup:
+		m.ClearGroup()
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRule unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PlaylistRuleMutation) ResetEdge(name string) error {
+	switch name {
+	case playlistrule.EdgeGroup:
+		m.ResetGroup()
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRule edge %s", name)
+}
+
+// PlaylistRuleGroupMutation represents an operation that mutates the PlaylistRuleGroup nodes in the graph.
+type PlaylistRuleGroupMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	operator        *playlistrulegroup.Operator
+	position        *int
+	addposition     *int
+	clearedFields   map[string]struct{}
+	playlist        *uuid.UUID
+	clearedplaylist bool
+	rules           map[uuid.UUID]struct{}
+	removedrules    map[uuid.UUID]struct{}
+	clearedrules    bool
+	done            bool
+	oldValue        func(context.Context) (*PlaylistRuleGroup, error)
+	predicates      []predicate.PlaylistRuleGroup
+}
+
+var _ ent.Mutation = (*PlaylistRuleGroupMutation)(nil)
+
+// playlistrulegroupOption allows management of the mutation configuration using functional options.
+type playlistrulegroupOption func(*PlaylistRuleGroupMutation)
+
+// newPlaylistRuleGroupMutation creates new mutation for the PlaylistRuleGroup entity.
+func newPlaylistRuleGroupMutation(c config, op Op, opts ...playlistrulegroupOption) *PlaylistRuleGroupMutation {
+	m := &PlaylistRuleGroupMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePlaylistRuleGroup,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPlaylistRuleGroupID sets the ID field of the mutation.
+func withPlaylistRuleGroupID(id uuid.UUID) playlistrulegroupOption {
+	return func(m *PlaylistRuleGroupMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PlaylistRuleGroup
+		)
+		m.oldValue = func(ctx context.Context) (*PlaylistRuleGroup, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PlaylistRuleGroup.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPlaylistRuleGroup sets the old PlaylistRuleGroup of the mutation.
+func withPlaylistRuleGroup(node *PlaylistRuleGroup) playlistrulegroupOption {
+	return func(m *PlaylistRuleGroupMutation) {
+		m.oldValue = func(context.Context) (*PlaylistRuleGroup, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PlaylistRuleGroupMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PlaylistRuleGroupMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of PlaylistRuleGroup entities.
+func (m *PlaylistRuleGroupMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PlaylistRuleGroupMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PlaylistRuleGroupMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PlaylistRuleGroup.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetOperator sets the "operator" field.
+func (m *PlaylistRuleGroupMutation) SetOperator(pl playlistrulegroup.Operator) {
+	m.operator = &pl
+}
+
+// Operator returns the value of the "operator" field in the mutation.
+func (m *PlaylistRuleGroupMutation) Operator() (r playlistrulegroup.Operator, exists bool) {
+	v := m.operator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOperator returns the old "operator" field's value of the PlaylistRuleGroup entity.
+// If the PlaylistRuleGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaylistRuleGroupMutation) OldOperator(ctx context.Context) (v playlistrulegroup.Operator, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOperator is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOperator requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOperator: %w", err)
+	}
+	return oldValue.Operator, nil
+}
+
+// ResetOperator resets all changes to the "operator" field.
+func (m *PlaylistRuleGroupMutation) ResetOperator() {
+	m.operator = nil
+}
+
+// SetPosition sets the "position" field.
+func (m *PlaylistRuleGroupMutation) SetPosition(i int) {
+	m.position = &i
+	m.addposition = nil
+}
+
+// Position returns the value of the "position" field in the mutation.
+func (m *PlaylistRuleGroupMutation) Position() (r int, exists bool) {
+	v := m.position
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPosition returns the old "position" field's value of the PlaylistRuleGroup entity.
+// If the PlaylistRuleGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaylistRuleGroupMutation) OldPosition(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPosition is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPosition requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPosition: %w", err)
+	}
+	return oldValue.Position, nil
+}
+
+// AddPosition adds i to the "position" field.
+func (m *PlaylistRuleGroupMutation) AddPosition(i int) {
+	if m.addposition != nil {
+		*m.addposition += i
+	} else {
+		m.addposition = &i
+	}
+}
+
+// AddedPosition returns the value that was added to the "position" field in this mutation.
+func (m *PlaylistRuleGroupMutation) AddedPosition() (r int, exists bool) {
+	v := m.addposition
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPosition resets all changes to the "position" field.
+func (m *PlaylistRuleGroupMutation) ResetPosition() {
+	m.position = nil
+	m.addposition = nil
+}
+
+// SetPlaylistID sets the "playlist" edge to the Playlist entity by id.
+func (m *PlaylistRuleGroupMutation) SetPlaylistID(id uuid.UUID) {
+	m.playlist = &id
+}
+
+// ClearPlaylist clears the "playlist" edge to the Playlist entity.
+func (m *PlaylistRuleGroupMutation) ClearPlaylist() {
+	m.clearedplaylist = true
+}
+
+// PlaylistCleared reports if the "playlist" edge to the Playlist entity was cleared.
+func (m *PlaylistRuleGroupMutation) PlaylistCleared() bool {
+	return m.clearedplaylist
+}
+
+// PlaylistID returns the "playlist" edge ID in the mutation.
+func (m *PlaylistRuleGroupMutation) PlaylistID() (id uuid.UUID, exists bool) {
+	if m.playlist != nil {
+		return *m.playlist, true
+	}
+	return
+}
+
+// PlaylistIDs returns the "playlist" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PlaylistID instead. It exists only for internal usage by the builders.
+func (m *PlaylistRuleGroupMutation) PlaylistIDs() (ids []uuid.UUID) {
+	if id := m.playlist; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPlaylist resets all changes to the "playlist" edge.
+func (m *PlaylistRuleGroupMutation) ResetPlaylist() {
+	m.playlist = nil
+	m.clearedplaylist = false
+}
+
+// AddRuleIDs adds the "rules" edge to the PlaylistRule entity by ids.
+func (m *PlaylistRuleGroupMutation) AddRuleIDs(ids ...uuid.UUID) {
+	if m.rules == nil {
+		m.rules = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.rules[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRules clears the "rules" edge to the PlaylistRule entity.
+func (m *PlaylistRuleGroupMutation) ClearRules() {
+	m.clearedrules = true
+}
+
+// RulesCleared reports if the "rules" edge to the PlaylistRule entity was cleared.
+func (m *PlaylistRuleGroupMutation) RulesCleared() bool {
+	return m.clearedrules
+}
+
+// RemoveRuleIDs removes the "rules" edge to the PlaylistRule entity by IDs.
+func (m *PlaylistRuleGroupMutation) RemoveRuleIDs(ids ...uuid.UUID) {
+	if m.removedrules == nil {
+		m.removedrules = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.rules, ids[i])
+		m.removedrules[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRules returns the removed IDs of the "rules" edge to the PlaylistRule entity.
+func (m *PlaylistRuleGroupMutation) RemovedRulesIDs() (ids []uuid.UUID) {
+	for id := range m.removedrules {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RulesIDs returns the "rules" edge IDs in the mutation.
+func (m *PlaylistRuleGroupMutation) RulesIDs() (ids []uuid.UUID) {
+	for id := range m.rules {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRules resets all changes to the "rules" edge.
+func (m *PlaylistRuleGroupMutation) ResetRules() {
+	m.rules = nil
+	m.clearedrules = false
+	m.removedrules = nil
+}
+
+// Where appends a list predicates to the PlaylistRuleGroupMutation builder.
+func (m *PlaylistRuleGroupMutation) Where(ps ...predicate.PlaylistRuleGroup) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PlaylistRuleGroupMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PlaylistRuleGroupMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PlaylistRuleGroup, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PlaylistRuleGroupMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PlaylistRuleGroupMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PlaylistRuleGroup).
+func (m *PlaylistRuleGroupMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PlaylistRuleGroupMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.operator != nil {
+		fields = append(fields, playlistrulegroup.FieldOperator)
+	}
+	if m.position != nil {
+		fields = append(fields, playlistrulegroup.FieldPosition)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PlaylistRuleGroupMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case playlistrulegroup.FieldOperator:
+		return m.Operator()
+	case playlistrulegroup.FieldPosition:
+		return m.Position()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PlaylistRuleGroupMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case playlistrulegroup.FieldOperator:
+		return m.OldOperator(ctx)
+	case playlistrulegroup.FieldPosition:
+		return m.OldPosition(ctx)
+	}
+	return nil, fmt.Errorf("unknown PlaylistRuleGroup field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PlaylistRuleGroupMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case playlistrulegroup.FieldOperator:
+		v, ok := value.(playlistrulegroup.Operator)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOperator(v)
+		return nil
+	case playlistrulegroup.FieldPosition:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPosition(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRuleGroup field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PlaylistRuleGroupMutation) AddedFields() []string {
+	var fields []string
+	if m.addposition != nil {
+		fields = append(fields, playlistrulegroup.FieldPosition)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PlaylistRuleGroupMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case playlistrulegroup.FieldPosition:
+		return m.AddedPosition()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PlaylistRuleGroupMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case playlistrulegroup.FieldPosition:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPosition(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRuleGroup numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PlaylistRuleGroupMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PlaylistRuleGroupMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PlaylistRuleGroupMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown PlaylistRuleGroup nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PlaylistRuleGroupMutation) ResetField(name string) error {
+	switch name {
+	case playlistrulegroup.FieldOperator:
+		m.ResetOperator()
+		return nil
+	case playlistrulegroup.FieldPosition:
+		m.ResetPosition()
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRuleGroup field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PlaylistRuleGroupMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.playlist != nil {
+		edges = append(edges, playlistrulegroup.EdgePlaylist)
+	}
+	if m.rules != nil {
+		edges = append(edges, playlistrulegroup.EdgeRules)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PlaylistRuleGroupMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case playlistrulegroup.EdgePlaylist:
+		if id := m.playlist; id != nil {
+			return []ent.Value{*id}
+		}
+	case playlistrulegroup.EdgeRules:
+		ids := make([]ent.Value, 0, len(m.rules))
+		for id := range m.rules {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PlaylistRuleGroupMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedrules != nil {
+		edges = append(edges, playlistrulegroup.EdgeRules)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PlaylistRuleGroupMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case playlistrulegroup.EdgeRules:
+		ids := make([]ent.Value, 0, len(m.removedrules))
+		for id := range m.removedrules {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PlaylistRuleGroupMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedplaylist {
+		edges = append(edges, playlistrulegroup.EdgePlaylist)
+	}
+	if m.clearedrules {
+		edges = append(edges, playlistrulegroup.EdgeRules)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PlaylistRuleGroupMutation) EdgeCleared(name string) bool {
+	switch name {
+	case playlistrulegroup.EdgePlaylist:
+		return m.clearedplaylist
+	case playlistrulegroup.EdgeRules:
+		return m.clearedrules
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PlaylistRuleGroupMutation) ClearEdge(name string) error {
+	switch name {
+	case playlistrulegroup.EdgePlaylist:
+		m.ClearPlaylist()
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRuleGroup unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PlaylistRuleGroupMutation) ResetEdge(name string) error {
+	switch name {
+	case playlistrulegroup.EdgePlaylist:
+		m.ResetPlaylist()
+		return nil
+	case playlistrulegroup.EdgeRules:
+		m.ResetRules()
+		return nil
+	}
+	return fmt.Errorf("unknown PlaylistRuleGroup edge %s", name)
 }
 
 // QueueMutation represents an operation that mutates the Queue nodes in the graph.

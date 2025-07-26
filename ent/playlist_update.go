@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
+	"github.com/zibbp/ganymede/ent/playlistrulegroup"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/vod"
 )
@@ -121,6 +122,21 @@ func (pu *PlaylistUpdate) AddMultistreamInfo(m ...*MultistreamInfo) *PlaylistUpd
 	return pu.AddMultistreamInfoIDs(ids...)
 }
 
+// AddRuleGroupIDs adds the "rule_groups" edge to the PlaylistRuleGroup entity by IDs.
+func (pu *PlaylistUpdate) AddRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdate {
+	pu.mutation.AddRuleGroupIDs(ids...)
+	return pu
+}
+
+// AddRuleGroups adds the "rule_groups" edges to the PlaylistRuleGroup entity.
+func (pu *PlaylistUpdate) AddRuleGroups(p ...*PlaylistRuleGroup) *PlaylistUpdate {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pu.AddRuleGroupIDs(ids...)
+}
+
 // Mutation returns the PlaylistMutation object of the builder.
 func (pu *PlaylistUpdate) Mutation() *PlaylistMutation {
 	return pu.mutation
@@ -166,6 +182,27 @@ func (pu *PlaylistUpdate) RemoveMultistreamInfo(m ...*MultistreamInfo) *Playlist
 		ids[i] = m[i].ID
 	}
 	return pu.RemoveMultistreamInfoIDs(ids...)
+}
+
+// ClearRuleGroups clears all "rule_groups" edges to the PlaylistRuleGroup entity.
+func (pu *PlaylistUpdate) ClearRuleGroups() *PlaylistUpdate {
+	pu.mutation.ClearRuleGroups()
+	return pu
+}
+
+// RemoveRuleGroupIDs removes the "rule_groups" edge to PlaylistRuleGroup entities by IDs.
+func (pu *PlaylistUpdate) RemoveRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdate {
+	pu.mutation.RemoveRuleGroupIDs(ids...)
+	return pu
+}
+
+// RemoveRuleGroups removes "rule_groups" edges to PlaylistRuleGroup entities.
+func (pu *PlaylistUpdate) RemoveRuleGroups(p ...*PlaylistRuleGroup) *PlaylistUpdate {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pu.RemoveRuleGroupIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -321,6 +358,51 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if pu.mutation.RuleGroupsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.RuleGroupsTable,
+			Columns: []string{playlist.RuleGroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.RemovedRuleGroupsIDs(); len(nodes) > 0 && !pu.mutation.RuleGroupsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.RuleGroupsTable,
+			Columns: []string{playlist.RuleGroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.RuleGroupsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.RuleGroupsTable,
+			Columns: []string{playlist.RuleGroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{playlist.Label}
@@ -431,6 +513,21 @@ func (puo *PlaylistUpdateOne) AddMultistreamInfo(m ...*MultistreamInfo) *Playlis
 	return puo.AddMultistreamInfoIDs(ids...)
 }
 
+// AddRuleGroupIDs adds the "rule_groups" edge to the PlaylistRuleGroup entity by IDs.
+func (puo *PlaylistUpdateOne) AddRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdateOne {
+	puo.mutation.AddRuleGroupIDs(ids...)
+	return puo
+}
+
+// AddRuleGroups adds the "rule_groups" edges to the PlaylistRuleGroup entity.
+func (puo *PlaylistUpdateOne) AddRuleGroups(p ...*PlaylistRuleGroup) *PlaylistUpdateOne {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return puo.AddRuleGroupIDs(ids...)
+}
+
 // Mutation returns the PlaylistMutation object of the builder.
 func (puo *PlaylistUpdateOne) Mutation() *PlaylistMutation {
 	return puo.mutation
@@ -476,6 +573,27 @@ func (puo *PlaylistUpdateOne) RemoveMultistreamInfo(m ...*MultistreamInfo) *Play
 		ids[i] = m[i].ID
 	}
 	return puo.RemoveMultistreamInfoIDs(ids...)
+}
+
+// ClearRuleGroups clears all "rule_groups" edges to the PlaylistRuleGroup entity.
+func (puo *PlaylistUpdateOne) ClearRuleGroups() *PlaylistUpdateOne {
+	puo.mutation.ClearRuleGroups()
+	return puo
+}
+
+// RemoveRuleGroupIDs removes the "rule_groups" edge to PlaylistRuleGroup entities by IDs.
+func (puo *PlaylistUpdateOne) RemoveRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdateOne {
+	puo.mutation.RemoveRuleGroupIDs(ids...)
+	return puo
+}
+
+// RemoveRuleGroups removes "rule_groups" edges to PlaylistRuleGroup entities.
+func (puo *PlaylistUpdateOne) RemoveRuleGroups(p ...*PlaylistRuleGroup) *PlaylistUpdateOne {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return puo.RemoveRuleGroupIDs(ids...)
 }
 
 // Where appends a list predicates to the PlaylistUpdate builder.
@@ -654,6 +772,51 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if puo.mutation.RuleGroupsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.RuleGroupsTable,
+			Columns: []string{playlist.RuleGroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.RemovedRuleGroupsIDs(); len(nodes) > 0 && !puo.mutation.RuleGroupsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.RuleGroupsTable,
+			Columns: []string{playlist.RuleGroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.RuleGroupsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.RuleGroupsTable,
+			Columns: []string{playlist.RuleGroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
+	"github.com/zibbp/ganymede/ent/playlistrulegroup"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/vod"
 )
@@ -28,6 +29,7 @@ type PlaylistQuery struct {
 	predicates          []predicate.Playlist
 	withVods            *VodQuery
 	withMultistreamInfo *MultistreamInfoQuery
+	withRuleGroups      *PlaylistRuleGroupQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -101,6 +103,28 @@ func (pq *PlaylistQuery) QueryMultistreamInfo() *MultistreamInfoQuery {
 			sqlgraph.From(playlist.Table, playlist.FieldID, selector),
 			sqlgraph.To(multistreaminfo.Table, multistreaminfo.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, playlist.MultistreamInfoTable, playlist.MultistreamInfoColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRuleGroups chains the current query on the "rule_groups" edge.
+func (pq *PlaylistQuery) QueryRuleGroups() *PlaylistRuleGroupQuery {
+	query := (&PlaylistRuleGroupClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(playlist.Table, playlist.FieldID, selector),
+			sqlgraph.To(playlistrulegroup.Table, playlistrulegroup.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, playlist.RuleGroupsTable, playlist.RuleGroupsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -302,6 +326,7 @@ func (pq *PlaylistQuery) Clone() *PlaylistQuery {
 		predicates:          append([]predicate.Playlist{}, pq.predicates...),
 		withVods:            pq.withVods.Clone(),
 		withMultistreamInfo: pq.withMultistreamInfo.Clone(),
+		withRuleGroups:      pq.withRuleGroups.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
 		path: pq.path,
@@ -327,6 +352,17 @@ func (pq *PlaylistQuery) WithMultistreamInfo(opts ...func(*MultistreamInfoQuery)
 		opt(query)
 	}
 	pq.withMultistreamInfo = query
+	return pq
+}
+
+// WithRuleGroups tells the query-builder to eager-load the nodes that are connected to
+// the "rule_groups" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *PlaylistQuery) WithRuleGroups(opts ...func(*PlaylistRuleGroupQuery)) *PlaylistQuery {
+	query := (&PlaylistRuleGroupClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withRuleGroups = query
 	return pq
 }
 
@@ -408,9 +444,10 @@ func (pq *PlaylistQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pla
 	var (
 		nodes       = []*Playlist{}
 		_spec       = pq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			pq.withVods != nil,
 			pq.withMultistreamInfo != nil,
+			pq.withRuleGroups != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -442,6 +479,13 @@ func (pq *PlaylistQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pla
 		if err := pq.loadMultistreamInfo(ctx, query, nodes,
 			func(n *Playlist) { n.Edges.MultistreamInfo = []*MultistreamInfo{} },
 			func(n *Playlist, e *MultistreamInfo) { n.Edges.MultistreamInfo = append(n.Edges.MultistreamInfo, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withRuleGroups; query != nil {
+		if err := pq.loadRuleGroups(ctx, query, nodes,
+			func(n *Playlist) { n.Edges.RuleGroups = []*PlaylistRuleGroup{} },
+			func(n *Playlist, e *PlaylistRuleGroup) { n.Edges.RuleGroups = append(n.Edges.RuleGroups, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -535,6 +579,37 @@ func (pq *PlaylistQuery) loadMultistreamInfo(ctx context.Context, query *Multist
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "playlist_multistream_info" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (pq *PlaylistQuery) loadRuleGroups(ctx context.Context, query *PlaylistRuleGroupQuery, nodes []*Playlist, init func(*Playlist), assign func(*Playlist, *PlaylistRuleGroup)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Playlist)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.PlaylistRuleGroup(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(playlist.RuleGroupsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.playlist_rule_groups
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "playlist_rule_groups" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "playlist_rule_groups" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

@@ -15,6 +15,8 @@ import (
 	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
+	"github.com/zibbp/ganymede/ent/playlistrule"
+	"github.com/zibbp/ganymede/ent/playlistrulegroup"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/schema"
 	"github.com/zibbp/ganymede/ent/sessions"
@@ -215,6 +217,30 @@ func init() {
 	playlistDescID := playlistFields[0].Descriptor()
 	// playlist.DefaultID holds the default value on creation for the id field.
 	playlist.DefaultID = playlistDescID.Default.(func() uuid.UUID)
+	playlistruleFields := schema.PlaylistRule{}.Fields()
+	_ = playlistruleFields
+	// playlistruleDescPosition is the schema descriptor for position field.
+	playlistruleDescPosition := playlistruleFields[5].Descriptor()
+	// playlistrule.DefaultPosition holds the default value on creation for the position field.
+	playlistrule.DefaultPosition = playlistruleDescPosition.Default.(int)
+	// playlistruleDescEnabled is the schema descriptor for enabled field.
+	playlistruleDescEnabled := playlistruleFields[6].Descriptor()
+	// playlistrule.DefaultEnabled holds the default value on creation for the enabled field.
+	playlistrule.DefaultEnabled = playlistruleDescEnabled.Default.(bool)
+	// playlistruleDescID is the schema descriptor for id field.
+	playlistruleDescID := playlistruleFields[0].Descriptor()
+	// playlistrule.DefaultID holds the default value on creation for the id field.
+	playlistrule.DefaultID = playlistruleDescID.Default.(func() uuid.UUID)
+	playlistrulegroupFields := schema.PlaylistRuleGroup{}.Fields()
+	_ = playlistrulegroupFields
+	// playlistrulegroupDescPosition is the schema descriptor for position field.
+	playlistrulegroupDescPosition := playlistrulegroupFields[2].Descriptor()
+	// playlistrulegroup.DefaultPosition holds the default value on creation for the position field.
+	playlistrulegroup.DefaultPosition = playlistrulegroupDescPosition.Default.(int)
+	// playlistrulegroupDescID is the schema descriptor for id field.
+	playlistrulegroupDescID := playlistrulegroupFields[0].Descriptor()
+	// playlistrulegroup.DefaultID holds the default value on creation for the id field.
+	playlistrulegroup.DefaultID = playlistrulegroupDescID.Default.(func() uuid.UUID)
 	queueFields := schema.Queue{}.Fields()
 	_ = queueFields
 	// queueDescLiveArchive is the schema descriptor for live_archive field.
