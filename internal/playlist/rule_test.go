@@ -15,6 +15,7 @@ import (
 	"github.com/zibbp/ganymede/tests"
 )
 
+// setupAppAndSeed initializes the application and seeds it with a playlist, channel, and video.
 func setupAppAndSeed(t *testing.T) (*server.Application, *ent.Playlist, *ent.Channel, *ent.Vod) {
 	app, err := tests.Setup(t)
 	assert.NoError(t, err, "Failed to setup test application")
