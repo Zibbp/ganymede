@@ -18,7 +18,7 @@ interface SelectOption {
   value: string;
 }
 
-const PlaylistAutomationRuleDrawerContent = ({ playlist, handleClose }: Props) => {
+const PlaylistAutomationRuleModalContent = ({ playlist, handleClose }: Props) => {
   const t = useTranslations('PlaylistComponents')
   const axiosPrivate = useAxiosPrivate();
   const [saveButtonLoading, setSaveButtonLoading] = useState(false);
@@ -219,40 +219,21 @@ const PlaylistAutomationRuleDrawerContent = ({ playlist, handleClose }: Props) =
                         withAsterisk
                         onBlur={() => {
                           const rules = [...form.values.rule_groups[groupIdx].rules];
-                          const currentRule = rules[ruleIdx];
+                          const currentRule = rules.splice(ruleIdx, 1)[0];
                           let newPosition = Number(currentRule.position);
 
                           // Clamp position to valid range
                           if (newPosition < 1) newPosition = 1;
-                          if (newPosition > rules.length) newPosition = rules.length;
+                          if (newPosition > rules.length + 1) newPosition = rules.length + 1;
 
-                          // Remove current rule from array
-                          const otherRules = rules.filter((_, i) => i !== ruleIdx);
-
-                          // Insert current rule at new position, shifting others
-                          otherRules.forEach((rule, idx) => {
-                            // If rule's position >= newPosition, increment its position
-                            if (rule.position >= newPosition) {
-                              rule.position = idx + 1 >= newPosition ? idx + 2 : idx + 1;
-                            } else {
-                              rule.position = idx + 1;
-                            }
-                          });
-
-                          // Set current rule's position
-                          currentRule.position = newPosition;
-
-                          // Rebuild rules array
-                          const updatedRules = [
-                            ...otherRules.slice(0, newPosition - 1),
-                            currentRule,
-                            ...otherRules.slice(newPosition - 1)
-                          ];
+                          // Insert current rule at new position
+                          rules.splice(newPosition - 1, 0, currentRule);
 
                           // Reassign positions to be sequential
-                          updatedRules.forEach((rule, idx) => {
-                            rule.position = idx + 1;
-                          });
+                          const updatedRules = rules.map((rule, idx) => ({
+                            ...rule,
+                            position: idx + 1,
+                          }));
 
                           form.setFieldValue(`rule_groups.${groupIdx}.rules`, updatedRules);
                         }}
@@ -350,4 +331,4 @@ const PlaylistAutomationRuleDrawerContent = ({ playlist, handleClose }: Props) =
   );
 }
 
-export default PlaylistAutomationRuleDrawerContent;
+export default PlaylistAutomationRuleModalContent;

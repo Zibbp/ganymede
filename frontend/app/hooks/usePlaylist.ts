@@ -325,8 +325,8 @@ const useSavePlaylistRules = () => {
   >({
     mutationFn: ({ axiosPrivate, id, rules }) =>
       savePlaylistRules(id, rules, axiosPrivate),
-    onSuccess: (data) => {
-      queryClient.setQueryData(["playlist_rules", data.data[0].id], data.data);
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(["playlist_rules", variables.id], data.data);
       queryClient.invalidateQueries({ queryKey: ["playlists"] });
     },
   });

@@ -184,14 +184,6 @@ func validateRule(r RuleInput) error {
 		return fmt.Errorf("field, operator, and value must be provided")
 	}
 
-	if !validFields[r.Field] {
-		return fmt.Errorf("invalid rule field: %s", r.Field)
-	}
-
-	if !validOperators[r.Operator] {
-		return fmt.Errorf("invalid rule operator: %s", r.Operator)
-	}
-
 	if !isValidFieldOperator(r.Field, r.Operator) {
 		return fmt.Errorf("operator %s is not valid for field %s", r.Operator, r.Field)
 	}

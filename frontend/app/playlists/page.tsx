@@ -15,7 +15,7 @@ import { useAxiosPrivate } from "../hooks/useAxios";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "../util/util";
-import PlaylistAutomationRuleDrawerContent from "../components/playlist/AutomationRuleDrawerContent";
+import PlaylistAutomationRuleModalContent from "../components/playlist/AutomationRuleModalContent";
 
 
 const PlaylistsPage = () => {
@@ -30,7 +30,7 @@ const PlaylistsPage = () => {
   const [playlistEditMode, setPlaylistEditMode] = useState<PlaylistEditFormMode>(PlaylistEditFormMode.Edit)
 
   const [playlistDrawerOpened, { open: openPlaylistDrawer, close: closePlaylistDrawer }] = useDisclosure(false);
-  const [playlistAutomationDrawerOpened, { open: openPlaylistAutomationDrawer, close: closePlaylistAutomationDrawer }] = useDisclosure(false);
+  const [playlistAutomationModalOpened, { open: openPlaylistAutomationModal, close: closePlaylistAutomationModal }] = useDisclosure(false);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
 
   const axiosPrivate = useAxiosPrivate();
@@ -63,6 +63,10 @@ const PlaylistsPage = () => {
 
   const closeDrawerCallback = () => {
     closePlaylistDrawer()
+  }
+
+  const closeModalCallback = () => {
+    closePlaylistAutomationModal()
   }
 
   if (isPending) return (
@@ -131,7 +135,7 @@ const PlaylistsPage = () => {
                     color="green"
                     onClick={() => {
                       setPlaylist(playlist)
-                      openPlaylistAutomationDrawer()
+                      openPlaylistAutomationModal()
                     }}
                     title={t('playlist.videoAutomationRules')}
                     aria-label="Automation Rules"
@@ -165,9 +169,9 @@ const PlaylistsPage = () => {
       </Drawer>
 
 
-      <Modal opened={playlistAutomationDrawerOpened} onClose={closePlaylistAutomationDrawer} size="100%" title={t('videoAutomationRulesModalTitle')}>
+      <Modal opened={playlistAutomationModalOpened} onClose={closePlaylistAutomationModal} size="100%" title={t('videoAutomationRulesModalTitle')}>
         {playlist && (
-          <PlaylistAutomationRuleDrawerContent playlist={playlist} handleClose={closeDrawerCallback} />
+          <PlaylistAutomationRuleModalContent playlist={playlist} handleClose={closeModalCallback} />
         )}
       </Modal>
 
