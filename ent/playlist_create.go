@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
+	"github.com/zibbp/ganymede/ent/playlistrulegroup"
 	"github.com/zibbp/ganymede/ent/vod"
 )
 
@@ -130,6 +131,21 @@ func (pc *PlaylistCreate) AddMultistreamInfo(m ...*MultistreamInfo) *PlaylistCre
 		ids[i] = m[i].ID
 	}
 	return pc.AddMultistreamInfoIDs(ids...)
+}
+
+// AddRuleGroupIDs adds the "rule_groups" edge to the PlaylistRuleGroup entity by IDs.
+func (pc *PlaylistCreate) AddRuleGroupIDs(ids ...uuid.UUID) *PlaylistCreate {
+	pc.mutation.AddRuleGroupIDs(ids...)
+	return pc
+}
+
+// AddRuleGroups adds the "rule_groups" edges to the PlaylistRuleGroup entity.
+func (pc *PlaylistCreate) AddRuleGroups(p ...*PlaylistRuleGroup) *PlaylistCreate {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pc.AddRuleGroupIDs(ids...)
 }
 
 // Mutation returns the PlaylistMutation object of the builder.
@@ -273,6 +289,22 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.RuleGroupsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.RuleGroupsTable,
+			Columns: []string{playlist.RuleGroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -26,6 +26,8 @@ import (
 	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
+	"github.com/zibbp/ganymede/ent/playlistrule"
+	"github.com/zibbp/ganymede/ent/playlistrulegroup"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/sessions"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
@@ -58,6 +60,10 @@ type Client struct {
 	Playback *PlaybackClient
 	// Playlist is the client for interacting with the Playlist builders.
 	Playlist *PlaylistClient
+	// PlaylistRule is the client for interacting with the PlaylistRule builders.
+	PlaylistRule *PlaylistRuleClient
+	// PlaylistRuleGroup is the client for interacting with the PlaylistRuleGroup builders.
+	PlaylistRuleGroup *PlaylistRuleGroupClient
 	// Queue is the client for interacting with the Queue builders.
 	Queue *QueueClient
 	// Sessions is the client for interacting with the Sessions builders.
@@ -89,6 +95,8 @@ func (c *Client) init() {
 	c.MutedSegment = NewMutedSegmentClient(c.config)
 	c.Playback = NewPlaybackClient(c.config)
 	c.Playlist = NewPlaylistClient(c.config)
+	c.PlaylistRule = NewPlaylistRuleClient(c.config)
+	c.PlaylistRuleGroup = NewPlaylistRuleGroupClient(c.config)
 	c.Queue = NewQueueClient(c.config)
 	c.Sessions = NewSessionsClient(c.config)
 	c.TwitchCategory = NewTwitchCategoryClient(c.config)
@@ -184,23 +192,25 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:             ctx,
-		config:          cfg,
-		BlockedVideos:   NewBlockedVideosClient(cfg),
-		Channel:         NewChannelClient(cfg),
-		Chapter:         NewChapterClient(cfg),
-		Live:            NewLiveClient(cfg),
-		LiveCategory:    NewLiveCategoryClient(cfg),
-		LiveTitleRegex:  NewLiveTitleRegexClient(cfg),
-		MultistreamInfo: NewMultistreamInfoClient(cfg),
-		MutedSegment:    NewMutedSegmentClient(cfg),
-		Playback:        NewPlaybackClient(cfg),
-		Playlist:        NewPlaylistClient(cfg),
-		Queue:           NewQueueClient(cfg),
-		Sessions:        NewSessionsClient(cfg),
-		TwitchCategory:  NewTwitchCategoryClient(cfg),
-		User:            NewUserClient(cfg),
-		Vod:             NewVodClient(cfg),
+		ctx:               ctx,
+		config:            cfg,
+		BlockedVideos:     NewBlockedVideosClient(cfg),
+		Channel:           NewChannelClient(cfg),
+		Chapter:           NewChapterClient(cfg),
+		Live:              NewLiveClient(cfg),
+		LiveCategory:      NewLiveCategoryClient(cfg),
+		LiveTitleRegex:    NewLiveTitleRegexClient(cfg),
+		MultistreamInfo:   NewMultistreamInfoClient(cfg),
+		MutedSegment:      NewMutedSegmentClient(cfg),
+		Playback:          NewPlaybackClient(cfg),
+		Playlist:          NewPlaylistClient(cfg),
+		PlaylistRule:      NewPlaylistRuleClient(cfg),
+		PlaylistRuleGroup: NewPlaylistRuleGroupClient(cfg),
+		Queue:             NewQueueClient(cfg),
+		Sessions:          NewSessionsClient(cfg),
+		TwitchCategory:    NewTwitchCategoryClient(cfg),
+		User:              NewUserClient(cfg),
+		Vod:               NewVodClient(cfg),
 	}, nil
 }
 
@@ -218,23 +228,25 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:             ctx,
-		config:          cfg,
-		BlockedVideos:   NewBlockedVideosClient(cfg),
-		Channel:         NewChannelClient(cfg),
-		Chapter:         NewChapterClient(cfg),
-		Live:            NewLiveClient(cfg),
-		LiveCategory:    NewLiveCategoryClient(cfg),
-		LiveTitleRegex:  NewLiveTitleRegexClient(cfg),
-		MultistreamInfo: NewMultistreamInfoClient(cfg),
-		MutedSegment:    NewMutedSegmentClient(cfg),
-		Playback:        NewPlaybackClient(cfg),
-		Playlist:        NewPlaylistClient(cfg),
-		Queue:           NewQueueClient(cfg),
-		Sessions:        NewSessionsClient(cfg),
-		TwitchCategory:  NewTwitchCategoryClient(cfg),
-		User:            NewUserClient(cfg),
-		Vod:             NewVodClient(cfg),
+		ctx:               ctx,
+		config:            cfg,
+		BlockedVideos:     NewBlockedVideosClient(cfg),
+		Channel:           NewChannelClient(cfg),
+		Chapter:           NewChapterClient(cfg),
+		Live:              NewLiveClient(cfg),
+		LiveCategory:      NewLiveCategoryClient(cfg),
+		LiveTitleRegex:    NewLiveTitleRegexClient(cfg),
+		MultistreamInfo:   NewMultistreamInfoClient(cfg),
+		MutedSegment:      NewMutedSegmentClient(cfg),
+		Playback:          NewPlaybackClient(cfg),
+		Playlist:          NewPlaylistClient(cfg),
+		PlaylistRule:      NewPlaylistRuleClient(cfg),
+		PlaylistRuleGroup: NewPlaylistRuleGroupClient(cfg),
+		Queue:             NewQueueClient(cfg),
+		Sessions:          NewSessionsClient(cfg),
+		TwitchCategory:    NewTwitchCategoryClient(cfg),
+		User:              NewUserClient(cfg),
+		Vod:               NewVodClient(cfg),
 	}, nil
 }
 
@@ -265,8 +277,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
-		c.MultistreamInfo, c.MutedSegment, c.Playback, c.Playlist, c.Queue, c.Sessions,
-		c.TwitchCategory, c.User, c.Vod,
+		c.MultistreamInfo, c.MutedSegment, c.Playback, c.Playlist, c.PlaylistRule,
+		c.PlaylistRuleGroup, c.Queue, c.Sessions, c.TwitchCategory, c.User, c.Vod,
 	} {
 		n.Use(hooks...)
 	}
@@ -277,8 +289,8 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
-		c.MultistreamInfo, c.MutedSegment, c.Playback, c.Playlist, c.Queue, c.Sessions,
-		c.TwitchCategory, c.User, c.Vod,
+		c.MultistreamInfo, c.MutedSegment, c.Playback, c.Playlist, c.PlaylistRule,
+		c.PlaylistRuleGroup, c.Queue, c.Sessions, c.TwitchCategory, c.User, c.Vod,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -307,6 +319,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Playback.mutate(ctx, m)
 	case *PlaylistMutation:
 		return c.Playlist.mutate(ctx, m)
+	case *PlaylistRuleMutation:
+		return c.PlaylistRule.mutate(ctx, m)
+	case *PlaylistRuleGroupMutation:
+		return c.PlaylistRuleGroup.mutate(ctx, m)
 	case *QueueMutation:
 		return c.Queue.mutate(ctx, m)
 	case *SessionsMutation:
@@ -1835,6 +1851,22 @@ func (c *PlaylistClient) QueryMultistreamInfo(pl *Playlist) *MultistreamInfoQuer
 	return query
 }
 
+// QueryRuleGroups queries the rule_groups edge of a Playlist.
+func (c *PlaylistClient) QueryRuleGroups(pl *Playlist) *PlaylistRuleGroupQuery {
+	query := (&PlaylistRuleGroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(playlist.Table, playlist.FieldID, id),
+			sqlgraph.To(playlistrulegroup.Table, playlistrulegroup.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, playlist.RuleGroupsTable, playlist.RuleGroupsColumn),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *PlaylistClient) Hooks() []Hook {
 	return c.hooks.Playlist
@@ -1857,6 +1889,320 @@ func (c *PlaylistClient) mutate(ctx context.Context, m *PlaylistMutation) (Value
 		return (&PlaylistDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Playlist mutation op: %q", m.Op())
+	}
+}
+
+// PlaylistRuleClient is a client for the PlaylistRule schema.
+type PlaylistRuleClient struct {
+	config
+}
+
+// NewPlaylistRuleClient returns a client for the PlaylistRule from the given config.
+func NewPlaylistRuleClient(c config) *PlaylistRuleClient {
+	return &PlaylistRuleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `playlistrule.Hooks(f(g(h())))`.
+func (c *PlaylistRuleClient) Use(hooks ...Hook) {
+	c.hooks.PlaylistRule = append(c.hooks.PlaylistRule, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `playlistrule.Intercept(f(g(h())))`.
+func (c *PlaylistRuleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PlaylistRule = append(c.inters.PlaylistRule, interceptors...)
+}
+
+// Create returns a builder for creating a PlaylistRule entity.
+func (c *PlaylistRuleClient) Create() *PlaylistRuleCreate {
+	mutation := newPlaylistRuleMutation(c.config, OpCreate)
+	return &PlaylistRuleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PlaylistRule entities.
+func (c *PlaylistRuleClient) CreateBulk(builders ...*PlaylistRuleCreate) *PlaylistRuleCreateBulk {
+	return &PlaylistRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PlaylistRuleClient) MapCreateBulk(slice any, setFunc func(*PlaylistRuleCreate, int)) *PlaylistRuleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PlaylistRuleCreateBulk{err: fmt.Errorf("calling to PlaylistRuleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PlaylistRuleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PlaylistRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PlaylistRule.
+func (c *PlaylistRuleClient) Update() *PlaylistRuleUpdate {
+	mutation := newPlaylistRuleMutation(c.config, OpUpdate)
+	return &PlaylistRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PlaylistRuleClient) UpdateOne(pr *PlaylistRule) *PlaylistRuleUpdateOne {
+	mutation := newPlaylistRuleMutation(c.config, OpUpdateOne, withPlaylistRule(pr))
+	return &PlaylistRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PlaylistRuleClient) UpdateOneID(id uuid.UUID) *PlaylistRuleUpdateOne {
+	mutation := newPlaylistRuleMutation(c.config, OpUpdateOne, withPlaylistRuleID(id))
+	return &PlaylistRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PlaylistRule.
+func (c *PlaylistRuleClient) Delete() *PlaylistRuleDelete {
+	mutation := newPlaylistRuleMutation(c.config, OpDelete)
+	return &PlaylistRuleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PlaylistRuleClient) DeleteOne(pr *PlaylistRule) *PlaylistRuleDeleteOne {
+	return c.DeleteOneID(pr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PlaylistRuleClient) DeleteOneID(id uuid.UUID) *PlaylistRuleDeleteOne {
+	builder := c.Delete().Where(playlistrule.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PlaylistRuleDeleteOne{builder}
+}
+
+// Query returns a query builder for PlaylistRule.
+func (c *PlaylistRuleClient) Query() *PlaylistRuleQuery {
+	return &PlaylistRuleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePlaylistRule},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PlaylistRule entity by its id.
+func (c *PlaylistRuleClient) Get(ctx context.Context, id uuid.UUID) (*PlaylistRule, error) {
+	return c.Query().Where(playlistrule.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PlaylistRuleClient) GetX(ctx context.Context, id uuid.UUID) *PlaylistRule {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryGroup queries the group edge of a PlaylistRule.
+func (c *PlaylistRuleClient) QueryGroup(pr *PlaylistRule) *PlaylistRuleGroupQuery {
+	query := (&PlaylistRuleGroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(playlistrule.Table, playlistrule.FieldID, id),
+			sqlgraph.To(playlistrulegroup.Table, playlistrulegroup.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, playlistrule.GroupTable, playlistrule.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PlaylistRuleClient) Hooks() []Hook {
+	return c.hooks.PlaylistRule
+}
+
+// Interceptors returns the client interceptors.
+func (c *PlaylistRuleClient) Interceptors() []Interceptor {
+	return c.inters.PlaylistRule
+}
+
+func (c *PlaylistRuleClient) mutate(ctx context.Context, m *PlaylistRuleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PlaylistRuleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PlaylistRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PlaylistRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PlaylistRuleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PlaylistRule mutation op: %q", m.Op())
+	}
+}
+
+// PlaylistRuleGroupClient is a client for the PlaylistRuleGroup schema.
+type PlaylistRuleGroupClient struct {
+	config
+}
+
+// NewPlaylistRuleGroupClient returns a client for the PlaylistRuleGroup from the given config.
+func NewPlaylistRuleGroupClient(c config) *PlaylistRuleGroupClient {
+	return &PlaylistRuleGroupClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `playlistrulegroup.Hooks(f(g(h())))`.
+func (c *PlaylistRuleGroupClient) Use(hooks ...Hook) {
+	c.hooks.PlaylistRuleGroup = append(c.hooks.PlaylistRuleGroup, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `playlistrulegroup.Intercept(f(g(h())))`.
+func (c *PlaylistRuleGroupClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PlaylistRuleGroup = append(c.inters.PlaylistRuleGroup, interceptors...)
+}
+
+// Create returns a builder for creating a PlaylistRuleGroup entity.
+func (c *PlaylistRuleGroupClient) Create() *PlaylistRuleGroupCreate {
+	mutation := newPlaylistRuleGroupMutation(c.config, OpCreate)
+	return &PlaylistRuleGroupCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PlaylistRuleGroup entities.
+func (c *PlaylistRuleGroupClient) CreateBulk(builders ...*PlaylistRuleGroupCreate) *PlaylistRuleGroupCreateBulk {
+	return &PlaylistRuleGroupCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PlaylistRuleGroupClient) MapCreateBulk(slice any, setFunc func(*PlaylistRuleGroupCreate, int)) *PlaylistRuleGroupCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PlaylistRuleGroupCreateBulk{err: fmt.Errorf("calling to PlaylistRuleGroupClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PlaylistRuleGroupCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PlaylistRuleGroupCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PlaylistRuleGroup.
+func (c *PlaylistRuleGroupClient) Update() *PlaylistRuleGroupUpdate {
+	mutation := newPlaylistRuleGroupMutation(c.config, OpUpdate)
+	return &PlaylistRuleGroupUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PlaylistRuleGroupClient) UpdateOne(prg *PlaylistRuleGroup) *PlaylistRuleGroupUpdateOne {
+	mutation := newPlaylistRuleGroupMutation(c.config, OpUpdateOne, withPlaylistRuleGroup(prg))
+	return &PlaylistRuleGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PlaylistRuleGroupClient) UpdateOneID(id uuid.UUID) *PlaylistRuleGroupUpdateOne {
+	mutation := newPlaylistRuleGroupMutation(c.config, OpUpdateOne, withPlaylistRuleGroupID(id))
+	return &PlaylistRuleGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PlaylistRuleGroup.
+func (c *PlaylistRuleGroupClient) Delete() *PlaylistRuleGroupDelete {
+	mutation := newPlaylistRuleGroupMutation(c.config, OpDelete)
+	return &PlaylistRuleGroupDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PlaylistRuleGroupClient) DeleteOne(prg *PlaylistRuleGroup) *PlaylistRuleGroupDeleteOne {
+	return c.DeleteOneID(prg.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PlaylistRuleGroupClient) DeleteOneID(id uuid.UUID) *PlaylistRuleGroupDeleteOne {
+	builder := c.Delete().Where(playlistrulegroup.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PlaylistRuleGroupDeleteOne{builder}
+}
+
+// Query returns a query builder for PlaylistRuleGroup.
+func (c *PlaylistRuleGroupClient) Query() *PlaylistRuleGroupQuery {
+	return &PlaylistRuleGroupQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePlaylistRuleGroup},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PlaylistRuleGroup entity by its id.
+func (c *PlaylistRuleGroupClient) Get(ctx context.Context, id uuid.UUID) (*PlaylistRuleGroup, error) {
+	return c.Query().Where(playlistrulegroup.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PlaylistRuleGroupClient) GetX(ctx context.Context, id uuid.UUID) *PlaylistRuleGroup {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryPlaylist queries the playlist edge of a PlaylistRuleGroup.
+func (c *PlaylistRuleGroupClient) QueryPlaylist(prg *PlaylistRuleGroup) *PlaylistQuery {
+	query := (&PlaylistClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := prg.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(playlistrulegroup.Table, playlistrulegroup.FieldID, id),
+			sqlgraph.To(playlist.Table, playlist.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, playlistrulegroup.PlaylistTable, playlistrulegroup.PlaylistColumn),
+		)
+		fromV = sqlgraph.Neighbors(prg.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRules queries the rules edge of a PlaylistRuleGroup.
+func (c *PlaylistRuleGroupClient) QueryRules(prg *PlaylistRuleGroup) *PlaylistRuleQuery {
+	query := (&PlaylistRuleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := prg.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(playlistrulegroup.Table, playlistrulegroup.FieldID, id),
+			sqlgraph.To(playlistrule.Table, playlistrule.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, playlistrulegroup.RulesTable, playlistrulegroup.RulesColumn),
+		)
+		fromV = sqlgraph.Neighbors(prg.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PlaylistRuleGroupClient) Hooks() []Hook {
+	return c.hooks.PlaylistRuleGroup
+}
+
+// Interceptors returns the client interceptors.
+func (c *PlaylistRuleGroupClient) Interceptors() []Interceptor {
+	return c.inters.PlaylistRuleGroup
+}
+
+func (c *PlaylistRuleGroupClient) mutate(ctx context.Context, m *PlaylistRuleGroupMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PlaylistRuleGroupCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PlaylistRuleGroupUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PlaylistRuleGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PlaylistRuleGroupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PlaylistRuleGroup mutation op: %q", m.Op())
 	}
 }
 
@@ -2641,12 +2987,12 @@ func (c *VodClient) mutate(ctx context.Context, m *VodMutation) (Value, error) {
 type (
 	hooks struct {
 		BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
-		MultistreamInfo, MutedSegment, Playback, Playlist, Queue, Sessions,
-		TwitchCategory, User, Vod []ent.Hook
+		MultistreamInfo, MutedSegment, Playback, Playlist, PlaylistRule,
+		PlaylistRuleGroup, Queue, Sessions, TwitchCategory, User, Vod []ent.Hook
 	}
 	inters struct {
 		BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
-		MultistreamInfo, MutedSegment, Playback, Playlist, Queue, Sessions,
-		TwitchCategory, User, Vod []ent.Interceptor
+		MultistreamInfo, MutedSegment, Playback, Playlist, PlaylistRule,
+		PlaylistRuleGroup, Queue, Sessions, TwitchCategory, User, Vod []ent.Interceptor
 	}
 )

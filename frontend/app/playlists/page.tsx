@@ -3,18 +3,19 @@ import { Text, ActionIcon, Button, Container, Group, Title, Drawer, Modal, Code 
 import { Playlist, useDeletePlaylist, useGetPlaylists } from "../hooks/usePlaylist";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import useAuthStore from "../store/useAuthStore";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconAutomation, IconEdit, IconTrash } from "@tabler/icons-react";
 import { UserRole } from "../hooks/useAuthentication";
 import { DataTable } from 'mantine-datatable';
 import Link from "next/link"
 import { useDisclosure } from "@mantine/hooks";
 import PlaylistEditForm, { PlaylistEditFormMode } from "../components/playlist/EditForm";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { showNotification } from "@mantine/notifications";
 import { useAxiosPrivate } from "../hooks/useAxios";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "../util/util";
+import PlaylistAutomationRuleDrawerContent from "../components/playlist/AutomationRuleDrawerContent";
 
 
 const PlaylistsPage = () => {
@@ -29,6 +30,7 @@ const PlaylistsPage = () => {
   const [playlistEditMode, setPlaylistEditMode] = useState<PlaylistEditFormMode>(PlaylistEditFormMode.Edit)
 
   const [playlistDrawerOpened, { open: openPlaylistDrawer, close: closePlaylistDrawer }] = useDisclosure(false);
+  const [playlistAutomationDrawerOpened, { open: openPlaylistAutomationDrawer, close: closePlaylistAutomationDrawer }] = useDisclosure(false);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
 
   const axiosPrivate = useAxiosPrivate();
@@ -126,13 +128,26 @@ const PlaylistsPage = () => {
                   <ActionIcon
                     size="sm"
                     variant="subtle"
+                    color="green"
+                    onClick={() => {
+                      setPlaylist(playlist)
+                      openPlaylistAutomationDrawer()
+                    }}
+                    title={t('playlist.videoAutomationRules')}
+                    aria-label="Automation Rules"
+                  >
+                    <IconAutomation size={16} />
+                  </ActionIcon>
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
                     color="red"
                     onClick={() => {
                       setPlaylist(playlist)
                       openDeleteModal()
                     }}
                     title={t('playlist.delete')}
-                    arria-label="Delete"
+                    aria-label="Delete"
                   >
                     <IconTrash size={16} />
                   </ActionIcon>
@@ -148,6 +163,14 @@ const PlaylistsPage = () => {
       <Drawer opened={playlistDrawerOpened} onClose={closePlaylistDrawer} position="right" title={t('title')}>
         <PlaylistEditForm mode={playlistEditMode} playlist={playlist} handleClose={closeDrawerCallback} />
       </Drawer>
+
+
+      <Modal opened={playlistAutomationDrawerOpened} onClose={closePlaylistAutomationDrawer} size="100%" title={t('videoAutomationRulesModalTitle')}>
+        {playlist && (
+          <PlaylistAutomationRuleDrawerContent playlist={playlist} handleClose={closeDrawerCallback} />
+        )}
+      </Modal>
+
 
       <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deletePlaylist')} centered>
         <div>

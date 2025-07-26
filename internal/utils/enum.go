@@ -182,3 +182,40 @@ func (ProxyType) Values() (kinds []string) {
 	}
 	return
 }
+
+// PlaylistRuleOperator represents the operator used in playlist rules.
+// also update http structs when changing this
+type PlaylistRuleOperator string
+
+const (
+	OperatorEquals   PlaylistRuleOperator = "equals"
+	OperatorContains PlaylistRuleOperator = "contains"
+	OperatorRegex    PlaylistRuleOperator = "regex"
+)
+
+func (PlaylistRuleOperator) Values() (kinds []string) {
+	for _, s := range []PlaylistRuleOperator{OperatorEquals, OperatorContains, OperatorRegex} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}
+
+// PlaylistField represents the fields that can be used in playlist rules.
+// also update http structs when changing this
+// need to also run `make ent_generate` to update ent schema
+type PlaylistRuleField string
+
+const (
+	FieldTitle       PlaylistRuleField = "title"
+	FieldCategory    PlaylistRuleField = "category"
+	FieldType        PlaylistRuleField = "type"
+	FieldPlatform    PlaylistRuleField = "platform"
+	FieldChannelName PlaylistRuleField = "channel_name"
+)
+
+func (PlaylistRuleField) Values() (kinds []string) {
+	for _, s := range []PlaylistRuleField{FieldTitle, FieldCategory, FieldType, FieldPlatform, FieldChannelName} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}

@@ -22,6 +22,8 @@ import (
 	"github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
+	"github.com/zibbp/ganymede/ent/playlistrule"
+	"github.com/zibbp/ganymede/ent/playlistrulegroup"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/sessions"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
@@ -87,21 +89,23 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			blockedvideos.Table:   blockedvideos.ValidColumn,
-			channel.Table:         channel.ValidColumn,
-			chapter.Table:         chapter.ValidColumn,
-			live.Table:            live.ValidColumn,
-			livecategory.Table:    livecategory.ValidColumn,
-			livetitleregex.Table:  livetitleregex.ValidColumn,
-			multistreaminfo.Table: multistreaminfo.ValidColumn,
-			mutedsegment.Table:    mutedsegment.ValidColumn,
-			playback.Table:        playback.ValidColumn,
-			playlist.Table:        playlist.ValidColumn,
-			queue.Table:           queue.ValidColumn,
-			sessions.Table:        sessions.ValidColumn,
-			twitchcategory.Table:  twitchcategory.ValidColumn,
-			user.Table:            user.ValidColumn,
-			vod.Table:             vod.ValidColumn,
+			blockedvideos.Table:     blockedvideos.ValidColumn,
+			channel.Table:           channel.ValidColumn,
+			chapter.Table:           chapter.ValidColumn,
+			live.Table:              live.ValidColumn,
+			livecategory.Table:      livecategory.ValidColumn,
+			livetitleregex.Table:    livetitleregex.ValidColumn,
+			multistreaminfo.Table:   multistreaminfo.ValidColumn,
+			mutedsegment.Table:      mutedsegment.ValidColumn,
+			playback.Table:          playback.ValidColumn,
+			playlist.Table:          playlist.ValidColumn,
+			playlistrule.Table:      playlistrule.ValidColumn,
+			playlistrulegroup.Table: playlistrulegroup.ValidColumn,
+			queue.Table:             queue.ValidColumn,
+			sessions.Table:          sessions.ValidColumn,
+			twitchcategory.Table:    twitchcategory.ValidColumn,
+			user.Table:              user.ValidColumn,
+			vod.Table:               vod.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

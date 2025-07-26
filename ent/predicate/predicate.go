@@ -36,6 +36,12 @@ type Playback func(*sql.Selector)
 // Playlist is the predicate function for playlist builders.
 type Playlist func(*sql.Selector)
 
+// PlaylistRule is the predicate function for playlistrule builders.
+type PlaylistRule func(*sql.Selector)
+
+// PlaylistRuleGroup is the predicate function for playlistrulegroup builders.
+type PlaylistRuleGroup func(*sql.Selector)
+
 // Queue is the predicate function for queue builders.
 type Queue func(*sql.Selector)
 

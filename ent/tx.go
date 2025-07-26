@@ -32,6 +32,10 @@ type Tx struct {
 	Playback *PlaybackClient
 	// Playlist is the client for interacting with the Playlist builders.
 	Playlist *PlaylistClient
+	// PlaylistRule is the client for interacting with the PlaylistRule builders.
+	PlaylistRule *PlaylistRuleClient
+	// PlaylistRuleGroup is the client for interacting with the PlaylistRuleGroup builders.
+	PlaylistRuleGroup *PlaylistRuleGroupClient
 	// Queue is the client for interacting with the Queue builders.
 	Queue *QueueClient
 	// Sessions is the client for interacting with the Sessions builders.
@@ -183,6 +187,8 @@ func (tx *Tx) init() {
 	tx.MutedSegment = NewMutedSegmentClient(tx.config)
 	tx.Playback = NewPlaybackClient(tx.config)
 	tx.Playlist = NewPlaylistClient(tx.config)
+	tx.PlaylistRule = NewPlaylistRuleClient(tx.config)
+	tx.PlaylistRuleGroup = NewPlaylistRuleGroupClient(tx.config)
 	tx.Queue = NewQueueClient(tx.config)
 	tx.Sessions = NewSessionsClient(tx.config)
 	tx.TwitchCategory = NewTwitchCategoryClient(tx.config)

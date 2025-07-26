@@ -129,6 +129,30 @@ func (f PlaylistFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlaylistMutation", m)
 }
 
+// The PlaylistRuleFunc type is an adapter to allow the use of ordinary
+// function as PlaylistRule mutator.
+type PlaylistRuleFunc func(context.Context, *ent.PlaylistRuleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PlaylistRuleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PlaylistRuleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlaylistRuleMutation", m)
+}
+
+// The PlaylistRuleGroupFunc type is an adapter to allow the use of ordinary
+// function as PlaylistRuleGroup mutator.
+type PlaylistRuleGroupFunc func(context.Context, *ent.PlaylistRuleGroupMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PlaylistRuleGroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PlaylistRuleGroupMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlaylistRuleGroupMutation", m)
+}
+
 // The QueueFunc type is an adapter to allow the use of ordinary
 // function as Queue mutator.
 type QueueFunc func(context.Context, *ent.QueueMutation) (ent.Value, error)

@@ -105,8 +105,10 @@
       "name": "Name",
       "description": "Description",
       "edit": "Edit",
-      "delete": "Delete"
+      "delete": "Delete",
+      "videoAutomationRules": "Video Automation Rules"
     },
+    "videoAutomationRulesModalTitle": "Playlist Video Automation Rules",
     "deletePlaylist": "Delete Playlist",
     "loadingVideos": "Loading videos",
     "errorLoadingVideos": "Error loading videos"
@@ -666,7 +668,37 @@
     "addVideoToPlaylistButton": "Add video to playlist",
     "videosAddedToPlaylistNotification": "Videos added to playlist",
     "notificationError": "Error",
-    "addVideosToPlaylistButton": "Add videos to playlist"
+    "addVideosToPlaylistButton": "Add videos to playlist",
+    "automationRules": {
+      "notifications": {
+        "testEnterVideoId": "Enter a video ID to test the rules",
+        "rulesMatchedTitle": "Rules Matched",
+        "rulesMatchedText": "Video would be added to the playlist",
+        "rulesNotMatchedTitle": "Rules did not match",
+        "rulesNotMatchedText": "Video would not be added to the playlist",
+        "errorText": "Failed to test rules",
+        "saveText": "Rules saved successfully",
+        "errorSaveText": "Error saving rules"
+      },
+      "title": "Editing Video Automation Rules for Playlist \"{playlistName}\"",
+      "descriptionOne": "Playlist video automation rules can have multiple groups with multiple rules inside each group. Each group has a single \"group operator\" that controls how rules are evaluated within a group. Multiple groups use the \"OR\" operator.",
+      "descriptionTwo": "For example, if you have one group with the \"AND\" operator and two rules inside it, both rules must pass for the video to be added to the playlist.",
+      "descriptionThree": "Enable debug logs and check the log output to see how rules are being evaluated.",
+      "groupText": "Group",
+      "groupOperatorLabel": "Group Operator",
+      "nameLabel": "Name",
+      "positionLabel": "Position",
+      "enabledLabel": "Enabled",
+      "fieldLabel": "Field",
+      "operatorLabel": "Operator",
+      "valueLabel": "Value",
+      "addRuleGroupButton": "Add Rule Group",
+      "addRuleButton": "Add Rule",
+      "saveButton": "Save Rules",
+      "testRulesTitle": "Test Rules",
+      "testRulesVideoIdInputLabel": "Video ID",
+      "testRulesButton": "Test Rules"
+    }
   },
   "QueueComponents": {
     "restartButton": "restart",
