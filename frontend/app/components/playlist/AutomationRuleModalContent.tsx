@@ -38,7 +38,7 @@ const PlaylistAutomationRuleModalContent = ({ playlist, handleClose }: Props) =>
     value: value
   }));
   const playlistRuleOperator: SelectOption[] = Object.entries(PlaylistRuleOperator).map(([key, value]) => ({
-    label: key,
+    label: value === "contains" ? "Contains (case insensitive)" : key,
     value: value
   }));
   const operatorValues: SelectOption[] = Object.entries(PlaylistGroupOperator).map(([key, value]) => ({

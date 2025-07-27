@@ -100,7 +100,7 @@ func matchString(field string, op utils.PlaylistRuleOperator, val string) bool {
 	case utils.OperatorEquals:
 		return field == val
 	case utils.OperatorContains:
-		return strings.Contains(field, val)
+		return strings.Contains(strings.ToLower(field), strings.ToLower(val))
 	case utils.OperatorRegex:
 		re, err := regexp.Compile(val)
 		if err != nil {
@@ -219,5 +219,12 @@ func (s *Service) ShouldVideoBeInPlaylist(ctx context.Context, videoId uuid.UUID
 	if err != nil {
 		return false, err
 	}
+
+	// If no groups, no rules to evaluate
+	if len(groups) == 0 {
+		logger.Debug().Msg("No rule groups found for playlist, video cannot match any rules")
+		return false, nil
+	}
+
 	return EvaluatePlaylist(logger, video, groups), nil
 }

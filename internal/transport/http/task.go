@@ -12,7 +12,7 @@ type TaskService interface {
 }
 
 type StartTaskRequest struct {
-	Task string `json:"task" validate:"required,oneof=check_live check_vod check_clips get_jwks storage_migration prune_videos save_chapters update_stream_vod_ids generate_sprite_thumbnails update_video_storage_usage"`
+	Task string `json:"task" validate:"required,oneof=check_live check_vod check_clips get_jwks storage_migration prune_videos save_chapters update_stream_vod_ids generate_sprite_thumbnails update_video_storage_usage process_playlist_video_rules"`
 }
 
 // StartTask godoc

@@ -341,7 +341,9 @@
     "generateSpriteThumbnails": "Generate Sprite Thumbnails",
     "generateSpriteThumbnailsDescription": "Generate preview thumbnails seen when hovering over the player progress bar for all videos. This automatically runs after every video archive.",
     "updateVideoStorageUsage": "Update Video Storage Usage",
-    "updateVideoStorageUsageDescription": "Update the storage usage for all videos. This is used to display the storage usage in the video list and statistics page."
+    "updateVideoStorageUsageDescription": "Update the storage usage for all videos. This is used to display the storage usage in the video list and statistics page. Runs every hour.",
+    "processPlaylistVideoRules": "Process Playlist Video Rules",
+    "processPlaylistVideoRulesDescription": "Process video rules for playlists. This will check if videos should be added to playlists based on the rules defined. Runs ever hour."
   },
   "AdminUsersPage": {
     "title": "Admin - Users",
