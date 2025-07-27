@@ -20,7 +20,7 @@
     "searchInputPlaceholder": "Videos suchen...",
     "advancedSearchButton": "Erweiterte Suche",
     "advancedSearchText1": "Standardmäßig durchsucht die Suche nur den Titel der Videos. Dies kann geändert werden, indem ein bestimmtes Video-Feld durchsucht wird.",
-    "advancedSearchText2": "Verwenden Sie die Syntax <code>field:Abfrage</code>, um nach einem bestimmten Feld zu suchen.",
+    "advancedSearchText2": "Verwende die Syntax <code>field:Abfrage</code>, um nach einem bestimmten Feld zu suchen.",
     "advancedSearchText3": "Verfügbare Felder:",
     "advancedSearchText4": "Beispiele:",
     "advancedSearchTextExample1": "Suche nach Videos mit dem Titel <code>title:mein großartiges Video</code>",
@@ -59,7 +59,7 @@
     "modal": {
       "cancel": {
         "title": "Warteschlangen-Element abbrechen",
-        "text": "Sind Sie sicher, dass Sie dieses Warteschlangen-Element abbrechen möchten?",
+        "text": "Dist du Sicher, dass du dieses Warteschlangen-Element abbrechen möchten?",
         "description": "Bei Live-Archiven wird der Video- und Chat-Download gestoppt und die Nachbearbeitung gestartet. Bei VOD-Archiven werden alle Aufgaben gestoppt.",
         "delete": "Video und Videodateien löschen",
         "block": "Video-ID blockieren"
@@ -105,8 +105,10 @@
       "name": "Name",
       "description": "Beschreibung",
       "edit": "Bearbeiten",
-      "delete": "Löschen"
+      "delete": "Löschen",
+      "videoAutomationRules": "Videoautomatisierungsregeln"
     },
+    "videoAutomationRulesModalTitle": "Wiedergabelisten Videoautomatisierungsregeln",
     "deletePlaylist": "Wiedergabeliste löschen",
     "loadingVideos": "Videos werden geladen",
     "errorLoadingVideos": "Fehler beim Laden der Videos"
@@ -339,7 +341,9 @@
     "generateSpriteThumbnails": "Sprite-Thumbnails generieren",
     "generateSpriteThumbnailsDescription": "Generiere Vorschaubilder, die beim Bewegen der Maus über die Fortschrittsanzeige des Players für alle Videos angezeigt werden. Dies wird automatisch nach jeder Videoarchivierung ausgeführt.",
     "updateVideoStorageUsage": "Speichernutzung für Videos aktualisieren",
-    "updateVideoStorageUsageDescription": "Aktualisiere die Speichernutzung für alle Videos. Dies wird verwendet, um die Speichernutzung in der Videoliste und auf der Statistikseite anzuzeigen."
+    "updateVideoStorageUsageDescription": "Aktualisiere die Speichernutzung für alle Videos. Dies wird verwendet, um die Speichernutzung in der Videoliste und auf der Statistikseite anzuzeigen.",
+    "processPlaylistVideoRules": "Playlist-Videoregeln verarbeiten",
+    "processPlaylistVideoRulesDescription": "Videoregeln für Playlists verarbeiten. Dies überprüft, ob Videos basierend auf den definierten Regeln zu den Playlists hinzugefügt werden sollten. Wird jede Stunde ausgeführt."
   },
   "AdminUsersPage": {
     "title": "Admin - Benutzer",
@@ -666,7 +670,37 @@
     "addVideoToPlaylistButton": "Füge Video zur Wiedergabeliste hinzu",
     "videosAddedToPlaylistNotification": "Videos zur Wiedergabeliste hinzugefügt",
     "notificationError": "Fehler",
-    "addVideosToPlaylistButton": "Videos zur Wiedergabeliste hinzufügen"
+    "addVideosToPlaylistButton": "Videos zur Wiedergabeliste hinzufügen",
+    "automationRules": {
+      "notifications": {
+        "testEnterVideoId": "Gebe eine Video-ID ein, um die Regeln zu testen",
+        "rulesMatchedTitle": "Regeln treffen zu",
+        "rulesMatchedText": "Das Video würde zur Wiedergabeliste hinzugefügt werden",
+        "rulesNotMatchedTitle": "Regeln stimmen nicht zu",
+        "rulesNotMatchedText": "Das Video würde nicht zur Wiedergabeliste hinzugefügt werden",
+        "errorText": "Regeln konnten nicht getestet werden",
+        "saveText": "Regeln erfolgreich gespeichert",
+        "errorSaveText": "Fehler beim Speichern der Regeln"
+      },
+      "title": "Videoautomatisierungsregeln für die Wiedergabeliste \"{playlistName}\" bearbeiten",
+      "descriptionOne": "Wiedergabelistenvideoautomatisierungsregeln können mehrere Gruppen mit mehreren Regeln innerhalb jeder Gruppe haben. Jede Gruppe hat einen einzigen \"Gruppenoperator\", der steuert, wie die Regeln innerhalb einer Gruppe ausgewertet werden. Mehrere Gruppen verwenden den \"ODER\"-Operator.",
+      "descriptionTwo": "Z.B., wenn du eine Gruppe mit dem \"UND\"-Operator und zwei Regeln darin hast, müssen beide Regeln zutreffen, damit das Video zur Wiedergabeliste hinzugefügt wird.",
+      "descriptionThree": "Aktiviere die Debug-Protokolle und überprüfe deren Ausgabe, um zu sehen, wie die Regeln ausgewertet werden.",
+      "groupText": "Gruppe",
+      "groupOperatorLabel": "Gruppenoperator",
+      "nameLabel": "Name",
+      "positionLabel": "Position",
+      "enabledLabel": "Aktiviert",
+      "fieldLabel": "Feld",
+      "operatorLabel": "Operator",
+      "valueLabel": "Wert",
+      "addRuleGroupButton": "Regelgruppe hinzufügen",
+      "addRuleButton": "Regel hinzufügen",
+      "saveButton": "Regeln speichern",
+      "testRulesTitle": "Regeln testen",
+      "testRulesVideoIdInputLabel": "Video-ID",
+      "testRulesButton": "Regeln testen"
+    }
   },
   "QueueComponents": {
     "restartButton": "Neustarten",
@@ -711,7 +745,7 @@
     "filterByLabel": "Nach Kriterium filtern",
     "filterByPlaceholder": "Nach Videoarten filtern",
     "videosCount": "{count} Videos",
-    "loginRequiredText": "Sie müssen angemeldet sein, um dieses Video anzusehen",
+    "loginRequiredText": "Du musst angemeldet sein, um dieses Video anzusehen",
     "markedAsWatchedNotification": "Video als angesehen markiert",
     "markedAsUnwatchedNotification": "Video als nicht angesehen markiert",
     "videoLockedNotification": "Das Video wurde {status}.",
