@@ -11,6 +11,7 @@ import (
 	entPlaylist "github.com/zibbp/ganymede/ent/playlist"
 	entPlaylistGroup "github.com/zibbp/ganymede/ent/playlistrulegroup"
 	entTwitchCategory "github.com/zibbp/ganymede/ent/twitchcategory"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/live"
@@ -324,6 +325,7 @@ type ProcessPlaylistVideoRulesWorker struct {
 	river.WorkerDefaults[ProcessPlaylistVideoRulesArgs]
 }
 
+// ProcessPlaylistVideoRulesWorker processes playlist video rules by checking if videos should be added or removed from playlists based on defined rules.
 func (w ProcessPlaylistVideoRulesWorker) Work(ctx context.Context, job *river.Job[ProcessPlaylistVideoRulesArgs]) error {
 	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
 	logger.Info().Msg("starting task")
@@ -375,26 +377,41 @@ func (w ProcessPlaylistVideoRulesWorker) Work(ctx context.Context, job *river.Jo
 			continue
 		}
 
+		// Evaluate each video against the playlist rules
 		for _, videoID := range videoIds {
 			shouldBeIn, err := playlistService.ShouldVideoBeInPlaylist(ctx, videoID, playlistID)
 			if err != nil {
 				logger.Error().Err(err).Msg("failed to evaluate video against playlist rules")
 				continue
 			}
+
 			if shouldBeIn {
-				logger.Info().Msgf("video %s should be in playlist %s", videoID, playlistID)
+				logger.Debug().Msgf("video %s should be in playlist %s", videoID, playlistID)
 				err = playlistService.AddVodToPlaylist(ctx, playlistID, videoID)
 				if err != nil {
 					logger.Error().Err(err).Msg("failed to add video to playlist")
 					continue
 				}
+				logger.Info().Msgf("video %s added to playlist %s", videoID, playlistID)
+
 			} else {
 				logger.Debug().Msgf("video %s should NOT be in playlist %s", videoID, playlistID)
-				// Remove video from playlist if it exists
-				err = playlistService.DeleteVodFromPlaylist(ctx, playlistID, videoID)
+				// Check if video is actually in the playlist before attempting removal
+				inPlaylist, err := store.Client.Playlist.Query().
+					Where(entPlaylist.HasVodsWith(entVod.IDEQ(videoID))).
+					Where(entPlaylist.IDEQ(playlistID)).
+					Exist(ctx)
 				if err != nil {
-					logger.Error().Err(err).Msg("failed to remove video from playlist")
+					logger.Error().Err(err).Msg("failed to check if video is in playlist")
 					continue
+				}
+				if inPlaylist {
+					err = playlistService.DeleteVodFromPlaylist(ctx, playlistID, videoID)
+					if err != nil {
+						logger.Error().Err(err).Msg("failed to remove video from playlist")
+						continue
+					}
+					logger.Info().Msgf("video %s removed from playlist %s", videoID, playlistID)
 				}
 			}
 		}

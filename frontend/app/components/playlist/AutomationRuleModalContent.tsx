@@ -304,8 +304,8 @@ const PlaylistAutomationRuleModalContent = ({ playlist, handleClose }: Props) =>
             >
               {t('automationRules.addRuleGroupButton')}
             </Button>
-            <Button type="submit" loading={saveButtonLoading} disabled={saveButtonLoading} color="green">
-              Save
+            <Button type="submit" loading={saveButtonLoading} disabled={saveButtonLoading} color="green" aria-label="Save playlist rules">
+              {t('automationRules.saveButton')}
             </Button>
           </Group>
           <Card mt={"md"}>
