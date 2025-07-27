@@ -29,6 +29,8 @@ const (
 	EdgeVods = "vods"
 	// EdgeMultistreamInfo holds the string denoting the multistream_info edge name in mutations.
 	EdgeMultistreamInfo = "multistream_info"
+	// EdgeRuleGroups holds the string denoting the rule_groups edge name in mutations.
+	EdgeRuleGroups = "rule_groups"
 	// Table holds the table name of the playlist in the database.
 	Table = "playlists"
 	// VodsTable is the table that holds the vods relation/edge. The primary key declared below.
@@ -43,6 +45,13 @@ const (
 	MultistreamInfoInverseTable = "multistream_infos"
 	// MultistreamInfoColumn is the table column denoting the multistream_info relation/edge.
 	MultistreamInfoColumn = "playlist_multistream_info"
+	// RuleGroupsTable is the table that holds the rule_groups relation/edge.
+	RuleGroupsTable = "playlist_rule_groups"
+	// RuleGroupsInverseTable is the table name for the PlaylistRuleGroup entity.
+	// It exists in this package in order to avoid circular dependency with the "playlistrulegroup" package.
+	RuleGroupsInverseTable = "playlist_rule_groups"
+	// RuleGroupsColumn is the table column denoting the rule_groups relation/edge.
+	RuleGroupsColumn = "playlist_rule_groups"
 )
 
 // Columns holds all SQL columns for playlist fields.
@@ -142,6 +151,20 @@ func ByMultistreamInfo(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMultistreamInfoStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByRuleGroupsCount orders the results by rule_groups count.
+func ByRuleGroupsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRuleGroupsStep(), opts...)
+	}
+}
+
+// ByRuleGroups orders the results by rule_groups terms.
+func ByRuleGroups(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRuleGroupsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newVodsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -154,5 +177,12 @@ func newMultistreamInfoStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MultistreamInfoInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MultistreamInfoTable, MultistreamInfoColumn),
+	)
+}
+func newRuleGroupsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RuleGroupsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RuleGroupsTable, RuleGroupsColumn),
 	)
 }

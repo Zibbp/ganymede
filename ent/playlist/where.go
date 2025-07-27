@@ -422,6 +422,29 @@ func HasMultistreamInfoWith(preds ...predicate.MultistreamInfo) predicate.Playli
 	})
 }
 
+// HasRuleGroups applies the HasEdge predicate on the "rule_groups" edge.
+func HasRuleGroups() predicate.Playlist {
+	return predicate.Playlist(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RuleGroupsTable, RuleGroupsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRuleGroupsWith applies the HasEdge predicate on the "rule_groups" edge with a given conditions (other predicates).
+func HasRuleGroupsWith(preds ...predicate.PlaylistRuleGroup) predicate.Playlist {
+	return predicate.Playlist(func(s *sql.Selector) {
+		step := newRuleGroupsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Playlist) predicate.Playlist {
 	return predicate.Playlist(sql.AndPredicates(predicates...))

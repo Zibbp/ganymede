@@ -40,9 +40,11 @@ type PlaylistEdges struct {
 	Vods []*Vod `json:"vods,omitempty"`
 	// MultistreamInfo holds the value of the multistream_info edge.
 	MultistreamInfo []*MultistreamInfo `json:"multistream_info,omitempty"`
+	// RuleGroups holds the value of the rule_groups edge.
+	RuleGroups []*PlaylistRuleGroup `json:"rule_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // VodsOrErr returns the Vods value or an error if the edge
@@ -61,6 +63,15 @@ func (e PlaylistEdges) MultistreamInfoOrErr() ([]*MultistreamInfo, error) {
 		return e.MultistreamInfo, nil
 	}
 	return nil, &NotLoadedError{edge: "multistream_info"}
+}
+
+// RuleGroupsOrErr returns the RuleGroups value or an error if the edge
+// was not loaded in eager-loading.
+func (e PlaylistEdges) RuleGroupsOrErr() ([]*PlaylistRuleGroup, error) {
+	if e.loadedTypes[2] {
+		return e.RuleGroups, nil
+	}
+	return nil, &NotLoadedError{edge: "rule_groups"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -146,6 +157,11 @@ func (pl *Playlist) QueryVods() *VodQuery {
 // QueryMultistreamInfo queries the "multistream_info" edge of the Playlist entity.
 func (pl *Playlist) QueryMultistreamInfo() *MultistreamInfoQuery {
 	return NewPlaylistClient(pl.config).QueryMultistreamInfo(pl)
+}
+
+// QueryRuleGroups queries the "rule_groups" edge of the Playlist entity.
+func (pl *Playlist) QueryRuleGroups() *PlaylistRuleGroupQuery {
+	return NewPlaylistClient(pl.config).QueryRuleGroups(pl)
 }
 
 // Update returns a builder for updating this Playlist.

@@ -5,12 +5,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/riverqueue/river"
 	"github.com/rs/zerolog/log"
+	entPlaylist "github.com/zibbp/ganymede/ent/playlist"
+	entPlaylistGroup "github.com/zibbp/ganymede/ent/playlistrulegroup"
 	entTwitchCategory "github.com/zibbp/ganymede/ent/twitchcategory"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/live"
+	"github.com/zibbp/ganymede/internal/playlist"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
 	"github.com/zibbp/ganymede/internal/vod"
@@ -294,6 +299,122 @@ func (w FetchJWKSWorker) Work(ctx context.Context, job *river.Job[FetchJWKSArgs]
 	err := auth.FetchJWKS(ctx)
 	if err != nil {
 		return err
+	}
+
+	logger.Info().Msg("task completed")
+
+	return nil
+}
+
+// Process playlist video rules
+type ProcessPlaylistVideoRulesArgs struct{}
+
+func (ProcessPlaylistVideoRulesArgs) Kind() string { return tasks.TaskProcessPlaylistVideoRules }
+
+func (w ProcessPlaylistVideoRulesArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w ProcessPlaylistVideoRulesArgs) Timeout(job *river.Job[ProcessPlaylistVideoRulesArgs]) time.Duration {
+	return 5 * time.Minute
+}
+
+type ProcessPlaylistVideoRulesWorker struct {
+	river.WorkerDefaults[ProcessPlaylistVideoRulesArgs]
+}
+
+// ProcessPlaylistVideoRulesWorker processes playlist video rules by checking if videos should be added or removed from playlists based on defined rules.
+func (w ProcessPlaylistVideoRulesWorker) Work(ctx context.Context, job *river.Job[ProcessPlaylistVideoRulesArgs]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	store, err := tasks.StoreFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	playlistService := playlist.NewService(store)
+
+	// Get all playlists
+	var playlistIds []uuid.UUID
+	err = store.Client.Playlist.
+		Query().
+		Select(entPlaylist.FieldID).
+		Scan(ctx, &playlistIds)
+	if err != nil {
+		return fmt.Errorf("failed to get playlists: %w", err)
+	}
+
+	// Get all videos
+	var videoIds []uuid.UUID
+	err = store.Client.Vod.
+		Query().
+		Select(entPlaylist.FieldID).
+		Scan(ctx, &videoIds)
+	if err != nil {
+		return fmt.Errorf("failed to get videos: %w", err)
+	}
+
+	log.Info().Msgf("found %d playlists and %d videos, processing playlist rules", len(playlistIds), len(videoIds))
+	for _, playlistID := range playlistIds {
+		logger := logger.With().Str("playlist_id", playlistID.String()).Logger()
+		logger.Info().Msg("processing playlist video rules")
+
+		// Query rule groups for the playlist
+		groups, err := store.Client.PlaylistRuleGroup.
+			Query().
+			Where(entPlaylistGroup.HasPlaylistWith(entPlaylist.IDEQ(playlistID))).
+			WithRules().
+			All(ctx)
+		if err != nil {
+			logger.Error().Err(err).Msg("failed to get playlist rule groups")
+			continue
+		}
+		if len(groups) == 0 {
+			logger.Info().Msg("no rule groups found for playlist, skipping")
+			continue
+		}
+
+		// Evaluate each video against the playlist rules
+		for _, videoID := range videoIds {
+			shouldBeIn, err := playlistService.ShouldVideoBeInPlaylist(ctx, videoID, playlistID)
+			if err != nil {
+				logger.Error().Err(err).Msg("failed to evaluate video against playlist rules")
+				continue
+			}
+
+			if shouldBeIn {
+				logger.Debug().Msgf("video %s should be in playlist %s", videoID, playlistID)
+				err = playlistService.AddVodToPlaylist(ctx, playlistID, videoID)
+				if err != nil {
+					logger.Error().Err(err).Msg("failed to add video to playlist")
+					continue
+				}
+				logger.Info().Msgf("video %s added to playlist %s", videoID, playlistID)
+
+			} else {
+				logger.Debug().Msgf("video %s should NOT be in playlist %s", videoID, playlistID)
+				// Check if video is actually in the playlist before attempting removal
+				inPlaylist, err := store.Client.Playlist.Query().
+					Where(entPlaylist.HasVodsWith(entVod.IDEQ(videoID))).
+					Where(entPlaylist.IDEQ(playlistID)).
+					Exist(ctx)
+				if err != nil {
+					logger.Error().Err(err).Msg("failed to check if video is in playlist")
+					continue
+				}
+				if inPlaylist {
+					err = playlistService.DeleteVodFromPlaylist(ctx, playlistID, videoID)
+					if err != nil {
+						logger.Error().Err(err).Msg("failed to remove video from playlist")
+						continue
+					}
+					logger.Info().Msgf("video %s removed from playlist %s", videoID, playlistID)
+				}
+			}
+		}
 	}
 
 	logger.Info().Msg("task completed")

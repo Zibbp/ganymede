@@ -32,5 +32,6 @@ func (Playlist) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("vods", Vod.Type),
 		edge.To("multistream_info", MultistreamInfo.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("rule_groups", PlaylistRuleGroup.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }

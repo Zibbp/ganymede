@@ -111,6 +111,14 @@ func (s *Service) StartTask(ctx context.Context, task string) error {
 			return fmt.Errorf("error inserting task: %v", err)
 		}
 		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
+
+	case "process_playlist_video_rules":
+		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.ProcessPlaylistVideoRulesArgs{}, nil)
+		if err != nil {
+			return fmt.Errorf("error inserting task: %v", err)
+		}
+		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
+
 	}
 
 	return nil

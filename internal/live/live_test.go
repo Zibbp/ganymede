@@ -91,7 +91,7 @@ func startAndWaitForArchiving(t *testing.T, app *server.Application, watchedChan
 
 // Helper to assert VOD and queue item, stop archive, and check files
 func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platform.LiveStreamInfo) {
-	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).First(t.Context())
+	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).WithChapters().First(t.Context())
 	assert.NoError(t, err, "Failed to query VOD for live stream")
 	assert.NotNil(t, vod, "VOD should not be nil")
 
@@ -126,6 +126,12 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.NotEqual(t, 0, vod.StorageSizeBytes)
 	assert.True(t, tests_shared.IsPlayableVideo(vod.VideoPath), "Video file is not playable")
 	assert.True(t, tests_shared.IsPlayableVideo(vod.ChatVideoPath), "Video file is not playable")
+
+	// If live archive assert at least one chapter exists
+	if vod.Type == utils.Live {
+		assert.NoError(t, err, "Failed to get chapters for VOD")
+		assert.GreaterOrEqual(t, len(vod.Edges.Chapters), 1, "Expected at least one chapter for live archive VOD")
+	}
 }
 
 // TestTwitchWatchedChannelLive tests the basic live archiving of a Twitch channel
