@@ -59,7 +59,7 @@
     "modal": {
       "cancel": {
         "title": "Warteschlangen-Element abbrechen",
-        "text": "Dist du Sicher, dass du dieses Warteschlangen-Element abbrechen möchten?",
+        "text": "Bist du Sicher, dass du dieses Warteschlangen-Element abbrechen möchten?",
         "description": "Bei Live-Archiven wird der Video- und Chat-Download gestoppt und die Nachbearbeitung gestartet. Bei VOD-Archiven werden alle Aufgaben gestoppt.",
         "delete": "Video und Videodateien löschen",
         "block": "Video-ID blockieren"
