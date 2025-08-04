@@ -139,7 +139,7 @@ const ChatPlayer = ({ video }: Params) => {
     content_offset_seconds: 0,
     // @ts-expect-error additional fields unnecessary
     commenter: {
-      display_name: "Ganymede",
+      display_name: "QuackGuard",
     },
     // @ts-expect-error additional fields unnecessary
     message: {
