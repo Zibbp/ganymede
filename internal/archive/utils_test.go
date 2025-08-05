@@ -39,7 +39,7 @@ func TestGetFolderName(t *testing.T) {
 	}{
 		{
 			name:        "default template",
-			template:    "",
+			template:    "{{date}}-{{id}}-{{type}}-{{uuid}}",
 			expected:    "2025-08-04-testid-video-123e4567-e89b-12d3-a456-426614174000",
 			expectError: false,
 		},
@@ -111,7 +111,7 @@ func TestGetFileName(t *testing.T) {
 	}{
 		{
 			name:        "default template",
-			template:    "",
+			template:    "{{id}}",
 			expected:    "testid",
 			expectError: false,
 		},
