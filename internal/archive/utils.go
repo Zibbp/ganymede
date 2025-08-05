@@ -22,6 +22,10 @@ type StorageTemplateInput struct {
 	Title   string
 	Type    string
 	Date    string // parsed date
+	YYYY    string // year
+	MM      string // month
+	DD      string // day
+	HH      string // hour
 }
 
 func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
@@ -98,6 +102,10 @@ func getVariableMap(uuid uuid.UUID, input StorageTemplateInput) (map[string]inte
 		"title":   safeTitle,
 		"date":    input.Date,
 		"type":    input.Type,
+		"YYYY":    input.YYYY,
+		"MM":      input.MM,
+		"DD":      input.DD,
+		"HH":      input.HH,
 	}
 	return variables, nil
 }

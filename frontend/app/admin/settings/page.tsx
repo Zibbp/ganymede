@@ -163,7 +163,7 @@ const AdminSettingsPage = () => {
               {t('applicationSettings.notificationSettingsButton')}
             </Button>
 
-            <Collapse in={notificationsOpened}>
+            <Collapse in={notificationsOpened} px={25} pt={10}>
               <Text>Must be a webhook URL or an Apprise HTTP URL, visit the <a href="https://github.com/Zibbp/ganymede/wiki/Notifications" target="_blank">wiki</a> for more information.</Text>
 
               {/* video archive success */}
@@ -403,7 +403,7 @@ const AdminSettingsPage = () => {
               {t('archiveSettings.storageTemplateSettings')}
             </Button>
 
-            <Collapse in={storageTemplateOpened}>
+            <Collapse in={storageTemplateOpened} px={25} pt={10}>
 
               <div>
                 <Text mb={10}>
@@ -426,7 +426,7 @@ const AdminSettingsPage = () => {
                   </Title>
 
                   <Textarea
-                    description="Do not include the file extension. The file type will be appened to the end of the file name such as -video -chat and -thumbnail."
+                    description="Do not include the file extension. The file type will be appended to the end of the file name such as -video -chat and -thumbnail."
                     key={form.key('storage_templates.file_template')}
                     {...form.getInputProps('storage_templates.file_template')}
                     required
@@ -440,13 +440,22 @@ const AdminSettingsPage = () => {
 
                   <div>
                     <Text>Ganymede</Text>
-                    <Code>{"{{uuid}}"}</Code>
-                    <Text>Twitch Video</Text>
-                    <Code>{"{{id}} {{channel}} {{title}} {{date}} {{type}}"}</Code>
-                    <Text ml={20} mt={5} size="sm">
-                      ID: Twitch video ID <br /> Date: Date streamed or uploaded <br />{" "}
-                      Type: Twitch video type (live, archive, highlight)
-                    </Text>
+                    <ul>
+                      <li><Code>{"{{uuid}}"}</Code>: Unique identifier for the archive</li>
+                    </ul>
+                    <Text>Video</Text>
+                    <ul>
+                      <li><Code>{"{{id}}"}</Code>: Video ID</li>
+                      <li><Code>{"{{channel}}"}</Code>: Channel name</li>
+                      <li><Code>{"{{title}}"}</Code>: Video title (file safe)</li>
+                      <li><Code>{"{{type}}"}</Code>: Video type (live, archive, highlight)</li>
+                      <li><Code>{"{{date}}"}</Code>: Formatted date (YYYY-MM-DD)</li>
+                      <li><Code>{"{{YYYY}}"}</Code>: Year</li>
+                      <li><Code>{"{{MM}}"}</Code>: Month</li>
+                      <li><Code>{"{{DD}}"}</Code>: Day</li>
+                      <li><Code>{"{{HH}}"}</Code>: Hour</li>
+                    </ul>
+
                   </div>
                 </div>
 
