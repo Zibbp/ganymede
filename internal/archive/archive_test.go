@@ -2,6 +2,7 @@ package archive_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -572,4 +573,114 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	for _, spriteThumbnailPath := range v.SpriteThumbnailsImages {
 		assert.FileExists(t, spriteThumbnailPath)
 	}
+}
+
+// TestArchiveVideoStorageTemplateSettings tests the storage template settings for archiving videos
+func TestArchiveVideoStorageTemplateSettings(t *testing.T) {
+	// Setup the application
+	app, err := tests.Setup(t)
+	assert.NoError(t, err)
+
+	// Archive the video
+	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+		VideoId:     TestTwitchVideoId,
+		Quality:     utils.R720,
+		ArchiveChat: false,
+		RenderChat:  false,
+	})
+	assert.NoError(t, err)
+
+	// Assert video was created
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChannel().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+
+	// Assert storage template settings were applied
+	expectedFolderName, err := archive.GetFolderName(v.ID, archive.StorageTemplateInput{
+		UUID:    v.ID,
+		ID:      v.ExtID,
+		Channel: v.Edges.Channel.Name,
+		Title:   v.Title,
+		Type:    string(v.Type),
+		Date:    v.StreamedAt.Format("2006-01-02"),
+		YYYY:    v.StreamedAt.Format("2006"),
+		MM:      v.StreamedAt.Format("01"),
+		DD:      v.StreamedAt.Format("02"),
+		HH:      v.StreamedAt.Format("15"),
+	})
+	assert.NoError(t, err)
+	expectedFileName, err := archive.GetFileName(v.ID, archive.StorageTemplateInput{
+		UUID:    v.ID,
+		ID:      v.ExtID,
+		Channel: v.Edges.Channel.Name,
+		Title:   v.Title,
+		Type:    string(v.Type),
+		Date:    v.StreamedAt.Format("2006-01-02"),
+		YYYY:    v.StreamedAt.Format("2006"),
+		MM:      v.StreamedAt.Format("01"),
+		DD:      v.StreamedAt.Format("02"),
+		HH:      v.StreamedAt.Format("15"),
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, v.FolderName, expectedFolderName, "Folder name should match the expected storage template")
+	assert.Equal(t, v.FileName, expectedFileName, "File name should match the expected storage template")
+}
+
+// TestArchiveVideoStorageTemplateSettingsCustom tests the custom storage template settings for archiving videos
+func TestArchiveVideoStorageTemplateSettingsCustom(t *testing.T) {
+	// Setup the application
+	app, err := tests.Setup(t)
+	assert.NoError(t, err)
+
+	c := config.Get()
+	// Set a custom storage template for testing
+	c.StorageTemplates.FolderTemplate = "{{YYYY}}{{MM}}-{{DD}}{{HH}} - {{title}}"
+	c.StorageTemplates.FileTemplate = "{{title}}_{{id}}_{{uuid}}"
+	assert.NoError(t, config.UpdateConfig(c), "failed to update config with custom template")
+
+	// Archive the video
+	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+		VideoId:     TestTwitchVideoId,
+		Quality:     utils.R720,
+		ArchiveChat: false,
+		RenderChat:  false,
+	})
+	assert.NoError(t, err)
+
+	// Assert video was created
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChannel().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+
+	// Assert storage template settings were applied
+	expectedFolderName, err := archive.GetFolderName(v.ID, archive.StorageTemplateInput{
+		UUID:    v.ID,
+		ID:      v.ExtID,
+		Channel: v.Edges.Channel.Name,
+		Title:   v.Title,
+		Type:    string(v.Type),
+		Date:    v.StreamedAt.Format("2006-01-02"),
+		YYYY:    v.StreamedAt.Format("2006"),
+		MM:      v.StreamedAt.Format("01"),
+		DD:      v.StreamedAt.Format("02"),
+		HH:      v.StreamedAt.Format("15"),
+	})
+	assert.NoError(t, err)
+	expectedFileName, err := archive.GetFileName(v.ID, archive.StorageTemplateInput{
+		UUID:    v.ID,
+		ID:      v.ExtID,
+		Channel: v.Edges.Channel.Name,
+		Title:   v.Title,
+		Type:    string(v.Type),
+		Date:    v.StreamedAt.Format("2006-01-02"),
+		YYYY:    v.StreamedAt.Format("2006"),
+		MM:      v.StreamedAt.Format("01"),
+		DD:      v.StreamedAt.Format("02"),
+		HH:      v.StreamedAt.Format("15"),
+	})
+	assert.NoError(t, err)
+	fmt.Printf("Expected folder name: %s, expected file name: %s\n", expectedFolderName, expectedFileName)
+	fmt.Printf("Actual folder name: %s, actual file name: %s\n", v.FolderName, v.FileName)
+	assert.Equal(t, v.FolderName, expectedFolderName, "Folder name should match the expected storage template")
+	assert.Equal(t, v.FileName, expectedFileName, "File name should match the expected storage template")
 }

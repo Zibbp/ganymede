@@ -154,6 +154,10 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 		Title:   video.Title,
 		Type:    video.Type,
 		Date:    video.CreatedAt.Format("2006-01-02"),
+		YYYY:    video.CreatedAt.Format("2006"),
+		MM:      video.CreatedAt.Format("01"),
+		DD:      video.CreatedAt.Format("02"),
+		HH:      video.CreatedAt.Format("15"),
 	}
 	// Create directory paths
 	folderName, err := GetFolderName(vUUID, storageTemplateInput)
@@ -346,6 +350,10 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) error
 		Title:   clip.Title,
 		Type:    string(utils.Clip),
 		Date:    clip.CreatedAt.Format("2006-01-02"),
+		YYYY:    clip.CreatedAt.Format("2006"),
+		MM:      clip.CreatedAt.Format("01"),
+		DD:      clip.CreatedAt.Format("02"),
+		HH:      clip.CreatedAt.Format("15"),
 	}
 	// Create directory paths
 	folderName, err := GetFolderName(vUUID, storageTemplateInput)
@@ -502,6 +510,10 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		Title:   video.Title,
 		Type:    video.Type,
 		Date:    video.StartedAt.Format("2006-01-02"),
+		YYYY:    video.StartedAt.Format("2006"),
+		MM:      video.StartedAt.Format("01"),
+		DD:      video.StartedAt.Format("02"),
+		HH:      video.StartedAt.Format("15"),
 	}
 	// Create directory paths
 	folderName, err := GetFolderName(vUUID, storageTemplateInput)

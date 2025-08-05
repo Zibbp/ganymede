@@ -13,6 +13,8 @@ import (
 	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/queue"
 	entVod "github.com/zibbp/ganymede/ent/vod"
+	"github.com/zibbp/ganymede/internal/archive"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/server"
@@ -67,7 +69,7 @@ func setupAppAndLiveChannel(t *testing.T) (*server.Application, platform.LiveStr
 }
 
 // Helper to create a watched channel
-func createWatchedChannel(t *testing.T, app *server.Application, liveInput live.Live, channelID uuid.UUID) *ent.Live {
+func createWatchedChannel(t *testing.T, app *server.Application, liveInput live.Live, channelID uuid.UUID, storageTemplateFolder *string, storageTemplateFile *string) *ent.Live {
 	watchedChannel, err := app.LiveService.AddLiveWatchedChannel(t.Context(), liveInput)
 	assert.NoError(t, err)
 	assert.NotNil(t, watchedChannel, "Expected a valid watched channel to be created")
@@ -76,6 +78,19 @@ func createWatchedChannel(t *testing.T, app *server.Application, liveInput live.
 	assert.NoError(t, err, "Failed to query watched channel")
 	assert.NotNil(t, watchedChannel, "Watched channel should not be nil")
 	assert.Equal(t, channelID, watchedChannel.Edges.Channel.ID, "Watched channel should be linked to the archived platform channel")
+
+	// Update storage template settings if provided
+	if storageTemplateFolder != nil || storageTemplateFile != nil {
+		updatedConfig := config.Get()
+		if storageTemplateFolder != nil {
+			updatedConfig.StorageTemplates.FolderTemplate = *storageTemplateFolder
+		}
+		if storageTemplateFile != nil {
+			updatedConfig.StorageTemplates.FileTemplate = *storageTemplateFile
+		}
+		assert.NoError(t, config.UpdateConfig(updatedConfig), "Failed to update config with storage template settings")
+	}
+
 	return watchedChannel
 }
 
@@ -91,13 +106,43 @@ func startAndWaitForArchiving(t *testing.T, app *server.Application, watchedChan
 
 // Helper to assert VOD and queue item, stop archive, and check files
 func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platform.LiveStreamInfo) {
-	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).WithChapters().First(t.Context())
+	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).WithChannel().WithChapters().First(t.Context())
 	assert.NoError(t, err, "Failed to query VOD for live stream")
 	assert.NotNil(t, vod, "VOD should not be nil")
 
 	q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(entVod.ID(vod.ID))).Only(t.Context())
 	assert.NoError(t, err, "Failed to query queue item for VOD")
 	assert.NotNil(t, q, "Queue item for VOD should not be nil")
+
+	// Assert storage template settings were applied
+	expectedFolderName, err := archive.GetFolderName(vod.ID, archive.StorageTemplateInput{
+		UUID:    vod.ID,
+		ID:      vod.ExtID,
+		Channel: vod.Edges.Channel.Name,
+		Title:   vod.Title,
+		Type:    string(vod.Type),
+		Date:    vod.StreamedAt.Format("2006-01-02"),
+		YYYY:    vod.StreamedAt.Format("2006"),
+		MM:      vod.StreamedAt.Format("01"),
+		DD:      vod.StreamedAt.Format("02"),
+		HH:      vod.StreamedAt.Format("15"),
+	})
+	assert.NoError(t, err)
+	expectedFileName, err := archive.GetFileName(vod.ID, archive.StorageTemplateInput{
+		UUID:    vod.ID,
+		ID:      vod.ExtID,
+		Channel: vod.Edges.Channel.Name,
+		Title:   vod.Title,
+		Type:    string(vod.Type),
+		Date:    vod.StreamedAt.Format("2006-01-02"),
+		YYYY:    vod.StreamedAt.Format("2006"),
+		MM:      vod.StreamedAt.Format("01"),
+		DD:      vod.StreamedAt.Format("02"),
+		HH:      vod.StreamedAt.Format("15"),
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, vod.FolderName, expectedFolderName, "Folder name should match the expected storage template")
+	assert.Equal(t, vod.FileName, expectedFileName, "File name should match the expected storage template")
 
 	t.Logf("Waiting for live stream to archive")
 	time.Sleep(1 * time.Minute)
@@ -150,7 +195,7 @@ func TestTwitchWatchedChannelLive(t *testing.T) {
 		DownloadSubOnly:       false,
 		UpdateMetadataMinutes: 1,
 	}
-	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID)
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
 	assertVodAndQueue(t, app, liveChannel)
 }
@@ -173,7 +218,7 @@ func TestTwitchWatchedChannelLiveCategoryRestrictionFail(t *testing.T) {
 		Categories:            []string{"Factorio"},
 		ApplyCategoriesToLive: true,
 	}
-	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID)
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, true)
 }
 
@@ -194,7 +239,7 @@ func TestTwitchWatchedChannelLiveCategoryRestriction(t *testing.T) {
 		UpdateMetadataMinutes: 1,
 		Categories:            []string{liveChannel.GameName},
 	}
-	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID)
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
 	assertVodAndQueue(t, app, liveChannel)
 }
@@ -222,7 +267,7 @@ func TestTwitchWatchedChannelTitleRegexFail(t *testing.T) {
 			},
 		},
 	}
-	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID)
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, true)
 }
 
@@ -249,7 +294,12 @@ func TestTwitchWatchedChannelTitleRegex(t *testing.T) {
 			},
 		},
 	}
-	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID)
+
+	// Set custom storage template settings for this test
+	customFolder := "{{YYYY}}{{MM}}-{{DD}}{{HH}} - {{title}}"
+	customFile := "{{title}}_{{id}}_{{uuid}}"
+
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, &customFolder, &customFile)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
 	assertVodAndQueue(t, app, liveChannel)
 }
