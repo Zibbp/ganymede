@@ -326,7 +326,7 @@ OUTER:
 				}
 
 				// Archive stream
-				err = s.ArchiveService.ArchiveLivestream(ctx, archive.ArchiveVideoInput{
+				_, err = s.ArchiveService.ArchiveLivestream(ctx, archive.ArchiveVideoInput{
 					ChannelId:   lwc.Edges.Channel.ID,
 					Quality:     utils.VodQuality(lwc.Resolution),
 					ArchiveChat: lwc.ArchiveChat,

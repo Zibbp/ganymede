@@ -71,7 +71,7 @@ func TestArchiveVideo(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: true,
@@ -193,7 +193,7 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: false,
@@ -260,7 +260,7 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: true,
@@ -332,7 +332,7 @@ func TestArchiveVideoHLS(t *testing.T) {
 	assert.NoError(t, config.UpdateConfig(c))
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: false,
@@ -434,7 +434,7 @@ func TestArchiveClip(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveClip(context.Background(), archive.ArchiveClipInput{
+	_, err = app.ArchiveService.ArchiveClip(context.Background(), archive.ArchiveClipInput{
 		ID:          TestTwitchClipId,
 		Quality:     utils.R720,
 		ArchiveChat: true,
@@ -502,7 +502,7 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: false,
@@ -582,7 +582,7 @@ func TestArchiveVideoStorageTemplateSettings(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: false,
@@ -639,7 +639,7 @@ func TestArchiveVideoStorageTemplateSettingsCustom(t *testing.T) {
 	assert.NoError(t, config.UpdateConfig(c), "failed to update config with custom template")
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: false,

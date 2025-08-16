@@ -18,9 +18,9 @@ import (
 
 type ArchiveService interface {
 	ArchiveChannel(ctx context.Context, channelName string) (*ent.Channel, error)
-	ArchiveVideo(ctx context.Context, input archive.ArchiveVideoInput) error
-	ArchiveLivestream(ctx context.Context, input archive.ArchiveVideoInput) error
-	ArchiveClip(ctx context.Context, input archive.ArchiveClipInput) error
+	ArchiveVideo(ctx context.Context, input archive.ArchiveVideoInput) (*archive.ArchiveResponse, error)
+	ArchiveLivestream(ctx context.Context, input archive.ArchiveVideoInput) (*archive.ArchiveResponse, error)
+	ArchiveClip(ctx context.Context, input archive.ArchiveClipInput) (*archive.ArchiveResponse, error)
 }
 
 type ArchiveChannelRequest struct {
@@ -108,6 +108,8 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, "either channel_id or video_id must be set")
 	}
 
+	var archiveResponse *archive.ArchiveResponse
+
 	if body.ChannelId != "" {
 		// validate channel id
 		parsedChannelId, err := uuid.Parse(body.ChannelId)
@@ -115,7 +117,7 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 			return ErrorResponse(c, http.StatusBadRequest, err.Error())
 		}
 
-		err = h.Service.ArchiveService.ArchiveLivestream(c.Request().Context(), archive.ArchiveVideoInput{
+		archiveResponse, err = h.Service.ArchiveService.ArchiveLivestream(c.Request().Context(), archive.ArchiveVideoInput{
 			ChannelId:   parsedChannelId,
 			Quality:     body.Quality,
 			ArchiveChat: body.ArchiveChat,
@@ -129,7 +131,8 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 
 		switch idType {
 		case "numeric":
-			err := h.Service.ArchiveService.ArchiveVideo(c.Request().Context(), archive.ArchiveVideoInput{
+			var err error
+			archiveResponse, err = h.Service.ArchiveService.ArchiveVideo(c.Request().Context(), archive.ArchiveVideoInput{
 				VideoId:     body.VideoId,
 				Quality:     body.Quality,
 				ArchiveChat: body.ArchiveChat,
@@ -140,7 +143,8 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 			}
 
 		case "alphanumeric":
-			err := h.Service.ArchiveService.ArchiveClip(c.Request().Context(), archive.ArchiveClipInput{
+			var err error
+			archiveResponse, err = h.Service.ArchiveService.ArchiveClip(c.Request().Context(), archive.ArchiveClipInput{
 				ID:          body.VideoId,
 				Quality:     body.Quality,
 				ArchiveChat: body.ArchiveChat,
@@ -156,7 +160,7 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 
 	}
 
-	return SuccessResponse(c, "", "archive started")
+	return SuccessResponse(c, archiveResponse, "archive started")
 }
 
 // debug route to test converting chat files
