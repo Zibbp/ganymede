@@ -289,7 +289,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*A
 	return &ArchiveResponse{
 		Queue: q,
 		Video: v,
-	}, err
+	}, nil
 }
 
 type ArchiveClipInput struct {

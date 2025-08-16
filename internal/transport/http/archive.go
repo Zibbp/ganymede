@@ -109,6 +109,7 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 	}
 
 	var archiveResponse *archive.ArchiveResponse
+	var err error
 
 	if body.ChannelId != "" {
 		// validate channel id
@@ -131,7 +132,6 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 
 		switch idType {
 		case "numeric":
-			var err error
 			archiveResponse, err = h.Service.ArchiveService.ArchiveVideo(c.Request().Context(), archive.ArchiveVideoInput{
 				VideoId:     body.VideoId,
 				Quality:     body.Quality,
@@ -143,7 +143,6 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 			}
 
 		case "alphanumeric":
-			var err error
 			archiveResponse, err = h.Service.ArchiveService.ArchiveClip(c.Request().Context(), archive.ArchiveClipInput{
 				ID:          body.VideoId,
 				Quality:     body.Quality,
