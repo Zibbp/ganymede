@@ -63,7 +63,7 @@ func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.
 	// Download channel profile image
 	err = utils.DownloadFile(platformChannel.ProfileImageURL, fmt.Sprintf("%s/%s/%s", env.VideosDir, platformChannel.Login, "profile.png"))
 	if err != nil {
-		return nil, fmt.Errorf("error downloading channel profile image: %v", err)
+		log.Error().Err(err).Msg("error downloading channel profile image")
 	}
 
 	// Create channel in DB
