@@ -35,6 +35,11 @@ type TwitchVodResponse struct {
 	Queue *ent.Queue `json:"queue"`
 }
 
+type ArchiveResponse struct {
+	Queue *ent.Queue `json:"queue"`
+	Video *ent.Vod   `json:"video"`
+}
+
 func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, blockedVodService *blocked.Service, riverClient *tasks_client.RiverClient, platformTwitch platform.Platform) *Service {
 	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, BlockedVodsService: blockedVodService, RiverClient: riverClient, PlatformTwitch: platformTwitch}
 }
@@ -91,7 +96,7 @@ type ArchiveVideoInput struct {
 	RenderChat  bool
 }
 
-func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) error {
+func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*ArchiveResponse, error) {
 	// log.Debug().Msgf("Archiving video %s quality: %s chat: %t render chat: %t", videoId, quality, chat, renderChat)
 
 	envConfig := config.GetEnvConfig()
@@ -99,30 +104,30 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 	// check if video is blocked
 	blocked, err := s.BlockedVodsService.IsVideoBlocked(ctx, input.VideoId)
 	if err != nil {
-		return fmt.Errorf("error checking if vod is blocked: %v", err)
+		return nil, fmt.Errorf("error checking if vod is blocked: %v", err)
 	}
 	if blocked {
-		return fmt.Errorf("video id is blocked")
+		return nil, fmt.Errorf("video id is blocked")
 	}
 
 	// get video
 	video, err := s.PlatformTwitch.GetVideo(context.Background(), input.VideoId, false, false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// check if video is processing
 	if strings.Contains(video.ThumbnailURL, "processing") {
-		return fmt.Errorf("vod is still processing")
+		return nil, fmt.Errorf("vod is still processing")
 	}
 
 	// Check if video is already archived
 	vCheck, err := s.VodService.CheckVodExists(video.ID)
 	if err != nil {
-		return fmt.Errorf("error checking if vod exists: %v", err)
+		return nil, fmt.Errorf("error checking if vod exists: %v", err)
 	}
 	if vCheck {
-		return fmt.Errorf("vod already exists")
+		return nil, fmt.Errorf("vod already exists")
 	}
 
 	// Check if channel exists
@@ -131,20 +136,20 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 		log.Debug().Msgf("channel does not exist: %s while archiving vod. creating now.", video.UserLogin)
 		_, err := s.ArchiveChannel(ctx, video.UserLogin)
 		if err != nil {
-			return fmt.Errorf("error creating channel: %v", err)
+			return nil, fmt.Errorf("error creating channel: %v", err)
 		}
 	}
 
 	// Fetch channel
 	channel, err := s.ChannelService.GetChannelByName(video.UserLogin)
 	if err != nil {
-		return fmt.Errorf("error fetching channel: %v", err)
+		return nil, fmt.Errorf("error fetching channel: %v", err)
 	}
 
 	// Generate Ganymede video ID for directory and file naming
 	vUUID, err := uuid.NewUUID()
 	if err != nil {
-		return fmt.Errorf("error creating vod uuid: %v", err)
+		return nil, fmt.Errorf("error creating vod uuid: %v", err)
 	}
 
 	storageTemplateInput := StorageTemplateInput{
@@ -228,24 +233,24 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 
 	v, err := s.VodService.CreateVod(vodDTO, channel.ID)
 	if err != nil {
-		return fmt.Errorf("error creating vod: %v", err)
+		return nil, fmt.Errorf("error creating vod: %v", err)
 	}
 
 	// Create queue item
 	q, err := s.QueueService.CreateQueueItem(queue.Queue{LiveArchive: false, ArchiveChat: input.ArchiveChat, RenderChat: input.RenderChat}, v.ID)
 	if err != nil {
-		return fmt.Errorf("error creating queue item: %v", err)
+		return nil, fmt.Errorf("error creating queue item: %v", err)
 	}
 
 	// If chat is disabled update queue
 	if !input.ArchiveChat {
 		_, err := q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating queue item: %v", err)
+			return nil, fmt.Errorf("error updating queue item: %v", err)
 		}
 		_, err = v.Update().SetChatPath("").SetChatVideoPath("").Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating vod: %v", err)
+			return nil, fmt.Errorf("error updating vod: %v", err)
 		}
 	}
 
@@ -253,18 +258,18 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 	if !input.RenderChat {
 		_, err := q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating queue item: %v", err)
+			return nil, fmt.Errorf("error updating queue item: %v", err)
 		}
 		_, err = v.Update().SetChatVideoPath("").Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating vod: %v", err)
+			return nil, fmt.Errorf("error updating vod: %v", err)
 		}
 	}
 
 	// Re-query queue from DB for updated values
 	q, err = s.QueueService.GetQueueItem(q.ID)
 	if err != nil {
-		return fmt.Errorf("error fetching queue item: %v", err)
+		return nil, fmt.Errorf("error fetching queue item: %v", err)
 	}
 
 	taskInput := tasks.ArchiveVideoInput{
@@ -278,10 +283,13 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) err
 	}, nil)
 
 	if err != nil {
-		return fmt.Errorf("error enqueueing task: %v", err)
+		return nil, fmt.Errorf("error enqueueing task: %v", err)
 	}
 
-	return nil
+	return &ArchiveResponse{
+		Queue: q,
+		Video: v,
+	}, nil
 }
 
 type ArchiveClipInput struct {
@@ -293,32 +301,32 @@ type ArchiveClipInput struct {
 }
 
 // ArchiveClip archives a clip from a platform
-func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) error {
+func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*ArchiveResponse, error) {
 
 	envConfig := config.GetEnvConfig()
 
 	// check if video is blocked
 	blocked, err := s.BlockedVodsService.IsVideoBlocked(ctx, input.ID)
 	if err != nil {
-		return fmt.Errorf("error checking if clip is blocked: %v", err)
+		return nil, fmt.Errorf("error checking if clip is blocked: %v", err)
 	}
 	if blocked {
-		return fmt.Errorf("clip id is blocked")
+		return nil, fmt.Errorf("clip id is blocked")
 	}
 
 	// get clip
 	clip, err := s.PlatformTwitch.GetClip(context.Background(), input.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Check if video is already archived
 	vCheck, err := s.VodService.CheckVodExists(clip.ID)
 	if err != nil {
-		return fmt.Errorf("error checking if clip exists: %v", err)
+		return nil, fmt.Errorf("error checking if clip exists: %v", err)
 	}
 	if vCheck {
-		return fmt.Errorf("clip already exists")
+		return nil, fmt.Errorf("clip already exists")
 	}
 
 	// Check if channel exists
@@ -327,20 +335,20 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) error
 		log.Debug().Msg("channel does not exist: %s while archiving clip. creating now")
 		_, err := s.ArchiveChannel(ctx, *clip.ChannelName)
 		if err != nil {
-			return fmt.Errorf("error creating channel: %v", err)
+			return nil, fmt.Errorf("error creating channel: %v", err)
 		}
 	}
 
 	// Fetch channel
 	channel, err := s.ChannelService.GetChannelByExtId(clip.ChannelID)
 	if err != nil {
-		return fmt.Errorf("error fetching channel: %v", err)
+		return nil, fmt.Errorf("error fetching channel: %v", err)
 	}
 
 	// Generate Ganymede video ID for directory and file naming
 	vUUID, err := uuid.NewUUID()
 	if err != nil {
-		return fmt.Errorf("error creating vod uuid: %v", err)
+		return nil, fmt.Errorf("error creating vod uuid: %v", err)
 	}
 
 	storageTemplateInput := StorageTemplateInput{
@@ -427,24 +435,24 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) error
 
 	v, err := s.VodService.CreateVod(vodDTO, channel.ID)
 	if err != nil {
-		return fmt.Errorf("error creating vod: %v", err)
+		return nil, fmt.Errorf("error creating vod: %v", err)
 	}
 
 	// Create queue item
 	q, err := s.QueueService.CreateQueueItem(queue.Queue{LiveArchive: false, ArchiveChat: input.ArchiveChat, RenderChat: input.RenderChat}, v.ID)
 	if err != nil {
-		return fmt.Errorf("error creating queue item: %v", err)
+		return nil, fmt.Errorf("error creating queue item: %v", err)
 	}
 
 	// If chat is disabled update queue
 	if !input.ArchiveChat {
 		_, err := q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating queue item: %v", err)
+			return nil, fmt.Errorf("error updating queue item: %v", err)
 		}
 		_, err = v.Update().SetChatPath("").SetChatVideoPath("").Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating vod: %v", err)
+			return nil, fmt.Errorf("error updating vod: %v", err)
 		}
 	}
 
@@ -452,18 +460,18 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) error
 	if !input.RenderChat {
 		_, err := q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating queue item: %v", err)
+			return nil, fmt.Errorf("error updating queue item: %v", err)
 		}
 		_, err = v.Update().SetChatVideoPath("").Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating vod: %v", err)
+			return nil, fmt.Errorf("error updating vod: %v", err)
 		}
 	}
 
 	// Re-query queue from DB for updated values
 	q, err = s.QueueService.GetQueueItem(q.ID)
 	if err != nil {
-		return fmt.Errorf("error fetching queue item: %v", err)
+		return nil, fmt.Errorf("error fetching queue item: %v", err)
 	}
 
 	taskInput := tasks.ArchiveVideoInput{
@@ -477,30 +485,33 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) error
 	}, nil)
 
 	if err != nil {
-		return fmt.Errorf("error enqueueing task: %v", err)
+		return nil, fmt.Errorf("error enqueueing task: %v", err)
 	}
 
-	return nil
+	return &ArchiveResponse{
+		Queue: q,
+		Video: v,
+	}, nil
 }
 
-func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput) error {
+func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput) (*ArchiveResponse, error) {
 	envConfig := config.GetEnvConfig()
 
 	channel, err := s.ChannelService.GetChannel(input.ChannelId)
 	if err != nil {
-		return fmt.Errorf("error fetching channel: %v", err)
+		return nil, fmt.Errorf("error fetching channel: %v", err)
 	}
 
 	// get video
 	video, err := s.PlatformTwitch.GetLiveStream(context.Background(), channel.Name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Generate Ganymede video ID for directory and file naming
 	vUUID, err := uuid.NewUUID()
 	if err != nil {
-		return fmt.Errorf("error creating vod uuid: %v", err)
+		return nil, fmt.Errorf("error creating vod uuid: %v", err)
 	}
 
 	storageTemplateInput := StorageTemplateInput{
@@ -583,24 +594,24 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 
 	v, err := s.VodService.CreateVod(vodDTO, channel.ID)
 	if err != nil {
-		return fmt.Errorf("error creating vod: %v", err)
+		return nil, fmt.Errorf("error creating vod: %v", err)
 	}
 
 	// Create queue item
 	q, err := s.QueueService.CreateQueueItem(queue.Queue{LiveArchive: true, ArchiveChat: input.ArchiveChat, RenderChat: input.RenderChat}, v.ID)
 	if err != nil {
-		return fmt.Errorf("error creating queue item: %v", err)
+		return nil, fmt.Errorf("error creating queue item: %v", err)
 	}
 
 	// If chat is disabled update queue
 	if !input.ArchiveChat {
 		_, err := q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating queue item: %v", err)
+			return nil, fmt.Errorf("error updating queue item: %v", err)
 		}
 		_, err = v.Update().SetChatPath("").SetChatVideoPath("").Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating vod: %v", err)
+			return nil, fmt.Errorf("error updating vod: %v", err)
 		}
 	}
 
@@ -608,18 +619,18 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 	if !input.RenderChat {
 		_, err := q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating queue item: %v", err)
+			return nil, fmt.Errorf("error updating queue item: %v", err)
 		}
 		_, err = v.Update().SetChatVideoPath("").Save(context.Background())
 		if err != nil {
-			return fmt.Errorf("error updating vod: %v", err)
+			return nil, fmt.Errorf("error updating vod: %v", err)
 		}
 	}
 
 	// Re-query queue from DB for updated values
 	q, err = s.QueueService.GetQueueItem(q.ID)
 	if err != nil {
-		return fmt.Errorf("error fetching queue item: %v", err)
+		return nil, fmt.Errorf("error fetching queue item: %v", err)
 	}
 
 	taskInput := tasks.ArchiveVideoInput{
@@ -633,8 +644,11 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 	}, nil)
 
 	if err != nil {
-		return fmt.Errorf("error enqueueing task: %v", err)
+		return nil, fmt.Errorf("error enqueueing task: %v", err)
 	}
 
-	return nil
+	return &ArchiveResponse{
+		Queue: q,
+		Video: v,
+	}, nil
 }

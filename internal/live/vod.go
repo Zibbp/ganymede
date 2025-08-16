@@ -221,7 +221,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 					ArchiveChat: watch.ArchiveChat,
 					RenderChat:  watch.RenderChat,
 				}
-				err = s.ArchiveService.ArchiveVideo(ctx, input)
+				_, err = s.ArchiveService.ArchiveVideo(ctx, input)
 				if err != nil {
 					log.Error().Err(err).Str("video_id", video.ID).Msgf("error archiving video")
 					continue
