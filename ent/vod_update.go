@@ -32,1021 +32,1021 @@ type VodUpdate struct {
 }
 
 // Where appends a list predicates to the VodUpdate builder.
-func (vu *VodUpdate) Where(ps ...predicate.Vod) *VodUpdate {
-	vu.mutation.Where(ps...)
-	return vu
+func (_u *VodUpdate) Where(ps ...predicate.Vod) *VodUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetExtID sets the "ext_id" field.
-func (vu *VodUpdate) SetExtID(s string) *VodUpdate {
-	vu.mutation.SetExtID(s)
-	return vu
+func (_u *VodUpdate) SetExtID(v string) *VodUpdate {
+	_u.mutation.SetExtID(v)
+	return _u
 }
 
 // SetNillableExtID sets the "ext_id" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableExtID(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetExtID(*s)
+func (_u *VodUpdate) SetNillableExtID(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetExtID(*v)
 	}
-	return vu
+	return _u
 }
 
 // SetClipExtVodID sets the "clip_ext_vod_id" field.
-func (vu *VodUpdate) SetClipExtVodID(s string) *VodUpdate {
-	vu.mutation.SetClipExtVodID(s)
-	return vu
+func (_u *VodUpdate) SetClipExtVodID(v string) *VodUpdate {
+	_u.mutation.SetClipExtVodID(v)
+	return _u
 }
 
 // SetNillableClipExtVodID sets the "clip_ext_vod_id" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableClipExtVodID(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetClipExtVodID(*s)
+func (_u *VodUpdate) SetNillableClipExtVodID(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetClipExtVodID(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
-func (vu *VodUpdate) ClearClipExtVodID() *VodUpdate {
-	vu.mutation.ClearClipExtVodID()
-	return vu
+func (_u *VodUpdate) ClearClipExtVodID() *VodUpdate {
+	_u.mutation.ClearClipExtVodID()
+	return _u
 }
 
 // SetExtStreamID sets the "ext_stream_id" field.
-func (vu *VodUpdate) SetExtStreamID(s string) *VodUpdate {
-	vu.mutation.SetExtStreamID(s)
-	return vu
+func (_u *VodUpdate) SetExtStreamID(v string) *VodUpdate {
+	_u.mutation.SetExtStreamID(v)
+	return _u
 }
 
 // SetNillableExtStreamID sets the "ext_stream_id" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableExtStreamID(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetExtStreamID(*s)
+func (_u *VodUpdate) SetNillableExtStreamID(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetExtStreamID(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearExtStreamID clears the value of the "ext_stream_id" field.
-func (vu *VodUpdate) ClearExtStreamID() *VodUpdate {
-	vu.mutation.ClearExtStreamID()
-	return vu
+func (_u *VodUpdate) ClearExtStreamID() *VodUpdate {
+	_u.mutation.ClearExtStreamID()
+	return _u
 }
 
 // SetPlatform sets the "platform" field.
-func (vu *VodUpdate) SetPlatform(up utils.VideoPlatform) *VodUpdate {
-	vu.mutation.SetPlatform(up)
-	return vu
+func (_u *VodUpdate) SetPlatform(v utils.VideoPlatform) *VodUpdate {
+	_u.mutation.SetPlatform(v)
+	return _u
 }
 
 // SetNillablePlatform sets the "platform" field if the given value is not nil.
-func (vu *VodUpdate) SetNillablePlatform(up *utils.VideoPlatform) *VodUpdate {
-	if up != nil {
-		vu.SetPlatform(*up)
+func (_u *VodUpdate) SetNillablePlatform(v *utils.VideoPlatform) *VodUpdate {
+	if v != nil {
+		_u.SetPlatform(*v)
 	}
-	return vu
+	return _u
 }
 
 // SetType sets the "type" field.
-func (vu *VodUpdate) SetType(ut utils.VodType) *VodUpdate {
-	vu.mutation.SetType(ut)
-	return vu
+func (_u *VodUpdate) SetType(v utils.VodType) *VodUpdate {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableType(ut *utils.VodType) *VodUpdate {
-	if ut != nil {
-		vu.SetType(*ut)
+func (_u *VodUpdate) SetNillableType(v *utils.VodType) *VodUpdate {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return vu
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (vu *VodUpdate) SetTitle(s string) *VodUpdate {
-	vu.mutation.SetTitle(s)
-	return vu
+func (_u *VodUpdate) SetTitle(v string) *VodUpdate {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableTitle(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetTitle(*s)
+func (_u *VodUpdate) SetNillableTitle(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return vu
+	return _u
 }
 
 // SetDuration sets the "duration" field.
-func (vu *VodUpdate) SetDuration(i int) *VodUpdate {
-	vu.mutation.ResetDuration()
-	vu.mutation.SetDuration(i)
-	return vu
+func (_u *VodUpdate) SetDuration(v int) *VodUpdate {
+	_u.mutation.ResetDuration()
+	_u.mutation.SetDuration(v)
+	return _u
 }
 
 // SetNillableDuration sets the "duration" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableDuration(i *int) *VodUpdate {
-	if i != nil {
-		vu.SetDuration(*i)
+func (_u *VodUpdate) SetNillableDuration(v *int) *VodUpdate {
+	if v != nil {
+		_u.SetDuration(*v)
 	}
-	return vu
+	return _u
 }
 
-// AddDuration adds i to the "duration" field.
-func (vu *VodUpdate) AddDuration(i int) *VodUpdate {
-	vu.mutation.AddDuration(i)
-	return vu
+// AddDuration adds value to the "duration" field.
+func (_u *VodUpdate) AddDuration(v int) *VodUpdate {
+	_u.mutation.AddDuration(v)
+	return _u
 }
 
 // SetClipVodOffset sets the "clip_vod_offset" field.
-func (vu *VodUpdate) SetClipVodOffset(i int) *VodUpdate {
-	vu.mutation.ResetClipVodOffset()
-	vu.mutation.SetClipVodOffset(i)
-	return vu
+func (_u *VodUpdate) SetClipVodOffset(v int) *VodUpdate {
+	_u.mutation.ResetClipVodOffset()
+	_u.mutation.SetClipVodOffset(v)
+	return _u
 }
 
 // SetNillableClipVodOffset sets the "clip_vod_offset" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableClipVodOffset(i *int) *VodUpdate {
-	if i != nil {
-		vu.SetClipVodOffset(*i)
+func (_u *VodUpdate) SetNillableClipVodOffset(v *int) *VodUpdate {
+	if v != nil {
+		_u.SetClipVodOffset(*v)
 	}
-	return vu
+	return _u
 }
 
-// AddClipVodOffset adds i to the "clip_vod_offset" field.
-func (vu *VodUpdate) AddClipVodOffset(i int) *VodUpdate {
-	vu.mutation.AddClipVodOffset(i)
-	return vu
+// AddClipVodOffset adds value to the "clip_vod_offset" field.
+func (_u *VodUpdate) AddClipVodOffset(v int) *VodUpdate {
+	_u.mutation.AddClipVodOffset(v)
+	return _u
 }
 
 // ClearClipVodOffset clears the value of the "clip_vod_offset" field.
-func (vu *VodUpdate) ClearClipVodOffset() *VodUpdate {
-	vu.mutation.ClearClipVodOffset()
-	return vu
+func (_u *VodUpdate) ClearClipVodOffset() *VodUpdate {
+	_u.mutation.ClearClipVodOffset()
+	return _u
 }
 
 // SetViews sets the "views" field.
-func (vu *VodUpdate) SetViews(i int) *VodUpdate {
-	vu.mutation.ResetViews()
-	vu.mutation.SetViews(i)
-	return vu
+func (_u *VodUpdate) SetViews(v int) *VodUpdate {
+	_u.mutation.ResetViews()
+	_u.mutation.SetViews(v)
+	return _u
 }
 
 // SetNillableViews sets the "views" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableViews(i *int) *VodUpdate {
-	if i != nil {
-		vu.SetViews(*i)
+func (_u *VodUpdate) SetNillableViews(v *int) *VodUpdate {
+	if v != nil {
+		_u.SetViews(*v)
 	}
-	return vu
+	return _u
 }
 
-// AddViews adds i to the "views" field.
-func (vu *VodUpdate) AddViews(i int) *VodUpdate {
-	vu.mutation.AddViews(i)
-	return vu
+// AddViews adds value to the "views" field.
+func (_u *VodUpdate) AddViews(v int) *VodUpdate {
+	_u.mutation.AddViews(v)
+	return _u
 }
 
 // SetResolution sets the "resolution" field.
-func (vu *VodUpdate) SetResolution(s string) *VodUpdate {
-	vu.mutation.SetResolution(s)
-	return vu
+func (_u *VodUpdate) SetResolution(v string) *VodUpdate {
+	_u.mutation.SetResolution(v)
+	return _u
 }
 
 // SetNillableResolution sets the "resolution" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableResolution(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetResolution(*s)
+func (_u *VodUpdate) SetNillableResolution(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetResolution(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearResolution clears the value of the "resolution" field.
-func (vu *VodUpdate) ClearResolution() *VodUpdate {
-	vu.mutation.ClearResolution()
-	return vu
+func (_u *VodUpdate) ClearResolution() *VodUpdate {
+	_u.mutation.ClearResolution()
+	return _u
 }
 
 // SetProcessing sets the "processing" field.
-func (vu *VodUpdate) SetProcessing(b bool) *VodUpdate {
-	vu.mutation.SetProcessing(b)
-	return vu
+func (_u *VodUpdate) SetProcessing(v bool) *VodUpdate {
+	_u.mutation.SetProcessing(v)
+	return _u
 }
 
 // SetNillableProcessing sets the "processing" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableProcessing(b *bool) *VodUpdate {
-	if b != nil {
-		vu.SetProcessing(*b)
+func (_u *VodUpdate) SetNillableProcessing(v *bool) *VodUpdate {
+	if v != nil {
+		_u.SetProcessing(*v)
 	}
-	return vu
+	return _u
 }
 
 // SetThumbnailPath sets the "thumbnail_path" field.
-func (vu *VodUpdate) SetThumbnailPath(s string) *VodUpdate {
-	vu.mutation.SetThumbnailPath(s)
-	return vu
+func (_u *VodUpdate) SetThumbnailPath(v string) *VodUpdate {
+	_u.mutation.SetThumbnailPath(v)
+	return _u
 }
 
 // SetNillableThumbnailPath sets the "thumbnail_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableThumbnailPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetThumbnailPath(*s)
+func (_u *VodUpdate) SetNillableThumbnailPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetThumbnailPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearThumbnailPath clears the value of the "thumbnail_path" field.
-func (vu *VodUpdate) ClearThumbnailPath() *VodUpdate {
-	vu.mutation.ClearThumbnailPath()
-	return vu
+func (_u *VodUpdate) ClearThumbnailPath() *VodUpdate {
+	_u.mutation.ClearThumbnailPath()
+	return _u
 }
 
 // SetWebThumbnailPath sets the "web_thumbnail_path" field.
-func (vu *VodUpdate) SetWebThumbnailPath(s string) *VodUpdate {
-	vu.mutation.SetWebThumbnailPath(s)
-	return vu
+func (_u *VodUpdate) SetWebThumbnailPath(v string) *VodUpdate {
+	_u.mutation.SetWebThumbnailPath(v)
+	return _u
 }
 
 // SetNillableWebThumbnailPath sets the "web_thumbnail_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableWebThumbnailPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetWebThumbnailPath(*s)
+func (_u *VodUpdate) SetNillableWebThumbnailPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetWebThumbnailPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // SetVideoPath sets the "video_path" field.
-func (vu *VodUpdate) SetVideoPath(s string) *VodUpdate {
-	vu.mutation.SetVideoPath(s)
-	return vu
+func (_u *VodUpdate) SetVideoPath(v string) *VodUpdate {
+	_u.mutation.SetVideoPath(v)
+	return _u
 }
 
 // SetNillableVideoPath sets the "video_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableVideoPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetVideoPath(*s)
+func (_u *VodUpdate) SetNillableVideoPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetVideoPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // SetVideoHlsPath sets the "video_hls_path" field.
-func (vu *VodUpdate) SetVideoHlsPath(s string) *VodUpdate {
-	vu.mutation.SetVideoHlsPath(s)
-	return vu
+func (_u *VodUpdate) SetVideoHlsPath(v string) *VodUpdate {
+	_u.mutation.SetVideoHlsPath(v)
+	return _u
 }
 
 // SetNillableVideoHlsPath sets the "video_hls_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableVideoHlsPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetVideoHlsPath(*s)
+func (_u *VodUpdate) SetNillableVideoHlsPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetVideoHlsPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearVideoHlsPath clears the value of the "video_hls_path" field.
-func (vu *VodUpdate) ClearVideoHlsPath() *VodUpdate {
-	vu.mutation.ClearVideoHlsPath()
-	return vu
+func (_u *VodUpdate) ClearVideoHlsPath() *VodUpdate {
+	_u.mutation.ClearVideoHlsPath()
+	return _u
 }
 
 // SetChatPath sets the "chat_path" field.
-func (vu *VodUpdate) SetChatPath(s string) *VodUpdate {
-	vu.mutation.SetChatPath(s)
-	return vu
+func (_u *VodUpdate) SetChatPath(v string) *VodUpdate {
+	_u.mutation.SetChatPath(v)
+	return _u
 }
 
 // SetNillableChatPath sets the "chat_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableChatPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetChatPath(*s)
+func (_u *VodUpdate) SetNillableChatPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetChatPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearChatPath clears the value of the "chat_path" field.
-func (vu *VodUpdate) ClearChatPath() *VodUpdate {
-	vu.mutation.ClearChatPath()
-	return vu
+func (_u *VodUpdate) ClearChatPath() *VodUpdate {
+	_u.mutation.ClearChatPath()
+	return _u
 }
 
 // SetLiveChatPath sets the "live_chat_path" field.
-func (vu *VodUpdate) SetLiveChatPath(s string) *VodUpdate {
-	vu.mutation.SetLiveChatPath(s)
-	return vu
+func (_u *VodUpdate) SetLiveChatPath(v string) *VodUpdate {
+	_u.mutation.SetLiveChatPath(v)
+	return _u
 }
 
 // SetNillableLiveChatPath sets the "live_chat_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableLiveChatPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetLiveChatPath(*s)
+func (_u *VodUpdate) SetNillableLiveChatPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetLiveChatPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearLiveChatPath clears the value of the "live_chat_path" field.
-func (vu *VodUpdate) ClearLiveChatPath() *VodUpdate {
-	vu.mutation.ClearLiveChatPath()
-	return vu
+func (_u *VodUpdate) ClearLiveChatPath() *VodUpdate {
+	_u.mutation.ClearLiveChatPath()
+	return _u
 }
 
 // SetLiveChatConvertPath sets the "live_chat_convert_path" field.
-func (vu *VodUpdate) SetLiveChatConvertPath(s string) *VodUpdate {
-	vu.mutation.SetLiveChatConvertPath(s)
-	return vu
+func (_u *VodUpdate) SetLiveChatConvertPath(v string) *VodUpdate {
+	_u.mutation.SetLiveChatConvertPath(v)
+	return _u
 }
 
 // SetNillableLiveChatConvertPath sets the "live_chat_convert_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableLiveChatConvertPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetLiveChatConvertPath(*s)
+func (_u *VodUpdate) SetNillableLiveChatConvertPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetLiveChatConvertPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearLiveChatConvertPath clears the value of the "live_chat_convert_path" field.
-func (vu *VodUpdate) ClearLiveChatConvertPath() *VodUpdate {
-	vu.mutation.ClearLiveChatConvertPath()
-	return vu
+func (_u *VodUpdate) ClearLiveChatConvertPath() *VodUpdate {
+	_u.mutation.ClearLiveChatConvertPath()
+	return _u
 }
 
 // SetChatVideoPath sets the "chat_video_path" field.
-func (vu *VodUpdate) SetChatVideoPath(s string) *VodUpdate {
-	vu.mutation.SetChatVideoPath(s)
-	return vu
+func (_u *VodUpdate) SetChatVideoPath(v string) *VodUpdate {
+	_u.mutation.SetChatVideoPath(v)
+	return _u
 }
 
 // SetNillableChatVideoPath sets the "chat_video_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableChatVideoPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetChatVideoPath(*s)
+func (_u *VodUpdate) SetNillableChatVideoPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetChatVideoPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearChatVideoPath clears the value of the "chat_video_path" field.
-func (vu *VodUpdate) ClearChatVideoPath() *VodUpdate {
-	vu.mutation.ClearChatVideoPath()
-	return vu
+func (_u *VodUpdate) ClearChatVideoPath() *VodUpdate {
+	_u.mutation.ClearChatVideoPath()
+	return _u
 }
 
 // SetInfoPath sets the "info_path" field.
-func (vu *VodUpdate) SetInfoPath(s string) *VodUpdate {
-	vu.mutation.SetInfoPath(s)
-	return vu
+func (_u *VodUpdate) SetInfoPath(v string) *VodUpdate {
+	_u.mutation.SetInfoPath(v)
+	return _u
 }
 
 // SetNillableInfoPath sets the "info_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableInfoPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetInfoPath(*s)
+func (_u *VodUpdate) SetNillableInfoPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetInfoPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearInfoPath clears the value of the "info_path" field.
-func (vu *VodUpdate) ClearInfoPath() *VodUpdate {
-	vu.mutation.ClearInfoPath()
-	return vu
+func (_u *VodUpdate) ClearInfoPath() *VodUpdate {
+	_u.mutation.ClearInfoPath()
+	return _u
 }
 
 // SetCaptionPath sets the "caption_path" field.
-func (vu *VodUpdate) SetCaptionPath(s string) *VodUpdate {
-	vu.mutation.SetCaptionPath(s)
-	return vu
+func (_u *VodUpdate) SetCaptionPath(v string) *VodUpdate {
+	_u.mutation.SetCaptionPath(v)
+	return _u
 }
 
 // SetNillableCaptionPath sets the "caption_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableCaptionPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetCaptionPath(*s)
+func (_u *VodUpdate) SetNillableCaptionPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetCaptionPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearCaptionPath clears the value of the "caption_path" field.
-func (vu *VodUpdate) ClearCaptionPath() *VodUpdate {
-	vu.mutation.ClearCaptionPath()
-	return vu
+func (_u *VodUpdate) ClearCaptionPath() *VodUpdate {
+	_u.mutation.ClearCaptionPath()
+	return _u
 }
 
 // SetFolderName sets the "folder_name" field.
-func (vu *VodUpdate) SetFolderName(s string) *VodUpdate {
-	vu.mutation.SetFolderName(s)
-	return vu
+func (_u *VodUpdate) SetFolderName(v string) *VodUpdate {
+	_u.mutation.SetFolderName(v)
+	return _u
 }
 
 // SetNillableFolderName sets the "folder_name" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableFolderName(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetFolderName(*s)
+func (_u *VodUpdate) SetNillableFolderName(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetFolderName(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearFolderName clears the value of the "folder_name" field.
-func (vu *VodUpdate) ClearFolderName() *VodUpdate {
-	vu.mutation.ClearFolderName()
-	return vu
+func (_u *VodUpdate) ClearFolderName() *VodUpdate {
+	_u.mutation.ClearFolderName()
+	return _u
 }
 
 // SetFileName sets the "file_name" field.
-func (vu *VodUpdate) SetFileName(s string) *VodUpdate {
-	vu.mutation.SetFileName(s)
-	return vu
+func (_u *VodUpdate) SetFileName(v string) *VodUpdate {
+	_u.mutation.SetFileName(v)
+	return _u
 }
 
 // SetNillableFileName sets the "file_name" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableFileName(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetFileName(*s)
+func (_u *VodUpdate) SetNillableFileName(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetFileName(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearFileName clears the value of the "file_name" field.
-func (vu *VodUpdate) ClearFileName() *VodUpdate {
-	vu.mutation.ClearFileName()
-	return vu
+func (_u *VodUpdate) ClearFileName() *VodUpdate {
+	_u.mutation.ClearFileName()
+	return _u
 }
 
 // SetTmpVideoDownloadPath sets the "tmp_video_download_path" field.
-func (vu *VodUpdate) SetTmpVideoDownloadPath(s string) *VodUpdate {
-	vu.mutation.SetTmpVideoDownloadPath(s)
-	return vu
+func (_u *VodUpdate) SetTmpVideoDownloadPath(v string) *VodUpdate {
+	_u.mutation.SetTmpVideoDownloadPath(v)
+	return _u
 }
 
 // SetNillableTmpVideoDownloadPath sets the "tmp_video_download_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableTmpVideoDownloadPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetTmpVideoDownloadPath(*s)
+func (_u *VodUpdate) SetNillableTmpVideoDownloadPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetTmpVideoDownloadPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearTmpVideoDownloadPath clears the value of the "tmp_video_download_path" field.
-func (vu *VodUpdate) ClearTmpVideoDownloadPath() *VodUpdate {
-	vu.mutation.ClearTmpVideoDownloadPath()
-	return vu
+func (_u *VodUpdate) ClearTmpVideoDownloadPath() *VodUpdate {
+	_u.mutation.ClearTmpVideoDownloadPath()
+	return _u
 }
 
 // SetTmpVideoConvertPath sets the "tmp_video_convert_path" field.
-func (vu *VodUpdate) SetTmpVideoConvertPath(s string) *VodUpdate {
-	vu.mutation.SetTmpVideoConvertPath(s)
-	return vu
+func (_u *VodUpdate) SetTmpVideoConvertPath(v string) *VodUpdate {
+	_u.mutation.SetTmpVideoConvertPath(v)
+	return _u
 }
 
 // SetNillableTmpVideoConvertPath sets the "tmp_video_convert_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableTmpVideoConvertPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetTmpVideoConvertPath(*s)
+func (_u *VodUpdate) SetNillableTmpVideoConvertPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetTmpVideoConvertPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearTmpVideoConvertPath clears the value of the "tmp_video_convert_path" field.
-func (vu *VodUpdate) ClearTmpVideoConvertPath() *VodUpdate {
-	vu.mutation.ClearTmpVideoConvertPath()
-	return vu
+func (_u *VodUpdate) ClearTmpVideoConvertPath() *VodUpdate {
+	_u.mutation.ClearTmpVideoConvertPath()
+	return _u
 }
 
 // SetTmpChatDownloadPath sets the "tmp_chat_download_path" field.
-func (vu *VodUpdate) SetTmpChatDownloadPath(s string) *VodUpdate {
-	vu.mutation.SetTmpChatDownloadPath(s)
-	return vu
+func (_u *VodUpdate) SetTmpChatDownloadPath(v string) *VodUpdate {
+	_u.mutation.SetTmpChatDownloadPath(v)
+	return _u
 }
 
 // SetNillableTmpChatDownloadPath sets the "tmp_chat_download_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableTmpChatDownloadPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetTmpChatDownloadPath(*s)
+func (_u *VodUpdate) SetNillableTmpChatDownloadPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetTmpChatDownloadPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearTmpChatDownloadPath clears the value of the "tmp_chat_download_path" field.
-func (vu *VodUpdate) ClearTmpChatDownloadPath() *VodUpdate {
-	vu.mutation.ClearTmpChatDownloadPath()
-	return vu
+func (_u *VodUpdate) ClearTmpChatDownloadPath() *VodUpdate {
+	_u.mutation.ClearTmpChatDownloadPath()
+	return _u
 }
 
 // SetTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field.
-func (vu *VodUpdate) SetTmpLiveChatDownloadPath(s string) *VodUpdate {
-	vu.mutation.SetTmpLiveChatDownloadPath(s)
-	return vu
+func (_u *VodUpdate) SetTmpLiveChatDownloadPath(v string) *VodUpdate {
+	_u.mutation.SetTmpLiveChatDownloadPath(v)
+	return _u
 }
 
 // SetNillableTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableTmpLiveChatDownloadPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetTmpLiveChatDownloadPath(*s)
+func (_u *VodUpdate) SetNillableTmpLiveChatDownloadPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetTmpLiveChatDownloadPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearTmpLiveChatDownloadPath clears the value of the "tmp_live_chat_download_path" field.
-func (vu *VodUpdate) ClearTmpLiveChatDownloadPath() *VodUpdate {
-	vu.mutation.ClearTmpLiveChatDownloadPath()
-	return vu
+func (_u *VodUpdate) ClearTmpLiveChatDownloadPath() *VodUpdate {
+	_u.mutation.ClearTmpLiveChatDownloadPath()
+	return _u
 }
 
 // SetTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field.
-func (vu *VodUpdate) SetTmpLiveChatConvertPath(s string) *VodUpdate {
-	vu.mutation.SetTmpLiveChatConvertPath(s)
-	return vu
+func (_u *VodUpdate) SetTmpLiveChatConvertPath(v string) *VodUpdate {
+	_u.mutation.SetTmpLiveChatConvertPath(v)
+	return _u
 }
 
 // SetNillableTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableTmpLiveChatConvertPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetTmpLiveChatConvertPath(*s)
+func (_u *VodUpdate) SetNillableTmpLiveChatConvertPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetTmpLiveChatConvertPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearTmpLiveChatConvertPath clears the value of the "tmp_live_chat_convert_path" field.
-func (vu *VodUpdate) ClearTmpLiveChatConvertPath() *VodUpdate {
-	vu.mutation.ClearTmpLiveChatConvertPath()
-	return vu
+func (_u *VodUpdate) ClearTmpLiveChatConvertPath() *VodUpdate {
+	_u.mutation.ClearTmpLiveChatConvertPath()
+	return _u
 }
 
 // SetTmpChatRenderPath sets the "tmp_chat_render_path" field.
-func (vu *VodUpdate) SetTmpChatRenderPath(s string) *VodUpdate {
-	vu.mutation.SetTmpChatRenderPath(s)
-	return vu
+func (_u *VodUpdate) SetTmpChatRenderPath(v string) *VodUpdate {
+	_u.mutation.SetTmpChatRenderPath(v)
+	return _u
 }
 
 // SetNillableTmpChatRenderPath sets the "tmp_chat_render_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableTmpChatRenderPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetTmpChatRenderPath(*s)
+func (_u *VodUpdate) SetNillableTmpChatRenderPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetTmpChatRenderPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearTmpChatRenderPath clears the value of the "tmp_chat_render_path" field.
-func (vu *VodUpdate) ClearTmpChatRenderPath() *VodUpdate {
-	vu.mutation.ClearTmpChatRenderPath()
-	return vu
+func (_u *VodUpdate) ClearTmpChatRenderPath() *VodUpdate {
+	_u.mutation.ClearTmpChatRenderPath()
+	return _u
 }
 
 // SetTmpVideoHlsPath sets the "tmp_video_hls_path" field.
-func (vu *VodUpdate) SetTmpVideoHlsPath(s string) *VodUpdate {
-	vu.mutation.SetTmpVideoHlsPath(s)
-	return vu
+func (_u *VodUpdate) SetTmpVideoHlsPath(v string) *VodUpdate {
+	_u.mutation.SetTmpVideoHlsPath(v)
+	return _u
 }
 
 // SetNillableTmpVideoHlsPath sets the "tmp_video_hls_path" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableTmpVideoHlsPath(s *string) *VodUpdate {
-	if s != nil {
-		vu.SetTmpVideoHlsPath(*s)
+func (_u *VodUpdate) SetNillableTmpVideoHlsPath(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetTmpVideoHlsPath(*v)
 	}
-	return vu
+	return _u
 }
 
 // ClearTmpVideoHlsPath clears the value of the "tmp_video_hls_path" field.
-func (vu *VodUpdate) ClearTmpVideoHlsPath() *VodUpdate {
-	vu.mutation.ClearTmpVideoHlsPath()
-	return vu
+func (_u *VodUpdate) ClearTmpVideoHlsPath() *VodUpdate {
+	_u.mutation.ClearTmpVideoHlsPath()
+	return _u
 }
 
 // SetLocked sets the "locked" field.
-func (vu *VodUpdate) SetLocked(b bool) *VodUpdate {
-	vu.mutation.SetLocked(b)
-	return vu
+func (_u *VodUpdate) SetLocked(v bool) *VodUpdate {
+	_u.mutation.SetLocked(v)
+	return _u
 }
 
 // SetNillableLocked sets the "locked" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableLocked(b *bool) *VodUpdate {
-	if b != nil {
-		vu.SetLocked(*b)
+func (_u *VodUpdate) SetNillableLocked(v *bool) *VodUpdate {
+	if v != nil {
+		_u.SetLocked(*v)
 	}
-	return vu
+	return _u
 }
 
 // SetLocalViews sets the "local_views" field.
-func (vu *VodUpdate) SetLocalViews(i int) *VodUpdate {
-	vu.mutation.ResetLocalViews()
-	vu.mutation.SetLocalViews(i)
-	return vu
+func (_u *VodUpdate) SetLocalViews(v int) *VodUpdate {
+	_u.mutation.ResetLocalViews()
+	_u.mutation.SetLocalViews(v)
+	return _u
 }
 
 // SetNillableLocalViews sets the "local_views" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableLocalViews(i *int) *VodUpdate {
-	if i != nil {
-		vu.SetLocalViews(*i)
+func (_u *VodUpdate) SetNillableLocalViews(v *int) *VodUpdate {
+	if v != nil {
+		_u.SetLocalViews(*v)
 	}
-	return vu
+	return _u
 }
 
-// AddLocalViews adds i to the "local_views" field.
-func (vu *VodUpdate) AddLocalViews(i int) *VodUpdate {
-	vu.mutation.AddLocalViews(i)
-	return vu
+// AddLocalViews adds value to the "local_views" field.
+func (_u *VodUpdate) AddLocalViews(v int) *VodUpdate {
+	_u.mutation.AddLocalViews(v)
+	return _u
 }
 
 // SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
-func (vu *VodUpdate) SetSpriteThumbnailsEnabled(b bool) *VodUpdate {
-	vu.mutation.SetSpriteThumbnailsEnabled(b)
-	return vu
+func (_u *VodUpdate) SetSpriteThumbnailsEnabled(v bool) *VodUpdate {
+	_u.mutation.SetSpriteThumbnailsEnabled(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableSpriteThumbnailsEnabled(b *bool) *VodUpdate {
-	if b != nil {
-		vu.SetSpriteThumbnailsEnabled(*b)
+func (_u *VodUpdate) SetNillableSpriteThumbnailsEnabled(v *bool) *VodUpdate {
+	if v != nil {
+		_u.SetSpriteThumbnailsEnabled(*v)
 	}
-	return vu
+	return _u
 }
 
 // SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
-func (vu *VodUpdate) SetSpriteThumbnailsImages(s []string) *VodUpdate {
-	vu.mutation.SetSpriteThumbnailsImages(s)
-	return vu
+func (_u *VodUpdate) SetSpriteThumbnailsImages(v []string) *VodUpdate {
+	_u.mutation.SetSpriteThumbnailsImages(v)
+	return _u
 }
 
-// AppendSpriteThumbnailsImages appends s to the "sprite_thumbnails_images" field.
-func (vu *VodUpdate) AppendSpriteThumbnailsImages(s []string) *VodUpdate {
-	vu.mutation.AppendSpriteThumbnailsImages(s)
-	return vu
+// AppendSpriteThumbnailsImages appends value to the "sprite_thumbnails_images" field.
+func (_u *VodUpdate) AppendSpriteThumbnailsImages(v []string) *VodUpdate {
+	_u.mutation.AppendSpriteThumbnailsImages(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsImages clears the value of the "sprite_thumbnails_images" field.
-func (vu *VodUpdate) ClearSpriteThumbnailsImages() *VodUpdate {
-	vu.mutation.ClearSpriteThumbnailsImages()
-	return vu
+func (_u *VodUpdate) ClearSpriteThumbnailsImages() *VodUpdate {
+	_u.mutation.ClearSpriteThumbnailsImages()
+	return _u
 }
 
 // SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
-func (vu *VodUpdate) SetSpriteThumbnailsInterval(i int) *VodUpdate {
-	vu.mutation.ResetSpriteThumbnailsInterval()
-	vu.mutation.SetSpriteThumbnailsInterval(i)
-	return vu
+func (_u *VodUpdate) SetSpriteThumbnailsInterval(v int) *VodUpdate {
+	_u.mutation.ResetSpriteThumbnailsInterval()
+	_u.mutation.SetSpriteThumbnailsInterval(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableSpriteThumbnailsInterval(i *int) *VodUpdate {
-	if i != nil {
-		vu.SetSpriteThumbnailsInterval(*i)
+func (_u *VodUpdate) SetNillableSpriteThumbnailsInterval(v *int) *VodUpdate {
+	if v != nil {
+		_u.SetSpriteThumbnailsInterval(*v)
 	}
-	return vu
+	return _u
 }
 
-// AddSpriteThumbnailsInterval adds i to the "sprite_thumbnails_interval" field.
-func (vu *VodUpdate) AddSpriteThumbnailsInterval(i int) *VodUpdate {
-	vu.mutation.AddSpriteThumbnailsInterval(i)
-	return vu
+// AddSpriteThumbnailsInterval adds value to the "sprite_thumbnails_interval" field.
+func (_u *VodUpdate) AddSpriteThumbnailsInterval(v int) *VodUpdate {
+	_u.mutation.AddSpriteThumbnailsInterval(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsInterval clears the value of the "sprite_thumbnails_interval" field.
-func (vu *VodUpdate) ClearSpriteThumbnailsInterval() *VodUpdate {
-	vu.mutation.ClearSpriteThumbnailsInterval()
-	return vu
+func (_u *VodUpdate) ClearSpriteThumbnailsInterval() *VodUpdate {
+	_u.mutation.ClearSpriteThumbnailsInterval()
+	return _u
 }
 
 // SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
-func (vu *VodUpdate) SetSpriteThumbnailsWidth(i int) *VodUpdate {
-	vu.mutation.ResetSpriteThumbnailsWidth()
-	vu.mutation.SetSpriteThumbnailsWidth(i)
-	return vu
+func (_u *VodUpdate) SetSpriteThumbnailsWidth(v int) *VodUpdate {
+	_u.mutation.ResetSpriteThumbnailsWidth()
+	_u.mutation.SetSpriteThumbnailsWidth(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableSpriteThumbnailsWidth(i *int) *VodUpdate {
-	if i != nil {
-		vu.SetSpriteThumbnailsWidth(*i)
+func (_u *VodUpdate) SetNillableSpriteThumbnailsWidth(v *int) *VodUpdate {
+	if v != nil {
+		_u.SetSpriteThumbnailsWidth(*v)
 	}
-	return vu
+	return _u
 }
 
-// AddSpriteThumbnailsWidth adds i to the "sprite_thumbnails_width" field.
-func (vu *VodUpdate) AddSpriteThumbnailsWidth(i int) *VodUpdate {
-	vu.mutation.AddSpriteThumbnailsWidth(i)
-	return vu
+// AddSpriteThumbnailsWidth adds value to the "sprite_thumbnails_width" field.
+func (_u *VodUpdate) AddSpriteThumbnailsWidth(v int) *VodUpdate {
+	_u.mutation.AddSpriteThumbnailsWidth(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsWidth clears the value of the "sprite_thumbnails_width" field.
-func (vu *VodUpdate) ClearSpriteThumbnailsWidth() *VodUpdate {
-	vu.mutation.ClearSpriteThumbnailsWidth()
-	return vu
+func (_u *VodUpdate) ClearSpriteThumbnailsWidth() *VodUpdate {
+	_u.mutation.ClearSpriteThumbnailsWidth()
+	return _u
 }
 
 // SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
-func (vu *VodUpdate) SetSpriteThumbnailsHeight(i int) *VodUpdate {
-	vu.mutation.ResetSpriteThumbnailsHeight()
-	vu.mutation.SetSpriteThumbnailsHeight(i)
-	return vu
+func (_u *VodUpdate) SetSpriteThumbnailsHeight(v int) *VodUpdate {
+	_u.mutation.ResetSpriteThumbnailsHeight()
+	_u.mutation.SetSpriteThumbnailsHeight(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableSpriteThumbnailsHeight(i *int) *VodUpdate {
-	if i != nil {
-		vu.SetSpriteThumbnailsHeight(*i)
+func (_u *VodUpdate) SetNillableSpriteThumbnailsHeight(v *int) *VodUpdate {
+	if v != nil {
+		_u.SetSpriteThumbnailsHeight(*v)
 	}
-	return vu
+	return _u
 }
 
-// AddSpriteThumbnailsHeight adds i to the "sprite_thumbnails_height" field.
-func (vu *VodUpdate) AddSpriteThumbnailsHeight(i int) *VodUpdate {
-	vu.mutation.AddSpriteThumbnailsHeight(i)
-	return vu
+// AddSpriteThumbnailsHeight adds value to the "sprite_thumbnails_height" field.
+func (_u *VodUpdate) AddSpriteThumbnailsHeight(v int) *VodUpdate {
+	_u.mutation.AddSpriteThumbnailsHeight(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsHeight clears the value of the "sprite_thumbnails_height" field.
-func (vu *VodUpdate) ClearSpriteThumbnailsHeight() *VodUpdate {
-	vu.mutation.ClearSpriteThumbnailsHeight()
-	return vu
+func (_u *VodUpdate) ClearSpriteThumbnailsHeight() *VodUpdate {
+	_u.mutation.ClearSpriteThumbnailsHeight()
+	return _u
 }
 
 // SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
-func (vu *VodUpdate) SetSpriteThumbnailsRows(i int) *VodUpdate {
-	vu.mutation.ResetSpriteThumbnailsRows()
-	vu.mutation.SetSpriteThumbnailsRows(i)
-	return vu
+func (_u *VodUpdate) SetSpriteThumbnailsRows(v int) *VodUpdate {
+	_u.mutation.ResetSpriteThumbnailsRows()
+	_u.mutation.SetSpriteThumbnailsRows(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableSpriteThumbnailsRows(i *int) *VodUpdate {
-	if i != nil {
-		vu.SetSpriteThumbnailsRows(*i)
+func (_u *VodUpdate) SetNillableSpriteThumbnailsRows(v *int) *VodUpdate {
+	if v != nil {
+		_u.SetSpriteThumbnailsRows(*v)
 	}
-	return vu
+	return _u
 }
 
-// AddSpriteThumbnailsRows adds i to the "sprite_thumbnails_rows" field.
-func (vu *VodUpdate) AddSpriteThumbnailsRows(i int) *VodUpdate {
-	vu.mutation.AddSpriteThumbnailsRows(i)
-	return vu
+// AddSpriteThumbnailsRows adds value to the "sprite_thumbnails_rows" field.
+func (_u *VodUpdate) AddSpriteThumbnailsRows(v int) *VodUpdate {
+	_u.mutation.AddSpriteThumbnailsRows(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsRows clears the value of the "sprite_thumbnails_rows" field.
-func (vu *VodUpdate) ClearSpriteThumbnailsRows() *VodUpdate {
-	vu.mutation.ClearSpriteThumbnailsRows()
-	return vu
+func (_u *VodUpdate) ClearSpriteThumbnailsRows() *VodUpdate {
+	_u.mutation.ClearSpriteThumbnailsRows()
+	return _u
 }
 
 // SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
-func (vu *VodUpdate) SetSpriteThumbnailsColumns(i int) *VodUpdate {
-	vu.mutation.ResetSpriteThumbnailsColumns()
-	vu.mutation.SetSpriteThumbnailsColumns(i)
-	return vu
+func (_u *VodUpdate) SetSpriteThumbnailsColumns(v int) *VodUpdate {
+	_u.mutation.ResetSpriteThumbnailsColumns()
+	_u.mutation.SetSpriteThumbnailsColumns(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableSpriteThumbnailsColumns(i *int) *VodUpdate {
-	if i != nil {
-		vu.SetSpriteThumbnailsColumns(*i)
+func (_u *VodUpdate) SetNillableSpriteThumbnailsColumns(v *int) *VodUpdate {
+	if v != nil {
+		_u.SetSpriteThumbnailsColumns(*v)
 	}
-	return vu
+	return _u
 }
 
-// AddSpriteThumbnailsColumns adds i to the "sprite_thumbnails_columns" field.
-func (vu *VodUpdate) AddSpriteThumbnailsColumns(i int) *VodUpdate {
-	vu.mutation.AddSpriteThumbnailsColumns(i)
-	return vu
+// AddSpriteThumbnailsColumns adds value to the "sprite_thumbnails_columns" field.
+func (_u *VodUpdate) AddSpriteThumbnailsColumns(v int) *VodUpdate {
+	_u.mutation.AddSpriteThumbnailsColumns(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsColumns clears the value of the "sprite_thumbnails_columns" field.
-func (vu *VodUpdate) ClearSpriteThumbnailsColumns() *VodUpdate {
-	vu.mutation.ClearSpriteThumbnailsColumns()
-	return vu
+func (_u *VodUpdate) ClearSpriteThumbnailsColumns() *VodUpdate {
+	_u.mutation.ClearSpriteThumbnailsColumns()
+	return _u
 }
 
 // SetStorageSizeBytes sets the "storage_size_bytes" field.
-func (vu *VodUpdate) SetStorageSizeBytes(i int64) *VodUpdate {
-	vu.mutation.ResetStorageSizeBytes()
-	vu.mutation.SetStorageSizeBytes(i)
-	return vu
+func (_u *VodUpdate) SetStorageSizeBytes(v int64) *VodUpdate {
+	_u.mutation.ResetStorageSizeBytes()
+	_u.mutation.SetStorageSizeBytes(v)
+	return _u
 }
 
 // SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableStorageSizeBytes(i *int64) *VodUpdate {
-	if i != nil {
-		vu.SetStorageSizeBytes(*i)
+func (_u *VodUpdate) SetNillableStorageSizeBytes(v *int64) *VodUpdate {
+	if v != nil {
+		_u.SetStorageSizeBytes(*v)
 	}
-	return vu
+	return _u
 }
 
-// AddStorageSizeBytes adds i to the "storage_size_bytes" field.
-func (vu *VodUpdate) AddStorageSizeBytes(i int64) *VodUpdate {
-	vu.mutation.AddStorageSizeBytes(i)
-	return vu
+// AddStorageSizeBytes adds value to the "storage_size_bytes" field.
+func (_u *VodUpdate) AddStorageSizeBytes(v int64) *VodUpdate {
+	_u.mutation.AddStorageSizeBytes(v)
+	return _u
 }
 
 // SetStreamedAt sets the "streamed_at" field.
-func (vu *VodUpdate) SetStreamedAt(t time.Time) *VodUpdate {
-	vu.mutation.SetStreamedAt(t)
-	return vu
+func (_u *VodUpdate) SetStreamedAt(v time.Time) *VodUpdate {
+	_u.mutation.SetStreamedAt(v)
+	return _u
 }
 
 // SetNillableStreamedAt sets the "streamed_at" field if the given value is not nil.
-func (vu *VodUpdate) SetNillableStreamedAt(t *time.Time) *VodUpdate {
-	if t != nil {
-		vu.SetStreamedAt(*t)
+func (_u *VodUpdate) SetNillableStreamedAt(v *time.Time) *VodUpdate {
+	if v != nil {
+		_u.SetStreamedAt(*v)
 	}
-	return vu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (vu *VodUpdate) SetUpdatedAt(t time.Time) *VodUpdate {
-	vu.mutation.SetUpdatedAt(t)
-	return vu
+func (_u *VodUpdate) SetUpdatedAt(v time.Time) *VodUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetChannelID sets the "channel" edge to the Channel entity by ID.
-func (vu *VodUpdate) SetChannelID(id uuid.UUID) *VodUpdate {
-	vu.mutation.SetChannelID(id)
-	return vu
+func (_u *VodUpdate) SetChannelID(id uuid.UUID) *VodUpdate {
+	_u.mutation.SetChannelID(id)
+	return _u
 }
 
 // SetChannel sets the "channel" edge to the Channel entity.
-func (vu *VodUpdate) SetChannel(c *Channel) *VodUpdate {
-	return vu.SetChannelID(c.ID)
+func (_u *VodUpdate) SetChannel(v *Channel) *VodUpdate {
+	return _u.SetChannelID(v.ID)
 }
 
 // SetQueueID sets the "queue" edge to the Queue entity by ID.
-func (vu *VodUpdate) SetQueueID(id uuid.UUID) *VodUpdate {
-	vu.mutation.SetQueueID(id)
-	return vu
+func (_u *VodUpdate) SetQueueID(id uuid.UUID) *VodUpdate {
+	_u.mutation.SetQueueID(id)
+	return _u
 }
 
 // SetNillableQueueID sets the "queue" edge to the Queue entity by ID if the given value is not nil.
-func (vu *VodUpdate) SetNillableQueueID(id *uuid.UUID) *VodUpdate {
+func (_u *VodUpdate) SetNillableQueueID(id *uuid.UUID) *VodUpdate {
 	if id != nil {
-		vu = vu.SetQueueID(*id)
+		_u = _u.SetQueueID(*id)
 	}
-	return vu
+	return _u
 }
 
 // SetQueue sets the "queue" edge to the Queue entity.
-func (vu *VodUpdate) SetQueue(q *Queue) *VodUpdate {
-	return vu.SetQueueID(q.ID)
+func (_u *VodUpdate) SetQueue(v *Queue) *VodUpdate {
+	return _u.SetQueueID(v.ID)
 }
 
 // AddPlaylistIDs adds the "playlists" edge to the Playlist entity by IDs.
-func (vu *VodUpdate) AddPlaylistIDs(ids ...uuid.UUID) *VodUpdate {
-	vu.mutation.AddPlaylistIDs(ids...)
-	return vu
+func (_u *VodUpdate) AddPlaylistIDs(ids ...uuid.UUID) *VodUpdate {
+	_u.mutation.AddPlaylistIDs(ids...)
+	return _u
 }
 
 // AddPlaylists adds the "playlists" edges to the Playlist entity.
-func (vu *VodUpdate) AddPlaylists(p ...*Playlist) *VodUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *VodUpdate) AddPlaylists(v ...*Playlist) *VodUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vu.AddPlaylistIDs(ids...)
+	return _u.AddPlaylistIDs(ids...)
 }
 
 // AddChapterIDs adds the "chapters" edge to the Chapter entity by IDs.
-func (vu *VodUpdate) AddChapterIDs(ids ...uuid.UUID) *VodUpdate {
-	vu.mutation.AddChapterIDs(ids...)
-	return vu
+func (_u *VodUpdate) AddChapterIDs(ids ...uuid.UUID) *VodUpdate {
+	_u.mutation.AddChapterIDs(ids...)
+	return _u
 }
 
 // AddChapters adds the "chapters" edges to the Chapter entity.
-func (vu *VodUpdate) AddChapters(c ...*Chapter) *VodUpdate {
-	ids := make([]uuid.UUID, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *VodUpdate) AddChapters(v ...*Chapter) *VodUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vu.AddChapterIDs(ids...)
+	return _u.AddChapterIDs(ids...)
 }
 
 // AddMutedSegmentIDs adds the "muted_segments" edge to the MutedSegment entity by IDs.
-func (vu *VodUpdate) AddMutedSegmentIDs(ids ...uuid.UUID) *VodUpdate {
-	vu.mutation.AddMutedSegmentIDs(ids...)
-	return vu
+func (_u *VodUpdate) AddMutedSegmentIDs(ids ...uuid.UUID) *VodUpdate {
+	_u.mutation.AddMutedSegmentIDs(ids...)
+	return _u
 }
 
 // AddMutedSegments adds the "muted_segments" edges to the MutedSegment entity.
-func (vu *VodUpdate) AddMutedSegments(m ...*MutedSegment) *VodUpdate {
-	ids := make([]uuid.UUID, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *VodUpdate) AddMutedSegments(v ...*MutedSegment) *VodUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vu.AddMutedSegmentIDs(ids...)
+	return _u.AddMutedSegmentIDs(ids...)
 }
 
 // AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
-func (vu *VodUpdate) AddMultistreamInfoIDs(ids ...int) *VodUpdate {
-	vu.mutation.AddMultistreamInfoIDs(ids...)
-	return vu
+func (_u *VodUpdate) AddMultistreamInfoIDs(ids ...int) *VodUpdate {
+	_u.mutation.AddMultistreamInfoIDs(ids...)
+	return _u
 }
 
 // AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
-func (vu *VodUpdate) AddMultistreamInfo(m ...*MultistreamInfo) *VodUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *VodUpdate) AddMultistreamInfo(v ...*MultistreamInfo) *VodUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vu.AddMultistreamInfoIDs(ids...)
+	return _u.AddMultistreamInfoIDs(ids...)
 }
 
 // Mutation returns the VodMutation object of the builder.
-func (vu *VodUpdate) Mutation() *VodMutation {
-	return vu.mutation
+func (_u *VodUpdate) Mutation() *VodMutation {
+	return _u.mutation
 }
 
 // ClearChannel clears the "channel" edge to the Channel entity.
-func (vu *VodUpdate) ClearChannel() *VodUpdate {
-	vu.mutation.ClearChannel()
-	return vu
+func (_u *VodUpdate) ClearChannel() *VodUpdate {
+	_u.mutation.ClearChannel()
+	return _u
 }
 
 // ClearQueue clears the "queue" edge to the Queue entity.
-func (vu *VodUpdate) ClearQueue() *VodUpdate {
-	vu.mutation.ClearQueue()
-	return vu
+func (_u *VodUpdate) ClearQueue() *VodUpdate {
+	_u.mutation.ClearQueue()
+	return _u
 }
 
 // ClearPlaylists clears all "playlists" edges to the Playlist entity.
-func (vu *VodUpdate) ClearPlaylists() *VodUpdate {
-	vu.mutation.ClearPlaylists()
-	return vu
+func (_u *VodUpdate) ClearPlaylists() *VodUpdate {
+	_u.mutation.ClearPlaylists()
+	return _u
 }
 
 // RemovePlaylistIDs removes the "playlists" edge to Playlist entities by IDs.
-func (vu *VodUpdate) RemovePlaylistIDs(ids ...uuid.UUID) *VodUpdate {
-	vu.mutation.RemovePlaylistIDs(ids...)
-	return vu
+func (_u *VodUpdate) RemovePlaylistIDs(ids ...uuid.UUID) *VodUpdate {
+	_u.mutation.RemovePlaylistIDs(ids...)
+	return _u
 }
 
 // RemovePlaylists removes "playlists" edges to Playlist entities.
-func (vu *VodUpdate) RemovePlaylists(p ...*Playlist) *VodUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *VodUpdate) RemovePlaylists(v ...*Playlist) *VodUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vu.RemovePlaylistIDs(ids...)
+	return _u.RemovePlaylistIDs(ids...)
 }
 
 // ClearChapters clears all "chapters" edges to the Chapter entity.
-func (vu *VodUpdate) ClearChapters() *VodUpdate {
-	vu.mutation.ClearChapters()
-	return vu
+func (_u *VodUpdate) ClearChapters() *VodUpdate {
+	_u.mutation.ClearChapters()
+	return _u
 }
 
 // RemoveChapterIDs removes the "chapters" edge to Chapter entities by IDs.
-func (vu *VodUpdate) RemoveChapterIDs(ids ...uuid.UUID) *VodUpdate {
-	vu.mutation.RemoveChapterIDs(ids...)
-	return vu
+func (_u *VodUpdate) RemoveChapterIDs(ids ...uuid.UUID) *VodUpdate {
+	_u.mutation.RemoveChapterIDs(ids...)
+	return _u
 }
 
 // RemoveChapters removes "chapters" edges to Chapter entities.
-func (vu *VodUpdate) RemoveChapters(c ...*Chapter) *VodUpdate {
-	ids := make([]uuid.UUID, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *VodUpdate) RemoveChapters(v ...*Chapter) *VodUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vu.RemoveChapterIDs(ids...)
+	return _u.RemoveChapterIDs(ids...)
 }
 
 // ClearMutedSegments clears all "muted_segments" edges to the MutedSegment entity.
-func (vu *VodUpdate) ClearMutedSegments() *VodUpdate {
-	vu.mutation.ClearMutedSegments()
-	return vu
+func (_u *VodUpdate) ClearMutedSegments() *VodUpdate {
+	_u.mutation.ClearMutedSegments()
+	return _u
 }
 
 // RemoveMutedSegmentIDs removes the "muted_segments" edge to MutedSegment entities by IDs.
-func (vu *VodUpdate) RemoveMutedSegmentIDs(ids ...uuid.UUID) *VodUpdate {
-	vu.mutation.RemoveMutedSegmentIDs(ids...)
-	return vu
+func (_u *VodUpdate) RemoveMutedSegmentIDs(ids ...uuid.UUID) *VodUpdate {
+	_u.mutation.RemoveMutedSegmentIDs(ids...)
+	return _u
 }
 
 // RemoveMutedSegments removes "muted_segments" edges to MutedSegment entities.
-func (vu *VodUpdate) RemoveMutedSegments(m ...*MutedSegment) *VodUpdate {
-	ids := make([]uuid.UUID, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *VodUpdate) RemoveMutedSegments(v ...*MutedSegment) *VodUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vu.RemoveMutedSegmentIDs(ids...)
+	return _u.RemoveMutedSegmentIDs(ids...)
 }
 
 // ClearMultistreamInfo clears all "multistream_info" edges to the MultistreamInfo entity.
-func (vu *VodUpdate) ClearMultistreamInfo() *VodUpdate {
-	vu.mutation.ClearMultistreamInfo()
-	return vu
+func (_u *VodUpdate) ClearMultistreamInfo() *VodUpdate {
+	_u.mutation.ClearMultistreamInfo()
+	return _u
 }
 
 // RemoveMultistreamInfoIDs removes the "multistream_info" edge to MultistreamInfo entities by IDs.
-func (vu *VodUpdate) RemoveMultistreamInfoIDs(ids ...int) *VodUpdate {
-	vu.mutation.RemoveMultistreamInfoIDs(ids...)
-	return vu
+func (_u *VodUpdate) RemoveMultistreamInfoIDs(ids ...int) *VodUpdate {
+	_u.mutation.RemoveMultistreamInfoIDs(ids...)
+	return _u
 }
 
 // RemoveMultistreamInfo removes "multistream_info" edges to MultistreamInfo entities.
-func (vu *VodUpdate) RemoveMultistreamInfo(m ...*MultistreamInfo) *VodUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *VodUpdate) RemoveMultistreamInfo(v ...*MultistreamInfo) *VodUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vu.RemoveMultistreamInfoIDs(ids...)
+	return _u.RemoveMultistreamInfoIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (vu *VodUpdate) Save(ctx context.Context) (int, error) {
-	vu.defaults()
-	return withHooks(ctx, vu.sqlSave, vu.mutation, vu.hooks)
+func (_u *VodUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (vu *VodUpdate) SaveX(ctx context.Context) int {
-	affected, err := vu.Save(ctx)
+func (_u *VodUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1054,299 +1054,299 @@ func (vu *VodUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (vu *VodUpdate) Exec(ctx context.Context) error {
-	_, err := vu.Save(ctx)
+func (_u *VodUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (vu *VodUpdate) ExecX(ctx context.Context) {
-	if err := vu.Exec(ctx); err != nil {
+func (_u *VodUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (vu *VodUpdate) defaults() {
-	if _, ok := vu.mutation.UpdatedAt(); !ok {
+func (_u *VodUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := vod.UpdateDefaultUpdatedAt()
-		vu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (vu *VodUpdate) check() error {
-	if v, ok := vu.mutation.Platform(); ok {
+func (_u *VodUpdate) check() error {
+	if v, ok := _u.mutation.Platform(); ok {
 		if err := vod.PlatformValidator(v); err != nil {
 			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Vod.platform": %w`, err)}
 		}
 	}
-	if v, ok := vu.mutation.GetType(); ok {
+	if v, ok := _u.mutation.GetType(); ok {
 		if err := vod.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Vod.type": %w`, err)}
 		}
 	}
-	if vu.mutation.ChannelCleared() && len(vu.mutation.ChannelIDs()) > 0 {
+	if _u.mutation.ChannelCleared() && len(_u.mutation.ChannelIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Vod.channel"`)
 	}
 	return nil
 }
 
-func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := vu.check(); err != nil {
-		return n, err
+func (_u *VodUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(vod.Table, vod.Columns, sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID))
-	if ps := vu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := vu.mutation.ExtID(); ok {
+	if value, ok := _u.mutation.ExtID(); ok {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 	}
-	if value, ok := vu.mutation.ClipExtVodID(); ok {
+	if value, ok := _u.mutation.ClipExtVodID(); ok {
 		_spec.SetField(vod.FieldClipExtVodID, field.TypeString, value)
 	}
-	if vu.mutation.ClipExtVodIDCleared() {
+	if _u.mutation.ClipExtVodIDCleared() {
 		_spec.ClearField(vod.FieldClipExtVodID, field.TypeString)
 	}
-	if value, ok := vu.mutation.ExtStreamID(); ok {
+	if value, ok := _u.mutation.ExtStreamID(); ok {
 		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
 	}
-	if vu.mutation.ExtStreamIDCleared() {
+	if _u.mutation.ExtStreamIDCleared() {
 		_spec.ClearField(vod.FieldExtStreamID, field.TypeString)
 	}
-	if value, ok := vu.mutation.Platform(); ok {
+	if value, ok := _u.mutation.Platform(); ok {
 		_spec.SetField(vod.FieldPlatform, field.TypeEnum, value)
 	}
-	if value, ok := vu.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(vod.FieldType, field.TypeEnum, value)
 	}
-	if value, ok := vu.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(vod.FieldTitle, field.TypeString, value)
 	}
-	if value, ok := vu.mutation.Duration(); ok {
+	if value, ok := _u.mutation.Duration(); ok {
 		_spec.SetField(vod.FieldDuration, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.AddedDuration(); ok {
+	if value, ok := _u.mutation.AddedDuration(); ok {
 		_spec.AddField(vod.FieldDuration, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.ClipVodOffset(); ok {
+	if value, ok := _u.mutation.ClipVodOffset(); ok {
 		_spec.SetField(vod.FieldClipVodOffset, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.AddedClipVodOffset(); ok {
+	if value, ok := _u.mutation.AddedClipVodOffset(); ok {
 		_spec.AddField(vod.FieldClipVodOffset, field.TypeInt, value)
 	}
-	if vu.mutation.ClipVodOffsetCleared() {
+	if _u.mutation.ClipVodOffsetCleared() {
 		_spec.ClearField(vod.FieldClipVodOffset, field.TypeInt)
 	}
-	if value, ok := vu.mutation.Views(); ok {
+	if value, ok := _u.mutation.Views(); ok {
 		_spec.SetField(vod.FieldViews, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.AddedViews(); ok {
+	if value, ok := _u.mutation.AddedViews(); ok {
 		_spec.AddField(vod.FieldViews, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.Resolution(); ok {
+	if value, ok := _u.mutation.Resolution(); ok {
 		_spec.SetField(vod.FieldResolution, field.TypeString, value)
 	}
-	if vu.mutation.ResolutionCleared() {
+	if _u.mutation.ResolutionCleared() {
 		_spec.ClearField(vod.FieldResolution, field.TypeString)
 	}
-	if value, ok := vu.mutation.Processing(); ok {
+	if value, ok := _u.mutation.Processing(); ok {
 		_spec.SetField(vod.FieldProcessing, field.TypeBool, value)
 	}
-	if value, ok := vu.mutation.ThumbnailPath(); ok {
+	if value, ok := _u.mutation.ThumbnailPath(); ok {
 		_spec.SetField(vod.FieldThumbnailPath, field.TypeString, value)
 	}
-	if vu.mutation.ThumbnailPathCleared() {
+	if _u.mutation.ThumbnailPathCleared() {
 		_spec.ClearField(vod.FieldThumbnailPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.WebThumbnailPath(); ok {
+	if value, ok := _u.mutation.WebThumbnailPath(); ok {
 		_spec.SetField(vod.FieldWebThumbnailPath, field.TypeString, value)
 	}
-	if value, ok := vu.mutation.VideoPath(); ok {
+	if value, ok := _u.mutation.VideoPath(); ok {
 		_spec.SetField(vod.FieldVideoPath, field.TypeString, value)
 	}
-	if value, ok := vu.mutation.VideoHlsPath(); ok {
+	if value, ok := _u.mutation.VideoHlsPath(); ok {
 		_spec.SetField(vod.FieldVideoHlsPath, field.TypeString, value)
 	}
-	if vu.mutation.VideoHlsPathCleared() {
+	if _u.mutation.VideoHlsPathCleared() {
 		_spec.ClearField(vod.FieldVideoHlsPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.ChatPath(); ok {
+	if value, ok := _u.mutation.ChatPath(); ok {
 		_spec.SetField(vod.FieldChatPath, field.TypeString, value)
 	}
-	if vu.mutation.ChatPathCleared() {
+	if _u.mutation.ChatPathCleared() {
 		_spec.ClearField(vod.FieldChatPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.LiveChatPath(); ok {
+	if value, ok := _u.mutation.LiveChatPath(); ok {
 		_spec.SetField(vod.FieldLiveChatPath, field.TypeString, value)
 	}
-	if vu.mutation.LiveChatPathCleared() {
+	if _u.mutation.LiveChatPathCleared() {
 		_spec.ClearField(vod.FieldLiveChatPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.LiveChatConvertPath(); ok {
+	if value, ok := _u.mutation.LiveChatConvertPath(); ok {
 		_spec.SetField(vod.FieldLiveChatConvertPath, field.TypeString, value)
 	}
-	if vu.mutation.LiveChatConvertPathCleared() {
+	if _u.mutation.LiveChatConvertPathCleared() {
 		_spec.ClearField(vod.FieldLiveChatConvertPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.ChatVideoPath(); ok {
+	if value, ok := _u.mutation.ChatVideoPath(); ok {
 		_spec.SetField(vod.FieldChatVideoPath, field.TypeString, value)
 	}
-	if vu.mutation.ChatVideoPathCleared() {
+	if _u.mutation.ChatVideoPathCleared() {
 		_spec.ClearField(vod.FieldChatVideoPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.InfoPath(); ok {
+	if value, ok := _u.mutation.InfoPath(); ok {
 		_spec.SetField(vod.FieldInfoPath, field.TypeString, value)
 	}
-	if vu.mutation.InfoPathCleared() {
+	if _u.mutation.InfoPathCleared() {
 		_spec.ClearField(vod.FieldInfoPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.CaptionPath(); ok {
+	if value, ok := _u.mutation.CaptionPath(); ok {
 		_spec.SetField(vod.FieldCaptionPath, field.TypeString, value)
 	}
-	if vu.mutation.CaptionPathCleared() {
+	if _u.mutation.CaptionPathCleared() {
 		_spec.ClearField(vod.FieldCaptionPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.FolderName(); ok {
+	if value, ok := _u.mutation.FolderName(); ok {
 		_spec.SetField(vod.FieldFolderName, field.TypeString, value)
 	}
-	if vu.mutation.FolderNameCleared() {
+	if _u.mutation.FolderNameCleared() {
 		_spec.ClearField(vod.FieldFolderName, field.TypeString)
 	}
-	if value, ok := vu.mutation.FileName(); ok {
+	if value, ok := _u.mutation.FileName(); ok {
 		_spec.SetField(vod.FieldFileName, field.TypeString, value)
 	}
-	if vu.mutation.FileNameCleared() {
+	if _u.mutation.FileNameCleared() {
 		_spec.ClearField(vod.FieldFileName, field.TypeString)
 	}
-	if value, ok := vu.mutation.TmpVideoDownloadPath(); ok {
+	if value, ok := _u.mutation.TmpVideoDownloadPath(); ok {
 		_spec.SetField(vod.FieldTmpVideoDownloadPath, field.TypeString, value)
 	}
-	if vu.mutation.TmpVideoDownloadPathCleared() {
+	if _u.mutation.TmpVideoDownloadPathCleared() {
 		_spec.ClearField(vod.FieldTmpVideoDownloadPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.TmpVideoConvertPath(); ok {
+	if value, ok := _u.mutation.TmpVideoConvertPath(); ok {
 		_spec.SetField(vod.FieldTmpVideoConvertPath, field.TypeString, value)
 	}
-	if vu.mutation.TmpVideoConvertPathCleared() {
+	if _u.mutation.TmpVideoConvertPathCleared() {
 		_spec.ClearField(vod.FieldTmpVideoConvertPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.TmpChatDownloadPath(); ok {
+	if value, ok := _u.mutation.TmpChatDownloadPath(); ok {
 		_spec.SetField(vod.FieldTmpChatDownloadPath, field.TypeString, value)
 	}
-	if vu.mutation.TmpChatDownloadPathCleared() {
+	if _u.mutation.TmpChatDownloadPathCleared() {
 		_spec.ClearField(vod.FieldTmpChatDownloadPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.TmpLiveChatDownloadPath(); ok {
+	if value, ok := _u.mutation.TmpLiveChatDownloadPath(); ok {
 		_spec.SetField(vod.FieldTmpLiveChatDownloadPath, field.TypeString, value)
 	}
-	if vu.mutation.TmpLiveChatDownloadPathCleared() {
+	if _u.mutation.TmpLiveChatDownloadPathCleared() {
 		_spec.ClearField(vod.FieldTmpLiveChatDownloadPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.TmpLiveChatConvertPath(); ok {
+	if value, ok := _u.mutation.TmpLiveChatConvertPath(); ok {
 		_spec.SetField(vod.FieldTmpLiveChatConvertPath, field.TypeString, value)
 	}
-	if vu.mutation.TmpLiveChatConvertPathCleared() {
+	if _u.mutation.TmpLiveChatConvertPathCleared() {
 		_spec.ClearField(vod.FieldTmpLiveChatConvertPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.TmpChatRenderPath(); ok {
+	if value, ok := _u.mutation.TmpChatRenderPath(); ok {
 		_spec.SetField(vod.FieldTmpChatRenderPath, field.TypeString, value)
 	}
-	if vu.mutation.TmpChatRenderPathCleared() {
+	if _u.mutation.TmpChatRenderPathCleared() {
 		_spec.ClearField(vod.FieldTmpChatRenderPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.TmpVideoHlsPath(); ok {
+	if value, ok := _u.mutation.TmpVideoHlsPath(); ok {
 		_spec.SetField(vod.FieldTmpVideoHlsPath, field.TypeString, value)
 	}
-	if vu.mutation.TmpVideoHlsPathCleared() {
+	if _u.mutation.TmpVideoHlsPathCleared() {
 		_spec.ClearField(vod.FieldTmpVideoHlsPath, field.TypeString)
 	}
-	if value, ok := vu.mutation.Locked(); ok {
+	if value, ok := _u.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
 	}
-	if value, ok := vu.mutation.LocalViews(); ok {
+	if value, ok := _u.mutation.LocalViews(); ok {
 		_spec.SetField(vod.FieldLocalViews, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.AddedLocalViews(); ok {
+	if value, ok := _u.mutation.AddedLocalViews(); ok {
 		_spec.AddField(vod.FieldLocalViews, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.SpriteThumbnailsEnabled(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsEnabled(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsEnabled, field.TypeBool, value)
 	}
-	if value, ok := vu.mutation.SpriteThumbnailsImages(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsImages(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsImages, field.TypeJSON, value)
 	}
-	if value, ok := vu.mutation.AppendedSpriteThumbnailsImages(); ok {
+	if value, ok := _u.mutation.AppendedSpriteThumbnailsImages(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, vod.FieldSpriteThumbnailsImages, value)
 		})
 	}
-	if vu.mutation.SpriteThumbnailsImagesCleared() {
+	if _u.mutation.SpriteThumbnailsImagesCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsImages, field.TypeJSON)
 	}
-	if value, ok := vu.mutation.SpriteThumbnailsInterval(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsInterval(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsInterval, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.AddedSpriteThumbnailsInterval(); ok {
+	if value, ok := _u.mutation.AddedSpriteThumbnailsInterval(); ok {
 		_spec.AddField(vod.FieldSpriteThumbnailsInterval, field.TypeInt, value)
 	}
-	if vu.mutation.SpriteThumbnailsIntervalCleared() {
+	if _u.mutation.SpriteThumbnailsIntervalCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsInterval, field.TypeInt)
 	}
-	if value, ok := vu.mutation.SpriteThumbnailsWidth(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsWidth(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsWidth, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.AddedSpriteThumbnailsWidth(); ok {
+	if value, ok := _u.mutation.AddedSpriteThumbnailsWidth(); ok {
 		_spec.AddField(vod.FieldSpriteThumbnailsWidth, field.TypeInt, value)
 	}
-	if vu.mutation.SpriteThumbnailsWidthCleared() {
+	if _u.mutation.SpriteThumbnailsWidthCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsWidth, field.TypeInt)
 	}
-	if value, ok := vu.mutation.SpriteThumbnailsHeight(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsHeight(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsHeight, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.AddedSpriteThumbnailsHeight(); ok {
+	if value, ok := _u.mutation.AddedSpriteThumbnailsHeight(); ok {
 		_spec.AddField(vod.FieldSpriteThumbnailsHeight, field.TypeInt, value)
 	}
-	if vu.mutation.SpriteThumbnailsHeightCleared() {
+	if _u.mutation.SpriteThumbnailsHeightCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsHeight, field.TypeInt)
 	}
-	if value, ok := vu.mutation.SpriteThumbnailsRows(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsRows(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsRows, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.AddedSpriteThumbnailsRows(); ok {
+	if value, ok := _u.mutation.AddedSpriteThumbnailsRows(); ok {
 		_spec.AddField(vod.FieldSpriteThumbnailsRows, field.TypeInt, value)
 	}
-	if vu.mutation.SpriteThumbnailsRowsCleared() {
+	if _u.mutation.SpriteThumbnailsRowsCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsRows, field.TypeInt)
 	}
-	if value, ok := vu.mutation.SpriteThumbnailsColumns(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsColumns(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
 	}
-	if value, ok := vu.mutation.AddedSpriteThumbnailsColumns(); ok {
+	if value, ok := _u.mutation.AddedSpriteThumbnailsColumns(); ok {
 		_spec.AddField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
 	}
-	if vu.mutation.SpriteThumbnailsColumnsCleared() {
+	if _u.mutation.SpriteThumbnailsColumnsCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsColumns, field.TypeInt)
 	}
-	if value, ok := vu.mutation.StorageSizeBytes(); ok {
+	if value, ok := _u.mutation.StorageSizeBytes(); ok {
 		_spec.SetField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
-	if value, ok := vu.mutation.AddedStorageSizeBytes(); ok {
+	if value, ok := _u.mutation.AddedStorageSizeBytes(); ok {
 		_spec.AddField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
-	if value, ok := vu.mutation.StreamedAt(); ok {
+	if value, ok := _u.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
 	}
-	if value, ok := vu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(vod.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if vu.mutation.ChannelCleared() {
+	if _u.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1359,7 +1359,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vu.mutation.ChannelIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ChannelIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1375,7 +1375,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if vu.mutation.QueueCleared() {
+	if _u.mutation.QueueCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2O,
 			Inverse: false,
@@ -1388,7 +1388,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vu.mutation.QueueIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.QueueIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2O,
 			Inverse: false,
@@ -1404,7 +1404,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if vu.mutation.PlaylistsCleared() {
+	if _u.mutation.PlaylistsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1417,23 +1417,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vu.mutation.RemovedPlaylistsIDs(); len(nodes) > 0 && !vu.mutation.PlaylistsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   vod.PlaylistsTable,
-			Columns: vod.PlaylistsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := vu.mutation.PlaylistsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedPlaylistsIDs(); len(nodes) > 0 && !_u.mutation.PlaylistsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1447,9 +1431,25 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PlaylistsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   vod.PlaylistsTable,
+			Columns: vod.PlaylistsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if vu.mutation.ChaptersCleared() {
+	if _u.mutation.ChaptersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1462,7 +1462,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vu.mutation.RemovedChaptersIDs(); len(nodes) > 0 && !vu.mutation.ChaptersCleared() {
+	if nodes := _u.mutation.RemovedChaptersIDs(); len(nodes) > 0 && !_u.mutation.ChaptersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1478,7 +1478,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vu.mutation.ChaptersIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ChaptersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1494,7 +1494,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if vu.mutation.MutedSegmentsCleared() {
+	if _u.mutation.MutedSegmentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1507,7 +1507,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vu.mutation.RemovedMutedSegmentsIDs(); len(nodes) > 0 && !vu.mutation.MutedSegmentsCleared() {
+	if nodes := _u.mutation.RemovedMutedSegmentsIDs(); len(nodes) > 0 && !_u.mutation.MutedSegmentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1523,7 +1523,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vu.mutation.MutedSegmentsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MutedSegmentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1539,7 +1539,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if vu.mutation.MultistreamInfoCleared() {
+	if _u.mutation.MultistreamInfoCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
@@ -1552,7 +1552,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vu.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !vu.mutation.MultistreamInfoCleared() {
+	if nodes := _u.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !_u.mutation.MultistreamInfoCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
@@ -1568,7 +1568,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vu.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
@@ -1584,7 +1584,7 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, vu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{vod.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1592,8 +1592,8 @@ func (vu *VodUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	vu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // VodUpdateOne is the builder for updating a single Vod entity.
@@ -1605,1028 +1605,1028 @@ type VodUpdateOne struct {
 }
 
 // SetExtID sets the "ext_id" field.
-func (vuo *VodUpdateOne) SetExtID(s string) *VodUpdateOne {
-	vuo.mutation.SetExtID(s)
-	return vuo
+func (_u *VodUpdateOne) SetExtID(v string) *VodUpdateOne {
+	_u.mutation.SetExtID(v)
+	return _u
 }
 
 // SetNillableExtID sets the "ext_id" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableExtID(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetExtID(*s)
+func (_u *VodUpdateOne) SetNillableExtID(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetExtID(*v)
 	}
-	return vuo
+	return _u
 }
 
 // SetClipExtVodID sets the "clip_ext_vod_id" field.
-func (vuo *VodUpdateOne) SetClipExtVodID(s string) *VodUpdateOne {
-	vuo.mutation.SetClipExtVodID(s)
-	return vuo
+func (_u *VodUpdateOne) SetClipExtVodID(v string) *VodUpdateOne {
+	_u.mutation.SetClipExtVodID(v)
+	return _u
 }
 
 // SetNillableClipExtVodID sets the "clip_ext_vod_id" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableClipExtVodID(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetClipExtVodID(*s)
+func (_u *VodUpdateOne) SetNillableClipExtVodID(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetClipExtVodID(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearClipExtVodID clears the value of the "clip_ext_vod_id" field.
-func (vuo *VodUpdateOne) ClearClipExtVodID() *VodUpdateOne {
-	vuo.mutation.ClearClipExtVodID()
-	return vuo
+func (_u *VodUpdateOne) ClearClipExtVodID() *VodUpdateOne {
+	_u.mutation.ClearClipExtVodID()
+	return _u
 }
 
 // SetExtStreamID sets the "ext_stream_id" field.
-func (vuo *VodUpdateOne) SetExtStreamID(s string) *VodUpdateOne {
-	vuo.mutation.SetExtStreamID(s)
-	return vuo
+func (_u *VodUpdateOne) SetExtStreamID(v string) *VodUpdateOne {
+	_u.mutation.SetExtStreamID(v)
+	return _u
 }
 
 // SetNillableExtStreamID sets the "ext_stream_id" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableExtStreamID(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetExtStreamID(*s)
+func (_u *VodUpdateOne) SetNillableExtStreamID(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetExtStreamID(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearExtStreamID clears the value of the "ext_stream_id" field.
-func (vuo *VodUpdateOne) ClearExtStreamID() *VodUpdateOne {
-	vuo.mutation.ClearExtStreamID()
-	return vuo
+func (_u *VodUpdateOne) ClearExtStreamID() *VodUpdateOne {
+	_u.mutation.ClearExtStreamID()
+	return _u
 }
 
 // SetPlatform sets the "platform" field.
-func (vuo *VodUpdateOne) SetPlatform(up utils.VideoPlatform) *VodUpdateOne {
-	vuo.mutation.SetPlatform(up)
-	return vuo
+func (_u *VodUpdateOne) SetPlatform(v utils.VideoPlatform) *VodUpdateOne {
+	_u.mutation.SetPlatform(v)
+	return _u
 }
 
 // SetNillablePlatform sets the "platform" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillablePlatform(up *utils.VideoPlatform) *VodUpdateOne {
-	if up != nil {
-		vuo.SetPlatform(*up)
+func (_u *VodUpdateOne) SetNillablePlatform(v *utils.VideoPlatform) *VodUpdateOne {
+	if v != nil {
+		_u.SetPlatform(*v)
 	}
-	return vuo
+	return _u
 }
 
 // SetType sets the "type" field.
-func (vuo *VodUpdateOne) SetType(ut utils.VodType) *VodUpdateOne {
-	vuo.mutation.SetType(ut)
-	return vuo
+func (_u *VodUpdateOne) SetType(v utils.VodType) *VodUpdateOne {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableType(ut *utils.VodType) *VodUpdateOne {
-	if ut != nil {
-		vuo.SetType(*ut)
+func (_u *VodUpdateOne) SetNillableType(v *utils.VodType) *VodUpdateOne {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return vuo
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (vuo *VodUpdateOne) SetTitle(s string) *VodUpdateOne {
-	vuo.mutation.SetTitle(s)
-	return vuo
+func (_u *VodUpdateOne) SetTitle(v string) *VodUpdateOne {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableTitle(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetTitle(*s)
+func (_u *VodUpdateOne) SetNillableTitle(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return vuo
+	return _u
 }
 
 // SetDuration sets the "duration" field.
-func (vuo *VodUpdateOne) SetDuration(i int) *VodUpdateOne {
-	vuo.mutation.ResetDuration()
-	vuo.mutation.SetDuration(i)
-	return vuo
+func (_u *VodUpdateOne) SetDuration(v int) *VodUpdateOne {
+	_u.mutation.ResetDuration()
+	_u.mutation.SetDuration(v)
+	return _u
 }
 
 // SetNillableDuration sets the "duration" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableDuration(i *int) *VodUpdateOne {
-	if i != nil {
-		vuo.SetDuration(*i)
+func (_u *VodUpdateOne) SetNillableDuration(v *int) *VodUpdateOne {
+	if v != nil {
+		_u.SetDuration(*v)
 	}
-	return vuo
+	return _u
 }
 
-// AddDuration adds i to the "duration" field.
-func (vuo *VodUpdateOne) AddDuration(i int) *VodUpdateOne {
-	vuo.mutation.AddDuration(i)
-	return vuo
+// AddDuration adds value to the "duration" field.
+func (_u *VodUpdateOne) AddDuration(v int) *VodUpdateOne {
+	_u.mutation.AddDuration(v)
+	return _u
 }
 
 // SetClipVodOffset sets the "clip_vod_offset" field.
-func (vuo *VodUpdateOne) SetClipVodOffset(i int) *VodUpdateOne {
-	vuo.mutation.ResetClipVodOffset()
-	vuo.mutation.SetClipVodOffset(i)
-	return vuo
+func (_u *VodUpdateOne) SetClipVodOffset(v int) *VodUpdateOne {
+	_u.mutation.ResetClipVodOffset()
+	_u.mutation.SetClipVodOffset(v)
+	return _u
 }
 
 // SetNillableClipVodOffset sets the "clip_vod_offset" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableClipVodOffset(i *int) *VodUpdateOne {
-	if i != nil {
-		vuo.SetClipVodOffset(*i)
+func (_u *VodUpdateOne) SetNillableClipVodOffset(v *int) *VodUpdateOne {
+	if v != nil {
+		_u.SetClipVodOffset(*v)
 	}
-	return vuo
+	return _u
 }
 
-// AddClipVodOffset adds i to the "clip_vod_offset" field.
-func (vuo *VodUpdateOne) AddClipVodOffset(i int) *VodUpdateOne {
-	vuo.mutation.AddClipVodOffset(i)
-	return vuo
+// AddClipVodOffset adds value to the "clip_vod_offset" field.
+func (_u *VodUpdateOne) AddClipVodOffset(v int) *VodUpdateOne {
+	_u.mutation.AddClipVodOffset(v)
+	return _u
 }
 
 // ClearClipVodOffset clears the value of the "clip_vod_offset" field.
-func (vuo *VodUpdateOne) ClearClipVodOffset() *VodUpdateOne {
-	vuo.mutation.ClearClipVodOffset()
-	return vuo
+func (_u *VodUpdateOne) ClearClipVodOffset() *VodUpdateOne {
+	_u.mutation.ClearClipVodOffset()
+	return _u
 }
 
 // SetViews sets the "views" field.
-func (vuo *VodUpdateOne) SetViews(i int) *VodUpdateOne {
-	vuo.mutation.ResetViews()
-	vuo.mutation.SetViews(i)
-	return vuo
+func (_u *VodUpdateOne) SetViews(v int) *VodUpdateOne {
+	_u.mutation.ResetViews()
+	_u.mutation.SetViews(v)
+	return _u
 }
 
 // SetNillableViews sets the "views" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableViews(i *int) *VodUpdateOne {
-	if i != nil {
-		vuo.SetViews(*i)
+func (_u *VodUpdateOne) SetNillableViews(v *int) *VodUpdateOne {
+	if v != nil {
+		_u.SetViews(*v)
 	}
-	return vuo
+	return _u
 }
 
-// AddViews adds i to the "views" field.
-func (vuo *VodUpdateOne) AddViews(i int) *VodUpdateOne {
-	vuo.mutation.AddViews(i)
-	return vuo
+// AddViews adds value to the "views" field.
+func (_u *VodUpdateOne) AddViews(v int) *VodUpdateOne {
+	_u.mutation.AddViews(v)
+	return _u
 }
 
 // SetResolution sets the "resolution" field.
-func (vuo *VodUpdateOne) SetResolution(s string) *VodUpdateOne {
-	vuo.mutation.SetResolution(s)
-	return vuo
+func (_u *VodUpdateOne) SetResolution(v string) *VodUpdateOne {
+	_u.mutation.SetResolution(v)
+	return _u
 }
 
 // SetNillableResolution sets the "resolution" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableResolution(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetResolution(*s)
+func (_u *VodUpdateOne) SetNillableResolution(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetResolution(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearResolution clears the value of the "resolution" field.
-func (vuo *VodUpdateOne) ClearResolution() *VodUpdateOne {
-	vuo.mutation.ClearResolution()
-	return vuo
+func (_u *VodUpdateOne) ClearResolution() *VodUpdateOne {
+	_u.mutation.ClearResolution()
+	return _u
 }
 
 // SetProcessing sets the "processing" field.
-func (vuo *VodUpdateOne) SetProcessing(b bool) *VodUpdateOne {
-	vuo.mutation.SetProcessing(b)
-	return vuo
+func (_u *VodUpdateOne) SetProcessing(v bool) *VodUpdateOne {
+	_u.mutation.SetProcessing(v)
+	return _u
 }
 
 // SetNillableProcessing sets the "processing" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableProcessing(b *bool) *VodUpdateOne {
-	if b != nil {
-		vuo.SetProcessing(*b)
+func (_u *VodUpdateOne) SetNillableProcessing(v *bool) *VodUpdateOne {
+	if v != nil {
+		_u.SetProcessing(*v)
 	}
-	return vuo
+	return _u
 }
 
 // SetThumbnailPath sets the "thumbnail_path" field.
-func (vuo *VodUpdateOne) SetThumbnailPath(s string) *VodUpdateOne {
-	vuo.mutation.SetThumbnailPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetThumbnailPath(v string) *VodUpdateOne {
+	_u.mutation.SetThumbnailPath(v)
+	return _u
 }
 
 // SetNillableThumbnailPath sets the "thumbnail_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableThumbnailPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetThumbnailPath(*s)
+func (_u *VodUpdateOne) SetNillableThumbnailPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetThumbnailPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearThumbnailPath clears the value of the "thumbnail_path" field.
-func (vuo *VodUpdateOne) ClearThumbnailPath() *VodUpdateOne {
-	vuo.mutation.ClearThumbnailPath()
-	return vuo
+func (_u *VodUpdateOne) ClearThumbnailPath() *VodUpdateOne {
+	_u.mutation.ClearThumbnailPath()
+	return _u
 }
 
 // SetWebThumbnailPath sets the "web_thumbnail_path" field.
-func (vuo *VodUpdateOne) SetWebThumbnailPath(s string) *VodUpdateOne {
-	vuo.mutation.SetWebThumbnailPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetWebThumbnailPath(v string) *VodUpdateOne {
+	_u.mutation.SetWebThumbnailPath(v)
+	return _u
 }
 
 // SetNillableWebThumbnailPath sets the "web_thumbnail_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableWebThumbnailPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetWebThumbnailPath(*s)
+func (_u *VodUpdateOne) SetNillableWebThumbnailPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetWebThumbnailPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // SetVideoPath sets the "video_path" field.
-func (vuo *VodUpdateOne) SetVideoPath(s string) *VodUpdateOne {
-	vuo.mutation.SetVideoPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetVideoPath(v string) *VodUpdateOne {
+	_u.mutation.SetVideoPath(v)
+	return _u
 }
 
 // SetNillableVideoPath sets the "video_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableVideoPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetVideoPath(*s)
+func (_u *VodUpdateOne) SetNillableVideoPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetVideoPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // SetVideoHlsPath sets the "video_hls_path" field.
-func (vuo *VodUpdateOne) SetVideoHlsPath(s string) *VodUpdateOne {
-	vuo.mutation.SetVideoHlsPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetVideoHlsPath(v string) *VodUpdateOne {
+	_u.mutation.SetVideoHlsPath(v)
+	return _u
 }
 
 // SetNillableVideoHlsPath sets the "video_hls_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableVideoHlsPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetVideoHlsPath(*s)
+func (_u *VodUpdateOne) SetNillableVideoHlsPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetVideoHlsPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearVideoHlsPath clears the value of the "video_hls_path" field.
-func (vuo *VodUpdateOne) ClearVideoHlsPath() *VodUpdateOne {
-	vuo.mutation.ClearVideoHlsPath()
-	return vuo
+func (_u *VodUpdateOne) ClearVideoHlsPath() *VodUpdateOne {
+	_u.mutation.ClearVideoHlsPath()
+	return _u
 }
 
 // SetChatPath sets the "chat_path" field.
-func (vuo *VodUpdateOne) SetChatPath(s string) *VodUpdateOne {
-	vuo.mutation.SetChatPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetChatPath(v string) *VodUpdateOne {
+	_u.mutation.SetChatPath(v)
+	return _u
 }
 
 // SetNillableChatPath sets the "chat_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableChatPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetChatPath(*s)
+func (_u *VodUpdateOne) SetNillableChatPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetChatPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearChatPath clears the value of the "chat_path" field.
-func (vuo *VodUpdateOne) ClearChatPath() *VodUpdateOne {
-	vuo.mutation.ClearChatPath()
-	return vuo
+func (_u *VodUpdateOne) ClearChatPath() *VodUpdateOne {
+	_u.mutation.ClearChatPath()
+	return _u
 }
 
 // SetLiveChatPath sets the "live_chat_path" field.
-func (vuo *VodUpdateOne) SetLiveChatPath(s string) *VodUpdateOne {
-	vuo.mutation.SetLiveChatPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetLiveChatPath(v string) *VodUpdateOne {
+	_u.mutation.SetLiveChatPath(v)
+	return _u
 }
 
 // SetNillableLiveChatPath sets the "live_chat_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableLiveChatPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetLiveChatPath(*s)
+func (_u *VodUpdateOne) SetNillableLiveChatPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetLiveChatPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearLiveChatPath clears the value of the "live_chat_path" field.
-func (vuo *VodUpdateOne) ClearLiveChatPath() *VodUpdateOne {
-	vuo.mutation.ClearLiveChatPath()
-	return vuo
+func (_u *VodUpdateOne) ClearLiveChatPath() *VodUpdateOne {
+	_u.mutation.ClearLiveChatPath()
+	return _u
 }
 
 // SetLiveChatConvertPath sets the "live_chat_convert_path" field.
-func (vuo *VodUpdateOne) SetLiveChatConvertPath(s string) *VodUpdateOne {
-	vuo.mutation.SetLiveChatConvertPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetLiveChatConvertPath(v string) *VodUpdateOne {
+	_u.mutation.SetLiveChatConvertPath(v)
+	return _u
 }
 
 // SetNillableLiveChatConvertPath sets the "live_chat_convert_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableLiveChatConvertPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetLiveChatConvertPath(*s)
+func (_u *VodUpdateOne) SetNillableLiveChatConvertPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetLiveChatConvertPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearLiveChatConvertPath clears the value of the "live_chat_convert_path" field.
-func (vuo *VodUpdateOne) ClearLiveChatConvertPath() *VodUpdateOne {
-	vuo.mutation.ClearLiveChatConvertPath()
-	return vuo
+func (_u *VodUpdateOne) ClearLiveChatConvertPath() *VodUpdateOne {
+	_u.mutation.ClearLiveChatConvertPath()
+	return _u
 }
 
 // SetChatVideoPath sets the "chat_video_path" field.
-func (vuo *VodUpdateOne) SetChatVideoPath(s string) *VodUpdateOne {
-	vuo.mutation.SetChatVideoPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetChatVideoPath(v string) *VodUpdateOne {
+	_u.mutation.SetChatVideoPath(v)
+	return _u
 }
 
 // SetNillableChatVideoPath sets the "chat_video_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableChatVideoPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetChatVideoPath(*s)
+func (_u *VodUpdateOne) SetNillableChatVideoPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetChatVideoPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearChatVideoPath clears the value of the "chat_video_path" field.
-func (vuo *VodUpdateOne) ClearChatVideoPath() *VodUpdateOne {
-	vuo.mutation.ClearChatVideoPath()
-	return vuo
+func (_u *VodUpdateOne) ClearChatVideoPath() *VodUpdateOne {
+	_u.mutation.ClearChatVideoPath()
+	return _u
 }
 
 // SetInfoPath sets the "info_path" field.
-func (vuo *VodUpdateOne) SetInfoPath(s string) *VodUpdateOne {
-	vuo.mutation.SetInfoPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetInfoPath(v string) *VodUpdateOne {
+	_u.mutation.SetInfoPath(v)
+	return _u
 }
 
 // SetNillableInfoPath sets the "info_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableInfoPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetInfoPath(*s)
+func (_u *VodUpdateOne) SetNillableInfoPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetInfoPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearInfoPath clears the value of the "info_path" field.
-func (vuo *VodUpdateOne) ClearInfoPath() *VodUpdateOne {
-	vuo.mutation.ClearInfoPath()
-	return vuo
+func (_u *VodUpdateOne) ClearInfoPath() *VodUpdateOne {
+	_u.mutation.ClearInfoPath()
+	return _u
 }
 
 // SetCaptionPath sets the "caption_path" field.
-func (vuo *VodUpdateOne) SetCaptionPath(s string) *VodUpdateOne {
-	vuo.mutation.SetCaptionPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetCaptionPath(v string) *VodUpdateOne {
+	_u.mutation.SetCaptionPath(v)
+	return _u
 }
 
 // SetNillableCaptionPath sets the "caption_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableCaptionPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetCaptionPath(*s)
+func (_u *VodUpdateOne) SetNillableCaptionPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetCaptionPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearCaptionPath clears the value of the "caption_path" field.
-func (vuo *VodUpdateOne) ClearCaptionPath() *VodUpdateOne {
-	vuo.mutation.ClearCaptionPath()
-	return vuo
+func (_u *VodUpdateOne) ClearCaptionPath() *VodUpdateOne {
+	_u.mutation.ClearCaptionPath()
+	return _u
 }
 
 // SetFolderName sets the "folder_name" field.
-func (vuo *VodUpdateOne) SetFolderName(s string) *VodUpdateOne {
-	vuo.mutation.SetFolderName(s)
-	return vuo
+func (_u *VodUpdateOne) SetFolderName(v string) *VodUpdateOne {
+	_u.mutation.SetFolderName(v)
+	return _u
 }
 
 // SetNillableFolderName sets the "folder_name" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableFolderName(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetFolderName(*s)
+func (_u *VodUpdateOne) SetNillableFolderName(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetFolderName(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearFolderName clears the value of the "folder_name" field.
-func (vuo *VodUpdateOne) ClearFolderName() *VodUpdateOne {
-	vuo.mutation.ClearFolderName()
-	return vuo
+func (_u *VodUpdateOne) ClearFolderName() *VodUpdateOne {
+	_u.mutation.ClearFolderName()
+	return _u
 }
 
 // SetFileName sets the "file_name" field.
-func (vuo *VodUpdateOne) SetFileName(s string) *VodUpdateOne {
-	vuo.mutation.SetFileName(s)
-	return vuo
+func (_u *VodUpdateOne) SetFileName(v string) *VodUpdateOne {
+	_u.mutation.SetFileName(v)
+	return _u
 }
 
 // SetNillableFileName sets the "file_name" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableFileName(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetFileName(*s)
+func (_u *VodUpdateOne) SetNillableFileName(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetFileName(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearFileName clears the value of the "file_name" field.
-func (vuo *VodUpdateOne) ClearFileName() *VodUpdateOne {
-	vuo.mutation.ClearFileName()
-	return vuo
+func (_u *VodUpdateOne) ClearFileName() *VodUpdateOne {
+	_u.mutation.ClearFileName()
+	return _u
 }
 
 // SetTmpVideoDownloadPath sets the "tmp_video_download_path" field.
-func (vuo *VodUpdateOne) SetTmpVideoDownloadPath(s string) *VodUpdateOne {
-	vuo.mutation.SetTmpVideoDownloadPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetTmpVideoDownloadPath(v string) *VodUpdateOne {
+	_u.mutation.SetTmpVideoDownloadPath(v)
+	return _u
 }
 
 // SetNillableTmpVideoDownloadPath sets the "tmp_video_download_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableTmpVideoDownloadPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetTmpVideoDownloadPath(*s)
+func (_u *VodUpdateOne) SetNillableTmpVideoDownloadPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetTmpVideoDownloadPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearTmpVideoDownloadPath clears the value of the "tmp_video_download_path" field.
-func (vuo *VodUpdateOne) ClearTmpVideoDownloadPath() *VodUpdateOne {
-	vuo.mutation.ClearTmpVideoDownloadPath()
-	return vuo
+func (_u *VodUpdateOne) ClearTmpVideoDownloadPath() *VodUpdateOne {
+	_u.mutation.ClearTmpVideoDownloadPath()
+	return _u
 }
 
 // SetTmpVideoConvertPath sets the "tmp_video_convert_path" field.
-func (vuo *VodUpdateOne) SetTmpVideoConvertPath(s string) *VodUpdateOne {
-	vuo.mutation.SetTmpVideoConvertPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetTmpVideoConvertPath(v string) *VodUpdateOne {
+	_u.mutation.SetTmpVideoConvertPath(v)
+	return _u
 }
 
 // SetNillableTmpVideoConvertPath sets the "tmp_video_convert_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableTmpVideoConvertPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetTmpVideoConvertPath(*s)
+func (_u *VodUpdateOne) SetNillableTmpVideoConvertPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetTmpVideoConvertPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearTmpVideoConvertPath clears the value of the "tmp_video_convert_path" field.
-func (vuo *VodUpdateOne) ClearTmpVideoConvertPath() *VodUpdateOne {
-	vuo.mutation.ClearTmpVideoConvertPath()
-	return vuo
+func (_u *VodUpdateOne) ClearTmpVideoConvertPath() *VodUpdateOne {
+	_u.mutation.ClearTmpVideoConvertPath()
+	return _u
 }
 
 // SetTmpChatDownloadPath sets the "tmp_chat_download_path" field.
-func (vuo *VodUpdateOne) SetTmpChatDownloadPath(s string) *VodUpdateOne {
-	vuo.mutation.SetTmpChatDownloadPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetTmpChatDownloadPath(v string) *VodUpdateOne {
+	_u.mutation.SetTmpChatDownloadPath(v)
+	return _u
 }
 
 // SetNillableTmpChatDownloadPath sets the "tmp_chat_download_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableTmpChatDownloadPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetTmpChatDownloadPath(*s)
+func (_u *VodUpdateOne) SetNillableTmpChatDownloadPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetTmpChatDownloadPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearTmpChatDownloadPath clears the value of the "tmp_chat_download_path" field.
-func (vuo *VodUpdateOne) ClearTmpChatDownloadPath() *VodUpdateOne {
-	vuo.mutation.ClearTmpChatDownloadPath()
-	return vuo
+func (_u *VodUpdateOne) ClearTmpChatDownloadPath() *VodUpdateOne {
+	_u.mutation.ClearTmpChatDownloadPath()
+	return _u
 }
 
 // SetTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field.
-func (vuo *VodUpdateOne) SetTmpLiveChatDownloadPath(s string) *VodUpdateOne {
-	vuo.mutation.SetTmpLiveChatDownloadPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetTmpLiveChatDownloadPath(v string) *VodUpdateOne {
+	_u.mutation.SetTmpLiveChatDownloadPath(v)
+	return _u
 }
 
 // SetNillableTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableTmpLiveChatDownloadPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetTmpLiveChatDownloadPath(*s)
+func (_u *VodUpdateOne) SetNillableTmpLiveChatDownloadPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetTmpLiveChatDownloadPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearTmpLiveChatDownloadPath clears the value of the "tmp_live_chat_download_path" field.
-func (vuo *VodUpdateOne) ClearTmpLiveChatDownloadPath() *VodUpdateOne {
-	vuo.mutation.ClearTmpLiveChatDownloadPath()
-	return vuo
+func (_u *VodUpdateOne) ClearTmpLiveChatDownloadPath() *VodUpdateOne {
+	_u.mutation.ClearTmpLiveChatDownloadPath()
+	return _u
 }
 
 // SetTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field.
-func (vuo *VodUpdateOne) SetTmpLiveChatConvertPath(s string) *VodUpdateOne {
-	vuo.mutation.SetTmpLiveChatConvertPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetTmpLiveChatConvertPath(v string) *VodUpdateOne {
+	_u.mutation.SetTmpLiveChatConvertPath(v)
+	return _u
 }
 
 // SetNillableTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableTmpLiveChatConvertPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetTmpLiveChatConvertPath(*s)
+func (_u *VodUpdateOne) SetNillableTmpLiveChatConvertPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetTmpLiveChatConvertPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearTmpLiveChatConvertPath clears the value of the "tmp_live_chat_convert_path" field.
-func (vuo *VodUpdateOne) ClearTmpLiveChatConvertPath() *VodUpdateOne {
-	vuo.mutation.ClearTmpLiveChatConvertPath()
-	return vuo
+func (_u *VodUpdateOne) ClearTmpLiveChatConvertPath() *VodUpdateOne {
+	_u.mutation.ClearTmpLiveChatConvertPath()
+	return _u
 }
 
 // SetTmpChatRenderPath sets the "tmp_chat_render_path" field.
-func (vuo *VodUpdateOne) SetTmpChatRenderPath(s string) *VodUpdateOne {
-	vuo.mutation.SetTmpChatRenderPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetTmpChatRenderPath(v string) *VodUpdateOne {
+	_u.mutation.SetTmpChatRenderPath(v)
+	return _u
 }
 
 // SetNillableTmpChatRenderPath sets the "tmp_chat_render_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableTmpChatRenderPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetTmpChatRenderPath(*s)
+func (_u *VodUpdateOne) SetNillableTmpChatRenderPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetTmpChatRenderPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearTmpChatRenderPath clears the value of the "tmp_chat_render_path" field.
-func (vuo *VodUpdateOne) ClearTmpChatRenderPath() *VodUpdateOne {
-	vuo.mutation.ClearTmpChatRenderPath()
-	return vuo
+func (_u *VodUpdateOne) ClearTmpChatRenderPath() *VodUpdateOne {
+	_u.mutation.ClearTmpChatRenderPath()
+	return _u
 }
 
 // SetTmpVideoHlsPath sets the "tmp_video_hls_path" field.
-func (vuo *VodUpdateOne) SetTmpVideoHlsPath(s string) *VodUpdateOne {
-	vuo.mutation.SetTmpVideoHlsPath(s)
-	return vuo
+func (_u *VodUpdateOne) SetTmpVideoHlsPath(v string) *VodUpdateOne {
+	_u.mutation.SetTmpVideoHlsPath(v)
+	return _u
 }
 
 // SetNillableTmpVideoHlsPath sets the "tmp_video_hls_path" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableTmpVideoHlsPath(s *string) *VodUpdateOne {
-	if s != nil {
-		vuo.SetTmpVideoHlsPath(*s)
+func (_u *VodUpdateOne) SetNillableTmpVideoHlsPath(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetTmpVideoHlsPath(*v)
 	}
-	return vuo
+	return _u
 }
 
 // ClearTmpVideoHlsPath clears the value of the "tmp_video_hls_path" field.
-func (vuo *VodUpdateOne) ClearTmpVideoHlsPath() *VodUpdateOne {
-	vuo.mutation.ClearTmpVideoHlsPath()
-	return vuo
+func (_u *VodUpdateOne) ClearTmpVideoHlsPath() *VodUpdateOne {
+	_u.mutation.ClearTmpVideoHlsPath()
+	return _u
 }
 
 // SetLocked sets the "locked" field.
-func (vuo *VodUpdateOne) SetLocked(b bool) *VodUpdateOne {
-	vuo.mutation.SetLocked(b)
-	return vuo
+func (_u *VodUpdateOne) SetLocked(v bool) *VodUpdateOne {
+	_u.mutation.SetLocked(v)
+	return _u
 }
 
 // SetNillableLocked sets the "locked" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableLocked(b *bool) *VodUpdateOne {
-	if b != nil {
-		vuo.SetLocked(*b)
+func (_u *VodUpdateOne) SetNillableLocked(v *bool) *VodUpdateOne {
+	if v != nil {
+		_u.SetLocked(*v)
 	}
-	return vuo
+	return _u
 }
 
 // SetLocalViews sets the "local_views" field.
-func (vuo *VodUpdateOne) SetLocalViews(i int) *VodUpdateOne {
-	vuo.mutation.ResetLocalViews()
-	vuo.mutation.SetLocalViews(i)
-	return vuo
+func (_u *VodUpdateOne) SetLocalViews(v int) *VodUpdateOne {
+	_u.mutation.ResetLocalViews()
+	_u.mutation.SetLocalViews(v)
+	return _u
 }
 
 // SetNillableLocalViews sets the "local_views" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableLocalViews(i *int) *VodUpdateOne {
-	if i != nil {
-		vuo.SetLocalViews(*i)
+func (_u *VodUpdateOne) SetNillableLocalViews(v *int) *VodUpdateOne {
+	if v != nil {
+		_u.SetLocalViews(*v)
 	}
-	return vuo
+	return _u
 }
 
-// AddLocalViews adds i to the "local_views" field.
-func (vuo *VodUpdateOne) AddLocalViews(i int) *VodUpdateOne {
-	vuo.mutation.AddLocalViews(i)
-	return vuo
+// AddLocalViews adds value to the "local_views" field.
+func (_u *VodUpdateOne) AddLocalViews(v int) *VodUpdateOne {
+	_u.mutation.AddLocalViews(v)
+	return _u
 }
 
 // SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
-func (vuo *VodUpdateOne) SetSpriteThumbnailsEnabled(b bool) *VodUpdateOne {
-	vuo.mutation.SetSpriteThumbnailsEnabled(b)
-	return vuo
+func (_u *VodUpdateOne) SetSpriteThumbnailsEnabled(v bool) *VodUpdateOne {
+	_u.mutation.SetSpriteThumbnailsEnabled(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsEnabled(b *bool) *VodUpdateOne {
-	if b != nil {
-		vuo.SetSpriteThumbnailsEnabled(*b)
+func (_u *VodUpdateOne) SetNillableSpriteThumbnailsEnabled(v *bool) *VodUpdateOne {
+	if v != nil {
+		_u.SetSpriteThumbnailsEnabled(*v)
 	}
-	return vuo
+	return _u
 }
 
 // SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
-func (vuo *VodUpdateOne) SetSpriteThumbnailsImages(s []string) *VodUpdateOne {
-	vuo.mutation.SetSpriteThumbnailsImages(s)
-	return vuo
+func (_u *VodUpdateOne) SetSpriteThumbnailsImages(v []string) *VodUpdateOne {
+	_u.mutation.SetSpriteThumbnailsImages(v)
+	return _u
 }
 
-// AppendSpriteThumbnailsImages appends s to the "sprite_thumbnails_images" field.
-func (vuo *VodUpdateOne) AppendSpriteThumbnailsImages(s []string) *VodUpdateOne {
-	vuo.mutation.AppendSpriteThumbnailsImages(s)
-	return vuo
+// AppendSpriteThumbnailsImages appends value to the "sprite_thumbnails_images" field.
+func (_u *VodUpdateOne) AppendSpriteThumbnailsImages(v []string) *VodUpdateOne {
+	_u.mutation.AppendSpriteThumbnailsImages(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsImages clears the value of the "sprite_thumbnails_images" field.
-func (vuo *VodUpdateOne) ClearSpriteThumbnailsImages() *VodUpdateOne {
-	vuo.mutation.ClearSpriteThumbnailsImages()
-	return vuo
+func (_u *VodUpdateOne) ClearSpriteThumbnailsImages() *VodUpdateOne {
+	_u.mutation.ClearSpriteThumbnailsImages()
+	return _u
 }
 
 // SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
-func (vuo *VodUpdateOne) SetSpriteThumbnailsInterval(i int) *VodUpdateOne {
-	vuo.mutation.ResetSpriteThumbnailsInterval()
-	vuo.mutation.SetSpriteThumbnailsInterval(i)
-	return vuo
+func (_u *VodUpdateOne) SetSpriteThumbnailsInterval(v int) *VodUpdateOne {
+	_u.mutation.ResetSpriteThumbnailsInterval()
+	_u.mutation.SetSpriteThumbnailsInterval(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsInterval(i *int) *VodUpdateOne {
-	if i != nil {
-		vuo.SetSpriteThumbnailsInterval(*i)
+func (_u *VodUpdateOne) SetNillableSpriteThumbnailsInterval(v *int) *VodUpdateOne {
+	if v != nil {
+		_u.SetSpriteThumbnailsInterval(*v)
 	}
-	return vuo
+	return _u
 }
 
-// AddSpriteThumbnailsInterval adds i to the "sprite_thumbnails_interval" field.
-func (vuo *VodUpdateOne) AddSpriteThumbnailsInterval(i int) *VodUpdateOne {
-	vuo.mutation.AddSpriteThumbnailsInterval(i)
-	return vuo
+// AddSpriteThumbnailsInterval adds value to the "sprite_thumbnails_interval" field.
+func (_u *VodUpdateOne) AddSpriteThumbnailsInterval(v int) *VodUpdateOne {
+	_u.mutation.AddSpriteThumbnailsInterval(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsInterval clears the value of the "sprite_thumbnails_interval" field.
-func (vuo *VodUpdateOne) ClearSpriteThumbnailsInterval() *VodUpdateOne {
-	vuo.mutation.ClearSpriteThumbnailsInterval()
-	return vuo
+func (_u *VodUpdateOne) ClearSpriteThumbnailsInterval() *VodUpdateOne {
+	_u.mutation.ClearSpriteThumbnailsInterval()
+	return _u
 }
 
 // SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
-func (vuo *VodUpdateOne) SetSpriteThumbnailsWidth(i int) *VodUpdateOne {
-	vuo.mutation.ResetSpriteThumbnailsWidth()
-	vuo.mutation.SetSpriteThumbnailsWidth(i)
-	return vuo
+func (_u *VodUpdateOne) SetSpriteThumbnailsWidth(v int) *VodUpdateOne {
+	_u.mutation.ResetSpriteThumbnailsWidth()
+	_u.mutation.SetSpriteThumbnailsWidth(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsWidth(i *int) *VodUpdateOne {
-	if i != nil {
-		vuo.SetSpriteThumbnailsWidth(*i)
+func (_u *VodUpdateOne) SetNillableSpriteThumbnailsWidth(v *int) *VodUpdateOne {
+	if v != nil {
+		_u.SetSpriteThumbnailsWidth(*v)
 	}
-	return vuo
+	return _u
 }
 
-// AddSpriteThumbnailsWidth adds i to the "sprite_thumbnails_width" field.
-func (vuo *VodUpdateOne) AddSpriteThumbnailsWidth(i int) *VodUpdateOne {
-	vuo.mutation.AddSpriteThumbnailsWidth(i)
-	return vuo
+// AddSpriteThumbnailsWidth adds value to the "sprite_thumbnails_width" field.
+func (_u *VodUpdateOne) AddSpriteThumbnailsWidth(v int) *VodUpdateOne {
+	_u.mutation.AddSpriteThumbnailsWidth(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsWidth clears the value of the "sprite_thumbnails_width" field.
-func (vuo *VodUpdateOne) ClearSpriteThumbnailsWidth() *VodUpdateOne {
-	vuo.mutation.ClearSpriteThumbnailsWidth()
-	return vuo
+func (_u *VodUpdateOne) ClearSpriteThumbnailsWidth() *VodUpdateOne {
+	_u.mutation.ClearSpriteThumbnailsWidth()
+	return _u
 }
 
 // SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
-func (vuo *VodUpdateOne) SetSpriteThumbnailsHeight(i int) *VodUpdateOne {
-	vuo.mutation.ResetSpriteThumbnailsHeight()
-	vuo.mutation.SetSpriteThumbnailsHeight(i)
-	return vuo
+func (_u *VodUpdateOne) SetSpriteThumbnailsHeight(v int) *VodUpdateOne {
+	_u.mutation.ResetSpriteThumbnailsHeight()
+	_u.mutation.SetSpriteThumbnailsHeight(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsHeight(i *int) *VodUpdateOne {
-	if i != nil {
-		vuo.SetSpriteThumbnailsHeight(*i)
+func (_u *VodUpdateOne) SetNillableSpriteThumbnailsHeight(v *int) *VodUpdateOne {
+	if v != nil {
+		_u.SetSpriteThumbnailsHeight(*v)
 	}
-	return vuo
+	return _u
 }
 
-// AddSpriteThumbnailsHeight adds i to the "sprite_thumbnails_height" field.
-func (vuo *VodUpdateOne) AddSpriteThumbnailsHeight(i int) *VodUpdateOne {
-	vuo.mutation.AddSpriteThumbnailsHeight(i)
-	return vuo
+// AddSpriteThumbnailsHeight adds value to the "sprite_thumbnails_height" field.
+func (_u *VodUpdateOne) AddSpriteThumbnailsHeight(v int) *VodUpdateOne {
+	_u.mutation.AddSpriteThumbnailsHeight(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsHeight clears the value of the "sprite_thumbnails_height" field.
-func (vuo *VodUpdateOne) ClearSpriteThumbnailsHeight() *VodUpdateOne {
-	vuo.mutation.ClearSpriteThumbnailsHeight()
-	return vuo
+func (_u *VodUpdateOne) ClearSpriteThumbnailsHeight() *VodUpdateOne {
+	_u.mutation.ClearSpriteThumbnailsHeight()
+	return _u
 }
 
 // SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
-func (vuo *VodUpdateOne) SetSpriteThumbnailsRows(i int) *VodUpdateOne {
-	vuo.mutation.ResetSpriteThumbnailsRows()
-	vuo.mutation.SetSpriteThumbnailsRows(i)
-	return vuo
+func (_u *VodUpdateOne) SetSpriteThumbnailsRows(v int) *VodUpdateOne {
+	_u.mutation.ResetSpriteThumbnailsRows()
+	_u.mutation.SetSpriteThumbnailsRows(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsRows(i *int) *VodUpdateOne {
-	if i != nil {
-		vuo.SetSpriteThumbnailsRows(*i)
+func (_u *VodUpdateOne) SetNillableSpriteThumbnailsRows(v *int) *VodUpdateOne {
+	if v != nil {
+		_u.SetSpriteThumbnailsRows(*v)
 	}
-	return vuo
+	return _u
 }
 
-// AddSpriteThumbnailsRows adds i to the "sprite_thumbnails_rows" field.
-func (vuo *VodUpdateOne) AddSpriteThumbnailsRows(i int) *VodUpdateOne {
-	vuo.mutation.AddSpriteThumbnailsRows(i)
-	return vuo
+// AddSpriteThumbnailsRows adds value to the "sprite_thumbnails_rows" field.
+func (_u *VodUpdateOne) AddSpriteThumbnailsRows(v int) *VodUpdateOne {
+	_u.mutation.AddSpriteThumbnailsRows(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsRows clears the value of the "sprite_thumbnails_rows" field.
-func (vuo *VodUpdateOne) ClearSpriteThumbnailsRows() *VodUpdateOne {
-	vuo.mutation.ClearSpriteThumbnailsRows()
-	return vuo
+func (_u *VodUpdateOne) ClearSpriteThumbnailsRows() *VodUpdateOne {
+	_u.mutation.ClearSpriteThumbnailsRows()
+	return _u
 }
 
 // SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
-func (vuo *VodUpdateOne) SetSpriteThumbnailsColumns(i int) *VodUpdateOne {
-	vuo.mutation.ResetSpriteThumbnailsColumns()
-	vuo.mutation.SetSpriteThumbnailsColumns(i)
-	return vuo
+func (_u *VodUpdateOne) SetSpriteThumbnailsColumns(v int) *VodUpdateOne {
+	_u.mutation.ResetSpriteThumbnailsColumns()
+	_u.mutation.SetSpriteThumbnailsColumns(v)
+	return _u
 }
 
 // SetNillableSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableSpriteThumbnailsColumns(i *int) *VodUpdateOne {
-	if i != nil {
-		vuo.SetSpriteThumbnailsColumns(*i)
+func (_u *VodUpdateOne) SetNillableSpriteThumbnailsColumns(v *int) *VodUpdateOne {
+	if v != nil {
+		_u.SetSpriteThumbnailsColumns(*v)
 	}
-	return vuo
+	return _u
 }
 
-// AddSpriteThumbnailsColumns adds i to the "sprite_thumbnails_columns" field.
-func (vuo *VodUpdateOne) AddSpriteThumbnailsColumns(i int) *VodUpdateOne {
-	vuo.mutation.AddSpriteThumbnailsColumns(i)
-	return vuo
+// AddSpriteThumbnailsColumns adds value to the "sprite_thumbnails_columns" field.
+func (_u *VodUpdateOne) AddSpriteThumbnailsColumns(v int) *VodUpdateOne {
+	_u.mutation.AddSpriteThumbnailsColumns(v)
+	return _u
 }
 
 // ClearSpriteThumbnailsColumns clears the value of the "sprite_thumbnails_columns" field.
-func (vuo *VodUpdateOne) ClearSpriteThumbnailsColumns() *VodUpdateOne {
-	vuo.mutation.ClearSpriteThumbnailsColumns()
-	return vuo
+func (_u *VodUpdateOne) ClearSpriteThumbnailsColumns() *VodUpdateOne {
+	_u.mutation.ClearSpriteThumbnailsColumns()
+	return _u
 }
 
 // SetStorageSizeBytes sets the "storage_size_bytes" field.
-func (vuo *VodUpdateOne) SetStorageSizeBytes(i int64) *VodUpdateOne {
-	vuo.mutation.ResetStorageSizeBytes()
-	vuo.mutation.SetStorageSizeBytes(i)
-	return vuo
+func (_u *VodUpdateOne) SetStorageSizeBytes(v int64) *VodUpdateOne {
+	_u.mutation.ResetStorageSizeBytes()
+	_u.mutation.SetStorageSizeBytes(v)
+	return _u
 }
 
 // SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableStorageSizeBytes(i *int64) *VodUpdateOne {
-	if i != nil {
-		vuo.SetStorageSizeBytes(*i)
+func (_u *VodUpdateOne) SetNillableStorageSizeBytes(v *int64) *VodUpdateOne {
+	if v != nil {
+		_u.SetStorageSizeBytes(*v)
 	}
-	return vuo
+	return _u
 }
 
-// AddStorageSizeBytes adds i to the "storage_size_bytes" field.
-func (vuo *VodUpdateOne) AddStorageSizeBytes(i int64) *VodUpdateOne {
-	vuo.mutation.AddStorageSizeBytes(i)
-	return vuo
+// AddStorageSizeBytes adds value to the "storage_size_bytes" field.
+func (_u *VodUpdateOne) AddStorageSizeBytes(v int64) *VodUpdateOne {
+	_u.mutation.AddStorageSizeBytes(v)
+	return _u
 }
 
 // SetStreamedAt sets the "streamed_at" field.
-func (vuo *VodUpdateOne) SetStreamedAt(t time.Time) *VodUpdateOne {
-	vuo.mutation.SetStreamedAt(t)
-	return vuo
+func (_u *VodUpdateOne) SetStreamedAt(v time.Time) *VodUpdateOne {
+	_u.mutation.SetStreamedAt(v)
+	return _u
 }
 
 // SetNillableStreamedAt sets the "streamed_at" field if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableStreamedAt(t *time.Time) *VodUpdateOne {
-	if t != nil {
-		vuo.SetStreamedAt(*t)
+func (_u *VodUpdateOne) SetNillableStreamedAt(v *time.Time) *VodUpdateOne {
+	if v != nil {
+		_u.SetStreamedAt(*v)
 	}
-	return vuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (vuo *VodUpdateOne) SetUpdatedAt(t time.Time) *VodUpdateOne {
-	vuo.mutation.SetUpdatedAt(t)
-	return vuo
+func (_u *VodUpdateOne) SetUpdatedAt(v time.Time) *VodUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetChannelID sets the "channel" edge to the Channel entity by ID.
-func (vuo *VodUpdateOne) SetChannelID(id uuid.UUID) *VodUpdateOne {
-	vuo.mutation.SetChannelID(id)
-	return vuo
+func (_u *VodUpdateOne) SetChannelID(id uuid.UUID) *VodUpdateOne {
+	_u.mutation.SetChannelID(id)
+	return _u
 }
 
 // SetChannel sets the "channel" edge to the Channel entity.
-func (vuo *VodUpdateOne) SetChannel(c *Channel) *VodUpdateOne {
-	return vuo.SetChannelID(c.ID)
+func (_u *VodUpdateOne) SetChannel(v *Channel) *VodUpdateOne {
+	return _u.SetChannelID(v.ID)
 }
 
 // SetQueueID sets the "queue" edge to the Queue entity by ID.
-func (vuo *VodUpdateOne) SetQueueID(id uuid.UUID) *VodUpdateOne {
-	vuo.mutation.SetQueueID(id)
-	return vuo
+func (_u *VodUpdateOne) SetQueueID(id uuid.UUID) *VodUpdateOne {
+	_u.mutation.SetQueueID(id)
+	return _u
 }
 
 // SetNillableQueueID sets the "queue" edge to the Queue entity by ID if the given value is not nil.
-func (vuo *VodUpdateOne) SetNillableQueueID(id *uuid.UUID) *VodUpdateOne {
+func (_u *VodUpdateOne) SetNillableQueueID(id *uuid.UUID) *VodUpdateOne {
 	if id != nil {
-		vuo = vuo.SetQueueID(*id)
+		_u = _u.SetQueueID(*id)
 	}
-	return vuo
+	return _u
 }
 
 // SetQueue sets the "queue" edge to the Queue entity.
-func (vuo *VodUpdateOne) SetQueue(q *Queue) *VodUpdateOne {
-	return vuo.SetQueueID(q.ID)
+func (_u *VodUpdateOne) SetQueue(v *Queue) *VodUpdateOne {
+	return _u.SetQueueID(v.ID)
 }
 
 // AddPlaylistIDs adds the "playlists" edge to the Playlist entity by IDs.
-func (vuo *VodUpdateOne) AddPlaylistIDs(ids ...uuid.UUID) *VodUpdateOne {
-	vuo.mutation.AddPlaylistIDs(ids...)
-	return vuo
+func (_u *VodUpdateOne) AddPlaylistIDs(ids ...uuid.UUID) *VodUpdateOne {
+	_u.mutation.AddPlaylistIDs(ids...)
+	return _u
 }
 
 // AddPlaylists adds the "playlists" edges to the Playlist entity.
-func (vuo *VodUpdateOne) AddPlaylists(p ...*Playlist) *VodUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *VodUpdateOne) AddPlaylists(v ...*Playlist) *VodUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vuo.AddPlaylistIDs(ids...)
+	return _u.AddPlaylistIDs(ids...)
 }
 
 // AddChapterIDs adds the "chapters" edge to the Chapter entity by IDs.
-func (vuo *VodUpdateOne) AddChapterIDs(ids ...uuid.UUID) *VodUpdateOne {
-	vuo.mutation.AddChapterIDs(ids...)
-	return vuo
+func (_u *VodUpdateOne) AddChapterIDs(ids ...uuid.UUID) *VodUpdateOne {
+	_u.mutation.AddChapterIDs(ids...)
+	return _u
 }
 
 // AddChapters adds the "chapters" edges to the Chapter entity.
-func (vuo *VodUpdateOne) AddChapters(c ...*Chapter) *VodUpdateOne {
-	ids := make([]uuid.UUID, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *VodUpdateOne) AddChapters(v ...*Chapter) *VodUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vuo.AddChapterIDs(ids...)
+	return _u.AddChapterIDs(ids...)
 }
 
 // AddMutedSegmentIDs adds the "muted_segments" edge to the MutedSegment entity by IDs.
-func (vuo *VodUpdateOne) AddMutedSegmentIDs(ids ...uuid.UUID) *VodUpdateOne {
-	vuo.mutation.AddMutedSegmentIDs(ids...)
-	return vuo
+func (_u *VodUpdateOne) AddMutedSegmentIDs(ids ...uuid.UUID) *VodUpdateOne {
+	_u.mutation.AddMutedSegmentIDs(ids...)
+	return _u
 }
 
 // AddMutedSegments adds the "muted_segments" edges to the MutedSegment entity.
-func (vuo *VodUpdateOne) AddMutedSegments(m ...*MutedSegment) *VodUpdateOne {
-	ids := make([]uuid.UUID, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *VodUpdateOne) AddMutedSegments(v ...*MutedSegment) *VodUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vuo.AddMutedSegmentIDs(ids...)
+	return _u.AddMutedSegmentIDs(ids...)
 }
 
 // AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
-func (vuo *VodUpdateOne) AddMultistreamInfoIDs(ids ...int) *VodUpdateOne {
-	vuo.mutation.AddMultistreamInfoIDs(ids...)
-	return vuo
+func (_u *VodUpdateOne) AddMultistreamInfoIDs(ids ...int) *VodUpdateOne {
+	_u.mutation.AddMultistreamInfoIDs(ids...)
+	return _u
 }
 
 // AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
-func (vuo *VodUpdateOne) AddMultistreamInfo(m ...*MultistreamInfo) *VodUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *VodUpdateOne) AddMultistreamInfo(v ...*MultistreamInfo) *VodUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vuo.AddMultistreamInfoIDs(ids...)
+	return _u.AddMultistreamInfoIDs(ids...)
 }
 
 // Mutation returns the VodMutation object of the builder.
-func (vuo *VodUpdateOne) Mutation() *VodMutation {
-	return vuo.mutation
+func (_u *VodUpdateOne) Mutation() *VodMutation {
+	return _u.mutation
 }
 
 // ClearChannel clears the "channel" edge to the Channel entity.
-func (vuo *VodUpdateOne) ClearChannel() *VodUpdateOne {
-	vuo.mutation.ClearChannel()
-	return vuo
+func (_u *VodUpdateOne) ClearChannel() *VodUpdateOne {
+	_u.mutation.ClearChannel()
+	return _u
 }
 
 // ClearQueue clears the "queue" edge to the Queue entity.
-func (vuo *VodUpdateOne) ClearQueue() *VodUpdateOne {
-	vuo.mutation.ClearQueue()
-	return vuo
+func (_u *VodUpdateOne) ClearQueue() *VodUpdateOne {
+	_u.mutation.ClearQueue()
+	return _u
 }
 
 // ClearPlaylists clears all "playlists" edges to the Playlist entity.
-func (vuo *VodUpdateOne) ClearPlaylists() *VodUpdateOne {
-	vuo.mutation.ClearPlaylists()
-	return vuo
+func (_u *VodUpdateOne) ClearPlaylists() *VodUpdateOne {
+	_u.mutation.ClearPlaylists()
+	return _u
 }
 
 // RemovePlaylistIDs removes the "playlists" edge to Playlist entities by IDs.
-func (vuo *VodUpdateOne) RemovePlaylistIDs(ids ...uuid.UUID) *VodUpdateOne {
-	vuo.mutation.RemovePlaylistIDs(ids...)
-	return vuo
+func (_u *VodUpdateOne) RemovePlaylistIDs(ids ...uuid.UUID) *VodUpdateOne {
+	_u.mutation.RemovePlaylistIDs(ids...)
+	return _u
 }
 
 // RemovePlaylists removes "playlists" edges to Playlist entities.
-func (vuo *VodUpdateOne) RemovePlaylists(p ...*Playlist) *VodUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *VodUpdateOne) RemovePlaylists(v ...*Playlist) *VodUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vuo.RemovePlaylistIDs(ids...)
+	return _u.RemovePlaylistIDs(ids...)
 }
 
 // ClearChapters clears all "chapters" edges to the Chapter entity.
-func (vuo *VodUpdateOne) ClearChapters() *VodUpdateOne {
-	vuo.mutation.ClearChapters()
-	return vuo
+func (_u *VodUpdateOne) ClearChapters() *VodUpdateOne {
+	_u.mutation.ClearChapters()
+	return _u
 }
 
 // RemoveChapterIDs removes the "chapters" edge to Chapter entities by IDs.
-func (vuo *VodUpdateOne) RemoveChapterIDs(ids ...uuid.UUID) *VodUpdateOne {
-	vuo.mutation.RemoveChapterIDs(ids...)
-	return vuo
+func (_u *VodUpdateOne) RemoveChapterIDs(ids ...uuid.UUID) *VodUpdateOne {
+	_u.mutation.RemoveChapterIDs(ids...)
+	return _u
 }
 
 // RemoveChapters removes "chapters" edges to Chapter entities.
-func (vuo *VodUpdateOne) RemoveChapters(c ...*Chapter) *VodUpdateOne {
-	ids := make([]uuid.UUID, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *VodUpdateOne) RemoveChapters(v ...*Chapter) *VodUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vuo.RemoveChapterIDs(ids...)
+	return _u.RemoveChapterIDs(ids...)
 }
 
 // ClearMutedSegments clears all "muted_segments" edges to the MutedSegment entity.
-func (vuo *VodUpdateOne) ClearMutedSegments() *VodUpdateOne {
-	vuo.mutation.ClearMutedSegments()
-	return vuo
+func (_u *VodUpdateOne) ClearMutedSegments() *VodUpdateOne {
+	_u.mutation.ClearMutedSegments()
+	return _u
 }
 
 // RemoveMutedSegmentIDs removes the "muted_segments" edge to MutedSegment entities by IDs.
-func (vuo *VodUpdateOne) RemoveMutedSegmentIDs(ids ...uuid.UUID) *VodUpdateOne {
-	vuo.mutation.RemoveMutedSegmentIDs(ids...)
-	return vuo
+func (_u *VodUpdateOne) RemoveMutedSegmentIDs(ids ...uuid.UUID) *VodUpdateOne {
+	_u.mutation.RemoveMutedSegmentIDs(ids...)
+	return _u
 }
 
 // RemoveMutedSegments removes "muted_segments" edges to MutedSegment entities.
-func (vuo *VodUpdateOne) RemoveMutedSegments(m ...*MutedSegment) *VodUpdateOne {
-	ids := make([]uuid.UUID, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *VodUpdateOne) RemoveMutedSegments(v ...*MutedSegment) *VodUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vuo.RemoveMutedSegmentIDs(ids...)
+	return _u.RemoveMutedSegmentIDs(ids...)
 }
 
 // ClearMultistreamInfo clears all "multistream_info" edges to the MultistreamInfo entity.
-func (vuo *VodUpdateOne) ClearMultistreamInfo() *VodUpdateOne {
-	vuo.mutation.ClearMultistreamInfo()
-	return vuo
+func (_u *VodUpdateOne) ClearMultistreamInfo() *VodUpdateOne {
+	_u.mutation.ClearMultistreamInfo()
+	return _u
 }
 
 // RemoveMultistreamInfoIDs removes the "multistream_info" edge to MultistreamInfo entities by IDs.
-func (vuo *VodUpdateOne) RemoveMultistreamInfoIDs(ids ...int) *VodUpdateOne {
-	vuo.mutation.RemoveMultistreamInfoIDs(ids...)
-	return vuo
+func (_u *VodUpdateOne) RemoveMultistreamInfoIDs(ids ...int) *VodUpdateOne {
+	_u.mutation.RemoveMultistreamInfoIDs(ids...)
+	return _u
 }
 
 // RemoveMultistreamInfo removes "multistream_info" edges to MultistreamInfo entities.
-func (vuo *VodUpdateOne) RemoveMultistreamInfo(m ...*MultistreamInfo) *VodUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *VodUpdateOne) RemoveMultistreamInfo(v ...*MultistreamInfo) *VodUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vuo.RemoveMultistreamInfoIDs(ids...)
+	return _u.RemoveMultistreamInfoIDs(ids...)
 }
 
 // Where appends a list predicates to the VodUpdate builder.
-func (vuo *VodUpdateOne) Where(ps ...predicate.Vod) *VodUpdateOne {
-	vuo.mutation.Where(ps...)
-	return vuo
+func (_u *VodUpdateOne) Where(ps ...predicate.Vod) *VodUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (vuo *VodUpdateOne) Select(field string, fields ...string) *VodUpdateOne {
-	vuo.fields = append([]string{field}, fields...)
-	return vuo
+func (_u *VodUpdateOne) Select(field string, fields ...string) *VodUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Vod entity.
-func (vuo *VodUpdateOne) Save(ctx context.Context) (*Vod, error) {
-	vuo.defaults()
-	return withHooks(ctx, vuo.sqlSave, vuo.mutation, vuo.hooks)
+func (_u *VodUpdateOne) Save(ctx context.Context) (*Vod, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (vuo *VodUpdateOne) SaveX(ctx context.Context) *Vod {
-	node, err := vuo.Save(ctx)
+func (_u *VodUpdateOne) SaveX(ctx context.Context) *Vod {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -2634,55 +2634,55 @@ func (vuo *VodUpdateOne) SaveX(ctx context.Context) *Vod {
 }
 
 // Exec executes the query on the entity.
-func (vuo *VodUpdateOne) Exec(ctx context.Context) error {
-	_, err := vuo.Save(ctx)
+func (_u *VodUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (vuo *VodUpdateOne) ExecX(ctx context.Context) {
-	if err := vuo.Exec(ctx); err != nil {
+func (_u *VodUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (vuo *VodUpdateOne) defaults() {
-	if _, ok := vuo.mutation.UpdatedAt(); !ok {
+func (_u *VodUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := vod.UpdateDefaultUpdatedAt()
-		vuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (vuo *VodUpdateOne) check() error {
-	if v, ok := vuo.mutation.Platform(); ok {
+func (_u *VodUpdateOne) check() error {
+	if v, ok := _u.mutation.Platform(); ok {
 		if err := vod.PlatformValidator(v); err != nil {
 			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Vod.platform": %w`, err)}
 		}
 	}
-	if v, ok := vuo.mutation.GetType(); ok {
+	if v, ok := _u.mutation.GetType(); ok {
 		if err := vod.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Vod.type": %w`, err)}
 		}
 	}
-	if vuo.mutation.ChannelCleared() && len(vuo.mutation.ChannelIDs()) > 0 {
+	if _u.mutation.ChannelCleared() && len(_u.mutation.ChannelIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Vod.channel"`)
 	}
 	return nil
 }
 
-func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
-	if err := vuo.check(); err != nil {
+func (_u *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(vod.Table, vod.Columns, sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID))
-	id, ok := vuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Vod.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := vuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, vod.FieldID)
 		for _, f := range fields {
@@ -2694,256 +2694,256 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 			}
 		}
 	}
-	if ps := vuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := vuo.mutation.ExtID(); ok {
+	if value, ok := _u.mutation.ExtID(); ok {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 	}
-	if value, ok := vuo.mutation.ClipExtVodID(); ok {
+	if value, ok := _u.mutation.ClipExtVodID(); ok {
 		_spec.SetField(vod.FieldClipExtVodID, field.TypeString, value)
 	}
-	if vuo.mutation.ClipExtVodIDCleared() {
+	if _u.mutation.ClipExtVodIDCleared() {
 		_spec.ClearField(vod.FieldClipExtVodID, field.TypeString)
 	}
-	if value, ok := vuo.mutation.ExtStreamID(); ok {
+	if value, ok := _u.mutation.ExtStreamID(); ok {
 		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
 	}
-	if vuo.mutation.ExtStreamIDCleared() {
+	if _u.mutation.ExtStreamIDCleared() {
 		_spec.ClearField(vod.FieldExtStreamID, field.TypeString)
 	}
-	if value, ok := vuo.mutation.Platform(); ok {
+	if value, ok := _u.mutation.Platform(); ok {
 		_spec.SetField(vod.FieldPlatform, field.TypeEnum, value)
 	}
-	if value, ok := vuo.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(vod.FieldType, field.TypeEnum, value)
 	}
-	if value, ok := vuo.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(vod.FieldTitle, field.TypeString, value)
 	}
-	if value, ok := vuo.mutation.Duration(); ok {
+	if value, ok := _u.mutation.Duration(); ok {
 		_spec.SetField(vod.FieldDuration, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.AddedDuration(); ok {
+	if value, ok := _u.mutation.AddedDuration(); ok {
 		_spec.AddField(vod.FieldDuration, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.ClipVodOffset(); ok {
+	if value, ok := _u.mutation.ClipVodOffset(); ok {
 		_spec.SetField(vod.FieldClipVodOffset, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.AddedClipVodOffset(); ok {
+	if value, ok := _u.mutation.AddedClipVodOffset(); ok {
 		_spec.AddField(vod.FieldClipVodOffset, field.TypeInt, value)
 	}
-	if vuo.mutation.ClipVodOffsetCleared() {
+	if _u.mutation.ClipVodOffsetCleared() {
 		_spec.ClearField(vod.FieldClipVodOffset, field.TypeInt)
 	}
-	if value, ok := vuo.mutation.Views(); ok {
+	if value, ok := _u.mutation.Views(); ok {
 		_spec.SetField(vod.FieldViews, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.AddedViews(); ok {
+	if value, ok := _u.mutation.AddedViews(); ok {
 		_spec.AddField(vod.FieldViews, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.Resolution(); ok {
+	if value, ok := _u.mutation.Resolution(); ok {
 		_spec.SetField(vod.FieldResolution, field.TypeString, value)
 	}
-	if vuo.mutation.ResolutionCleared() {
+	if _u.mutation.ResolutionCleared() {
 		_spec.ClearField(vod.FieldResolution, field.TypeString)
 	}
-	if value, ok := vuo.mutation.Processing(); ok {
+	if value, ok := _u.mutation.Processing(); ok {
 		_spec.SetField(vod.FieldProcessing, field.TypeBool, value)
 	}
-	if value, ok := vuo.mutation.ThumbnailPath(); ok {
+	if value, ok := _u.mutation.ThumbnailPath(); ok {
 		_spec.SetField(vod.FieldThumbnailPath, field.TypeString, value)
 	}
-	if vuo.mutation.ThumbnailPathCleared() {
+	if _u.mutation.ThumbnailPathCleared() {
 		_spec.ClearField(vod.FieldThumbnailPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.WebThumbnailPath(); ok {
+	if value, ok := _u.mutation.WebThumbnailPath(); ok {
 		_spec.SetField(vod.FieldWebThumbnailPath, field.TypeString, value)
 	}
-	if value, ok := vuo.mutation.VideoPath(); ok {
+	if value, ok := _u.mutation.VideoPath(); ok {
 		_spec.SetField(vod.FieldVideoPath, field.TypeString, value)
 	}
-	if value, ok := vuo.mutation.VideoHlsPath(); ok {
+	if value, ok := _u.mutation.VideoHlsPath(); ok {
 		_spec.SetField(vod.FieldVideoHlsPath, field.TypeString, value)
 	}
-	if vuo.mutation.VideoHlsPathCleared() {
+	if _u.mutation.VideoHlsPathCleared() {
 		_spec.ClearField(vod.FieldVideoHlsPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.ChatPath(); ok {
+	if value, ok := _u.mutation.ChatPath(); ok {
 		_spec.SetField(vod.FieldChatPath, field.TypeString, value)
 	}
-	if vuo.mutation.ChatPathCleared() {
+	if _u.mutation.ChatPathCleared() {
 		_spec.ClearField(vod.FieldChatPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.LiveChatPath(); ok {
+	if value, ok := _u.mutation.LiveChatPath(); ok {
 		_spec.SetField(vod.FieldLiveChatPath, field.TypeString, value)
 	}
-	if vuo.mutation.LiveChatPathCleared() {
+	if _u.mutation.LiveChatPathCleared() {
 		_spec.ClearField(vod.FieldLiveChatPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.LiveChatConvertPath(); ok {
+	if value, ok := _u.mutation.LiveChatConvertPath(); ok {
 		_spec.SetField(vod.FieldLiveChatConvertPath, field.TypeString, value)
 	}
-	if vuo.mutation.LiveChatConvertPathCleared() {
+	if _u.mutation.LiveChatConvertPathCleared() {
 		_spec.ClearField(vod.FieldLiveChatConvertPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.ChatVideoPath(); ok {
+	if value, ok := _u.mutation.ChatVideoPath(); ok {
 		_spec.SetField(vod.FieldChatVideoPath, field.TypeString, value)
 	}
-	if vuo.mutation.ChatVideoPathCleared() {
+	if _u.mutation.ChatVideoPathCleared() {
 		_spec.ClearField(vod.FieldChatVideoPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.InfoPath(); ok {
+	if value, ok := _u.mutation.InfoPath(); ok {
 		_spec.SetField(vod.FieldInfoPath, field.TypeString, value)
 	}
-	if vuo.mutation.InfoPathCleared() {
+	if _u.mutation.InfoPathCleared() {
 		_spec.ClearField(vod.FieldInfoPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.CaptionPath(); ok {
+	if value, ok := _u.mutation.CaptionPath(); ok {
 		_spec.SetField(vod.FieldCaptionPath, field.TypeString, value)
 	}
-	if vuo.mutation.CaptionPathCleared() {
+	if _u.mutation.CaptionPathCleared() {
 		_spec.ClearField(vod.FieldCaptionPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.FolderName(); ok {
+	if value, ok := _u.mutation.FolderName(); ok {
 		_spec.SetField(vod.FieldFolderName, field.TypeString, value)
 	}
-	if vuo.mutation.FolderNameCleared() {
+	if _u.mutation.FolderNameCleared() {
 		_spec.ClearField(vod.FieldFolderName, field.TypeString)
 	}
-	if value, ok := vuo.mutation.FileName(); ok {
+	if value, ok := _u.mutation.FileName(); ok {
 		_spec.SetField(vod.FieldFileName, field.TypeString, value)
 	}
-	if vuo.mutation.FileNameCleared() {
+	if _u.mutation.FileNameCleared() {
 		_spec.ClearField(vod.FieldFileName, field.TypeString)
 	}
-	if value, ok := vuo.mutation.TmpVideoDownloadPath(); ok {
+	if value, ok := _u.mutation.TmpVideoDownloadPath(); ok {
 		_spec.SetField(vod.FieldTmpVideoDownloadPath, field.TypeString, value)
 	}
-	if vuo.mutation.TmpVideoDownloadPathCleared() {
+	if _u.mutation.TmpVideoDownloadPathCleared() {
 		_spec.ClearField(vod.FieldTmpVideoDownloadPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.TmpVideoConvertPath(); ok {
+	if value, ok := _u.mutation.TmpVideoConvertPath(); ok {
 		_spec.SetField(vod.FieldTmpVideoConvertPath, field.TypeString, value)
 	}
-	if vuo.mutation.TmpVideoConvertPathCleared() {
+	if _u.mutation.TmpVideoConvertPathCleared() {
 		_spec.ClearField(vod.FieldTmpVideoConvertPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.TmpChatDownloadPath(); ok {
+	if value, ok := _u.mutation.TmpChatDownloadPath(); ok {
 		_spec.SetField(vod.FieldTmpChatDownloadPath, field.TypeString, value)
 	}
-	if vuo.mutation.TmpChatDownloadPathCleared() {
+	if _u.mutation.TmpChatDownloadPathCleared() {
 		_spec.ClearField(vod.FieldTmpChatDownloadPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.TmpLiveChatDownloadPath(); ok {
+	if value, ok := _u.mutation.TmpLiveChatDownloadPath(); ok {
 		_spec.SetField(vod.FieldTmpLiveChatDownloadPath, field.TypeString, value)
 	}
-	if vuo.mutation.TmpLiveChatDownloadPathCleared() {
+	if _u.mutation.TmpLiveChatDownloadPathCleared() {
 		_spec.ClearField(vod.FieldTmpLiveChatDownloadPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.TmpLiveChatConvertPath(); ok {
+	if value, ok := _u.mutation.TmpLiveChatConvertPath(); ok {
 		_spec.SetField(vod.FieldTmpLiveChatConvertPath, field.TypeString, value)
 	}
-	if vuo.mutation.TmpLiveChatConvertPathCleared() {
+	if _u.mutation.TmpLiveChatConvertPathCleared() {
 		_spec.ClearField(vod.FieldTmpLiveChatConvertPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.TmpChatRenderPath(); ok {
+	if value, ok := _u.mutation.TmpChatRenderPath(); ok {
 		_spec.SetField(vod.FieldTmpChatRenderPath, field.TypeString, value)
 	}
-	if vuo.mutation.TmpChatRenderPathCleared() {
+	if _u.mutation.TmpChatRenderPathCleared() {
 		_spec.ClearField(vod.FieldTmpChatRenderPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.TmpVideoHlsPath(); ok {
+	if value, ok := _u.mutation.TmpVideoHlsPath(); ok {
 		_spec.SetField(vod.FieldTmpVideoHlsPath, field.TypeString, value)
 	}
-	if vuo.mutation.TmpVideoHlsPathCleared() {
+	if _u.mutation.TmpVideoHlsPathCleared() {
 		_spec.ClearField(vod.FieldTmpVideoHlsPath, field.TypeString)
 	}
-	if value, ok := vuo.mutation.Locked(); ok {
+	if value, ok := _u.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
 	}
-	if value, ok := vuo.mutation.LocalViews(); ok {
+	if value, ok := _u.mutation.LocalViews(); ok {
 		_spec.SetField(vod.FieldLocalViews, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.AddedLocalViews(); ok {
+	if value, ok := _u.mutation.AddedLocalViews(); ok {
 		_spec.AddField(vod.FieldLocalViews, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.SpriteThumbnailsEnabled(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsEnabled(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsEnabled, field.TypeBool, value)
 	}
-	if value, ok := vuo.mutation.SpriteThumbnailsImages(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsImages(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsImages, field.TypeJSON, value)
 	}
-	if value, ok := vuo.mutation.AppendedSpriteThumbnailsImages(); ok {
+	if value, ok := _u.mutation.AppendedSpriteThumbnailsImages(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, vod.FieldSpriteThumbnailsImages, value)
 		})
 	}
-	if vuo.mutation.SpriteThumbnailsImagesCleared() {
+	if _u.mutation.SpriteThumbnailsImagesCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsImages, field.TypeJSON)
 	}
-	if value, ok := vuo.mutation.SpriteThumbnailsInterval(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsInterval(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsInterval, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.AddedSpriteThumbnailsInterval(); ok {
+	if value, ok := _u.mutation.AddedSpriteThumbnailsInterval(); ok {
 		_spec.AddField(vod.FieldSpriteThumbnailsInterval, field.TypeInt, value)
 	}
-	if vuo.mutation.SpriteThumbnailsIntervalCleared() {
+	if _u.mutation.SpriteThumbnailsIntervalCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsInterval, field.TypeInt)
 	}
-	if value, ok := vuo.mutation.SpriteThumbnailsWidth(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsWidth(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsWidth, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.AddedSpriteThumbnailsWidth(); ok {
+	if value, ok := _u.mutation.AddedSpriteThumbnailsWidth(); ok {
 		_spec.AddField(vod.FieldSpriteThumbnailsWidth, field.TypeInt, value)
 	}
-	if vuo.mutation.SpriteThumbnailsWidthCleared() {
+	if _u.mutation.SpriteThumbnailsWidthCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsWidth, field.TypeInt)
 	}
-	if value, ok := vuo.mutation.SpriteThumbnailsHeight(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsHeight(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsHeight, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.AddedSpriteThumbnailsHeight(); ok {
+	if value, ok := _u.mutation.AddedSpriteThumbnailsHeight(); ok {
 		_spec.AddField(vod.FieldSpriteThumbnailsHeight, field.TypeInt, value)
 	}
-	if vuo.mutation.SpriteThumbnailsHeightCleared() {
+	if _u.mutation.SpriteThumbnailsHeightCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsHeight, field.TypeInt)
 	}
-	if value, ok := vuo.mutation.SpriteThumbnailsRows(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsRows(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsRows, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.AddedSpriteThumbnailsRows(); ok {
+	if value, ok := _u.mutation.AddedSpriteThumbnailsRows(); ok {
 		_spec.AddField(vod.FieldSpriteThumbnailsRows, field.TypeInt, value)
 	}
-	if vuo.mutation.SpriteThumbnailsRowsCleared() {
+	if _u.mutation.SpriteThumbnailsRowsCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsRows, field.TypeInt)
 	}
-	if value, ok := vuo.mutation.SpriteThumbnailsColumns(); ok {
+	if value, ok := _u.mutation.SpriteThumbnailsColumns(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
 	}
-	if value, ok := vuo.mutation.AddedSpriteThumbnailsColumns(); ok {
+	if value, ok := _u.mutation.AddedSpriteThumbnailsColumns(); ok {
 		_spec.AddField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
 	}
-	if vuo.mutation.SpriteThumbnailsColumnsCleared() {
+	if _u.mutation.SpriteThumbnailsColumnsCleared() {
 		_spec.ClearField(vod.FieldSpriteThumbnailsColumns, field.TypeInt)
 	}
-	if value, ok := vuo.mutation.StorageSizeBytes(); ok {
+	if value, ok := _u.mutation.StorageSizeBytes(); ok {
 		_spec.SetField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
-	if value, ok := vuo.mutation.AddedStorageSizeBytes(); ok {
+	if value, ok := _u.mutation.AddedStorageSizeBytes(); ok {
 		_spec.AddField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
-	if value, ok := vuo.mutation.StreamedAt(); ok {
+	if value, ok := _u.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
 	}
-	if value, ok := vuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(vod.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if vuo.mutation.ChannelCleared() {
+	if _u.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -2956,7 +2956,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vuo.mutation.ChannelIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ChannelIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -2972,7 +2972,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if vuo.mutation.QueueCleared() {
+	if _u.mutation.QueueCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2O,
 			Inverse: false,
@@ -2985,7 +2985,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vuo.mutation.QueueIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.QueueIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2O,
 			Inverse: false,
@@ -3001,7 +3001,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if vuo.mutation.PlaylistsCleared() {
+	if _u.mutation.PlaylistsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -3014,23 +3014,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vuo.mutation.RemovedPlaylistsIDs(); len(nodes) > 0 && !vuo.mutation.PlaylistsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   vod.PlaylistsTable,
-			Columns: vod.PlaylistsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := vuo.mutation.PlaylistsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedPlaylistsIDs(); len(nodes) > 0 && !_u.mutation.PlaylistsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -3044,9 +3028,25 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PlaylistsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   vod.PlaylistsTable,
+			Columns: vod.PlaylistsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if vuo.mutation.ChaptersCleared() {
+	if _u.mutation.ChaptersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -3059,7 +3059,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vuo.mutation.RemovedChaptersIDs(); len(nodes) > 0 && !vuo.mutation.ChaptersCleared() {
+	if nodes := _u.mutation.RemovedChaptersIDs(); len(nodes) > 0 && !_u.mutation.ChaptersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -3075,7 +3075,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vuo.mutation.ChaptersIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ChaptersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -3091,7 +3091,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if vuo.mutation.MutedSegmentsCleared() {
+	if _u.mutation.MutedSegmentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -3104,7 +3104,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vuo.mutation.RemovedMutedSegmentsIDs(); len(nodes) > 0 && !vuo.mutation.MutedSegmentsCleared() {
+	if nodes := _u.mutation.RemovedMutedSegmentsIDs(); len(nodes) > 0 && !_u.mutation.MutedSegmentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -3120,7 +3120,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vuo.mutation.MutedSegmentsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MutedSegmentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -3136,7 +3136,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if vuo.mutation.MultistreamInfoCleared() {
+	if _u.mutation.MultistreamInfoCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
@@ -3149,7 +3149,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vuo.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !vuo.mutation.MultistreamInfoCleared() {
+	if nodes := _u.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !_u.mutation.MultistreamInfoCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
@@ -3165,7 +3165,7 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vuo.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
@@ -3181,10 +3181,10 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Vod{config: vuo.config}
+	_node = &Vod{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, vuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{vod.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -3192,6 +3192,6 @@ func (vuo *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 		}
 		return nil, err
 	}
-	vuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

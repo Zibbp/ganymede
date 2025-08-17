@@ -35,44 +35,44 @@ type PlaylistRuleGroupQuery struct {
 }
 
 // Where adds a new predicate for the PlaylistRuleGroupQuery builder.
-func (prgq *PlaylistRuleGroupQuery) Where(ps ...predicate.PlaylistRuleGroup) *PlaylistRuleGroupQuery {
-	prgq.predicates = append(prgq.predicates, ps...)
-	return prgq
+func (_q *PlaylistRuleGroupQuery) Where(ps ...predicate.PlaylistRuleGroup) *PlaylistRuleGroupQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (prgq *PlaylistRuleGroupQuery) Limit(limit int) *PlaylistRuleGroupQuery {
-	prgq.ctx.Limit = &limit
-	return prgq
+func (_q *PlaylistRuleGroupQuery) Limit(limit int) *PlaylistRuleGroupQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (prgq *PlaylistRuleGroupQuery) Offset(offset int) *PlaylistRuleGroupQuery {
-	prgq.ctx.Offset = &offset
-	return prgq
+func (_q *PlaylistRuleGroupQuery) Offset(offset int) *PlaylistRuleGroupQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (prgq *PlaylistRuleGroupQuery) Unique(unique bool) *PlaylistRuleGroupQuery {
-	prgq.ctx.Unique = &unique
-	return prgq
+func (_q *PlaylistRuleGroupQuery) Unique(unique bool) *PlaylistRuleGroupQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (prgq *PlaylistRuleGroupQuery) Order(o ...playlistrulegroup.OrderOption) *PlaylistRuleGroupQuery {
-	prgq.order = append(prgq.order, o...)
-	return prgq
+func (_q *PlaylistRuleGroupQuery) Order(o ...playlistrulegroup.OrderOption) *PlaylistRuleGroupQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryPlaylist chains the current query on the "playlist" edge.
-func (prgq *PlaylistRuleGroupQuery) QueryPlaylist() *PlaylistQuery {
-	query := (&PlaylistClient{config: prgq.config}).Query()
+func (_q *PlaylistRuleGroupQuery) QueryPlaylist() *PlaylistQuery {
+	query := (&PlaylistClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := prgq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := prgq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -81,20 +81,20 @@ func (prgq *PlaylistRuleGroupQuery) QueryPlaylist() *PlaylistQuery {
 			sqlgraph.To(playlist.Table, playlist.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, playlistrulegroup.PlaylistTable, playlistrulegroup.PlaylistColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(prgq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryRules chains the current query on the "rules" edge.
-func (prgq *PlaylistRuleGroupQuery) QueryRules() *PlaylistRuleQuery {
-	query := (&PlaylistRuleClient{config: prgq.config}).Query()
+func (_q *PlaylistRuleGroupQuery) QueryRules() *PlaylistRuleQuery {
+	query := (&PlaylistRuleClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := prgq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := prgq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -103,7 +103,7 @@ func (prgq *PlaylistRuleGroupQuery) QueryRules() *PlaylistRuleQuery {
 			sqlgraph.To(playlistrule.Table, playlistrule.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, playlistrulegroup.RulesTable, playlistrulegroup.RulesColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(prgq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -111,8 +111,8 @@ func (prgq *PlaylistRuleGroupQuery) QueryRules() *PlaylistRuleQuery {
 
 // First returns the first PlaylistRuleGroup entity from the query.
 // Returns a *NotFoundError when no PlaylistRuleGroup was found.
-func (prgq *PlaylistRuleGroupQuery) First(ctx context.Context) (*PlaylistRuleGroup, error) {
-	nodes, err := prgq.Limit(1).All(setContextOp(ctx, prgq.ctx, ent.OpQueryFirst))
+func (_q *PlaylistRuleGroupQuery) First(ctx context.Context) (*PlaylistRuleGroup, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -123,8 +123,8 @@ func (prgq *PlaylistRuleGroupQuery) First(ctx context.Context) (*PlaylistRuleGro
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (prgq *PlaylistRuleGroupQuery) FirstX(ctx context.Context) *PlaylistRuleGroup {
-	node, err := prgq.First(ctx)
+func (_q *PlaylistRuleGroupQuery) FirstX(ctx context.Context) *PlaylistRuleGroup {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -133,9 +133,9 @@ func (prgq *PlaylistRuleGroupQuery) FirstX(ctx context.Context) *PlaylistRuleGro
 
 // FirstID returns the first PlaylistRuleGroup ID from the query.
 // Returns a *NotFoundError when no PlaylistRuleGroup ID was found.
-func (prgq *PlaylistRuleGroupQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *PlaylistRuleGroupQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = prgq.Limit(1).IDs(setContextOp(ctx, prgq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -146,8 +146,8 @@ func (prgq *PlaylistRuleGroupQuery) FirstID(ctx context.Context) (id uuid.UUID, 
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (prgq *PlaylistRuleGroupQuery) FirstIDX(ctx context.Context) uuid.UUID {
-	id, err := prgq.FirstID(ctx)
+func (_q *PlaylistRuleGroupQuery) FirstIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -157,8 +157,8 @@ func (prgq *PlaylistRuleGroupQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Only returns a single PlaylistRuleGroup entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one PlaylistRuleGroup entity is found.
 // Returns a *NotFoundError when no PlaylistRuleGroup entities are found.
-func (prgq *PlaylistRuleGroupQuery) Only(ctx context.Context) (*PlaylistRuleGroup, error) {
-	nodes, err := prgq.Limit(2).All(setContextOp(ctx, prgq.ctx, ent.OpQueryOnly))
+func (_q *PlaylistRuleGroupQuery) Only(ctx context.Context) (*PlaylistRuleGroup, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -173,8 +173,8 @@ func (prgq *PlaylistRuleGroupQuery) Only(ctx context.Context) (*PlaylistRuleGrou
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (prgq *PlaylistRuleGroupQuery) OnlyX(ctx context.Context) *PlaylistRuleGroup {
-	node, err := prgq.Only(ctx)
+func (_q *PlaylistRuleGroupQuery) OnlyX(ctx context.Context) *PlaylistRuleGroup {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -184,9 +184,9 @@ func (prgq *PlaylistRuleGroupQuery) OnlyX(ctx context.Context) *PlaylistRuleGrou
 // OnlyID is like Only, but returns the only PlaylistRuleGroup ID in the query.
 // Returns a *NotSingularError when more than one PlaylistRuleGroup ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (prgq *PlaylistRuleGroupQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *PlaylistRuleGroupQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = prgq.Limit(2).IDs(setContextOp(ctx, prgq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -201,8 +201,8 @@ func (prgq *PlaylistRuleGroupQuery) OnlyID(ctx context.Context) (id uuid.UUID, e
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (prgq *PlaylistRuleGroupQuery) OnlyIDX(ctx context.Context) uuid.UUID {
-	id, err := prgq.OnlyID(ctx)
+func (_q *PlaylistRuleGroupQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -210,18 +210,18 @@ func (prgq *PlaylistRuleGroupQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 }
 
 // All executes the query and returns a list of PlaylistRuleGroups.
-func (prgq *PlaylistRuleGroupQuery) All(ctx context.Context) ([]*PlaylistRuleGroup, error) {
-	ctx = setContextOp(ctx, prgq.ctx, ent.OpQueryAll)
-	if err := prgq.prepareQuery(ctx); err != nil {
+func (_q *PlaylistRuleGroupQuery) All(ctx context.Context) ([]*PlaylistRuleGroup, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*PlaylistRuleGroup, *PlaylistRuleGroupQuery]()
-	return withInterceptors[[]*PlaylistRuleGroup](ctx, prgq, qr, prgq.inters)
+	return withInterceptors[[]*PlaylistRuleGroup](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (prgq *PlaylistRuleGroupQuery) AllX(ctx context.Context) []*PlaylistRuleGroup {
-	nodes, err := prgq.All(ctx)
+func (_q *PlaylistRuleGroupQuery) AllX(ctx context.Context) []*PlaylistRuleGroup {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -229,20 +229,20 @@ func (prgq *PlaylistRuleGroupQuery) AllX(ctx context.Context) []*PlaylistRuleGro
 }
 
 // IDs executes the query and returns a list of PlaylistRuleGroup IDs.
-func (prgq *PlaylistRuleGroupQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
-	if prgq.ctx.Unique == nil && prgq.path != nil {
-		prgq.Unique(true)
+func (_q *PlaylistRuleGroupQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, prgq.ctx, ent.OpQueryIDs)
-	if err = prgq.Select(playlistrulegroup.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(playlistrulegroup.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (prgq *PlaylistRuleGroupQuery) IDsX(ctx context.Context) []uuid.UUID {
-	ids, err := prgq.IDs(ctx)
+func (_q *PlaylistRuleGroupQuery) IDsX(ctx context.Context) []uuid.UUID {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -250,17 +250,17 @@ func (prgq *PlaylistRuleGroupQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (prgq *PlaylistRuleGroupQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, prgq.ctx, ent.OpQueryCount)
-	if err := prgq.prepareQuery(ctx); err != nil {
+func (_q *PlaylistRuleGroupQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, prgq, querierCount[*PlaylistRuleGroupQuery](), prgq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*PlaylistRuleGroupQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (prgq *PlaylistRuleGroupQuery) CountX(ctx context.Context) int {
-	count, err := prgq.Count(ctx)
+func (_q *PlaylistRuleGroupQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -268,9 +268,9 @@ func (prgq *PlaylistRuleGroupQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (prgq *PlaylistRuleGroupQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, prgq.ctx, ent.OpQueryExist)
-	switch _, err := prgq.FirstID(ctx); {
+func (_q *PlaylistRuleGroupQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -281,8 +281,8 @@ func (prgq *PlaylistRuleGroupQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (prgq *PlaylistRuleGroupQuery) ExistX(ctx context.Context) bool {
-	exist, err := prgq.Exist(ctx)
+func (_q *PlaylistRuleGroupQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -291,44 +291,44 @@ func (prgq *PlaylistRuleGroupQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the PlaylistRuleGroupQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (prgq *PlaylistRuleGroupQuery) Clone() *PlaylistRuleGroupQuery {
-	if prgq == nil {
+func (_q *PlaylistRuleGroupQuery) Clone() *PlaylistRuleGroupQuery {
+	if _q == nil {
 		return nil
 	}
 	return &PlaylistRuleGroupQuery{
-		config:       prgq.config,
-		ctx:          prgq.ctx.Clone(),
-		order:        append([]playlistrulegroup.OrderOption{}, prgq.order...),
-		inters:       append([]Interceptor{}, prgq.inters...),
-		predicates:   append([]predicate.PlaylistRuleGroup{}, prgq.predicates...),
-		withPlaylist: prgq.withPlaylist.Clone(),
-		withRules:    prgq.withRules.Clone(),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]playlistrulegroup.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.PlaylistRuleGroup{}, _q.predicates...),
+		withPlaylist: _q.withPlaylist.Clone(),
+		withRules:    _q.withRules.Clone(),
 		// clone intermediate query.
-		sql:  prgq.sql.Clone(),
-		path: prgq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithPlaylist tells the query-builder to eager-load the nodes that are connected to
 // the "playlist" edge. The optional arguments are used to configure the query builder of the edge.
-func (prgq *PlaylistRuleGroupQuery) WithPlaylist(opts ...func(*PlaylistQuery)) *PlaylistRuleGroupQuery {
-	query := (&PlaylistClient{config: prgq.config}).Query()
+func (_q *PlaylistRuleGroupQuery) WithPlaylist(opts ...func(*PlaylistQuery)) *PlaylistRuleGroupQuery {
+	query := (&PlaylistClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	prgq.withPlaylist = query
-	return prgq
+	_q.withPlaylist = query
+	return _q
 }
 
 // WithRules tells the query-builder to eager-load the nodes that are connected to
 // the "rules" edge. The optional arguments are used to configure the query builder of the edge.
-func (prgq *PlaylistRuleGroupQuery) WithRules(opts ...func(*PlaylistRuleQuery)) *PlaylistRuleGroupQuery {
-	query := (&PlaylistRuleClient{config: prgq.config}).Query()
+func (_q *PlaylistRuleGroupQuery) WithRules(opts ...func(*PlaylistRuleQuery)) *PlaylistRuleGroupQuery {
+	query := (&PlaylistRuleClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	prgq.withRules = query
-	return prgq
+	_q.withRules = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -345,10 +345,10 @@ func (prgq *PlaylistRuleGroupQuery) WithRules(opts ...func(*PlaylistRuleQuery)) 
 //		GroupBy(playlistrulegroup.FieldOperator).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (prgq *PlaylistRuleGroupQuery) GroupBy(field string, fields ...string) *PlaylistRuleGroupGroupBy {
-	prgq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &PlaylistRuleGroupGroupBy{build: prgq}
-	grbuild.flds = &prgq.ctx.Fields
+func (_q *PlaylistRuleGroupQuery) GroupBy(field string, fields ...string) *PlaylistRuleGroupGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &PlaylistRuleGroupGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = playlistrulegroup.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -366,56 +366,56 @@ func (prgq *PlaylistRuleGroupQuery) GroupBy(field string, fields ...string) *Pla
 //	client.PlaylistRuleGroup.Query().
 //		Select(playlistrulegroup.FieldOperator).
 //		Scan(ctx, &v)
-func (prgq *PlaylistRuleGroupQuery) Select(fields ...string) *PlaylistRuleGroupSelect {
-	prgq.ctx.Fields = append(prgq.ctx.Fields, fields...)
-	sbuild := &PlaylistRuleGroupSelect{PlaylistRuleGroupQuery: prgq}
+func (_q *PlaylistRuleGroupQuery) Select(fields ...string) *PlaylistRuleGroupSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &PlaylistRuleGroupSelect{PlaylistRuleGroupQuery: _q}
 	sbuild.label = playlistrulegroup.Label
-	sbuild.flds, sbuild.scan = &prgq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a PlaylistRuleGroupSelect configured with the given aggregations.
-func (prgq *PlaylistRuleGroupQuery) Aggregate(fns ...AggregateFunc) *PlaylistRuleGroupSelect {
-	return prgq.Select().Aggregate(fns...)
+func (_q *PlaylistRuleGroupQuery) Aggregate(fns ...AggregateFunc) *PlaylistRuleGroupSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (prgq *PlaylistRuleGroupQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range prgq.inters {
+func (_q *PlaylistRuleGroupQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, prgq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range prgq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !playlistrulegroup.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if prgq.path != nil {
-		prev, err := prgq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		prgq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (prgq *PlaylistRuleGroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*PlaylistRuleGroup, error) {
+func (_q *PlaylistRuleGroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*PlaylistRuleGroup, error) {
 	var (
 		nodes       = []*PlaylistRuleGroup{}
-		withFKs     = prgq.withFKs
-		_spec       = prgq.querySpec()
+		withFKs     = _q.withFKs
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			prgq.withPlaylist != nil,
-			prgq.withRules != nil,
+			_q.withPlaylist != nil,
+			_q.withRules != nil,
 		}
 	)
-	if prgq.withPlaylist != nil {
+	if _q.withPlaylist != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -425,7 +425,7 @@ func (prgq *PlaylistRuleGroupQuery) sqlAll(ctx context.Context, hooks ...queryHo
 		return (*PlaylistRuleGroup).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &PlaylistRuleGroup{config: prgq.config}
+		node := &PlaylistRuleGroup{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -433,20 +433,20 @@ func (prgq *PlaylistRuleGroupQuery) sqlAll(ctx context.Context, hooks ...queryHo
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, prgq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := prgq.withPlaylist; query != nil {
-		if err := prgq.loadPlaylist(ctx, query, nodes, nil,
+	if query := _q.withPlaylist; query != nil {
+		if err := _q.loadPlaylist(ctx, query, nodes, nil,
 			func(n *PlaylistRuleGroup, e *Playlist) { n.Edges.Playlist = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := prgq.withRules; query != nil {
-		if err := prgq.loadRules(ctx, query, nodes,
+	if query := _q.withRules; query != nil {
+		if err := _q.loadRules(ctx, query, nodes,
 			func(n *PlaylistRuleGroup) { n.Edges.Rules = []*PlaylistRule{} },
 			func(n *PlaylistRuleGroup, e *PlaylistRule) { n.Edges.Rules = append(n.Edges.Rules, e) }); err != nil {
 			return nil, err
@@ -455,7 +455,7 @@ func (prgq *PlaylistRuleGroupQuery) sqlAll(ctx context.Context, hooks ...queryHo
 	return nodes, nil
 }
 
-func (prgq *PlaylistRuleGroupQuery) loadPlaylist(ctx context.Context, query *PlaylistQuery, nodes []*PlaylistRuleGroup, init func(*PlaylistRuleGroup), assign func(*PlaylistRuleGroup, *Playlist)) error {
+func (_q *PlaylistRuleGroupQuery) loadPlaylist(ctx context.Context, query *PlaylistQuery, nodes []*PlaylistRuleGroup, init func(*PlaylistRuleGroup), assign func(*PlaylistRuleGroup, *Playlist)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*PlaylistRuleGroup)
 	for i := range nodes {
@@ -487,7 +487,7 @@ func (prgq *PlaylistRuleGroupQuery) loadPlaylist(ctx context.Context, query *Pla
 	}
 	return nil
 }
-func (prgq *PlaylistRuleGroupQuery) loadRules(ctx context.Context, query *PlaylistRuleQuery, nodes []*PlaylistRuleGroup, init func(*PlaylistRuleGroup), assign func(*PlaylistRuleGroup, *PlaylistRule)) error {
+func (_q *PlaylistRuleGroupQuery) loadRules(ctx context.Context, query *PlaylistRuleQuery, nodes []*PlaylistRuleGroup, init func(*PlaylistRuleGroup), assign func(*PlaylistRuleGroup, *PlaylistRule)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[uuid.UUID]*PlaylistRuleGroup)
 	for i := range nodes {
@@ -519,24 +519,24 @@ func (prgq *PlaylistRuleGroupQuery) loadRules(ctx context.Context, query *Playli
 	return nil
 }
 
-func (prgq *PlaylistRuleGroupQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := prgq.querySpec()
-	_spec.Node.Columns = prgq.ctx.Fields
-	if len(prgq.ctx.Fields) > 0 {
-		_spec.Unique = prgq.ctx.Unique != nil && *prgq.ctx.Unique
+func (_q *PlaylistRuleGroupQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, prgq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (prgq *PlaylistRuleGroupQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *PlaylistRuleGroupQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(playlistrulegroup.Table, playlistrulegroup.Columns, sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID))
-	_spec.From = prgq.sql
-	if unique := prgq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if prgq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := prgq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, playlistrulegroup.FieldID)
 		for i := range fields {
@@ -545,20 +545,20 @@ func (prgq *PlaylistRuleGroupQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := prgq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := prgq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := prgq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := prgq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -568,33 +568,33 @@ func (prgq *PlaylistRuleGroupQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (prgq *PlaylistRuleGroupQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(prgq.driver.Dialect())
+func (_q *PlaylistRuleGroupQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(playlistrulegroup.Table)
-	columns := prgq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = playlistrulegroup.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if prgq.sql != nil {
-		selector = prgq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if prgq.ctx.Unique != nil && *prgq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range prgq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range prgq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := prgq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := prgq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -607,41 +607,41 @@ type PlaylistRuleGroupGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (prggb *PlaylistRuleGroupGroupBy) Aggregate(fns ...AggregateFunc) *PlaylistRuleGroupGroupBy {
-	prggb.fns = append(prggb.fns, fns...)
-	return prggb
+func (_g *PlaylistRuleGroupGroupBy) Aggregate(fns ...AggregateFunc) *PlaylistRuleGroupGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (prggb *PlaylistRuleGroupGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, prggb.build.ctx, ent.OpQueryGroupBy)
-	if err := prggb.build.prepareQuery(ctx); err != nil {
+func (_g *PlaylistRuleGroupGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*PlaylistRuleGroupQuery, *PlaylistRuleGroupGroupBy](ctx, prggb.build, prggb, prggb.build.inters, v)
+	return scanWithInterceptors[*PlaylistRuleGroupQuery, *PlaylistRuleGroupGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (prggb *PlaylistRuleGroupGroupBy) sqlScan(ctx context.Context, root *PlaylistRuleGroupQuery, v any) error {
+func (_g *PlaylistRuleGroupGroupBy) sqlScan(ctx context.Context, root *PlaylistRuleGroupQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(prggb.fns))
-	for _, fn := range prggb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*prggb.flds)+len(prggb.fns))
-		for _, f := range *prggb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*prggb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := prggb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -655,27 +655,27 @@ type PlaylistRuleGroupSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (prgs *PlaylistRuleGroupSelect) Aggregate(fns ...AggregateFunc) *PlaylistRuleGroupSelect {
-	prgs.fns = append(prgs.fns, fns...)
-	return prgs
+func (_s *PlaylistRuleGroupSelect) Aggregate(fns ...AggregateFunc) *PlaylistRuleGroupSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (prgs *PlaylistRuleGroupSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, prgs.ctx, ent.OpQuerySelect)
-	if err := prgs.prepareQuery(ctx); err != nil {
+func (_s *PlaylistRuleGroupSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*PlaylistRuleGroupQuery, *PlaylistRuleGroupSelect](ctx, prgs.PlaylistRuleGroupQuery, prgs, prgs.inters, v)
+	return scanWithInterceptors[*PlaylistRuleGroupQuery, *PlaylistRuleGroupSelect](ctx, _s.PlaylistRuleGroupQuery, _s, _s.inters, v)
 }
 
-func (prgs *PlaylistRuleGroupSelect) sqlScan(ctx context.Context, root *PlaylistRuleGroupQuery, v any) error {
+func (_s *PlaylistRuleGroupSelect) sqlScan(ctx context.Context, root *PlaylistRuleGroupQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(prgs.fns))
-	for _, fn := range prgs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*prgs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -683,7 +683,7 @@ func (prgs *PlaylistRuleGroupSelect) sqlScan(ctx context.Context, root *Playlist
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := prgs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

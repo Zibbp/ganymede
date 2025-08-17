@@ -24,39 +24,39 @@ type BlockedVideosCreate struct {
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (bvc *BlockedVideosCreate) SetCreatedAt(t time.Time) *BlockedVideosCreate {
-	bvc.mutation.SetCreatedAt(t)
-	return bvc
+func (_c *BlockedVideosCreate) SetCreatedAt(v time.Time) *BlockedVideosCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (bvc *BlockedVideosCreate) SetNillableCreatedAt(t *time.Time) *BlockedVideosCreate {
-	if t != nil {
-		bvc.SetCreatedAt(*t)
+func (_c *BlockedVideosCreate) SetNillableCreatedAt(v *time.Time) *BlockedVideosCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return bvc
+	return _c
 }
 
 // SetID sets the "id" field.
-func (bvc *BlockedVideosCreate) SetID(s string) *BlockedVideosCreate {
-	bvc.mutation.SetID(s)
-	return bvc
+func (_c *BlockedVideosCreate) SetID(v string) *BlockedVideosCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // Mutation returns the BlockedVideosMutation object of the builder.
-func (bvc *BlockedVideosCreate) Mutation() *BlockedVideosMutation {
-	return bvc.mutation
+func (_c *BlockedVideosCreate) Mutation() *BlockedVideosMutation {
+	return _c.mutation
 }
 
 // Save creates the BlockedVideos in the database.
-func (bvc *BlockedVideosCreate) Save(ctx context.Context) (*BlockedVideos, error) {
-	bvc.defaults()
-	return withHooks(ctx, bvc.sqlSave, bvc.mutation, bvc.hooks)
+func (_c *BlockedVideosCreate) Save(ctx context.Context) (*BlockedVideos, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (bvc *BlockedVideosCreate) SaveX(ctx context.Context) *BlockedVideos {
-	v, err := bvc.Save(ctx)
+func (_c *BlockedVideosCreate) SaveX(ctx context.Context) *BlockedVideos {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -64,40 +64,40 @@ func (bvc *BlockedVideosCreate) SaveX(ctx context.Context) *BlockedVideos {
 }
 
 // Exec executes the query.
-func (bvc *BlockedVideosCreate) Exec(ctx context.Context) error {
-	_, err := bvc.Save(ctx)
+func (_c *BlockedVideosCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (bvc *BlockedVideosCreate) ExecX(ctx context.Context) {
-	if err := bvc.Exec(ctx); err != nil {
+func (_c *BlockedVideosCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (bvc *BlockedVideosCreate) defaults() {
-	if _, ok := bvc.mutation.CreatedAt(); !ok {
+func (_c *BlockedVideosCreate) defaults() {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := blockedvideos.DefaultCreatedAt()
-		bvc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (bvc *BlockedVideosCreate) check() error {
-	if _, ok := bvc.mutation.CreatedAt(); !ok {
+func (_c *BlockedVideosCreate) check() error {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "BlockedVideos.created_at"`)}
 	}
 	return nil
 }
 
-func (bvc *BlockedVideosCreate) sqlSave(ctx context.Context) (*BlockedVideos, error) {
-	if err := bvc.check(); err != nil {
+func (_c *BlockedVideosCreate) sqlSave(ctx context.Context) (*BlockedVideos, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := bvc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, bvc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -110,22 +110,22 @@ func (bvc *BlockedVideosCreate) sqlSave(ctx context.Context) (*BlockedVideos, er
 			return nil, fmt.Errorf("unexpected BlockedVideos.ID type: %T", _spec.ID.Value)
 		}
 	}
-	bvc.mutation.id = &_node.ID
-	bvc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (bvc *BlockedVideosCreate) createSpec() (*BlockedVideos, *sqlgraph.CreateSpec) {
+func (_c *BlockedVideosCreate) createSpec() (*BlockedVideos, *sqlgraph.CreateSpec) {
 	var (
-		_node = &BlockedVideos{config: bvc.config}
+		_node = &BlockedVideos{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(blockedvideos.Table, sqlgraph.NewFieldSpec(blockedvideos.FieldID, field.TypeString))
 	)
-	_spec.OnConflict = bvc.conflict
-	if id, ok := bvc.mutation.ID(); ok {
+	_spec.OnConflict = _c.conflict
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := bvc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(blockedvideos.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
@@ -148,10 +148,10 @@ func (bvc *BlockedVideosCreate) createSpec() (*BlockedVideos, *sqlgraph.CreateSp
 //			SetCreatedAt(v+v).
 //		}).
 //		Exec(ctx)
-func (bvc *BlockedVideosCreate) OnConflict(opts ...sql.ConflictOption) *BlockedVideosUpsertOne {
-	bvc.conflict = opts
+func (_c *BlockedVideosCreate) OnConflict(opts ...sql.ConflictOption) *BlockedVideosUpsertOne {
+	_c.conflict = opts
 	return &BlockedVideosUpsertOne{
-		create: bvc,
+		create: _c,
 	}
 }
 
@@ -161,10 +161,10 @@ func (bvc *BlockedVideosCreate) OnConflict(opts ...sql.ConflictOption) *BlockedV
 //	client.BlockedVideos.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (bvc *BlockedVideosCreate) OnConflictColumns(columns ...string) *BlockedVideosUpsertOne {
-	bvc.conflict = append(bvc.conflict, sql.ConflictColumns(columns...))
+func (_c *BlockedVideosCreate) OnConflictColumns(columns ...string) *BlockedVideosUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &BlockedVideosUpsertOne{
-		create: bvc,
+		create: _c,
 	}
 }
 
@@ -279,16 +279,16 @@ type BlockedVideosCreateBulk struct {
 }
 
 // Save creates the BlockedVideos entities in the database.
-func (bvcb *BlockedVideosCreateBulk) Save(ctx context.Context) ([]*BlockedVideos, error) {
-	if bvcb.err != nil {
-		return nil, bvcb.err
+func (_c *BlockedVideosCreateBulk) Save(ctx context.Context) ([]*BlockedVideos, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(bvcb.builders))
-	nodes := make([]*BlockedVideos, len(bvcb.builders))
-	mutators := make([]Mutator, len(bvcb.builders))
-	for i := range bvcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*BlockedVideos, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := bvcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*BlockedVideosMutation)
@@ -302,12 +302,12 @@ func (bvcb *BlockedVideosCreateBulk) Save(ctx context.Context) ([]*BlockedVideos
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, bvcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = bvcb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, bvcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -327,7 +327,7 @@ func (bvcb *BlockedVideosCreateBulk) Save(ctx context.Context) ([]*BlockedVideos
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, bvcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -335,8 +335,8 @@ func (bvcb *BlockedVideosCreateBulk) Save(ctx context.Context) ([]*BlockedVideos
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (bvcb *BlockedVideosCreateBulk) SaveX(ctx context.Context) []*BlockedVideos {
-	v, err := bvcb.Save(ctx)
+func (_c *BlockedVideosCreateBulk) SaveX(ctx context.Context) []*BlockedVideos {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -344,14 +344,14 @@ func (bvcb *BlockedVideosCreateBulk) SaveX(ctx context.Context) []*BlockedVideos
 }
 
 // Exec executes the query.
-func (bvcb *BlockedVideosCreateBulk) Exec(ctx context.Context) error {
-	_, err := bvcb.Save(ctx)
+func (_c *BlockedVideosCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (bvcb *BlockedVideosCreateBulk) ExecX(ctx context.Context) {
-	if err := bvcb.Exec(ctx); err != nil {
+func (_c *BlockedVideosCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -371,10 +371,10 @@ func (bvcb *BlockedVideosCreateBulk) ExecX(ctx context.Context) {
 //			SetCreatedAt(v+v).
 //		}).
 //		Exec(ctx)
-func (bvcb *BlockedVideosCreateBulk) OnConflict(opts ...sql.ConflictOption) *BlockedVideosUpsertBulk {
-	bvcb.conflict = opts
+func (_c *BlockedVideosCreateBulk) OnConflict(opts ...sql.ConflictOption) *BlockedVideosUpsertBulk {
+	_c.conflict = opts
 	return &BlockedVideosUpsertBulk{
-		create: bvcb,
+		create: _c,
 	}
 }
 
@@ -384,10 +384,10 @@ func (bvcb *BlockedVideosCreateBulk) OnConflict(opts ...sql.ConflictOption) *Blo
 //	client.BlockedVideos.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (bvcb *BlockedVideosCreateBulk) OnConflictColumns(columns ...string) *BlockedVideosUpsertBulk {
-	bvcb.conflict = append(bvcb.conflict, sql.ConflictColumns(columns...))
+func (_c *BlockedVideosCreateBulk) OnConflictColumns(columns ...string) *BlockedVideosUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &BlockedVideosUpsertBulk{
-		create: bvcb,
+		create: _c,
 	}
 }
 

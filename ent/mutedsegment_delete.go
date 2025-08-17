@@ -20,56 +20,56 @@ type MutedSegmentDelete struct {
 }
 
 // Where appends a list predicates to the MutedSegmentDelete builder.
-func (msd *MutedSegmentDelete) Where(ps ...predicate.MutedSegment) *MutedSegmentDelete {
-	msd.mutation.Where(ps...)
-	return msd
+func (_d *MutedSegmentDelete) Where(ps ...predicate.MutedSegment) *MutedSegmentDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (msd *MutedSegmentDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, msd.sqlExec, msd.mutation, msd.hooks)
+func (_d *MutedSegmentDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (msd *MutedSegmentDelete) ExecX(ctx context.Context) int {
-	n, err := msd.Exec(ctx)
+func (_d *MutedSegmentDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (msd *MutedSegmentDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *MutedSegmentDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(mutedsegment.Table, sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID))
-	if ps := msd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, msd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	msd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // MutedSegmentDeleteOne is the builder for deleting a single MutedSegment entity.
 type MutedSegmentDeleteOne struct {
-	msd *MutedSegmentDelete
+	_d *MutedSegmentDelete
 }
 
 // Where appends a list predicates to the MutedSegmentDelete builder.
-func (msdo *MutedSegmentDeleteOne) Where(ps ...predicate.MutedSegment) *MutedSegmentDeleteOne {
-	msdo.msd.mutation.Where(ps...)
-	return msdo
+func (_d *MutedSegmentDeleteOne) Where(ps ...predicate.MutedSegment) *MutedSegmentDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (msdo *MutedSegmentDeleteOne) Exec(ctx context.Context) error {
-	n, err := msdo.msd.Exec(ctx)
+func (_d *MutedSegmentDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (msdo *MutedSegmentDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (msdo *MutedSegmentDeleteOne) ExecX(ctx context.Context) {
-	if err := msdo.Exec(ctx); err != nil {
+func (_d *MutedSegmentDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

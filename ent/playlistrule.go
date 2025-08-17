@@ -82,7 +82,7 @@ func (*PlaylistRule) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the PlaylistRule fields.
-func (pr *PlaylistRule) assignValues(columns []string, values []any) error {
+func (_m *PlaylistRule) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -92,53 +92,53 @@ func (pr *PlaylistRule) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
-				pr.ID = *value
+				_m.ID = *value
 			}
 		case playlistrule.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				pr.Name = value.String
+				_m.Name = value.String
 			}
 		case playlistrule.FieldField:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field field", values[i])
 			} else if value.Valid {
-				pr.Field = utils.PlaylistRuleField(value.String)
+				_m.Field = utils.PlaylistRuleField(value.String)
 			}
 		case playlistrule.FieldOperator:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field operator", values[i])
 			} else if value.Valid {
-				pr.Operator = utils.PlaylistRuleOperator(value.String)
+				_m.Operator = utils.PlaylistRuleOperator(value.String)
 			}
 		case playlistrule.FieldValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field value", values[i])
 			} else if value.Valid {
-				pr.Value = value.String
+				_m.Value = value.String
 			}
 		case playlistrule.FieldPosition:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field position", values[i])
 			} else if value.Valid {
-				pr.Position = int(value.Int64)
+				_m.Position = int(value.Int64)
 			}
 		case playlistrule.FieldEnabled:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field enabled", values[i])
 			} else if value.Valid {
-				pr.Enabled = value.Bool
+				_m.Enabled = value.Bool
 			}
 		case playlistrule.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field playlist_rule_group_rules", values[i])
 			} else if value.Valid {
-				pr.playlist_rule_group_rules = new(uuid.UUID)
-				*pr.playlist_rule_group_rules = *value.S.(*uuid.UUID)
+				_m.playlist_rule_group_rules = new(uuid.UUID)
+				*_m.playlist_rule_group_rules = *value.S.(*uuid.UUID)
 			}
 		default:
-			pr.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -146,55 +146,55 @@ func (pr *PlaylistRule) assignValues(columns []string, values []any) error {
 
 // GetValue returns the ent.Value that was dynamically selected and assigned to the PlaylistRule.
 // This includes values selected through modifiers, order, etc.
-func (pr *PlaylistRule) GetValue(name string) (ent.Value, error) {
-	return pr.selectValues.Get(name)
+func (_m *PlaylistRule) GetValue(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryGroup queries the "group" edge of the PlaylistRule entity.
-func (pr *PlaylistRule) QueryGroup() *PlaylistRuleGroupQuery {
-	return NewPlaylistRuleClient(pr.config).QueryGroup(pr)
+func (_m *PlaylistRule) QueryGroup() *PlaylistRuleGroupQuery {
+	return NewPlaylistRuleClient(_m.config).QueryGroup(_m)
 }
 
 // Update returns a builder for updating this PlaylistRule.
 // Note that you need to call PlaylistRule.Unwrap() before calling this method if this PlaylistRule
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pr *PlaylistRule) Update() *PlaylistRuleUpdateOne {
-	return NewPlaylistRuleClient(pr.config).UpdateOne(pr)
+func (_m *PlaylistRule) Update() *PlaylistRuleUpdateOne {
+	return NewPlaylistRuleClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the PlaylistRule entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pr *PlaylistRule) Unwrap() *PlaylistRule {
-	_tx, ok := pr.config.driver.(*txDriver)
+func (_m *PlaylistRule) Unwrap() *PlaylistRule {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: PlaylistRule is not a transactional entity")
 	}
-	pr.config.driver = _tx.drv
-	return pr
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pr *PlaylistRule) String() string {
+func (_m *PlaylistRule) String() string {
 	var builder strings.Builder
 	builder.WriteString("PlaylistRule(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pr.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(pr.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("field=")
-	builder.WriteString(fmt.Sprintf("%v", pr.Field))
+	builder.WriteString(fmt.Sprintf("%v", _m.Field))
 	builder.WriteString(", ")
 	builder.WriteString("operator=")
-	builder.WriteString(fmt.Sprintf("%v", pr.Operator))
+	builder.WriteString(fmt.Sprintf("%v", _m.Operator))
 	builder.WriteString(", ")
 	builder.WriteString("value=")
-	builder.WriteString(pr.Value)
+	builder.WriteString(_m.Value)
 	builder.WriteString(", ")
 	builder.WriteString("position=")
-	builder.WriteString(fmt.Sprintf("%v", pr.Position))
+	builder.WriteString(fmt.Sprintf("%v", _m.Position))
 	builder.WriteString(", ")
 	builder.WriteString("enabled=")
-	builder.WriteString(fmt.Sprintf("%v", pr.Enabled))
+	builder.WriteString(fmt.Sprintf("%v", _m.Enabled))
 	builder.WriteByte(')')
 	return builder.String()
 }

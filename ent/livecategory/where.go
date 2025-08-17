@@ -114,6 +114,16 @@ func NameHasSuffix(v string) predicate.LiveCategory {
 	return predicate.LiveCategory(sql.FieldHasSuffix(FieldName, v))
 }
 
+// NameIsNil applies the IsNil predicate on the "name" field.
+func NameIsNil() predicate.LiveCategory {
+	return predicate.LiveCategory(sql.FieldIsNull(FieldName))
+}
+
+// NameNotNil applies the NotNil predicate on the "name" field.
+func NameNotNil() predicate.LiveCategory {
+	return predicate.LiveCategory(sql.FieldNotNull(FieldName))
+}
+
 // NameEqualFold applies the EqualFold predicate on the "name" field.
 func NameEqualFold(v string) predicate.LiveCategory {
 	return predicate.LiveCategory(sql.FieldEqualFold(FieldName, v))

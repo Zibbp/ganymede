@@ -25,112 +25,112 @@ type PlaylistRuleGroupUpdate struct {
 }
 
 // Where appends a list predicates to the PlaylistRuleGroupUpdate builder.
-func (prgu *PlaylistRuleGroupUpdate) Where(ps ...predicate.PlaylistRuleGroup) *PlaylistRuleGroupUpdate {
-	prgu.mutation.Where(ps...)
-	return prgu
+func (_u *PlaylistRuleGroupUpdate) Where(ps ...predicate.PlaylistRuleGroup) *PlaylistRuleGroupUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetOperator sets the "operator" field.
-func (prgu *PlaylistRuleGroupUpdate) SetOperator(pl playlistrulegroup.Operator) *PlaylistRuleGroupUpdate {
-	prgu.mutation.SetOperator(pl)
-	return prgu
+func (_u *PlaylistRuleGroupUpdate) SetOperator(v playlistrulegroup.Operator) *PlaylistRuleGroupUpdate {
+	_u.mutation.SetOperator(v)
+	return _u
 }
 
 // SetNillableOperator sets the "operator" field if the given value is not nil.
-func (prgu *PlaylistRuleGroupUpdate) SetNillableOperator(pl *playlistrulegroup.Operator) *PlaylistRuleGroupUpdate {
-	if pl != nil {
-		prgu.SetOperator(*pl)
+func (_u *PlaylistRuleGroupUpdate) SetNillableOperator(v *playlistrulegroup.Operator) *PlaylistRuleGroupUpdate {
+	if v != nil {
+		_u.SetOperator(*v)
 	}
-	return prgu
+	return _u
 }
 
 // SetPosition sets the "position" field.
-func (prgu *PlaylistRuleGroupUpdate) SetPosition(i int) *PlaylistRuleGroupUpdate {
-	prgu.mutation.ResetPosition()
-	prgu.mutation.SetPosition(i)
-	return prgu
+func (_u *PlaylistRuleGroupUpdate) SetPosition(v int) *PlaylistRuleGroupUpdate {
+	_u.mutation.ResetPosition()
+	_u.mutation.SetPosition(v)
+	return _u
 }
 
 // SetNillablePosition sets the "position" field if the given value is not nil.
-func (prgu *PlaylistRuleGroupUpdate) SetNillablePosition(i *int) *PlaylistRuleGroupUpdate {
-	if i != nil {
-		prgu.SetPosition(*i)
+func (_u *PlaylistRuleGroupUpdate) SetNillablePosition(v *int) *PlaylistRuleGroupUpdate {
+	if v != nil {
+		_u.SetPosition(*v)
 	}
-	return prgu
+	return _u
 }
 
-// AddPosition adds i to the "position" field.
-func (prgu *PlaylistRuleGroupUpdate) AddPosition(i int) *PlaylistRuleGroupUpdate {
-	prgu.mutation.AddPosition(i)
-	return prgu
+// AddPosition adds value to the "position" field.
+func (_u *PlaylistRuleGroupUpdate) AddPosition(v int) *PlaylistRuleGroupUpdate {
+	_u.mutation.AddPosition(v)
+	return _u
 }
 
 // SetPlaylistID sets the "playlist" edge to the Playlist entity by ID.
-func (prgu *PlaylistRuleGroupUpdate) SetPlaylistID(id uuid.UUID) *PlaylistRuleGroupUpdate {
-	prgu.mutation.SetPlaylistID(id)
-	return prgu
+func (_u *PlaylistRuleGroupUpdate) SetPlaylistID(id uuid.UUID) *PlaylistRuleGroupUpdate {
+	_u.mutation.SetPlaylistID(id)
+	return _u
 }
 
 // SetPlaylist sets the "playlist" edge to the Playlist entity.
-func (prgu *PlaylistRuleGroupUpdate) SetPlaylist(p *Playlist) *PlaylistRuleGroupUpdate {
-	return prgu.SetPlaylistID(p.ID)
+func (_u *PlaylistRuleGroupUpdate) SetPlaylist(v *Playlist) *PlaylistRuleGroupUpdate {
+	return _u.SetPlaylistID(v.ID)
 }
 
 // AddRuleIDs adds the "rules" edge to the PlaylistRule entity by IDs.
-func (prgu *PlaylistRuleGroupUpdate) AddRuleIDs(ids ...uuid.UUID) *PlaylistRuleGroupUpdate {
-	prgu.mutation.AddRuleIDs(ids...)
-	return prgu
+func (_u *PlaylistRuleGroupUpdate) AddRuleIDs(ids ...uuid.UUID) *PlaylistRuleGroupUpdate {
+	_u.mutation.AddRuleIDs(ids...)
+	return _u
 }
 
 // AddRules adds the "rules" edges to the PlaylistRule entity.
-func (prgu *PlaylistRuleGroupUpdate) AddRules(p ...*PlaylistRule) *PlaylistRuleGroupUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *PlaylistRuleGroupUpdate) AddRules(v ...*PlaylistRule) *PlaylistRuleGroupUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return prgu.AddRuleIDs(ids...)
+	return _u.AddRuleIDs(ids...)
 }
 
 // Mutation returns the PlaylistRuleGroupMutation object of the builder.
-func (prgu *PlaylistRuleGroupUpdate) Mutation() *PlaylistRuleGroupMutation {
-	return prgu.mutation
+func (_u *PlaylistRuleGroupUpdate) Mutation() *PlaylistRuleGroupMutation {
+	return _u.mutation
 }
 
 // ClearPlaylist clears the "playlist" edge to the Playlist entity.
-func (prgu *PlaylistRuleGroupUpdate) ClearPlaylist() *PlaylistRuleGroupUpdate {
-	prgu.mutation.ClearPlaylist()
-	return prgu
+func (_u *PlaylistRuleGroupUpdate) ClearPlaylist() *PlaylistRuleGroupUpdate {
+	_u.mutation.ClearPlaylist()
+	return _u
 }
 
 // ClearRules clears all "rules" edges to the PlaylistRule entity.
-func (prgu *PlaylistRuleGroupUpdate) ClearRules() *PlaylistRuleGroupUpdate {
-	prgu.mutation.ClearRules()
-	return prgu
+func (_u *PlaylistRuleGroupUpdate) ClearRules() *PlaylistRuleGroupUpdate {
+	_u.mutation.ClearRules()
+	return _u
 }
 
 // RemoveRuleIDs removes the "rules" edge to PlaylistRule entities by IDs.
-func (prgu *PlaylistRuleGroupUpdate) RemoveRuleIDs(ids ...uuid.UUID) *PlaylistRuleGroupUpdate {
-	prgu.mutation.RemoveRuleIDs(ids...)
-	return prgu
+func (_u *PlaylistRuleGroupUpdate) RemoveRuleIDs(ids ...uuid.UUID) *PlaylistRuleGroupUpdate {
+	_u.mutation.RemoveRuleIDs(ids...)
+	return _u
 }
 
 // RemoveRules removes "rules" edges to PlaylistRule entities.
-func (prgu *PlaylistRuleGroupUpdate) RemoveRules(p ...*PlaylistRule) *PlaylistRuleGroupUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *PlaylistRuleGroupUpdate) RemoveRules(v ...*PlaylistRule) *PlaylistRuleGroupUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return prgu.RemoveRuleIDs(ids...)
+	return _u.RemoveRuleIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (prgu *PlaylistRuleGroupUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, prgu.sqlSave, prgu.mutation, prgu.hooks)
+func (_u *PlaylistRuleGroupUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (prgu *PlaylistRuleGroupUpdate) SaveX(ctx context.Context) int {
-	affected, err := prgu.Save(ctx)
+func (_u *PlaylistRuleGroupUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -138,53 +138,53 @@ func (prgu *PlaylistRuleGroupUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (prgu *PlaylistRuleGroupUpdate) Exec(ctx context.Context) error {
-	_, err := prgu.Save(ctx)
+func (_u *PlaylistRuleGroupUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (prgu *PlaylistRuleGroupUpdate) ExecX(ctx context.Context) {
-	if err := prgu.Exec(ctx); err != nil {
+func (_u *PlaylistRuleGroupUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (prgu *PlaylistRuleGroupUpdate) check() error {
-	if v, ok := prgu.mutation.Operator(); ok {
+func (_u *PlaylistRuleGroupUpdate) check() error {
+	if v, ok := _u.mutation.Operator(); ok {
 		if err := playlistrulegroup.OperatorValidator(v); err != nil {
 			return &ValidationError{Name: "operator", err: fmt.Errorf(`ent: validator failed for field "PlaylistRuleGroup.operator": %w`, err)}
 		}
 	}
-	if prgu.mutation.PlaylistCleared() && len(prgu.mutation.PlaylistIDs()) > 0 {
+	if _u.mutation.PlaylistCleared() && len(_u.mutation.PlaylistIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PlaylistRuleGroup.playlist"`)
 	}
 	return nil
 }
 
-func (prgu *PlaylistRuleGroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := prgu.check(); err != nil {
-		return n, err
+func (_u *PlaylistRuleGroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(playlistrulegroup.Table, playlistrulegroup.Columns, sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID))
-	if ps := prgu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := prgu.mutation.Operator(); ok {
+	if value, ok := _u.mutation.Operator(); ok {
 		_spec.SetField(playlistrulegroup.FieldOperator, field.TypeEnum, value)
 	}
-	if value, ok := prgu.mutation.Position(); ok {
+	if value, ok := _u.mutation.Position(); ok {
 		_spec.SetField(playlistrulegroup.FieldPosition, field.TypeInt, value)
 	}
-	if value, ok := prgu.mutation.AddedPosition(); ok {
+	if value, ok := _u.mutation.AddedPosition(); ok {
 		_spec.AddField(playlistrulegroup.FieldPosition, field.TypeInt, value)
 	}
-	if prgu.mutation.PlaylistCleared() {
+	if _u.mutation.PlaylistCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -197,7 +197,7 @@ func (prgu *PlaylistRuleGroupUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := prgu.mutation.PlaylistIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.PlaylistIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -213,7 +213,7 @@ func (prgu *PlaylistRuleGroupUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if prgu.mutation.RulesCleared() {
+	if _u.mutation.RulesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -226,7 +226,7 @@ func (prgu *PlaylistRuleGroupUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := prgu.mutation.RemovedRulesIDs(); len(nodes) > 0 && !prgu.mutation.RulesCleared() {
+	if nodes := _u.mutation.RemovedRulesIDs(); len(nodes) > 0 && !_u.mutation.RulesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -242,7 +242,7 @@ func (prgu *PlaylistRuleGroupUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := prgu.mutation.RulesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RulesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -258,7 +258,7 @@ func (prgu *PlaylistRuleGroupUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, prgu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{playlistrulegroup.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -266,8 +266,8 @@ func (prgu *PlaylistRuleGroupUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		return 0, err
 	}
-	prgu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // PlaylistRuleGroupUpdateOne is the builder for updating a single PlaylistRuleGroup entity.
@@ -279,119 +279,119 @@ type PlaylistRuleGroupUpdateOne struct {
 }
 
 // SetOperator sets the "operator" field.
-func (prguo *PlaylistRuleGroupUpdateOne) SetOperator(pl playlistrulegroup.Operator) *PlaylistRuleGroupUpdateOne {
-	prguo.mutation.SetOperator(pl)
-	return prguo
+func (_u *PlaylistRuleGroupUpdateOne) SetOperator(v playlistrulegroup.Operator) *PlaylistRuleGroupUpdateOne {
+	_u.mutation.SetOperator(v)
+	return _u
 }
 
 // SetNillableOperator sets the "operator" field if the given value is not nil.
-func (prguo *PlaylistRuleGroupUpdateOne) SetNillableOperator(pl *playlistrulegroup.Operator) *PlaylistRuleGroupUpdateOne {
-	if pl != nil {
-		prguo.SetOperator(*pl)
+func (_u *PlaylistRuleGroupUpdateOne) SetNillableOperator(v *playlistrulegroup.Operator) *PlaylistRuleGroupUpdateOne {
+	if v != nil {
+		_u.SetOperator(*v)
 	}
-	return prguo
+	return _u
 }
 
 // SetPosition sets the "position" field.
-func (prguo *PlaylistRuleGroupUpdateOne) SetPosition(i int) *PlaylistRuleGroupUpdateOne {
-	prguo.mutation.ResetPosition()
-	prguo.mutation.SetPosition(i)
-	return prguo
+func (_u *PlaylistRuleGroupUpdateOne) SetPosition(v int) *PlaylistRuleGroupUpdateOne {
+	_u.mutation.ResetPosition()
+	_u.mutation.SetPosition(v)
+	return _u
 }
 
 // SetNillablePosition sets the "position" field if the given value is not nil.
-func (prguo *PlaylistRuleGroupUpdateOne) SetNillablePosition(i *int) *PlaylistRuleGroupUpdateOne {
-	if i != nil {
-		prguo.SetPosition(*i)
+func (_u *PlaylistRuleGroupUpdateOne) SetNillablePosition(v *int) *PlaylistRuleGroupUpdateOne {
+	if v != nil {
+		_u.SetPosition(*v)
 	}
-	return prguo
+	return _u
 }
 
-// AddPosition adds i to the "position" field.
-func (prguo *PlaylistRuleGroupUpdateOne) AddPosition(i int) *PlaylistRuleGroupUpdateOne {
-	prguo.mutation.AddPosition(i)
-	return prguo
+// AddPosition adds value to the "position" field.
+func (_u *PlaylistRuleGroupUpdateOne) AddPosition(v int) *PlaylistRuleGroupUpdateOne {
+	_u.mutation.AddPosition(v)
+	return _u
 }
 
 // SetPlaylistID sets the "playlist" edge to the Playlist entity by ID.
-func (prguo *PlaylistRuleGroupUpdateOne) SetPlaylistID(id uuid.UUID) *PlaylistRuleGroupUpdateOne {
-	prguo.mutation.SetPlaylistID(id)
-	return prguo
+func (_u *PlaylistRuleGroupUpdateOne) SetPlaylistID(id uuid.UUID) *PlaylistRuleGroupUpdateOne {
+	_u.mutation.SetPlaylistID(id)
+	return _u
 }
 
 // SetPlaylist sets the "playlist" edge to the Playlist entity.
-func (prguo *PlaylistRuleGroupUpdateOne) SetPlaylist(p *Playlist) *PlaylistRuleGroupUpdateOne {
-	return prguo.SetPlaylistID(p.ID)
+func (_u *PlaylistRuleGroupUpdateOne) SetPlaylist(v *Playlist) *PlaylistRuleGroupUpdateOne {
+	return _u.SetPlaylistID(v.ID)
 }
 
 // AddRuleIDs adds the "rules" edge to the PlaylistRule entity by IDs.
-func (prguo *PlaylistRuleGroupUpdateOne) AddRuleIDs(ids ...uuid.UUID) *PlaylistRuleGroupUpdateOne {
-	prguo.mutation.AddRuleIDs(ids...)
-	return prguo
+func (_u *PlaylistRuleGroupUpdateOne) AddRuleIDs(ids ...uuid.UUID) *PlaylistRuleGroupUpdateOne {
+	_u.mutation.AddRuleIDs(ids...)
+	return _u
 }
 
 // AddRules adds the "rules" edges to the PlaylistRule entity.
-func (prguo *PlaylistRuleGroupUpdateOne) AddRules(p ...*PlaylistRule) *PlaylistRuleGroupUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *PlaylistRuleGroupUpdateOne) AddRules(v ...*PlaylistRule) *PlaylistRuleGroupUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return prguo.AddRuleIDs(ids...)
+	return _u.AddRuleIDs(ids...)
 }
 
 // Mutation returns the PlaylistRuleGroupMutation object of the builder.
-func (prguo *PlaylistRuleGroupUpdateOne) Mutation() *PlaylistRuleGroupMutation {
-	return prguo.mutation
+func (_u *PlaylistRuleGroupUpdateOne) Mutation() *PlaylistRuleGroupMutation {
+	return _u.mutation
 }
 
 // ClearPlaylist clears the "playlist" edge to the Playlist entity.
-func (prguo *PlaylistRuleGroupUpdateOne) ClearPlaylist() *PlaylistRuleGroupUpdateOne {
-	prguo.mutation.ClearPlaylist()
-	return prguo
+func (_u *PlaylistRuleGroupUpdateOne) ClearPlaylist() *PlaylistRuleGroupUpdateOne {
+	_u.mutation.ClearPlaylist()
+	return _u
 }
 
 // ClearRules clears all "rules" edges to the PlaylistRule entity.
-func (prguo *PlaylistRuleGroupUpdateOne) ClearRules() *PlaylistRuleGroupUpdateOne {
-	prguo.mutation.ClearRules()
-	return prguo
+func (_u *PlaylistRuleGroupUpdateOne) ClearRules() *PlaylistRuleGroupUpdateOne {
+	_u.mutation.ClearRules()
+	return _u
 }
 
 // RemoveRuleIDs removes the "rules" edge to PlaylistRule entities by IDs.
-func (prguo *PlaylistRuleGroupUpdateOne) RemoveRuleIDs(ids ...uuid.UUID) *PlaylistRuleGroupUpdateOne {
-	prguo.mutation.RemoveRuleIDs(ids...)
-	return prguo
+func (_u *PlaylistRuleGroupUpdateOne) RemoveRuleIDs(ids ...uuid.UUID) *PlaylistRuleGroupUpdateOne {
+	_u.mutation.RemoveRuleIDs(ids...)
+	return _u
 }
 
 // RemoveRules removes "rules" edges to PlaylistRule entities.
-func (prguo *PlaylistRuleGroupUpdateOne) RemoveRules(p ...*PlaylistRule) *PlaylistRuleGroupUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *PlaylistRuleGroupUpdateOne) RemoveRules(v ...*PlaylistRule) *PlaylistRuleGroupUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return prguo.RemoveRuleIDs(ids...)
+	return _u.RemoveRuleIDs(ids...)
 }
 
 // Where appends a list predicates to the PlaylistRuleGroupUpdate builder.
-func (prguo *PlaylistRuleGroupUpdateOne) Where(ps ...predicate.PlaylistRuleGroup) *PlaylistRuleGroupUpdateOne {
-	prguo.mutation.Where(ps...)
-	return prguo
+func (_u *PlaylistRuleGroupUpdateOne) Where(ps ...predicate.PlaylistRuleGroup) *PlaylistRuleGroupUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (prguo *PlaylistRuleGroupUpdateOne) Select(field string, fields ...string) *PlaylistRuleGroupUpdateOne {
-	prguo.fields = append([]string{field}, fields...)
-	return prguo
+func (_u *PlaylistRuleGroupUpdateOne) Select(field string, fields ...string) *PlaylistRuleGroupUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated PlaylistRuleGroup entity.
-func (prguo *PlaylistRuleGroupUpdateOne) Save(ctx context.Context) (*PlaylistRuleGroup, error) {
-	return withHooks(ctx, prguo.sqlSave, prguo.mutation, prguo.hooks)
+func (_u *PlaylistRuleGroupUpdateOne) Save(ctx context.Context) (*PlaylistRuleGroup, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (prguo *PlaylistRuleGroupUpdateOne) SaveX(ctx context.Context) *PlaylistRuleGroup {
-	node, err := prguo.Save(ctx)
+func (_u *PlaylistRuleGroupUpdateOne) SaveX(ctx context.Context) *PlaylistRuleGroup {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -399,42 +399,42 @@ func (prguo *PlaylistRuleGroupUpdateOne) SaveX(ctx context.Context) *PlaylistRul
 }
 
 // Exec executes the query on the entity.
-func (prguo *PlaylistRuleGroupUpdateOne) Exec(ctx context.Context) error {
-	_, err := prguo.Save(ctx)
+func (_u *PlaylistRuleGroupUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (prguo *PlaylistRuleGroupUpdateOne) ExecX(ctx context.Context) {
-	if err := prguo.Exec(ctx); err != nil {
+func (_u *PlaylistRuleGroupUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (prguo *PlaylistRuleGroupUpdateOne) check() error {
-	if v, ok := prguo.mutation.Operator(); ok {
+func (_u *PlaylistRuleGroupUpdateOne) check() error {
+	if v, ok := _u.mutation.Operator(); ok {
 		if err := playlistrulegroup.OperatorValidator(v); err != nil {
 			return &ValidationError{Name: "operator", err: fmt.Errorf(`ent: validator failed for field "PlaylistRuleGroup.operator": %w`, err)}
 		}
 	}
-	if prguo.mutation.PlaylistCleared() && len(prguo.mutation.PlaylistIDs()) > 0 {
+	if _u.mutation.PlaylistCleared() && len(_u.mutation.PlaylistIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PlaylistRuleGroup.playlist"`)
 	}
 	return nil
 }
 
-func (prguo *PlaylistRuleGroupUpdateOne) sqlSave(ctx context.Context) (_node *PlaylistRuleGroup, err error) {
-	if err := prguo.check(); err != nil {
+func (_u *PlaylistRuleGroupUpdateOne) sqlSave(ctx context.Context) (_node *PlaylistRuleGroup, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(playlistrulegroup.Table, playlistrulegroup.Columns, sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID))
-	id, ok := prguo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "PlaylistRuleGroup.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := prguo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, playlistrulegroup.FieldID)
 		for _, f := range fields {
@@ -446,23 +446,23 @@ func (prguo *PlaylistRuleGroupUpdateOne) sqlSave(ctx context.Context) (_node *Pl
 			}
 		}
 	}
-	if ps := prguo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := prguo.mutation.Operator(); ok {
+	if value, ok := _u.mutation.Operator(); ok {
 		_spec.SetField(playlistrulegroup.FieldOperator, field.TypeEnum, value)
 	}
-	if value, ok := prguo.mutation.Position(); ok {
+	if value, ok := _u.mutation.Position(); ok {
 		_spec.SetField(playlistrulegroup.FieldPosition, field.TypeInt, value)
 	}
-	if value, ok := prguo.mutation.AddedPosition(); ok {
+	if value, ok := _u.mutation.AddedPosition(); ok {
 		_spec.AddField(playlistrulegroup.FieldPosition, field.TypeInt, value)
 	}
-	if prguo.mutation.PlaylistCleared() {
+	if _u.mutation.PlaylistCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -475,7 +475,7 @@ func (prguo *PlaylistRuleGroupUpdateOne) sqlSave(ctx context.Context) (_node *Pl
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := prguo.mutation.PlaylistIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.PlaylistIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -491,7 +491,7 @@ func (prguo *PlaylistRuleGroupUpdateOne) sqlSave(ctx context.Context) (_node *Pl
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if prguo.mutation.RulesCleared() {
+	if _u.mutation.RulesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -504,7 +504,7 @@ func (prguo *PlaylistRuleGroupUpdateOne) sqlSave(ctx context.Context) (_node *Pl
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := prguo.mutation.RemovedRulesIDs(); len(nodes) > 0 && !prguo.mutation.RulesCleared() {
+	if nodes := _u.mutation.RemovedRulesIDs(); len(nodes) > 0 && !_u.mutation.RulesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -520,7 +520,7 @@ func (prguo *PlaylistRuleGroupUpdateOne) sqlSave(ctx context.Context) (_node *Pl
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := prguo.mutation.RulesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RulesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -536,10 +536,10 @@ func (prguo *PlaylistRuleGroupUpdateOne) sqlSave(ctx context.Context) (_node *Pl
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &PlaylistRuleGroup{config: prguo.config}
+	_node = &PlaylistRuleGroup{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, prguo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{playlistrulegroup.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -547,6 +547,6 @@ func (prguo *PlaylistRuleGroupUpdateOne) sqlSave(ctx context.Context) (_node *Pl
 		}
 		return nil, err
 	}
-	prguo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

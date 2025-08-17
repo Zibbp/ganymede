@@ -20,56 +20,56 @@ type LiveCategoryDelete struct {
 }
 
 // Where appends a list predicates to the LiveCategoryDelete builder.
-func (lcd *LiveCategoryDelete) Where(ps ...predicate.LiveCategory) *LiveCategoryDelete {
-	lcd.mutation.Where(ps...)
-	return lcd
+func (_d *LiveCategoryDelete) Where(ps ...predicate.LiveCategory) *LiveCategoryDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (lcd *LiveCategoryDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, lcd.sqlExec, lcd.mutation, lcd.hooks)
+func (_d *LiveCategoryDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (lcd *LiveCategoryDelete) ExecX(ctx context.Context) int {
-	n, err := lcd.Exec(ctx)
+func (_d *LiveCategoryDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (lcd *LiveCategoryDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *LiveCategoryDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(livecategory.Table, sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID))
-	if ps := lcd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, lcd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	lcd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // LiveCategoryDeleteOne is the builder for deleting a single LiveCategory entity.
 type LiveCategoryDeleteOne struct {
-	lcd *LiveCategoryDelete
+	_d *LiveCategoryDelete
 }
 
 // Where appends a list predicates to the LiveCategoryDelete builder.
-func (lcdo *LiveCategoryDeleteOne) Where(ps ...predicate.LiveCategory) *LiveCategoryDeleteOne {
-	lcdo.lcd.mutation.Where(ps...)
-	return lcdo
+func (_d *LiveCategoryDeleteOne) Where(ps ...predicate.LiveCategory) *LiveCategoryDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (lcdo *LiveCategoryDeleteOne) Exec(ctx context.Context) error {
-	n, err := lcdo.lcd.Exec(ctx)
+func (_d *LiveCategoryDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (lcdo *LiveCategoryDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (lcdo *LiveCategoryDeleteOne) ExecX(ctx context.Context) {
-	if err := lcdo.Exec(ctx); err != nil {
+func (_d *LiveCategoryDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

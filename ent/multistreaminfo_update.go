@@ -24,68 +24,68 @@ type MultistreamInfoUpdate struct {
 }
 
 // Where appends a list predicates to the MultistreamInfoUpdate builder.
-func (miu *MultistreamInfoUpdate) Where(ps ...predicate.MultistreamInfo) *MultistreamInfoUpdate {
-	miu.mutation.Where(ps...)
-	return miu
+func (_u *MultistreamInfoUpdate) Where(ps ...predicate.MultistreamInfo) *MultistreamInfoUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetDelayMs sets the "delay_ms" field.
-func (miu *MultistreamInfoUpdate) SetDelayMs(i int) *MultistreamInfoUpdate {
-	miu.mutation.ResetDelayMs()
-	miu.mutation.SetDelayMs(i)
-	return miu
+func (_u *MultistreamInfoUpdate) SetDelayMs(v int) *MultistreamInfoUpdate {
+	_u.mutation.ResetDelayMs()
+	_u.mutation.SetDelayMs(v)
+	return _u
 }
 
 // SetNillableDelayMs sets the "delay_ms" field if the given value is not nil.
-func (miu *MultistreamInfoUpdate) SetNillableDelayMs(i *int) *MultistreamInfoUpdate {
-	if i != nil {
-		miu.SetDelayMs(*i)
+func (_u *MultistreamInfoUpdate) SetNillableDelayMs(v *int) *MultistreamInfoUpdate {
+	if v != nil {
+		_u.SetDelayMs(*v)
 	}
-	return miu
+	return _u
 }
 
-// AddDelayMs adds i to the "delay_ms" field.
-func (miu *MultistreamInfoUpdate) AddDelayMs(i int) *MultistreamInfoUpdate {
-	miu.mutation.AddDelayMs(i)
-	return miu
+// AddDelayMs adds value to the "delay_ms" field.
+func (_u *MultistreamInfoUpdate) AddDelayMs(v int) *MultistreamInfoUpdate {
+	_u.mutation.AddDelayMs(v)
+	return _u
 }
 
 // ClearDelayMs clears the value of the "delay_ms" field.
-func (miu *MultistreamInfoUpdate) ClearDelayMs() *MultistreamInfoUpdate {
-	miu.mutation.ClearDelayMs()
-	return miu
+func (_u *MultistreamInfoUpdate) ClearDelayMs() *MultistreamInfoUpdate {
+	_u.mutation.ClearDelayMs()
+	return _u
 }
 
 // SetPlaylistID sets the "playlist" edge to the Playlist entity by ID.
-func (miu *MultistreamInfoUpdate) SetPlaylistID(id uuid.UUID) *MultistreamInfoUpdate {
-	miu.mutation.SetPlaylistID(id)
-	return miu
+func (_u *MultistreamInfoUpdate) SetPlaylistID(id uuid.UUID) *MultistreamInfoUpdate {
+	_u.mutation.SetPlaylistID(id)
+	return _u
 }
 
 // SetPlaylist sets the "playlist" edge to the Playlist entity.
-func (miu *MultistreamInfoUpdate) SetPlaylist(p *Playlist) *MultistreamInfoUpdate {
-	return miu.SetPlaylistID(p.ID)
+func (_u *MultistreamInfoUpdate) SetPlaylist(v *Playlist) *MultistreamInfoUpdate {
+	return _u.SetPlaylistID(v.ID)
 }
 
 // Mutation returns the MultistreamInfoMutation object of the builder.
-func (miu *MultistreamInfoUpdate) Mutation() *MultistreamInfoMutation {
-	return miu.mutation
+func (_u *MultistreamInfoUpdate) Mutation() *MultistreamInfoMutation {
+	return _u.mutation
 }
 
 // ClearPlaylist clears the "playlist" edge to the Playlist entity.
-func (miu *MultistreamInfoUpdate) ClearPlaylist() *MultistreamInfoUpdate {
-	miu.mutation.ClearPlaylist()
-	return miu
+func (_u *MultistreamInfoUpdate) ClearPlaylist() *MultistreamInfoUpdate {
+	_u.mutation.ClearPlaylist()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (miu *MultistreamInfoUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, miu.sqlSave, miu.mutation, miu.hooks)
+func (_u *MultistreamInfoUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (miu *MultistreamInfoUpdate) SaveX(ctx context.Context) int {
-	affected, err := miu.Save(ctx)
+func (_u *MultistreamInfoUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -93,51 +93,51 @@ func (miu *MultistreamInfoUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (miu *MultistreamInfoUpdate) Exec(ctx context.Context) error {
-	_, err := miu.Save(ctx)
+func (_u *MultistreamInfoUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (miu *MultistreamInfoUpdate) ExecX(ctx context.Context) {
-	if err := miu.Exec(ctx); err != nil {
+func (_u *MultistreamInfoUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (miu *MultistreamInfoUpdate) check() error {
-	if miu.mutation.VodCleared() && len(miu.mutation.VodIDs()) > 0 {
+func (_u *MultistreamInfoUpdate) check() error {
+	if _u.mutation.VodCleared() && len(_u.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MultistreamInfo.vod"`)
 	}
-	if miu.mutation.PlaylistCleared() && len(miu.mutation.PlaylistIDs()) > 0 {
+	if _u.mutation.PlaylistCleared() && len(_u.mutation.PlaylistIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MultistreamInfo.playlist"`)
 	}
 	return nil
 }
 
-func (miu *MultistreamInfoUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := miu.check(); err != nil {
-		return n, err
+func (_u *MultistreamInfoUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(multistreaminfo.Table, multistreaminfo.Columns, sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt))
-	if ps := miu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := miu.mutation.DelayMs(); ok {
+	if value, ok := _u.mutation.DelayMs(); ok {
 		_spec.SetField(multistreaminfo.FieldDelayMs, field.TypeInt, value)
 	}
-	if value, ok := miu.mutation.AddedDelayMs(); ok {
+	if value, ok := _u.mutation.AddedDelayMs(); ok {
 		_spec.AddField(multistreaminfo.FieldDelayMs, field.TypeInt, value)
 	}
-	if miu.mutation.DelayMsCleared() {
+	if _u.mutation.DelayMsCleared() {
 		_spec.ClearField(multistreaminfo.FieldDelayMs, field.TypeInt)
 	}
-	if miu.mutation.PlaylistCleared() {
+	if _u.mutation.PlaylistCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -150,7 +150,7 @@ func (miu *MultistreamInfoUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := miu.mutation.PlaylistIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.PlaylistIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -166,7 +166,7 @@ func (miu *MultistreamInfoUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, miu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{multistreaminfo.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -174,8 +174,8 @@ func (miu *MultistreamInfoUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		return 0, err
 	}
-	miu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // MultistreamInfoUpdateOne is the builder for updating a single MultistreamInfo entity.
@@ -187,75 +187,75 @@ type MultistreamInfoUpdateOne struct {
 }
 
 // SetDelayMs sets the "delay_ms" field.
-func (miuo *MultistreamInfoUpdateOne) SetDelayMs(i int) *MultistreamInfoUpdateOne {
-	miuo.mutation.ResetDelayMs()
-	miuo.mutation.SetDelayMs(i)
-	return miuo
+func (_u *MultistreamInfoUpdateOne) SetDelayMs(v int) *MultistreamInfoUpdateOne {
+	_u.mutation.ResetDelayMs()
+	_u.mutation.SetDelayMs(v)
+	return _u
 }
 
 // SetNillableDelayMs sets the "delay_ms" field if the given value is not nil.
-func (miuo *MultistreamInfoUpdateOne) SetNillableDelayMs(i *int) *MultistreamInfoUpdateOne {
-	if i != nil {
-		miuo.SetDelayMs(*i)
+func (_u *MultistreamInfoUpdateOne) SetNillableDelayMs(v *int) *MultistreamInfoUpdateOne {
+	if v != nil {
+		_u.SetDelayMs(*v)
 	}
-	return miuo
+	return _u
 }
 
-// AddDelayMs adds i to the "delay_ms" field.
-func (miuo *MultistreamInfoUpdateOne) AddDelayMs(i int) *MultistreamInfoUpdateOne {
-	miuo.mutation.AddDelayMs(i)
-	return miuo
+// AddDelayMs adds value to the "delay_ms" field.
+func (_u *MultistreamInfoUpdateOne) AddDelayMs(v int) *MultistreamInfoUpdateOne {
+	_u.mutation.AddDelayMs(v)
+	return _u
 }
 
 // ClearDelayMs clears the value of the "delay_ms" field.
-func (miuo *MultistreamInfoUpdateOne) ClearDelayMs() *MultistreamInfoUpdateOne {
-	miuo.mutation.ClearDelayMs()
-	return miuo
+func (_u *MultistreamInfoUpdateOne) ClearDelayMs() *MultistreamInfoUpdateOne {
+	_u.mutation.ClearDelayMs()
+	return _u
 }
 
 // SetPlaylistID sets the "playlist" edge to the Playlist entity by ID.
-func (miuo *MultistreamInfoUpdateOne) SetPlaylistID(id uuid.UUID) *MultistreamInfoUpdateOne {
-	miuo.mutation.SetPlaylistID(id)
-	return miuo
+func (_u *MultistreamInfoUpdateOne) SetPlaylistID(id uuid.UUID) *MultistreamInfoUpdateOne {
+	_u.mutation.SetPlaylistID(id)
+	return _u
 }
 
 // SetPlaylist sets the "playlist" edge to the Playlist entity.
-func (miuo *MultistreamInfoUpdateOne) SetPlaylist(p *Playlist) *MultistreamInfoUpdateOne {
-	return miuo.SetPlaylistID(p.ID)
+func (_u *MultistreamInfoUpdateOne) SetPlaylist(v *Playlist) *MultistreamInfoUpdateOne {
+	return _u.SetPlaylistID(v.ID)
 }
 
 // Mutation returns the MultistreamInfoMutation object of the builder.
-func (miuo *MultistreamInfoUpdateOne) Mutation() *MultistreamInfoMutation {
-	return miuo.mutation
+func (_u *MultistreamInfoUpdateOne) Mutation() *MultistreamInfoMutation {
+	return _u.mutation
 }
 
 // ClearPlaylist clears the "playlist" edge to the Playlist entity.
-func (miuo *MultistreamInfoUpdateOne) ClearPlaylist() *MultistreamInfoUpdateOne {
-	miuo.mutation.ClearPlaylist()
-	return miuo
+func (_u *MultistreamInfoUpdateOne) ClearPlaylist() *MultistreamInfoUpdateOne {
+	_u.mutation.ClearPlaylist()
+	return _u
 }
 
 // Where appends a list predicates to the MultistreamInfoUpdate builder.
-func (miuo *MultistreamInfoUpdateOne) Where(ps ...predicate.MultistreamInfo) *MultistreamInfoUpdateOne {
-	miuo.mutation.Where(ps...)
-	return miuo
+func (_u *MultistreamInfoUpdateOne) Where(ps ...predicate.MultistreamInfo) *MultistreamInfoUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (miuo *MultistreamInfoUpdateOne) Select(field string, fields ...string) *MultistreamInfoUpdateOne {
-	miuo.fields = append([]string{field}, fields...)
-	return miuo
+func (_u *MultistreamInfoUpdateOne) Select(field string, fields ...string) *MultistreamInfoUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated MultistreamInfo entity.
-func (miuo *MultistreamInfoUpdateOne) Save(ctx context.Context) (*MultistreamInfo, error) {
-	return withHooks(ctx, miuo.sqlSave, miuo.mutation, miuo.hooks)
+func (_u *MultistreamInfoUpdateOne) Save(ctx context.Context) (*MultistreamInfo, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (miuo *MultistreamInfoUpdateOne) SaveX(ctx context.Context) *MultistreamInfo {
-	node, err := miuo.Save(ctx)
+func (_u *MultistreamInfoUpdateOne) SaveX(ctx context.Context) *MultistreamInfo {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -263,40 +263,40 @@ func (miuo *MultistreamInfoUpdateOne) SaveX(ctx context.Context) *MultistreamInf
 }
 
 // Exec executes the query on the entity.
-func (miuo *MultistreamInfoUpdateOne) Exec(ctx context.Context) error {
-	_, err := miuo.Save(ctx)
+func (_u *MultistreamInfoUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (miuo *MultistreamInfoUpdateOne) ExecX(ctx context.Context) {
-	if err := miuo.Exec(ctx); err != nil {
+func (_u *MultistreamInfoUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (miuo *MultistreamInfoUpdateOne) check() error {
-	if miuo.mutation.VodCleared() && len(miuo.mutation.VodIDs()) > 0 {
+func (_u *MultistreamInfoUpdateOne) check() error {
+	if _u.mutation.VodCleared() && len(_u.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MultistreamInfo.vod"`)
 	}
-	if miuo.mutation.PlaylistCleared() && len(miuo.mutation.PlaylistIDs()) > 0 {
+	if _u.mutation.PlaylistCleared() && len(_u.mutation.PlaylistIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MultistreamInfo.playlist"`)
 	}
 	return nil
 }
 
-func (miuo *MultistreamInfoUpdateOne) sqlSave(ctx context.Context) (_node *MultistreamInfo, err error) {
-	if err := miuo.check(); err != nil {
+func (_u *MultistreamInfoUpdateOne) sqlSave(ctx context.Context) (_node *MultistreamInfo, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(multistreaminfo.Table, multistreaminfo.Columns, sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt))
-	id, ok := miuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "MultistreamInfo.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := miuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, multistreaminfo.FieldID)
 		for _, f := range fields {
@@ -308,23 +308,23 @@ func (miuo *MultistreamInfoUpdateOne) sqlSave(ctx context.Context) (_node *Multi
 			}
 		}
 	}
-	if ps := miuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := miuo.mutation.DelayMs(); ok {
+	if value, ok := _u.mutation.DelayMs(); ok {
 		_spec.SetField(multistreaminfo.FieldDelayMs, field.TypeInt, value)
 	}
-	if value, ok := miuo.mutation.AddedDelayMs(); ok {
+	if value, ok := _u.mutation.AddedDelayMs(); ok {
 		_spec.AddField(multistreaminfo.FieldDelayMs, field.TypeInt, value)
 	}
-	if miuo.mutation.DelayMsCleared() {
+	if _u.mutation.DelayMsCleared() {
 		_spec.ClearField(multistreaminfo.FieldDelayMs, field.TypeInt)
 	}
-	if miuo.mutation.PlaylistCleared() {
+	if _u.mutation.PlaylistCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -337,7 +337,7 @@ func (miuo *MultistreamInfoUpdateOne) sqlSave(ctx context.Context) (_node *Multi
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := miuo.mutation.PlaylistIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.PlaylistIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -353,10 +353,10 @@ func (miuo *MultistreamInfoUpdateOne) sqlSave(ctx context.Context) (_node *Multi
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &MultistreamInfo{config: miuo.config}
+	_node = &MultistreamInfo{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, miuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{multistreaminfo.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -364,6 +364,6 @@ func (miuo *MultistreamInfoUpdateOne) sqlSave(ctx context.Context) (_node *Multi
 		}
 		return nil, err
 	}
-	miuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

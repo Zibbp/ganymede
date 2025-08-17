@@ -24,83 +24,83 @@ type LiveTitleRegexUpdate struct {
 }
 
 // Where appends a list predicates to the LiveTitleRegexUpdate builder.
-func (ltru *LiveTitleRegexUpdate) Where(ps ...predicate.LiveTitleRegex) *LiveTitleRegexUpdate {
-	ltru.mutation.Where(ps...)
-	return ltru
+func (_u *LiveTitleRegexUpdate) Where(ps ...predicate.LiveTitleRegex) *LiveTitleRegexUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetNegative sets the "negative" field.
-func (ltru *LiveTitleRegexUpdate) SetNegative(b bool) *LiveTitleRegexUpdate {
-	ltru.mutation.SetNegative(b)
-	return ltru
+func (_u *LiveTitleRegexUpdate) SetNegative(v bool) *LiveTitleRegexUpdate {
+	_u.mutation.SetNegative(v)
+	return _u
 }
 
 // SetNillableNegative sets the "negative" field if the given value is not nil.
-func (ltru *LiveTitleRegexUpdate) SetNillableNegative(b *bool) *LiveTitleRegexUpdate {
-	if b != nil {
-		ltru.SetNegative(*b)
+func (_u *LiveTitleRegexUpdate) SetNillableNegative(v *bool) *LiveTitleRegexUpdate {
+	if v != nil {
+		_u.SetNegative(*v)
 	}
-	return ltru
+	return _u
 }
 
 // SetRegex sets the "regex" field.
-func (ltru *LiveTitleRegexUpdate) SetRegex(s string) *LiveTitleRegexUpdate {
-	ltru.mutation.SetRegex(s)
-	return ltru
+func (_u *LiveTitleRegexUpdate) SetRegex(v string) *LiveTitleRegexUpdate {
+	_u.mutation.SetRegex(v)
+	return _u
 }
 
 // SetNillableRegex sets the "regex" field if the given value is not nil.
-func (ltru *LiveTitleRegexUpdate) SetNillableRegex(s *string) *LiveTitleRegexUpdate {
-	if s != nil {
-		ltru.SetRegex(*s)
+func (_u *LiveTitleRegexUpdate) SetNillableRegex(v *string) *LiveTitleRegexUpdate {
+	if v != nil {
+		_u.SetRegex(*v)
 	}
-	return ltru
+	return _u
 }
 
 // SetApplyToVideos sets the "apply_to_videos" field.
-func (ltru *LiveTitleRegexUpdate) SetApplyToVideos(b bool) *LiveTitleRegexUpdate {
-	ltru.mutation.SetApplyToVideos(b)
-	return ltru
+func (_u *LiveTitleRegexUpdate) SetApplyToVideos(v bool) *LiveTitleRegexUpdate {
+	_u.mutation.SetApplyToVideos(v)
+	return _u
 }
 
 // SetNillableApplyToVideos sets the "apply_to_videos" field if the given value is not nil.
-func (ltru *LiveTitleRegexUpdate) SetNillableApplyToVideos(b *bool) *LiveTitleRegexUpdate {
-	if b != nil {
-		ltru.SetApplyToVideos(*b)
+func (_u *LiveTitleRegexUpdate) SetNillableApplyToVideos(v *bool) *LiveTitleRegexUpdate {
+	if v != nil {
+		_u.SetApplyToVideos(*v)
 	}
-	return ltru
+	return _u
 }
 
 // SetLiveID sets the "live" edge to the Live entity by ID.
-func (ltru *LiveTitleRegexUpdate) SetLiveID(id uuid.UUID) *LiveTitleRegexUpdate {
-	ltru.mutation.SetLiveID(id)
-	return ltru
+func (_u *LiveTitleRegexUpdate) SetLiveID(id uuid.UUID) *LiveTitleRegexUpdate {
+	_u.mutation.SetLiveID(id)
+	return _u
 }
 
 // SetLive sets the "live" edge to the Live entity.
-func (ltru *LiveTitleRegexUpdate) SetLive(l *Live) *LiveTitleRegexUpdate {
-	return ltru.SetLiveID(l.ID)
+func (_u *LiveTitleRegexUpdate) SetLive(v *Live) *LiveTitleRegexUpdate {
+	return _u.SetLiveID(v.ID)
 }
 
 // Mutation returns the LiveTitleRegexMutation object of the builder.
-func (ltru *LiveTitleRegexUpdate) Mutation() *LiveTitleRegexMutation {
-	return ltru.mutation
+func (_u *LiveTitleRegexUpdate) Mutation() *LiveTitleRegexMutation {
+	return _u.mutation
 }
 
 // ClearLive clears the "live" edge to the Live entity.
-func (ltru *LiveTitleRegexUpdate) ClearLive() *LiveTitleRegexUpdate {
-	ltru.mutation.ClearLive()
-	return ltru
+func (_u *LiveTitleRegexUpdate) ClearLive() *LiveTitleRegexUpdate {
+	_u.mutation.ClearLive()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (ltru *LiveTitleRegexUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, ltru.sqlSave, ltru.mutation, ltru.hooks)
+func (_u *LiveTitleRegexUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ltru *LiveTitleRegexUpdate) SaveX(ctx context.Context) int {
-	affected, err := ltru.Save(ctx)
+func (_u *LiveTitleRegexUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -108,48 +108,48 @@ func (ltru *LiveTitleRegexUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (ltru *LiveTitleRegexUpdate) Exec(ctx context.Context) error {
-	_, err := ltru.Save(ctx)
+func (_u *LiveTitleRegexUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ltru *LiveTitleRegexUpdate) ExecX(ctx context.Context) {
-	if err := ltru.Exec(ctx); err != nil {
+func (_u *LiveTitleRegexUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ltru *LiveTitleRegexUpdate) check() error {
-	if ltru.mutation.LiveCleared() && len(ltru.mutation.LiveIDs()) > 0 {
+func (_u *LiveTitleRegexUpdate) check() error {
+	if _u.mutation.LiveCleared() && len(_u.mutation.LiveIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "LiveTitleRegex.live"`)
 	}
 	return nil
 }
 
-func (ltru *LiveTitleRegexUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := ltru.check(); err != nil {
-		return n, err
+func (_u *LiveTitleRegexUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(livetitleregex.Table, livetitleregex.Columns, sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID))
-	if ps := ltru.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ltru.mutation.Negative(); ok {
+	if value, ok := _u.mutation.Negative(); ok {
 		_spec.SetField(livetitleregex.FieldNegative, field.TypeBool, value)
 	}
-	if value, ok := ltru.mutation.Regex(); ok {
+	if value, ok := _u.mutation.Regex(); ok {
 		_spec.SetField(livetitleregex.FieldRegex, field.TypeString, value)
 	}
-	if value, ok := ltru.mutation.ApplyToVideos(); ok {
+	if value, ok := _u.mutation.ApplyToVideos(); ok {
 		_spec.SetField(livetitleregex.FieldApplyToVideos, field.TypeBool, value)
 	}
-	if ltru.mutation.LiveCleared() {
+	if _u.mutation.LiveCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -162,7 +162,7 @@ func (ltru *LiveTitleRegexUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ltru.mutation.LiveIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.LiveIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -178,7 +178,7 @@ func (ltru *LiveTitleRegexUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, ltru.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{livetitleregex.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -186,8 +186,8 @@ func (ltru *LiveTitleRegexUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		return 0, err
 	}
-	ltru.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // LiveTitleRegexUpdateOne is the builder for updating a single LiveTitleRegex entity.
@@ -199,90 +199,90 @@ type LiveTitleRegexUpdateOne struct {
 }
 
 // SetNegative sets the "negative" field.
-func (ltruo *LiveTitleRegexUpdateOne) SetNegative(b bool) *LiveTitleRegexUpdateOne {
-	ltruo.mutation.SetNegative(b)
-	return ltruo
+func (_u *LiveTitleRegexUpdateOne) SetNegative(v bool) *LiveTitleRegexUpdateOne {
+	_u.mutation.SetNegative(v)
+	return _u
 }
 
 // SetNillableNegative sets the "negative" field if the given value is not nil.
-func (ltruo *LiveTitleRegexUpdateOne) SetNillableNegative(b *bool) *LiveTitleRegexUpdateOne {
-	if b != nil {
-		ltruo.SetNegative(*b)
+func (_u *LiveTitleRegexUpdateOne) SetNillableNegative(v *bool) *LiveTitleRegexUpdateOne {
+	if v != nil {
+		_u.SetNegative(*v)
 	}
-	return ltruo
+	return _u
 }
 
 // SetRegex sets the "regex" field.
-func (ltruo *LiveTitleRegexUpdateOne) SetRegex(s string) *LiveTitleRegexUpdateOne {
-	ltruo.mutation.SetRegex(s)
-	return ltruo
+func (_u *LiveTitleRegexUpdateOne) SetRegex(v string) *LiveTitleRegexUpdateOne {
+	_u.mutation.SetRegex(v)
+	return _u
 }
 
 // SetNillableRegex sets the "regex" field if the given value is not nil.
-func (ltruo *LiveTitleRegexUpdateOne) SetNillableRegex(s *string) *LiveTitleRegexUpdateOne {
-	if s != nil {
-		ltruo.SetRegex(*s)
+func (_u *LiveTitleRegexUpdateOne) SetNillableRegex(v *string) *LiveTitleRegexUpdateOne {
+	if v != nil {
+		_u.SetRegex(*v)
 	}
-	return ltruo
+	return _u
 }
 
 // SetApplyToVideos sets the "apply_to_videos" field.
-func (ltruo *LiveTitleRegexUpdateOne) SetApplyToVideos(b bool) *LiveTitleRegexUpdateOne {
-	ltruo.mutation.SetApplyToVideos(b)
-	return ltruo
+func (_u *LiveTitleRegexUpdateOne) SetApplyToVideos(v bool) *LiveTitleRegexUpdateOne {
+	_u.mutation.SetApplyToVideos(v)
+	return _u
 }
 
 // SetNillableApplyToVideos sets the "apply_to_videos" field if the given value is not nil.
-func (ltruo *LiveTitleRegexUpdateOne) SetNillableApplyToVideos(b *bool) *LiveTitleRegexUpdateOne {
-	if b != nil {
-		ltruo.SetApplyToVideos(*b)
+func (_u *LiveTitleRegexUpdateOne) SetNillableApplyToVideos(v *bool) *LiveTitleRegexUpdateOne {
+	if v != nil {
+		_u.SetApplyToVideos(*v)
 	}
-	return ltruo
+	return _u
 }
 
 // SetLiveID sets the "live" edge to the Live entity by ID.
-func (ltruo *LiveTitleRegexUpdateOne) SetLiveID(id uuid.UUID) *LiveTitleRegexUpdateOne {
-	ltruo.mutation.SetLiveID(id)
-	return ltruo
+func (_u *LiveTitleRegexUpdateOne) SetLiveID(id uuid.UUID) *LiveTitleRegexUpdateOne {
+	_u.mutation.SetLiveID(id)
+	return _u
 }
 
 // SetLive sets the "live" edge to the Live entity.
-func (ltruo *LiveTitleRegexUpdateOne) SetLive(l *Live) *LiveTitleRegexUpdateOne {
-	return ltruo.SetLiveID(l.ID)
+func (_u *LiveTitleRegexUpdateOne) SetLive(v *Live) *LiveTitleRegexUpdateOne {
+	return _u.SetLiveID(v.ID)
 }
 
 // Mutation returns the LiveTitleRegexMutation object of the builder.
-func (ltruo *LiveTitleRegexUpdateOne) Mutation() *LiveTitleRegexMutation {
-	return ltruo.mutation
+func (_u *LiveTitleRegexUpdateOne) Mutation() *LiveTitleRegexMutation {
+	return _u.mutation
 }
 
 // ClearLive clears the "live" edge to the Live entity.
-func (ltruo *LiveTitleRegexUpdateOne) ClearLive() *LiveTitleRegexUpdateOne {
-	ltruo.mutation.ClearLive()
-	return ltruo
+func (_u *LiveTitleRegexUpdateOne) ClearLive() *LiveTitleRegexUpdateOne {
+	_u.mutation.ClearLive()
+	return _u
 }
 
 // Where appends a list predicates to the LiveTitleRegexUpdate builder.
-func (ltruo *LiveTitleRegexUpdateOne) Where(ps ...predicate.LiveTitleRegex) *LiveTitleRegexUpdateOne {
-	ltruo.mutation.Where(ps...)
-	return ltruo
+func (_u *LiveTitleRegexUpdateOne) Where(ps ...predicate.LiveTitleRegex) *LiveTitleRegexUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (ltruo *LiveTitleRegexUpdateOne) Select(field string, fields ...string) *LiveTitleRegexUpdateOne {
-	ltruo.fields = append([]string{field}, fields...)
-	return ltruo
+func (_u *LiveTitleRegexUpdateOne) Select(field string, fields ...string) *LiveTitleRegexUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated LiveTitleRegex entity.
-func (ltruo *LiveTitleRegexUpdateOne) Save(ctx context.Context) (*LiveTitleRegex, error) {
-	return withHooks(ctx, ltruo.sqlSave, ltruo.mutation, ltruo.hooks)
+func (_u *LiveTitleRegexUpdateOne) Save(ctx context.Context) (*LiveTitleRegex, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ltruo *LiveTitleRegexUpdateOne) SaveX(ctx context.Context) *LiveTitleRegex {
-	node, err := ltruo.Save(ctx)
+func (_u *LiveTitleRegexUpdateOne) SaveX(ctx context.Context) *LiveTitleRegex {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -290,37 +290,37 @@ func (ltruo *LiveTitleRegexUpdateOne) SaveX(ctx context.Context) *LiveTitleRegex
 }
 
 // Exec executes the query on the entity.
-func (ltruo *LiveTitleRegexUpdateOne) Exec(ctx context.Context) error {
-	_, err := ltruo.Save(ctx)
+func (_u *LiveTitleRegexUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ltruo *LiveTitleRegexUpdateOne) ExecX(ctx context.Context) {
-	if err := ltruo.Exec(ctx); err != nil {
+func (_u *LiveTitleRegexUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ltruo *LiveTitleRegexUpdateOne) check() error {
-	if ltruo.mutation.LiveCleared() && len(ltruo.mutation.LiveIDs()) > 0 {
+func (_u *LiveTitleRegexUpdateOne) check() error {
+	if _u.mutation.LiveCleared() && len(_u.mutation.LiveIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "LiveTitleRegex.live"`)
 	}
 	return nil
 }
 
-func (ltruo *LiveTitleRegexUpdateOne) sqlSave(ctx context.Context) (_node *LiveTitleRegex, err error) {
-	if err := ltruo.check(); err != nil {
+func (_u *LiveTitleRegexUpdateOne) sqlSave(ctx context.Context) (_node *LiveTitleRegex, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(livetitleregex.Table, livetitleregex.Columns, sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID))
-	id, ok := ltruo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "LiveTitleRegex.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := ltruo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, livetitleregex.FieldID)
 		for _, f := range fields {
@@ -332,23 +332,23 @@ func (ltruo *LiveTitleRegexUpdateOne) sqlSave(ctx context.Context) (_node *LiveT
 			}
 		}
 	}
-	if ps := ltruo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ltruo.mutation.Negative(); ok {
+	if value, ok := _u.mutation.Negative(); ok {
 		_spec.SetField(livetitleregex.FieldNegative, field.TypeBool, value)
 	}
-	if value, ok := ltruo.mutation.Regex(); ok {
+	if value, ok := _u.mutation.Regex(); ok {
 		_spec.SetField(livetitleregex.FieldRegex, field.TypeString, value)
 	}
-	if value, ok := ltruo.mutation.ApplyToVideos(); ok {
+	if value, ok := _u.mutation.ApplyToVideos(); ok {
 		_spec.SetField(livetitleregex.FieldApplyToVideos, field.TypeBool, value)
 	}
-	if ltruo.mutation.LiveCleared() {
+	if _u.mutation.LiveCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -361,7 +361,7 @@ func (ltruo *LiveTitleRegexUpdateOne) sqlSave(ctx context.Context) (_node *LiveT
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ltruo.mutation.LiveIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.LiveIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -377,10 +377,10 @@ func (ltruo *LiveTitleRegexUpdateOne) sqlSave(ctx context.Context) (_node *LiveT
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &LiveTitleRegex{config: ltruo.config}
+	_node = &LiveTitleRegex{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, ltruo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{livetitleregex.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -388,6 +388,6 @@ func (ltruo *LiveTitleRegexUpdateOne) sqlSave(ctx context.Context) (_node *LiveT
 		}
 		return nil, err
 	}
-	ltruo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

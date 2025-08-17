@@ -24,135 +24,135 @@ type ChapterUpdate struct {
 }
 
 // Where appends a list predicates to the ChapterUpdate builder.
-func (cu *ChapterUpdate) Where(ps ...predicate.Chapter) *ChapterUpdate {
-	cu.mutation.Where(ps...)
-	return cu
+func (_u *ChapterUpdate) Where(ps ...predicate.Chapter) *ChapterUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetType sets the "type" field.
-func (cu *ChapterUpdate) SetType(s string) *ChapterUpdate {
-	cu.mutation.SetType(s)
-	return cu
+func (_u *ChapterUpdate) SetType(v string) *ChapterUpdate {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (cu *ChapterUpdate) SetNillableType(s *string) *ChapterUpdate {
-	if s != nil {
-		cu.SetType(*s)
+func (_u *ChapterUpdate) SetNillableType(v *string) *ChapterUpdate {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearType clears the value of the "type" field.
-func (cu *ChapterUpdate) ClearType() *ChapterUpdate {
-	cu.mutation.ClearType()
-	return cu
+func (_u *ChapterUpdate) ClearType() *ChapterUpdate {
+	_u.mutation.ClearType()
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (cu *ChapterUpdate) SetTitle(s string) *ChapterUpdate {
-	cu.mutation.SetTitle(s)
-	return cu
+func (_u *ChapterUpdate) SetTitle(v string) *ChapterUpdate {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (cu *ChapterUpdate) SetNillableTitle(s *string) *ChapterUpdate {
-	if s != nil {
-		cu.SetTitle(*s)
+func (_u *ChapterUpdate) SetNillableTitle(v *string) *ChapterUpdate {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearTitle clears the value of the "title" field.
-func (cu *ChapterUpdate) ClearTitle() *ChapterUpdate {
-	cu.mutation.ClearTitle()
-	return cu
+func (_u *ChapterUpdate) ClearTitle() *ChapterUpdate {
+	_u.mutation.ClearTitle()
+	return _u
 }
 
 // SetStart sets the "start" field.
-func (cu *ChapterUpdate) SetStart(i int) *ChapterUpdate {
-	cu.mutation.ResetStart()
-	cu.mutation.SetStart(i)
-	return cu
+func (_u *ChapterUpdate) SetStart(v int) *ChapterUpdate {
+	_u.mutation.ResetStart()
+	_u.mutation.SetStart(v)
+	return _u
 }
 
 // SetNillableStart sets the "start" field if the given value is not nil.
-func (cu *ChapterUpdate) SetNillableStart(i *int) *ChapterUpdate {
-	if i != nil {
-		cu.SetStart(*i)
+func (_u *ChapterUpdate) SetNillableStart(v *int) *ChapterUpdate {
+	if v != nil {
+		_u.SetStart(*v)
 	}
-	return cu
+	return _u
 }
 
-// AddStart adds i to the "start" field.
-func (cu *ChapterUpdate) AddStart(i int) *ChapterUpdate {
-	cu.mutation.AddStart(i)
-	return cu
+// AddStart adds value to the "start" field.
+func (_u *ChapterUpdate) AddStart(v int) *ChapterUpdate {
+	_u.mutation.AddStart(v)
+	return _u
 }
 
 // ClearStart clears the value of the "start" field.
-func (cu *ChapterUpdate) ClearStart() *ChapterUpdate {
-	cu.mutation.ClearStart()
-	return cu
+func (_u *ChapterUpdate) ClearStart() *ChapterUpdate {
+	_u.mutation.ClearStart()
+	return _u
 }
 
 // SetEnd sets the "end" field.
-func (cu *ChapterUpdate) SetEnd(i int) *ChapterUpdate {
-	cu.mutation.ResetEnd()
-	cu.mutation.SetEnd(i)
-	return cu
+func (_u *ChapterUpdate) SetEnd(v int) *ChapterUpdate {
+	_u.mutation.ResetEnd()
+	_u.mutation.SetEnd(v)
+	return _u
 }
 
 // SetNillableEnd sets the "end" field if the given value is not nil.
-func (cu *ChapterUpdate) SetNillableEnd(i *int) *ChapterUpdate {
-	if i != nil {
-		cu.SetEnd(*i)
+func (_u *ChapterUpdate) SetNillableEnd(v *int) *ChapterUpdate {
+	if v != nil {
+		_u.SetEnd(*v)
 	}
-	return cu
+	return _u
 }
 
-// AddEnd adds i to the "end" field.
-func (cu *ChapterUpdate) AddEnd(i int) *ChapterUpdate {
-	cu.mutation.AddEnd(i)
-	return cu
+// AddEnd adds value to the "end" field.
+func (_u *ChapterUpdate) AddEnd(v int) *ChapterUpdate {
+	_u.mutation.AddEnd(v)
+	return _u
 }
 
 // ClearEnd clears the value of the "end" field.
-func (cu *ChapterUpdate) ClearEnd() *ChapterUpdate {
-	cu.mutation.ClearEnd()
-	return cu
+func (_u *ChapterUpdate) ClearEnd() *ChapterUpdate {
+	_u.mutation.ClearEnd()
+	return _u
 }
 
 // SetVodID sets the "vod" edge to the Vod entity by ID.
-func (cu *ChapterUpdate) SetVodID(id uuid.UUID) *ChapterUpdate {
-	cu.mutation.SetVodID(id)
-	return cu
+func (_u *ChapterUpdate) SetVodID(id uuid.UUID) *ChapterUpdate {
+	_u.mutation.SetVodID(id)
+	return _u
 }
 
 // SetVod sets the "vod" edge to the Vod entity.
-func (cu *ChapterUpdate) SetVod(v *Vod) *ChapterUpdate {
-	return cu.SetVodID(v.ID)
+func (_u *ChapterUpdate) SetVod(v *Vod) *ChapterUpdate {
+	return _u.SetVodID(v.ID)
 }
 
 // Mutation returns the ChapterMutation object of the builder.
-func (cu *ChapterUpdate) Mutation() *ChapterMutation {
-	return cu.mutation
+func (_u *ChapterUpdate) Mutation() *ChapterMutation {
+	return _u.mutation
 }
 
 // ClearVod clears the "vod" edge to the Vod entity.
-func (cu *ChapterUpdate) ClearVod() *ChapterUpdate {
-	cu.mutation.ClearVod()
-	return cu
+func (_u *ChapterUpdate) ClearVod() *ChapterUpdate {
+	_u.mutation.ClearVod()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (cu *ChapterUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, cu.sqlSave, cu.mutation, cu.hooks)
+func (_u *ChapterUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cu *ChapterUpdate) SaveX(ctx context.Context) int {
-	affected, err := cu.Save(ctx)
+func (_u *ChapterUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -160,69 +160,69 @@ func (cu *ChapterUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (cu *ChapterUpdate) Exec(ctx context.Context) error {
-	_, err := cu.Save(ctx)
+func (_u *ChapterUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cu *ChapterUpdate) ExecX(ctx context.Context) {
-	if err := cu.Exec(ctx); err != nil {
+func (_u *ChapterUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cu *ChapterUpdate) check() error {
-	if cu.mutation.VodCleared() && len(cu.mutation.VodIDs()) > 0 {
+func (_u *ChapterUpdate) check() error {
+	if _u.mutation.VodCleared() && len(_u.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Chapter.vod"`)
 	}
 	return nil
 }
 
-func (cu *ChapterUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := cu.check(); err != nil {
-		return n, err
+func (_u *ChapterUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(chapter.Table, chapter.Columns, sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID))
-	if ps := cu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cu.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(chapter.FieldType, field.TypeString, value)
 	}
-	if cu.mutation.TypeCleared() {
+	if _u.mutation.TypeCleared() {
 		_spec.ClearField(chapter.FieldType, field.TypeString)
 	}
-	if value, ok := cu.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(chapter.FieldTitle, field.TypeString, value)
 	}
-	if cu.mutation.TitleCleared() {
+	if _u.mutation.TitleCleared() {
 		_spec.ClearField(chapter.FieldTitle, field.TypeString)
 	}
-	if value, ok := cu.mutation.Start(); ok {
+	if value, ok := _u.mutation.Start(); ok {
 		_spec.SetField(chapter.FieldStart, field.TypeInt, value)
 	}
-	if value, ok := cu.mutation.AddedStart(); ok {
+	if value, ok := _u.mutation.AddedStart(); ok {
 		_spec.AddField(chapter.FieldStart, field.TypeInt, value)
 	}
-	if cu.mutation.StartCleared() {
+	if _u.mutation.StartCleared() {
 		_spec.ClearField(chapter.FieldStart, field.TypeInt)
 	}
-	if value, ok := cu.mutation.End(); ok {
+	if value, ok := _u.mutation.End(); ok {
 		_spec.SetField(chapter.FieldEnd, field.TypeInt, value)
 	}
-	if value, ok := cu.mutation.AddedEnd(); ok {
+	if value, ok := _u.mutation.AddedEnd(); ok {
 		_spec.AddField(chapter.FieldEnd, field.TypeInt, value)
 	}
-	if cu.mutation.EndCleared() {
+	if _u.mutation.EndCleared() {
 		_spec.ClearField(chapter.FieldEnd, field.TypeInt)
 	}
-	if cu.mutation.VodCleared() {
+	if _u.mutation.VodCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -235,7 +235,7 @@ func (cu *ChapterUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.VodIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.VodIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -251,7 +251,7 @@ func (cu *ChapterUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{chapter.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -259,8 +259,8 @@ func (cu *ChapterUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	cu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ChapterUpdateOne is the builder for updating a single Chapter entity.
@@ -272,142 +272,142 @@ type ChapterUpdateOne struct {
 }
 
 // SetType sets the "type" field.
-func (cuo *ChapterUpdateOne) SetType(s string) *ChapterUpdateOne {
-	cuo.mutation.SetType(s)
-	return cuo
+func (_u *ChapterUpdateOne) SetType(v string) *ChapterUpdateOne {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (cuo *ChapterUpdateOne) SetNillableType(s *string) *ChapterUpdateOne {
-	if s != nil {
-		cuo.SetType(*s)
+func (_u *ChapterUpdateOne) SetNillableType(v *string) *ChapterUpdateOne {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearType clears the value of the "type" field.
-func (cuo *ChapterUpdateOne) ClearType() *ChapterUpdateOne {
-	cuo.mutation.ClearType()
-	return cuo
+func (_u *ChapterUpdateOne) ClearType() *ChapterUpdateOne {
+	_u.mutation.ClearType()
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (cuo *ChapterUpdateOne) SetTitle(s string) *ChapterUpdateOne {
-	cuo.mutation.SetTitle(s)
-	return cuo
+func (_u *ChapterUpdateOne) SetTitle(v string) *ChapterUpdateOne {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (cuo *ChapterUpdateOne) SetNillableTitle(s *string) *ChapterUpdateOne {
-	if s != nil {
-		cuo.SetTitle(*s)
+func (_u *ChapterUpdateOne) SetNillableTitle(v *string) *ChapterUpdateOne {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearTitle clears the value of the "title" field.
-func (cuo *ChapterUpdateOne) ClearTitle() *ChapterUpdateOne {
-	cuo.mutation.ClearTitle()
-	return cuo
+func (_u *ChapterUpdateOne) ClearTitle() *ChapterUpdateOne {
+	_u.mutation.ClearTitle()
+	return _u
 }
 
 // SetStart sets the "start" field.
-func (cuo *ChapterUpdateOne) SetStart(i int) *ChapterUpdateOne {
-	cuo.mutation.ResetStart()
-	cuo.mutation.SetStart(i)
-	return cuo
+func (_u *ChapterUpdateOne) SetStart(v int) *ChapterUpdateOne {
+	_u.mutation.ResetStart()
+	_u.mutation.SetStart(v)
+	return _u
 }
 
 // SetNillableStart sets the "start" field if the given value is not nil.
-func (cuo *ChapterUpdateOne) SetNillableStart(i *int) *ChapterUpdateOne {
-	if i != nil {
-		cuo.SetStart(*i)
+func (_u *ChapterUpdateOne) SetNillableStart(v *int) *ChapterUpdateOne {
+	if v != nil {
+		_u.SetStart(*v)
 	}
-	return cuo
+	return _u
 }
 
-// AddStart adds i to the "start" field.
-func (cuo *ChapterUpdateOne) AddStart(i int) *ChapterUpdateOne {
-	cuo.mutation.AddStart(i)
-	return cuo
+// AddStart adds value to the "start" field.
+func (_u *ChapterUpdateOne) AddStart(v int) *ChapterUpdateOne {
+	_u.mutation.AddStart(v)
+	return _u
 }
 
 // ClearStart clears the value of the "start" field.
-func (cuo *ChapterUpdateOne) ClearStart() *ChapterUpdateOne {
-	cuo.mutation.ClearStart()
-	return cuo
+func (_u *ChapterUpdateOne) ClearStart() *ChapterUpdateOne {
+	_u.mutation.ClearStart()
+	return _u
 }
 
 // SetEnd sets the "end" field.
-func (cuo *ChapterUpdateOne) SetEnd(i int) *ChapterUpdateOne {
-	cuo.mutation.ResetEnd()
-	cuo.mutation.SetEnd(i)
-	return cuo
+func (_u *ChapterUpdateOne) SetEnd(v int) *ChapterUpdateOne {
+	_u.mutation.ResetEnd()
+	_u.mutation.SetEnd(v)
+	return _u
 }
 
 // SetNillableEnd sets the "end" field if the given value is not nil.
-func (cuo *ChapterUpdateOne) SetNillableEnd(i *int) *ChapterUpdateOne {
-	if i != nil {
-		cuo.SetEnd(*i)
+func (_u *ChapterUpdateOne) SetNillableEnd(v *int) *ChapterUpdateOne {
+	if v != nil {
+		_u.SetEnd(*v)
 	}
-	return cuo
+	return _u
 }
 
-// AddEnd adds i to the "end" field.
-func (cuo *ChapterUpdateOne) AddEnd(i int) *ChapterUpdateOne {
-	cuo.mutation.AddEnd(i)
-	return cuo
+// AddEnd adds value to the "end" field.
+func (_u *ChapterUpdateOne) AddEnd(v int) *ChapterUpdateOne {
+	_u.mutation.AddEnd(v)
+	return _u
 }
 
 // ClearEnd clears the value of the "end" field.
-func (cuo *ChapterUpdateOne) ClearEnd() *ChapterUpdateOne {
-	cuo.mutation.ClearEnd()
-	return cuo
+func (_u *ChapterUpdateOne) ClearEnd() *ChapterUpdateOne {
+	_u.mutation.ClearEnd()
+	return _u
 }
 
 // SetVodID sets the "vod" edge to the Vod entity by ID.
-func (cuo *ChapterUpdateOne) SetVodID(id uuid.UUID) *ChapterUpdateOne {
-	cuo.mutation.SetVodID(id)
-	return cuo
+func (_u *ChapterUpdateOne) SetVodID(id uuid.UUID) *ChapterUpdateOne {
+	_u.mutation.SetVodID(id)
+	return _u
 }
 
 // SetVod sets the "vod" edge to the Vod entity.
-func (cuo *ChapterUpdateOne) SetVod(v *Vod) *ChapterUpdateOne {
-	return cuo.SetVodID(v.ID)
+func (_u *ChapterUpdateOne) SetVod(v *Vod) *ChapterUpdateOne {
+	return _u.SetVodID(v.ID)
 }
 
 // Mutation returns the ChapterMutation object of the builder.
-func (cuo *ChapterUpdateOne) Mutation() *ChapterMutation {
-	return cuo.mutation
+func (_u *ChapterUpdateOne) Mutation() *ChapterMutation {
+	return _u.mutation
 }
 
 // ClearVod clears the "vod" edge to the Vod entity.
-func (cuo *ChapterUpdateOne) ClearVod() *ChapterUpdateOne {
-	cuo.mutation.ClearVod()
-	return cuo
+func (_u *ChapterUpdateOne) ClearVod() *ChapterUpdateOne {
+	_u.mutation.ClearVod()
+	return _u
 }
 
 // Where appends a list predicates to the ChapterUpdate builder.
-func (cuo *ChapterUpdateOne) Where(ps ...predicate.Chapter) *ChapterUpdateOne {
-	cuo.mutation.Where(ps...)
-	return cuo
+func (_u *ChapterUpdateOne) Where(ps ...predicate.Chapter) *ChapterUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (cuo *ChapterUpdateOne) Select(field string, fields ...string) *ChapterUpdateOne {
-	cuo.fields = append([]string{field}, fields...)
-	return cuo
+func (_u *ChapterUpdateOne) Select(field string, fields ...string) *ChapterUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Chapter entity.
-func (cuo *ChapterUpdateOne) Save(ctx context.Context) (*Chapter, error) {
-	return withHooks(ctx, cuo.sqlSave, cuo.mutation, cuo.hooks)
+func (_u *ChapterUpdateOne) Save(ctx context.Context) (*Chapter, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cuo *ChapterUpdateOne) SaveX(ctx context.Context) *Chapter {
-	node, err := cuo.Save(ctx)
+func (_u *ChapterUpdateOne) SaveX(ctx context.Context) *Chapter {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -415,37 +415,37 @@ func (cuo *ChapterUpdateOne) SaveX(ctx context.Context) *Chapter {
 }
 
 // Exec executes the query on the entity.
-func (cuo *ChapterUpdateOne) Exec(ctx context.Context) error {
-	_, err := cuo.Save(ctx)
+func (_u *ChapterUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cuo *ChapterUpdateOne) ExecX(ctx context.Context) {
-	if err := cuo.Exec(ctx); err != nil {
+func (_u *ChapterUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cuo *ChapterUpdateOne) check() error {
-	if cuo.mutation.VodCleared() && len(cuo.mutation.VodIDs()) > 0 {
+func (_u *ChapterUpdateOne) check() error {
+	if _u.mutation.VodCleared() && len(_u.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Chapter.vod"`)
 	}
 	return nil
 }
 
-func (cuo *ChapterUpdateOne) sqlSave(ctx context.Context) (_node *Chapter, err error) {
-	if err := cuo.check(); err != nil {
+func (_u *ChapterUpdateOne) sqlSave(ctx context.Context) (_node *Chapter, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(chapter.Table, chapter.Columns, sqlgraph.NewFieldSpec(chapter.FieldID, field.TypeUUID))
-	id, ok := cuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Chapter.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := cuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, chapter.FieldID)
 		for _, f := range fields {
@@ -457,44 +457,44 @@ func (cuo *ChapterUpdateOne) sqlSave(ctx context.Context) (_node *Chapter, err e
 			}
 		}
 	}
-	if ps := cuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cuo.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(chapter.FieldType, field.TypeString, value)
 	}
-	if cuo.mutation.TypeCleared() {
+	if _u.mutation.TypeCleared() {
 		_spec.ClearField(chapter.FieldType, field.TypeString)
 	}
-	if value, ok := cuo.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(chapter.FieldTitle, field.TypeString, value)
 	}
-	if cuo.mutation.TitleCleared() {
+	if _u.mutation.TitleCleared() {
 		_spec.ClearField(chapter.FieldTitle, field.TypeString)
 	}
-	if value, ok := cuo.mutation.Start(); ok {
+	if value, ok := _u.mutation.Start(); ok {
 		_spec.SetField(chapter.FieldStart, field.TypeInt, value)
 	}
-	if value, ok := cuo.mutation.AddedStart(); ok {
+	if value, ok := _u.mutation.AddedStart(); ok {
 		_spec.AddField(chapter.FieldStart, field.TypeInt, value)
 	}
-	if cuo.mutation.StartCleared() {
+	if _u.mutation.StartCleared() {
 		_spec.ClearField(chapter.FieldStart, field.TypeInt)
 	}
-	if value, ok := cuo.mutation.End(); ok {
+	if value, ok := _u.mutation.End(); ok {
 		_spec.SetField(chapter.FieldEnd, field.TypeInt, value)
 	}
-	if value, ok := cuo.mutation.AddedEnd(); ok {
+	if value, ok := _u.mutation.AddedEnd(); ok {
 		_spec.AddField(chapter.FieldEnd, field.TypeInt, value)
 	}
-	if cuo.mutation.EndCleared() {
+	if _u.mutation.EndCleared() {
 		_spec.ClearField(chapter.FieldEnd, field.TypeInt)
 	}
-	if cuo.mutation.VodCleared() {
+	if _u.mutation.VodCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -507,7 +507,7 @@ func (cuo *ChapterUpdateOne) sqlSave(ctx context.Context) (_node *Chapter, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.VodIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.VodIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -523,10 +523,10 @@ func (cuo *ChapterUpdateOne) sqlSave(ctx context.Context) (_node *Chapter, err e
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Chapter{config: cuo.config}
+	_node = &Chapter{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, cuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{chapter.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -534,6 +534,6 @@ func (cuo *ChapterUpdateOne) sqlSave(ctx context.Context) (_node *Chapter, err e
 		}
 		return nil, err
 	}
-	cuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

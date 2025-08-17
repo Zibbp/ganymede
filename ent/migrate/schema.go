@@ -104,7 +104,7 @@ var (
 	// LiveCategoriesColumns holds the columns for the "live_categories" table.
 	LiveCategoriesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
-		{Name: "name", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString, Nullable: true},
 		{Name: "live_id", Type: field.TypeUUID},
 	}
 	// LiveCategoriesTable holds the schema information for the "live_categories" table.

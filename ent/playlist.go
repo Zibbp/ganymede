@@ -94,7 +94,7 @@ func (*Playlist) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Playlist fields.
-func (pl *Playlist) assignValues(columns []string, values []any) error {
+func (_m *Playlist) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -104,40 +104,40 @@ func (pl *Playlist) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
-				pl.ID = *value
+				_m.ID = *value
 			}
 		case playlist.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				pl.Name = value.String
+				_m.Name = value.String
 			}
 		case playlist.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				pl.Description = value.String
+				_m.Description = value.String
 			}
 		case playlist.FieldThumbnailPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field thumbnail_path", values[i])
 			} else if value.Valid {
-				pl.ThumbnailPath = value.String
+				_m.ThumbnailPath = value.String
 			}
 		case playlist.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				pl.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case playlist.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				pl.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			pl.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -145,62 +145,62 @@ func (pl *Playlist) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Playlist.
 // This includes values selected through modifiers, order, etc.
-func (pl *Playlist) Value(name string) (ent.Value, error) {
-	return pl.selectValues.Get(name)
+func (_m *Playlist) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryVods queries the "vods" edge of the Playlist entity.
-func (pl *Playlist) QueryVods() *VodQuery {
-	return NewPlaylistClient(pl.config).QueryVods(pl)
+func (_m *Playlist) QueryVods() *VodQuery {
+	return NewPlaylistClient(_m.config).QueryVods(_m)
 }
 
 // QueryMultistreamInfo queries the "multistream_info" edge of the Playlist entity.
-func (pl *Playlist) QueryMultistreamInfo() *MultistreamInfoQuery {
-	return NewPlaylistClient(pl.config).QueryMultistreamInfo(pl)
+func (_m *Playlist) QueryMultistreamInfo() *MultistreamInfoQuery {
+	return NewPlaylistClient(_m.config).QueryMultistreamInfo(_m)
 }
 
 // QueryRuleGroups queries the "rule_groups" edge of the Playlist entity.
-func (pl *Playlist) QueryRuleGroups() *PlaylistRuleGroupQuery {
-	return NewPlaylistClient(pl.config).QueryRuleGroups(pl)
+func (_m *Playlist) QueryRuleGroups() *PlaylistRuleGroupQuery {
+	return NewPlaylistClient(_m.config).QueryRuleGroups(_m)
 }
 
 // Update returns a builder for updating this Playlist.
 // Note that you need to call Playlist.Unwrap() before calling this method if this Playlist
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pl *Playlist) Update() *PlaylistUpdateOne {
-	return NewPlaylistClient(pl.config).UpdateOne(pl)
+func (_m *Playlist) Update() *PlaylistUpdateOne {
+	return NewPlaylistClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Playlist entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pl *Playlist) Unwrap() *Playlist {
-	_tx, ok := pl.config.driver.(*txDriver)
+func (_m *Playlist) Unwrap() *Playlist {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Playlist is not a transactional entity")
 	}
-	pl.config.driver = _tx.drv
-	return pl
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pl *Playlist) String() string {
+func (_m *Playlist) String() string {
 	var builder strings.Builder
 	builder.WriteString("Playlist(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pl.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(pl.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(pl.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("thumbnail_path=")
-	builder.WriteString(pl.ThumbnailPath)
+	builder.WriteString(_m.ThumbnailPath)
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(pl.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(pl.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

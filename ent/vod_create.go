@@ -32,685 +32,685 @@ type VodCreate struct {
 }
 
 // SetExtID sets the "ext_id" field.
-func (vc *VodCreate) SetExtID(s string) *VodCreate {
-	vc.mutation.SetExtID(s)
-	return vc
+func (_c *VodCreate) SetExtID(v string) *VodCreate {
+	_c.mutation.SetExtID(v)
+	return _c
 }
 
 // SetClipExtVodID sets the "clip_ext_vod_id" field.
-func (vc *VodCreate) SetClipExtVodID(s string) *VodCreate {
-	vc.mutation.SetClipExtVodID(s)
-	return vc
+func (_c *VodCreate) SetClipExtVodID(v string) *VodCreate {
+	_c.mutation.SetClipExtVodID(v)
+	return _c
 }
 
 // SetNillableClipExtVodID sets the "clip_ext_vod_id" field if the given value is not nil.
-func (vc *VodCreate) SetNillableClipExtVodID(s *string) *VodCreate {
-	if s != nil {
-		vc.SetClipExtVodID(*s)
+func (_c *VodCreate) SetNillableClipExtVodID(v *string) *VodCreate {
+	if v != nil {
+		_c.SetClipExtVodID(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetExtStreamID sets the "ext_stream_id" field.
-func (vc *VodCreate) SetExtStreamID(s string) *VodCreate {
-	vc.mutation.SetExtStreamID(s)
-	return vc
+func (_c *VodCreate) SetExtStreamID(v string) *VodCreate {
+	_c.mutation.SetExtStreamID(v)
+	return _c
 }
 
 // SetNillableExtStreamID sets the "ext_stream_id" field if the given value is not nil.
-func (vc *VodCreate) SetNillableExtStreamID(s *string) *VodCreate {
-	if s != nil {
-		vc.SetExtStreamID(*s)
+func (_c *VodCreate) SetNillableExtStreamID(v *string) *VodCreate {
+	if v != nil {
+		_c.SetExtStreamID(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetPlatform sets the "platform" field.
-func (vc *VodCreate) SetPlatform(up utils.VideoPlatform) *VodCreate {
-	vc.mutation.SetPlatform(up)
-	return vc
+func (_c *VodCreate) SetPlatform(v utils.VideoPlatform) *VodCreate {
+	_c.mutation.SetPlatform(v)
+	return _c
 }
 
 // SetNillablePlatform sets the "platform" field if the given value is not nil.
-func (vc *VodCreate) SetNillablePlatform(up *utils.VideoPlatform) *VodCreate {
-	if up != nil {
-		vc.SetPlatform(*up)
+func (_c *VodCreate) SetNillablePlatform(v *utils.VideoPlatform) *VodCreate {
+	if v != nil {
+		_c.SetPlatform(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetType sets the "type" field.
-func (vc *VodCreate) SetType(ut utils.VodType) *VodCreate {
-	vc.mutation.SetType(ut)
-	return vc
+func (_c *VodCreate) SetType(v utils.VodType) *VodCreate {
+	_c.mutation.SetType(v)
+	return _c
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (vc *VodCreate) SetNillableType(ut *utils.VodType) *VodCreate {
-	if ut != nil {
-		vc.SetType(*ut)
+func (_c *VodCreate) SetNillableType(v *utils.VodType) *VodCreate {
+	if v != nil {
+		_c.SetType(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetTitle sets the "title" field.
-func (vc *VodCreate) SetTitle(s string) *VodCreate {
-	vc.mutation.SetTitle(s)
-	return vc
+func (_c *VodCreate) SetTitle(v string) *VodCreate {
+	_c.mutation.SetTitle(v)
+	return _c
 }
 
 // SetDuration sets the "duration" field.
-func (vc *VodCreate) SetDuration(i int) *VodCreate {
-	vc.mutation.SetDuration(i)
-	return vc
+func (_c *VodCreate) SetDuration(v int) *VodCreate {
+	_c.mutation.SetDuration(v)
+	return _c
 }
 
 // SetNillableDuration sets the "duration" field if the given value is not nil.
-func (vc *VodCreate) SetNillableDuration(i *int) *VodCreate {
-	if i != nil {
-		vc.SetDuration(*i)
+func (_c *VodCreate) SetNillableDuration(v *int) *VodCreate {
+	if v != nil {
+		_c.SetDuration(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetClipVodOffset sets the "clip_vod_offset" field.
-func (vc *VodCreate) SetClipVodOffset(i int) *VodCreate {
-	vc.mutation.SetClipVodOffset(i)
-	return vc
+func (_c *VodCreate) SetClipVodOffset(v int) *VodCreate {
+	_c.mutation.SetClipVodOffset(v)
+	return _c
 }
 
 // SetNillableClipVodOffset sets the "clip_vod_offset" field if the given value is not nil.
-func (vc *VodCreate) SetNillableClipVodOffset(i *int) *VodCreate {
-	if i != nil {
-		vc.SetClipVodOffset(*i)
+func (_c *VodCreate) SetNillableClipVodOffset(v *int) *VodCreate {
+	if v != nil {
+		_c.SetClipVodOffset(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetViews sets the "views" field.
-func (vc *VodCreate) SetViews(i int) *VodCreate {
-	vc.mutation.SetViews(i)
-	return vc
+func (_c *VodCreate) SetViews(v int) *VodCreate {
+	_c.mutation.SetViews(v)
+	return _c
 }
 
 // SetNillableViews sets the "views" field if the given value is not nil.
-func (vc *VodCreate) SetNillableViews(i *int) *VodCreate {
-	if i != nil {
-		vc.SetViews(*i)
+func (_c *VodCreate) SetNillableViews(v *int) *VodCreate {
+	if v != nil {
+		_c.SetViews(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetResolution sets the "resolution" field.
-func (vc *VodCreate) SetResolution(s string) *VodCreate {
-	vc.mutation.SetResolution(s)
-	return vc
+func (_c *VodCreate) SetResolution(v string) *VodCreate {
+	_c.mutation.SetResolution(v)
+	return _c
 }
 
 // SetNillableResolution sets the "resolution" field if the given value is not nil.
-func (vc *VodCreate) SetNillableResolution(s *string) *VodCreate {
-	if s != nil {
-		vc.SetResolution(*s)
+func (_c *VodCreate) SetNillableResolution(v *string) *VodCreate {
+	if v != nil {
+		_c.SetResolution(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetProcessing sets the "processing" field.
-func (vc *VodCreate) SetProcessing(b bool) *VodCreate {
-	vc.mutation.SetProcessing(b)
-	return vc
+func (_c *VodCreate) SetProcessing(v bool) *VodCreate {
+	_c.mutation.SetProcessing(v)
+	return _c
 }
 
 // SetNillableProcessing sets the "processing" field if the given value is not nil.
-func (vc *VodCreate) SetNillableProcessing(b *bool) *VodCreate {
-	if b != nil {
-		vc.SetProcessing(*b)
+func (_c *VodCreate) SetNillableProcessing(v *bool) *VodCreate {
+	if v != nil {
+		_c.SetProcessing(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetThumbnailPath sets the "thumbnail_path" field.
-func (vc *VodCreate) SetThumbnailPath(s string) *VodCreate {
-	vc.mutation.SetThumbnailPath(s)
-	return vc
+func (_c *VodCreate) SetThumbnailPath(v string) *VodCreate {
+	_c.mutation.SetThumbnailPath(v)
+	return _c
 }
 
 // SetNillableThumbnailPath sets the "thumbnail_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableThumbnailPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetThumbnailPath(*s)
+func (_c *VodCreate) SetNillableThumbnailPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetThumbnailPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetWebThumbnailPath sets the "web_thumbnail_path" field.
-func (vc *VodCreate) SetWebThumbnailPath(s string) *VodCreate {
-	vc.mutation.SetWebThumbnailPath(s)
-	return vc
+func (_c *VodCreate) SetWebThumbnailPath(v string) *VodCreate {
+	_c.mutation.SetWebThumbnailPath(v)
+	return _c
 }
 
 // SetVideoPath sets the "video_path" field.
-func (vc *VodCreate) SetVideoPath(s string) *VodCreate {
-	vc.mutation.SetVideoPath(s)
-	return vc
+func (_c *VodCreate) SetVideoPath(v string) *VodCreate {
+	_c.mutation.SetVideoPath(v)
+	return _c
 }
 
 // SetVideoHlsPath sets the "video_hls_path" field.
-func (vc *VodCreate) SetVideoHlsPath(s string) *VodCreate {
-	vc.mutation.SetVideoHlsPath(s)
-	return vc
+func (_c *VodCreate) SetVideoHlsPath(v string) *VodCreate {
+	_c.mutation.SetVideoHlsPath(v)
+	return _c
 }
 
 // SetNillableVideoHlsPath sets the "video_hls_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableVideoHlsPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetVideoHlsPath(*s)
+func (_c *VodCreate) SetNillableVideoHlsPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetVideoHlsPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetChatPath sets the "chat_path" field.
-func (vc *VodCreate) SetChatPath(s string) *VodCreate {
-	vc.mutation.SetChatPath(s)
-	return vc
+func (_c *VodCreate) SetChatPath(v string) *VodCreate {
+	_c.mutation.SetChatPath(v)
+	return _c
 }
 
 // SetNillableChatPath sets the "chat_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableChatPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetChatPath(*s)
+func (_c *VodCreate) SetNillableChatPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetChatPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetLiveChatPath sets the "live_chat_path" field.
-func (vc *VodCreate) SetLiveChatPath(s string) *VodCreate {
-	vc.mutation.SetLiveChatPath(s)
-	return vc
+func (_c *VodCreate) SetLiveChatPath(v string) *VodCreate {
+	_c.mutation.SetLiveChatPath(v)
+	return _c
 }
 
 // SetNillableLiveChatPath sets the "live_chat_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableLiveChatPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetLiveChatPath(*s)
+func (_c *VodCreate) SetNillableLiveChatPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetLiveChatPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetLiveChatConvertPath sets the "live_chat_convert_path" field.
-func (vc *VodCreate) SetLiveChatConvertPath(s string) *VodCreate {
-	vc.mutation.SetLiveChatConvertPath(s)
-	return vc
+func (_c *VodCreate) SetLiveChatConvertPath(v string) *VodCreate {
+	_c.mutation.SetLiveChatConvertPath(v)
+	return _c
 }
 
 // SetNillableLiveChatConvertPath sets the "live_chat_convert_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableLiveChatConvertPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetLiveChatConvertPath(*s)
+func (_c *VodCreate) SetNillableLiveChatConvertPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetLiveChatConvertPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetChatVideoPath sets the "chat_video_path" field.
-func (vc *VodCreate) SetChatVideoPath(s string) *VodCreate {
-	vc.mutation.SetChatVideoPath(s)
-	return vc
+func (_c *VodCreate) SetChatVideoPath(v string) *VodCreate {
+	_c.mutation.SetChatVideoPath(v)
+	return _c
 }
 
 // SetNillableChatVideoPath sets the "chat_video_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableChatVideoPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetChatVideoPath(*s)
+func (_c *VodCreate) SetNillableChatVideoPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetChatVideoPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetInfoPath sets the "info_path" field.
-func (vc *VodCreate) SetInfoPath(s string) *VodCreate {
-	vc.mutation.SetInfoPath(s)
-	return vc
+func (_c *VodCreate) SetInfoPath(v string) *VodCreate {
+	_c.mutation.SetInfoPath(v)
+	return _c
 }
 
 // SetNillableInfoPath sets the "info_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableInfoPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetInfoPath(*s)
+func (_c *VodCreate) SetNillableInfoPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetInfoPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetCaptionPath sets the "caption_path" field.
-func (vc *VodCreate) SetCaptionPath(s string) *VodCreate {
-	vc.mutation.SetCaptionPath(s)
-	return vc
+func (_c *VodCreate) SetCaptionPath(v string) *VodCreate {
+	_c.mutation.SetCaptionPath(v)
+	return _c
 }
 
 // SetNillableCaptionPath sets the "caption_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableCaptionPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetCaptionPath(*s)
+func (_c *VodCreate) SetNillableCaptionPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetCaptionPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetFolderName sets the "folder_name" field.
-func (vc *VodCreate) SetFolderName(s string) *VodCreate {
-	vc.mutation.SetFolderName(s)
-	return vc
+func (_c *VodCreate) SetFolderName(v string) *VodCreate {
+	_c.mutation.SetFolderName(v)
+	return _c
 }
 
 // SetNillableFolderName sets the "folder_name" field if the given value is not nil.
-func (vc *VodCreate) SetNillableFolderName(s *string) *VodCreate {
-	if s != nil {
-		vc.SetFolderName(*s)
+func (_c *VodCreate) SetNillableFolderName(v *string) *VodCreate {
+	if v != nil {
+		_c.SetFolderName(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetFileName sets the "file_name" field.
-func (vc *VodCreate) SetFileName(s string) *VodCreate {
-	vc.mutation.SetFileName(s)
-	return vc
+func (_c *VodCreate) SetFileName(v string) *VodCreate {
+	_c.mutation.SetFileName(v)
+	return _c
 }
 
 // SetNillableFileName sets the "file_name" field if the given value is not nil.
-func (vc *VodCreate) SetNillableFileName(s *string) *VodCreate {
-	if s != nil {
-		vc.SetFileName(*s)
+func (_c *VodCreate) SetNillableFileName(v *string) *VodCreate {
+	if v != nil {
+		_c.SetFileName(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetTmpVideoDownloadPath sets the "tmp_video_download_path" field.
-func (vc *VodCreate) SetTmpVideoDownloadPath(s string) *VodCreate {
-	vc.mutation.SetTmpVideoDownloadPath(s)
-	return vc
+func (_c *VodCreate) SetTmpVideoDownloadPath(v string) *VodCreate {
+	_c.mutation.SetTmpVideoDownloadPath(v)
+	return _c
 }
 
 // SetNillableTmpVideoDownloadPath sets the "tmp_video_download_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableTmpVideoDownloadPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetTmpVideoDownloadPath(*s)
+func (_c *VodCreate) SetNillableTmpVideoDownloadPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetTmpVideoDownloadPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetTmpVideoConvertPath sets the "tmp_video_convert_path" field.
-func (vc *VodCreate) SetTmpVideoConvertPath(s string) *VodCreate {
-	vc.mutation.SetTmpVideoConvertPath(s)
-	return vc
+func (_c *VodCreate) SetTmpVideoConvertPath(v string) *VodCreate {
+	_c.mutation.SetTmpVideoConvertPath(v)
+	return _c
 }
 
 // SetNillableTmpVideoConvertPath sets the "tmp_video_convert_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableTmpVideoConvertPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetTmpVideoConvertPath(*s)
+func (_c *VodCreate) SetNillableTmpVideoConvertPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetTmpVideoConvertPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetTmpChatDownloadPath sets the "tmp_chat_download_path" field.
-func (vc *VodCreate) SetTmpChatDownloadPath(s string) *VodCreate {
-	vc.mutation.SetTmpChatDownloadPath(s)
-	return vc
+func (_c *VodCreate) SetTmpChatDownloadPath(v string) *VodCreate {
+	_c.mutation.SetTmpChatDownloadPath(v)
+	return _c
 }
 
 // SetNillableTmpChatDownloadPath sets the "tmp_chat_download_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableTmpChatDownloadPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetTmpChatDownloadPath(*s)
+func (_c *VodCreate) SetNillableTmpChatDownloadPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetTmpChatDownloadPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field.
-func (vc *VodCreate) SetTmpLiveChatDownloadPath(s string) *VodCreate {
-	vc.mutation.SetTmpLiveChatDownloadPath(s)
-	return vc
+func (_c *VodCreate) SetTmpLiveChatDownloadPath(v string) *VodCreate {
+	_c.mutation.SetTmpLiveChatDownloadPath(v)
+	return _c
 }
 
 // SetNillableTmpLiveChatDownloadPath sets the "tmp_live_chat_download_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableTmpLiveChatDownloadPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetTmpLiveChatDownloadPath(*s)
+func (_c *VodCreate) SetNillableTmpLiveChatDownloadPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetTmpLiveChatDownloadPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field.
-func (vc *VodCreate) SetTmpLiveChatConvertPath(s string) *VodCreate {
-	vc.mutation.SetTmpLiveChatConvertPath(s)
-	return vc
+func (_c *VodCreate) SetTmpLiveChatConvertPath(v string) *VodCreate {
+	_c.mutation.SetTmpLiveChatConvertPath(v)
+	return _c
 }
 
 // SetNillableTmpLiveChatConvertPath sets the "tmp_live_chat_convert_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableTmpLiveChatConvertPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetTmpLiveChatConvertPath(*s)
+func (_c *VodCreate) SetNillableTmpLiveChatConvertPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetTmpLiveChatConvertPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetTmpChatRenderPath sets the "tmp_chat_render_path" field.
-func (vc *VodCreate) SetTmpChatRenderPath(s string) *VodCreate {
-	vc.mutation.SetTmpChatRenderPath(s)
-	return vc
+func (_c *VodCreate) SetTmpChatRenderPath(v string) *VodCreate {
+	_c.mutation.SetTmpChatRenderPath(v)
+	return _c
 }
 
 // SetNillableTmpChatRenderPath sets the "tmp_chat_render_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableTmpChatRenderPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetTmpChatRenderPath(*s)
+func (_c *VodCreate) SetNillableTmpChatRenderPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetTmpChatRenderPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetTmpVideoHlsPath sets the "tmp_video_hls_path" field.
-func (vc *VodCreate) SetTmpVideoHlsPath(s string) *VodCreate {
-	vc.mutation.SetTmpVideoHlsPath(s)
-	return vc
+func (_c *VodCreate) SetTmpVideoHlsPath(v string) *VodCreate {
+	_c.mutation.SetTmpVideoHlsPath(v)
+	return _c
 }
 
 // SetNillableTmpVideoHlsPath sets the "tmp_video_hls_path" field if the given value is not nil.
-func (vc *VodCreate) SetNillableTmpVideoHlsPath(s *string) *VodCreate {
-	if s != nil {
-		vc.SetTmpVideoHlsPath(*s)
+func (_c *VodCreate) SetNillableTmpVideoHlsPath(v *string) *VodCreate {
+	if v != nil {
+		_c.SetTmpVideoHlsPath(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetLocked sets the "locked" field.
-func (vc *VodCreate) SetLocked(b bool) *VodCreate {
-	vc.mutation.SetLocked(b)
-	return vc
+func (_c *VodCreate) SetLocked(v bool) *VodCreate {
+	_c.mutation.SetLocked(v)
+	return _c
 }
 
 // SetNillableLocked sets the "locked" field if the given value is not nil.
-func (vc *VodCreate) SetNillableLocked(b *bool) *VodCreate {
-	if b != nil {
-		vc.SetLocked(*b)
+func (_c *VodCreate) SetNillableLocked(v *bool) *VodCreate {
+	if v != nil {
+		_c.SetLocked(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetLocalViews sets the "local_views" field.
-func (vc *VodCreate) SetLocalViews(i int) *VodCreate {
-	vc.mutation.SetLocalViews(i)
-	return vc
+func (_c *VodCreate) SetLocalViews(v int) *VodCreate {
+	_c.mutation.SetLocalViews(v)
+	return _c
 }
 
 // SetNillableLocalViews sets the "local_views" field if the given value is not nil.
-func (vc *VodCreate) SetNillableLocalViews(i *int) *VodCreate {
-	if i != nil {
-		vc.SetLocalViews(*i)
+func (_c *VodCreate) SetNillableLocalViews(v *int) *VodCreate {
+	if v != nil {
+		_c.SetLocalViews(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field.
-func (vc *VodCreate) SetSpriteThumbnailsEnabled(b bool) *VodCreate {
-	vc.mutation.SetSpriteThumbnailsEnabled(b)
-	return vc
+func (_c *VodCreate) SetSpriteThumbnailsEnabled(v bool) *VodCreate {
+	_c.mutation.SetSpriteThumbnailsEnabled(v)
+	return _c
 }
 
 // SetNillableSpriteThumbnailsEnabled sets the "sprite_thumbnails_enabled" field if the given value is not nil.
-func (vc *VodCreate) SetNillableSpriteThumbnailsEnabled(b *bool) *VodCreate {
-	if b != nil {
-		vc.SetSpriteThumbnailsEnabled(*b)
+func (_c *VodCreate) SetNillableSpriteThumbnailsEnabled(v *bool) *VodCreate {
+	if v != nil {
+		_c.SetSpriteThumbnailsEnabled(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetSpriteThumbnailsImages sets the "sprite_thumbnails_images" field.
-func (vc *VodCreate) SetSpriteThumbnailsImages(s []string) *VodCreate {
-	vc.mutation.SetSpriteThumbnailsImages(s)
-	return vc
+func (_c *VodCreate) SetSpriteThumbnailsImages(v []string) *VodCreate {
+	_c.mutation.SetSpriteThumbnailsImages(v)
+	return _c
 }
 
 // SetSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field.
-func (vc *VodCreate) SetSpriteThumbnailsInterval(i int) *VodCreate {
-	vc.mutation.SetSpriteThumbnailsInterval(i)
-	return vc
+func (_c *VodCreate) SetSpriteThumbnailsInterval(v int) *VodCreate {
+	_c.mutation.SetSpriteThumbnailsInterval(v)
+	return _c
 }
 
 // SetNillableSpriteThumbnailsInterval sets the "sprite_thumbnails_interval" field if the given value is not nil.
-func (vc *VodCreate) SetNillableSpriteThumbnailsInterval(i *int) *VodCreate {
-	if i != nil {
-		vc.SetSpriteThumbnailsInterval(*i)
+func (_c *VodCreate) SetNillableSpriteThumbnailsInterval(v *int) *VodCreate {
+	if v != nil {
+		_c.SetSpriteThumbnailsInterval(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field.
-func (vc *VodCreate) SetSpriteThumbnailsWidth(i int) *VodCreate {
-	vc.mutation.SetSpriteThumbnailsWidth(i)
-	return vc
+func (_c *VodCreate) SetSpriteThumbnailsWidth(v int) *VodCreate {
+	_c.mutation.SetSpriteThumbnailsWidth(v)
+	return _c
 }
 
 // SetNillableSpriteThumbnailsWidth sets the "sprite_thumbnails_width" field if the given value is not nil.
-func (vc *VodCreate) SetNillableSpriteThumbnailsWidth(i *int) *VodCreate {
-	if i != nil {
-		vc.SetSpriteThumbnailsWidth(*i)
+func (_c *VodCreate) SetNillableSpriteThumbnailsWidth(v *int) *VodCreate {
+	if v != nil {
+		_c.SetSpriteThumbnailsWidth(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field.
-func (vc *VodCreate) SetSpriteThumbnailsHeight(i int) *VodCreate {
-	vc.mutation.SetSpriteThumbnailsHeight(i)
-	return vc
+func (_c *VodCreate) SetSpriteThumbnailsHeight(v int) *VodCreate {
+	_c.mutation.SetSpriteThumbnailsHeight(v)
+	return _c
 }
 
 // SetNillableSpriteThumbnailsHeight sets the "sprite_thumbnails_height" field if the given value is not nil.
-func (vc *VodCreate) SetNillableSpriteThumbnailsHeight(i *int) *VodCreate {
-	if i != nil {
-		vc.SetSpriteThumbnailsHeight(*i)
+func (_c *VodCreate) SetNillableSpriteThumbnailsHeight(v *int) *VodCreate {
+	if v != nil {
+		_c.SetSpriteThumbnailsHeight(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field.
-func (vc *VodCreate) SetSpriteThumbnailsRows(i int) *VodCreate {
-	vc.mutation.SetSpriteThumbnailsRows(i)
-	return vc
+func (_c *VodCreate) SetSpriteThumbnailsRows(v int) *VodCreate {
+	_c.mutation.SetSpriteThumbnailsRows(v)
+	return _c
 }
 
 // SetNillableSpriteThumbnailsRows sets the "sprite_thumbnails_rows" field if the given value is not nil.
-func (vc *VodCreate) SetNillableSpriteThumbnailsRows(i *int) *VodCreate {
-	if i != nil {
-		vc.SetSpriteThumbnailsRows(*i)
+func (_c *VodCreate) SetNillableSpriteThumbnailsRows(v *int) *VodCreate {
+	if v != nil {
+		_c.SetSpriteThumbnailsRows(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field.
-func (vc *VodCreate) SetSpriteThumbnailsColumns(i int) *VodCreate {
-	vc.mutation.SetSpriteThumbnailsColumns(i)
-	return vc
+func (_c *VodCreate) SetSpriteThumbnailsColumns(v int) *VodCreate {
+	_c.mutation.SetSpriteThumbnailsColumns(v)
+	return _c
 }
 
 // SetNillableSpriteThumbnailsColumns sets the "sprite_thumbnails_columns" field if the given value is not nil.
-func (vc *VodCreate) SetNillableSpriteThumbnailsColumns(i *int) *VodCreate {
-	if i != nil {
-		vc.SetSpriteThumbnailsColumns(*i)
+func (_c *VodCreate) SetNillableSpriteThumbnailsColumns(v *int) *VodCreate {
+	if v != nil {
+		_c.SetSpriteThumbnailsColumns(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetStorageSizeBytes sets the "storage_size_bytes" field.
-func (vc *VodCreate) SetStorageSizeBytes(i int64) *VodCreate {
-	vc.mutation.SetStorageSizeBytes(i)
-	return vc
+func (_c *VodCreate) SetStorageSizeBytes(v int64) *VodCreate {
+	_c.mutation.SetStorageSizeBytes(v)
+	return _c
 }
 
 // SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
-func (vc *VodCreate) SetNillableStorageSizeBytes(i *int64) *VodCreate {
-	if i != nil {
-		vc.SetStorageSizeBytes(*i)
+func (_c *VodCreate) SetNillableStorageSizeBytes(v *int64) *VodCreate {
+	if v != nil {
+		_c.SetStorageSizeBytes(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetStreamedAt sets the "streamed_at" field.
-func (vc *VodCreate) SetStreamedAt(t time.Time) *VodCreate {
-	vc.mutation.SetStreamedAt(t)
-	return vc
+func (_c *VodCreate) SetStreamedAt(v time.Time) *VodCreate {
+	_c.mutation.SetStreamedAt(v)
+	return _c
 }
 
 // SetNillableStreamedAt sets the "streamed_at" field if the given value is not nil.
-func (vc *VodCreate) SetNillableStreamedAt(t *time.Time) *VodCreate {
-	if t != nil {
-		vc.SetStreamedAt(*t)
+func (_c *VodCreate) SetNillableStreamedAt(v *time.Time) *VodCreate {
+	if v != nil {
+		_c.SetStreamedAt(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (vc *VodCreate) SetUpdatedAt(t time.Time) *VodCreate {
-	vc.mutation.SetUpdatedAt(t)
-	return vc
+func (_c *VodCreate) SetUpdatedAt(v time.Time) *VodCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (vc *VodCreate) SetNillableUpdatedAt(t *time.Time) *VodCreate {
-	if t != nil {
-		vc.SetUpdatedAt(*t)
+func (_c *VodCreate) SetNillableUpdatedAt(v *time.Time) *VodCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (vc *VodCreate) SetCreatedAt(t time.Time) *VodCreate {
-	vc.mutation.SetCreatedAt(t)
-	return vc
+func (_c *VodCreate) SetCreatedAt(v time.Time) *VodCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (vc *VodCreate) SetNillableCreatedAt(t *time.Time) *VodCreate {
-	if t != nil {
-		vc.SetCreatedAt(*t)
+func (_c *VodCreate) SetNillableCreatedAt(v *time.Time) *VodCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetID sets the "id" field.
-func (vc *VodCreate) SetID(u uuid.UUID) *VodCreate {
-	vc.mutation.SetID(u)
-	return vc
+func (_c *VodCreate) SetID(v uuid.UUID) *VodCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (vc *VodCreate) SetNillableID(u *uuid.UUID) *VodCreate {
-	if u != nil {
-		vc.SetID(*u)
+func (_c *VodCreate) SetNillableID(v *uuid.UUID) *VodCreate {
+	if v != nil {
+		_c.SetID(*v)
 	}
-	return vc
+	return _c
 }
 
 // SetChannelID sets the "channel" edge to the Channel entity by ID.
-func (vc *VodCreate) SetChannelID(id uuid.UUID) *VodCreate {
-	vc.mutation.SetChannelID(id)
-	return vc
+func (_c *VodCreate) SetChannelID(id uuid.UUID) *VodCreate {
+	_c.mutation.SetChannelID(id)
+	return _c
 }
 
 // SetChannel sets the "channel" edge to the Channel entity.
-func (vc *VodCreate) SetChannel(c *Channel) *VodCreate {
-	return vc.SetChannelID(c.ID)
+func (_c *VodCreate) SetChannel(v *Channel) *VodCreate {
+	return _c.SetChannelID(v.ID)
 }
 
 // SetQueueID sets the "queue" edge to the Queue entity by ID.
-func (vc *VodCreate) SetQueueID(id uuid.UUID) *VodCreate {
-	vc.mutation.SetQueueID(id)
-	return vc
+func (_c *VodCreate) SetQueueID(id uuid.UUID) *VodCreate {
+	_c.mutation.SetQueueID(id)
+	return _c
 }
 
 // SetNillableQueueID sets the "queue" edge to the Queue entity by ID if the given value is not nil.
-func (vc *VodCreate) SetNillableQueueID(id *uuid.UUID) *VodCreate {
+func (_c *VodCreate) SetNillableQueueID(id *uuid.UUID) *VodCreate {
 	if id != nil {
-		vc = vc.SetQueueID(*id)
+		_c = _c.SetQueueID(*id)
 	}
-	return vc
+	return _c
 }
 
 // SetQueue sets the "queue" edge to the Queue entity.
-func (vc *VodCreate) SetQueue(q *Queue) *VodCreate {
-	return vc.SetQueueID(q.ID)
+func (_c *VodCreate) SetQueue(v *Queue) *VodCreate {
+	return _c.SetQueueID(v.ID)
 }
 
 // AddPlaylistIDs adds the "playlists" edge to the Playlist entity by IDs.
-func (vc *VodCreate) AddPlaylistIDs(ids ...uuid.UUID) *VodCreate {
-	vc.mutation.AddPlaylistIDs(ids...)
-	return vc
+func (_c *VodCreate) AddPlaylistIDs(ids ...uuid.UUID) *VodCreate {
+	_c.mutation.AddPlaylistIDs(ids...)
+	return _c
 }
 
 // AddPlaylists adds the "playlists" edges to the Playlist entity.
-func (vc *VodCreate) AddPlaylists(p ...*Playlist) *VodCreate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *VodCreate) AddPlaylists(v ...*Playlist) *VodCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vc.AddPlaylistIDs(ids...)
+	return _c.AddPlaylistIDs(ids...)
 }
 
 // AddChapterIDs adds the "chapters" edge to the Chapter entity by IDs.
-func (vc *VodCreate) AddChapterIDs(ids ...uuid.UUID) *VodCreate {
-	vc.mutation.AddChapterIDs(ids...)
-	return vc
+func (_c *VodCreate) AddChapterIDs(ids ...uuid.UUID) *VodCreate {
+	_c.mutation.AddChapterIDs(ids...)
+	return _c
 }
 
 // AddChapters adds the "chapters" edges to the Chapter entity.
-func (vc *VodCreate) AddChapters(c ...*Chapter) *VodCreate {
-	ids := make([]uuid.UUID, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_c *VodCreate) AddChapters(v ...*Chapter) *VodCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vc.AddChapterIDs(ids...)
+	return _c.AddChapterIDs(ids...)
 }
 
 // AddMutedSegmentIDs adds the "muted_segments" edge to the MutedSegment entity by IDs.
-func (vc *VodCreate) AddMutedSegmentIDs(ids ...uuid.UUID) *VodCreate {
-	vc.mutation.AddMutedSegmentIDs(ids...)
-	return vc
+func (_c *VodCreate) AddMutedSegmentIDs(ids ...uuid.UUID) *VodCreate {
+	_c.mutation.AddMutedSegmentIDs(ids...)
+	return _c
 }
 
 // AddMutedSegments adds the "muted_segments" edges to the MutedSegment entity.
-func (vc *VodCreate) AddMutedSegments(m ...*MutedSegment) *VodCreate {
-	ids := make([]uuid.UUID, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_c *VodCreate) AddMutedSegments(v ...*MutedSegment) *VodCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vc.AddMutedSegmentIDs(ids...)
+	return _c.AddMutedSegmentIDs(ids...)
 }
 
 // AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
-func (vc *VodCreate) AddMultistreamInfoIDs(ids ...int) *VodCreate {
-	vc.mutation.AddMultistreamInfoIDs(ids...)
-	return vc
+func (_c *VodCreate) AddMultistreamInfoIDs(ids ...int) *VodCreate {
+	_c.mutation.AddMultistreamInfoIDs(ids...)
+	return _c
 }
 
 // AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
-func (vc *VodCreate) AddMultistreamInfo(m ...*MultistreamInfo) *VodCreate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_c *VodCreate) AddMultistreamInfo(v ...*MultistreamInfo) *VodCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return vc.AddMultistreamInfoIDs(ids...)
+	return _c.AddMultistreamInfoIDs(ids...)
 }
 
 // Mutation returns the VodMutation object of the builder.
-func (vc *VodCreate) Mutation() *VodMutation {
-	return vc.mutation
+func (_c *VodCreate) Mutation() *VodMutation {
+	return _c.mutation
 }
 
 // Save creates the Vod in the database.
-func (vc *VodCreate) Save(ctx context.Context) (*Vod, error) {
-	vc.defaults()
-	return withHooks(ctx, vc.sqlSave, vc.mutation, vc.hooks)
+func (_c *VodCreate) Save(ctx context.Context) (*Vod, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (vc *VodCreate) SaveX(ctx context.Context) *Vod {
-	v, err := vc.Save(ctx)
+func (_c *VodCreate) SaveX(ctx context.Context) *Vod {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -718,146 +718,146 @@ func (vc *VodCreate) SaveX(ctx context.Context) *Vod {
 }
 
 // Exec executes the query.
-func (vc *VodCreate) Exec(ctx context.Context) error {
-	_, err := vc.Save(ctx)
+func (_c *VodCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (vc *VodCreate) ExecX(ctx context.Context) {
-	if err := vc.Exec(ctx); err != nil {
+func (_c *VodCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (vc *VodCreate) defaults() {
-	if _, ok := vc.mutation.Platform(); !ok {
+func (_c *VodCreate) defaults() {
+	if _, ok := _c.mutation.Platform(); !ok {
 		v := vod.DefaultPlatform
-		vc.mutation.SetPlatform(v)
+		_c.mutation.SetPlatform(v)
 	}
-	if _, ok := vc.mutation.GetType(); !ok {
+	if _, ok := _c.mutation.GetType(); !ok {
 		v := vod.DefaultType
-		vc.mutation.SetType(v)
+		_c.mutation.SetType(v)
 	}
-	if _, ok := vc.mutation.Duration(); !ok {
+	if _, ok := _c.mutation.Duration(); !ok {
 		v := vod.DefaultDuration
-		vc.mutation.SetDuration(v)
+		_c.mutation.SetDuration(v)
 	}
-	if _, ok := vc.mutation.Views(); !ok {
+	if _, ok := _c.mutation.Views(); !ok {
 		v := vod.DefaultViews
-		vc.mutation.SetViews(v)
+		_c.mutation.SetViews(v)
 	}
-	if _, ok := vc.mutation.Processing(); !ok {
+	if _, ok := _c.mutation.Processing(); !ok {
 		v := vod.DefaultProcessing
-		vc.mutation.SetProcessing(v)
+		_c.mutation.SetProcessing(v)
 	}
-	if _, ok := vc.mutation.Locked(); !ok {
+	if _, ok := _c.mutation.Locked(); !ok {
 		v := vod.DefaultLocked
-		vc.mutation.SetLocked(v)
+		_c.mutation.SetLocked(v)
 	}
-	if _, ok := vc.mutation.LocalViews(); !ok {
+	if _, ok := _c.mutation.LocalViews(); !ok {
 		v := vod.DefaultLocalViews
-		vc.mutation.SetLocalViews(v)
+		_c.mutation.SetLocalViews(v)
 	}
-	if _, ok := vc.mutation.SpriteThumbnailsEnabled(); !ok {
+	if _, ok := _c.mutation.SpriteThumbnailsEnabled(); !ok {
 		v := vod.DefaultSpriteThumbnailsEnabled
-		vc.mutation.SetSpriteThumbnailsEnabled(v)
+		_c.mutation.SetSpriteThumbnailsEnabled(v)
 	}
-	if _, ok := vc.mutation.StorageSizeBytes(); !ok {
+	if _, ok := _c.mutation.StorageSizeBytes(); !ok {
 		v := vod.DefaultStorageSizeBytes
-		vc.mutation.SetStorageSizeBytes(v)
+		_c.mutation.SetStorageSizeBytes(v)
 	}
-	if _, ok := vc.mutation.StreamedAt(); !ok {
+	if _, ok := _c.mutation.StreamedAt(); !ok {
 		v := vod.DefaultStreamedAt()
-		vc.mutation.SetStreamedAt(v)
+		_c.mutation.SetStreamedAt(v)
 	}
-	if _, ok := vc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := vod.DefaultUpdatedAt()
-		vc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := vc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := vod.DefaultCreatedAt()
-		vc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := vc.mutation.ID(); !ok {
+	if _, ok := _c.mutation.ID(); !ok {
 		v := vod.DefaultID()
-		vc.mutation.SetID(v)
+		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (vc *VodCreate) check() error {
-	if _, ok := vc.mutation.ExtID(); !ok {
+func (_c *VodCreate) check() error {
+	if _, ok := _c.mutation.ExtID(); !ok {
 		return &ValidationError{Name: "ext_id", err: errors.New(`ent: missing required field "Vod.ext_id"`)}
 	}
-	if _, ok := vc.mutation.Platform(); !ok {
+	if _, ok := _c.mutation.Platform(); !ok {
 		return &ValidationError{Name: "platform", err: errors.New(`ent: missing required field "Vod.platform"`)}
 	}
-	if v, ok := vc.mutation.Platform(); ok {
+	if v, ok := _c.mutation.Platform(); ok {
 		if err := vod.PlatformValidator(v); err != nil {
 			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Vod.platform": %w`, err)}
 		}
 	}
-	if _, ok := vc.mutation.GetType(); !ok {
+	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Vod.type"`)}
 	}
-	if v, ok := vc.mutation.GetType(); ok {
+	if v, ok := _c.mutation.GetType(); ok {
 		if err := vod.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Vod.type": %w`, err)}
 		}
 	}
-	if _, ok := vc.mutation.Title(); !ok {
+	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Vod.title"`)}
 	}
-	if _, ok := vc.mutation.Duration(); !ok {
+	if _, ok := _c.mutation.Duration(); !ok {
 		return &ValidationError{Name: "duration", err: errors.New(`ent: missing required field "Vod.duration"`)}
 	}
-	if _, ok := vc.mutation.Views(); !ok {
+	if _, ok := _c.mutation.Views(); !ok {
 		return &ValidationError{Name: "views", err: errors.New(`ent: missing required field "Vod.views"`)}
 	}
-	if _, ok := vc.mutation.Processing(); !ok {
+	if _, ok := _c.mutation.Processing(); !ok {
 		return &ValidationError{Name: "processing", err: errors.New(`ent: missing required field "Vod.processing"`)}
 	}
-	if _, ok := vc.mutation.WebThumbnailPath(); !ok {
+	if _, ok := _c.mutation.WebThumbnailPath(); !ok {
 		return &ValidationError{Name: "web_thumbnail_path", err: errors.New(`ent: missing required field "Vod.web_thumbnail_path"`)}
 	}
-	if _, ok := vc.mutation.VideoPath(); !ok {
+	if _, ok := _c.mutation.VideoPath(); !ok {
 		return &ValidationError{Name: "video_path", err: errors.New(`ent: missing required field "Vod.video_path"`)}
 	}
-	if _, ok := vc.mutation.Locked(); !ok {
+	if _, ok := _c.mutation.Locked(); !ok {
 		return &ValidationError{Name: "locked", err: errors.New(`ent: missing required field "Vod.locked"`)}
 	}
-	if _, ok := vc.mutation.LocalViews(); !ok {
+	if _, ok := _c.mutation.LocalViews(); !ok {
 		return &ValidationError{Name: "local_views", err: errors.New(`ent: missing required field "Vod.local_views"`)}
 	}
-	if _, ok := vc.mutation.SpriteThumbnailsEnabled(); !ok {
+	if _, ok := _c.mutation.SpriteThumbnailsEnabled(); !ok {
 		return &ValidationError{Name: "sprite_thumbnails_enabled", err: errors.New(`ent: missing required field "Vod.sprite_thumbnails_enabled"`)}
 	}
-	if _, ok := vc.mutation.StorageSizeBytes(); !ok {
+	if _, ok := _c.mutation.StorageSizeBytes(); !ok {
 		return &ValidationError{Name: "storage_size_bytes", err: errors.New(`ent: missing required field "Vod.storage_size_bytes"`)}
 	}
-	if _, ok := vc.mutation.StreamedAt(); !ok {
+	if _, ok := _c.mutation.StreamedAt(); !ok {
 		return &ValidationError{Name: "streamed_at", err: errors.New(`ent: missing required field "Vod.streamed_at"`)}
 	}
-	if _, ok := vc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Vod.updated_at"`)}
 	}
-	if _, ok := vc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Vod.created_at"`)}
 	}
-	if len(vc.mutation.ChannelIDs()) == 0 {
+	if len(_c.mutation.ChannelIDs()) == 0 {
 		return &ValidationError{Name: "channel", err: errors.New(`ent: missing required edge "Vod.channel"`)}
 	}
 	return nil
 }
 
-func (vc *VodCreate) sqlSave(ctx context.Context) (*Vod, error) {
-	if err := vc.check(); err != nil {
+func (_c *VodCreate) sqlSave(ctx context.Context) (*Vod, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := vc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, vc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -870,194 +870,194 @@ func (vc *VodCreate) sqlSave(ctx context.Context) (*Vod, error) {
 			return nil, err
 		}
 	}
-	vc.mutation.id = &_node.ID
-	vc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
+func (_c *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Vod{config: vc.config}
+		_node = &Vod{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(vod.Table, sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID))
 	)
-	_spec.OnConflict = vc.conflict
-	if id, ok := vc.mutation.ID(); ok {
+	_spec.OnConflict = _c.conflict
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := vc.mutation.ExtID(); ok {
+	if value, ok := _c.mutation.ExtID(); ok {
 		_spec.SetField(vod.FieldExtID, field.TypeString, value)
 		_node.ExtID = value
 	}
-	if value, ok := vc.mutation.ClipExtVodID(); ok {
+	if value, ok := _c.mutation.ClipExtVodID(); ok {
 		_spec.SetField(vod.FieldClipExtVodID, field.TypeString, value)
 		_node.ClipExtVodID = value
 	}
-	if value, ok := vc.mutation.ExtStreamID(); ok {
+	if value, ok := _c.mutation.ExtStreamID(); ok {
 		_spec.SetField(vod.FieldExtStreamID, field.TypeString, value)
 		_node.ExtStreamID = value
 	}
-	if value, ok := vc.mutation.Platform(); ok {
+	if value, ok := _c.mutation.Platform(); ok {
 		_spec.SetField(vod.FieldPlatform, field.TypeEnum, value)
 		_node.Platform = value
 	}
-	if value, ok := vc.mutation.GetType(); ok {
+	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(vod.FieldType, field.TypeEnum, value)
 		_node.Type = value
 	}
-	if value, ok := vc.mutation.Title(); ok {
+	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(vod.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
-	if value, ok := vc.mutation.Duration(); ok {
+	if value, ok := _c.mutation.Duration(); ok {
 		_spec.SetField(vod.FieldDuration, field.TypeInt, value)
 		_node.Duration = value
 	}
-	if value, ok := vc.mutation.ClipVodOffset(); ok {
+	if value, ok := _c.mutation.ClipVodOffset(); ok {
 		_spec.SetField(vod.FieldClipVodOffset, field.TypeInt, value)
 		_node.ClipVodOffset = value
 	}
-	if value, ok := vc.mutation.Views(); ok {
+	if value, ok := _c.mutation.Views(); ok {
 		_spec.SetField(vod.FieldViews, field.TypeInt, value)
 		_node.Views = value
 	}
-	if value, ok := vc.mutation.Resolution(); ok {
+	if value, ok := _c.mutation.Resolution(); ok {
 		_spec.SetField(vod.FieldResolution, field.TypeString, value)
 		_node.Resolution = value
 	}
-	if value, ok := vc.mutation.Processing(); ok {
+	if value, ok := _c.mutation.Processing(); ok {
 		_spec.SetField(vod.FieldProcessing, field.TypeBool, value)
 		_node.Processing = value
 	}
-	if value, ok := vc.mutation.ThumbnailPath(); ok {
+	if value, ok := _c.mutation.ThumbnailPath(); ok {
 		_spec.SetField(vod.FieldThumbnailPath, field.TypeString, value)
 		_node.ThumbnailPath = value
 	}
-	if value, ok := vc.mutation.WebThumbnailPath(); ok {
+	if value, ok := _c.mutation.WebThumbnailPath(); ok {
 		_spec.SetField(vod.FieldWebThumbnailPath, field.TypeString, value)
 		_node.WebThumbnailPath = value
 	}
-	if value, ok := vc.mutation.VideoPath(); ok {
+	if value, ok := _c.mutation.VideoPath(); ok {
 		_spec.SetField(vod.FieldVideoPath, field.TypeString, value)
 		_node.VideoPath = value
 	}
-	if value, ok := vc.mutation.VideoHlsPath(); ok {
+	if value, ok := _c.mutation.VideoHlsPath(); ok {
 		_spec.SetField(vod.FieldVideoHlsPath, field.TypeString, value)
 		_node.VideoHlsPath = value
 	}
-	if value, ok := vc.mutation.ChatPath(); ok {
+	if value, ok := _c.mutation.ChatPath(); ok {
 		_spec.SetField(vod.FieldChatPath, field.TypeString, value)
 		_node.ChatPath = value
 	}
-	if value, ok := vc.mutation.LiveChatPath(); ok {
+	if value, ok := _c.mutation.LiveChatPath(); ok {
 		_spec.SetField(vod.FieldLiveChatPath, field.TypeString, value)
 		_node.LiveChatPath = value
 	}
-	if value, ok := vc.mutation.LiveChatConvertPath(); ok {
+	if value, ok := _c.mutation.LiveChatConvertPath(); ok {
 		_spec.SetField(vod.FieldLiveChatConvertPath, field.TypeString, value)
 		_node.LiveChatConvertPath = value
 	}
-	if value, ok := vc.mutation.ChatVideoPath(); ok {
+	if value, ok := _c.mutation.ChatVideoPath(); ok {
 		_spec.SetField(vod.FieldChatVideoPath, field.TypeString, value)
 		_node.ChatVideoPath = value
 	}
-	if value, ok := vc.mutation.InfoPath(); ok {
+	if value, ok := _c.mutation.InfoPath(); ok {
 		_spec.SetField(vod.FieldInfoPath, field.TypeString, value)
 		_node.InfoPath = value
 	}
-	if value, ok := vc.mutation.CaptionPath(); ok {
+	if value, ok := _c.mutation.CaptionPath(); ok {
 		_spec.SetField(vod.FieldCaptionPath, field.TypeString, value)
 		_node.CaptionPath = value
 	}
-	if value, ok := vc.mutation.FolderName(); ok {
+	if value, ok := _c.mutation.FolderName(); ok {
 		_spec.SetField(vod.FieldFolderName, field.TypeString, value)
 		_node.FolderName = value
 	}
-	if value, ok := vc.mutation.FileName(); ok {
+	if value, ok := _c.mutation.FileName(); ok {
 		_spec.SetField(vod.FieldFileName, field.TypeString, value)
 		_node.FileName = value
 	}
-	if value, ok := vc.mutation.TmpVideoDownloadPath(); ok {
+	if value, ok := _c.mutation.TmpVideoDownloadPath(); ok {
 		_spec.SetField(vod.FieldTmpVideoDownloadPath, field.TypeString, value)
 		_node.TmpVideoDownloadPath = value
 	}
-	if value, ok := vc.mutation.TmpVideoConvertPath(); ok {
+	if value, ok := _c.mutation.TmpVideoConvertPath(); ok {
 		_spec.SetField(vod.FieldTmpVideoConvertPath, field.TypeString, value)
 		_node.TmpVideoConvertPath = value
 	}
-	if value, ok := vc.mutation.TmpChatDownloadPath(); ok {
+	if value, ok := _c.mutation.TmpChatDownloadPath(); ok {
 		_spec.SetField(vod.FieldTmpChatDownloadPath, field.TypeString, value)
 		_node.TmpChatDownloadPath = value
 	}
-	if value, ok := vc.mutation.TmpLiveChatDownloadPath(); ok {
+	if value, ok := _c.mutation.TmpLiveChatDownloadPath(); ok {
 		_spec.SetField(vod.FieldTmpLiveChatDownloadPath, field.TypeString, value)
 		_node.TmpLiveChatDownloadPath = value
 	}
-	if value, ok := vc.mutation.TmpLiveChatConvertPath(); ok {
+	if value, ok := _c.mutation.TmpLiveChatConvertPath(); ok {
 		_spec.SetField(vod.FieldTmpLiveChatConvertPath, field.TypeString, value)
 		_node.TmpLiveChatConvertPath = value
 	}
-	if value, ok := vc.mutation.TmpChatRenderPath(); ok {
+	if value, ok := _c.mutation.TmpChatRenderPath(); ok {
 		_spec.SetField(vod.FieldTmpChatRenderPath, field.TypeString, value)
 		_node.TmpChatRenderPath = value
 	}
-	if value, ok := vc.mutation.TmpVideoHlsPath(); ok {
+	if value, ok := _c.mutation.TmpVideoHlsPath(); ok {
 		_spec.SetField(vod.FieldTmpVideoHlsPath, field.TypeString, value)
 		_node.TmpVideoHlsPath = value
 	}
-	if value, ok := vc.mutation.Locked(); ok {
+	if value, ok := _c.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
 		_node.Locked = value
 	}
-	if value, ok := vc.mutation.LocalViews(); ok {
+	if value, ok := _c.mutation.LocalViews(); ok {
 		_spec.SetField(vod.FieldLocalViews, field.TypeInt, value)
 		_node.LocalViews = value
 	}
-	if value, ok := vc.mutation.SpriteThumbnailsEnabled(); ok {
+	if value, ok := _c.mutation.SpriteThumbnailsEnabled(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsEnabled, field.TypeBool, value)
 		_node.SpriteThumbnailsEnabled = value
 	}
-	if value, ok := vc.mutation.SpriteThumbnailsImages(); ok {
+	if value, ok := _c.mutation.SpriteThumbnailsImages(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsImages, field.TypeJSON, value)
 		_node.SpriteThumbnailsImages = value
 	}
-	if value, ok := vc.mutation.SpriteThumbnailsInterval(); ok {
+	if value, ok := _c.mutation.SpriteThumbnailsInterval(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsInterval, field.TypeInt, value)
 		_node.SpriteThumbnailsInterval = value
 	}
-	if value, ok := vc.mutation.SpriteThumbnailsWidth(); ok {
+	if value, ok := _c.mutation.SpriteThumbnailsWidth(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsWidth, field.TypeInt, value)
 		_node.SpriteThumbnailsWidth = value
 	}
-	if value, ok := vc.mutation.SpriteThumbnailsHeight(); ok {
+	if value, ok := _c.mutation.SpriteThumbnailsHeight(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsHeight, field.TypeInt, value)
 		_node.SpriteThumbnailsHeight = value
 	}
-	if value, ok := vc.mutation.SpriteThumbnailsRows(); ok {
+	if value, ok := _c.mutation.SpriteThumbnailsRows(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsRows, field.TypeInt, value)
 		_node.SpriteThumbnailsRows = value
 	}
-	if value, ok := vc.mutation.SpriteThumbnailsColumns(); ok {
+	if value, ok := _c.mutation.SpriteThumbnailsColumns(); ok {
 		_spec.SetField(vod.FieldSpriteThumbnailsColumns, field.TypeInt, value)
 		_node.SpriteThumbnailsColumns = value
 	}
-	if value, ok := vc.mutation.StorageSizeBytes(); ok {
+	if value, ok := _c.mutation.StorageSizeBytes(); ok {
 		_spec.SetField(vod.FieldStorageSizeBytes, field.TypeInt64, value)
 		_node.StorageSizeBytes = value
 	}
-	if value, ok := vc.mutation.StreamedAt(); ok {
+	if value, ok := _c.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
 		_node.StreamedAt = value
 	}
-	if value, ok := vc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(vod.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := vc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(vod.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := vc.mutation.ChannelIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ChannelIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1074,7 +1074,7 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		_node.channel_vods = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := vc.mutation.QueueIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.QueueIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2O,
 			Inverse: false,
@@ -1090,7 +1090,7 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := vc.mutation.PlaylistsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.PlaylistsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1106,7 +1106,7 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := vc.mutation.ChaptersIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ChaptersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1122,7 +1122,7 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := vc.mutation.MutedSegmentsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.MutedSegmentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1138,7 +1138,7 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := vc.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
@@ -1173,10 +1173,10 @@ func (vc *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 //			SetExtID(v+v).
 //		}).
 //		Exec(ctx)
-func (vc *VodCreate) OnConflict(opts ...sql.ConflictOption) *VodUpsertOne {
-	vc.conflict = opts
+func (_c *VodCreate) OnConflict(opts ...sql.ConflictOption) *VodUpsertOne {
+	_c.conflict = opts
 	return &VodUpsertOne{
-		create: vc,
+		create: _c,
 	}
 }
 
@@ -1186,10 +1186,10 @@ func (vc *VodCreate) OnConflict(opts ...sql.ConflictOption) *VodUpsertOne {
 //	client.Vod.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (vc *VodCreate) OnConflictColumns(columns ...string) *VodUpsertOne {
-	vc.conflict = append(vc.conflict, sql.ConflictColumns(columns...))
+func (_c *VodCreate) OnConflictColumns(columns ...string) *VodUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &VodUpsertOne{
-		create: vc,
+		create: _c,
 	}
 }
 
@@ -2877,16 +2877,16 @@ type VodCreateBulk struct {
 }
 
 // Save creates the Vod entities in the database.
-func (vcb *VodCreateBulk) Save(ctx context.Context) ([]*Vod, error) {
-	if vcb.err != nil {
-		return nil, vcb.err
+func (_c *VodCreateBulk) Save(ctx context.Context) ([]*Vod, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(vcb.builders))
-	nodes := make([]*Vod, len(vcb.builders))
-	mutators := make([]Mutator, len(vcb.builders))
-	for i := range vcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Vod, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := vcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*VodMutation)
@@ -2900,12 +2900,12 @@ func (vcb *VodCreateBulk) Save(ctx context.Context) ([]*Vod, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, vcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = vcb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, vcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -2925,7 +2925,7 @@ func (vcb *VodCreateBulk) Save(ctx context.Context) ([]*Vod, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, vcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -2933,8 +2933,8 @@ func (vcb *VodCreateBulk) Save(ctx context.Context) ([]*Vod, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (vcb *VodCreateBulk) SaveX(ctx context.Context) []*Vod {
-	v, err := vcb.Save(ctx)
+func (_c *VodCreateBulk) SaveX(ctx context.Context) []*Vod {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -2942,14 +2942,14 @@ func (vcb *VodCreateBulk) SaveX(ctx context.Context) []*Vod {
 }
 
 // Exec executes the query.
-func (vcb *VodCreateBulk) Exec(ctx context.Context) error {
-	_, err := vcb.Save(ctx)
+func (_c *VodCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (vcb *VodCreateBulk) ExecX(ctx context.Context) {
-	if err := vcb.Exec(ctx); err != nil {
+func (_c *VodCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -2969,10 +2969,10 @@ func (vcb *VodCreateBulk) ExecX(ctx context.Context) {
 //			SetExtID(v+v).
 //		}).
 //		Exec(ctx)
-func (vcb *VodCreateBulk) OnConflict(opts ...sql.ConflictOption) *VodUpsertBulk {
-	vcb.conflict = opts
+func (_c *VodCreateBulk) OnConflict(opts ...sql.ConflictOption) *VodUpsertBulk {
+	_c.conflict = opts
 	return &VodUpsertBulk{
-		create: vcb,
+		create: _c,
 	}
 }
 
@@ -2982,10 +2982,10 @@ func (vcb *VodCreateBulk) OnConflict(opts ...sql.ConflictOption) *VodUpsertBulk 
 //	client.Vod.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (vcb *VodCreateBulk) OnConflictColumns(columns ...string) *VodUpsertBulk {
-	vcb.conflict = append(vcb.conflict, sql.ConflictColumns(columns...))
+func (_c *VodCreateBulk) OnConflictColumns(columns ...string) *VodUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &VodUpsertBulk{
-		create: vcb,
+		create: _c,
 	}
 }
 

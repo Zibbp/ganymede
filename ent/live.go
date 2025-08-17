@@ -136,7 +136,7 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Live fields.
-func (l *Live) assignValues(columns []string, values []any) error {
+func (_m *Live) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -146,143 +146,143 @@ func (l *Live) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
-				l.ID = *value
+				_m.ID = *value
 			}
 		case live.FieldWatchLive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field watch_live", values[i])
 			} else if value.Valid {
-				l.WatchLive = value.Bool
+				_m.WatchLive = value.Bool
 			}
 		case live.FieldWatchVod:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field watch_vod", values[i])
 			} else if value.Valid {
-				l.WatchVod = value.Bool
+				_m.WatchVod = value.Bool
 			}
 		case live.FieldDownloadArchives:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field download_archives", values[i])
 			} else if value.Valid {
-				l.DownloadArchives = value.Bool
+				_m.DownloadArchives = value.Bool
 			}
 		case live.FieldDownloadHighlights:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field download_highlights", values[i])
 			} else if value.Valid {
-				l.DownloadHighlights = value.Bool
+				_m.DownloadHighlights = value.Bool
 			}
 		case live.FieldDownloadUploads:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field download_uploads", values[i])
 			} else if value.Valid {
-				l.DownloadUploads = value.Bool
+				_m.DownloadUploads = value.Bool
 			}
 		case live.FieldDownloadSubOnly:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field download_sub_only", values[i])
 			} else if value.Valid {
-				l.DownloadSubOnly = value.Bool
+				_m.DownloadSubOnly = value.Bool
 			}
 		case live.FieldIsLive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_live", values[i])
 			} else if value.Valid {
-				l.IsLive = value.Bool
+				_m.IsLive = value.Bool
 			}
 		case live.FieldArchiveChat:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field archive_chat", values[i])
 			} else if value.Valid {
-				l.ArchiveChat = value.Bool
+				_m.ArchiveChat = value.Bool
 			}
 		case live.FieldResolution:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resolution", values[i])
 			} else if value.Valid {
-				l.Resolution = value.String
+				_m.Resolution = value.String
 			}
 		case live.FieldLastLive:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field last_live", values[i])
 			} else if value.Valid {
-				l.LastLive = value.Time
+				_m.LastLive = value.Time
 			}
 		case live.FieldRenderChat:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field render_chat", values[i])
 			} else if value.Valid {
-				l.RenderChat = value.Bool
+				_m.RenderChat = value.Bool
 			}
 		case live.FieldVideoAge:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field video_age", values[i])
 			} else if value.Valid {
-				l.VideoAge = value.Int64
+				_m.VideoAge = value.Int64
 			}
 		case live.FieldApplyCategoriesToLive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field apply_categories_to_live", values[i])
 			} else if value.Valid {
-				l.ApplyCategoriesToLive = value.Bool
+				_m.ApplyCategoriesToLive = value.Bool
 			}
 		case live.FieldWatchClips:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field watch_clips", values[i])
 			} else if value.Valid {
-				l.WatchClips = value.Bool
+				_m.WatchClips = value.Bool
 			}
 		case live.FieldClipsLimit:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field clips_limit", values[i])
 			} else if value.Valid {
-				l.ClipsLimit = int(value.Int64)
+				_m.ClipsLimit = int(value.Int64)
 			}
 		case live.FieldClipsIntervalDays:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field clips_interval_days", values[i])
 			} else if value.Valid {
-				l.ClipsIntervalDays = int(value.Int64)
+				_m.ClipsIntervalDays = int(value.Int64)
 			}
 		case live.FieldClipsLastChecked:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field clips_last_checked", values[i])
 			} else if value.Valid {
-				l.ClipsLastChecked = value.Time
+				_m.ClipsLastChecked = value.Time
 			}
 		case live.FieldClipsIgnoreLastChecked:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field clips_ignore_last_checked", values[i])
 			} else if value.Valid {
-				l.ClipsIgnoreLastChecked = value.Bool
+				_m.ClipsIgnoreLastChecked = value.Bool
 			}
 		case live.FieldUpdateMetadataMinutes:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field update_metadata_minutes", values[i])
 			} else if value.Valid {
-				l.UpdateMetadataMinutes = int(value.Int64)
+				_m.UpdateMetadataMinutes = int(value.Int64)
 			}
 		case live.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				l.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case live.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				l.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case live.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field channel_live", values[i])
 			} else if value.Valid {
-				l.channel_live = new(uuid.UUID)
-				*l.channel_live = *value.S.(*uuid.UUID)
+				_m.channel_live = new(uuid.UUID)
+				*_m.channel_live = *value.S.(*uuid.UUID)
 			}
 		default:
-			l.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -290,110 +290,110 @@ func (l *Live) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Live.
 // This includes values selected through modifiers, order, etc.
-func (l *Live) Value(name string) (ent.Value, error) {
-	return l.selectValues.Get(name)
+func (_m *Live) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryChannel queries the "channel" edge of the Live entity.
-func (l *Live) QueryChannel() *ChannelQuery {
-	return NewLiveClient(l.config).QueryChannel(l)
+func (_m *Live) QueryChannel() *ChannelQuery {
+	return NewLiveClient(_m.config).QueryChannel(_m)
 }
 
 // QueryCategories queries the "categories" edge of the Live entity.
-func (l *Live) QueryCategories() *LiveCategoryQuery {
-	return NewLiveClient(l.config).QueryCategories(l)
+func (_m *Live) QueryCategories() *LiveCategoryQuery {
+	return NewLiveClient(_m.config).QueryCategories(_m)
 }
 
 // QueryTitleRegex queries the "title_regex" edge of the Live entity.
-func (l *Live) QueryTitleRegex() *LiveTitleRegexQuery {
-	return NewLiveClient(l.config).QueryTitleRegex(l)
+func (_m *Live) QueryTitleRegex() *LiveTitleRegexQuery {
+	return NewLiveClient(_m.config).QueryTitleRegex(_m)
 }
 
 // Update returns a builder for updating this Live.
 // Note that you need to call Live.Unwrap() before calling this method if this Live
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (l *Live) Update() *LiveUpdateOne {
-	return NewLiveClient(l.config).UpdateOne(l)
+func (_m *Live) Update() *LiveUpdateOne {
+	return NewLiveClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Live entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (l *Live) Unwrap() *Live {
-	_tx, ok := l.config.driver.(*txDriver)
+func (_m *Live) Unwrap() *Live {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Live is not a transactional entity")
 	}
-	l.config.driver = _tx.drv
-	return l
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (l *Live) String() string {
+func (_m *Live) String() string {
 	var builder strings.Builder
 	builder.WriteString("Live(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", l.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("watch_live=")
-	builder.WriteString(fmt.Sprintf("%v", l.WatchLive))
+	builder.WriteString(fmt.Sprintf("%v", _m.WatchLive))
 	builder.WriteString(", ")
 	builder.WriteString("watch_vod=")
-	builder.WriteString(fmt.Sprintf("%v", l.WatchVod))
+	builder.WriteString(fmt.Sprintf("%v", _m.WatchVod))
 	builder.WriteString(", ")
 	builder.WriteString("download_archives=")
-	builder.WriteString(fmt.Sprintf("%v", l.DownloadArchives))
+	builder.WriteString(fmt.Sprintf("%v", _m.DownloadArchives))
 	builder.WriteString(", ")
 	builder.WriteString("download_highlights=")
-	builder.WriteString(fmt.Sprintf("%v", l.DownloadHighlights))
+	builder.WriteString(fmt.Sprintf("%v", _m.DownloadHighlights))
 	builder.WriteString(", ")
 	builder.WriteString("download_uploads=")
-	builder.WriteString(fmt.Sprintf("%v", l.DownloadUploads))
+	builder.WriteString(fmt.Sprintf("%v", _m.DownloadUploads))
 	builder.WriteString(", ")
 	builder.WriteString("download_sub_only=")
-	builder.WriteString(fmt.Sprintf("%v", l.DownloadSubOnly))
+	builder.WriteString(fmt.Sprintf("%v", _m.DownloadSubOnly))
 	builder.WriteString(", ")
 	builder.WriteString("is_live=")
-	builder.WriteString(fmt.Sprintf("%v", l.IsLive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsLive))
 	builder.WriteString(", ")
 	builder.WriteString("archive_chat=")
-	builder.WriteString(fmt.Sprintf("%v", l.ArchiveChat))
+	builder.WriteString(fmt.Sprintf("%v", _m.ArchiveChat))
 	builder.WriteString(", ")
 	builder.WriteString("resolution=")
-	builder.WriteString(l.Resolution)
+	builder.WriteString(_m.Resolution)
 	builder.WriteString(", ")
 	builder.WriteString("last_live=")
-	builder.WriteString(l.LastLive.Format(time.ANSIC))
+	builder.WriteString(_m.LastLive.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("render_chat=")
-	builder.WriteString(fmt.Sprintf("%v", l.RenderChat))
+	builder.WriteString(fmt.Sprintf("%v", _m.RenderChat))
 	builder.WriteString(", ")
 	builder.WriteString("video_age=")
-	builder.WriteString(fmt.Sprintf("%v", l.VideoAge))
+	builder.WriteString(fmt.Sprintf("%v", _m.VideoAge))
 	builder.WriteString(", ")
 	builder.WriteString("apply_categories_to_live=")
-	builder.WriteString(fmt.Sprintf("%v", l.ApplyCategoriesToLive))
+	builder.WriteString(fmt.Sprintf("%v", _m.ApplyCategoriesToLive))
 	builder.WriteString(", ")
 	builder.WriteString("watch_clips=")
-	builder.WriteString(fmt.Sprintf("%v", l.WatchClips))
+	builder.WriteString(fmt.Sprintf("%v", _m.WatchClips))
 	builder.WriteString(", ")
 	builder.WriteString("clips_limit=")
-	builder.WriteString(fmt.Sprintf("%v", l.ClipsLimit))
+	builder.WriteString(fmt.Sprintf("%v", _m.ClipsLimit))
 	builder.WriteString(", ")
 	builder.WriteString("clips_interval_days=")
-	builder.WriteString(fmt.Sprintf("%v", l.ClipsIntervalDays))
+	builder.WriteString(fmt.Sprintf("%v", _m.ClipsIntervalDays))
 	builder.WriteString(", ")
 	builder.WriteString("clips_last_checked=")
-	builder.WriteString(l.ClipsLastChecked.Format(time.ANSIC))
+	builder.WriteString(_m.ClipsLastChecked.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("clips_ignore_last_checked=")
-	builder.WriteString(fmt.Sprintf("%v", l.ClipsIgnoreLastChecked))
+	builder.WriteString(fmt.Sprintf("%v", _m.ClipsIgnoreLastChecked))
 	builder.WriteString(", ")
 	builder.WriteString("update_metadata_minutes=")
-	builder.WriteString(fmt.Sprintf("%v", l.UpdateMetadataMinutes))
+	builder.WriteString(fmt.Sprintf("%v", _m.UpdateMetadataMinutes))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(l.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(l.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

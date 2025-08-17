@@ -278,14 +278,14 @@ OUTER:
 
 				tmpCategoryNames := make([]string, 0)
 				for _, category := range lwc.Edges.Categories {
-					tmpCategoryNames = append(tmpCategoryNames, category.Name)
+					tmpCategoryNames = append(tmpCategoryNames, *category.Name)
 				}
 
 				// check for category restrictions
 				if lwc.ApplyCategoriesToLive && len(lwc.Edges.Categories) > 0 {
 					found := false
 					for _, category := range lwc.Edges.Categories {
-						if strings.EqualFold(category.Name, stream.GameName) {
+						if strings.EqualFold(*category.Name, stream.GameName) {
 							log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(tmpCategoryNames, ", ")).Msgf("%s matches category restrictions", lwc.Edges.Channel.Name)
 							found = true
 							break

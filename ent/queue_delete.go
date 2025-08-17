@@ -20,56 +20,56 @@ type QueueDelete struct {
 }
 
 // Where appends a list predicates to the QueueDelete builder.
-func (qd *QueueDelete) Where(ps ...predicate.Queue) *QueueDelete {
-	qd.mutation.Where(ps...)
-	return qd
+func (_d *QueueDelete) Where(ps ...predicate.Queue) *QueueDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (qd *QueueDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, qd.sqlExec, qd.mutation, qd.hooks)
+func (_d *QueueDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (qd *QueueDelete) ExecX(ctx context.Context) int {
-	n, err := qd.Exec(ctx)
+func (_d *QueueDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (qd *QueueDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *QueueDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(queue.Table, sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID))
-	if ps := qd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, qd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	qd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // QueueDeleteOne is the builder for deleting a single Queue entity.
 type QueueDeleteOne struct {
-	qd *QueueDelete
+	_d *QueueDelete
 }
 
 // Where appends a list predicates to the QueueDelete builder.
-func (qdo *QueueDeleteOne) Where(ps ...predicate.Queue) *QueueDeleteOne {
-	qdo.qd.mutation.Where(ps...)
-	return qdo
+func (_d *QueueDeleteOne) Where(ps ...predicate.Queue) *QueueDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (qdo *QueueDeleteOne) Exec(ctx context.Context) error {
-	n, err := qdo.qd.Exec(ctx)
+func (_d *QueueDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (qdo *QueueDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (qdo *QueueDeleteOne) ExecX(ctx context.Context) {
-	if err := qdo.Exec(ctx); err != nil {
+func (_d *QueueDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

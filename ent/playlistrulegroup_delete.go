@@ -20,56 +20,56 @@ type PlaylistRuleGroupDelete struct {
 }
 
 // Where appends a list predicates to the PlaylistRuleGroupDelete builder.
-func (prgd *PlaylistRuleGroupDelete) Where(ps ...predicate.PlaylistRuleGroup) *PlaylistRuleGroupDelete {
-	prgd.mutation.Where(ps...)
-	return prgd
+func (_d *PlaylistRuleGroupDelete) Where(ps ...predicate.PlaylistRuleGroup) *PlaylistRuleGroupDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (prgd *PlaylistRuleGroupDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, prgd.sqlExec, prgd.mutation, prgd.hooks)
+func (_d *PlaylistRuleGroupDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (prgd *PlaylistRuleGroupDelete) ExecX(ctx context.Context) int {
-	n, err := prgd.Exec(ctx)
+func (_d *PlaylistRuleGroupDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (prgd *PlaylistRuleGroupDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *PlaylistRuleGroupDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(playlistrulegroup.Table, sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID))
-	if ps := prgd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, prgd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	prgd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // PlaylistRuleGroupDeleteOne is the builder for deleting a single PlaylistRuleGroup entity.
 type PlaylistRuleGroupDeleteOne struct {
-	prgd *PlaylistRuleGroupDelete
+	_d *PlaylistRuleGroupDelete
 }
 
 // Where appends a list predicates to the PlaylistRuleGroupDelete builder.
-func (prgdo *PlaylistRuleGroupDeleteOne) Where(ps ...predicate.PlaylistRuleGroup) *PlaylistRuleGroupDeleteOne {
-	prgdo.prgd.mutation.Where(ps...)
-	return prgdo
+func (_d *PlaylistRuleGroupDeleteOne) Where(ps ...predicate.PlaylistRuleGroup) *PlaylistRuleGroupDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (prgdo *PlaylistRuleGroupDeleteOne) Exec(ctx context.Context) error {
-	n, err := prgdo.prgd.Exec(ctx)
+func (_d *PlaylistRuleGroupDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (prgdo *PlaylistRuleGroupDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (prgdo *PlaylistRuleGroupDeleteOne) ExecX(ctx context.Context) {
-	if err := prgdo.Exec(ctx); err != nil {
+func (_d *PlaylistRuleGroupDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

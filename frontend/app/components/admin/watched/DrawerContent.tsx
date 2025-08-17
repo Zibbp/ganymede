@@ -101,6 +101,11 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       })).filter((item, index, self) =>
         index === self.findIndex((t) => t.label === item.label)
       );
+      // Add "no category" option
+      tmpArr.unshift({
+        label: "No Category",
+        value: "",
+      });
 
       setFormattedTwitchCategories(tmpArr);
     } catch (error) {

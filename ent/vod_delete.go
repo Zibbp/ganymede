@@ -20,56 +20,56 @@ type VodDelete struct {
 }
 
 // Where appends a list predicates to the VodDelete builder.
-func (vd *VodDelete) Where(ps ...predicate.Vod) *VodDelete {
-	vd.mutation.Where(ps...)
-	return vd
+func (_d *VodDelete) Where(ps ...predicate.Vod) *VodDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (vd *VodDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, vd.sqlExec, vd.mutation, vd.hooks)
+func (_d *VodDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (vd *VodDelete) ExecX(ctx context.Context) int {
-	n, err := vd.Exec(ctx)
+func (_d *VodDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (vd *VodDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *VodDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(vod.Table, sqlgraph.NewFieldSpec(vod.FieldID, field.TypeUUID))
-	if ps := vd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, vd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	vd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // VodDeleteOne is the builder for deleting a single Vod entity.
 type VodDeleteOne struct {
-	vd *VodDelete
+	_d *VodDelete
 }
 
 // Where appends a list predicates to the VodDelete builder.
-func (vdo *VodDeleteOne) Where(ps ...predicate.Vod) *VodDeleteOne {
-	vdo.vd.mutation.Where(ps...)
-	return vdo
+func (_d *VodDeleteOne) Where(ps ...predicate.Vod) *VodDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (vdo *VodDeleteOne) Exec(ctx context.Context) error {
-	n, err := vdo.vd.Exec(ctx)
+func (_d *VodDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (vdo *VodDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (vdo *VodDeleteOne) ExecX(ctx context.Context) {
-	if err := vdo.Exec(ctx); err != nil {
+func (_d *VodDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

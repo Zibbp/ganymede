@@ -393,8 +393,8 @@ func (c *BlockedVideosClient) Update() *BlockedVideosUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *BlockedVideosClient) UpdateOne(bv *BlockedVideos) *BlockedVideosUpdateOne {
-	mutation := newBlockedVideosMutation(c.config, OpUpdateOne, withBlockedVideos(bv))
+func (c *BlockedVideosClient) UpdateOne(_m *BlockedVideos) *BlockedVideosUpdateOne {
+	mutation := newBlockedVideosMutation(c.config, OpUpdateOne, withBlockedVideos(_m))
 	return &BlockedVideosUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -411,8 +411,8 @@ func (c *BlockedVideosClient) Delete() *BlockedVideosDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *BlockedVideosClient) DeleteOne(bv *BlockedVideos) *BlockedVideosDeleteOne {
-	return c.DeleteOneID(bv.ID)
+func (c *BlockedVideosClient) DeleteOne(_m *BlockedVideos) *BlockedVideosDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -526,8 +526,8 @@ func (c *ChannelClient) Update() *ChannelUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *ChannelClient) UpdateOne(ch *Channel) *ChannelUpdateOne {
-	mutation := newChannelMutation(c.config, OpUpdateOne, withChannel(ch))
+func (c *ChannelClient) UpdateOne(_m *Channel) *ChannelUpdateOne {
+	mutation := newChannelMutation(c.config, OpUpdateOne, withChannel(_m))
 	return &ChannelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -544,8 +544,8 @@ func (c *ChannelClient) Delete() *ChannelDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *ChannelClient) DeleteOne(ch *Channel) *ChannelDeleteOne {
-	return c.DeleteOneID(ch.ID)
+func (c *ChannelClient) DeleteOne(_m *Channel) *ChannelDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -580,32 +580,32 @@ func (c *ChannelClient) GetX(ctx context.Context, id uuid.UUID) *Channel {
 }
 
 // QueryVods queries the vods edge of a Channel.
-func (c *ChannelClient) QueryVods(ch *Channel) *VodQuery {
+func (c *ChannelClient) QueryVods(_m *Channel) *VodQuery {
 	query := (&VodClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ch.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(channel.Table, channel.FieldID, id),
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, channel.VodsTable, channel.VodsColumn),
 		)
-		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryLive queries the live edge of a Channel.
-func (c *ChannelClient) QueryLive(ch *Channel) *LiveQuery {
+func (c *ChannelClient) QueryLive(_m *Channel) *LiveQuery {
 	query := (&LiveClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ch.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(channel.Table, channel.FieldID, id),
 			sqlgraph.To(live.Table, live.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, channel.LiveTable, channel.LiveColumn),
 		)
-		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -691,8 +691,8 @@ func (c *ChapterClient) Update() *ChapterUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *ChapterClient) UpdateOne(ch *Chapter) *ChapterUpdateOne {
-	mutation := newChapterMutation(c.config, OpUpdateOne, withChapter(ch))
+func (c *ChapterClient) UpdateOne(_m *Chapter) *ChapterUpdateOne {
+	mutation := newChapterMutation(c.config, OpUpdateOne, withChapter(_m))
 	return &ChapterUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -709,8 +709,8 @@ func (c *ChapterClient) Delete() *ChapterDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *ChapterClient) DeleteOne(ch *Chapter) *ChapterDeleteOne {
-	return c.DeleteOneID(ch.ID)
+func (c *ChapterClient) DeleteOne(_m *Chapter) *ChapterDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -745,16 +745,16 @@ func (c *ChapterClient) GetX(ctx context.Context, id uuid.UUID) *Chapter {
 }
 
 // QueryVod queries the vod edge of a Chapter.
-func (c *ChapterClient) QueryVod(ch *Chapter) *VodQuery {
+func (c *ChapterClient) QueryVod(_m *Chapter) *VodQuery {
 	query := (&VodClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ch.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(chapter.Table, chapter.FieldID, id),
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, chapter.VodTable, chapter.VodColumn),
 		)
-		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -840,8 +840,8 @@ func (c *LiveClient) Update() *LiveUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *LiveClient) UpdateOne(l *Live) *LiveUpdateOne {
-	mutation := newLiveMutation(c.config, OpUpdateOne, withLive(l))
+func (c *LiveClient) UpdateOne(_m *Live) *LiveUpdateOne {
+	mutation := newLiveMutation(c.config, OpUpdateOne, withLive(_m))
 	return &LiveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -858,8 +858,8 @@ func (c *LiveClient) Delete() *LiveDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *LiveClient) DeleteOne(l *Live) *LiveDeleteOne {
-	return c.DeleteOneID(l.ID)
+func (c *LiveClient) DeleteOne(_m *Live) *LiveDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -894,48 +894,48 @@ func (c *LiveClient) GetX(ctx context.Context, id uuid.UUID) *Live {
 }
 
 // QueryChannel queries the channel edge of a Live.
-func (c *LiveClient) QueryChannel(l *Live) *ChannelQuery {
+func (c *LiveClient) QueryChannel(_m *Live) *ChannelQuery {
 	query := (&ChannelClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := l.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(live.Table, live.FieldID, id),
 			sqlgraph.To(channel.Table, channel.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, live.ChannelTable, live.ChannelColumn),
 		)
-		fromV = sqlgraph.Neighbors(l.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryCategories queries the categories edge of a Live.
-func (c *LiveClient) QueryCategories(l *Live) *LiveCategoryQuery {
+func (c *LiveClient) QueryCategories(_m *Live) *LiveCategoryQuery {
 	query := (&LiveCategoryClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := l.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(live.Table, live.FieldID, id),
 			sqlgraph.To(livecategory.Table, livecategory.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, live.CategoriesTable, live.CategoriesColumn),
 		)
-		fromV = sqlgraph.Neighbors(l.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryTitleRegex queries the title_regex edge of a Live.
-func (c *LiveClient) QueryTitleRegex(l *Live) *LiveTitleRegexQuery {
+func (c *LiveClient) QueryTitleRegex(_m *Live) *LiveTitleRegexQuery {
 	query := (&LiveTitleRegexClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := l.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(live.Table, live.FieldID, id),
 			sqlgraph.To(livetitleregex.Table, livetitleregex.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, live.TitleRegexTable, live.TitleRegexColumn),
 		)
-		fromV = sqlgraph.Neighbors(l.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -1021,8 +1021,8 @@ func (c *LiveCategoryClient) Update() *LiveCategoryUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *LiveCategoryClient) UpdateOne(lc *LiveCategory) *LiveCategoryUpdateOne {
-	mutation := newLiveCategoryMutation(c.config, OpUpdateOne, withLiveCategory(lc))
+func (c *LiveCategoryClient) UpdateOne(_m *LiveCategory) *LiveCategoryUpdateOne {
+	mutation := newLiveCategoryMutation(c.config, OpUpdateOne, withLiveCategory(_m))
 	return &LiveCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -1039,8 +1039,8 @@ func (c *LiveCategoryClient) Delete() *LiveCategoryDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *LiveCategoryClient) DeleteOne(lc *LiveCategory) *LiveCategoryDeleteOne {
-	return c.DeleteOneID(lc.ID)
+func (c *LiveCategoryClient) DeleteOne(_m *LiveCategory) *LiveCategoryDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -1075,16 +1075,16 @@ func (c *LiveCategoryClient) GetX(ctx context.Context, id uuid.UUID) *LiveCatego
 }
 
 // QueryLive queries the live edge of a LiveCategory.
-func (c *LiveCategoryClient) QueryLive(lc *LiveCategory) *LiveQuery {
+func (c *LiveCategoryClient) QueryLive(_m *LiveCategory) *LiveQuery {
 	query := (&LiveClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := lc.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(livecategory.Table, livecategory.FieldID, id),
 			sqlgraph.To(live.Table, live.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, livecategory.LiveTable, livecategory.LiveColumn),
 		)
-		fromV = sqlgraph.Neighbors(lc.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -1170,8 +1170,8 @@ func (c *LiveTitleRegexClient) Update() *LiveTitleRegexUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *LiveTitleRegexClient) UpdateOne(ltr *LiveTitleRegex) *LiveTitleRegexUpdateOne {
-	mutation := newLiveTitleRegexMutation(c.config, OpUpdateOne, withLiveTitleRegex(ltr))
+func (c *LiveTitleRegexClient) UpdateOne(_m *LiveTitleRegex) *LiveTitleRegexUpdateOne {
+	mutation := newLiveTitleRegexMutation(c.config, OpUpdateOne, withLiveTitleRegex(_m))
 	return &LiveTitleRegexUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -1188,8 +1188,8 @@ func (c *LiveTitleRegexClient) Delete() *LiveTitleRegexDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *LiveTitleRegexClient) DeleteOne(ltr *LiveTitleRegex) *LiveTitleRegexDeleteOne {
-	return c.DeleteOneID(ltr.ID)
+func (c *LiveTitleRegexClient) DeleteOne(_m *LiveTitleRegex) *LiveTitleRegexDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -1224,16 +1224,16 @@ func (c *LiveTitleRegexClient) GetX(ctx context.Context, id uuid.UUID) *LiveTitl
 }
 
 // QueryLive queries the live edge of a LiveTitleRegex.
-func (c *LiveTitleRegexClient) QueryLive(ltr *LiveTitleRegex) *LiveQuery {
+func (c *LiveTitleRegexClient) QueryLive(_m *LiveTitleRegex) *LiveQuery {
 	query := (&LiveClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ltr.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(livetitleregex.Table, livetitleregex.FieldID, id),
 			sqlgraph.To(live.Table, live.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, livetitleregex.LiveTable, livetitleregex.LiveColumn),
 		)
-		fromV = sqlgraph.Neighbors(ltr.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -1319,8 +1319,8 @@ func (c *MultistreamInfoClient) Update() *MultistreamInfoUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *MultistreamInfoClient) UpdateOne(mi *MultistreamInfo) *MultistreamInfoUpdateOne {
-	mutation := newMultistreamInfoMutation(c.config, OpUpdateOne, withMultistreamInfo(mi))
+func (c *MultistreamInfoClient) UpdateOne(_m *MultistreamInfo) *MultistreamInfoUpdateOne {
+	mutation := newMultistreamInfoMutation(c.config, OpUpdateOne, withMultistreamInfo(_m))
 	return &MultistreamInfoUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -1337,8 +1337,8 @@ func (c *MultistreamInfoClient) Delete() *MultistreamInfoDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *MultistreamInfoClient) DeleteOne(mi *MultistreamInfo) *MultistreamInfoDeleteOne {
-	return c.DeleteOneID(mi.ID)
+func (c *MultistreamInfoClient) DeleteOne(_m *MultistreamInfo) *MultistreamInfoDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -1373,32 +1373,32 @@ func (c *MultistreamInfoClient) GetX(ctx context.Context, id int) *MultistreamIn
 }
 
 // QueryVod queries the vod edge of a MultistreamInfo.
-func (c *MultistreamInfoClient) QueryVod(mi *MultistreamInfo) *VodQuery {
+func (c *MultistreamInfoClient) QueryVod(_m *MultistreamInfo) *VodQuery {
 	query := (&VodClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := mi.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(multistreaminfo.Table, multistreaminfo.FieldID, id),
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, multistreaminfo.VodTable, multistreaminfo.VodColumn),
 		)
-		fromV = sqlgraph.Neighbors(mi.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryPlaylist queries the playlist edge of a MultistreamInfo.
-func (c *MultistreamInfoClient) QueryPlaylist(mi *MultistreamInfo) *PlaylistQuery {
+func (c *MultistreamInfoClient) QueryPlaylist(_m *MultistreamInfo) *PlaylistQuery {
 	query := (&PlaylistClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := mi.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(multistreaminfo.Table, multistreaminfo.FieldID, id),
 			sqlgraph.To(playlist.Table, playlist.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, multistreaminfo.PlaylistTable, multistreaminfo.PlaylistColumn),
 		)
-		fromV = sqlgraph.Neighbors(mi.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -1484,8 +1484,8 @@ func (c *MutedSegmentClient) Update() *MutedSegmentUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *MutedSegmentClient) UpdateOne(ms *MutedSegment) *MutedSegmentUpdateOne {
-	mutation := newMutedSegmentMutation(c.config, OpUpdateOne, withMutedSegment(ms))
+func (c *MutedSegmentClient) UpdateOne(_m *MutedSegment) *MutedSegmentUpdateOne {
+	mutation := newMutedSegmentMutation(c.config, OpUpdateOne, withMutedSegment(_m))
 	return &MutedSegmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -1502,8 +1502,8 @@ func (c *MutedSegmentClient) Delete() *MutedSegmentDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *MutedSegmentClient) DeleteOne(ms *MutedSegment) *MutedSegmentDeleteOne {
-	return c.DeleteOneID(ms.ID)
+func (c *MutedSegmentClient) DeleteOne(_m *MutedSegment) *MutedSegmentDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -1538,16 +1538,16 @@ func (c *MutedSegmentClient) GetX(ctx context.Context, id uuid.UUID) *MutedSegme
 }
 
 // QueryVod queries the vod edge of a MutedSegment.
-func (c *MutedSegmentClient) QueryVod(ms *MutedSegment) *VodQuery {
+func (c *MutedSegmentClient) QueryVod(_m *MutedSegment) *VodQuery {
 	query := (&VodClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ms.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mutedsegment.Table, mutedsegment.FieldID, id),
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, mutedsegment.VodTable, mutedsegment.VodColumn),
 		)
-		fromV = sqlgraph.Neighbors(ms.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -1633,8 +1633,8 @@ func (c *PlaybackClient) Update() *PlaybackUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *PlaybackClient) UpdateOne(pl *Playback) *PlaybackUpdateOne {
-	mutation := newPlaybackMutation(c.config, OpUpdateOne, withPlayback(pl))
+func (c *PlaybackClient) UpdateOne(_m *Playback) *PlaybackUpdateOne {
+	mutation := newPlaybackMutation(c.config, OpUpdateOne, withPlayback(_m))
 	return &PlaybackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -1651,8 +1651,8 @@ func (c *PlaybackClient) Delete() *PlaybackDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *PlaybackClient) DeleteOne(pl *Playback) *PlaybackDeleteOne {
-	return c.DeleteOneID(pl.ID)
+func (c *PlaybackClient) DeleteOne(_m *Playback) *PlaybackDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -1766,8 +1766,8 @@ func (c *PlaylistClient) Update() *PlaylistUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *PlaylistClient) UpdateOne(pl *Playlist) *PlaylistUpdateOne {
-	mutation := newPlaylistMutation(c.config, OpUpdateOne, withPlaylist(pl))
+func (c *PlaylistClient) UpdateOne(_m *Playlist) *PlaylistUpdateOne {
+	mutation := newPlaylistMutation(c.config, OpUpdateOne, withPlaylist(_m))
 	return &PlaylistUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -1784,8 +1784,8 @@ func (c *PlaylistClient) Delete() *PlaylistDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *PlaylistClient) DeleteOne(pl *Playlist) *PlaylistDeleteOne {
-	return c.DeleteOneID(pl.ID)
+func (c *PlaylistClient) DeleteOne(_m *Playlist) *PlaylistDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -1820,48 +1820,48 @@ func (c *PlaylistClient) GetX(ctx context.Context, id uuid.UUID) *Playlist {
 }
 
 // QueryVods queries the vods edge of a Playlist.
-func (c *PlaylistClient) QueryVods(pl *Playlist) *VodQuery {
+func (c *PlaylistClient) QueryVods(_m *Playlist) *VodQuery {
 	query := (&VodClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := pl.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(playlist.Table, playlist.FieldID, id),
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, playlist.VodsTable, playlist.VodsPrimaryKey...),
 		)
-		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryMultistreamInfo queries the multistream_info edge of a Playlist.
-func (c *PlaylistClient) QueryMultistreamInfo(pl *Playlist) *MultistreamInfoQuery {
+func (c *PlaylistClient) QueryMultistreamInfo(_m *Playlist) *MultistreamInfoQuery {
 	query := (&MultistreamInfoClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := pl.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(playlist.Table, playlist.FieldID, id),
 			sqlgraph.To(multistreaminfo.Table, multistreaminfo.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, playlist.MultistreamInfoTable, playlist.MultistreamInfoColumn),
 		)
-		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryRuleGroups queries the rule_groups edge of a Playlist.
-func (c *PlaylistClient) QueryRuleGroups(pl *Playlist) *PlaylistRuleGroupQuery {
+func (c *PlaylistClient) QueryRuleGroups(_m *Playlist) *PlaylistRuleGroupQuery {
 	query := (&PlaylistRuleGroupClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := pl.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(playlist.Table, playlist.FieldID, id),
 			sqlgraph.To(playlistrulegroup.Table, playlistrulegroup.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, playlist.RuleGroupsTable, playlist.RuleGroupsColumn),
 		)
-		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -1947,8 +1947,8 @@ func (c *PlaylistRuleClient) Update() *PlaylistRuleUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *PlaylistRuleClient) UpdateOne(pr *PlaylistRule) *PlaylistRuleUpdateOne {
-	mutation := newPlaylistRuleMutation(c.config, OpUpdateOne, withPlaylistRule(pr))
+func (c *PlaylistRuleClient) UpdateOne(_m *PlaylistRule) *PlaylistRuleUpdateOne {
+	mutation := newPlaylistRuleMutation(c.config, OpUpdateOne, withPlaylistRule(_m))
 	return &PlaylistRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -1965,8 +1965,8 @@ func (c *PlaylistRuleClient) Delete() *PlaylistRuleDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *PlaylistRuleClient) DeleteOne(pr *PlaylistRule) *PlaylistRuleDeleteOne {
-	return c.DeleteOneID(pr.ID)
+func (c *PlaylistRuleClient) DeleteOne(_m *PlaylistRule) *PlaylistRuleDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -2001,16 +2001,16 @@ func (c *PlaylistRuleClient) GetX(ctx context.Context, id uuid.UUID) *PlaylistRu
 }
 
 // QueryGroup queries the group edge of a PlaylistRule.
-func (c *PlaylistRuleClient) QueryGroup(pr *PlaylistRule) *PlaylistRuleGroupQuery {
+func (c *PlaylistRuleClient) QueryGroup(_m *PlaylistRule) *PlaylistRuleGroupQuery {
 	query := (&PlaylistRuleGroupClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := pr.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(playlistrule.Table, playlistrule.FieldID, id),
 			sqlgraph.To(playlistrulegroup.Table, playlistrulegroup.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, playlistrule.GroupTable, playlistrule.GroupColumn),
 		)
-		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -2096,8 +2096,8 @@ func (c *PlaylistRuleGroupClient) Update() *PlaylistRuleGroupUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *PlaylistRuleGroupClient) UpdateOne(prg *PlaylistRuleGroup) *PlaylistRuleGroupUpdateOne {
-	mutation := newPlaylistRuleGroupMutation(c.config, OpUpdateOne, withPlaylistRuleGroup(prg))
+func (c *PlaylistRuleGroupClient) UpdateOne(_m *PlaylistRuleGroup) *PlaylistRuleGroupUpdateOne {
+	mutation := newPlaylistRuleGroupMutation(c.config, OpUpdateOne, withPlaylistRuleGroup(_m))
 	return &PlaylistRuleGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -2114,8 +2114,8 @@ func (c *PlaylistRuleGroupClient) Delete() *PlaylistRuleGroupDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *PlaylistRuleGroupClient) DeleteOne(prg *PlaylistRuleGroup) *PlaylistRuleGroupDeleteOne {
-	return c.DeleteOneID(prg.ID)
+func (c *PlaylistRuleGroupClient) DeleteOne(_m *PlaylistRuleGroup) *PlaylistRuleGroupDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -2150,32 +2150,32 @@ func (c *PlaylistRuleGroupClient) GetX(ctx context.Context, id uuid.UUID) *Playl
 }
 
 // QueryPlaylist queries the playlist edge of a PlaylistRuleGroup.
-func (c *PlaylistRuleGroupClient) QueryPlaylist(prg *PlaylistRuleGroup) *PlaylistQuery {
+func (c *PlaylistRuleGroupClient) QueryPlaylist(_m *PlaylistRuleGroup) *PlaylistQuery {
 	query := (&PlaylistClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := prg.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(playlistrulegroup.Table, playlistrulegroup.FieldID, id),
 			sqlgraph.To(playlist.Table, playlist.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, playlistrulegroup.PlaylistTable, playlistrulegroup.PlaylistColumn),
 		)
-		fromV = sqlgraph.Neighbors(prg.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryRules queries the rules edge of a PlaylistRuleGroup.
-func (c *PlaylistRuleGroupClient) QueryRules(prg *PlaylistRuleGroup) *PlaylistRuleQuery {
+func (c *PlaylistRuleGroupClient) QueryRules(_m *PlaylistRuleGroup) *PlaylistRuleQuery {
 	query := (&PlaylistRuleClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := prg.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(playlistrulegroup.Table, playlistrulegroup.FieldID, id),
 			sqlgraph.To(playlistrule.Table, playlistrule.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, playlistrulegroup.RulesTable, playlistrulegroup.RulesColumn),
 		)
-		fromV = sqlgraph.Neighbors(prg.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -2261,8 +2261,8 @@ func (c *QueueClient) Update() *QueueUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *QueueClient) UpdateOne(q *Queue) *QueueUpdateOne {
-	mutation := newQueueMutation(c.config, OpUpdateOne, withQueue(q))
+func (c *QueueClient) UpdateOne(_m *Queue) *QueueUpdateOne {
+	mutation := newQueueMutation(c.config, OpUpdateOne, withQueue(_m))
 	return &QueueUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -2279,8 +2279,8 @@ func (c *QueueClient) Delete() *QueueDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *QueueClient) DeleteOne(q *Queue) *QueueDeleteOne {
-	return c.DeleteOneID(q.ID)
+func (c *QueueClient) DeleteOne(_m *Queue) *QueueDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -2315,16 +2315,16 @@ func (c *QueueClient) GetX(ctx context.Context, id uuid.UUID) *Queue {
 }
 
 // QueryVod queries the vod edge of a Queue.
-func (c *QueueClient) QueryVod(q *Queue) *VodQuery {
+func (c *QueueClient) QueryVod(_m *Queue) *VodQuery {
 	query := (&VodClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := q.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(queue.Table, queue.FieldID, id),
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, queue.VodTable, queue.VodColumn),
 		)
-		fromV = sqlgraph.Neighbors(q.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -2410,8 +2410,8 @@ func (c *SessionsClient) Update() *SessionsUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *SessionsClient) UpdateOne(s *Sessions) *SessionsUpdateOne {
-	mutation := newSessionsMutation(c.config, OpUpdateOne, withSessions(s))
+func (c *SessionsClient) UpdateOne(_m *Sessions) *SessionsUpdateOne {
+	mutation := newSessionsMutation(c.config, OpUpdateOne, withSessions(_m))
 	return &SessionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -2428,8 +2428,8 @@ func (c *SessionsClient) Delete() *SessionsDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *SessionsClient) DeleteOne(s *Sessions) *SessionsDeleteOne {
-	return c.DeleteOneID(s.ID)
+func (c *SessionsClient) DeleteOne(_m *Sessions) *SessionsDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -2543,8 +2543,8 @@ func (c *TwitchCategoryClient) Update() *TwitchCategoryUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *TwitchCategoryClient) UpdateOne(tc *TwitchCategory) *TwitchCategoryUpdateOne {
-	mutation := newTwitchCategoryMutation(c.config, OpUpdateOne, withTwitchCategory(tc))
+func (c *TwitchCategoryClient) UpdateOne(_m *TwitchCategory) *TwitchCategoryUpdateOne {
+	mutation := newTwitchCategoryMutation(c.config, OpUpdateOne, withTwitchCategory(_m))
 	return &TwitchCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -2561,8 +2561,8 @@ func (c *TwitchCategoryClient) Delete() *TwitchCategoryDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *TwitchCategoryClient) DeleteOne(tc *TwitchCategory) *TwitchCategoryDeleteOne {
-	return c.DeleteOneID(tc.ID)
+func (c *TwitchCategoryClient) DeleteOne(_m *TwitchCategory) *TwitchCategoryDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -2676,8 +2676,8 @@ func (c *UserClient) Update() *UserUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *UserClient) UpdateOne(u *User) *UserUpdateOne {
-	mutation := newUserMutation(c.config, OpUpdateOne, withUser(u))
+func (c *UserClient) UpdateOne(_m *User) *UserUpdateOne {
+	mutation := newUserMutation(c.config, OpUpdateOne, withUser(_m))
 	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -2694,8 +2694,8 @@ func (c *UserClient) Delete() *UserDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *UserClient) DeleteOne(u *User) *UserDeleteOne {
-	return c.DeleteOneID(u.ID)
+func (c *UserClient) DeleteOne(_m *User) *UserDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -2809,8 +2809,8 @@ func (c *VodClient) Update() *VodUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *VodClient) UpdateOne(v *Vod) *VodUpdateOne {
-	mutation := newVodMutation(c.config, OpUpdateOne, withVod(v))
+func (c *VodClient) UpdateOne(_m *Vod) *VodUpdateOne {
+	mutation := newVodMutation(c.config, OpUpdateOne, withVod(_m))
 	return &VodUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -2827,8 +2827,8 @@ func (c *VodClient) Delete() *VodDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *VodClient) DeleteOne(v *Vod) *VodDeleteOne {
-	return c.DeleteOneID(v.ID)
+func (c *VodClient) DeleteOne(_m *Vod) *VodDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -2863,96 +2863,96 @@ func (c *VodClient) GetX(ctx context.Context, id uuid.UUID) *Vod {
 }
 
 // QueryChannel queries the channel edge of a Vod.
-func (c *VodClient) QueryChannel(v *Vod) *ChannelQuery {
+func (c *VodClient) QueryChannel(_m *Vod) *ChannelQuery {
 	query := (&ChannelClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := v.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(vod.Table, vod.FieldID, id),
 			sqlgraph.To(channel.Table, channel.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, vod.ChannelTable, vod.ChannelColumn),
 		)
-		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryQueue queries the queue edge of a Vod.
-func (c *VodClient) QueryQueue(v *Vod) *QueueQuery {
+func (c *VodClient) QueryQueue(_m *Vod) *QueueQuery {
 	query := (&QueueClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := v.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(vod.Table, vod.FieldID, id),
 			sqlgraph.To(queue.Table, queue.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, vod.QueueTable, vod.QueueColumn),
 		)
-		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryPlaylists queries the playlists edge of a Vod.
-func (c *VodClient) QueryPlaylists(v *Vod) *PlaylistQuery {
+func (c *VodClient) QueryPlaylists(_m *Vod) *PlaylistQuery {
 	query := (&PlaylistClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := v.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(vod.Table, vod.FieldID, id),
 			sqlgraph.To(playlist.Table, playlist.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, vod.PlaylistsTable, vod.PlaylistsPrimaryKey...),
 		)
-		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryChapters queries the chapters edge of a Vod.
-func (c *VodClient) QueryChapters(v *Vod) *ChapterQuery {
+func (c *VodClient) QueryChapters(_m *Vod) *ChapterQuery {
 	query := (&ChapterClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := v.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(vod.Table, vod.FieldID, id),
 			sqlgraph.To(chapter.Table, chapter.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, vod.ChaptersTable, vod.ChaptersColumn),
 		)
-		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryMutedSegments queries the muted_segments edge of a Vod.
-func (c *VodClient) QueryMutedSegments(v *Vod) *MutedSegmentQuery {
+func (c *VodClient) QueryMutedSegments(_m *Vod) *MutedSegmentQuery {
 	query := (&MutedSegmentClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := v.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(vod.Table, vod.FieldID, id),
 			sqlgraph.To(mutedsegment.Table, mutedsegment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, vod.MutedSegmentsTable, vod.MutedSegmentsColumn),
 		)
-		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // QueryMultistreamInfo queries the multistream_info edge of a Vod.
-func (c *VodClient) QueryMultistreamInfo(v *Vod) *MultistreamInfoQuery {
+func (c *VodClient) QueryMultistreamInfo(_m *Vod) *MultistreamInfoQuery {
 	query := (&MultistreamInfoClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := v.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(vod.Table, vod.FieldID, id),
 			sqlgraph.To(multistreaminfo.Table, multistreaminfo.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, vod.MultistreamInfoTable, vod.MultistreamInfoColumn),
 		)
-		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query

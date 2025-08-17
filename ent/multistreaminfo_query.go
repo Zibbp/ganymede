@@ -34,44 +34,44 @@ type MultistreamInfoQuery struct {
 }
 
 // Where adds a new predicate for the MultistreamInfoQuery builder.
-func (miq *MultistreamInfoQuery) Where(ps ...predicate.MultistreamInfo) *MultistreamInfoQuery {
-	miq.predicates = append(miq.predicates, ps...)
-	return miq
+func (_q *MultistreamInfoQuery) Where(ps ...predicate.MultistreamInfo) *MultistreamInfoQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (miq *MultistreamInfoQuery) Limit(limit int) *MultistreamInfoQuery {
-	miq.ctx.Limit = &limit
-	return miq
+func (_q *MultistreamInfoQuery) Limit(limit int) *MultistreamInfoQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (miq *MultistreamInfoQuery) Offset(offset int) *MultistreamInfoQuery {
-	miq.ctx.Offset = &offset
-	return miq
+func (_q *MultistreamInfoQuery) Offset(offset int) *MultistreamInfoQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (miq *MultistreamInfoQuery) Unique(unique bool) *MultistreamInfoQuery {
-	miq.ctx.Unique = &unique
-	return miq
+func (_q *MultistreamInfoQuery) Unique(unique bool) *MultistreamInfoQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (miq *MultistreamInfoQuery) Order(o ...multistreaminfo.OrderOption) *MultistreamInfoQuery {
-	miq.order = append(miq.order, o...)
-	return miq
+func (_q *MultistreamInfoQuery) Order(o ...multistreaminfo.OrderOption) *MultistreamInfoQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryVod chains the current query on the "vod" edge.
-func (miq *MultistreamInfoQuery) QueryVod() *VodQuery {
-	query := (&VodClient{config: miq.config}).Query()
+func (_q *MultistreamInfoQuery) QueryVod() *VodQuery {
+	query := (&VodClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := miq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := miq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -80,20 +80,20 @@ func (miq *MultistreamInfoQuery) QueryVod() *VodQuery {
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, multistreaminfo.VodTable, multistreaminfo.VodColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(miq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryPlaylist chains the current query on the "playlist" edge.
-func (miq *MultistreamInfoQuery) QueryPlaylist() *PlaylistQuery {
-	query := (&PlaylistClient{config: miq.config}).Query()
+func (_q *MultistreamInfoQuery) QueryPlaylist() *PlaylistQuery {
+	query := (&PlaylistClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := miq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := miq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -102,7 +102,7 @@ func (miq *MultistreamInfoQuery) QueryPlaylist() *PlaylistQuery {
 			sqlgraph.To(playlist.Table, playlist.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, multistreaminfo.PlaylistTable, multistreaminfo.PlaylistColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(miq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -110,8 +110,8 @@ func (miq *MultistreamInfoQuery) QueryPlaylist() *PlaylistQuery {
 
 // First returns the first MultistreamInfo entity from the query.
 // Returns a *NotFoundError when no MultistreamInfo was found.
-func (miq *MultistreamInfoQuery) First(ctx context.Context) (*MultistreamInfo, error) {
-	nodes, err := miq.Limit(1).All(setContextOp(ctx, miq.ctx, ent.OpQueryFirst))
+func (_q *MultistreamInfoQuery) First(ctx context.Context) (*MultistreamInfo, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +122,8 @@ func (miq *MultistreamInfoQuery) First(ctx context.Context) (*MultistreamInfo, e
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (miq *MultistreamInfoQuery) FirstX(ctx context.Context) *MultistreamInfo {
-	node, err := miq.First(ctx)
+func (_q *MultistreamInfoQuery) FirstX(ctx context.Context) *MultistreamInfo {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -132,9 +132,9 @@ func (miq *MultistreamInfoQuery) FirstX(ctx context.Context) *MultistreamInfo {
 
 // FirstID returns the first MultistreamInfo ID from the query.
 // Returns a *NotFoundError when no MultistreamInfo ID was found.
-func (miq *MultistreamInfoQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *MultistreamInfoQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = miq.Limit(1).IDs(setContextOp(ctx, miq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -145,8 +145,8 @@ func (miq *MultistreamInfoQuery) FirstID(ctx context.Context) (id int, err error
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (miq *MultistreamInfoQuery) FirstIDX(ctx context.Context) int {
-	id, err := miq.FirstID(ctx)
+func (_q *MultistreamInfoQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -156,8 +156,8 @@ func (miq *MultistreamInfoQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single MultistreamInfo entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one MultistreamInfo entity is found.
 // Returns a *NotFoundError when no MultistreamInfo entities are found.
-func (miq *MultistreamInfoQuery) Only(ctx context.Context) (*MultistreamInfo, error) {
-	nodes, err := miq.Limit(2).All(setContextOp(ctx, miq.ctx, ent.OpQueryOnly))
+func (_q *MultistreamInfoQuery) Only(ctx context.Context) (*MultistreamInfo, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -172,8 +172,8 @@ func (miq *MultistreamInfoQuery) Only(ctx context.Context) (*MultistreamInfo, er
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (miq *MultistreamInfoQuery) OnlyX(ctx context.Context) *MultistreamInfo {
-	node, err := miq.Only(ctx)
+func (_q *MultistreamInfoQuery) OnlyX(ctx context.Context) *MultistreamInfo {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,9 +183,9 @@ func (miq *MultistreamInfoQuery) OnlyX(ctx context.Context) *MultistreamInfo {
 // OnlyID is like Only, but returns the only MultistreamInfo ID in the query.
 // Returns a *NotSingularError when more than one MultistreamInfo ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (miq *MultistreamInfoQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *MultistreamInfoQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = miq.Limit(2).IDs(setContextOp(ctx, miq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -200,8 +200,8 @@ func (miq *MultistreamInfoQuery) OnlyID(ctx context.Context) (id int, err error)
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (miq *MultistreamInfoQuery) OnlyIDX(ctx context.Context) int {
-	id, err := miq.OnlyID(ctx)
+func (_q *MultistreamInfoQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -209,18 +209,18 @@ func (miq *MultistreamInfoQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of MultistreamInfos.
-func (miq *MultistreamInfoQuery) All(ctx context.Context) ([]*MultistreamInfo, error) {
-	ctx = setContextOp(ctx, miq.ctx, ent.OpQueryAll)
-	if err := miq.prepareQuery(ctx); err != nil {
+func (_q *MultistreamInfoQuery) All(ctx context.Context) ([]*MultistreamInfo, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*MultistreamInfo, *MultistreamInfoQuery]()
-	return withInterceptors[[]*MultistreamInfo](ctx, miq, qr, miq.inters)
+	return withInterceptors[[]*MultistreamInfo](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (miq *MultistreamInfoQuery) AllX(ctx context.Context) []*MultistreamInfo {
-	nodes, err := miq.All(ctx)
+func (_q *MultistreamInfoQuery) AllX(ctx context.Context) []*MultistreamInfo {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -228,20 +228,20 @@ func (miq *MultistreamInfoQuery) AllX(ctx context.Context) []*MultistreamInfo {
 }
 
 // IDs executes the query and returns a list of MultistreamInfo IDs.
-func (miq *MultistreamInfoQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if miq.ctx.Unique == nil && miq.path != nil {
-		miq.Unique(true)
+func (_q *MultistreamInfoQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, miq.ctx, ent.OpQueryIDs)
-	if err = miq.Select(multistreaminfo.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(multistreaminfo.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (miq *MultistreamInfoQuery) IDsX(ctx context.Context) []int {
-	ids, err := miq.IDs(ctx)
+func (_q *MultistreamInfoQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -249,17 +249,17 @@ func (miq *MultistreamInfoQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (miq *MultistreamInfoQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, miq.ctx, ent.OpQueryCount)
-	if err := miq.prepareQuery(ctx); err != nil {
+func (_q *MultistreamInfoQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, miq, querierCount[*MultistreamInfoQuery](), miq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*MultistreamInfoQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (miq *MultistreamInfoQuery) CountX(ctx context.Context) int {
-	count, err := miq.Count(ctx)
+func (_q *MultistreamInfoQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -267,9 +267,9 @@ func (miq *MultistreamInfoQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (miq *MultistreamInfoQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, miq.ctx, ent.OpQueryExist)
-	switch _, err := miq.FirstID(ctx); {
+func (_q *MultistreamInfoQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -280,8 +280,8 @@ func (miq *MultistreamInfoQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (miq *MultistreamInfoQuery) ExistX(ctx context.Context) bool {
-	exist, err := miq.Exist(ctx)
+func (_q *MultistreamInfoQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -290,44 +290,44 @@ func (miq *MultistreamInfoQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the MultistreamInfoQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (miq *MultistreamInfoQuery) Clone() *MultistreamInfoQuery {
-	if miq == nil {
+func (_q *MultistreamInfoQuery) Clone() *MultistreamInfoQuery {
+	if _q == nil {
 		return nil
 	}
 	return &MultistreamInfoQuery{
-		config:       miq.config,
-		ctx:          miq.ctx.Clone(),
-		order:        append([]multistreaminfo.OrderOption{}, miq.order...),
-		inters:       append([]Interceptor{}, miq.inters...),
-		predicates:   append([]predicate.MultistreamInfo{}, miq.predicates...),
-		withVod:      miq.withVod.Clone(),
-		withPlaylist: miq.withPlaylist.Clone(),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]multistreaminfo.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.MultistreamInfo{}, _q.predicates...),
+		withVod:      _q.withVod.Clone(),
+		withPlaylist: _q.withPlaylist.Clone(),
 		// clone intermediate query.
-		sql:  miq.sql.Clone(),
-		path: miq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithVod tells the query-builder to eager-load the nodes that are connected to
 // the "vod" edge. The optional arguments are used to configure the query builder of the edge.
-func (miq *MultistreamInfoQuery) WithVod(opts ...func(*VodQuery)) *MultistreamInfoQuery {
-	query := (&VodClient{config: miq.config}).Query()
+func (_q *MultistreamInfoQuery) WithVod(opts ...func(*VodQuery)) *MultistreamInfoQuery {
+	query := (&VodClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	miq.withVod = query
-	return miq
+	_q.withVod = query
+	return _q
 }
 
 // WithPlaylist tells the query-builder to eager-load the nodes that are connected to
 // the "playlist" edge. The optional arguments are used to configure the query builder of the edge.
-func (miq *MultistreamInfoQuery) WithPlaylist(opts ...func(*PlaylistQuery)) *MultistreamInfoQuery {
-	query := (&PlaylistClient{config: miq.config}).Query()
+func (_q *MultistreamInfoQuery) WithPlaylist(opts ...func(*PlaylistQuery)) *MultistreamInfoQuery {
+	query := (&PlaylistClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	miq.withPlaylist = query
-	return miq
+	_q.withPlaylist = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -344,10 +344,10 @@ func (miq *MultistreamInfoQuery) WithPlaylist(opts ...func(*PlaylistQuery)) *Mul
 //		GroupBy(multistreaminfo.FieldDelayMs).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (miq *MultistreamInfoQuery) GroupBy(field string, fields ...string) *MultistreamInfoGroupBy {
-	miq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &MultistreamInfoGroupBy{build: miq}
-	grbuild.flds = &miq.ctx.Fields
+func (_q *MultistreamInfoQuery) GroupBy(field string, fields ...string) *MultistreamInfoGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &MultistreamInfoGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = multistreaminfo.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -365,56 +365,56 @@ func (miq *MultistreamInfoQuery) GroupBy(field string, fields ...string) *Multis
 //	client.MultistreamInfo.Query().
 //		Select(multistreaminfo.FieldDelayMs).
 //		Scan(ctx, &v)
-func (miq *MultistreamInfoQuery) Select(fields ...string) *MultistreamInfoSelect {
-	miq.ctx.Fields = append(miq.ctx.Fields, fields...)
-	sbuild := &MultistreamInfoSelect{MultistreamInfoQuery: miq}
+func (_q *MultistreamInfoQuery) Select(fields ...string) *MultistreamInfoSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &MultistreamInfoSelect{MultistreamInfoQuery: _q}
 	sbuild.label = multistreaminfo.Label
-	sbuild.flds, sbuild.scan = &miq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a MultistreamInfoSelect configured with the given aggregations.
-func (miq *MultistreamInfoQuery) Aggregate(fns ...AggregateFunc) *MultistreamInfoSelect {
-	return miq.Select().Aggregate(fns...)
+func (_q *MultistreamInfoQuery) Aggregate(fns ...AggregateFunc) *MultistreamInfoSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (miq *MultistreamInfoQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range miq.inters {
+func (_q *MultistreamInfoQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, miq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range miq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !multistreaminfo.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if miq.path != nil {
-		prev, err := miq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		miq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (miq *MultistreamInfoQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*MultistreamInfo, error) {
+func (_q *MultistreamInfoQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*MultistreamInfo, error) {
 	var (
 		nodes       = []*MultistreamInfo{}
-		withFKs     = miq.withFKs
-		_spec       = miq.querySpec()
+		withFKs     = _q.withFKs
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			miq.withVod != nil,
-			miq.withPlaylist != nil,
+			_q.withVod != nil,
+			_q.withPlaylist != nil,
 		}
 	)
-	if miq.withVod != nil || miq.withPlaylist != nil {
+	if _q.withVod != nil || _q.withPlaylist != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -424,7 +424,7 @@ func (miq *MultistreamInfoQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 		return (*MultistreamInfo).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &MultistreamInfo{config: miq.config}
+		node := &MultistreamInfo{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -432,20 +432,20 @@ func (miq *MultistreamInfoQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, miq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := miq.withVod; query != nil {
-		if err := miq.loadVod(ctx, query, nodes, nil,
+	if query := _q.withVod; query != nil {
+		if err := _q.loadVod(ctx, query, nodes, nil,
 			func(n *MultistreamInfo, e *Vod) { n.Edges.Vod = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := miq.withPlaylist; query != nil {
-		if err := miq.loadPlaylist(ctx, query, nodes, nil,
+	if query := _q.withPlaylist; query != nil {
+		if err := _q.loadPlaylist(ctx, query, nodes, nil,
 			func(n *MultistreamInfo, e *Playlist) { n.Edges.Playlist = e }); err != nil {
 			return nil, err
 		}
@@ -453,7 +453,7 @@ func (miq *MultistreamInfoQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	return nodes, nil
 }
 
-func (miq *MultistreamInfoQuery) loadVod(ctx context.Context, query *VodQuery, nodes []*MultistreamInfo, init func(*MultistreamInfo), assign func(*MultistreamInfo, *Vod)) error {
+func (_q *MultistreamInfoQuery) loadVod(ctx context.Context, query *VodQuery, nodes []*MultistreamInfo, init func(*MultistreamInfo), assign func(*MultistreamInfo, *Vod)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*MultistreamInfo)
 	for i := range nodes {
@@ -485,7 +485,7 @@ func (miq *MultistreamInfoQuery) loadVod(ctx context.Context, query *VodQuery, n
 	}
 	return nil
 }
-func (miq *MultistreamInfoQuery) loadPlaylist(ctx context.Context, query *PlaylistQuery, nodes []*MultistreamInfo, init func(*MultistreamInfo), assign func(*MultistreamInfo, *Playlist)) error {
+func (_q *MultistreamInfoQuery) loadPlaylist(ctx context.Context, query *PlaylistQuery, nodes []*MultistreamInfo, init func(*MultistreamInfo), assign func(*MultistreamInfo, *Playlist)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*MultistreamInfo)
 	for i := range nodes {
@@ -518,24 +518,24 @@ func (miq *MultistreamInfoQuery) loadPlaylist(ctx context.Context, query *Playli
 	return nil
 }
 
-func (miq *MultistreamInfoQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := miq.querySpec()
-	_spec.Node.Columns = miq.ctx.Fields
-	if len(miq.ctx.Fields) > 0 {
-		_spec.Unique = miq.ctx.Unique != nil && *miq.ctx.Unique
+func (_q *MultistreamInfoQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, miq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (miq *MultistreamInfoQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *MultistreamInfoQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(multistreaminfo.Table, multistreaminfo.Columns, sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt))
-	_spec.From = miq.sql
-	if unique := miq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if miq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := miq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, multistreaminfo.FieldID)
 		for i := range fields {
@@ -544,20 +544,20 @@ func (miq *MultistreamInfoQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := miq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := miq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := miq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := miq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -567,33 +567,33 @@ func (miq *MultistreamInfoQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (miq *MultistreamInfoQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(miq.driver.Dialect())
+func (_q *MultistreamInfoQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(multistreaminfo.Table)
-	columns := miq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = multistreaminfo.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if miq.sql != nil {
-		selector = miq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if miq.ctx.Unique != nil && *miq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range miq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range miq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := miq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := miq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -606,41 +606,41 @@ type MultistreamInfoGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (migb *MultistreamInfoGroupBy) Aggregate(fns ...AggregateFunc) *MultistreamInfoGroupBy {
-	migb.fns = append(migb.fns, fns...)
-	return migb
+func (_g *MultistreamInfoGroupBy) Aggregate(fns ...AggregateFunc) *MultistreamInfoGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (migb *MultistreamInfoGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, migb.build.ctx, ent.OpQueryGroupBy)
-	if err := migb.build.prepareQuery(ctx); err != nil {
+func (_g *MultistreamInfoGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*MultistreamInfoQuery, *MultistreamInfoGroupBy](ctx, migb.build, migb, migb.build.inters, v)
+	return scanWithInterceptors[*MultistreamInfoQuery, *MultistreamInfoGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (migb *MultistreamInfoGroupBy) sqlScan(ctx context.Context, root *MultistreamInfoQuery, v any) error {
+func (_g *MultistreamInfoGroupBy) sqlScan(ctx context.Context, root *MultistreamInfoQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(migb.fns))
-	for _, fn := range migb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*migb.flds)+len(migb.fns))
-		for _, f := range *migb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*migb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := migb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -654,27 +654,27 @@ type MultistreamInfoSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (mis *MultistreamInfoSelect) Aggregate(fns ...AggregateFunc) *MultistreamInfoSelect {
-	mis.fns = append(mis.fns, fns...)
-	return mis
+func (_s *MultistreamInfoSelect) Aggregate(fns ...AggregateFunc) *MultistreamInfoSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (mis *MultistreamInfoSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, mis.ctx, ent.OpQuerySelect)
-	if err := mis.prepareQuery(ctx); err != nil {
+func (_s *MultistreamInfoSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*MultistreamInfoQuery, *MultistreamInfoSelect](ctx, mis.MultistreamInfoQuery, mis, mis.inters, v)
+	return scanWithInterceptors[*MultistreamInfoQuery, *MultistreamInfoSelect](ctx, _s.MultistreamInfoQuery, _s, _s.inters, v)
 }
 
-func (mis *MultistreamInfoSelect) sqlScan(ctx context.Context, root *MultistreamInfoQuery, v any) error {
+func (_s *MultistreamInfoSelect) sqlScan(ctx context.Context, root *MultistreamInfoQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(mis.fns))
-	for _, fn := range mis.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*mis.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -682,7 +682,7 @@ func (mis *MultistreamInfoSelect) sqlScan(ctx context.Context, root *Multistream
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := mis.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

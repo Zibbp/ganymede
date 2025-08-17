@@ -20,56 +20,56 @@ type PlaylistRuleDelete struct {
 }
 
 // Where appends a list predicates to the PlaylistRuleDelete builder.
-func (prd *PlaylistRuleDelete) Where(ps ...predicate.PlaylistRule) *PlaylistRuleDelete {
-	prd.mutation.Where(ps...)
-	return prd
+func (_d *PlaylistRuleDelete) Where(ps ...predicate.PlaylistRule) *PlaylistRuleDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (prd *PlaylistRuleDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, prd.sqlExec, prd.mutation, prd.hooks)
+func (_d *PlaylistRuleDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (prd *PlaylistRuleDelete) ExecX(ctx context.Context) int {
-	n, err := prd.Exec(ctx)
+func (_d *PlaylistRuleDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (prd *PlaylistRuleDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *PlaylistRuleDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(playlistrule.Table, sqlgraph.NewFieldSpec(playlistrule.FieldID, field.TypeUUID))
-	if ps := prd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, prd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	prd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // PlaylistRuleDeleteOne is the builder for deleting a single PlaylistRule entity.
 type PlaylistRuleDeleteOne struct {
-	prd *PlaylistRuleDelete
+	_d *PlaylistRuleDelete
 }
 
 // Where appends a list predicates to the PlaylistRuleDelete builder.
-func (prdo *PlaylistRuleDeleteOne) Where(ps ...predicate.PlaylistRule) *PlaylistRuleDeleteOne {
-	prdo.prd.mutation.Where(ps...)
-	return prdo
+func (_d *PlaylistRuleDeleteOne) Where(ps ...predicate.PlaylistRule) *PlaylistRuleDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (prdo *PlaylistRuleDeleteOne) Exec(ctx context.Context) error {
-	n, err := prdo.prd.Exec(ctx)
+func (_d *PlaylistRuleDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (prdo *PlaylistRuleDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (prdo *PlaylistRuleDeleteOne) ExecX(ctx context.Context) {
-	if err := prdo.Exec(ctx); err != nil {
+func (_d *PlaylistRuleDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
