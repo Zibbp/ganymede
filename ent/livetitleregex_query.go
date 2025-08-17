@@ -32,44 +32,44 @@ type LiveTitleRegexQuery struct {
 }
 
 // Where adds a new predicate for the LiveTitleRegexQuery builder.
-func (ltrq *LiveTitleRegexQuery) Where(ps ...predicate.LiveTitleRegex) *LiveTitleRegexQuery {
-	ltrq.predicates = append(ltrq.predicates, ps...)
-	return ltrq
+func (_q *LiveTitleRegexQuery) Where(ps ...predicate.LiveTitleRegex) *LiveTitleRegexQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (ltrq *LiveTitleRegexQuery) Limit(limit int) *LiveTitleRegexQuery {
-	ltrq.ctx.Limit = &limit
-	return ltrq
+func (_q *LiveTitleRegexQuery) Limit(limit int) *LiveTitleRegexQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (ltrq *LiveTitleRegexQuery) Offset(offset int) *LiveTitleRegexQuery {
-	ltrq.ctx.Offset = &offset
-	return ltrq
+func (_q *LiveTitleRegexQuery) Offset(offset int) *LiveTitleRegexQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (ltrq *LiveTitleRegexQuery) Unique(unique bool) *LiveTitleRegexQuery {
-	ltrq.ctx.Unique = &unique
-	return ltrq
+func (_q *LiveTitleRegexQuery) Unique(unique bool) *LiveTitleRegexQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (ltrq *LiveTitleRegexQuery) Order(o ...livetitleregex.OrderOption) *LiveTitleRegexQuery {
-	ltrq.order = append(ltrq.order, o...)
-	return ltrq
+func (_q *LiveTitleRegexQuery) Order(o ...livetitleregex.OrderOption) *LiveTitleRegexQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryLive chains the current query on the "live" edge.
-func (ltrq *LiveTitleRegexQuery) QueryLive() *LiveQuery {
-	query := (&LiveClient{config: ltrq.config}).Query()
+func (_q *LiveTitleRegexQuery) QueryLive() *LiveQuery {
+	query := (&LiveClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ltrq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := ltrq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -78,7 +78,7 @@ func (ltrq *LiveTitleRegexQuery) QueryLive() *LiveQuery {
 			sqlgraph.To(live.Table, live.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, livetitleregex.LiveTable, livetitleregex.LiveColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(ltrq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -86,8 +86,8 @@ func (ltrq *LiveTitleRegexQuery) QueryLive() *LiveQuery {
 
 // First returns the first LiveTitleRegex entity from the query.
 // Returns a *NotFoundError when no LiveTitleRegex was found.
-func (ltrq *LiveTitleRegexQuery) First(ctx context.Context) (*LiveTitleRegex, error) {
-	nodes, err := ltrq.Limit(1).All(setContextOp(ctx, ltrq.ctx, ent.OpQueryFirst))
+func (_q *LiveTitleRegexQuery) First(ctx context.Context) (*LiveTitleRegex, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +98,8 @@ func (ltrq *LiveTitleRegexQuery) First(ctx context.Context) (*LiveTitleRegex, er
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (ltrq *LiveTitleRegexQuery) FirstX(ctx context.Context) *LiveTitleRegex {
-	node, err := ltrq.First(ctx)
+func (_q *LiveTitleRegexQuery) FirstX(ctx context.Context) *LiveTitleRegex {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -108,9 +108,9 @@ func (ltrq *LiveTitleRegexQuery) FirstX(ctx context.Context) *LiveTitleRegex {
 
 // FirstID returns the first LiveTitleRegex ID from the query.
 // Returns a *NotFoundError when no LiveTitleRegex ID was found.
-func (ltrq *LiveTitleRegexQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *LiveTitleRegexQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = ltrq.Limit(1).IDs(setContextOp(ctx, ltrq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -121,8 +121,8 @@ func (ltrq *LiveTitleRegexQuery) FirstID(ctx context.Context) (id uuid.UUID, err
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (ltrq *LiveTitleRegexQuery) FirstIDX(ctx context.Context) uuid.UUID {
-	id, err := ltrq.FirstID(ctx)
+func (_q *LiveTitleRegexQuery) FirstIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -132,8 +132,8 @@ func (ltrq *LiveTitleRegexQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Only returns a single LiveTitleRegex entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one LiveTitleRegex entity is found.
 // Returns a *NotFoundError when no LiveTitleRegex entities are found.
-func (ltrq *LiveTitleRegexQuery) Only(ctx context.Context) (*LiveTitleRegex, error) {
-	nodes, err := ltrq.Limit(2).All(setContextOp(ctx, ltrq.ctx, ent.OpQueryOnly))
+func (_q *LiveTitleRegexQuery) Only(ctx context.Context) (*LiveTitleRegex, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -148,8 +148,8 @@ func (ltrq *LiveTitleRegexQuery) Only(ctx context.Context) (*LiveTitleRegex, err
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (ltrq *LiveTitleRegexQuery) OnlyX(ctx context.Context) *LiveTitleRegex {
-	node, err := ltrq.Only(ctx)
+func (_q *LiveTitleRegexQuery) OnlyX(ctx context.Context) *LiveTitleRegex {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,9 +159,9 @@ func (ltrq *LiveTitleRegexQuery) OnlyX(ctx context.Context) *LiveTitleRegex {
 // OnlyID is like Only, but returns the only LiveTitleRegex ID in the query.
 // Returns a *NotSingularError when more than one LiveTitleRegex ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (ltrq *LiveTitleRegexQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *LiveTitleRegexQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = ltrq.Limit(2).IDs(setContextOp(ctx, ltrq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -176,8 +176,8 @@ func (ltrq *LiveTitleRegexQuery) OnlyID(ctx context.Context) (id uuid.UUID, err 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (ltrq *LiveTitleRegexQuery) OnlyIDX(ctx context.Context) uuid.UUID {
-	id, err := ltrq.OnlyID(ctx)
+func (_q *LiveTitleRegexQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -185,18 +185,18 @@ func (ltrq *LiveTitleRegexQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 }
 
 // All executes the query and returns a list of LiveTitleRegexes.
-func (ltrq *LiveTitleRegexQuery) All(ctx context.Context) ([]*LiveTitleRegex, error) {
-	ctx = setContextOp(ctx, ltrq.ctx, ent.OpQueryAll)
-	if err := ltrq.prepareQuery(ctx); err != nil {
+func (_q *LiveTitleRegexQuery) All(ctx context.Context) ([]*LiveTitleRegex, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*LiveTitleRegex, *LiveTitleRegexQuery]()
-	return withInterceptors[[]*LiveTitleRegex](ctx, ltrq, qr, ltrq.inters)
+	return withInterceptors[[]*LiveTitleRegex](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (ltrq *LiveTitleRegexQuery) AllX(ctx context.Context) []*LiveTitleRegex {
-	nodes, err := ltrq.All(ctx)
+func (_q *LiveTitleRegexQuery) AllX(ctx context.Context) []*LiveTitleRegex {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -204,20 +204,20 @@ func (ltrq *LiveTitleRegexQuery) AllX(ctx context.Context) []*LiveTitleRegex {
 }
 
 // IDs executes the query and returns a list of LiveTitleRegex IDs.
-func (ltrq *LiveTitleRegexQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
-	if ltrq.ctx.Unique == nil && ltrq.path != nil {
-		ltrq.Unique(true)
+func (_q *LiveTitleRegexQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, ltrq.ctx, ent.OpQueryIDs)
-	if err = ltrq.Select(livetitleregex.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(livetitleregex.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (ltrq *LiveTitleRegexQuery) IDsX(ctx context.Context) []uuid.UUID {
-	ids, err := ltrq.IDs(ctx)
+func (_q *LiveTitleRegexQuery) IDsX(ctx context.Context) []uuid.UUID {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -225,17 +225,17 @@ func (ltrq *LiveTitleRegexQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (ltrq *LiveTitleRegexQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, ltrq.ctx, ent.OpQueryCount)
-	if err := ltrq.prepareQuery(ctx); err != nil {
+func (_q *LiveTitleRegexQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, ltrq, querierCount[*LiveTitleRegexQuery](), ltrq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*LiveTitleRegexQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (ltrq *LiveTitleRegexQuery) CountX(ctx context.Context) int {
-	count, err := ltrq.Count(ctx)
+func (_q *LiveTitleRegexQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -243,9 +243,9 @@ func (ltrq *LiveTitleRegexQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (ltrq *LiveTitleRegexQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, ltrq.ctx, ent.OpQueryExist)
-	switch _, err := ltrq.FirstID(ctx); {
+func (_q *LiveTitleRegexQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -256,8 +256,8 @@ func (ltrq *LiveTitleRegexQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (ltrq *LiveTitleRegexQuery) ExistX(ctx context.Context) bool {
-	exist, err := ltrq.Exist(ctx)
+func (_q *LiveTitleRegexQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -266,32 +266,32 @@ func (ltrq *LiveTitleRegexQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the LiveTitleRegexQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (ltrq *LiveTitleRegexQuery) Clone() *LiveTitleRegexQuery {
-	if ltrq == nil {
+func (_q *LiveTitleRegexQuery) Clone() *LiveTitleRegexQuery {
+	if _q == nil {
 		return nil
 	}
 	return &LiveTitleRegexQuery{
-		config:     ltrq.config,
-		ctx:        ltrq.ctx.Clone(),
-		order:      append([]livetitleregex.OrderOption{}, ltrq.order...),
-		inters:     append([]Interceptor{}, ltrq.inters...),
-		predicates: append([]predicate.LiveTitleRegex{}, ltrq.predicates...),
-		withLive:   ltrq.withLive.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]livetitleregex.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.LiveTitleRegex{}, _q.predicates...),
+		withLive:   _q.withLive.Clone(),
 		// clone intermediate query.
-		sql:  ltrq.sql.Clone(),
-		path: ltrq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithLive tells the query-builder to eager-load the nodes that are connected to
 // the "live" edge. The optional arguments are used to configure the query builder of the edge.
-func (ltrq *LiveTitleRegexQuery) WithLive(opts ...func(*LiveQuery)) *LiveTitleRegexQuery {
-	query := (&LiveClient{config: ltrq.config}).Query()
+func (_q *LiveTitleRegexQuery) WithLive(opts ...func(*LiveQuery)) *LiveTitleRegexQuery {
+	query := (&LiveClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ltrq.withLive = query
-	return ltrq
+	_q.withLive = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -308,10 +308,10 @@ func (ltrq *LiveTitleRegexQuery) WithLive(opts ...func(*LiveQuery)) *LiveTitleRe
 //		GroupBy(livetitleregex.FieldNegative).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (ltrq *LiveTitleRegexQuery) GroupBy(field string, fields ...string) *LiveTitleRegexGroupBy {
-	ltrq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &LiveTitleRegexGroupBy{build: ltrq}
-	grbuild.flds = &ltrq.ctx.Fields
+func (_q *LiveTitleRegexQuery) GroupBy(field string, fields ...string) *LiveTitleRegexGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &LiveTitleRegexGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = livetitleregex.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -329,55 +329,55 @@ func (ltrq *LiveTitleRegexQuery) GroupBy(field string, fields ...string) *LiveTi
 //	client.LiveTitleRegex.Query().
 //		Select(livetitleregex.FieldNegative).
 //		Scan(ctx, &v)
-func (ltrq *LiveTitleRegexQuery) Select(fields ...string) *LiveTitleRegexSelect {
-	ltrq.ctx.Fields = append(ltrq.ctx.Fields, fields...)
-	sbuild := &LiveTitleRegexSelect{LiveTitleRegexQuery: ltrq}
+func (_q *LiveTitleRegexQuery) Select(fields ...string) *LiveTitleRegexSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &LiveTitleRegexSelect{LiveTitleRegexQuery: _q}
 	sbuild.label = livetitleregex.Label
-	sbuild.flds, sbuild.scan = &ltrq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a LiveTitleRegexSelect configured with the given aggregations.
-func (ltrq *LiveTitleRegexQuery) Aggregate(fns ...AggregateFunc) *LiveTitleRegexSelect {
-	return ltrq.Select().Aggregate(fns...)
+func (_q *LiveTitleRegexQuery) Aggregate(fns ...AggregateFunc) *LiveTitleRegexSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (ltrq *LiveTitleRegexQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range ltrq.inters {
+func (_q *LiveTitleRegexQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, ltrq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range ltrq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !livetitleregex.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if ltrq.path != nil {
-		prev, err := ltrq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		ltrq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (ltrq *LiveTitleRegexQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*LiveTitleRegex, error) {
+func (_q *LiveTitleRegexQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*LiveTitleRegex, error) {
 	var (
 		nodes       = []*LiveTitleRegex{}
-		withFKs     = ltrq.withFKs
-		_spec       = ltrq.querySpec()
+		withFKs     = _q.withFKs
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			ltrq.withLive != nil,
+			_q.withLive != nil,
 		}
 	)
-	if ltrq.withLive != nil {
+	if _q.withLive != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -387,7 +387,7 @@ func (ltrq *LiveTitleRegexQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 		return (*LiveTitleRegex).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &LiveTitleRegex{config: ltrq.config}
+		node := &LiveTitleRegex{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -395,14 +395,14 @@ func (ltrq *LiveTitleRegexQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, ltrq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := ltrq.withLive; query != nil {
-		if err := ltrq.loadLive(ctx, query, nodes, nil,
+	if query := _q.withLive; query != nil {
+		if err := _q.loadLive(ctx, query, nodes, nil,
 			func(n *LiveTitleRegex, e *Live) { n.Edges.Live = e }); err != nil {
 			return nil, err
 		}
@@ -410,7 +410,7 @@ func (ltrq *LiveTitleRegexQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	return nodes, nil
 }
 
-func (ltrq *LiveTitleRegexQuery) loadLive(ctx context.Context, query *LiveQuery, nodes []*LiveTitleRegex, init func(*LiveTitleRegex), assign func(*LiveTitleRegex, *Live)) error {
+func (_q *LiveTitleRegexQuery) loadLive(ctx context.Context, query *LiveQuery, nodes []*LiveTitleRegex, init func(*LiveTitleRegex), assign func(*LiveTitleRegex, *Live)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*LiveTitleRegex)
 	for i := range nodes {
@@ -443,24 +443,24 @@ func (ltrq *LiveTitleRegexQuery) loadLive(ctx context.Context, query *LiveQuery,
 	return nil
 }
 
-func (ltrq *LiveTitleRegexQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := ltrq.querySpec()
-	_spec.Node.Columns = ltrq.ctx.Fields
-	if len(ltrq.ctx.Fields) > 0 {
-		_spec.Unique = ltrq.ctx.Unique != nil && *ltrq.ctx.Unique
+func (_q *LiveTitleRegexQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, ltrq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (ltrq *LiveTitleRegexQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *LiveTitleRegexQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(livetitleregex.Table, livetitleregex.Columns, sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID))
-	_spec.From = ltrq.sql
-	if unique := ltrq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if ltrq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := ltrq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, livetitleregex.FieldID)
 		for i := range fields {
@@ -469,20 +469,20 @@ func (ltrq *LiveTitleRegexQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := ltrq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := ltrq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := ltrq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := ltrq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -492,33 +492,33 @@ func (ltrq *LiveTitleRegexQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (ltrq *LiveTitleRegexQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(ltrq.driver.Dialect())
+func (_q *LiveTitleRegexQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(livetitleregex.Table)
-	columns := ltrq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = livetitleregex.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if ltrq.sql != nil {
-		selector = ltrq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if ltrq.ctx.Unique != nil && *ltrq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range ltrq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range ltrq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := ltrq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := ltrq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -531,41 +531,41 @@ type LiveTitleRegexGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (ltrgb *LiveTitleRegexGroupBy) Aggregate(fns ...AggregateFunc) *LiveTitleRegexGroupBy {
-	ltrgb.fns = append(ltrgb.fns, fns...)
-	return ltrgb
+func (_g *LiveTitleRegexGroupBy) Aggregate(fns ...AggregateFunc) *LiveTitleRegexGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ltrgb *LiveTitleRegexGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ltrgb.build.ctx, ent.OpQueryGroupBy)
-	if err := ltrgb.build.prepareQuery(ctx); err != nil {
+func (_g *LiveTitleRegexGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*LiveTitleRegexQuery, *LiveTitleRegexGroupBy](ctx, ltrgb.build, ltrgb, ltrgb.build.inters, v)
+	return scanWithInterceptors[*LiveTitleRegexQuery, *LiveTitleRegexGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (ltrgb *LiveTitleRegexGroupBy) sqlScan(ctx context.Context, root *LiveTitleRegexQuery, v any) error {
+func (_g *LiveTitleRegexGroupBy) sqlScan(ctx context.Context, root *LiveTitleRegexQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(ltrgb.fns))
-	for _, fn := range ltrgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*ltrgb.flds)+len(ltrgb.fns))
-		for _, f := range *ltrgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*ltrgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := ltrgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -579,27 +579,27 @@ type LiveTitleRegexSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (ltrs *LiveTitleRegexSelect) Aggregate(fns ...AggregateFunc) *LiveTitleRegexSelect {
-	ltrs.fns = append(ltrs.fns, fns...)
-	return ltrs
+func (_s *LiveTitleRegexSelect) Aggregate(fns ...AggregateFunc) *LiveTitleRegexSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ltrs *LiveTitleRegexSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ltrs.ctx, ent.OpQuerySelect)
-	if err := ltrs.prepareQuery(ctx); err != nil {
+func (_s *LiveTitleRegexSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*LiveTitleRegexQuery, *LiveTitleRegexSelect](ctx, ltrs.LiveTitleRegexQuery, ltrs, ltrs.inters, v)
+	return scanWithInterceptors[*LiveTitleRegexQuery, *LiveTitleRegexSelect](ctx, _s.LiveTitleRegexQuery, _s, _s.inters, v)
 }
 
-func (ltrs *LiveTitleRegexSelect) sqlScan(ctx context.Context, root *LiveTitleRegexQuery, v any) error {
+func (_s *LiveTitleRegexSelect) sqlScan(ctx context.Context, root *LiveTitleRegexQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(ltrs.fns))
-	for _, fn := range ltrs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*ltrs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -607,7 +607,7 @@ func (ltrs *LiveTitleRegexSelect) sqlScan(ctx context.Context, root *LiveTitleRe
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := ltrs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

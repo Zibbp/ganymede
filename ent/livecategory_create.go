@@ -25,50 +25,58 @@ type LiveCategoryCreate struct {
 }
 
 // SetName sets the "name" field.
-func (lcc *LiveCategoryCreate) SetName(s string) *LiveCategoryCreate {
-	lcc.mutation.SetName(s)
-	return lcc
+func (_c *LiveCategoryCreate) SetName(v string) *LiveCategoryCreate {
+	_c.mutation.SetName(v)
+	return _c
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (_c *LiveCategoryCreate) SetNillableName(v *string) *LiveCategoryCreate {
+	if v != nil {
+		_c.SetName(*v)
+	}
+	return _c
 }
 
 // SetID sets the "id" field.
-func (lcc *LiveCategoryCreate) SetID(u uuid.UUID) *LiveCategoryCreate {
-	lcc.mutation.SetID(u)
-	return lcc
+func (_c *LiveCategoryCreate) SetID(v uuid.UUID) *LiveCategoryCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (lcc *LiveCategoryCreate) SetNillableID(u *uuid.UUID) *LiveCategoryCreate {
-	if u != nil {
-		lcc.SetID(*u)
+func (_c *LiveCategoryCreate) SetNillableID(v *uuid.UUID) *LiveCategoryCreate {
+	if v != nil {
+		_c.SetID(*v)
 	}
-	return lcc
+	return _c
 }
 
 // SetLiveID sets the "live" edge to the Live entity by ID.
-func (lcc *LiveCategoryCreate) SetLiveID(id uuid.UUID) *LiveCategoryCreate {
-	lcc.mutation.SetLiveID(id)
-	return lcc
+func (_c *LiveCategoryCreate) SetLiveID(id uuid.UUID) *LiveCategoryCreate {
+	_c.mutation.SetLiveID(id)
+	return _c
 }
 
 // SetLive sets the "live" edge to the Live entity.
-func (lcc *LiveCategoryCreate) SetLive(l *Live) *LiveCategoryCreate {
-	return lcc.SetLiveID(l.ID)
+func (_c *LiveCategoryCreate) SetLive(v *Live) *LiveCategoryCreate {
+	return _c.SetLiveID(v.ID)
 }
 
 // Mutation returns the LiveCategoryMutation object of the builder.
-func (lcc *LiveCategoryCreate) Mutation() *LiveCategoryMutation {
-	return lcc.mutation
+func (_c *LiveCategoryCreate) Mutation() *LiveCategoryMutation {
+	return _c.mutation
 }
 
 // Save creates the LiveCategory in the database.
-func (lcc *LiveCategoryCreate) Save(ctx context.Context) (*LiveCategory, error) {
-	lcc.defaults()
-	return withHooks(ctx, lcc.sqlSave, lcc.mutation, lcc.hooks)
+func (_c *LiveCategoryCreate) Save(ctx context.Context) (*LiveCategory, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (lcc *LiveCategoryCreate) SaveX(ctx context.Context) *LiveCategory {
-	v, err := lcc.Save(ctx)
+func (_c *LiveCategoryCreate) SaveX(ctx context.Context) *LiveCategory {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -76,43 +84,40 @@ func (lcc *LiveCategoryCreate) SaveX(ctx context.Context) *LiveCategory {
 }
 
 // Exec executes the query.
-func (lcc *LiveCategoryCreate) Exec(ctx context.Context) error {
-	_, err := lcc.Save(ctx)
+func (_c *LiveCategoryCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (lcc *LiveCategoryCreate) ExecX(ctx context.Context) {
-	if err := lcc.Exec(ctx); err != nil {
+func (_c *LiveCategoryCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (lcc *LiveCategoryCreate) defaults() {
-	if _, ok := lcc.mutation.ID(); !ok {
+func (_c *LiveCategoryCreate) defaults() {
+	if _, ok := _c.mutation.ID(); !ok {
 		v := livecategory.DefaultID()
-		lcc.mutation.SetID(v)
+		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (lcc *LiveCategoryCreate) check() error {
-	if _, ok := lcc.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "LiveCategory.name"`)}
-	}
-	if len(lcc.mutation.LiveIDs()) == 0 {
+func (_c *LiveCategoryCreate) check() error {
+	if len(_c.mutation.LiveIDs()) == 0 {
 		return &ValidationError{Name: "live", err: errors.New(`ent: missing required edge "LiveCategory.live"`)}
 	}
 	return nil
 }
 
-func (lcc *LiveCategoryCreate) sqlSave(ctx context.Context) (*LiveCategory, error) {
-	if err := lcc.check(); err != nil {
+func (_c *LiveCategoryCreate) sqlSave(ctx context.Context) (*LiveCategory, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := lcc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, lcc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -125,26 +130,26 @@ func (lcc *LiveCategoryCreate) sqlSave(ctx context.Context) (*LiveCategory, erro
 			return nil, err
 		}
 	}
-	lcc.mutation.id = &_node.ID
-	lcc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (lcc *LiveCategoryCreate) createSpec() (*LiveCategory, *sqlgraph.CreateSpec) {
+func (_c *LiveCategoryCreate) createSpec() (*LiveCategory, *sqlgraph.CreateSpec) {
 	var (
-		_node = &LiveCategory{config: lcc.config}
+		_node = &LiveCategory{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(livecategory.Table, sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID))
 	)
-	_spec.OnConflict = lcc.conflict
-	if id, ok := lcc.mutation.ID(); ok {
+	_spec.OnConflict = _c.conflict
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := lcc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(livecategory.FieldName, field.TypeString, value)
-		_node.Name = value
+		_node.Name = &value
 	}
-	if nodes := lcc.mutation.LiveIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.LiveIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -180,10 +185,10 @@ func (lcc *LiveCategoryCreate) createSpec() (*LiveCategory, *sqlgraph.CreateSpec
 //			SetName(v+v).
 //		}).
 //		Exec(ctx)
-func (lcc *LiveCategoryCreate) OnConflict(opts ...sql.ConflictOption) *LiveCategoryUpsertOne {
-	lcc.conflict = opts
+func (_c *LiveCategoryCreate) OnConflict(opts ...sql.ConflictOption) *LiveCategoryUpsertOne {
+	_c.conflict = opts
 	return &LiveCategoryUpsertOne{
-		create: lcc,
+		create: _c,
 	}
 }
 
@@ -193,10 +198,10 @@ func (lcc *LiveCategoryCreate) OnConflict(opts ...sql.ConflictOption) *LiveCateg
 //	client.LiveCategory.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (lcc *LiveCategoryCreate) OnConflictColumns(columns ...string) *LiveCategoryUpsertOne {
-	lcc.conflict = append(lcc.conflict, sql.ConflictColumns(columns...))
+func (_c *LiveCategoryCreate) OnConflictColumns(columns ...string) *LiveCategoryUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &LiveCategoryUpsertOne{
-		create: lcc,
+		create: _c,
 	}
 }
 
@@ -222,6 +227,12 @@ func (u *LiveCategoryUpsert) SetName(v string) *LiveCategoryUpsert {
 // UpdateName sets the "name" field to the value that was provided on create.
 func (u *LiveCategoryUpsert) UpdateName() *LiveCategoryUpsert {
 	u.SetExcluded(livecategory.FieldName)
+	return u
+}
+
+// ClearName clears the value of the "name" field.
+func (u *LiveCategoryUpsert) ClearName() *LiveCategoryUpsert {
+	u.SetNull(livecategory.FieldName)
 	return u
 }
 
@@ -287,6 +298,13 @@ func (u *LiveCategoryUpsertOne) UpdateName() *LiveCategoryUpsertOne {
 	})
 }
 
+// ClearName clears the value of the "name" field.
+func (u *LiveCategoryUpsertOne) ClearName() *LiveCategoryUpsertOne {
+	return u.Update(func(s *LiveCategoryUpsert) {
+		s.ClearName()
+	})
+}
+
 // Exec executes the query.
 func (u *LiveCategoryUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
@@ -334,16 +352,16 @@ type LiveCategoryCreateBulk struct {
 }
 
 // Save creates the LiveCategory entities in the database.
-func (lccb *LiveCategoryCreateBulk) Save(ctx context.Context) ([]*LiveCategory, error) {
-	if lccb.err != nil {
-		return nil, lccb.err
+func (_c *LiveCategoryCreateBulk) Save(ctx context.Context) ([]*LiveCategory, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(lccb.builders))
-	nodes := make([]*LiveCategory, len(lccb.builders))
-	mutators := make([]Mutator, len(lccb.builders))
-	for i := range lccb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*LiveCategory, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := lccb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*LiveCategoryMutation)
@@ -357,12 +375,12 @@ func (lccb *LiveCategoryCreateBulk) Save(ctx context.Context) ([]*LiveCategory, 
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, lccb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = lccb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, lccb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -382,7 +400,7 @@ func (lccb *LiveCategoryCreateBulk) Save(ctx context.Context) ([]*LiveCategory, 
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, lccb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -390,8 +408,8 @@ func (lccb *LiveCategoryCreateBulk) Save(ctx context.Context) ([]*LiveCategory, 
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (lccb *LiveCategoryCreateBulk) SaveX(ctx context.Context) []*LiveCategory {
-	v, err := lccb.Save(ctx)
+func (_c *LiveCategoryCreateBulk) SaveX(ctx context.Context) []*LiveCategory {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -399,14 +417,14 @@ func (lccb *LiveCategoryCreateBulk) SaveX(ctx context.Context) []*LiveCategory {
 }
 
 // Exec executes the query.
-func (lccb *LiveCategoryCreateBulk) Exec(ctx context.Context) error {
-	_, err := lccb.Save(ctx)
+func (_c *LiveCategoryCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (lccb *LiveCategoryCreateBulk) ExecX(ctx context.Context) {
-	if err := lccb.Exec(ctx); err != nil {
+func (_c *LiveCategoryCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -426,10 +444,10 @@ func (lccb *LiveCategoryCreateBulk) ExecX(ctx context.Context) {
 //			SetName(v+v).
 //		}).
 //		Exec(ctx)
-func (lccb *LiveCategoryCreateBulk) OnConflict(opts ...sql.ConflictOption) *LiveCategoryUpsertBulk {
-	lccb.conflict = opts
+func (_c *LiveCategoryCreateBulk) OnConflict(opts ...sql.ConflictOption) *LiveCategoryUpsertBulk {
+	_c.conflict = opts
 	return &LiveCategoryUpsertBulk{
-		create: lccb,
+		create: _c,
 	}
 }
 
@@ -439,10 +457,10 @@ func (lccb *LiveCategoryCreateBulk) OnConflict(opts ...sql.ConflictOption) *Live
 //	client.LiveCategory.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (lccb *LiveCategoryCreateBulk) OnConflictColumns(columns ...string) *LiveCategoryUpsertBulk {
-	lccb.conflict = append(lccb.conflict, sql.ConflictColumns(columns...))
+func (_c *LiveCategoryCreateBulk) OnConflictColumns(columns ...string) *LiveCategoryUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &LiveCategoryUpsertBulk{
-		create: lccb,
+		create: _c,
 	}
 }
 
@@ -513,6 +531,13 @@ func (u *LiveCategoryUpsertBulk) SetName(v string) *LiveCategoryUpsertBulk {
 func (u *LiveCategoryUpsertBulk) UpdateName() *LiveCategoryUpsertBulk {
 	return u.Update(func(s *LiveCategoryUpsert) {
 		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *LiveCategoryUpsertBulk) ClearName() *LiveCategoryUpsertBulk {
+	return u.Update(func(s *LiveCategoryUpsert) {
+		s.ClearName()
 	})
 }
 

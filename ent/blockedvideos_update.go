@@ -22,24 +22,24 @@ type BlockedVideosUpdate struct {
 }
 
 // Where appends a list predicates to the BlockedVideosUpdate builder.
-func (bvu *BlockedVideosUpdate) Where(ps ...predicate.BlockedVideos) *BlockedVideosUpdate {
-	bvu.mutation.Where(ps...)
-	return bvu
+func (_u *BlockedVideosUpdate) Where(ps ...predicate.BlockedVideos) *BlockedVideosUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Mutation returns the BlockedVideosMutation object of the builder.
-func (bvu *BlockedVideosUpdate) Mutation() *BlockedVideosMutation {
-	return bvu.mutation
+func (_u *BlockedVideosUpdate) Mutation() *BlockedVideosMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (bvu *BlockedVideosUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, bvu.sqlSave, bvu.mutation, bvu.hooks)
+func (_u *BlockedVideosUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (bvu *BlockedVideosUpdate) SaveX(ctx context.Context) int {
-	affected, err := bvu.Save(ctx)
+func (_u *BlockedVideosUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -47,28 +47,28 @@ func (bvu *BlockedVideosUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (bvu *BlockedVideosUpdate) Exec(ctx context.Context) error {
-	_, err := bvu.Save(ctx)
+func (_u *BlockedVideosUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (bvu *BlockedVideosUpdate) ExecX(ctx context.Context) {
-	if err := bvu.Exec(ctx); err != nil {
+func (_u *BlockedVideosUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
-func (bvu *BlockedVideosUpdate) sqlSave(ctx context.Context) (n int, err error) {
+func (_u *BlockedVideosUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(blockedvideos.Table, blockedvideos.Columns, sqlgraph.NewFieldSpec(blockedvideos.FieldID, field.TypeString))
-	if ps := bvu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, bvu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{blockedvideos.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -76,8 +76,8 @@ func (bvu *BlockedVideosUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		return 0, err
 	}
-	bvu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // BlockedVideosUpdateOne is the builder for updating a single BlockedVideos entity.
@@ -89,31 +89,31 @@ type BlockedVideosUpdateOne struct {
 }
 
 // Mutation returns the BlockedVideosMutation object of the builder.
-func (bvuo *BlockedVideosUpdateOne) Mutation() *BlockedVideosMutation {
-	return bvuo.mutation
+func (_u *BlockedVideosUpdateOne) Mutation() *BlockedVideosMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the BlockedVideosUpdate builder.
-func (bvuo *BlockedVideosUpdateOne) Where(ps ...predicate.BlockedVideos) *BlockedVideosUpdateOne {
-	bvuo.mutation.Where(ps...)
-	return bvuo
+func (_u *BlockedVideosUpdateOne) Where(ps ...predicate.BlockedVideos) *BlockedVideosUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (bvuo *BlockedVideosUpdateOne) Select(field string, fields ...string) *BlockedVideosUpdateOne {
-	bvuo.fields = append([]string{field}, fields...)
-	return bvuo
+func (_u *BlockedVideosUpdateOne) Select(field string, fields ...string) *BlockedVideosUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated BlockedVideos entity.
-func (bvuo *BlockedVideosUpdateOne) Save(ctx context.Context) (*BlockedVideos, error) {
-	return withHooks(ctx, bvuo.sqlSave, bvuo.mutation, bvuo.hooks)
+func (_u *BlockedVideosUpdateOne) Save(ctx context.Context) (*BlockedVideos, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (bvuo *BlockedVideosUpdateOne) SaveX(ctx context.Context) *BlockedVideos {
-	node, err := bvuo.Save(ctx)
+func (_u *BlockedVideosUpdateOne) SaveX(ctx context.Context) *BlockedVideos {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -121,26 +121,26 @@ func (bvuo *BlockedVideosUpdateOne) SaveX(ctx context.Context) *BlockedVideos {
 }
 
 // Exec executes the query on the entity.
-func (bvuo *BlockedVideosUpdateOne) Exec(ctx context.Context) error {
-	_, err := bvuo.Save(ctx)
+func (_u *BlockedVideosUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (bvuo *BlockedVideosUpdateOne) ExecX(ctx context.Context) {
-	if err := bvuo.Exec(ctx); err != nil {
+func (_u *BlockedVideosUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
-func (bvuo *BlockedVideosUpdateOne) sqlSave(ctx context.Context) (_node *BlockedVideos, err error) {
+func (_u *BlockedVideosUpdateOne) sqlSave(ctx context.Context) (_node *BlockedVideos, err error) {
 	_spec := sqlgraph.NewUpdateSpec(blockedvideos.Table, blockedvideos.Columns, sqlgraph.NewFieldSpec(blockedvideos.FieldID, field.TypeString))
-	id, ok := bvuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "BlockedVideos.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := bvuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, blockedvideos.FieldID)
 		for _, f := range fields {
@@ -152,17 +152,17 @@ func (bvuo *BlockedVideosUpdateOne) sqlSave(ctx context.Context) (_node *Blocked
 			}
 		}
 	}
-	if ps := bvuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	_node = &BlockedVideos{config: bvuo.config}
+	_node = &BlockedVideos{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, bvuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{blockedvideos.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -170,6 +170,6 @@ func (bvuo *BlockedVideosUpdateOne) sqlSave(ctx context.Context) (_node *Blocked
 		}
 		return nil, err
 	}
-	bvuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

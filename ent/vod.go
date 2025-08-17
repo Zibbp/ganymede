@@ -220,7 +220,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Vod fields.
-func (v *Vod) assignValues(columns []string, values []any) error {
+func (_m *Vod) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -230,211 +230,211 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
-				v.ID = *value
+				_m.ID = *value
 			}
 		case vod.FieldExtID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ext_id", values[i])
 			} else if value.Valid {
-				v.ExtID = value.String
+				_m.ExtID = value.String
 			}
 		case vod.FieldClipExtVodID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field clip_ext_vod_id", values[i])
 			} else if value.Valid {
-				v.ClipExtVodID = value.String
+				_m.ClipExtVodID = value.String
 			}
 		case vod.FieldExtStreamID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ext_stream_id", values[i])
 			} else if value.Valid {
-				v.ExtStreamID = value.String
+				_m.ExtStreamID = value.String
 			}
 		case vod.FieldPlatform:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field platform", values[i])
 			} else if value.Valid {
-				v.Platform = utils.VideoPlatform(value.String)
+				_m.Platform = utils.VideoPlatform(value.String)
 			}
 		case vod.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				v.Type = utils.VodType(value.String)
+				_m.Type = utils.VodType(value.String)
 			}
 		case vod.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
-				v.Title = value.String
+				_m.Title = value.String
 			}
 		case vod.FieldDuration:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field duration", values[i])
 			} else if value.Valid {
-				v.Duration = int(value.Int64)
+				_m.Duration = int(value.Int64)
 			}
 		case vod.FieldClipVodOffset:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field clip_vod_offset", values[i])
 			} else if value.Valid {
-				v.ClipVodOffset = int(value.Int64)
+				_m.ClipVodOffset = int(value.Int64)
 			}
 		case vod.FieldViews:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field views", values[i])
 			} else if value.Valid {
-				v.Views = int(value.Int64)
+				_m.Views = int(value.Int64)
 			}
 		case vod.FieldResolution:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resolution", values[i])
 			} else if value.Valid {
-				v.Resolution = value.String
+				_m.Resolution = value.String
 			}
 		case vod.FieldProcessing:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field processing", values[i])
 			} else if value.Valid {
-				v.Processing = value.Bool
+				_m.Processing = value.Bool
 			}
 		case vod.FieldThumbnailPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field thumbnail_path", values[i])
 			} else if value.Valid {
-				v.ThumbnailPath = value.String
+				_m.ThumbnailPath = value.String
 			}
 		case vod.FieldWebThumbnailPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field web_thumbnail_path", values[i])
 			} else if value.Valid {
-				v.WebThumbnailPath = value.String
+				_m.WebThumbnailPath = value.String
 			}
 		case vod.FieldVideoPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field video_path", values[i])
 			} else if value.Valid {
-				v.VideoPath = value.String
+				_m.VideoPath = value.String
 			}
 		case vod.FieldVideoHlsPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field video_hls_path", values[i])
 			} else if value.Valid {
-				v.VideoHlsPath = value.String
+				_m.VideoHlsPath = value.String
 			}
 		case vod.FieldChatPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field chat_path", values[i])
 			} else if value.Valid {
-				v.ChatPath = value.String
+				_m.ChatPath = value.String
 			}
 		case vod.FieldLiveChatPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field live_chat_path", values[i])
 			} else if value.Valid {
-				v.LiveChatPath = value.String
+				_m.LiveChatPath = value.String
 			}
 		case vod.FieldLiveChatConvertPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field live_chat_convert_path", values[i])
 			} else if value.Valid {
-				v.LiveChatConvertPath = value.String
+				_m.LiveChatConvertPath = value.String
 			}
 		case vod.FieldChatVideoPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field chat_video_path", values[i])
 			} else if value.Valid {
-				v.ChatVideoPath = value.String
+				_m.ChatVideoPath = value.String
 			}
 		case vod.FieldInfoPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field info_path", values[i])
 			} else if value.Valid {
-				v.InfoPath = value.String
+				_m.InfoPath = value.String
 			}
 		case vod.FieldCaptionPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field caption_path", values[i])
 			} else if value.Valid {
-				v.CaptionPath = value.String
+				_m.CaptionPath = value.String
 			}
 		case vod.FieldFolderName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field folder_name", values[i])
 			} else if value.Valid {
-				v.FolderName = value.String
+				_m.FolderName = value.String
 			}
 		case vod.FieldFileName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field file_name", values[i])
 			} else if value.Valid {
-				v.FileName = value.String
+				_m.FileName = value.String
 			}
 		case vod.FieldTmpVideoDownloadPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tmp_video_download_path", values[i])
 			} else if value.Valid {
-				v.TmpVideoDownloadPath = value.String
+				_m.TmpVideoDownloadPath = value.String
 			}
 		case vod.FieldTmpVideoConvertPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tmp_video_convert_path", values[i])
 			} else if value.Valid {
-				v.TmpVideoConvertPath = value.String
+				_m.TmpVideoConvertPath = value.String
 			}
 		case vod.FieldTmpChatDownloadPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tmp_chat_download_path", values[i])
 			} else if value.Valid {
-				v.TmpChatDownloadPath = value.String
+				_m.TmpChatDownloadPath = value.String
 			}
 		case vod.FieldTmpLiveChatDownloadPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tmp_live_chat_download_path", values[i])
 			} else if value.Valid {
-				v.TmpLiveChatDownloadPath = value.String
+				_m.TmpLiveChatDownloadPath = value.String
 			}
 		case vod.FieldTmpLiveChatConvertPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tmp_live_chat_convert_path", values[i])
 			} else if value.Valid {
-				v.TmpLiveChatConvertPath = value.String
+				_m.TmpLiveChatConvertPath = value.String
 			}
 		case vod.FieldTmpChatRenderPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tmp_chat_render_path", values[i])
 			} else if value.Valid {
-				v.TmpChatRenderPath = value.String
+				_m.TmpChatRenderPath = value.String
 			}
 		case vod.FieldTmpVideoHlsPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tmp_video_hls_path", values[i])
 			} else if value.Valid {
-				v.TmpVideoHlsPath = value.String
+				_m.TmpVideoHlsPath = value.String
 			}
 		case vod.FieldLocked:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field locked", values[i])
 			} else if value.Valid {
-				v.Locked = value.Bool
+				_m.Locked = value.Bool
 			}
 		case vod.FieldLocalViews:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field local_views", values[i])
 			} else if value.Valid {
-				v.LocalViews = int(value.Int64)
+				_m.LocalViews = int(value.Int64)
 			}
 		case vod.FieldSpriteThumbnailsEnabled:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_enabled", values[i])
 			} else if value.Valid {
-				v.SpriteThumbnailsEnabled = value.Bool
+				_m.SpriteThumbnailsEnabled = value.Bool
 			}
 		case vod.FieldSpriteThumbnailsImages:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_images", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &v.SpriteThumbnailsImages); err != nil {
+				if err := json.Unmarshal(*value, &_m.SpriteThumbnailsImages); err != nil {
 					return fmt.Errorf("unmarshal field sprite_thumbnails_images: %w", err)
 				}
 			}
@@ -442,65 +442,65 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_interval", values[i])
 			} else if value.Valid {
-				v.SpriteThumbnailsInterval = int(value.Int64)
+				_m.SpriteThumbnailsInterval = int(value.Int64)
 			}
 		case vod.FieldSpriteThumbnailsWidth:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_width", values[i])
 			} else if value.Valid {
-				v.SpriteThumbnailsWidth = int(value.Int64)
+				_m.SpriteThumbnailsWidth = int(value.Int64)
 			}
 		case vod.FieldSpriteThumbnailsHeight:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_height", values[i])
 			} else if value.Valid {
-				v.SpriteThumbnailsHeight = int(value.Int64)
+				_m.SpriteThumbnailsHeight = int(value.Int64)
 			}
 		case vod.FieldSpriteThumbnailsRows:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_rows", values[i])
 			} else if value.Valid {
-				v.SpriteThumbnailsRows = int(value.Int64)
+				_m.SpriteThumbnailsRows = int(value.Int64)
 			}
 		case vod.FieldSpriteThumbnailsColumns:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field sprite_thumbnails_columns", values[i])
 			} else if value.Valid {
-				v.SpriteThumbnailsColumns = int(value.Int64)
+				_m.SpriteThumbnailsColumns = int(value.Int64)
 			}
 		case vod.FieldStorageSizeBytes:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field storage_size_bytes", values[i])
 			} else if value.Valid {
-				v.StorageSizeBytes = value.Int64
+				_m.StorageSizeBytes = value.Int64
 			}
 		case vod.FieldStreamedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field streamed_at", values[i])
 			} else if value.Valid {
-				v.StreamedAt = value.Time
+				_m.StreamedAt = value.Time
 			}
 		case vod.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				v.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case vod.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				v.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case vod.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field channel_vods", values[i])
 			} else if value.Valid {
-				v.channel_vods = new(uuid.UUID)
-				*v.channel_vods = *value.S.(*uuid.UUID)
+				_m.channel_vods = new(uuid.UUID)
+				*_m.channel_vods = *value.S.(*uuid.UUID)
 			}
 		default:
-			v.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -508,191 +508,191 @@ func (v *Vod) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Vod.
 // This includes values selected through modifiers, order, etc.
-func (v *Vod) Value(name string) (ent.Value, error) {
-	return v.selectValues.Get(name)
+func (_m *Vod) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryChannel queries the "channel" edge of the Vod entity.
-func (v *Vod) QueryChannel() *ChannelQuery {
-	return NewVodClient(v.config).QueryChannel(v)
+func (_m *Vod) QueryChannel() *ChannelQuery {
+	return NewVodClient(_m.config).QueryChannel(_m)
 }
 
 // QueryQueue queries the "queue" edge of the Vod entity.
-func (v *Vod) QueryQueue() *QueueQuery {
-	return NewVodClient(v.config).QueryQueue(v)
+func (_m *Vod) QueryQueue() *QueueQuery {
+	return NewVodClient(_m.config).QueryQueue(_m)
 }
 
 // QueryPlaylists queries the "playlists" edge of the Vod entity.
-func (v *Vod) QueryPlaylists() *PlaylistQuery {
-	return NewVodClient(v.config).QueryPlaylists(v)
+func (_m *Vod) QueryPlaylists() *PlaylistQuery {
+	return NewVodClient(_m.config).QueryPlaylists(_m)
 }
 
 // QueryChapters queries the "chapters" edge of the Vod entity.
-func (v *Vod) QueryChapters() *ChapterQuery {
-	return NewVodClient(v.config).QueryChapters(v)
+func (_m *Vod) QueryChapters() *ChapterQuery {
+	return NewVodClient(_m.config).QueryChapters(_m)
 }
 
 // QueryMutedSegments queries the "muted_segments" edge of the Vod entity.
-func (v *Vod) QueryMutedSegments() *MutedSegmentQuery {
-	return NewVodClient(v.config).QueryMutedSegments(v)
+func (_m *Vod) QueryMutedSegments() *MutedSegmentQuery {
+	return NewVodClient(_m.config).QueryMutedSegments(_m)
 }
 
 // QueryMultistreamInfo queries the "multistream_info" edge of the Vod entity.
-func (v *Vod) QueryMultistreamInfo() *MultistreamInfoQuery {
-	return NewVodClient(v.config).QueryMultistreamInfo(v)
+func (_m *Vod) QueryMultistreamInfo() *MultistreamInfoQuery {
+	return NewVodClient(_m.config).QueryMultistreamInfo(_m)
 }
 
 // Update returns a builder for updating this Vod.
 // Note that you need to call Vod.Unwrap() before calling this method if this Vod
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (v *Vod) Update() *VodUpdateOne {
-	return NewVodClient(v.config).UpdateOne(v)
+func (_m *Vod) Update() *VodUpdateOne {
+	return NewVodClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Vod entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (v *Vod) Unwrap() *Vod {
-	_tx, ok := v.config.driver.(*txDriver)
+func (_m *Vod) Unwrap() *Vod {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Vod is not a transactional entity")
 	}
-	v.config.driver = _tx.drv
-	return v
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (v *Vod) String() string {
+func (_m *Vod) String() string {
 	var builder strings.Builder
 	builder.WriteString("Vod(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", v.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("ext_id=")
-	builder.WriteString(v.ExtID)
+	builder.WriteString(_m.ExtID)
 	builder.WriteString(", ")
 	builder.WriteString("clip_ext_vod_id=")
-	builder.WriteString(v.ClipExtVodID)
+	builder.WriteString(_m.ClipExtVodID)
 	builder.WriteString(", ")
 	builder.WriteString("ext_stream_id=")
-	builder.WriteString(v.ExtStreamID)
+	builder.WriteString(_m.ExtStreamID)
 	builder.WriteString(", ")
 	builder.WriteString("platform=")
-	builder.WriteString(fmt.Sprintf("%v", v.Platform))
+	builder.WriteString(fmt.Sprintf("%v", _m.Platform))
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(fmt.Sprintf("%v", v.Type))
+	builder.WriteString(fmt.Sprintf("%v", _m.Type))
 	builder.WriteString(", ")
 	builder.WriteString("title=")
-	builder.WriteString(v.Title)
+	builder.WriteString(_m.Title)
 	builder.WriteString(", ")
 	builder.WriteString("duration=")
-	builder.WriteString(fmt.Sprintf("%v", v.Duration))
+	builder.WriteString(fmt.Sprintf("%v", _m.Duration))
 	builder.WriteString(", ")
 	builder.WriteString("clip_vod_offset=")
-	builder.WriteString(fmt.Sprintf("%v", v.ClipVodOffset))
+	builder.WriteString(fmt.Sprintf("%v", _m.ClipVodOffset))
 	builder.WriteString(", ")
 	builder.WriteString("views=")
-	builder.WriteString(fmt.Sprintf("%v", v.Views))
+	builder.WriteString(fmt.Sprintf("%v", _m.Views))
 	builder.WriteString(", ")
 	builder.WriteString("resolution=")
-	builder.WriteString(v.Resolution)
+	builder.WriteString(_m.Resolution)
 	builder.WriteString(", ")
 	builder.WriteString("processing=")
-	builder.WriteString(fmt.Sprintf("%v", v.Processing))
+	builder.WriteString(fmt.Sprintf("%v", _m.Processing))
 	builder.WriteString(", ")
 	builder.WriteString("thumbnail_path=")
-	builder.WriteString(v.ThumbnailPath)
+	builder.WriteString(_m.ThumbnailPath)
 	builder.WriteString(", ")
 	builder.WriteString("web_thumbnail_path=")
-	builder.WriteString(v.WebThumbnailPath)
+	builder.WriteString(_m.WebThumbnailPath)
 	builder.WriteString(", ")
 	builder.WriteString("video_path=")
-	builder.WriteString(v.VideoPath)
+	builder.WriteString(_m.VideoPath)
 	builder.WriteString(", ")
 	builder.WriteString("video_hls_path=")
-	builder.WriteString(v.VideoHlsPath)
+	builder.WriteString(_m.VideoHlsPath)
 	builder.WriteString(", ")
 	builder.WriteString("chat_path=")
-	builder.WriteString(v.ChatPath)
+	builder.WriteString(_m.ChatPath)
 	builder.WriteString(", ")
 	builder.WriteString("live_chat_path=")
-	builder.WriteString(v.LiveChatPath)
+	builder.WriteString(_m.LiveChatPath)
 	builder.WriteString(", ")
 	builder.WriteString("live_chat_convert_path=")
-	builder.WriteString(v.LiveChatConvertPath)
+	builder.WriteString(_m.LiveChatConvertPath)
 	builder.WriteString(", ")
 	builder.WriteString("chat_video_path=")
-	builder.WriteString(v.ChatVideoPath)
+	builder.WriteString(_m.ChatVideoPath)
 	builder.WriteString(", ")
 	builder.WriteString("info_path=")
-	builder.WriteString(v.InfoPath)
+	builder.WriteString(_m.InfoPath)
 	builder.WriteString(", ")
 	builder.WriteString("caption_path=")
-	builder.WriteString(v.CaptionPath)
+	builder.WriteString(_m.CaptionPath)
 	builder.WriteString(", ")
 	builder.WriteString("folder_name=")
-	builder.WriteString(v.FolderName)
+	builder.WriteString(_m.FolderName)
 	builder.WriteString(", ")
 	builder.WriteString("file_name=")
-	builder.WriteString(v.FileName)
+	builder.WriteString(_m.FileName)
 	builder.WriteString(", ")
 	builder.WriteString("tmp_video_download_path=")
-	builder.WriteString(v.TmpVideoDownloadPath)
+	builder.WriteString(_m.TmpVideoDownloadPath)
 	builder.WriteString(", ")
 	builder.WriteString("tmp_video_convert_path=")
-	builder.WriteString(v.TmpVideoConvertPath)
+	builder.WriteString(_m.TmpVideoConvertPath)
 	builder.WriteString(", ")
 	builder.WriteString("tmp_chat_download_path=")
-	builder.WriteString(v.TmpChatDownloadPath)
+	builder.WriteString(_m.TmpChatDownloadPath)
 	builder.WriteString(", ")
 	builder.WriteString("tmp_live_chat_download_path=")
-	builder.WriteString(v.TmpLiveChatDownloadPath)
+	builder.WriteString(_m.TmpLiveChatDownloadPath)
 	builder.WriteString(", ")
 	builder.WriteString("tmp_live_chat_convert_path=")
-	builder.WriteString(v.TmpLiveChatConvertPath)
+	builder.WriteString(_m.TmpLiveChatConvertPath)
 	builder.WriteString(", ")
 	builder.WriteString("tmp_chat_render_path=")
-	builder.WriteString(v.TmpChatRenderPath)
+	builder.WriteString(_m.TmpChatRenderPath)
 	builder.WriteString(", ")
 	builder.WriteString("tmp_video_hls_path=")
-	builder.WriteString(v.TmpVideoHlsPath)
+	builder.WriteString(_m.TmpVideoHlsPath)
 	builder.WriteString(", ")
 	builder.WriteString("locked=")
-	builder.WriteString(fmt.Sprintf("%v", v.Locked))
+	builder.WriteString(fmt.Sprintf("%v", _m.Locked))
 	builder.WriteString(", ")
 	builder.WriteString("local_views=")
-	builder.WriteString(fmt.Sprintf("%v", v.LocalViews))
+	builder.WriteString(fmt.Sprintf("%v", _m.LocalViews))
 	builder.WriteString(", ")
 	builder.WriteString("sprite_thumbnails_enabled=")
-	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsEnabled))
+	builder.WriteString(fmt.Sprintf("%v", _m.SpriteThumbnailsEnabled))
 	builder.WriteString(", ")
 	builder.WriteString("sprite_thumbnails_images=")
-	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsImages))
+	builder.WriteString(fmt.Sprintf("%v", _m.SpriteThumbnailsImages))
 	builder.WriteString(", ")
 	builder.WriteString("sprite_thumbnails_interval=")
-	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsInterval))
+	builder.WriteString(fmt.Sprintf("%v", _m.SpriteThumbnailsInterval))
 	builder.WriteString(", ")
 	builder.WriteString("sprite_thumbnails_width=")
-	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsWidth))
+	builder.WriteString(fmt.Sprintf("%v", _m.SpriteThumbnailsWidth))
 	builder.WriteString(", ")
 	builder.WriteString("sprite_thumbnails_height=")
-	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsHeight))
+	builder.WriteString(fmt.Sprintf("%v", _m.SpriteThumbnailsHeight))
 	builder.WriteString(", ")
 	builder.WriteString("sprite_thumbnails_rows=")
-	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsRows))
+	builder.WriteString(fmt.Sprintf("%v", _m.SpriteThumbnailsRows))
 	builder.WriteString(", ")
 	builder.WriteString("sprite_thumbnails_columns=")
-	builder.WriteString(fmt.Sprintf("%v", v.SpriteThumbnailsColumns))
+	builder.WriteString(fmt.Sprintf("%v", _m.SpriteThumbnailsColumns))
 	builder.WriteString(", ")
 	builder.WriteString("storage_size_bytes=")
-	builder.WriteString(fmt.Sprintf("%v", v.StorageSizeBytes))
+	builder.WriteString(fmt.Sprintf("%v", _m.StorageSizeBytes))
 	builder.WriteString(", ")
 	builder.WriteString("streamed_at=")
-	builder.WriteString(v.StreamedAt.Format(time.ANSIC))
+	builder.WriteString(_m.StreamedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(v.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(v.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

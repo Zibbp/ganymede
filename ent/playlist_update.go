@@ -27,193 +27,193 @@ type PlaylistUpdate struct {
 }
 
 // Where appends a list predicates to the PlaylistUpdate builder.
-func (pu *PlaylistUpdate) Where(ps ...predicate.Playlist) *PlaylistUpdate {
-	pu.mutation.Where(ps...)
-	return pu
+func (_u *PlaylistUpdate) Where(ps ...predicate.Playlist) *PlaylistUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (pu *PlaylistUpdate) SetName(s string) *PlaylistUpdate {
-	pu.mutation.SetName(s)
-	return pu
+func (_u *PlaylistUpdate) SetName(v string) *PlaylistUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (pu *PlaylistUpdate) SetNillableName(s *string) *PlaylistUpdate {
-	if s != nil {
-		pu.SetName(*s)
+func (_u *PlaylistUpdate) SetNillableName(v *string) *PlaylistUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (pu *PlaylistUpdate) SetDescription(s string) *PlaylistUpdate {
-	pu.mutation.SetDescription(s)
-	return pu
+func (_u *PlaylistUpdate) SetDescription(v string) *PlaylistUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (pu *PlaylistUpdate) SetNillableDescription(s *string) *PlaylistUpdate {
-	if s != nil {
-		pu.SetDescription(*s)
+func (_u *PlaylistUpdate) SetNillableDescription(v *string) *PlaylistUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (pu *PlaylistUpdate) ClearDescription() *PlaylistUpdate {
-	pu.mutation.ClearDescription()
-	return pu
+func (_u *PlaylistUpdate) ClearDescription() *PlaylistUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetThumbnailPath sets the "thumbnail_path" field.
-func (pu *PlaylistUpdate) SetThumbnailPath(s string) *PlaylistUpdate {
-	pu.mutation.SetThumbnailPath(s)
-	return pu
+func (_u *PlaylistUpdate) SetThumbnailPath(v string) *PlaylistUpdate {
+	_u.mutation.SetThumbnailPath(v)
+	return _u
 }
 
 // SetNillableThumbnailPath sets the "thumbnail_path" field if the given value is not nil.
-func (pu *PlaylistUpdate) SetNillableThumbnailPath(s *string) *PlaylistUpdate {
-	if s != nil {
-		pu.SetThumbnailPath(*s)
+func (_u *PlaylistUpdate) SetNillableThumbnailPath(v *string) *PlaylistUpdate {
+	if v != nil {
+		_u.SetThumbnailPath(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearThumbnailPath clears the value of the "thumbnail_path" field.
-func (pu *PlaylistUpdate) ClearThumbnailPath() *PlaylistUpdate {
-	pu.mutation.ClearThumbnailPath()
-	return pu
+func (_u *PlaylistUpdate) ClearThumbnailPath() *PlaylistUpdate {
+	_u.mutation.ClearThumbnailPath()
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pu *PlaylistUpdate) SetUpdatedAt(t time.Time) *PlaylistUpdate {
-	pu.mutation.SetUpdatedAt(t)
-	return pu
+func (_u *PlaylistUpdate) SetUpdatedAt(v time.Time) *PlaylistUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddVodIDs adds the "vods" edge to the Vod entity by IDs.
-func (pu *PlaylistUpdate) AddVodIDs(ids ...uuid.UUID) *PlaylistUpdate {
-	pu.mutation.AddVodIDs(ids...)
-	return pu
+func (_u *PlaylistUpdate) AddVodIDs(ids ...uuid.UUID) *PlaylistUpdate {
+	_u.mutation.AddVodIDs(ids...)
+	return _u
 }
 
 // AddVods adds the "vods" edges to the Vod entity.
-func (pu *PlaylistUpdate) AddVods(v ...*Vod) *PlaylistUpdate {
+func (_u *PlaylistUpdate) AddVods(v ...*Vod) *PlaylistUpdate {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return pu.AddVodIDs(ids...)
+	return _u.AddVodIDs(ids...)
 }
 
 // AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
-func (pu *PlaylistUpdate) AddMultistreamInfoIDs(ids ...int) *PlaylistUpdate {
-	pu.mutation.AddMultistreamInfoIDs(ids...)
-	return pu
+func (_u *PlaylistUpdate) AddMultistreamInfoIDs(ids ...int) *PlaylistUpdate {
+	_u.mutation.AddMultistreamInfoIDs(ids...)
+	return _u
 }
 
 // AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
-func (pu *PlaylistUpdate) AddMultistreamInfo(m ...*MultistreamInfo) *PlaylistUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *PlaylistUpdate) AddMultistreamInfo(v ...*MultistreamInfo) *PlaylistUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pu.AddMultistreamInfoIDs(ids...)
+	return _u.AddMultistreamInfoIDs(ids...)
 }
 
 // AddRuleGroupIDs adds the "rule_groups" edge to the PlaylistRuleGroup entity by IDs.
-func (pu *PlaylistUpdate) AddRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdate {
-	pu.mutation.AddRuleGroupIDs(ids...)
-	return pu
+func (_u *PlaylistUpdate) AddRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdate {
+	_u.mutation.AddRuleGroupIDs(ids...)
+	return _u
 }
 
 // AddRuleGroups adds the "rule_groups" edges to the PlaylistRuleGroup entity.
-func (pu *PlaylistUpdate) AddRuleGroups(p ...*PlaylistRuleGroup) *PlaylistUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return pu.AddRuleGroupIDs(ids...)
-}
-
-// Mutation returns the PlaylistMutation object of the builder.
-func (pu *PlaylistUpdate) Mutation() *PlaylistMutation {
-	return pu.mutation
-}
-
-// ClearVods clears all "vods" edges to the Vod entity.
-func (pu *PlaylistUpdate) ClearVods() *PlaylistUpdate {
-	pu.mutation.ClearVods()
-	return pu
-}
-
-// RemoveVodIDs removes the "vods" edge to Vod entities by IDs.
-func (pu *PlaylistUpdate) RemoveVodIDs(ids ...uuid.UUID) *PlaylistUpdate {
-	pu.mutation.RemoveVodIDs(ids...)
-	return pu
-}
-
-// RemoveVods removes "vods" edges to Vod entities.
-func (pu *PlaylistUpdate) RemoveVods(v ...*Vod) *PlaylistUpdate {
+func (_u *PlaylistUpdate) AddRuleGroups(v ...*PlaylistRuleGroup) *PlaylistUpdate {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return pu.RemoveVodIDs(ids...)
+	return _u.AddRuleGroupIDs(ids...)
+}
+
+// Mutation returns the PlaylistMutation object of the builder.
+func (_u *PlaylistUpdate) Mutation() *PlaylistMutation {
+	return _u.mutation
+}
+
+// ClearVods clears all "vods" edges to the Vod entity.
+func (_u *PlaylistUpdate) ClearVods() *PlaylistUpdate {
+	_u.mutation.ClearVods()
+	return _u
+}
+
+// RemoveVodIDs removes the "vods" edge to Vod entities by IDs.
+func (_u *PlaylistUpdate) RemoveVodIDs(ids ...uuid.UUID) *PlaylistUpdate {
+	_u.mutation.RemoveVodIDs(ids...)
+	return _u
+}
+
+// RemoveVods removes "vods" edges to Vod entities.
+func (_u *PlaylistUpdate) RemoveVods(v ...*Vod) *PlaylistUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveVodIDs(ids...)
 }
 
 // ClearMultistreamInfo clears all "multistream_info" edges to the MultistreamInfo entity.
-func (pu *PlaylistUpdate) ClearMultistreamInfo() *PlaylistUpdate {
-	pu.mutation.ClearMultistreamInfo()
-	return pu
+func (_u *PlaylistUpdate) ClearMultistreamInfo() *PlaylistUpdate {
+	_u.mutation.ClearMultistreamInfo()
+	return _u
 }
 
 // RemoveMultistreamInfoIDs removes the "multistream_info" edge to MultistreamInfo entities by IDs.
-func (pu *PlaylistUpdate) RemoveMultistreamInfoIDs(ids ...int) *PlaylistUpdate {
-	pu.mutation.RemoveMultistreamInfoIDs(ids...)
-	return pu
+func (_u *PlaylistUpdate) RemoveMultistreamInfoIDs(ids ...int) *PlaylistUpdate {
+	_u.mutation.RemoveMultistreamInfoIDs(ids...)
+	return _u
 }
 
 // RemoveMultistreamInfo removes "multistream_info" edges to MultistreamInfo entities.
-func (pu *PlaylistUpdate) RemoveMultistreamInfo(m ...*MultistreamInfo) *PlaylistUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *PlaylistUpdate) RemoveMultistreamInfo(v ...*MultistreamInfo) *PlaylistUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pu.RemoveMultistreamInfoIDs(ids...)
+	return _u.RemoveMultistreamInfoIDs(ids...)
 }
 
 // ClearRuleGroups clears all "rule_groups" edges to the PlaylistRuleGroup entity.
-func (pu *PlaylistUpdate) ClearRuleGroups() *PlaylistUpdate {
-	pu.mutation.ClearRuleGroups()
-	return pu
+func (_u *PlaylistUpdate) ClearRuleGroups() *PlaylistUpdate {
+	_u.mutation.ClearRuleGroups()
+	return _u
 }
 
 // RemoveRuleGroupIDs removes the "rule_groups" edge to PlaylistRuleGroup entities by IDs.
-func (pu *PlaylistUpdate) RemoveRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdate {
-	pu.mutation.RemoveRuleGroupIDs(ids...)
-	return pu
+func (_u *PlaylistUpdate) RemoveRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdate {
+	_u.mutation.RemoveRuleGroupIDs(ids...)
+	return _u
 }
 
 // RemoveRuleGroups removes "rule_groups" edges to PlaylistRuleGroup entities.
-func (pu *PlaylistUpdate) RemoveRuleGroups(p ...*PlaylistRuleGroup) *PlaylistUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *PlaylistUpdate) RemoveRuleGroups(v ...*PlaylistRuleGroup) *PlaylistUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pu.RemoveRuleGroupIDs(ids...)
+	return _u.RemoveRuleGroupIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (pu *PlaylistUpdate) Save(ctx context.Context) (int, error) {
-	pu.defaults()
-	return withHooks(ctx, pu.sqlSave, pu.mutation, pu.hooks)
+func (_u *PlaylistUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pu *PlaylistUpdate) SaveX(ctx context.Context) int {
-	affected, err := pu.Save(ctx)
+func (_u *PlaylistUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -221,54 +221,54 @@ func (pu *PlaylistUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (pu *PlaylistUpdate) Exec(ctx context.Context) error {
-	_, err := pu.Save(ctx)
+func (_u *PlaylistUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pu *PlaylistUpdate) ExecX(ctx context.Context) {
-	if err := pu.Exec(ctx); err != nil {
+func (_u *PlaylistUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pu *PlaylistUpdate) defaults() {
-	if _, ok := pu.mutation.UpdatedAt(); !ok {
+func (_u *PlaylistUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := playlist.UpdateDefaultUpdatedAt()
-		pu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
-func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
+func (_u *PlaylistUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(playlist.Table, playlist.Columns, sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID))
-	if ps := pu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(playlist.FieldName, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(playlist.FieldDescription, field.TypeString, value)
 	}
-	if pu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(playlist.FieldDescription, field.TypeString)
 	}
-	if value, ok := pu.mutation.ThumbnailPath(); ok {
+	if value, ok := _u.mutation.ThumbnailPath(); ok {
 		_spec.SetField(playlist.FieldThumbnailPath, field.TypeString, value)
 	}
-	if pu.mutation.ThumbnailPathCleared() {
+	if _u.mutation.ThumbnailPathCleared() {
 		_spec.ClearField(playlist.FieldThumbnailPath, field.TypeString)
 	}
-	if value, ok := pu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if pu.mutation.VodsCleared() {
+	if _u.mutation.VodsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -281,7 +281,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.RemovedVodsIDs(); len(nodes) > 0 && !pu.mutation.VodsCleared() {
+	if nodes := _u.mutation.RemovedVodsIDs(); len(nodes) > 0 && !_u.mutation.VodsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -297,7 +297,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.VodsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.VodsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -313,7 +313,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pu.mutation.MultistreamInfoCleared() {
+	if _u.mutation.MultistreamInfoCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -326,7 +326,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !pu.mutation.MultistreamInfoCleared() {
+	if nodes := _u.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !_u.mutation.MultistreamInfoCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -342,7 +342,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -358,7 +358,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pu.mutation.RuleGroupsCleared() {
+	if _u.mutation.RuleGroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -371,7 +371,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.RemovedRuleGroupsIDs(); len(nodes) > 0 && !pu.mutation.RuleGroupsCleared() {
+	if nodes := _u.mutation.RemovedRuleGroupsIDs(); len(nodes) > 0 && !_u.mutation.RuleGroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -387,7 +387,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.RuleGroupsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RuleGroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -403,7 +403,7 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{playlist.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -411,8 +411,8 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	pu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // PlaylistUpdateOne is the builder for updating a single Playlist entity.
@@ -424,200 +424,200 @@ type PlaylistUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (puo *PlaylistUpdateOne) SetName(s string) *PlaylistUpdateOne {
-	puo.mutation.SetName(s)
-	return puo
+func (_u *PlaylistUpdateOne) SetName(v string) *PlaylistUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (puo *PlaylistUpdateOne) SetNillableName(s *string) *PlaylistUpdateOne {
-	if s != nil {
-		puo.SetName(*s)
+func (_u *PlaylistUpdateOne) SetNillableName(v *string) *PlaylistUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (puo *PlaylistUpdateOne) SetDescription(s string) *PlaylistUpdateOne {
-	puo.mutation.SetDescription(s)
-	return puo
+func (_u *PlaylistUpdateOne) SetDescription(v string) *PlaylistUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (puo *PlaylistUpdateOne) SetNillableDescription(s *string) *PlaylistUpdateOne {
-	if s != nil {
-		puo.SetDescription(*s)
+func (_u *PlaylistUpdateOne) SetNillableDescription(v *string) *PlaylistUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (puo *PlaylistUpdateOne) ClearDescription() *PlaylistUpdateOne {
-	puo.mutation.ClearDescription()
-	return puo
+func (_u *PlaylistUpdateOne) ClearDescription() *PlaylistUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetThumbnailPath sets the "thumbnail_path" field.
-func (puo *PlaylistUpdateOne) SetThumbnailPath(s string) *PlaylistUpdateOne {
-	puo.mutation.SetThumbnailPath(s)
-	return puo
+func (_u *PlaylistUpdateOne) SetThumbnailPath(v string) *PlaylistUpdateOne {
+	_u.mutation.SetThumbnailPath(v)
+	return _u
 }
 
 // SetNillableThumbnailPath sets the "thumbnail_path" field if the given value is not nil.
-func (puo *PlaylistUpdateOne) SetNillableThumbnailPath(s *string) *PlaylistUpdateOne {
-	if s != nil {
-		puo.SetThumbnailPath(*s)
+func (_u *PlaylistUpdateOne) SetNillableThumbnailPath(v *string) *PlaylistUpdateOne {
+	if v != nil {
+		_u.SetThumbnailPath(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearThumbnailPath clears the value of the "thumbnail_path" field.
-func (puo *PlaylistUpdateOne) ClearThumbnailPath() *PlaylistUpdateOne {
-	puo.mutation.ClearThumbnailPath()
-	return puo
+func (_u *PlaylistUpdateOne) ClearThumbnailPath() *PlaylistUpdateOne {
+	_u.mutation.ClearThumbnailPath()
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (puo *PlaylistUpdateOne) SetUpdatedAt(t time.Time) *PlaylistUpdateOne {
-	puo.mutation.SetUpdatedAt(t)
-	return puo
+func (_u *PlaylistUpdateOne) SetUpdatedAt(v time.Time) *PlaylistUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddVodIDs adds the "vods" edge to the Vod entity by IDs.
-func (puo *PlaylistUpdateOne) AddVodIDs(ids ...uuid.UUID) *PlaylistUpdateOne {
-	puo.mutation.AddVodIDs(ids...)
-	return puo
+func (_u *PlaylistUpdateOne) AddVodIDs(ids ...uuid.UUID) *PlaylistUpdateOne {
+	_u.mutation.AddVodIDs(ids...)
+	return _u
 }
 
 // AddVods adds the "vods" edges to the Vod entity.
-func (puo *PlaylistUpdateOne) AddVods(v ...*Vod) *PlaylistUpdateOne {
+func (_u *PlaylistUpdateOne) AddVods(v ...*Vod) *PlaylistUpdateOne {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return puo.AddVodIDs(ids...)
+	return _u.AddVodIDs(ids...)
 }
 
 // AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
-func (puo *PlaylistUpdateOne) AddMultistreamInfoIDs(ids ...int) *PlaylistUpdateOne {
-	puo.mutation.AddMultistreamInfoIDs(ids...)
-	return puo
+func (_u *PlaylistUpdateOne) AddMultistreamInfoIDs(ids ...int) *PlaylistUpdateOne {
+	_u.mutation.AddMultistreamInfoIDs(ids...)
+	return _u
 }
 
 // AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
-func (puo *PlaylistUpdateOne) AddMultistreamInfo(m ...*MultistreamInfo) *PlaylistUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *PlaylistUpdateOne) AddMultistreamInfo(v ...*MultistreamInfo) *PlaylistUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return puo.AddMultistreamInfoIDs(ids...)
+	return _u.AddMultistreamInfoIDs(ids...)
 }
 
 // AddRuleGroupIDs adds the "rule_groups" edge to the PlaylistRuleGroup entity by IDs.
-func (puo *PlaylistUpdateOne) AddRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdateOne {
-	puo.mutation.AddRuleGroupIDs(ids...)
-	return puo
+func (_u *PlaylistUpdateOne) AddRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdateOne {
+	_u.mutation.AddRuleGroupIDs(ids...)
+	return _u
 }
 
 // AddRuleGroups adds the "rule_groups" edges to the PlaylistRuleGroup entity.
-func (puo *PlaylistUpdateOne) AddRuleGroups(p ...*PlaylistRuleGroup) *PlaylistUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return puo.AddRuleGroupIDs(ids...)
-}
-
-// Mutation returns the PlaylistMutation object of the builder.
-func (puo *PlaylistUpdateOne) Mutation() *PlaylistMutation {
-	return puo.mutation
-}
-
-// ClearVods clears all "vods" edges to the Vod entity.
-func (puo *PlaylistUpdateOne) ClearVods() *PlaylistUpdateOne {
-	puo.mutation.ClearVods()
-	return puo
-}
-
-// RemoveVodIDs removes the "vods" edge to Vod entities by IDs.
-func (puo *PlaylistUpdateOne) RemoveVodIDs(ids ...uuid.UUID) *PlaylistUpdateOne {
-	puo.mutation.RemoveVodIDs(ids...)
-	return puo
-}
-
-// RemoveVods removes "vods" edges to Vod entities.
-func (puo *PlaylistUpdateOne) RemoveVods(v ...*Vod) *PlaylistUpdateOne {
+func (_u *PlaylistUpdateOne) AddRuleGroups(v ...*PlaylistRuleGroup) *PlaylistUpdateOne {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return puo.RemoveVodIDs(ids...)
+	return _u.AddRuleGroupIDs(ids...)
+}
+
+// Mutation returns the PlaylistMutation object of the builder.
+func (_u *PlaylistUpdateOne) Mutation() *PlaylistMutation {
+	return _u.mutation
+}
+
+// ClearVods clears all "vods" edges to the Vod entity.
+func (_u *PlaylistUpdateOne) ClearVods() *PlaylistUpdateOne {
+	_u.mutation.ClearVods()
+	return _u
+}
+
+// RemoveVodIDs removes the "vods" edge to Vod entities by IDs.
+func (_u *PlaylistUpdateOne) RemoveVodIDs(ids ...uuid.UUID) *PlaylistUpdateOne {
+	_u.mutation.RemoveVodIDs(ids...)
+	return _u
+}
+
+// RemoveVods removes "vods" edges to Vod entities.
+func (_u *PlaylistUpdateOne) RemoveVods(v ...*Vod) *PlaylistUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveVodIDs(ids...)
 }
 
 // ClearMultistreamInfo clears all "multistream_info" edges to the MultistreamInfo entity.
-func (puo *PlaylistUpdateOne) ClearMultistreamInfo() *PlaylistUpdateOne {
-	puo.mutation.ClearMultistreamInfo()
-	return puo
+func (_u *PlaylistUpdateOne) ClearMultistreamInfo() *PlaylistUpdateOne {
+	_u.mutation.ClearMultistreamInfo()
+	return _u
 }
 
 // RemoveMultistreamInfoIDs removes the "multistream_info" edge to MultistreamInfo entities by IDs.
-func (puo *PlaylistUpdateOne) RemoveMultistreamInfoIDs(ids ...int) *PlaylistUpdateOne {
-	puo.mutation.RemoveMultistreamInfoIDs(ids...)
-	return puo
+func (_u *PlaylistUpdateOne) RemoveMultistreamInfoIDs(ids ...int) *PlaylistUpdateOne {
+	_u.mutation.RemoveMultistreamInfoIDs(ids...)
+	return _u
 }
 
 // RemoveMultistreamInfo removes "multistream_info" edges to MultistreamInfo entities.
-func (puo *PlaylistUpdateOne) RemoveMultistreamInfo(m ...*MultistreamInfo) *PlaylistUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *PlaylistUpdateOne) RemoveMultistreamInfo(v ...*MultistreamInfo) *PlaylistUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return puo.RemoveMultistreamInfoIDs(ids...)
+	return _u.RemoveMultistreamInfoIDs(ids...)
 }
 
 // ClearRuleGroups clears all "rule_groups" edges to the PlaylistRuleGroup entity.
-func (puo *PlaylistUpdateOne) ClearRuleGroups() *PlaylistUpdateOne {
-	puo.mutation.ClearRuleGroups()
-	return puo
+func (_u *PlaylistUpdateOne) ClearRuleGroups() *PlaylistUpdateOne {
+	_u.mutation.ClearRuleGroups()
+	return _u
 }
 
 // RemoveRuleGroupIDs removes the "rule_groups" edge to PlaylistRuleGroup entities by IDs.
-func (puo *PlaylistUpdateOne) RemoveRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdateOne {
-	puo.mutation.RemoveRuleGroupIDs(ids...)
-	return puo
+func (_u *PlaylistUpdateOne) RemoveRuleGroupIDs(ids ...uuid.UUID) *PlaylistUpdateOne {
+	_u.mutation.RemoveRuleGroupIDs(ids...)
+	return _u
 }
 
 // RemoveRuleGroups removes "rule_groups" edges to PlaylistRuleGroup entities.
-func (puo *PlaylistUpdateOne) RemoveRuleGroups(p ...*PlaylistRuleGroup) *PlaylistUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *PlaylistUpdateOne) RemoveRuleGroups(v ...*PlaylistRuleGroup) *PlaylistUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return puo.RemoveRuleGroupIDs(ids...)
+	return _u.RemoveRuleGroupIDs(ids...)
 }
 
 // Where appends a list predicates to the PlaylistUpdate builder.
-func (puo *PlaylistUpdateOne) Where(ps ...predicate.Playlist) *PlaylistUpdateOne {
-	puo.mutation.Where(ps...)
-	return puo
+func (_u *PlaylistUpdateOne) Where(ps ...predicate.Playlist) *PlaylistUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (puo *PlaylistUpdateOne) Select(field string, fields ...string) *PlaylistUpdateOne {
-	puo.fields = append([]string{field}, fields...)
-	return puo
+func (_u *PlaylistUpdateOne) Select(field string, fields ...string) *PlaylistUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Playlist entity.
-func (puo *PlaylistUpdateOne) Save(ctx context.Context) (*Playlist, error) {
-	puo.defaults()
-	return withHooks(ctx, puo.sqlSave, puo.mutation, puo.hooks)
+func (_u *PlaylistUpdateOne) Save(ctx context.Context) (*Playlist, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (puo *PlaylistUpdateOne) SaveX(ctx context.Context) *Playlist {
-	node, err := puo.Save(ctx)
+func (_u *PlaylistUpdateOne) SaveX(ctx context.Context) *Playlist {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -625,34 +625,34 @@ func (puo *PlaylistUpdateOne) SaveX(ctx context.Context) *Playlist {
 }
 
 // Exec executes the query on the entity.
-func (puo *PlaylistUpdateOne) Exec(ctx context.Context) error {
-	_, err := puo.Save(ctx)
+func (_u *PlaylistUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (puo *PlaylistUpdateOne) ExecX(ctx context.Context) {
-	if err := puo.Exec(ctx); err != nil {
+func (_u *PlaylistUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (puo *PlaylistUpdateOne) defaults() {
-	if _, ok := puo.mutation.UpdatedAt(); !ok {
+func (_u *PlaylistUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := playlist.UpdateDefaultUpdatedAt()
-		puo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
-func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err error) {
+func (_u *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err error) {
 	_spec := sqlgraph.NewUpdateSpec(playlist.Table, playlist.Columns, sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID))
-	id, ok := puo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Playlist.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := puo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, playlist.FieldID)
 		for _, f := range fields {
@@ -664,32 +664,32 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 			}
 		}
 	}
-	if ps := puo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := puo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(playlist.FieldName, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(playlist.FieldDescription, field.TypeString, value)
 	}
-	if puo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(playlist.FieldDescription, field.TypeString)
 	}
-	if value, ok := puo.mutation.ThumbnailPath(); ok {
+	if value, ok := _u.mutation.ThumbnailPath(); ok {
 		_spec.SetField(playlist.FieldThumbnailPath, field.TypeString, value)
 	}
-	if puo.mutation.ThumbnailPathCleared() {
+	if _u.mutation.ThumbnailPathCleared() {
 		_spec.ClearField(playlist.FieldThumbnailPath, field.TypeString)
 	}
-	if value, ok := puo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if puo.mutation.VodsCleared() {
+	if _u.mutation.VodsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -702,7 +702,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.RemovedVodsIDs(); len(nodes) > 0 && !puo.mutation.VodsCleared() {
+	if nodes := _u.mutation.RemovedVodsIDs(); len(nodes) > 0 && !_u.mutation.VodsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -718,7 +718,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.VodsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.VodsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -734,7 +734,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if puo.mutation.MultistreamInfoCleared() {
+	if _u.mutation.MultistreamInfoCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -747,7 +747,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !puo.mutation.MultistreamInfoCleared() {
+	if nodes := _u.mutation.RemovedMultistreamInfoIDs(); len(nodes) > 0 && !_u.mutation.MultistreamInfoCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -763,7 +763,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -779,7 +779,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if puo.mutation.RuleGroupsCleared() {
+	if _u.mutation.RuleGroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -792,7 +792,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.RemovedRuleGroupsIDs(); len(nodes) > 0 && !puo.mutation.RuleGroupsCleared() {
+	if nodes := _u.mutation.RemovedRuleGroupsIDs(); len(nodes) > 0 && !_u.mutation.RuleGroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -808,7 +808,7 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.RuleGroupsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RuleGroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -824,10 +824,10 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Playlist{config: puo.config}
+	_node = &Playlist{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, puo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{playlist.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -835,6 +835,6 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 		}
 		return nil, err
 	}
-	puo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

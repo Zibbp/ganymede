@@ -115,7 +115,7 @@ func (*Queue) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Queue fields.
-func (q *Queue) assignValues(columns []string, values []any) error {
+func (_m *Queue) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -125,149 +125,149 @@ func (q *Queue) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
-				q.ID = *value
+				_m.ID = *value
 			}
 		case queue.FieldLiveArchive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field live_archive", values[i])
 			} else if value.Valid {
-				q.LiveArchive = value.Bool
+				_m.LiveArchive = value.Bool
 			}
 		case queue.FieldOnHold:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field on_hold", values[i])
 			} else if value.Valid {
-				q.OnHold = value.Bool
+				_m.OnHold = value.Bool
 			}
 		case queue.FieldVideoProcessing:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field video_processing", values[i])
 			} else if value.Valid {
-				q.VideoProcessing = value.Bool
+				_m.VideoProcessing = value.Bool
 			}
 		case queue.FieldChatProcessing:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field chat_processing", values[i])
 			} else if value.Valid {
-				q.ChatProcessing = value.Bool
+				_m.ChatProcessing = value.Bool
 			}
 		case queue.FieldProcessing:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field processing", values[i])
 			} else if value.Valid {
-				q.Processing = value.Bool
+				_m.Processing = value.Bool
 			}
 		case queue.FieldTaskVodCreateFolder:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_vod_create_folder", values[i])
 			} else if value.Valid {
-				q.TaskVodCreateFolder = utils.TaskStatus(value.String)
+				_m.TaskVodCreateFolder = utils.TaskStatus(value.String)
 			}
 		case queue.FieldTaskVodDownloadThumbnail:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_vod_download_thumbnail", values[i])
 			} else if value.Valid {
-				q.TaskVodDownloadThumbnail = utils.TaskStatus(value.String)
+				_m.TaskVodDownloadThumbnail = utils.TaskStatus(value.String)
 			}
 		case queue.FieldTaskVodSaveInfo:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_vod_save_info", values[i])
 			} else if value.Valid {
-				q.TaskVodSaveInfo = utils.TaskStatus(value.String)
+				_m.TaskVodSaveInfo = utils.TaskStatus(value.String)
 			}
 		case queue.FieldTaskVideoDownload:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_video_download", values[i])
 			} else if value.Valid {
-				q.TaskVideoDownload = utils.TaskStatus(value.String)
+				_m.TaskVideoDownload = utils.TaskStatus(value.String)
 			}
 		case queue.FieldTaskVideoConvert:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_video_convert", values[i])
 			} else if value.Valid {
-				q.TaskVideoConvert = utils.TaskStatus(value.String)
+				_m.TaskVideoConvert = utils.TaskStatus(value.String)
 			}
 		case queue.FieldTaskVideoMove:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_video_move", values[i])
 			} else if value.Valid {
-				q.TaskVideoMove = utils.TaskStatus(value.String)
+				_m.TaskVideoMove = utils.TaskStatus(value.String)
 			}
 		case queue.FieldTaskChatDownload:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_chat_download", values[i])
 			} else if value.Valid {
-				q.TaskChatDownload = utils.TaskStatus(value.String)
+				_m.TaskChatDownload = utils.TaskStatus(value.String)
 			}
 		case queue.FieldTaskChatConvert:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_chat_convert", values[i])
 			} else if value.Valid {
-				q.TaskChatConvert = utils.TaskStatus(value.String)
+				_m.TaskChatConvert = utils.TaskStatus(value.String)
 			}
 		case queue.FieldTaskChatRender:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_chat_render", values[i])
 			} else if value.Valid {
-				q.TaskChatRender = utils.TaskStatus(value.String)
+				_m.TaskChatRender = utils.TaskStatus(value.String)
 			}
 		case queue.FieldTaskChatMove:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_chat_move", values[i])
 			} else if value.Valid {
-				q.TaskChatMove = utils.TaskStatus(value.String)
+				_m.TaskChatMove = utils.TaskStatus(value.String)
 			}
 		case queue.FieldChatStart:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field chat_start", values[i])
 			} else if value.Valid {
-				q.ChatStart = value.Time
+				_m.ChatStart = value.Time
 			}
 		case queue.FieldArchiveChat:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field archive_chat", values[i])
 			} else if value.Valid {
-				q.ArchiveChat = value.Bool
+				_m.ArchiveChat = value.Bool
 			}
 		case queue.FieldRenderChat:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field render_chat", values[i])
 			} else if value.Valid {
-				q.RenderChat = value.Bool
+				_m.RenderChat = value.Bool
 			}
 		case queue.FieldWorkflowID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field workflow_id", values[i])
 			} else if value.Valid {
-				q.WorkflowID = value.String
+				_m.WorkflowID = value.String
 			}
 		case queue.FieldWorkflowRunID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field workflow_run_id", values[i])
 			} else if value.Valid {
-				q.WorkflowRunID = value.String
+				_m.WorkflowRunID = value.String
 			}
 		case queue.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				q.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case queue.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				q.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case queue.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field vod_queue", values[i])
 			} else if value.Valid {
-				q.vod_queue = new(uuid.UUID)
-				*q.vod_queue = *value.S.(*uuid.UUID)
+				_m.vod_queue = new(uuid.UUID)
+				*_m.vod_queue = *value.S.(*uuid.UUID)
 			}
 		default:
-			q.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -275,103 +275,103 @@ func (q *Queue) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Queue.
 // This includes values selected through modifiers, order, etc.
-func (q *Queue) Value(name string) (ent.Value, error) {
-	return q.selectValues.Get(name)
+func (_m *Queue) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryVod queries the "vod" edge of the Queue entity.
-func (q *Queue) QueryVod() *VodQuery {
-	return NewQueueClient(q.config).QueryVod(q)
+func (_m *Queue) QueryVod() *VodQuery {
+	return NewQueueClient(_m.config).QueryVod(_m)
 }
 
 // Update returns a builder for updating this Queue.
 // Note that you need to call Queue.Unwrap() before calling this method if this Queue
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (q *Queue) Update() *QueueUpdateOne {
-	return NewQueueClient(q.config).UpdateOne(q)
+func (_m *Queue) Update() *QueueUpdateOne {
+	return NewQueueClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Queue entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (q *Queue) Unwrap() *Queue {
-	_tx, ok := q.config.driver.(*txDriver)
+func (_m *Queue) Unwrap() *Queue {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Queue is not a transactional entity")
 	}
-	q.config.driver = _tx.drv
-	return q
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (q *Queue) String() string {
+func (_m *Queue) String() string {
 	var builder strings.Builder
 	builder.WriteString("Queue(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", q.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("live_archive=")
-	builder.WriteString(fmt.Sprintf("%v", q.LiveArchive))
+	builder.WriteString(fmt.Sprintf("%v", _m.LiveArchive))
 	builder.WriteString(", ")
 	builder.WriteString("on_hold=")
-	builder.WriteString(fmt.Sprintf("%v", q.OnHold))
+	builder.WriteString(fmt.Sprintf("%v", _m.OnHold))
 	builder.WriteString(", ")
 	builder.WriteString("video_processing=")
-	builder.WriteString(fmt.Sprintf("%v", q.VideoProcessing))
+	builder.WriteString(fmt.Sprintf("%v", _m.VideoProcessing))
 	builder.WriteString(", ")
 	builder.WriteString("chat_processing=")
-	builder.WriteString(fmt.Sprintf("%v", q.ChatProcessing))
+	builder.WriteString(fmt.Sprintf("%v", _m.ChatProcessing))
 	builder.WriteString(", ")
 	builder.WriteString("processing=")
-	builder.WriteString(fmt.Sprintf("%v", q.Processing))
+	builder.WriteString(fmt.Sprintf("%v", _m.Processing))
 	builder.WriteString(", ")
 	builder.WriteString("task_vod_create_folder=")
-	builder.WriteString(fmt.Sprintf("%v", q.TaskVodCreateFolder))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskVodCreateFolder))
 	builder.WriteString(", ")
 	builder.WriteString("task_vod_download_thumbnail=")
-	builder.WriteString(fmt.Sprintf("%v", q.TaskVodDownloadThumbnail))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskVodDownloadThumbnail))
 	builder.WriteString(", ")
 	builder.WriteString("task_vod_save_info=")
-	builder.WriteString(fmt.Sprintf("%v", q.TaskVodSaveInfo))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskVodSaveInfo))
 	builder.WriteString(", ")
 	builder.WriteString("task_video_download=")
-	builder.WriteString(fmt.Sprintf("%v", q.TaskVideoDownload))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskVideoDownload))
 	builder.WriteString(", ")
 	builder.WriteString("task_video_convert=")
-	builder.WriteString(fmt.Sprintf("%v", q.TaskVideoConvert))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskVideoConvert))
 	builder.WriteString(", ")
 	builder.WriteString("task_video_move=")
-	builder.WriteString(fmt.Sprintf("%v", q.TaskVideoMove))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskVideoMove))
 	builder.WriteString(", ")
 	builder.WriteString("task_chat_download=")
-	builder.WriteString(fmt.Sprintf("%v", q.TaskChatDownload))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskChatDownload))
 	builder.WriteString(", ")
 	builder.WriteString("task_chat_convert=")
-	builder.WriteString(fmt.Sprintf("%v", q.TaskChatConvert))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskChatConvert))
 	builder.WriteString(", ")
 	builder.WriteString("task_chat_render=")
-	builder.WriteString(fmt.Sprintf("%v", q.TaskChatRender))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskChatRender))
 	builder.WriteString(", ")
 	builder.WriteString("task_chat_move=")
-	builder.WriteString(fmt.Sprintf("%v", q.TaskChatMove))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskChatMove))
 	builder.WriteString(", ")
 	builder.WriteString("chat_start=")
-	builder.WriteString(q.ChatStart.Format(time.ANSIC))
+	builder.WriteString(_m.ChatStart.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("archive_chat=")
-	builder.WriteString(fmt.Sprintf("%v", q.ArchiveChat))
+	builder.WriteString(fmt.Sprintf("%v", _m.ArchiveChat))
 	builder.WriteString(", ")
 	builder.WriteString("render_chat=")
-	builder.WriteString(fmt.Sprintf("%v", q.RenderChat))
+	builder.WriteString(fmt.Sprintf("%v", _m.RenderChat))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_id=")
-	builder.WriteString(q.WorkflowID)
+	builder.WriteString(_m.WorkflowID)
 	builder.WriteString(", ")
 	builder.WriteString("workflow_run_id=")
-	builder.WriteString(q.WorkflowRunID)
+	builder.WriteString(_m.WorkflowRunID)
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(q.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(q.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

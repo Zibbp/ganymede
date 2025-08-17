@@ -79,7 +79,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 		var channelVideoCategories []string
 		if len(watch.Edges.Categories) > 0 {
 			for _, category := range watch.Edges.Categories {
-				channelVideoCategories = append(channelVideoCategories, category.Name)
+				channelVideoCategories = append(channelVideoCategories, *category.Name)
 			}
 			logger.Debug().Msgf("channel %s has category restrictions: %s", watch.Edges.Channel.Name, strings.Join(channelVideoCategories, ", "))
 		}

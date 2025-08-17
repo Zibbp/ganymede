@@ -28,40 +28,40 @@ type BlockedVideosQuery struct {
 }
 
 // Where adds a new predicate for the BlockedVideosQuery builder.
-func (bvq *BlockedVideosQuery) Where(ps ...predicate.BlockedVideos) *BlockedVideosQuery {
-	bvq.predicates = append(bvq.predicates, ps...)
-	return bvq
+func (_q *BlockedVideosQuery) Where(ps ...predicate.BlockedVideos) *BlockedVideosQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (bvq *BlockedVideosQuery) Limit(limit int) *BlockedVideosQuery {
-	bvq.ctx.Limit = &limit
-	return bvq
+func (_q *BlockedVideosQuery) Limit(limit int) *BlockedVideosQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (bvq *BlockedVideosQuery) Offset(offset int) *BlockedVideosQuery {
-	bvq.ctx.Offset = &offset
-	return bvq
+func (_q *BlockedVideosQuery) Offset(offset int) *BlockedVideosQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (bvq *BlockedVideosQuery) Unique(unique bool) *BlockedVideosQuery {
-	bvq.ctx.Unique = &unique
-	return bvq
+func (_q *BlockedVideosQuery) Unique(unique bool) *BlockedVideosQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (bvq *BlockedVideosQuery) Order(o ...blockedvideos.OrderOption) *BlockedVideosQuery {
-	bvq.order = append(bvq.order, o...)
-	return bvq
+func (_q *BlockedVideosQuery) Order(o ...blockedvideos.OrderOption) *BlockedVideosQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // First returns the first BlockedVideos entity from the query.
 // Returns a *NotFoundError when no BlockedVideos was found.
-func (bvq *BlockedVideosQuery) First(ctx context.Context) (*BlockedVideos, error) {
-	nodes, err := bvq.Limit(1).All(setContextOp(ctx, bvq.ctx, ent.OpQueryFirst))
+func (_q *BlockedVideosQuery) First(ctx context.Context) (*BlockedVideos, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,8 @@ func (bvq *BlockedVideosQuery) First(ctx context.Context) (*BlockedVideos, error
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (bvq *BlockedVideosQuery) FirstX(ctx context.Context) *BlockedVideos {
-	node, err := bvq.First(ctx)
+func (_q *BlockedVideosQuery) FirstX(ctx context.Context) *BlockedVideos {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -82,9 +82,9 @@ func (bvq *BlockedVideosQuery) FirstX(ctx context.Context) *BlockedVideos {
 
 // FirstID returns the first BlockedVideos ID from the query.
 // Returns a *NotFoundError when no BlockedVideos ID was found.
-func (bvq *BlockedVideosQuery) FirstID(ctx context.Context) (id string, err error) {
+func (_q *BlockedVideosQuery) FirstID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = bvq.Limit(1).IDs(setContextOp(ctx, bvq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -95,8 +95,8 @@ func (bvq *BlockedVideosQuery) FirstID(ctx context.Context) (id string, err erro
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (bvq *BlockedVideosQuery) FirstIDX(ctx context.Context) string {
-	id, err := bvq.FirstID(ctx)
+func (_q *BlockedVideosQuery) FirstIDX(ctx context.Context) string {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,8 +106,8 @@ func (bvq *BlockedVideosQuery) FirstIDX(ctx context.Context) string {
 // Only returns a single BlockedVideos entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one BlockedVideos entity is found.
 // Returns a *NotFoundError when no BlockedVideos entities are found.
-func (bvq *BlockedVideosQuery) Only(ctx context.Context) (*BlockedVideos, error) {
-	nodes, err := bvq.Limit(2).All(setContextOp(ctx, bvq.ctx, ent.OpQueryOnly))
+func (_q *BlockedVideosQuery) Only(ctx context.Context) (*BlockedVideos, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +122,8 @@ func (bvq *BlockedVideosQuery) Only(ctx context.Context) (*BlockedVideos, error)
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (bvq *BlockedVideosQuery) OnlyX(ctx context.Context) *BlockedVideos {
-	node, err := bvq.Only(ctx)
+func (_q *BlockedVideosQuery) OnlyX(ctx context.Context) *BlockedVideos {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -133,9 +133,9 @@ func (bvq *BlockedVideosQuery) OnlyX(ctx context.Context) *BlockedVideos {
 // OnlyID is like Only, but returns the only BlockedVideos ID in the query.
 // Returns a *NotSingularError when more than one BlockedVideos ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (bvq *BlockedVideosQuery) OnlyID(ctx context.Context) (id string, err error) {
+func (_q *BlockedVideosQuery) OnlyID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = bvq.Limit(2).IDs(setContextOp(ctx, bvq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -150,8 +150,8 @@ func (bvq *BlockedVideosQuery) OnlyID(ctx context.Context) (id string, err error
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (bvq *BlockedVideosQuery) OnlyIDX(ctx context.Context) string {
-	id, err := bvq.OnlyID(ctx)
+func (_q *BlockedVideosQuery) OnlyIDX(ctx context.Context) string {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,18 +159,18 @@ func (bvq *BlockedVideosQuery) OnlyIDX(ctx context.Context) string {
 }
 
 // All executes the query and returns a list of BlockedVideosSlice.
-func (bvq *BlockedVideosQuery) All(ctx context.Context) ([]*BlockedVideos, error) {
-	ctx = setContextOp(ctx, bvq.ctx, ent.OpQueryAll)
-	if err := bvq.prepareQuery(ctx); err != nil {
+func (_q *BlockedVideosQuery) All(ctx context.Context) ([]*BlockedVideos, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*BlockedVideos, *BlockedVideosQuery]()
-	return withInterceptors[[]*BlockedVideos](ctx, bvq, qr, bvq.inters)
+	return withInterceptors[[]*BlockedVideos](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (bvq *BlockedVideosQuery) AllX(ctx context.Context) []*BlockedVideos {
-	nodes, err := bvq.All(ctx)
+func (_q *BlockedVideosQuery) AllX(ctx context.Context) []*BlockedVideos {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -178,20 +178,20 @@ func (bvq *BlockedVideosQuery) AllX(ctx context.Context) []*BlockedVideos {
 }
 
 // IDs executes the query and returns a list of BlockedVideos IDs.
-func (bvq *BlockedVideosQuery) IDs(ctx context.Context) (ids []string, err error) {
-	if bvq.ctx.Unique == nil && bvq.path != nil {
-		bvq.Unique(true)
+func (_q *BlockedVideosQuery) IDs(ctx context.Context) (ids []string, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, bvq.ctx, ent.OpQueryIDs)
-	if err = bvq.Select(blockedvideos.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(blockedvideos.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (bvq *BlockedVideosQuery) IDsX(ctx context.Context) []string {
-	ids, err := bvq.IDs(ctx)
+func (_q *BlockedVideosQuery) IDsX(ctx context.Context) []string {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -199,17 +199,17 @@ func (bvq *BlockedVideosQuery) IDsX(ctx context.Context) []string {
 }
 
 // Count returns the count of the given query.
-func (bvq *BlockedVideosQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, bvq.ctx, ent.OpQueryCount)
-	if err := bvq.prepareQuery(ctx); err != nil {
+func (_q *BlockedVideosQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, bvq, querierCount[*BlockedVideosQuery](), bvq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*BlockedVideosQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (bvq *BlockedVideosQuery) CountX(ctx context.Context) int {
-	count, err := bvq.Count(ctx)
+func (_q *BlockedVideosQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -217,9 +217,9 @@ func (bvq *BlockedVideosQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (bvq *BlockedVideosQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, bvq.ctx, ent.OpQueryExist)
-	switch _, err := bvq.FirstID(ctx); {
+func (_q *BlockedVideosQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -230,8 +230,8 @@ func (bvq *BlockedVideosQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (bvq *BlockedVideosQuery) ExistX(ctx context.Context) bool {
-	exist, err := bvq.Exist(ctx)
+func (_q *BlockedVideosQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -240,19 +240,19 @@ func (bvq *BlockedVideosQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the BlockedVideosQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (bvq *BlockedVideosQuery) Clone() *BlockedVideosQuery {
-	if bvq == nil {
+func (_q *BlockedVideosQuery) Clone() *BlockedVideosQuery {
+	if _q == nil {
 		return nil
 	}
 	return &BlockedVideosQuery{
-		config:     bvq.config,
-		ctx:        bvq.ctx.Clone(),
-		order:      append([]blockedvideos.OrderOption{}, bvq.order...),
-		inters:     append([]Interceptor{}, bvq.inters...),
-		predicates: append([]predicate.BlockedVideos{}, bvq.predicates...),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]blockedvideos.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.BlockedVideos{}, _q.predicates...),
 		// clone intermediate query.
-		sql:  bvq.sql.Clone(),
-		path: bvq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
@@ -270,10 +270,10 @@ func (bvq *BlockedVideosQuery) Clone() *BlockedVideosQuery {
 //		GroupBy(blockedvideos.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (bvq *BlockedVideosQuery) GroupBy(field string, fields ...string) *BlockedVideosGroupBy {
-	bvq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &BlockedVideosGroupBy{build: bvq}
-	grbuild.flds = &bvq.ctx.Fields
+func (_q *BlockedVideosQuery) GroupBy(field string, fields ...string) *BlockedVideosGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &BlockedVideosGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = blockedvideos.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -291,62 +291,62 @@ func (bvq *BlockedVideosQuery) GroupBy(field string, fields ...string) *BlockedV
 //	client.BlockedVideos.Query().
 //		Select(blockedvideos.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (bvq *BlockedVideosQuery) Select(fields ...string) *BlockedVideosSelect {
-	bvq.ctx.Fields = append(bvq.ctx.Fields, fields...)
-	sbuild := &BlockedVideosSelect{BlockedVideosQuery: bvq}
+func (_q *BlockedVideosQuery) Select(fields ...string) *BlockedVideosSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &BlockedVideosSelect{BlockedVideosQuery: _q}
 	sbuild.label = blockedvideos.Label
-	sbuild.flds, sbuild.scan = &bvq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a BlockedVideosSelect configured with the given aggregations.
-func (bvq *BlockedVideosQuery) Aggregate(fns ...AggregateFunc) *BlockedVideosSelect {
-	return bvq.Select().Aggregate(fns...)
+func (_q *BlockedVideosQuery) Aggregate(fns ...AggregateFunc) *BlockedVideosSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (bvq *BlockedVideosQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range bvq.inters {
+func (_q *BlockedVideosQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, bvq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range bvq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !blockedvideos.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if bvq.path != nil {
-		prev, err := bvq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		bvq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (bvq *BlockedVideosQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*BlockedVideos, error) {
+func (_q *BlockedVideosQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*BlockedVideos, error) {
 	var (
 		nodes = []*BlockedVideos{}
-		_spec = bvq.querySpec()
+		_spec = _q.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*BlockedVideos).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &BlockedVideos{config: bvq.config}
+		node := &BlockedVideos{config: _q.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, bvq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
@@ -355,24 +355,24 @@ func (bvq *BlockedVideosQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	return nodes, nil
 }
 
-func (bvq *BlockedVideosQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := bvq.querySpec()
-	_spec.Node.Columns = bvq.ctx.Fields
-	if len(bvq.ctx.Fields) > 0 {
-		_spec.Unique = bvq.ctx.Unique != nil && *bvq.ctx.Unique
+func (_q *BlockedVideosQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, bvq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (bvq *BlockedVideosQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *BlockedVideosQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(blockedvideos.Table, blockedvideos.Columns, sqlgraph.NewFieldSpec(blockedvideos.FieldID, field.TypeString))
-	_spec.From = bvq.sql
-	if unique := bvq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if bvq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := bvq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, blockedvideos.FieldID)
 		for i := range fields {
@@ -381,20 +381,20 @@ func (bvq *BlockedVideosQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := bvq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := bvq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := bvq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := bvq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -404,33 +404,33 @@ func (bvq *BlockedVideosQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (bvq *BlockedVideosQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(bvq.driver.Dialect())
+func (_q *BlockedVideosQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(blockedvideos.Table)
-	columns := bvq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = blockedvideos.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if bvq.sql != nil {
-		selector = bvq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if bvq.ctx.Unique != nil && *bvq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range bvq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range bvq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := bvq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := bvq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -443,41 +443,41 @@ type BlockedVideosGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (bvgb *BlockedVideosGroupBy) Aggregate(fns ...AggregateFunc) *BlockedVideosGroupBy {
-	bvgb.fns = append(bvgb.fns, fns...)
-	return bvgb
+func (_g *BlockedVideosGroupBy) Aggregate(fns ...AggregateFunc) *BlockedVideosGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (bvgb *BlockedVideosGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, bvgb.build.ctx, ent.OpQueryGroupBy)
-	if err := bvgb.build.prepareQuery(ctx); err != nil {
+func (_g *BlockedVideosGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*BlockedVideosQuery, *BlockedVideosGroupBy](ctx, bvgb.build, bvgb, bvgb.build.inters, v)
+	return scanWithInterceptors[*BlockedVideosQuery, *BlockedVideosGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (bvgb *BlockedVideosGroupBy) sqlScan(ctx context.Context, root *BlockedVideosQuery, v any) error {
+func (_g *BlockedVideosGroupBy) sqlScan(ctx context.Context, root *BlockedVideosQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(bvgb.fns))
-	for _, fn := range bvgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*bvgb.flds)+len(bvgb.fns))
-		for _, f := range *bvgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*bvgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := bvgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -491,27 +491,27 @@ type BlockedVideosSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (bvs *BlockedVideosSelect) Aggregate(fns ...AggregateFunc) *BlockedVideosSelect {
-	bvs.fns = append(bvs.fns, fns...)
-	return bvs
+func (_s *BlockedVideosSelect) Aggregate(fns ...AggregateFunc) *BlockedVideosSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (bvs *BlockedVideosSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, bvs.ctx, ent.OpQuerySelect)
-	if err := bvs.prepareQuery(ctx); err != nil {
+func (_s *BlockedVideosSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*BlockedVideosQuery, *BlockedVideosSelect](ctx, bvs.BlockedVideosQuery, bvs, bvs.inters, v)
+	return scanWithInterceptors[*BlockedVideosQuery, *BlockedVideosSelect](ctx, _s.BlockedVideosQuery, _s, _s.inters, v)
 }
 
-func (bvs *BlockedVideosSelect) sqlScan(ctx context.Context, root *BlockedVideosQuery, v any) error {
+func (_s *BlockedVideosSelect) sqlScan(ctx context.Context, root *BlockedVideosQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(bvs.fns))
-	for _, fn := range bvs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*bvs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -519,7 +519,7 @@ func (bvs *BlockedVideosSelect) sqlScan(ctx context.Context, root *BlockedVideos
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := bvs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

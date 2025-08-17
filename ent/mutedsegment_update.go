@@ -24,83 +24,83 @@ type MutedSegmentUpdate struct {
 }
 
 // Where appends a list predicates to the MutedSegmentUpdate builder.
-func (msu *MutedSegmentUpdate) Where(ps ...predicate.MutedSegment) *MutedSegmentUpdate {
-	msu.mutation.Where(ps...)
-	return msu
+func (_u *MutedSegmentUpdate) Where(ps ...predicate.MutedSegment) *MutedSegmentUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetStart sets the "start" field.
-func (msu *MutedSegmentUpdate) SetStart(i int) *MutedSegmentUpdate {
-	msu.mutation.ResetStart()
-	msu.mutation.SetStart(i)
-	return msu
+func (_u *MutedSegmentUpdate) SetStart(v int) *MutedSegmentUpdate {
+	_u.mutation.ResetStart()
+	_u.mutation.SetStart(v)
+	return _u
 }
 
 // SetNillableStart sets the "start" field if the given value is not nil.
-func (msu *MutedSegmentUpdate) SetNillableStart(i *int) *MutedSegmentUpdate {
-	if i != nil {
-		msu.SetStart(*i)
+func (_u *MutedSegmentUpdate) SetNillableStart(v *int) *MutedSegmentUpdate {
+	if v != nil {
+		_u.SetStart(*v)
 	}
-	return msu
+	return _u
 }
 
-// AddStart adds i to the "start" field.
-func (msu *MutedSegmentUpdate) AddStart(i int) *MutedSegmentUpdate {
-	msu.mutation.AddStart(i)
-	return msu
+// AddStart adds value to the "start" field.
+func (_u *MutedSegmentUpdate) AddStart(v int) *MutedSegmentUpdate {
+	_u.mutation.AddStart(v)
+	return _u
 }
 
 // SetEnd sets the "end" field.
-func (msu *MutedSegmentUpdate) SetEnd(i int) *MutedSegmentUpdate {
-	msu.mutation.ResetEnd()
-	msu.mutation.SetEnd(i)
-	return msu
+func (_u *MutedSegmentUpdate) SetEnd(v int) *MutedSegmentUpdate {
+	_u.mutation.ResetEnd()
+	_u.mutation.SetEnd(v)
+	return _u
 }
 
 // SetNillableEnd sets the "end" field if the given value is not nil.
-func (msu *MutedSegmentUpdate) SetNillableEnd(i *int) *MutedSegmentUpdate {
-	if i != nil {
-		msu.SetEnd(*i)
+func (_u *MutedSegmentUpdate) SetNillableEnd(v *int) *MutedSegmentUpdate {
+	if v != nil {
+		_u.SetEnd(*v)
 	}
-	return msu
+	return _u
 }
 
-// AddEnd adds i to the "end" field.
-func (msu *MutedSegmentUpdate) AddEnd(i int) *MutedSegmentUpdate {
-	msu.mutation.AddEnd(i)
-	return msu
+// AddEnd adds value to the "end" field.
+func (_u *MutedSegmentUpdate) AddEnd(v int) *MutedSegmentUpdate {
+	_u.mutation.AddEnd(v)
+	return _u
 }
 
 // SetVodID sets the "vod" edge to the Vod entity by ID.
-func (msu *MutedSegmentUpdate) SetVodID(id uuid.UUID) *MutedSegmentUpdate {
-	msu.mutation.SetVodID(id)
-	return msu
+func (_u *MutedSegmentUpdate) SetVodID(id uuid.UUID) *MutedSegmentUpdate {
+	_u.mutation.SetVodID(id)
+	return _u
 }
 
 // SetVod sets the "vod" edge to the Vod entity.
-func (msu *MutedSegmentUpdate) SetVod(v *Vod) *MutedSegmentUpdate {
-	return msu.SetVodID(v.ID)
+func (_u *MutedSegmentUpdate) SetVod(v *Vod) *MutedSegmentUpdate {
+	return _u.SetVodID(v.ID)
 }
 
 // Mutation returns the MutedSegmentMutation object of the builder.
-func (msu *MutedSegmentUpdate) Mutation() *MutedSegmentMutation {
-	return msu.mutation
+func (_u *MutedSegmentUpdate) Mutation() *MutedSegmentMutation {
+	return _u.mutation
 }
 
 // ClearVod clears the "vod" edge to the Vod entity.
-func (msu *MutedSegmentUpdate) ClearVod() *MutedSegmentUpdate {
-	msu.mutation.ClearVod()
-	return msu
+func (_u *MutedSegmentUpdate) ClearVod() *MutedSegmentUpdate {
+	_u.mutation.ClearVod()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (msu *MutedSegmentUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, msu.sqlSave, msu.mutation, msu.hooks)
+func (_u *MutedSegmentUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (msu *MutedSegmentUpdate) SaveX(ctx context.Context) int {
-	affected, err := msu.Save(ctx)
+func (_u *MutedSegmentUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -108,51 +108,51 @@ func (msu *MutedSegmentUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (msu *MutedSegmentUpdate) Exec(ctx context.Context) error {
-	_, err := msu.Save(ctx)
+func (_u *MutedSegmentUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (msu *MutedSegmentUpdate) ExecX(ctx context.Context) {
-	if err := msu.Exec(ctx); err != nil {
+func (_u *MutedSegmentUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (msu *MutedSegmentUpdate) check() error {
-	if msu.mutation.VodCleared() && len(msu.mutation.VodIDs()) > 0 {
+func (_u *MutedSegmentUpdate) check() error {
+	if _u.mutation.VodCleared() && len(_u.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MutedSegment.vod"`)
 	}
 	return nil
 }
 
-func (msu *MutedSegmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := msu.check(); err != nil {
-		return n, err
+func (_u *MutedSegmentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(mutedsegment.Table, mutedsegment.Columns, sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID))
-	if ps := msu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := msu.mutation.Start(); ok {
+	if value, ok := _u.mutation.Start(); ok {
 		_spec.SetField(mutedsegment.FieldStart, field.TypeInt, value)
 	}
-	if value, ok := msu.mutation.AddedStart(); ok {
+	if value, ok := _u.mutation.AddedStart(); ok {
 		_spec.AddField(mutedsegment.FieldStart, field.TypeInt, value)
 	}
-	if value, ok := msu.mutation.End(); ok {
+	if value, ok := _u.mutation.End(); ok {
 		_spec.SetField(mutedsegment.FieldEnd, field.TypeInt, value)
 	}
-	if value, ok := msu.mutation.AddedEnd(); ok {
+	if value, ok := _u.mutation.AddedEnd(); ok {
 		_spec.AddField(mutedsegment.FieldEnd, field.TypeInt, value)
 	}
-	if msu.mutation.VodCleared() {
+	if _u.mutation.VodCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -165,7 +165,7 @@ func (msu *MutedSegmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := msu.mutation.VodIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.VodIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -181,7 +181,7 @@ func (msu *MutedSegmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, msu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{mutedsegment.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -189,8 +189,8 @@ func (msu *MutedSegmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	msu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // MutedSegmentUpdateOne is the builder for updating a single MutedSegment entity.
@@ -202,90 +202,90 @@ type MutedSegmentUpdateOne struct {
 }
 
 // SetStart sets the "start" field.
-func (msuo *MutedSegmentUpdateOne) SetStart(i int) *MutedSegmentUpdateOne {
-	msuo.mutation.ResetStart()
-	msuo.mutation.SetStart(i)
-	return msuo
+func (_u *MutedSegmentUpdateOne) SetStart(v int) *MutedSegmentUpdateOne {
+	_u.mutation.ResetStart()
+	_u.mutation.SetStart(v)
+	return _u
 }
 
 // SetNillableStart sets the "start" field if the given value is not nil.
-func (msuo *MutedSegmentUpdateOne) SetNillableStart(i *int) *MutedSegmentUpdateOne {
-	if i != nil {
-		msuo.SetStart(*i)
+func (_u *MutedSegmentUpdateOne) SetNillableStart(v *int) *MutedSegmentUpdateOne {
+	if v != nil {
+		_u.SetStart(*v)
 	}
-	return msuo
+	return _u
 }
 
-// AddStart adds i to the "start" field.
-func (msuo *MutedSegmentUpdateOne) AddStart(i int) *MutedSegmentUpdateOne {
-	msuo.mutation.AddStart(i)
-	return msuo
+// AddStart adds value to the "start" field.
+func (_u *MutedSegmentUpdateOne) AddStart(v int) *MutedSegmentUpdateOne {
+	_u.mutation.AddStart(v)
+	return _u
 }
 
 // SetEnd sets the "end" field.
-func (msuo *MutedSegmentUpdateOne) SetEnd(i int) *MutedSegmentUpdateOne {
-	msuo.mutation.ResetEnd()
-	msuo.mutation.SetEnd(i)
-	return msuo
+func (_u *MutedSegmentUpdateOne) SetEnd(v int) *MutedSegmentUpdateOne {
+	_u.mutation.ResetEnd()
+	_u.mutation.SetEnd(v)
+	return _u
 }
 
 // SetNillableEnd sets the "end" field if the given value is not nil.
-func (msuo *MutedSegmentUpdateOne) SetNillableEnd(i *int) *MutedSegmentUpdateOne {
-	if i != nil {
-		msuo.SetEnd(*i)
+func (_u *MutedSegmentUpdateOne) SetNillableEnd(v *int) *MutedSegmentUpdateOne {
+	if v != nil {
+		_u.SetEnd(*v)
 	}
-	return msuo
+	return _u
 }
 
-// AddEnd adds i to the "end" field.
-func (msuo *MutedSegmentUpdateOne) AddEnd(i int) *MutedSegmentUpdateOne {
-	msuo.mutation.AddEnd(i)
-	return msuo
+// AddEnd adds value to the "end" field.
+func (_u *MutedSegmentUpdateOne) AddEnd(v int) *MutedSegmentUpdateOne {
+	_u.mutation.AddEnd(v)
+	return _u
 }
 
 // SetVodID sets the "vod" edge to the Vod entity by ID.
-func (msuo *MutedSegmentUpdateOne) SetVodID(id uuid.UUID) *MutedSegmentUpdateOne {
-	msuo.mutation.SetVodID(id)
-	return msuo
+func (_u *MutedSegmentUpdateOne) SetVodID(id uuid.UUID) *MutedSegmentUpdateOne {
+	_u.mutation.SetVodID(id)
+	return _u
 }
 
 // SetVod sets the "vod" edge to the Vod entity.
-func (msuo *MutedSegmentUpdateOne) SetVod(v *Vod) *MutedSegmentUpdateOne {
-	return msuo.SetVodID(v.ID)
+func (_u *MutedSegmentUpdateOne) SetVod(v *Vod) *MutedSegmentUpdateOne {
+	return _u.SetVodID(v.ID)
 }
 
 // Mutation returns the MutedSegmentMutation object of the builder.
-func (msuo *MutedSegmentUpdateOne) Mutation() *MutedSegmentMutation {
-	return msuo.mutation
+func (_u *MutedSegmentUpdateOne) Mutation() *MutedSegmentMutation {
+	return _u.mutation
 }
 
 // ClearVod clears the "vod" edge to the Vod entity.
-func (msuo *MutedSegmentUpdateOne) ClearVod() *MutedSegmentUpdateOne {
-	msuo.mutation.ClearVod()
-	return msuo
+func (_u *MutedSegmentUpdateOne) ClearVod() *MutedSegmentUpdateOne {
+	_u.mutation.ClearVod()
+	return _u
 }
 
 // Where appends a list predicates to the MutedSegmentUpdate builder.
-func (msuo *MutedSegmentUpdateOne) Where(ps ...predicate.MutedSegment) *MutedSegmentUpdateOne {
-	msuo.mutation.Where(ps...)
-	return msuo
+func (_u *MutedSegmentUpdateOne) Where(ps ...predicate.MutedSegment) *MutedSegmentUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (msuo *MutedSegmentUpdateOne) Select(field string, fields ...string) *MutedSegmentUpdateOne {
-	msuo.fields = append([]string{field}, fields...)
-	return msuo
+func (_u *MutedSegmentUpdateOne) Select(field string, fields ...string) *MutedSegmentUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated MutedSegment entity.
-func (msuo *MutedSegmentUpdateOne) Save(ctx context.Context) (*MutedSegment, error) {
-	return withHooks(ctx, msuo.sqlSave, msuo.mutation, msuo.hooks)
+func (_u *MutedSegmentUpdateOne) Save(ctx context.Context) (*MutedSegment, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (msuo *MutedSegmentUpdateOne) SaveX(ctx context.Context) *MutedSegment {
-	node, err := msuo.Save(ctx)
+func (_u *MutedSegmentUpdateOne) SaveX(ctx context.Context) *MutedSegment {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -293,37 +293,37 @@ func (msuo *MutedSegmentUpdateOne) SaveX(ctx context.Context) *MutedSegment {
 }
 
 // Exec executes the query on the entity.
-func (msuo *MutedSegmentUpdateOne) Exec(ctx context.Context) error {
-	_, err := msuo.Save(ctx)
+func (_u *MutedSegmentUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (msuo *MutedSegmentUpdateOne) ExecX(ctx context.Context) {
-	if err := msuo.Exec(ctx); err != nil {
+func (_u *MutedSegmentUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (msuo *MutedSegmentUpdateOne) check() error {
-	if msuo.mutation.VodCleared() && len(msuo.mutation.VodIDs()) > 0 {
+func (_u *MutedSegmentUpdateOne) check() error {
+	if _u.mutation.VodCleared() && len(_u.mutation.VodIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MutedSegment.vod"`)
 	}
 	return nil
 }
 
-func (msuo *MutedSegmentUpdateOne) sqlSave(ctx context.Context) (_node *MutedSegment, err error) {
-	if err := msuo.check(); err != nil {
+func (_u *MutedSegmentUpdateOne) sqlSave(ctx context.Context) (_node *MutedSegment, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(mutedsegment.Table, mutedsegment.Columns, sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID))
-	id, ok := msuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "MutedSegment.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := msuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, mutedsegment.FieldID)
 		for _, f := range fields {
@@ -335,26 +335,26 @@ func (msuo *MutedSegmentUpdateOne) sqlSave(ctx context.Context) (_node *MutedSeg
 			}
 		}
 	}
-	if ps := msuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := msuo.mutation.Start(); ok {
+	if value, ok := _u.mutation.Start(); ok {
 		_spec.SetField(mutedsegment.FieldStart, field.TypeInt, value)
 	}
-	if value, ok := msuo.mutation.AddedStart(); ok {
+	if value, ok := _u.mutation.AddedStart(); ok {
 		_spec.AddField(mutedsegment.FieldStart, field.TypeInt, value)
 	}
-	if value, ok := msuo.mutation.End(); ok {
+	if value, ok := _u.mutation.End(); ok {
 		_spec.SetField(mutedsegment.FieldEnd, field.TypeInt, value)
 	}
-	if value, ok := msuo.mutation.AddedEnd(); ok {
+	if value, ok := _u.mutation.AddedEnd(); ok {
 		_spec.AddField(mutedsegment.FieldEnd, field.TypeInt, value)
 	}
-	if msuo.mutation.VodCleared() {
+	if _u.mutation.VodCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -367,7 +367,7 @@ func (msuo *MutedSegmentUpdateOne) sqlSave(ctx context.Context) (_node *MutedSeg
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := msuo.mutation.VodIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.VodIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -383,10 +383,10 @@ func (msuo *MutedSegmentUpdateOne) sqlSave(ctx context.Context) (_node *MutedSeg
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &MutedSegment{config: msuo.config}
+	_node = &MutedSegment{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, msuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{mutedsegment.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -394,6 +394,6 @@ func (msuo *MutedSegmentUpdateOne) sqlSave(ctx context.Context) (_node *MutedSeg
 		}
 		return nil, err
 	}
-	msuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

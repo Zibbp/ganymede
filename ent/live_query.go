@@ -37,44 +37,44 @@ type LiveQuery struct {
 }
 
 // Where adds a new predicate for the LiveQuery builder.
-func (lq *LiveQuery) Where(ps ...predicate.Live) *LiveQuery {
-	lq.predicates = append(lq.predicates, ps...)
-	return lq
+func (_q *LiveQuery) Where(ps ...predicate.Live) *LiveQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (lq *LiveQuery) Limit(limit int) *LiveQuery {
-	lq.ctx.Limit = &limit
-	return lq
+func (_q *LiveQuery) Limit(limit int) *LiveQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (lq *LiveQuery) Offset(offset int) *LiveQuery {
-	lq.ctx.Offset = &offset
-	return lq
+func (_q *LiveQuery) Offset(offset int) *LiveQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (lq *LiveQuery) Unique(unique bool) *LiveQuery {
-	lq.ctx.Unique = &unique
-	return lq
+func (_q *LiveQuery) Unique(unique bool) *LiveQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (lq *LiveQuery) Order(o ...live.OrderOption) *LiveQuery {
-	lq.order = append(lq.order, o...)
-	return lq
+func (_q *LiveQuery) Order(o ...live.OrderOption) *LiveQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryChannel chains the current query on the "channel" edge.
-func (lq *LiveQuery) QueryChannel() *ChannelQuery {
-	query := (&ChannelClient{config: lq.config}).Query()
+func (_q *LiveQuery) QueryChannel() *ChannelQuery {
+	query := (&ChannelClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := lq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := lq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -83,20 +83,20 @@ func (lq *LiveQuery) QueryChannel() *ChannelQuery {
 			sqlgraph.To(channel.Table, channel.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, live.ChannelTable, live.ChannelColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(lq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryCategories chains the current query on the "categories" edge.
-func (lq *LiveQuery) QueryCategories() *LiveCategoryQuery {
-	query := (&LiveCategoryClient{config: lq.config}).Query()
+func (_q *LiveQuery) QueryCategories() *LiveCategoryQuery {
+	query := (&LiveCategoryClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := lq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := lq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -105,20 +105,20 @@ func (lq *LiveQuery) QueryCategories() *LiveCategoryQuery {
 			sqlgraph.To(livecategory.Table, livecategory.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, live.CategoriesTable, live.CategoriesColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(lq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryTitleRegex chains the current query on the "title_regex" edge.
-func (lq *LiveQuery) QueryTitleRegex() *LiveTitleRegexQuery {
-	query := (&LiveTitleRegexClient{config: lq.config}).Query()
+func (_q *LiveQuery) QueryTitleRegex() *LiveTitleRegexQuery {
+	query := (&LiveTitleRegexClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := lq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := lq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -127,7 +127,7 @@ func (lq *LiveQuery) QueryTitleRegex() *LiveTitleRegexQuery {
 			sqlgraph.To(livetitleregex.Table, livetitleregex.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, live.TitleRegexTable, live.TitleRegexColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(lq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -135,8 +135,8 @@ func (lq *LiveQuery) QueryTitleRegex() *LiveTitleRegexQuery {
 
 // First returns the first Live entity from the query.
 // Returns a *NotFoundError when no Live was found.
-func (lq *LiveQuery) First(ctx context.Context) (*Live, error) {
-	nodes, err := lq.Limit(1).All(setContextOp(ctx, lq.ctx, ent.OpQueryFirst))
+func (_q *LiveQuery) First(ctx context.Context) (*Live, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +147,8 @@ func (lq *LiveQuery) First(ctx context.Context) (*Live, error) {
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (lq *LiveQuery) FirstX(ctx context.Context) *Live {
-	node, err := lq.First(ctx)
+func (_q *LiveQuery) FirstX(ctx context.Context) *Live {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (lq *LiveQuery) FirstX(ctx context.Context) *Live {
 
 // FirstID returns the first Live ID from the query.
 // Returns a *NotFoundError when no Live ID was found.
-func (lq *LiveQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *LiveQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = lq.Limit(1).IDs(setContextOp(ctx, lq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -170,8 +170,8 @@ func (lq *LiveQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (lq *LiveQuery) FirstIDX(ctx context.Context) uuid.UUID {
-	id, err := lq.FirstID(ctx)
+func (_q *LiveQuery) FirstIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -181,8 +181,8 @@ func (lq *LiveQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Only returns a single Live entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one Live entity is found.
 // Returns a *NotFoundError when no Live entities are found.
-func (lq *LiveQuery) Only(ctx context.Context) (*Live, error) {
-	nodes, err := lq.Limit(2).All(setContextOp(ctx, lq.ctx, ent.OpQueryOnly))
+func (_q *LiveQuery) Only(ctx context.Context) (*Live, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -197,8 +197,8 @@ func (lq *LiveQuery) Only(ctx context.Context) (*Live, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (lq *LiveQuery) OnlyX(ctx context.Context) *Live {
-	node, err := lq.Only(ctx)
+func (_q *LiveQuery) OnlyX(ctx context.Context) *Live {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -208,9 +208,9 @@ func (lq *LiveQuery) OnlyX(ctx context.Context) *Live {
 // OnlyID is like Only, but returns the only Live ID in the query.
 // Returns a *NotSingularError when more than one Live ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (lq *LiveQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *LiveQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = lq.Limit(2).IDs(setContextOp(ctx, lq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -225,8 +225,8 @@ func (lq *LiveQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (lq *LiveQuery) OnlyIDX(ctx context.Context) uuid.UUID {
-	id, err := lq.OnlyID(ctx)
+func (_q *LiveQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -234,18 +234,18 @@ func (lq *LiveQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 }
 
 // All executes the query and returns a list of Lives.
-func (lq *LiveQuery) All(ctx context.Context) ([]*Live, error) {
-	ctx = setContextOp(ctx, lq.ctx, ent.OpQueryAll)
-	if err := lq.prepareQuery(ctx); err != nil {
+func (_q *LiveQuery) All(ctx context.Context) ([]*Live, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*Live, *LiveQuery]()
-	return withInterceptors[[]*Live](ctx, lq, qr, lq.inters)
+	return withInterceptors[[]*Live](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (lq *LiveQuery) AllX(ctx context.Context) []*Live {
-	nodes, err := lq.All(ctx)
+func (_q *LiveQuery) AllX(ctx context.Context) []*Live {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -253,20 +253,20 @@ func (lq *LiveQuery) AllX(ctx context.Context) []*Live {
 }
 
 // IDs executes the query and returns a list of Live IDs.
-func (lq *LiveQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
-	if lq.ctx.Unique == nil && lq.path != nil {
-		lq.Unique(true)
+func (_q *LiveQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, lq.ctx, ent.OpQueryIDs)
-	if err = lq.Select(live.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(live.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (lq *LiveQuery) IDsX(ctx context.Context) []uuid.UUID {
-	ids, err := lq.IDs(ctx)
+func (_q *LiveQuery) IDsX(ctx context.Context) []uuid.UUID {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -274,17 +274,17 @@ func (lq *LiveQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (lq *LiveQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, lq.ctx, ent.OpQueryCount)
-	if err := lq.prepareQuery(ctx); err != nil {
+func (_q *LiveQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, lq, querierCount[*LiveQuery](), lq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*LiveQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (lq *LiveQuery) CountX(ctx context.Context) int {
-	count, err := lq.Count(ctx)
+func (_q *LiveQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -292,9 +292,9 @@ func (lq *LiveQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (lq *LiveQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, lq.ctx, ent.OpQueryExist)
-	switch _, err := lq.FirstID(ctx); {
+func (_q *LiveQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -305,8 +305,8 @@ func (lq *LiveQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (lq *LiveQuery) ExistX(ctx context.Context) bool {
-	exist, err := lq.Exist(ctx)
+func (_q *LiveQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -315,56 +315,56 @@ func (lq *LiveQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the LiveQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (lq *LiveQuery) Clone() *LiveQuery {
-	if lq == nil {
+func (_q *LiveQuery) Clone() *LiveQuery {
+	if _q == nil {
 		return nil
 	}
 	return &LiveQuery{
-		config:         lq.config,
-		ctx:            lq.ctx.Clone(),
-		order:          append([]live.OrderOption{}, lq.order...),
-		inters:         append([]Interceptor{}, lq.inters...),
-		predicates:     append([]predicate.Live{}, lq.predicates...),
-		withChannel:    lq.withChannel.Clone(),
-		withCategories: lq.withCategories.Clone(),
-		withTitleRegex: lq.withTitleRegex.Clone(),
+		config:         _q.config,
+		ctx:            _q.ctx.Clone(),
+		order:          append([]live.OrderOption{}, _q.order...),
+		inters:         append([]Interceptor{}, _q.inters...),
+		predicates:     append([]predicate.Live{}, _q.predicates...),
+		withChannel:    _q.withChannel.Clone(),
+		withCategories: _q.withCategories.Clone(),
+		withTitleRegex: _q.withTitleRegex.Clone(),
 		// clone intermediate query.
-		sql:  lq.sql.Clone(),
-		path: lq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithChannel tells the query-builder to eager-load the nodes that are connected to
 // the "channel" edge. The optional arguments are used to configure the query builder of the edge.
-func (lq *LiveQuery) WithChannel(opts ...func(*ChannelQuery)) *LiveQuery {
-	query := (&ChannelClient{config: lq.config}).Query()
+func (_q *LiveQuery) WithChannel(opts ...func(*ChannelQuery)) *LiveQuery {
+	query := (&ChannelClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	lq.withChannel = query
-	return lq
+	_q.withChannel = query
+	return _q
 }
 
 // WithCategories tells the query-builder to eager-load the nodes that are connected to
 // the "categories" edge. The optional arguments are used to configure the query builder of the edge.
-func (lq *LiveQuery) WithCategories(opts ...func(*LiveCategoryQuery)) *LiveQuery {
-	query := (&LiveCategoryClient{config: lq.config}).Query()
+func (_q *LiveQuery) WithCategories(opts ...func(*LiveCategoryQuery)) *LiveQuery {
+	query := (&LiveCategoryClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	lq.withCategories = query
-	return lq
+	_q.withCategories = query
+	return _q
 }
 
 // WithTitleRegex tells the query-builder to eager-load the nodes that are connected to
 // the "title_regex" edge. The optional arguments are used to configure the query builder of the edge.
-func (lq *LiveQuery) WithTitleRegex(opts ...func(*LiveTitleRegexQuery)) *LiveQuery {
-	query := (&LiveTitleRegexClient{config: lq.config}).Query()
+func (_q *LiveQuery) WithTitleRegex(opts ...func(*LiveTitleRegexQuery)) *LiveQuery {
+	query := (&LiveTitleRegexClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	lq.withTitleRegex = query
-	return lq
+	_q.withTitleRegex = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -381,10 +381,10 @@ func (lq *LiveQuery) WithTitleRegex(opts ...func(*LiveTitleRegexQuery)) *LiveQue
 //		GroupBy(live.FieldWatchLive).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (lq *LiveQuery) GroupBy(field string, fields ...string) *LiveGroupBy {
-	lq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &LiveGroupBy{build: lq}
-	grbuild.flds = &lq.ctx.Fields
+func (_q *LiveQuery) GroupBy(field string, fields ...string) *LiveGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &LiveGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = live.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -402,57 +402,57 @@ func (lq *LiveQuery) GroupBy(field string, fields ...string) *LiveGroupBy {
 //	client.Live.Query().
 //		Select(live.FieldWatchLive).
 //		Scan(ctx, &v)
-func (lq *LiveQuery) Select(fields ...string) *LiveSelect {
-	lq.ctx.Fields = append(lq.ctx.Fields, fields...)
-	sbuild := &LiveSelect{LiveQuery: lq}
+func (_q *LiveQuery) Select(fields ...string) *LiveSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &LiveSelect{LiveQuery: _q}
 	sbuild.label = live.Label
-	sbuild.flds, sbuild.scan = &lq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a LiveSelect configured with the given aggregations.
-func (lq *LiveQuery) Aggregate(fns ...AggregateFunc) *LiveSelect {
-	return lq.Select().Aggregate(fns...)
+func (_q *LiveQuery) Aggregate(fns ...AggregateFunc) *LiveSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (lq *LiveQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range lq.inters {
+func (_q *LiveQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, lq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range lq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !live.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if lq.path != nil {
-		prev, err := lq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		lq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (lq *LiveQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Live, error) {
+func (_q *LiveQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Live, error) {
 	var (
 		nodes       = []*Live{}
-		withFKs     = lq.withFKs
-		_spec       = lq.querySpec()
+		withFKs     = _q.withFKs
+		_spec       = _q.querySpec()
 		loadedTypes = [3]bool{
-			lq.withChannel != nil,
-			lq.withCategories != nil,
-			lq.withTitleRegex != nil,
+			_q.withChannel != nil,
+			_q.withCategories != nil,
+			_q.withTitleRegex != nil,
 		}
 	)
-	if lq.withChannel != nil {
+	if _q.withChannel != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -462,7 +462,7 @@ func (lq *LiveQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Live, e
 		return (*Live).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Live{config: lq.config}
+		node := &Live{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -470,27 +470,27 @@ func (lq *LiveQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Live, e
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, lq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := lq.withChannel; query != nil {
-		if err := lq.loadChannel(ctx, query, nodes, nil,
+	if query := _q.withChannel; query != nil {
+		if err := _q.loadChannel(ctx, query, nodes, nil,
 			func(n *Live, e *Channel) { n.Edges.Channel = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := lq.withCategories; query != nil {
-		if err := lq.loadCategories(ctx, query, nodes,
+	if query := _q.withCategories; query != nil {
+		if err := _q.loadCategories(ctx, query, nodes,
 			func(n *Live) { n.Edges.Categories = []*LiveCategory{} },
 			func(n *Live, e *LiveCategory) { n.Edges.Categories = append(n.Edges.Categories, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := lq.withTitleRegex; query != nil {
-		if err := lq.loadTitleRegex(ctx, query, nodes,
+	if query := _q.withTitleRegex; query != nil {
+		if err := _q.loadTitleRegex(ctx, query, nodes,
 			func(n *Live) { n.Edges.TitleRegex = []*LiveTitleRegex{} },
 			func(n *Live, e *LiveTitleRegex) { n.Edges.TitleRegex = append(n.Edges.TitleRegex, e) }); err != nil {
 			return nil, err
@@ -499,7 +499,7 @@ func (lq *LiveQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Live, e
 	return nodes, nil
 }
 
-func (lq *LiveQuery) loadChannel(ctx context.Context, query *ChannelQuery, nodes []*Live, init func(*Live), assign func(*Live, *Channel)) error {
+func (_q *LiveQuery) loadChannel(ctx context.Context, query *ChannelQuery, nodes []*Live, init func(*Live), assign func(*Live, *Channel)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Live)
 	for i := range nodes {
@@ -531,7 +531,7 @@ func (lq *LiveQuery) loadChannel(ctx context.Context, query *ChannelQuery, nodes
 	}
 	return nil
 }
-func (lq *LiveQuery) loadCategories(ctx context.Context, query *LiveCategoryQuery, nodes []*Live, init func(*Live), assign func(*Live, *LiveCategory)) error {
+func (_q *LiveQuery) loadCategories(ctx context.Context, query *LiveCategoryQuery, nodes []*Live, init func(*Live), assign func(*Live, *LiveCategory)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[uuid.UUID]*Live)
 	for i := range nodes {
@@ -562,7 +562,7 @@ func (lq *LiveQuery) loadCategories(ctx context.Context, query *LiveCategoryQuer
 	}
 	return nil
 }
-func (lq *LiveQuery) loadTitleRegex(ctx context.Context, query *LiveTitleRegexQuery, nodes []*Live, init func(*Live), assign func(*Live, *LiveTitleRegex)) error {
+func (_q *LiveQuery) loadTitleRegex(ctx context.Context, query *LiveTitleRegexQuery, nodes []*Live, init func(*Live), assign func(*Live, *LiveTitleRegex)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[uuid.UUID]*Live)
 	for i := range nodes {
@@ -594,24 +594,24 @@ func (lq *LiveQuery) loadTitleRegex(ctx context.Context, query *LiveTitleRegexQu
 	return nil
 }
 
-func (lq *LiveQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := lq.querySpec()
-	_spec.Node.Columns = lq.ctx.Fields
-	if len(lq.ctx.Fields) > 0 {
-		_spec.Unique = lq.ctx.Unique != nil && *lq.ctx.Unique
+func (_q *LiveQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, lq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (lq *LiveQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *LiveQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(live.Table, live.Columns, sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID))
-	_spec.From = lq.sql
-	if unique := lq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if lq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := lq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, live.FieldID)
 		for i := range fields {
@@ -620,20 +620,20 @@ func (lq *LiveQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := lq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := lq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := lq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := lq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -643,33 +643,33 @@ func (lq *LiveQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (lq *LiveQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(lq.driver.Dialect())
+func (_q *LiveQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(live.Table)
-	columns := lq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = live.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if lq.sql != nil {
-		selector = lq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if lq.ctx.Unique != nil && *lq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range lq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range lq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := lq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := lq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -682,41 +682,41 @@ type LiveGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (lgb *LiveGroupBy) Aggregate(fns ...AggregateFunc) *LiveGroupBy {
-	lgb.fns = append(lgb.fns, fns...)
-	return lgb
+func (_g *LiveGroupBy) Aggregate(fns ...AggregateFunc) *LiveGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (lgb *LiveGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, lgb.build.ctx, ent.OpQueryGroupBy)
-	if err := lgb.build.prepareQuery(ctx); err != nil {
+func (_g *LiveGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*LiveQuery, *LiveGroupBy](ctx, lgb.build, lgb, lgb.build.inters, v)
+	return scanWithInterceptors[*LiveQuery, *LiveGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (lgb *LiveGroupBy) sqlScan(ctx context.Context, root *LiveQuery, v any) error {
+func (_g *LiveGroupBy) sqlScan(ctx context.Context, root *LiveQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(lgb.fns))
-	for _, fn := range lgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*lgb.flds)+len(lgb.fns))
-		for _, f := range *lgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*lgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := lgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -730,27 +730,27 @@ type LiveSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (ls *LiveSelect) Aggregate(fns ...AggregateFunc) *LiveSelect {
-	ls.fns = append(ls.fns, fns...)
-	return ls
+func (_s *LiveSelect) Aggregate(fns ...AggregateFunc) *LiveSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ls *LiveSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ls.ctx, ent.OpQuerySelect)
-	if err := ls.prepareQuery(ctx); err != nil {
+func (_s *LiveSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*LiveQuery, *LiveSelect](ctx, ls.LiveQuery, ls, ls.inters, v)
+	return scanWithInterceptors[*LiveQuery, *LiveSelect](ctx, _s.LiveQuery, _s, _s.inters, v)
 }
 
-func (ls *LiveSelect) sqlScan(ctx context.Context, root *LiveQuery, v any) error {
+func (_s *LiveSelect) sqlScan(ctx context.Context, root *LiveQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(ls.fns))
-	for _, fn := range ls.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*ls.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -758,7 +758,7 @@ func (ls *LiveSelect) sqlScan(ctx context.Context, root *LiveQuery, v any) error
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := ls.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

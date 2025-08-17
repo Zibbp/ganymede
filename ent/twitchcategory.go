@@ -48,7 +48,7 @@ func (*TwitchCategory) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the TwitchCategory fields.
-func (tc *TwitchCategory) assignValues(columns []string, values []any) error {
+func (_m *TwitchCategory) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -58,40 +58,40 @@ func (tc *TwitchCategory) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
-				tc.ID = value.String
+				_m.ID = value.String
 			}
 		case twitchcategory.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				tc.Name = value.String
+				_m.Name = value.String
 			}
 		case twitchcategory.FieldBoxArtURL:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field box_art_url", values[i])
 			} else if value.Valid {
-				tc.BoxArtURL = value.String
+				_m.BoxArtURL = value.String
 			}
 		case twitchcategory.FieldIgdbID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field igdb_id", values[i])
 			} else if value.Valid {
-				tc.IgdbID = value.String
+				_m.IgdbID = value.String
 			}
 		case twitchcategory.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				tc.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case twitchcategory.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				tc.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			tc.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -99,47 +99,47 @@ func (tc *TwitchCategory) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the TwitchCategory.
 // This includes values selected through modifiers, order, etc.
-func (tc *TwitchCategory) Value(name string) (ent.Value, error) {
-	return tc.selectValues.Get(name)
+func (_m *TwitchCategory) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this TwitchCategory.
 // Note that you need to call TwitchCategory.Unwrap() before calling this method if this TwitchCategory
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (tc *TwitchCategory) Update() *TwitchCategoryUpdateOne {
-	return NewTwitchCategoryClient(tc.config).UpdateOne(tc)
+func (_m *TwitchCategory) Update() *TwitchCategoryUpdateOne {
+	return NewTwitchCategoryClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the TwitchCategory entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (tc *TwitchCategory) Unwrap() *TwitchCategory {
-	_tx, ok := tc.config.driver.(*txDriver)
+func (_m *TwitchCategory) Unwrap() *TwitchCategory {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: TwitchCategory is not a transactional entity")
 	}
-	tc.config.driver = _tx.drv
-	return tc
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (tc *TwitchCategory) String() string {
+func (_m *TwitchCategory) String() string {
 	var builder strings.Builder
 	builder.WriteString("TwitchCategory(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", tc.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(tc.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("box_art_url=")
-	builder.WriteString(tc.BoxArtURL)
+	builder.WriteString(_m.BoxArtURL)
 	builder.WriteString(", ")
 	builder.WriteString("igdb_id=")
-	builder.WriteString(tc.IgdbID)
+	builder.WriteString(_m.IgdbID)
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(tc.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(tc.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

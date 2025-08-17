@@ -95,7 +95,7 @@ func (*Channel) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Channel fields.
-func (c *Channel) assignValues(columns []string, values []any) error {
+func (_m *Channel) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -105,64 +105,64 @@ func (c *Channel) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
-				c.ID = *value
+				_m.ID = *value
 			}
 		case channel.FieldExtID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ext_id", values[i])
 			} else if value.Valid {
-				c.ExtID = value.String
+				_m.ExtID = value.String
 			}
 		case channel.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				c.Name = value.String
+				_m.Name = value.String
 			}
 		case channel.FieldDisplayName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field display_name", values[i])
 			} else if value.Valid {
-				c.DisplayName = value.String
+				_m.DisplayName = value.String
 			}
 		case channel.FieldImagePath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field image_path", values[i])
 			} else if value.Valid {
-				c.ImagePath = value.String
+				_m.ImagePath = value.String
 			}
 		case channel.FieldRetention:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field retention", values[i])
 			} else if value.Valid {
-				c.Retention = value.Bool
+				_m.Retention = value.Bool
 			}
 		case channel.FieldRetentionDays:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field retention_days", values[i])
 			} else if value.Valid {
-				c.RetentionDays = value.Int64
+				_m.RetentionDays = value.Int64
 			}
 		case channel.FieldStorageSizeBytes:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field storage_size_bytes", values[i])
 			} else if value.Valid {
-				c.StorageSizeBytes = value.Int64
+				_m.StorageSizeBytes = value.Int64
 			}
 		case channel.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				c.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case channel.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				c.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			c.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -170,69 +170,69 @@ func (c *Channel) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Channel.
 // This includes values selected through modifiers, order, etc.
-func (c *Channel) Value(name string) (ent.Value, error) {
-	return c.selectValues.Get(name)
+func (_m *Channel) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryVods queries the "vods" edge of the Channel entity.
-func (c *Channel) QueryVods() *VodQuery {
-	return NewChannelClient(c.config).QueryVods(c)
+func (_m *Channel) QueryVods() *VodQuery {
+	return NewChannelClient(_m.config).QueryVods(_m)
 }
 
 // QueryLive queries the "live" edge of the Channel entity.
-func (c *Channel) QueryLive() *LiveQuery {
-	return NewChannelClient(c.config).QueryLive(c)
+func (_m *Channel) QueryLive() *LiveQuery {
+	return NewChannelClient(_m.config).QueryLive(_m)
 }
 
 // Update returns a builder for updating this Channel.
 // Note that you need to call Channel.Unwrap() before calling this method if this Channel
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (c *Channel) Update() *ChannelUpdateOne {
-	return NewChannelClient(c.config).UpdateOne(c)
+func (_m *Channel) Update() *ChannelUpdateOne {
+	return NewChannelClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Channel entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (c *Channel) Unwrap() *Channel {
-	_tx, ok := c.config.driver.(*txDriver)
+func (_m *Channel) Unwrap() *Channel {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Channel is not a transactional entity")
 	}
-	c.config.driver = _tx.drv
-	return c
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (c *Channel) String() string {
+func (_m *Channel) String() string {
 	var builder strings.Builder
 	builder.WriteString("Channel(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", c.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("ext_id=")
-	builder.WriteString(c.ExtID)
+	builder.WriteString(_m.ExtID)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
-	builder.WriteString(c.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("display_name=")
-	builder.WriteString(c.DisplayName)
+	builder.WriteString(_m.DisplayName)
 	builder.WriteString(", ")
 	builder.WriteString("image_path=")
-	builder.WriteString(c.ImagePath)
+	builder.WriteString(_m.ImagePath)
 	builder.WriteString(", ")
 	builder.WriteString("retention=")
-	builder.WriteString(fmt.Sprintf("%v", c.Retention))
+	builder.WriteString(fmt.Sprintf("%v", _m.Retention))
 	builder.WriteString(", ")
 	builder.WriteString("retention_days=")
-	builder.WriteString(fmt.Sprintf("%v", c.RetentionDays))
+	builder.WriteString(fmt.Sprintf("%v", _m.RetentionDays))
 	builder.WriteString(", ")
 	builder.WriteString("storage_size_bytes=")
-	builder.WriteString(fmt.Sprintf("%v", c.StorageSizeBytes))
+	builder.WriteString(fmt.Sprintf("%v", _m.StorageSizeBytes))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

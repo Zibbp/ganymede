@@ -56,7 +56,7 @@ func (*Playback) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Playback fields.
-func (pl *Playback) assignValues(columns []string, values []any) error {
+func (_m *Playback) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -66,46 +66,46 @@ func (pl *Playback) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
-				pl.ID = *value
+				_m.ID = *value
 			}
 		case playback.FieldVodID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field vod_id", values[i])
 			} else if value != nil {
-				pl.VodID = *value
+				_m.VodID = *value
 			}
 		case playback.FieldUserID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value != nil {
-				pl.UserID = *value
+				_m.UserID = *value
 			}
 		case playback.FieldTime:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field time", values[i])
 			} else if value.Valid {
-				pl.Time = int(value.Int64)
+				_m.Time = int(value.Int64)
 			}
 		case playback.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				pl.Status = utils.PlaybackStatus(value.String)
+				_m.Status = utils.PlaybackStatus(value.String)
 			}
 		case playback.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				pl.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case playback.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				pl.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			pl.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -113,50 +113,50 @@ func (pl *Playback) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Playback.
 // This includes values selected through modifiers, order, etc.
-func (pl *Playback) Value(name string) (ent.Value, error) {
-	return pl.selectValues.Get(name)
+func (_m *Playback) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this Playback.
 // Note that you need to call Playback.Unwrap() before calling this method if this Playback
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pl *Playback) Update() *PlaybackUpdateOne {
-	return NewPlaybackClient(pl.config).UpdateOne(pl)
+func (_m *Playback) Update() *PlaybackUpdateOne {
+	return NewPlaybackClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Playback entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pl *Playback) Unwrap() *Playback {
-	_tx, ok := pl.config.driver.(*txDriver)
+func (_m *Playback) Unwrap() *Playback {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Playback is not a transactional entity")
 	}
-	pl.config.driver = _tx.drv
-	return pl
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pl *Playback) String() string {
+func (_m *Playback) String() string {
 	var builder strings.Builder
 	builder.WriteString("Playback(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pl.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("vod_id=")
-	builder.WriteString(fmt.Sprintf("%v", pl.VodID))
+	builder.WriteString(fmt.Sprintf("%v", _m.VodID))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", pl.UserID))
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
 	builder.WriteString("time=")
-	builder.WriteString(fmt.Sprintf("%v", pl.Time))
+	builder.WriteString(fmt.Sprintf("%v", _m.Time))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", pl.Status))
+	builder.WriteString(fmt.Sprintf("%v", _m.Status))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(pl.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(pl.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -25,138 +25,138 @@ type PlaylistRuleUpdate struct {
 }
 
 // Where appends a list predicates to the PlaylistRuleUpdate builder.
-func (pru *PlaylistRuleUpdate) Where(ps ...predicate.PlaylistRule) *PlaylistRuleUpdate {
-	pru.mutation.Where(ps...)
-	return pru
+func (_u *PlaylistRuleUpdate) Where(ps ...predicate.PlaylistRule) *PlaylistRuleUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (pru *PlaylistRuleUpdate) SetName(s string) *PlaylistRuleUpdate {
-	pru.mutation.SetName(s)
-	return pru
+func (_u *PlaylistRuleUpdate) SetName(v string) *PlaylistRuleUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (pru *PlaylistRuleUpdate) SetNillableName(s *string) *PlaylistRuleUpdate {
-	if s != nil {
-		pru.SetName(*s)
+func (_u *PlaylistRuleUpdate) SetNillableName(v *string) *PlaylistRuleUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return pru
+	return _u
 }
 
 // ClearName clears the value of the "name" field.
-func (pru *PlaylistRuleUpdate) ClearName() *PlaylistRuleUpdate {
-	pru.mutation.ClearName()
-	return pru
+func (_u *PlaylistRuleUpdate) ClearName() *PlaylistRuleUpdate {
+	_u.mutation.ClearName()
+	return _u
 }
 
 // SetField sets the "field" field.
-func (pru *PlaylistRuleUpdate) SetField(urf utils.PlaylistRuleField) *PlaylistRuleUpdate {
-	pru.mutation.SetFieldField(urf)
-	return pru
+func (_u *PlaylistRuleUpdate) SetField(v utils.PlaylistRuleField) *PlaylistRuleUpdate {
+	_u.mutation.SetFieldField(v)
+	return _u
 }
 
 // SetNillableField sets the "field" field if the given value is not nil.
-func (pru *PlaylistRuleUpdate) SetNillableField(urf *utils.PlaylistRuleField) *PlaylistRuleUpdate {
-	if urf != nil {
-		pru.SetField(*urf)
+func (_u *PlaylistRuleUpdate) SetNillableField(v *utils.PlaylistRuleField) *PlaylistRuleUpdate {
+	if v != nil {
+		_u.SetField(*v)
 	}
-	return pru
+	return _u
 }
 
 // SetOperator sets the "operator" field.
-func (pru *PlaylistRuleUpdate) SetOperator(uro utils.PlaylistRuleOperator) *PlaylistRuleUpdate {
-	pru.mutation.SetOperator(uro)
-	return pru
+func (_u *PlaylistRuleUpdate) SetOperator(v utils.PlaylistRuleOperator) *PlaylistRuleUpdate {
+	_u.mutation.SetOperator(v)
+	return _u
 }
 
 // SetNillableOperator sets the "operator" field if the given value is not nil.
-func (pru *PlaylistRuleUpdate) SetNillableOperator(uro *utils.PlaylistRuleOperator) *PlaylistRuleUpdate {
-	if uro != nil {
-		pru.SetOperator(*uro)
+func (_u *PlaylistRuleUpdate) SetNillableOperator(v *utils.PlaylistRuleOperator) *PlaylistRuleUpdate {
+	if v != nil {
+		_u.SetOperator(*v)
 	}
-	return pru
+	return _u
 }
 
 // SetValue sets the "value" field.
-func (pru *PlaylistRuleUpdate) SetValue(s string) *PlaylistRuleUpdate {
-	pru.mutation.SetValue(s)
-	return pru
+func (_u *PlaylistRuleUpdate) SetValue(v string) *PlaylistRuleUpdate {
+	_u.mutation.SetValue(v)
+	return _u
 }
 
 // SetNillableValue sets the "value" field if the given value is not nil.
-func (pru *PlaylistRuleUpdate) SetNillableValue(s *string) *PlaylistRuleUpdate {
-	if s != nil {
-		pru.SetValue(*s)
+func (_u *PlaylistRuleUpdate) SetNillableValue(v *string) *PlaylistRuleUpdate {
+	if v != nil {
+		_u.SetValue(*v)
 	}
-	return pru
+	return _u
 }
 
 // SetPosition sets the "position" field.
-func (pru *PlaylistRuleUpdate) SetPosition(i int) *PlaylistRuleUpdate {
-	pru.mutation.ResetPosition()
-	pru.mutation.SetPosition(i)
-	return pru
+func (_u *PlaylistRuleUpdate) SetPosition(v int) *PlaylistRuleUpdate {
+	_u.mutation.ResetPosition()
+	_u.mutation.SetPosition(v)
+	return _u
 }
 
 // SetNillablePosition sets the "position" field if the given value is not nil.
-func (pru *PlaylistRuleUpdate) SetNillablePosition(i *int) *PlaylistRuleUpdate {
-	if i != nil {
-		pru.SetPosition(*i)
+func (_u *PlaylistRuleUpdate) SetNillablePosition(v *int) *PlaylistRuleUpdate {
+	if v != nil {
+		_u.SetPosition(*v)
 	}
-	return pru
+	return _u
 }
 
-// AddPosition adds i to the "position" field.
-func (pru *PlaylistRuleUpdate) AddPosition(i int) *PlaylistRuleUpdate {
-	pru.mutation.AddPosition(i)
-	return pru
+// AddPosition adds value to the "position" field.
+func (_u *PlaylistRuleUpdate) AddPosition(v int) *PlaylistRuleUpdate {
+	_u.mutation.AddPosition(v)
+	return _u
 }
 
 // SetEnabled sets the "enabled" field.
-func (pru *PlaylistRuleUpdate) SetEnabled(b bool) *PlaylistRuleUpdate {
-	pru.mutation.SetEnabled(b)
-	return pru
+func (_u *PlaylistRuleUpdate) SetEnabled(v bool) *PlaylistRuleUpdate {
+	_u.mutation.SetEnabled(v)
+	return _u
 }
 
 // SetNillableEnabled sets the "enabled" field if the given value is not nil.
-func (pru *PlaylistRuleUpdate) SetNillableEnabled(b *bool) *PlaylistRuleUpdate {
-	if b != nil {
-		pru.SetEnabled(*b)
+func (_u *PlaylistRuleUpdate) SetNillableEnabled(v *bool) *PlaylistRuleUpdate {
+	if v != nil {
+		_u.SetEnabled(*v)
 	}
-	return pru
+	return _u
 }
 
 // SetGroupID sets the "group" edge to the PlaylistRuleGroup entity by ID.
-func (pru *PlaylistRuleUpdate) SetGroupID(id uuid.UUID) *PlaylistRuleUpdate {
-	pru.mutation.SetGroupID(id)
-	return pru
+func (_u *PlaylistRuleUpdate) SetGroupID(id uuid.UUID) *PlaylistRuleUpdate {
+	_u.mutation.SetGroupID(id)
+	return _u
 }
 
 // SetGroup sets the "group" edge to the PlaylistRuleGroup entity.
-func (pru *PlaylistRuleUpdate) SetGroup(p *PlaylistRuleGroup) *PlaylistRuleUpdate {
-	return pru.SetGroupID(p.ID)
+func (_u *PlaylistRuleUpdate) SetGroup(v *PlaylistRuleGroup) *PlaylistRuleUpdate {
+	return _u.SetGroupID(v.ID)
 }
 
 // Mutation returns the PlaylistRuleMutation object of the builder.
-func (pru *PlaylistRuleUpdate) Mutation() *PlaylistRuleMutation {
-	return pru.mutation
+func (_u *PlaylistRuleUpdate) Mutation() *PlaylistRuleMutation {
+	return _u.mutation
 }
 
 // ClearGroup clears the "group" edge to the PlaylistRuleGroup entity.
-func (pru *PlaylistRuleUpdate) ClearGroup() *PlaylistRuleUpdate {
-	pru.mutation.ClearGroup()
-	return pru
+func (_u *PlaylistRuleUpdate) ClearGroup() *PlaylistRuleUpdate {
+	_u.mutation.ClearGroup()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (pru *PlaylistRuleUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, pru.sqlSave, pru.mutation, pru.hooks)
+func (_u *PlaylistRuleUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pru *PlaylistRuleUpdate) SaveX(ctx context.Context) int {
-	affected, err := pru.Save(ctx)
+func (_u *PlaylistRuleUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -164,73 +164,73 @@ func (pru *PlaylistRuleUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (pru *PlaylistRuleUpdate) Exec(ctx context.Context) error {
-	_, err := pru.Save(ctx)
+func (_u *PlaylistRuleUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pru *PlaylistRuleUpdate) ExecX(ctx context.Context) {
-	if err := pru.Exec(ctx); err != nil {
+func (_u *PlaylistRuleUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pru *PlaylistRuleUpdate) check() error {
-	if v, ok := pru.mutation.GetField(); ok {
+func (_u *PlaylistRuleUpdate) check() error {
+	if v, ok := _u.mutation.GetField(); ok {
 		if err := playlistrule.FieldValidator(v); err != nil {
 			return &ValidationError{Name: "field", err: fmt.Errorf(`ent: validator failed for field "PlaylistRule.field": %w`, err)}
 		}
 	}
-	if v, ok := pru.mutation.Operator(); ok {
+	if v, ok := _u.mutation.Operator(); ok {
 		if err := playlistrule.OperatorValidator(v); err != nil {
 			return &ValidationError{Name: "operator", err: fmt.Errorf(`ent: validator failed for field "PlaylistRule.operator": %w`, err)}
 		}
 	}
-	if pru.mutation.GroupCleared() && len(pru.mutation.GroupIDs()) > 0 {
+	if _u.mutation.GroupCleared() && len(_u.mutation.GroupIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PlaylistRule.group"`)
 	}
 	return nil
 }
 
-func (pru *PlaylistRuleUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := pru.check(); err != nil {
-		return n, err
+func (_u *PlaylistRuleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(playlistrule.Table, playlistrule.Columns, sqlgraph.NewFieldSpec(playlistrule.FieldID, field.TypeUUID))
-	if ps := pru.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pru.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(playlistrule.FieldName, field.TypeString, value)
 	}
-	if pru.mutation.NameCleared() {
+	if _u.mutation.NameCleared() {
 		_spec.ClearField(playlistrule.FieldName, field.TypeString)
 	}
-	if value, ok := pru.mutation.GetField(); ok {
+	if value, ok := _u.mutation.GetField(); ok {
 		_spec.SetField(playlistrule.FieldField, field.TypeEnum, value)
 	}
-	if value, ok := pru.mutation.Operator(); ok {
+	if value, ok := _u.mutation.Operator(); ok {
 		_spec.SetField(playlistrule.FieldOperator, field.TypeEnum, value)
 	}
-	if value, ok := pru.mutation.Value(); ok {
+	if value, ok := _u.mutation.Value(); ok {
 		_spec.SetField(playlistrule.FieldValue, field.TypeString, value)
 	}
-	if value, ok := pru.mutation.Position(); ok {
+	if value, ok := _u.mutation.Position(); ok {
 		_spec.SetField(playlistrule.FieldPosition, field.TypeInt, value)
 	}
-	if value, ok := pru.mutation.AddedPosition(); ok {
+	if value, ok := _u.mutation.AddedPosition(); ok {
 		_spec.AddField(playlistrule.FieldPosition, field.TypeInt, value)
 	}
-	if value, ok := pru.mutation.Enabled(); ok {
+	if value, ok := _u.mutation.Enabled(); ok {
 		_spec.SetField(playlistrule.FieldEnabled, field.TypeBool, value)
 	}
-	if pru.mutation.GroupCleared() {
+	if _u.mutation.GroupCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -243,7 +243,7 @@ func (pru *PlaylistRuleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pru.mutation.GroupIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.GroupIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -259,7 +259,7 @@ func (pru *PlaylistRuleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, pru.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{playlistrule.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -267,8 +267,8 @@ func (pru *PlaylistRuleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	pru.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // PlaylistRuleUpdateOne is the builder for updating a single PlaylistRule entity.
@@ -280,145 +280,145 @@ type PlaylistRuleUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (pruo *PlaylistRuleUpdateOne) SetName(s string) *PlaylistRuleUpdateOne {
-	pruo.mutation.SetName(s)
-	return pruo
+func (_u *PlaylistRuleUpdateOne) SetName(v string) *PlaylistRuleUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (pruo *PlaylistRuleUpdateOne) SetNillableName(s *string) *PlaylistRuleUpdateOne {
-	if s != nil {
-		pruo.SetName(*s)
+func (_u *PlaylistRuleUpdateOne) SetNillableName(v *string) *PlaylistRuleUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return pruo
+	return _u
 }
 
 // ClearName clears the value of the "name" field.
-func (pruo *PlaylistRuleUpdateOne) ClearName() *PlaylistRuleUpdateOne {
-	pruo.mutation.ClearName()
-	return pruo
+func (_u *PlaylistRuleUpdateOne) ClearName() *PlaylistRuleUpdateOne {
+	_u.mutation.ClearName()
+	return _u
 }
 
 // SetField sets the "field" field.
-func (pruo *PlaylistRuleUpdateOne) SetField(urf utils.PlaylistRuleField) *PlaylistRuleUpdateOne {
-	pruo.mutation.SetFieldField(urf)
-	return pruo
+func (_u *PlaylistRuleUpdateOne) SetField(v utils.PlaylistRuleField) *PlaylistRuleUpdateOne {
+	_u.mutation.SetFieldField(v)
+	return _u
 }
 
 // SetNillableField sets the "field" field if the given value is not nil.
-func (pruo *PlaylistRuleUpdateOne) SetNillableField(urf *utils.PlaylistRuleField) *PlaylistRuleUpdateOne {
-	if urf != nil {
-		pruo.SetField(*urf)
+func (_u *PlaylistRuleUpdateOne) SetNillableField(v *utils.PlaylistRuleField) *PlaylistRuleUpdateOne {
+	if v != nil {
+		_u.SetField(*v)
 	}
-	return pruo
+	return _u
 }
 
 // SetOperator sets the "operator" field.
-func (pruo *PlaylistRuleUpdateOne) SetOperator(uro utils.PlaylistRuleOperator) *PlaylistRuleUpdateOne {
-	pruo.mutation.SetOperator(uro)
-	return pruo
+func (_u *PlaylistRuleUpdateOne) SetOperator(v utils.PlaylistRuleOperator) *PlaylistRuleUpdateOne {
+	_u.mutation.SetOperator(v)
+	return _u
 }
 
 // SetNillableOperator sets the "operator" field if the given value is not nil.
-func (pruo *PlaylistRuleUpdateOne) SetNillableOperator(uro *utils.PlaylistRuleOperator) *PlaylistRuleUpdateOne {
-	if uro != nil {
-		pruo.SetOperator(*uro)
+func (_u *PlaylistRuleUpdateOne) SetNillableOperator(v *utils.PlaylistRuleOperator) *PlaylistRuleUpdateOne {
+	if v != nil {
+		_u.SetOperator(*v)
 	}
-	return pruo
+	return _u
 }
 
 // SetValue sets the "value" field.
-func (pruo *PlaylistRuleUpdateOne) SetValue(s string) *PlaylistRuleUpdateOne {
-	pruo.mutation.SetValue(s)
-	return pruo
+func (_u *PlaylistRuleUpdateOne) SetValue(v string) *PlaylistRuleUpdateOne {
+	_u.mutation.SetValue(v)
+	return _u
 }
 
 // SetNillableValue sets the "value" field if the given value is not nil.
-func (pruo *PlaylistRuleUpdateOne) SetNillableValue(s *string) *PlaylistRuleUpdateOne {
-	if s != nil {
-		pruo.SetValue(*s)
+func (_u *PlaylistRuleUpdateOne) SetNillableValue(v *string) *PlaylistRuleUpdateOne {
+	if v != nil {
+		_u.SetValue(*v)
 	}
-	return pruo
+	return _u
 }
 
 // SetPosition sets the "position" field.
-func (pruo *PlaylistRuleUpdateOne) SetPosition(i int) *PlaylistRuleUpdateOne {
-	pruo.mutation.ResetPosition()
-	pruo.mutation.SetPosition(i)
-	return pruo
+func (_u *PlaylistRuleUpdateOne) SetPosition(v int) *PlaylistRuleUpdateOne {
+	_u.mutation.ResetPosition()
+	_u.mutation.SetPosition(v)
+	return _u
 }
 
 // SetNillablePosition sets the "position" field if the given value is not nil.
-func (pruo *PlaylistRuleUpdateOne) SetNillablePosition(i *int) *PlaylistRuleUpdateOne {
-	if i != nil {
-		pruo.SetPosition(*i)
+func (_u *PlaylistRuleUpdateOne) SetNillablePosition(v *int) *PlaylistRuleUpdateOne {
+	if v != nil {
+		_u.SetPosition(*v)
 	}
-	return pruo
+	return _u
 }
 
-// AddPosition adds i to the "position" field.
-func (pruo *PlaylistRuleUpdateOne) AddPosition(i int) *PlaylistRuleUpdateOne {
-	pruo.mutation.AddPosition(i)
-	return pruo
+// AddPosition adds value to the "position" field.
+func (_u *PlaylistRuleUpdateOne) AddPosition(v int) *PlaylistRuleUpdateOne {
+	_u.mutation.AddPosition(v)
+	return _u
 }
 
 // SetEnabled sets the "enabled" field.
-func (pruo *PlaylistRuleUpdateOne) SetEnabled(b bool) *PlaylistRuleUpdateOne {
-	pruo.mutation.SetEnabled(b)
-	return pruo
+func (_u *PlaylistRuleUpdateOne) SetEnabled(v bool) *PlaylistRuleUpdateOne {
+	_u.mutation.SetEnabled(v)
+	return _u
 }
 
 // SetNillableEnabled sets the "enabled" field if the given value is not nil.
-func (pruo *PlaylistRuleUpdateOne) SetNillableEnabled(b *bool) *PlaylistRuleUpdateOne {
-	if b != nil {
-		pruo.SetEnabled(*b)
+func (_u *PlaylistRuleUpdateOne) SetNillableEnabled(v *bool) *PlaylistRuleUpdateOne {
+	if v != nil {
+		_u.SetEnabled(*v)
 	}
-	return pruo
+	return _u
 }
 
 // SetGroupID sets the "group" edge to the PlaylistRuleGroup entity by ID.
-func (pruo *PlaylistRuleUpdateOne) SetGroupID(id uuid.UUID) *PlaylistRuleUpdateOne {
-	pruo.mutation.SetGroupID(id)
-	return pruo
+func (_u *PlaylistRuleUpdateOne) SetGroupID(id uuid.UUID) *PlaylistRuleUpdateOne {
+	_u.mutation.SetGroupID(id)
+	return _u
 }
 
 // SetGroup sets the "group" edge to the PlaylistRuleGroup entity.
-func (pruo *PlaylistRuleUpdateOne) SetGroup(p *PlaylistRuleGroup) *PlaylistRuleUpdateOne {
-	return pruo.SetGroupID(p.ID)
+func (_u *PlaylistRuleUpdateOne) SetGroup(v *PlaylistRuleGroup) *PlaylistRuleUpdateOne {
+	return _u.SetGroupID(v.ID)
 }
 
 // Mutation returns the PlaylistRuleMutation object of the builder.
-func (pruo *PlaylistRuleUpdateOne) Mutation() *PlaylistRuleMutation {
-	return pruo.mutation
+func (_u *PlaylistRuleUpdateOne) Mutation() *PlaylistRuleMutation {
+	return _u.mutation
 }
 
 // ClearGroup clears the "group" edge to the PlaylistRuleGroup entity.
-func (pruo *PlaylistRuleUpdateOne) ClearGroup() *PlaylistRuleUpdateOne {
-	pruo.mutation.ClearGroup()
-	return pruo
+func (_u *PlaylistRuleUpdateOne) ClearGroup() *PlaylistRuleUpdateOne {
+	_u.mutation.ClearGroup()
+	return _u
 }
 
 // Where appends a list predicates to the PlaylistRuleUpdate builder.
-func (pruo *PlaylistRuleUpdateOne) Where(ps ...predicate.PlaylistRule) *PlaylistRuleUpdateOne {
-	pruo.mutation.Where(ps...)
-	return pruo
+func (_u *PlaylistRuleUpdateOne) Where(ps ...predicate.PlaylistRule) *PlaylistRuleUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (pruo *PlaylistRuleUpdateOne) Select(field string, fields ...string) *PlaylistRuleUpdateOne {
-	pruo.fields = append([]string{field}, fields...)
-	return pruo
+func (_u *PlaylistRuleUpdateOne) Select(field string, fields ...string) *PlaylistRuleUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated PlaylistRule entity.
-func (pruo *PlaylistRuleUpdateOne) Save(ctx context.Context) (*PlaylistRule, error) {
-	return withHooks(ctx, pruo.sqlSave, pruo.mutation, pruo.hooks)
+func (_u *PlaylistRuleUpdateOne) Save(ctx context.Context) (*PlaylistRule, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pruo *PlaylistRuleUpdateOne) SaveX(ctx context.Context) *PlaylistRule {
-	node, err := pruo.Save(ctx)
+func (_u *PlaylistRuleUpdateOne) SaveX(ctx context.Context) *PlaylistRule {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -426,47 +426,47 @@ func (pruo *PlaylistRuleUpdateOne) SaveX(ctx context.Context) *PlaylistRule {
 }
 
 // Exec executes the query on the entity.
-func (pruo *PlaylistRuleUpdateOne) Exec(ctx context.Context) error {
-	_, err := pruo.Save(ctx)
+func (_u *PlaylistRuleUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pruo *PlaylistRuleUpdateOne) ExecX(ctx context.Context) {
-	if err := pruo.Exec(ctx); err != nil {
+func (_u *PlaylistRuleUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pruo *PlaylistRuleUpdateOne) check() error {
-	if v, ok := pruo.mutation.GetField(); ok {
+func (_u *PlaylistRuleUpdateOne) check() error {
+	if v, ok := _u.mutation.GetField(); ok {
 		if err := playlistrule.FieldValidator(v); err != nil {
 			return &ValidationError{Name: "field", err: fmt.Errorf(`ent: validator failed for field "PlaylistRule.field": %w`, err)}
 		}
 	}
-	if v, ok := pruo.mutation.Operator(); ok {
+	if v, ok := _u.mutation.Operator(); ok {
 		if err := playlistrule.OperatorValidator(v); err != nil {
 			return &ValidationError{Name: "operator", err: fmt.Errorf(`ent: validator failed for field "PlaylistRule.operator": %w`, err)}
 		}
 	}
-	if pruo.mutation.GroupCleared() && len(pruo.mutation.GroupIDs()) > 0 {
+	if _u.mutation.GroupCleared() && len(_u.mutation.GroupIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PlaylistRule.group"`)
 	}
 	return nil
 }
 
-func (pruo *PlaylistRuleUpdateOne) sqlSave(ctx context.Context) (_node *PlaylistRule, err error) {
-	if err := pruo.check(); err != nil {
+func (_u *PlaylistRuleUpdateOne) sqlSave(ctx context.Context) (_node *PlaylistRule, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(playlistrule.Table, playlistrule.Columns, sqlgraph.NewFieldSpec(playlistrule.FieldID, field.TypeUUID))
-	id, ok := pruo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "PlaylistRule.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := pruo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, playlistrule.FieldID)
 		for _, f := range fields {
@@ -478,38 +478,38 @@ func (pruo *PlaylistRuleUpdateOne) sqlSave(ctx context.Context) (_node *Playlist
 			}
 		}
 	}
-	if ps := pruo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pruo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(playlistrule.FieldName, field.TypeString, value)
 	}
-	if pruo.mutation.NameCleared() {
+	if _u.mutation.NameCleared() {
 		_spec.ClearField(playlistrule.FieldName, field.TypeString)
 	}
-	if value, ok := pruo.mutation.GetField(); ok {
+	if value, ok := _u.mutation.GetField(); ok {
 		_spec.SetField(playlistrule.FieldField, field.TypeEnum, value)
 	}
-	if value, ok := pruo.mutation.Operator(); ok {
+	if value, ok := _u.mutation.Operator(); ok {
 		_spec.SetField(playlistrule.FieldOperator, field.TypeEnum, value)
 	}
-	if value, ok := pruo.mutation.Value(); ok {
+	if value, ok := _u.mutation.Value(); ok {
 		_spec.SetField(playlistrule.FieldValue, field.TypeString, value)
 	}
-	if value, ok := pruo.mutation.Position(); ok {
+	if value, ok := _u.mutation.Position(); ok {
 		_spec.SetField(playlistrule.FieldPosition, field.TypeInt, value)
 	}
-	if value, ok := pruo.mutation.AddedPosition(); ok {
+	if value, ok := _u.mutation.AddedPosition(); ok {
 		_spec.AddField(playlistrule.FieldPosition, field.TypeInt, value)
 	}
-	if value, ok := pruo.mutation.Enabled(); ok {
+	if value, ok := _u.mutation.Enabled(); ok {
 		_spec.SetField(playlistrule.FieldEnabled, field.TypeBool, value)
 	}
-	if pruo.mutation.GroupCleared() {
+	if _u.mutation.GroupCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -522,7 +522,7 @@ func (pruo *PlaylistRuleUpdateOne) sqlSave(ctx context.Context) (_node *Playlist
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pruo.mutation.GroupIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.GroupIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -538,10 +538,10 @@ func (pruo *PlaylistRuleUpdateOne) sqlSave(ctx context.Context) (_node *Playlist
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &PlaylistRule{config: pruo.config}
+	_node = &PlaylistRule{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, pruo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{playlistrule.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -549,6 +549,6 @@ func (pruo *PlaylistRuleUpdateOne) sqlSave(ctx context.Context) (_node *Playlist
 		}
 		return nil, err
 	}
-	pruo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

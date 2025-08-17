@@ -41,7 +41,7 @@ func (*BlockedVideos) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the BlockedVideos fields.
-func (bv *BlockedVideos) assignValues(columns []string, values []any) error {
+func (_m *BlockedVideos) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -51,16 +51,16 @@ func (bv *BlockedVideos) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
-				bv.ID = value.String
+				_m.ID = value.String
 			}
 		case blockedvideos.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				bv.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			bv.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -68,35 +68,35 @@ func (bv *BlockedVideos) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the BlockedVideos.
 // This includes values selected through modifiers, order, etc.
-func (bv *BlockedVideos) Value(name string) (ent.Value, error) {
-	return bv.selectValues.Get(name)
+func (_m *BlockedVideos) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this BlockedVideos.
 // Note that you need to call BlockedVideos.Unwrap() before calling this method if this BlockedVideos
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (bv *BlockedVideos) Update() *BlockedVideosUpdateOne {
-	return NewBlockedVideosClient(bv.config).UpdateOne(bv)
+func (_m *BlockedVideos) Update() *BlockedVideosUpdateOne {
+	return NewBlockedVideosClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the BlockedVideos entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (bv *BlockedVideos) Unwrap() *BlockedVideos {
-	_tx, ok := bv.config.driver.(*txDriver)
+func (_m *BlockedVideos) Unwrap() *BlockedVideos {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: BlockedVideos is not a transactional entity")
 	}
-	bv.config.driver = _tx.drv
-	return bv
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (bv *BlockedVideos) String() string {
+func (_m *BlockedVideos) String() string {
 	var builder strings.Builder
 	builder.WriteString("BlockedVideos(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", bv.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_at=")
-	builder.WriteString(bv.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

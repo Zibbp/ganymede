@@ -82,7 +82,7 @@ func (*PlaylistRuleGroup) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the PlaylistRuleGroup fields.
-func (prg *PlaylistRuleGroup) assignValues(columns []string, values []any) error {
+func (_m *PlaylistRuleGroup) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -92,29 +92,29 @@ func (prg *PlaylistRuleGroup) assignValues(columns []string, values []any) error
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
-				prg.ID = *value
+				_m.ID = *value
 			}
 		case playlistrulegroup.FieldOperator:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field operator", values[i])
 			} else if value.Valid {
-				prg.Operator = playlistrulegroup.Operator(value.String)
+				_m.Operator = playlistrulegroup.Operator(value.String)
 			}
 		case playlistrulegroup.FieldPosition:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field position", values[i])
 			} else if value.Valid {
-				prg.Position = int(value.Int64)
+				_m.Position = int(value.Int64)
 			}
 		case playlistrulegroup.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field playlist_rule_groups", values[i])
 			} else if value.Valid {
-				prg.playlist_rule_groups = new(uuid.UUID)
-				*prg.playlist_rule_groups = *value.S.(*uuid.UUID)
+				_m.playlist_rule_groups = new(uuid.UUID)
+				*_m.playlist_rule_groups = *value.S.(*uuid.UUID)
 			}
 		default:
-			prg.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -122,48 +122,48 @@ func (prg *PlaylistRuleGroup) assignValues(columns []string, values []any) error
 
 // Value returns the ent.Value that was dynamically selected and assigned to the PlaylistRuleGroup.
 // This includes values selected through modifiers, order, etc.
-func (prg *PlaylistRuleGroup) Value(name string) (ent.Value, error) {
-	return prg.selectValues.Get(name)
+func (_m *PlaylistRuleGroup) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryPlaylist queries the "playlist" edge of the PlaylistRuleGroup entity.
-func (prg *PlaylistRuleGroup) QueryPlaylist() *PlaylistQuery {
-	return NewPlaylistRuleGroupClient(prg.config).QueryPlaylist(prg)
+func (_m *PlaylistRuleGroup) QueryPlaylist() *PlaylistQuery {
+	return NewPlaylistRuleGroupClient(_m.config).QueryPlaylist(_m)
 }
 
 // QueryRules queries the "rules" edge of the PlaylistRuleGroup entity.
-func (prg *PlaylistRuleGroup) QueryRules() *PlaylistRuleQuery {
-	return NewPlaylistRuleGroupClient(prg.config).QueryRules(prg)
+func (_m *PlaylistRuleGroup) QueryRules() *PlaylistRuleQuery {
+	return NewPlaylistRuleGroupClient(_m.config).QueryRules(_m)
 }
 
 // Update returns a builder for updating this PlaylistRuleGroup.
 // Note that you need to call PlaylistRuleGroup.Unwrap() before calling this method if this PlaylistRuleGroup
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (prg *PlaylistRuleGroup) Update() *PlaylistRuleGroupUpdateOne {
-	return NewPlaylistRuleGroupClient(prg.config).UpdateOne(prg)
+func (_m *PlaylistRuleGroup) Update() *PlaylistRuleGroupUpdateOne {
+	return NewPlaylistRuleGroupClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the PlaylistRuleGroup entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (prg *PlaylistRuleGroup) Unwrap() *PlaylistRuleGroup {
-	_tx, ok := prg.config.driver.(*txDriver)
+func (_m *PlaylistRuleGroup) Unwrap() *PlaylistRuleGroup {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: PlaylistRuleGroup is not a transactional entity")
 	}
-	prg.config.driver = _tx.drv
-	return prg
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (prg *PlaylistRuleGroup) String() string {
+func (_m *PlaylistRuleGroup) String() string {
 	var builder strings.Builder
 	builder.WriteString("PlaylistRuleGroup(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", prg.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("operator=")
-	builder.WriteString(fmt.Sprintf("%v", prg.Operator))
+	builder.WriteString(fmt.Sprintf("%v", _m.Operator))
 	builder.WriteString(", ")
 	builder.WriteString("position=")
-	builder.WriteString(fmt.Sprintf("%v", prg.Position))
+	builder.WriteString(fmt.Sprintf("%v", _m.Position))
 	builder.WriteByte(')')
 	return builder.String()
 }

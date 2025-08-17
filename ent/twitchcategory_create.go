@@ -24,87 +24,87 @@ type TwitchCategoryCreate struct {
 }
 
 // SetName sets the "name" field.
-func (tcc *TwitchCategoryCreate) SetName(s string) *TwitchCategoryCreate {
-	tcc.mutation.SetName(s)
-	return tcc
+func (_c *TwitchCategoryCreate) SetName(v string) *TwitchCategoryCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetBoxArtURL sets the "box_art_url" field.
-func (tcc *TwitchCategoryCreate) SetBoxArtURL(s string) *TwitchCategoryCreate {
-	tcc.mutation.SetBoxArtURL(s)
-	return tcc
+func (_c *TwitchCategoryCreate) SetBoxArtURL(v string) *TwitchCategoryCreate {
+	_c.mutation.SetBoxArtURL(v)
+	return _c
 }
 
 // SetNillableBoxArtURL sets the "box_art_url" field if the given value is not nil.
-func (tcc *TwitchCategoryCreate) SetNillableBoxArtURL(s *string) *TwitchCategoryCreate {
-	if s != nil {
-		tcc.SetBoxArtURL(*s)
+func (_c *TwitchCategoryCreate) SetNillableBoxArtURL(v *string) *TwitchCategoryCreate {
+	if v != nil {
+		_c.SetBoxArtURL(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetIgdbID sets the "igdb_id" field.
-func (tcc *TwitchCategoryCreate) SetIgdbID(s string) *TwitchCategoryCreate {
-	tcc.mutation.SetIgdbID(s)
-	return tcc
+func (_c *TwitchCategoryCreate) SetIgdbID(v string) *TwitchCategoryCreate {
+	_c.mutation.SetIgdbID(v)
+	return _c
 }
 
 // SetNillableIgdbID sets the "igdb_id" field if the given value is not nil.
-func (tcc *TwitchCategoryCreate) SetNillableIgdbID(s *string) *TwitchCategoryCreate {
-	if s != nil {
-		tcc.SetIgdbID(*s)
+func (_c *TwitchCategoryCreate) SetNillableIgdbID(v *string) *TwitchCategoryCreate {
+	if v != nil {
+		_c.SetIgdbID(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tcc *TwitchCategoryCreate) SetUpdatedAt(t time.Time) *TwitchCategoryCreate {
-	tcc.mutation.SetUpdatedAt(t)
-	return tcc
+func (_c *TwitchCategoryCreate) SetUpdatedAt(v time.Time) *TwitchCategoryCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (tcc *TwitchCategoryCreate) SetNillableUpdatedAt(t *time.Time) *TwitchCategoryCreate {
-	if t != nil {
-		tcc.SetUpdatedAt(*t)
+func (_c *TwitchCategoryCreate) SetNillableUpdatedAt(v *time.Time) *TwitchCategoryCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tcc *TwitchCategoryCreate) SetCreatedAt(t time.Time) *TwitchCategoryCreate {
-	tcc.mutation.SetCreatedAt(t)
-	return tcc
+func (_c *TwitchCategoryCreate) SetCreatedAt(v time.Time) *TwitchCategoryCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tcc *TwitchCategoryCreate) SetNillableCreatedAt(t *time.Time) *TwitchCategoryCreate {
-	if t != nil {
-		tcc.SetCreatedAt(*t)
+func (_c *TwitchCategoryCreate) SetNillableCreatedAt(v *time.Time) *TwitchCategoryCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetID sets the "id" field.
-func (tcc *TwitchCategoryCreate) SetID(s string) *TwitchCategoryCreate {
-	tcc.mutation.SetID(s)
-	return tcc
+func (_c *TwitchCategoryCreate) SetID(v string) *TwitchCategoryCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // Mutation returns the TwitchCategoryMutation object of the builder.
-func (tcc *TwitchCategoryCreate) Mutation() *TwitchCategoryMutation {
-	return tcc.mutation
+func (_c *TwitchCategoryCreate) Mutation() *TwitchCategoryMutation {
+	return _c.mutation
 }
 
 // Save creates the TwitchCategory in the database.
-func (tcc *TwitchCategoryCreate) Save(ctx context.Context) (*TwitchCategory, error) {
-	tcc.defaults()
-	return withHooks(ctx, tcc.sqlSave, tcc.mutation, tcc.hooks)
+func (_c *TwitchCategoryCreate) Save(ctx context.Context) (*TwitchCategory, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (tcc *TwitchCategoryCreate) SaveX(ctx context.Context) *TwitchCategory {
-	v, err := tcc.Save(ctx)
+func (_c *TwitchCategoryCreate) SaveX(ctx context.Context) *TwitchCategory {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -112,50 +112,50 @@ func (tcc *TwitchCategoryCreate) SaveX(ctx context.Context) *TwitchCategory {
 }
 
 // Exec executes the query.
-func (tcc *TwitchCategoryCreate) Exec(ctx context.Context) error {
-	_, err := tcc.Save(ctx)
+func (_c *TwitchCategoryCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tcc *TwitchCategoryCreate) ExecX(ctx context.Context) {
-	if err := tcc.Exec(ctx); err != nil {
+func (_c *TwitchCategoryCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tcc *TwitchCategoryCreate) defaults() {
-	if _, ok := tcc.mutation.UpdatedAt(); !ok {
+func (_c *TwitchCategoryCreate) defaults() {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := twitchcategory.DefaultUpdatedAt()
-		tcc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := tcc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := twitchcategory.DefaultCreatedAt()
-		tcc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tcc *TwitchCategoryCreate) check() error {
-	if _, ok := tcc.mutation.Name(); !ok {
+func (_c *TwitchCategoryCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "TwitchCategory.name"`)}
 	}
-	if _, ok := tcc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "TwitchCategory.updated_at"`)}
 	}
-	if _, ok := tcc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TwitchCategory.created_at"`)}
 	}
 	return nil
 }
 
-func (tcc *TwitchCategoryCreate) sqlSave(ctx context.Context) (*TwitchCategory, error) {
-	if err := tcc.check(); err != nil {
+func (_c *TwitchCategoryCreate) sqlSave(ctx context.Context) (*TwitchCategory, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := tcc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, tcc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -168,38 +168,38 @@ func (tcc *TwitchCategoryCreate) sqlSave(ctx context.Context) (*TwitchCategory, 
 			return nil, fmt.Errorf("unexpected TwitchCategory.ID type: %T", _spec.ID.Value)
 		}
 	}
-	tcc.mutation.id = &_node.ID
-	tcc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (tcc *TwitchCategoryCreate) createSpec() (*TwitchCategory, *sqlgraph.CreateSpec) {
+func (_c *TwitchCategoryCreate) createSpec() (*TwitchCategory, *sqlgraph.CreateSpec) {
 	var (
-		_node = &TwitchCategory{config: tcc.config}
+		_node = &TwitchCategory{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(twitchcategory.Table, sqlgraph.NewFieldSpec(twitchcategory.FieldID, field.TypeString))
 	)
-	_spec.OnConflict = tcc.conflict
-	if id, ok := tcc.mutation.ID(); ok {
+	_spec.OnConflict = _c.conflict
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := tcc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(twitchcategory.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := tcc.mutation.BoxArtURL(); ok {
+	if value, ok := _c.mutation.BoxArtURL(); ok {
 		_spec.SetField(twitchcategory.FieldBoxArtURL, field.TypeString, value)
 		_node.BoxArtURL = value
 	}
-	if value, ok := tcc.mutation.IgdbID(); ok {
+	if value, ok := _c.mutation.IgdbID(); ok {
 		_spec.SetField(twitchcategory.FieldIgdbID, field.TypeString, value)
 		_node.IgdbID = value
 	}
-	if value, ok := tcc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(twitchcategory.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := tcc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(twitchcategory.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
@@ -222,10 +222,10 @@ func (tcc *TwitchCategoryCreate) createSpec() (*TwitchCategory, *sqlgraph.Create
 //			SetName(v+v).
 //		}).
 //		Exec(ctx)
-func (tcc *TwitchCategoryCreate) OnConflict(opts ...sql.ConflictOption) *TwitchCategoryUpsertOne {
-	tcc.conflict = opts
+func (_c *TwitchCategoryCreate) OnConflict(opts ...sql.ConflictOption) *TwitchCategoryUpsertOne {
+	_c.conflict = opts
 	return &TwitchCategoryUpsertOne{
-		create: tcc,
+		create: _c,
 	}
 }
 
@@ -235,10 +235,10 @@ func (tcc *TwitchCategoryCreate) OnConflict(opts ...sql.ConflictOption) *TwitchC
 //	client.TwitchCategory.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (tcc *TwitchCategoryCreate) OnConflictColumns(columns ...string) *TwitchCategoryUpsertOne {
-	tcc.conflict = append(tcc.conflict, sql.ConflictColumns(columns...))
+func (_c *TwitchCategoryCreate) OnConflictColumns(columns ...string) *TwitchCategoryUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &TwitchCategoryUpsertOne{
-		create: tcc,
+		create: _c,
 	}
 }
 
@@ -483,16 +483,16 @@ type TwitchCategoryCreateBulk struct {
 }
 
 // Save creates the TwitchCategory entities in the database.
-func (tccb *TwitchCategoryCreateBulk) Save(ctx context.Context) ([]*TwitchCategory, error) {
-	if tccb.err != nil {
-		return nil, tccb.err
+func (_c *TwitchCategoryCreateBulk) Save(ctx context.Context) ([]*TwitchCategory, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(tccb.builders))
-	nodes := make([]*TwitchCategory, len(tccb.builders))
-	mutators := make([]Mutator, len(tccb.builders))
-	for i := range tccb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*TwitchCategory, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := tccb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TwitchCategoryMutation)
@@ -506,12 +506,12 @@ func (tccb *TwitchCategoryCreateBulk) Save(ctx context.Context) ([]*TwitchCatego
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, tccb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = tccb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, tccb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -531,7 +531,7 @@ func (tccb *TwitchCategoryCreateBulk) Save(ctx context.Context) ([]*TwitchCatego
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, tccb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -539,8 +539,8 @@ func (tccb *TwitchCategoryCreateBulk) Save(ctx context.Context) ([]*TwitchCatego
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tccb *TwitchCategoryCreateBulk) SaveX(ctx context.Context) []*TwitchCategory {
-	v, err := tccb.Save(ctx)
+func (_c *TwitchCategoryCreateBulk) SaveX(ctx context.Context) []*TwitchCategory {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -548,14 +548,14 @@ func (tccb *TwitchCategoryCreateBulk) SaveX(ctx context.Context) []*TwitchCatego
 }
 
 // Exec executes the query.
-func (tccb *TwitchCategoryCreateBulk) Exec(ctx context.Context) error {
-	_, err := tccb.Save(ctx)
+func (_c *TwitchCategoryCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tccb *TwitchCategoryCreateBulk) ExecX(ctx context.Context) {
-	if err := tccb.Exec(ctx); err != nil {
+func (_c *TwitchCategoryCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -575,10 +575,10 @@ func (tccb *TwitchCategoryCreateBulk) ExecX(ctx context.Context) {
 //			SetName(v+v).
 //		}).
 //		Exec(ctx)
-func (tccb *TwitchCategoryCreateBulk) OnConflict(opts ...sql.ConflictOption) *TwitchCategoryUpsertBulk {
-	tccb.conflict = opts
+func (_c *TwitchCategoryCreateBulk) OnConflict(opts ...sql.ConflictOption) *TwitchCategoryUpsertBulk {
+	_c.conflict = opts
 	return &TwitchCategoryUpsertBulk{
-		create: tccb,
+		create: _c,
 	}
 }
 
@@ -588,10 +588,10 @@ func (tccb *TwitchCategoryCreateBulk) OnConflict(opts ...sql.ConflictOption) *Tw
 //	client.TwitchCategory.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (tccb *TwitchCategoryCreateBulk) OnConflictColumns(columns ...string) *TwitchCategoryUpsertBulk {
-	tccb.conflict = append(tccb.conflict, sql.ConflictColumns(columns...))
+func (_c *TwitchCategoryCreateBulk) OnConflictColumns(columns ...string) *TwitchCategoryUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &TwitchCategoryUpsertBulk{
-		create: tccb,
+		create: _c,
 	}
 }
 

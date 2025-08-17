@@ -26,87 +26,87 @@ type PlaylistRuleGroupCreate struct {
 }
 
 // SetOperator sets the "operator" field.
-func (prgc *PlaylistRuleGroupCreate) SetOperator(pl playlistrulegroup.Operator) *PlaylistRuleGroupCreate {
-	prgc.mutation.SetOperator(pl)
-	return prgc
+func (_c *PlaylistRuleGroupCreate) SetOperator(v playlistrulegroup.Operator) *PlaylistRuleGroupCreate {
+	_c.mutation.SetOperator(v)
+	return _c
 }
 
 // SetNillableOperator sets the "operator" field if the given value is not nil.
-func (prgc *PlaylistRuleGroupCreate) SetNillableOperator(pl *playlistrulegroup.Operator) *PlaylistRuleGroupCreate {
-	if pl != nil {
-		prgc.SetOperator(*pl)
+func (_c *PlaylistRuleGroupCreate) SetNillableOperator(v *playlistrulegroup.Operator) *PlaylistRuleGroupCreate {
+	if v != nil {
+		_c.SetOperator(*v)
 	}
-	return prgc
+	return _c
 }
 
 // SetPosition sets the "position" field.
-func (prgc *PlaylistRuleGroupCreate) SetPosition(i int) *PlaylistRuleGroupCreate {
-	prgc.mutation.SetPosition(i)
-	return prgc
+func (_c *PlaylistRuleGroupCreate) SetPosition(v int) *PlaylistRuleGroupCreate {
+	_c.mutation.SetPosition(v)
+	return _c
 }
 
 // SetNillablePosition sets the "position" field if the given value is not nil.
-func (prgc *PlaylistRuleGroupCreate) SetNillablePosition(i *int) *PlaylistRuleGroupCreate {
-	if i != nil {
-		prgc.SetPosition(*i)
+func (_c *PlaylistRuleGroupCreate) SetNillablePosition(v *int) *PlaylistRuleGroupCreate {
+	if v != nil {
+		_c.SetPosition(*v)
 	}
-	return prgc
+	return _c
 }
 
 // SetID sets the "id" field.
-func (prgc *PlaylistRuleGroupCreate) SetID(u uuid.UUID) *PlaylistRuleGroupCreate {
-	prgc.mutation.SetID(u)
-	return prgc
+func (_c *PlaylistRuleGroupCreate) SetID(v uuid.UUID) *PlaylistRuleGroupCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (prgc *PlaylistRuleGroupCreate) SetNillableID(u *uuid.UUID) *PlaylistRuleGroupCreate {
-	if u != nil {
-		prgc.SetID(*u)
+func (_c *PlaylistRuleGroupCreate) SetNillableID(v *uuid.UUID) *PlaylistRuleGroupCreate {
+	if v != nil {
+		_c.SetID(*v)
 	}
-	return prgc
+	return _c
 }
 
 // SetPlaylistID sets the "playlist" edge to the Playlist entity by ID.
-func (prgc *PlaylistRuleGroupCreate) SetPlaylistID(id uuid.UUID) *PlaylistRuleGroupCreate {
-	prgc.mutation.SetPlaylistID(id)
-	return prgc
+func (_c *PlaylistRuleGroupCreate) SetPlaylistID(id uuid.UUID) *PlaylistRuleGroupCreate {
+	_c.mutation.SetPlaylistID(id)
+	return _c
 }
 
 // SetPlaylist sets the "playlist" edge to the Playlist entity.
-func (prgc *PlaylistRuleGroupCreate) SetPlaylist(p *Playlist) *PlaylistRuleGroupCreate {
-	return prgc.SetPlaylistID(p.ID)
+func (_c *PlaylistRuleGroupCreate) SetPlaylist(v *Playlist) *PlaylistRuleGroupCreate {
+	return _c.SetPlaylistID(v.ID)
 }
 
 // AddRuleIDs adds the "rules" edge to the PlaylistRule entity by IDs.
-func (prgc *PlaylistRuleGroupCreate) AddRuleIDs(ids ...uuid.UUID) *PlaylistRuleGroupCreate {
-	prgc.mutation.AddRuleIDs(ids...)
-	return prgc
+func (_c *PlaylistRuleGroupCreate) AddRuleIDs(ids ...uuid.UUID) *PlaylistRuleGroupCreate {
+	_c.mutation.AddRuleIDs(ids...)
+	return _c
 }
 
 // AddRules adds the "rules" edges to the PlaylistRule entity.
-func (prgc *PlaylistRuleGroupCreate) AddRules(p ...*PlaylistRule) *PlaylistRuleGroupCreate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *PlaylistRuleGroupCreate) AddRules(v ...*PlaylistRule) *PlaylistRuleGroupCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return prgc.AddRuleIDs(ids...)
+	return _c.AddRuleIDs(ids...)
 }
 
 // Mutation returns the PlaylistRuleGroupMutation object of the builder.
-func (prgc *PlaylistRuleGroupCreate) Mutation() *PlaylistRuleGroupMutation {
-	return prgc.mutation
+func (_c *PlaylistRuleGroupCreate) Mutation() *PlaylistRuleGroupMutation {
+	return _c.mutation
 }
 
 // Save creates the PlaylistRuleGroup in the database.
-func (prgc *PlaylistRuleGroupCreate) Save(ctx context.Context) (*PlaylistRuleGroup, error) {
-	prgc.defaults()
-	return withHooks(ctx, prgc.sqlSave, prgc.mutation, prgc.hooks)
+func (_c *PlaylistRuleGroupCreate) Save(ctx context.Context) (*PlaylistRuleGroup, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (prgc *PlaylistRuleGroupCreate) SaveX(ctx context.Context) *PlaylistRuleGroup {
-	v, err := prgc.Save(ctx)
+func (_c *PlaylistRuleGroupCreate) SaveX(ctx context.Context) *PlaylistRuleGroup {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -114,59 +114,59 @@ func (prgc *PlaylistRuleGroupCreate) SaveX(ctx context.Context) *PlaylistRuleGro
 }
 
 // Exec executes the query.
-func (prgc *PlaylistRuleGroupCreate) Exec(ctx context.Context) error {
-	_, err := prgc.Save(ctx)
+func (_c *PlaylistRuleGroupCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (prgc *PlaylistRuleGroupCreate) ExecX(ctx context.Context) {
-	if err := prgc.Exec(ctx); err != nil {
+func (_c *PlaylistRuleGroupCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (prgc *PlaylistRuleGroupCreate) defaults() {
-	if _, ok := prgc.mutation.Operator(); !ok {
+func (_c *PlaylistRuleGroupCreate) defaults() {
+	if _, ok := _c.mutation.Operator(); !ok {
 		v := playlistrulegroup.DefaultOperator
-		prgc.mutation.SetOperator(v)
+		_c.mutation.SetOperator(v)
 	}
-	if _, ok := prgc.mutation.Position(); !ok {
+	if _, ok := _c.mutation.Position(); !ok {
 		v := playlistrulegroup.DefaultPosition
-		prgc.mutation.SetPosition(v)
+		_c.mutation.SetPosition(v)
 	}
-	if _, ok := prgc.mutation.ID(); !ok {
+	if _, ok := _c.mutation.ID(); !ok {
 		v := playlistrulegroup.DefaultID()
-		prgc.mutation.SetID(v)
+		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (prgc *PlaylistRuleGroupCreate) check() error {
-	if _, ok := prgc.mutation.Operator(); !ok {
+func (_c *PlaylistRuleGroupCreate) check() error {
+	if _, ok := _c.mutation.Operator(); !ok {
 		return &ValidationError{Name: "operator", err: errors.New(`ent: missing required field "PlaylistRuleGroup.operator"`)}
 	}
-	if v, ok := prgc.mutation.Operator(); ok {
+	if v, ok := _c.mutation.Operator(); ok {
 		if err := playlistrulegroup.OperatorValidator(v); err != nil {
 			return &ValidationError{Name: "operator", err: fmt.Errorf(`ent: validator failed for field "PlaylistRuleGroup.operator": %w`, err)}
 		}
 	}
-	if _, ok := prgc.mutation.Position(); !ok {
+	if _, ok := _c.mutation.Position(); !ok {
 		return &ValidationError{Name: "position", err: errors.New(`ent: missing required field "PlaylistRuleGroup.position"`)}
 	}
-	if len(prgc.mutation.PlaylistIDs()) == 0 {
+	if len(_c.mutation.PlaylistIDs()) == 0 {
 		return &ValidationError{Name: "playlist", err: errors.New(`ent: missing required edge "PlaylistRuleGroup.playlist"`)}
 	}
 	return nil
 }
 
-func (prgc *PlaylistRuleGroupCreate) sqlSave(ctx context.Context) (*PlaylistRuleGroup, error) {
-	if err := prgc.check(); err != nil {
+func (_c *PlaylistRuleGroupCreate) sqlSave(ctx context.Context) (*PlaylistRuleGroup, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := prgc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, prgc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -179,30 +179,30 @@ func (prgc *PlaylistRuleGroupCreate) sqlSave(ctx context.Context) (*PlaylistRule
 			return nil, err
 		}
 	}
-	prgc.mutation.id = &_node.ID
-	prgc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (prgc *PlaylistRuleGroupCreate) createSpec() (*PlaylistRuleGroup, *sqlgraph.CreateSpec) {
+func (_c *PlaylistRuleGroupCreate) createSpec() (*PlaylistRuleGroup, *sqlgraph.CreateSpec) {
 	var (
-		_node = &PlaylistRuleGroup{config: prgc.config}
+		_node = &PlaylistRuleGroup{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(playlistrulegroup.Table, sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID))
 	)
-	_spec.OnConflict = prgc.conflict
-	if id, ok := prgc.mutation.ID(); ok {
+	_spec.OnConflict = _c.conflict
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := prgc.mutation.Operator(); ok {
+	if value, ok := _c.mutation.Operator(); ok {
 		_spec.SetField(playlistrulegroup.FieldOperator, field.TypeEnum, value)
 		_node.Operator = value
 	}
-	if value, ok := prgc.mutation.Position(); ok {
+	if value, ok := _c.mutation.Position(); ok {
 		_spec.SetField(playlistrulegroup.FieldPosition, field.TypeInt, value)
 		_node.Position = value
 	}
-	if nodes := prgc.mutation.PlaylistIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.PlaylistIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -219,7 +219,7 @@ func (prgc *PlaylistRuleGroupCreate) createSpec() (*PlaylistRuleGroup, *sqlgraph
 		_node.playlist_rule_groups = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := prgc.mutation.RulesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.RulesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -254,10 +254,10 @@ func (prgc *PlaylistRuleGroupCreate) createSpec() (*PlaylistRuleGroup, *sqlgraph
 //			SetOperator(v+v).
 //		}).
 //		Exec(ctx)
-func (prgc *PlaylistRuleGroupCreate) OnConflict(opts ...sql.ConflictOption) *PlaylistRuleGroupUpsertOne {
-	prgc.conflict = opts
+func (_c *PlaylistRuleGroupCreate) OnConflict(opts ...sql.ConflictOption) *PlaylistRuleGroupUpsertOne {
+	_c.conflict = opts
 	return &PlaylistRuleGroupUpsertOne{
-		create: prgc,
+		create: _c,
 	}
 }
 
@@ -267,10 +267,10 @@ func (prgc *PlaylistRuleGroupCreate) OnConflict(opts ...sql.ConflictOption) *Pla
 //	client.PlaylistRuleGroup.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (prgc *PlaylistRuleGroupCreate) OnConflictColumns(columns ...string) *PlaylistRuleGroupUpsertOne {
-	prgc.conflict = append(prgc.conflict, sql.ConflictColumns(columns...))
+func (_c *PlaylistRuleGroupCreate) OnConflictColumns(columns ...string) *PlaylistRuleGroupUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &PlaylistRuleGroupUpsertOne{
-		create: prgc,
+		create: _c,
 	}
 }
 
@@ -447,16 +447,16 @@ type PlaylistRuleGroupCreateBulk struct {
 }
 
 // Save creates the PlaylistRuleGroup entities in the database.
-func (prgcb *PlaylistRuleGroupCreateBulk) Save(ctx context.Context) ([]*PlaylistRuleGroup, error) {
-	if prgcb.err != nil {
-		return nil, prgcb.err
+func (_c *PlaylistRuleGroupCreateBulk) Save(ctx context.Context) ([]*PlaylistRuleGroup, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(prgcb.builders))
-	nodes := make([]*PlaylistRuleGroup, len(prgcb.builders))
-	mutators := make([]Mutator, len(prgcb.builders))
-	for i := range prgcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*PlaylistRuleGroup, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := prgcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*PlaylistRuleGroupMutation)
@@ -470,12 +470,12 @@ func (prgcb *PlaylistRuleGroupCreateBulk) Save(ctx context.Context) ([]*Playlist
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, prgcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = prgcb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, prgcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -495,7 +495,7 @@ func (prgcb *PlaylistRuleGroupCreateBulk) Save(ctx context.Context) ([]*Playlist
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, prgcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -503,8 +503,8 @@ func (prgcb *PlaylistRuleGroupCreateBulk) Save(ctx context.Context) ([]*Playlist
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (prgcb *PlaylistRuleGroupCreateBulk) SaveX(ctx context.Context) []*PlaylistRuleGroup {
-	v, err := prgcb.Save(ctx)
+func (_c *PlaylistRuleGroupCreateBulk) SaveX(ctx context.Context) []*PlaylistRuleGroup {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -512,14 +512,14 @@ func (prgcb *PlaylistRuleGroupCreateBulk) SaveX(ctx context.Context) []*Playlist
 }
 
 // Exec executes the query.
-func (prgcb *PlaylistRuleGroupCreateBulk) Exec(ctx context.Context) error {
-	_, err := prgcb.Save(ctx)
+func (_c *PlaylistRuleGroupCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (prgcb *PlaylistRuleGroupCreateBulk) ExecX(ctx context.Context) {
-	if err := prgcb.Exec(ctx); err != nil {
+func (_c *PlaylistRuleGroupCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -539,10 +539,10 @@ func (prgcb *PlaylistRuleGroupCreateBulk) ExecX(ctx context.Context) {
 //			SetOperator(v+v).
 //		}).
 //		Exec(ctx)
-func (prgcb *PlaylistRuleGroupCreateBulk) OnConflict(opts ...sql.ConflictOption) *PlaylistRuleGroupUpsertBulk {
-	prgcb.conflict = opts
+func (_c *PlaylistRuleGroupCreateBulk) OnConflict(opts ...sql.ConflictOption) *PlaylistRuleGroupUpsertBulk {
+	_c.conflict = opts
 	return &PlaylistRuleGroupUpsertBulk{
-		create: prgcb,
+		create: _c,
 	}
 }
 
@@ -552,10 +552,10 @@ func (prgcb *PlaylistRuleGroupCreateBulk) OnConflict(opts ...sql.ConflictOption)
 //	client.PlaylistRuleGroup.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (prgcb *PlaylistRuleGroupCreateBulk) OnConflictColumns(columns ...string) *PlaylistRuleGroupUpsertBulk {
-	prgcb.conflict = append(prgcb.conflict, sql.ConflictColumns(columns...))
+func (_c *PlaylistRuleGroupCreateBulk) OnConflictColumns(columns ...string) *PlaylistRuleGroupUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &PlaylistRuleGroupUpsertBulk{
-		create: prgcb,
+		create: _c,
 	}
 }
 
