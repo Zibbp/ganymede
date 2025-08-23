@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
@@ -53,7 +54,7 @@ type Application struct {
 	ChapterService    *chapter.Service
 	CategoryService   *category.Service
 	BlockedVodService *blocked.Service
-	RiverUIServer     *riverui.Server
+	RiverUIServer     *riverui.Handler
 	RiverClient       *tasks_client.RiverClient
 }
 
@@ -110,13 +111,12 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	}
 
 	// Setup RiverUI server
-	riverUIOpts := &riverui.ServerOpts{
-		Client: riverClient.Client,
-		DB:     riverClient.PgxPool,
-		Logger: slog.New(slog.NewTextHandler(os.Stderr, nil)),
-		Prefix: "/riverui",
+	riverUIOpts := &riverui.HandlerOpts{
+		Endpoints: riverui.NewEndpoints[pgx.Tx](riverClient.Client, nil),
+		Logger:    slog.New(slog.NewTextHandler(os.Stderr, nil)),
+		Prefix:    "/riverui",
 	}
-	riverUIServer, err := riverui.NewServer(riverUIOpts)
+	riverUIServer, err := riverui.NewHandler(riverUIOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error creating riverui server: %v", err)
 	}
