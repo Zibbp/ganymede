@@ -2,9 +2,14 @@
   height: rem(56px);
   padding-left: rem(20px);
   padding-right: rem(20px);
-  background-color: var(--mantine-color-body);
+  background-color: color-mix(in oklab, var(--mantine-color-body), transparent 10%);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   border-bottom: rem(1px) solid
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .inner {
@@ -12,6 +17,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  max-width: rem(1400px);
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
 }
 
 .link {

@@ -398,6 +398,64 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 		}
 	}
 
+	// Optionally produce an AV1 variant
+	if config.Get().Archive.EncodeAv1 {
+		// Derive a temp AV1 path alongside the convert path by inserting "-av1" before the extension
+		av1TmpPath := video.TmpVideoConvertPath
+		if ext := filepath.Ext(av1TmpPath); ext != "" {
+			av1TmpPath = strings.TrimSuffix(av1TmpPath, ext) + "-av1" + ext
+		} else {
+			av1TmpPath = av1TmpPath + "-av1.mp4"
+		}
+
+		av1ArgsStr := config.Get().Parameters.VideoConvertAv1
+		av1Args := strings.Fields(av1ArgsStr)
+		// Base arguments: read from the just-converted/copy output to avoid re-mux issues
+		av1FfmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoConvertPath}
+		av1FfmpegArgs = append(av1FfmpegArgs, av1Args...)
+		av1FfmpegArgs = append(av1FfmpegArgs, av1TmpPath)
+
+		// open av1 log file
+		av1LogFilePath := fmt.Sprintf("%s/%s-video-convert-av1.log", env.LogsDir, video.ID.String())
+		av1File, err := os.Create(av1LogFilePath)
+		if err != nil {
+			return fmt.Errorf("failed to open av1 log file: %w", err)
+		}
+		defer func() {
+			if err := av1File.Close(); err != nil {
+				log.Debug().Err(err).Msg("failed to close av1 log file")
+			}
+		}()
+		log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(av1FfmpegArgs, " ")).Msgf("running ffmpeg (av1)")
+
+		av1Cmd := osExec.CommandContext(ctx, "ffmpeg", av1FfmpegArgs...)
+		av1Cmd.Stderr = av1File
+		av1Cmd.Stdout = av1File
+
+		if err := av1Cmd.Start(); err != nil {
+			return fmt.Errorf("error starting ffmpeg av1: %w", err)
+		}
+
+		av1Done := make(chan error)
+		go func() {
+			av1Done <- av1Cmd.Wait()
+		}()
+
+		select {
+		case <-ctx.Done():
+			if err := av1Cmd.Process.Kill(); err != nil {
+				return fmt.Errorf("failed to kill ffmpeg av1 process: %v", err)
+			}
+			<-av1Done
+			return ctx.Err()
+		case err := <-av1Done:
+			if err != nil {
+				log.Error().Err(err).Msg("error running ffmpeg av1")
+				return fmt.Errorf("error running ffmpeg av1: %w", err)
+			}
+		}
+	}
+
 	return nil
 }
 

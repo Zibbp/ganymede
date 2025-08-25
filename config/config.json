@@ -1,0 +1,49 @@
+{
+  "live_check_interval_seconds": 300,
+  "video_check_interval_minutes": 180,
+  "registration_enabled": true,
+  "parameters": {
+    "twitch_token": "",
+    "video_convert": "-c:v copy -c:a copy",
+    "chat_render": "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13",
+    "yt_dlp_video": "",
+    "yt_dlp_live": ""
+  },
+  "archive": {
+    "save_as_hls": true,
+    "generate_sprite_thumbnails": true
+  },
+  "notifications": {
+    "video_success_webhook_url": "",
+    "video_success_template": "✅ Video Archived: {{vod_title}} by {{channel_display_name}}.",
+    "video_success_enabled": true,
+    "live_success_webhook_url": "",
+    "live_success_template": "✅ Live Stream Archived: {{vod_title}} by {{channel_display_name}}.",
+    "live_success_enabled": true,
+    "error_webhook_url": "",
+    "error_template": "⚠️ Error: Queue {{queue_id}} failed at task {{failed_task}}.",
+    "error_enabled": true,
+    "is_live_webhook_url": "",
+    "is_live_template": "🔴 {{channel_display_name}} is live!",
+    "is_live_enabled": true
+  },
+  "storage_templates": {
+    "folder_template": "{{date}}-{{id}}-{{type}}-{{uuid}}",
+    "file_template": "{{id}}"
+  },
+  "livestream": {
+    "proxies": [
+      {
+        "url": "https://eu.luminous.dev",
+        "header": "",
+        "proxy_type": "twitch_hls"
+      }
+    ],
+    "proxy_enabled": true,
+    "proxy_parameters": "%3Fplayer%3Dtwitchweb%26type%3Dany%26allow_source%3Dtrue%26allow_audio_only%3Dtrue%26allow_spectre%3Dfalse%26fast_bread%3Dtrue",
+    "proxy_whitelist": []
+  },
+  "experimental": {
+    "better_live_stream_detection_and_cleanup": false
+  }
+}

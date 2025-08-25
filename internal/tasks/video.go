@@ -3,6 +3,8 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -304,9 +306,31 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 
 	// move standard video
 	if dbItems.Video.VideoHlsPath == "" {
+		// Move primary file
 		err := utils.MoveFile(ctx, dbItems.Video.TmpVideoConvertPath, dbItems.Video.VideoPath)
 		if err != nil {
 			return err
+		}
+
+		// Move optional AV1 variant if present
+		if config.Get().Archive.EncodeAv1 {
+			av1Tmp := dbItems.Video.TmpVideoConvertPath
+			if ext := path.Ext(av1Tmp); ext != "" {
+				av1Tmp = strings.TrimSuffix(av1Tmp, ext) + "-av1" + ext
+			} else {
+				av1Tmp = av1Tmp + "-av1.mp4"
+			}
+			av1Dst := dbItems.Video.VideoPath
+			if ext := path.Ext(av1Dst); ext != "" {
+				av1Dst = strings.TrimSuffix(av1Dst, ext) + "-av1" + ext
+			} else {
+				av1Dst = av1Dst + "-av1.mp4"
+			}
+			if utils.FileExists(av1Tmp) {
+				if err := utils.MoveFile(ctx, av1Tmp, av1Dst); err != nil {
+					return err
+				}
+			}
 		}
 	} else {
 		// move hls video

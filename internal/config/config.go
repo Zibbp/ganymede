@@ -15,15 +15,17 @@ type Config struct {
 	VideoCheckInterval  int  `json:"video_check_interval_minutes"` // How often in minutes watched channels are checked for new videos.
 	RegistrationEnabled bool `json:"registration_enabled"`         // Enable registration.
 	Parameters          struct {
-		TwitchToken  string `json:"twitch_token"`  // Twitch token for ad-free live streams or subscriber-only videos.
-		VideoConvert string `json:"video_convert"` // FFmpeg arguments for video conversion.
-		ChatRender   string `json:"chat_render"`   // TwitchDownloaderCLI arguments for chat rendering.
-		YtDlpVideo   string `json:"yt_dlp_video"`  // yt-dlp arguments for video downloads.
-		YtDlpLive    string `json:"yt_dlp_live"`   // yt-dlp arguments for live stream downloads.
+		TwitchToken     string `json:"twitch_token"`      // Twitch token for ad-free live streams or subscriber-only videos.
+		VideoConvert    string `json:"video_convert"`     // FFmpeg arguments for video conversion.
+		VideoConvertAv1 string `json:"video_convert_av1"` // FFmpeg arguments for optional AV1 encode.
+		ChatRender      string `json:"chat_render"`       // TwitchDownloaderCLI arguments for chat rendering.
+		YtDlpVideo      string `json:"yt_dlp_video"`      // yt-dlp arguments for video downloads.
+		YtDlpLive       string `json:"yt_dlp_live"`       // yt-dlp arguments for live stream downloads.
 	} `json:"parameters"`
 	Archive struct {
 		SaveAsHls                bool `json:"save_as_hls"`                // Save as HLS rather than MP4.
 		GenerateSpriteThumbnails bool `json:"generate_sprite_thumbnails"` // Generate sprite thumbnails for scrubbing.
+		EncodeAv1                bool `json:"encode_av1"`                 // Optionally encode an AV1 variant alongside the primary output.
 	} `json:"archive"`
 	Notification     Notification    `json:"notifications"`     // Notification templates and settings.
 	StorageTemplates StorageTemplate `json:"storage_templates"` // Storage folder/file templates.
@@ -161,12 +163,14 @@ func (c *Config) setDefaults() {
 	c.RegistrationEnabled = true
 	c.Parameters.TwitchToken = ""
 	c.Parameters.VideoConvert = "-c:v copy -c:a copy"
+	c.Parameters.VideoConvertAv1 = "-c:v libsvtav1 -preset 7 -crf 35 -b:v 0 -row-mt 1 -pix_fmt yuv420p10le -c:a copy"
 	c.Parameters.ChatRender = "-h 1440 -w 340 --framerate 30 --font Inter --font-size 13"
 	c.Parameters.YtDlpVideo = ""
 	c.Parameters.YtDlpLive = ""
 
 	c.Archive.SaveAsHls = false
 	c.Archive.GenerateSpriteThumbnails = true
+	c.Archive.EncodeAv1 = false
 
 	// notifications
 	c.Notification.VideoSuccessWebhookUrl = ""

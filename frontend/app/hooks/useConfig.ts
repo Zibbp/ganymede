@@ -11,6 +11,7 @@ export interface Config {
   parameters: {
     twitch_token: string;
     video_convert: string;
+    video_convert_av1: string;
     chat_render: string;
     yt_dlp_video: string;
     yt_dlp_live: string;
@@ -18,6 +19,7 @@ export interface Config {
   archive: {
     save_as_hls: boolean;
     generate_sprite_thumbnails: boolean;
+    encode_av1: boolean;
   };
   notifications: Notification;
   storage_templates: StorageTemplate;

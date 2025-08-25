@@ -66,10 +66,43 @@ const VideoPlayer = ({ video, ref }: Params) => {
       videoType = "video/object";
     }
 
-    setVideoSource({
-      src: `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.video_path)}`,
-      type: videoType
-    })
+    const baseUrl = (env('NEXT_PUBLIC_CDN_URL') ?? '')
+
+    // Prefer AV1 if supported and available (mp4-only; skip for m3u8)
+    const trySetSource = async () => {
+      // If HLS, don't attempt AV1 swap
+      if (videoExtension === 'm3u8') {
+        setVideoSource({
+          src: `${baseUrl}${escapeURL(video.video_path)}`,
+          type: videoType
+        })
+        return
+      }
+
+      const p = video.video_path
+      const idx = p.lastIndexOf('.')
+      const av1Path = idx > -1 ? `${p.slice(0, idx)}-av1${p.slice(idx)}` : `${p}-av1.mp4`
+
+      const videoEl = document.createElement('video')
+      const canPlayAv1 = videoEl.canPlayType('video/mp4; codecs="av01.0.08M.08"') !== ''
+
+      if (canPlayAv1) {
+        try {
+          const res = await fetch(`${baseUrl}${escapeURL(av1Path)}`, { method: 'HEAD' })
+          if (res.ok) {
+            setVideoSource({ src: `${baseUrl}${escapeURL(av1Path)}`, type: videoType })
+            return
+          }
+        } catch (_) { /* ignore */ }
+      }
+
+      setVideoSource({
+        src: `${baseUrl}${escapeURL(p)}`,
+        type: videoType
+      })
+    }
+
+    void trySetSource()
 
     if (video.thumbnail_path) {
       setVideoPoster(`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.thumbnail_path)}`)

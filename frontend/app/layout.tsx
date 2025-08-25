@@ -8,6 +8,7 @@ import '@/app/global.css'
 import { ColorSchemeScript } from '@mantine/core';
 import type { Metadata } from "next";
 import Providers from './providers';
+import { Navbar } from './layout/Navbar';
 import { EnvScript, PublicEnvScript } from 'next-runtime-env';
 import { getLocale } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';

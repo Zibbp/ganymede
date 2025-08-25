@@ -47,13 +47,15 @@ const AdminSettingsPage = () => {
       parameters: {
         twitch_token: data?.parameters.twitch_token || "",
         video_convert: data?.parameters.video_convert || "",
+        video_convert_av1: data?.parameters.video_convert_av1 || "",
         chat_render: data?.parameters.chat_render || "",
         yt_dlp_video: data?.parameters.yt_dlp_video || "",
         yt_dlp_live: data?.parameters.yt_dlp_live || ""
       },
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
-        generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true
+        generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true,
+        encode_av1: data?.archive.encode_av1 ?? false
       },
       notifications: {
         video_success_webhook_url: data?.notifications.video_success_webhook_url || "",
@@ -391,6 +393,15 @@ const AdminSettingsPage = () => {
               mr={15}
             />
 
+            <Checkbox
+              mt={15}
+              label={t('archiveSettings.encodeAV1Label')}
+              description={t('archiveSettings.encodeAV1Description')}
+              key={form.key('archive.encode_av1')}
+              {...form.getInputProps('archive.encode_av1', { type: "checkbox" })}
+              mr={15}
+            />
+
             <Button
               mt={15}
               onClick={toggleStorageTemplate}
@@ -490,6 +501,22 @@ const AdminSettingsPage = () => {
               description={t('videoSettings.convertFFmpegArgsDescription')}
               key={form.key('parameters.video_convert')}
               {...form.getInputProps('parameters.video_convert')}
+            />
+
+            <Checkbox
+              mt={15}
+              label={t('videoSettings.encodeAV1Label')}
+              description={t('videoSettings.encodeAV1Description')}
+              key={form.key('archive.encode_av1')}
+              {...form.getInputProps('archive.encode_av1', { type: "checkbox" })}
+            />
+
+            <TextInput
+              mt={10}
+              label={t('videoSettings.convertAV1FFmpegArgsLabel')}
+              description={t('videoSettings.convertAV1FFmpegArgsDescription')}
+              key={form.key('parameters.video_convert_av1')}
+              {...form.getInputProps('parameters.video_convert_av1')}
             />
 
             <TextInput

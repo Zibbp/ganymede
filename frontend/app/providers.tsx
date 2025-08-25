@@ -31,6 +31,8 @@ const CONTAINER_SIZES: Record<string, string> = {
 
 const theme = createTheme({
   fontFamily: localInterFont.style.fontFamily,
+  defaultRadius: 'md',
+  primaryColor: 'violet',
   breakpoints: {
     xs: "30em",
     sm: "48em",
@@ -64,10 +66,10 @@ const theme = createTheme({
       '#5c5f66',
       '#373A40',
       '#2C2E33',
-      '#18181C',
-      '#141417',
-      '#141517',
-      '#101113',
+      '#14151A',
+      '#121219',
+      '#101018',
+      '#0E0E15',
     ],
   },
 });

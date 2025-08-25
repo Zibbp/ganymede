@@ -46,7 +46,7 @@ services:
       - ./logs:/data/logs # queue logs
       - ./config:/data/config # config and other miscellaneous files
     ports:
-      - 4800:4000
+      - 4030:4000
     healthcheck:
       test: curl --fail http://localhost:4000/health || exit 1
       interval: 60s
