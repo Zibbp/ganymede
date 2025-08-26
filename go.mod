@@ -156,7 +156,7 @@ require (
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.24.0
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
