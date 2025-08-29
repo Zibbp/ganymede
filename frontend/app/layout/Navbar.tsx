@@ -51,7 +51,6 @@ export function Navbar() {
       auth: true,
       role: UserRole.Editor
     },
-    { link: '/playlists', label: t('links.playlists') },
     { link: '/queue', label: t('links.queue'), auth: true, role: UserRole.Editor },
     { link: '/riverui//', label: t('links.tasks'), auth: true, role: UserRole.Editor },
     {
