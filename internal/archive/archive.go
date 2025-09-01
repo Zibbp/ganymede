@@ -46,6 +46,10 @@ func NewService(store *database.Database, channelService *channel.Service, vodSe
 
 // ArchiveChannel - Create channel entry in database along with folder, profile image, etc.
 func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.Channel, error) {
+	if s.PlatformTwitch == nil {
+        return nil, fmt.Errorf("twitch platform is not configured; set TWITCH_CLIENT_ID/SECRET")
+    }
+
 	env := config.GetEnvConfig()
 	// get channel from platform
 	platformChannel, err := s.PlatformTwitch.GetChannel(ctx, channelName)
