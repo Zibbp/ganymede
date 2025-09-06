@@ -322,7 +322,7 @@ OUTER:
 				}
 
 				// check if stream is already being archived
-				queueItems, err := database.DB().Client.Queue.Query().Where(entQueue.Processing(true)).WithVod().All(context.Background())
+				queueItems, err := database.DB().Client.Queue.Query().Where(entQueue.Processing(true)).WithVod().All(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error getting queue items")
 				}
@@ -361,7 +361,7 @@ OUTER:
 				}
 
 				// Stream is online and archive started, update database
-				_, err = s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(true).Save(context.Background())
+				_, err = s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(true).Save(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error updating live watched channel")
 				}
@@ -393,7 +393,7 @@ OUTER:
 			if lwc.IsLive {
 				log.Debug().Msgf("%s is now offline", lwc.Edges.Channel.Name)
 				// Stream is offline, update database
-				_, err := s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(false).SetLastLive(time.Now()).Save(context.Background())
+				_, err := s.Store.Client.Live.UpdateOneID(lwc.ID).SetIsLive(false).SetLastLive(time.Now()).Save(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error updating live watched channel")
 				}
