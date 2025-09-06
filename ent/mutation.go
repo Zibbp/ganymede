@@ -2175,6 +2175,7 @@ type LiveMutation struct {
 	video_age                  *int64
 	addvideo_age               *int64
 	apply_categories_to_live   *bool
+	strict_categories_live     *bool
 	watch_clips                *bool
 	clips_limit                *int
 	addclips_limit             *int
@@ -2805,6 +2806,42 @@ func (m *LiveMutation) ResetApplyCategoriesToLive() {
 	m.apply_categories_to_live = nil
 }
 
+// SetStrictCategoriesLive sets the "strict_categories_live" field.
+func (m *LiveMutation) SetStrictCategoriesLive(b bool) {
+	m.strict_categories_live = &b
+}
+
+// StrictCategoriesLive returns the value of the "strict_categories_live" field in the mutation.
+func (m *LiveMutation) StrictCategoriesLive() (r bool, exists bool) {
+	v := m.strict_categories_live
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStrictCategoriesLive returns the old "strict_categories_live" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldStrictCategoriesLive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStrictCategoriesLive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStrictCategoriesLive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStrictCategoriesLive: %w", err)
+	}
+	return oldValue.StrictCategoriesLive, nil
+}
+
+// ResetStrictCategoriesLive resets all changes to the "strict_categories_live" field.
+func (m *LiveMutation) ResetStrictCategoriesLive() {
+	m.strict_categories_live = nil
+}
+
 // SetWatchClips sets the "watch_clips" field.
 func (m *LiveMutation) SetWatchClips(b bool) {
 	m.watch_clips = &b
@@ -3347,7 +3384,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 22)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -3386,6 +3423,9 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.apply_categories_to_live != nil {
 		fields = append(fields, live.FieldApplyCategoriesToLive)
+	}
+	if m.strict_categories_live != nil {
+		fields = append(fields, live.FieldStrictCategoriesLive)
 	}
 	if m.watch_clips != nil {
 		fields = append(fields, live.FieldWatchClips)
@@ -3445,6 +3485,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.VideoAge()
 	case live.FieldApplyCategoriesToLive:
 		return m.ApplyCategoriesToLive()
+	case live.FieldStrictCategoriesLive:
+		return m.StrictCategoriesLive()
 	case live.FieldWatchClips:
 		return m.WatchClips()
 	case live.FieldClipsLimit:
@@ -3496,6 +3538,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldVideoAge(ctx)
 	case live.FieldApplyCategoriesToLive:
 		return m.OldApplyCategoriesToLive(ctx)
+	case live.FieldStrictCategoriesLive:
+		return m.OldStrictCategoriesLive(ctx)
 	case live.FieldWatchClips:
 		return m.OldWatchClips(ctx)
 	case live.FieldClipsLimit:
@@ -3611,6 +3655,13 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetApplyCategoriesToLive(v)
+		return nil
+	case live.FieldStrictCategoriesLive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStrictCategoriesLive(v)
 		return nil
 	case live.FieldWatchClips:
 		v, ok := value.(bool)
@@ -3821,6 +3872,9 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldApplyCategoriesToLive:
 		m.ResetApplyCategoriesToLive()
+		return nil
+	case live.FieldStrictCategoriesLive:
+		m.ResetStrictCategoriesLive()
 		return nil
 	case live.FieldWatchClips:
 		m.ResetWatchClips()

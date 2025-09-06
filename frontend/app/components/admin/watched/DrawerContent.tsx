@@ -66,6 +66,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       download_sub_only: watchedChannel?.download_sub_only ?? false,
       video_age: watchedChannel?.video_age || 0,
       apply_categories_to_live: watchedChannel?.apply_categories_to_live ?? false,
+      strict_categories_live: watchedChannel?.strict_categories_live ?? false,
       watch_clips: watchedChannel?.watch_clips ?? false,
       clips_limit: watchedChannel?.clips_limit || 5,
       clips_interval_days: watchedChannel?.clips_interval_days || 7,
@@ -135,6 +136,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           download_sub_only: formValues.download_sub_only,
           video_age: formValues.video_age,
           apply_categories_to_live: formValues.apply_categories_to_live,
+          strict_categories_live: formValues.strict_categories_live,
           watch_clips: formValues.watch_clips,
           clips_limit: formValues.clips_limit,
           clips_interval_days: formValues.clips_interval_days,
@@ -178,6 +180,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           download_sub_only: formValues.download_sub_only,
           video_age: formValues.video_age,
           apply_categories_to_live: formValues.apply_categories_to_live,
+          strict_categories_live: formValues.strict_categories_live,
           watch_clips: formValues.watch_clips,
           clips_limit: formValues.clips_limit,
           clips_interval_days: formValues.clips_interval_days,
@@ -510,6 +513,14 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           {...form.getInputProps('apply_categories_to_live', { type: "checkbox" })}
         />
 
+        <Checkbox
+          mt={5}
+          label={t('strictCategoriesLiveLabel')}
+          description={t('strictCategoriesLiveDescription')}
+          key={form.key('strict_categories_live')}
+          {...form.getInputProps('strict_categories_live', { type: "checkbox" })}
+          disabled={!form.values.apply_categories_to_live}
+        />
 
         <Box mt={10}>
           {formattedTwitchCategories.length == 0 ? (

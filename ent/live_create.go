@@ -209,6 +209,20 @@ func (_c *LiveCreate) SetNillableApplyCategoriesToLive(v *bool) *LiveCreate {
 	return _c
 }
 
+// SetStrictCategoriesLive sets the "strict_categories_live" field.
+func (_c *LiveCreate) SetStrictCategoriesLive(v bool) *LiveCreate {
+	_c.mutation.SetStrictCategoriesLive(v)
+	return _c
+}
+
+// SetNillableStrictCategoriesLive sets the "strict_categories_live" field if the given value is not nil.
+func (_c *LiveCreate) SetNillableStrictCategoriesLive(v *bool) *LiveCreate {
+	if v != nil {
+		_c.SetStrictCategoriesLive(*v)
+	}
+	return _c
+}
+
 // SetWatchClips sets the "watch_clips" field.
 func (_c *LiveCreate) SetWatchClips(v bool) *LiveCreate {
 	_c.mutation.SetWatchClips(v)
@@ -463,6 +477,10 @@ func (_c *LiveCreate) defaults() {
 		v := live.DefaultApplyCategoriesToLive
 		_c.mutation.SetApplyCategoriesToLive(v)
 	}
+	if _, ok := _c.mutation.StrictCategoriesLive(); !ok {
+		v := live.DefaultStrictCategoriesLive
+		_c.mutation.SetStrictCategoriesLive(v)
+	}
 	if _, ok := _c.mutation.WatchClips(); !ok {
 		v := live.DefaultWatchClips
 		_c.mutation.SetWatchClips(v)
@@ -534,6 +552,9 @@ func (_c *LiveCreate) check() error {
 	}
 	if _, ok := _c.mutation.ApplyCategoriesToLive(); !ok {
 		return &ValidationError{Name: "apply_categories_to_live", err: errors.New(`ent: missing required field "Live.apply_categories_to_live"`)}
+	}
+	if _, ok := _c.mutation.StrictCategoriesLive(); !ok {
+		return &ValidationError{Name: "strict_categories_live", err: errors.New(`ent: missing required field "Live.strict_categories_live"`)}
 	}
 	if _, ok := _c.mutation.WatchClips(); !ok {
 		return &ValidationError{Name: "watch_clips", err: errors.New(`ent: missing required field "Live.watch_clips"`)}
@@ -651,6 +672,10 @@ func (_c *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ApplyCategoriesToLive(); ok {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
 		_node.ApplyCategoriesToLive = value
+	}
+	if value, ok := _c.mutation.StrictCategoriesLive(); ok {
+		_spec.SetField(live.FieldStrictCategoriesLive, field.TypeBool, value)
+		_node.StrictCategoriesLive = value
 	}
 	if value, ok := _c.mutation.WatchClips(); ok {
 		_spec.SetField(live.FieldWatchClips, field.TypeBool, value)
@@ -950,6 +975,18 @@ func (u *LiveUpsert) SetApplyCategoriesToLive(v bool) *LiveUpsert {
 // UpdateApplyCategoriesToLive sets the "apply_categories_to_live" field to the value that was provided on create.
 func (u *LiveUpsert) UpdateApplyCategoriesToLive() *LiveUpsert {
 	u.SetExcluded(live.FieldApplyCategoriesToLive)
+	return u
+}
+
+// SetStrictCategoriesLive sets the "strict_categories_live" field.
+func (u *LiveUpsert) SetStrictCategoriesLive(v bool) *LiveUpsert {
+	u.Set(live.FieldStrictCategoriesLive, v)
+	return u
+}
+
+// UpdateStrictCategoriesLive sets the "strict_categories_live" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateStrictCategoriesLive() *LiveUpsert {
+	u.SetExcluded(live.FieldStrictCategoriesLive)
 	return u
 }
 
@@ -1305,6 +1342,20 @@ func (u *LiveUpsertOne) SetApplyCategoriesToLive(v bool) *LiveUpsertOne {
 func (u *LiveUpsertOne) UpdateApplyCategoriesToLive() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateApplyCategoriesToLive()
+	})
+}
+
+// SetStrictCategoriesLive sets the "strict_categories_live" field.
+func (u *LiveUpsertOne) SetStrictCategoriesLive(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetStrictCategoriesLive(v)
+	})
+}
+
+// UpdateStrictCategoriesLive sets the "strict_categories_live" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateStrictCategoriesLive() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateStrictCategoriesLive()
 	})
 }
 
@@ -1845,6 +1896,20 @@ func (u *LiveUpsertBulk) SetApplyCategoriesToLive(v bool) *LiveUpsertBulk {
 func (u *LiveUpsertBulk) UpdateApplyCategoriesToLive() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateApplyCategoriesToLive()
+	})
+}
+
+// SetStrictCategoriesLive sets the "strict_categories_live" field.
+func (u *LiveUpsertBulk) SetStrictCategoriesLive(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetStrictCategoriesLive(v)
+	})
+}
+
+// UpdateStrictCategoriesLive sets the "strict_categories_live" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateStrictCategoriesLive() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateStrictCategoriesLive()
 	})
 }
 

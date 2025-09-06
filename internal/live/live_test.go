@@ -105,7 +105,7 @@ func startAndWaitForArchiving(t *testing.T, app *server.Application, watchedChan
 }
 
 // Helper to assert VOD and queue item, stop archive, and check files
-func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platform.LiveStreamInfo) {
+func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platform.LiveStreamInfo, stopArchive bool) {
 	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).WithChannel().WithChapters().First(t.Context())
 	assert.NoError(t, err, "Failed to query VOD for live stream")
 	assert.NotNil(t, vod, "VOD should not be nil")
@@ -147,8 +147,10 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	t.Logf("Waiting for live stream to archive")
 	time.Sleep(1 * time.Minute)
 
-	assert.NoError(t, app.QueueService.StopQueueItem(t.Context(), q.ID), "Failed to stop live archive")
-	tests_shared.WaitForArchiveCompletion(t, app, vod.ID, TestArchiveTimeout)
+	if stopArchive {
+		assert.NoError(t, app.QueueService.StopQueueItem(t.Context(), q.ID), "Failed to stop live archive")
+		tests_shared.WaitForArchiveCompletion(t, app, vod.ID, TestArchiveTimeout)
+	}
 
 	q, err = app.Database.Client.Queue.Get(t.Context(), q.ID)
 	assert.NoError(t, err)
@@ -197,7 +199,7 @@ func TestTwitchWatchedChannelLive(t *testing.T) {
 	}
 	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
-	assertVodAndQueue(t, app, liveChannel)
+	assertVodAndQueue(t, app, liveChannel, true)
 }
 
 // TestTwitchWatchedChannelLiveCategoryRestrictionFail tests live archiving with category restrictions that prevent archiving
@@ -241,7 +243,44 @@ func TestTwitchWatchedChannelLiveCategoryRestriction(t *testing.T) {
 	}
 	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
-	assertVodAndQueue(t, app, liveChannel)
+	assertVodAndQueue(t, app, liveChannel, true)
+}
+
+// TestTwitchWatchedChannelLiveCategoryRestrictionStrict tests live archiving with matching category restrictions with strict category restriction enabled. The category is changed after the live stream archive starts causing it to stop archiving once the category no longer matches.
+func TestTwitchWatchedChannelLiveCategoryRestrictionStrict(t *testing.T) {
+	app, liveChannel, channel := setupAppAndLiveChannel(t)
+	liveInput := live.Live{
+		ID:                    channel.ID,
+		WatchLive:             true,
+		WatchVod:              false,
+		DownloadArchives:      false,
+		DownloadHighlights:    false,
+		DownloadUploads:       false,
+		ArchiveChat:           true,
+		Resolution:            "best",
+		RenderChat:            true,
+		DownloadSubOnly:       false,
+		UpdateMetadataMinutes: 1,
+		ApplyCategoriesToLive: true,
+		StrictCategoriesLive:  true,
+		Categories:            []string{liveChannel.GameName},
+	}
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
+
+	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
+
+	// Change category to "TestCategory" causing the live archive to stop
+	liveInput.Categories = []string{"TestCategory"}
+	liveInput.ID = watchedChannel.ID
+	_, err := app.LiveService.UpdateLiveWatchedChannel(context.Background(), liveInput)
+	assert.NoError(t, err, "Failed to update watched channel with new category")
+
+	time.Sleep(15 * time.Second) // Let stream archive for a bit
+
+	// Run check live again
+	assert.NoError(t, app.TaskService.StartTask(t.Context(), "check_live"), "Failed to run check_live task")
+
+	assertVodAndQueue(t, app, liveChannel, false)
 }
 
 // TestTwitchWatchedChannelTitleRegexFail tests live archiving with a title regex that does not match
@@ -301,5 +340,5 @@ func TestTwitchWatchedChannelTitleRegex(t *testing.T) {
 
 	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, &customFolder, &customFile)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
-	assertVodAndQueue(t, app, liveChannel)
+	assertVodAndQueue(t, app, liveChannel, true)
 }
