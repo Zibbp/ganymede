@@ -244,13 +244,6 @@ OUTER:
 		// Check if LWC is in twitchStreams.Data
 		stream := channelInLiveStreamInfo(lwc.Edges.Channel.Name, streams)
 		if len(stream.ID) > 0 {
-			// Run chapter update - this needs to be done before additional checks to cover the case where a stream is being archived but fails restriction checks
-			// It also needs to run before live watched channel "isLive" check and this should run every time live streams are checked
-			err = s.updateLiveStreamArchiveChapter(stream)
-			if err != nil {
-				log.Error().Err(err).Msg("error updating live stream archive chapter")
-			}
-
 			// Build map of channel watched categories
 			watchedChannelCategories := make(map[string]struct{}, len(lwc.Edges.Categories))
 			categoryNamesForLog := make([]string, 0, len(lwc.Edges.Categories))
@@ -281,6 +274,12 @@ OUTER:
 				} else {
 					log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msgf("%s matches category restrictions", lwc.Edges.Channel.Name)
 				}
+			}
+
+			// Run chapter update, this needs to be done before additional checks to cover the case where a stream is being archived but fails restriction checks
+			err = s.updateLiveStreamArchiveChapter(stream)
+			if err != nil {
+				log.Error().Err(err).Msg("error updating live stream archive chapter")
 			}
 
 			if !lwc.IsLive {
