@@ -78,7 +78,7 @@ func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 	blockedVodsService := blocked.NewService(db)
 	// twitchService := twitch.NewService()
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodsService, riverClient, platformTwitch)
-	liveService := live.NewService(db, archiveService, platformTwitch, chapterService)
+	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService)
 
 	// initialize river
 	riverWorkerClient, err := tasks_worker.NewRiverWorker(tasks_worker.RiverWorkerInput{

@@ -32,6 +32,7 @@ type AddWatchedChannelRequest struct {
 	DownloadSubOnly        bool                `json:"download_sub_only" validate:"boolean"`
 	Categories             []string            `json:"categories"`
 	ApplyCategoriesToLive  bool                `json:"apply_categories_to_live" validate:"boolean"`
+	StrictCategoriesLive   bool                `json:"strict_categories_live" validate:"boolean"`
 	VideoAge               int64               `json:"video_age"` // restrict fetching videos to a certain age
 	Regex                  []AddLiveTitleRegex `json:"regex"`
 	WatchClips             bool                `json:"watch_clips" validate:"boolean"`
@@ -59,6 +60,7 @@ type UpdateWatchedChannelRequest struct {
 	DownloadSubOnly        bool                `json:"download_sub_only" validate:"boolean"`
 	Categories             []string            `json:"categories"`
 	ApplyCategoriesToLive  bool                `json:"apply_categories_to_live" validate:"boolean"`
+	StrictCategoriesLive   bool                `json:"strict_categories_live" validate:"boolean"`
 	VideoAge               int64               `json:"video_age"` // retrict fetching videos to a certain age
 	Regex                  []AddLiveTitleRegex `json:"regex"`
 	WatchClips             bool                `json:"watch_clips" validate:"boolean"`
@@ -152,6 +154,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		DownloadSubOnly:        ccr.DownloadSubOnly,
 		Categories:             ccr.Categories,
 		ApplyCategoriesToLive:  ccr.ApplyCategoriesToLive,
+		StrictCategoriesLive:   ccr.StrictCategoriesLive,
 		VideoAge:               ccr.VideoAge,
 		WatchClips:             ccr.WatchClips,
 		ClipsLimit:             ccr.ClipsLimit,
@@ -224,6 +227,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		DownloadSubOnly:        ccr.DownloadSubOnly,
 		Categories:             ccr.Categories,
 		ApplyCategoriesToLive:  ccr.ApplyCategoriesToLive,
+		StrictCategoriesLive:   ccr.StrictCategoriesLive,
 		VideoAge:               ccr.VideoAge,
 		WatchClips:             ccr.WatchClips,
 		ClipsLimit:             ccr.ClipsLimit,

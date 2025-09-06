@@ -149,7 +149,7 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
 	chapterService := chapter.NewService(db)
-	liveService := live.NewService(db, archiveService, platformTwitch, chapterService)
+	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService)
 	playbackService := playback.NewService(db)
 	metricsService := metrics.NewService(db, riverClient)
 	playlistService := playlist.NewService(db)
