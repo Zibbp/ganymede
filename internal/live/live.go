@@ -124,14 +124,14 @@ func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent
 	return l, nil
 }
 
-func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.Live, error) {
-	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetStrictCategoriesLive(liveDto.StrictCategoriesLive).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).SetWatchClips(liveDto.WatchClips).SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).Save(c.Request().Context())
+func (s *Service) UpdateLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent.Live, error) {
+	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetStrictCategoriesLive(liveDto.StrictCategoriesLive).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).SetWatchClips(liveDto.WatchClips).SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error updating watched channel: %v", err)
 	}
 
 	// Delete all categories
-	_, err = s.Store.Client.LiveCategory.Delete().Where(livecategory.HasLiveWith(live.ID(liveDto.ID))).Exec(c.Request().Context())
+	_, err = s.Store.Client.LiveCategory.Delete().Where(livecategory.HasLiveWith(live.ID(liveDto.ID))).Exec(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error deleting categories: %v", err)
 	}
@@ -140,7 +140,7 @@ func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.L
 	if len(liveDto.Categories) > 0 {
 		// Add new categories
 		for _, category := range liveDto.Categories {
-			_, err := s.Store.Client.LiveCategory.Create().SetName(category).SetLive(l).Save(c.Request().Context())
+			_, err := s.Store.Client.LiveCategory.Create().SetName(category).SetLive(l).Save(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("error adding category: %v", err)
 			}
@@ -148,7 +148,7 @@ func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.L
 	}
 
 	// delete all title regexes
-	_, err = s.Store.Client.LiveTitleRegex.Delete().Where(livetitleregex.HasLiveWith(live.ID(liveDto.ID))).Exec(c.Request().Context())
+	_, err = s.Store.Client.LiveTitleRegex.Delete().Where(livetitleregex.HasLiveWith(live.ID(liveDto.ID))).Exec(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error deleting title regexes: %v", err)
 	}
@@ -156,7 +156,7 @@ func (s *Service) UpdateLiveWatchedChannel(c echo.Context, liveDto Live) (*ent.L
 	// update title regexes
 	if len(liveDto.TitleRegex) > 0 {
 		for _, regex := range liveDto.TitleRegex {
-			_, err := s.Store.Client.LiveTitleRegex.Create().SetNegative(regex.Negative).SetApplyToVideos(regex.ApplyToVideos).SetRegex(regex.Regex).SetLive(l).Save(c.Request().Context())
+			_, err := s.Store.Client.LiveTitleRegex.Create().SetNegative(regex.Negative).SetApplyToVideos(regex.ApplyToVideos).SetRegex(regex.Regex).SetLive(l).Save(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("error adding title regex: %v", err)
 			}
