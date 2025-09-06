@@ -41,6 +41,8 @@ const (
 	FieldVideoAge = "video_age"
 	// FieldApplyCategoriesToLive holds the string denoting the apply_categories_to_live field in the database.
 	FieldApplyCategoriesToLive = "apply_categories_to_live"
+	// FieldStrictCategoriesLive holds the string denoting the strict_categories_live field in the database.
+	FieldStrictCategoriesLive = "strict_categories_live"
 	// FieldWatchClips holds the string denoting the watch_clips field in the database.
 	FieldWatchClips = "watch_clips"
 	// FieldClipsLimit holds the string denoting the clips_limit field in the database.
@@ -104,6 +106,7 @@ var Columns = []string{
 	FieldRenderChat,
 	FieldVideoAge,
 	FieldApplyCategoriesToLive,
+	FieldStrictCategoriesLive,
 	FieldWatchClips,
 	FieldClipsLimit,
 	FieldClipsIntervalDays,
@@ -162,6 +165,8 @@ var (
 	DefaultVideoAge int64
 	// DefaultApplyCategoriesToLive holds the default value on creation for the "apply_categories_to_live" field.
 	DefaultApplyCategoriesToLive bool
+	// DefaultStrictCategoriesLive holds the default value on creation for the "strict_categories_live" field.
+	DefaultStrictCategoriesLive bool
 	// DefaultWatchClips holds the default value on creation for the "watch_clips" field.
 	DefaultWatchClips bool
 	// DefaultClipsLimit holds the default value on creation for the "clips_limit" field.
@@ -255,6 +260,11 @@ func ByVideoAge(opts ...sql.OrderTermOption) OrderOption {
 // ByApplyCategoriesToLive orders the results by the apply_categories_to_live field.
 func ByApplyCategoriesToLive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldApplyCategoriesToLive, opts...).ToFunc()
+}
+
+// ByStrictCategoriesLive orders the results by the strict_categories_live field.
+func ByStrictCategoriesLive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStrictCategoriesLive, opts...).ToFunc()
 }
 
 // ByWatchClips orders the results by the watch_clips field.

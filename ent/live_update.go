@@ -227,6 +227,20 @@ func (_u *LiveUpdate) SetNillableApplyCategoriesToLive(v *bool) *LiveUpdate {
 	return _u
 }
 
+// SetStrictCategoriesLive sets the "strict_categories_live" field.
+func (_u *LiveUpdate) SetStrictCategoriesLive(v bool) *LiveUpdate {
+	_u.mutation.SetStrictCategoriesLive(v)
+	return _u
+}
+
+// SetNillableStrictCategoriesLive sets the "strict_categories_live" field if the given value is not nil.
+func (_u *LiveUpdate) SetNillableStrictCategoriesLive(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetStrictCategoriesLive(*v)
+	}
+	return _u
+}
+
 // SetWatchClips sets the "watch_clips" field.
 func (_u *LiveUpdate) SetWatchClips(v bool) *LiveUpdate {
 	_u.mutation.SetWatchClips(v)
@@ -543,6 +557,9 @@ func (_u *LiveUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.ApplyCategoriesToLive(); ok {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.StrictCategoriesLive(); ok {
+		_spec.SetField(live.FieldStrictCategoriesLive, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.WatchClips(); ok {
 		_spec.SetField(live.FieldWatchClips, field.TypeBool, value)
@@ -911,6 +928,20 @@ func (_u *LiveUpdateOne) SetNillableApplyCategoriesToLive(v *bool) *LiveUpdateOn
 	return _u
 }
 
+// SetStrictCategoriesLive sets the "strict_categories_live" field.
+func (_u *LiveUpdateOne) SetStrictCategoriesLive(v bool) *LiveUpdateOne {
+	_u.mutation.SetStrictCategoriesLive(v)
+	return _u
+}
+
+// SetNillableStrictCategoriesLive sets the "strict_categories_live" field if the given value is not nil.
+func (_u *LiveUpdateOne) SetNillableStrictCategoriesLive(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetStrictCategoriesLive(*v)
+	}
+	return _u
+}
+
 // SetWatchClips sets the "watch_clips" field.
 func (_u *LiveUpdateOne) SetWatchClips(v bool) *LiveUpdateOne {
 	_u.mutation.SetWatchClips(v)
@@ -1257,6 +1288,9 @@ func (_u *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) {
 	}
 	if value, ok := _u.mutation.ApplyCategoriesToLive(); ok {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.StrictCategoriesLive(); ok {
+		_spec.SetField(live.FieldStrictCategoriesLive, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.WatchClips(); ok {
 		_spec.SetField(live.FieldWatchClips, field.TypeBool, value)
