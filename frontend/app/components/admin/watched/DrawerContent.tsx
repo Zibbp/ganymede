@@ -519,6 +519,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           description={t('strictCategoriesLiveDescription')}
           key={form.key('strict_categories_live')}
           {...form.getInputProps('strict_categories_live', { type: "checkbox" })}
+          disabled={!form.values.apply_categories_to_live}
         />
 
         <Box mt={10}>

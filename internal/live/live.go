@@ -251,26 +251,20 @@ OUTER:
 				log.Error().Err(err).Msg("error updating live stream archive chapter")
 			}
 
+			// Build map of channel watched categories
+			watchedChannelCategories := make(map[string]struct{}, len(lwc.Edges.Categories))
+			categoryNamesForLog := make([]string, 0, len(lwc.Edges.Categories))
+			for _, category := range lwc.Edges.Categories {
+				watchedChannelCategories[strings.ToLower(*category.Name)] = struct{}{}
+				categoryNamesForLog = append(categoryNamesForLog, *category.Name)
+			}
+
 			// Check if watched channel has strict category mode on
 			// Stop live stream archive if category is not in select list
 			// GH: 852
-			if lwc.IsLive && lwc.StrictCategoriesLive && len(lwc.Edges.Categories) > 0 {
-				watchedChannelCategoryNames := make([]string, 0)
-				for _, category := range lwc.Edges.Categories {
-					watchedChannelCategoryNames = append(watchedChannelCategoryNames, *category.Name)
-				}
-
-				found := false
-				for _, category := range lwc.Edges.Categories {
-					if strings.EqualFold(*category.Name, stream.GameName) {
-						log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(watchedChannelCategoryNames, ", ")).Msgf("%s matches category restrictions", lwc.Edges.Channel.Name)
-						found = true
-						break
-					}
-				}
-
-				if !found {
-					log.Info().Str("channel", lwc.Edges.Channel.Name).Str("category", stream.GameName).Str("category_restrictions", strings.Join(watchedChannelCategoryNames, ", ")).Msg("stream does not match selected categories, stopping archive")
+			if lwc.IsLive && lwc.ApplyCategoriesToLive && lwc.StrictCategoriesLive && len(lwc.Edges.Categories) > 0 {
+				if _, found := watchedChannelCategories[strings.ToLower(stream.GameName)]; !found {
+					log.Info().Str("channel", lwc.Edges.Channel.Name).Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msg("stream does not match selected categories, stopping archive")
 					// Stop archive
 					video, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).First(ctx)
 					if err != nil {
@@ -284,6 +278,8 @@ OUTER:
 					}
 					// Continue to next liveWatchedChannel
 					continue OUTER
+				} else {
+					log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msgf("%s matches category restrictions", lwc.Edges.Channel.Name)
 				}
 			}
 
@@ -315,24 +311,12 @@ OUTER:
 					}
 				}
 
-				tmpCategoryNames := make([]string, 0)
-				for _, category := range lwc.Edges.Categories {
-					tmpCategoryNames = append(tmpCategoryNames, *category.Name)
-				}
-
 				// check for category restrictions
 				if lwc.ApplyCategoriesToLive && len(lwc.Edges.Categories) > 0 {
-					found := false
-					for _, category := range lwc.Edges.Categories {
-						if strings.EqualFold(*category.Name, stream.GameName) {
-							log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(tmpCategoryNames, ", ")).Msgf("%s matches category restrictions", lwc.Edges.Channel.Name)
-							found = true
-							break
-						}
-					}
-
-					if !found {
-						log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(tmpCategoryNames, ", ")).Msgf("%s does not match category restrictions", lwc.Edges.Channel.Name)
+					if _, found := watchedChannelCategories[strings.ToLower(stream.GameName)]; found {
+						log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msgf("%s matches category restrictions", lwc.Edges.Channel.Name)
+					} else {
+						log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msgf("%s does not match category restrictions", lwc.Edges.Channel.Name)
 						continue
 					}
 				}
