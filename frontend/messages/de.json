@@ -613,6 +613,8 @@
     "categoriesDescription": "Archiviere Videos und Live-Streams aus ausgewählten Kategorien. Lasse dieses Feld leer, um alle Kategorien zu archivieren.",
     "categoriesApplyToLivestreamsLabel": "Auf Live-Streams anwenden",
     "categoriesApplyToLivestreamsDescription": "Kategoriebeschränkungen auf Live-Streams anwenden",
+    "strictCategoriesLiveLabel": "Strikte Live-Stream-Kategorien",
+    "strictCategoriesLiveDescription": "Archivierung des Live-Streams stoppen, wenn die Kategorie zu einer nicht ausgewählten wechselt",
     "categoriesLoadButton": "Kategorien laden",
     "categoriesSearchPlaceholder": "Kategorien suchen...",
     "submitButton": "Beobachteten Kanal erstellen",
