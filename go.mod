@@ -24,7 +24,7 @@ require (
 	github.com/riverqueue/river/rivertype v0.24.0
 	github.com/rs/zerolog v1.34.0
 	github.com/sethvargo/go-envconfig v1.3.0
-	github.com/shirou/gopsutil/v4 v4.25.7
+	github.com/shirou/gopsutil/v4 v4.25.8
 	github.com/swaggo/swag v1.16.6
 	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.38.0
@@ -156,7 +156,7 @@ require (
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.24.0
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
