@@ -1,6 +1,6 @@
 module github.com/zibbp/ganymede
 
-go 1.24
+go 1.24.0
 
 toolchain go1.24.2
 
@@ -29,7 +29,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.38.0
 	golang.org/x/crypto v0.41.0
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.31.0
 	riverqueue.com/riverui v0.12.2
 )
 
