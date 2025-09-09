@@ -105,6 +105,11 @@ func TestArchiveVideo(t *testing.T) {
 	// Wait for the video to be archived
 	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
 	assert.NoError(t, err)
@@ -230,6 +235,11 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	// Wait for the video to be archived
 	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
 	assert.NoError(t, err)
@@ -299,6 +309,11 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 
 	// Wait for the video to be archived
 	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -376,6 +391,11 @@ func TestArchiveVideoHLS(t *testing.T) {
 
 	// Wait for the video to be archived
 	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -480,6 +500,11 @@ func TestArchiveClip(t *testing.T) {
 	// Wait for the video to be archived
 	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
 	assert.NoError(t, err)
@@ -547,6 +572,11 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 
 	// Wait for the video to be archived
 	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
