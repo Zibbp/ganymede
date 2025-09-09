@@ -95,7 +95,7 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters
 		info.Chapters = chapters
 
 		// If chapter is empty use the category as a fallback chapter
-		if len(info.Chapters) == 0 {
+		if len(info.Chapters) == 0 && gqlVideo.Game.Name != "" {
 			info.Chapters = []chapter.Chapter{
 				{
 					ID:    "fallback",
