@@ -80,7 +80,7 @@ func TestArchiveVideo(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
@@ -156,6 +156,9 @@ func TestArchiveVideo(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 	assert.Len(t, v.SpriteThumbnailsImages, 1, "Sprite thumbnails should be generated for videos")
+
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
 
 	// Test delete and ensure directory is removed
 	videoDirectory := filepath.Dir(filepath.Clean(v.VideoPath))
@@ -247,6 +250,9 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.NoFileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
 
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
+
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
@@ -313,6 +319,9 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.FileExists(t, v.VideoPath)
 	assert.FileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
+
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
 
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
@@ -388,6 +397,9 @@ func TestArchiveVideoHLS(t *testing.T) {
 	assert.NoFileExists(t, v.ChatVideoPath)
 
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
+
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
 
 	// Assert video is playable
 	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
@@ -557,6 +569,9 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.NoFileExists(t, v.ChatVideoPath)
 
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
+
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
 
 	// Assert sprite thumbnail facts
 	v, err = app.Database.Client.Vod.Query().Where(vod.ID(v.ID)).Only(context.Background())

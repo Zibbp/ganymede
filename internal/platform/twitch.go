@@ -93,6 +93,19 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters
 		}
 		chapters = append(chapters, convertedChapters...)
 		info.Chapters = chapters
+
+		// If chapter is empty use the category as a fallback chapter
+		if len(info.Chapters) == 0 {
+			info.Chapters = []chapter.Chapter{
+				{
+					ID:    "fallback",
+					Type:  string(utils.ChapterTypeFallback),
+					Title: gqlVideo.Game.Name,
+					Start: 0,
+					End:   int(info.Duration.Seconds()),
+				},
+			}
+		}
 	}
 
 	// get muted segments
