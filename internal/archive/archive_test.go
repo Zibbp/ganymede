@@ -152,7 +152,7 @@ func TestArchiveVideo(t *testing.T) {
 	assert.Greater(t, webThumbnailFileInfo.Size(), int64(0), "Web thumbnail file should not be empty")
 
 	// Assert sprite thumbnail facts
-	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 	assert.Len(t, v.SpriteThumbnailsImages, 1, "Sprite thumbnails should be generated for videos")
@@ -205,7 +205,7 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
@@ -275,7 +275,7 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
@@ -350,7 +350,7 @@ func TestArchiveVideoHLS(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
@@ -523,7 +523,7 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
