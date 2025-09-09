@@ -501,7 +501,7 @@ func TestArchiveClip(t *testing.T) {
 	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
 
 	// Requery video
-	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchClipId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
