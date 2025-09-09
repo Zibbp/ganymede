@@ -51,7 +51,7 @@ func setupAppAndSeed(t *testing.T) (*server.Application, *ent.Playlist, *ent.Cha
 
 	// Add chapters to the video
 	_, err = app.ChapterService.CreateChapter(chapter.Chapter{
-		Type:  "game_change",
+		Type:  string(utils.ChapterTypeGameChange),
 		Title: "Baldur's Gate 3",
 		Start: 0,
 		End:   3600,

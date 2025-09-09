@@ -219,3 +219,18 @@ func (PlaylistRuleField) Values() (kinds []string) {
 	}
 	return
 }
+
+// ChapterType represents the type of a chapter.
+type ChapterType string
+
+const (
+	ChapterTypeGameChange ChapterType = "GAME_CHANGE" // A chapter that indicates a change in the game being played
+	ChapterTypeFallback   ChapterType = "FALLBACK"    // A fallback chapter to be used when no other chapter is available, typically the video category/game is used instead
+)
+
+func (ChapterType) Values() (kinds []string) {
+	for _, s := range []ChapterType{ChapterTypeGameChange, ChapterTypeFallback} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}

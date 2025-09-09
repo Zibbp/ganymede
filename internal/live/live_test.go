@@ -174,11 +174,8 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.True(t, tests_shared.IsPlayableVideo(vod.VideoPath), "Video file is not playable")
 	assert.True(t, tests_shared.IsPlayableVideo(vod.ChatVideoPath), "Video file is not playable")
 
-	// If live archive assert at least one chapter exists
-	if vod.Type == utils.Live {
-		assert.NoError(t, err, "Failed to get chapters for VOD")
-		assert.GreaterOrEqual(t, len(vod.Edges.Chapters), 1, "Expected at least one chapter for live archive VOD")
-	}
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, vod.Edges.Chapters, "Expected at least one chapter to be present")
 }
 
 // TestTwitchWatchedChannelLive tests the basic live archiving of a Twitch channel

@@ -378,7 +378,7 @@ OUTER:
 
 				// Create initial chapter
 				_, err = s.ChapterService.CreateChapter(chapter.Chapter{
-					Type:  "GAME_CHANGE",
+					Type:  string(utils.ChapterTypeGameChange),
 					Start: 0,
 					End:   0,
 					Title: stream.GameName,
@@ -469,7 +469,7 @@ func (s *Service) updateLiveStreamArchiveChapter(stream platform.LiveStreamInfo)
 
 	// Create new chapter
 	_, err = s.ChapterService.CreateChapter(chapter.Chapter{
-		Type:  "GAME_CHANGE",
+		Type:  string(utils.ChapterTypeGameChange),
 		Start: lastChapter.End,
 		End:   0,
 		Title: stream.GameName,
