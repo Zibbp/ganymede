@@ -725,10 +725,20 @@ func (s *Service) GetChatBadges(ctx context.Context, vodID uuid.UUID) (*platform
 					if imgData.Title == "" {
 						empty = true
 					} else {
+						var badgeTitle string
+						if imgData.Description != "" {
+							// Use the description instead of the title because the title
+							// looks broken for the default "1-Year Subscriber" badge
+							badgeTitle = imgData.Description
+						} else {
+							// Fallback on the title just in case
+							badgeTitle = imgData.Title
+						}
+
 						badgeResp.Badges = append(badgeResp.Badges, platform.Badge{
 							Name:       badge.Name,
 							Version:    v,
-							Title:      fmt.Sprintf("%s %s", badge.Name, v),
+							Title:      badgeTitle,
 							ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData.Bytes),
 						})
 					}
@@ -750,7 +760,7 @@ func (s *Service) GetChatBadges(ctx context.Context, vodID uuid.UUID) (*platform
 						badgeResp.Badges = append(badgeResp.Badges, platform.Badge{
 							Name:       badge.Name,
 							Version:    v,
-							Title:      fmt.Sprintf("%s %s", badge.Name, v),
+							Title:      imgData.Title,
 							ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData.Bytes),
 						})
 					}
@@ -771,7 +781,7 @@ func (s *Service) GetChatBadges(ctx context.Context, vodID uuid.UUID) (*platform
 						badgeResp.Badges = append(badgeResp.Badges, platform.Badge{
 							Name:       badge.Name,
 							Version:    v,
-							Title:      fmt.Sprintf("%s %s", badge.Name, v),
+							Title:      imgData.Title,
 							ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData.Bytes),
 						})
 					}
@@ -791,7 +801,7 @@ func (s *Service) GetChatBadges(ctx context.Context, vodID uuid.UUID) (*platform
 						badgeResp.Badges = append(badgeResp.Badges, platform.Badge{
 							Name:       badge.Name,
 							Version:    v,
-							Title:      fmt.Sprintf("%s %s", badge.Name, v),
+							Title:      imgData.Title,
 							ImageUrl1X: fmt.Sprintf("data:image/png;base64,%s", imgData.Bytes),
 						})
 					}
