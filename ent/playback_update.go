@@ -25,100 +25,100 @@ type PlaybackUpdate struct {
 }
 
 // Where appends a list predicates to the PlaybackUpdate builder.
-func (pu *PlaybackUpdate) Where(ps ...predicate.Playback) *PlaybackUpdate {
-	pu.mutation.Where(ps...)
-	return pu
+func (_u *PlaybackUpdate) Where(ps ...predicate.Playback) *PlaybackUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetVodID sets the "vod_id" field.
-func (pu *PlaybackUpdate) SetVodID(u uuid.UUID) *PlaybackUpdate {
-	pu.mutation.SetVodID(u)
-	return pu
+func (_u *PlaybackUpdate) SetVodID(v uuid.UUID) *PlaybackUpdate {
+	_u.mutation.SetVodID(v)
+	return _u
 }
 
 // SetNillableVodID sets the "vod_id" field if the given value is not nil.
-func (pu *PlaybackUpdate) SetNillableVodID(u *uuid.UUID) *PlaybackUpdate {
-	if u != nil {
-		pu.SetVodID(*u)
+func (_u *PlaybackUpdate) SetNillableVodID(v *uuid.UUID) *PlaybackUpdate {
+	if v != nil {
+		_u.SetVodID(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (pu *PlaybackUpdate) SetUserID(u uuid.UUID) *PlaybackUpdate {
-	pu.mutation.SetUserID(u)
-	return pu
+func (_u *PlaybackUpdate) SetUserID(v uuid.UUID) *PlaybackUpdate {
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (pu *PlaybackUpdate) SetNillableUserID(u *uuid.UUID) *PlaybackUpdate {
-	if u != nil {
-		pu.SetUserID(*u)
+func (_u *PlaybackUpdate) SetNillableUserID(v *uuid.UUID) *PlaybackUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetTime sets the "time" field.
-func (pu *PlaybackUpdate) SetTime(i int) *PlaybackUpdate {
-	pu.mutation.ResetTime()
-	pu.mutation.SetTime(i)
-	return pu
+func (_u *PlaybackUpdate) SetTime(v int) *PlaybackUpdate {
+	_u.mutation.ResetTime()
+	_u.mutation.SetTime(v)
+	return _u
 }
 
 // SetNillableTime sets the "time" field if the given value is not nil.
-func (pu *PlaybackUpdate) SetNillableTime(i *int) *PlaybackUpdate {
-	if i != nil {
-		pu.SetTime(*i)
+func (_u *PlaybackUpdate) SetNillableTime(v *int) *PlaybackUpdate {
+	if v != nil {
+		_u.SetTime(*v)
 	}
-	return pu
+	return _u
 }
 
-// AddTime adds i to the "time" field.
-func (pu *PlaybackUpdate) AddTime(i int) *PlaybackUpdate {
-	pu.mutation.AddTime(i)
-	return pu
+// AddTime adds value to the "time" field.
+func (_u *PlaybackUpdate) AddTime(v int) *PlaybackUpdate {
+	_u.mutation.AddTime(v)
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (pu *PlaybackUpdate) SetStatus(us utils.PlaybackStatus) *PlaybackUpdate {
-	pu.mutation.SetStatus(us)
-	return pu
+func (_u *PlaybackUpdate) SetStatus(v utils.PlaybackStatus) *PlaybackUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (pu *PlaybackUpdate) SetNillableStatus(us *utils.PlaybackStatus) *PlaybackUpdate {
-	if us != nil {
-		pu.SetStatus(*us)
+func (_u *PlaybackUpdate) SetNillableStatus(v *utils.PlaybackStatus) *PlaybackUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearStatus clears the value of the "status" field.
-func (pu *PlaybackUpdate) ClearStatus() *PlaybackUpdate {
-	pu.mutation.ClearStatus()
-	return pu
+func (_u *PlaybackUpdate) ClearStatus() *PlaybackUpdate {
+	_u.mutation.ClearStatus()
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pu *PlaybackUpdate) SetUpdatedAt(t time.Time) *PlaybackUpdate {
-	pu.mutation.SetUpdatedAt(t)
-	return pu
+func (_u *PlaybackUpdate) SetUpdatedAt(v time.Time) *PlaybackUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the PlaybackMutation object of the builder.
-func (pu *PlaybackUpdate) Mutation() *PlaybackMutation {
-	return pu.mutation
+func (_u *PlaybackUpdate) Mutation() *PlaybackMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (pu *PlaybackUpdate) Save(ctx context.Context) (int, error) {
-	pu.defaults()
-	return withHooks(ctx, pu.sqlSave, pu.mutation, pu.hooks)
+func (_u *PlaybackUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pu *PlaybackUpdate) SaveX(ctx context.Context) int {
-	affected, err := pu.Save(ctx)
+func (_u *PlaybackUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -126,29 +126,29 @@ func (pu *PlaybackUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (pu *PlaybackUpdate) Exec(ctx context.Context) error {
-	_, err := pu.Save(ctx)
+func (_u *PlaybackUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pu *PlaybackUpdate) ExecX(ctx context.Context) {
-	if err := pu.Exec(ctx); err != nil {
+func (_u *PlaybackUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pu *PlaybackUpdate) defaults() {
-	if _, ok := pu.mutation.UpdatedAt(); !ok {
+func (_u *PlaybackUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := playback.UpdateDefaultUpdatedAt()
-		pu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pu *PlaybackUpdate) check() error {
-	if v, ok := pu.mutation.Status(); ok {
+func (_u *PlaybackUpdate) check() error {
+	if v, ok := _u.mutation.Status(); ok {
 		if err := playback.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Playback.status": %w`, err)}
 		}
@@ -156,40 +156,40 @@ func (pu *PlaybackUpdate) check() error {
 	return nil
 }
 
-func (pu *PlaybackUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := pu.check(); err != nil {
-		return n, err
+func (_u *PlaybackUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(playback.Table, playback.Columns, sqlgraph.NewFieldSpec(playback.FieldID, field.TypeUUID))
-	if ps := pu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pu.mutation.VodID(); ok {
+	if value, ok := _u.mutation.VodID(); ok {
 		_spec.SetField(playback.FieldVodID, field.TypeUUID, value)
 	}
-	if value, ok := pu.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(playback.FieldUserID, field.TypeUUID, value)
 	}
-	if value, ok := pu.mutation.Time(); ok {
+	if value, ok := _u.mutation.Time(); ok {
 		_spec.SetField(playback.FieldTime, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.AddedTime(); ok {
+	if value, ok := _u.mutation.AddedTime(); ok {
 		_spec.AddField(playback.FieldTime, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(playback.FieldStatus, field.TypeEnum, value)
 	}
-	if pu.mutation.StatusCleared() {
+	if _u.mutation.StatusCleared() {
 		_spec.ClearField(playback.FieldStatus, field.TypeEnum)
 	}
-	if value, ok := pu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(playback.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{playback.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -197,8 +197,8 @@ func (pu *PlaybackUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	pu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // PlaybackUpdateOne is the builder for updating a single Playback entity.
@@ -210,107 +210,107 @@ type PlaybackUpdateOne struct {
 }
 
 // SetVodID sets the "vod_id" field.
-func (puo *PlaybackUpdateOne) SetVodID(u uuid.UUID) *PlaybackUpdateOne {
-	puo.mutation.SetVodID(u)
-	return puo
+func (_u *PlaybackUpdateOne) SetVodID(v uuid.UUID) *PlaybackUpdateOne {
+	_u.mutation.SetVodID(v)
+	return _u
 }
 
 // SetNillableVodID sets the "vod_id" field if the given value is not nil.
-func (puo *PlaybackUpdateOne) SetNillableVodID(u *uuid.UUID) *PlaybackUpdateOne {
-	if u != nil {
-		puo.SetVodID(*u)
+func (_u *PlaybackUpdateOne) SetNillableVodID(v *uuid.UUID) *PlaybackUpdateOne {
+	if v != nil {
+		_u.SetVodID(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (puo *PlaybackUpdateOne) SetUserID(u uuid.UUID) *PlaybackUpdateOne {
-	puo.mutation.SetUserID(u)
-	return puo
+func (_u *PlaybackUpdateOne) SetUserID(v uuid.UUID) *PlaybackUpdateOne {
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (puo *PlaybackUpdateOne) SetNillableUserID(u *uuid.UUID) *PlaybackUpdateOne {
-	if u != nil {
-		puo.SetUserID(*u)
+func (_u *PlaybackUpdateOne) SetNillableUserID(v *uuid.UUID) *PlaybackUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetTime sets the "time" field.
-func (puo *PlaybackUpdateOne) SetTime(i int) *PlaybackUpdateOne {
-	puo.mutation.ResetTime()
-	puo.mutation.SetTime(i)
-	return puo
+func (_u *PlaybackUpdateOne) SetTime(v int) *PlaybackUpdateOne {
+	_u.mutation.ResetTime()
+	_u.mutation.SetTime(v)
+	return _u
 }
 
 // SetNillableTime sets the "time" field if the given value is not nil.
-func (puo *PlaybackUpdateOne) SetNillableTime(i *int) *PlaybackUpdateOne {
-	if i != nil {
-		puo.SetTime(*i)
+func (_u *PlaybackUpdateOne) SetNillableTime(v *int) *PlaybackUpdateOne {
+	if v != nil {
+		_u.SetTime(*v)
 	}
-	return puo
+	return _u
 }
 
-// AddTime adds i to the "time" field.
-func (puo *PlaybackUpdateOne) AddTime(i int) *PlaybackUpdateOne {
-	puo.mutation.AddTime(i)
-	return puo
+// AddTime adds value to the "time" field.
+func (_u *PlaybackUpdateOne) AddTime(v int) *PlaybackUpdateOne {
+	_u.mutation.AddTime(v)
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (puo *PlaybackUpdateOne) SetStatus(us utils.PlaybackStatus) *PlaybackUpdateOne {
-	puo.mutation.SetStatus(us)
-	return puo
+func (_u *PlaybackUpdateOne) SetStatus(v utils.PlaybackStatus) *PlaybackUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (puo *PlaybackUpdateOne) SetNillableStatus(us *utils.PlaybackStatus) *PlaybackUpdateOne {
-	if us != nil {
-		puo.SetStatus(*us)
+func (_u *PlaybackUpdateOne) SetNillableStatus(v *utils.PlaybackStatus) *PlaybackUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearStatus clears the value of the "status" field.
-func (puo *PlaybackUpdateOne) ClearStatus() *PlaybackUpdateOne {
-	puo.mutation.ClearStatus()
-	return puo
+func (_u *PlaybackUpdateOne) ClearStatus() *PlaybackUpdateOne {
+	_u.mutation.ClearStatus()
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (puo *PlaybackUpdateOne) SetUpdatedAt(t time.Time) *PlaybackUpdateOne {
-	puo.mutation.SetUpdatedAt(t)
-	return puo
+func (_u *PlaybackUpdateOne) SetUpdatedAt(v time.Time) *PlaybackUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the PlaybackMutation object of the builder.
-func (puo *PlaybackUpdateOne) Mutation() *PlaybackMutation {
-	return puo.mutation
+func (_u *PlaybackUpdateOne) Mutation() *PlaybackMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the PlaybackUpdate builder.
-func (puo *PlaybackUpdateOne) Where(ps ...predicate.Playback) *PlaybackUpdateOne {
-	puo.mutation.Where(ps...)
-	return puo
+func (_u *PlaybackUpdateOne) Where(ps ...predicate.Playback) *PlaybackUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (puo *PlaybackUpdateOne) Select(field string, fields ...string) *PlaybackUpdateOne {
-	puo.fields = append([]string{field}, fields...)
-	return puo
+func (_u *PlaybackUpdateOne) Select(field string, fields ...string) *PlaybackUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Playback entity.
-func (puo *PlaybackUpdateOne) Save(ctx context.Context) (*Playback, error) {
-	puo.defaults()
-	return withHooks(ctx, puo.sqlSave, puo.mutation, puo.hooks)
+func (_u *PlaybackUpdateOne) Save(ctx context.Context) (*Playback, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (puo *PlaybackUpdateOne) SaveX(ctx context.Context) *Playback {
-	node, err := puo.Save(ctx)
+func (_u *PlaybackUpdateOne) SaveX(ctx context.Context) *Playback {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -318,29 +318,29 @@ func (puo *PlaybackUpdateOne) SaveX(ctx context.Context) *Playback {
 }
 
 // Exec executes the query on the entity.
-func (puo *PlaybackUpdateOne) Exec(ctx context.Context) error {
-	_, err := puo.Save(ctx)
+func (_u *PlaybackUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (puo *PlaybackUpdateOne) ExecX(ctx context.Context) {
-	if err := puo.Exec(ctx); err != nil {
+func (_u *PlaybackUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (puo *PlaybackUpdateOne) defaults() {
-	if _, ok := puo.mutation.UpdatedAt(); !ok {
+func (_u *PlaybackUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := playback.UpdateDefaultUpdatedAt()
-		puo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (puo *PlaybackUpdateOne) check() error {
-	if v, ok := puo.mutation.Status(); ok {
+func (_u *PlaybackUpdateOne) check() error {
+	if v, ok := _u.mutation.Status(); ok {
 		if err := playback.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Playback.status": %w`, err)}
 		}
@@ -348,17 +348,17 @@ func (puo *PlaybackUpdateOne) check() error {
 	return nil
 }
 
-func (puo *PlaybackUpdateOne) sqlSave(ctx context.Context) (_node *Playback, err error) {
-	if err := puo.check(); err != nil {
+func (_u *PlaybackUpdateOne) sqlSave(ctx context.Context) (_node *Playback, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(playback.Table, playback.Columns, sqlgraph.NewFieldSpec(playback.FieldID, field.TypeUUID))
-	id, ok := puo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Playback.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := puo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, playback.FieldID)
 		for _, f := range fields {
@@ -370,38 +370,38 @@ func (puo *PlaybackUpdateOne) sqlSave(ctx context.Context) (_node *Playback, err
 			}
 		}
 	}
-	if ps := puo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := puo.mutation.VodID(); ok {
+	if value, ok := _u.mutation.VodID(); ok {
 		_spec.SetField(playback.FieldVodID, field.TypeUUID, value)
 	}
-	if value, ok := puo.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(playback.FieldUserID, field.TypeUUID, value)
 	}
-	if value, ok := puo.mutation.Time(); ok {
+	if value, ok := _u.mutation.Time(); ok {
 		_spec.SetField(playback.FieldTime, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.AddedTime(); ok {
+	if value, ok := _u.mutation.AddedTime(); ok {
 		_spec.AddField(playback.FieldTime, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(playback.FieldStatus, field.TypeEnum, value)
 	}
-	if puo.mutation.StatusCleared() {
+	if _u.mutation.StatusCleared() {
 		_spec.ClearField(playback.FieldStatus, field.TypeEnum)
 	}
-	if value, ok := puo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(playback.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &Playback{config: puo.config}
+	_node = &Playback{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, puo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{playback.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -409,6 +409,6 @@ func (puo *PlaybackUpdateOne) sqlSave(ctx context.Context) (_node *Playback, err
 		}
 		return nil, err
 	}
-	puo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

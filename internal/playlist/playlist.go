@@ -1,11 +1,11 @@
 package playlist
 
 import (
+	"context"
 	"fmt"
 	"sort"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
@@ -30,8 +30,8 @@ func NewService(store *database.Database) *Service {
 	return &Service{Store: store}
 }
 
-func (s *Service) CreatePlaylist(c echo.Context, playlistDto Playlist) (*ent.Playlist, error) {
-	playlistEntry, err := s.Store.Client.Playlist.Create().SetName(playlistDto.Name).SetDescription(playlistDto.Description).Save(c.Request().Context())
+func (s *Service) CreatePlaylist(ctx context.Context, playlistDto Playlist) (*ent.Playlist, error) {
+	playlistEntry, err := s.Store.Client.Playlist.Create().SetName(playlistDto.Name).SetDescription(playlistDto.Description).Save(ctx)
 	if err != nil {
 		if _, ok := err.(*ent.ConstraintError); ok {
 			return nil, fmt.Errorf("playlist already exists")
@@ -42,13 +42,13 @@ func (s *Service) CreatePlaylist(c echo.Context, playlistDto Playlist) (*ent.Pla
 	return playlistEntry, nil
 }
 
-func (s *Service) AddVodToPlaylist(c echo.Context, playlistID uuid.UUID, vodID uuid.UUID) error {
-	_, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).Only(c.Request().Context())
+func (s *Service) AddVodToPlaylist(ctx context.Context, playlistID uuid.UUID, vodID uuid.UUID) error {
+	_, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).Only(ctx)
 	if err != nil {
 		return fmt.Errorf("playlist not found")
 	}
 
-	_, err = s.Store.Client.Playlist.UpdateOneID(playlistID).AddVodIDs(vodID).Save(c.Request().Context())
+	_, err = s.Store.Client.Playlist.UpdateOneID(playlistID).AddVodIDs(vodID).Save(ctx)
 	if err != nil {
 		if _, ok := err.(*ent.ConstraintError); ok {
 			return fmt.Errorf("vod already exists in playlist")
@@ -59,8 +59,8 @@ func (s *Service) AddVodToPlaylist(c echo.Context, playlistID uuid.UUID, vodID u
 	return nil
 }
 
-func (s *Service) GetPlaylists(c echo.Context) ([]*ent.Playlist, error) {
-	playlists, err := s.Store.Client.Playlist.Query().Order(ent.Desc(playlist.FieldCreatedAt)).All(c.Request().Context())
+func (s *Service) GetPlaylists(ctx context.Context) ([]*ent.Playlist, error) {
+	playlists, err := s.Store.Client.Playlist.Query().Order(ent.Desc(playlist.FieldCreatedAt)).All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting playlists: %v", err)
 	}
@@ -68,14 +68,14 @@ func (s *Service) GetPlaylists(c echo.Context) ([]*ent.Playlist, error) {
 	return playlists, nil
 }
 
-func (s *Service) GetPlaylist(c echo.Context, playlistID uuid.UUID, withMultistreamInfo bool) (*ent.Playlist, error) {
+func (s *Service) GetPlaylist(ctx context.Context, playlistID uuid.UUID, withMultistreamInfo bool) (*ent.Playlist, error) {
 	playlistQuery := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).WithVods(func(q *ent.VodQuery) {
 		q.WithChannel()
 	})
 	if withMultistreamInfo {
 		playlistQuery.WithMultistreamInfo(func(miq *ent.MultistreamInfoQuery) { miq.WithVod() })
 	}
-	rPlaylist, err := playlistQuery.Order(ent.Desc(playlist.FieldCreatedAt)).Only(c.Request().Context())
+	rPlaylist, err := playlistQuery.Order(ent.Desc(playlist.FieldCreatedAt)).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting playlist: %v", err)
 	}
@@ -89,13 +89,13 @@ func (s *Service) GetPlaylist(c echo.Context, playlistID uuid.UUID, withMultistr
 	return rPlaylist, nil
 }
 
-func (s *Service) UpdatePlaylist(c echo.Context, playlistID uuid.UUID, playlistDto Playlist) (*ent.Playlist, error) {
-	_, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).Only(c.Request().Context())
+func (s *Service) UpdatePlaylist(ctx context.Context, playlistID uuid.UUID, playlistDto Playlist) (*ent.Playlist, error) {
+	_, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("playlist not found")
 	}
 
-	uPlaylist, err := s.Store.Client.Playlist.UpdateOneID(playlistID).SetName(playlistDto.Name).SetDescription(playlistDto.Description).Save(c.Request().Context())
+	uPlaylist, err := s.Store.Client.Playlist.UpdateOneID(playlistID).SetName(playlistDto.Name).SetDescription(playlistDto.Description).Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error updating playlist: %v", err)
 	}
@@ -103,13 +103,13 @@ func (s *Service) UpdatePlaylist(c echo.Context, playlistID uuid.UUID, playlistD
 	return uPlaylist, nil
 }
 
-func (s *Service) DeletePlaylist(c echo.Context, playlistID uuid.UUID) error {
-	_, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).Only(c.Request().Context())
+func (s *Service) DeletePlaylist(ctx context.Context, playlistID uuid.UUID) error {
+	_, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).Only(ctx)
 	if err != nil {
 		return fmt.Errorf("playlist not found")
 	}
 
-	err = s.Store.Client.Playlist.DeleteOneID(playlistID).Exec(c.Request().Context())
+	err = s.Store.Client.Playlist.DeleteOneID(playlistID).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("error deleting playlist: %v", err)
 	}
@@ -117,13 +117,13 @@ func (s *Service) DeletePlaylist(c echo.Context, playlistID uuid.UUID) error {
 	return nil
 }
 
-func (s *Service) DeleteVodFromPlaylist(c echo.Context, playlistID uuid.UUID, vodID uuid.UUID) error {
-	_, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).Only(c.Request().Context())
+func (s *Service) DeleteVodFromPlaylist(ctx context.Context, playlistID uuid.UUID, vodID uuid.UUID) error {
+	_, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).Only(ctx)
 	if err != nil {
 		return fmt.Errorf("playlist not found")
 	}
 
-	_, err = s.Store.Client.Playlist.UpdateOneID(playlistID).RemoveVodIDs(vodID).Save(c.Request().Context())
+	_, err = s.Store.Client.Playlist.UpdateOneID(playlistID).RemoveVodIDs(vodID).Save(ctx)
 	if err != nil {
 		return fmt.Errorf("error deleting vod from playlist: %v", err)
 	}
@@ -131,15 +131,15 @@ func (s *Service) DeleteVodFromPlaylist(c echo.Context, playlistID uuid.UUID, vo
 	return nil
 }
 
-func (s *Service) SetVodDelayOnPlaylist(c echo.Context, playlistID uuid.UUID, vodID uuid.UUID, delayMs int) error {
-	dbPlaylist, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).WithVods().Only(c.Request().Context())
+func (s *Service) SetVodDelayOnPlaylist(ctx context.Context, playlistID uuid.UUID, vodID uuid.UUID, delayMs int) error {
+	dbPlaylist, err := s.Store.Client.Playlist.Query().Where(playlist.ID(playlistID)).WithVods().Only(ctx)
 	if err != nil {
 		return fmt.Errorf("playlist not found")
 	}
 
 	// If one day, we need to store more than just the delay, we should remove the deletion here
 	if delayMs == 0 {
-		return s.deleteMultistreamInfo(c, playlistID, vodID)
+		return s.deleteMultistreamInfo(ctx, playlistID, vodID)
 	}
 
 	// Check if vod exists in playlist before creating new data
@@ -159,15 +159,15 @@ func (s *Service) SetVodDelayOnPlaylist(c echo.Context, playlistID uuid.UUID, vo
 			multistreaminfo.HasPlaylistWith(playlist.ID(playlistID)),
 			multistreaminfo.HasVodWith(vod.ID(vodID)),
 		),
-	).Only(c.Request().Context())
+	).Only(ctx)
 
 	if err != nil && ent.IsNotFound(err) {
-		_, err = s.Store.Client.MultistreamInfo.Create().SetDelayMs(delayMs).SetPlaylistID(playlistID).SetVodID(vodID).Save(c.Request().Context())
+		_, err = s.Store.Client.MultistreamInfo.Create().SetDelayMs(delayMs).SetPlaylistID(playlistID).SetVodID(vodID).Save(ctx)
 		if err != nil {
 			return fmt.Errorf("error creating multistream info: %v", err)
 		}
 	} else {
-		_, err = s.Store.Client.MultistreamInfo.UpdateOne(dbMultistreamInfo).SetDelayMs(delayMs).Save(c.Request().Context())
+		_, err = s.Store.Client.MultistreamInfo.UpdateOne(dbMultistreamInfo).SetDelayMs(delayMs).Save(ctx)
 		if err != nil {
 			return fmt.Errorf("error updating multistream info: %v", err)
 		}
@@ -175,13 +175,13 @@ func (s *Service) SetVodDelayOnPlaylist(c echo.Context, playlistID uuid.UUID, vo
 	return nil
 }
 
-func (s *Service) deleteMultistreamInfo(c echo.Context, playlistID uuid.UUID, vodID uuid.UUID) error {
+func (s *Service) deleteMultistreamInfo(ctx context.Context, playlistID uuid.UUID, vodID uuid.UUID) error {
 	_, err := s.Store.Client.MultistreamInfo.Delete().Where(
 		multistreaminfo.And(
 			multistreaminfo.HasPlaylistWith(playlist.ID(playlistID)),
 			multistreaminfo.HasVodWith(vod.ID(vodID)),
 		),
-	).Exec(c.Request().Context())
+	).Exec(ctx)
 
 	if err != nil {
 		return fmt.Errorf("error deleting multistream info: %v", err)

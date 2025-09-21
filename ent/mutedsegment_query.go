@@ -32,44 +32,44 @@ type MutedSegmentQuery struct {
 }
 
 // Where adds a new predicate for the MutedSegmentQuery builder.
-func (msq *MutedSegmentQuery) Where(ps ...predicate.MutedSegment) *MutedSegmentQuery {
-	msq.predicates = append(msq.predicates, ps...)
-	return msq
+func (_q *MutedSegmentQuery) Where(ps ...predicate.MutedSegment) *MutedSegmentQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (msq *MutedSegmentQuery) Limit(limit int) *MutedSegmentQuery {
-	msq.ctx.Limit = &limit
-	return msq
+func (_q *MutedSegmentQuery) Limit(limit int) *MutedSegmentQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (msq *MutedSegmentQuery) Offset(offset int) *MutedSegmentQuery {
-	msq.ctx.Offset = &offset
-	return msq
+func (_q *MutedSegmentQuery) Offset(offset int) *MutedSegmentQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (msq *MutedSegmentQuery) Unique(unique bool) *MutedSegmentQuery {
-	msq.ctx.Unique = &unique
-	return msq
+func (_q *MutedSegmentQuery) Unique(unique bool) *MutedSegmentQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (msq *MutedSegmentQuery) Order(o ...mutedsegment.OrderOption) *MutedSegmentQuery {
-	msq.order = append(msq.order, o...)
-	return msq
+func (_q *MutedSegmentQuery) Order(o ...mutedsegment.OrderOption) *MutedSegmentQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryVod chains the current query on the "vod" edge.
-func (msq *MutedSegmentQuery) QueryVod() *VodQuery {
-	query := (&VodClient{config: msq.config}).Query()
+func (_q *MutedSegmentQuery) QueryVod() *VodQuery {
+	query := (&VodClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := msq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := msq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -78,7 +78,7 @@ func (msq *MutedSegmentQuery) QueryVod() *VodQuery {
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, mutedsegment.VodTable, mutedsegment.VodColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(msq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -86,8 +86,8 @@ func (msq *MutedSegmentQuery) QueryVod() *VodQuery {
 
 // First returns the first MutedSegment entity from the query.
 // Returns a *NotFoundError when no MutedSegment was found.
-func (msq *MutedSegmentQuery) First(ctx context.Context) (*MutedSegment, error) {
-	nodes, err := msq.Limit(1).All(setContextOp(ctx, msq.ctx, ent.OpQueryFirst))
+func (_q *MutedSegmentQuery) First(ctx context.Context) (*MutedSegment, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +98,8 @@ func (msq *MutedSegmentQuery) First(ctx context.Context) (*MutedSegment, error) 
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (msq *MutedSegmentQuery) FirstX(ctx context.Context) *MutedSegment {
-	node, err := msq.First(ctx)
+func (_q *MutedSegmentQuery) FirstX(ctx context.Context) *MutedSegment {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -108,9 +108,9 @@ func (msq *MutedSegmentQuery) FirstX(ctx context.Context) *MutedSegment {
 
 // FirstID returns the first MutedSegment ID from the query.
 // Returns a *NotFoundError when no MutedSegment ID was found.
-func (msq *MutedSegmentQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *MutedSegmentQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = msq.Limit(1).IDs(setContextOp(ctx, msq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -121,8 +121,8 @@ func (msq *MutedSegmentQuery) FirstID(ctx context.Context) (id uuid.UUID, err er
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (msq *MutedSegmentQuery) FirstIDX(ctx context.Context) uuid.UUID {
-	id, err := msq.FirstID(ctx)
+func (_q *MutedSegmentQuery) FirstIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -132,8 +132,8 @@ func (msq *MutedSegmentQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Only returns a single MutedSegment entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one MutedSegment entity is found.
 // Returns a *NotFoundError when no MutedSegment entities are found.
-func (msq *MutedSegmentQuery) Only(ctx context.Context) (*MutedSegment, error) {
-	nodes, err := msq.Limit(2).All(setContextOp(ctx, msq.ctx, ent.OpQueryOnly))
+func (_q *MutedSegmentQuery) Only(ctx context.Context) (*MutedSegment, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -148,8 +148,8 @@ func (msq *MutedSegmentQuery) Only(ctx context.Context) (*MutedSegment, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (msq *MutedSegmentQuery) OnlyX(ctx context.Context) *MutedSegment {
-	node, err := msq.Only(ctx)
+func (_q *MutedSegmentQuery) OnlyX(ctx context.Context) *MutedSegment {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,9 +159,9 @@ func (msq *MutedSegmentQuery) OnlyX(ctx context.Context) *MutedSegment {
 // OnlyID is like Only, but returns the only MutedSegment ID in the query.
 // Returns a *NotSingularError when more than one MutedSegment ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (msq *MutedSegmentQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *MutedSegmentQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = msq.Limit(2).IDs(setContextOp(ctx, msq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -176,8 +176,8 @@ func (msq *MutedSegmentQuery) OnlyID(ctx context.Context) (id uuid.UUID, err err
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (msq *MutedSegmentQuery) OnlyIDX(ctx context.Context) uuid.UUID {
-	id, err := msq.OnlyID(ctx)
+func (_q *MutedSegmentQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -185,18 +185,18 @@ func (msq *MutedSegmentQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 }
 
 // All executes the query and returns a list of MutedSegments.
-func (msq *MutedSegmentQuery) All(ctx context.Context) ([]*MutedSegment, error) {
-	ctx = setContextOp(ctx, msq.ctx, ent.OpQueryAll)
-	if err := msq.prepareQuery(ctx); err != nil {
+func (_q *MutedSegmentQuery) All(ctx context.Context) ([]*MutedSegment, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*MutedSegment, *MutedSegmentQuery]()
-	return withInterceptors[[]*MutedSegment](ctx, msq, qr, msq.inters)
+	return withInterceptors[[]*MutedSegment](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (msq *MutedSegmentQuery) AllX(ctx context.Context) []*MutedSegment {
-	nodes, err := msq.All(ctx)
+func (_q *MutedSegmentQuery) AllX(ctx context.Context) []*MutedSegment {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -204,20 +204,20 @@ func (msq *MutedSegmentQuery) AllX(ctx context.Context) []*MutedSegment {
 }
 
 // IDs executes the query and returns a list of MutedSegment IDs.
-func (msq *MutedSegmentQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
-	if msq.ctx.Unique == nil && msq.path != nil {
-		msq.Unique(true)
+func (_q *MutedSegmentQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, msq.ctx, ent.OpQueryIDs)
-	if err = msq.Select(mutedsegment.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(mutedsegment.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (msq *MutedSegmentQuery) IDsX(ctx context.Context) []uuid.UUID {
-	ids, err := msq.IDs(ctx)
+func (_q *MutedSegmentQuery) IDsX(ctx context.Context) []uuid.UUID {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -225,17 +225,17 @@ func (msq *MutedSegmentQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (msq *MutedSegmentQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, msq.ctx, ent.OpQueryCount)
-	if err := msq.prepareQuery(ctx); err != nil {
+func (_q *MutedSegmentQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, msq, querierCount[*MutedSegmentQuery](), msq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*MutedSegmentQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (msq *MutedSegmentQuery) CountX(ctx context.Context) int {
-	count, err := msq.Count(ctx)
+func (_q *MutedSegmentQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -243,9 +243,9 @@ func (msq *MutedSegmentQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (msq *MutedSegmentQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, msq.ctx, ent.OpQueryExist)
-	switch _, err := msq.FirstID(ctx); {
+func (_q *MutedSegmentQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -256,8 +256,8 @@ func (msq *MutedSegmentQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (msq *MutedSegmentQuery) ExistX(ctx context.Context) bool {
-	exist, err := msq.Exist(ctx)
+func (_q *MutedSegmentQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -266,32 +266,32 @@ func (msq *MutedSegmentQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the MutedSegmentQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (msq *MutedSegmentQuery) Clone() *MutedSegmentQuery {
-	if msq == nil {
+func (_q *MutedSegmentQuery) Clone() *MutedSegmentQuery {
+	if _q == nil {
 		return nil
 	}
 	return &MutedSegmentQuery{
-		config:     msq.config,
-		ctx:        msq.ctx.Clone(),
-		order:      append([]mutedsegment.OrderOption{}, msq.order...),
-		inters:     append([]Interceptor{}, msq.inters...),
-		predicates: append([]predicate.MutedSegment{}, msq.predicates...),
-		withVod:    msq.withVod.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]mutedsegment.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.MutedSegment{}, _q.predicates...),
+		withVod:    _q.withVod.Clone(),
 		// clone intermediate query.
-		sql:  msq.sql.Clone(),
-		path: msq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithVod tells the query-builder to eager-load the nodes that are connected to
 // the "vod" edge. The optional arguments are used to configure the query builder of the edge.
-func (msq *MutedSegmentQuery) WithVod(opts ...func(*VodQuery)) *MutedSegmentQuery {
-	query := (&VodClient{config: msq.config}).Query()
+func (_q *MutedSegmentQuery) WithVod(opts ...func(*VodQuery)) *MutedSegmentQuery {
+	query := (&VodClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	msq.withVod = query
-	return msq
+	_q.withVod = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -308,10 +308,10 @@ func (msq *MutedSegmentQuery) WithVod(opts ...func(*VodQuery)) *MutedSegmentQuer
 //		GroupBy(mutedsegment.FieldStart).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (msq *MutedSegmentQuery) GroupBy(field string, fields ...string) *MutedSegmentGroupBy {
-	msq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &MutedSegmentGroupBy{build: msq}
-	grbuild.flds = &msq.ctx.Fields
+func (_q *MutedSegmentQuery) GroupBy(field string, fields ...string) *MutedSegmentGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &MutedSegmentGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = mutedsegment.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -329,55 +329,55 @@ func (msq *MutedSegmentQuery) GroupBy(field string, fields ...string) *MutedSegm
 //	client.MutedSegment.Query().
 //		Select(mutedsegment.FieldStart).
 //		Scan(ctx, &v)
-func (msq *MutedSegmentQuery) Select(fields ...string) *MutedSegmentSelect {
-	msq.ctx.Fields = append(msq.ctx.Fields, fields...)
-	sbuild := &MutedSegmentSelect{MutedSegmentQuery: msq}
+func (_q *MutedSegmentQuery) Select(fields ...string) *MutedSegmentSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &MutedSegmentSelect{MutedSegmentQuery: _q}
 	sbuild.label = mutedsegment.Label
-	sbuild.flds, sbuild.scan = &msq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a MutedSegmentSelect configured with the given aggregations.
-func (msq *MutedSegmentQuery) Aggregate(fns ...AggregateFunc) *MutedSegmentSelect {
-	return msq.Select().Aggregate(fns...)
+func (_q *MutedSegmentQuery) Aggregate(fns ...AggregateFunc) *MutedSegmentSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (msq *MutedSegmentQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range msq.inters {
+func (_q *MutedSegmentQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, msq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range msq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !mutedsegment.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if msq.path != nil {
-		prev, err := msq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		msq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (msq *MutedSegmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*MutedSegment, error) {
+func (_q *MutedSegmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*MutedSegment, error) {
 	var (
 		nodes       = []*MutedSegment{}
-		withFKs     = msq.withFKs
-		_spec       = msq.querySpec()
+		withFKs     = _q.withFKs
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			msq.withVod != nil,
+			_q.withVod != nil,
 		}
 	)
-	if msq.withVod != nil {
+	if _q.withVod != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -387,7 +387,7 @@ func (msq *MutedSegmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		return (*MutedSegment).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &MutedSegment{config: msq.config}
+		node := &MutedSegment{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -395,14 +395,14 @@ func (msq *MutedSegmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, msq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := msq.withVod; query != nil {
-		if err := msq.loadVod(ctx, query, nodes, nil,
+	if query := _q.withVod; query != nil {
+		if err := _q.loadVod(ctx, query, nodes, nil,
 			func(n *MutedSegment, e *Vod) { n.Edges.Vod = e }); err != nil {
 			return nil, err
 		}
@@ -410,7 +410,7 @@ func (msq *MutedSegmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	return nodes, nil
 }
 
-func (msq *MutedSegmentQuery) loadVod(ctx context.Context, query *VodQuery, nodes []*MutedSegment, init func(*MutedSegment), assign func(*MutedSegment, *Vod)) error {
+func (_q *MutedSegmentQuery) loadVod(ctx context.Context, query *VodQuery, nodes []*MutedSegment, init func(*MutedSegment), assign func(*MutedSegment, *Vod)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*MutedSegment)
 	for i := range nodes {
@@ -443,24 +443,24 @@ func (msq *MutedSegmentQuery) loadVod(ctx context.Context, query *VodQuery, node
 	return nil
 }
 
-func (msq *MutedSegmentQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := msq.querySpec()
-	_spec.Node.Columns = msq.ctx.Fields
-	if len(msq.ctx.Fields) > 0 {
-		_spec.Unique = msq.ctx.Unique != nil && *msq.ctx.Unique
+func (_q *MutedSegmentQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, msq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (msq *MutedSegmentQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *MutedSegmentQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(mutedsegment.Table, mutedsegment.Columns, sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID))
-	_spec.From = msq.sql
-	if unique := msq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if msq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := msq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, mutedsegment.FieldID)
 		for i := range fields {
@@ -469,20 +469,20 @@ func (msq *MutedSegmentQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := msq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := msq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := msq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := msq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -492,33 +492,33 @@ func (msq *MutedSegmentQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (msq *MutedSegmentQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(msq.driver.Dialect())
+func (_q *MutedSegmentQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(mutedsegment.Table)
-	columns := msq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = mutedsegment.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if msq.sql != nil {
-		selector = msq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if msq.ctx.Unique != nil && *msq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range msq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range msq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := msq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := msq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -531,41 +531,41 @@ type MutedSegmentGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (msgb *MutedSegmentGroupBy) Aggregate(fns ...AggregateFunc) *MutedSegmentGroupBy {
-	msgb.fns = append(msgb.fns, fns...)
-	return msgb
+func (_g *MutedSegmentGroupBy) Aggregate(fns ...AggregateFunc) *MutedSegmentGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (msgb *MutedSegmentGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, msgb.build.ctx, ent.OpQueryGroupBy)
-	if err := msgb.build.prepareQuery(ctx); err != nil {
+func (_g *MutedSegmentGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*MutedSegmentQuery, *MutedSegmentGroupBy](ctx, msgb.build, msgb, msgb.build.inters, v)
+	return scanWithInterceptors[*MutedSegmentQuery, *MutedSegmentGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (msgb *MutedSegmentGroupBy) sqlScan(ctx context.Context, root *MutedSegmentQuery, v any) error {
+func (_g *MutedSegmentGroupBy) sqlScan(ctx context.Context, root *MutedSegmentQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(msgb.fns))
-	for _, fn := range msgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*msgb.flds)+len(msgb.fns))
-		for _, f := range *msgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*msgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := msgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -579,27 +579,27 @@ type MutedSegmentSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (mss *MutedSegmentSelect) Aggregate(fns ...AggregateFunc) *MutedSegmentSelect {
-	mss.fns = append(mss.fns, fns...)
-	return mss
+func (_s *MutedSegmentSelect) Aggregate(fns ...AggregateFunc) *MutedSegmentSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (mss *MutedSegmentSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, mss.ctx, ent.OpQuerySelect)
-	if err := mss.prepareQuery(ctx); err != nil {
+func (_s *MutedSegmentSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*MutedSegmentQuery, *MutedSegmentSelect](ctx, mss.MutedSegmentQuery, mss, mss.inters, v)
+	return scanWithInterceptors[*MutedSegmentQuery, *MutedSegmentSelect](ctx, _s.MutedSegmentQuery, _s, _s.inters, v)
 }
 
-func (mss *MutedSegmentSelect) sqlScan(ctx context.Context, root *MutedSegmentQuery, v any) error {
+func (_s *MutedSegmentSelect) sqlScan(ctx context.Context, root *MutedSegmentQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(mss.fns))
-	for _, fn := range mss.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*mss.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -607,7 +607,7 @@ func (mss *MutedSegmentSelect) sqlScan(ctx context.Context, root *MutedSegmentQu
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := mss.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

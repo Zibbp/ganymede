@@ -32,44 +32,44 @@ type QueueQuery struct {
 }
 
 // Where adds a new predicate for the QueueQuery builder.
-func (qq *QueueQuery) Where(ps ...predicate.Queue) *QueueQuery {
-	qq.predicates = append(qq.predicates, ps...)
-	return qq
+func (_q *QueueQuery) Where(ps ...predicate.Queue) *QueueQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (qq *QueueQuery) Limit(limit int) *QueueQuery {
-	qq.ctx.Limit = &limit
-	return qq
+func (_q *QueueQuery) Limit(limit int) *QueueQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (qq *QueueQuery) Offset(offset int) *QueueQuery {
-	qq.ctx.Offset = &offset
-	return qq
+func (_q *QueueQuery) Offset(offset int) *QueueQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (qq *QueueQuery) Unique(unique bool) *QueueQuery {
-	qq.ctx.Unique = &unique
-	return qq
+func (_q *QueueQuery) Unique(unique bool) *QueueQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (qq *QueueQuery) Order(o ...queue.OrderOption) *QueueQuery {
-	qq.order = append(qq.order, o...)
-	return qq
+func (_q *QueueQuery) Order(o ...queue.OrderOption) *QueueQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryVod chains the current query on the "vod" edge.
-func (qq *QueueQuery) QueryVod() *VodQuery {
-	query := (&VodClient{config: qq.config}).Query()
+func (_q *QueueQuery) QueryVod() *VodQuery {
+	query := (&VodClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := qq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := qq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -78,7 +78,7 @@ func (qq *QueueQuery) QueryVod() *VodQuery {
 			sqlgraph.To(vod.Table, vod.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, queue.VodTable, queue.VodColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(qq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -86,8 +86,8 @@ func (qq *QueueQuery) QueryVod() *VodQuery {
 
 // First returns the first Queue entity from the query.
 // Returns a *NotFoundError when no Queue was found.
-func (qq *QueueQuery) First(ctx context.Context) (*Queue, error) {
-	nodes, err := qq.Limit(1).All(setContextOp(ctx, qq.ctx, ent.OpQueryFirst))
+func (_q *QueueQuery) First(ctx context.Context) (*Queue, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +98,8 @@ func (qq *QueueQuery) First(ctx context.Context) (*Queue, error) {
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (qq *QueueQuery) FirstX(ctx context.Context) *Queue {
-	node, err := qq.First(ctx)
+func (_q *QueueQuery) FirstX(ctx context.Context) *Queue {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -108,9 +108,9 @@ func (qq *QueueQuery) FirstX(ctx context.Context) *Queue {
 
 // FirstID returns the first Queue ID from the query.
 // Returns a *NotFoundError when no Queue ID was found.
-func (qq *QueueQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *QueueQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = qq.Limit(1).IDs(setContextOp(ctx, qq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -121,8 +121,8 @@ func (qq *QueueQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (qq *QueueQuery) FirstIDX(ctx context.Context) uuid.UUID {
-	id, err := qq.FirstID(ctx)
+func (_q *QueueQuery) FirstIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -132,8 +132,8 @@ func (qq *QueueQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Only returns a single Queue entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one Queue entity is found.
 // Returns a *NotFoundError when no Queue entities are found.
-func (qq *QueueQuery) Only(ctx context.Context) (*Queue, error) {
-	nodes, err := qq.Limit(2).All(setContextOp(ctx, qq.ctx, ent.OpQueryOnly))
+func (_q *QueueQuery) Only(ctx context.Context) (*Queue, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -148,8 +148,8 @@ func (qq *QueueQuery) Only(ctx context.Context) (*Queue, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (qq *QueueQuery) OnlyX(ctx context.Context) *Queue {
-	node, err := qq.Only(ctx)
+func (_q *QueueQuery) OnlyX(ctx context.Context) *Queue {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,9 +159,9 @@ func (qq *QueueQuery) OnlyX(ctx context.Context) *Queue {
 // OnlyID is like Only, but returns the only Queue ID in the query.
 // Returns a *NotSingularError when more than one Queue ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (qq *QueueQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *QueueQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = qq.Limit(2).IDs(setContextOp(ctx, qq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -176,8 +176,8 @@ func (qq *QueueQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (qq *QueueQuery) OnlyIDX(ctx context.Context) uuid.UUID {
-	id, err := qq.OnlyID(ctx)
+func (_q *QueueQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -185,18 +185,18 @@ func (qq *QueueQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 }
 
 // All executes the query and returns a list of Queues.
-func (qq *QueueQuery) All(ctx context.Context) ([]*Queue, error) {
-	ctx = setContextOp(ctx, qq.ctx, ent.OpQueryAll)
-	if err := qq.prepareQuery(ctx); err != nil {
+func (_q *QueueQuery) All(ctx context.Context) ([]*Queue, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*Queue, *QueueQuery]()
-	return withInterceptors[[]*Queue](ctx, qq, qr, qq.inters)
+	return withInterceptors[[]*Queue](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (qq *QueueQuery) AllX(ctx context.Context) []*Queue {
-	nodes, err := qq.All(ctx)
+func (_q *QueueQuery) AllX(ctx context.Context) []*Queue {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -204,20 +204,20 @@ func (qq *QueueQuery) AllX(ctx context.Context) []*Queue {
 }
 
 // IDs executes the query and returns a list of Queue IDs.
-func (qq *QueueQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
-	if qq.ctx.Unique == nil && qq.path != nil {
-		qq.Unique(true)
+func (_q *QueueQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, qq.ctx, ent.OpQueryIDs)
-	if err = qq.Select(queue.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(queue.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (qq *QueueQuery) IDsX(ctx context.Context) []uuid.UUID {
-	ids, err := qq.IDs(ctx)
+func (_q *QueueQuery) IDsX(ctx context.Context) []uuid.UUID {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -225,17 +225,17 @@ func (qq *QueueQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (qq *QueueQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, qq.ctx, ent.OpQueryCount)
-	if err := qq.prepareQuery(ctx); err != nil {
+func (_q *QueueQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, qq, querierCount[*QueueQuery](), qq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*QueueQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (qq *QueueQuery) CountX(ctx context.Context) int {
-	count, err := qq.Count(ctx)
+func (_q *QueueQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -243,9 +243,9 @@ func (qq *QueueQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (qq *QueueQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, qq.ctx, ent.OpQueryExist)
-	switch _, err := qq.FirstID(ctx); {
+func (_q *QueueQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -256,8 +256,8 @@ func (qq *QueueQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (qq *QueueQuery) ExistX(ctx context.Context) bool {
-	exist, err := qq.Exist(ctx)
+func (_q *QueueQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -266,32 +266,32 @@ func (qq *QueueQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the QueueQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (qq *QueueQuery) Clone() *QueueQuery {
-	if qq == nil {
+func (_q *QueueQuery) Clone() *QueueQuery {
+	if _q == nil {
 		return nil
 	}
 	return &QueueQuery{
-		config:     qq.config,
-		ctx:        qq.ctx.Clone(),
-		order:      append([]queue.OrderOption{}, qq.order...),
-		inters:     append([]Interceptor{}, qq.inters...),
-		predicates: append([]predicate.Queue{}, qq.predicates...),
-		withVod:    qq.withVod.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]queue.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.Queue{}, _q.predicates...),
+		withVod:    _q.withVod.Clone(),
 		// clone intermediate query.
-		sql:  qq.sql.Clone(),
-		path: qq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithVod tells the query-builder to eager-load the nodes that are connected to
 // the "vod" edge. The optional arguments are used to configure the query builder of the edge.
-func (qq *QueueQuery) WithVod(opts ...func(*VodQuery)) *QueueQuery {
-	query := (&VodClient{config: qq.config}).Query()
+func (_q *QueueQuery) WithVod(opts ...func(*VodQuery)) *QueueQuery {
+	query := (&VodClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	qq.withVod = query
-	return qq
+	_q.withVod = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -308,10 +308,10 @@ func (qq *QueueQuery) WithVod(opts ...func(*VodQuery)) *QueueQuery {
 //		GroupBy(queue.FieldLiveArchive).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (qq *QueueQuery) GroupBy(field string, fields ...string) *QueueGroupBy {
-	qq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &QueueGroupBy{build: qq}
-	grbuild.flds = &qq.ctx.Fields
+func (_q *QueueQuery) GroupBy(field string, fields ...string) *QueueGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &QueueGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = queue.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -329,55 +329,55 @@ func (qq *QueueQuery) GroupBy(field string, fields ...string) *QueueGroupBy {
 //	client.Queue.Query().
 //		Select(queue.FieldLiveArchive).
 //		Scan(ctx, &v)
-func (qq *QueueQuery) Select(fields ...string) *QueueSelect {
-	qq.ctx.Fields = append(qq.ctx.Fields, fields...)
-	sbuild := &QueueSelect{QueueQuery: qq}
+func (_q *QueueQuery) Select(fields ...string) *QueueSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &QueueSelect{QueueQuery: _q}
 	sbuild.label = queue.Label
-	sbuild.flds, sbuild.scan = &qq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a QueueSelect configured with the given aggregations.
-func (qq *QueueQuery) Aggregate(fns ...AggregateFunc) *QueueSelect {
-	return qq.Select().Aggregate(fns...)
+func (_q *QueueQuery) Aggregate(fns ...AggregateFunc) *QueueSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (qq *QueueQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range qq.inters {
+func (_q *QueueQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, qq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range qq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !queue.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if qq.path != nil {
-		prev, err := qq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		qq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (qq *QueueQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Queue, error) {
+func (_q *QueueQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Queue, error) {
 	var (
 		nodes       = []*Queue{}
-		withFKs     = qq.withFKs
-		_spec       = qq.querySpec()
+		withFKs     = _q.withFKs
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			qq.withVod != nil,
+			_q.withVod != nil,
 		}
 	)
-	if qq.withVod != nil {
+	if _q.withVod != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -387,7 +387,7 @@ func (qq *QueueQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Queue,
 		return (*Queue).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Queue{config: qq.config}
+		node := &Queue{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -395,14 +395,14 @@ func (qq *QueueQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Queue,
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, qq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := qq.withVod; query != nil {
-		if err := qq.loadVod(ctx, query, nodes, nil,
+	if query := _q.withVod; query != nil {
+		if err := _q.loadVod(ctx, query, nodes, nil,
 			func(n *Queue, e *Vod) { n.Edges.Vod = e }); err != nil {
 			return nil, err
 		}
@@ -410,7 +410,7 @@ func (qq *QueueQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Queue,
 	return nodes, nil
 }
 
-func (qq *QueueQuery) loadVod(ctx context.Context, query *VodQuery, nodes []*Queue, init func(*Queue), assign func(*Queue, *Vod)) error {
+func (_q *QueueQuery) loadVod(ctx context.Context, query *VodQuery, nodes []*Queue, init func(*Queue), assign func(*Queue, *Vod)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Queue)
 	for i := range nodes {
@@ -443,24 +443,24 @@ func (qq *QueueQuery) loadVod(ctx context.Context, query *VodQuery, nodes []*Que
 	return nil
 }
 
-func (qq *QueueQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := qq.querySpec()
-	_spec.Node.Columns = qq.ctx.Fields
-	if len(qq.ctx.Fields) > 0 {
-		_spec.Unique = qq.ctx.Unique != nil && *qq.ctx.Unique
+func (_q *QueueQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, qq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (qq *QueueQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *QueueQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(queue.Table, queue.Columns, sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID))
-	_spec.From = qq.sql
-	if unique := qq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if qq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := qq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, queue.FieldID)
 		for i := range fields {
@@ -469,20 +469,20 @@ func (qq *QueueQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := qq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := qq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := qq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := qq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -492,33 +492,33 @@ func (qq *QueueQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (qq *QueueQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(qq.driver.Dialect())
+func (_q *QueueQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(queue.Table)
-	columns := qq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = queue.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if qq.sql != nil {
-		selector = qq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if qq.ctx.Unique != nil && *qq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range qq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range qq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := qq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := qq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -531,41 +531,41 @@ type QueueGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (qgb *QueueGroupBy) Aggregate(fns ...AggregateFunc) *QueueGroupBy {
-	qgb.fns = append(qgb.fns, fns...)
-	return qgb
+func (_g *QueueGroupBy) Aggregate(fns ...AggregateFunc) *QueueGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (qgb *QueueGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, qgb.build.ctx, ent.OpQueryGroupBy)
-	if err := qgb.build.prepareQuery(ctx); err != nil {
+func (_g *QueueGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*QueueQuery, *QueueGroupBy](ctx, qgb.build, qgb, qgb.build.inters, v)
+	return scanWithInterceptors[*QueueQuery, *QueueGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (qgb *QueueGroupBy) sqlScan(ctx context.Context, root *QueueQuery, v any) error {
+func (_g *QueueGroupBy) sqlScan(ctx context.Context, root *QueueQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(qgb.fns))
-	for _, fn := range qgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*qgb.flds)+len(qgb.fns))
-		for _, f := range *qgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*qgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := qgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -579,27 +579,27 @@ type QueueSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (qs *QueueSelect) Aggregate(fns ...AggregateFunc) *QueueSelect {
-	qs.fns = append(qs.fns, fns...)
-	return qs
+func (_s *QueueSelect) Aggregate(fns ...AggregateFunc) *QueueSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (qs *QueueSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, qs.ctx, ent.OpQuerySelect)
-	if err := qs.prepareQuery(ctx); err != nil {
+func (_s *QueueSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*QueueQuery, *QueueSelect](ctx, qs.QueueQuery, qs, qs.inters, v)
+	return scanWithInterceptors[*QueueQuery, *QueueSelect](ctx, _s.QueueQuery, _s, _s.inters, v)
 }
 
-func (qs *QueueSelect) sqlScan(ctx context.Context, root *QueueQuery, v any) error {
+func (_s *QueueSelect) sqlScan(ctx context.Context, root *QueueQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(qs.fns))
-	for _, fn := range qs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*qs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -607,7 +607,7 @@ func (qs *QueueSelect) sqlScan(ctx context.Context, root *QueueQuery, v any) err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := qs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

@@ -23,85 +23,85 @@ type TwitchCategoryUpdate struct {
 }
 
 // Where appends a list predicates to the TwitchCategoryUpdate builder.
-func (tcu *TwitchCategoryUpdate) Where(ps ...predicate.TwitchCategory) *TwitchCategoryUpdate {
-	tcu.mutation.Where(ps...)
-	return tcu
+func (_u *TwitchCategoryUpdate) Where(ps ...predicate.TwitchCategory) *TwitchCategoryUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (tcu *TwitchCategoryUpdate) SetName(s string) *TwitchCategoryUpdate {
-	tcu.mutation.SetName(s)
-	return tcu
+func (_u *TwitchCategoryUpdate) SetName(v string) *TwitchCategoryUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (tcu *TwitchCategoryUpdate) SetNillableName(s *string) *TwitchCategoryUpdate {
-	if s != nil {
-		tcu.SetName(*s)
+func (_u *TwitchCategoryUpdate) SetNillableName(v *string) *TwitchCategoryUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return tcu
+	return _u
 }
 
 // SetBoxArtURL sets the "box_art_url" field.
-func (tcu *TwitchCategoryUpdate) SetBoxArtURL(s string) *TwitchCategoryUpdate {
-	tcu.mutation.SetBoxArtURL(s)
-	return tcu
+func (_u *TwitchCategoryUpdate) SetBoxArtURL(v string) *TwitchCategoryUpdate {
+	_u.mutation.SetBoxArtURL(v)
+	return _u
 }
 
 // SetNillableBoxArtURL sets the "box_art_url" field if the given value is not nil.
-func (tcu *TwitchCategoryUpdate) SetNillableBoxArtURL(s *string) *TwitchCategoryUpdate {
-	if s != nil {
-		tcu.SetBoxArtURL(*s)
+func (_u *TwitchCategoryUpdate) SetNillableBoxArtURL(v *string) *TwitchCategoryUpdate {
+	if v != nil {
+		_u.SetBoxArtURL(*v)
 	}
-	return tcu
+	return _u
 }
 
 // ClearBoxArtURL clears the value of the "box_art_url" field.
-func (tcu *TwitchCategoryUpdate) ClearBoxArtURL() *TwitchCategoryUpdate {
-	tcu.mutation.ClearBoxArtURL()
-	return tcu
+func (_u *TwitchCategoryUpdate) ClearBoxArtURL() *TwitchCategoryUpdate {
+	_u.mutation.ClearBoxArtURL()
+	return _u
 }
 
 // SetIgdbID sets the "igdb_id" field.
-func (tcu *TwitchCategoryUpdate) SetIgdbID(s string) *TwitchCategoryUpdate {
-	tcu.mutation.SetIgdbID(s)
-	return tcu
+func (_u *TwitchCategoryUpdate) SetIgdbID(v string) *TwitchCategoryUpdate {
+	_u.mutation.SetIgdbID(v)
+	return _u
 }
 
 // SetNillableIgdbID sets the "igdb_id" field if the given value is not nil.
-func (tcu *TwitchCategoryUpdate) SetNillableIgdbID(s *string) *TwitchCategoryUpdate {
-	if s != nil {
-		tcu.SetIgdbID(*s)
+func (_u *TwitchCategoryUpdate) SetNillableIgdbID(v *string) *TwitchCategoryUpdate {
+	if v != nil {
+		_u.SetIgdbID(*v)
 	}
-	return tcu
+	return _u
 }
 
 // ClearIgdbID clears the value of the "igdb_id" field.
-func (tcu *TwitchCategoryUpdate) ClearIgdbID() *TwitchCategoryUpdate {
-	tcu.mutation.ClearIgdbID()
-	return tcu
+func (_u *TwitchCategoryUpdate) ClearIgdbID() *TwitchCategoryUpdate {
+	_u.mutation.ClearIgdbID()
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tcu *TwitchCategoryUpdate) SetUpdatedAt(t time.Time) *TwitchCategoryUpdate {
-	tcu.mutation.SetUpdatedAt(t)
-	return tcu
+func (_u *TwitchCategoryUpdate) SetUpdatedAt(v time.Time) *TwitchCategoryUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the TwitchCategoryMutation object of the builder.
-func (tcu *TwitchCategoryUpdate) Mutation() *TwitchCategoryMutation {
-	return tcu.mutation
+func (_u *TwitchCategoryUpdate) Mutation() *TwitchCategoryMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (tcu *TwitchCategoryUpdate) Save(ctx context.Context) (int, error) {
-	tcu.defaults()
-	return withHooks(ctx, tcu.sqlSave, tcu.mutation, tcu.hooks)
+func (_u *TwitchCategoryUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tcu *TwitchCategoryUpdate) SaveX(ctx context.Context) int {
-	affected, err := tcu.Save(ctx)
+func (_u *TwitchCategoryUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -109,54 +109,54 @@ func (tcu *TwitchCategoryUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (tcu *TwitchCategoryUpdate) Exec(ctx context.Context) error {
-	_, err := tcu.Save(ctx)
+func (_u *TwitchCategoryUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tcu *TwitchCategoryUpdate) ExecX(ctx context.Context) {
-	if err := tcu.Exec(ctx); err != nil {
+func (_u *TwitchCategoryUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tcu *TwitchCategoryUpdate) defaults() {
-	if _, ok := tcu.mutation.UpdatedAt(); !ok {
+func (_u *TwitchCategoryUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := twitchcategory.UpdateDefaultUpdatedAt()
-		tcu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
-func (tcu *TwitchCategoryUpdate) sqlSave(ctx context.Context) (n int, err error) {
+func (_u *TwitchCategoryUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(twitchcategory.Table, twitchcategory.Columns, sqlgraph.NewFieldSpec(twitchcategory.FieldID, field.TypeString))
-	if ps := tcu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tcu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(twitchcategory.FieldName, field.TypeString, value)
 	}
-	if value, ok := tcu.mutation.BoxArtURL(); ok {
+	if value, ok := _u.mutation.BoxArtURL(); ok {
 		_spec.SetField(twitchcategory.FieldBoxArtURL, field.TypeString, value)
 	}
-	if tcu.mutation.BoxArtURLCleared() {
+	if _u.mutation.BoxArtURLCleared() {
 		_spec.ClearField(twitchcategory.FieldBoxArtURL, field.TypeString)
 	}
-	if value, ok := tcu.mutation.IgdbID(); ok {
+	if value, ok := _u.mutation.IgdbID(); ok {
 		_spec.SetField(twitchcategory.FieldIgdbID, field.TypeString, value)
 	}
-	if tcu.mutation.IgdbIDCleared() {
+	if _u.mutation.IgdbIDCleared() {
 		_spec.ClearField(twitchcategory.FieldIgdbID, field.TypeString)
 	}
-	if value, ok := tcu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(twitchcategory.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, tcu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{twitchcategory.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -164,8 +164,8 @@ func (tcu *TwitchCategoryUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		return 0, err
 	}
-	tcu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // TwitchCategoryUpdateOne is the builder for updating a single TwitchCategory entity.
@@ -177,92 +177,92 @@ type TwitchCategoryUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (tcuo *TwitchCategoryUpdateOne) SetName(s string) *TwitchCategoryUpdateOne {
-	tcuo.mutation.SetName(s)
-	return tcuo
+func (_u *TwitchCategoryUpdateOne) SetName(v string) *TwitchCategoryUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (tcuo *TwitchCategoryUpdateOne) SetNillableName(s *string) *TwitchCategoryUpdateOne {
-	if s != nil {
-		tcuo.SetName(*s)
+func (_u *TwitchCategoryUpdateOne) SetNillableName(v *string) *TwitchCategoryUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return tcuo
+	return _u
 }
 
 // SetBoxArtURL sets the "box_art_url" field.
-func (tcuo *TwitchCategoryUpdateOne) SetBoxArtURL(s string) *TwitchCategoryUpdateOne {
-	tcuo.mutation.SetBoxArtURL(s)
-	return tcuo
+func (_u *TwitchCategoryUpdateOne) SetBoxArtURL(v string) *TwitchCategoryUpdateOne {
+	_u.mutation.SetBoxArtURL(v)
+	return _u
 }
 
 // SetNillableBoxArtURL sets the "box_art_url" field if the given value is not nil.
-func (tcuo *TwitchCategoryUpdateOne) SetNillableBoxArtURL(s *string) *TwitchCategoryUpdateOne {
-	if s != nil {
-		tcuo.SetBoxArtURL(*s)
+func (_u *TwitchCategoryUpdateOne) SetNillableBoxArtURL(v *string) *TwitchCategoryUpdateOne {
+	if v != nil {
+		_u.SetBoxArtURL(*v)
 	}
-	return tcuo
+	return _u
 }
 
 // ClearBoxArtURL clears the value of the "box_art_url" field.
-func (tcuo *TwitchCategoryUpdateOne) ClearBoxArtURL() *TwitchCategoryUpdateOne {
-	tcuo.mutation.ClearBoxArtURL()
-	return tcuo
+func (_u *TwitchCategoryUpdateOne) ClearBoxArtURL() *TwitchCategoryUpdateOne {
+	_u.mutation.ClearBoxArtURL()
+	return _u
 }
 
 // SetIgdbID sets the "igdb_id" field.
-func (tcuo *TwitchCategoryUpdateOne) SetIgdbID(s string) *TwitchCategoryUpdateOne {
-	tcuo.mutation.SetIgdbID(s)
-	return tcuo
+func (_u *TwitchCategoryUpdateOne) SetIgdbID(v string) *TwitchCategoryUpdateOne {
+	_u.mutation.SetIgdbID(v)
+	return _u
 }
 
 // SetNillableIgdbID sets the "igdb_id" field if the given value is not nil.
-func (tcuo *TwitchCategoryUpdateOne) SetNillableIgdbID(s *string) *TwitchCategoryUpdateOne {
-	if s != nil {
-		tcuo.SetIgdbID(*s)
+func (_u *TwitchCategoryUpdateOne) SetNillableIgdbID(v *string) *TwitchCategoryUpdateOne {
+	if v != nil {
+		_u.SetIgdbID(*v)
 	}
-	return tcuo
+	return _u
 }
 
 // ClearIgdbID clears the value of the "igdb_id" field.
-func (tcuo *TwitchCategoryUpdateOne) ClearIgdbID() *TwitchCategoryUpdateOne {
-	tcuo.mutation.ClearIgdbID()
-	return tcuo
+func (_u *TwitchCategoryUpdateOne) ClearIgdbID() *TwitchCategoryUpdateOne {
+	_u.mutation.ClearIgdbID()
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tcuo *TwitchCategoryUpdateOne) SetUpdatedAt(t time.Time) *TwitchCategoryUpdateOne {
-	tcuo.mutation.SetUpdatedAt(t)
-	return tcuo
+func (_u *TwitchCategoryUpdateOne) SetUpdatedAt(v time.Time) *TwitchCategoryUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the TwitchCategoryMutation object of the builder.
-func (tcuo *TwitchCategoryUpdateOne) Mutation() *TwitchCategoryMutation {
-	return tcuo.mutation
+func (_u *TwitchCategoryUpdateOne) Mutation() *TwitchCategoryMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the TwitchCategoryUpdate builder.
-func (tcuo *TwitchCategoryUpdateOne) Where(ps ...predicate.TwitchCategory) *TwitchCategoryUpdateOne {
-	tcuo.mutation.Where(ps...)
-	return tcuo
+func (_u *TwitchCategoryUpdateOne) Where(ps ...predicate.TwitchCategory) *TwitchCategoryUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (tcuo *TwitchCategoryUpdateOne) Select(field string, fields ...string) *TwitchCategoryUpdateOne {
-	tcuo.fields = append([]string{field}, fields...)
-	return tcuo
+func (_u *TwitchCategoryUpdateOne) Select(field string, fields ...string) *TwitchCategoryUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated TwitchCategory entity.
-func (tcuo *TwitchCategoryUpdateOne) Save(ctx context.Context) (*TwitchCategory, error) {
-	tcuo.defaults()
-	return withHooks(ctx, tcuo.sqlSave, tcuo.mutation, tcuo.hooks)
+func (_u *TwitchCategoryUpdateOne) Save(ctx context.Context) (*TwitchCategory, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tcuo *TwitchCategoryUpdateOne) SaveX(ctx context.Context) *TwitchCategory {
-	node, err := tcuo.Save(ctx)
+func (_u *TwitchCategoryUpdateOne) SaveX(ctx context.Context) *TwitchCategory {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -270,34 +270,34 @@ func (tcuo *TwitchCategoryUpdateOne) SaveX(ctx context.Context) *TwitchCategory 
 }
 
 // Exec executes the query on the entity.
-func (tcuo *TwitchCategoryUpdateOne) Exec(ctx context.Context) error {
-	_, err := tcuo.Save(ctx)
+func (_u *TwitchCategoryUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tcuo *TwitchCategoryUpdateOne) ExecX(ctx context.Context) {
-	if err := tcuo.Exec(ctx); err != nil {
+func (_u *TwitchCategoryUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tcuo *TwitchCategoryUpdateOne) defaults() {
-	if _, ok := tcuo.mutation.UpdatedAt(); !ok {
+func (_u *TwitchCategoryUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := twitchcategory.UpdateDefaultUpdatedAt()
-		tcuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
-func (tcuo *TwitchCategoryUpdateOne) sqlSave(ctx context.Context) (_node *TwitchCategory, err error) {
+func (_u *TwitchCategoryUpdateOne) sqlSave(ctx context.Context) (_node *TwitchCategory, err error) {
 	_spec := sqlgraph.NewUpdateSpec(twitchcategory.Table, twitchcategory.Columns, sqlgraph.NewFieldSpec(twitchcategory.FieldID, field.TypeString))
-	id, ok := tcuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "TwitchCategory.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := tcuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, twitchcategory.FieldID)
 		for _, f := range fields {
@@ -309,35 +309,35 @@ func (tcuo *TwitchCategoryUpdateOne) sqlSave(ctx context.Context) (_node *Twitch
 			}
 		}
 	}
-	if ps := tcuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tcuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(twitchcategory.FieldName, field.TypeString, value)
 	}
-	if value, ok := tcuo.mutation.BoxArtURL(); ok {
+	if value, ok := _u.mutation.BoxArtURL(); ok {
 		_spec.SetField(twitchcategory.FieldBoxArtURL, field.TypeString, value)
 	}
-	if tcuo.mutation.BoxArtURLCleared() {
+	if _u.mutation.BoxArtURLCleared() {
 		_spec.ClearField(twitchcategory.FieldBoxArtURL, field.TypeString)
 	}
-	if value, ok := tcuo.mutation.IgdbID(); ok {
+	if value, ok := _u.mutation.IgdbID(); ok {
 		_spec.SetField(twitchcategory.FieldIgdbID, field.TypeString, value)
 	}
-	if tcuo.mutation.IgdbIDCleared() {
+	if _u.mutation.IgdbIDCleared() {
 		_spec.ClearField(twitchcategory.FieldIgdbID, field.TypeString)
 	}
-	if value, ok := tcuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(twitchcategory.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &TwitchCategory{config: tcuo.config}
+	_node = &TwitchCategory{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, tcuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{twitchcategory.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -345,6 +345,6 @@ func (tcuo *TwitchCategoryUpdateOne) sqlSave(ctx context.Context) (_node *Twitch
 		}
 		return nil, err
 	}
-	tcuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

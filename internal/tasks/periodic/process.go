@@ -61,7 +61,6 @@ func (w SaveVideoChaptersWorker) Work(ctx context.Context, job *river.Job[SaveVi
 			continue
 		}
 
-		log.Info().Msgf("saving chapters for video %s", video.ExtID)
 		platformVideo, err := platform.GetVideo(ctx, video.ExtID, true, true)
 		if err != nil {
 			return err
@@ -76,6 +75,7 @@ func (w SaveVideoChaptersWorker) Work(ctx context.Context, job *river.Job[SaveVi
 			}
 
 			if len(existingVideoChapters) == 0 {
+				log.Info().Str("video_id", video.ID.String()).Msgf("saving chapters for external video %s", video.ExtID)
 
 				// save chapters to database
 				for _, c := range platformVideo.Chapters {
@@ -85,7 +85,7 @@ func (w SaveVideoChaptersWorker) Work(ctx context.Context, job *river.Job[SaveVi
 					}
 				}
 
-				log.Info().Str("video_id", fmt.Sprintf("%d", video.ID)).Str("chapters", fmt.Sprintf("%d", len(platformVideo.Chapters))).Msgf("saved chapters for video")
+				log.Info().Str("video_id", video.ID.String()).Str("chapters", fmt.Sprintf("%d", len(platformVideo.Chapters))).Msgf("saved chapters for video")
 			}
 		}
 

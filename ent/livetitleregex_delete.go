@@ -20,56 +20,56 @@ type LiveTitleRegexDelete struct {
 }
 
 // Where appends a list predicates to the LiveTitleRegexDelete builder.
-func (ltrd *LiveTitleRegexDelete) Where(ps ...predicate.LiveTitleRegex) *LiveTitleRegexDelete {
-	ltrd.mutation.Where(ps...)
-	return ltrd
+func (_d *LiveTitleRegexDelete) Where(ps ...predicate.LiveTitleRegex) *LiveTitleRegexDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ltrd *LiveTitleRegexDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, ltrd.sqlExec, ltrd.mutation, ltrd.hooks)
+func (_d *LiveTitleRegexDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ltrd *LiveTitleRegexDelete) ExecX(ctx context.Context) int {
-	n, err := ltrd.Exec(ctx)
+func (_d *LiveTitleRegexDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ltrd *LiveTitleRegexDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *LiveTitleRegexDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(livetitleregex.Table, sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID))
-	if ps := ltrd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ltrd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	ltrd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // LiveTitleRegexDeleteOne is the builder for deleting a single LiveTitleRegex entity.
 type LiveTitleRegexDeleteOne struct {
-	ltrd *LiveTitleRegexDelete
+	_d *LiveTitleRegexDelete
 }
 
 // Where appends a list predicates to the LiveTitleRegexDelete builder.
-func (ltrdo *LiveTitleRegexDeleteOne) Where(ps ...predicate.LiveTitleRegex) *LiveTitleRegexDeleteOne {
-	ltrdo.ltrd.mutation.Where(ps...)
-	return ltrdo
+func (_d *LiveTitleRegexDeleteOne) Where(ps ...predicate.LiveTitleRegex) *LiveTitleRegexDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (ltrdo *LiveTitleRegexDeleteOne) Exec(ctx context.Context) error {
-	n, err := ltrdo.ltrd.Exec(ctx)
+func (_d *LiveTitleRegexDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (ltrdo *LiveTitleRegexDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ltrdo *LiveTitleRegexDeleteOne) ExecX(ctx context.Context) {
-	if err := ltrdo.Exec(ctx); err != nil {
+func (_d *LiveTitleRegexDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

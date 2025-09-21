@@ -50,12 +50,12 @@ type Handler struct {
 	Server         *echo.Echo
 	Service        Services
 	SessionManager *scs.SessionManager
-	RiverUIServer  *riverui.Server
+	RiverUIServer  *riverui.Handler
 }
 
 var sessionManager *scs.SessionManager
 
-func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform, riverUIServer *riverui.Server) *Handler {
+func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
 	log.Debug().Msg("creating route handler")
 	envConfig := config.GetEnvConfig()
 
@@ -220,6 +220,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.POST("/:id/generate-static-thumbnail", h.GenerateStaticThumbnail, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	vodGroup.POST("/:id/generate-sprite-thumbnails", h.GenerateSpriteThumbnails, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	vodGroup.GET("/:id/thumbnails/vtt", h.GetVodSpriteThumbnails)
+	vodGroup.POST("/:id/ffprobe", h.GetFFprobe, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
 
 	// Queue
 	queueGroup := e.Group("/queue")
@@ -294,10 +295,9 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	playlistGroup.DELETE("/:id", h.DeletePlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	playlistGroup.PUT("/:id", h.UpdatePlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	playlistGroup.PUT("/:id/multistream/delay", h.SetVodDelayOnPlaylistMultistream, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-
-	// Exec
-	execGroup := e.Group("/exec")
-	execGroup.POST("/ffprobe", h.GetFfprobeData, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
+	playlistGroup.PUT("/:id/rules", h.SetPlaylistRules, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	playlistGroup.GET("/:id/rules", h.GetPlaylistRules, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	playlistGroup.POST("/:id/rules/test", h.TestPlaylistRules, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 
 	// Task
 	taskGroup := e.Group("/task")

@@ -560,6 +560,25 @@ const useGetVideoChatHistogram = (id: string) => {
   });
 };
 
+const getVideoFFprobe = async (id: string): Promise<String> => {
+  const response = await useAxios.post<ApiResponse<String>>(
+    `/api/v1/vod/${id}/ffprobe`
+  );
+  return response.data.data;
+};
+
+const useGetVideoFFprobe = (id: string) => {
+  return useQuery({
+    queryKey: ["video_ffprobe", id],
+    queryFn: () => getVideoFFprobe(id),
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchIntervalInBackground: false,
+  });
+};
+
 export {
   fetchVideosFilter,
   useFetchVideosFilter,
@@ -577,4 +596,5 @@ export {
   useGetVideoClips,
   useGenerateSpriteThumbnails,
   useGetVideoChatHistogram,
+  useGetVideoFFprobe
 };

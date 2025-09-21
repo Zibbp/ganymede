@@ -30,6 +30,7 @@ const SCROLL_THRESHOLD = 100; // px from bottom to trigger auto-scroll
 
 interface ChatMaps {
   emoteMap: Map<string, Emote>;
+  thirdPartyEmoteMap: Map<string, Emote>;
   generalBadgeMap: Map<string, Badge>;
   subscriptionBadgeMap: Map<string, Badge>;
   subscriptionGiftBadgeMap: Map<string, Badge>;
@@ -61,6 +62,7 @@ const ChatPlayer = ({ video }: Params) => {
   const retryCountRef = useRef(0);
   const chatMapsRef = useRef<ChatMaps>({
     emoteMap: new Map(),
+    thirdPartyEmoteMap: new Map(),
     generalBadgeMap: new Map(),
     subscriptionBadgeMap: new Map(),
     subscriptionGiftBadgeMap: new Map(),
@@ -206,7 +208,7 @@ const ChatPlayer = ({ video }: Params) => {
         }
 
         return fragment.text.split(" ").map(word => {
-          const thirdPartyEmote = chatMapsRef.current.emoteMap.get(word);
+          const thirdPartyEmote = chatMapsRef.current.thirdPartyEmoteMap.get(word);
           return thirdPartyEmote
             ? {
               type: GanymedeFormattedMessageType.Emote,
@@ -344,6 +346,7 @@ const ChatPlayer = ({ video }: Params) => {
           chatMapsRef.current.emoteMap.set(emote.id, emote);
         } else {
           chatMapsRef.current.emoteMap.set(emote.name, emote);
+          chatMapsRef.current.thirdPartyEmoteMap.set(emote.name, emote);
         }
       });
 

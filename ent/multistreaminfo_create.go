@@ -25,54 +25,54 @@ type MultistreamInfoCreate struct {
 }
 
 // SetDelayMs sets the "delay_ms" field.
-func (mic *MultistreamInfoCreate) SetDelayMs(i int) *MultistreamInfoCreate {
-	mic.mutation.SetDelayMs(i)
-	return mic
+func (_c *MultistreamInfoCreate) SetDelayMs(v int) *MultistreamInfoCreate {
+	_c.mutation.SetDelayMs(v)
+	return _c
 }
 
 // SetNillableDelayMs sets the "delay_ms" field if the given value is not nil.
-func (mic *MultistreamInfoCreate) SetNillableDelayMs(i *int) *MultistreamInfoCreate {
-	if i != nil {
-		mic.SetDelayMs(*i)
+func (_c *MultistreamInfoCreate) SetNillableDelayMs(v *int) *MultistreamInfoCreate {
+	if v != nil {
+		_c.SetDelayMs(*v)
 	}
-	return mic
+	return _c
 }
 
 // SetVodID sets the "vod" edge to the Vod entity by ID.
-func (mic *MultistreamInfoCreate) SetVodID(id uuid.UUID) *MultistreamInfoCreate {
-	mic.mutation.SetVodID(id)
-	return mic
+func (_c *MultistreamInfoCreate) SetVodID(id uuid.UUID) *MultistreamInfoCreate {
+	_c.mutation.SetVodID(id)
+	return _c
 }
 
 // SetVod sets the "vod" edge to the Vod entity.
-func (mic *MultistreamInfoCreate) SetVod(v *Vod) *MultistreamInfoCreate {
-	return mic.SetVodID(v.ID)
+func (_c *MultistreamInfoCreate) SetVod(v *Vod) *MultistreamInfoCreate {
+	return _c.SetVodID(v.ID)
 }
 
 // SetPlaylistID sets the "playlist" edge to the Playlist entity by ID.
-func (mic *MultistreamInfoCreate) SetPlaylistID(id uuid.UUID) *MultistreamInfoCreate {
-	mic.mutation.SetPlaylistID(id)
-	return mic
+func (_c *MultistreamInfoCreate) SetPlaylistID(id uuid.UUID) *MultistreamInfoCreate {
+	_c.mutation.SetPlaylistID(id)
+	return _c
 }
 
 // SetPlaylist sets the "playlist" edge to the Playlist entity.
-func (mic *MultistreamInfoCreate) SetPlaylist(p *Playlist) *MultistreamInfoCreate {
-	return mic.SetPlaylistID(p.ID)
+func (_c *MultistreamInfoCreate) SetPlaylist(v *Playlist) *MultistreamInfoCreate {
+	return _c.SetPlaylistID(v.ID)
 }
 
 // Mutation returns the MultistreamInfoMutation object of the builder.
-func (mic *MultistreamInfoCreate) Mutation() *MultistreamInfoMutation {
-	return mic.mutation
+func (_c *MultistreamInfoCreate) Mutation() *MultistreamInfoMutation {
+	return _c.mutation
 }
 
 // Save creates the MultistreamInfo in the database.
-func (mic *MultistreamInfoCreate) Save(ctx context.Context) (*MultistreamInfo, error) {
-	return withHooks(ctx, mic.sqlSave, mic.mutation, mic.hooks)
+func (_c *MultistreamInfoCreate) Save(ctx context.Context) (*MultistreamInfo, error) {
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (mic *MultistreamInfoCreate) SaveX(ctx context.Context) *MultistreamInfo {
-	v, err := mic.Save(ctx)
+func (_c *MultistreamInfoCreate) SaveX(ctx context.Context) *MultistreamInfo {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -80,35 +80,35 @@ func (mic *MultistreamInfoCreate) SaveX(ctx context.Context) *MultistreamInfo {
 }
 
 // Exec executes the query.
-func (mic *MultistreamInfoCreate) Exec(ctx context.Context) error {
-	_, err := mic.Save(ctx)
+func (_c *MultistreamInfoCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (mic *MultistreamInfoCreate) ExecX(ctx context.Context) {
-	if err := mic.Exec(ctx); err != nil {
+func (_c *MultistreamInfoCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (mic *MultistreamInfoCreate) check() error {
-	if len(mic.mutation.VodIDs()) == 0 {
+func (_c *MultistreamInfoCreate) check() error {
+	if len(_c.mutation.VodIDs()) == 0 {
 		return &ValidationError{Name: "vod", err: errors.New(`ent: missing required edge "MultistreamInfo.vod"`)}
 	}
-	if len(mic.mutation.PlaylistIDs()) == 0 {
+	if len(_c.mutation.PlaylistIDs()) == 0 {
 		return &ValidationError{Name: "playlist", err: errors.New(`ent: missing required edge "MultistreamInfo.playlist"`)}
 	}
 	return nil
 }
 
-func (mic *MultistreamInfoCreate) sqlSave(ctx context.Context) (*MultistreamInfo, error) {
-	if err := mic.check(); err != nil {
+func (_c *MultistreamInfoCreate) sqlSave(ctx context.Context) (*MultistreamInfo, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := mic.createSpec()
-	if err := sqlgraph.CreateNode(ctx, mic.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -116,22 +116,22 @@ func (mic *MultistreamInfoCreate) sqlSave(ctx context.Context) (*MultistreamInfo
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	mic.mutation.id = &_node.ID
-	mic.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (mic *MultistreamInfoCreate) createSpec() (*MultistreamInfo, *sqlgraph.CreateSpec) {
+func (_c *MultistreamInfoCreate) createSpec() (*MultistreamInfo, *sqlgraph.CreateSpec) {
 	var (
-		_node = &MultistreamInfo{config: mic.config}
+		_node = &MultistreamInfo{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(multistreaminfo.Table, sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt))
 	)
-	_spec.OnConflict = mic.conflict
-	if value, ok := mic.mutation.DelayMs(); ok {
+	_spec.OnConflict = _c.conflict
+	if value, ok := _c.mutation.DelayMs(); ok {
 		_spec.SetField(multistreaminfo.FieldDelayMs, field.TypeInt, value)
 		_node.DelayMs = value
 	}
-	if nodes := mic.mutation.VodIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.VodIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
@@ -148,7 +148,7 @@ func (mic *MultistreamInfoCreate) createSpec() (*MultistreamInfo, *sqlgraph.Crea
 		_node.multistream_info_vod = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := mic.mutation.PlaylistIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.PlaylistIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -184,10 +184,10 @@ func (mic *MultistreamInfoCreate) createSpec() (*MultistreamInfo, *sqlgraph.Crea
 //			SetDelayMs(v+v).
 //		}).
 //		Exec(ctx)
-func (mic *MultistreamInfoCreate) OnConflict(opts ...sql.ConflictOption) *MultistreamInfoUpsertOne {
-	mic.conflict = opts
+func (_c *MultistreamInfoCreate) OnConflict(opts ...sql.ConflictOption) *MultistreamInfoUpsertOne {
+	_c.conflict = opts
 	return &MultistreamInfoUpsertOne{
-		create: mic,
+		create: _c,
 	}
 }
 
@@ -197,10 +197,10 @@ func (mic *MultistreamInfoCreate) OnConflict(opts ...sql.ConflictOption) *Multis
 //	client.MultistreamInfo.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (mic *MultistreamInfoCreate) OnConflictColumns(columns ...string) *MultistreamInfoUpsertOne {
-	mic.conflict = append(mic.conflict, sql.ConflictColumns(columns...))
+func (_c *MultistreamInfoCreate) OnConflictColumns(columns ...string) *MultistreamInfoUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &MultistreamInfoUpsertOne{
-		create: mic,
+		create: _c,
 	}
 }
 
@@ -351,16 +351,16 @@ type MultistreamInfoCreateBulk struct {
 }
 
 // Save creates the MultistreamInfo entities in the database.
-func (micb *MultistreamInfoCreateBulk) Save(ctx context.Context) ([]*MultistreamInfo, error) {
-	if micb.err != nil {
-		return nil, micb.err
+func (_c *MultistreamInfoCreateBulk) Save(ctx context.Context) ([]*MultistreamInfo, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(micb.builders))
-	nodes := make([]*MultistreamInfo, len(micb.builders))
-	mutators := make([]Mutator, len(micb.builders))
-	for i := range micb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*MultistreamInfo, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := micb.builders[i]
+			builder := _c.builders[i]
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*MultistreamInfoMutation)
 				if !ok {
@@ -373,12 +373,12 @@ func (micb *MultistreamInfoCreateBulk) Save(ctx context.Context) ([]*Multistream
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, micb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = micb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, micb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -402,7 +402,7 @@ func (micb *MultistreamInfoCreateBulk) Save(ctx context.Context) ([]*Multistream
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, micb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -410,8 +410,8 @@ func (micb *MultistreamInfoCreateBulk) Save(ctx context.Context) ([]*Multistream
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (micb *MultistreamInfoCreateBulk) SaveX(ctx context.Context) []*MultistreamInfo {
-	v, err := micb.Save(ctx)
+func (_c *MultistreamInfoCreateBulk) SaveX(ctx context.Context) []*MultistreamInfo {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -419,14 +419,14 @@ func (micb *MultistreamInfoCreateBulk) SaveX(ctx context.Context) []*Multistream
 }
 
 // Exec executes the query.
-func (micb *MultistreamInfoCreateBulk) Exec(ctx context.Context) error {
-	_, err := micb.Save(ctx)
+func (_c *MultistreamInfoCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (micb *MultistreamInfoCreateBulk) ExecX(ctx context.Context) {
-	if err := micb.Exec(ctx); err != nil {
+func (_c *MultistreamInfoCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -446,10 +446,10 @@ func (micb *MultistreamInfoCreateBulk) ExecX(ctx context.Context) {
 //			SetDelayMs(v+v).
 //		}).
 //		Exec(ctx)
-func (micb *MultistreamInfoCreateBulk) OnConflict(opts ...sql.ConflictOption) *MultistreamInfoUpsertBulk {
-	micb.conflict = opts
+func (_c *MultistreamInfoCreateBulk) OnConflict(opts ...sql.ConflictOption) *MultistreamInfoUpsertBulk {
+	_c.conflict = opts
 	return &MultistreamInfoUpsertBulk{
-		create: micb,
+		create: _c,
 	}
 }
 
@@ -459,10 +459,10 @@ func (micb *MultistreamInfoCreateBulk) OnConflict(opts ...sql.ConflictOption) *M
 //	client.MultistreamInfo.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (micb *MultistreamInfoCreateBulk) OnConflictColumns(columns ...string) *MultistreamInfoUpsertBulk {
-	micb.conflict = append(micb.conflict, sql.ConflictColumns(columns...))
+func (_c *MultistreamInfoCreateBulk) OnConflictColumns(columns ...string) *MultistreamInfoUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &MultistreamInfoUpsertBulk{
-		create: micb,
+		create: _c,
 	}
 }
 

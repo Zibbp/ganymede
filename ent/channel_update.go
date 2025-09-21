@@ -26,227 +26,227 @@ type ChannelUpdate struct {
 }
 
 // Where appends a list predicates to the ChannelUpdate builder.
-func (cu *ChannelUpdate) Where(ps ...predicate.Channel) *ChannelUpdate {
-	cu.mutation.Where(ps...)
-	return cu
+func (_u *ChannelUpdate) Where(ps ...predicate.Channel) *ChannelUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetExtID sets the "ext_id" field.
-func (cu *ChannelUpdate) SetExtID(s string) *ChannelUpdate {
-	cu.mutation.SetExtID(s)
-	return cu
+func (_u *ChannelUpdate) SetExtID(v string) *ChannelUpdate {
+	_u.mutation.SetExtID(v)
+	return _u
 }
 
 // SetNillableExtID sets the "ext_id" field if the given value is not nil.
-func (cu *ChannelUpdate) SetNillableExtID(s *string) *ChannelUpdate {
-	if s != nil {
-		cu.SetExtID(*s)
+func (_u *ChannelUpdate) SetNillableExtID(v *string) *ChannelUpdate {
+	if v != nil {
+		_u.SetExtID(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearExtID clears the value of the "ext_id" field.
-func (cu *ChannelUpdate) ClearExtID() *ChannelUpdate {
-	cu.mutation.ClearExtID()
-	return cu
+func (_u *ChannelUpdate) ClearExtID() *ChannelUpdate {
+	_u.mutation.ClearExtID()
+	return _u
 }
 
 // SetName sets the "name" field.
-func (cu *ChannelUpdate) SetName(s string) *ChannelUpdate {
-	cu.mutation.SetName(s)
-	return cu
+func (_u *ChannelUpdate) SetName(v string) *ChannelUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (cu *ChannelUpdate) SetNillableName(s *string) *ChannelUpdate {
-	if s != nil {
-		cu.SetName(*s)
+func (_u *ChannelUpdate) SetNillableName(v *string) *ChannelUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetDisplayName sets the "display_name" field.
-func (cu *ChannelUpdate) SetDisplayName(s string) *ChannelUpdate {
-	cu.mutation.SetDisplayName(s)
-	return cu
+func (_u *ChannelUpdate) SetDisplayName(v string) *ChannelUpdate {
+	_u.mutation.SetDisplayName(v)
+	return _u
 }
 
 // SetNillableDisplayName sets the "display_name" field if the given value is not nil.
-func (cu *ChannelUpdate) SetNillableDisplayName(s *string) *ChannelUpdate {
-	if s != nil {
-		cu.SetDisplayName(*s)
+func (_u *ChannelUpdate) SetNillableDisplayName(v *string) *ChannelUpdate {
+	if v != nil {
+		_u.SetDisplayName(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetImagePath sets the "image_path" field.
-func (cu *ChannelUpdate) SetImagePath(s string) *ChannelUpdate {
-	cu.mutation.SetImagePath(s)
-	return cu
+func (_u *ChannelUpdate) SetImagePath(v string) *ChannelUpdate {
+	_u.mutation.SetImagePath(v)
+	return _u
 }
 
 // SetNillableImagePath sets the "image_path" field if the given value is not nil.
-func (cu *ChannelUpdate) SetNillableImagePath(s *string) *ChannelUpdate {
-	if s != nil {
-		cu.SetImagePath(*s)
+func (_u *ChannelUpdate) SetNillableImagePath(v *string) *ChannelUpdate {
+	if v != nil {
+		_u.SetImagePath(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetRetention sets the "retention" field.
-func (cu *ChannelUpdate) SetRetention(b bool) *ChannelUpdate {
-	cu.mutation.SetRetention(b)
-	return cu
+func (_u *ChannelUpdate) SetRetention(v bool) *ChannelUpdate {
+	_u.mutation.SetRetention(v)
+	return _u
 }
 
 // SetNillableRetention sets the "retention" field if the given value is not nil.
-func (cu *ChannelUpdate) SetNillableRetention(b *bool) *ChannelUpdate {
-	if b != nil {
-		cu.SetRetention(*b)
+func (_u *ChannelUpdate) SetNillableRetention(v *bool) *ChannelUpdate {
+	if v != nil {
+		_u.SetRetention(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetRetentionDays sets the "retention_days" field.
-func (cu *ChannelUpdate) SetRetentionDays(i int64) *ChannelUpdate {
-	cu.mutation.ResetRetentionDays()
-	cu.mutation.SetRetentionDays(i)
-	return cu
+func (_u *ChannelUpdate) SetRetentionDays(v int64) *ChannelUpdate {
+	_u.mutation.ResetRetentionDays()
+	_u.mutation.SetRetentionDays(v)
+	return _u
 }
 
 // SetNillableRetentionDays sets the "retention_days" field if the given value is not nil.
-func (cu *ChannelUpdate) SetNillableRetentionDays(i *int64) *ChannelUpdate {
-	if i != nil {
-		cu.SetRetentionDays(*i)
+func (_u *ChannelUpdate) SetNillableRetentionDays(v *int64) *ChannelUpdate {
+	if v != nil {
+		_u.SetRetentionDays(*v)
 	}
-	return cu
+	return _u
 }
 
-// AddRetentionDays adds i to the "retention_days" field.
-func (cu *ChannelUpdate) AddRetentionDays(i int64) *ChannelUpdate {
-	cu.mutation.AddRetentionDays(i)
-	return cu
+// AddRetentionDays adds value to the "retention_days" field.
+func (_u *ChannelUpdate) AddRetentionDays(v int64) *ChannelUpdate {
+	_u.mutation.AddRetentionDays(v)
+	return _u
 }
 
 // ClearRetentionDays clears the value of the "retention_days" field.
-func (cu *ChannelUpdate) ClearRetentionDays() *ChannelUpdate {
-	cu.mutation.ClearRetentionDays()
-	return cu
+func (_u *ChannelUpdate) ClearRetentionDays() *ChannelUpdate {
+	_u.mutation.ClearRetentionDays()
+	return _u
 }
 
 // SetStorageSizeBytes sets the "storage_size_bytes" field.
-func (cu *ChannelUpdate) SetStorageSizeBytes(i int64) *ChannelUpdate {
-	cu.mutation.ResetStorageSizeBytes()
-	cu.mutation.SetStorageSizeBytes(i)
-	return cu
+func (_u *ChannelUpdate) SetStorageSizeBytes(v int64) *ChannelUpdate {
+	_u.mutation.ResetStorageSizeBytes()
+	_u.mutation.SetStorageSizeBytes(v)
+	return _u
 }
 
 // SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
-func (cu *ChannelUpdate) SetNillableStorageSizeBytes(i *int64) *ChannelUpdate {
-	if i != nil {
-		cu.SetStorageSizeBytes(*i)
+func (_u *ChannelUpdate) SetNillableStorageSizeBytes(v *int64) *ChannelUpdate {
+	if v != nil {
+		_u.SetStorageSizeBytes(*v)
 	}
-	return cu
+	return _u
 }
 
-// AddStorageSizeBytes adds i to the "storage_size_bytes" field.
-func (cu *ChannelUpdate) AddStorageSizeBytes(i int64) *ChannelUpdate {
-	cu.mutation.AddStorageSizeBytes(i)
-	return cu
+// AddStorageSizeBytes adds value to the "storage_size_bytes" field.
+func (_u *ChannelUpdate) AddStorageSizeBytes(v int64) *ChannelUpdate {
+	_u.mutation.AddStorageSizeBytes(v)
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cu *ChannelUpdate) SetUpdatedAt(t time.Time) *ChannelUpdate {
-	cu.mutation.SetUpdatedAt(t)
-	return cu
+func (_u *ChannelUpdate) SetUpdatedAt(v time.Time) *ChannelUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddVodIDs adds the "vods" edge to the Vod entity by IDs.
-func (cu *ChannelUpdate) AddVodIDs(ids ...uuid.UUID) *ChannelUpdate {
-	cu.mutation.AddVodIDs(ids...)
-	return cu
+func (_u *ChannelUpdate) AddVodIDs(ids ...uuid.UUID) *ChannelUpdate {
+	_u.mutation.AddVodIDs(ids...)
+	return _u
 }
 
 // AddVods adds the "vods" edges to the Vod entity.
-func (cu *ChannelUpdate) AddVods(v ...*Vod) *ChannelUpdate {
+func (_u *ChannelUpdate) AddVods(v ...*Vod) *ChannelUpdate {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return cu.AddVodIDs(ids...)
+	return _u.AddVodIDs(ids...)
 }
 
 // AddLiveIDs adds the "live" edge to the Live entity by IDs.
-func (cu *ChannelUpdate) AddLiveIDs(ids ...uuid.UUID) *ChannelUpdate {
-	cu.mutation.AddLiveIDs(ids...)
-	return cu
+func (_u *ChannelUpdate) AddLiveIDs(ids ...uuid.UUID) *ChannelUpdate {
+	_u.mutation.AddLiveIDs(ids...)
+	return _u
 }
 
 // AddLive adds the "live" edges to the Live entity.
-func (cu *ChannelUpdate) AddLive(l ...*Live) *ChannelUpdate {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
-	}
-	return cu.AddLiveIDs(ids...)
-}
-
-// Mutation returns the ChannelMutation object of the builder.
-func (cu *ChannelUpdate) Mutation() *ChannelMutation {
-	return cu.mutation
-}
-
-// ClearVods clears all "vods" edges to the Vod entity.
-func (cu *ChannelUpdate) ClearVods() *ChannelUpdate {
-	cu.mutation.ClearVods()
-	return cu
-}
-
-// RemoveVodIDs removes the "vods" edge to Vod entities by IDs.
-func (cu *ChannelUpdate) RemoveVodIDs(ids ...uuid.UUID) *ChannelUpdate {
-	cu.mutation.RemoveVodIDs(ids...)
-	return cu
-}
-
-// RemoveVods removes "vods" edges to Vod entities.
-func (cu *ChannelUpdate) RemoveVods(v ...*Vod) *ChannelUpdate {
+func (_u *ChannelUpdate) AddLive(v ...*Live) *ChannelUpdate {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return cu.RemoveVodIDs(ids...)
+	return _u.AddLiveIDs(ids...)
+}
+
+// Mutation returns the ChannelMutation object of the builder.
+func (_u *ChannelUpdate) Mutation() *ChannelMutation {
+	return _u.mutation
+}
+
+// ClearVods clears all "vods" edges to the Vod entity.
+func (_u *ChannelUpdate) ClearVods() *ChannelUpdate {
+	_u.mutation.ClearVods()
+	return _u
+}
+
+// RemoveVodIDs removes the "vods" edge to Vod entities by IDs.
+func (_u *ChannelUpdate) RemoveVodIDs(ids ...uuid.UUID) *ChannelUpdate {
+	_u.mutation.RemoveVodIDs(ids...)
+	return _u
+}
+
+// RemoveVods removes "vods" edges to Vod entities.
+func (_u *ChannelUpdate) RemoveVods(v ...*Vod) *ChannelUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveVodIDs(ids...)
 }
 
 // ClearLive clears all "live" edges to the Live entity.
-func (cu *ChannelUpdate) ClearLive() *ChannelUpdate {
-	cu.mutation.ClearLive()
-	return cu
+func (_u *ChannelUpdate) ClearLive() *ChannelUpdate {
+	_u.mutation.ClearLive()
+	return _u
 }
 
 // RemoveLiveIDs removes the "live" edge to Live entities by IDs.
-func (cu *ChannelUpdate) RemoveLiveIDs(ids ...uuid.UUID) *ChannelUpdate {
-	cu.mutation.RemoveLiveIDs(ids...)
-	return cu
+func (_u *ChannelUpdate) RemoveLiveIDs(ids ...uuid.UUID) *ChannelUpdate {
+	_u.mutation.RemoveLiveIDs(ids...)
+	return _u
 }
 
 // RemoveLive removes "live" edges to Live entities.
-func (cu *ChannelUpdate) RemoveLive(l ...*Live) *ChannelUpdate {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_u *ChannelUpdate) RemoveLive(v ...*Live) *ChannelUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cu.RemoveLiveIDs(ids...)
+	return _u.RemoveLiveIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (cu *ChannelUpdate) Save(ctx context.Context) (int, error) {
-	cu.defaults()
-	return withHooks(ctx, cu.sqlSave, cu.mutation, cu.hooks)
+func (_u *ChannelUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cu *ChannelUpdate) SaveX(ctx context.Context) int {
-	affected, err := cu.Save(ctx)
+func (_u *ChannelUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -254,72 +254,72 @@ func (cu *ChannelUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (cu *ChannelUpdate) Exec(ctx context.Context) error {
-	_, err := cu.Save(ctx)
+func (_u *ChannelUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cu *ChannelUpdate) ExecX(ctx context.Context) {
-	if err := cu.Exec(ctx); err != nil {
+func (_u *ChannelUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cu *ChannelUpdate) defaults() {
-	if _, ok := cu.mutation.UpdatedAt(); !ok {
+func (_u *ChannelUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := channel.UpdateDefaultUpdatedAt()
-		cu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
-func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
+func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(channel.Table, channel.Columns, sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID))
-	if ps := cu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cu.mutation.ExtID(); ok {
+	if value, ok := _u.mutation.ExtID(); ok {
 		_spec.SetField(channel.FieldExtID, field.TypeString, value)
 	}
-	if cu.mutation.ExtIDCleared() {
+	if _u.mutation.ExtIDCleared() {
 		_spec.ClearField(channel.FieldExtID, field.TypeString)
 	}
-	if value, ok := cu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(channel.FieldName, field.TypeString, value)
 	}
-	if value, ok := cu.mutation.DisplayName(); ok {
+	if value, ok := _u.mutation.DisplayName(); ok {
 		_spec.SetField(channel.FieldDisplayName, field.TypeString, value)
 	}
-	if value, ok := cu.mutation.ImagePath(); ok {
+	if value, ok := _u.mutation.ImagePath(); ok {
 		_spec.SetField(channel.FieldImagePath, field.TypeString, value)
 	}
-	if value, ok := cu.mutation.Retention(); ok {
+	if value, ok := _u.mutation.Retention(); ok {
 		_spec.SetField(channel.FieldRetention, field.TypeBool, value)
 	}
-	if value, ok := cu.mutation.RetentionDays(); ok {
+	if value, ok := _u.mutation.RetentionDays(); ok {
 		_spec.SetField(channel.FieldRetentionDays, field.TypeInt64, value)
 	}
-	if value, ok := cu.mutation.AddedRetentionDays(); ok {
+	if value, ok := _u.mutation.AddedRetentionDays(); ok {
 		_spec.AddField(channel.FieldRetentionDays, field.TypeInt64, value)
 	}
-	if cu.mutation.RetentionDaysCleared() {
+	if _u.mutation.RetentionDaysCleared() {
 		_spec.ClearField(channel.FieldRetentionDays, field.TypeInt64)
 	}
-	if value, ok := cu.mutation.StorageSizeBytes(); ok {
+	if value, ok := _u.mutation.StorageSizeBytes(); ok {
 		_spec.SetField(channel.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
-	if value, ok := cu.mutation.AddedStorageSizeBytes(); ok {
+	if value, ok := _u.mutation.AddedStorageSizeBytes(); ok {
 		_spec.AddField(channel.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
-	if value, ok := cu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(channel.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if cu.mutation.VodsCleared() {
+	if _u.mutation.VodsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -332,7 +332,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.RemovedVodsIDs(); len(nodes) > 0 && !cu.mutation.VodsCleared() {
+	if nodes := _u.mutation.RemovedVodsIDs(); len(nodes) > 0 && !_u.mutation.VodsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -348,7 +348,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.VodsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.VodsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -364,7 +364,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if cu.mutation.LiveCleared() {
+	if _u.mutation.LiveCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -377,7 +377,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.RemovedLiveIDs(); len(nodes) > 0 && !cu.mutation.LiveCleared() {
+	if nodes := _u.mutation.RemovedLiveIDs(); len(nodes) > 0 && !_u.mutation.LiveCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -393,7 +393,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.LiveIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.LiveIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -409,7 +409,7 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{channel.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -417,8 +417,8 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	cu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ChannelUpdateOne is the builder for updating a single Channel entity.
@@ -430,234 +430,234 @@ type ChannelUpdateOne struct {
 }
 
 // SetExtID sets the "ext_id" field.
-func (cuo *ChannelUpdateOne) SetExtID(s string) *ChannelUpdateOne {
-	cuo.mutation.SetExtID(s)
-	return cuo
+func (_u *ChannelUpdateOne) SetExtID(v string) *ChannelUpdateOne {
+	_u.mutation.SetExtID(v)
+	return _u
 }
 
 // SetNillableExtID sets the "ext_id" field if the given value is not nil.
-func (cuo *ChannelUpdateOne) SetNillableExtID(s *string) *ChannelUpdateOne {
-	if s != nil {
-		cuo.SetExtID(*s)
+func (_u *ChannelUpdateOne) SetNillableExtID(v *string) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetExtID(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearExtID clears the value of the "ext_id" field.
-func (cuo *ChannelUpdateOne) ClearExtID() *ChannelUpdateOne {
-	cuo.mutation.ClearExtID()
-	return cuo
+func (_u *ChannelUpdateOne) ClearExtID() *ChannelUpdateOne {
+	_u.mutation.ClearExtID()
+	return _u
 }
 
 // SetName sets the "name" field.
-func (cuo *ChannelUpdateOne) SetName(s string) *ChannelUpdateOne {
-	cuo.mutation.SetName(s)
-	return cuo
+func (_u *ChannelUpdateOne) SetName(v string) *ChannelUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (cuo *ChannelUpdateOne) SetNillableName(s *string) *ChannelUpdateOne {
-	if s != nil {
-		cuo.SetName(*s)
+func (_u *ChannelUpdateOne) SetNillableName(v *string) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetDisplayName sets the "display_name" field.
-func (cuo *ChannelUpdateOne) SetDisplayName(s string) *ChannelUpdateOne {
-	cuo.mutation.SetDisplayName(s)
-	return cuo
+func (_u *ChannelUpdateOne) SetDisplayName(v string) *ChannelUpdateOne {
+	_u.mutation.SetDisplayName(v)
+	return _u
 }
 
 // SetNillableDisplayName sets the "display_name" field if the given value is not nil.
-func (cuo *ChannelUpdateOne) SetNillableDisplayName(s *string) *ChannelUpdateOne {
-	if s != nil {
-		cuo.SetDisplayName(*s)
+func (_u *ChannelUpdateOne) SetNillableDisplayName(v *string) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetDisplayName(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetImagePath sets the "image_path" field.
-func (cuo *ChannelUpdateOne) SetImagePath(s string) *ChannelUpdateOne {
-	cuo.mutation.SetImagePath(s)
-	return cuo
+func (_u *ChannelUpdateOne) SetImagePath(v string) *ChannelUpdateOne {
+	_u.mutation.SetImagePath(v)
+	return _u
 }
 
 // SetNillableImagePath sets the "image_path" field if the given value is not nil.
-func (cuo *ChannelUpdateOne) SetNillableImagePath(s *string) *ChannelUpdateOne {
-	if s != nil {
-		cuo.SetImagePath(*s)
+func (_u *ChannelUpdateOne) SetNillableImagePath(v *string) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetImagePath(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetRetention sets the "retention" field.
-func (cuo *ChannelUpdateOne) SetRetention(b bool) *ChannelUpdateOne {
-	cuo.mutation.SetRetention(b)
-	return cuo
+func (_u *ChannelUpdateOne) SetRetention(v bool) *ChannelUpdateOne {
+	_u.mutation.SetRetention(v)
+	return _u
 }
 
 // SetNillableRetention sets the "retention" field if the given value is not nil.
-func (cuo *ChannelUpdateOne) SetNillableRetention(b *bool) *ChannelUpdateOne {
-	if b != nil {
-		cuo.SetRetention(*b)
+func (_u *ChannelUpdateOne) SetNillableRetention(v *bool) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetRetention(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetRetentionDays sets the "retention_days" field.
-func (cuo *ChannelUpdateOne) SetRetentionDays(i int64) *ChannelUpdateOne {
-	cuo.mutation.ResetRetentionDays()
-	cuo.mutation.SetRetentionDays(i)
-	return cuo
+func (_u *ChannelUpdateOne) SetRetentionDays(v int64) *ChannelUpdateOne {
+	_u.mutation.ResetRetentionDays()
+	_u.mutation.SetRetentionDays(v)
+	return _u
 }
 
 // SetNillableRetentionDays sets the "retention_days" field if the given value is not nil.
-func (cuo *ChannelUpdateOne) SetNillableRetentionDays(i *int64) *ChannelUpdateOne {
-	if i != nil {
-		cuo.SetRetentionDays(*i)
+func (_u *ChannelUpdateOne) SetNillableRetentionDays(v *int64) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetRetentionDays(*v)
 	}
-	return cuo
+	return _u
 }
 
-// AddRetentionDays adds i to the "retention_days" field.
-func (cuo *ChannelUpdateOne) AddRetentionDays(i int64) *ChannelUpdateOne {
-	cuo.mutation.AddRetentionDays(i)
-	return cuo
+// AddRetentionDays adds value to the "retention_days" field.
+func (_u *ChannelUpdateOne) AddRetentionDays(v int64) *ChannelUpdateOne {
+	_u.mutation.AddRetentionDays(v)
+	return _u
 }
 
 // ClearRetentionDays clears the value of the "retention_days" field.
-func (cuo *ChannelUpdateOne) ClearRetentionDays() *ChannelUpdateOne {
-	cuo.mutation.ClearRetentionDays()
-	return cuo
+func (_u *ChannelUpdateOne) ClearRetentionDays() *ChannelUpdateOne {
+	_u.mutation.ClearRetentionDays()
+	return _u
 }
 
 // SetStorageSizeBytes sets the "storage_size_bytes" field.
-func (cuo *ChannelUpdateOne) SetStorageSizeBytes(i int64) *ChannelUpdateOne {
-	cuo.mutation.ResetStorageSizeBytes()
-	cuo.mutation.SetStorageSizeBytes(i)
-	return cuo
+func (_u *ChannelUpdateOne) SetStorageSizeBytes(v int64) *ChannelUpdateOne {
+	_u.mutation.ResetStorageSizeBytes()
+	_u.mutation.SetStorageSizeBytes(v)
+	return _u
 }
 
 // SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
-func (cuo *ChannelUpdateOne) SetNillableStorageSizeBytes(i *int64) *ChannelUpdateOne {
-	if i != nil {
-		cuo.SetStorageSizeBytes(*i)
+func (_u *ChannelUpdateOne) SetNillableStorageSizeBytes(v *int64) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetStorageSizeBytes(*v)
 	}
-	return cuo
+	return _u
 }
 
-// AddStorageSizeBytes adds i to the "storage_size_bytes" field.
-func (cuo *ChannelUpdateOne) AddStorageSizeBytes(i int64) *ChannelUpdateOne {
-	cuo.mutation.AddStorageSizeBytes(i)
-	return cuo
+// AddStorageSizeBytes adds value to the "storage_size_bytes" field.
+func (_u *ChannelUpdateOne) AddStorageSizeBytes(v int64) *ChannelUpdateOne {
+	_u.mutation.AddStorageSizeBytes(v)
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cuo *ChannelUpdateOne) SetUpdatedAt(t time.Time) *ChannelUpdateOne {
-	cuo.mutation.SetUpdatedAt(t)
-	return cuo
+func (_u *ChannelUpdateOne) SetUpdatedAt(v time.Time) *ChannelUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddVodIDs adds the "vods" edge to the Vod entity by IDs.
-func (cuo *ChannelUpdateOne) AddVodIDs(ids ...uuid.UUID) *ChannelUpdateOne {
-	cuo.mutation.AddVodIDs(ids...)
-	return cuo
+func (_u *ChannelUpdateOne) AddVodIDs(ids ...uuid.UUID) *ChannelUpdateOne {
+	_u.mutation.AddVodIDs(ids...)
+	return _u
 }
 
 // AddVods adds the "vods" edges to the Vod entity.
-func (cuo *ChannelUpdateOne) AddVods(v ...*Vod) *ChannelUpdateOne {
+func (_u *ChannelUpdateOne) AddVods(v ...*Vod) *ChannelUpdateOne {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return cuo.AddVodIDs(ids...)
+	return _u.AddVodIDs(ids...)
 }
 
 // AddLiveIDs adds the "live" edge to the Live entity by IDs.
-func (cuo *ChannelUpdateOne) AddLiveIDs(ids ...uuid.UUID) *ChannelUpdateOne {
-	cuo.mutation.AddLiveIDs(ids...)
-	return cuo
+func (_u *ChannelUpdateOne) AddLiveIDs(ids ...uuid.UUID) *ChannelUpdateOne {
+	_u.mutation.AddLiveIDs(ids...)
+	return _u
 }
 
 // AddLive adds the "live" edges to the Live entity.
-func (cuo *ChannelUpdateOne) AddLive(l ...*Live) *ChannelUpdateOne {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
-	}
-	return cuo.AddLiveIDs(ids...)
-}
-
-// Mutation returns the ChannelMutation object of the builder.
-func (cuo *ChannelUpdateOne) Mutation() *ChannelMutation {
-	return cuo.mutation
-}
-
-// ClearVods clears all "vods" edges to the Vod entity.
-func (cuo *ChannelUpdateOne) ClearVods() *ChannelUpdateOne {
-	cuo.mutation.ClearVods()
-	return cuo
-}
-
-// RemoveVodIDs removes the "vods" edge to Vod entities by IDs.
-func (cuo *ChannelUpdateOne) RemoveVodIDs(ids ...uuid.UUID) *ChannelUpdateOne {
-	cuo.mutation.RemoveVodIDs(ids...)
-	return cuo
-}
-
-// RemoveVods removes "vods" edges to Vod entities.
-func (cuo *ChannelUpdateOne) RemoveVods(v ...*Vod) *ChannelUpdateOne {
+func (_u *ChannelUpdateOne) AddLive(v ...*Live) *ChannelUpdateOne {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return cuo.RemoveVodIDs(ids...)
+	return _u.AddLiveIDs(ids...)
+}
+
+// Mutation returns the ChannelMutation object of the builder.
+func (_u *ChannelUpdateOne) Mutation() *ChannelMutation {
+	return _u.mutation
+}
+
+// ClearVods clears all "vods" edges to the Vod entity.
+func (_u *ChannelUpdateOne) ClearVods() *ChannelUpdateOne {
+	_u.mutation.ClearVods()
+	return _u
+}
+
+// RemoveVodIDs removes the "vods" edge to Vod entities by IDs.
+func (_u *ChannelUpdateOne) RemoveVodIDs(ids ...uuid.UUID) *ChannelUpdateOne {
+	_u.mutation.RemoveVodIDs(ids...)
+	return _u
+}
+
+// RemoveVods removes "vods" edges to Vod entities.
+func (_u *ChannelUpdateOne) RemoveVods(v ...*Vod) *ChannelUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveVodIDs(ids...)
 }
 
 // ClearLive clears all "live" edges to the Live entity.
-func (cuo *ChannelUpdateOne) ClearLive() *ChannelUpdateOne {
-	cuo.mutation.ClearLive()
-	return cuo
+func (_u *ChannelUpdateOne) ClearLive() *ChannelUpdateOne {
+	_u.mutation.ClearLive()
+	return _u
 }
 
 // RemoveLiveIDs removes the "live" edge to Live entities by IDs.
-func (cuo *ChannelUpdateOne) RemoveLiveIDs(ids ...uuid.UUID) *ChannelUpdateOne {
-	cuo.mutation.RemoveLiveIDs(ids...)
-	return cuo
+func (_u *ChannelUpdateOne) RemoveLiveIDs(ids ...uuid.UUID) *ChannelUpdateOne {
+	_u.mutation.RemoveLiveIDs(ids...)
+	return _u
 }
 
 // RemoveLive removes "live" edges to Live entities.
-func (cuo *ChannelUpdateOne) RemoveLive(l ...*Live) *ChannelUpdateOne {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_u *ChannelUpdateOne) RemoveLive(v ...*Live) *ChannelUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cuo.RemoveLiveIDs(ids...)
+	return _u.RemoveLiveIDs(ids...)
 }
 
 // Where appends a list predicates to the ChannelUpdate builder.
-func (cuo *ChannelUpdateOne) Where(ps ...predicate.Channel) *ChannelUpdateOne {
-	cuo.mutation.Where(ps...)
-	return cuo
+func (_u *ChannelUpdateOne) Where(ps ...predicate.Channel) *ChannelUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (cuo *ChannelUpdateOne) Select(field string, fields ...string) *ChannelUpdateOne {
-	cuo.fields = append([]string{field}, fields...)
-	return cuo
+func (_u *ChannelUpdateOne) Select(field string, fields ...string) *ChannelUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Channel entity.
-func (cuo *ChannelUpdateOne) Save(ctx context.Context) (*Channel, error) {
-	cuo.defaults()
-	return withHooks(ctx, cuo.sqlSave, cuo.mutation, cuo.hooks)
+func (_u *ChannelUpdateOne) Save(ctx context.Context) (*Channel, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cuo *ChannelUpdateOne) SaveX(ctx context.Context) *Channel {
-	node, err := cuo.Save(ctx)
+func (_u *ChannelUpdateOne) SaveX(ctx context.Context) *Channel {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -665,34 +665,34 @@ func (cuo *ChannelUpdateOne) SaveX(ctx context.Context) *Channel {
 }
 
 // Exec executes the query on the entity.
-func (cuo *ChannelUpdateOne) Exec(ctx context.Context) error {
-	_, err := cuo.Save(ctx)
+func (_u *ChannelUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cuo *ChannelUpdateOne) ExecX(ctx context.Context) {
-	if err := cuo.Exec(ctx); err != nil {
+func (_u *ChannelUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cuo *ChannelUpdateOne) defaults() {
-	if _, ok := cuo.mutation.UpdatedAt(); !ok {
+func (_u *ChannelUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := channel.UpdateDefaultUpdatedAt()
-		cuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
-func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err error) {
+func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err error) {
 	_spec := sqlgraph.NewUpdateSpec(channel.Table, channel.Columns, sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID))
-	id, ok := cuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Channel.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := cuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, channel.FieldID)
 		for _, f := range fields {
@@ -704,50 +704,50 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 			}
 		}
 	}
-	if ps := cuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cuo.mutation.ExtID(); ok {
+	if value, ok := _u.mutation.ExtID(); ok {
 		_spec.SetField(channel.FieldExtID, field.TypeString, value)
 	}
-	if cuo.mutation.ExtIDCleared() {
+	if _u.mutation.ExtIDCleared() {
 		_spec.ClearField(channel.FieldExtID, field.TypeString)
 	}
-	if value, ok := cuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(channel.FieldName, field.TypeString, value)
 	}
-	if value, ok := cuo.mutation.DisplayName(); ok {
+	if value, ok := _u.mutation.DisplayName(); ok {
 		_spec.SetField(channel.FieldDisplayName, field.TypeString, value)
 	}
-	if value, ok := cuo.mutation.ImagePath(); ok {
+	if value, ok := _u.mutation.ImagePath(); ok {
 		_spec.SetField(channel.FieldImagePath, field.TypeString, value)
 	}
-	if value, ok := cuo.mutation.Retention(); ok {
+	if value, ok := _u.mutation.Retention(); ok {
 		_spec.SetField(channel.FieldRetention, field.TypeBool, value)
 	}
-	if value, ok := cuo.mutation.RetentionDays(); ok {
+	if value, ok := _u.mutation.RetentionDays(); ok {
 		_spec.SetField(channel.FieldRetentionDays, field.TypeInt64, value)
 	}
-	if value, ok := cuo.mutation.AddedRetentionDays(); ok {
+	if value, ok := _u.mutation.AddedRetentionDays(); ok {
 		_spec.AddField(channel.FieldRetentionDays, field.TypeInt64, value)
 	}
-	if cuo.mutation.RetentionDaysCleared() {
+	if _u.mutation.RetentionDaysCleared() {
 		_spec.ClearField(channel.FieldRetentionDays, field.TypeInt64)
 	}
-	if value, ok := cuo.mutation.StorageSizeBytes(); ok {
+	if value, ok := _u.mutation.StorageSizeBytes(); ok {
 		_spec.SetField(channel.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
-	if value, ok := cuo.mutation.AddedStorageSizeBytes(); ok {
+	if value, ok := _u.mutation.AddedStorageSizeBytes(); ok {
 		_spec.AddField(channel.FieldStorageSizeBytes, field.TypeInt64, value)
 	}
-	if value, ok := cuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(channel.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if cuo.mutation.VodsCleared() {
+	if _u.mutation.VodsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -760,7 +760,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.RemovedVodsIDs(); len(nodes) > 0 && !cuo.mutation.VodsCleared() {
+	if nodes := _u.mutation.RemovedVodsIDs(); len(nodes) > 0 && !_u.mutation.VodsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -776,7 +776,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.VodsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.VodsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -792,7 +792,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if cuo.mutation.LiveCleared() {
+	if _u.mutation.LiveCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -805,7 +805,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.RemovedLiveIDs(); len(nodes) > 0 && !cuo.mutation.LiveCleared() {
+	if nodes := _u.mutation.RemovedLiveIDs(); len(nodes) > 0 && !_u.mutation.LiveCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -821,7 +821,7 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.LiveIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.LiveIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -837,10 +837,10 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Channel{config: cuo.config}
+	_node = &Channel{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, cuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{channel.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -848,6 +848,6 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 		}
 		return nil, err
 	}
-	cuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

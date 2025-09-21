@@ -48,6 +48,7 @@ var (
 	TaskSaveVideoChapters           = "save_video_chapters"
 	TaskUpdateVideoStorageUsage     = "update_video_storage_usage"
 	TaskUpdateChannelStorageUsage   = "update_channel_storage_usage"
+	TaskProcessPlaylistVideoRules   = "process_playlist_video_rules"
 )
 
 var (

@@ -77,6 +77,7 @@ var (
 		{Name: "render_chat", Type: field.TypeBool, Default: true},
 		{Name: "video_age", Type: field.TypeInt64, Default: 0},
 		{Name: "apply_categories_to_live", Type: field.TypeBool, Default: false},
+		{Name: "strict_categories_live", Type: field.TypeBool, Default: false},
 		{Name: "watch_clips", Type: field.TypeBool, Default: false},
 		{Name: "clips_limit", Type: field.TypeInt, Default: 0},
 		{Name: "clips_interval_days", Type: field.TypeInt, Default: 0},
@@ -95,7 +96,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[22]},
+				Columns:    []*schema.Column{LivesColumns[23]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -104,7 +105,7 @@ var (
 	// LiveCategoriesColumns holds the columns for the "live_categories" table.
 	LiveCategoriesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
-		{Name: "name", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString, Nullable: true},
 		{Name: "live_id", Type: field.TypeUUID},
 	}
 	// LiveCategoriesTable holds the schema information for the "live_categories" table.
@@ -221,6 +222,52 @@ var (
 		Name:       "playlists",
 		Columns:    PlaylistsColumns,
 		PrimaryKey: []*schema.Column{PlaylistsColumns[0]},
+	}
+	// PlaylistRulesColumns holds the columns for the "playlist_rules" table.
+	PlaylistRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Nullable: true},
+		{Name: "field", Type: field.TypeEnum, Enums: []string{"title", "category", "type", "platform", "channel_name"}, Default: "title"},
+		{Name: "operator", Type: field.TypeEnum, Enums: []string{"equals", "contains", "regex"}, Default: "contains"},
+		{Name: "value", Type: field.TypeString},
+		{Name: "position", Type: field.TypeInt, Default: 0},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "playlist_rule_group_rules", Type: field.TypeUUID},
+	}
+	// PlaylistRulesTable holds the schema information for the "playlist_rules" table.
+	PlaylistRulesTable = &schema.Table{
+		Name:       "playlist_rules",
+		Columns:    PlaylistRulesColumns,
+		PrimaryKey: []*schema.Column{PlaylistRulesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "playlist_rules_playlist_rule_groups_rules",
+				Columns:    []*schema.Column{PlaylistRulesColumns[7]},
+				RefColumns: []*schema.Column{PlaylistRuleGroupsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// PlaylistRuleGroupsColumns holds the columns for the "playlist_rule_groups" table.
+	PlaylistRuleGroupsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "operator", Type: field.TypeEnum, Enums: []string{"AND", "OR"}, Default: "AND"},
+		{Name: "position", Type: field.TypeInt, Default: 0},
+		{Name: "playlist_rule_groups", Type: field.TypeUUID},
+	}
+	// PlaylistRuleGroupsTable holds the schema information for the "playlist_rule_groups" table.
+	PlaylistRuleGroupsTable = &schema.Table{
+		Name:       "playlist_rule_groups",
+		Columns:    PlaylistRuleGroupsColumns,
+		PrimaryKey: []*schema.Column{PlaylistRuleGroupsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "playlist_rule_groups_playlists_rule_groups",
+				Columns:    []*schema.Column{PlaylistRuleGroupsColumns[3]},
+				RefColumns: []*schema.Column{PlaylistsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
 	}
 	// QueuesColumns holds the columns for the "queues" table.
 	QueuesColumns = []*schema.Column{
@@ -415,6 +462,8 @@ var (
 		MutedSegmentsTable,
 		PlaybacksTable,
 		PlaylistsTable,
+		PlaylistRulesTable,
+		PlaylistRuleGroupsTable,
 		QueuesTable,
 		SessionsTable,
 		TwitchCategoriesTable,
@@ -432,6 +481,8 @@ func init() {
 	MultistreamInfosTable.ForeignKeys[0].RefTable = VodsTable
 	MultistreamInfosTable.ForeignKeys[1].RefTable = PlaylistsTable
 	MutedSegmentsTable.ForeignKeys[0].RefTable = VodsTable
+	PlaylistRulesTable.ForeignKeys[0].RefTable = PlaylistRuleGroupsTable
+	PlaylistRuleGroupsTable.ForeignKeys[0].RefTable = PlaylistsTable
 	QueuesTable.ForeignKeys[0].RefTable = VodsTable
 	VodsTable.ForeignKeys[0].RefTable = ChannelsTable
 	PlaylistVodsTable.ForeignKeys[0].RefTable = PlaylistsTable

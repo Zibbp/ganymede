@@ -81,6 +81,7 @@ type VodQuality string
 const (
 	Best   VodQuality = "best"
 	Source VodQuality = "source"
+	R1440  VodQuality = "1440"
 	R1080  VodQuality = "1080"
 	R720   VodQuality = "720"
 	R480   VodQuality = "480"
@@ -90,7 +91,7 @@ const (
 )
 
 func (VodQuality) Values() (kinds []string) {
-	for _, s := range []VodQuality{Best, Source, R1080, R720, R480, R360, R160, Audio} {
+	for _, s := range []VodQuality{Best, Source, R1440, R1080, R720, R480, R360, R160, Audio} {
 		kinds = append(kinds, string(s))
 	}
 	return
@@ -166,4 +167,70 @@ func GetTaskName(s string) TaskName {
 	default:
 		return ""
 	}
+}
+
+type ProxyType string
+
+const (
+	ProxyTypeTwitchHLS ProxyType = "twitch_hls"
+	ProxyTypeHTTP      ProxyType = "http"
+)
+
+func (ProxyType) Values() (kinds []string) {
+	for _, s := range []ProxyType{ProxyTypeTwitchHLS, ProxyTypeHTTP} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}
+
+// PlaylistRuleOperator represents the operator used in playlist rules.
+// also update http structs when changing this
+type PlaylistRuleOperator string
+
+const (
+	OperatorEquals   PlaylistRuleOperator = "equals"
+	OperatorContains PlaylistRuleOperator = "contains"
+	OperatorRegex    PlaylistRuleOperator = "regex"
+)
+
+func (PlaylistRuleOperator) Values() (kinds []string) {
+	for _, s := range []PlaylistRuleOperator{OperatorEquals, OperatorContains, OperatorRegex} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}
+
+// PlaylistField represents the fields that can be used in playlist rules.
+// also update http structs when changing this
+// need to also run `make ent_generate` to update ent schema
+type PlaylistRuleField string
+
+const (
+	FieldTitle       PlaylistRuleField = "title"
+	FieldCategory    PlaylistRuleField = "category"
+	FieldType        PlaylistRuleField = "type"
+	FieldPlatform    PlaylistRuleField = "platform"
+	FieldChannelName PlaylistRuleField = "channel_name"
+)
+
+func (PlaylistRuleField) Values() (kinds []string) {
+	for _, s := range []PlaylistRuleField{FieldTitle, FieldCategory, FieldType, FieldPlatform, FieldChannelName} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}
+
+// ChapterType represents the type of a chapter.
+type ChapterType string
+
+const (
+	ChapterTypeGameChange ChapterType = "GAME_CHANGE" // A chapter that indicates a change in the game being played
+	ChapterTypeFallback   ChapterType = "FALLBACK"    // A fallback chapter to be used when no other chapter is available, typically the video category/game is used instead
+)
+
+func (ChapterType) Values() (kinds []string) {
+	for _, s := range []ChapterType{ChapterTypeGameChange, ChapterTypeFallback} {
+		kinds = append(kinds, string(s))
+	}
+	return
 }

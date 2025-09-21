@@ -73,7 +73,7 @@ func (*LiveTitleRegex) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the LiveTitleRegex fields.
-func (ltr *LiveTitleRegex) assignValues(columns []string, values []any) error {
+func (_m *LiveTitleRegex) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -83,35 +83,35 @@ func (ltr *LiveTitleRegex) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
-				ltr.ID = *value
+				_m.ID = *value
 			}
 		case livetitleregex.FieldNegative:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field negative", values[i])
 			} else if value.Valid {
-				ltr.Negative = value.Bool
+				_m.Negative = value.Bool
 			}
 		case livetitleregex.FieldRegex:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field regex", values[i])
 			} else if value.Valid {
-				ltr.Regex = value.String
+				_m.Regex = value.String
 			}
 		case livetitleregex.FieldApplyToVideos:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field apply_to_videos", values[i])
 			} else if value.Valid {
-				ltr.ApplyToVideos = value.Bool
+				_m.ApplyToVideos = value.Bool
 			}
 		case livetitleregex.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field live_id", values[i])
 			} else if value.Valid {
-				ltr.live_id = new(uuid.UUID)
-				*ltr.live_id = *value.S.(*uuid.UUID)
+				_m.live_id = new(uuid.UUID)
+				*_m.live_id = *value.S.(*uuid.UUID)
 			}
 		default:
-			ltr.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -119,46 +119,46 @@ func (ltr *LiveTitleRegex) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the LiveTitleRegex.
 // This includes values selected through modifiers, order, etc.
-func (ltr *LiveTitleRegex) Value(name string) (ent.Value, error) {
-	return ltr.selectValues.Get(name)
+func (_m *LiveTitleRegex) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryLive queries the "live" edge of the LiveTitleRegex entity.
-func (ltr *LiveTitleRegex) QueryLive() *LiveQuery {
-	return NewLiveTitleRegexClient(ltr.config).QueryLive(ltr)
+func (_m *LiveTitleRegex) QueryLive() *LiveQuery {
+	return NewLiveTitleRegexClient(_m.config).QueryLive(_m)
 }
 
 // Update returns a builder for updating this LiveTitleRegex.
 // Note that you need to call LiveTitleRegex.Unwrap() before calling this method if this LiveTitleRegex
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ltr *LiveTitleRegex) Update() *LiveTitleRegexUpdateOne {
-	return NewLiveTitleRegexClient(ltr.config).UpdateOne(ltr)
+func (_m *LiveTitleRegex) Update() *LiveTitleRegexUpdateOne {
+	return NewLiveTitleRegexClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the LiveTitleRegex entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ltr *LiveTitleRegex) Unwrap() *LiveTitleRegex {
-	_tx, ok := ltr.config.driver.(*txDriver)
+func (_m *LiveTitleRegex) Unwrap() *LiveTitleRegex {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: LiveTitleRegex is not a transactional entity")
 	}
-	ltr.config.driver = _tx.drv
-	return ltr
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ltr *LiveTitleRegex) String() string {
+func (_m *LiveTitleRegex) String() string {
 	var builder strings.Builder
 	builder.WriteString("LiveTitleRegex(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ltr.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("negative=")
-	builder.WriteString(fmt.Sprintf("%v", ltr.Negative))
+	builder.WriteString(fmt.Sprintf("%v", _m.Negative))
 	builder.WriteString(", ")
 	builder.WriteString("regex=")
-	builder.WriteString(ltr.Regex)
+	builder.WriteString(_m.Regex)
 	builder.WriteString(", ")
 	builder.WriteString("apply_to_videos=")
-	builder.WriteString(fmt.Sprintf("%v", ltr.ApplyToVideos))
+	builder.WriteString(fmt.Sprintf("%v", _m.ApplyToVideos))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -108,7 +108,7 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 					ArchiveChat: watchedChannel.ArchiveChat,
 					RenderChat:  watchedChannel.RenderChat,
 				}
-				err = s.ArchiveService.ArchiveClip(ctx, input)
+				_, err = s.ArchiveService.ArchiveClip(ctx, input)
 				if err != nil {
 					logger.Error().Err(err).Str("clip_id", clip.ID).Msgf("error archiving clip")
 					continue

@@ -51,10 +51,17 @@ func GenerateThumbnails(config GenerateThumbnailsInput) error {
 	for t := 0; t < int(duration); t += config.Interval {
 		outputPath := filepath.Join(config.ThumbnailDir, fmt.Sprintf(format, t))
 		ffmpegArgs := []string{
-			"-hide_banner", "-an", "-ss", strconv.Itoa(t), "-i", config.Video,
+			"-hide_banner", "-an",
+			"-ss", strconv.Itoa(t),
+			"-i", config.Video,
+			"-update", "1",
 			"-frames:v", "1",
 			"-q:v", "10",
-			"-vf", fmt.Sprintf("scale=%d:%d", config.Width, config.Height),
+			"-err_detect", "ignore_err",
+			"-vf", fmt.Sprintf(
+				"select='eq(pict_type\\,I)',scale=%d:%d",
+				config.Width, config.Height,
+			),
 			"-y",
 			outputPath,
 		}

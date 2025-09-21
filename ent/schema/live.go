@@ -35,6 +35,7 @@ func (Live) Fields() []ent.Field {
 		field.Bool("render_chat").Default(true).Comment("Whether the chat should be rendered."),
 		field.Int64("video_age").Default(0).Comment("Restrict fetching videos to a certain age."),
 		field.Bool("apply_categories_to_live").Default(false).Comment("Whether the categories should be applied to livestreams."),
+		field.Bool("strict_categories_live").Default(false).Comment("Stop live stream archive if category changes to one not selected."),
 		field.Bool("watch_clips").Default(false).Comment("Whether to download clips on a schedule."),
 		field.Int("clips_limit").Default(0).Comment("The number of clips to archive."),
 		field.Int("clips_interval_days").Default(0).Comment("How often channel should be checked for clips to archive in days."),

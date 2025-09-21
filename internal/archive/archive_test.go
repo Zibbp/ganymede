@@ -2,15 +2,14 @@ package archive_test
 
 import (
 	"context"
+	"fmt"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/riverqueue/river"
-	"github.com/riverqueue/river/rivertype"
 	"github.com/stretchr/testify/assert"
+	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
@@ -18,6 +17,7 @@ import (
 	"github.com/zibbp/ganymede/internal/server"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/tests"
+	tests_shared "github.com/zibbp/ganymede/tests/shared"
 )
 
 type ArchiveTest struct {
@@ -33,41 +33,7 @@ var (
 	TestArchiveTimeout           = 300 * time.Second
 )
 
-// isPlayableVideo checks if a video file is playable using ffprobe.
-func isPlayableVideo(path string) bool {
-	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
-		"stream=codec_name", "-of", "default=noprint_wrappers=1:nokey=1", path)
-	err := cmd.Run()
-	return err == nil
-}
-
-// waitForArchiveCompletion waits until the queue item is done processing and no running jobs remain.
-func waitForArchiveCompletion(t *testing.T, app *server.Application, videoId uuid.UUID, timeout time.Duration) {
-	startTime := time.Now()
-	for {
-		if time.Since(startTime) >= timeout {
-			t.Fatalf("Timeout reached while waiting for video to be archived")
-		}
-
-		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(videoId))).Only(context.Background())
-		if err != nil {
-			t.Fatalf("Error querying queue item: %v", err)
-		}
-		runningJobsParams := river.NewJobListParams().States(rivertype.JobStateRunning).First(10000)
-		runningJobs, err := app.RiverClient.JobList(context.Background(), runningJobsParams)
-		if err != nil {
-			t.Fatalf("Error listing running jobs: %v", err)
-		}
-
-		if !q.Processing && len(runningJobs.Jobs) == 0 {
-			break
-		}
-
-		time.Sleep(10 * time.Second)
-	}
-}
-
-// TestAdmin tests the admin service. This function runs all the tests to avoid spinning up multiple containers.
+// TestArchive runs all archive tests
 func TestArchive(t *testing.T) {
 	app, err := tests.Setup(t)
 	assert.NoError(t, err)
@@ -97,13 +63,15 @@ func (s *ArchiveTest) ArchiveChannelTest(t *testing.T) {
 }
 
 // ArchiveVideo tests the full archive process for a video with chat downloading, processing, and rendering
+// This asserts the files are created, the queue item is created, and the video is playable.
+// It also tests the deletion of the video and its associated files.
 func TestArchiveVideo(t *testing.T) {
 	// Setup the application
 	app, err := tests.Setup(t)
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: true,
@@ -112,7 +80,7 @@ func TestArchiveVideo(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
@@ -135,12 +103,17 @@ func TestArchiveVideo(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
 	assert.NoError(t, err)
-	assert.NotNil(t, v)
+	assert.NotNil(t, q)
 	assert.Equal(t, false, q.ChatProcessing)
 	assert.Equal(t, false, q.VideoProcessing)
 	assert.Equal(t, utils.Success, q.TaskChatDownload)
@@ -160,8 +133,65 @@ func TestArchiveVideo(t *testing.T) {
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
-	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
-	assert.True(t, isPlayableVideo(v.ChatVideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.ChatVideoPath), "Video file is not playable")
+
+	// Assert chat files is greater than 0 bytes
+	chatFileInfo, err := os.Stat(v.ChatPath)
+	assert.NoError(t, err)
+	assert.Greater(t, chatFileInfo.Size(), int64(0), "Chat file should not be empty")
+
+	// Assert info file is greater than 0 bytes
+	infoFileInfo, err := os.Stat(v.InfoPath)
+	assert.NoError(t, err)
+	assert.Greater(t, infoFileInfo.Size(), int64(0), "Info file should not be empty")
+
+	// Assert thumbnail is greater than 0 bytes
+	thumbnailFileInfo, err := os.Stat(v.ThumbnailPath)
+	assert.NoError(t, err)
+	assert.Greater(t, thumbnailFileInfo.Size(), int64(0), "Thumbnail file should not be empty")
+
+	// Assert web thumbnail is greater than 0 bytes
+	webThumbnailFileInfo, err := os.Stat(v.WebThumbnailPath)
+	assert.NoError(t, err)
+	assert.Greater(t, webThumbnailFileInfo.Size(), int64(0), "Web thumbnail file should not be empty")
+
+	// Assert sprite thumbnail facts
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+	assert.Len(t, v.SpriteThumbnailsImages, 1, "Sprite thumbnails should be generated for videos")
+
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
+
+	// Test delete and ensure directory is removed
+	videoDirectory := filepath.Dir(filepath.Clean(v.VideoPath))
+
+	err = app.VodService.DeleteVod(t.Context(), v.ID, true)
+	assert.NoError(t, err)
+
+	// Assert video directory is removed
+	_, err = os.Stat(videoDirectory)
+	assert.Error(t, err)
+	if !os.IsNotExist(err) {
+		t.Fatalf("Expected video directory %s to be removed, but it still exists: %v", videoDirectory, err)
+	}
+
+	// Assert video was deleted from database
+	_, err = app.Database.Client.Vod.Query().Where(vod.ID(v.ID)).Only(context.Background())
+	assert.Error(t, err)
+	if _, ok := err.(*ent.NotFoundError); !ok {
+		t.Fatalf("Expected vod to be deleted, but it still exists: %v", err)
+	}
+
+	// Assert queue item was deleted
+	_, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
+	assert.Error(t, err)
+	if _, ok := err.(*ent.NotFoundError); !ok {
+		t.Fatalf("Expected queue item to be deleted, but it still exists: %v", err)
+	}
+
 }
 
 // ArchiveVideo tests the full archive process for a video without chat downloading, processing, and rendering
@@ -171,7 +201,7 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: false,
@@ -180,7 +210,7 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
@@ -203,7 +233,12 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -225,10 +260,13 @@ func TestArchiveVideoNoChat(t *testing.T) {
 	assert.NoFileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
 
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
+
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
-	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
 }
 
 // ArchiveVideo tests the full archive process for a video without chat rendering
@@ -238,7 +276,7 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: true,
@@ -247,7 +285,7 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
@@ -270,7 +308,12 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -292,10 +335,13 @@ func TestArchiveVideoNoChatRender(t *testing.T) {
 	assert.FileExists(t, v.ChatPath)
 	assert.NoFileExists(t, v.ChatVideoPath)
 
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
+
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
-	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
 }
 
 // TestArchiveVideoHLS tests the full archive process for a video without chat downloading, processing, and rendering converting to HLS
@@ -310,7 +356,7 @@ func TestArchiveVideoHLS(t *testing.T) {
 	assert.NoError(t, config.UpdateConfig(c))
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: false,
@@ -319,7 +365,7 @@ func TestArchiveVideoHLS(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
@@ -344,7 +390,12 @@ func TestArchiveVideoHLS(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -367,12 +418,45 @@ func TestArchiveVideoHLS(t *testing.T) {
 
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
+
+	// Assert video is playable
+	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
+
 	assert.DirExists(t, v.VideoHlsPath)
 
 	// Assert number of files in HLS directory is greater than 0
 	files, err := os.ReadDir(v.VideoHlsPath)
 	assert.NoError(t, err)
 	assert.Greater(t, len(files), 0)
+
+	// Test delete and ensure directory is removed
+	videoDirectory := filepath.Dir(filepath.Clean(v.VideoHlsPath))
+
+	err = app.VodService.DeleteVod(t.Context(), v.ID, true)
+	assert.NoError(t, err)
+
+	// Assert video directory is removed
+	_, err = os.Stat(videoDirectory)
+	assert.Error(t, err)
+	if !os.IsNotExist(err) {
+		t.Fatalf("Expected video directory %s to be removed, but it still exists: %v", videoDirectory, err)
+	}
+
+	// Assert video was deleted from database
+	_, err = app.Database.Client.Vod.Query().Where(vod.ID(v.ID)).Only(context.Background())
+	assert.Error(t, err)
+	if _, ok := err.(*ent.NotFoundError); !ok {
+		t.Fatalf("Expected vod to be deleted, but it still exists: %v", err)
+	}
+
+	// Assert queue item was deleted
+	_, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
+	assert.Error(t, err)
+	if _, ok := err.(*ent.NotFoundError); !ok {
+		t.Fatalf("Expected queue item to be deleted, but it still exists: %v", err)
+	}
 }
 
 // ArchiveVideo tests the full archive process for a video with chat downloading, processing, and rendering
@@ -382,7 +466,7 @@ func TestArchiveClip(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveClip(context.Background(), archive.ArchiveClipInput{
+	_, err = app.ArchiveService.ArchiveClip(context.Background(), archive.ArchiveClipInput{
 		ID:          TestTwitchClipId,
 		Quality:     utils.R720,
 		ArchiveChat: true,
@@ -414,7 +498,12 @@ func TestArchiveClip(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchClipId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -439,8 +528,8 @@ func TestArchiveClip(t *testing.T) {
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
 	// Assert video is playable
-	assert.True(t, isPlayableVideo(v.VideoPath), "Video file is not playable")
-	assert.True(t, isPlayableVideo(v.ChatVideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(v.ChatVideoPath), "Video file is not playable")
 }
 
 // TestArchiveVideoWithSpriteThumbnails tests generate sprite thumbnails after a video is archived.
@@ -450,7 +539,7 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Archive the video
-	err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     TestTwitchVideoId,
 		Quality:     utils.R720,
 		ArchiveChat: false,
@@ -459,7 +548,7 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).Only(context.Background())
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
@@ -482,7 +571,12 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	assert.Equal(t, utils.Pending, q.TaskVideoMove)
 
 	// Wait for the video to be archived
-	waitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
 
 	// Assert queue item was updated
 	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
@@ -506,6 +600,9 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 
 	assert.NotEqual(t, 0, v.StorageSizeBytes)
 
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
+
 	// Assert sprite thumbnail facts
 	v, err = app.Database.Client.Vod.Query().Where(vod.ID(v.ID)).Only(context.Background())
 	assert.NoError(t, err)
@@ -521,4 +618,114 @@ func TestArchiveVideoWithSpriteThumbnails(t *testing.T) {
 	for _, spriteThumbnailPath := range v.SpriteThumbnailsImages {
 		assert.FileExists(t, spriteThumbnailPath)
 	}
+}
+
+// TestArchiveVideoStorageTemplateSettings tests the storage template settings for archiving videos
+func TestArchiveVideoStorageTemplateSettings(t *testing.T) {
+	// Setup the application
+	app, err := tests.Setup(t)
+	assert.NoError(t, err)
+
+	// Archive the video
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+		VideoId:     TestTwitchVideoId,
+		Quality:     utils.R720,
+		ArchiveChat: false,
+		RenderChat:  false,
+	})
+	assert.NoError(t, err)
+
+	// Assert video was created
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChannel().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+
+	// Assert storage template settings were applied
+	expectedFolderName, err := archive.GetFolderName(v.ID, archive.StorageTemplateInput{
+		UUID:    v.ID,
+		ID:      v.ExtID,
+		Channel: v.Edges.Channel.Name,
+		Title:   v.Title,
+		Type:    string(v.Type),
+		Date:    v.StreamedAt.Format("2006-01-02"),
+		YYYY:    v.StreamedAt.Format("2006"),
+		MM:      v.StreamedAt.Format("01"),
+		DD:      v.StreamedAt.Format("02"),
+		HH:      v.StreamedAt.Format("15"),
+	})
+	assert.NoError(t, err)
+	expectedFileName, err := archive.GetFileName(v.ID, archive.StorageTemplateInput{
+		UUID:    v.ID,
+		ID:      v.ExtID,
+		Channel: v.Edges.Channel.Name,
+		Title:   v.Title,
+		Type:    string(v.Type),
+		Date:    v.StreamedAt.Format("2006-01-02"),
+		YYYY:    v.StreamedAt.Format("2006"),
+		MM:      v.StreamedAt.Format("01"),
+		DD:      v.StreamedAt.Format("02"),
+		HH:      v.StreamedAt.Format("15"),
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, v.FolderName, expectedFolderName, "Folder name should match the expected storage template")
+	assert.Equal(t, v.FileName, expectedFileName, "File name should match the expected storage template")
+}
+
+// TestArchiveVideoStorageTemplateSettingsCustom tests the custom storage template settings for archiving videos
+func TestArchiveVideoStorageTemplateSettingsCustom(t *testing.T) {
+	// Setup the application
+	app, err := tests.Setup(t)
+	assert.NoError(t, err)
+
+	c := config.Get()
+	// Set a custom storage template for testing
+	c.StorageTemplates.FolderTemplate = "{{YYYY}}{{MM}}-{{DD}}{{HH}} - {{title}}"
+	c.StorageTemplates.FileTemplate = "{{title}}_{{id}}_{{uuid}}"
+	assert.NoError(t, config.UpdateConfig(c), "failed to update config with custom template")
+
+	// Archive the video
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+		VideoId:     TestTwitchVideoId,
+		Quality:     utils.R720,
+		ArchiveChat: false,
+		RenderChat:  false,
+	})
+	assert.NoError(t, err)
+
+	// Assert video was created
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChannel().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+
+	// Assert storage template settings were applied
+	expectedFolderName, err := archive.GetFolderName(v.ID, archive.StorageTemplateInput{
+		UUID:    v.ID,
+		ID:      v.ExtID,
+		Channel: v.Edges.Channel.Name,
+		Title:   v.Title,
+		Type:    string(v.Type),
+		Date:    v.StreamedAt.Format("2006-01-02"),
+		YYYY:    v.StreamedAt.Format("2006"),
+		MM:      v.StreamedAt.Format("01"),
+		DD:      v.StreamedAt.Format("02"),
+		HH:      v.StreamedAt.Format("15"),
+	})
+	assert.NoError(t, err)
+	expectedFileName, err := archive.GetFileName(v.ID, archive.StorageTemplateInput{
+		UUID:    v.ID,
+		ID:      v.ExtID,
+		Channel: v.Edges.Channel.Name,
+		Title:   v.Title,
+		Type:    string(v.Type),
+		Date:    v.StreamedAt.Format("2006-01-02"),
+		YYYY:    v.StreamedAt.Format("2006"),
+		MM:      v.StreamedAt.Format("01"),
+		DD:      v.StreamedAt.Format("02"),
+		HH:      v.StreamedAt.Format("15"),
+	})
+	assert.NoError(t, err)
+	fmt.Printf("Expected folder name: %s, expected file name: %s\n", expectedFolderName, expectedFileName)
+	fmt.Printf("Actual folder name: %s, actual file name: %s\n", v.FolderName, v.FileName)
+	assert.Equal(t, v.FolderName, expectedFolderName, "Folder name should match the expected storage template")
+	assert.Equal(t, v.FileName, expectedFileName, "File name should match the expected storage template")
 }

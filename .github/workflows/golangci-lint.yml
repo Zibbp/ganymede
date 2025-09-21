@@ -17,11 +17,11 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: "stable"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8.0.0

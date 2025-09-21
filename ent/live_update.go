@@ -27,426 +27,440 @@ type LiveUpdate struct {
 }
 
 // Where appends a list predicates to the LiveUpdate builder.
-func (lu *LiveUpdate) Where(ps ...predicate.Live) *LiveUpdate {
-	lu.mutation.Where(ps...)
-	return lu
+func (_u *LiveUpdate) Where(ps ...predicate.Live) *LiveUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetWatchLive sets the "watch_live" field.
-func (lu *LiveUpdate) SetWatchLive(b bool) *LiveUpdate {
-	lu.mutation.SetWatchLive(b)
-	return lu
+func (_u *LiveUpdate) SetWatchLive(v bool) *LiveUpdate {
+	_u.mutation.SetWatchLive(v)
+	return _u
 }
 
 // SetNillableWatchLive sets the "watch_live" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableWatchLive(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetWatchLive(*b)
+func (_u *LiveUpdate) SetNillableWatchLive(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetWatchLive(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetWatchVod sets the "watch_vod" field.
-func (lu *LiveUpdate) SetWatchVod(b bool) *LiveUpdate {
-	lu.mutation.SetWatchVod(b)
-	return lu
+func (_u *LiveUpdate) SetWatchVod(v bool) *LiveUpdate {
+	_u.mutation.SetWatchVod(v)
+	return _u
 }
 
 // SetNillableWatchVod sets the "watch_vod" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableWatchVod(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetWatchVod(*b)
+func (_u *LiveUpdate) SetNillableWatchVod(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetWatchVod(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetDownloadArchives sets the "download_archives" field.
-func (lu *LiveUpdate) SetDownloadArchives(b bool) *LiveUpdate {
-	lu.mutation.SetDownloadArchives(b)
-	return lu
+func (_u *LiveUpdate) SetDownloadArchives(v bool) *LiveUpdate {
+	_u.mutation.SetDownloadArchives(v)
+	return _u
 }
 
 // SetNillableDownloadArchives sets the "download_archives" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableDownloadArchives(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetDownloadArchives(*b)
+func (_u *LiveUpdate) SetNillableDownloadArchives(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetDownloadArchives(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetDownloadHighlights sets the "download_highlights" field.
-func (lu *LiveUpdate) SetDownloadHighlights(b bool) *LiveUpdate {
-	lu.mutation.SetDownloadHighlights(b)
-	return lu
+func (_u *LiveUpdate) SetDownloadHighlights(v bool) *LiveUpdate {
+	_u.mutation.SetDownloadHighlights(v)
+	return _u
 }
 
 // SetNillableDownloadHighlights sets the "download_highlights" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableDownloadHighlights(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetDownloadHighlights(*b)
+func (_u *LiveUpdate) SetNillableDownloadHighlights(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetDownloadHighlights(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetDownloadUploads sets the "download_uploads" field.
-func (lu *LiveUpdate) SetDownloadUploads(b bool) *LiveUpdate {
-	lu.mutation.SetDownloadUploads(b)
-	return lu
+func (_u *LiveUpdate) SetDownloadUploads(v bool) *LiveUpdate {
+	_u.mutation.SetDownloadUploads(v)
+	return _u
 }
 
 // SetNillableDownloadUploads sets the "download_uploads" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableDownloadUploads(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetDownloadUploads(*b)
+func (_u *LiveUpdate) SetNillableDownloadUploads(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetDownloadUploads(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetDownloadSubOnly sets the "download_sub_only" field.
-func (lu *LiveUpdate) SetDownloadSubOnly(b bool) *LiveUpdate {
-	lu.mutation.SetDownloadSubOnly(b)
-	return lu
+func (_u *LiveUpdate) SetDownloadSubOnly(v bool) *LiveUpdate {
+	_u.mutation.SetDownloadSubOnly(v)
+	return _u
 }
 
 // SetNillableDownloadSubOnly sets the "download_sub_only" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableDownloadSubOnly(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetDownloadSubOnly(*b)
+func (_u *LiveUpdate) SetNillableDownloadSubOnly(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetDownloadSubOnly(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetIsLive sets the "is_live" field.
-func (lu *LiveUpdate) SetIsLive(b bool) *LiveUpdate {
-	lu.mutation.SetIsLive(b)
-	return lu
+func (_u *LiveUpdate) SetIsLive(v bool) *LiveUpdate {
+	_u.mutation.SetIsLive(v)
+	return _u
 }
 
 // SetNillableIsLive sets the "is_live" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableIsLive(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetIsLive(*b)
+func (_u *LiveUpdate) SetNillableIsLive(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetIsLive(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetArchiveChat sets the "archive_chat" field.
-func (lu *LiveUpdate) SetArchiveChat(b bool) *LiveUpdate {
-	lu.mutation.SetArchiveChat(b)
-	return lu
+func (_u *LiveUpdate) SetArchiveChat(v bool) *LiveUpdate {
+	_u.mutation.SetArchiveChat(v)
+	return _u
 }
 
 // SetNillableArchiveChat sets the "archive_chat" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableArchiveChat(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetArchiveChat(*b)
+func (_u *LiveUpdate) SetNillableArchiveChat(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetArchiveChat(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetResolution sets the "resolution" field.
-func (lu *LiveUpdate) SetResolution(s string) *LiveUpdate {
-	lu.mutation.SetResolution(s)
-	return lu
+func (_u *LiveUpdate) SetResolution(v string) *LiveUpdate {
+	_u.mutation.SetResolution(v)
+	return _u
 }
 
 // SetNillableResolution sets the "resolution" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableResolution(s *string) *LiveUpdate {
-	if s != nil {
-		lu.SetResolution(*s)
+func (_u *LiveUpdate) SetNillableResolution(v *string) *LiveUpdate {
+	if v != nil {
+		_u.SetResolution(*v)
 	}
-	return lu
+	return _u
 }
 
 // ClearResolution clears the value of the "resolution" field.
-func (lu *LiveUpdate) ClearResolution() *LiveUpdate {
-	lu.mutation.ClearResolution()
-	return lu
+func (_u *LiveUpdate) ClearResolution() *LiveUpdate {
+	_u.mutation.ClearResolution()
+	return _u
 }
 
 // SetLastLive sets the "last_live" field.
-func (lu *LiveUpdate) SetLastLive(t time.Time) *LiveUpdate {
-	lu.mutation.SetLastLive(t)
-	return lu
+func (_u *LiveUpdate) SetLastLive(v time.Time) *LiveUpdate {
+	_u.mutation.SetLastLive(v)
+	return _u
 }
 
 // SetNillableLastLive sets the "last_live" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableLastLive(t *time.Time) *LiveUpdate {
-	if t != nil {
-		lu.SetLastLive(*t)
+func (_u *LiveUpdate) SetNillableLastLive(v *time.Time) *LiveUpdate {
+	if v != nil {
+		_u.SetLastLive(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetRenderChat sets the "render_chat" field.
-func (lu *LiveUpdate) SetRenderChat(b bool) *LiveUpdate {
-	lu.mutation.SetRenderChat(b)
-	return lu
+func (_u *LiveUpdate) SetRenderChat(v bool) *LiveUpdate {
+	_u.mutation.SetRenderChat(v)
+	return _u
 }
 
 // SetNillableRenderChat sets the "render_chat" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableRenderChat(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetRenderChat(*b)
+func (_u *LiveUpdate) SetNillableRenderChat(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetRenderChat(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetVideoAge sets the "video_age" field.
-func (lu *LiveUpdate) SetVideoAge(i int64) *LiveUpdate {
-	lu.mutation.ResetVideoAge()
-	lu.mutation.SetVideoAge(i)
-	return lu
+func (_u *LiveUpdate) SetVideoAge(v int64) *LiveUpdate {
+	_u.mutation.ResetVideoAge()
+	_u.mutation.SetVideoAge(v)
+	return _u
 }
 
 // SetNillableVideoAge sets the "video_age" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableVideoAge(i *int64) *LiveUpdate {
-	if i != nil {
-		lu.SetVideoAge(*i)
+func (_u *LiveUpdate) SetNillableVideoAge(v *int64) *LiveUpdate {
+	if v != nil {
+		_u.SetVideoAge(*v)
 	}
-	return lu
+	return _u
 }
 
-// AddVideoAge adds i to the "video_age" field.
-func (lu *LiveUpdate) AddVideoAge(i int64) *LiveUpdate {
-	lu.mutation.AddVideoAge(i)
-	return lu
+// AddVideoAge adds value to the "video_age" field.
+func (_u *LiveUpdate) AddVideoAge(v int64) *LiveUpdate {
+	_u.mutation.AddVideoAge(v)
+	return _u
 }
 
 // SetApplyCategoriesToLive sets the "apply_categories_to_live" field.
-func (lu *LiveUpdate) SetApplyCategoriesToLive(b bool) *LiveUpdate {
-	lu.mutation.SetApplyCategoriesToLive(b)
-	return lu
+func (_u *LiveUpdate) SetApplyCategoriesToLive(v bool) *LiveUpdate {
+	_u.mutation.SetApplyCategoriesToLive(v)
+	return _u
 }
 
 // SetNillableApplyCategoriesToLive sets the "apply_categories_to_live" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableApplyCategoriesToLive(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetApplyCategoriesToLive(*b)
+func (_u *LiveUpdate) SetNillableApplyCategoriesToLive(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetApplyCategoriesToLive(*v)
 	}
-	return lu
+	return _u
+}
+
+// SetStrictCategoriesLive sets the "strict_categories_live" field.
+func (_u *LiveUpdate) SetStrictCategoriesLive(v bool) *LiveUpdate {
+	_u.mutation.SetStrictCategoriesLive(v)
+	return _u
+}
+
+// SetNillableStrictCategoriesLive sets the "strict_categories_live" field if the given value is not nil.
+func (_u *LiveUpdate) SetNillableStrictCategoriesLive(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetStrictCategoriesLive(*v)
+	}
+	return _u
 }
 
 // SetWatchClips sets the "watch_clips" field.
-func (lu *LiveUpdate) SetWatchClips(b bool) *LiveUpdate {
-	lu.mutation.SetWatchClips(b)
-	return lu
+func (_u *LiveUpdate) SetWatchClips(v bool) *LiveUpdate {
+	_u.mutation.SetWatchClips(v)
+	return _u
 }
 
 // SetNillableWatchClips sets the "watch_clips" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableWatchClips(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetWatchClips(*b)
+func (_u *LiveUpdate) SetNillableWatchClips(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetWatchClips(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetClipsLimit sets the "clips_limit" field.
-func (lu *LiveUpdate) SetClipsLimit(i int) *LiveUpdate {
-	lu.mutation.ResetClipsLimit()
-	lu.mutation.SetClipsLimit(i)
-	return lu
+func (_u *LiveUpdate) SetClipsLimit(v int) *LiveUpdate {
+	_u.mutation.ResetClipsLimit()
+	_u.mutation.SetClipsLimit(v)
+	return _u
 }
 
 // SetNillableClipsLimit sets the "clips_limit" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableClipsLimit(i *int) *LiveUpdate {
-	if i != nil {
-		lu.SetClipsLimit(*i)
+func (_u *LiveUpdate) SetNillableClipsLimit(v *int) *LiveUpdate {
+	if v != nil {
+		_u.SetClipsLimit(*v)
 	}
-	return lu
+	return _u
 }
 
-// AddClipsLimit adds i to the "clips_limit" field.
-func (lu *LiveUpdate) AddClipsLimit(i int) *LiveUpdate {
-	lu.mutation.AddClipsLimit(i)
-	return lu
+// AddClipsLimit adds value to the "clips_limit" field.
+func (_u *LiveUpdate) AddClipsLimit(v int) *LiveUpdate {
+	_u.mutation.AddClipsLimit(v)
+	return _u
 }
 
 // SetClipsIntervalDays sets the "clips_interval_days" field.
-func (lu *LiveUpdate) SetClipsIntervalDays(i int) *LiveUpdate {
-	lu.mutation.ResetClipsIntervalDays()
-	lu.mutation.SetClipsIntervalDays(i)
-	return lu
+func (_u *LiveUpdate) SetClipsIntervalDays(v int) *LiveUpdate {
+	_u.mutation.ResetClipsIntervalDays()
+	_u.mutation.SetClipsIntervalDays(v)
+	return _u
 }
 
 // SetNillableClipsIntervalDays sets the "clips_interval_days" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableClipsIntervalDays(i *int) *LiveUpdate {
-	if i != nil {
-		lu.SetClipsIntervalDays(*i)
+func (_u *LiveUpdate) SetNillableClipsIntervalDays(v *int) *LiveUpdate {
+	if v != nil {
+		_u.SetClipsIntervalDays(*v)
 	}
-	return lu
+	return _u
 }
 
-// AddClipsIntervalDays adds i to the "clips_interval_days" field.
-func (lu *LiveUpdate) AddClipsIntervalDays(i int) *LiveUpdate {
-	lu.mutation.AddClipsIntervalDays(i)
-	return lu
+// AddClipsIntervalDays adds value to the "clips_interval_days" field.
+func (_u *LiveUpdate) AddClipsIntervalDays(v int) *LiveUpdate {
+	_u.mutation.AddClipsIntervalDays(v)
+	return _u
 }
 
 // SetClipsLastChecked sets the "clips_last_checked" field.
-func (lu *LiveUpdate) SetClipsLastChecked(t time.Time) *LiveUpdate {
-	lu.mutation.SetClipsLastChecked(t)
-	return lu
+func (_u *LiveUpdate) SetClipsLastChecked(v time.Time) *LiveUpdate {
+	_u.mutation.SetClipsLastChecked(v)
+	return _u
 }
 
 // SetNillableClipsLastChecked sets the "clips_last_checked" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableClipsLastChecked(t *time.Time) *LiveUpdate {
-	if t != nil {
-		lu.SetClipsLastChecked(*t)
+func (_u *LiveUpdate) SetNillableClipsLastChecked(v *time.Time) *LiveUpdate {
+	if v != nil {
+		_u.SetClipsLastChecked(*v)
 	}
-	return lu
+	return _u
 }
 
 // ClearClipsLastChecked clears the value of the "clips_last_checked" field.
-func (lu *LiveUpdate) ClearClipsLastChecked() *LiveUpdate {
-	lu.mutation.ClearClipsLastChecked()
-	return lu
+func (_u *LiveUpdate) ClearClipsLastChecked() *LiveUpdate {
+	_u.mutation.ClearClipsLastChecked()
+	return _u
 }
 
 // SetClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field.
-func (lu *LiveUpdate) SetClipsIgnoreLastChecked(b bool) *LiveUpdate {
-	lu.mutation.SetClipsIgnoreLastChecked(b)
-	return lu
+func (_u *LiveUpdate) SetClipsIgnoreLastChecked(v bool) *LiveUpdate {
+	_u.mutation.SetClipsIgnoreLastChecked(v)
+	return _u
 }
 
 // SetNillableClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableClipsIgnoreLastChecked(b *bool) *LiveUpdate {
-	if b != nil {
-		lu.SetClipsIgnoreLastChecked(*b)
+func (_u *LiveUpdate) SetNillableClipsIgnoreLastChecked(v *bool) *LiveUpdate {
+	if v != nil {
+		_u.SetClipsIgnoreLastChecked(*v)
 	}
-	return lu
+	return _u
 }
 
 // SetUpdateMetadataMinutes sets the "update_metadata_minutes" field.
-func (lu *LiveUpdate) SetUpdateMetadataMinutes(i int) *LiveUpdate {
-	lu.mutation.ResetUpdateMetadataMinutes()
-	lu.mutation.SetUpdateMetadataMinutes(i)
-	return lu
+func (_u *LiveUpdate) SetUpdateMetadataMinutes(v int) *LiveUpdate {
+	_u.mutation.ResetUpdateMetadataMinutes()
+	_u.mutation.SetUpdateMetadataMinutes(v)
+	return _u
 }
 
 // SetNillableUpdateMetadataMinutes sets the "update_metadata_minutes" field if the given value is not nil.
-func (lu *LiveUpdate) SetNillableUpdateMetadataMinutes(i *int) *LiveUpdate {
-	if i != nil {
-		lu.SetUpdateMetadataMinutes(*i)
+func (_u *LiveUpdate) SetNillableUpdateMetadataMinutes(v *int) *LiveUpdate {
+	if v != nil {
+		_u.SetUpdateMetadataMinutes(*v)
 	}
-	return lu
+	return _u
 }
 
-// AddUpdateMetadataMinutes adds i to the "update_metadata_minutes" field.
-func (lu *LiveUpdate) AddUpdateMetadataMinutes(i int) *LiveUpdate {
-	lu.mutation.AddUpdateMetadataMinutes(i)
-	return lu
+// AddUpdateMetadataMinutes adds value to the "update_metadata_minutes" field.
+func (_u *LiveUpdate) AddUpdateMetadataMinutes(v int) *LiveUpdate {
+	_u.mutation.AddUpdateMetadataMinutes(v)
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (lu *LiveUpdate) SetUpdatedAt(t time.Time) *LiveUpdate {
-	lu.mutation.SetUpdatedAt(t)
-	return lu
+func (_u *LiveUpdate) SetUpdatedAt(v time.Time) *LiveUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetChannelID sets the "channel" edge to the Channel entity by ID.
-func (lu *LiveUpdate) SetChannelID(id uuid.UUID) *LiveUpdate {
-	lu.mutation.SetChannelID(id)
-	return lu
+func (_u *LiveUpdate) SetChannelID(id uuid.UUID) *LiveUpdate {
+	_u.mutation.SetChannelID(id)
+	return _u
 }
 
 // SetChannel sets the "channel" edge to the Channel entity.
-func (lu *LiveUpdate) SetChannel(c *Channel) *LiveUpdate {
-	return lu.SetChannelID(c.ID)
+func (_u *LiveUpdate) SetChannel(v *Channel) *LiveUpdate {
+	return _u.SetChannelID(v.ID)
 }
 
 // AddCategoryIDs adds the "categories" edge to the LiveCategory entity by IDs.
-func (lu *LiveUpdate) AddCategoryIDs(ids ...uuid.UUID) *LiveUpdate {
-	lu.mutation.AddCategoryIDs(ids...)
-	return lu
+func (_u *LiveUpdate) AddCategoryIDs(ids ...uuid.UUID) *LiveUpdate {
+	_u.mutation.AddCategoryIDs(ids...)
+	return _u
 }
 
 // AddCategories adds the "categories" edges to the LiveCategory entity.
-func (lu *LiveUpdate) AddCategories(l ...*LiveCategory) *LiveUpdate {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_u *LiveUpdate) AddCategories(v ...*LiveCategory) *LiveUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return lu.AddCategoryIDs(ids...)
+	return _u.AddCategoryIDs(ids...)
 }
 
 // AddTitleRegexIDs adds the "title_regex" edge to the LiveTitleRegex entity by IDs.
-func (lu *LiveUpdate) AddTitleRegexIDs(ids ...uuid.UUID) *LiveUpdate {
-	lu.mutation.AddTitleRegexIDs(ids...)
-	return lu
+func (_u *LiveUpdate) AddTitleRegexIDs(ids ...uuid.UUID) *LiveUpdate {
+	_u.mutation.AddTitleRegexIDs(ids...)
+	return _u
 }
 
 // AddTitleRegex adds the "title_regex" edges to the LiveTitleRegex entity.
-func (lu *LiveUpdate) AddTitleRegex(l ...*LiveTitleRegex) *LiveUpdate {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_u *LiveUpdate) AddTitleRegex(v ...*LiveTitleRegex) *LiveUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return lu.AddTitleRegexIDs(ids...)
+	return _u.AddTitleRegexIDs(ids...)
 }
 
 // Mutation returns the LiveMutation object of the builder.
-func (lu *LiveUpdate) Mutation() *LiveMutation {
-	return lu.mutation
+func (_u *LiveUpdate) Mutation() *LiveMutation {
+	return _u.mutation
 }
 
 // ClearChannel clears the "channel" edge to the Channel entity.
-func (lu *LiveUpdate) ClearChannel() *LiveUpdate {
-	lu.mutation.ClearChannel()
-	return lu
+func (_u *LiveUpdate) ClearChannel() *LiveUpdate {
+	_u.mutation.ClearChannel()
+	return _u
 }
 
 // ClearCategories clears all "categories" edges to the LiveCategory entity.
-func (lu *LiveUpdate) ClearCategories() *LiveUpdate {
-	lu.mutation.ClearCategories()
-	return lu
+func (_u *LiveUpdate) ClearCategories() *LiveUpdate {
+	_u.mutation.ClearCategories()
+	return _u
 }
 
 // RemoveCategoryIDs removes the "categories" edge to LiveCategory entities by IDs.
-func (lu *LiveUpdate) RemoveCategoryIDs(ids ...uuid.UUID) *LiveUpdate {
-	lu.mutation.RemoveCategoryIDs(ids...)
-	return lu
+func (_u *LiveUpdate) RemoveCategoryIDs(ids ...uuid.UUID) *LiveUpdate {
+	_u.mutation.RemoveCategoryIDs(ids...)
+	return _u
 }
 
 // RemoveCategories removes "categories" edges to LiveCategory entities.
-func (lu *LiveUpdate) RemoveCategories(l ...*LiveCategory) *LiveUpdate {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_u *LiveUpdate) RemoveCategories(v ...*LiveCategory) *LiveUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return lu.RemoveCategoryIDs(ids...)
+	return _u.RemoveCategoryIDs(ids...)
 }
 
 // ClearTitleRegex clears all "title_regex" edges to the LiveTitleRegex entity.
-func (lu *LiveUpdate) ClearTitleRegex() *LiveUpdate {
-	lu.mutation.ClearTitleRegex()
-	return lu
+func (_u *LiveUpdate) ClearTitleRegex() *LiveUpdate {
+	_u.mutation.ClearTitleRegex()
+	return _u
 }
 
 // RemoveTitleRegexIDs removes the "title_regex" edge to LiveTitleRegex entities by IDs.
-func (lu *LiveUpdate) RemoveTitleRegexIDs(ids ...uuid.UUID) *LiveUpdate {
-	lu.mutation.RemoveTitleRegexIDs(ids...)
-	return lu
+func (_u *LiveUpdate) RemoveTitleRegexIDs(ids ...uuid.UUID) *LiveUpdate {
+	_u.mutation.RemoveTitleRegexIDs(ids...)
+	return _u
 }
 
 // RemoveTitleRegex removes "title_regex" edges to LiveTitleRegex entities.
-func (lu *LiveUpdate) RemoveTitleRegex(l ...*LiveTitleRegex) *LiveUpdate {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_u *LiveUpdate) RemoveTitleRegex(v ...*LiveTitleRegex) *LiveUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return lu.RemoveTitleRegexIDs(ids...)
+	return _u.RemoveTitleRegexIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (lu *LiveUpdate) Save(ctx context.Context) (int, error) {
-	lu.defaults()
-	return withHooks(ctx, lu.sqlSave, lu.mutation, lu.hooks)
+func (_u *LiveUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (lu *LiveUpdate) SaveX(ctx context.Context) int {
-	affected, err := lu.Save(ctx)
+func (_u *LiveUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -454,130 +468,133 @@ func (lu *LiveUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (lu *LiveUpdate) Exec(ctx context.Context) error {
-	_, err := lu.Save(ctx)
+func (_u *LiveUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (lu *LiveUpdate) ExecX(ctx context.Context) {
-	if err := lu.Exec(ctx); err != nil {
+func (_u *LiveUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (lu *LiveUpdate) defaults() {
-	if _, ok := lu.mutation.UpdatedAt(); !ok {
+func (_u *LiveUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := live.UpdateDefaultUpdatedAt()
-		lu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (lu *LiveUpdate) check() error {
-	if v, ok := lu.mutation.UpdateMetadataMinutes(); ok {
+func (_u *LiveUpdate) check() error {
+	if v, ok := _u.mutation.UpdateMetadataMinutes(); ok {
 		if err := live.UpdateMetadataMinutesValidator(v); err != nil {
 			return &ValidationError{Name: "update_metadata_minutes", err: fmt.Errorf(`ent: validator failed for field "Live.update_metadata_minutes": %w`, err)}
 		}
 	}
-	if lu.mutation.ChannelCleared() && len(lu.mutation.ChannelIDs()) > 0 {
+	if _u.mutation.ChannelCleared() && len(_u.mutation.ChannelIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Live.channel"`)
 	}
 	return nil
 }
 
-func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := lu.check(); err != nil {
-		return n, err
+func (_u *LiveUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(live.Table, live.Columns, sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID))
-	if ps := lu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := lu.mutation.WatchLive(); ok {
+	if value, ok := _u.mutation.WatchLive(); ok {
 		_spec.SetField(live.FieldWatchLive, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.WatchVod(); ok {
+	if value, ok := _u.mutation.WatchVod(); ok {
 		_spec.SetField(live.FieldWatchVod, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.DownloadArchives(); ok {
+	if value, ok := _u.mutation.DownloadArchives(); ok {
 		_spec.SetField(live.FieldDownloadArchives, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.DownloadHighlights(); ok {
+	if value, ok := _u.mutation.DownloadHighlights(); ok {
 		_spec.SetField(live.FieldDownloadHighlights, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.DownloadUploads(); ok {
+	if value, ok := _u.mutation.DownloadUploads(); ok {
 		_spec.SetField(live.FieldDownloadUploads, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.DownloadSubOnly(); ok {
+	if value, ok := _u.mutation.DownloadSubOnly(); ok {
 		_spec.SetField(live.FieldDownloadSubOnly, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.IsLive(); ok {
+	if value, ok := _u.mutation.IsLive(); ok {
 		_spec.SetField(live.FieldIsLive, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.ArchiveChat(); ok {
+	if value, ok := _u.mutation.ArchiveChat(); ok {
 		_spec.SetField(live.FieldArchiveChat, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.Resolution(); ok {
+	if value, ok := _u.mutation.Resolution(); ok {
 		_spec.SetField(live.FieldResolution, field.TypeString, value)
 	}
-	if lu.mutation.ResolutionCleared() {
+	if _u.mutation.ResolutionCleared() {
 		_spec.ClearField(live.FieldResolution, field.TypeString)
 	}
-	if value, ok := lu.mutation.LastLive(); ok {
+	if value, ok := _u.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
 	}
-	if value, ok := lu.mutation.RenderChat(); ok {
+	if value, ok := _u.mutation.RenderChat(); ok {
 		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.VideoAge(); ok {
+	if value, ok := _u.mutation.VideoAge(); ok {
 		_spec.SetField(live.FieldVideoAge, field.TypeInt64, value)
 	}
-	if value, ok := lu.mutation.AddedVideoAge(); ok {
+	if value, ok := _u.mutation.AddedVideoAge(); ok {
 		_spec.AddField(live.FieldVideoAge, field.TypeInt64, value)
 	}
-	if value, ok := lu.mutation.ApplyCategoriesToLive(); ok {
+	if value, ok := _u.mutation.ApplyCategoriesToLive(); ok {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.WatchClips(); ok {
+	if value, ok := _u.mutation.StrictCategoriesLive(); ok {
+		_spec.SetField(live.FieldStrictCategoriesLive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.WatchClips(); ok {
 		_spec.SetField(live.FieldWatchClips, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.ClipsLimit(); ok {
+	if value, ok := _u.mutation.ClipsLimit(); ok {
 		_spec.SetField(live.FieldClipsLimit, field.TypeInt, value)
 	}
-	if value, ok := lu.mutation.AddedClipsLimit(); ok {
+	if value, ok := _u.mutation.AddedClipsLimit(); ok {
 		_spec.AddField(live.FieldClipsLimit, field.TypeInt, value)
 	}
-	if value, ok := lu.mutation.ClipsIntervalDays(); ok {
+	if value, ok := _u.mutation.ClipsIntervalDays(); ok {
 		_spec.SetField(live.FieldClipsIntervalDays, field.TypeInt, value)
 	}
-	if value, ok := lu.mutation.AddedClipsIntervalDays(); ok {
+	if value, ok := _u.mutation.AddedClipsIntervalDays(); ok {
 		_spec.AddField(live.FieldClipsIntervalDays, field.TypeInt, value)
 	}
-	if value, ok := lu.mutation.ClipsLastChecked(); ok {
+	if value, ok := _u.mutation.ClipsLastChecked(); ok {
 		_spec.SetField(live.FieldClipsLastChecked, field.TypeTime, value)
 	}
-	if lu.mutation.ClipsLastCheckedCleared() {
+	if _u.mutation.ClipsLastCheckedCleared() {
 		_spec.ClearField(live.FieldClipsLastChecked, field.TypeTime)
 	}
-	if value, ok := lu.mutation.ClipsIgnoreLastChecked(); ok {
+	if value, ok := _u.mutation.ClipsIgnoreLastChecked(); ok {
 		_spec.SetField(live.FieldClipsIgnoreLastChecked, field.TypeBool, value)
 	}
-	if value, ok := lu.mutation.UpdateMetadataMinutes(); ok {
+	if value, ok := _u.mutation.UpdateMetadataMinutes(); ok {
 		_spec.SetField(live.FieldUpdateMetadataMinutes, field.TypeInt, value)
 	}
-	if value, ok := lu.mutation.AddedUpdateMetadataMinutes(); ok {
+	if value, ok := _u.mutation.AddedUpdateMetadataMinutes(); ok {
 		_spec.AddField(live.FieldUpdateMetadataMinutes, field.TypeInt, value)
 	}
-	if value, ok := lu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if lu.mutation.ChannelCleared() {
+	if _u.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -590,7 +607,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := lu.mutation.ChannelIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ChannelIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -606,7 +623,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if lu.mutation.CategoriesCleared() {
+	if _u.mutation.CategoriesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -619,7 +636,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := lu.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !lu.mutation.CategoriesCleared() {
+	if nodes := _u.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !_u.mutation.CategoriesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -635,7 +652,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := lu.mutation.CategoriesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.CategoriesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -651,7 +668,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if lu.mutation.TitleRegexCleared() {
+	if _u.mutation.TitleRegexCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -664,7 +681,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := lu.mutation.RemovedTitleRegexIDs(); len(nodes) > 0 && !lu.mutation.TitleRegexCleared() {
+	if nodes := _u.mutation.RemovedTitleRegexIDs(); len(nodes) > 0 && !_u.mutation.TitleRegexCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -680,7 +697,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := lu.mutation.TitleRegexIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TitleRegexIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -696,7 +713,7 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, lu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{live.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -704,8 +721,8 @@ func (lu *LiveUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	lu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // LiveUpdateOne is the builder for updating a single Live entity.
@@ -717,433 +734,447 @@ type LiveUpdateOne struct {
 }
 
 // SetWatchLive sets the "watch_live" field.
-func (luo *LiveUpdateOne) SetWatchLive(b bool) *LiveUpdateOne {
-	luo.mutation.SetWatchLive(b)
-	return luo
+func (_u *LiveUpdateOne) SetWatchLive(v bool) *LiveUpdateOne {
+	_u.mutation.SetWatchLive(v)
+	return _u
 }
 
 // SetNillableWatchLive sets the "watch_live" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableWatchLive(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetWatchLive(*b)
+func (_u *LiveUpdateOne) SetNillableWatchLive(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetWatchLive(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetWatchVod sets the "watch_vod" field.
-func (luo *LiveUpdateOne) SetWatchVod(b bool) *LiveUpdateOne {
-	luo.mutation.SetWatchVod(b)
-	return luo
+func (_u *LiveUpdateOne) SetWatchVod(v bool) *LiveUpdateOne {
+	_u.mutation.SetWatchVod(v)
+	return _u
 }
 
 // SetNillableWatchVod sets the "watch_vod" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableWatchVod(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetWatchVod(*b)
+func (_u *LiveUpdateOne) SetNillableWatchVod(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetWatchVod(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetDownloadArchives sets the "download_archives" field.
-func (luo *LiveUpdateOne) SetDownloadArchives(b bool) *LiveUpdateOne {
-	luo.mutation.SetDownloadArchives(b)
-	return luo
+func (_u *LiveUpdateOne) SetDownloadArchives(v bool) *LiveUpdateOne {
+	_u.mutation.SetDownloadArchives(v)
+	return _u
 }
 
 // SetNillableDownloadArchives sets the "download_archives" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableDownloadArchives(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetDownloadArchives(*b)
+func (_u *LiveUpdateOne) SetNillableDownloadArchives(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetDownloadArchives(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetDownloadHighlights sets the "download_highlights" field.
-func (luo *LiveUpdateOne) SetDownloadHighlights(b bool) *LiveUpdateOne {
-	luo.mutation.SetDownloadHighlights(b)
-	return luo
+func (_u *LiveUpdateOne) SetDownloadHighlights(v bool) *LiveUpdateOne {
+	_u.mutation.SetDownloadHighlights(v)
+	return _u
 }
 
 // SetNillableDownloadHighlights sets the "download_highlights" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableDownloadHighlights(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetDownloadHighlights(*b)
+func (_u *LiveUpdateOne) SetNillableDownloadHighlights(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetDownloadHighlights(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetDownloadUploads sets the "download_uploads" field.
-func (luo *LiveUpdateOne) SetDownloadUploads(b bool) *LiveUpdateOne {
-	luo.mutation.SetDownloadUploads(b)
-	return luo
+func (_u *LiveUpdateOne) SetDownloadUploads(v bool) *LiveUpdateOne {
+	_u.mutation.SetDownloadUploads(v)
+	return _u
 }
 
 // SetNillableDownloadUploads sets the "download_uploads" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableDownloadUploads(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetDownloadUploads(*b)
+func (_u *LiveUpdateOne) SetNillableDownloadUploads(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetDownloadUploads(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetDownloadSubOnly sets the "download_sub_only" field.
-func (luo *LiveUpdateOne) SetDownloadSubOnly(b bool) *LiveUpdateOne {
-	luo.mutation.SetDownloadSubOnly(b)
-	return luo
+func (_u *LiveUpdateOne) SetDownloadSubOnly(v bool) *LiveUpdateOne {
+	_u.mutation.SetDownloadSubOnly(v)
+	return _u
 }
 
 // SetNillableDownloadSubOnly sets the "download_sub_only" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableDownloadSubOnly(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetDownloadSubOnly(*b)
+func (_u *LiveUpdateOne) SetNillableDownloadSubOnly(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetDownloadSubOnly(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetIsLive sets the "is_live" field.
-func (luo *LiveUpdateOne) SetIsLive(b bool) *LiveUpdateOne {
-	luo.mutation.SetIsLive(b)
-	return luo
+func (_u *LiveUpdateOne) SetIsLive(v bool) *LiveUpdateOne {
+	_u.mutation.SetIsLive(v)
+	return _u
 }
 
 // SetNillableIsLive sets the "is_live" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableIsLive(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetIsLive(*b)
+func (_u *LiveUpdateOne) SetNillableIsLive(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetIsLive(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetArchiveChat sets the "archive_chat" field.
-func (luo *LiveUpdateOne) SetArchiveChat(b bool) *LiveUpdateOne {
-	luo.mutation.SetArchiveChat(b)
-	return luo
+func (_u *LiveUpdateOne) SetArchiveChat(v bool) *LiveUpdateOne {
+	_u.mutation.SetArchiveChat(v)
+	return _u
 }
 
 // SetNillableArchiveChat sets the "archive_chat" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableArchiveChat(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetArchiveChat(*b)
+func (_u *LiveUpdateOne) SetNillableArchiveChat(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetArchiveChat(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetResolution sets the "resolution" field.
-func (luo *LiveUpdateOne) SetResolution(s string) *LiveUpdateOne {
-	luo.mutation.SetResolution(s)
-	return luo
+func (_u *LiveUpdateOne) SetResolution(v string) *LiveUpdateOne {
+	_u.mutation.SetResolution(v)
+	return _u
 }
 
 // SetNillableResolution sets the "resolution" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableResolution(s *string) *LiveUpdateOne {
-	if s != nil {
-		luo.SetResolution(*s)
+func (_u *LiveUpdateOne) SetNillableResolution(v *string) *LiveUpdateOne {
+	if v != nil {
+		_u.SetResolution(*v)
 	}
-	return luo
+	return _u
 }
 
 // ClearResolution clears the value of the "resolution" field.
-func (luo *LiveUpdateOne) ClearResolution() *LiveUpdateOne {
-	luo.mutation.ClearResolution()
-	return luo
+func (_u *LiveUpdateOne) ClearResolution() *LiveUpdateOne {
+	_u.mutation.ClearResolution()
+	return _u
 }
 
 // SetLastLive sets the "last_live" field.
-func (luo *LiveUpdateOne) SetLastLive(t time.Time) *LiveUpdateOne {
-	luo.mutation.SetLastLive(t)
-	return luo
+func (_u *LiveUpdateOne) SetLastLive(v time.Time) *LiveUpdateOne {
+	_u.mutation.SetLastLive(v)
+	return _u
 }
 
 // SetNillableLastLive sets the "last_live" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableLastLive(t *time.Time) *LiveUpdateOne {
-	if t != nil {
-		luo.SetLastLive(*t)
+func (_u *LiveUpdateOne) SetNillableLastLive(v *time.Time) *LiveUpdateOne {
+	if v != nil {
+		_u.SetLastLive(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetRenderChat sets the "render_chat" field.
-func (luo *LiveUpdateOne) SetRenderChat(b bool) *LiveUpdateOne {
-	luo.mutation.SetRenderChat(b)
-	return luo
+func (_u *LiveUpdateOne) SetRenderChat(v bool) *LiveUpdateOne {
+	_u.mutation.SetRenderChat(v)
+	return _u
 }
 
 // SetNillableRenderChat sets the "render_chat" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableRenderChat(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetRenderChat(*b)
+func (_u *LiveUpdateOne) SetNillableRenderChat(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetRenderChat(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetVideoAge sets the "video_age" field.
-func (luo *LiveUpdateOne) SetVideoAge(i int64) *LiveUpdateOne {
-	luo.mutation.ResetVideoAge()
-	luo.mutation.SetVideoAge(i)
-	return luo
+func (_u *LiveUpdateOne) SetVideoAge(v int64) *LiveUpdateOne {
+	_u.mutation.ResetVideoAge()
+	_u.mutation.SetVideoAge(v)
+	return _u
 }
 
 // SetNillableVideoAge sets the "video_age" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableVideoAge(i *int64) *LiveUpdateOne {
-	if i != nil {
-		luo.SetVideoAge(*i)
+func (_u *LiveUpdateOne) SetNillableVideoAge(v *int64) *LiveUpdateOne {
+	if v != nil {
+		_u.SetVideoAge(*v)
 	}
-	return luo
+	return _u
 }
 
-// AddVideoAge adds i to the "video_age" field.
-func (luo *LiveUpdateOne) AddVideoAge(i int64) *LiveUpdateOne {
-	luo.mutation.AddVideoAge(i)
-	return luo
+// AddVideoAge adds value to the "video_age" field.
+func (_u *LiveUpdateOne) AddVideoAge(v int64) *LiveUpdateOne {
+	_u.mutation.AddVideoAge(v)
+	return _u
 }
 
 // SetApplyCategoriesToLive sets the "apply_categories_to_live" field.
-func (luo *LiveUpdateOne) SetApplyCategoriesToLive(b bool) *LiveUpdateOne {
-	luo.mutation.SetApplyCategoriesToLive(b)
-	return luo
+func (_u *LiveUpdateOne) SetApplyCategoriesToLive(v bool) *LiveUpdateOne {
+	_u.mutation.SetApplyCategoriesToLive(v)
+	return _u
 }
 
 // SetNillableApplyCategoriesToLive sets the "apply_categories_to_live" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableApplyCategoriesToLive(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetApplyCategoriesToLive(*b)
+func (_u *LiveUpdateOne) SetNillableApplyCategoriesToLive(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetApplyCategoriesToLive(*v)
 	}
-	return luo
+	return _u
+}
+
+// SetStrictCategoriesLive sets the "strict_categories_live" field.
+func (_u *LiveUpdateOne) SetStrictCategoriesLive(v bool) *LiveUpdateOne {
+	_u.mutation.SetStrictCategoriesLive(v)
+	return _u
+}
+
+// SetNillableStrictCategoriesLive sets the "strict_categories_live" field if the given value is not nil.
+func (_u *LiveUpdateOne) SetNillableStrictCategoriesLive(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetStrictCategoriesLive(*v)
+	}
+	return _u
 }
 
 // SetWatchClips sets the "watch_clips" field.
-func (luo *LiveUpdateOne) SetWatchClips(b bool) *LiveUpdateOne {
-	luo.mutation.SetWatchClips(b)
-	return luo
+func (_u *LiveUpdateOne) SetWatchClips(v bool) *LiveUpdateOne {
+	_u.mutation.SetWatchClips(v)
+	return _u
 }
 
 // SetNillableWatchClips sets the "watch_clips" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableWatchClips(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetWatchClips(*b)
+func (_u *LiveUpdateOne) SetNillableWatchClips(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetWatchClips(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetClipsLimit sets the "clips_limit" field.
-func (luo *LiveUpdateOne) SetClipsLimit(i int) *LiveUpdateOne {
-	luo.mutation.ResetClipsLimit()
-	luo.mutation.SetClipsLimit(i)
-	return luo
+func (_u *LiveUpdateOne) SetClipsLimit(v int) *LiveUpdateOne {
+	_u.mutation.ResetClipsLimit()
+	_u.mutation.SetClipsLimit(v)
+	return _u
 }
 
 // SetNillableClipsLimit sets the "clips_limit" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableClipsLimit(i *int) *LiveUpdateOne {
-	if i != nil {
-		luo.SetClipsLimit(*i)
+func (_u *LiveUpdateOne) SetNillableClipsLimit(v *int) *LiveUpdateOne {
+	if v != nil {
+		_u.SetClipsLimit(*v)
 	}
-	return luo
+	return _u
 }
 
-// AddClipsLimit adds i to the "clips_limit" field.
-func (luo *LiveUpdateOne) AddClipsLimit(i int) *LiveUpdateOne {
-	luo.mutation.AddClipsLimit(i)
-	return luo
+// AddClipsLimit adds value to the "clips_limit" field.
+func (_u *LiveUpdateOne) AddClipsLimit(v int) *LiveUpdateOne {
+	_u.mutation.AddClipsLimit(v)
+	return _u
 }
 
 // SetClipsIntervalDays sets the "clips_interval_days" field.
-func (luo *LiveUpdateOne) SetClipsIntervalDays(i int) *LiveUpdateOne {
-	luo.mutation.ResetClipsIntervalDays()
-	luo.mutation.SetClipsIntervalDays(i)
-	return luo
+func (_u *LiveUpdateOne) SetClipsIntervalDays(v int) *LiveUpdateOne {
+	_u.mutation.ResetClipsIntervalDays()
+	_u.mutation.SetClipsIntervalDays(v)
+	return _u
 }
 
 // SetNillableClipsIntervalDays sets the "clips_interval_days" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableClipsIntervalDays(i *int) *LiveUpdateOne {
-	if i != nil {
-		luo.SetClipsIntervalDays(*i)
+func (_u *LiveUpdateOne) SetNillableClipsIntervalDays(v *int) *LiveUpdateOne {
+	if v != nil {
+		_u.SetClipsIntervalDays(*v)
 	}
-	return luo
+	return _u
 }
 
-// AddClipsIntervalDays adds i to the "clips_interval_days" field.
-func (luo *LiveUpdateOne) AddClipsIntervalDays(i int) *LiveUpdateOne {
-	luo.mutation.AddClipsIntervalDays(i)
-	return luo
+// AddClipsIntervalDays adds value to the "clips_interval_days" field.
+func (_u *LiveUpdateOne) AddClipsIntervalDays(v int) *LiveUpdateOne {
+	_u.mutation.AddClipsIntervalDays(v)
+	return _u
 }
 
 // SetClipsLastChecked sets the "clips_last_checked" field.
-func (luo *LiveUpdateOne) SetClipsLastChecked(t time.Time) *LiveUpdateOne {
-	luo.mutation.SetClipsLastChecked(t)
-	return luo
+func (_u *LiveUpdateOne) SetClipsLastChecked(v time.Time) *LiveUpdateOne {
+	_u.mutation.SetClipsLastChecked(v)
+	return _u
 }
 
 // SetNillableClipsLastChecked sets the "clips_last_checked" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableClipsLastChecked(t *time.Time) *LiveUpdateOne {
-	if t != nil {
-		luo.SetClipsLastChecked(*t)
+func (_u *LiveUpdateOne) SetNillableClipsLastChecked(v *time.Time) *LiveUpdateOne {
+	if v != nil {
+		_u.SetClipsLastChecked(*v)
 	}
-	return luo
+	return _u
 }
 
 // ClearClipsLastChecked clears the value of the "clips_last_checked" field.
-func (luo *LiveUpdateOne) ClearClipsLastChecked() *LiveUpdateOne {
-	luo.mutation.ClearClipsLastChecked()
-	return luo
+func (_u *LiveUpdateOne) ClearClipsLastChecked() *LiveUpdateOne {
+	_u.mutation.ClearClipsLastChecked()
+	return _u
 }
 
 // SetClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field.
-func (luo *LiveUpdateOne) SetClipsIgnoreLastChecked(b bool) *LiveUpdateOne {
-	luo.mutation.SetClipsIgnoreLastChecked(b)
-	return luo
+func (_u *LiveUpdateOne) SetClipsIgnoreLastChecked(v bool) *LiveUpdateOne {
+	_u.mutation.SetClipsIgnoreLastChecked(v)
+	return _u
 }
 
 // SetNillableClipsIgnoreLastChecked sets the "clips_ignore_last_checked" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableClipsIgnoreLastChecked(b *bool) *LiveUpdateOne {
-	if b != nil {
-		luo.SetClipsIgnoreLastChecked(*b)
+func (_u *LiveUpdateOne) SetNillableClipsIgnoreLastChecked(v *bool) *LiveUpdateOne {
+	if v != nil {
+		_u.SetClipsIgnoreLastChecked(*v)
 	}
-	return luo
+	return _u
 }
 
 // SetUpdateMetadataMinutes sets the "update_metadata_minutes" field.
-func (luo *LiveUpdateOne) SetUpdateMetadataMinutes(i int) *LiveUpdateOne {
-	luo.mutation.ResetUpdateMetadataMinutes()
-	luo.mutation.SetUpdateMetadataMinutes(i)
-	return luo
+func (_u *LiveUpdateOne) SetUpdateMetadataMinutes(v int) *LiveUpdateOne {
+	_u.mutation.ResetUpdateMetadataMinutes()
+	_u.mutation.SetUpdateMetadataMinutes(v)
+	return _u
 }
 
 // SetNillableUpdateMetadataMinutes sets the "update_metadata_minutes" field if the given value is not nil.
-func (luo *LiveUpdateOne) SetNillableUpdateMetadataMinutes(i *int) *LiveUpdateOne {
-	if i != nil {
-		luo.SetUpdateMetadataMinutes(*i)
+func (_u *LiveUpdateOne) SetNillableUpdateMetadataMinutes(v *int) *LiveUpdateOne {
+	if v != nil {
+		_u.SetUpdateMetadataMinutes(*v)
 	}
-	return luo
+	return _u
 }
 
-// AddUpdateMetadataMinutes adds i to the "update_metadata_minutes" field.
-func (luo *LiveUpdateOne) AddUpdateMetadataMinutes(i int) *LiveUpdateOne {
-	luo.mutation.AddUpdateMetadataMinutes(i)
-	return luo
+// AddUpdateMetadataMinutes adds value to the "update_metadata_minutes" field.
+func (_u *LiveUpdateOne) AddUpdateMetadataMinutes(v int) *LiveUpdateOne {
+	_u.mutation.AddUpdateMetadataMinutes(v)
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (luo *LiveUpdateOne) SetUpdatedAt(t time.Time) *LiveUpdateOne {
-	luo.mutation.SetUpdatedAt(t)
-	return luo
+func (_u *LiveUpdateOne) SetUpdatedAt(v time.Time) *LiveUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetChannelID sets the "channel" edge to the Channel entity by ID.
-func (luo *LiveUpdateOne) SetChannelID(id uuid.UUID) *LiveUpdateOne {
-	luo.mutation.SetChannelID(id)
-	return luo
+func (_u *LiveUpdateOne) SetChannelID(id uuid.UUID) *LiveUpdateOne {
+	_u.mutation.SetChannelID(id)
+	return _u
 }
 
 // SetChannel sets the "channel" edge to the Channel entity.
-func (luo *LiveUpdateOne) SetChannel(c *Channel) *LiveUpdateOne {
-	return luo.SetChannelID(c.ID)
+func (_u *LiveUpdateOne) SetChannel(v *Channel) *LiveUpdateOne {
+	return _u.SetChannelID(v.ID)
 }
 
 // AddCategoryIDs adds the "categories" edge to the LiveCategory entity by IDs.
-func (luo *LiveUpdateOne) AddCategoryIDs(ids ...uuid.UUID) *LiveUpdateOne {
-	luo.mutation.AddCategoryIDs(ids...)
-	return luo
+func (_u *LiveUpdateOne) AddCategoryIDs(ids ...uuid.UUID) *LiveUpdateOne {
+	_u.mutation.AddCategoryIDs(ids...)
+	return _u
 }
 
 // AddCategories adds the "categories" edges to the LiveCategory entity.
-func (luo *LiveUpdateOne) AddCategories(l ...*LiveCategory) *LiveUpdateOne {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_u *LiveUpdateOne) AddCategories(v ...*LiveCategory) *LiveUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return luo.AddCategoryIDs(ids...)
+	return _u.AddCategoryIDs(ids...)
 }
 
 // AddTitleRegexIDs adds the "title_regex" edge to the LiveTitleRegex entity by IDs.
-func (luo *LiveUpdateOne) AddTitleRegexIDs(ids ...uuid.UUID) *LiveUpdateOne {
-	luo.mutation.AddTitleRegexIDs(ids...)
-	return luo
+func (_u *LiveUpdateOne) AddTitleRegexIDs(ids ...uuid.UUID) *LiveUpdateOne {
+	_u.mutation.AddTitleRegexIDs(ids...)
+	return _u
 }
 
 // AddTitleRegex adds the "title_regex" edges to the LiveTitleRegex entity.
-func (luo *LiveUpdateOne) AddTitleRegex(l ...*LiveTitleRegex) *LiveUpdateOne {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_u *LiveUpdateOne) AddTitleRegex(v ...*LiveTitleRegex) *LiveUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return luo.AddTitleRegexIDs(ids...)
+	return _u.AddTitleRegexIDs(ids...)
 }
 
 // Mutation returns the LiveMutation object of the builder.
-func (luo *LiveUpdateOne) Mutation() *LiveMutation {
-	return luo.mutation
+func (_u *LiveUpdateOne) Mutation() *LiveMutation {
+	return _u.mutation
 }
 
 // ClearChannel clears the "channel" edge to the Channel entity.
-func (luo *LiveUpdateOne) ClearChannel() *LiveUpdateOne {
-	luo.mutation.ClearChannel()
-	return luo
+func (_u *LiveUpdateOne) ClearChannel() *LiveUpdateOne {
+	_u.mutation.ClearChannel()
+	return _u
 }
 
 // ClearCategories clears all "categories" edges to the LiveCategory entity.
-func (luo *LiveUpdateOne) ClearCategories() *LiveUpdateOne {
-	luo.mutation.ClearCategories()
-	return luo
+func (_u *LiveUpdateOne) ClearCategories() *LiveUpdateOne {
+	_u.mutation.ClearCategories()
+	return _u
 }
 
 // RemoveCategoryIDs removes the "categories" edge to LiveCategory entities by IDs.
-func (luo *LiveUpdateOne) RemoveCategoryIDs(ids ...uuid.UUID) *LiveUpdateOne {
-	luo.mutation.RemoveCategoryIDs(ids...)
-	return luo
+func (_u *LiveUpdateOne) RemoveCategoryIDs(ids ...uuid.UUID) *LiveUpdateOne {
+	_u.mutation.RemoveCategoryIDs(ids...)
+	return _u
 }
 
 // RemoveCategories removes "categories" edges to LiveCategory entities.
-func (luo *LiveUpdateOne) RemoveCategories(l ...*LiveCategory) *LiveUpdateOne {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_u *LiveUpdateOne) RemoveCategories(v ...*LiveCategory) *LiveUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return luo.RemoveCategoryIDs(ids...)
+	return _u.RemoveCategoryIDs(ids...)
 }
 
 // ClearTitleRegex clears all "title_regex" edges to the LiveTitleRegex entity.
-func (luo *LiveUpdateOne) ClearTitleRegex() *LiveUpdateOne {
-	luo.mutation.ClearTitleRegex()
-	return luo
+func (_u *LiveUpdateOne) ClearTitleRegex() *LiveUpdateOne {
+	_u.mutation.ClearTitleRegex()
+	return _u
 }
 
 // RemoveTitleRegexIDs removes the "title_regex" edge to LiveTitleRegex entities by IDs.
-func (luo *LiveUpdateOne) RemoveTitleRegexIDs(ids ...uuid.UUID) *LiveUpdateOne {
-	luo.mutation.RemoveTitleRegexIDs(ids...)
-	return luo
+func (_u *LiveUpdateOne) RemoveTitleRegexIDs(ids ...uuid.UUID) *LiveUpdateOne {
+	_u.mutation.RemoveTitleRegexIDs(ids...)
+	return _u
 }
 
 // RemoveTitleRegex removes "title_regex" edges to LiveTitleRegex entities.
-func (luo *LiveUpdateOne) RemoveTitleRegex(l ...*LiveTitleRegex) *LiveUpdateOne {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_u *LiveUpdateOne) RemoveTitleRegex(v ...*LiveTitleRegex) *LiveUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return luo.RemoveTitleRegexIDs(ids...)
+	return _u.RemoveTitleRegexIDs(ids...)
 }
 
 // Where appends a list predicates to the LiveUpdate builder.
-func (luo *LiveUpdateOne) Where(ps ...predicate.Live) *LiveUpdateOne {
-	luo.mutation.Where(ps...)
-	return luo
+func (_u *LiveUpdateOne) Where(ps ...predicate.Live) *LiveUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (luo *LiveUpdateOne) Select(field string, fields ...string) *LiveUpdateOne {
-	luo.fields = append([]string{field}, fields...)
-	return luo
+func (_u *LiveUpdateOne) Select(field string, fields ...string) *LiveUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Live entity.
-func (luo *LiveUpdateOne) Save(ctx context.Context) (*Live, error) {
-	luo.defaults()
-	return withHooks(ctx, luo.sqlSave, luo.mutation, luo.hooks)
+func (_u *LiveUpdateOne) Save(ctx context.Context) (*Live, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (luo *LiveUpdateOne) SaveX(ctx context.Context) *Live {
-	node, err := luo.Save(ctx)
+func (_u *LiveUpdateOne) SaveX(ctx context.Context) *Live {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1151,50 +1182,50 @@ func (luo *LiveUpdateOne) SaveX(ctx context.Context) *Live {
 }
 
 // Exec executes the query on the entity.
-func (luo *LiveUpdateOne) Exec(ctx context.Context) error {
-	_, err := luo.Save(ctx)
+func (_u *LiveUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (luo *LiveUpdateOne) ExecX(ctx context.Context) {
-	if err := luo.Exec(ctx); err != nil {
+func (_u *LiveUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (luo *LiveUpdateOne) defaults() {
-	if _, ok := luo.mutation.UpdatedAt(); !ok {
+func (_u *LiveUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := live.UpdateDefaultUpdatedAt()
-		luo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (luo *LiveUpdateOne) check() error {
-	if v, ok := luo.mutation.UpdateMetadataMinutes(); ok {
+func (_u *LiveUpdateOne) check() error {
+	if v, ok := _u.mutation.UpdateMetadataMinutes(); ok {
 		if err := live.UpdateMetadataMinutesValidator(v); err != nil {
 			return &ValidationError{Name: "update_metadata_minutes", err: fmt.Errorf(`ent: validator failed for field "Live.update_metadata_minutes": %w`, err)}
 		}
 	}
-	if luo.mutation.ChannelCleared() && len(luo.mutation.ChannelIDs()) > 0 {
+	if _u.mutation.ChannelCleared() && len(_u.mutation.ChannelIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Live.channel"`)
 	}
 	return nil
 }
 
-func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) {
-	if err := luo.check(); err != nil {
+func (_u *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(live.Table, live.Columns, sqlgraph.NewFieldSpec(live.FieldID, field.TypeUUID))
-	id, ok := luo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Live.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := luo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, live.FieldID)
 		for _, f := range fields {
@@ -1206,92 +1237,95 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 			}
 		}
 	}
-	if ps := luo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := luo.mutation.WatchLive(); ok {
+	if value, ok := _u.mutation.WatchLive(); ok {
 		_spec.SetField(live.FieldWatchLive, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.WatchVod(); ok {
+	if value, ok := _u.mutation.WatchVod(); ok {
 		_spec.SetField(live.FieldWatchVod, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.DownloadArchives(); ok {
+	if value, ok := _u.mutation.DownloadArchives(); ok {
 		_spec.SetField(live.FieldDownloadArchives, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.DownloadHighlights(); ok {
+	if value, ok := _u.mutation.DownloadHighlights(); ok {
 		_spec.SetField(live.FieldDownloadHighlights, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.DownloadUploads(); ok {
+	if value, ok := _u.mutation.DownloadUploads(); ok {
 		_spec.SetField(live.FieldDownloadUploads, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.DownloadSubOnly(); ok {
+	if value, ok := _u.mutation.DownloadSubOnly(); ok {
 		_spec.SetField(live.FieldDownloadSubOnly, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.IsLive(); ok {
+	if value, ok := _u.mutation.IsLive(); ok {
 		_spec.SetField(live.FieldIsLive, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.ArchiveChat(); ok {
+	if value, ok := _u.mutation.ArchiveChat(); ok {
 		_spec.SetField(live.FieldArchiveChat, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.Resolution(); ok {
+	if value, ok := _u.mutation.Resolution(); ok {
 		_spec.SetField(live.FieldResolution, field.TypeString, value)
 	}
-	if luo.mutation.ResolutionCleared() {
+	if _u.mutation.ResolutionCleared() {
 		_spec.ClearField(live.FieldResolution, field.TypeString)
 	}
-	if value, ok := luo.mutation.LastLive(); ok {
+	if value, ok := _u.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
 	}
-	if value, ok := luo.mutation.RenderChat(); ok {
+	if value, ok := _u.mutation.RenderChat(); ok {
 		_spec.SetField(live.FieldRenderChat, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.VideoAge(); ok {
+	if value, ok := _u.mutation.VideoAge(); ok {
 		_spec.SetField(live.FieldVideoAge, field.TypeInt64, value)
 	}
-	if value, ok := luo.mutation.AddedVideoAge(); ok {
+	if value, ok := _u.mutation.AddedVideoAge(); ok {
 		_spec.AddField(live.FieldVideoAge, field.TypeInt64, value)
 	}
-	if value, ok := luo.mutation.ApplyCategoriesToLive(); ok {
+	if value, ok := _u.mutation.ApplyCategoriesToLive(); ok {
 		_spec.SetField(live.FieldApplyCategoriesToLive, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.WatchClips(); ok {
+	if value, ok := _u.mutation.StrictCategoriesLive(); ok {
+		_spec.SetField(live.FieldStrictCategoriesLive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.WatchClips(); ok {
 		_spec.SetField(live.FieldWatchClips, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.ClipsLimit(); ok {
+	if value, ok := _u.mutation.ClipsLimit(); ok {
 		_spec.SetField(live.FieldClipsLimit, field.TypeInt, value)
 	}
-	if value, ok := luo.mutation.AddedClipsLimit(); ok {
+	if value, ok := _u.mutation.AddedClipsLimit(); ok {
 		_spec.AddField(live.FieldClipsLimit, field.TypeInt, value)
 	}
-	if value, ok := luo.mutation.ClipsIntervalDays(); ok {
+	if value, ok := _u.mutation.ClipsIntervalDays(); ok {
 		_spec.SetField(live.FieldClipsIntervalDays, field.TypeInt, value)
 	}
-	if value, ok := luo.mutation.AddedClipsIntervalDays(); ok {
+	if value, ok := _u.mutation.AddedClipsIntervalDays(); ok {
 		_spec.AddField(live.FieldClipsIntervalDays, field.TypeInt, value)
 	}
-	if value, ok := luo.mutation.ClipsLastChecked(); ok {
+	if value, ok := _u.mutation.ClipsLastChecked(); ok {
 		_spec.SetField(live.FieldClipsLastChecked, field.TypeTime, value)
 	}
-	if luo.mutation.ClipsLastCheckedCleared() {
+	if _u.mutation.ClipsLastCheckedCleared() {
 		_spec.ClearField(live.FieldClipsLastChecked, field.TypeTime)
 	}
-	if value, ok := luo.mutation.ClipsIgnoreLastChecked(); ok {
+	if value, ok := _u.mutation.ClipsIgnoreLastChecked(); ok {
 		_spec.SetField(live.FieldClipsIgnoreLastChecked, field.TypeBool, value)
 	}
-	if value, ok := luo.mutation.UpdateMetadataMinutes(); ok {
+	if value, ok := _u.mutation.UpdateMetadataMinutes(); ok {
 		_spec.SetField(live.FieldUpdateMetadataMinutes, field.TypeInt, value)
 	}
-	if value, ok := luo.mutation.AddedUpdateMetadataMinutes(); ok {
+	if value, ok := _u.mutation.AddedUpdateMetadataMinutes(); ok {
 		_spec.AddField(live.FieldUpdateMetadataMinutes, field.TypeInt, value)
 	}
-	if value, ok := luo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(live.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if luo.mutation.ChannelCleared() {
+	if _u.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1304,7 +1338,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := luo.mutation.ChannelIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ChannelIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1320,7 +1354,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if luo.mutation.CategoriesCleared() {
+	if _u.mutation.CategoriesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1333,7 +1367,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := luo.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !luo.mutation.CategoriesCleared() {
+	if nodes := _u.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !_u.mutation.CategoriesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1349,7 +1383,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := luo.mutation.CategoriesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.CategoriesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1365,7 +1399,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if luo.mutation.TitleRegexCleared() {
+	if _u.mutation.TitleRegexCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1378,7 +1412,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := luo.mutation.RemovedTitleRegexIDs(); len(nodes) > 0 && !luo.mutation.TitleRegexCleared() {
+	if nodes := _u.mutation.RemovedTitleRegexIDs(); len(nodes) > 0 && !_u.mutation.TitleRegexCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1394,7 +1428,7 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := luo.mutation.TitleRegexIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TitleRegexIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1410,10 +1444,10 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Live{config: luo.config}
+	_node = &Live{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, luo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{live.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1421,6 +1455,6 @@ func (luo *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) 
 		}
 		return nil, err
 	}
-	luo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

@@ -25,78 +25,78 @@ type LiveTitleRegexCreate struct {
 }
 
 // SetNegative sets the "negative" field.
-func (ltrc *LiveTitleRegexCreate) SetNegative(b bool) *LiveTitleRegexCreate {
-	ltrc.mutation.SetNegative(b)
-	return ltrc
+func (_c *LiveTitleRegexCreate) SetNegative(v bool) *LiveTitleRegexCreate {
+	_c.mutation.SetNegative(v)
+	return _c
 }
 
 // SetNillableNegative sets the "negative" field if the given value is not nil.
-func (ltrc *LiveTitleRegexCreate) SetNillableNegative(b *bool) *LiveTitleRegexCreate {
-	if b != nil {
-		ltrc.SetNegative(*b)
+func (_c *LiveTitleRegexCreate) SetNillableNegative(v *bool) *LiveTitleRegexCreate {
+	if v != nil {
+		_c.SetNegative(*v)
 	}
-	return ltrc
+	return _c
 }
 
 // SetRegex sets the "regex" field.
-func (ltrc *LiveTitleRegexCreate) SetRegex(s string) *LiveTitleRegexCreate {
-	ltrc.mutation.SetRegex(s)
-	return ltrc
+func (_c *LiveTitleRegexCreate) SetRegex(v string) *LiveTitleRegexCreate {
+	_c.mutation.SetRegex(v)
+	return _c
 }
 
 // SetApplyToVideos sets the "apply_to_videos" field.
-func (ltrc *LiveTitleRegexCreate) SetApplyToVideos(b bool) *LiveTitleRegexCreate {
-	ltrc.mutation.SetApplyToVideos(b)
-	return ltrc
+func (_c *LiveTitleRegexCreate) SetApplyToVideos(v bool) *LiveTitleRegexCreate {
+	_c.mutation.SetApplyToVideos(v)
+	return _c
 }
 
 // SetNillableApplyToVideos sets the "apply_to_videos" field if the given value is not nil.
-func (ltrc *LiveTitleRegexCreate) SetNillableApplyToVideos(b *bool) *LiveTitleRegexCreate {
-	if b != nil {
-		ltrc.SetApplyToVideos(*b)
+func (_c *LiveTitleRegexCreate) SetNillableApplyToVideos(v *bool) *LiveTitleRegexCreate {
+	if v != nil {
+		_c.SetApplyToVideos(*v)
 	}
-	return ltrc
+	return _c
 }
 
 // SetID sets the "id" field.
-func (ltrc *LiveTitleRegexCreate) SetID(u uuid.UUID) *LiveTitleRegexCreate {
-	ltrc.mutation.SetID(u)
-	return ltrc
+func (_c *LiveTitleRegexCreate) SetID(v uuid.UUID) *LiveTitleRegexCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (ltrc *LiveTitleRegexCreate) SetNillableID(u *uuid.UUID) *LiveTitleRegexCreate {
-	if u != nil {
-		ltrc.SetID(*u)
+func (_c *LiveTitleRegexCreate) SetNillableID(v *uuid.UUID) *LiveTitleRegexCreate {
+	if v != nil {
+		_c.SetID(*v)
 	}
-	return ltrc
+	return _c
 }
 
 // SetLiveID sets the "live" edge to the Live entity by ID.
-func (ltrc *LiveTitleRegexCreate) SetLiveID(id uuid.UUID) *LiveTitleRegexCreate {
-	ltrc.mutation.SetLiveID(id)
-	return ltrc
+func (_c *LiveTitleRegexCreate) SetLiveID(id uuid.UUID) *LiveTitleRegexCreate {
+	_c.mutation.SetLiveID(id)
+	return _c
 }
 
 // SetLive sets the "live" edge to the Live entity.
-func (ltrc *LiveTitleRegexCreate) SetLive(l *Live) *LiveTitleRegexCreate {
-	return ltrc.SetLiveID(l.ID)
+func (_c *LiveTitleRegexCreate) SetLive(v *Live) *LiveTitleRegexCreate {
+	return _c.SetLiveID(v.ID)
 }
 
 // Mutation returns the LiveTitleRegexMutation object of the builder.
-func (ltrc *LiveTitleRegexCreate) Mutation() *LiveTitleRegexMutation {
-	return ltrc.mutation
+func (_c *LiveTitleRegexCreate) Mutation() *LiveTitleRegexMutation {
+	return _c.mutation
 }
 
 // Save creates the LiveTitleRegex in the database.
-func (ltrc *LiveTitleRegexCreate) Save(ctx context.Context) (*LiveTitleRegex, error) {
-	ltrc.defaults()
-	return withHooks(ctx, ltrc.sqlSave, ltrc.mutation, ltrc.hooks)
+func (_c *LiveTitleRegexCreate) Save(ctx context.Context) (*LiveTitleRegex, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ltrc *LiveTitleRegexCreate) SaveX(ctx context.Context) *LiveTitleRegex {
-	v, err := ltrc.Save(ctx)
+func (_c *LiveTitleRegexCreate) SaveX(ctx context.Context) *LiveTitleRegex {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -104,57 +104,57 @@ func (ltrc *LiveTitleRegexCreate) SaveX(ctx context.Context) *LiveTitleRegex {
 }
 
 // Exec executes the query.
-func (ltrc *LiveTitleRegexCreate) Exec(ctx context.Context) error {
-	_, err := ltrc.Save(ctx)
+func (_c *LiveTitleRegexCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ltrc *LiveTitleRegexCreate) ExecX(ctx context.Context) {
-	if err := ltrc.Exec(ctx); err != nil {
+func (_c *LiveTitleRegexCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ltrc *LiveTitleRegexCreate) defaults() {
-	if _, ok := ltrc.mutation.Negative(); !ok {
+func (_c *LiveTitleRegexCreate) defaults() {
+	if _, ok := _c.mutation.Negative(); !ok {
 		v := livetitleregex.DefaultNegative
-		ltrc.mutation.SetNegative(v)
+		_c.mutation.SetNegative(v)
 	}
-	if _, ok := ltrc.mutation.ApplyToVideos(); !ok {
+	if _, ok := _c.mutation.ApplyToVideos(); !ok {
 		v := livetitleregex.DefaultApplyToVideos
-		ltrc.mutation.SetApplyToVideos(v)
+		_c.mutation.SetApplyToVideos(v)
 	}
-	if _, ok := ltrc.mutation.ID(); !ok {
+	if _, ok := _c.mutation.ID(); !ok {
 		v := livetitleregex.DefaultID()
-		ltrc.mutation.SetID(v)
+		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ltrc *LiveTitleRegexCreate) check() error {
-	if _, ok := ltrc.mutation.Negative(); !ok {
+func (_c *LiveTitleRegexCreate) check() error {
+	if _, ok := _c.mutation.Negative(); !ok {
 		return &ValidationError{Name: "negative", err: errors.New(`ent: missing required field "LiveTitleRegex.negative"`)}
 	}
-	if _, ok := ltrc.mutation.Regex(); !ok {
+	if _, ok := _c.mutation.Regex(); !ok {
 		return &ValidationError{Name: "regex", err: errors.New(`ent: missing required field "LiveTitleRegex.regex"`)}
 	}
-	if _, ok := ltrc.mutation.ApplyToVideos(); !ok {
+	if _, ok := _c.mutation.ApplyToVideos(); !ok {
 		return &ValidationError{Name: "apply_to_videos", err: errors.New(`ent: missing required field "LiveTitleRegex.apply_to_videos"`)}
 	}
-	if len(ltrc.mutation.LiveIDs()) == 0 {
+	if len(_c.mutation.LiveIDs()) == 0 {
 		return &ValidationError{Name: "live", err: errors.New(`ent: missing required edge "LiveTitleRegex.live"`)}
 	}
 	return nil
 }
 
-func (ltrc *LiveTitleRegexCreate) sqlSave(ctx context.Context) (*LiveTitleRegex, error) {
-	if err := ltrc.check(); err != nil {
+func (_c *LiveTitleRegexCreate) sqlSave(ctx context.Context) (*LiveTitleRegex, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := ltrc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, ltrc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -167,34 +167,34 @@ func (ltrc *LiveTitleRegexCreate) sqlSave(ctx context.Context) (*LiveTitleRegex,
 			return nil, err
 		}
 	}
-	ltrc.mutation.id = &_node.ID
-	ltrc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (ltrc *LiveTitleRegexCreate) createSpec() (*LiveTitleRegex, *sqlgraph.CreateSpec) {
+func (_c *LiveTitleRegexCreate) createSpec() (*LiveTitleRegex, *sqlgraph.CreateSpec) {
 	var (
-		_node = &LiveTitleRegex{config: ltrc.config}
+		_node = &LiveTitleRegex{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(livetitleregex.Table, sqlgraph.NewFieldSpec(livetitleregex.FieldID, field.TypeUUID))
 	)
-	_spec.OnConflict = ltrc.conflict
-	if id, ok := ltrc.mutation.ID(); ok {
+	_spec.OnConflict = _c.conflict
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := ltrc.mutation.Negative(); ok {
+	if value, ok := _c.mutation.Negative(); ok {
 		_spec.SetField(livetitleregex.FieldNegative, field.TypeBool, value)
 		_node.Negative = value
 	}
-	if value, ok := ltrc.mutation.Regex(); ok {
+	if value, ok := _c.mutation.Regex(); ok {
 		_spec.SetField(livetitleregex.FieldRegex, field.TypeString, value)
 		_node.Regex = value
 	}
-	if value, ok := ltrc.mutation.ApplyToVideos(); ok {
+	if value, ok := _c.mutation.ApplyToVideos(); ok {
 		_spec.SetField(livetitleregex.FieldApplyToVideos, field.TypeBool, value)
 		_node.ApplyToVideos = value
 	}
-	if nodes := ltrc.mutation.LiveIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.LiveIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -230,10 +230,10 @@ func (ltrc *LiveTitleRegexCreate) createSpec() (*LiveTitleRegex, *sqlgraph.Creat
 //			SetNegative(v+v).
 //		}).
 //		Exec(ctx)
-func (ltrc *LiveTitleRegexCreate) OnConflict(opts ...sql.ConflictOption) *LiveTitleRegexUpsertOne {
-	ltrc.conflict = opts
+func (_c *LiveTitleRegexCreate) OnConflict(opts ...sql.ConflictOption) *LiveTitleRegexUpsertOne {
+	_c.conflict = opts
 	return &LiveTitleRegexUpsertOne{
-		create: ltrc,
+		create: _c,
 	}
 }
 
@@ -243,10 +243,10 @@ func (ltrc *LiveTitleRegexCreate) OnConflict(opts ...sql.ConflictOption) *LiveTi
 //	client.LiveTitleRegex.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (ltrc *LiveTitleRegexCreate) OnConflictColumns(columns ...string) *LiveTitleRegexUpsertOne {
-	ltrc.conflict = append(ltrc.conflict, sql.ConflictColumns(columns...))
+func (_c *LiveTitleRegexCreate) OnConflictColumns(columns ...string) *LiveTitleRegexUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &LiveTitleRegexUpsertOne{
-		create: ltrc,
+		create: _c,
 	}
 }
 
@@ -436,16 +436,16 @@ type LiveTitleRegexCreateBulk struct {
 }
 
 // Save creates the LiveTitleRegex entities in the database.
-func (ltrcb *LiveTitleRegexCreateBulk) Save(ctx context.Context) ([]*LiveTitleRegex, error) {
-	if ltrcb.err != nil {
-		return nil, ltrcb.err
+func (_c *LiveTitleRegexCreateBulk) Save(ctx context.Context) ([]*LiveTitleRegex, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ltrcb.builders))
-	nodes := make([]*LiveTitleRegex, len(ltrcb.builders))
-	mutators := make([]Mutator, len(ltrcb.builders))
-	for i := range ltrcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*LiveTitleRegex, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ltrcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*LiveTitleRegexMutation)
@@ -459,12 +459,12 @@ func (ltrcb *LiveTitleRegexCreateBulk) Save(ctx context.Context) ([]*LiveTitleRe
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ltrcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = ltrcb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ltrcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -484,7 +484,7 @@ func (ltrcb *LiveTitleRegexCreateBulk) Save(ctx context.Context) ([]*LiveTitleRe
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ltrcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -492,8 +492,8 @@ func (ltrcb *LiveTitleRegexCreateBulk) Save(ctx context.Context) ([]*LiveTitleRe
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ltrcb *LiveTitleRegexCreateBulk) SaveX(ctx context.Context) []*LiveTitleRegex {
-	v, err := ltrcb.Save(ctx)
+func (_c *LiveTitleRegexCreateBulk) SaveX(ctx context.Context) []*LiveTitleRegex {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -501,14 +501,14 @@ func (ltrcb *LiveTitleRegexCreateBulk) SaveX(ctx context.Context) []*LiveTitleRe
 }
 
 // Exec executes the query.
-func (ltrcb *LiveTitleRegexCreateBulk) Exec(ctx context.Context) error {
-	_, err := ltrcb.Save(ctx)
+func (_c *LiveTitleRegexCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ltrcb *LiveTitleRegexCreateBulk) ExecX(ctx context.Context) {
-	if err := ltrcb.Exec(ctx); err != nil {
+func (_c *LiveTitleRegexCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -528,10 +528,10 @@ func (ltrcb *LiveTitleRegexCreateBulk) ExecX(ctx context.Context) {
 //			SetNegative(v+v).
 //		}).
 //		Exec(ctx)
-func (ltrcb *LiveTitleRegexCreateBulk) OnConflict(opts ...sql.ConflictOption) *LiveTitleRegexUpsertBulk {
-	ltrcb.conflict = opts
+func (_c *LiveTitleRegexCreateBulk) OnConflict(opts ...sql.ConflictOption) *LiveTitleRegexUpsertBulk {
+	_c.conflict = opts
 	return &LiveTitleRegexUpsertBulk{
-		create: ltrcb,
+		create: _c,
 	}
 }
 
@@ -541,10 +541,10 @@ func (ltrcb *LiveTitleRegexCreateBulk) OnConflict(opts ...sql.ConflictOption) *L
 //	client.LiveTitleRegex.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (ltrcb *LiveTitleRegexCreateBulk) OnConflictColumns(columns ...string) *LiveTitleRegexUpsertBulk {
-	ltrcb.conflict = append(ltrcb.conflict, sql.ConflictColumns(columns...))
+func (_c *LiveTitleRegexCreateBulk) OnConflictColumns(columns ...string) *LiveTitleRegexUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &LiveTitleRegexUpsertBulk{
-		create: ltrcb,
+		create: _c,
 	}
 }
 

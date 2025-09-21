@@ -82,7 +82,7 @@ func (*MultistreamInfo) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the MultistreamInfo fields.
-func (mi *MultistreamInfo) assignValues(columns []string, values []any) error {
+func (_m *MultistreamInfo) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -93,29 +93,29 @@ func (mi *MultistreamInfo) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			mi.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case multistreaminfo.FieldDelayMs:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field delay_ms", values[i])
 			} else if value.Valid {
-				mi.DelayMs = int(value.Int64)
+				_m.DelayMs = int(value.Int64)
 			}
 		case multistreaminfo.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field multistream_info_vod", values[i])
 			} else if value.Valid {
-				mi.multistream_info_vod = new(uuid.UUID)
-				*mi.multistream_info_vod = *value.S.(*uuid.UUID)
+				_m.multistream_info_vod = new(uuid.UUID)
+				*_m.multistream_info_vod = *value.S.(*uuid.UUID)
 			}
 		case multistreaminfo.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field playlist_multistream_info", values[i])
 			} else if value.Valid {
-				mi.playlist_multistream_info = new(uuid.UUID)
-				*mi.playlist_multistream_info = *value.S.(*uuid.UUID)
+				_m.playlist_multistream_info = new(uuid.UUID)
+				*_m.playlist_multistream_info = *value.S.(*uuid.UUID)
 			}
 		default:
-			mi.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -123,45 +123,45 @@ func (mi *MultistreamInfo) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the MultistreamInfo.
 // This includes values selected through modifiers, order, etc.
-func (mi *MultistreamInfo) Value(name string) (ent.Value, error) {
-	return mi.selectValues.Get(name)
+func (_m *MultistreamInfo) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryVod queries the "vod" edge of the MultistreamInfo entity.
-func (mi *MultistreamInfo) QueryVod() *VodQuery {
-	return NewMultistreamInfoClient(mi.config).QueryVod(mi)
+func (_m *MultistreamInfo) QueryVod() *VodQuery {
+	return NewMultistreamInfoClient(_m.config).QueryVod(_m)
 }
 
 // QueryPlaylist queries the "playlist" edge of the MultistreamInfo entity.
-func (mi *MultistreamInfo) QueryPlaylist() *PlaylistQuery {
-	return NewMultistreamInfoClient(mi.config).QueryPlaylist(mi)
+func (_m *MultistreamInfo) QueryPlaylist() *PlaylistQuery {
+	return NewMultistreamInfoClient(_m.config).QueryPlaylist(_m)
 }
 
 // Update returns a builder for updating this MultistreamInfo.
 // Note that you need to call MultistreamInfo.Unwrap() before calling this method if this MultistreamInfo
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (mi *MultistreamInfo) Update() *MultistreamInfoUpdateOne {
-	return NewMultistreamInfoClient(mi.config).UpdateOne(mi)
+func (_m *MultistreamInfo) Update() *MultistreamInfoUpdateOne {
+	return NewMultistreamInfoClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the MultistreamInfo entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (mi *MultistreamInfo) Unwrap() *MultistreamInfo {
-	_tx, ok := mi.config.driver.(*txDriver)
+func (_m *MultistreamInfo) Unwrap() *MultistreamInfo {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: MultistreamInfo is not a transactional entity")
 	}
-	mi.config.driver = _tx.drv
-	return mi
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (mi *MultistreamInfo) String() string {
+func (_m *MultistreamInfo) String() string {
 	var builder strings.Builder
 	builder.WriteString("MultistreamInfo(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", mi.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("delay_ms=")
-	builder.WriteString(fmt.Sprintf("%v", mi.DelayMs))
+	builder.WriteString(fmt.Sprintf("%v", _m.DelayMs))
 	builder.WriteByte(')')
 	return builder.String()
 }

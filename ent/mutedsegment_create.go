@@ -25,56 +25,56 @@ type MutedSegmentCreate struct {
 }
 
 // SetStart sets the "start" field.
-func (msc *MutedSegmentCreate) SetStart(i int) *MutedSegmentCreate {
-	msc.mutation.SetStart(i)
-	return msc
+func (_c *MutedSegmentCreate) SetStart(v int) *MutedSegmentCreate {
+	_c.mutation.SetStart(v)
+	return _c
 }
 
 // SetEnd sets the "end" field.
-func (msc *MutedSegmentCreate) SetEnd(i int) *MutedSegmentCreate {
-	msc.mutation.SetEnd(i)
-	return msc
+func (_c *MutedSegmentCreate) SetEnd(v int) *MutedSegmentCreate {
+	_c.mutation.SetEnd(v)
+	return _c
 }
 
 // SetID sets the "id" field.
-func (msc *MutedSegmentCreate) SetID(u uuid.UUID) *MutedSegmentCreate {
-	msc.mutation.SetID(u)
-	return msc
+func (_c *MutedSegmentCreate) SetID(v uuid.UUID) *MutedSegmentCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (msc *MutedSegmentCreate) SetNillableID(u *uuid.UUID) *MutedSegmentCreate {
-	if u != nil {
-		msc.SetID(*u)
+func (_c *MutedSegmentCreate) SetNillableID(v *uuid.UUID) *MutedSegmentCreate {
+	if v != nil {
+		_c.SetID(*v)
 	}
-	return msc
+	return _c
 }
 
 // SetVodID sets the "vod" edge to the Vod entity by ID.
-func (msc *MutedSegmentCreate) SetVodID(id uuid.UUID) *MutedSegmentCreate {
-	msc.mutation.SetVodID(id)
-	return msc
+func (_c *MutedSegmentCreate) SetVodID(id uuid.UUID) *MutedSegmentCreate {
+	_c.mutation.SetVodID(id)
+	return _c
 }
 
 // SetVod sets the "vod" edge to the Vod entity.
-func (msc *MutedSegmentCreate) SetVod(v *Vod) *MutedSegmentCreate {
-	return msc.SetVodID(v.ID)
+func (_c *MutedSegmentCreate) SetVod(v *Vod) *MutedSegmentCreate {
+	return _c.SetVodID(v.ID)
 }
 
 // Mutation returns the MutedSegmentMutation object of the builder.
-func (msc *MutedSegmentCreate) Mutation() *MutedSegmentMutation {
-	return msc.mutation
+func (_c *MutedSegmentCreate) Mutation() *MutedSegmentMutation {
+	return _c.mutation
 }
 
 // Save creates the MutedSegment in the database.
-func (msc *MutedSegmentCreate) Save(ctx context.Context) (*MutedSegment, error) {
-	msc.defaults()
-	return withHooks(ctx, msc.sqlSave, msc.mutation, msc.hooks)
+func (_c *MutedSegmentCreate) Save(ctx context.Context) (*MutedSegment, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (msc *MutedSegmentCreate) SaveX(ctx context.Context) *MutedSegment {
-	v, err := msc.Save(ctx)
+func (_c *MutedSegmentCreate) SaveX(ctx context.Context) *MutedSegment {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -82,46 +82,46 @@ func (msc *MutedSegmentCreate) SaveX(ctx context.Context) *MutedSegment {
 }
 
 // Exec executes the query.
-func (msc *MutedSegmentCreate) Exec(ctx context.Context) error {
-	_, err := msc.Save(ctx)
+func (_c *MutedSegmentCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (msc *MutedSegmentCreate) ExecX(ctx context.Context) {
-	if err := msc.Exec(ctx); err != nil {
+func (_c *MutedSegmentCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (msc *MutedSegmentCreate) defaults() {
-	if _, ok := msc.mutation.ID(); !ok {
+func (_c *MutedSegmentCreate) defaults() {
+	if _, ok := _c.mutation.ID(); !ok {
 		v := mutedsegment.DefaultID()
-		msc.mutation.SetID(v)
+		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (msc *MutedSegmentCreate) check() error {
-	if _, ok := msc.mutation.Start(); !ok {
+func (_c *MutedSegmentCreate) check() error {
+	if _, ok := _c.mutation.Start(); !ok {
 		return &ValidationError{Name: "start", err: errors.New(`ent: missing required field "MutedSegment.start"`)}
 	}
-	if _, ok := msc.mutation.End(); !ok {
+	if _, ok := _c.mutation.End(); !ok {
 		return &ValidationError{Name: "end", err: errors.New(`ent: missing required field "MutedSegment.end"`)}
 	}
-	if len(msc.mutation.VodIDs()) == 0 {
+	if len(_c.mutation.VodIDs()) == 0 {
 		return &ValidationError{Name: "vod", err: errors.New(`ent: missing required edge "MutedSegment.vod"`)}
 	}
 	return nil
 }
 
-func (msc *MutedSegmentCreate) sqlSave(ctx context.Context) (*MutedSegment, error) {
-	if err := msc.check(); err != nil {
+func (_c *MutedSegmentCreate) sqlSave(ctx context.Context) (*MutedSegment, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := msc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, msc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -134,30 +134,30 @@ func (msc *MutedSegmentCreate) sqlSave(ctx context.Context) (*MutedSegment, erro
 			return nil, err
 		}
 	}
-	msc.mutation.id = &_node.ID
-	msc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (msc *MutedSegmentCreate) createSpec() (*MutedSegment, *sqlgraph.CreateSpec) {
+func (_c *MutedSegmentCreate) createSpec() (*MutedSegment, *sqlgraph.CreateSpec) {
 	var (
-		_node = &MutedSegment{config: msc.config}
+		_node = &MutedSegment{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(mutedsegment.Table, sqlgraph.NewFieldSpec(mutedsegment.FieldID, field.TypeUUID))
 	)
-	_spec.OnConflict = msc.conflict
-	if id, ok := msc.mutation.ID(); ok {
+	_spec.OnConflict = _c.conflict
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := msc.mutation.Start(); ok {
+	if value, ok := _c.mutation.Start(); ok {
 		_spec.SetField(mutedsegment.FieldStart, field.TypeInt, value)
 		_node.Start = value
 	}
-	if value, ok := msc.mutation.End(); ok {
+	if value, ok := _c.mutation.End(); ok {
 		_spec.SetField(mutedsegment.FieldEnd, field.TypeInt, value)
 		_node.End = value
 	}
-	if nodes := msc.mutation.VodIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.VodIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -193,10 +193,10 @@ func (msc *MutedSegmentCreate) createSpec() (*MutedSegment, *sqlgraph.CreateSpec
 //			SetStart(v+v).
 //		}).
 //		Exec(ctx)
-func (msc *MutedSegmentCreate) OnConflict(opts ...sql.ConflictOption) *MutedSegmentUpsertOne {
-	msc.conflict = opts
+func (_c *MutedSegmentCreate) OnConflict(opts ...sql.ConflictOption) *MutedSegmentUpsertOne {
+	_c.conflict = opts
 	return &MutedSegmentUpsertOne{
-		create: msc,
+		create: _c,
 	}
 }
 
@@ -206,10 +206,10 @@ func (msc *MutedSegmentCreate) OnConflict(opts ...sql.ConflictOption) *MutedSegm
 //	client.MutedSegment.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (msc *MutedSegmentCreate) OnConflictColumns(columns ...string) *MutedSegmentUpsertOne {
-	msc.conflict = append(msc.conflict, sql.ConflictColumns(columns...))
+func (_c *MutedSegmentCreate) OnConflictColumns(columns ...string) *MutedSegmentUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &MutedSegmentUpsertOne{
-		create: msc,
+		create: _c,
 	}
 }
 
@@ -399,16 +399,16 @@ type MutedSegmentCreateBulk struct {
 }
 
 // Save creates the MutedSegment entities in the database.
-func (mscb *MutedSegmentCreateBulk) Save(ctx context.Context) ([]*MutedSegment, error) {
-	if mscb.err != nil {
-		return nil, mscb.err
+func (_c *MutedSegmentCreateBulk) Save(ctx context.Context) ([]*MutedSegment, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(mscb.builders))
-	nodes := make([]*MutedSegment, len(mscb.builders))
-	mutators := make([]Mutator, len(mscb.builders))
-	for i := range mscb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*MutedSegment, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := mscb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*MutedSegmentMutation)
@@ -422,12 +422,12 @@ func (mscb *MutedSegmentCreateBulk) Save(ctx context.Context) ([]*MutedSegment, 
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, mscb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = mscb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, mscb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -447,7 +447,7 @@ func (mscb *MutedSegmentCreateBulk) Save(ctx context.Context) ([]*MutedSegment, 
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, mscb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -455,8 +455,8 @@ func (mscb *MutedSegmentCreateBulk) Save(ctx context.Context) ([]*MutedSegment, 
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (mscb *MutedSegmentCreateBulk) SaveX(ctx context.Context) []*MutedSegment {
-	v, err := mscb.Save(ctx)
+func (_c *MutedSegmentCreateBulk) SaveX(ctx context.Context) []*MutedSegment {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -464,14 +464,14 @@ func (mscb *MutedSegmentCreateBulk) SaveX(ctx context.Context) []*MutedSegment {
 }
 
 // Exec executes the query.
-func (mscb *MutedSegmentCreateBulk) Exec(ctx context.Context) error {
-	_, err := mscb.Save(ctx)
+func (_c *MutedSegmentCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (mscb *MutedSegmentCreateBulk) ExecX(ctx context.Context) {
-	if err := mscb.Exec(ctx); err != nil {
+func (_c *MutedSegmentCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -491,10 +491,10 @@ func (mscb *MutedSegmentCreateBulk) ExecX(ctx context.Context) {
 //			SetStart(v+v).
 //		}).
 //		Exec(ctx)
-func (mscb *MutedSegmentCreateBulk) OnConflict(opts ...sql.ConflictOption) *MutedSegmentUpsertBulk {
-	mscb.conflict = opts
+func (_c *MutedSegmentCreateBulk) OnConflict(opts ...sql.ConflictOption) *MutedSegmentUpsertBulk {
+	_c.conflict = opts
 	return &MutedSegmentUpsertBulk{
-		create: mscb,
+		create: _c,
 	}
 }
 
@@ -504,10 +504,10 @@ func (mscb *MutedSegmentCreateBulk) OnConflict(opts ...sql.ConflictOption) *Mute
 //	client.MutedSegment.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (mscb *MutedSegmentCreateBulk) OnConflictColumns(columns ...string) *MutedSegmentUpsertBulk {
-	mscb.conflict = append(mscb.conflict, sql.ConflictColumns(columns...))
+func (_c *MutedSegmentCreateBulk) OnConflictColumns(columns ...string) *MutedSegmentUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &MutedSegmentUpsertBulk{
-		create: mscb,
+		create: _c,
 	}
 }
 

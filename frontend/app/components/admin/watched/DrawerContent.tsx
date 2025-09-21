@@ -12,6 +12,7 @@ import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { metadata } from "@/app/layout";
+import { VideoQuality } from "@/app/hooks/useArchive";
 
 type Props = {
   watchedChannel: WatchedChannel | null
@@ -19,25 +20,21 @@ type Props = {
   handleClose: () => void;
 }
 
+interface SelectOption {
+  label: string;
+  value: string;
+}
+
 export enum WatchedChannelEditMode {
   Create = "create",
   Edit = "edit",
 }
 
-const qualityOptions = [
-  { label: "Best", value: "best" },
-  { label: "1080p", value: "1080p" },
-  { label: "720p", value: "720p" },
-  { label: "480p", value: "480p" },
-  { label: "360p", value: "360p" },
-  { label: "160p", value: "160p" },
-  { label: "audio", value: "audio" }
-];
-
-interface SelectOption {
-  label: string;
-  value: string;
-}
+// Quality options using the enum
+const qualityOptions: SelectOption[] = Object.entries(VideoQuality).map(([key, value]) => ({
+  label: key.replace('quality', ''),
+  value: value
+}));
 
 const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }: Props) => {
   const t = useTranslations('AdminWatchedComponents')
@@ -69,6 +66,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       download_sub_only: watchedChannel?.download_sub_only ?? false,
       video_age: watchedChannel?.video_age || 0,
       apply_categories_to_live: watchedChannel?.apply_categories_to_live ?? false,
+      strict_categories_live: watchedChannel?.strict_categories_live ?? false,
       watch_clips: watchedChannel?.watch_clips ?? false,
       clips_limit: watchedChannel?.clips_limit || 5,
       clips_interval_days: watchedChannel?.clips_interval_days || 7,
@@ -104,6 +102,11 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       })).filter((item, index, self) =>
         index === self.findIndex((t) => t.label === item.label)
       );
+      // Add "no category" option
+      tmpArr.unshift({
+        label: "No Category",
+        value: "",
+      });
 
       setFormattedTwitchCategories(tmpArr);
     } catch (error) {
@@ -133,6 +136,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           download_sub_only: formValues.download_sub_only,
           video_age: formValues.video_age,
           apply_categories_to_live: formValues.apply_categories_to_live,
+          strict_categories_live: formValues.strict_categories_live,
           watch_clips: formValues.watch_clips,
           clips_limit: formValues.clips_limit,
           clips_interval_days: formValues.clips_interval_days,
@@ -176,6 +180,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           download_sub_only: formValues.download_sub_only,
           video_age: formValues.video_age,
           apply_categories_to_live: formValues.apply_categories_to_live,
+          strict_categories_live: formValues.strict_categories_live,
           watch_clips: formValues.watch_clips,
           clips_limit: formValues.clips_limit,
           clips_interval_days: formValues.clips_interval_days,
@@ -508,6 +513,14 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           {...form.getInputProps('apply_categories_to_live', { type: "checkbox" })}
         />
 
+        <Checkbox
+          mt={5}
+          label={t('strictCategoriesLiveLabel')}
+          description={t('strictCategoriesLiveDescription')}
+          key={form.key('strict_categories_live')}
+          {...form.getInputProps('strict_categories_live', { type: "checkbox" })}
+          disabled={!form.values.apply_categories_to_live}
+        />
 
         <Box mt={10}>
           {formattedTwitchCategories.length == 0 ? (

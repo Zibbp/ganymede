@@ -27,352 +27,352 @@ type QueueCreate struct {
 }
 
 // SetLiveArchive sets the "live_archive" field.
-func (qc *QueueCreate) SetLiveArchive(b bool) *QueueCreate {
-	qc.mutation.SetLiveArchive(b)
-	return qc
+func (_c *QueueCreate) SetLiveArchive(v bool) *QueueCreate {
+	_c.mutation.SetLiveArchive(v)
+	return _c
 }
 
 // SetNillableLiveArchive sets the "live_archive" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableLiveArchive(b *bool) *QueueCreate {
-	if b != nil {
-		qc.SetLiveArchive(*b)
+func (_c *QueueCreate) SetNillableLiveArchive(v *bool) *QueueCreate {
+	if v != nil {
+		_c.SetLiveArchive(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetOnHold sets the "on_hold" field.
-func (qc *QueueCreate) SetOnHold(b bool) *QueueCreate {
-	qc.mutation.SetOnHold(b)
-	return qc
+func (_c *QueueCreate) SetOnHold(v bool) *QueueCreate {
+	_c.mutation.SetOnHold(v)
+	return _c
 }
 
 // SetNillableOnHold sets the "on_hold" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableOnHold(b *bool) *QueueCreate {
-	if b != nil {
-		qc.SetOnHold(*b)
+func (_c *QueueCreate) SetNillableOnHold(v *bool) *QueueCreate {
+	if v != nil {
+		_c.SetOnHold(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetVideoProcessing sets the "video_processing" field.
-func (qc *QueueCreate) SetVideoProcessing(b bool) *QueueCreate {
-	qc.mutation.SetVideoProcessing(b)
-	return qc
+func (_c *QueueCreate) SetVideoProcessing(v bool) *QueueCreate {
+	_c.mutation.SetVideoProcessing(v)
+	return _c
 }
 
 // SetNillableVideoProcessing sets the "video_processing" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableVideoProcessing(b *bool) *QueueCreate {
-	if b != nil {
-		qc.SetVideoProcessing(*b)
+func (_c *QueueCreate) SetNillableVideoProcessing(v *bool) *QueueCreate {
+	if v != nil {
+		_c.SetVideoProcessing(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetChatProcessing sets the "chat_processing" field.
-func (qc *QueueCreate) SetChatProcessing(b bool) *QueueCreate {
-	qc.mutation.SetChatProcessing(b)
-	return qc
+func (_c *QueueCreate) SetChatProcessing(v bool) *QueueCreate {
+	_c.mutation.SetChatProcessing(v)
+	return _c
 }
 
 // SetNillableChatProcessing sets the "chat_processing" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableChatProcessing(b *bool) *QueueCreate {
-	if b != nil {
-		qc.SetChatProcessing(*b)
+func (_c *QueueCreate) SetNillableChatProcessing(v *bool) *QueueCreate {
+	if v != nil {
+		_c.SetChatProcessing(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetProcessing sets the "processing" field.
-func (qc *QueueCreate) SetProcessing(b bool) *QueueCreate {
-	qc.mutation.SetProcessing(b)
-	return qc
+func (_c *QueueCreate) SetProcessing(v bool) *QueueCreate {
+	_c.mutation.SetProcessing(v)
+	return _c
 }
 
 // SetNillableProcessing sets the "processing" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableProcessing(b *bool) *QueueCreate {
-	if b != nil {
-		qc.SetProcessing(*b)
+func (_c *QueueCreate) SetNillableProcessing(v *bool) *QueueCreate {
+	if v != nil {
+		_c.SetProcessing(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetTaskVodCreateFolder sets the "task_vod_create_folder" field.
-func (qc *QueueCreate) SetTaskVodCreateFolder(us utils.TaskStatus) *QueueCreate {
-	qc.mutation.SetTaskVodCreateFolder(us)
-	return qc
+func (_c *QueueCreate) SetTaskVodCreateFolder(v utils.TaskStatus) *QueueCreate {
+	_c.mutation.SetTaskVodCreateFolder(v)
+	return _c
 }
 
 // SetNillableTaskVodCreateFolder sets the "task_vod_create_folder" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableTaskVodCreateFolder(us *utils.TaskStatus) *QueueCreate {
-	if us != nil {
-		qc.SetTaskVodCreateFolder(*us)
+func (_c *QueueCreate) SetNillableTaskVodCreateFolder(v *utils.TaskStatus) *QueueCreate {
+	if v != nil {
+		_c.SetTaskVodCreateFolder(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetTaskVodDownloadThumbnail sets the "task_vod_download_thumbnail" field.
-func (qc *QueueCreate) SetTaskVodDownloadThumbnail(us utils.TaskStatus) *QueueCreate {
-	qc.mutation.SetTaskVodDownloadThumbnail(us)
-	return qc
+func (_c *QueueCreate) SetTaskVodDownloadThumbnail(v utils.TaskStatus) *QueueCreate {
+	_c.mutation.SetTaskVodDownloadThumbnail(v)
+	return _c
 }
 
 // SetNillableTaskVodDownloadThumbnail sets the "task_vod_download_thumbnail" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableTaskVodDownloadThumbnail(us *utils.TaskStatus) *QueueCreate {
-	if us != nil {
-		qc.SetTaskVodDownloadThumbnail(*us)
+func (_c *QueueCreate) SetNillableTaskVodDownloadThumbnail(v *utils.TaskStatus) *QueueCreate {
+	if v != nil {
+		_c.SetTaskVodDownloadThumbnail(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetTaskVodSaveInfo sets the "task_vod_save_info" field.
-func (qc *QueueCreate) SetTaskVodSaveInfo(us utils.TaskStatus) *QueueCreate {
-	qc.mutation.SetTaskVodSaveInfo(us)
-	return qc
+func (_c *QueueCreate) SetTaskVodSaveInfo(v utils.TaskStatus) *QueueCreate {
+	_c.mutation.SetTaskVodSaveInfo(v)
+	return _c
 }
 
 // SetNillableTaskVodSaveInfo sets the "task_vod_save_info" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableTaskVodSaveInfo(us *utils.TaskStatus) *QueueCreate {
-	if us != nil {
-		qc.SetTaskVodSaveInfo(*us)
+func (_c *QueueCreate) SetNillableTaskVodSaveInfo(v *utils.TaskStatus) *QueueCreate {
+	if v != nil {
+		_c.SetTaskVodSaveInfo(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetTaskVideoDownload sets the "task_video_download" field.
-func (qc *QueueCreate) SetTaskVideoDownload(us utils.TaskStatus) *QueueCreate {
-	qc.mutation.SetTaskVideoDownload(us)
-	return qc
+func (_c *QueueCreate) SetTaskVideoDownload(v utils.TaskStatus) *QueueCreate {
+	_c.mutation.SetTaskVideoDownload(v)
+	return _c
 }
 
 // SetNillableTaskVideoDownload sets the "task_video_download" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableTaskVideoDownload(us *utils.TaskStatus) *QueueCreate {
-	if us != nil {
-		qc.SetTaskVideoDownload(*us)
+func (_c *QueueCreate) SetNillableTaskVideoDownload(v *utils.TaskStatus) *QueueCreate {
+	if v != nil {
+		_c.SetTaskVideoDownload(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetTaskVideoConvert sets the "task_video_convert" field.
-func (qc *QueueCreate) SetTaskVideoConvert(us utils.TaskStatus) *QueueCreate {
-	qc.mutation.SetTaskVideoConvert(us)
-	return qc
+func (_c *QueueCreate) SetTaskVideoConvert(v utils.TaskStatus) *QueueCreate {
+	_c.mutation.SetTaskVideoConvert(v)
+	return _c
 }
 
 // SetNillableTaskVideoConvert sets the "task_video_convert" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableTaskVideoConvert(us *utils.TaskStatus) *QueueCreate {
-	if us != nil {
-		qc.SetTaskVideoConvert(*us)
+func (_c *QueueCreate) SetNillableTaskVideoConvert(v *utils.TaskStatus) *QueueCreate {
+	if v != nil {
+		_c.SetTaskVideoConvert(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetTaskVideoMove sets the "task_video_move" field.
-func (qc *QueueCreate) SetTaskVideoMove(us utils.TaskStatus) *QueueCreate {
-	qc.mutation.SetTaskVideoMove(us)
-	return qc
+func (_c *QueueCreate) SetTaskVideoMove(v utils.TaskStatus) *QueueCreate {
+	_c.mutation.SetTaskVideoMove(v)
+	return _c
 }
 
 // SetNillableTaskVideoMove sets the "task_video_move" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableTaskVideoMove(us *utils.TaskStatus) *QueueCreate {
-	if us != nil {
-		qc.SetTaskVideoMove(*us)
+func (_c *QueueCreate) SetNillableTaskVideoMove(v *utils.TaskStatus) *QueueCreate {
+	if v != nil {
+		_c.SetTaskVideoMove(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetTaskChatDownload sets the "task_chat_download" field.
-func (qc *QueueCreate) SetTaskChatDownload(us utils.TaskStatus) *QueueCreate {
-	qc.mutation.SetTaskChatDownload(us)
-	return qc
+func (_c *QueueCreate) SetTaskChatDownload(v utils.TaskStatus) *QueueCreate {
+	_c.mutation.SetTaskChatDownload(v)
+	return _c
 }
 
 // SetNillableTaskChatDownload sets the "task_chat_download" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableTaskChatDownload(us *utils.TaskStatus) *QueueCreate {
-	if us != nil {
-		qc.SetTaskChatDownload(*us)
+func (_c *QueueCreate) SetNillableTaskChatDownload(v *utils.TaskStatus) *QueueCreate {
+	if v != nil {
+		_c.SetTaskChatDownload(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetTaskChatConvert sets the "task_chat_convert" field.
-func (qc *QueueCreate) SetTaskChatConvert(us utils.TaskStatus) *QueueCreate {
-	qc.mutation.SetTaskChatConvert(us)
-	return qc
+func (_c *QueueCreate) SetTaskChatConvert(v utils.TaskStatus) *QueueCreate {
+	_c.mutation.SetTaskChatConvert(v)
+	return _c
 }
 
 // SetNillableTaskChatConvert sets the "task_chat_convert" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableTaskChatConvert(us *utils.TaskStatus) *QueueCreate {
-	if us != nil {
-		qc.SetTaskChatConvert(*us)
+func (_c *QueueCreate) SetNillableTaskChatConvert(v *utils.TaskStatus) *QueueCreate {
+	if v != nil {
+		_c.SetTaskChatConvert(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetTaskChatRender sets the "task_chat_render" field.
-func (qc *QueueCreate) SetTaskChatRender(us utils.TaskStatus) *QueueCreate {
-	qc.mutation.SetTaskChatRender(us)
-	return qc
+func (_c *QueueCreate) SetTaskChatRender(v utils.TaskStatus) *QueueCreate {
+	_c.mutation.SetTaskChatRender(v)
+	return _c
 }
 
 // SetNillableTaskChatRender sets the "task_chat_render" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableTaskChatRender(us *utils.TaskStatus) *QueueCreate {
-	if us != nil {
-		qc.SetTaskChatRender(*us)
+func (_c *QueueCreate) SetNillableTaskChatRender(v *utils.TaskStatus) *QueueCreate {
+	if v != nil {
+		_c.SetTaskChatRender(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetTaskChatMove sets the "task_chat_move" field.
-func (qc *QueueCreate) SetTaskChatMove(us utils.TaskStatus) *QueueCreate {
-	qc.mutation.SetTaskChatMove(us)
-	return qc
+func (_c *QueueCreate) SetTaskChatMove(v utils.TaskStatus) *QueueCreate {
+	_c.mutation.SetTaskChatMove(v)
+	return _c
 }
 
 // SetNillableTaskChatMove sets the "task_chat_move" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableTaskChatMove(us *utils.TaskStatus) *QueueCreate {
-	if us != nil {
-		qc.SetTaskChatMove(*us)
+func (_c *QueueCreate) SetNillableTaskChatMove(v *utils.TaskStatus) *QueueCreate {
+	if v != nil {
+		_c.SetTaskChatMove(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetChatStart sets the "chat_start" field.
-func (qc *QueueCreate) SetChatStart(t time.Time) *QueueCreate {
-	qc.mutation.SetChatStart(t)
-	return qc
+func (_c *QueueCreate) SetChatStart(v time.Time) *QueueCreate {
+	_c.mutation.SetChatStart(v)
+	return _c
 }
 
 // SetNillableChatStart sets the "chat_start" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableChatStart(t *time.Time) *QueueCreate {
-	if t != nil {
-		qc.SetChatStart(*t)
+func (_c *QueueCreate) SetNillableChatStart(v *time.Time) *QueueCreate {
+	if v != nil {
+		_c.SetChatStart(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetArchiveChat sets the "archive_chat" field.
-func (qc *QueueCreate) SetArchiveChat(b bool) *QueueCreate {
-	qc.mutation.SetArchiveChat(b)
-	return qc
+func (_c *QueueCreate) SetArchiveChat(v bool) *QueueCreate {
+	_c.mutation.SetArchiveChat(v)
+	return _c
 }
 
 // SetNillableArchiveChat sets the "archive_chat" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableArchiveChat(b *bool) *QueueCreate {
-	if b != nil {
-		qc.SetArchiveChat(*b)
+func (_c *QueueCreate) SetNillableArchiveChat(v *bool) *QueueCreate {
+	if v != nil {
+		_c.SetArchiveChat(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetRenderChat sets the "render_chat" field.
-func (qc *QueueCreate) SetRenderChat(b bool) *QueueCreate {
-	qc.mutation.SetRenderChat(b)
-	return qc
+func (_c *QueueCreate) SetRenderChat(v bool) *QueueCreate {
+	_c.mutation.SetRenderChat(v)
+	return _c
 }
 
 // SetNillableRenderChat sets the "render_chat" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableRenderChat(b *bool) *QueueCreate {
-	if b != nil {
-		qc.SetRenderChat(*b)
+func (_c *QueueCreate) SetNillableRenderChat(v *bool) *QueueCreate {
+	if v != nil {
+		_c.SetRenderChat(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetWorkflowID sets the "workflow_id" field.
-func (qc *QueueCreate) SetWorkflowID(s string) *QueueCreate {
-	qc.mutation.SetWorkflowID(s)
-	return qc
+func (_c *QueueCreate) SetWorkflowID(v string) *QueueCreate {
+	_c.mutation.SetWorkflowID(v)
+	return _c
 }
 
 // SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableWorkflowID(s *string) *QueueCreate {
-	if s != nil {
-		qc.SetWorkflowID(*s)
+func (_c *QueueCreate) SetNillableWorkflowID(v *string) *QueueCreate {
+	if v != nil {
+		_c.SetWorkflowID(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetWorkflowRunID sets the "workflow_run_id" field.
-func (qc *QueueCreate) SetWorkflowRunID(s string) *QueueCreate {
-	qc.mutation.SetWorkflowRunID(s)
-	return qc
+func (_c *QueueCreate) SetWorkflowRunID(v string) *QueueCreate {
+	_c.mutation.SetWorkflowRunID(v)
+	return _c
 }
 
 // SetNillableWorkflowRunID sets the "workflow_run_id" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableWorkflowRunID(s *string) *QueueCreate {
-	if s != nil {
-		qc.SetWorkflowRunID(*s)
+func (_c *QueueCreate) SetNillableWorkflowRunID(v *string) *QueueCreate {
+	if v != nil {
+		_c.SetWorkflowRunID(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (qc *QueueCreate) SetUpdatedAt(t time.Time) *QueueCreate {
-	qc.mutation.SetUpdatedAt(t)
-	return qc
+func (_c *QueueCreate) SetUpdatedAt(v time.Time) *QueueCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableUpdatedAt(t *time.Time) *QueueCreate {
-	if t != nil {
-		qc.SetUpdatedAt(*t)
+func (_c *QueueCreate) SetNillableUpdatedAt(v *time.Time) *QueueCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (qc *QueueCreate) SetCreatedAt(t time.Time) *QueueCreate {
-	qc.mutation.SetCreatedAt(t)
-	return qc
+func (_c *QueueCreate) SetCreatedAt(v time.Time) *QueueCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableCreatedAt(t *time.Time) *QueueCreate {
-	if t != nil {
-		qc.SetCreatedAt(*t)
+func (_c *QueueCreate) SetNillableCreatedAt(v *time.Time) *QueueCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetID sets the "id" field.
-func (qc *QueueCreate) SetID(u uuid.UUID) *QueueCreate {
-	qc.mutation.SetID(u)
-	return qc
+func (_c *QueueCreate) SetID(v uuid.UUID) *QueueCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (qc *QueueCreate) SetNillableID(u *uuid.UUID) *QueueCreate {
-	if u != nil {
-		qc.SetID(*u)
+func (_c *QueueCreate) SetNillableID(v *uuid.UUID) *QueueCreate {
+	if v != nil {
+		_c.SetID(*v)
 	}
-	return qc
+	return _c
 }
 
 // SetVodID sets the "vod" edge to the Vod entity by ID.
-func (qc *QueueCreate) SetVodID(id uuid.UUID) *QueueCreate {
-	qc.mutation.SetVodID(id)
-	return qc
+func (_c *QueueCreate) SetVodID(id uuid.UUID) *QueueCreate {
+	_c.mutation.SetVodID(id)
+	return _c
 }
 
 // SetVod sets the "vod" edge to the Vod entity.
-func (qc *QueueCreate) SetVod(v *Vod) *QueueCreate {
-	return qc.SetVodID(v.ID)
+func (_c *QueueCreate) SetVod(v *Vod) *QueueCreate {
+	return _c.SetVodID(v.ID)
 }
 
 // Mutation returns the QueueMutation object of the builder.
-func (qc *QueueCreate) Mutation() *QueueMutation {
-	return qc.mutation
+func (_c *QueueCreate) Mutation() *QueueMutation {
+	return _c.mutation
 }
 
 // Save creates the Queue in the database.
-func (qc *QueueCreate) Save(ctx context.Context) (*Queue, error) {
-	qc.defaults()
-	return withHooks(ctx, qc.sqlSave, qc.mutation, qc.hooks)
+func (_c *QueueCreate) Save(ctx context.Context) (*Queue, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (qc *QueueCreate) SaveX(ctx context.Context) *Queue {
-	v, err := qc.Save(ctx)
+func (_c *QueueCreate) SaveX(ctx context.Context) *Queue {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -380,187 +380,187 @@ func (qc *QueueCreate) SaveX(ctx context.Context) *Queue {
 }
 
 // Exec executes the query.
-func (qc *QueueCreate) Exec(ctx context.Context) error {
-	_, err := qc.Save(ctx)
+func (_c *QueueCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (qc *QueueCreate) ExecX(ctx context.Context) {
-	if err := qc.Exec(ctx); err != nil {
+func (_c *QueueCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (qc *QueueCreate) defaults() {
-	if _, ok := qc.mutation.LiveArchive(); !ok {
+func (_c *QueueCreate) defaults() {
+	if _, ok := _c.mutation.LiveArchive(); !ok {
 		v := queue.DefaultLiveArchive
-		qc.mutation.SetLiveArchive(v)
+		_c.mutation.SetLiveArchive(v)
 	}
-	if _, ok := qc.mutation.OnHold(); !ok {
+	if _, ok := _c.mutation.OnHold(); !ok {
 		v := queue.DefaultOnHold
-		qc.mutation.SetOnHold(v)
+		_c.mutation.SetOnHold(v)
 	}
-	if _, ok := qc.mutation.VideoProcessing(); !ok {
+	if _, ok := _c.mutation.VideoProcessing(); !ok {
 		v := queue.DefaultVideoProcessing
-		qc.mutation.SetVideoProcessing(v)
+		_c.mutation.SetVideoProcessing(v)
 	}
-	if _, ok := qc.mutation.ChatProcessing(); !ok {
+	if _, ok := _c.mutation.ChatProcessing(); !ok {
 		v := queue.DefaultChatProcessing
-		qc.mutation.SetChatProcessing(v)
+		_c.mutation.SetChatProcessing(v)
 	}
-	if _, ok := qc.mutation.Processing(); !ok {
+	if _, ok := _c.mutation.Processing(); !ok {
 		v := queue.DefaultProcessing
-		qc.mutation.SetProcessing(v)
+		_c.mutation.SetProcessing(v)
 	}
-	if _, ok := qc.mutation.TaskVodCreateFolder(); !ok {
+	if _, ok := _c.mutation.TaskVodCreateFolder(); !ok {
 		v := queue.DefaultTaskVodCreateFolder
-		qc.mutation.SetTaskVodCreateFolder(v)
+		_c.mutation.SetTaskVodCreateFolder(v)
 	}
-	if _, ok := qc.mutation.TaskVodDownloadThumbnail(); !ok {
+	if _, ok := _c.mutation.TaskVodDownloadThumbnail(); !ok {
 		v := queue.DefaultTaskVodDownloadThumbnail
-		qc.mutation.SetTaskVodDownloadThumbnail(v)
+		_c.mutation.SetTaskVodDownloadThumbnail(v)
 	}
-	if _, ok := qc.mutation.TaskVodSaveInfo(); !ok {
+	if _, ok := _c.mutation.TaskVodSaveInfo(); !ok {
 		v := queue.DefaultTaskVodSaveInfo
-		qc.mutation.SetTaskVodSaveInfo(v)
+		_c.mutation.SetTaskVodSaveInfo(v)
 	}
-	if _, ok := qc.mutation.TaskVideoDownload(); !ok {
+	if _, ok := _c.mutation.TaskVideoDownload(); !ok {
 		v := queue.DefaultTaskVideoDownload
-		qc.mutation.SetTaskVideoDownload(v)
+		_c.mutation.SetTaskVideoDownload(v)
 	}
-	if _, ok := qc.mutation.TaskVideoConvert(); !ok {
+	if _, ok := _c.mutation.TaskVideoConvert(); !ok {
 		v := queue.DefaultTaskVideoConvert
-		qc.mutation.SetTaskVideoConvert(v)
+		_c.mutation.SetTaskVideoConvert(v)
 	}
-	if _, ok := qc.mutation.TaskVideoMove(); !ok {
+	if _, ok := _c.mutation.TaskVideoMove(); !ok {
 		v := queue.DefaultTaskVideoMove
-		qc.mutation.SetTaskVideoMove(v)
+		_c.mutation.SetTaskVideoMove(v)
 	}
-	if _, ok := qc.mutation.TaskChatDownload(); !ok {
+	if _, ok := _c.mutation.TaskChatDownload(); !ok {
 		v := queue.DefaultTaskChatDownload
-		qc.mutation.SetTaskChatDownload(v)
+		_c.mutation.SetTaskChatDownload(v)
 	}
-	if _, ok := qc.mutation.TaskChatConvert(); !ok {
+	if _, ok := _c.mutation.TaskChatConvert(); !ok {
 		v := queue.DefaultTaskChatConvert
-		qc.mutation.SetTaskChatConvert(v)
+		_c.mutation.SetTaskChatConvert(v)
 	}
-	if _, ok := qc.mutation.TaskChatRender(); !ok {
+	if _, ok := _c.mutation.TaskChatRender(); !ok {
 		v := queue.DefaultTaskChatRender
-		qc.mutation.SetTaskChatRender(v)
+		_c.mutation.SetTaskChatRender(v)
 	}
-	if _, ok := qc.mutation.TaskChatMove(); !ok {
+	if _, ok := _c.mutation.TaskChatMove(); !ok {
 		v := queue.DefaultTaskChatMove
-		qc.mutation.SetTaskChatMove(v)
+		_c.mutation.SetTaskChatMove(v)
 	}
-	if _, ok := qc.mutation.ArchiveChat(); !ok {
+	if _, ok := _c.mutation.ArchiveChat(); !ok {
 		v := queue.DefaultArchiveChat
-		qc.mutation.SetArchiveChat(v)
+		_c.mutation.SetArchiveChat(v)
 	}
-	if _, ok := qc.mutation.RenderChat(); !ok {
+	if _, ok := _c.mutation.RenderChat(); !ok {
 		v := queue.DefaultRenderChat
-		qc.mutation.SetRenderChat(v)
+		_c.mutation.SetRenderChat(v)
 	}
-	if _, ok := qc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := queue.DefaultUpdatedAt()
-		qc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := qc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := queue.DefaultCreatedAt()
-		qc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := qc.mutation.ID(); !ok {
+	if _, ok := _c.mutation.ID(); !ok {
 		v := queue.DefaultID()
-		qc.mutation.SetID(v)
+		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (qc *QueueCreate) check() error {
-	if _, ok := qc.mutation.LiveArchive(); !ok {
+func (_c *QueueCreate) check() error {
+	if _, ok := _c.mutation.LiveArchive(); !ok {
 		return &ValidationError{Name: "live_archive", err: errors.New(`ent: missing required field "Queue.live_archive"`)}
 	}
-	if _, ok := qc.mutation.OnHold(); !ok {
+	if _, ok := _c.mutation.OnHold(); !ok {
 		return &ValidationError{Name: "on_hold", err: errors.New(`ent: missing required field "Queue.on_hold"`)}
 	}
-	if _, ok := qc.mutation.VideoProcessing(); !ok {
+	if _, ok := _c.mutation.VideoProcessing(); !ok {
 		return &ValidationError{Name: "video_processing", err: errors.New(`ent: missing required field "Queue.video_processing"`)}
 	}
-	if _, ok := qc.mutation.ChatProcessing(); !ok {
+	if _, ok := _c.mutation.ChatProcessing(); !ok {
 		return &ValidationError{Name: "chat_processing", err: errors.New(`ent: missing required field "Queue.chat_processing"`)}
 	}
-	if _, ok := qc.mutation.Processing(); !ok {
+	if _, ok := _c.mutation.Processing(); !ok {
 		return &ValidationError{Name: "processing", err: errors.New(`ent: missing required field "Queue.processing"`)}
 	}
-	if v, ok := qc.mutation.TaskVodCreateFolder(); ok {
+	if v, ok := _c.mutation.TaskVodCreateFolder(); ok {
 		if err := queue.TaskVodCreateFolderValidator(v); err != nil {
 			return &ValidationError{Name: "task_vod_create_folder", err: fmt.Errorf(`ent: validator failed for field "Queue.task_vod_create_folder": %w`, err)}
 		}
 	}
-	if v, ok := qc.mutation.TaskVodDownloadThumbnail(); ok {
+	if v, ok := _c.mutation.TaskVodDownloadThumbnail(); ok {
 		if err := queue.TaskVodDownloadThumbnailValidator(v); err != nil {
 			return &ValidationError{Name: "task_vod_download_thumbnail", err: fmt.Errorf(`ent: validator failed for field "Queue.task_vod_download_thumbnail": %w`, err)}
 		}
 	}
-	if v, ok := qc.mutation.TaskVodSaveInfo(); ok {
+	if v, ok := _c.mutation.TaskVodSaveInfo(); ok {
 		if err := queue.TaskVodSaveInfoValidator(v); err != nil {
 			return &ValidationError{Name: "task_vod_save_info", err: fmt.Errorf(`ent: validator failed for field "Queue.task_vod_save_info": %w`, err)}
 		}
 	}
-	if v, ok := qc.mutation.TaskVideoDownload(); ok {
+	if v, ok := _c.mutation.TaskVideoDownload(); ok {
 		if err := queue.TaskVideoDownloadValidator(v); err != nil {
 			return &ValidationError{Name: "task_video_download", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_download": %w`, err)}
 		}
 	}
-	if v, ok := qc.mutation.TaskVideoConvert(); ok {
+	if v, ok := _c.mutation.TaskVideoConvert(); ok {
 		if err := queue.TaskVideoConvertValidator(v); err != nil {
 			return &ValidationError{Name: "task_video_convert", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_convert": %w`, err)}
 		}
 	}
-	if v, ok := qc.mutation.TaskVideoMove(); ok {
+	if v, ok := _c.mutation.TaskVideoMove(); ok {
 		if err := queue.TaskVideoMoveValidator(v); err != nil {
 			return &ValidationError{Name: "task_video_move", err: fmt.Errorf(`ent: validator failed for field "Queue.task_video_move": %w`, err)}
 		}
 	}
-	if v, ok := qc.mutation.TaskChatDownload(); ok {
+	if v, ok := _c.mutation.TaskChatDownload(); ok {
 		if err := queue.TaskChatDownloadValidator(v); err != nil {
 			return &ValidationError{Name: "task_chat_download", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_download": %w`, err)}
 		}
 	}
-	if v, ok := qc.mutation.TaskChatConvert(); ok {
+	if v, ok := _c.mutation.TaskChatConvert(); ok {
 		if err := queue.TaskChatConvertValidator(v); err != nil {
 			return &ValidationError{Name: "task_chat_convert", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_convert": %w`, err)}
 		}
 	}
-	if v, ok := qc.mutation.TaskChatRender(); ok {
+	if v, ok := _c.mutation.TaskChatRender(); ok {
 		if err := queue.TaskChatRenderValidator(v); err != nil {
 			return &ValidationError{Name: "task_chat_render", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_render": %w`, err)}
 		}
 	}
-	if v, ok := qc.mutation.TaskChatMove(); ok {
+	if v, ok := _c.mutation.TaskChatMove(); ok {
 		if err := queue.TaskChatMoveValidator(v); err != nil {
 			return &ValidationError{Name: "task_chat_move", err: fmt.Errorf(`ent: validator failed for field "Queue.task_chat_move": %w`, err)}
 		}
 	}
-	if _, ok := qc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Queue.updated_at"`)}
 	}
-	if _, ok := qc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Queue.created_at"`)}
 	}
-	if len(qc.mutation.VodIDs()) == 0 {
+	if len(_c.mutation.VodIDs()) == 0 {
 		return &ValidationError{Name: "vod", err: errors.New(`ent: missing required edge "Queue.vod"`)}
 	}
 	return nil
 }
 
-func (qc *QueueCreate) sqlSave(ctx context.Context) (*Queue, error) {
-	if err := qc.check(); err != nil {
+func (_c *QueueCreate) sqlSave(ctx context.Context) (*Queue, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := qc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, qc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -573,110 +573,110 @@ func (qc *QueueCreate) sqlSave(ctx context.Context) (*Queue, error) {
 			return nil, err
 		}
 	}
-	qc.mutation.id = &_node.ID
-	qc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
+func (_c *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Queue{config: qc.config}
+		_node = &Queue{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(queue.Table, sqlgraph.NewFieldSpec(queue.FieldID, field.TypeUUID))
 	)
-	_spec.OnConflict = qc.conflict
-	if id, ok := qc.mutation.ID(); ok {
+	_spec.OnConflict = _c.conflict
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := qc.mutation.LiveArchive(); ok {
+	if value, ok := _c.mutation.LiveArchive(); ok {
 		_spec.SetField(queue.FieldLiveArchive, field.TypeBool, value)
 		_node.LiveArchive = value
 	}
-	if value, ok := qc.mutation.OnHold(); ok {
+	if value, ok := _c.mutation.OnHold(); ok {
 		_spec.SetField(queue.FieldOnHold, field.TypeBool, value)
 		_node.OnHold = value
 	}
-	if value, ok := qc.mutation.VideoProcessing(); ok {
+	if value, ok := _c.mutation.VideoProcessing(); ok {
 		_spec.SetField(queue.FieldVideoProcessing, field.TypeBool, value)
 		_node.VideoProcessing = value
 	}
-	if value, ok := qc.mutation.ChatProcessing(); ok {
+	if value, ok := _c.mutation.ChatProcessing(); ok {
 		_spec.SetField(queue.FieldChatProcessing, field.TypeBool, value)
 		_node.ChatProcessing = value
 	}
-	if value, ok := qc.mutation.Processing(); ok {
+	if value, ok := _c.mutation.Processing(); ok {
 		_spec.SetField(queue.FieldProcessing, field.TypeBool, value)
 		_node.Processing = value
 	}
-	if value, ok := qc.mutation.TaskVodCreateFolder(); ok {
+	if value, ok := _c.mutation.TaskVodCreateFolder(); ok {
 		_spec.SetField(queue.FieldTaskVodCreateFolder, field.TypeEnum, value)
 		_node.TaskVodCreateFolder = value
 	}
-	if value, ok := qc.mutation.TaskVodDownloadThumbnail(); ok {
+	if value, ok := _c.mutation.TaskVodDownloadThumbnail(); ok {
 		_spec.SetField(queue.FieldTaskVodDownloadThumbnail, field.TypeEnum, value)
 		_node.TaskVodDownloadThumbnail = value
 	}
-	if value, ok := qc.mutation.TaskVodSaveInfo(); ok {
+	if value, ok := _c.mutation.TaskVodSaveInfo(); ok {
 		_spec.SetField(queue.FieldTaskVodSaveInfo, field.TypeEnum, value)
 		_node.TaskVodSaveInfo = value
 	}
-	if value, ok := qc.mutation.TaskVideoDownload(); ok {
+	if value, ok := _c.mutation.TaskVideoDownload(); ok {
 		_spec.SetField(queue.FieldTaskVideoDownload, field.TypeEnum, value)
 		_node.TaskVideoDownload = value
 	}
-	if value, ok := qc.mutation.TaskVideoConvert(); ok {
+	if value, ok := _c.mutation.TaskVideoConvert(); ok {
 		_spec.SetField(queue.FieldTaskVideoConvert, field.TypeEnum, value)
 		_node.TaskVideoConvert = value
 	}
-	if value, ok := qc.mutation.TaskVideoMove(); ok {
+	if value, ok := _c.mutation.TaskVideoMove(); ok {
 		_spec.SetField(queue.FieldTaskVideoMove, field.TypeEnum, value)
 		_node.TaskVideoMove = value
 	}
-	if value, ok := qc.mutation.TaskChatDownload(); ok {
+	if value, ok := _c.mutation.TaskChatDownload(); ok {
 		_spec.SetField(queue.FieldTaskChatDownload, field.TypeEnum, value)
 		_node.TaskChatDownload = value
 	}
-	if value, ok := qc.mutation.TaskChatConvert(); ok {
+	if value, ok := _c.mutation.TaskChatConvert(); ok {
 		_spec.SetField(queue.FieldTaskChatConvert, field.TypeEnum, value)
 		_node.TaskChatConvert = value
 	}
-	if value, ok := qc.mutation.TaskChatRender(); ok {
+	if value, ok := _c.mutation.TaskChatRender(); ok {
 		_spec.SetField(queue.FieldTaskChatRender, field.TypeEnum, value)
 		_node.TaskChatRender = value
 	}
-	if value, ok := qc.mutation.TaskChatMove(); ok {
+	if value, ok := _c.mutation.TaskChatMove(); ok {
 		_spec.SetField(queue.FieldTaskChatMove, field.TypeEnum, value)
 		_node.TaskChatMove = value
 	}
-	if value, ok := qc.mutation.ChatStart(); ok {
+	if value, ok := _c.mutation.ChatStart(); ok {
 		_spec.SetField(queue.FieldChatStart, field.TypeTime, value)
 		_node.ChatStart = value
 	}
-	if value, ok := qc.mutation.ArchiveChat(); ok {
+	if value, ok := _c.mutation.ArchiveChat(); ok {
 		_spec.SetField(queue.FieldArchiveChat, field.TypeBool, value)
 		_node.ArchiveChat = value
 	}
-	if value, ok := qc.mutation.RenderChat(); ok {
+	if value, ok := _c.mutation.RenderChat(); ok {
 		_spec.SetField(queue.FieldRenderChat, field.TypeBool, value)
 		_node.RenderChat = value
 	}
-	if value, ok := qc.mutation.WorkflowID(); ok {
+	if value, ok := _c.mutation.WorkflowID(); ok {
 		_spec.SetField(queue.FieldWorkflowID, field.TypeString, value)
 		_node.WorkflowID = value
 	}
-	if value, ok := qc.mutation.WorkflowRunID(); ok {
+	if value, ok := _c.mutation.WorkflowRunID(); ok {
 		_spec.SetField(queue.FieldWorkflowRunID, field.TypeString, value)
 		_node.WorkflowRunID = value
 	}
-	if value, ok := qc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(queue.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := qc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(queue.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := qc.mutation.VodIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.VodIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2O,
 			Inverse: true,
@@ -712,10 +712,10 @@ func (qc *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 //			SetLiveArchive(v+v).
 //		}).
 //		Exec(ctx)
-func (qc *QueueCreate) OnConflict(opts ...sql.ConflictOption) *QueueUpsertOne {
-	qc.conflict = opts
+func (_c *QueueCreate) OnConflict(opts ...sql.ConflictOption) *QueueUpsertOne {
+	_c.conflict = opts
 	return &QueueUpsertOne{
-		create: qc,
+		create: _c,
 	}
 }
 
@@ -725,10 +725,10 @@ func (qc *QueueCreate) OnConflict(opts ...sql.ConflictOption) *QueueUpsertOne {
 //	client.Queue.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (qc *QueueCreate) OnConflictColumns(columns ...string) *QueueUpsertOne {
-	qc.conflict = append(qc.conflict, sql.ConflictColumns(columns...))
+func (_c *QueueCreate) OnConflictColumns(columns ...string) *QueueUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &QueueUpsertOne{
-		create: qc,
+		create: _c,
 	}
 }
 
@@ -1584,16 +1584,16 @@ type QueueCreateBulk struct {
 }
 
 // Save creates the Queue entities in the database.
-func (qcb *QueueCreateBulk) Save(ctx context.Context) ([]*Queue, error) {
-	if qcb.err != nil {
-		return nil, qcb.err
+func (_c *QueueCreateBulk) Save(ctx context.Context) ([]*Queue, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(qcb.builders))
-	nodes := make([]*Queue, len(qcb.builders))
-	mutators := make([]Mutator, len(qcb.builders))
-	for i := range qcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Queue, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := qcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*QueueMutation)
@@ -1607,12 +1607,12 @@ func (qcb *QueueCreateBulk) Save(ctx context.Context) ([]*Queue, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, qcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = qcb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, qcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -1632,7 +1632,7 @@ func (qcb *QueueCreateBulk) Save(ctx context.Context) ([]*Queue, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, qcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -1640,8 +1640,8 @@ func (qcb *QueueCreateBulk) Save(ctx context.Context) ([]*Queue, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (qcb *QueueCreateBulk) SaveX(ctx context.Context) []*Queue {
-	v, err := qcb.Save(ctx)
+func (_c *QueueCreateBulk) SaveX(ctx context.Context) []*Queue {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1649,14 +1649,14 @@ func (qcb *QueueCreateBulk) SaveX(ctx context.Context) []*Queue {
 }
 
 // Exec executes the query.
-func (qcb *QueueCreateBulk) Exec(ctx context.Context) error {
-	_, err := qcb.Save(ctx)
+func (_c *QueueCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (qcb *QueueCreateBulk) ExecX(ctx context.Context) {
-	if err := qcb.Exec(ctx); err != nil {
+func (_c *QueueCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -1676,10 +1676,10 @@ func (qcb *QueueCreateBulk) ExecX(ctx context.Context) {
 //			SetLiveArchive(v+v).
 //		}).
 //		Exec(ctx)
-func (qcb *QueueCreateBulk) OnConflict(opts ...sql.ConflictOption) *QueueUpsertBulk {
-	qcb.conflict = opts
+func (_c *QueueCreateBulk) OnConflict(opts ...sql.ConflictOption) *QueueUpsertBulk {
+	_c.conflict = opts
 	return &QueueUpsertBulk{
-		create: qcb,
+		create: _c,
 	}
 }
 
@@ -1689,10 +1689,10 @@ func (qcb *QueueCreateBulk) OnConflict(opts ...sql.ConflictOption) *QueueUpsertB
 //	client.Queue.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (qcb *QueueCreateBulk) OnConflictColumns(columns ...string) *QueueUpsertBulk {
-	qcb.conflict = append(qcb.conflict, sql.ConflictColumns(columns...))
+func (_c *QueueCreateBulk) OnConflictColumns(columns ...string) *QueueUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &QueueUpsertBulk{
-		create: qcb,
+		create: _c,
 	}
 }
 

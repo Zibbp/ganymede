@@ -14,7 +14,7 @@ const ChannelCard = ({ channel }: Props) => {
       <Link href={"/channels/" + channel.name} className={classes.link}>
         <Card key={channel.id} p="md" radius="md" >
           <AspectRatio ratio={300 / 300}>
-            <Image src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${channel.image_path}`} alt={`${channel.name}`} />
+            <Image src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${channel.image_path}`} alt={`${channel.name}`} fallbackSrc="/images/ganymede_default_channel_image.webp" />
           </AspectRatio>
           <Center mt={5}>
             <Title order={3} mt={5}>

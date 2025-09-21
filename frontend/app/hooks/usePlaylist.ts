@@ -19,6 +19,42 @@ export interface Playlist {
   edges: PlaylistEdges;
 }
 
+export interface PlaylistRule {
+  id: string;
+  name: string;
+  field: PlaylistRuleField;
+  operator: PlaylistRuleOperator;
+  value: string;
+  position: number;
+  enabled: boolean;
+}
+
+export interface PlaylistRuleGroup {
+  id: string;
+  operator: "and" | "or";
+  rules: Array<PlaylistRule>;
+  position: number;
+}
+
+export enum PlaylistRuleField {
+  Title = "title",
+  Type = "type",
+  Category = "category",
+  Platform = "platform",
+  ChannelName = "channel_name",
+}
+
+export enum PlaylistRuleOperator {
+  Equals = "equals",
+  Contains = "contains",
+  Regex = "regex",
+}
+
+export enum PlaylistGroupOperator {
+  AND = "AND",
+  OR = "OR",
+}
+
 export interface PlaylistEdges {
   vods: Array<Video>;
   multistream_info: Array<PlaylistMultistreamInfo>;
@@ -244,6 +280,83 @@ const useUpdateMultistreamVideoOffset = () => {
   });
 };
 
+const getPlaylistRules = async (
+  id: string
+): Promise<Array<PlaylistRuleGroup>> => {
+  const response = await useAxios.get<ApiResponse<Array<PlaylistRuleGroup>>>(
+    `/api/v1/playlist/${id}/rules`
+  );
+  return response.data.data;
+};
+
+const useGetPlaylistRules = (id: string) => {
+  return useQuery({
+    queryKey: ["playlist_rules", id],
+    queryFn: () => getPlaylistRules(id),
+    placeholderData: keepPreviousData,
+  });
+};
+
+const savePlaylistRules = async (
+  id: string,
+  rules: Array<PlaylistRuleGroup>,
+  axiosPrivate: AxiosInstance
+): Promise<ApiResponse<Array<PlaylistRuleGroup>>> => {
+  const response = await axiosPrivate.put<
+    ApiResponse<Array<PlaylistRuleGroup>>
+  >(`/api/v1/playlist/${id}/rules`, {
+    rule_groups: rules,
+  });
+  return response.data;
+};
+
+type savePlaylistVariables = {
+  axiosPrivate: AxiosInstance;
+  id: string;
+  rules: Array<PlaylistRuleGroup>;
+};
+
+const useSavePlaylistRules = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<Array<PlaylistRuleGroup>>,
+    Error,
+    savePlaylistVariables
+  >({
+    mutationFn: ({ axiosPrivate, id, rules }) =>
+      savePlaylistRules(id, rules, axiosPrivate),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["playlist_rules", variables.id],
+      });
+    },
+  });
+};
+
+type TestPlaylistRulesVariables = {
+  axiosPrivate: AxiosInstance;
+  playlistId: string;
+  videoId: string;
+};
+
+const testPlaylistRules = async (
+  axiosPrivate: AxiosInstance,
+  playlistId: string,
+  videoId: string
+): Promise<ApiResponse<boolean>> => {
+  const response = await axiosPrivate.post<ApiResponse<boolean>>(
+    `/api/v1/playlist/${playlistId}/rules/test?video_id=${videoId}`
+  );
+  return response.data;
+};
+
+const useTestPlaylistRules = () => {
+  return useMutation<ApiResponse<boolean>, Error, TestPlaylistRulesVariables>({
+    mutationFn: ({ axiosPrivate, playlistId, videoId }) =>
+      testPlaylistRules(axiosPrivate, playlistId, videoId),
+  });
+};
+
 export {
   useGetPlaylists,
   useCreatePlaylist,
@@ -253,4 +366,7 @@ export {
   useAddVideoToPlaylist,
   useRemoveVideoFromPlaylist,
   useUpdateMultistreamVideoOffset,
+  useGetPlaylistRules,
+  useSavePlaylistRules,
+  useTestPlaylistRules,
 };

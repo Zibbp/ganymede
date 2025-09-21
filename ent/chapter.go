@@ -75,7 +75,7 @@ func (*Chapter) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Chapter fields.
-func (c *Chapter) assignValues(columns []string, values []any) error {
+func (_m *Chapter) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -85,41 +85,41 @@ func (c *Chapter) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
-				c.ID = *value
+				_m.ID = *value
 			}
 		case chapter.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				c.Type = value.String
+				_m.Type = value.String
 			}
 		case chapter.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
-				c.Title = value.String
+				_m.Title = value.String
 			}
 		case chapter.FieldStart:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field start", values[i])
 			} else if value.Valid {
-				c.Start = int(value.Int64)
+				_m.Start = int(value.Int64)
 			}
 		case chapter.FieldEnd:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field end", values[i])
 			} else if value.Valid {
-				c.End = int(value.Int64)
+				_m.End = int(value.Int64)
 			}
 		case chapter.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field vod_chapters", values[i])
 			} else if value.Valid {
-				c.vod_chapters = new(uuid.UUID)
-				*c.vod_chapters = *value.S.(*uuid.UUID)
+				_m.vod_chapters = new(uuid.UUID)
+				*_m.vod_chapters = *value.S.(*uuid.UUID)
 			}
 		default:
-			c.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -127,49 +127,49 @@ func (c *Chapter) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Chapter.
 // This includes values selected through modifiers, order, etc.
-func (c *Chapter) Value(name string) (ent.Value, error) {
-	return c.selectValues.Get(name)
+func (_m *Chapter) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryVod queries the "vod" edge of the Chapter entity.
-func (c *Chapter) QueryVod() *VodQuery {
-	return NewChapterClient(c.config).QueryVod(c)
+func (_m *Chapter) QueryVod() *VodQuery {
+	return NewChapterClient(_m.config).QueryVod(_m)
 }
 
 // Update returns a builder for updating this Chapter.
 // Note that you need to call Chapter.Unwrap() before calling this method if this Chapter
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (c *Chapter) Update() *ChapterUpdateOne {
-	return NewChapterClient(c.config).UpdateOne(c)
+func (_m *Chapter) Update() *ChapterUpdateOne {
+	return NewChapterClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Chapter entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (c *Chapter) Unwrap() *Chapter {
-	_tx, ok := c.config.driver.(*txDriver)
+func (_m *Chapter) Unwrap() *Chapter {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Chapter is not a transactional entity")
 	}
-	c.config.driver = _tx.drv
-	return c
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (c *Chapter) String() string {
+func (_m *Chapter) String() string {
 	var builder strings.Builder
 	builder.WriteString("Chapter(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", c.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("type=")
-	builder.WriteString(c.Type)
+	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("title=")
-	builder.WriteString(c.Title)
+	builder.WriteString(_m.Title)
 	builder.WriteString(", ")
 	builder.WriteString("start=")
-	builder.WriteString(fmt.Sprintf("%v", c.Start))
+	builder.WriteString(fmt.Sprintf("%v", _m.Start))
 	builder.WriteString(", ")
 	builder.WriteString("end=")
-	builder.WriteString(fmt.Sprintf("%v", c.End))
+	builder.WriteString(fmt.Sprintf("%v", _m.End))
 	builder.WriteByte(')')
 	return builder.String()
 }

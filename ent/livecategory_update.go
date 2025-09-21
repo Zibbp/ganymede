@@ -24,55 +24,61 @@ type LiveCategoryUpdate struct {
 }
 
 // Where appends a list predicates to the LiveCategoryUpdate builder.
-func (lcu *LiveCategoryUpdate) Where(ps ...predicate.LiveCategory) *LiveCategoryUpdate {
-	lcu.mutation.Where(ps...)
-	return lcu
+func (_u *LiveCategoryUpdate) Where(ps ...predicate.LiveCategory) *LiveCategoryUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (lcu *LiveCategoryUpdate) SetName(s string) *LiveCategoryUpdate {
-	lcu.mutation.SetName(s)
-	return lcu
+func (_u *LiveCategoryUpdate) SetName(v string) *LiveCategoryUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (lcu *LiveCategoryUpdate) SetNillableName(s *string) *LiveCategoryUpdate {
-	if s != nil {
-		lcu.SetName(*s)
+func (_u *LiveCategoryUpdate) SetNillableName(v *string) *LiveCategoryUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return lcu
+	return _u
+}
+
+// ClearName clears the value of the "name" field.
+func (_u *LiveCategoryUpdate) ClearName() *LiveCategoryUpdate {
+	_u.mutation.ClearName()
+	return _u
 }
 
 // SetLiveID sets the "live" edge to the Live entity by ID.
-func (lcu *LiveCategoryUpdate) SetLiveID(id uuid.UUID) *LiveCategoryUpdate {
-	lcu.mutation.SetLiveID(id)
-	return lcu
+func (_u *LiveCategoryUpdate) SetLiveID(id uuid.UUID) *LiveCategoryUpdate {
+	_u.mutation.SetLiveID(id)
+	return _u
 }
 
 // SetLive sets the "live" edge to the Live entity.
-func (lcu *LiveCategoryUpdate) SetLive(l *Live) *LiveCategoryUpdate {
-	return lcu.SetLiveID(l.ID)
+func (_u *LiveCategoryUpdate) SetLive(v *Live) *LiveCategoryUpdate {
+	return _u.SetLiveID(v.ID)
 }
 
 // Mutation returns the LiveCategoryMutation object of the builder.
-func (lcu *LiveCategoryUpdate) Mutation() *LiveCategoryMutation {
-	return lcu.mutation
+func (_u *LiveCategoryUpdate) Mutation() *LiveCategoryMutation {
+	return _u.mutation
 }
 
 // ClearLive clears the "live" edge to the Live entity.
-func (lcu *LiveCategoryUpdate) ClearLive() *LiveCategoryUpdate {
-	lcu.mutation.ClearLive()
-	return lcu
+func (_u *LiveCategoryUpdate) ClearLive() *LiveCategoryUpdate {
+	_u.mutation.ClearLive()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (lcu *LiveCategoryUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, lcu.sqlSave, lcu.mutation, lcu.hooks)
+func (_u *LiveCategoryUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (lcu *LiveCategoryUpdate) SaveX(ctx context.Context) int {
-	affected, err := lcu.Save(ctx)
+func (_u *LiveCategoryUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -80,42 +86,45 @@ func (lcu *LiveCategoryUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (lcu *LiveCategoryUpdate) Exec(ctx context.Context) error {
-	_, err := lcu.Save(ctx)
+func (_u *LiveCategoryUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (lcu *LiveCategoryUpdate) ExecX(ctx context.Context) {
-	if err := lcu.Exec(ctx); err != nil {
+func (_u *LiveCategoryUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (lcu *LiveCategoryUpdate) check() error {
-	if lcu.mutation.LiveCleared() && len(lcu.mutation.LiveIDs()) > 0 {
+func (_u *LiveCategoryUpdate) check() error {
+	if _u.mutation.LiveCleared() && len(_u.mutation.LiveIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "LiveCategory.live"`)
 	}
 	return nil
 }
 
-func (lcu *LiveCategoryUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := lcu.check(); err != nil {
-		return n, err
+func (_u *LiveCategoryUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(livecategory.Table, livecategory.Columns, sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID))
-	if ps := lcu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := lcu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(livecategory.FieldName, field.TypeString, value)
 	}
-	if lcu.mutation.LiveCleared() {
+	if _u.mutation.NameCleared() {
+		_spec.ClearField(livecategory.FieldName, field.TypeString)
+	}
+	if _u.mutation.LiveCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -128,7 +137,7 @@ func (lcu *LiveCategoryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := lcu.mutation.LiveIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.LiveIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -144,7 +153,7 @@ func (lcu *LiveCategoryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, lcu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{livecategory.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -152,8 +161,8 @@ func (lcu *LiveCategoryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	lcu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // LiveCategoryUpdateOne is the builder for updating a single LiveCategory entity.
@@ -165,62 +174,68 @@ type LiveCategoryUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (lcuo *LiveCategoryUpdateOne) SetName(s string) *LiveCategoryUpdateOne {
-	lcuo.mutation.SetName(s)
-	return lcuo
+func (_u *LiveCategoryUpdateOne) SetName(v string) *LiveCategoryUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (lcuo *LiveCategoryUpdateOne) SetNillableName(s *string) *LiveCategoryUpdateOne {
-	if s != nil {
-		lcuo.SetName(*s)
+func (_u *LiveCategoryUpdateOne) SetNillableName(v *string) *LiveCategoryUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return lcuo
+	return _u
+}
+
+// ClearName clears the value of the "name" field.
+func (_u *LiveCategoryUpdateOne) ClearName() *LiveCategoryUpdateOne {
+	_u.mutation.ClearName()
+	return _u
 }
 
 // SetLiveID sets the "live" edge to the Live entity by ID.
-func (lcuo *LiveCategoryUpdateOne) SetLiveID(id uuid.UUID) *LiveCategoryUpdateOne {
-	lcuo.mutation.SetLiveID(id)
-	return lcuo
+func (_u *LiveCategoryUpdateOne) SetLiveID(id uuid.UUID) *LiveCategoryUpdateOne {
+	_u.mutation.SetLiveID(id)
+	return _u
 }
 
 // SetLive sets the "live" edge to the Live entity.
-func (lcuo *LiveCategoryUpdateOne) SetLive(l *Live) *LiveCategoryUpdateOne {
-	return lcuo.SetLiveID(l.ID)
+func (_u *LiveCategoryUpdateOne) SetLive(v *Live) *LiveCategoryUpdateOne {
+	return _u.SetLiveID(v.ID)
 }
 
 // Mutation returns the LiveCategoryMutation object of the builder.
-func (lcuo *LiveCategoryUpdateOne) Mutation() *LiveCategoryMutation {
-	return lcuo.mutation
+func (_u *LiveCategoryUpdateOne) Mutation() *LiveCategoryMutation {
+	return _u.mutation
 }
 
 // ClearLive clears the "live" edge to the Live entity.
-func (lcuo *LiveCategoryUpdateOne) ClearLive() *LiveCategoryUpdateOne {
-	lcuo.mutation.ClearLive()
-	return lcuo
+func (_u *LiveCategoryUpdateOne) ClearLive() *LiveCategoryUpdateOne {
+	_u.mutation.ClearLive()
+	return _u
 }
 
 // Where appends a list predicates to the LiveCategoryUpdate builder.
-func (lcuo *LiveCategoryUpdateOne) Where(ps ...predicate.LiveCategory) *LiveCategoryUpdateOne {
-	lcuo.mutation.Where(ps...)
-	return lcuo
+func (_u *LiveCategoryUpdateOne) Where(ps ...predicate.LiveCategory) *LiveCategoryUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (lcuo *LiveCategoryUpdateOne) Select(field string, fields ...string) *LiveCategoryUpdateOne {
-	lcuo.fields = append([]string{field}, fields...)
-	return lcuo
+func (_u *LiveCategoryUpdateOne) Select(field string, fields ...string) *LiveCategoryUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated LiveCategory entity.
-func (lcuo *LiveCategoryUpdateOne) Save(ctx context.Context) (*LiveCategory, error) {
-	return withHooks(ctx, lcuo.sqlSave, lcuo.mutation, lcuo.hooks)
+func (_u *LiveCategoryUpdateOne) Save(ctx context.Context) (*LiveCategory, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (lcuo *LiveCategoryUpdateOne) SaveX(ctx context.Context) *LiveCategory {
-	node, err := lcuo.Save(ctx)
+func (_u *LiveCategoryUpdateOne) SaveX(ctx context.Context) *LiveCategory {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -228,37 +243,37 @@ func (lcuo *LiveCategoryUpdateOne) SaveX(ctx context.Context) *LiveCategory {
 }
 
 // Exec executes the query on the entity.
-func (lcuo *LiveCategoryUpdateOne) Exec(ctx context.Context) error {
-	_, err := lcuo.Save(ctx)
+func (_u *LiveCategoryUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (lcuo *LiveCategoryUpdateOne) ExecX(ctx context.Context) {
-	if err := lcuo.Exec(ctx); err != nil {
+func (_u *LiveCategoryUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (lcuo *LiveCategoryUpdateOne) check() error {
-	if lcuo.mutation.LiveCleared() && len(lcuo.mutation.LiveIDs()) > 0 {
+func (_u *LiveCategoryUpdateOne) check() error {
+	if _u.mutation.LiveCleared() && len(_u.mutation.LiveIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "LiveCategory.live"`)
 	}
 	return nil
 }
 
-func (lcuo *LiveCategoryUpdateOne) sqlSave(ctx context.Context) (_node *LiveCategory, err error) {
-	if err := lcuo.check(); err != nil {
+func (_u *LiveCategoryUpdateOne) sqlSave(ctx context.Context) (_node *LiveCategory, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(livecategory.Table, livecategory.Columns, sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID))
-	id, ok := lcuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "LiveCategory.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := lcuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, livecategory.FieldID)
 		for _, f := range fields {
@@ -270,17 +285,20 @@ func (lcuo *LiveCategoryUpdateOne) sqlSave(ctx context.Context) (_node *LiveCate
 			}
 		}
 	}
-	if ps := lcuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := lcuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(livecategory.FieldName, field.TypeString, value)
 	}
-	if lcuo.mutation.LiveCleared() {
+	if _u.mutation.NameCleared() {
+		_spec.ClearField(livecategory.FieldName, field.TypeString)
+	}
+	if _u.mutation.LiveCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -293,7 +311,7 @@ func (lcuo *LiveCategoryUpdateOne) sqlSave(ctx context.Context) (_node *LiveCate
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := lcuo.mutation.LiveIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.LiveIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -309,10 +327,10 @@ func (lcuo *LiveCategoryUpdateOne) sqlSave(ctx context.Context) (_node *LiveCate
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &LiveCategory{config: lcuo.config}
+	_node = &LiveCategory{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, lcuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{livecategory.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -320,6 +338,6 @@ func (lcuo *LiveCategoryUpdateOne) sqlSave(ctx context.Context) (_node *LiveCate
 		}
 		return nil, err
 	}
-	lcuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

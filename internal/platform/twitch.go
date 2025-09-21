@@ -93,6 +93,19 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters
 		}
 		chapters = append(chapters, convertedChapters...)
 		info.Chapters = chapters
+
+		// If chapter is empty use the category as a fallback chapter
+		if len(info.Chapters) == 0 && gqlVideo.Game.Name != "" {
+			info.Chapters = []chapter.Chapter{
+				{
+					ID:    "fallback",
+					Type:  string(utils.ChapterTypeFallback),
+					Title: gqlVideo.Game.Name,
+					Start: 0,
+					End:   int(info.Duration.Seconds()),
+				},
+			}
+		}
 	}
 
 	// get muted segments
@@ -812,4 +825,71 @@ func (c *TwitchConnection) CheckIfStreamIsLive(ctx context.Context, channelName 
 	}
 
 	return true, nil
+}
+
+// GetStreams fetches live streams from Twitch sorted by viewership. It supports pagination and limits the number of streams returned.
+func (c *TwitchConnection) GetStreams(ctx context.Context, limit int) ([]LiveStreamInfo, error) {
+	params := url.Values{
+		"first": []string{"100"}, // Twitch API allows a maximum of 100 streams per request
+	}
+
+	var streams []LiveStreamInfo
+	cursor := ""
+	fetched := 0
+
+	for {
+		if cursor != "" {
+			params.Set("after", cursor)
+		} else {
+			params.Del("after")
+		}
+
+		body, err := c.twitchMakeHTTPRequest("GET", "streams", params, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		var resp TwitchLiveStreamsRepsponse
+		err = json.Unmarshal(body, &resp)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(resp.Data) == 0 {
+			break // No more streams to fetch
+		}
+
+		for _, stream := range resp.Data {
+			if limit > 0 && fetched >= limit {
+				return streams, nil
+			}
+			startedAt, err := time.Parse(time.RFC3339, stream.StartedAt)
+			if err != nil {
+				return nil, err
+			}
+
+			streams = append(streams, LiveStreamInfo{
+				ID:           stream.ID,
+				UserID:       stream.UserID,
+				UserLogin:    stream.UserLogin,
+				UserName:     stream.UserName,
+				GameID:       stream.GameID,
+				GameName:     stream.GameName,
+				Type:         stream.Type,
+				Title:        stream.Title,
+				ViewerCount:  stream.ViewerCount,
+				StartedAt:    startedAt,
+				Language:     stream.Language,
+				ThumbnailURL: stream.ThumbnailURL,
+			})
+			fetched++
+		}
+
+		cursor = resp.Pagination.Cursor
+		if cursor == "" || (limit > 0 && fetched >= limit) {
+			break
+		}
+	}
+
+	return streams, nil
 }

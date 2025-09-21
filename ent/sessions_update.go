@@ -23,44 +23,44 @@ type SessionsUpdate struct {
 }
 
 // Where appends a list predicates to the SessionsUpdate builder.
-func (su *SessionsUpdate) Where(ps ...predicate.Sessions) *SessionsUpdate {
-	su.mutation.Where(ps...)
-	return su
+func (_u *SessionsUpdate) Where(ps ...predicate.Sessions) *SessionsUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetData sets the "data" field.
-func (su *SessionsUpdate) SetData(b []byte) *SessionsUpdate {
-	su.mutation.SetData(b)
-	return su
+func (_u *SessionsUpdate) SetData(v []byte) *SessionsUpdate {
+	_u.mutation.SetData(v)
+	return _u
 }
 
 // SetExpiry sets the "expiry" field.
-func (su *SessionsUpdate) SetExpiry(t time.Time) *SessionsUpdate {
-	su.mutation.SetExpiry(t)
-	return su
+func (_u *SessionsUpdate) SetExpiry(v time.Time) *SessionsUpdate {
+	_u.mutation.SetExpiry(v)
+	return _u
 }
 
 // SetNillableExpiry sets the "expiry" field if the given value is not nil.
-func (su *SessionsUpdate) SetNillableExpiry(t *time.Time) *SessionsUpdate {
-	if t != nil {
-		su.SetExpiry(*t)
+func (_u *SessionsUpdate) SetNillableExpiry(v *time.Time) *SessionsUpdate {
+	if v != nil {
+		_u.SetExpiry(*v)
 	}
-	return su
+	return _u
 }
 
 // Mutation returns the SessionsMutation object of the builder.
-func (su *SessionsUpdate) Mutation() *SessionsMutation {
-	return su.mutation
+func (_u *SessionsUpdate) Mutation() *SessionsMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (su *SessionsUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, su.sqlSave, su.mutation, su.hooks)
+func (_u *SessionsUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (su *SessionsUpdate) SaveX(ctx context.Context) int {
-	affected, err := su.Save(ctx)
+func (_u *SessionsUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -68,21 +68,21 @@ func (su *SessionsUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (su *SessionsUpdate) Exec(ctx context.Context) error {
-	_, err := su.Save(ctx)
+func (_u *SessionsUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (su *SessionsUpdate) ExecX(ctx context.Context) {
-	if err := su.Exec(ctx); err != nil {
+func (_u *SessionsUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (su *SessionsUpdate) check() error {
-	if v, ok := su.mutation.Data(); ok {
+func (_u *SessionsUpdate) check() error {
+	if v, ok := _u.mutation.Data(); ok {
 		if err := sessions.DataValidator(v); err != nil {
 			return &ValidationError{Name: "data", err: fmt.Errorf(`ent: validator failed for field "Sessions.data": %w`, err)}
 		}
@@ -90,25 +90,25 @@ func (su *SessionsUpdate) check() error {
 	return nil
 }
 
-func (su *SessionsUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := su.check(); err != nil {
-		return n, err
+func (_u *SessionsUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(sessions.Table, sessions.Columns, sqlgraph.NewFieldSpec(sessions.FieldID, field.TypeInt))
-	if ps := su.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := su.mutation.Data(); ok {
+	if value, ok := _u.mutation.Data(); ok {
 		_spec.SetField(sessions.FieldData, field.TypeBytes, value)
 	}
-	if value, ok := su.mutation.Expiry(); ok {
+	if value, ok := _u.mutation.Expiry(); ok {
 		_spec.SetField(sessions.FieldExpiry, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{sessions.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -116,8 +116,8 @@ func (su *SessionsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	su.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // SessionsUpdateOne is the builder for updating a single Sessions entity.
@@ -129,51 +129,51 @@ type SessionsUpdateOne struct {
 }
 
 // SetData sets the "data" field.
-func (suo *SessionsUpdateOne) SetData(b []byte) *SessionsUpdateOne {
-	suo.mutation.SetData(b)
-	return suo
+func (_u *SessionsUpdateOne) SetData(v []byte) *SessionsUpdateOne {
+	_u.mutation.SetData(v)
+	return _u
 }
 
 // SetExpiry sets the "expiry" field.
-func (suo *SessionsUpdateOne) SetExpiry(t time.Time) *SessionsUpdateOne {
-	suo.mutation.SetExpiry(t)
-	return suo
+func (_u *SessionsUpdateOne) SetExpiry(v time.Time) *SessionsUpdateOne {
+	_u.mutation.SetExpiry(v)
+	return _u
 }
 
 // SetNillableExpiry sets the "expiry" field if the given value is not nil.
-func (suo *SessionsUpdateOne) SetNillableExpiry(t *time.Time) *SessionsUpdateOne {
-	if t != nil {
-		suo.SetExpiry(*t)
+func (_u *SessionsUpdateOne) SetNillableExpiry(v *time.Time) *SessionsUpdateOne {
+	if v != nil {
+		_u.SetExpiry(*v)
 	}
-	return suo
+	return _u
 }
 
 // Mutation returns the SessionsMutation object of the builder.
-func (suo *SessionsUpdateOne) Mutation() *SessionsMutation {
-	return suo.mutation
+func (_u *SessionsUpdateOne) Mutation() *SessionsMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the SessionsUpdate builder.
-func (suo *SessionsUpdateOne) Where(ps ...predicate.Sessions) *SessionsUpdateOne {
-	suo.mutation.Where(ps...)
-	return suo
+func (_u *SessionsUpdateOne) Where(ps ...predicate.Sessions) *SessionsUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (suo *SessionsUpdateOne) Select(field string, fields ...string) *SessionsUpdateOne {
-	suo.fields = append([]string{field}, fields...)
-	return suo
+func (_u *SessionsUpdateOne) Select(field string, fields ...string) *SessionsUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Sessions entity.
-func (suo *SessionsUpdateOne) Save(ctx context.Context) (*Sessions, error) {
-	return withHooks(ctx, suo.sqlSave, suo.mutation, suo.hooks)
+func (_u *SessionsUpdateOne) Save(ctx context.Context) (*Sessions, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (suo *SessionsUpdateOne) SaveX(ctx context.Context) *Sessions {
-	node, err := suo.Save(ctx)
+func (_u *SessionsUpdateOne) SaveX(ctx context.Context) *Sessions {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -181,21 +181,21 @@ func (suo *SessionsUpdateOne) SaveX(ctx context.Context) *Sessions {
 }
 
 // Exec executes the query on the entity.
-func (suo *SessionsUpdateOne) Exec(ctx context.Context) error {
-	_, err := suo.Save(ctx)
+func (_u *SessionsUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (suo *SessionsUpdateOne) ExecX(ctx context.Context) {
-	if err := suo.Exec(ctx); err != nil {
+func (_u *SessionsUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (suo *SessionsUpdateOne) check() error {
-	if v, ok := suo.mutation.Data(); ok {
+func (_u *SessionsUpdateOne) check() error {
+	if v, ok := _u.mutation.Data(); ok {
 		if err := sessions.DataValidator(v); err != nil {
 			return &ValidationError{Name: "data", err: fmt.Errorf(`ent: validator failed for field "Sessions.data": %w`, err)}
 		}
@@ -203,17 +203,17 @@ func (suo *SessionsUpdateOne) check() error {
 	return nil
 }
 
-func (suo *SessionsUpdateOne) sqlSave(ctx context.Context) (_node *Sessions, err error) {
-	if err := suo.check(); err != nil {
+func (_u *SessionsUpdateOne) sqlSave(ctx context.Context) (_node *Sessions, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(sessions.Table, sessions.Columns, sqlgraph.NewFieldSpec(sessions.FieldID, field.TypeInt))
-	id, ok := suo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Sessions.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := suo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, sessions.FieldID)
 		for _, f := range fields {
@@ -225,23 +225,23 @@ func (suo *SessionsUpdateOne) sqlSave(ctx context.Context) (_node *Sessions, err
 			}
 		}
 	}
-	if ps := suo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := suo.mutation.Data(); ok {
+	if value, ok := _u.mutation.Data(); ok {
 		_spec.SetField(sessions.FieldData, field.TypeBytes, value)
 	}
-	if value, ok := suo.mutation.Expiry(); ok {
+	if value, ok := _u.mutation.Expiry(); ok {
 		_spec.SetField(sessions.FieldExpiry, field.TypeTime, value)
 	}
-	_node = &Sessions{config: suo.config}
+	_node = &Sessions{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, suo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{sessions.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -249,6 +249,6 @@ func (suo *SessionsUpdateOne) sqlSave(ctx context.Context) (_node *Sessions, err
 		}
 		return nil, err
 	}
-	suo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

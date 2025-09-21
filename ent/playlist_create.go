@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
+	"github.com/zibbp/ganymede/ent/playlistrulegroup"
 	"github.com/zibbp/ganymede/ent/vod"
 )
 
@@ -27,125 +28,140 @@ type PlaylistCreate struct {
 }
 
 // SetName sets the "name" field.
-func (pc *PlaylistCreate) SetName(s string) *PlaylistCreate {
-	pc.mutation.SetName(s)
-	return pc
+func (_c *PlaylistCreate) SetName(v string) *PlaylistCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (pc *PlaylistCreate) SetDescription(s string) *PlaylistCreate {
-	pc.mutation.SetDescription(s)
-	return pc
+func (_c *PlaylistCreate) SetDescription(v string) *PlaylistCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (pc *PlaylistCreate) SetNillableDescription(s *string) *PlaylistCreate {
-	if s != nil {
-		pc.SetDescription(*s)
+func (_c *PlaylistCreate) SetNillableDescription(v *string) *PlaylistCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetThumbnailPath sets the "thumbnail_path" field.
-func (pc *PlaylistCreate) SetThumbnailPath(s string) *PlaylistCreate {
-	pc.mutation.SetThumbnailPath(s)
-	return pc
+func (_c *PlaylistCreate) SetThumbnailPath(v string) *PlaylistCreate {
+	_c.mutation.SetThumbnailPath(v)
+	return _c
 }
 
 // SetNillableThumbnailPath sets the "thumbnail_path" field if the given value is not nil.
-func (pc *PlaylistCreate) SetNillableThumbnailPath(s *string) *PlaylistCreate {
-	if s != nil {
-		pc.SetThumbnailPath(*s)
+func (_c *PlaylistCreate) SetNillableThumbnailPath(v *string) *PlaylistCreate {
+	if v != nil {
+		_c.SetThumbnailPath(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pc *PlaylistCreate) SetUpdatedAt(t time.Time) *PlaylistCreate {
-	pc.mutation.SetUpdatedAt(t)
-	return pc
+func (_c *PlaylistCreate) SetUpdatedAt(v time.Time) *PlaylistCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (pc *PlaylistCreate) SetNillableUpdatedAt(t *time.Time) *PlaylistCreate {
-	if t != nil {
-		pc.SetUpdatedAt(*t)
+func (_c *PlaylistCreate) SetNillableUpdatedAt(v *time.Time) *PlaylistCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pc *PlaylistCreate) SetCreatedAt(t time.Time) *PlaylistCreate {
-	pc.mutation.SetCreatedAt(t)
-	return pc
+func (_c *PlaylistCreate) SetCreatedAt(v time.Time) *PlaylistCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pc *PlaylistCreate) SetNillableCreatedAt(t *time.Time) *PlaylistCreate {
-	if t != nil {
-		pc.SetCreatedAt(*t)
+func (_c *PlaylistCreate) SetNillableCreatedAt(v *time.Time) *PlaylistCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetID sets the "id" field.
-func (pc *PlaylistCreate) SetID(u uuid.UUID) *PlaylistCreate {
-	pc.mutation.SetID(u)
-	return pc
+func (_c *PlaylistCreate) SetID(v uuid.UUID) *PlaylistCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (pc *PlaylistCreate) SetNillableID(u *uuid.UUID) *PlaylistCreate {
-	if u != nil {
-		pc.SetID(*u)
+func (_c *PlaylistCreate) SetNillableID(v *uuid.UUID) *PlaylistCreate {
+	if v != nil {
+		_c.SetID(*v)
 	}
-	return pc
+	return _c
 }
 
 // AddVodIDs adds the "vods" edge to the Vod entity by IDs.
-func (pc *PlaylistCreate) AddVodIDs(ids ...uuid.UUID) *PlaylistCreate {
-	pc.mutation.AddVodIDs(ids...)
-	return pc
+func (_c *PlaylistCreate) AddVodIDs(ids ...uuid.UUID) *PlaylistCreate {
+	_c.mutation.AddVodIDs(ids...)
+	return _c
 }
 
 // AddVods adds the "vods" edges to the Vod entity.
-func (pc *PlaylistCreate) AddVods(v ...*Vod) *PlaylistCreate {
+func (_c *PlaylistCreate) AddVods(v ...*Vod) *PlaylistCreate {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return pc.AddVodIDs(ids...)
+	return _c.AddVodIDs(ids...)
 }
 
 // AddMultistreamInfoIDs adds the "multistream_info" edge to the MultistreamInfo entity by IDs.
-func (pc *PlaylistCreate) AddMultistreamInfoIDs(ids ...int) *PlaylistCreate {
-	pc.mutation.AddMultistreamInfoIDs(ids...)
-	return pc
+func (_c *PlaylistCreate) AddMultistreamInfoIDs(ids ...int) *PlaylistCreate {
+	_c.mutation.AddMultistreamInfoIDs(ids...)
+	return _c
 }
 
 // AddMultistreamInfo adds the "multistream_info" edges to the MultistreamInfo entity.
-func (pc *PlaylistCreate) AddMultistreamInfo(m ...*MultistreamInfo) *PlaylistCreate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_c *PlaylistCreate) AddMultistreamInfo(v ...*MultistreamInfo) *PlaylistCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pc.AddMultistreamInfoIDs(ids...)
+	return _c.AddMultistreamInfoIDs(ids...)
+}
+
+// AddRuleGroupIDs adds the "rule_groups" edge to the PlaylistRuleGroup entity by IDs.
+func (_c *PlaylistCreate) AddRuleGroupIDs(ids ...uuid.UUID) *PlaylistCreate {
+	_c.mutation.AddRuleGroupIDs(ids...)
+	return _c
+}
+
+// AddRuleGroups adds the "rule_groups" edges to the PlaylistRuleGroup entity.
+func (_c *PlaylistCreate) AddRuleGroups(v ...*PlaylistRuleGroup) *PlaylistCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRuleGroupIDs(ids...)
 }
 
 // Mutation returns the PlaylistMutation object of the builder.
-func (pc *PlaylistCreate) Mutation() *PlaylistMutation {
-	return pc.mutation
+func (_c *PlaylistCreate) Mutation() *PlaylistMutation {
+	return _c.mutation
 }
 
 // Save creates the Playlist in the database.
-func (pc *PlaylistCreate) Save(ctx context.Context) (*Playlist, error) {
-	pc.defaults()
-	return withHooks(ctx, pc.sqlSave, pc.mutation, pc.hooks)
+func (_c *PlaylistCreate) Save(ctx context.Context) (*Playlist, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (pc *PlaylistCreate) SaveX(ctx context.Context) *Playlist {
-	v, err := pc.Save(ctx)
+func (_c *PlaylistCreate) SaveX(ctx context.Context) *Playlist {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -153,54 +169,54 @@ func (pc *PlaylistCreate) SaveX(ctx context.Context) *Playlist {
 }
 
 // Exec executes the query.
-func (pc *PlaylistCreate) Exec(ctx context.Context) error {
-	_, err := pc.Save(ctx)
+func (_c *PlaylistCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pc *PlaylistCreate) ExecX(ctx context.Context) {
-	if err := pc.Exec(ctx); err != nil {
+func (_c *PlaylistCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pc *PlaylistCreate) defaults() {
-	if _, ok := pc.mutation.UpdatedAt(); !ok {
+func (_c *PlaylistCreate) defaults() {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := playlist.DefaultUpdatedAt()
-		pc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := pc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := playlist.DefaultCreatedAt()
-		pc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := pc.mutation.ID(); !ok {
+	if _, ok := _c.mutation.ID(); !ok {
 		v := playlist.DefaultID()
-		pc.mutation.SetID(v)
+		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pc *PlaylistCreate) check() error {
-	if _, ok := pc.mutation.Name(); !ok {
+func (_c *PlaylistCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Playlist.name"`)}
 	}
-	if _, ok := pc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Playlist.updated_at"`)}
 	}
-	if _, ok := pc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Playlist.created_at"`)}
 	}
 	return nil
 }
 
-func (pc *PlaylistCreate) sqlSave(ctx context.Context) (*Playlist, error) {
-	if err := pc.check(); err != nil {
+func (_c *PlaylistCreate) sqlSave(ctx context.Context) (*Playlist, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := pc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, pc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -213,42 +229,42 @@ func (pc *PlaylistCreate) sqlSave(ctx context.Context) (*Playlist, error) {
 			return nil, err
 		}
 	}
-	pc.mutation.id = &_node.ID
-	pc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
+func (_c *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Playlist{config: pc.config}
+		_node = &Playlist{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(playlist.Table, sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeUUID))
 	)
-	_spec.OnConflict = pc.conflict
-	if id, ok := pc.mutation.ID(); ok {
+	_spec.OnConflict = _c.conflict
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := pc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(playlist.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := pc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(playlist.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := pc.mutation.ThumbnailPath(); ok {
+	if value, ok := _c.mutation.ThumbnailPath(); ok {
 		_spec.SetField(playlist.FieldThumbnailPath, field.TypeString, value)
 		_node.ThumbnailPath = value
 	}
-	if value, ok := pc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := pc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(playlist.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := pc.mutation.VodsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.VodsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -264,7 +280,7 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pc.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.MultistreamInfoIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -273,6 +289,22 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(multistreaminfo.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RuleGroupsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   playlist.RuleGroupsTable,
+			Columns: []string{playlist.RuleGroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(playlistrulegroup.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -299,10 +331,10 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 //			SetName(v+v).
 //		}).
 //		Exec(ctx)
-func (pc *PlaylistCreate) OnConflict(opts ...sql.ConflictOption) *PlaylistUpsertOne {
-	pc.conflict = opts
+func (_c *PlaylistCreate) OnConflict(opts ...sql.ConflictOption) *PlaylistUpsertOne {
+	_c.conflict = opts
 	return &PlaylistUpsertOne{
-		create: pc,
+		create: _c,
 	}
 }
 
@@ -312,10 +344,10 @@ func (pc *PlaylistCreate) OnConflict(opts ...sql.ConflictOption) *PlaylistUpsert
 //	client.Playlist.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (pc *PlaylistCreate) OnConflictColumns(columns ...string) *PlaylistUpsertOne {
-	pc.conflict = append(pc.conflict, sql.ConflictColumns(columns...))
+func (_c *PlaylistCreate) OnConflictColumns(columns ...string) *PlaylistUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &PlaylistUpsertOne{
-		create: pc,
+		create: _c,
 	}
 }
 
@@ -560,16 +592,16 @@ type PlaylistCreateBulk struct {
 }
 
 // Save creates the Playlist entities in the database.
-func (pcb *PlaylistCreateBulk) Save(ctx context.Context) ([]*Playlist, error) {
-	if pcb.err != nil {
-		return nil, pcb.err
+func (_c *PlaylistCreateBulk) Save(ctx context.Context) ([]*Playlist, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(pcb.builders))
-	nodes := make([]*Playlist, len(pcb.builders))
-	mutators := make([]Mutator, len(pcb.builders))
-	for i := range pcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Playlist, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := pcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*PlaylistMutation)
@@ -583,12 +615,12 @@ func (pcb *PlaylistCreateBulk) Save(ctx context.Context) ([]*Playlist, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, pcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = pcb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, pcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -608,7 +640,7 @@ func (pcb *PlaylistCreateBulk) Save(ctx context.Context) ([]*Playlist, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, pcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -616,8 +648,8 @@ func (pcb *PlaylistCreateBulk) Save(ctx context.Context) ([]*Playlist, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pcb *PlaylistCreateBulk) SaveX(ctx context.Context) []*Playlist {
-	v, err := pcb.Save(ctx)
+func (_c *PlaylistCreateBulk) SaveX(ctx context.Context) []*Playlist {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -625,14 +657,14 @@ func (pcb *PlaylistCreateBulk) SaveX(ctx context.Context) []*Playlist {
 }
 
 // Exec executes the query.
-func (pcb *PlaylistCreateBulk) Exec(ctx context.Context) error {
-	_, err := pcb.Save(ctx)
+func (_c *PlaylistCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pcb *PlaylistCreateBulk) ExecX(ctx context.Context) {
-	if err := pcb.Exec(ctx); err != nil {
+func (_c *PlaylistCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -652,10 +684,10 @@ func (pcb *PlaylistCreateBulk) ExecX(ctx context.Context) {
 //			SetName(v+v).
 //		}).
 //		Exec(ctx)
-func (pcb *PlaylistCreateBulk) OnConflict(opts ...sql.ConflictOption) *PlaylistUpsertBulk {
-	pcb.conflict = opts
+func (_c *PlaylistCreateBulk) OnConflict(opts ...sql.ConflictOption) *PlaylistUpsertBulk {
+	_c.conflict = opts
 	return &PlaylistUpsertBulk{
-		create: pcb,
+		create: _c,
 	}
 }
 
@@ -665,10 +697,10 @@ func (pcb *PlaylistCreateBulk) OnConflict(opts ...sql.ConflictOption) *PlaylistU
 //	client.Playlist.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (pcb *PlaylistCreateBulk) OnConflictColumns(columns ...string) *PlaylistUpsertBulk {
-	pcb.conflict = append(pcb.conflict, sql.ConflictColumns(columns...))
+func (_c *PlaylistCreateBulk) OnConflictColumns(columns ...string) *PlaylistUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &PlaylistUpsertBulk{
-		create: pcb,
+		create: _c,
 	}
 }
 

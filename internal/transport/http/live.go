@@ -12,9 +12,9 @@ import (
 
 type LiveService interface {
 	GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error)
-	AddLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
+	AddLiveWatchedChannel(ctx context.Context, liveDto live.Live) (*ent.Live, error)
 	DeleteLiveWatchedChannel(c echo.Context, lID uuid.UUID) error
-	UpdateLiveWatchedChannel(c echo.Context, liveDto live.Live) (*ent.Live, error)
+	UpdateLiveWatchedChannel(ctx context.Context, liveDto live.Live) (*ent.Live, error)
 	Check(ctx context.Context) error
 	// ArchiveLiveChannel(c echo.Context, archiveDto live.ArchiveLive) error
 }
@@ -26,12 +26,13 @@ type AddWatchedChannelRequest struct {
 	DownloadHighlights     bool                `json:"download_highlights" validate:"boolean"`
 	DownloadUploads        bool                `json:"download_uploads" validate:"boolean"`
 	ChannelID              string              `json:"channel_id" validate:"required"`
-	Resolution             string              `json:"resolution" validate:"required,oneof=best 1080p 720p 480p 360p 160p audio"`
+	Resolution             string              `json:"resolution" validate:"required,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
 	ArchiveChat            bool                `json:"archive_chat" validate:"boolean"`
 	RenderChat             bool                `json:"render_chat" validate:"boolean"`
 	DownloadSubOnly        bool                `json:"download_sub_only" validate:"boolean"`
 	Categories             []string            `json:"categories"`
 	ApplyCategoriesToLive  bool                `json:"apply_categories_to_live" validate:"boolean"`
+	StrictCategoriesLive   bool                `json:"strict_categories_live" validate:"boolean"`
 	VideoAge               int64               `json:"video_age"` // restrict fetching videos to a certain age
 	Regex                  []AddLiveTitleRegex `json:"regex"`
 	WatchClips             bool                `json:"watch_clips" validate:"boolean"`
@@ -53,12 +54,13 @@ type UpdateWatchedChannelRequest struct {
 	DownloadArchives       bool                `json:"download_archives" validate:"boolean"`
 	DownloadHighlights     bool                `json:"download_highlights" validate:"boolean"`
 	DownloadUploads        bool                `json:"download_uploads" validate:"boolean"`
-	Resolution             string              `json:"resolution" validate:"required,oneof=best 1080p 720p 480p 360p 160p audio"`
+	Resolution             string              `json:"resolution" validate:"required,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
 	ArchiveChat            bool                `json:"archive_chat" validate:"boolean"`
 	RenderChat             bool                `json:"render_chat" validate:"boolean"`
 	DownloadSubOnly        bool                `json:"download_sub_only" validate:"boolean"`
 	Categories             []string            `json:"categories"`
 	ApplyCategoriesToLive  bool                `json:"apply_categories_to_live" validate:"boolean"`
+	StrictCategoriesLive   bool                `json:"strict_categories_live" validate:"boolean"`
 	VideoAge               int64               `json:"video_age"` // retrict fetching videos to a certain age
 	Regex                  []AddLiveTitleRegex `json:"regex"`
 	WatchClips             bool                `json:"watch_clips" validate:"boolean"`
@@ -79,7 +81,7 @@ type ConvertChatRequest struct {
 
 type ArchiveLiveChannelRequest struct {
 	ChannelID              string `json:"channel_id" validate:"required"`
-	Resolution             string `json:"resolution" validate:"required,oneof=best 1080p 720p 480p 360p 160p audio"`
+	Resolution             string `json:"resolution" validate:"required,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
 	ArchiveChat            bool   `json:"archive_chat"`
 	RenderChat             bool   `json:"render_chat"`
 	WatchClips             bool   `json:"watch_clips" validate:"boolean"`
@@ -152,6 +154,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		DownloadSubOnly:        ccr.DownloadSubOnly,
 		Categories:             ccr.Categories,
 		ApplyCategoriesToLive:  ccr.ApplyCategoriesToLive,
+		StrictCategoriesLive:   ccr.StrictCategoriesLive,
 		VideoAge:               ccr.VideoAge,
 		WatchClips:             ccr.WatchClips,
 		ClipsLimit:             ccr.ClipsLimit,
@@ -171,7 +174,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		})
 	}
 
-	l, err := h.Service.LiveService.AddLiveWatchedChannel(c, liveDto)
+	l, err := h.Service.LiveService.AddLiveWatchedChannel(c.Request().Context(), liveDto)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
@@ -224,6 +227,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		DownloadSubOnly:        ccr.DownloadSubOnly,
 		Categories:             ccr.Categories,
 		ApplyCategoriesToLive:  ccr.ApplyCategoriesToLive,
+		StrictCategoriesLive:   ccr.StrictCategoriesLive,
 		VideoAge:               ccr.VideoAge,
 		WatchClips:             ccr.WatchClips,
 		ClipsLimit:             ccr.ClipsLimit,
@@ -243,7 +247,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		})
 	}
 
-	l, err := h.Service.LiveService.UpdateLiveWatchedChannel(c, liveDto)
+	l, err := h.Service.LiveService.UpdateLiveWatchedChannel(c.Request().Context(), liveDto)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

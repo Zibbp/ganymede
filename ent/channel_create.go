@@ -27,165 +27,165 @@ type ChannelCreate struct {
 }
 
 // SetExtID sets the "ext_id" field.
-func (cc *ChannelCreate) SetExtID(s string) *ChannelCreate {
-	cc.mutation.SetExtID(s)
-	return cc
+func (_c *ChannelCreate) SetExtID(v string) *ChannelCreate {
+	_c.mutation.SetExtID(v)
+	return _c
 }
 
 // SetNillableExtID sets the "ext_id" field if the given value is not nil.
-func (cc *ChannelCreate) SetNillableExtID(s *string) *ChannelCreate {
-	if s != nil {
-		cc.SetExtID(*s)
+func (_c *ChannelCreate) SetNillableExtID(v *string) *ChannelCreate {
+	if v != nil {
+		_c.SetExtID(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetName sets the "name" field.
-func (cc *ChannelCreate) SetName(s string) *ChannelCreate {
-	cc.mutation.SetName(s)
-	return cc
+func (_c *ChannelCreate) SetName(v string) *ChannelCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDisplayName sets the "display_name" field.
-func (cc *ChannelCreate) SetDisplayName(s string) *ChannelCreate {
-	cc.mutation.SetDisplayName(s)
-	return cc
+func (_c *ChannelCreate) SetDisplayName(v string) *ChannelCreate {
+	_c.mutation.SetDisplayName(v)
+	return _c
 }
 
 // SetImagePath sets the "image_path" field.
-func (cc *ChannelCreate) SetImagePath(s string) *ChannelCreate {
-	cc.mutation.SetImagePath(s)
-	return cc
+func (_c *ChannelCreate) SetImagePath(v string) *ChannelCreate {
+	_c.mutation.SetImagePath(v)
+	return _c
 }
 
 // SetRetention sets the "retention" field.
-func (cc *ChannelCreate) SetRetention(b bool) *ChannelCreate {
-	cc.mutation.SetRetention(b)
-	return cc
+func (_c *ChannelCreate) SetRetention(v bool) *ChannelCreate {
+	_c.mutation.SetRetention(v)
+	return _c
 }
 
 // SetNillableRetention sets the "retention" field if the given value is not nil.
-func (cc *ChannelCreate) SetNillableRetention(b *bool) *ChannelCreate {
-	if b != nil {
-		cc.SetRetention(*b)
+func (_c *ChannelCreate) SetNillableRetention(v *bool) *ChannelCreate {
+	if v != nil {
+		_c.SetRetention(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetRetentionDays sets the "retention_days" field.
-func (cc *ChannelCreate) SetRetentionDays(i int64) *ChannelCreate {
-	cc.mutation.SetRetentionDays(i)
-	return cc
+func (_c *ChannelCreate) SetRetentionDays(v int64) *ChannelCreate {
+	_c.mutation.SetRetentionDays(v)
+	return _c
 }
 
 // SetNillableRetentionDays sets the "retention_days" field if the given value is not nil.
-func (cc *ChannelCreate) SetNillableRetentionDays(i *int64) *ChannelCreate {
-	if i != nil {
-		cc.SetRetentionDays(*i)
+func (_c *ChannelCreate) SetNillableRetentionDays(v *int64) *ChannelCreate {
+	if v != nil {
+		_c.SetRetentionDays(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetStorageSizeBytes sets the "storage_size_bytes" field.
-func (cc *ChannelCreate) SetStorageSizeBytes(i int64) *ChannelCreate {
-	cc.mutation.SetStorageSizeBytes(i)
-	return cc
+func (_c *ChannelCreate) SetStorageSizeBytes(v int64) *ChannelCreate {
+	_c.mutation.SetStorageSizeBytes(v)
+	return _c
 }
 
 // SetNillableStorageSizeBytes sets the "storage_size_bytes" field if the given value is not nil.
-func (cc *ChannelCreate) SetNillableStorageSizeBytes(i *int64) *ChannelCreate {
-	if i != nil {
-		cc.SetStorageSizeBytes(*i)
+func (_c *ChannelCreate) SetNillableStorageSizeBytes(v *int64) *ChannelCreate {
+	if v != nil {
+		_c.SetStorageSizeBytes(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cc *ChannelCreate) SetUpdatedAt(t time.Time) *ChannelCreate {
-	cc.mutation.SetUpdatedAt(t)
-	return cc
+func (_c *ChannelCreate) SetUpdatedAt(v time.Time) *ChannelCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (cc *ChannelCreate) SetNillableUpdatedAt(t *time.Time) *ChannelCreate {
-	if t != nil {
-		cc.SetUpdatedAt(*t)
+func (_c *ChannelCreate) SetNillableUpdatedAt(v *time.Time) *ChannelCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cc *ChannelCreate) SetCreatedAt(t time.Time) *ChannelCreate {
-	cc.mutation.SetCreatedAt(t)
-	return cc
+func (_c *ChannelCreate) SetCreatedAt(v time.Time) *ChannelCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cc *ChannelCreate) SetNillableCreatedAt(t *time.Time) *ChannelCreate {
-	if t != nil {
-		cc.SetCreatedAt(*t)
+func (_c *ChannelCreate) SetNillableCreatedAt(v *time.Time) *ChannelCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetID sets the "id" field.
-func (cc *ChannelCreate) SetID(u uuid.UUID) *ChannelCreate {
-	cc.mutation.SetID(u)
-	return cc
+func (_c *ChannelCreate) SetID(v uuid.UUID) *ChannelCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (cc *ChannelCreate) SetNillableID(u *uuid.UUID) *ChannelCreate {
-	if u != nil {
-		cc.SetID(*u)
+func (_c *ChannelCreate) SetNillableID(v *uuid.UUID) *ChannelCreate {
+	if v != nil {
+		_c.SetID(*v)
 	}
-	return cc
+	return _c
 }
 
 // AddVodIDs adds the "vods" edge to the Vod entity by IDs.
-func (cc *ChannelCreate) AddVodIDs(ids ...uuid.UUID) *ChannelCreate {
-	cc.mutation.AddVodIDs(ids...)
-	return cc
+func (_c *ChannelCreate) AddVodIDs(ids ...uuid.UUID) *ChannelCreate {
+	_c.mutation.AddVodIDs(ids...)
+	return _c
 }
 
 // AddVods adds the "vods" edges to the Vod entity.
-func (cc *ChannelCreate) AddVods(v ...*Vod) *ChannelCreate {
+func (_c *ChannelCreate) AddVods(v ...*Vod) *ChannelCreate {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return cc.AddVodIDs(ids...)
+	return _c.AddVodIDs(ids...)
 }
 
 // AddLiveIDs adds the "live" edge to the Live entity by IDs.
-func (cc *ChannelCreate) AddLiveIDs(ids ...uuid.UUID) *ChannelCreate {
-	cc.mutation.AddLiveIDs(ids...)
-	return cc
+func (_c *ChannelCreate) AddLiveIDs(ids ...uuid.UUID) *ChannelCreate {
+	_c.mutation.AddLiveIDs(ids...)
+	return _c
 }
 
 // AddLive adds the "live" edges to the Live entity.
-func (cc *ChannelCreate) AddLive(l ...*Live) *ChannelCreate {
-	ids := make([]uuid.UUID, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+func (_c *ChannelCreate) AddLive(v ...*Live) *ChannelCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cc.AddLiveIDs(ids...)
+	return _c.AddLiveIDs(ids...)
 }
 
 // Mutation returns the ChannelMutation object of the builder.
-func (cc *ChannelCreate) Mutation() *ChannelMutation {
-	return cc.mutation
+func (_c *ChannelCreate) Mutation() *ChannelMutation {
+	return _c.mutation
 }
 
 // Save creates the Channel in the database.
-func (cc *ChannelCreate) Save(ctx context.Context) (*Channel, error) {
-	cc.defaults()
-	return withHooks(ctx, cc.sqlSave, cc.mutation, cc.hooks)
+func (_c *ChannelCreate) Save(ctx context.Context) (*Channel, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (cc *ChannelCreate) SaveX(ctx context.Context) *Channel {
-	v, err := cc.Save(ctx)
+func (_c *ChannelCreate) SaveX(ctx context.Context) *Channel {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -193,74 +193,74 @@ func (cc *ChannelCreate) SaveX(ctx context.Context) *Channel {
 }
 
 // Exec executes the query.
-func (cc *ChannelCreate) Exec(ctx context.Context) error {
-	_, err := cc.Save(ctx)
+func (_c *ChannelCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cc *ChannelCreate) ExecX(ctx context.Context) {
-	if err := cc.Exec(ctx); err != nil {
+func (_c *ChannelCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cc *ChannelCreate) defaults() {
-	if _, ok := cc.mutation.Retention(); !ok {
+func (_c *ChannelCreate) defaults() {
+	if _, ok := _c.mutation.Retention(); !ok {
 		v := channel.DefaultRetention
-		cc.mutation.SetRetention(v)
+		_c.mutation.SetRetention(v)
 	}
-	if _, ok := cc.mutation.StorageSizeBytes(); !ok {
+	if _, ok := _c.mutation.StorageSizeBytes(); !ok {
 		v := channel.DefaultStorageSizeBytes
-		cc.mutation.SetStorageSizeBytes(v)
+		_c.mutation.SetStorageSizeBytes(v)
 	}
-	if _, ok := cc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := channel.DefaultUpdatedAt()
-		cc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := cc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := channel.DefaultCreatedAt()
-		cc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := cc.mutation.ID(); !ok {
+	if _, ok := _c.mutation.ID(); !ok {
 		v := channel.DefaultID()
-		cc.mutation.SetID(v)
+		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cc *ChannelCreate) check() error {
-	if _, ok := cc.mutation.Name(); !ok {
+func (_c *ChannelCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Channel.name"`)}
 	}
-	if _, ok := cc.mutation.DisplayName(); !ok {
+	if _, ok := _c.mutation.DisplayName(); !ok {
 		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "Channel.display_name"`)}
 	}
-	if _, ok := cc.mutation.ImagePath(); !ok {
+	if _, ok := _c.mutation.ImagePath(); !ok {
 		return &ValidationError{Name: "image_path", err: errors.New(`ent: missing required field "Channel.image_path"`)}
 	}
-	if _, ok := cc.mutation.Retention(); !ok {
+	if _, ok := _c.mutation.Retention(); !ok {
 		return &ValidationError{Name: "retention", err: errors.New(`ent: missing required field "Channel.retention"`)}
 	}
-	if _, ok := cc.mutation.StorageSizeBytes(); !ok {
+	if _, ok := _c.mutation.StorageSizeBytes(); !ok {
 		return &ValidationError{Name: "storage_size_bytes", err: errors.New(`ent: missing required field "Channel.storage_size_bytes"`)}
 	}
-	if _, ok := cc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Channel.updated_at"`)}
 	}
-	if _, ok := cc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Channel.created_at"`)}
 	}
 	return nil
 }
 
-func (cc *ChannelCreate) sqlSave(ctx context.Context) (*Channel, error) {
-	if err := cc.check(); err != nil {
+func (_c *ChannelCreate) sqlSave(ctx context.Context) (*Channel, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := cc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, cc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -273,58 +273,58 @@ func (cc *ChannelCreate) sqlSave(ctx context.Context) (*Channel, error) {
 			return nil, err
 		}
 	}
-	cc.mutation.id = &_node.ID
-	cc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
+func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Channel{config: cc.config}
+		_node = &Channel{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(channel.Table, sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID))
 	)
-	_spec.OnConflict = cc.conflict
-	if id, ok := cc.mutation.ID(); ok {
+	_spec.OnConflict = _c.conflict
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := cc.mutation.ExtID(); ok {
+	if value, ok := _c.mutation.ExtID(); ok {
 		_spec.SetField(channel.FieldExtID, field.TypeString, value)
 		_node.ExtID = value
 	}
-	if value, ok := cc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(channel.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := cc.mutation.DisplayName(); ok {
+	if value, ok := _c.mutation.DisplayName(); ok {
 		_spec.SetField(channel.FieldDisplayName, field.TypeString, value)
 		_node.DisplayName = value
 	}
-	if value, ok := cc.mutation.ImagePath(); ok {
+	if value, ok := _c.mutation.ImagePath(); ok {
 		_spec.SetField(channel.FieldImagePath, field.TypeString, value)
 		_node.ImagePath = value
 	}
-	if value, ok := cc.mutation.Retention(); ok {
+	if value, ok := _c.mutation.Retention(); ok {
 		_spec.SetField(channel.FieldRetention, field.TypeBool, value)
 		_node.Retention = value
 	}
-	if value, ok := cc.mutation.RetentionDays(); ok {
+	if value, ok := _c.mutation.RetentionDays(); ok {
 		_spec.SetField(channel.FieldRetentionDays, field.TypeInt64, value)
 		_node.RetentionDays = value
 	}
-	if value, ok := cc.mutation.StorageSizeBytes(); ok {
+	if value, ok := _c.mutation.StorageSizeBytes(); ok {
 		_spec.SetField(channel.FieldStorageSizeBytes, field.TypeInt64, value)
 		_node.StorageSizeBytes = value
 	}
-	if value, ok := cc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(channel.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := cc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(channel.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := cc.mutation.VodsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.VodsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -340,7 +340,7 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := cc.mutation.LiveIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.LiveIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -375,10 +375,10 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 //			SetExtID(v+v).
 //		}).
 //		Exec(ctx)
-func (cc *ChannelCreate) OnConflict(opts ...sql.ConflictOption) *ChannelUpsertOne {
-	cc.conflict = opts
+func (_c *ChannelCreate) OnConflict(opts ...sql.ConflictOption) *ChannelUpsertOne {
+	_c.conflict = opts
 	return &ChannelUpsertOne{
-		create: cc,
+		create: _c,
 	}
 }
 
@@ -388,10 +388,10 @@ func (cc *ChannelCreate) OnConflict(opts ...sql.ConflictOption) *ChannelUpsertOn
 //	client.Channel.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (cc *ChannelCreate) OnConflictColumns(columns ...string) *ChannelUpsertOne {
-	cc.conflict = append(cc.conflict, sql.ConflictColumns(columns...))
+func (_c *ChannelCreate) OnConflictColumns(columns ...string) *ChannelUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &ChannelUpsertOne{
-		create: cc,
+		create: _c,
 	}
 }
 
@@ -766,16 +766,16 @@ type ChannelCreateBulk struct {
 }
 
 // Save creates the Channel entities in the database.
-func (ccb *ChannelCreateBulk) Save(ctx context.Context) ([]*Channel, error) {
-	if ccb.err != nil {
-		return nil, ccb.err
+func (_c *ChannelCreateBulk) Save(ctx context.Context) ([]*Channel, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ccb.builders))
-	nodes := make([]*Channel, len(ccb.builders))
-	mutators := make([]Mutator, len(ccb.builders))
-	for i := range ccb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Channel, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ccb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ChannelMutation)
@@ -789,12 +789,12 @@ func (ccb *ChannelCreateBulk) Save(ctx context.Context) ([]*Channel, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ccb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = ccb.conflict
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ccb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -814,7 +814,7 @@ func (ccb *ChannelCreateBulk) Save(ctx context.Context) ([]*Channel, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ccb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -822,8 +822,8 @@ func (ccb *ChannelCreateBulk) Save(ctx context.Context) ([]*Channel, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ccb *ChannelCreateBulk) SaveX(ctx context.Context) []*Channel {
-	v, err := ccb.Save(ctx)
+func (_c *ChannelCreateBulk) SaveX(ctx context.Context) []*Channel {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -831,14 +831,14 @@ func (ccb *ChannelCreateBulk) SaveX(ctx context.Context) []*Channel {
 }
 
 // Exec executes the query.
-func (ccb *ChannelCreateBulk) Exec(ctx context.Context) error {
-	_, err := ccb.Save(ctx)
+func (_c *ChannelCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ccb *ChannelCreateBulk) ExecX(ctx context.Context) {
-	if err := ccb.Exec(ctx); err != nil {
+func (_c *ChannelCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -858,10 +858,10 @@ func (ccb *ChannelCreateBulk) ExecX(ctx context.Context) {
 //			SetExtID(v+v).
 //		}).
 //		Exec(ctx)
-func (ccb *ChannelCreateBulk) OnConflict(opts ...sql.ConflictOption) *ChannelUpsertBulk {
-	ccb.conflict = opts
+func (_c *ChannelCreateBulk) OnConflict(opts ...sql.ConflictOption) *ChannelUpsertBulk {
+	_c.conflict = opts
 	return &ChannelUpsertBulk{
-		create: ccb,
+		create: _c,
 	}
 }
 
@@ -871,10 +871,10 @@ func (ccb *ChannelCreateBulk) OnConflict(opts ...sql.ConflictOption) *ChannelUps
 //	client.Channel.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (ccb *ChannelCreateBulk) OnConflictColumns(columns ...string) *ChannelUpsertBulk {
-	ccb.conflict = append(ccb.conflict, sql.ConflictColumns(columns...))
+func (_c *ChannelCreateBulk) OnConflictColumns(columns ...string) *ChannelUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
 	return &ChannelUpsertBulk{
-		create: ccb,
+		create: _c,
 	}
 }
 

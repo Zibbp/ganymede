@@ -32,44 +32,44 @@ type LiveCategoryQuery struct {
 }
 
 // Where adds a new predicate for the LiveCategoryQuery builder.
-func (lcq *LiveCategoryQuery) Where(ps ...predicate.LiveCategory) *LiveCategoryQuery {
-	lcq.predicates = append(lcq.predicates, ps...)
-	return lcq
+func (_q *LiveCategoryQuery) Where(ps ...predicate.LiveCategory) *LiveCategoryQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (lcq *LiveCategoryQuery) Limit(limit int) *LiveCategoryQuery {
-	lcq.ctx.Limit = &limit
-	return lcq
+func (_q *LiveCategoryQuery) Limit(limit int) *LiveCategoryQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (lcq *LiveCategoryQuery) Offset(offset int) *LiveCategoryQuery {
-	lcq.ctx.Offset = &offset
-	return lcq
+func (_q *LiveCategoryQuery) Offset(offset int) *LiveCategoryQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (lcq *LiveCategoryQuery) Unique(unique bool) *LiveCategoryQuery {
-	lcq.ctx.Unique = &unique
-	return lcq
+func (_q *LiveCategoryQuery) Unique(unique bool) *LiveCategoryQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (lcq *LiveCategoryQuery) Order(o ...livecategory.OrderOption) *LiveCategoryQuery {
-	lcq.order = append(lcq.order, o...)
-	return lcq
+func (_q *LiveCategoryQuery) Order(o ...livecategory.OrderOption) *LiveCategoryQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryLive chains the current query on the "live" edge.
-func (lcq *LiveCategoryQuery) QueryLive() *LiveQuery {
-	query := (&LiveClient{config: lcq.config}).Query()
+func (_q *LiveCategoryQuery) QueryLive() *LiveQuery {
+	query := (&LiveClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := lcq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := lcq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -78,7 +78,7 @@ func (lcq *LiveCategoryQuery) QueryLive() *LiveQuery {
 			sqlgraph.To(live.Table, live.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, livecategory.LiveTable, livecategory.LiveColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(lcq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -86,8 +86,8 @@ func (lcq *LiveCategoryQuery) QueryLive() *LiveQuery {
 
 // First returns the first LiveCategory entity from the query.
 // Returns a *NotFoundError when no LiveCategory was found.
-func (lcq *LiveCategoryQuery) First(ctx context.Context) (*LiveCategory, error) {
-	nodes, err := lcq.Limit(1).All(setContextOp(ctx, lcq.ctx, ent.OpQueryFirst))
+func (_q *LiveCategoryQuery) First(ctx context.Context) (*LiveCategory, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +98,8 @@ func (lcq *LiveCategoryQuery) First(ctx context.Context) (*LiveCategory, error) 
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (lcq *LiveCategoryQuery) FirstX(ctx context.Context) *LiveCategory {
-	node, err := lcq.First(ctx)
+func (_q *LiveCategoryQuery) FirstX(ctx context.Context) *LiveCategory {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -108,9 +108,9 @@ func (lcq *LiveCategoryQuery) FirstX(ctx context.Context) *LiveCategory {
 
 // FirstID returns the first LiveCategory ID from the query.
 // Returns a *NotFoundError when no LiveCategory ID was found.
-func (lcq *LiveCategoryQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *LiveCategoryQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = lcq.Limit(1).IDs(setContextOp(ctx, lcq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -121,8 +121,8 @@ func (lcq *LiveCategoryQuery) FirstID(ctx context.Context) (id uuid.UUID, err er
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (lcq *LiveCategoryQuery) FirstIDX(ctx context.Context) uuid.UUID {
-	id, err := lcq.FirstID(ctx)
+func (_q *LiveCategoryQuery) FirstIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -132,8 +132,8 @@ func (lcq *LiveCategoryQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Only returns a single LiveCategory entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one LiveCategory entity is found.
 // Returns a *NotFoundError when no LiveCategory entities are found.
-func (lcq *LiveCategoryQuery) Only(ctx context.Context) (*LiveCategory, error) {
-	nodes, err := lcq.Limit(2).All(setContextOp(ctx, lcq.ctx, ent.OpQueryOnly))
+func (_q *LiveCategoryQuery) Only(ctx context.Context) (*LiveCategory, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -148,8 +148,8 @@ func (lcq *LiveCategoryQuery) Only(ctx context.Context) (*LiveCategory, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (lcq *LiveCategoryQuery) OnlyX(ctx context.Context) *LiveCategory {
-	node, err := lcq.Only(ctx)
+func (_q *LiveCategoryQuery) OnlyX(ctx context.Context) *LiveCategory {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,9 +159,9 @@ func (lcq *LiveCategoryQuery) OnlyX(ctx context.Context) *LiveCategory {
 // OnlyID is like Only, but returns the only LiveCategory ID in the query.
 // Returns a *NotSingularError when more than one LiveCategory ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (lcq *LiveCategoryQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *LiveCategoryQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = lcq.Limit(2).IDs(setContextOp(ctx, lcq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -176,8 +176,8 @@ func (lcq *LiveCategoryQuery) OnlyID(ctx context.Context) (id uuid.UUID, err err
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (lcq *LiveCategoryQuery) OnlyIDX(ctx context.Context) uuid.UUID {
-	id, err := lcq.OnlyID(ctx)
+func (_q *LiveCategoryQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -185,18 +185,18 @@ func (lcq *LiveCategoryQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 }
 
 // All executes the query and returns a list of LiveCategories.
-func (lcq *LiveCategoryQuery) All(ctx context.Context) ([]*LiveCategory, error) {
-	ctx = setContextOp(ctx, lcq.ctx, ent.OpQueryAll)
-	if err := lcq.prepareQuery(ctx); err != nil {
+func (_q *LiveCategoryQuery) All(ctx context.Context) ([]*LiveCategory, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*LiveCategory, *LiveCategoryQuery]()
-	return withInterceptors[[]*LiveCategory](ctx, lcq, qr, lcq.inters)
+	return withInterceptors[[]*LiveCategory](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (lcq *LiveCategoryQuery) AllX(ctx context.Context) []*LiveCategory {
-	nodes, err := lcq.All(ctx)
+func (_q *LiveCategoryQuery) AllX(ctx context.Context) []*LiveCategory {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -204,20 +204,20 @@ func (lcq *LiveCategoryQuery) AllX(ctx context.Context) []*LiveCategory {
 }
 
 // IDs executes the query and returns a list of LiveCategory IDs.
-func (lcq *LiveCategoryQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
-	if lcq.ctx.Unique == nil && lcq.path != nil {
-		lcq.Unique(true)
+func (_q *LiveCategoryQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, lcq.ctx, ent.OpQueryIDs)
-	if err = lcq.Select(livecategory.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(livecategory.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (lcq *LiveCategoryQuery) IDsX(ctx context.Context) []uuid.UUID {
-	ids, err := lcq.IDs(ctx)
+func (_q *LiveCategoryQuery) IDsX(ctx context.Context) []uuid.UUID {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -225,17 +225,17 @@ func (lcq *LiveCategoryQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (lcq *LiveCategoryQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, lcq.ctx, ent.OpQueryCount)
-	if err := lcq.prepareQuery(ctx); err != nil {
+func (_q *LiveCategoryQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, lcq, querierCount[*LiveCategoryQuery](), lcq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*LiveCategoryQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (lcq *LiveCategoryQuery) CountX(ctx context.Context) int {
-	count, err := lcq.Count(ctx)
+func (_q *LiveCategoryQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -243,9 +243,9 @@ func (lcq *LiveCategoryQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (lcq *LiveCategoryQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, lcq.ctx, ent.OpQueryExist)
-	switch _, err := lcq.FirstID(ctx); {
+func (_q *LiveCategoryQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -256,8 +256,8 @@ func (lcq *LiveCategoryQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (lcq *LiveCategoryQuery) ExistX(ctx context.Context) bool {
-	exist, err := lcq.Exist(ctx)
+func (_q *LiveCategoryQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -266,32 +266,32 @@ func (lcq *LiveCategoryQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the LiveCategoryQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (lcq *LiveCategoryQuery) Clone() *LiveCategoryQuery {
-	if lcq == nil {
+func (_q *LiveCategoryQuery) Clone() *LiveCategoryQuery {
+	if _q == nil {
 		return nil
 	}
 	return &LiveCategoryQuery{
-		config:     lcq.config,
-		ctx:        lcq.ctx.Clone(),
-		order:      append([]livecategory.OrderOption{}, lcq.order...),
-		inters:     append([]Interceptor{}, lcq.inters...),
-		predicates: append([]predicate.LiveCategory{}, lcq.predicates...),
-		withLive:   lcq.withLive.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]livecategory.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.LiveCategory{}, _q.predicates...),
+		withLive:   _q.withLive.Clone(),
 		// clone intermediate query.
-		sql:  lcq.sql.Clone(),
-		path: lcq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithLive tells the query-builder to eager-load the nodes that are connected to
 // the "live" edge. The optional arguments are used to configure the query builder of the edge.
-func (lcq *LiveCategoryQuery) WithLive(opts ...func(*LiveQuery)) *LiveCategoryQuery {
-	query := (&LiveClient{config: lcq.config}).Query()
+func (_q *LiveCategoryQuery) WithLive(opts ...func(*LiveQuery)) *LiveCategoryQuery {
+	query := (&LiveClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	lcq.withLive = query
-	return lcq
+	_q.withLive = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -308,10 +308,10 @@ func (lcq *LiveCategoryQuery) WithLive(opts ...func(*LiveQuery)) *LiveCategoryQu
 //		GroupBy(livecategory.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (lcq *LiveCategoryQuery) GroupBy(field string, fields ...string) *LiveCategoryGroupBy {
-	lcq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &LiveCategoryGroupBy{build: lcq}
-	grbuild.flds = &lcq.ctx.Fields
+func (_q *LiveCategoryQuery) GroupBy(field string, fields ...string) *LiveCategoryGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &LiveCategoryGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = livecategory.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -329,55 +329,55 @@ func (lcq *LiveCategoryQuery) GroupBy(field string, fields ...string) *LiveCateg
 //	client.LiveCategory.Query().
 //		Select(livecategory.FieldName).
 //		Scan(ctx, &v)
-func (lcq *LiveCategoryQuery) Select(fields ...string) *LiveCategorySelect {
-	lcq.ctx.Fields = append(lcq.ctx.Fields, fields...)
-	sbuild := &LiveCategorySelect{LiveCategoryQuery: lcq}
+func (_q *LiveCategoryQuery) Select(fields ...string) *LiveCategorySelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &LiveCategorySelect{LiveCategoryQuery: _q}
 	sbuild.label = livecategory.Label
-	sbuild.flds, sbuild.scan = &lcq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a LiveCategorySelect configured with the given aggregations.
-func (lcq *LiveCategoryQuery) Aggregate(fns ...AggregateFunc) *LiveCategorySelect {
-	return lcq.Select().Aggregate(fns...)
+func (_q *LiveCategoryQuery) Aggregate(fns ...AggregateFunc) *LiveCategorySelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (lcq *LiveCategoryQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range lcq.inters {
+func (_q *LiveCategoryQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, lcq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range lcq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !livecategory.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if lcq.path != nil {
-		prev, err := lcq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		lcq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (lcq *LiveCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*LiveCategory, error) {
+func (_q *LiveCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*LiveCategory, error) {
 	var (
 		nodes       = []*LiveCategory{}
-		withFKs     = lcq.withFKs
-		_spec       = lcq.querySpec()
+		withFKs     = _q.withFKs
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			lcq.withLive != nil,
+			_q.withLive != nil,
 		}
 	)
-	if lcq.withLive != nil {
+	if _q.withLive != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -387,7 +387,7 @@ func (lcq *LiveCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		return (*LiveCategory).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &LiveCategory{config: lcq.config}
+		node := &LiveCategory{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -395,14 +395,14 @@ func (lcq *LiveCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, lcq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := lcq.withLive; query != nil {
-		if err := lcq.loadLive(ctx, query, nodes, nil,
+	if query := _q.withLive; query != nil {
+		if err := _q.loadLive(ctx, query, nodes, nil,
 			func(n *LiveCategory, e *Live) { n.Edges.Live = e }); err != nil {
 			return nil, err
 		}
@@ -410,7 +410,7 @@ func (lcq *LiveCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	return nodes, nil
 }
 
-func (lcq *LiveCategoryQuery) loadLive(ctx context.Context, query *LiveQuery, nodes []*LiveCategory, init func(*LiveCategory), assign func(*LiveCategory, *Live)) error {
+func (_q *LiveCategoryQuery) loadLive(ctx context.Context, query *LiveQuery, nodes []*LiveCategory, init func(*LiveCategory), assign func(*LiveCategory, *Live)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*LiveCategory)
 	for i := range nodes {
@@ -443,24 +443,24 @@ func (lcq *LiveCategoryQuery) loadLive(ctx context.Context, query *LiveQuery, no
 	return nil
 }
 
-func (lcq *LiveCategoryQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := lcq.querySpec()
-	_spec.Node.Columns = lcq.ctx.Fields
-	if len(lcq.ctx.Fields) > 0 {
-		_spec.Unique = lcq.ctx.Unique != nil && *lcq.ctx.Unique
+func (_q *LiveCategoryQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, lcq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (lcq *LiveCategoryQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *LiveCategoryQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(livecategory.Table, livecategory.Columns, sqlgraph.NewFieldSpec(livecategory.FieldID, field.TypeUUID))
-	_spec.From = lcq.sql
-	if unique := lcq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if lcq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := lcq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, livecategory.FieldID)
 		for i := range fields {
@@ -469,20 +469,20 @@ func (lcq *LiveCategoryQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := lcq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := lcq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := lcq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := lcq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -492,33 +492,33 @@ func (lcq *LiveCategoryQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (lcq *LiveCategoryQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(lcq.driver.Dialect())
+func (_q *LiveCategoryQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(livecategory.Table)
-	columns := lcq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = livecategory.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if lcq.sql != nil {
-		selector = lcq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if lcq.ctx.Unique != nil && *lcq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range lcq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range lcq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := lcq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := lcq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -531,41 +531,41 @@ type LiveCategoryGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (lcgb *LiveCategoryGroupBy) Aggregate(fns ...AggregateFunc) *LiveCategoryGroupBy {
-	lcgb.fns = append(lcgb.fns, fns...)
-	return lcgb
+func (_g *LiveCategoryGroupBy) Aggregate(fns ...AggregateFunc) *LiveCategoryGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (lcgb *LiveCategoryGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, lcgb.build.ctx, ent.OpQueryGroupBy)
-	if err := lcgb.build.prepareQuery(ctx); err != nil {
+func (_g *LiveCategoryGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*LiveCategoryQuery, *LiveCategoryGroupBy](ctx, lcgb.build, lcgb, lcgb.build.inters, v)
+	return scanWithInterceptors[*LiveCategoryQuery, *LiveCategoryGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (lcgb *LiveCategoryGroupBy) sqlScan(ctx context.Context, root *LiveCategoryQuery, v any) error {
+func (_g *LiveCategoryGroupBy) sqlScan(ctx context.Context, root *LiveCategoryQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(lcgb.fns))
-	for _, fn := range lcgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*lcgb.flds)+len(lcgb.fns))
-		for _, f := range *lcgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*lcgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := lcgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -579,27 +579,27 @@ type LiveCategorySelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (lcs *LiveCategorySelect) Aggregate(fns ...AggregateFunc) *LiveCategorySelect {
-	lcs.fns = append(lcs.fns, fns...)
-	return lcs
+func (_s *LiveCategorySelect) Aggregate(fns ...AggregateFunc) *LiveCategorySelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (lcs *LiveCategorySelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, lcs.ctx, ent.OpQuerySelect)
-	if err := lcs.prepareQuery(ctx); err != nil {
+func (_s *LiveCategorySelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*LiveCategoryQuery, *LiveCategorySelect](ctx, lcs.LiveCategoryQuery, lcs, lcs.inters, v)
+	return scanWithInterceptors[*LiveCategoryQuery, *LiveCategorySelect](ctx, _s.LiveCategoryQuery, _s, _s.inters, v)
 }
 
-func (lcs *LiveCategorySelect) sqlScan(ctx context.Context, root *LiveCategoryQuery, v any) error {
+func (_s *LiveCategorySelect) sqlScan(ctx context.Context, root *LiveCategoryQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(lcs.fns))
-	for _, fn := range lcs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*lcs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -607,7 +607,7 @@ func (lcs *LiveCategorySelect) sqlScan(ctx context.Context, root *LiveCategoryQu
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := lcs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
