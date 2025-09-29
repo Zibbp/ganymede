@@ -216,9 +216,9 @@ func (s *Service) Check(ctx context.Context) error {
 	}
 
 	var streams []platform.LiveStreamInfo
-	channels := make([]string, 0)
 	// generate query string for twitch api
 	for _, lwc := range liveWatchedChannelsSplit {
+		channels := make([]string, 0)
 		for _, lwc := range lwc {
 			channels = append(channels, lwc.Edges.Channel.Name)
 		}
