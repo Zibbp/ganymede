@@ -1,8 +1,15 @@
 package utils
 
 import (
+	"bufio"
+	"fmt"
+	"io"
+	"os"
 	"regexp"
+	"strings"
 	"unicode"
+
+	"github.com/rs/zerolog/log"
 )
 
 // find the substring position in a string. Supports passing an occurrence to find the Nth place of the substring in the string
@@ -34,4 +41,68 @@ func isAlphanumeric(str string) bool {
 		}
 	}
 	return true
+}
+
+// ConvertNDJSONToJSONArray converts a newline-delimited JSON file to a JSON array.
+func ConvertNDJSONToJSONArrayInPlace(filePath string) error {
+	// Check if file starts with '['
+	f, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("open file: %w", err)
+	}
+	defer f.Close()
+
+	head := make([]byte, 1)
+	if _, err := f.Read(head); err != nil {
+		return fmt.Errorf("read head: %w", err)
+	}
+	if head[0] == '[' {
+		log.Info().Msg("File already JSON array. Skipping conversion.")
+		return nil
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("seek start: %w", err)
+	}
+
+	// Temp output file
+	tmpPath := filePath + ".tmp"
+	tmp, err := os.Create(tmpPath)
+	if err != nil {
+		return fmt.Errorf("create temp file: %w", err)
+	}
+	defer tmp.Close()
+
+	scanner := bufio.NewScanner(f)
+	if _, err := tmp.WriteString("[\n"); err != nil {
+		return err
+	}
+
+	first := true
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+		if !first {
+			tmp.WriteString(",\n")
+		}
+		tmp.WriteString(line)
+		first = false
+	}
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("scan error: %w", err)
+	}
+
+	if _, err := tmp.WriteString("\n]\n"); err != nil {
+		return fmt.Errorf("write closing: %w", err)
+	}
+	tmp.Close()
+	f.Close()
+
+	// Replace original file
+	if err := os.Rename(tmpPath, filePath); err != nil {
+		return fmt.Errorf("replace original: %w", err)
+	}
+
+	return nil
 }

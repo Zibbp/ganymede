@@ -40,6 +40,7 @@ const (
 type LiveStreamInfo struct {
 	ID           string    `json:"id"`
 	UserID       string    `json:"user_id"`
+	ChatRoomID   string    `json:"chat_room_id"`
 	UserLogin    string    `json:"user_login"`
 	UserName     string    `json:"user_name"`
 	GameID       string    `json:"game_id"`
@@ -89,7 +90,7 @@ type Category struct {
 }
 
 type ConnectionInfo struct {
-	ClientId     string
+	ClientID     string
 	ClientSecret string
 	AccessToken  string
 }
@@ -150,4 +151,7 @@ type Platform interface {
 	CheckIfStreamIsLive(ctx context.Context, channelName string) (bool, error)
 	// GetStreams fetches live streams from the platform, sorted by viewership.
 	GetStreams(ctx context.Context, limit int) ([]LiveStreamInfo, error)
+	// DownloadVodChat downloads the chat for a given video ID and saves it to the specified output path.
+	// The output is a platform-specific format
+	DownloadVodChat(ctx context.Context, videoId string, startTime time.Time, endTime time.Time, outputPath string) error
 }

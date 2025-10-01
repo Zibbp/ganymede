@@ -68,15 +68,40 @@ func (w DownloadLiveChatWorker) Work(ctx context.Context, job *river.Job[Downloa
 		return err
 	}
 
-	// download video
-	err = exec.DownloadTwitchLiveChat(ctx, dbItems.Video, dbItems.Channel, dbItems.Queue)
+	platform, err := PlatformFromContext(ctx, dbItems.Video.Platform)
 	if err != nil {
-		if errors.Is(err, context.Canceled) {
-			// create new context to finish the task
-			ctx = context.Background()
-		} else {
-			return err
+		return err
+	}
+
+	// download chat
+	switch dbItems.Video.Platform {
+	case utils.PlatformTwitch:
+		err = exec.DownloadTwitchLiveChat(ctx, dbItems.Video, dbItems.Channel, dbItems.Queue)
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				// create new context to finish the task
+				ctx = context.Background()
+			} else {
+				return err
+			}
 		}
+	case utils.PlatformKick:
+		// Fetch live stream again to get chat room ID
+		streamInfo, err := platform.GetLiveStream(ctx, dbItems.Channel.Name)
+		if err != nil {
+			return fmt.Errorf("failed to get live stream info: %w", err)
+		}
+		err = exec.DownloadKickLiveChat(ctx, dbItems.Video, dbItems.Channel, dbItems.Queue, streamInfo.ChatRoomID)
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				// create new context to finish the task
+				ctx = context.Background()
+			} else {
+				return err
+			}
+		}
+	default:
+		return fmt.Errorf("unsupported platform %s for downloading live chat", dbItems.Video.Platform)
 	}
 
 	// set queue status to completed
@@ -181,7 +206,7 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	}
 
 	// get channel
-	platform, err := PlatformFromContext(ctx)
+	platform, err := PlatformFromContext(ctx, dbItems.Video.Platform)
 	if err != nil {
 		return err
 	}
@@ -223,16 +248,28 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 		previousVideoID = "132195945"
 	}
 
-	// convert chat
-	err = utils.ConvertTwitchLiveChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Channel.Name, dbItems.Video.ID.String(), dbItems.Video.ExtID, channelIdInt, dbItems.Queue.ChatStart, string(previousVideoID))
-	if err != nil {
-		return err
-	}
+	switch dbItems.Video.Platform {
+	case utils.PlatformTwitch:
+		// convert chat
+		err = utils.ConvertTwitchLiveChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Channel.Name, dbItems.Video.ID.String(), dbItems.Video.ExtID, channelIdInt, dbItems.Queue.ChatStart, string(previousVideoID))
+		if err != nil {
+			return err
+		}
 
-	// run TwitchDownloader "chatupdate" to embed emotes and badges
-	err = exec.UpdateTwitchChat(ctx, dbItems.Video)
-	if err != nil {
-		return err
+		// run TwitchDownloader "chatupdate" to embed emotes and badges
+		err = exec.UpdateTwitchChat(ctx, dbItems.Video)
+		if err != nil {
+			return err
+		}
+
+	case utils.PlatformKick:
+		err = utils.ConvertKickWebSocketChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.ChatPath, dbItems.Channel.Name, dbItems.Video.ID.String(), channelIdInt, dbItems.Queue.ChatStart)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unsupported platform %s for converting live chat", dbItems.Video.Platform)
+
 	}
 
 	// set queue status to completed

@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -84,7 +86,7 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 
 	log.Debug().Str("chat_file", path).Msg("Converting live Twitch chat to TDL chat for rendering")
 
-	liveComments, err := OpenLiveChatFile(path)
+	liveComments, err := OpenTwitchLiveChatFile(path)
 	if err != nil {
 		return err
 	}
@@ -338,7 +340,253 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 	}
 
 	return nil
+}
 
+func ConvertKickWebSocketChatToTDLChat(
+	path string,
+	outPath string,
+	channelName string,
+	previousVideoID string,
+	channelID int,
+	chatStartTime time.Time,
+) error {
+	log.Debug().Str("chat_file", path).Msg("Converting Kick WebSocket chat to TDL chat for rendering")
+	// Convert to JSON file
+	err := ConvertNDJSONToJSONArrayInPlace(path)
+	if err != nil {
+		return fmt.Errorf("converting kick chat to json: %w", err)
+	}
+
+	liveComments, err := OpenKickLiveChatFile(path)
+	if err != nil {
+		return fmt.Errorf("failed to open kick chat file: %v", err)
+	}
+
+	fmt.Println(len(liveComments), "live comments found in chat file")
+
+	tdlChat := TDLChat{}
+
+	tdlChat.Streamer.Name = channelName
+	tdlChat.Streamer.ID = channelID
+	tdlChat.Video.ID = previousVideoID // we don't know the video (vod) id at this point
+	tdlChat.Video.Start = 0
+
+	tdlComments := []Comment{}
+
+	// create an initial comment to mark the start of chat
+	tdlComments = append(tdlComments, Comment{
+		ID:                   "546a5e6e-c820-4ad2-9421-9ba5b5bf37ea",
+		Source:               "chat",
+		ContentOffsetSeconds: 0,
+		Commenter: Commenter{
+			DisplayName:  "Ganymede",
+			ID:           "222777213",
+			IsModerator:  false,
+			IsSubscriber: false,
+			IsTurbo:      false,
+			Name:         "ganymede",
+		},
+		Message: Message{
+			Body:      "Initial chat message",
+			BitsSpent: 0,
+			Fragments: []Fragment{
+				{
+					Text:     "Initial chat message",
+					Emoticon: nil,
+					Pos1:     0,
+					Pos2:     0,
+				},
+			},
+			UserBadges: []UserBadge{},
+			UserColor:  "#a65ee8",
+			UserNoticeParams: UserNoticParams{
+				MsgID: nil,
+			},
+		},
+	})
+
+	for _, liveComment := range liveComments {
+		if liveComment.Content == "" {
+			log.Debug().Str("comment_id", liveComment.ID).Msg("skipping empty comment")
+			continue
+		}
+
+		// use chat start time to get offset in seconds
+		diff := liveComment.CreatedAt.Sub(chatStartTime)
+
+		// populate static variables
+		tdlComment := Comment{
+			ContentOffsetSeconds: diff.Seconds(),
+			ID:                   uuid.NewString(),
+			Source:               "chat",
+			Commenter: Commenter{
+				ID:           strconv.Itoa(liveComment.Sender.ID),
+				DisplayName:  liveComment.Sender.Username,
+				Name:         liveComment.Sender.Slug,
+				IsModerator:  false, // Kick does not have moderator status in the chat message
+				IsSubscriber: false, // Kick does not have subscriber status in the chat message
+				IsTurbo:      false, // Kick does not have turbo status in the chat message
+			},
+			Message: Message{
+				Body:       liveComment.Content,
+				BitsSpent:  0,
+				UserBadges: []UserBadge{},
+				UserColor:  liveComment.Sender.Identity.Color,
+				UserNoticeParams: UserNoticParams{
+					MsgID: nil,
+				},
+			},
+		}
+
+		// create the first message fragment
+		tdlComment.Message.Fragments = append(tdlComment.Message.Fragments, Fragment{
+			Text:     liveComment.Content,
+			Emoticon: nil,
+		})
+
+		// set default offset value for this live comment
+		message_is_offset := false
+
+		// parse emotes, creating fragments with positions
+		emoteFragments := []Fragment{}
+		re := regexp.MustCompile(`\[emote:(\d+):(\w+)\]`)
+		matches := re.FindAllStringSubmatch(liveComment.Content, -1)
+		if matches != nil {
+			for _, match := range matches {
+				if len(match) < 3 {
+					log.Warn().Str("comment_id", liveComment.ID).Msg("skipping invalid emote match")
+					continue
+				}
+				emoteID := match[1]
+				// emoteName := match[2]
+				pos1 := strings.Index(liveComment.Content, match[0])
+				if pos1 == -1 {
+					log.Warn().Str("comment_id", liveComment.ID).Msg("emote not found in message, skipping")
+					continue
+				}
+				pos2 := pos1 + len(match[0])
+				slicedEmote := liveComment.Content[pos1:pos2]
+				if slicedEmote != match[0] || message_is_offset {
+					log.Debug().Str("comment_id", liveComment.ID).Msg("emote position mismatch detected while converting chat")
+					message_is_offset = true
+					// attempt to get emote position in comment message
+					pos1, pos2, found := findSubstringPositions(liveComment.Content, match[0], 1)
+					if !found {
+						log.Warn().Str("comment_id", liveComment.ID).Msg("unable to extract emote positions from message, skipping")
+						continue
+					}
+					slicedEmote = liveComment.Content[pos1:pos2]
+					emoteFragment := Fragment{
+						Pos1: pos1,
+						Pos2: pos2,
+						Text: slicedEmote,
+						Emoticon: &Emoticon{
+							EmoticonID:    emoteID,
+							EmoticonSetID: "", // Kick does not have emoticon set ID in the chat message
+						},
+					}
+					emoteFragments = append(emoteFragments, emoteFragment)
+				} else {
+					emoteFragment := Fragment{
+						Pos1: pos1,
+						Pos2: pos2,
+						Text: slicedEmote,
+						Emoticon: &Emoticon{
+							EmoticonID:    emoteID,
+							EmoticonSetID: "", // Kick does not have emoticon set ID in the chat message
+						},
+					}
+					emoteFragments = append(emoteFragments, emoteFragment)
+				}
+			}
+		}
+
+		// sort emote fragments by position ascending
+		sort.Slice(emoteFragments, func(i, j int) bool {
+			return emoteFragments[i].Pos1 < emoteFragments[j].Pos1
+		})
+
+		// remove emote fragments from message fragments
+		formattedEmoteFragments := []Fragment{}
+		for i, emoteFragment := range emoteFragments {
+			if i == 0 {
+				fragmentText := tdlComment.Message.Body[:emoteFragment.Pos1]
+				fragment := Fragment{
+					Text:     fragmentText,
+					Emoticon: nil,
+				}
+				formattedEmoteFragments = append(formattedEmoteFragments, fragment)
+				formattedEmoteFragments = append(formattedEmoteFragments, emoteFragment)
+			} else {
+				if emoteFragment.Pos1 == 0 {
+					log.Warn().Str("comment_id", liveComment.ID).Msg("skipping invalid emote position")
+					continue
+				}
+				start := emoteFragments[i-1].Pos2
+				end := emoteFragment.Pos1
+				if start < 0 || end > len(tdlComment.Message.Body) || start > end {
+					log.Warn().Str("comment_id", liveComment.ID).Msg("invalid fragment slice bounds, skipping fragment")
+					continue
+				}
+				fragmentText := tdlComment.Message.Body[start:end]
+				fragment := Fragment{
+					Text:     fragmentText,
+					Emoticon: nil,
+				}
+				formattedEmoteFragments = append(formattedEmoteFragments, fragment)
+				formattedEmoteFragments = append(formattedEmoteFragments, emoteFragment)
+			}
+		}
+
+		// check if last fragment is an emoticon
+		if len(formattedEmoteFragments) > 0 {
+			lastItem := len(formattedEmoteFragments) - 1
+			if formattedEmoteFragments[lastItem].Emoticon != nil && formattedEmoteFragments[lastItem].Emoticon.EmoticonID != "" {
+				fragmentText := tdlComment.Message.Body[formattedEmoteFragments[lastItem].Pos2:]
+				fragment := Fragment{
+					Text:     fragmentText,
+					Emoticon: nil,
+				}
+				formattedEmoteFragments = append(formattedEmoteFragments, fragment)
+			}
+		}
+
+		// ensure message has emote fragments
+		if len(formattedEmoteFragments) > 0 {
+			tdlComment.Message.Fragments = formattedEmoteFragments
+		} else {
+			// if no emotes, just add the full message as a fragment
+			tdlComment.Message.Fragments = []Fragment{
+				{
+					Text:     tdlComment.Message.Body,
+					Emoticon: nil,
+					Pos1:     0,
+					Pos2:     len(tdlComment.Message.Body),
+				},
+			}
+		}
+
+		tdlComments = append(tdlComments, tdlComment)
+
+	}
+
+	tdlChat.Comments = tdlComments
+
+	// get last comment offset and set as video end
+	if len(tdlChat.Comments) > 0 {
+		lastComment := tdlChat.Comments[len(tdlChat.Comments)-1]
+		tdlChat.Video.End = int64(lastComment.ContentOffsetSeconds)
+	} else {
+		tdlChat.Video.End = 0 // No comments, set end to 0
+	}
+
+	// write chat
+	err = writeTDLChat(tdlChat, outPath)
+	if err != nil {
+		return fmt.Errorf("failed to write TDL chat: %v", err)
+	}
+
+	return nil
 }
 
 func writeTDLChat(parsedChat TDLChat, outPath string) error {

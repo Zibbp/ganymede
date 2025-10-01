@@ -52,7 +52,7 @@ type CreateVodRequest struct {
 	ID               string              `json:"id"`
 	ChannelID        string              `json:"channel_id" validate:"required"`
 	ExtID            string              `json:"ext_id" validate:"min=1"`
-	Platform         utils.VideoPlatform `json:"platform" validate:"required,oneof=twitch youtube"`
+	Platform         utils.VideoPlatform `json:"platform" validate:"required,oneof=twitch youtube kick"`
 	Type             utils.VodType       `json:"type" validate:"required,oneof=archive live highlight upload clip"`
 	Title            string              `json:"title" validate:"required,min=1"`
 	Duration         int                 `json:"duration" validate:"required"`

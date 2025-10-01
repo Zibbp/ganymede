@@ -369,7 +369,7 @@ var (
 		{Name: "ext_id", Type: field.TypeString},
 		{Name: "clip_ext_vod_id", Type: field.TypeString, Nullable: true},
 		{Name: "ext_stream_id", Type: field.TypeString, Nullable: true},
-		{Name: "platform", Type: field.TypeEnum, Enums: []string{"twitch", "youtube"}, Default: "twitch"},
+		{Name: "platform", Type: field.TypeEnum, Enums: []string{"twitch", "kick", "youtube"}, Default: "twitch"},
 		{Name: "type", Type: field.TypeEnum, Enums: []string{"archive", "live", "highlight", "upload", "clip"}, Default: "archive"},
 		{Name: "title", Type: field.TypeString},
 		{Name: "duration", Type: field.TypeInt, Default: 1},

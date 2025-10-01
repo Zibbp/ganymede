@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -85,14 +86,26 @@ func StoreFromContext(ctx context.Context) (*database.Database, error) {
 	return store, nil
 }
 
-func PlatformFromContext(ctx context.Context) (platform.Platform, error) {
-	platform, exists := ctx.Value(tasks_shared.PlatformTwitchKey).(platform.Platform)
-	if !exists || platform == nil {
-		log.Error().Msg("platform not found in context, this usually means the platform authentication failed, check your platform client_id and client_secret.")
-		return nil, errors.New("platform not found in context")
+// PlatformFromContext retrieves the platform service from the context based on the provided video platform.
+func PlatformFromContext(ctx context.Context, videoPlatform utils.VideoPlatform) (platform.Platform, error) {
+	var platformFromCtx platform.Platform
+	exists := false
+	switch videoPlatform {
+	case utils.PlatformTwitch:
+		platformFromCtx, exists = ctx.Value(tasks_shared.PlatformTwitchKey).(platform.Platform)
+	case utils.PlatformKick:
+		platformFromCtx, exists = ctx.Value(tasks_shared.PlatformKickKey).(platform.Platform)
+	default:
+		log.Error().Msgf("unsupported platform: %s", videoPlatform)
+		return nil, fmt.Errorf("unsupported platform: %s", videoPlatform)
 	}
 
-	return platform, nil
+	if !exists || platformFromCtx == nil {
+		log.Error().Msgf("platform %s not found in context, this usually means the platform authentication failed, check your platform client_id and client_secret.", videoPlatform)
+		return nil, fmt.Errorf("platform %s not found in context", videoPlatform)
+	}
+
+	return platformFromCtx, nil
 }
 
 // getDatabaseItems retrieves the database items associated with the provided queueId. This is used instead of passing all the structs to each job so that they can be easily updated in the database.
@@ -153,13 +166,19 @@ func setQueueStatus(ctx context.Context, entClient *ent.Client, queueStatusInput
 }
 
 // replaceThumbnailPlaceholders replaces the placeholders in the provided url with the provided width and height.
-func replaceThumbnailPlaceholders(url, width, height string, isLive bool) string {
-	if isLive {
-		url = strings.ReplaceAll(url, "{width}", width)
-		url = strings.ReplaceAll(url, "{height}", height)
-	} else {
-		url = strings.ReplaceAll(url, "%{width}", width)
-		url = strings.ReplaceAll(url, "%{height}", height)
+func replaceThumbnailPlaceholders(url, width, height string, isLive bool, platform utils.VideoPlatform) string {
+	switch platform {
+	case utils.PlatformTwitch:
+		if isLive {
+			url = strings.ReplaceAll(url, "{width}", width)
+			url = strings.ReplaceAll(url, "{height}", height)
+		} else {
+			url = strings.ReplaceAll(url, "%{width}", width)
+			url = strings.ReplaceAll(url, "%{height}", height)
+		}
+	case utils.PlatformKick:
+		re := regexp.MustCompile(`/\d+\.webp$`)
+		url = re.ReplaceAllString(url, "/"+height+".webp")
 	}
 	return url
 }

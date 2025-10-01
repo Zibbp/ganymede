@@ -18,6 +18,7 @@ import (
 	"github.com/zibbp/ganymede/internal/playlist"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
+	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
 
@@ -210,7 +211,8 @@ func (w ImportCategoriesWorker) Work(ctx context.Context, job *river.Job[ImportC
 		return err
 	}
 
-	platform, err := tasks.PlatformFromContext(ctx)
+	// TODO: Support multiple platforms
+	platform, err := tasks.PlatformFromContext(ctx, utils.PlatformTwitch)
 	if err != nil {
 		return err
 	}
@@ -258,7 +260,8 @@ func (w AuthenticatePlatformWorker) Work(ctx context.Context, job *river.Job[Aut
 	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
 	logger.Info().Msg("starting task")
 
-	platform, err := tasks.PlatformFromContext(ctx)
+	// TODO: Support multiple platforms
+	platform, err := tasks.PlatformFromContext(ctx, utils.PlatformTwitch)
 	if err != nil {
 		return err
 	}
