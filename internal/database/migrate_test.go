@@ -2,7 +2,6 @@ package database_test
 
 import (
 	"context"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -71,7 +70,7 @@ func (s *DatabaseTest) TestVideosDirMigrate(t *testing.T) {
 			if pathValue == "" {
 				continue
 			}
-			assert.Truef(t, strings.HasPrefix(pathValue, newVideosDir) || filepath.HasPrefix(pathValue, newVideosDir),
+			assert.Truef(t, strings.HasPrefix(pathValue, newVideosDir),
 				"Field %s was not updated: got %s, want prefix %s", field.Name, pathValue, newVideosDir)
 		}
 	}
@@ -79,7 +78,7 @@ func (s *DatabaseTest) TestVideosDirMigrate(t *testing.T) {
 	// Assert sprite thumbnails paths have been updated
 	if v.SpriteThumbnailsEnabled && len(v.SpriteThumbnailsImages) > 0 {
 		for _, thumb := range v.SpriteThumbnailsImages {
-			assert.Truef(t, strings.HasPrefix(thumb, newVideosDir) || filepath.HasPrefix(thumb, newVideosDir),
+			assert.Truef(t, strings.HasPrefix(thumb, newVideosDir),
 				"Sprite thumbnail path was not updated: got %s, want prefix %s", thumb, newVideosDir)
 		}
 	}
