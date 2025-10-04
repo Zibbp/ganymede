@@ -30,12 +30,9 @@ func TestDatabase(t *testing.T) {
 
 // TestVideosDirMigrate tests the VideosDirMigrate function
 func (s *DatabaseTest) TestVideosDirMigrate(t *testing.T) {
-	// Setup the application
-	app, err := tests.Setup(t)
-	assert.NoError(t, err)
 
 	// Archive a video to test the migration
-	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+	_, err := s.App.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
 		VideoId:     tests_shared.TestTwitchVideoId1,
 		Quality:     utils.R480,
 		ArchiveChat: true,
@@ -44,19 +41,19 @@ func (s *DatabaseTest) TestVideosDirMigrate(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert video was created
-	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(tests_shared.TestTwitchVideoId1)).WithChapters().Only(context.Background())
+	v, err := s.App.Database.Client.Vod.Query().Where(vod.ExtID(tests_shared.TestTwitchVideoId1)).WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
-	tests_shared.WaitForArchiveCompletion(t, app, v.ID, tests_shared.TestArchiveTimeout)
+	tests_shared.WaitForArchiveCompletion(t, s.App, v.ID, tests_shared.TestArchiveTimeout)
 
 	// Migrate the videos directory
 	newVideosDir := "/new/videos/dir"
-	err = app.Database.VideosDirMigrate(context.Background(), newVideosDir)
+	err = s.App.Database.VideosDirMigrate(context.Background(), newVideosDir)
 	assert.NoError(t, err)
 
 	// Fetch the video again
-	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(tests_shared.TestTwitchVideoId1)).WithChannel().WithChapters().Only(context.Background())
+	v, err = s.App.Database.Client.Vod.Query().Where(vod.ExtID(tests_shared.TestTwitchVideoId1)).WithChannel().WithChapters().Only(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, v)
 
