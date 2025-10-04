@@ -23,6 +23,7 @@ var (
 	TestTwitchVideoChannelName2 = "datmodz"
 	TestTwitchClipId2           = "CleverPolishedSwordPanicBasket-qmNOWICct4rtR_wX"
 	TestTwitchClipChannelName2  = "datmodz"
+	TestArchiveTimeout          = 300 * time.Second
 )
 
 // IsPlayableVideo checks if a video file is playable using ffprobe.
