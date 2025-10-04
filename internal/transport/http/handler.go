@@ -245,6 +245,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	archiveGroup.POST("/channel", h.ArchiveChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
 	archiveGroup.POST("/video", h.ArchiveVideo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
 	archiveGroup.POST("/convert-twitch-live-chat", h.ConvertTwitchChat, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	archiveGroup.POST("/convert-kick-live-chat", h.ConvertKickChat, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 
 	// Admin
 	adminGroup := e.Group("/admin")
