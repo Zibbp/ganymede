@@ -146,7 +146,7 @@ const ChatPlayer = ({ video }: Params) => {
     // @ts-expect-error additional fields unnecessary
     message: {
       body: message,
-      user_color: "#a65ee8",
+      user_color: "#f39c12",
     },
     ganymede_formatted_message: [{
       type: GanymedeFormattedMessageType.Text,

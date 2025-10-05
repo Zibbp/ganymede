@@ -716,7 +716,7 @@
     "saveInformationTitle": "Informationen speichern",
     "downloadThumbnailsTitle": "Vorschaubilder herunterladen",
     "externalPlatformVideoIdLabel": "Externe Plattform Video-ID",
-    "DuckVODVideoIdLabel": "Ganymed Video-ID",
+    "GanymedeVideoIdLabel": "Ganymed Video-ID",
     "streamedAtLabel": "Gestreamt am",
     "taskRestartedNotification": "Aufgabe neu gestartet.",
     "taskRestartText": "Warteschlangenaufgabe {taskName} neu starten?",
