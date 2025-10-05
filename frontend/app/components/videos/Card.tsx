@@ -189,7 +189,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
           ).toLocaleString()}`}
         >
           <Text size="sm">
-            {dayjs(video.streamed_at).format("YYYY/MM/DD")}
+            {dayjs(video.streamed_at).format("DD.MM.YYYY")}
           </Text>
         </Tooltip>
 

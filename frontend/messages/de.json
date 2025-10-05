@@ -785,7 +785,7 @@
     "streamedOnTooltip": "Gestreamt am",
     "videoTypeTooltip": "Videotyp",
     "videoClipsTitle": "Video-Clips",
-    "storageSizeTooltip": "Speicherplatz"
+    "storageSizeTooltip": "Speicherplatzverbrauch"
   },
   "MultistreamComponents": {
     "seekBackTooltip": "{seconds} Sekunden zurückspringen",
