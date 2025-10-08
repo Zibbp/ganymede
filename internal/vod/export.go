@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/channel"
@@ -27,10 +28,10 @@ type ExportMetadata struct {
 
 // ExportMetadata exports the metadata of a VOD along with its related entities.
 // The exported metadata is written to a json file in the video directory.
-func (s *Service) ExportMetadata(ctx context.Context, video *ent.Vod) error {
+func (s *Service) ExportMetadata(ctx context.Context, videoId uuid.UUID) error {
 	vod, err := s.Store.Client.Vod.
 		Query().
-		Where(entVod.IDEQ(video.ID)).
+		Where(entVod.IDEQ(videoId)).
 		WithChannel().
 		WithPlaylists().
 		WithChapters().

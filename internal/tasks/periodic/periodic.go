@@ -460,7 +460,7 @@ func (w ExportVideoMetadataWorker) Work(ctx context.Context, job *river.Job[Expo
 	}
 
 	for _, v := range vods {
-		err := vodService.ExportMetadata(ctx, v)
+		err := vodService.ExportMetadata(ctx, v.ID)
 		if err != nil {
 			logger.Error().Err(err).Msgf("failed to export metadata for video %s", v.ID)
 			continue
