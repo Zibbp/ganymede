@@ -197,7 +197,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 	if err != nil {
 		return nil, err
 	}
-	one_am_cron, err := cron.ParseStandard("0 1 * * *")
+	oneAMCron, err := cron.ParseStandard("0 1 * * *")
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +316,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		// export video metadata
 		// runs once a day at 01:00
 		river.NewPeriodicJob(
-			one_am_cron,
+			oneAMCron,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.ExportVideoMetadataArgs{}, nil
 			},

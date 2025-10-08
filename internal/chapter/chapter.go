@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 	"github.com/zibbp/ganymede/ent"
 	entChapter "github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -23,12 +22,25 @@ func NewService(store *database.Database) *Service {
 	}
 }
 
+// Chapter is the DTO for a Chapter
+// Update DBChapterToDto if you change this struct
 type Chapter struct {
 	ID    string `json:"id"`
 	Type  string `json:"type"`
 	Title string `json:"title"`
 	Start int    `json:"start"`
 	End   int    `json:"end"`
+}
+
+// DBChapterToDto converts a Ent Chapter to a Chapter DTO
+func DBChapterToDto(v *ent.Chapter) Chapter {
+	return Chapter{
+		ID:    v.ID.String(),
+		Type:  v.Type,
+		Title: v.Title,
+		Start: v.Start,
+		End:   v.End,
+	}
 }
 
 func (s *Service) CreateChapter(c Chapter, videoId uuid.UUID) (*ent.Chapter, error) {
@@ -74,11 +86,4 @@ func (s *Service) CreateWebVtt(chapters []*ent.Chapter) (string, error) {
 	}
 
 	return webVtt, nil
-}
-
-// DBChapterToDto converts a Ent Chapter to a Chapter DTO
-func DBChapterToDto(v *ent.Chapter) Chapter {
-	var dto Chapter
-	copier.Copy(&dto, v)
-	return dto
 }

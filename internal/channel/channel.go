@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
@@ -25,6 +24,8 @@ func NewService(store *database.Database, platformTwitch platform.Platform) *Ser
 	return &Service{Store: store, PlatformTwitch: platformTwitch}
 }
 
+// Channel is the DTO for a Channel
+// Update DBChannelToDto if you change this struct
 type Channel struct {
 	ID            uuid.UUID `json:"id"`
 	ExtID         string    `json:"ext_id"`
@@ -35,6 +36,21 @@ type Channel struct {
 	RetentionDays int64     `json:"retention_days"`
 	UpdatedAt     time.Time `json:"updated_at"`
 	CreatedAt     time.Time `json:"created_at"`
+}
+
+// DBChannelToDto converts a Ent Channel to a Channel DTO
+func DBChannelToDto(v *ent.Channel) Channel {
+	return Channel{
+		ID:            v.ID,
+		ExtID:         v.ExtID,
+		Name:          v.Name,
+		DisplayName:   v.DisplayName,
+		ImagePath:     v.ImagePath,
+		Retention:     v.Retention,
+		RetentionDays: v.RetentionDays,
+		UpdatedAt:     v.UpdatedAt,
+		CreatedAt:     v.CreatedAt,
+	}
 }
 
 func (s *Service) CreateChannel(channelDto Channel) (*ent.Channel, error) {
@@ -206,11 +222,4 @@ func (s *Service) UpdateChannelImage(ctx context.Context, channelID uuid.UUID) e
 	}
 
 	return nil
-}
-
-// DBChannelToDto converts a Ent Channel to a Channel DTO
-func DBChannelToDto(v *ent.Channel) Channel {
-	var dto Channel
-	copier.Copy(&dto, v)
-	return dto
 }

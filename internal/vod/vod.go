@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 	"github.com/labstack/echo/v4"
 	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog/log"
@@ -40,6 +39,8 @@ func NewService(store *database.Database, riverClient *tasks_client.RiverClient,
 	return &Service{Store: store, RiverClient: riverClient, Platform: platform}
 }
 
+// Vod is the DTO for a VOD
+// Update DBVodToDto if you change this struct
 type Vod struct {
 	ID                       uuid.UUID           `json:"id"`
 	ExtID                    string              `json:"ext_id"`
@@ -99,6 +100,56 @@ type MutedSegment struct {
 	ID    string `json:"id"`
 	Start int    `json:"start"`
 	End   int    `json:"end"`
+}
+
+// DBVodToDto converts a VOD from the database format to the DTO format
+func DBVodToDto(v *ent.Vod) Vod {
+	return Vod{
+		ID:                       v.ID,
+		ExtID:                    v.ExtID,
+		ExtStreamID:              v.ExtStreamID,
+		ClipExtVodID:             v.ClipExtVodID,
+		Platform:                 v.Platform,
+		Type:                     v.Type,
+		Title:                    v.Title,
+		Duration:                 v.Duration,
+		Views:                    v.Views,
+		ClipVodOffset:            v.ClipVodOffset,
+		Resolution:               v.Resolution,
+		Processing:               v.Processing,
+		ThumbnailPath:            v.ThumbnailPath,
+		WebThumbnailPath:         v.WebThumbnailPath,
+		VideoPath:                v.VideoPath,
+		VideoHLSPath:             v.VideoHlsPath,
+		ChatPath:                 v.ChatPath,
+		LiveChatPath:             v.LiveChatPath,
+		LiveChatConvertPath:      v.LiveChatConvertPath,
+		ChatVideoPath:            v.ChatVideoPath,
+		InfoPath:                 v.InfoPath,
+		CaptionPath:              v.CaptionPath,
+		StreamedAt:               v.StreamedAt,
+		UpdatedAt:                v.UpdatedAt,
+		CreatedAt:                v.CreatedAt,
+		FolderName:               v.FolderName,
+		FileName:                 v.FileName,
+		Locked:                   v.Locked,
+		TmpVideoDownloadPath:     v.TmpVideoDownloadPath,
+		TmpVideoConvertPath:      v.TmpVideoConvertPath,
+		TmpChatDownloadPath:      v.TmpChatDownloadPath,
+		TmpLiveChatDownloadPath:  v.TmpLiveChatDownloadPath,
+		TmpLiveChatConvertPath:   v.TmpLiveChatConvertPath,
+		TmpChatRenderPath:        v.TmpChatRenderPath,
+		TmpVideoHLSPath:          v.TmpVideoHlsPath,
+		LocalViews:               v.LocalViews,
+		SpriteThumbnailsEnabled:  v.SpriteThumbnailsEnabled,
+		SpriteThumbnailsImages:   v.SpriteThumbnailsImages,
+		SpriteThumbnailsInterval: v.SpriteThumbnailsInterval,
+		SpriteThumbnailsWidth:    v.SpriteThumbnailsWidth,
+		SpriteThumbnailsHeight:   v.SpriteThumbnailsHeight,
+		SpriteThumbnailsRows:     v.SpriteThumbnailsRows,
+		SpriteThumbnailsColumns:  v.SpriteThumbnailsColumns,
+		StorageSizeBytes:         v.StorageSizeBytes,
+	}
 }
 
 func (s *Service) CreateVod(vodDto Vod, cUUID uuid.UUID) (*ent.Vod, error) {
@@ -931,11 +982,4 @@ func (s *Service) GetVodChatHistogram(ctx context.Context, videoId uuid.UUID, re
 	}
 
 	return sortedHistogram, nil
-}
-
-// DBVodToDto converts a Ent Vod to a Vod DTO
-func DBVodToDto(v *ent.Vod) Vod {
-	var dto Vod
-	copier.Copy(&dto, v)
-	return dto
 }

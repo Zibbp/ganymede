@@ -6,7 +6,6 @@ import (
 	"sort"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
@@ -18,13 +17,27 @@ type Service struct {
 	Store *database.Database
 }
 
+// Playlist is the DTO for a Playlist
+// Update DBPlaylistToDto if you change this struct
 type Playlist struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	ImagePath   string    `json:"image_path"`
-	CreatedAt   string    `json:"created_at"`
-	UpdatedAt   string    `json:"updated_at"`
+	ID            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	ThumbnailPath string    `json:"image_path"`
+	CreatedAt     string    `json:"created_at"`
+	UpdatedAt     string    `json:"updated_at"`
+}
+
+// DBPlaylistToDto converts a Ent Playlist to a Playlist DTO
+func DBPlaylistToDto(v *ent.Playlist) Playlist {
+	return Playlist{
+		ID:            v.ID,
+		Name:          v.Name,
+		Description:   v.Description,
+		ThumbnailPath: v.ThumbnailPath,
+		CreatedAt:     v.CreatedAt.String(),
+		UpdatedAt:     v.UpdatedAt.String(),
+	}
 }
 
 func NewService(store *database.Database) *Service {
@@ -188,11 +201,4 @@ func (s *Service) deleteMultistreamInfo(ctx context.Context, playlistID uuid.UUI
 		return fmt.Errorf("error deleting multistream info: %v", err)
 	}
 	return nil
-}
-
-// DBPlaylistToDto converts a Ent Playlist to a Playlist DTO
-func DBPlaylistToDto(v *ent.Playlist) Playlist {
-	var dto Playlist
-	copier.Copy(&dto, v)
-	return dto
 }
