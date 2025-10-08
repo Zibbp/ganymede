@@ -34,7 +34,7 @@ const SyncedVideoPlayer = ({ src, vodId, title, poster, time, playing, muted }: 
         await currentPlayer.pause();
       }
     })();
-  }, [playing, canPlay, time])
+  }, [playing, canPlay /* `time` should not be part of dependencies, it already has its own effect */])
 
   useEffect(() => {
     if (!player.current) return;
