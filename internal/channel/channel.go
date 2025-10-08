@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/channel"
@@ -205,4 +206,11 @@ func (s *Service) UpdateChannelImage(ctx context.Context, channelID uuid.UUID) e
 	}
 
 	return nil
+}
+
+// DBChannelToDto converts a Ent Channel to a Channel DTO
+func DBChannelToDto(v *ent.Channel) Channel {
+	var dto Channel
+	copier.Copy(&dto, v)
+	return dto
 }

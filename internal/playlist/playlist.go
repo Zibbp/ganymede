@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/playlist"
@@ -187,4 +188,11 @@ func (s *Service) deleteMultistreamInfo(ctx context.Context, playlistID uuid.UUI
 		return fmt.Errorf("error deleting multistream info: %v", err)
 	}
 	return nil
+}
+
+// DBPlaylistToDto converts a Ent Playlist to a Playlist DTO
+func DBPlaylistToDto(v *ent.Playlist) Playlist {
+	var dto Playlist
+	copier.Copy(&dto, v)
+	return dto
 }

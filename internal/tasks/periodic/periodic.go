@@ -421,3 +421,53 @@ func (w ProcessPlaylistVideoRulesWorker) Work(ctx context.Context, job *river.Jo
 
 	return nil
 }
+
+// Export video metadata
+type ExportVideoMetadataArgs struct {
+}
+
+func (ExportVideoMetadataArgs) Kind() string { return tasks.TaskExportVideoMetadata }
+
+func (w ExportVideoMetadataArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w ExportVideoMetadataArgs) Timeout(job *river.Job[ExportVideoMetadataArgs]) time.Duration {
+	return 5 * time.Minute
+}
+
+type ExportVideoMetadataWorker struct {
+	river.WorkerDefaults[ExportVideoMetadataArgs]
+}
+
+func (w ExportVideoMetadataWorker) Work(ctx context.Context, job *river.Job[ExportVideoMetadataArgs]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	store, err := tasks.StoreFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Setup vod service
+	vodService := vod.NewService(store, nil, nil)
+
+	vods, err := store.Client.Vod.Query().Select(entVod.FieldID).All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to fetch videos: %w", err)
+	}
+
+	for _, v := range vods {
+		err := vodService.ExportMetadata(ctx, v)
+		if err != nil {
+			logger.Error().Err(err).Msgf("failed to export metadata for video %s", v.ID)
+			continue
+		}
+		logger.Debug().Msgf("exported metadata for video %s", v.ID)
+	}
+
+	logger.Info().Msg("task completed")
+	return nil
+}

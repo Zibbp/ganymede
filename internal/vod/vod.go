@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 	"github.com/labstack/echo/v4"
 	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog/log"
@@ -40,41 +41,50 @@ func NewService(store *database.Database, riverClient *tasks_client.RiverClient,
 }
 
 type Vod struct {
-	ID                      uuid.UUID           `json:"id"`
-	ExtID                   string              `json:"ext_id"`
-	ExtStreamID             string              `json:"ext_stream_id"`
-	ClipExtVodID            string              `json:"clip_ext_vod_id"`
-	Platform                utils.VideoPlatform `json:"platform"`
-	Type                    utils.VodType       `json:"type"`
-	Title                   string              `json:"title"`
-	Duration                int                 `json:"duration"`
-	ClipVodOffset           int                 `json:"clip_vod_offset"`
-	Views                   int                 `json:"views"`
-	Resolution              string              `json:"resolution"`
-	Processing              bool                `json:"processing"`
-	ThumbnailPath           string              `json:"thumbnail_path"`
-	WebThumbnailPath        string              `json:"web_thumbnail_path"`
-	VideoPath               string              `json:"video_path"`
-	VideoHLSPath            string              `json:"video_hls_path"`
-	ChatPath                string              `json:"chat_path"`
-	LiveChatPath            string              `json:"live_chat_path"`
-	LiveChatConvertPath     string              `json:"live_chat_convert_path"`
-	ChatVideoPath           string              `json:"chat_video_path"`
-	InfoPath                string              `json:"info_path"`
-	CaptionPath             string              `json:"caption_path"`
-	StreamedAt              time.Time           `json:"streamed_at"`
-	UpdatedAt               time.Time           `json:"updated_at"`
-	CreatedAt               time.Time           `json:"created_at"`
-	FolderName              string              `json:"folder_name"`
-	FileName                string              `json:"file_name"`
-	Locked                  bool                `json:"locked"`
-	TmpVideoDownloadPath    string              `json:"tmp_video_download_path"`
-	TmpVideoConvertPath     string              `json:"tmp_video_convert_path"`
-	TmpChatDownloadPath     string              `json:"tmp_chat_download_path"`
-	TmpLiveChatDownloadPath string              `json:"tmp_live_chat_download_path"`
-	TmpLiveChatConvertPath  string              `json:"tmp_live_chat_convert_path"`
-	TmpChatRenderPath       string              `json:"tmp_chat_render_path"`
-	TmpVideoHLSPath         string              `json:"tmp_video_hls_path"`
+	ID                       uuid.UUID           `json:"id"`
+	ExtID                    string              `json:"ext_id"`
+	ExtStreamID              string              `json:"ext_stream_id"`
+	ClipExtVodID             string              `json:"clip_ext_vod_id"`
+	Platform                 utils.VideoPlatform `json:"platform"`
+	Type                     utils.VodType       `json:"type"`
+	Title                    string              `json:"title"`
+	Duration                 int                 `json:"duration"`
+	ClipVodOffset            int                 `json:"clip_vod_offset"`
+	Views                    int                 `json:"views"`
+	Resolution               string              `json:"resolution"`
+	Processing               bool                `json:"processing"`
+	ThumbnailPath            string              `json:"thumbnail_path"`
+	WebThumbnailPath         string              `json:"web_thumbnail_path"`
+	VideoPath                string              `json:"video_path"`
+	VideoHLSPath             string              `json:"video_hls_path"`
+	ChatPath                 string              `json:"chat_path"`
+	LiveChatPath             string              `json:"live_chat_path"`
+	LiveChatConvertPath      string              `json:"live_chat_convert_path"`
+	ChatVideoPath            string              `json:"chat_video_path"`
+	InfoPath                 string              `json:"info_path"`
+	CaptionPath              string              `json:"caption_path"`
+	StreamedAt               time.Time           `json:"streamed_at"`
+	UpdatedAt                time.Time           `json:"updated_at"`
+	CreatedAt                time.Time           `json:"created_at"`
+	FolderName               string              `json:"folder_name"`
+	FileName                 string              `json:"file_name"`
+	Locked                   bool                `json:"locked"`
+	TmpVideoDownloadPath     string              `json:"tmp_video_download_path"`
+	TmpVideoConvertPath      string              `json:"tmp_video_convert_path"`
+	TmpChatDownloadPath      string              `json:"tmp_chat_download_path"`
+	TmpLiveChatDownloadPath  string              `json:"tmp_live_chat_download_path"`
+	TmpLiveChatConvertPath   string              `json:"tmp_live_chat_convert_path"`
+	TmpChatRenderPath        string              `json:"tmp_chat_render_path"`
+	TmpVideoHLSPath          string              `json:"tmp_video_hls_path"`
+	LocalViews               int                 `json:"local_views"`
+	SpriteThumbnailsEnabled  bool                `json:"sprite_thumbnails_enabled"`
+	SpriteThumbnailsImages   []string            `json:"sprite_thumbnails_images"`
+	SpriteThumbnailsInterval int                 `json:"sprite_thumbnails_interval"`
+	SpriteThumbnailsWidth    int                 `json:"sprite_thumbnails_width"`
+	SpriteThumbnailsHeight   int                 `json:"sprite_thumbnails_height"`
+	SpriteThumbnailsRows     int                 `json:"sprite_thumbnails_rows"`
+	SpriteThumbnailsColumns  int                 `json:"sprite_thumbnails_columns"`
+	StorageSizeBytes         int64               `json:"storage_size_bytes"`
 }
 
 type Pagination struct {
@@ -921,4 +931,11 @@ func (s *Service) GetVodChatHistogram(ctx context.Context, videoId uuid.UUID, re
 	}
 
 	return sortedHistogram, nil
+}
+
+// DBVodToDto converts a Ent Vod to a Vod DTO
+func DBVodToDto(v *ent.Vod) Vod {
+	var dto Vod
+	copier.Copy(&dto, v)
+	return dto
 }

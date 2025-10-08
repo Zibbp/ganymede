@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 	"github.com/zibbp/ganymede/ent"
 	entChapter "github.com/zibbp/ganymede/ent/chapter"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -73,4 +74,11 @@ func (s *Service) CreateWebVtt(chapters []*ent.Chapter) (string, error) {
 	}
 
 	return webVtt, nil
+}
+
+// DBChapterToDto converts a Ent Chapter to a Chapter DTO
+func DBChapterToDto(v *ent.Chapter) Chapter {
+	var dto Chapter
+	copier.Copy(&dto, v)
+	return dto
 }

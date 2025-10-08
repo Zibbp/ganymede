@@ -241,6 +241,24 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
+          <Group justify="space-between" py={5} wrap="nowrap">
+            <Box>
+              <Text fw={"bold"}>{t('exportVideoMetadata')}</Text>
+              <Text size="xs">{t('exportVideoMetadataDescription')}</Text>
+            </Box>
+            <Tooltip label={t('startTaskButton')}>
+              <ActionIcon
+                onClick={() => startTask(Task.ExportVideoMetadata)}
+                loading={loading}
+                color="green"
+                variant="filled"
+                size="lg"
+              >
+                <IconPlayerPlay size={24} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+
 
         </Card>
       </Container>

@@ -13,6 +13,7 @@ export enum Task {
   GenerateSpriteThumbnails = "generate_sprite_thumbnails",
   UpdateVideoStorageUsage = "update_video_storage_usage",
   ProcessPlaylistVideoRules = "process_playlist_video_rules",
+  ExportVideoMetadata = "export_video_metadata",
 }
 
 const startTask = async (
