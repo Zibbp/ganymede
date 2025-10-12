@@ -197,6 +197,8 @@ ENV HOSTNAME="0.0.0.0"
 # Setup entrypoint
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY bin/supervisord-exit-on-fatal.sh /usr/local/bin/supervisord-exit-on-fatal.sh
+RUN chmod +x /usr/local/bin/supervisord-exit-on-fatal.sh
 COPY supervisord.conf /opt/app/supervisord.conf
 
 EXPOSE 4000
