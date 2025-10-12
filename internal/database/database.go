@@ -38,7 +38,7 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 
 	// Connect to the database with retries
 	func() {
-		for i := 0; i < maxRetries; i++ {
+		for i := range maxRetries {
 			client, err = ent.Open("postgres", input.DBString)
 			if err == nil {
 				return
