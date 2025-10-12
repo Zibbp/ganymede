@@ -36,17 +36,29 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 	maxRetries := 5
 	retryDelay := time.Second * 3
 
-	for i := range maxRetries {
-		client, err = ent.Open("postgres", input.DBString)
-		if err == nil {
-			break
+	// Connect to the database with retries
+	func() {
+		for i := 0; i < maxRetries; i++ {
+			client, err = ent.Open("postgres", input.DBString)
+			if err == nil {
+				return
+			}
+			log.Warn().Err(err).Msgf("error connecting to database, retrying (%d/%d)", i+1, maxRetries)
+
+			if i == maxRetries-1 {
+				return
+			}
+
+			timer := time.NewTimer(retryDelay)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				err = fmt.Errorf("context cancelled during db connection retry: %w", ctx.Err())
+				return
+			case <-timer.C:
+			}
 		}
-		log.Warn().Err(err).Msgf("error connecting to database, retrying (%d/%d)", i+1, maxRetries)
-		time.Sleep(retryDelay)
-	}
-	if err != nil {
-		log.Fatal().Err(err).Msg("error connecting to database after retries")
-	}
+	}()
 
 	if !input.IsWorker {
 		// Run auto migration
