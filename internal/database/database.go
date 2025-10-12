@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
@@ -28,11 +29,23 @@ func DB() *Database {
 	return db
 }
 
+// NewDatabase creates a new database connection and runs auto migration if not a worker
 func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
-	client, err := ent.Open("postgres", input.DBString)
+	var client *ent.Client
+	var err error
+	maxRetries := 5
+	retryDelay := time.Second * 3
 
+	for i := range maxRetries {
+		client, err = ent.Open("postgres", input.DBString)
+		if err == nil {
+			break
+		}
+		log.Warn().Err(err).Msgf("error connecting to database, retrying (%d/%d)", i+1, maxRetries)
+		time.Sleep(retryDelay)
+	}
 	if err != nil {
-		log.Fatal().Err(err).Msg("error connecting to database")
+		log.Fatal().Err(err).Msg("error connecting to database after retries")
 	}
 
 	if !input.IsWorker {
