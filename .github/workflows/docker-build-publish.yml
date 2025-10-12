@@ -18,6 +18,9 @@ jobs:
   build:
     name: Build OCI Images
     runs-on: ${{ matrix.os }}
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:

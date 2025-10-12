@@ -43,29 +43,33 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          BRANCH="ci-update-versions-$(date +'%Y%m%d%H%M%S')"
+
           if git diff --quiet; then
             echo "No changes"
             echo "commit_needed=false" >> $GITHUB_OUTPUT
+            echo "branch_name=$BRANCH" >> $GITHUB_OUTPUT
           else
             echo "Changes detected:"
             git diff
 
             # Delete existing local branch if needed
-            if git show-ref --verify --quiet refs/heads/ci-update-versions; then
-              git branch -D ci-update-versions
+            if git show-ref --verify --quiet refs/heads/$BRANCH; then
+              git branch -D $BRANCH
             fi
 
             # Optional: delete remote branch if it exists
-            if git ls-remote --exit-code --heads origin ci-update-versions > /dev/null; then
-              git push origin --delete ci-update-versions
+            if git ls-remote --exit-code --heads origin $BRANCH > /dev/null; then
+              git push origin --delete $BRANCH
             fi
 
-            git checkout -b ci-update-versions
+            git checkout -b $BRANCH
             git add Dockerfile .devcontainer/Dockerfile
             git commit -m "Update ARG package versions in Dockerfile"
-            git push --set-upstream origin ci-update-versions
+            git push --set-upstream origin $BRANCH
 
             echo "commit_needed=true" >> $GITHUB_OUTPUT
+            echo "branch_name=$BRANCH" >> $GITHUB_OUTPUT
           fi
 
       - name: Create pull request
@@ -79,5 +83,5 @@ jobs:
             Automatically updated versions of:
             - yt-dlp
             - TwitchDownloader
-          branch: ci-update-versions
+          branch: ${{ steps.commit.outputs.branch_name }}
           base: main
