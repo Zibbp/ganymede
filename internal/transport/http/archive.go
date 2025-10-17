@@ -27,11 +27,12 @@ type ArchiveChannelRequest struct {
 	ChannelName string `json:"channel_name" validate:"required"`
 }
 type ArchiveVideoRequest struct {
-	VideoId     string           `json:"video_id"`
-	ChannelId   string           `json:"channel_id"`
-	Quality     utils.VodQuality `json:"quality" validate:"required,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
-	ArchiveChat bool             `json:"archive_chat"`
-	RenderChat  bool             `json:"render_chat"`
+	VideoId     string              `json:"video_id"`
+	ChannelId   string              `json:"channel_id"`
+	Quality     utils.VodQuality    `json:"quality" validate:"required,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
+	ArchiveChat bool                `json:"archive_chat"`
+	RenderChat  bool                `json:"render_chat"`
+	Platform    utils.VideoPlatform `json:"platform" validate:"required,oneof=twitch kick"`
 }
 
 // CheckIDType checks if the provided ID is a video id (numeric) or clip (alphanumeric)
@@ -123,6 +124,7 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 			Quality:     body.Quality,
 			ArchiveChat: body.ArchiveChat,
 			RenderChat:  body.RenderChat,
+			Platform:    body.Platform,
 		})
 		if err != nil {
 			return ErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -137,6 +139,7 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 				Quality:     body.Quality,
 				ArchiveChat: body.ArchiveChat,
 				RenderChat:  body.RenderChat,
+				Platform:    body.Platform,
 			})
 			if err != nil {
 				return ErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -148,6 +151,7 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 				Quality:     body.Quality,
 				ArchiveChat: body.ArchiveChat,
 				RenderChat:  body.RenderChat,
+				Platform:    body.Platform,
 			})
 			if err != nil {
 				return ErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -192,6 +196,43 @@ func (h *Handler) ConvertTwitchChat(c echo.Context) error {
 	outPath := fmt.Sprintf("%s/%s-chat-convert.json", envConfig.TempDir, body.VideoID)
 
 	err = utils.ConvertTwitchLiveChatToTDLChat(body.LiveChatPath, outPath, body.ChannelName, body.VideoID, body.VideoExternalID, body.ChannelID, t, body.PreviousVideoID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+// debug route to test converting chat files
+func (h *Handler) ConvertKickChat(c echo.Context) error {
+	type Body struct {
+		LiveChatPath      string `json:"live_chat_path"`
+		ChannelName       string `json:"channel_name"`
+		VideoID           string `json:"video_id"`
+		VideoExternalID   string `json:"video_external_id"`
+		ChannelID         int    `json:"channel_id"`
+		PreviousVideoID   string `json:"previous_video_id"`
+		FirstMessageEpoch string `json:"first_message_epoch"`
+	}
+	body := new(Body)
+	if err := c.Bind(body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	epoch, err := strconv.Atoi(body.FirstMessageEpoch)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	epochMicroseconds := int64(epoch)
+	seconds := epochMicroseconds / 1_000_000
+	nanoseconds := (epochMicroseconds % 1_000_000) * 1_000
+
+	t := time.Unix(seconds, nanoseconds)
+
+	envConfig := config.GetEnvConfig()
+	outPath := fmt.Sprintf("%s/%s-chat-convert.json", envConfig.TempDir, body.VideoID)
+
+	err = utils.ConvertKickWebSocketChatToTDLChat(body.LiveChatPath, outPath, body.ChannelName, body.VideoID, body.ChannelID, t)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
