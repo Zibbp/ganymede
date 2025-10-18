@@ -223,6 +223,20 @@ func (_c *LiveCreate) SetNillableStrictCategoriesLive(v *bool) *LiveCreate {
 	return _c
 }
 
+// SetBlacklistCategoriesLive sets the "blacklist_categories_live" field.
+func (_c *LiveCreate) SetBlacklistCategoriesLive(v bool) *LiveCreate {
+	_c.mutation.SetBlacklistCategoriesLive(v)
+	return _c
+}
+
+// SetNillableBlacklistCategoriesLive sets the "blacklist_categories_live" field if the given value is not nil.
+func (_c *LiveCreate) SetNillableBlacklistCategoriesLive(v *bool) *LiveCreate {
+	if v != nil {
+		_c.SetBlacklistCategoriesLive(*v)
+	}
+	return _c
+}
+
 // SetWatchClips sets the "watch_clips" field.
 func (_c *LiveCreate) SetWatchClips(v bool) *LiveCreate {
 	_c.mutation.SetWatchClips(v)
@@ -481,6 +495,10 @@ func (_c *LiveCreate) defaults() {
 		v := live.DefaultStrictCategoriesLive
 		_c.mutation.SetStrictCategoriesLive(v)
 	}
+	if _, ok := _c.mutation.BlacklistCategoriesLive(); !ok {
+		v := live.DefaultBlacklistCategoriesLive
+		_c.mutation.SetBlacklistCategoriesLive(v)
+	}
 	if _, ok := _c.mutation.WatchClips(); !ok {
 		v := live.DefaultWatchClips
 		_c.mutation.SetWatchClips(v)
@@ -555,6 +573,9 @@ func (_c *LiveCreate) check() error {
 	}
 	if _, ok := _c.mutation.StrictCategoriesLive(); !ok {
 		return &ValidationError{Name: "strict_categories_live", err: errors.New(`ent: missing required field "Live.strict_categories_live"`)}
+	}
+	if _, ok := _c.mutation.BlacklistCategoriesLive(); !ok {
+		return &ValidationError{Name: "blacklist_categories_live", err: errors.New(`ent: missing required field "Live.blacklist_categories_live"`)}
 	}
 	if _, ok := _c.mutation.WatchClips(); !ok {
 		return &ValidationError{Name: "watch_clips", err: errors.New(`ent: missing required field "Live.watch_clips"`)}
@@ -676,6 +697,10 @@ func (_c *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.StrictCategoriesLive(); ok {
 		_spec.SetField(live.FieldStrictCategoriesLive, field.TypeBool, value)
 		_node.StrictCategoriesLive = value
+	}
+	if value, ok := _c.mutation.BlacklistCategoriesLive(); ok {
+		_spec.SetField(live.FieldBlacklistCategoriesLive, field.TypeBool, value)
+		_node.BlacklistCategoriesLive = value
 	}
 	if value, ok := _c.mutation.WatchClips(); ok {
 		_spec.SetField(live.FieldWatchClips, field.TypeBool, value)
@@ -987,6 +1012,18 @@ func (u *LiveUpsert) SetStrictCategoriesLive(v bool) *LiveUpsert {
 // UpdateStrictCategoriesLive sets the "strict_categories_live" field to the value that was provided on create.
 func (u *LiveUpsert) UpdateStrictCategoriesLive() *LiveUpsert {
 	u.SetExcluded(live.FieldStrictCategoriesLive)
+	return u
+}
+
+// SetBlacklistCategoriesLive sets the "blacklist_categories_live" field.
+func (u *LiveUpsert) SetBlacklistCategoriesLive(v bool) *LiveUpsert {
+	u.Set(live.FieldBlacklistCategoriesLive, v)
+	return u
+}
+
+// UpdateBlacklistCategoriesLive sets the "blacklist_categories_live" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateBlacklistCategoriesLive() *LiveUpsert {
+	u.SetExcluded(live.FieldBlacklistCategoriesLive)
 	return u
 }
 
@@ -1356,6 +1393,20 @@ func (u *LiveUpsertOne) SetStrictCategoriesLive(v bool) *LiveUpsertOne {
 func (u *LiveUpsertOne) UpdateStrictCategoriesLive() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateStrictCategoriesLive()
+	})
+}
+
+// SetBlacklistCategoriesLive sets the "blacklist_categories_live" field.
+func (u *LiveUpsertOne) SetBlacklistCategoriesLive(v bool) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetBlacklistCategoriesLive(v)
+	})
+}
+
+// UpdateBlacklistCategoriesLive sets the "blacklist_categories_live" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateBlacklistCategoriesLive() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateBlacklistCategoriesLive()
 	})
 }
 
@@ -1910,6 +1961,20 @@ func (u *LiveUpsertBulk) SetStrictCategoriesLive(v bool) *LiveUpsertBulk {
 func (u *LiveUpsertBulk) UpdateStrictCategoriesLive() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
 		s.UpdateStrictCategoriesLive()
+	})
+}
+
+// SetBlacklistCategoriesLive sets the "blacklist_categories_live" field.
+func (u *LiveUpsertBulk) SetBlacklistCategoriesLive(v bool) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetBlacklistCategoriesLive(v)
+	})
+}
+
+// UpdateBlacklistCategoriesLive sets the "blacklist_categories_live" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateBlacklistCategoriesLive() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateBlacklistCategoriesLive()
 	})
 }
 

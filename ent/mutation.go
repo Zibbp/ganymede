@@ -2176,6 +2176,7 @@ type LiveMutation struct {
 	addvideo_age               *int64
 	apply_categories_to_live   *bool
 	strict_categories_live     *bool
+	blacklist_categories_live  *bool
 	watch_clips                *bool
 	clips_limit                *int
 	addclips_limit             *int
@@ -2842,6 +2843,42 @@ func (m *LiveMutation) ResetStrictCategoriesLive() {
 	m.strict_categories_live = nil
 }
 
+// SetBlacklistCategoriesLive sets the "blacklist_categories_live" field.
+func (m *LiveMutation) SetBlacklistCategoriesLive(b bool) {
+	m.blacklist_categories_live = &b
+}
+
+// BlacklistCategoriesLive returns the value of the "blacklist_categories_live" field in the mutation.
+func (m *LiveMutation) BlacklistCategoriesLive() (r bool, exists bool) {
+	v := m.blacklist_categories_live
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBlacklistCategoriesLive returns the old "blacklist_categories_live" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldBlacklistCategoriesLive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBlacklistCategoriesLive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBlacklistCategoriesLive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBlacklistCategoriesLive: %w", err)
+	}
+	return oldValue.BlacklistCategoriesLive, nil
+}
+
+// ResetBlacklistCategoriesLive resets all changes to the "blacklist_categories_live" field.
+func (m *LiveMutation) ResetBlacklistCategoriesLive() {
+	m.blacklist_categories_live = nil
+}
+
 // SetWatchClips sets the "watch_clips" field.
 func (m *LiveMutation) SetWatchClips(b bool) {
 	m.watch_clips = &b
@@ -3384,7 +3421,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 22)
+	fields := make([]string, 0, 23)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -3426,6 +3463,9 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.strict_categories_live != nil {
 		fields = append(fields, live.FieldStrictCategoriesLive)
+	}
+	if m.blacklist_categories_live != nil {
+		fields = append(fields, live.FieldBlacklistCategoriesLive)
 	}
 	if m.watch_clips != nil {
 		fields = append(fields, live.FieldWatchClips)
@@ -3487,6 +3527,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.ApplyCategoriesToLive()
 	case live.FieldStrictCategoriesLive:
 		return m.StrictCategoriesLive()
+	case live.FieldBlacklistCategoriesLive:
+		return m.BlacklistCategoriesLive()
 	case live.FieldWatchClips:
 		return m.WatchClips()
 	case live.FieldClipsLimit:
@@ -3540,6 +3582,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldApplyCategoriesToLive(ctx)
 	case live.FieldStrictCategoriesLive:
 		return m.OldStrictCategoriesLive(ctx)
+	case live.FieldBlacklistCategoriesLive:
+		return m.OldBlacklistCategoriesLive(ctx)
 	case live.FieldWatchClips:
 		return m.OldWatchClips(ctx)
 	case live.FieldClipsLimit:
@@ -3662,6 +3706,13 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStrictCategoriesLive(v)
+		return nil
+	case live.FieldBlacklistCategoriesLive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBlacklistCategoriesLive(v)
 		return nil
 	case live.FieldWatchClips:
 		v, ok := value.(bool)
@@ -3875,6 +3926,9 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldStrictCategoriesLive:
 		m.ResetStrictCategoriesLive()
+		return nil
+	case live.FieldBlacklistCategoriesLive:
+		m.ResetBlacklistCategoriesLive()
 		return nil
 	case live.FieldWatchClips:
 		m.ResetWatchClips()
