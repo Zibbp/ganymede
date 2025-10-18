@@ -43,8 +43,8 @@ const (
 	FieldApplyCategoriesToLive = "apply_categories_to_live"
 	// FieldStrictCategoriesLive holds the string denoting the strict_categories_live field in the database.
 	FieldStrictCategoriesLive = "strict_categories_live"
-	// FieldBlacklistCategoriesLive holds the string denoting the blacklist_categories_live field in the database.
-	FieldBlacklistCategoriesLive = "blacklist_categories_live"
+	// FieldBlacklistCategories holds the string denoting the blacklist_categories field in the database.
+	FieldBlacklistCategories = "blacklist_categories"
 	// FieldWatchClips holds the string denoting the watch_clips field in the database.
 	FieldWatchClips = "watch_clips"
 	// FieldClipsLimit holds the string denoting the clips_limit field in the database.
@@ -109,7 +109,7 @@ var Columns = []string{
 	FieldVideoAge,
 	FieldApplyCategoriesToLive,
 	FieldStrictCategoriesLive,
-	FieldBlacklistCategoriesLive,
+	FieldBlacklistCategories,
 	FieldWatchClips,
 	FieldClipsLimit,
 	FieldClipsIntervalDays,
@@ -170,8 +170,8 @@ var (
 	DefaultApplyCategoriesToLive bool
 	// DefaultStrictCategoriesLive holds the default value on creation for the "strict_categories_live" field.
 	DefaultStrictCategoriesLive bool
-	// DefaultBlacklistCategoriesLive holds the default value on creation for the "blacklist_categories_live" field.
-	DefaultBlacklistCategoriesLive bool
+	// DefaultBlacklistCategories holds the default value on creation for the "blacklist_categories" field.
+	DefaultBlacklistCategories bool
 	// DefaultWatchClips holds the default value on creation for the "watch_clips" field.
 	DefaultWatchClips bool
 	// DefaultClipsLimit holds the default value on creation for the "clips_limit" field.
@@ -272,9 +272,9 @@ func ByStrictCategoriesLive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStrictCategoriesLive, opts...).ToFunc()
 }
 
-// ByBlacklistCategoriesLive orders the results by the blacklist_categories_live field.
-func ByBlacklistCategoriesLive(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldBlacklistCategoriesLive, opts...).ToFunc()
+// ByBlacklistCategories orders the results by the blacklist_categories field.
+func ByBlacklistCategories(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBlacklistCategories, opts...).ToFunc()
 }
 
 // ByWatchClips orders the results by the watch_clips field.

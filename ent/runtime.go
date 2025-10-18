@@ -123,10 +123,10 @@ func init() {
 	liveDescStrictCategoriesLive := liveFields[14].Descriptor()
 	// live.DefaultStrictCategoriesLive holds the default value on creation for the strict_categories_live field.
 	live.DefaultStrictCategoriesLive = liveDescStrictCategoriesLive.Default.(bool)
-	// liveDescBlacklistCategoriesLive is the schema descriptor for blacklist_categories_live field.
-	liveDescBlacklistCategoriesLive := liveFields[15].Descriptor()
-	// live.DefaultBlacklistCategoriesLive holds the default value on creation for the blacklist_categories_live field.
-	live.DefaultBlacklistCategoriesLive = liveDescBlacklistCategoriesLive.Default.(bool)
+	// liveDescBlacklistCategories is the schema descriptor for blacklist_categories field.
+	liveDescBlacklistCategories := liveFields[15].Descriptor()
+	// live.DefaultBlacklistCategories holds the default value on creation for the blacklist_categories field.
+	live.DefaultBlacklistCategories = liveDescBlacklistCategories.Default.(bool)
 	// liveDescWatchClips is the schema descriptor for watch_clips field.
 	liveDescWatchClips := liveFields[16].Descriptor()
 	// live.DefaultWatchClips holds the default value on creation for the watch_clips field.
