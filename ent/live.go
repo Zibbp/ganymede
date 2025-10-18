@@ -47,6 +47,8 @@ type Live struct {
 	ApplyCategoriesToLive bool `json:"apply_categories_to_live"`
 	// Stop live stream archive if category changes to one not selected.
 	StrictCategoriesLive bool `json:"strict_categories_live"`
+	// Whether the selected categories are blacklisted.
+	BlacklistCategories bool `json:"blacklist_categories"`
 	// Whether to download clips on a schedule.
 	WatchClips bool `json:"watch_clips"`
 	// The number of clips to archive.
@@ -117,7 +119,7 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive, live.FieldStrictCategoriesLive, live.FieldWatchClips, live.FieldClipsIgnoreLastChecked:
+		case live.FieldWatchLive, live.FieldWatchVod, live.FieldDownloadArchives, live.FieldDownloadHighlights, live.FieldDownloadUploads, live.FieldDownloadSubOnly, live.FieldIsLive, live.FieldArchiveChat, live.FieldRenderChat, live.FieldApplyCategoriesToLive, live.FieldStrictCategoriesLive, live.FieldBlacklistCategories, live.FieldWatchClips, live.FieldClipsIgnoreLastChecked:
 			values[i] = new(sql.NullBool)
 		case live.FieldVideoAge, live.FieldClipsLimit, live.FieldClipsIntervalDays, live.FieldUpdateMetadataMinutes:
 			values[i] = new(sql.NullInt64)
@@ -233,6 +235,12 @@ func (_m *Live) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field strict_categories_live", values[i])
 			} else if value.Valid {
 				_m.StrictCategoriesLive = value.Bool
+			}
+		case live.FieldBlacklistCategories:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field blacklist_categories", values[i])
+			} else if value.Valid {
+				_m.BlacklistCategories = value.Bool
 			}
 		case live.FieldWatchClips:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -381,6 +389,9 @@ func (_m *Live) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("strict_categories_live=")
 	builder.WriteString(fmt.Sprintf("%v", _m.StrictCategoriesLive))
+	builder.WriteString(", ")
+	builder.WriteString("blacklist_categories=")
+	builder.WriteString(fmt.Sprintf("%v", _m.BlacklistCategories))
 	builder.WriteString(", ")
 	builder.WriteString("watch_clips=")
 	builder.WriteString(fmt.Sprintf("%v", _m.WatchClips))

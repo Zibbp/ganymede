@@ -22,6 +22,7 @@ export interface WatchedChannel {
   video_age: number;
   apply_categories_to_live: boolean;
   strict_categories_live: boolean;
+  blacklist_categories: boolean;
   watch_clips: boolean;
   clips_limit: number;
   clips_interval_days: number;
@@ -79,6 +80,7 @@ const editWatchedChannel = async (
     regex: watchedChannel.edges.title_regex,
     apply_categories_to_live: watchedChannel.apply_categories_to_live,
     strict_categories_live: watchedChannel.strict_categories_live,
+    blacklist_categories: watchedChannel.blacklist_categories,
     watch_clips: watchedChannel.watch_clips,
     clips_limit: watchedChannel.clips_limit,
     clips_interval_days: watchedChannel.clips_interval_days,
@@ -110,6 +112,7 @@ const createWatchedChannel = async (
     regex: watchedChannel.edges.title_regex,
     apply_categories_to_live: watchedChannel.apply_categories_to_live,
     strict_categories_live: watchedChannel.strict_categories_live,
+    blacklist_categories: watchedChannel.blacklist_categories,
     watch_clips: watchedChannel.watch_clips,
     clips_limit: watchedChannel.clips_limit,
     clips_interval_days: watchedChannel.clips_interval_days,

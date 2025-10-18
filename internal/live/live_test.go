@@ -178,6 +178,17 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.NotEmpty(t, vod.Edges.Chapters, "Expected at least one chapter to be present")
 }
 
+// Helper to assert no VOD and queue item exist
+func assertNoVodAndQueue(t *testing.T, app *server.Application, liveChannel platform.LiveStreamInfo) {
+	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).Only(t.Context())
+	assert.Error(t, err, "Expected error querying VOD for live stream")
+	assert.Nil(t, vod, "VOD should be nil")
+
+	q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(entVod.ExtStreamID(liveChannel.ID))).Only(t.Context())
+	assert.Error(t, err, "Expected error querying queue item for VOD")
+	assert.Nil(t, q, "Queue item for VOD should be nil")
+}
+
 // TestTwitchWatchedChannelLive tests the basic live archiving of a Twitch channel
 func TestTwitchWatchedChannelLive(t *testing.T) {
 	app, liveChannel, channel := setupAppAndLiveChannel(t)
@@ -278,6 +289,51 @@ func TestTwitchWatchedChannelLiveCategoryRestrictionStrict(t *testing.T) {
 	assert.NoError(t, app.TaskService.StartTask(t.Context(), "check_live"), "Failed to run check_live task")
 
 	assertVodAndQueue(t, app, liveChannel, false)
+}
+
+// TestTwitchWatchedChannelBlacklistCategoryRestriction tests live archiving with a blacklisted category that prevents archiving
+func TestTwitchWatchedChannelBlacklistCategoryRestriction(t *testing.T) {
+	app, liveChannel, channel := setupAppAndLiveChannel(t)
+	liveInput := live.Live{
+		ID:                    channel.ID,
+		WatchLive:             true,
+		WatchVod:              false,
+		DownloadArchives:      false,
+		DownloadHighlights:    false,
+		DownloadUploads:       false,
+		ArchiveChat:           true,
+		Resolution:            "720p",
+		RenderChat:            true,
+		DownloadSubOnly:       false,
+		ApplyCategoriesToLive: true,
+		BlacklistCategories:   true,
+		Categories:            []string{liveChannel.GameName},
+	}
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
+	startAndWaitForArchiving(t, app, watchedChannel.ID, true)
+	assertNoVodAndQueue(t, app, liveChannel)
+}
+
+// TestTwitchWatchedChannelBlacklistCategoryRestrictionNoCategorySelected tests live archiving with a blacklisted category but no category selected, allowing archiving to proceed
+func TestTwitchWatchedChannelBlacklistCategoryRestrictionNoCategorySelected(t *testing.T) {
+	app, liveChannel, channel := setupAppAndLiveChannel(t)
+	liveInput := live.Live{
+		ID:                    channel.ID,
+		WatchLive:             true,
+		WatchVod:              false,
+		DownloadArchives:      false,
+		DownloadHighlights:    false,
+		DownloadUploads:       false,
+		ArchiveChat:           true,
+		Resolution:            "720p",
+		RenderChat:            true,
+		DownloadSubOnly:       false,
+		ApplyCategoriesToLive: true,
+		BlacklistCategories:   true,
+	}
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
+	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
+	assertVodAndQueue(t, app, liveChannel, true)
 }
 
 // TestTwitchWatchedChannelTitleRegexFail tests live archiving with a title regex that does not match

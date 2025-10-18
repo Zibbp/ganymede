@@ -67,6 +67,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       video_age: watchedChannel?.video_age || 0,
       apply_categories_to_live: watchedChannel?.apply_categories_to_live ?? false,
       strict_categories_live: watchedChannel?.strict_categories_live ?? false,
+      blacklist_categories: watchedChannel?.blacklist_categories ?? false,
       watch_clips: watchedChannel?.watch_clips ?? false,
       clips_limit: watchedChannel?.clips_limit || 5,
       clips_interval_days: watchedChannel?.clips_interval_days || 7,
@@ -137,6 +138,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           video_age: formValues.video_age,
           apply_categories_to_live: formValues.apply_categories_to_live,
           strict_categories_live: formValues.strict_categories_live,
+          blacklist_categories: formValues.blacklist_categories,
           watch_clips: formValues.watch_clips,
           clips_limit: formValues.clips_limit,
           clips_interval_days: formValues.clips_interval_days,
@@ -181,6 +183,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           video_age: formValues.video_age,
           apply_categories_to_live: formValues.apply_categories_to_live,
           strict_categories_live: formValues.strict_categories_live,
+          blacklist_categories: formValues.blacklist_categories,
           watch_clips: formValues.watch_clips,
           clips_limit: formValues.clips_limit,
           clips_interval_days: formValues.clips_interval_days,
@@ -519,7 +522,16 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           description={t('strictCategoriesLiveDescription')}
           key={form.key('strict_categories_live')}
           {...form.getInputProps('strict_categories_live', { type: "checkbox" })}
-          disabled={!form.values.apply_categories_to_live}
+          disabled={!form.values.apply_categories_to_live || form.values.blacklist_categories}
+        />
+
+        <Checkbox
+          mt={5}
+          label={t('blacklistCategoriesLiveLabel')}
+          description={t('blacklistCategoriesLiveDescription')}
+          key={form.key('blacklist_categories')}
+          {...form.getInputProps('blacklist_categories', { type: "checkbox" })}
+          disabled={form.values.strict_categories_live}
         />
 
         <Box mt={10}>
