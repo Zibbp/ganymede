@@ -126,6 +126,11 @@ func StrictCategoriesLive(v bool) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldStrictCategoriesLive, v))
 }
 
+// BlacklistCategories applies equality check predicate on the "blacklist_categories" field. It's identical to BlacklistCategoriesEQ.
+func BlacklistCategories(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldBlacklistCategories, v))
+}
+
 // WatchClips applies equality check predicate on the "watch_clips" field. It's identical to WatchClipsEQ.
 func WatchClips(v bool) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldWatchClips, v))
@@ -429,6 +434,16 @@ func StrictCategoriesLiveEQ(v bool) predicate.Live {
 // StrictCategoriesLiveNEQ applies the NEQ predicate on the "strict_categories_live" field.
 func StrictCategoriesLiveNEQ(v bool) predicate.Live {
 	return predicate.Live(sql.FieldNEQ(FieldStrictCategoriesLive, v))
+}
+
+// BlacklistCategoriesEQ applies the EQ predicate on the "blacklist_categories" field.
+func BlacklistCategoriesEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldBlacklistCategories, v))
+}
+
+// BlacklistCategoriesNEQ applies the NEQ predicate on the "blacklist_categories" field.
+func BlacklistCategoriesNEQ(v bool) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldBlacklistCategories, v))
 }
 
 // WatchClipsEQ applies the EQ predicate on the "watch_clips" field.

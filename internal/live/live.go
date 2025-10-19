@@ -49,10 +49,11 @@ type Live struct {
 	LastLive               time.Time            `json:"last_live"`
 	RenderChat             bool                 `json:"render_chat"`
 	DownloadSubOnly        bool                 `json:"download_sub_only"`
-	Categories             []string             `json:"categories"`
-	ApplyCategoriesToLive  bool                 `json:"apply_categories_to_live"`
-	StrictCategoriesLive   bool                 `json:"strict_categories_live"`
-	VideoAge               int64                `json:"video_age"` // Restrict fetching videos to a certain age.
+	Categories             []string             `json:"categories"`               // List of category names
+	ApplyCategoriesToLive  bool                 `json:"apply_categories_to_live"` // Apply category restrictions to live streams
+	StrictCategoriesLive   bool                 `json:"strict_categories_live"`   // Strictly enforce category restrictions for live streams. Stop archiving if category changes to one that is not selected.
+	BlacklistCategories    bool                 `json:"blacklist_categories"`     // Blacklist selected categories for live streams and videos.
+	VideoAge               int64                `json:"video_age"`                // Restrict fetching videos to a certain age.
 	TitleRegex             []ent.LiveTitleRegex `json:"title_regex"`
 	WatchClips             bool                 `json:"watch_clips"`
 	ClipsLimit             int                  `json:"clips_limit"`
@@ -99,7 +100,32 @@ func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent
 		return nil, fmt.Errorf("channel already watched")
 	}
 
-	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetStrictCategoriesLive(liveDto.StrictCategoriesLive).SetWatchClips(liveDto.WatchClips).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).Save(ctx)
+	// Validate conflicting options
+	if liveDto.StrictCategoriesLive && liveDto.BlacklistCategories {
+		return nil, fmt.Errorf("conflicting category options: strict_categories_live and blacklist_categories cannot both be enabled")
+	}
+
+	l, err := s.Store.Client.Live.Create().
+		SetChannelID(liveDto.ID).
+		SetWatchLive(liveDto.WatchLive).
+		SetWatchVod(liveDto.WatchVod).
+		SetDownloadArchives(liveDto.DownloadArchives).
+		SetDownloadHighlights(liveDto.DownloadHighlights).
+		SetDownloadUploads(liveDto.DownloadUploads).
+		SetResolution(liveDto.Resolution).
+		SetArchiveChat(liveDto.ArchiveChat).
+		SetRenderChat(liveDto.RenderChat).
+		SetDownloadSubOnly(liveDto.DownloadSubOnly).
+		SetVideoAge(liveDto.VideoAge).
+		SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).
+		SetStrictCategoriesLive(liveDto.StrictCategoriesLive).
+		SetBlacklistCategories(liveDto.BlacklistCategories).
+		SetWatchClips(liveDto.WatchClips).
+		SetClipsLimit(liveDto.ClipsLimit).
+		SetClipsIntervalDays(liveDto.ClipsIntervalDays).
+		SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).
+		SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).
+		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error adding watched channel: %v", err)
 	}
@@ -125,7 +151,31 @@ func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent
 }
 
 func (s *Service) UpdateLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent.Live, error) {
-	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetStrictCategoriesLive(liveDto.StrictCategoriesLive).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).SetWatchClips(liveDto.WatchClips).SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).Save(ctx)
+	// Validate conflicting options
+	if liveDto.StrictCategoriesLive && liveDto.BlacklistCategories {
+		return nil, fmt.Errorf("conflicting category options: strict_categories_live and blacklist_categories cannot both be enabled")
+	}
+
+	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).
+		SetWatchLive(liveDto.WatchLive).
+		SetWatchVod(liveDto.WatchVod).
+		SetDownloadArchives(liveDto.DownloadArchives).
+		SetDownloadHighlights(liveDto.DownloadHighlights).
+		SetDownloadUploads(liveDto.DownloadUploads).
+		SetResolution(liveDto.Resolution).
+		SetArchiveChat(liveDto.ArchiveChat).
+		SetRenderChat(liveDto.RenderChat).
+		SetDownloadSubOnly(liveDto.DownloadSubOnly).
+		SetVideoAge(liveDto.VideoAge).
+		SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).
+		SetStrictCategoriesLive(liveDto.StrictCategoriesLive).
+		SetBlacklistCategories(liveDto.BlacklistCategories).
+		SetClipsLimit(liveDto.ClipsLimit).
+		SetClipsIntervalDays(liveDto.ClipsIntervalDays).
+		SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).
+		SetWatchClips(liveDto.WatchClips).
+		SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).
+		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error updating watched channel: %v", err)
 	}
@@ -312,11 +362,20 @@ OUTER:
 
 				// check for category restrictions
 				if lwc.ApplyCategoriesToLive && len(lwc.Edges.Categories) > 0 {
-					if _, found := watchedChannelCategories[strings.ToLower(stream.GameName)]; found {
+					_, found := watchedChannelCategories[strings.ToLower(stream.GameName)]
+
+					if lwc.BlacklistCategories {
+						if found {
+							log.Debug().Str("category", stream.GameName).Str("blacklist_categories", strings.Join(categoryNamesForLog, ", ")).Msgf("%s is in blacklist categories, skipping", lwc.Edges.Channel.Name)
+							continue OUTER
+						}
+						log.Debug().Str("category", stream.GameName).Str("blacklist_categories", strings.Join(categoryNamesForLog, ", ")).Msgf("%s is not in blacklist categories", lwc.Edges.Channel.Name)
+					} else { // Whitelist mode
+						if !found {
+							log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msgf("%s does not match category restrictions", lwc.Edges.Channel.Name)
+							continue OUTER
+						}
 						log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msgf("%s matches category restrictions", lwc.Edges.Channel.Name)
-					} else {
-						log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msgf("%s does not match category restrictions", lwc.Edges.Channel.Name)
-						continue
 					}
 				}
 

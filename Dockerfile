@@ -105,7 +105,7 @@ RUN \
     fi
 
 #
-# Tests stage. Inclues depedencies required for tests
+# Tests stage. Includes dependencies required for tests
 #
 FROM golang:1.25-bookworm AS tests
 
