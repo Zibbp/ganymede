@@ -2,6 +2,8 @@ package config
 
 import (
 	"context"
+	"os"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/sethvargo/go-envconfig"
@@ -51,8 +53,56 @@ type EnvConfig struct {
 	CDN_URL string `env:"CDN_URL, default="` // Populate if using an external host for the static files (Nginx, S3, etc). By default Ganymede will serve the VIDEOS_DIR directory.
 }
 
+const fileSuffix = "_FILE"
+
+// processFileSecrets iterates through environment variables, checks for the _FILE suffix.
+// If found, it reads the content of the file specified by the variable's value
+// and sets a new environment variable without the _FILE suffix.
+func processFileSecrets() {
+	for _, env := range os.Environ() {
+		parts := strings.SplitN(env, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		envKeyFile := parts[0]
+		filePath := parts[1]
+
+		if !strings.HasSuffix(envKeyFile, fileSuffix) {
+			continue
+		}
+
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			log.Error().
+				Str("env_var", envKeyFile).
+				Str("file_path", filePath).
+				Err(err).
+				Msg("failed to read secret file")
+			continue
+		}
+
+		targetKey := strings.TrimSuffix(envKeyFile, fileSuffix)
+		secretValue := strings.TrimSpace(string(content))
+
+		if err := os.Setenv(targetKey, secretValue); err != nil {
+			log.Error().
+				Str("env_var", targetKey).
+				Err(err).
+				Msg("failed to set environment variable from secret file")
+		} else {
+			log.Debug().
+				Str("env_var", targetKey).
+				Str("source_file", filePath).
+				Msg("successfully loaded secret from file")
+		}
+	}
+}
+
 // GetEnvConfig returns the environment variables for the application
 func GetEnvConfig() EnvConfig {
+	processFileSecrets()
+
 	ctx := context.Background()
 
 	var c EnvConfig
@@ -63,6 +113,8 @@ func GetEnvConfig() EnvConfig {
 }
 
 func GetEnvApplicationConfig() EnvApplicationConfig {
+	processFileSecrets()
+
 	ctx := context.Background()
 
 	var c EnvApplicationConfig
