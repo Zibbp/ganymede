@@ -9,6 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Helper function to safely unset environment variables in tests
+func unsetEnv(t *testing.T, key string) {
+	if err := os.Unsetenv(key); err != nil {
+		t.Logf("Failed to unset environment variable %s: %v", key, err)
+	}
+}
+
 func TestGetEnvConfig(t *testing.T) {
 	assert.NoError(t, os.Setenv("VIDEOS_DIR", "/custom/videos"))
 	assert.NoError(t, os.Setenv("TWITCH_CLIENT_ID", "client_id"))
@@ -55,17 +62,17 @@ func TestProcessFileSecrets_ValidFile(t *testing.T) {
 	tempDir := t.TempDir()
 	secretFile := filepath.Join(tempDir, "secret.txt")
 	secretContent := "my-secret-value"
-	
+
 	err := os.WriteFile(secretFile, []byte(secretContent), 0600)
 	require.NoError(t, err)
 
 	envKey := "TEST_SECRET_FILE"
 	targetKey := "TEST_SECRET"
-	
+
 	err = os.Setenv(envKey, secretFile)
 	require.NoError(t, err)
-	defer os.Unsetenv(envKey)
-	defer os.Unsetenv(targetKey)
+	defer unsetEnv(t, envKey)
+	defer unsetEnv(t, targetKey)
 
 	processFileSecrets()
 
@@ -78,17 +85,17 @@ func TestProcessFileSecrets_ValidFileWithWhitespace(t *testing.T) {
 	secretFile := filepath.Join(tempDir, "secret.txt")
 	secretContent := "  my-secret-with-whitespace  \n\t"
 	expectedContent := "my-secret-with-whitespace"
-	
+
 	err := os.WriteFile(secretFile, []byte(secretContent), 0600)
 	require.NoError(t, err)
 
 	envKey := "DB_PASS_FILE"
 	targetKey := "DB_PASS"
-	
+
 	err = os.Setenv(envKey, secretFile)
 	require.NoError(t, err)
-	defer os.Unsetenv(envKey)
-	defer os.Unsetenv(targetKey)
+	defer unsetEnv(t, envKey)
+	defer unsetEnv(t, targetKey)
 
 	processFileSecrets()
 
@@ -100,11 +107,11 @@ func TestProcessFileSecrets_FileNotFound(t *testing.T) {
 	envKey := "MISSING_SECRET_FILE"
 	targetKey := "MISSING_SECRET"
 	nonExistentFile := "/path/to/nonexistent/file.txt"
-	
+
 	err := os.Setenv(envKey, nonExistentFile)
 	require.NoError(t, err)
-	defer os.Unsetenv(envKey)
-	defer os.Unsetenv(targetKey)
+	defer unsetEnv(t, envKey)
+	defer unsetEnv(t, targetKey)
 
 	processFileSecrets()
 
@@ -115,17 +122,17 @@ func TestProcessFileSecrets_FileNotFound(t *testing.T) {
 func TestProcessFileSecrets_EmptyFile(t *testing.T) {
 	tempDir := t.TempDir()
 	secretFile := filepath.Join(tempDir, "empty.txt")
-	
+
 	err := os.WriteFile(secretFile, []byte(""), 0600)
 	require.NoError(t, err)
 
 	envKey := "EMPTY_SECRET_FILE"
 	targetKey := "EMPTY_SECRET"
-	
+
 	err = os.Setenv(envKey, secretFile)
 	require.NoError(t, err)
-	defer os.Unsetenv(envKey)
-	defer os.Unsetenv(targetKey)
+	defer unsetEnv(t, envKey)
+	defer unsetEnv(t, targetKey)
 
 	processFileSecrets()
 
@@ -135,33 +142,33 @@ func TestProcessFileSecrets_EmptyFile(t *testing.T) {
 
 func TestProcessFileSecrets_MultipleSecrets(t *testing.T) {
 	tempDir := t.TempDir()
-	
+
 	secrets := map[string]string{
-		"DB_PASS_FILE":            "database-password",
+		"DB_PASS_FILE":              "database-password",
 		"TWITCH_CLIENT_SECRET_FILE": "twitch-secret",
-		"JWT_SECRET_FILE":         "jwt-signing-key",
+		"JWT_SECRET_FILE":           "jwt-signing-key",
 	}
-	
+
 	expectedTargets := map[string]string{
-		"DB_PASS":            "database-password",
-		"TWITCH_CLIENT_SECRET": "twitch-secret", 
-		"JWT_SECRET":         "jwt-signing-key",
+		"DB_PASS":              "database-password",
+		"TWITCH_CLIENT_SECRET": "twitch-secret",
+		"JWT_SECRET":           "jwt-signing-key",
 	}
 
 	for envKey, content := range secrets {
 		secretFile := filepath.Join(tempDir, envKey+".txt")
 		err := os.WriteFile(secretFile, []byte(content), 0600)
 		require.NoError(t, err)
-		
+
 		err = os.Setenv(envKey, secretFile)
 		require.NoError(t, err)
-		defer os.Unsetenv(envKey)
+		defer unsetEnv(t, envKey)
 	}
 
 	for targetKey := range expectedTargets {
-		defer os.Unsetenv(targetKey)
+		defer unsetEnv(t, targetKey)
 	}
-	
+
 	processFileSecrets()
 
 	for targetKey, expectedValue := range expectedTargets {
@@ -176,11 +183,11 @@ func TestProcessFileSecrets_NoFileSuffix(t *testing.T) {
 		"ANOTHER_CONFIG": "another-value",
 		"NO_SUFFIX":      "no-suffix-value",
 	}
-	
+
 	for key, value := range regularVars {
 		err := os.Setenv(key, value)
 		require.NoError(t, err)
-		defer os.Unsetenv(key)
+		defer unsetEnv(t, key)
 	}
 
 	processFileSecrets()
@@ -194,11 +201,11 @@ func TestProcessFileSecrets_NoFileSuffix(t *testing.T) {
 func TestProcessFileSecrets_MalformedEnvVar(t *testing.T) {
 	envKey := "MALFORMED_FILE"
 	targetKey := "MALFORMED"
-	
+
 	err := os.Setenv(envKey, "")
 	require.NoError(t, err)
-	defer os.Unsetenv(envKey)
-	defer os.Unsetenv(targetKey)
+	defer unsetEnv(t, envKey)
+	defer unsetEnv(t, targetKey)
 
 	processFileSecrets()
 
@@ -209,25 +216,25 @@ func TestProcessFileSecrets_MalformedEnvVar(t *testing.T) {
 func TestProcessFileSecrets_FileTooLarge(t *testing.T) {
 	tempDir := t.TempDir()
 	secretFile := filepath.Join(tempDir, "large_secret.txt")
-	
+
 	largeContent := make([]byte, 1024*1024+1) // 1MB + 1 byte
 	for i := range largeContent {
 		largeContent[i] = 'A'
 	}
-	
+
 	err := os.WriteFile(secretFile, largeContent, 0600)
 	require.NoError(t, err)
-	
+
 	envKey := "LARGE_SECRET_FILE"
 	targetKey := "LARGE_SECRET"
-	
+
 	err = os.Setenv(envKey, secretFile)
 	require.NoError(t, err)
-	defer os.Unsetenv(envKey)
-	defer os.Unsetenv(targetKey)
-	
+	defer unsetEnv(t, envKey)
+	defer unsetEnv(t, targetKey)
+
 	processFileSecrets()
-	
+
 	value := os.Getenv(targetKey)
 	assert.Empty(t, value, "Large secret file should be rejected")
 }
