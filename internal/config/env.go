@@ -64,11 +64,31 @@ func processFileSecrets() {
 		if len(parts) != 2 {
 			continue
 		}
-
+		
 		envKeyFile := parts[0]
 		filePath := parts[1]
 
 		if !strings.HasSuffix(envKeyFile, fileSuffix) {
+			continue
+		}
+
+		fileInfo, err := os.Stat(filePath)
+		if err != nil {
+			log.Error().
+				Str("env_var", envKeyFile).
+				Str("file_path", filePath).
+				Err(err).
+				Msg("failed to get file info for secret file")
+			continue
+		}
+
+		const maxSecretFileSize = 1024 * 1024 // 1MB
+		if fileInfo.Size() > maxSecretFileSize {
+			log.Error().
+				Str("env_var", envKeyFile).
+				Str("file_path", filePath).
+				Int64("file_size_bytes", fileInfo.Size()).
+				Msg("secret file exceeds maximum allowed size")
 			continue
 		}
 
@@ -84,10 +104,11 @@ func processFileSecrets() {
 
 		targetKey := strings.TrimSuffix(envKeyFile, fileSuffix)
 		secretValue := strings.TrimSpace(string(content))
-
+		
 		if err := os.Setenv(targetKey, secretValue); err != nil {
 			log.Error().
 				Str("env_var", targetKey).
+				Str("file_path", filePath). // Include file path in log
 				Err(err).
 				Msg("failed to set environment variable from secret file")
 		} else {
@@ -101,8 +122,8 @@ func processFileSecrets() {
 
 // GetEnvConfig returns the environment variables for the application
 func GetEnvConfig() EnvConfig {
-	processFileSecrets()
-
+	processFileSecrets() 
+	
 	ctx := context.Background()
 
 	var c EnvConfig
@@ -113,8 +134,8 @@ func GetEnvConfig() EnvConfig {
 }
 
 func GetEnvApplicationConfig() EnvApplicationConfig {
-	processFileSecrets()
-
+	processFileSecrets() 
+	
 	ctx := context.Background()
 
 	var c EnvApplicationConfig
