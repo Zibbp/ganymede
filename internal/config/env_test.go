@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Helper function to safely unset environment variables in tests
 func unsetEnv(t *testing.T, key string) {
 	if err := os.Unsetenv(key); err != nil {
 		t.Logf("Failed to unset environment variable %s: %v", key, err)
