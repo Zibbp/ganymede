@@ -60,13 +60,48 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 		}
 	}()
 
+	if err != nil {
+		log.Panic().Err(err).Msg("failed to open ent client")
+	}
+
+	// Create a pgx connection pool (used for advisory locking and other raw SQL)
+	connPool, err := pgxpool.New(ctx, input.DBString)
+	if err != nil {
+		log.Panic().Err(err).Msg("error creating pgx connection pool")
+	}
+
+	// If this instance is responsible for migrations, acquire an advisory lock
+	// so only one process runs schema migration at a time.
 	if !input.IsWorker {
-		// Run auto migration
-		if err := client.Schema.Create(context.Background()); err != nil {
+		const lockKey int64 = 9876543210 // arbitrary constant lock key
+		conn, err := connPool.Acquire(ctx)
+		if err != nil {
+			connPool.Close()
+			log.Panic().Err(err).Msg("failed to acquire pgx connection for migration lock")
+		}
+		// Ensure connection is released
+		defer conn.Release()
+
+		// Acquire exclusive advisory lock (blocks until obtained)
+		if _, err := conn.Exec(ctx, "SELECT pg_advisory_lock($1)", lockKey); err != nil {
+			connPool.Close()
+			log.Panic().Err(err).Msg("failed to acquire advisory lock for migrations")
+		}
+		// Ensure we release the advisory lock once done
+		defer func() {
+			// use background context to ensure unlock happens even if original ctx is cancelled
+			if _, err := conn.Exec(context.Background(), "SELECT pg_advisory_unlock($1)", lockKey); err != nil {
+				log.Warn().Err(err).Msg("failed to release advisory lock for migrations")
+			}
+		}()
+
+		// Run auto migration (under lock)
+		if err := client.Schema.Create(ctx); err != nil {
 			log.Fatal().Err(err).Msg("error running auto migration")
 		}
+
 		// check if any users exist
-		users, err := client.User.Query().All(context.Background())
+		users, err := client.User.Query().All(ctx)
 		if err != nil {
 			log.Panic().Err(err).Msg("error querying users")
 		}
@@ -79,12 +114,6 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 			}
 		}
 	}
-
-	connPool, err := pgxpool.New(ctx, input.DBString)
-	if err != nil {
-		log.Panic().Err(err).Msg("error connecting to database")
-	}
-	// defer connPool.Close()
 
 	db = &Database{
 		Client:   client,
