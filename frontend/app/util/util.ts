@@ -33,3 +33,36 @@ export function formatBytes(bytes: number, decimals = 2) {
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
+
+type PrettyOpts = {
+  base?: 1000 | 1024; // default 1000
+  maxUnit?: "K" | "M" | "B" | "T"; // default "T"
+};
+
+// Pretty-print large numbers: 1500 -> "1.5K", 2000000 -> "2M", etc.
+export function prettyNumber(n: number, opts: PrettyOpts = {}): string {
+  const base = opts.base ?? 1000;
+  const units = ["", "K", "M", "B", "T"];
+  const maxIdx = Math.min(units.indexOf(opts.maxUnit ?? "T"), units.length - 1);
+  if (!Number.isFinite(n)) return String(n);
+
+  const sign = n < 0 ? "-" : "";
+  let v = Math.abs(n);
+  let u = 0;
+
+  while (v >= base && u < maxIdx) {
+    v /= base;
+    u++;
+  }
+
+  // Truncate (not round): keep 1 decimal for <100 of a unit, else no decimals
+  const factor = v < 100 ? 10 : 1;
+  const truncated = Math.trunc(v * factor) / factor;
+
+  // Strip trailing ".0"
+  const str = (
+    factor === 10 ? truncated.toFixed(1) : truncated.toFixed(0)
+  ).replace(/\.0$/, "");
+
+  return sign + str + units[u];
+}
