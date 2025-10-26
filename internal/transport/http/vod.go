@@ -550,6 +550,11 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 	var sortBy utils.VideoSort
 	if vSortBy != "" {
 		sortBy = utils.VideoSort(vSortBy)
+		if sortBy != utils.SortDate && sortBy != utils.SortViews && sortBy != utils.SortLocalViews && sortBy != utils.SortCreated {
+			return ErrorResponse(c, http.StatusBadRequest, "invalid sort_by option, must be one of: "+strings.Join(utils.VideoSort("").Values(), ", "))
+		}
+	} else {
+		sortBy = utils.SortDate
 	}
 
 	vOrder := c.QueryParam("order")

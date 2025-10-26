@@ -218,42 +218,10 @@ func (s *Service) SearchVods(ctx context.Context, limit int, offset int, types [
 	}
 
 	// Apply sorting
-	// Apply sorting
-	if sortOrder == "" {
-		sortOrder = utils.SortOrderDesc
-	}
-	if sortBy != "" {
-		switch sortBy {
-		case utils.SortDate:
-			if sortOrder == utils.SortOrderAsc {
-				queryBuilder = queryBuilder.Order(ent.Asc(vod.FieldStreamedAt))
-			} else {
-				queryBuilder = queryBuilder.Order(ent.Desc(vod.FieldStreamedAt))
-			}
-		case utils.SortViews:
-			if sortOrder == utils.SortOrderAsc {
-				queryBuilder = queryBuilder.Order(ent.Asc(vod.FieldViews))
-			} else {
-				queryBuilder = queryBuilder.Order(ent.Desc(vod.FieldViews))
-			}
-		case utils.SortLocalViews:
-			if sortOrder == utils.SortOrderAsc {
-				queryBuilder = queryBuilder.Order(ent.Asc(vod.FieldLocalViews))
-			} else {
-				queryBuilder = queryBuilder.Order(ent.Desc(vod.FieldLocalViews))
-			}
-		case utils.SortCreated:
-			if sortOrder == utils.SortOrderAsc {
-				queryBuilder = queryBuilder.Order(ent.Asc(vod.FieldCreatedAt))
-			} else {
-				queryBuilder = queryBuilder.Order(ent.Desc(vod.FieldCreatedAt))
-			}
-		default:
-			return pagination, fmt.Errorf("invalid sortBy option, must be one of: %v", utils.VideoSort("").Values())
-		}
-	} else {
-		// Default sortBy by streamed at
-		queryBuilder = queryBuilder.Order(ent.Desc(vod.FieldStreamedAt))
+	queryBuilder, err := applyVodSorting(queryBuilder, sortBy, sortOrder)
+	if err != nil {
+		log.Debug().Err(err).Msg("error applying vod sorting")
+		return pagination, fmt.Errorf("error applying vod sorting: %v", err)
 	}
 
 	vods, err := queryBuilder.All(ctx)
@@ -323,41 +291,10 @@ func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, chann
 	}
 
 	// Apply sorting
-	if sortOrder == "" {
-		sortOrder = utils.SortOrderDesc
-	}
-	if sortBy != "" {
-		switch sortBy {
-		case utils.SortDate:
-			if sortOrder == utils.SortOrderAsc {
-				vodQuery = vodQuery.Order(ent.Asc(vod.FieldStreamedAt))
-			} else {
-				vodQuery = vodQuery.Order(ent.Desc(vod.FieldStreamedAt))
-			}
-		case utils.SortViews:
-			if sortOrder == utils.SortOrderAsc {
-				vodQuery = vodQuery.Order(ent.Asc(vod.FieldViews))
-			} else {
-				vodQuery = vodQuery.Order(ent.Desc(vod.FieldViews))
-			}
-		case utils.SortLocalViews:
-			if sortOrder == utils.SortOrderAsc {
-				vodQuery = vodQuery.Order(ent.Asc(vod.FieldLocalViews))
-			} else {
-				vodQuery = vodQuery.Order(ent.Desc(vod.FieldLocalViews))
-			}
-		case utils.SortCreated:
-			if sortOrder == utils.SortOrderAsc {
-				vodQuery = vodQuery.Order(ent.Asc(vod.FieldCreatedAt))
-			} else {
-				vodQuery = vodQuery.Order(ent.Desc(vod.FieldCreatedAt))
-			}
-		default:
-			return pagination, fmt.Errorf("invalid sortBy option, must be one of: %v", utils.VideoSort("").Values())
-		}
-	} else {
-		// Default sortBy by streamed at
-		vodQuery = vodQuery.Order(ent.Desc(vod.FieldStreamedAt))
+	vodQuery, err := applyVodSorting(vodQuery, sortBy, sortOrder)
+	if err != nil {
+		log.Debug().Err(err).Msg("error applying vod sorting")
+		return pagination, fmt.Errorf("error applying vod sorting: %v", err)
 	}
 
 	v, err := vodQuery.Limit(limit).Offset(offset).WithChannel().All(c.Request().Context())
@@ -997,4 +934,46 @@ func (s *Service) GetVodChatHistogram(ctx context.Context, videoId uuid.UUID, re
 	}
 
 	return sortedHistogram, nil
+}
+
+// applyVodSorting applies sorting to a VodQuery based on sortBy and sortOrder
+func applyVodSorting(query *ent.VodQuery, sortBy utils.VideoSort, sortOrder utils.SortOrder) (*ent.VodQuery, error) {
+	if sortOrder == "" {
+		sortOrder = utils.SortOrderDesc
+	}
+	if sortBy != "" {
+		switch sortBy {
+		case utils.SortDate:
+			if sortOrder == utils.SortOrderAsc {
+				query = query.Order(ent.Asc(vod.FieldStreamedAt))
+			} else {
+				query = query.Order(ent.Desc(vod.FieldStreamedAt))
+			}
+		case utils.SortViews:
+			if sortOrder == utils.SortOrderAsc {
+				query = query.Order(ent.Asc(vod.FieldViews))
+			} else {
+				query = query.Order(ent.Desc(vod.FieldViews))
+			}
+		case utils.SortLocalViews:
+			if sortOrder == utils.SortOrderAsc {
+				query = query.Order(ent.Asc(vod.FieldLocalViews))
+			} else {
+				query = query.Order(ent.Desc(vod.FieldLocalViews))
+			}
+		case utils.SortCreated:
+			if sortOrder == utils.SortOrderAsc {
+				query = query.Order(ent.Asc(vod.FieldCreatedAt))
+			} else {
+				query = query.Order(ent.Desc(vod.FieldCreatedAt))
+			}
+		default:
+			return query, fmt.Errorf("invalid sortBy option, must be one of: %v", utils.VideoSort("").Values())
+		}
+	} else {
+		// Default sortBy by streamed at
+		query = query.Order(ent.Desc(vod.FieldStreamedAt))
+	}
+
+	return query, nil
 }
