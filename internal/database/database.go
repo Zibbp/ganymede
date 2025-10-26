@@ -76,6 +76,7 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 		const lockKey int64 = 9876543210 // arbitrary constant lock key
 		conn, err := connPool.Acquire(ctx)
 		if err != nil {
+			client.Close()
 			connPool.Close()
 			log.Panic().Err(err).Msg("failed to acquire pgx connection for migration lock")
 		}
@@ -84,6 +85,7 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 
 		// Acquire exclusive advisory lock (blocks until obtained)
 		if _, err := conn.Exec(ctx, "SELECT pg_advisory_lock($1)", lockKey); err != nil {
+			client.Close()
 			connPool.Close()
 			log.Panic().Err(err).Msg("failed to acquire advisory lock for migrations")
 		}
