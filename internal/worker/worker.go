@@ -48,7 +48,7 @@ func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 
 	db := database.NewDatabase(ctx, database.DatabaseConnectionInput{
 		DBString: dbString,
-		IsWorker: false,
+		IsWorker: true,
 	})
 
 	riverClient, err := tasks_client.NewRiverClient(tasks_client.RiverClientInput{

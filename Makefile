@@ -40,7 +40,7 @@ lint:
 	golangci-lint run
 
 test:
-	go test -v ./...
+	go test -count=1 -v ./...
 
 river-tui:
 	go install github.com/almottier/rivertui@latest
