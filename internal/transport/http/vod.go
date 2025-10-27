@@ -33,9 +33,9 @@ type VodService interface {
 	GetVodByExternalId(ctx context.Context, externalId string) (*ent.Vod, error)
 	DeleteVod(ctx context.Context, vID uuid.UUID, deleteFiles bool) error
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
-	SearchVods(ctx context.Context, limit int, offset int, types []utils.VodType, predicates []predicate.Vod) (vod.Pagination, error)
+	SearchVods(ctx context.Context, limit int, offset int, types []utils.VodType, predicates []predicate.Vod, sortBy utils.VideoSort, order utils.SortOrder) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
-	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID, processing bool) (vod.Pagination, error)
+	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID, processing bool, sortBy utils.VideoSort, sortOrder utils.SortOrder) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error)
 	GetChatEmotes(ctx context.Context, vodID uuid.UUID) (*platform.Emotes, error)
@@ -71,10 +71,12 @@ type CreateVodRequest struct {
 }
 
 type SearchQueryParams struct {
-	Q      string   `query:"q" validate:"required"`
-	Limit  int      `query:"limit" default:"10" validate:"number"`
-	Offset int      `query:"offset" default:"0" validate:"number"`
-	Fields []string `validate:"dive,oneof=title id ext_id chapter channel_name channel_id channel_ext_id"`
+	Q      string          `query:"q" validate:"required"`
+	Limit  int             `query:"limit" default:"10" validate:"number"`
+	Offset int             `query:"offset" default:"0" validate:"number"`
+	Fields []string        `validate:"dive,oneof=title id ext_id chapter channel_name channel_id channel_ext_id"`
+	SortBy utils.VideoSort `query:"sort_by" default:"date" validate:"oneof=date views local_views created"`
+	Order  utils.SortOrder `query:"order" default:"desc" validate:"oneof=asc desc"`
 }
 
 // CreateVod godoc
@@ -405,6 +407,15 @@ func (h *Handler) SearchVods(c echo.Context) error {
 	}
 	qp.Fields = fields
 
+	qp.Order = utils.SortOrder(c.QueryParam("order"))
+	if qp.Order == "" {
+		qp.Order = utils.SortOrderDesc
+	}
+	qp.SortBy = utils.VideoSort(c.QueryParam("sort_by"))
+	if qp.SortBy == "" {
+		qp.SortBy = utils.SortDate
+	}
+
 	// Validate query params
 	if err := c.Validate(&qp); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -450,7 +461,7 @@ func (h *Handler) SearchVods(c echo.Context) error {
 		predicates = append(predicates, entVod.TitleContainsFold(qp.Q))
 	}
 
-	v, err := h.Service.VodService.SearchVods(c.Request().Context(), limit, offset, types, predicates)
+	v, err := h.Service.VodService.SearchVods(c.Request().Context(), limit, offset, types, predicates, qp.SortBy, qp.Order)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
@@ -535,10 +546,32 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 		}
 	}
 
+	vSortBy := c.QueryParam("sort_by")
+	var sortBy utils.VideoSort
+	if vSortBy != "" {
+		sortBy = utils.VideoSort(vSortBy)
+		if sortBy != utils.SortDate && sortBy != utils.SortViews && sortBy != utils.SortLocalViews && sortBy != utils.SortCreated {
+			return ErrorResponse(c, http.StatusBadRequest, "invalid sort_by option, must be one of: "+strings.Join(utils.VideoSort("").Values(), ", "))
+		}
+	} else {
+		sortBy = utils.SortDate
+	}
+
+	vOrder := c.QueryParam("order")
+	var sortOrder utils.SortOrder
+	if vOrder != "" {
+		sortOrder = utils.SortOrder(vOrder)
+		if sortOrder != utils.SortOrderAsc && sortOrder != utils.SortOrderDesc {
+			return ErrorResponse(c, http.StatusBadRequest, "invalid order option, must be one of: "+strings.Join(utils.SortOrder("").Values(), ", "))
+		}
+	} else {
+		sortOrder = utils.SortOrderDesc
+	}
+
 	// Default to true to include all videos. Only exclude processing videos is requested.
 	isProcessing := c.QueryParam("processing") != "false"
 
-	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types, playlistUUID, isProcessing)
+	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types, playlistUUID, isProcessing, sortBy, sortOrder)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

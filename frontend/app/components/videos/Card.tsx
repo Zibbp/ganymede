@@ -7,7 +7,7 @@ import duration from "dayjs/plugin/duration";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import classes from "./Card.module.css"
 import { env } from "next-runtime-env";
-import { escapeURL } from "@/app/util/util";
+import { escapeURL, prettyNumber } from "@/app/util/util";
 import { PlaybackStatus, useFetchPlaybackForVideo } from "@/app/hooks/usePlayback";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import useAuthStore from "@/app/store/useAuthStore";
@@ -24,6 +24,7 @@ type Props = {
   showProgress: boolean;
   showMenu: boolean;
   showChannel: boolean;
+  showViewCount?: boolean;
 }
 
 // durationToTime converts the provided video duration in seconds to 'HH:mm:ss'
@@ -40,7 +41,7 @@ function durationToTime(seconds: number) {
   return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 }
 
-const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = true }: Props) => {
+const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = true, showViewCount = true }: Props) => {
   const t = useTranslations('VideoComponents')
   const { isLoggedIn, hasPermission } = useAuthStore()
   const [thumbnailError, setThumbnailError] = useState(false);
@@ -112,7 +113,6 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
 
       </Link>
 
-
       {/* Duration badge */}
       <Badge py={0} px={5} className={classes.durationBadge} radius="md">
         <Text>
@@ -147,8 +147,6 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
         )}
       </Flex>
 
-
-
       {/* Title */}
       <Link href={video.processing ? `#` : `/videos/${video.id}`}>
         <Tooltip label={video.title} openDelay={250} withinPortal>
@@ -180,7 +178,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
       )}
 
       {/* Additional video information and menu */}
-      <Flex gap="xs" justify="flex-start"
+      <Flex justify="flex-start"
         align="center" pt={2}>
 
         <Tooltip
@@ -194,6 +192,20 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
         </Tooltip>
 
         <div className={classes.vodMenu}>
+          <Box pt={4} pr={5}>
+            {showViewCount && (
+              <Tooltip
+                multiline
+                label={`${video.views} ${t('sourceViewsText')}
+               ${video.local_views ?? 0} ${t('localViewsText')}`}
+              >
+                <Text size="sm">
+                  {prettyNumber(video.views)} {t('viewsText')}
+                </Text>
+              </Tooltip>
+            )}
+          </Box>
+
           <Badge variant="default" color="rgba(0, 0, 0, 1)" mt={4}>
             {video.type.toUpperCase()}
           </Badge>
@@ -202,12 +214,9 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
             <VideoMenu video={video} />
           )}
         </div>
-
-
       </Flex>
 
-
-    </Card>
+    </Card >
   );
 }
 

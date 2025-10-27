@@ -75,6 +75,18 @@ export enum VideoType {
   Upload = "upload",
 }
 
+export enum VideoSortBy {
+  Date = "date", // streamed at / published at / uploaded at
+  Views = "views", // source views
+  LocalViews = "local_views", // local views
+  Created = "created", // when added to Ganymede
+}
+
+export enum VideoOrder {
+  Asc = "asc",
+  Desc = "desc",
+}
+
 export enum SearchField {
   Title = "title",
   Id = "id",
@@ -148,26 +160,16 @@ const fetchVideo = async (
   return response.data.data;
 };
 
-type FetchVideosFilterOptions =
-  | {
-      channel_id: string;
-      playlist_id?: never;
-      types: Array<VideoType>;
-      limit: number;
-      offset: number;
-    }
-  | {
-      channel_id?: never;
-      playlist_id: string;
-      types: Array<VideoType>;
-      limit: number;
-      offset: number;
-    }
-  | {
-      limit: number;
-      offset: number;
-      is_processing: boolean;
-    };
+type FetchVideosFilterOptions = {
+  limit: number;
+  offset: number;
+  types?: Array<VideoType>;
+  channel_id?: string;
+  playlist_id?: string;
+  is_processing?: boolean;
+  sort_by?: VideoSortBy;
+  order?: VideoOrder;
+};
 
 const fetchVideosFilter = async (
   limit: number,
@@ -175,7 +177,9 @@ const fetchVideosFilter = async (
   types?: Array<VideoType>,
   channel_id?: string,
   playlist_id?: string,
-  is_processing?: boolean
+  is_processing?: boolean,
+  sort_by?: VideoSortBy,
+  order?: VideoOrder
 ): Promise<PaginationResponse<Array<Video>>> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const queryParams: { [key: string]: any } = {};
@@ -193,6 +197,12 @@ const fetchVideosFilter = async (
   if (typeof is_processing !== "undefined") {
     queryParams.processing = is_processing;
   }
+  if (sort_by) {
+    queryParams.sort_by = sort_by;
+  }
+  if (order) {
+    queryParams.order = order;
+  }
 
   const response = await useAxios.get<
     ApiResponse<PaginationResponse<Array<Video>>>
@@ -208,19 +218,42 @@ const fetchVideosFilter = async (
 };
 
 const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
-  // @ts-expect-error fine
-  const { limit, offset, types, channel_id, playlist_id, is_processing } =
-    params;
+  const {
+    limit,
+    offset,
+    types,
+    channel_id,
+    playlist_id,
+    is_processing,
+    sort_by,
+    order,
+  } = params;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let queryKey: any[];
   const processing = is_processing ?? true;
   if (channel_id) {
-    queryKey = ["channel_videos", channel_id, limit, offset, types];
+    queryKey = [
+      "channel_videos",
+      channel_id,
+      limit,
+      offset,
+      types,
+      sort_by,
+      order,
+    ];
   } else if (playlist_id) {
-    queryKey = ["playlist_videos", playlist_id, limit, offset, types];
+    queryKey = [
+      "playlist_videos",
+      playlist_id,
+      limit,
+      offset,
+      types,
+      sort_by,
+      order,
+    ];
   } else {
-    queryKey = ["videos", limit, offset, types, processing]; // Fetch videos without channel_id or playlist_id
+    queryKey = ["videos", limit, offset, types, processing, sort_by, order]; // Fetch videos without channel_id or playlist_id
   }
 
   return useQuery<PaginationResponse<Array<Video>>, Error>({
@@ -232,7 +265,9 @@ const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
         types,
         channel_id,
         playlist_id,
-        processing
+        processing,
+        sort_by,
+        order
       ),
     placeholderData: keepPreviousData, // previous data is kept until the new data is swapped in. This prevents flashing when changing pages, filtering, etc.
   });
@@ -257,7 +292,9 @@ const searchVideos = async (
   offset: number,
   query: string,
   types?: Array<VideoType>,
-  fields?: Array<SearchField>
+  fields?: Array<SearchField>,
+  sort_by?: VideoSortBy,
+  order?: VideoOrder
 ): Promise<PaginationResponse<Array<Video>>> => {
   const queryParams: { [key: string]: unknown } = {};
   if (types && types.length > 0) {
@@ -265,6 +302,12 @@ const searchVideos = async (
   }
   if (fields && fields.length > 0) {
     queryParams.fields = fields.join(",");
+  }
+  if (sort_by) {
+    queryParams.sort_by = sort_by;
+  }
+  if (order) {
+    queryParams.order = order;
   }
   const response = await useAxios.get<
     ApiResponse<PaginationResponse<Array<Video>>>
@@ -286,16 +329,19 @@ interface SearchVideosOptions {
   limit: number;
   offset: number;
   query: string;
+  sort_by: VideoSortBy;
+  order: VideoOrder;
 }
 
 const useSearchVideos = (
   params: SearchVideosOptions,
   enabled: boolean = true
 ) => {
-  const { limit, offset, types, query, fields } = params;
+  const { limit, offset, types, query, fields, sort_by, order } = params;
   return useQuery<PaginationResponse<Array<Video>>, Error>({
-    queryKey: ["search", limit, offset, types, query, fields],
-    queryFn: () => searchVideos(limit, offset, query, types, fields),
+    queryKey: ["search", limit, offset, types, query, fields, sort_by, order],
+    queryFn: () =>
+      searchVideos(limit, offset, query, types, fields, sort_by, order),
     placeholderData: keepPreviousData, // previous data is kept until the new data is swapped in. This prevents flashing when changing pages, filtering, etc.
     enabled: enabled,
   });
@@ -596,5 +642,5 @@ export {
   useGetVideoClips,
   useGenerateSpriteThumbnails,
   useGetVideoChatHistogram,
-  useGetVideoFFprobe
+  useGetVideoFFprobe,
 };
