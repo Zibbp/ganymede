@@ -794,7 +794,26 @@
     "streamedOnTooltip": "Streamed on",
     "videoTypeTooltip": "Video type",
     "videoClipsTitle": "Video Clips",
-    "storageSizeTooltip": "Storage Size"
+    "storageSizeTooltip": "Storage Size",
+    "enums": {
+      "VideoSortBy": {
+        "date": "Date",
+        "views": "Views",
+        "local_views": "Local Views",
+        "created": "Created"
+      },
+      "VideoOrder": {
+        "asc": "Ascending",
+        "desc": "Descending"
+      },
+      "VideoType": {
+        "archive": "Archive",
+        "clip": "Clip",
+        "live": "Live",
+        "highlight": "Highlight",
+        "upload": "Upload"
+      }
+    }
   },
   "MultistreamComponents": {
     "seekBackTooltip": "Seek back {seconds} seconds",

@@ -66,7 +66,7 @@ const VideoGrid = <T extends Video>({
   // Convert the enum VideoType to an array for the multiselector
   const selectorVideoTypes = Object.values(VideoType).map((type) => ({
     value: type,
-    label: type.charAt(0).toUpperCase() + type.slice(1),
+    label: t(`enums.VideoType.${type}`),
   }));
 
   const handleSetSortBy = (value: VideoSortBy | null) => {
@@ -78,10 +78,7 @@ const VideoGrid = <T extends Video>({
 
   const selectorSortBy = Object.values(VideoSortBy).map((sort) => ({
     value: sort,
-    label: (() => {
-      const s = String(sort).replace(/_/g, " ");
-      return s.charAt(0).toUpperCase() + s.slice(1);
-    })(),
+    label: t(`enums.VideoSortBy.${sort}`),
   }));
 
   const handleSetOrder = (value: VideoOrder | null) => {
@@ -93,7 +90,7 @@ const VideoGrid = <T extends Video>({
 
   const selectorOrder = Object.values(VideoOrder).map((order) => ({
     value: order,
-    label: order.charAt(0).toUpperCase() + order.slice(1),
+    label: t(`enums.VideoOrder.${order}`),
   }));
 
   const convertToVideoTypes = (selectedValues: string[]): VideoType[] => {
@@ -140,7 +137,7 @@ const VideoGrid = <T extends Video>({
           <Select
             data={selectorSortBy}
             value={sortBy}
-            onChange={(value) => handleSetSortBy((value as VideoSortBy) ?? null)} // <— guard
+            onChange={(value) => handleSetSortBy((value as VideoSortBy) ?? null)}
             label={t('sortByLabel')}
             placeholder={t("sortByPlaceholder")}
             clearable
@@ -148,10 +145,10 @@ const VideoGrid = <T extends Video>({
           <Select
             data={selectorOrder}
             value={order}
-            onChange={(value) => handleSetOrder((value as VideoOrder) ?? null)} // <— guard
+            onChange={(value) => handleSetOrder((value as VideoOrder) ?? null)}
             label={t('orderByLabel')}
             placeholder={t("orderByPlaceholder")}
-            w={100}
+            w={200}
           />
         </Flex>
         <div>
