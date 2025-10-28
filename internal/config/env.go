@@ -34,6 +34,8 @@ type EnvConfig struct {
 	// platform variables
 	TwitchClientId     string `env:"TWITCH_CLIENT_ID, required"`
 	TwitchClientSecret string `env:"TWITCH_CLIENT_SECRET, required"`
+	KickClientId       string `env:"KICK_CLIENT_ID"`
+	KickClientSecret   string `env:"KICK_CLIENT_SECRET"`
 
 	// worker config
 	MaxChatDownloadExecutions         int `env:"MAX_CHAT_DOWNLOAD_EXECUTIONS, default=3"`
