@@ -7,7 +7,7 @@ import duration from "dayjs/plugin/duration";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import classes from "./Card.module.css"
 import { env } from "next-runtime-env";
-import { escapeURL, prettyNumber } from "@/app/util/util";
+import { durationToTime, escapeURL, prettyNumber } from "@/app/util/util";
 import { PlaybackStatus, useFetchPlaybackForVideo } from "@/app/hooks/usePlayback";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import useAuthStore from "@/app/store/useAuthStore";
@@ -15,6 +15,7 @@ import { IconCircleCheck, IconLock } from "@tabler/icons-react";
 import VideoMenu from "./Menu";
 import { UserRole } from "@/app/hooks/useAuthentication";
 import { useTranslations } from "next-intl";
+import VideoSpritePeek from "./VideoSpritePeek"
 
 dayjs.extend(duration);
 dayjs.extend(localizedFormat);
@@ -25,20 +26,6 @@ type Props = {
   showMenu: boolean;
   showChannel: boolean;
   showViewCount?: boolean;
-}
-
-// durationToTime converts the provided video duration in seconds to 'HH:mm:ss'
-// dayjs.duration doesn't work well with longer >=24 hour durations
-function durationToTime(seconds: number) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  const formattedHours = String(hours).padStart(2, '0');
-  const formattedMinutes = String(minutes).padStart(2, '0');
-  const formattedSeconds = String(secs).padStart(2, '0');
-
-  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 }
 
 const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = true, showViewCount = true }: Props) => {
@@ -87,17 +74,30 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
       <Link href={`/videos/${video.id}`}>
 
         <Card.Section>
-          <Image
-            className={classes.videoImage}
-            src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
-              video.web_thumbnail_path
-            )}`}
-            onError={handleThumbnailError}
-            width={thumbnailError ? "100%" : "100%"}
-            height={thumbnailError ? "100%" : "100%"}
-            fallbackSrc="/images/ganymede-thumbnail.webp"
-            alt={video.title}
-          />
+          <div className={classes.videoImageWrapper}>
+            <Image
+              className={classes.videoImage}
+              src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
+                video.web_thumbnail_path
+              )}`}
+              onError={handleThumbnailError}
+              width={thumbnailError ? "100%" : "100%"}
+              height={thumbnailError ? "100%" : "100%"}
+              fallbackSrc="/images/ganymede-thumbnail.webp"
+              alt={video.title}
+            />
+
+            {video.sprite_thumbnails_enabled && (
+              <VideoSpritePeek
+                video={video}
+                progressDisplayed={
+                  showProgress &&
+                  Math.round(playbackProgress) > 0 &&
+                  !playbackIsWatched
+                }
+              />
+            )}
+          </div>
           {showProgress && Math.round(playbackProgress) > 0 && !playbackIsWatched && (
             <Tooltip label={`${Math.round(playbackProgress)}% ${t('watched')}`}>
               <Progress

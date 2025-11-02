@@ -66,3 +66,17 @@ export function prettyNumber(n: number, opts: PrettyOpts = {}): string {
 
   return sign + str + units[u];
 }
+
+// durationToTime converts the provided video duration in seconds to 'HH:mm:ss'
+// dayjs.duration doesn't work well with longer >=24 hour durations
+export function durationToTime(seconds: number) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  const formattedHours = String(hours).padStart(2, '0');
+  const formattedMinutes = String(minutes).padStart(2, '0');
+  const formattedSeconds = String(secs).padStart(2, '0');
+
+  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+}

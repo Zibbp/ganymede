@@ -17,6 +17,10 @@
   opacity: 2;
 }
 
+.videoImageWrapper {
+  position: relative;
+}
+
 .videoImage {
   pointer-events: none;
   cursor: default;

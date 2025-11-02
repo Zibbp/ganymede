@@ -1,0 +1,33 @@
+
+.spritePeekContainer {
+    position: absolute;
+    height: 20px;
+    inset: auto 0 0 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    touch-action: none;
+}
+
+.spritePeekContainer[data-with-progress="true"] .spritePeekBar {
+    margin-bottom: var(--progress-size-sm);
+}
+
+.spritePeekBar {
+    height: 0px;
+    transition: height 0.2s ease-in-out;
+    --progress-transition-duration: 0s;
+}
+
+.spritePeekContainer[data-opened="true"] .spritePeekBar {
+    height: 8px;
+}
+
+.spritePeekImage {
+    width: rem(240px);
+    height: auto;
+    aspect-ratio: var(--aspect-ratio);
+    background-size: calc((var(--spritesheet-cols)) * 100%) calc((var(--spritesheet-rows)) * 100%);
+    background-position: calc((var(--sprite-x)) * -100%) calc((var(--sprite-y)) * -100%);
+    background-image: var(--sprite-image);
+}
