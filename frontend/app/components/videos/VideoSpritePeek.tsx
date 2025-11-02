@@ -5,6 +5,11 @@ import { Flex, Popover, Progress } from "@mantine/core";
 import { env } from "next-runtime-env";
 import { durationToTime, escapeURL } from "@/app/util/util";
 import clsx from "clsx";
+import {
+  useDebouncedCallback,
+  useElementSize,
+  useThrottledCallback,
+} from "@mantine/hooks";
 
 interface Props {
   video: Video;
@@ -22,33 +27,45 @@ const VideoSpritePeek = ({ video, progressDisplayed }: Props) => {
   const [opened, setOpened] = useState<boolean>(false);
   const [hoveredTimeElement, setHoveredTimeElement] =
     useState<HoveredTimeElement | null>(null);
-  const spritePeekContainerRef = useRef<HTMLDivElement>(null);
+  const { ref: spritePeekContainerRef, width: spritePeekContainerWidth } =
+    useElementSize();
 
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const { clientX, currentTarget } = e;
-    const { left, width } = currentTarget.getBoundingClientRect();
-    const offsetX = clientX - left;
-    const percentage = Math.min(Math.max(offsetX / width, 0), 1);
-    const time = percentage * video.duration;
+  const onPointerMove = useThrottledCallback(
+    (e: React.PointerEvent<HTMLDivElement>, currentTarget: HTMLDivElement) => {
+      const { clientX } = e;
+      const { left, width } = currentTarget.getBoundingClientRect();
+      const offsetX = clientX - left;
+      const percentage = Math.min(Math.max(offsetX / width, 0), 1);
+      const time = percentage * video.duration;
 
-    const interval = video.sprite_thumbnails_interval;
-    const index = Math.floor(time / interval);
-    const spritesPerSheet =
-      video.sprite_thumbnails_columns * video.sprite_thumbnails_rows;
-    const sheetIndex = Math.floor(index / spritesPerSheet);
-    const indexInSheet = index % spritesPerSheet;
-    const spriteX = indexInSheet % video.sprite_thumbnails_columns;
-    const spriteY = Math.floor(indexInSheet / video.sprite_thumbnails_columns);
+      const interval = video.sprite_thumbnails_interval;
+      const index = Math.floor(time / interval);
+      const spritesPerSheet =
+        video.sprite_thumbnails_columns * video.sprite_thumbnails_rows;
+      const sheetIndex = Math.floor(index / spritesPerSheet);
 
-    const imageSrc = video.sprite_thumbnails_images[sheetIndex];
+      if (sheetIndex >= video.sprite_thumbnails_images.length) {
+        setHoveredTimeElement(null);
+        return;
+      }
 
-    setHoveredTimeElement({
-      time: index * interval,
-      spriteX,
-      spriteY,
-      imageSrc,
-    });
-  };
+      const indexInSheet = index % spritesPerSheet;
+      const spriteX = indexInSheet % video.sprite_thumbnails_columns;
+      const spriteY = Math.floor(
+        indexInSheet / video.sprite_thumbnails_columns
+      );
+
+      const imageSrc = video.sprite_thumbnails_images[sheetIndex];
+
+      setHoveredTimeElement({
+        time: index * interval,
+        spriteX,
+        spriteY,
+        imageSrc,
+      });
+    },
+    16
+  );
 
   return (
     <Popover
@@ -59,7 +76,7 @@ const VideoSpritePeek = ({ video, progressDisplayed }: Props) => {
           hoveredTimeElement && spritePeekContainerRef.current
             ? 0.5 *
               (hoveredTimeElement.time / video.duration - 0.5) *
-              spritePeekContainerRef.current.getBoundingClientRect().width
+              spritePeekContainerWidth
             : 0,
       }}
     >
@@ -71,7 +88,7 @@ const VideoSpritePeek = ({ video, progressDisplayed }: Props) => {
           ref={spritePeekContainerRef}
           onPointerEnter={() => setOpened(true)}
           onPointerLeave={() => setOpened(false)}
-          onPointerMove={onPointerMove}
+          onPointerMove={(e) => onPointerMove(e, e.currentTarget)}
           onPointerDown={(e) => e.preventDefault()}
           onClick={(e) => e.preventDefault()}
         >
