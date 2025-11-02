@@ -29,6 +29,13 @@ export interface Video {
   clip_vod_offset?: number;
   views: number;
   resolution: string;
+  sprite_thumbnails_columns: number;
+  sprite_thumbnails_enabled: boolean;
+  sprite_thumbnails_height: number;
+  sprite_thumbnails_images: string[];
+  sprite_thumbnails_interval: number;
+  sprite_thumbnails_rows: number;
+  sprite_thumbnails_width: number;
   thumbnail_path: string;
   web_thumbnail_path: string;
   video_path: string;
