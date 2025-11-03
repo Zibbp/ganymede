@@ -615,6 +615,8 @@
     "categoriesApplyToLivestreamsDescription": "Kategoriebeschränkungen auf Live-Streams anwenden",
     "strictCategoriesLiveLabel": "Strikte Live-Stream-Kategorien",
     "strictCategoriesLiveDescription": "Archivierung des Live-Streams stoppen, wenn die Kategorie zu einer nicht ausgewählten wechselt",
+    "blacklistCategoriesLiveLabel": "Blacklist-Kategorien",
+    "blacklistCategoriesLiveDescription": "Archiviere keine Live-Streams und Videos, die in den ausgewählten Kategorien sind",
     "categoriesLoadButton": "Kategorien laden",
     "categoriesSearchPlaceholder": "Kategorien suchen...",
     "submitButton": "Beobachteten Kanal erstellen",
@@ -734,6 +736,9 @@
     "watchedVideoText": "Dieses Video hast du bereits angesehen",
     "lockedText": "Video ist gesperrt",
     "streamedOnText": "Gestreamt am",
+    "sourceViewsText": "Aufrufe der Quelle",
+    "localViewsText": "Lokale Aufrufe",
+    "viewsText": "Aufrufe",
     "loadingVideos": "Videos werden geladen",
     "errorLoadingVideos": "Fehler beim Laden der Videos",
     "loadingChatHistogram": "Lade Chat-Histogramm",
@@ -746,6 +751,10 @@
     "chatError": "Fehler",
     "filterByLabel": "Nach Kriterium filtern",
     "filterByPlaceholder": "Nach Videoarten filtern",
+    "orderByLabel": "Sortierreihenfolge",
+    "orderByPlaceholder": "Sortierreihenfolge",
+    "sortByLabel": "Sortiere nach",
+    "sortByPlaceholder": "Sortiere nach",
     "videosCount": "{count} Videos",
     "loginRequiredText": "Du musst angemeldet sein, um dieses Video anzusehen",
     "markedAsWatchedNotification": "Video als angesehen markiert",
@@ -785,7 +794,26 @@
     "streamedOnTooltip": "Gestreamt am",
     "videoTypeTooltip": "Videotyp",
     "videoClipsTitle": "Video-Clips",
-    "storageSizeTooltip": "Speicherplatz"
+    "storageSizeTooltip": "Speicherplatz",
+    "enums": {
+      "VideoSortBy": {
+        "date": "Datum",
+        "views": "Aufrufe",
+        "local_views": "Lokale Aufrufe",
+        "created": "Erstellt"
+      },
+      "VideoOrder": {
+        "asc": "Aufsteigend",
+        "desc": "Absteigend"
+      },
+      "VideoType": {
+        "archive": "Archiv",
+        "clip": "Clip",
+        "live": "Live",
+        "highlight": "Highlight",
+        "upload": "Hochgeladen"
+      }
+    }
   },
   "MultistreamComponents": {
     "seekBackTooltip": "{seconds} Sekunden zurückspringen",
