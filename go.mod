@@ -26,7 +26,7 @@ require (
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/shirou/gopsutil/v4 v4.25.9
 	github.com/swaggo/swag v1.16.6
-	github.com/testcontainers/testcontainers-go v0.39.0
+	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.39.0
 	golang.org/x/crypto v0.43.0
 	golang.org/x/oauth2 v0.32.0
@@ -50,7 +50,7 @@ require (
 	github.com/containerd/platforms v0.2.1 // indirect
 	github.com/cpuguy83/dockercfg v0.3.2 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/docker v28.3.3+incompatible // indirect
+	github.com/docker/docker v28.5.1+incompatible // indirect
 	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/ebitengine/purego v0.9.0 // indirect
@@ -67,7 +67,6 @@ require (
 	github.com/go-openapi/spec v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 // indirect
