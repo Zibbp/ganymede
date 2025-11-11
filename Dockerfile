@@ -1,5 +1,5 @@
-ARG TWITCHDOWNLOADER_VERSION="1.56.1"
-ARG YT_DLP_VERSION="2025.09.05"
+ARG TWITCHDOWNLOADER_VERSION="1.56.2"
+ARG YT_DLP_VERSION="2025.10.22"
 
 #
 # API Build
@@ -31,9 +31,11 @@ RUN pip install requests --break-system-packages
 # Clone yt-dlp repository
 RUN git clone --depth 1 --branch ${YT_DLP_VERSION} https://github.com/yt-dlp/yt-dlp.git /app/yt-dlp
 # Copy patch for Twitch Ganymede 
-COPY ganymede_twitch_yt_dlp_git.patch /tmp/ganymede_twitch_yt_dlp_git.patch
+#COPY ganymede_twitch_yt_dlp_git.patch /tmp/ganymede_twitch_yt_dlp_git.patch
+COPY yt_dlp_twitch_fix_11_10_25.patch /tmp/yt_dlp_twitch_fix_11_10_25.patch
 WORKDIR /app/yt-dlp
-RUN git apply /tmp/ganymede_twitch_yt_dlp_git.patch
+#RUN git apply /tmp/ganymede_twitch_yt_dlp_git.patch
+RUN git apply /tmp/yt_dlp_twitch_fix_11_10_25.patch
 # Build
 RUN make
 
