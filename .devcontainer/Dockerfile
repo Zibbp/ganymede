@@ -1,7 +1,7 @@
 ARG TWITCHDOWNLOADER_VERSION="1.56.2"
 ARG YT_DLP_VERSION="2025.11.12"
 
-FROM mcr.microsoft.com/devcontainers/go:1.25
+FROM mcr.microsoft.com/devcontainers/go:2-1
 
 ARG TWITCHDOWNLOADER_VERSION
 ARG YT_DLP_VERSION
