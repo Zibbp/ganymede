@@ -114,7 +114,7 @@ jobs:
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: env.OCI_PUSH == 'true' && github.actor != 'dependabot[bot]'
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
@@ -139,7 +139,7 @@ jobs:
           OCI_IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Download digests
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: ${{ runner.temp }}/digests
           pattern: digests-*

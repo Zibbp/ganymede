@@ -2,7 +2,7 @@
 import { Center, Container, Title } from "@mantine/core";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import { useEffect, useState } from "react";
-import { useFetchVideosFilter, VideoType } from "../hooks/useVideos";
+import { useFetchVideosFilter, VideoOrder, VideoSortBy, VideoType } from "../hooks/useVideos";
 import useSettingsStore from "../store/useSettingsStore";
 import VideoGrid from "../components/videos/Grid";
 import { useTranslations } from "next-intl";
@@ -14,6 +14,8 @@ const VideosPage = () => {
 
   const [activePage, setActivePage] = useState(1);
   const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
+  const [sortBy, setSortBy] = useState<VideoSortBy>(VideoSortBy.Date);
+  const [order, setOrder] = useState<VideoOrder>(VideoOrder.Desc);
 
   const videoLimit = useSettingsStore((state) => state.videoLimit);
   const setVideoLimit = useSettingsStore((state) => state.setVideoLimit);
@@ -22,7 +24,9 @@ const VideosPage = () => {
     limit: videoLimit,
     offset: (activePage - 1) * videoLimit,
     types: videoTypes,
-    playlist_id: ""
+    playlist_id: "",
+    sort_by: sortBy,
+    order: order,
   });
 
   if (isPending) {
@@ -50,6 +54,8 @@ const VideosPage = () => {
           videoLimit={videoLimit}
           onVideoLimitChange={setVideoLimit}
           onVideoTypeChange={setVideoTypes}
+          onSortByChange={setSortBy}
+          onOrderChange={setOrder}
           showChannel={true}
         />
       </Container>

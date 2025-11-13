@@ -65,6 +65,14 @@ func (db *Database) VideosDirMigrate(ctx context.Context, videosDir string) erro
 			update.SetInfoPath(strings.Replace(v.InfoPath, oldVideoPath, videosDir, 1))
 			update.SetCaptionPath(strings.Replace(v.CaptionPath, oldVideoPath, videosDir, 1))
 
+			if v.SpriteThumbnailsEnabled && len(v.SpriteThumbnailsImages) > 0 {
+				var newSpriteThumbs []string
+				for _, thumb := range v.SpriteThumbnailsImages {
+					newSpriteThumbs = append(newSpriteThumbs, strings.Replace(thumb, oldVideoPath, videosDir, 1))
+				}
+				update = update.SetSpriteThumbnailsImages(newSpriteThumbs)
+			}
+
 			if _, err := update.Save(ctx); err != nil {
 				return err
 			}

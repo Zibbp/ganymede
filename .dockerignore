@@ -1,7 +1,6 @@
 .github
 dev
 tmp
-bin
 /frontend/node_modules
 /frontend/.pnp
 /frontend/.pnp.*

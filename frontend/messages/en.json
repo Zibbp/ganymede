@@ -610,11 +610,13 @@
     "applyToVideosLabel": "Apply to video downloads",
     "applyToVideosDescription": "Apply this regex to video downloads, applies to live streams only by default",
     "categoriesText": "Categories",
-    "categoriesDescription": "Archive videos and live streams from select categories. Leave blank to archive all categories.",
+    "categoriesDescription": "Archive videos and live streams from select categories. Leave blank to archive all categories. Category selection is a whitelist by default. Use the options below to change this behavior.",
     "categoriesApplyToLivestreamsLabel": "Apply to Live Streams",
     "categoriesApplyToLivestreamsDescription": "Apply category restrictions to live streams",
     "strictCategoriesLiveLabel": "Strict Live Stream Categories",
     "strictCategoriesLiveDescription": "Stop live stream archive if category changes to one that is not selected",
+    "blacklistCategoriesLiveLabel": "Blacklist Categories",
+    "blacklistCategoriesLiveDescription": "Do not archive live streams and videos that are in the selected categories",
     "categoriesLoadButton": "Load Categories",
     "categoriesSearchPlaceholder": "Search categories...",
     "submitButton": "Create Watched Channel",
@@ -734,6 +736,9 @@
     "watchedVideoText": "You have already watched this video",
     "lockedText": "Video is locked",
     "streamedOnText": "Streamed on",
+    "sourceViewsText": "source views",
+    "localViewsText": "local views",
+    "viewsText": "views",
     "loadingVideos": "Loading videos",
     "errorLoadingVideos": "Error loading videos",
     "loadingChatHistogram": "Loading chat histogram",
@@ -746,6 +751,10 @@
     "chatError": "Error",
     "filterByLabel": "Filter by",
     "filterByPlaceholder": "Filter by video types",
+    "orderByLabel": "Order by",
+    "orderByPlaceholder": "Order by",
+    "sortByLabel": "Sort by",
+    "sortByPlaceholder": "Sort by",
     "videosCount": "{count} videos",
     "loginRequiredText": "You must be logged in to watch this video",
     "markedAsWatchedNotification": "Video marked as watched",
@@ -758,7 +767,7 @@
     "copiedToClipboardText": "Copied to clipboard",
     "copiedToClipboardMessage": "The video url has been copied to your clipboard",
     "error": "Error",
-    "clipboardAPIErrorNotification": "The clipboard API requires HTTP, falling back to a prompt",
+    "clipboardAPIErrorNotification": "The clipboard API requires HTTPS, falling back to a prompt",
     "clipboardPromptText": "Copy to clipboard: Ctrl+C, Enter",
     "menu": {
       "playlists": "Playlists",
@@ -785,7 +794,26 @@
     "streamedOnTooltip": "Streamed on",
     "videoTypeTooltip": "Video type",
     "videoClipsTitle": "Video Clips",
-    "storageSizeTooltip": "Storage Size"
+    "storageSizeTooltip": "Storage Size",
+    "enums": {
+      "VideoSortBy": {
+        "date": "Date",
+        "views": "Views",
+        "local_views": "Local Views",
+        "created": "Created"
+      },
+      "VideoOrder": {
+        "asc": "Ascending",
+        "desc": "Descending"
+      },
+      "VideoType": {
+        "archive": "Archive",
+        "clip": "Clip",
+        "live": "Live",
+        "highlight": "Highlight",
+        "upload": "Upload"
+      }
+    }
   },
   "MultistreamComponents": {
     "seekBackTooltip": "Seek back {seconds} seconds",

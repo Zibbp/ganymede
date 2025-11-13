@@ -203,19 +203,25 @@ func (s *Service) CheckVodExists(extID string) (bool, error) {
 	return true, nil
 }
 
-func (s *Service) SearchVods(ctx context.Context, limit int, offset int, types []utils.VodType, predicates []predicate.Vod) (Pagination, error) {
+func (s *Service) SearchVods(ctx context.Context, limit int, offset int, types []utils.VodType, predicates []predicate.Vod, sortBy utils.VideoSort, sortOrder utils.SortOrder) (Pagination, error) {
 
 	var pagination Pagination
 
 	queryBuilder := s.Store.Client.Vod.Query().
 		Where(vod.Or(predicates...)).
-		Order(ent.Desc(vod.FieldStreamedAt)).
 		WithChannel().
 		Limit(limit).
 		Offset(offset)
 
 	if len(types) > 0 {
 		queryBuilder = queryBuilder.Where(vod.TypeIn(types...))
+	}
+
+	// Apply sorting
+	queryBuilder, err := applyVodSorting(queryBuilder, sortBy, sortOrder)
+	if err != nil {
+		log.Debug().Err(err).Msg("error applying vod sorting")
+		return pagination, fmt.Errorf("error applying vod sorting: %v", err)
 	}
 
 	vods, err := queryBuilder.All(ctx)
@@ -254,7 +260,7 @@ func (s *Service) GetVodPlaylists(c echo.Context, vodID uuid.UUID) ([]*ent.Playl
 	return v.Edges.Playlists, nil
 }
 
-func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID, isProcessing bool) (Pagination, error) {
+func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID, isProcessing bool, sortBy utils.VideoSort, sortOrder utils.SortOrder) (Pagination, error) {
 	var pagination Pagination
 
 	if channelId != uuid.Nil && playlistId != uuid.Nil {
@@ -284,7 +290,14 @@ func (s *Service) GetVodsPagination(c echo.Context, limit int, offset int, chann
 		vodQuery = vodQuery.Where(vod.Processing(isProcessing))
 	}
 
-	v, err := vodQuery.Order(ent.Desc(vod.FieldStreamedAt)).Limit(limit).Offset(offset).WithChannel().All(c.Request().Context())
+	// Apply sorting
+	vodQuery, err := applyVodSorting(vodQuery, sortBy, sortOrder)
+	if err != nil {
+		log.Debug().Err(err).Msg("error applying vod sorting")
+		return pagination, fmt.Errorf("error applying vod sorting: %v", err)
+	}
+
+	v, err := vodQuery.Limit(limit).Offset(offset).WithChannel().All(c.Request().Context())
 	if err != nil {
 		log.Debug().Err(err).Msg("error getting vods")
 		return pagination, fmt.Errorf("error getting vods: %v", err)
@@ -921,4 +934,46 @@ func (s *Service) GetVodChatHistogram(ctx context.Context, videoId uuid.UUID, re
 	}
 
 	return sortedHistogram, nil
+}
+
+// applyVodSorting applies sorting to a VodQuery based on sortBy and sortOrder
+func applyVodSorting(query *ent.VodQuery, sortBy utils.VideoSort, sortOrder utils.SortOrder) (*ent.VodQuery, error) {
+	if sortOrder == "" {
+		sortOrder = utils.SortOrderDesc
+	}
+	if sortBy != "" {
+		switch sortBy {
+		case utils.SortDate:
+			if sortOrder == utils.SortOrderAsc {
+				query = query.Order(ent.Asc(vod.FieldStreamedAt))
+			} else {
+				query = query.Order(ent.Desc(vod.FieldStreamedAt))
+			}
+		case utils.SortViews:
+			if sortOrder == utils.SortOrderAsc {
+				query = query.Order(ent.Asc(vod.FieldViews))
+			} else {
+				query = query.Order(ent.Desc(vod.FieldViews))
+			}
+		case utils.SortLocalViews:
+			if sortOrder == utils.SortOrderAsc {
+				query = query.Order(ent.Asc(vod.FieldLocalViews))
+			} else {
+				query = query.Order(ent.Desc(vod.FieldLocalViews))
+			}
+		case utils.SortCreated:
+			if sortOrder == utils.SortOrderAsc {
+				query = query.Order(ent.Asc(vod.FieldCreatedAt))
+			} else {
+				query = query.Order(ent.Desc(vod.FieldCreatedAt))
+			}
+		default:
+			return query, fmt.Errorf("invalid sortBy option, must be one of: %v", utils.VideoSort("").Values())
+		}
+	} else {
+		// Default sortBy by streamed at
+		query = query.Order(ent.Desc(vod.FieldStreamedAt))
+	}
+
+	return query, nil
 }

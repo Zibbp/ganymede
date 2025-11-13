@@ -60,6 +60,36 @@ func (VodType) Values() (kinds []string) {
 	return
 }
 
+type VideoSort string
+
+const (
+	SortDate       VideoSort = "date"        // streamed at / published at / upload date
+	SortViews      VideoSort = "views"       // views from platform
+	SortLocalViews VideoSort = "local_views" // views from Ganymede
+	SortCreated    VideoSort = "created"     // when the vod was created in Ganymede
+)
+
+func (VideoSort) Values() (kinds []string) {
+	for _, s := range []VideoSort{SortDate, SortViews, SortLocalViews, SortCreated} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}
+
+type SortOrder string
+
+const (
+	SortOrderAsc  SortOrder = "asc"
+	SortOrderDesc SortOrder = "desc"
+)
+
+func (SortOrder) Values() (kinds []string) {
+	for _, s := range []SortOrder{SortOrderAsc, SortOrderDesc} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}
+
 type TaskStatus string
 
 const (

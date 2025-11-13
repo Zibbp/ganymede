@@ -1,9 +1,9 @@
-import { Box, Center, Group, Pagination, SimpleGrid, ActionIcon, NumberInput, MultiSelect, Text } from "@mantine/core";
+import { Box, Center, Group, Pagination, SimpleGrid, ActionIcon, NumberInput, MultiSelect, Text, Select, Flex } from "@mantine/core";
 import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { useRef, useState, useEffect } from "react";
 import type { NumberInputHandlers } from "@mantine/core";
 import VideoCard from "./Card";
-import { Video, VideoType } from "@/app/hooks/useVideos";
+import { Video, VideoOrder, VideoSortBy, VideoType } from "@/app/hooks/useVideos";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";
 import { useTranslations } from "next-intl";
 
@@ -17,6 +17,8 @@ export type VideoGridProps<T extends Video> = {
   videoLimit: number;
   onVideoLimitChange: (limit: number) => void;
   onVideoTypeChange: (types: VideoType[]) => void;
+  onSortByChange?: (sort: VideoSortBy) => void;
+  onOrderChange?: (order: VideoOrder) => void;
   showChannel?: boolean;
   showMenu?: boolean;
   showProgress?: boolean;
@@ -32,6 +34,8 @@ const VideoGrid = <T extends Video>({
   videoLimit,
   onVideoLimitChange,
   onVideoTypeChange,
+  onSortByChange = () => { },
+  onOrderChange = () => { },
   showChannel = false,
   showMenu = true,
   showProgress = true,
@@ -41,6 +45,8 @@ const VideoGrid = <T extends Video>({
   // Local state to handle the input value while typing
   const [localLimit, setLocalLimit] = useState(videoLimit);
   const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
+  const [sortBy, setSortBy] = useState<VideoSortBy>(VideoSortBy.Date);
+  const [order, setOrder] = useState<VideoOrder>(VideoOrder.Desc);
 
   useEffect(() => {
     setLocalLimit(videoLimit);
@@ -60,7 +66,31 @@ const VideoGrid = <T extends Video>({
   // Convert the enum VideoType to an array for the multiselector
   const selectorVideoTypes = Object.values(VideoType).map((type) => ({
     value: type,
-    label: type.charAt(0).toUpperCase() + type.slice(1),
+    label: t(`enums.VideoType.${type}`),
+  }));
+
+  const handleSetSortBy = (value: VideoSortBy | null) => {
+    const next = value ?? VideoSortBy.Date; // handle clearable
+    setSortBy(next);
+    onSortByChange(next);
+    onPageChange(1);
+  };
+
+  const selectorSortBy = Object.values(VideoSortBy).map((sort) => ({
+    value: sort,
+    label: t(`enums.VideoSortBy.${sort}`),
+  }));
+
+  const handleSetOrder = (value: VideoOrder | null) => {
+    const next = value ?? VideoOrder.Desc; // handle clearable
+    setOrder(next);
+    onOrderChange(next);
+    onPageChange(1);
+  }
+
+  const selectorOrder = Object.values(VideoOrder).map((order) => ({
+    value: order,
+    label: t(`enums.VideoOrder.${order}`),
   }));
 
   const convertToVideoTypes = (selectedValues: string[]): VideoType[] => {
@@ -75,7 +105,6 @@ const VideoGrid = <T extends Video>({
     setVideoTypes(videoTypesArray)
     onPageChange(1);
   };
-
 
   const handleIncrement = () => {
     const newValue = Math.min(localLimit + 24, 120);
@@ -96,7 +125,7 @@ const VideoGrid = <T extends Video>({
   return (
     <Box>
       <Group justify="space-between" gap="xs" mb="md">
-        <Box w={200}>
+        <Flex gap="xs">
           <MultiSelect
             data={selectorVideoTypes}
             value={videoTypes}
@@ -105,7 +134,23 @@ const VideoGrid = <T extends Video>({
             placeholder={t("filterByPlaceholder")}
             clearable
           />
-        </Box>
+          <Select
+            data={selectorSortBy}
+            value={sortBy}
+            onChange={(value) => handleSetSortBy((value as VideoSortBy) ?? null)}
+            label={t('sortByLabel')}
+            placeholder={t("sortByPlaceholder")}
+            clearable
+          />
+          <Select
+            data={selectorOrder}
+            value={order}
+            onChange={(value) => handleSetOrder((value as VideoOrder) ?? null)}
+            label={t('orderByLabel')}
+            placeholder={t("orderByPlaceholder")}
+            w={200}
+          />
+        </Flex>
         <div>
           <Text>{t('videosCount', { count: totalCount.toLocaleString() })}</Text>
         </div>

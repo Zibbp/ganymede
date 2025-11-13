@@ -150,7 +150,7 @@ export function Navbar() {
             <Collapse in={adminLinksOpened}>
               <div className={classes.collapseContent}>
                 {link.links.map(subLink => (
-                  <Link key={subLink.label} href={subLink.link} className={classes.link}>
+                  <Link key={subLink.label} href={subLink.link} className={classes.link} onClick={closeDrawer}>
                     {subLink.label}
                   </Link>
                 ))}
@@ -161,7 +161,7 @@ export function Navbar() {
       }
 
       return (
-        <Link key={link.label} href={link.link} className={className}>
+        <Link key={link.label} href={link.link} className={className} onClick={closeDrawer}>
           {link.label}
         </Link>
       );
