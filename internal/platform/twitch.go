@@ -893,3 +893,7 @@ func (c *TwitchConnection) GetStreams(ctx context.Context, limit int) ([]LiveStr
 
 	return streams, nil
 }
+
+func (c *TwitchConnection) DownloadVodChat(ctx context.Context, videoId string, startTime time.Time, endTime time.Time, outputPath string) error {
+	return ErrNotImplemented
+}
