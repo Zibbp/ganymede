@@ -4,7 +4,7 @@ import { useInputState } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { Channel, useFetchChannels } from "../hooks/useChannels";
 import { showNotification } from "@mantine/notifications";
-import { useArchiveVideo, VideoQuality } from "../hooks/useArchive";
+import { Platforms, useArchiveVideo, VideoQuality } from "../hooks/useArchive";
 import { useAxiosPrivate } from "../hooks/useAxios";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "../util/util";
@@ -19,7 +19,7 @@ function extractTwitchId(input: string): string {
   const clipUrlRegex = /\/clip\/(?<id>[a-zA-Z0-9-_]+)/; // Extract full clip ID from URL
   const videoUrlRegex = /\/videos\/(?<id>\d+)/; // Extract video ID from URL
   const clipIdRegex = /^[a-zA-Z]+(?:[a-zA-Z0-9-]+)?$/; // Match standalone clip IDs
-  const videoIdRegex = /^\d+$/; // Match standalone video IDs (numeric)
+  // const videoIdRegex = /^\d+$/; // Match standalone video IDs (numeric)
 
   // Check for a clip URL
   const clipUrlMatch = input.match(clipUrlRegex);
@@ -39,9 +39,9 @@ function extractTwitchId(input: string): string {
   }
 
   // Check for standalone video IDs
-  if (videoIdRegex.test(input)) {
-    return input; // If input is already a valid video ID, return it
-  }
+  // if (videoIdRegex.test(input)) {
+  //   return input; // If input is already a valid video ID, return it
+  // }
 
   return ""
 }
@@ -60,6 +60,7 @@ const ArchivePage = () => {
   const [archiveQuality, setArchiveQuality] = useInputState<VideoQuality>(VideoQuality.Best);
   const [channelData, setChannelData] = useState<SelectOption[]>([]);
   const [channelId, setChannelId] = useState("");
+  const [archivePlatform, setArchivePlatform] = useInputState<Platforms>(Platforms.Twitch);
 
   const axiosPrivate = useAxiosPrivate();
   const useArchiveVideoMutate = useArchiveVideo();
@@ -68,6 +69,11 @@ const ArchivePage = () => {
   // Quality options using the enum
   const qualityOptions: SelectOption[] = Object.entries(VideoQuality).map(([key, value]) => ({
     label: key.replace('quality', ''),
+    value: value
+  }));
+
+  const platformOptions: SelectOption[] = Object.entries(Platforms).map(([key, value]) => ({
+    label: key.charAt(0).toUpperCase() + key.slice(1),
     value: value
   }));
 
@@ -113,6 +119,7 @@ const ArchivePage = () => {
         quality: archiveQuality,
         archive_chat: archiveChat,
         render_chat: renderChat,
+        platform: archivePlatform,
       });
 
       setArchiveInput("")
@@ -132,7 +139,7 @@ const ArchivePage = () => {
 
   return (
     <div>
-      <Container size="md" mt={20}>
+      <Container size="lg" mt={20}>
         <Center>
           <div style={{ width: "100%" }}>
             <Card
@@ -170,11 +177,18 @@ const ArchivePage = () => {
               />
               <Group mt={5} mb={10}>
                 <Select
+                  placeholder={t('platformPlaceholder')}
+                  value={archivePlatform}
+                  onChange={(value) => setArchivePlatform(value as Platforms)}
+                  data={platformOptions}
+                  w={rem(150)}
+                />
+                <Select
                   placeholder={t('resolutionPlaceholder')}
                   value={archiveQuality}
                   onChange={(value) => setArchiveQuality(value as VideoQuality)}
                   data={qualityOptions}
-                  w={rem(200)}
+                  w={rem(100)}
                 />
                 <Switch
                   checked={archiveChat}
