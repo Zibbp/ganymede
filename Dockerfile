@@ -62,7 +62,12 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     unzip twitchdownloader.zip && \
     rm twitchdownloader.zip
 
+# Clone chat-downloader
 RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
+# Apply Twitch fixes
+COPY chat_downloader_twitch_fix.patch /tmp/chat_downloader_twitch_fix.patch
+WORKDIR /tmp/chat-downloader
+RUN git apply /tmp/chat_downloader_twitch_fix.patch
 
 # Install yt-dlp
 COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp

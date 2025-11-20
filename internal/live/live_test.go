@@ -3,6 +3,7 @@ package live_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -176,6 +177,38 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 
 	// Assert at least one chapter exists
 	assert.NotEmpty(t, vod.Edges.Chapters, "Expected at least one chapter to be present")
+
+	// Assert video is playable
+	assert.True(t, tests_shared.IsPlayableVideo(vod.VideoPath), "Video file is not playable")
+	assert.True(t, tests_shared.IsPlayableVideo(vod.ChatVideoPath), "Video file is not playable")
+
+	// Assert chat files is greater than 0 bytes
+	chatFileInfo, err := os.Stat(vod.ChatPath)
+	assert.NoError(t, err)
+	assert.Greater(t, chatFileInfo.Size(), int64(0), "Chat file should not be empty")
+
+	// Assert info file is greater than 0 bytes
+	infoFileInfo, err := os.Stat(vod.InfoPath)
+	assert.NoError(t, err)
+	assert.Greater(t, infoFileInfo.Size(), int64(0), "Info file should not be empty")
+
+	// Assert thumbnail is greater than 0 bytes
+	thumbnailFileInfo, err := os.Stat(vod.ThumbnailPath)
+	assert.NoError(t, err)
+	assert.Greater(t, thumbnailFileInfo.Size(), int64(0), "Thumbnail file should not be empty")
+
+	// Assert web thumbnail is greater than 0 bytes
+	webThumbnailFileInfo, err := os.Stat(vod.WebThumbnailPath)
+	assert.NoError(t, err)
+	assert.Greater(t, webThumbnailFileInfo.Size(), int64(0), "Web thumbnail file should not be empty")
+
+	// Assert sprite thumbnail facts
+	vod, err = app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).WithChannel().WithChapters().First(t.Context())
+	assert.NoError(t, err, "Failed to query VOD for live stream")
+	assert.NoError(t, err)
+	assert.NotNil(t, vod)
+	assert.Greater(t, len(vod.SpriteThumbnailsImages), 0, "Sprite thumbnails should be generated for videos")
+
 }
 
 // Helper to assert no VOD and queue item exist

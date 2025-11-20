@@ -1,0 +1,51 @@
+diff --git a/chat_downloader/sites/twitch.py b/chat_downloader/sites/twitch.py
+index 9cb2194..ef908b0 100644
+--- a/chat_downloader/sites/twitch.py
++++ b/chat_downloader/sites/twitch.py
+@@ -788,7 +788,11 @@ class TwitchChatDownloader(BaseChatDownloader):
+                 'channelLogin': channel
+             }
+         }]
++        gquery = [{
++            'operationName': 'GlobalBadges',
++        }]
+         data = multi_get(self._download_gql(query), 0, 'data') or {}
++        data.update(multi_get(self._download_gql(gquery), 0, 'data') or {})
+ 
+         badges = data.get('badges') or []
+         user = multi_get(data, 'user', 'broadcastBadges') or []
+@@ -840,14 +844,14 @@ class TwitchChatDownloader(BaseChatDownloader):
+         return info
+ 
+     _OPERATION_HASHES = {
+-        'ChatList_Badges': '86f43113c04606e6476e39dcd432dee47c994d77a83e54b732e11d4935f0cd08',
+-        'StreamMetadata': '1c719a40e481453e5c48d9bb585d971b8b372f8ebb105b17076722264dfa5b3e',
+-        'BrowsePage_Popular': 'c3322a9df3121f437182beb5a75c2a8db9a1e27fa57701ffcae70e681f502557',
+-        'ChannelVideoShelvesQuery': 'fb663273aa958ebe2f58d5fcb3aacc112d67ebfd7f414b095c5d1498d21aad92',
+-        'ClipsCards__User': 'b73ad2bfaecfd30a9e6c28fada15bd97032c83ec77a0440766a56fe0bd632777',
+-        'VideoMetadata': '226edb3e692509f727fd56821f5653c05740242c82b0388883e0c0e75dcbf687',
+-        'FilterableVideoTower_Videos': 'a937f1d22e269e39a03b509f65a7490f9fc247d7f83d6ac1421523e3b68042cb',
+-
++        'ChatList_Badges': '838a7e0b47c09cac05f93ff081a9ff4f876b68f7624f0fc465fe30031e372fc2',
++        'GlobalBadges': '9db27e18d61ee393ccfdec8c7d90f14f9a11266298c2e5eb808550b77d7bcdf6',
++        'StreamMetadata': 'b57f9b910f8cd1a4659d894fe7550ccc81ec9052c01e438b290fd66a040b9b93',
++        'BrowsePage_Popular': 'fb60a7f9b2fe8f9c9a080f41585bd4564bea9d3030f4d7cb8ab7f9e99b1cee67',
++        'ChannelVideoShelvesQuery': 'a30af24ef449ab2e9be4a9c187ef14d294e4ec3041420d219b4c60fc9de7f27c',
++        'ClipsCards__User': '90c33f5e6465122fba8f9371e2a97076f9ed06c6fed3788d002ab9eba8f91d88',
++        'VideoMetadata': '45111672eea2e507f8ba44d101a61862f9c56b11dee09a15634cb75cb9b9084d',
++        'FilterableVideoTower_Videos': '67004f7881e65c297936f32c75246470629557a393788fb5a69d6d9a25a8fd5f',
+         'VideoCommentsByOffsetOrCursor': 'b70a3591ff0f4e0313d126c6a1502d79a1c02baebb288227c582044aa76adf6a',
+ 
+         # Not used yet
+@@ -1651,7 +1655,10 @@ class TwitchChatDownloader(BaseChatDownloader):
+ 
+         query = [{
+             'operationName': 'StreamMetadata',
+-            'variables': {'channelLogin': stream_id.lower()}
++            'variables': {
++                'channelLogin': stream_id.lower(),
++                'includeIsDJ': True
++            }
+         }]
+ 
+         for attempt_number in attempts(max_attempts):

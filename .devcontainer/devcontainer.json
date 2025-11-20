@@ -1,5 +1,8 @@
 {
-  "build": { "dockerfile": "Dockerfile" },
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
   "features": {
     "ghcr.io/jungaretti/features/make:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
@@ -52,6 +55,5 @@
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
   "workspaceFolder": "/workspace",
-  "postCreateCommand": "pip install chat-downloader --break-system-packages",
   "postAttachCommand": "sudo chown -R vscode:vscode /go && make dev_setup"
 }
