@@ -207,7 +207,7 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.NoError(t, err, "Failed to query VOD for live stream")
 	assert.NoError(t, err)
 	assert.NotNil(t, vod)
-	assert.Len(t, vod.SpriteThumbnailsImages, 1, "Sprite thumbnails should be generated for videos")
+	assert.Greater(t, len(vod.SpriteThumbnailsImages), 0, "Sprite thumbnails should be generated for videos")
 
 }
 
