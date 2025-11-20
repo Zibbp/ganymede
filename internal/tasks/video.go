@@ -156,15 +156,17 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		return err
 	}
 
-	// download video
-	err = exec.PostProcessVideo(ctx, dbItems.Video)
-	if err != nil {
-		return err
+	// download video non archive video
+	if !dbItems.Queue.LiveArchive {
+		err = exec.PostProcessVideo(ctx, dbItems.Video)
+		if err != nil {
+			return err
+		}
 	}
 
 	// update video duration for live archive
 	if dbItems.Queue.LiveArchive {
-		duration, err := exec.GetVideoDuration(ctx, dbItems.Video.TmpVideoConvertPath)
+		duration, err := exec.GetVideoDuration(ctx, dbItems.Video.TmpVideoDownloadPath)
 		if err != nil {
 			return err
 		}
@@ -192,25 +194,28 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		}
 	}
 
-	// convert to HLS if needed
-	if config.Get().Archive.SaveAsHls {
-		// create temp hls directory
-		if err := utils.CreateDirectory(dbItems.Video.TmpVideoHlsPath); err != nil {
-			return err
+	// convert non live archive video
+	if !dbItems.Queue.LiveArchive {
+		// convert to HLS if needed
+		if config.Get().Archive.SaveAsHls {
+			// create temp hls directory
+			if err := utils.CreateDirectory(dbItems.Video.TmpVideoHlsPath); err != nil {
+				return err
+			}
+
+			// convert to hls
+			err = exec.ConvertVideoToHLS(ctx, dbItems.Video)
+			if err != nil {
+				return err
+			}
 		}
 
-		// convert to hls
-		err = exec.ConvertVideoToHLS(ctx, dbItems.Video)
-		if err != nil {
-			return err
-		}
-	}
-
-	// delete source video
-	if utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
-		err = utils.DeleteFile(dbItems.Video.TmpVideoDownloadPath)
-		if err != nil {
-			return err
+		// delete source video
+		if utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
+			err = utils.DeleteFile(dbItems.Video.TmpVideoDownloadPath)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -302,7 +307,14 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 
 	// move standard video
 	if dbItems.Video.VideoHlsPath == "" {
-		err := utils.MoveFile(ctx, dbItems.Video.TmpVideoConvertPath, dbItems.Video.VideoPath)
+		var tmpVideoPath string
+		if dbItems.Queue.LiveArchive {
+			tmpVideoPath = dbItems.Video.TmpVideoDownloadPath
+		} else {
+			tmpVideoPath = dbItems.Video.TmpVideoConvertPath
+		}
+
+		err := utils.MoveFile(ctx, tmpVideoPath, dbItems.Video.VideoPath)
 		if err != nil {
 			return err
 		}

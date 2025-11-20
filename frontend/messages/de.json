@@ -297,8 +297,6 @@
       "convertFFmpegArgsDescription": "Benutzerdefinierte FFmpeg-Argumente, die bei der Konvertierung des Videos verwendet werden sollen. Dies wird sowohl für Live- als auch für VOD-Archive verwendet.",
       "ytdlpVideoArgsLabel": "YT-DLP Video-Argumente",
       "ytdlpVideoArgsDescription": "Benutzerdefinierte yt-dlp-Argumente zur Verwendung beim Herunterladen eines Videos. Dies wird nur für VOD-Downloads verwendet.",
-      "ytdlpLiveArgsLabel": "YT-DLP Live-Argumente",
-      "ytdlpLiveArgsDescription": "Benutzerdefinierte yt-dlp-Argumente, die beim Herunterladen eines Livestreams verwendet werden. Dies wird nur für Livestream-Downloads verwendet.",
       "liveStreamTitle": "Live-Stream",
       "proxySettings": "Proxy-Einstellungen",
       "proxySettingsDescription": "Archiviere Live-Streams über einen Proxy, um Werbung zu verhindern. Dein Twitch-Token wird nicht an den Proxy gesendet.",

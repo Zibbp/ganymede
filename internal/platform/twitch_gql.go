@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/chapter"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -159,6 +160,11 @@ func twitchGQLRequest(body string) ([]byte, error) {
 	req.Header.Set("Sec-Fetch-Mode", "cors")
 	req.Header.Set("Sec-Fetch-Site", "same-site")
 	req.Header.Set("User-Agent", utils.ChromeUserAgent)
+
+	twitchToken := config.Get().Parameters.TwitchToken
+	if twitchToken != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", twitchToken))
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
