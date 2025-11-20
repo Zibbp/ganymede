@@ -203,7 +203,8 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.Greater(t, webThumbnailFileInfo.Size(), int64(0), "Web thumbnail file should not be empty")
 
 	// Assert sprite thumbnail facts
-	vod, err = app.Database.Client.Vod.Query().Where(entVod.ExtID(q.Edges.Vod.ExtID)).WithChapters().Only(context.Background())
+	vod, err = app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).WithChannel().WithChapters().First(t.Context())
+	assert.NoError(t, err, "Failed to query VOD for live stream")
 	assert.NoError(t, err)
 	assert.NotNil(t, vod)
 	assert.Len(t, vod.SpriteThumbnailsImages, 1, "Sprite thumbnails should be generated for videos")
