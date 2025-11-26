@@ -242,7 +242,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 
 	// Build output path
-	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", qualitiesURI[closestQuality], "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-movflags", "+faststart"}
+	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts+discardcorrupt", "-i", qualitiesURI[closestQuality], "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-movflags", "+faststart"}
 
 	if video.TmpVideoHlsPath == "" {
 		ffmpegArgs = append(ffmpegArgs, []string{"-bsf:a", "aac_adtstoasc", "-f", "mp4"}...)
@@ -254,6 +254,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		}
 	}
 
+	// Append user defined video convert parameters
 	videoConvertString := config.Get().Parameters.VideoConvert
 	videoConvertArgs := strings.Fields(videoConvertString)
 	ffmpegArgs = append(ffmpegArgs, videoConvertArgs...)
