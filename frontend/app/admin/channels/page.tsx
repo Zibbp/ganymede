@@ -18,6 +18,7 @@ import { formatBytes, usePageTitle } from "@/app/util/util";
 
 const AdminChannelsPage = () => {
   const t = useTranslations("AdminChannelsPage");
+  const miscT = useTranslations("MiscComponents");
   usePageTitle(t('title'))
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -204,6 +205,7 @@ const AdminChannelsPage = () => {
             onRecordsPerPageChange={setPerPage}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
+            recordsPerPageLabel={miscT('recordsPerPageLabel')}
           />
         </Box>
       </Container>

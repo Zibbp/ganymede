@@ -18,6 +18,7 @@ import { usePageTitle } from "@/app/util/util";
 
 const AdminUsersPage = () => {
   const t = useTranslations('AdminUsersPage')
+  const miscT = useTranslations('MiscComponents')
   usePageTitle(t('title'))
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -174,6 +175,7 @@ const AdminUsersPage = () => {
             onRecordsPerPageChange={setPerPage}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
+            recordsPerPageLabel={miscT('recordsPerPageLabel')}
           />
         </Box>
       </Container>

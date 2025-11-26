@@ -136,6 +136,10 @@
       "tasks": "Tasks",
       "information": "Information"
     },
+    "profileDropdown": {
+      "profile": "Profile",
+      "logout": "Logout"
+    },
     "errorLoggingOut": "Error logging out",
     "search": "Search",
     "language": "Language",
@@ -862,5 +866,8 @@
       "topLargeVideosText": "Top Largest Videos",
       "noLargeVideosText": "No videos found"
     }
+  },
+  "MiscComponents": {
+    "recordsPerPageLabel": "Records per page"
   }
 }

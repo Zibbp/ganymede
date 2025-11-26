@@ -18,6 +18,7 @@ import { usePageTitle } from "../util/util";
 
 const QueuePage = () => {
   const t = useTranslations("QueuePage");
+  const miscT = useTranslations("MiscComponents");
   usePageTitle(t('pageTitle'))
 
 
@@ -226,6 +227,7 @@ const QueuePage = () => {
           onPageChange={(p) => setPage(p)}
           recordsPerPageOptions={[10, 20, 50]}
           onRecordsPerPageChange={setPerPage}
+          recordsPerPageLabel={miscT('recordsPerPageLabel')}
         />
       </Container>
       <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('modal.cancel.title')}>

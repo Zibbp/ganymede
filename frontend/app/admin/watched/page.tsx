@@ -16,6 +16,7 @@ import { usePageTitle } from "@/app/util/util";
 
 const AdminWatchChannelsPage = () => {
   const t = useTranslations('AdminWatchedChannelsPage')
+  const miscT = useTranslations('MiscComponents')
   usePageTitle(t('title'))
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -193,6 +194,7 @@ const AdminWatchChannelsPage = () => {
             onRecordsPerPageChange={setPerPage}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
+            recordsPerPageLabel={miscT('recordsPerPageLabel')}
           />
         </Box>
       </Container>
