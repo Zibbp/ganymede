@@ -550,7 +550,7 @@ const AdminSettingsPage = () => {
             </div>
             <Button
               onClick={() =>
-                form.insertListItem('livestream.proxies', { url: '', header: '' })
+                form.insertListItem('livestream.proxies', { url: '', header: '', proxy_type: ProxyType.TwitchHLS })
               }
               mt={10}
               leftSection={<IconPlus size="1rem" />}
