@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math"
 	"regexp"
 	"sort"
 	"strconv"
@@ -22,6 +23,10 @@ func parseQuality(q string) Quality {
 
 	// If it doesn’t look like "123p" or "123p45", see if it's just digits:
 	if len(matches) == 0 {
+		if q == "chunked" {
+			return Quality{Resolution: math.MaxInt, FPS: 60, Original: q}
+		}
+
 		if num, err := strconv.Atoi(q); err == nil {
 			// Treat "720" as Resolution=720, FPS=60 (default)
 			return Quality{Resolution: num, FPS: 60, Original: q}
