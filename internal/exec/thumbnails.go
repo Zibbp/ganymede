@@ -50,29 +50,59 @@ func GenerateThumbnails(config GenerateThumbnailsInput) error {
 	format := fmt.Sprintf("frame%%0%dd.jpg", 8)
 	for t := 0; t < int(duration); t += config.Interval {
 		outputPath := filepath.Join(config.ThumbnailDir, fmt.Sprintf(format, t))
-		ffmpegArgs := []string{
+
+		// Try fast method: seek to time and select I-frame
+		argsSelect := []string{
 			"-hide_banner", "-an",
 			"-ss", strconv.Itoa(t),
 			"-i", config.Video,
-			"-update", "1",
 			"-frames:v", "1",
 			"-q:v", "10",
 			"-err_detect", "ignore_err",
 			"-vf", fmt.Sprintf(
 				"select='eq(pict_type\\,I)',scale=%d:%d",
-				config.Width, config.Height,
-			),
+				config.Width, config.Height),
 			"-y",
 			outputPath,
 		}
-		cmd := exec.Command("ffmpeg", ffmpegArgs...)
-		ffmpegOutput, err := cmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf(
-				"failed to extract frame at %ds: %w\nCommand: ffmpeg %s\nOutput: %s",
-				t, err, strings.Join(ffmpegArgs, " "), string(ffmpegOutput),
-			)
+
+		cmd := exec.Command("ffmpeg", argsSelect...)
+		out, err := cmd.CombinedOutput()
+		if err == nil {
+			// verify file exists and is non-zero
+			if fi, statErr := os.Stat(outputPath); statErr == nil && fi.Size() > 0 {
+				continue // success
+			}
 		}
+
+		log.Info().Msgf("I-frame select thumbnail failed for t=%d, trying fallback method", t)
+
+		// Fallback method
+		argsFallback := []string{
+			"-hide_banner", "-an",
+			"-ss", strconv.Itoa(t),
+			"-i", config.Video,
+			"-vframes", "1",
+			"-q:v", "10",
+			"-vf", fmt.Sprintf("scale=%d:%d", config.Width, config.Height),
+			"-y",
+			outputPath,
+		}
+
+		cmd2 := exec.Command("ffmpeg", argsFallback...)
+		out2, err2 := cmd2.CombinedOutput()
+		if err2 != nil {
+			// both attempts failed
+			log.Printf("thumbnail failed for t=%d: firstErr=%v firstOut=%s\nsecondErr=%v secondOut=%s",
+				t, err, string(out), err2, string(out2))
+			continue
+		}
+
+		// verify file exists and is non-zero
+		if fi, statErr := os.Stat(outputPath); statErr != nil || fi.Size() == 0 {
+			log.Printf("thumbnail generated but file missing or zero-sized for t=%d (path=%s)", t, outputPath)
+		}
+
 	}
 	return nil
 }
