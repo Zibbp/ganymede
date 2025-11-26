@@ -237,10 +237,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	closestQuality := utils.SelectClosestQuality(video.Resolution, qualities)
 	log.Info().Str("requested_quality", video.Resolution).Msgf("selected closest quality %s", closestQuality)
 
-	switch closestQuality {
-	case "best":
-		closestQuality = "chunked"
-	case "audio":
+	if closestQuality == "audio" {
 		closestQuality = "audio_only"
 	}
 

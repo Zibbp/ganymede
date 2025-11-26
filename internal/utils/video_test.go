@@ -13,13 +13,15 @@ func TestSelectClosestQuality(t *testing.T) {
 		expected string
 	}{
 		{"best", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "chunked"},
+		{"1440p", []string{"chunked", "360p30", "480p30", "720p60", "audio_only"}, "chunked"},
+		{"1080p", []string{"chunked", "360p30", "480p30", "720p60", "audio_only"}, "chunked"},
 		{"1080p", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "1080p60"},
 		{"1080p60", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "1080p60"},
 		{"1080p30", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "1080p60"},
 		{"720p", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "720p60"},
 		{"best", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "chunked"},
 		{"audio_only", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "audio_only"},
-		{"500p", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "1080p60"},
+		{"500p", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "chunked"},
 	}
 
 	for _, test := range tests {
