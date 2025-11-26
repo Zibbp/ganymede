@@ -22,6 +22,7 @@ import PlaylistBulkAddModalContent from "@/app/components/playlist/BulkAddModalC
 
 const AdminVideosPage = () => {
   const t = useTranslations('AdminVideosPage')
+  const miscT = useTranslations('MiscComponents')
   usePageTitle(t('title'))
   const axiosPrivate = useAxiosPrivate()
   const [page, setPage] = useState(1);
@@ -388,6 +389,7 @@ const AdminVideosPage = () => {
             onSortStatusChange={setSortStatus}
             selectedRecords={activeVideos ?? []}
             onSelectedRecordsChange={setActiveVideos}
+            recordsPerPageLabel={miscT('recordsPerPageLabel')}
           />
         </Box>
       </Container>

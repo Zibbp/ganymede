@@ -42,6 +42,9 @@ lint:
 test:
 	go test -count=1 -v ./...
 
+web_update:
+	cd frontend && npx npm-check-updates -i
+
 river-tui:
 	go install github.com/almottier/rivertui@latest
 	@export $(shell grep -v '^#' .env | xargs) && \

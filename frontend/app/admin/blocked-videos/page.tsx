@@ -19,6 +19,7 @@ import { usePageTitle } from "@/app/util/util";
 
 const AdminBlockedVideosPage = () => {
   const t = useTranslations("AdminBlockedVideosPage");
+  const miscT = useTranslations("MiscComponents");
   usePageTitle(t('title'))
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -179,6 +180,7 @@ const AdminBlockedVideosPage = () => {
             onSortStatusChange={setSortStatus}
             selectedRecords={activeBlockedVideos ?? []}
             onSelectedRecordsChange={setActiveBlockedVideos}
+            recordsPerPageLabel={miscT('recordsPerPageLabel')}
           />
         </Box>
       </Container>

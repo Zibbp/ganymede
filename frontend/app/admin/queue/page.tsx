@@ -19,6 +19,7 @@ import { usePageTitle } from "@/app/util/util";
 
 const AdminQueuePage = () => {
   const t = useTranslations('AdminQueuePage');
+  const miscT = useTranslations('MiscComponents');
   usePageTitle(t('title'))
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -236,6 +237,7 @@ const AdminQueuePage = () => {
             onSortStatusChange={setSortStatus}
             selectedRecords={activeQueueItems ?? []}
             onSelectedRecordsChange={setActiveQueueItems}
+            recordsPerPageLabel={miscT('recordsPerPageLabel')}
           />
         </Box>
       </Container>
