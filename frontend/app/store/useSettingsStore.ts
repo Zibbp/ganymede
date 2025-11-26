@@ -5,11 +5,13 @@ interface SettingsState {
   videoLimit: number;
   chatPlaybackSmoothScroll: boolean;
   videoTheaterMode: boolean;
+  hideChat: boolean;
   showChatHistogram: boolean;
   showProcessingVideosInRecentlyArchived: boolean;
   setVideoLimit: (limit: number) => void;
   setChatPlaybackSmoothScroll: (smooth: boolean) => void;
   setVideoTheaterMode: (theaterMode: boolean) => void;
+  setHideChat: (hide: boolean) => void;
   setShowChatHistogram: (show: boolean) => void;
   setShowProcessingVideosInRecentlyArchived: (show: boolean) => void;
 }
@@ -22,6 +24,7 @@ const useSettingsStore = create<SettingsState>()(
       videoLimit: 24,
       chatPlaybackSmoothScroll: false,
       videoTheaterMode: false,
+      hideChat: false,
       showChatHistogram: true,
       showProcessingVideosInRecentlyArchived: true,
 
@@ -32,6 +35,8 @@ const useSettingsStore = create<SettingsState>()(
 
       setVideoTheaterMode: (theaterMode: boolean) =>
         set({ videoTheaterMode: theaterMode }),
+
+      setHideChat: (hide: boolean) => set({ hideChat: hide }),
 
       setShowChatHistogram: (show: boolean) => set({ showChatHistogram: show }),
 
@@ -46,6 +51,7 @@ const useSettingsStore = create<SettingsState>()(
         showChatHistogram: state.showChatHistogram,
         showProcessingVideosInRecentlyArchived:
           state.showProcessingVideosInRecentlyArchived,
+        hideChat: state.hideChat,
       }),
     }
   )

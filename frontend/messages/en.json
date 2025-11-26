@@ -787,6 +787,8 @@
     "managePlaylistsDrawerTitle": "Manage Playlists",
     "deleteVideoModalTitle": "Delete Video",
     "theaterModeIconTooltip": "Theater Mode",
+    "hideChatIconTooltip": "Hide Chat",
+    "showChatIconTooltip": "Show Chat",
     "sourceViewsTooltip": "source views",
     "localViewsTooltip": "local views",
     "streamedOnTooltip": "Streamed on",
