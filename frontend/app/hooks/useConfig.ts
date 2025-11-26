@@ -13,7 +13,6 @@ export interface Config {
     video_convert: string;
     chat_render: string;
     yt_dlp_video: string;
-    yt_dlp_live: string;
   };
   archive: {
     save_as_hls: boolean;
