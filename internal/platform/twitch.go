@@ -829,6 +829,7 @@ func (c *TwitchConnection) CheckIfStreamIsLive(ctx context.Context, channelName 
 	return true, nil
 }
 
+// GetStream fetches the m3u8 playlist for a live Twitch stream.
 func (c *TwitchConnection) GetStream(ctx context.Context, channelName string) (*m3u8.MasterPlaylist, error) {
 	token, err := c.TwitchGQLGetPlaybackAccessToken(channelName)
 	if err != nil {
@@ -854,9 +855,15 @@ func (c *TwitchConnection) GetStream(ctx context.Context, channelName string) (*
 	values.Set("sig", token.Signature)
 	values.Set("token", token.Value)
 
+	// Custom parameters to get the best quality possible (Enhanced Broadcast)
+	values.Set("supported_codecs", "av1,h265,h264")
+	values.Set("playlist_include_framerate", "true")
+
 	query := values.Encode()
 
 	m3u8URL := fmt.Sprintf("https://usher.ttvnw.net/api/channel/hls/%s.m3u8?%s", channelName, query)
+
+	log.Debug().Msgf("Twitch m3u8 URL for %s: %s", channelName, m3u8URL)
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,
