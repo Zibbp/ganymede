@@ -229,6 +229,10 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		qualities = append(qualities, variant.Video)
 		qualitiesURI[variant.Video] = variant.URI
 	}
+	log.Debug().Strs("available_qualities", qualities).Msg("available stream qualities")
+	for b, a := range qualitiesURI {
+		log.Debug().Str("quality", b).Str("quality_uri", a).Msg("quality uri")
+	}
 
 	closestQuality := utils.SelectClosestQuality(video.Resolution, qualities)
 	log.Info().Str("requested_quality", video.Resolution).Msgf("selected closest quality %s", closestQuality)
