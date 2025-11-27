@@ -118,7 +118,7 @@
       "home": "Startseite",
       "channels": "Kanäle",
       "videos": "Videos",
-      "archive": "Archiv",
+      "archive": "Archivieren",
       "playlists": "Wiedergabelisten",
       "queue": "Warteschlange",
       "tasks": "Aufgaben"
@@ -127,7 +127,7 @@
       "overview": "Übersicht",
       "admin": "Admin",
       "channels": "Kanäle",
-      "watchedChannels": "Beobachtete Kanäle",
+      "watchedChannels": "Überwachte Kanäle",
       "videos": "Videos",
       "blockedVideos": "Blockierte Videos",
       "queue": "Warteschlange",
@@ -135,6 +135,10 @@
       "settings": "Einstellungen",
       "tasks": "Aufgaben",
       "information": "Informationen"
+    },
+    "profileDropdown": {
+      "profile": "Profil",
+      "logout": "Abmelden"
     },
     "errorLoggingOut": "Fehler beim Abmelden",
     "search": "Suche",
@@ -150,7 +154,7 @@
     "errorLoadingChannel": "Error loading channel"
   },
   "ArchivePage": {
-    "title": "Archiv",
+    "title": "Archivieren",
     "inputTitle": "Eingabe erforderlich",
     "inputMessage": "Bitte gib eine Video-ID ein oder wähle einen Kanal aus",
     "invalidTitle": "Ungültige Auswahl",
@@ -241,7 +245,7 @@
       "externalId": "Externe ID",
       "processing": "In Bearbeitung",
       "onHold": "Pausiert",
-      "liveArchive": "Live-Archiv",
+      "liveArchive": "Live-Archivierung",
       "createdAt": "Erstellt am",
       "actions": "Aktionen"
     },
@@ -269,13 +273,13 @@
       "webhookUrlLabel": "Webhook-URL",
       "templateLabel": "Vorlage",
       "availableVariables": "Verfügbare Variablen zur Verwendung in der Vorlage:",
-      "videoArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Videoarchivierung",
+      "videoArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Video-Archivierung",
       "liveArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Live-Archivierung",
       "channelIsLiveNotification": "Kanal ist Live-Benachrichtigung",
       "errorNotification": "Fehlerbenachrichtigung"
     },
     "archiveSettings": {
-      "header": "Archiv-Einstellungen",
+      "header": "Archivierungs-Einstellungen",
       "livestreamCheckIntervalLabel": "Livestream-Prüfintervall (Sekunden)",
       "livestreamCheckIntervalDescription": "Das Intervall in Sekunden, um nach neuen Live-Streams zum Archivieren zu suchen. ERFORDERT NEUSTART!",
       "videoCheckIntervalLabel": "Video-Prüfintervall (Minuten)",
@@ -294,7 +298,7 @@
       "twitchTokenLabel": "Twitch-Token",
       "twitchTokenDescription": "Gib dein Twitch-Token an, um werbefreie Live-Streams und VODs nur für Abonnenten herunterzuladen.",
       "convertFFmpegArgsLabel": "Video-Konvertierungs-FFmpeg-Argumente",
-      "convertFFmpegArgsDescription": "Benutzerdefinierte FFmpeg-Argumente, die bei der Konvertierung des Videos verwendet werden sollen. Dies wird sowohl für Live- als auch für VOD-Archive verwendet.",
+      "convertFFmpegArgsDescription": "Benutzerdefinierte FFmpeg-Argumente, die bei der Konvertierung des Videos verwendet werden sollen. Dies wird sowohl für Live- als auch für VOD-Archivierungen verwendet.",
       "ytdlpVideoArgsLabel": "YT-DLP Video-Argumente",
       "ytdlpVideoArgsDescription": "Benutzerdefinierte yt-dlp-Argumente zur Verwendung beim Herunterladen eines Videos. Dies wird nur für VOD-Downloads verwendet.",
       "liveStreamTitle": "Live-Stream",
@@ -333,9 +337,9 @@
     "jwks": "JSON Web Key Sets (JWKS) vom SSO-Anbieter abrufen",
     "jwksDescription": "Erfolgt täglich um 00:00 Uhr.",
     "saveChaptersForVideos": "Kapitel für Videos speichern",
-    "saveChaptersForVideosDescription": "Speichere Kapitel für Videos, die archiviert wurden (geschieht automatisch für neue Archive).",
+    "saveChaptersForVideosDescription": "Speichere Kapitel für Videos, die archiviert wurden (geschieht automatisch für neue Archivierungen).",
     "updateLiveStreamIds": "Live-Stream-IDs mit Video-IDs aktualisieren",
-    "updateLiveStreamIdsDescription": "Versuche, Live-Stream-Archive mit ihrer entsprechenden Video-ID zu aktualisieren (geschieht automatisch, nachdem die Live-Archivierung abgeschlossen ist).",
+    "updateLiveStreamIdsDescription": "Versuche, Live-Stream-Archivierungen mit ihrer entsprechenden Video-ID zu aktualisieren (geschieht automatisch, nachdem die Live-Archivierung abgeschlossen ist).",
     "generateSpriteThumbnails": "Sprite-Thumbnails generieren",
     "generateSpriteThumbnailsDescription": "Generiere Vorschaubilder, die beim Bewegen der Maus über die Fortschrittsanzeige des Players für alle Videos angezeigt werden. Dies wird automatisch nach jeder Videoarchivierung ausgeführt.",
     "updateVideoStorageUsage": "Speichernutzung für Videos aktualisieren",
@@ -405,23 +409,23 @@
     "addVideosToPlaylistModalTitle": "Füge Videos zur Wiedergabeliste hinzu"
   },
   "AdminWatchedChannelsPage": {
-    "title": "Admin - Beobachtete Kanäle",
-    "loading": "Beobachtete Kanäle werden geladen",
-    "error": "Fehler beim Laden der beobachteten Kanäle",
-    "header": "Beobachtete Kanäle verwalten",
-    "addButton": "Beobachteten Kanal hinzufügen",
-    "searchPlaceholder": "Beobachtete Kanäle suchen...",
+    "title": "Admin - Überwachte Kanäle",
+    "loading": "Überwachte Kanäle werden geladen",
+    "error": "Fehler beim Laden der überwachten Kanäle",
+    "header": "Überwachte Kanäle verwalten",
+    "addButton": "Kanal-Überwachung hinzufügen",
+    "searchPlaceholder": "Überwachte Kanäle durchsuchen...",
     "columns": {
       "id": "ID",
       "channel": "Kanal",
-      "watchLive": "Live ansehen",
+      "watchLive": "Live überwachen",
       "isLive": "Ist Live",
-      "watchVideos": "Videos ansehen",
-      "watchClips": "Clips ansehen",
+      "watchVideos": "Videos überwachen",
+      "watchClips": "Clips überwachen",
       "actions": "Aktionen"
     },
-    "drawer": "Beobachteter Kanal",
-    "deleteModal": "Beobachteten Kanal löschen"
+    "drawer": "Überwachter Kanal",
+    "deleteModal": "Kanal-Überwachung löschen"
   },
   "AdminBlockedVideosComponents": {
     "validation": {
@@ -481,7 +485,7 @@
     "onHoldLabel": "Pausiert",
     "videoProcessingLabel": "Videoverarbeitung",
     "chatProcessingLabel": "Chatverarbeitung",
-    "liveArchiveLabel": "Live-Archiv",
+    "liveArchiveLabel": "Live-Archivierung",
     "taskCreateFolderLabel": "Aufgabe Ordner erstellen",
     "taskDownloadThumbnailLabel": "Aufgabe Thumbnail herunterladen",
     "taskSaveInformationLabel": "Aufgabe Informationen speichern",
@@ -556,11 +560,11 @@
     "multiDeleteButton": "Videos löschen"
   },
   "AdminWatchedComponents": {
-    "deleteNotification": "Beobachteter Kanal gelöscht",
+    "deleteNotification": "Kanal-Überwachung gelöscht",
     "deleteConfirmText": "Bist du sicher, dass du diesen beobachteten Kanal löschen möchtest?",
-    "deleteButton": "Beobachteten Kanal löschen",
-    "editNotification": "Beobachteter Kanal bearbeitet",
-    "createNotification": "Beobachteter Kanal erstellt",
+    "deleteButton": "Kanal-Überwachung löschen",
+    "editNotification": "Kanal-Überwachung bearbeitet",
+    "createNotification": "Kanal-Überwachung erstellt",
     "failedCreateNotification": "Fehler beim Erstellen des beobachteten Kanals",
     "failedEditNotification": "Fehler beim Bearbeiten des beobachteten Kanals",
     "headerText": "Lies die Wiki-Seite zum beobachteten Kanal <wiki>Wiki-Seite</wiki>, um weitere Informationen zu den einzelnen Funktionen zu erhalten.",
@@ -571,11 +575,11 @@
     "renderChatLabel": "Chat rendern",
     "liveStreamsText": "Live-Streams",
     "liveStreamsDescription": "Archiviere Live-Streams, während sie gestreamt werden.",
-    "watchLiveLabel": "Live ansehen",
+    "watchLiveLabel": "Live überwachen",
     "videosText": "Kanalvideos",
     "videosDescription": "Archiviere vergangene Kanalvideos.",
     "videosOccurrence": "Die Suche nach neuen Videos erfolgt einmal täglich.",
-    "watchVideosLabel": "Videos ansehen",
+    "watchVideosLabel": "Videos überwachen",
     "downloadArchivesLabel": "Vergangene Live-Streams herunterladen",
     "downloadArchivesDescription": "Vergangene Live-Streams herunterladen",
     "downloadHighlightsLabel": "Highlights herunterladen",
@@ -589,7 +593,7 @@
     "channelClipsDescription1": "Diese Funktion dient dazu, die beliebtesten (Anzahl der Aufrufe) Clips der letzten 'Intervall'-Tage zu archivieren. Wenn du beispielsweise die Anzahl der Clips auf 5 und das Intervall auf 7 festlegst, werden die Top 5 Clips der letzten 7 Tage archiviert. Sie wird erst nach 7 Tagen wieder ausgeführt. Es werden keine Einschränkungen (Kategorien, Alter, Titel, Regex usw.) angewendet.",
     "channelClipsMoreInformationButton": "Weitere Informationen",
     "channelClipsMoreInformationText": "Wenn du einen einmaligen Import der beliebtesten Clips eines Kanals durchführen möchtest, stelle das Intervall auf eine große Zahl (1000) und die Anzahl der Clips auf eine große Zahl (250) ein. Dadurch werden die Top 250 Clips der letzten 1000 Tage importiert. Es wird empfohlen, das Intervall und die Anzahl der Clips nach dem ersten Import auf eine niedrigere Zahl zu ändern.",
-    "watchClipsLabel": "Clips ansehen",
+    "watchClipsLabel": "Clips überwachen",
     "numberOfClipsLabel": "Anzahl der Clips",
     "numberOfClipsDescription": "Anzahl der zu archivierenden Clips.",
     "intervalDaysLabel": "Intervall (Tage)",
@@ -617,10 +621,10 @@
     "blacklistCategoriesLiveDescription": "Archiviere keine Live-Streams und Videos, die in den ausgewählten Kategorien sind",
     "categoriesLoadButton": "Kategorien laden",
     "categoriesSearchPlaceholder": "Kategorien suchen...",
-    "submitButton": "Beobachteten Kanal erstellen",
-    "editButton": "Beobachteten Kanal bearbeiten",
+    "submitButton": "Kanal-Überwachung erstellen",
+    "editButton": "Kanal-Überwachung bearbeiten",
     "updateMetadataLabel": "Metadaten aktualisieren",
-    "updateMetadataDescription": "Aktualisiere die Metadaten des Livestreams nach {minutes} Minuten, nachdem das Livestream-Archivieren gestartet wurde. Dazu gehören Thumbnails und Titel. Auf 0 setzen, um es zu deaktivieren."
+    "updateMetadataDescription": "Aktualisiere die Metadaten des Livestreams nach {minutes} Minuten, nachdem die Livestream-Archivierung gestartet wurde. Dazu gehören Thumbnails und Titel. Auf 0 setzen, um es zu deaktivieren."
   },
   "AuthComponents": {
     "validation": {
@@ -787,6 +791,8 @@
     "managePlaylistsDrawerTitle": "Wiedergabelisten verwalten",
     "deleteVideoModalTitle": "Video löschen",
     "theaterModeIconTooltip": "Theater Mode",
+    "hideChatIconTooltip": "Chat verbergen",
+    "showChatIconTooltip": "Chat anzeigen",
     "sourceViewsTooltip": "Quell-views",
     "localViewsTooltip": "Lokale views",
     "streamedOnTooltip": "Gestreamt am",
@@ -860,5 +866,8 @@
       "topLargeVideosText": "Größte Videos",
       "noLargeVideosText": "Keine Videos gefunden"
     }
+  },
+  "MiscComponents": {
+    "recordsPerPageLabel": "Einträge pro Seite"
   }
 }
