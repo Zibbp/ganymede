@@ -128,6 +128,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks_periodic.ProcessPlaylistVideoRulesWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.ExportVideoMetadataWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 
@@ -191,6 +194,10 @@ func (rc *RiverWorkerClient) Stop() error {
 func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*river.PeriodicJob, error) {
 	env := config.GetEnvConfig()
 	midnightCron, err := cron.ParseStandard("0 0 * * *")
+	if err != nil {
+		return nil, err
+	}
+	oneAMCron, err := cron.ParseStandard("0 1 * * *")
 	if err != nil {
 		return nil, err
 	}
@@ -302,6 +309,16 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 			river.PeriodicInterval(1*time.Hour),
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.ProcessPlaylistVideoRulesArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: false},
+		),
+
+		// export video metadata
+		// runs once a day at 01:00
+		river.NewPeriodicJob(
+			oneAMCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.ExportVideoMetadataArgs{}, nil
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
