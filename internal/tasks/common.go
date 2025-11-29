@@ -165,7 +165,7 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 		return err
 	}
 
-	platformService, err := PlatformFromContext(ctx)
+	platformService, err := PlatformFromContext(ctx, dbItems.Video.Platform)
 	if err != nil {
 		return err
 	}
@@ -304,7 +304,7 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 		return err
 	}
 
-	platformService, err := PlatformFromContext(ctx)
+	platformService, err := PlatformFromContext(ctx, dbItems.Video.Platform)
 	if err != nil {
 		return err
 	}
@@ -320,8 +320,8 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 			return err
 		}
 		thumbnailUrl = info.ThumbnailURL
-		fullResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive)
-		webResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive)
+		fullResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive, dbItems.Video.Platform)
+		webResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive, dbItems.Video.Platform)
 
 	} else if dbItems.Video.Type == utils.Clip {
 		info, err := platformService.GetClip(ctx, dbItems.Video.ExtID)
@@ -337,8 +337,8 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 			return err
 		}
 		thumbnailUrl = info.ThumbnailURL
-		fullResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive)
-		webResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive)
+		fullResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "1920", "1080", dbItems.Queue.LiveArchive, dbItems.Video.Platform)
+		webResThumbnailUrl = replaceThumbnailPlaceholders(thumbnailUrl, "640", "360", dbItems.Queue.LiveArchive, dbItems.Video.Platform)
 	}
 
 	err = utils.DownloadAndSaveFile(fullResThumbnailUrl, dbItems.Video.ThumbnailPath)
@@ -469,7 +469,7 @@ func (w UpdateLiveStreamMetadataWorker) Work(ctx context.Context, job *river.Job
 		return err
 	}
 
-	platformService, err := PlatformFromContext(ctx)
+	platformService, err := PlatformFromContext(ctx, dbItems.Video.Platform)
 	if err != nil {
 		return err
 	}
@@ -546,7 +546,12 @@ func (w UpdateStreamVideoIdWorker) Work(ctx context.Context, job *river.Job[Upda
 		conn:   store.ConnPool,
 	})
 
-	platformService, err := PlatformFromContext(ctx)
+	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
+	if err != nil {
+		return err
+	}
+
+	platformService, err := PlatformFromContext(ctx, dbItems.Video.Platform)
 	if err != nil {
 		return err
 	}
