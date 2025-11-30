@@ -297,7 +297,6 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 				log.Error().Err(err).Msg("failed to send SIGTERM to ffmpeg process")
 			}
 		}
-		}
 		select {
 		case <-done:
 			// exited after SIGTERM
