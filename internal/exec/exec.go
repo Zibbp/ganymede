@@ -261,8 +261,13 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 	ffmpegArgs = append(ffmpegArgs, video.TmpVideoDownloadPath)
 
-	// Create ffmpeg command
-	cmd := osExec.CommandContext(context.Background(), "ffmpeg", ffmpegArgs...)
+	// Create ffmpeg command without binding it to the job ctx so it isn't
+	// forcibly killed by CommandContext. We'll manage graceful shutdown
+	// ourselves (SIGTERM -> wait -> SIGKILL).
+	cmd := osExec.Command("ffmpeg", ffmpegArgs...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
 
 	log.Debug().Str("channel", channel.Name).Str("cmd", strings.Join(cmd.Args, " ")).Msgf("running ffmpeg")
 
@@ -281,25 +286,35 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		done <- cmd.Wait()
 	}()
 
-	// Wait for the command to finish or context to be cancelled
+	// Wait for the command to finish or for ctx cancellation.
+	// When ctx is cancelled, allow ffmpeg to handle a graceful shutdown first:
+	// send SIGTERM to the process group, wait up to sigtermTimeout, then SIGKILL
 	select {
 	case <-ctx.Done():
-		// Context was cancelled, signal SIGTERM to the process
-		if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
-			return fmt.Errorf("failed to signal SIGTERM to ffmpeg process: %v", err)
-		}
-
-		select {
-		case <-done: // Wait for ffmpeg to finish
-		case <-time.After(sigtermTimeout): // Timeout, kill the process
-			if err := cmd.Process.Kill(); err != nil {
-				return fmt.Errorf("failed to kill ffmpeg process: %v", err)
+		if cmd.Process != nil {
+			err = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to send SIGTERM to ffmpeg process")
 			}
 		}
-
+		select {
+		case <-done:
+			// exited after SIGTERM
+		case <-time.After(sigtermTimeout):
+			if cmd.Process != nil {
+				err = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+				if err != nil {
+					log.Error().Err(err).Msg("failed to send SIGKILL to ffmpeg process")
+				}
+			}
+			// wait for it to actually exit (best effort)
+			select {
+			case <-done:
+			case <-time.After(5 * time.Second):
+			}
+		}
 		return ctx.Err()
 	case err := <-done:
-		// Command finished normally
 		if err != nil {
 			log.Error().Err(err).Msg("error running ffmpeg")
 			return fmt.Errorf("error running ffmpeg: %w", err)
