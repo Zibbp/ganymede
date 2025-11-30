@@ -34,13 +34,18 @@ type VideoPlatform string
 const (
 	PlatformTwitch  VideoPlatform = "twitch"
 	PlatformYoutube VideoPlatform = "youtube"
+	PlatformKick    VideoPlatform = "kick"
 )
 
 func (VideoPlatform) Values() (kinds []string) {
-	for _, s := range []VideoPlatform{PlatformTwitch, PlatformYoutube} {
+	for _, s := range []VideoPlatform{PlatformTwitch, PlatformKick, PlatformYoutube} {
 		kinds = append(kinds, string(s))
 	}
 	return
+}
+
+func (v VideoPlatform) String() string {
+	return string(v)
 }
 
 type VodType string
