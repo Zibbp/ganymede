@@ -292,14 +292,21 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	select {
 	case <-ctx.Done():
 		if cmd.Process != nil {
-			_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
+			err = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to send SIGTERM to ffmpeg process")
+			}
+		}
 		}
 		select {
 		case <-done:
 			// exited after SIGTERM
 		case <-time.After(sigtermTimeout):
 			if cmd.Process != nil {
-				_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+				err = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+				if err != nil {
+					log.Error().Err(err).Msg("failed to send SIGKILL to ffmpeg process")
+				}
 			}
 			// wait for it to actually exit (best effort)
 			select {
