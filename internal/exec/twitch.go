@@ -1,0 +1,217 @@
+package exec
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"time"
+
+	twitchIRC "github.com/gempir/go-twitch-irc/v4"
+	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/internal/utils"
+)
+
+// convertToLiveComment converts a Twitch IRC message to LiveComment format (old chat-downloader format)
+func convertToLiveComment(msg twitchIRC.PrivateMessage) utils.LiveComment {
+	comment := utils.LiveComment{
+		ActionType:       "add_chat_message",
+		ChannelID:        msg.RoomID,
+		ClientNonce:      msg.ID,
+		Colour:           msg.User.Color,
+		Flags:            msg.Tags["flags"],
+		Message:          msg.Message,
+		MessageID:        msg.ID,
+		MessageType:      "text",
+		ReturningChatter: msg.Tags["returning-chatter"],
+		Timestamp:        msg.Time.UnixMicro(),
+		UserType:         msg.Tags["user-type"],
+	}
+
+	// Parse first-msg tag
+	if firstMsg := msg.Tags["first-msg"]; firstMsg == "1" {
+		comment.IsFirstMessage = true
+	}
+
+	// Set author fields
+	comment.Author.DisplayName = msg.User.DisplayName
+	comment.Author.ID = msg.User.ID
+	comment.Author.Name = msg.User.Name
+	comment.Author.IsModerator = msg.User.Badges["moderator"] == 1 || msg.Tags["mod"] == "1"
+	comment.Author.IsSubscriber = msg.User.Badges["subscriber"] == 1
+	comment.Author.IsTurbo = msg.User.Badges["turbo"] == 1
+
+	// Convert badges
+	for badgeName, badgeVersion := range msg.User.Badges {
+		badge := struct {
+			ClickAction string `json:"click_action"`
+			ClickURL    string `json:"click_url"`
+			Description string `json:"description"`
+			Icons       []struct {
+				Height int    `json:"height"`
+				ID     string `json:"id"`
+				URL    string `json:"url"`
+				Width  int    `json:"width"`
+			} `json:"icons"`
+			ID      string      `json:"id"`
+			Name    string      `json:"name"`
+			Title   string      `json:"title"`
+			Version interface{} `json:"version"`
+		}{
+			ID:      badgeName,
+			Name:    badgeName,
+			Title:   badgeName,
+			Version: badgeVersion,
+		}
+		comment.Author.Badges = append(comment.Author.Badges, badge)
+	}
+
+	// Convert emotes
+	for _, emote := range msg.Emotes {
+		commentEmote := struct {
+			ID     string `json:"id"`
+			Images []struct {
+				Height int    `json:"height"`
+				ID     string `json:"id"`
+				URL    string `json:"url"`
+				Width  int    `json:"width"`
+			} `json:"images"`
+			Locations []string `json:"locations"`
+			Name      string   `json:"name"`
+		}{
+			ID:   emote.ID,
+			Name: emote.Name,
+		}
+
+		// Convert emote positions to location strings
+		for _, position := range emote.Positions {
+			location := fmt.Sprintf("%d-%d", position.Start, position.End)
+			commentEmote.Locations = append(commentEmote.Locations, location)
+		}
+
+		comment.Emotes = append(comment.Emotes, commentEmote)
+	}
+
+	return comment
+}
+
+// appendMessageToJSONArray appends a message to a JSON array file
+func appendMessageToJSONArray(filename string, comment utils.LiveComment) error {
+	// Read existing file content
+	var messages []utils.LiveComment
+
+	fileData, err := os.ReadFile(filename)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to read file: %w", err)
+		}
+		// File doesn't exist, start with empty array
+		messages = []utils.LiveComment{}
+	} else {
+		// Parse existing JSON array
+		if len(fileData) > 0 {
+			if err := json.Unmarshal(fileData, &messages); err != nil {
+				return fmt.Errorf("failed to parse existing JSON: %w", err)
+			}
+		}
+	}
+
+	// Append new message
+	messages = append(messages, comment)
+
+	// Write back to file
+	data, err := json.MarshalIndent(messages, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
+	if err := os.WriteFile(filename, data, 0644); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return nil
+}
+
+// SaveTwitchLiveChatToFile connects to a Twitch channel and saves messages to a JSON file
+func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) error {
+	const (
+		maxRetries     = 10
+		initialBackoff = 1 * time.Second
+		maxBackoff     = 1 * time.Minute
+	)
+
+	retryCount := 0
+	backoff := initialBackoff
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		// Create client
+		client := twitchIRC.NewAnonymousClient()
+
+		// Channel for tracking connection errors
+		errChan := make(chan error, 1)
+		connected := make(chan struct{})
+
+		// Handle messages
+		client.OnPrivateMessage(func(message twitchIRC.PrivateMessage) {
+			comment := convertToLiveComment(message)
+			if err := appendMessageToJSONArray(filename, comment); err != nil {
+				log.Error().Err(err).Msg("error saving chat message")
+			}
+		})
+
+		// Handle connection
+		client.OnConnect(func() {
+			log.Info().Msgf("connected to %s live chat room", channel)
+			retryCount = 0
+			backoff = initialBackoff
+			close(connected)
+		})
+
+		client.Join(channel)
+
+		// Connect in a goroutine so we can handle context cancellation
+		go func() {
+			if err := client.Connect(); err != nil {
+				errChan <- err
+			}
+		}()
+
+		// Wait for either connection success, error, or context cancellation
+		select {
+		case <-ctx.Done():
+			client.Disconnect()
+			return ctx.Err()
+		case err := <-errChan:
+			log.Error().Err(err).Msg("live chat connection error")
+			retryCount++
+
+			if retryCount >= maxRetries {
+				return fmt.Errorf("max retries (%d) reached: %w", maxRetries, err)
+			}
+
+			log.Warn().Msgf("Retrying in %v (attempt %d/%d)...", backoff, retryCount, maxRetries)
+
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(backoff):
+				backoff *= 2
+				if backoff > maxBackoff {
+					backoff = maxBackoff
+				}
+			}
+			continue
+		case <-connected:
+			<-ctx.Done()
+			log.Info().Msg("Context cancelled, disconnecting from live chat...")
+			client.Disconnect()
+			return ctx.Err()
+		}
+	}
+}

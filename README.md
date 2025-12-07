@@ -164,7 +164,6 @@ View the [Makefile](/Makefile) for more commands.
 
 - [TwitchDownloader](https://github.com/lay295/TwitchDownloader)
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp)
-- [Chat-Downloader](https://github.com/xenova/chat-downloader)
 
 ## License
 
