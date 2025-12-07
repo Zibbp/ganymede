@@ -164,6 +164,7 @@
     "message": "Enter a video ID or select a channel to archive a live stream.",
     "archiveVideoPlaceholder": "Video ID or URL",
     "archiveChannelPlaceholder": "Select a channel",
+    "platformPlaceholder": "Platform",
     "resolutionPlaceholder": "Quality",
     "archiveChat": "Archive Chat",
     "renderChat": "Render Chat",

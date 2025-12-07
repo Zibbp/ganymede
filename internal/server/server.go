@@ -139,13 +139,34 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 			log.Panic().Err(err).Msg("Error authenticating to Twitch")
 		}
 	}
+	var platformKick platform.Platform
+	// setup kick platform
+	if envConfig.KickClientId != "" && envConfig.KickClientSecret != "" {
+		platformKick = &platform.KickConnection{
+			ClientId:     envConfig.KickClientId,
+			ClientSecret: envConfig.KickClientSecret,
+		}
+		_, err = platformKick.Authenticate(ctx)
+		if err != nil {
+			log.Panic().Err(err).Msg("Error authenticating to Kick")
+		}
+	}
+
+	// test kick
+	kickChannel, err := platformKick.GetChannel(ctx, "asmongold")
+	if err != nil {
+		log.Error().Err(err).Msg("Error getting Kick channel")
+	} else {
+		log.Info().Str("channel", kickChannel.Login).Msg("Successfully retrieved Kick channel")
+	}
+	fmt.Println("Kick Channel:", kickChannel)
 
 	authService := auth.NewService(db, &envConfig)
 	channelService := channel.NewService(db, platformTwitch)
 	vodService := vod.NewService(db, riverClient, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodService := blocked.NewService(db)
-	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch)
+	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch, platformKick)
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
 	chapterService := chapter.NewService(db)
