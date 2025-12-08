@@ -185,7 +185,10 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 		// Wait for either connection success, error, or context cancellation
 		select {
 		case <-ctx.Done():
-			client.Disconnect()
+			err := client.Disconnect()
+			if err != nil {
+				log.Error().Err(err).Msg("error disconnecting from live chat")
+			}
 			return ctx.Err()
 		case err := <-errChan:
 			log.Error().Err(err).Msg("live chat connection error")
@@ -210,7 +213,9 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 		case <-connected:
 			<-ctx.Done()
 			log.Info().Msg("Context cancelled, disconnecting from live chat...")
-			client.Disconnect()
+			if err := client.Disconnect(); err != nil {
+				log.Error().Err(err).Msg("error disconnecting from live chat")
+			}
 			return ctx.Err()
 		}
 	}
