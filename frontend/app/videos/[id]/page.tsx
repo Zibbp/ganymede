@@ -31,6 +31,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const t = useTranslations("VideoPage");
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
+  const hideChat = useSettingsStore((state) => state.hideChat);
   const showChatHistogram = useSettingsStore((state) => state.showChatHistogram);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { ref, toggle, fullscreen } = useFullscreen();
@@ -76,7 +77,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
         </div>
 
         {/* Chat player */}
-        {data.chat_path && (
+        {data.chat_path && !hideChat && (
           <div className={classes.chatColumnMobile}>
             <ChatPlayer video={data} />
           </div>
@@ -117,7 +118,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
 
 
         {/* Chat */}
-        {data.chat_path && (
+        {data.chat_path && !hideChat && (
           <div className={classes.rightColumn} style={{ height: "auto", maxHeight: "auto" }}>
             <div className={
               videoTheaterMode || fullscreen

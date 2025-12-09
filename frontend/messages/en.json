@@ -136,6 +136,10 @@
       "tasks": "Tasks",
       "information": "Information"
     },
+    "profileDropdown": {
+      "profile": "Profile",
+      "logout": "Logout"
+    },
     "errorLoggingOut": "Error logging out",
     "search": "Search",
     "language": "Language",
@@ -297,8 +301,6 @@
       "convertFFmpegArgsDescription": "Custom FFmpeg arguments to use when converting the video. This is used for both live and VOD archives.",
       "ytdlpVideoArgsLabel": "YT-DLP Video Arguments",
       "ytdlpVideoArgsDescription": "Custom yt-dlp arguments to use when downloading a video. This is only used for VOD downloads.",
-      "ytdlpLiveArgsLabel": "YT-DLP Live Arguments",
-      "ytdlpLiveArgsDescription": "Custom yt-dlp arguments to use when downloading a live stream. This is only used for live stream downloads.",
       "liveStreamTitle": "Live Stream",
       "proxySettings": "Proxy Settings",
       "proxySettingsDescription": "Archive live streams through a proxy to prevent ads. Your Twitch token is not sent to the proxy.",
@@ -789,6 +791,8 @@
     "managePlaylistsDrawerTitle": "Manage Playlists",
     "deleteVideoModalTitle": "Delete Video",
     "theaterModeIconTooltip": "Theater Mode",
+    "hideChatIconTooltip": "Hide Chat",
+    "showChatIconTooltip": "Show Chat",
     "sourceViewsTooltip": "source views",
     "localViewsTooltip": "local views",
     "streamedOnTooltip": "Streamed on",
@@ -862,5 +866,8 @@
       "topLargeVideosText": "Top Largest Videos",
       "noLargeVideosText": "No videos found"
     }
+  },
+  "MiscComponents": {
+    "recordsPerPageLabel": "Records per page"
   }
 }

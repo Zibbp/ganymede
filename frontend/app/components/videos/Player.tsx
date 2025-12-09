@@ -14,6 +14,7 @@ import { useSearchParams } from 'next/navigation';
 import VideoEventBus from '@/app/util/VideoEventBus';
 import VideoPlayerTheaterModeIcon from './PlayerTheaterModeIcon';
 import useSettingsStore from '@/app/store/useSettingsStore';
+import VideoPlayerHideChatIcon from './PlayerHideChatIcon';
 
 interface Params {
   video: Video;
@@ -186,6 +187,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
       <DefaultVideoLayout icons={defaultLayoutIcons} noScrubGesture={false}
         slots={{
           beforeFullscreenButton: <VideoPlayerTheaterModeIcon />,
+          afterFullscreenButton: <VideoPlayerHideChatIcon />
         }}
         thumbnails={`${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/vod/${video.id}/thumbnails/vtt`}
       />

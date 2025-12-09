@@ -10,8 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/grafov/m3u8"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/chapter"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/dto"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -825,6 +827,77 @@ func (c *TwitchConnection) CheckIfStreamIsLive(ctx context.Context, channelName 
 	}
 
 	return true, nil
+}
+
+// GetStream fetches the m3u8 playlist for a live Twitch stream.
+func (c *TwitchConnection) GetStream(ctx context.Context, channelName string) (*m3u8.MasterPlaylist, error) {
+	token, err := c.TwitchGQLGetPlaybackAccessToken(channelName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get playback access token: %v", err)
+	}
+
+	proxyParams := config.Get().Livestream.ProxyParameters
+
+	decoded, err := url.QueryUnescape(proxyParams)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query unescape proxy parameters: %v", err)
+	}
+
+	if len(decoded) > 0 && decoded[0] == '?' {
+		decoded = decoded[1:]
+	}
+
+	values, err := url.ParseQuery(decoded)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse query proxy parameters: %v", err)
+	}
+
+	values.Set("sig", token.Signature)
+	values.Set("token", token.Value)
+
+	// Custom parameters to get the best quality possible (Enhanced Broadcast)
+	values.Set("supported_codecs", "av1,h265,h264")
+	values.Set("playlist_include_framerate", "true")
+
+	query := values.Encode()
+
+	m3u8URL := fmt.Sprintf("https://usher.ttvnw.net/api/channel/hls/%s.m3u8?%s", channelName, query)
+
+	log.Debug().Msgf("Twitch m3u8 URL for %s: %s", channelName, m3u8URL)
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	// HTTP request to fetch the m3u8 playlist
+	req, err := http.NewRequest("GET", m3u8URL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+	req.Header.Set("User-Agent", utils.ChromeUserAgent)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch m3u8 playlist: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck
+
+	// If the response status is not 200 or 403 the stream is not live
+	// This request is not authenticated, so it can return 403 if the stream is sub-only or geo-blocked
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusForbidden {
+		return nil, fmt.Errorf("received unexpected status code: %d", resp.StatusCode)
+	}
+
+	playlist, _, err := m3u8.DecodeFrom(resp.Body, false)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding m3u8 response body: %v", err)
+	}
+
+	masterPlaylist, ok := playlist.(*m3u8.MasterPlaylist)
+	if !ok {
+		return nil, fmt.Errorf("failed to cast playlist to a master playlist: %v", err)
+	}
+
+	return masterPlaylist, nil
 }
 
 // GetStreams fetches live streams from Twitch sorted by viewership. It supports pagination and limits the number of streams returned.

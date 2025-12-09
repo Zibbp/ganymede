@@ -251,10 +251,10 @@ export function Navbar() {
               <Menu.Dropdown>
                 <Menu.Label>{user?.username}</Menu.Label>
                 <Menu.Item component={Link} href={`/profile`}>
-                  Profile
+                  {t('profileDropdown.profile')}
                 </Menu.Item>
                 <Menu.Item onClick={handleLogout}>
-                  Logout
+                  {t('profileDropdown.logout')}
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>

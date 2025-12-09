@@ -49,7 +49,6 @@ const AdminSettingsPage = () => {
         video_convert: data?.parameters.video_convert || "",
         chat_render: data?.parameters.chat_render || "",
         yt_dlp_video: data?.parameters.yt_dlp_video || "",
-        yt_dlp_live: data?.parameters.yt_dlp_live || ""
       },
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
@@ -501,13 +500,6 @@ const AdminSettingsPage = () => {
 
             <Title mt={10} order={3}>{t('videoSettings.liveStreamTitle')}</Title>
 
-            <TextInput
-              label={t('videoSettings.ytdlpLiveArgsLabel')}
-              description={t('videoSettings.ytdlpLiveArgsDescription')}
-              key={form.key('parameters.yt_dlp_live')}
-              {...form.getInputProps('parameters.yt_dlp_live')}
-            />
-
             <Title mt={5} order={5}>{t('videoSettings.proxySettings')}</Title>
             <Text>{t('videoSettings.proxySettingsDescription')}</Text>
 
@@ -558,7 +550,7 @@ const AdminSettingsPage = () => {
             </div>
             <Button
               onClick={() =>
-                form.insertListItem('livestream.proxies', { url: '', header: '' })
+                form.insertListItem('livestream.proxies', { url: '', header: '', proxy_type: ProxyType.TwitchHLS })
               }
               mt={10}
               leftSection={<IconPlus size="1rem" />}
