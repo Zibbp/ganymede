@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -96,40 +97,117 @@ func convertToLiveComment(msg twitchIRC.PrivateMessage) utils.LiveComment {
 }
 
 // appendMessageToJSONArray appends a message to a JSON array file
+// without loading the whole file into memory.
 func appendMessageToJSONArray(filename string, comment utils.LiveComment) error {
-	// Read existing file content
-	var messages []utils.LiveComment
-
-	fileData, err := os.ReadFile(filename)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return fmt.Errorf("failed to read file: %w", err)
-		}
-		// File doesn't exist, start with empty array
-		messages = []utils.LiveComment{}
-	} else {
-		// Parse existing JSON array
-		if len(fileData) > 0 {
-			if err := json.Unmarshal(fileData, &messages); err != nil {
-				return fmt.Errorf("failed to parse existing JSON: %w", err)
-			}
-		}
-	}
-
-	// Append new message
-	messages = append(messages, comment)
-
-	// Write back to file
-	data, err := json.MarshalIndent(messages, "", "  ")
+	// Encode the new comment once.
+	msg, err := json.Marshal(comment)
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	if err := os.WriteFile(filename, data, 0644); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+	// Open (or create) the file for read/write.
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %w", err)
+	}
+	defer f.Close()
+
+	info, err := f.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat file: %w", err)
+	}
+	size := info.Size()
+
+	// new file - write a complete array with a single element.
+	if size == 0 {
+		if _, err := f.Write([]byte("[\n")); err != nil {
+			return fmt.Errorf("failed to write opening bracket: %w", err)
+		}
+		if _, err := f.Write(msg); err != nil {
+			return fmt.Errorf("failed to write message: %w", err)
+		}
+		if _, err := f.Write([]byte("\n]\n")); err != nil {
+			return fmt.Errorf("failed to write closing bracket: %w", err)
+		}
+		return f.Sync()
 	}
 
-	return nil
+	// Read only a small tail of the file to find the closing ']' and
+	// determine whether the array is empty or not.
+	const tailSize = 1024
+	bufSize := size
+	if bufSize > tailSize {
+		bufSize = tailSize
+	}
+
+	buf := make([]byte, bufSize)
+	if _, err := f.ReadAt(buf, size-bufSize); err != nil && err != io.EOF {
+		return fmt.Errorf("failed to read file tail: %w", err)
+	}
+
+	// Find last non-whitespace char (should be ']').
+	i := int(bufSize - 1)
+	for ; i >= 0 && isSpace(buf[i]); i-- {
+	}
+	if i < 0 || buf[i] != ']' {
+		return fmt.Errorf("file %s is not a JSON array (missing closing ])", filename)
+	}
+
+	// Look backwards to see what’s before the closing ']' to check if array is empty.
+	j := i - 1
+	for ; j >= 0 && isSpace(buf[j]); j-- {
+	}
+
+	isEmptyArray := false
+	if j >= 0 && buf[j] == '[' {
+		isEmptyArray = true
+	} else if size <= 2 {
+		isEmptyArray = true
+	}
+
+	// Compute the absolute offset of the closing ']' in the file.
+	lastBracketOffset := (size - bufSize) + int64(i)
+
+	// Drop the closing ']' (and any trailing whitespace after it).
+	if err := f.Truncate(lastBracketOffset); err != nil {
+		return fmt.Errorf("failed to truncate file: %w", err)
+	}
+
+	// Seek to the end after truncation.
+	if _, err := f.Seek(0, io.SeekEnd); err != nil {
+		return fmt.Errorf("failed to seek: %w", err)
+	}
+
+	// If the array already has elements, add a comma; otherwise just a newline.
+	if isEmptyArray {
+		if _, err := f.Write([]byte("\n")); err != nil {
+			return fmt.Errorf("failed to write newline: %w", err)
+		}
+	} else {
+		if _, err := f.Write([]byte(",\n")); err != nil {
+			return fmt.Errorf("failed to write comma: %w", err)
+		}
+	}
+
+	// Write the new message and close the array again.
+	if _, err := f.Write(msg); err != nil {
+		return fmt.Errorf("failed to write message: %w", err)
+	}
+	if _, err := f.Write([]byte("\n]\n")); err != nil {
+		return fmt.Errorf("failed to write closing bracket: %w", err)
+	}
+
+	return f.Sync()
+}
+
+// isSpace is sufficient for JSON whitespace around the closing bracket.
+func isSpace(b byte) bool {
+	switch b {
+	case ' ', '\n', '\r', '\t':
+		return true
+	default:
+		return false
+	}
 }
 
 // SaveTwitchLiveChatToFile connects to a Twitch channel and saves messages to a JSON file
