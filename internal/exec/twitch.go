@@ -110,7 +110,7 @@ func appendMessageToJSONArray(filename string, comment utils.LiveComment) error 
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	info, err := f.Stat()
 	if err != nil {
