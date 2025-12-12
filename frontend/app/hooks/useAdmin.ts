@@ -14,7 +14,6 @@ export interface GanymedeInformation {
 export interface GanymedeProgramVersions {
   ffmpeg: string;
   twitch_downloader: string;
-  chat_downloader: string;
   yt_dlp: string;
 }
 

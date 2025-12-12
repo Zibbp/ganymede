@@ -29,17 +29,5 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/yt-dlp -o /usr/local/bin/yt-dlp && \
   chmod +x /usr/local/bin/yt-dlp
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  python3 python3-pip
-RUN  pip3 install --upgrade setuptools --break-system-packages
-# Clone chat-downloader
-WORKDIR /tmp
-RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
-# Apply Twitch fixes
-COPY ../chat_downloader_twitch_fix.patch /tmp/chat_downloader_twitch_fix.patch
-WORKDIR /tmp/chat-downloader
-
-RUN git apply /tmp/chat_downloader_twitch_fix.patch
-RUN cd /tmp/chat-downloader && python3 setup.py install && pip3 install /tmp/chat-downloader --break-system-packages && cd .. && rm -rf chat-downloader
 WORKDIR /workspace
 

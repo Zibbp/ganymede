@@ -68,8 +68,20 @@ func (w DownloadLiveChatWorker) Work(ctx context.Context, job *river.Job[Downloa
 		return err
 	}
 
-	// download video
-	err = exec.DownloadTwitchLiveChat(ctx, dbItems.Video, dbItems.Channel, dbItems.Queue)
+	// Set chat start time
+	if !dbItems.Queue.ChatStart.IsZero() {
+		log.Debug().Str("task_id", fmt.Sprintf("%d", job.ID)).Msg("chat start time already set, skipping")
+	} else {
+		chatStartTime := time.Now()
+		_, err = dbItems.Queue.Update().SetChatStart(chatStartTime).Save(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	// download chat
+	log.Info().Str("task_id", fmt.Sprintf("%d", job.ID)).Msgf("starting live chat download for %s", dbItems.Channel.Name)
+	err = exec.SaveTwitchLiveChatToFile(ctx, dbItems.Channel.Name, dbItems.Video.TmpLiveChatDownloadPath)
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			// create new context to finish the task
