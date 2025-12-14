@@ -494,74 +494,6 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
-func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Channel, queue ent.Queue) error {
-	env := config.GetEnvConfig()
-	// set chat start time
-	chatStarTime := time.Now()
-	_, err := queue.Update().SetChatStart(chatStarTime).Save(ctx)
-	if err != nil {
-		return err
-	}
-
-	// open log file
-	logFilePath := fmt.Sprintf("%s/%s-chat.log", env.LogsDir, video.ID.String())
-	file, err := os.Create(logFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to open log file: %w", err)
-	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Debug().Err(err).Msg("failed to close log file")
-		}
-	}()
-	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chat downloader output to %s", logFilePath)
-
-	var cmdArgs []string
-	cmdArgs = append(cmdArgs, fmt.Sprintf("https://twitch.tv/%s", channel.Name), "--output", video.TmpLiveChatDownloadPath, "-q")
-
-	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running chat_downloader")
-
-	cmd := osExec.CommandContext(ctx, "chat_downloader", cmdArgs...)
-
-	cmd.Stderr = file
-	cmd.Stdout = file
-
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting TwitchDownloader: %w", err)
-	}
-
-	done := make(chan error)
-	go func() {
-		done <- cmd.Wait()
-	}()
-
-	// Wait for the command to finish or context to be cancelled
-	select {
-	case <-ctx.Done():
-		// Context was cancelled, kill the process
-		if err := cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("failed to kill TwitchDownloaderCLI process: %v", err)
-		}
-		<-done // Wait for copying to finish
-		return ctx.Err()
-	case err := <-done:
-		// Command finished normally
-		if err != nil {
-			if exitError, ok := err.(*osExec.ExitError); ok {
-				if status, ok := exitError.Sys().(interface{ ExitStatus() int }); ok {
-					if status.ExitStatus() != -1 {
-						fmt.Println("chat_downloader terminated - exit code:", status.ExitStatus())
-					}
-				}
-			}
-			log.Error().Err(err).Msg("error running chat_downloader")
-			return fmt.Errorf("error running chat_downloader: %w", err)
-		}
-	}
-
-	return nil
-}
-
 func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
 	// open log file
@@ -575,7 +507,7 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
-	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chat_downloader output to %s", logFilePath)
+	log.Debug().Str("video_id", video.ID.String()).Msgf("logging TwitchDownloaderCLI output to %s", logFilePath)
 
 	var cmdArgs []string
 

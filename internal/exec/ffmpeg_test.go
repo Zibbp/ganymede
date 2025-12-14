@@ -115,13 +115,13 @@ func TestGetFfprobeVideoData_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetFfprobeVideoData failed: %v", err)
 	}
-	if data == nil {
+	if data == nil { //nolint:all
 		t.Fatal("expected non-nil data")
 	}
-	if len(data.Streams) == 0 {
+	if len(data.Streams) == 0 { //nolint:all
 		t.Error("expected at least one stream in ffprobe data")
 	}
-	if data.Format.Filename == "" {
+	if data.Format.Filename == "" { //nolint:all
 		t.Error("expected filename in ffprobe format data")
 	}
 }

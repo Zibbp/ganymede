@@ -38,22 +38,24 @@ const QueueChatTimeline = ({ queue }: Params) => {
         >
           <Text size="sm">
             {!queue.live_archive && (
-              <span>
+              <>
+                <span>
+                  <span
+                    className={classes.restartText}
+                    onClick={() => restartTask(QueueTask.TaskChatDownload)}
+                  >
+                    {t('restartButton')}
+                  </span>
+                  <span> - </span>
+                </span>
                 <span
                   className={classes.restartText}
-                  onClick={() => restartTask(QueueTask.TaskChatDownload)}
+                  onClick={() => openQueueTaskLog(queue.id, QueueLogType.Chat)}
                 >
-                  {t('restartButton')}
+                  {t('logsButton')}
                 </span>
-                <span> - </span>
-              </span>
+              </>
             )}
-            <span
-              className={classes.restartText}
-              onClick={() => openQueueTaskLog(queue.id, QueueLogType.Chat)}
-            >
-              {t('logsButton')}
-            </span>
           </Text>
         </Timeline.Item>
 
