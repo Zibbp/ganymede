@@ -28,6 +28,7 @@ type Service struct {
 	BlockedVodsService *blocked.Service
 	RiverClient        *tasks_client.RiverClient
 	PlatformTwitch     platform.Platform
+	PlatformKick       platform.Platform
 }
 
 type TwitchVodResponse struct {
@@ -35,13 +36,8 @@ type TwitchVodResponse struct {
 	Queue *ent.Queue `json:"queue"`
 }
 
-type ArchiveResponse struct {
-	Queue *ent.Queue `json:"queue"`
-	Video *ent.Vod   `json:"video"`
-}
-
-func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, blockedVodService *blocked.Service, riverClient *tasks_client.RiverClient, platformTwitch platform.Platform) *Service {
-	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, BlockedVodsService: blockedVodService, RiverClient: riverClient, PlatformTwitch: platformTwitch}
+func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, blockedVodService *blocked.Service, riverClient *tasks_client.RiverClient, platformTwitch platform.Platform, platformKick platform.Platform) *Service {
+	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, BlockedVodsService: blockedVodService, RiverClient: riverClient, PlatformTwitch: platformTwitch, PlatformKick: platformKick}
 }
 
 // ArchiveChannel - Create channel entry in database along with folder, profile image, etc.
@@ -98,6 +94,7 @@ type ArchiveVideoInput struct {
 	Quality     utils.VodQuality
 	ArchiveChat bool
 	RenderChat  bool
+	Platform    utils.VideoPlatform
 }
 
 func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*ArchiveResponse, error) {
@@ -120,9 +117,11 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*A
 		return nil, err
 	}
 
-	// check if video is processing
-	if strings.Contains(video.ThumbnailURL, "processing") {
-		return nil, fmt.Errorf("vod is still processing")
+	if input.Platform == utils.PlatformTwitch {
+		// check if video is processing
+		if strings.Contains(video.ThumbnailURL, "processing") {
+			return fmt.Errorf("vod is still processing")
+		}
 	}
 
 	// Check if video is already archived
@@ -302,6 +301,7 @@ type ArchiveClipInput struct {
 	Quality     utils.VodQuality
 	ArchiveChat bool
 	RenderChat  bool
+	Platform    utils.VideoPlatform
 }
 
 // ArchiveClip archives a clip from a platform
@@ -507,9 +507,20 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 	}
 
 	// get video
-	video, err := s.PlatformTwitch.GetLiveStream(context.Background(), channel.Name)
-	if err != nil {
-		return nil, err
+	var video *platform.LiveStreamInfo
+	switch input.Platform {
+	case utils.PlatformTwitch:
+		video, err = s.PlatformTwitch.GetLiveStream(context.Background(), channel.Name)
+		if err != nil {
+			return fmt.Errorf("error fetching live stream: %v", err)
+		}
+	case utils.PlatformKick:
+		video, err = s.PlatformKick.GetLiveStream(context.Background(), channel.Name)
+		if err != nil {
+			return fmt.Errorf("error fetching live stream: %v", err)
+		}
+	default:
+		return fmt.Errorf("unsupported platform: %s", input.Platform)
 	}
 
 	// Generate Ganymede video ID for directory and file naming
@@ -563,7 +574,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		ID:                  vUUID,
 		ExtID:               video.ID,
 		ExtStreamID:         video.ID,
-		Platform:            "twitch",
+		Platform:            input.Platform,
 		Type:                utils.VodType(video.Type),
 		Title:               video.Title,
 		Duration:            1,

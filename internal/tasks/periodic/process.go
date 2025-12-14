@@ -42,7 +42,8 @@ func (w SaveVideoChaptersWorker) Work(ctx context.Context, job *river.Job[SaveVi
 		return err
 	}
 
-	platform, err := tasks.PlatformFromContext(ctx)
+	// TODO: Support multiple platforms
+	platform, err := tasks.PlatformFromContext(ctx, utils.PlatformTwitch)
 	if err != nil {
 		return err
 	}

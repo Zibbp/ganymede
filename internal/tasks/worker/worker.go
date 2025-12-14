@@ -25,6 +25,7 @@ type RiverWorkerInput struct {
 	DB_URL                  string
 	DB                      *database.Database
 	PlatformTwitch          platform.Platform
+	PlatformKick            platform.Platform
 	VideoDownloadWorkers    int
 	VideoPostProcessWorkers int
 	ChatDownloadWorkers     int
@@ -168,7 +169,12 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.StoreKey, input.DB)
 
 	// put platform in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformTwitchKey, input.PlatformTwitch)
+	if input.PlatformTwitch != nil {
+		rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformTwitchKey, input.PlatformTwitch)
+	}
+	if input.PlatformKick != nil {
+		rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformKickKey, input.PlatformKick)
+	}
 
 	return rc, nil
 }

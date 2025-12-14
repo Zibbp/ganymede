@@ -92,14 +92,29 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	}()
 
 	// download live video
-	err = exec.DownloadTwitchLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload)
-	if err != nil {
-		if errors.Is(err, context.Canceled) {
-			// create new context to finish the task
-			ctx = context.Background()
-		} else {
-			return err
+	switch dbItems.Video.Platform {
+	case utils.PlatformTwitch:
+		err = exec.DownloadTwitchLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload)
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				// create new context to finish the task
+				ctx = context.Background()
+			} else {
+				return err
+			}
 		}
+	case utils.PlatformKick:
+		err = exec.DownloadKickLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload)
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				// create new context to finish the task
+				ctx = context.Background()
+			} else {
+				return err
+			}
+		}
+	default:
+		return errors.New("unsupported platform for live video download")
 	}
 
 	// cancel chat download when video download is done

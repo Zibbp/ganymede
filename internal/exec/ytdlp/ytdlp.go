@@ -175,7 +175,15 @@ func NewYtDlpService(options YtDlpOptions) *YtDlpService {
 
 // YtDlpGetVideoInfo retrieves video information using yt-dlp for a given video entity.
 func (s *YtDlpService) GetVideoInfo(ctx context.Context, video ent.Vod) (*YTDLPVideoInfo, error) {
-	url := utils.CreateTwitchURL(video.ExtID, video.Type, video.Edges.Channel.Name)
+	var url string
+	switch video.Platform {
+	case utils.PlatformTwitch:
+		url = utils.CreateTwitchURL(video.ExtID, video.Type, video.Edges.Channel.Name)
+	case utils.PlatformKick:
+		url = utils.CreateKickURL(video.ExtID, video.Type, video.Edges.Channel.Name)
+	default:
+		return nil, fmt.Errorf("unsupported platform: %s", video.Platform)
+	}
 
 	args := []string{"-q", "-j", url}
 	log.Info().Msgf("running yt-dlp with args: %s", strings.Join(args, " "))

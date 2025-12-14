@@ -10,6 +10,7 @@ export interface ArchiveVideoInput {
   quality: VideoQuality;
   archive_chat: boolean;
   render_chat: boolean;
+  platform: Platforms;
 }
 
 export enum VideoQuality {
@@ -23,13 +24,19 @@ export enum VideoQuality {
   audio = "audio",
 }
 
+export enum Platforms {
+  Twitch = "twitch",
+  Kick = "kick",
+}
+
 const archiveVideo = async (
   axiosPrivate: AxiosInstance,
   video_id: string,
   channel_id: string,
   quality: VideoQuality,
   archive_chat: boolean,
-  render_chat: boolean
+  render_chat: boolean,
+  platform: Platforms
 ): Promise<ApiResponse<NullResponse>> => {
   const response = await axiosPrivate.post(`/api/v1/archive/video`, {
     video_id,
@@ -37,6 +44,7 @@ const archiveVideo = async (
     quality,
     archive_chat,
     render_chat,
+    platform,
   });
   return response.data.data;
 };
@@ -51,6 +59,7 @@ const useArchiveVideo = () => {
       quality,
       archive_chat,
       render_chat,
+      platform,
     }) =>
       archiveVideo(
         axiosPrivate,
@@ -58,7 +67,8 @@ const useArchiveVideo = () => {
         channel_id,
         quality,
         archive_chat,
-        render_chat
+        render_chat,
+        platform
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["queue"] });

@@ -66,10 +66,33 @@ func (w DownloadChatWorker) Work(ctx context.Context, job *river.Job[DownloadCha
 		return err
 	}
 
-	// download video
-	err = exec.DownloadTwitchChat(ctx, dbItems.Video)
+	platform, err := PlatformFromContext(ctx, dbItems.Video.Platform)
 	if err != nil {
 		return err
+	}
+
+	// download chat
+	switch dbItems.Video.Platform {
+	case utils.PlatformTwitch:
+		err = exec.DownloadTwitchChat(ctx, dbItems.Video)
+		if err != nil {
+			return err
+		}
+	case utils.PlatformKick:
+		// Need to get the stream room ID for Kick
+		livestream, err := platform.GetLiveStream(ctx, dbItems.Channel.Name)
+		if err != nil {
+			return err
+		}
+
+		endTime := dbItems.Video.StreamedAt.Add(time.Duration(dbItems.Video.Duration) * time.Second)
+
+		err = platform.DownloadVodChat(ctx, livestream.ID, dbItems.Video.StreamedAt, endTime, dbItems.Video.TmpChatDownloadPath)
+		if err != nil {
+			return err
+		}
+	default:
+		return errors.ErrUnsupportedPlatform
 	}
 
 	// set queue status to completed

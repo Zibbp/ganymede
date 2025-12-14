@@ -70,6 +70,18 @@ func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 			return nil, err
 		}
 	}
+	var platformKick platform.Platform
+	// setup kick platform
+	if envConfig.KickClientId != "" && envConfig.KickClientSecret != "" {
+		platformKick = &platform.KickConnection{
+			ClientId:     envConfig.KickClientId,
+			ClientSecret: envConfig.KickClientSecret,
+		}
+		_, err = platformKick.Authenticate(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	chapterService := chapter.NewService(db)
 	channelService := channel.NewService(db, platformTwitch)
@@ -77,14 +89,20 @@ func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodsService := blocked.NewService(db)
 	// twitchService := twitch.NewService()
+<<<<<<< Updated upstream
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodsService, riverClient, platformTwitch)
 	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService)
+=======
+	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodsService, riverClient, platformTwitch, platformKick)
+	liveService := live.NewService(db, archiveService, platformTwitch, chapterService)
+>>>>>>> Stashed changes
 
 	// initialize river
 	riverWorkerClient, err := tasks_worker.NewRiverWorker(tasks_worker.RiverWorkerInput{
 		DB_URL:                  dbString,
 		DB:                      db,
 		PlatformTwitch:          platformTwitch,
+		PlatformKick:            platformKick,
 		VideoDownloadWorkers:    envConfig.MaxVideoDownloadExecutions,
 		VideoPostProcessWorkers: envConfig.MaxVideoConvertExecutions,
 		ChatDownloadWorkers:     envConfig.MaxChatDownloadExecutions,
