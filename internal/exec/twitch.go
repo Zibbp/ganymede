@@ -233,7 +233,10 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 
 		// Channel for tracking connection errors
 		errChan := make(chan error, 1)
-		connected := make(chan struct{})
+		// Use a buffered notification channel and send on connect instead of
+		// closing it. Closing from the callback could run multiple times and
+		// cause a "close of closed channel" panic.
+		connected := make(chan struct{}, 1)
 
 		// Handle messages
 		client.OnPrivateMessage(func(message twitchIRC.PrivateMessage) {
@@ -248,7 +251,10 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 			log.Info().Msgf("connected to %s live chat room", channel)
 			retryCount = 0
 			backoff = initialBackoff
-			close(connected)
+			select {
+			case connected <- struct{}{}:
+			default:
+			}
 		})
 
 		client.Join(channel)
