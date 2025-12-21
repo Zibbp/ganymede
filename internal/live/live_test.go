@@ -145,14 +145,14 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.Equal(t, vod.FolderName, expectedFolderName, "Folder name should match the expected storage template")
 	assert.Equal(t, vod.FileName, expectedFileName, "File name should match the expected storage template")
 
+	t.Logf("Waiting for live stream to archive")
+	time.Sleep(1 * time.Minute)
+
 	// If watch while archiving is enabled, check that the hls playlist exists
 	if config.Get().Livestream.WatchWhileArchiving {
 		hlsPlaylistPath := fmt.Sprintf("%s/%s-video.m3u8", vod.TmpVideoHlsPath, vod.ExtStreamID)
 		assert.FileExists(t, hlsPlaylistPath, "HLS playlist file should exist for watch while archiving")
 	}
-
-	t.Logf("Waiting for live stream to archive")
-	time.Sleep(1 * time.Minute)
 
 	if stopArchive {
 		assert.NoError(t, app.QueueService.StopQueueItem(t.Context(), q.ID), "Failed to stop live archive")
@@ -251,11 +251,12 @@ func TestTwitchWatchedChannelLive(t *testing.T) {
 
 // TestTwitchWatchedChannelLiveWithWatchLive tests the basic live archiving of a Twitch channel with the watch live feature
 func TestTwitchWatchedChannelLiveWithWatchLive(t *testing.T) {
+	app, liveChannel, channel := setupAppAndLiveChannel(t)
+
 	updatedConfig := config.Get()
 	updatedConfig.Livestream.WatchWhileArchiving = true
 	assert.NoError(t, config.UpdateConfig(updatedConfig))
 
-	app, liveChannel, channel := setupAppAndLiveChannel(t)
 	liveInput := live.Live{
 		ID:                    channel.ID,
 		WatchLive:             true,
