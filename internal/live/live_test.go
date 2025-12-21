@@ -146,7 +146,7 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.Equal(t, vod.FileName, expectedFileName, "File name should match the expected storage template")
 
 	t.Logf("Waiting for live stream to archive")
-	time.Sleep(30 * time.Second)
+	time.Sleep(60 * time.Second)
 
 	// If watch while archiving is enabled, check that the hls playlist exists
 	if config.Get().Livestream.WatchWhileArchiving {
