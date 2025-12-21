@@ -257,6 +257,11 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	// Decide archive format.
 	archivingAsMP4 := (video.VideoHlsPath == "")
 
+	// Append user-defined (global) params before outputs
+	videoConvertString := config.Get().Parameters.VideoConvert
+	videoConvertArgs := strings.Fields(videoConvertString)
+	ffmpegArgs = append(ffmpegArgs, videoConvertArgs...)
+
 	// Archive output
 	if archivingAsMP4 {
 		// Archive as MP4
@@ -306,11 +311,6 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 			playlistPath,
 		)
 	}
-
-	// Append user-defined (global) params BEFORE outputs
-	videoConvertString := config.Get().Parameters.VideoConvert
-	videoConvertArgs := strings.Fields(videoConvertString)
-	ffmpegArgs = append(ffmpegArgs, videoConvertArgs...)
 
 	// Run ffmpeg
 	cmd := osExec.Command("ffmpeg", ffmpegArgs...)
