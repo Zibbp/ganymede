@@ -150,7 +150,7 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 
 	// If watch while archiving is enabled, check that the hls playlist exists
 	if config.Get().Livestream.WatchWhileArchiving {
-		hlsPlaylistPath := fmt.Sprintf("%s/%s-video.m3u8", vod.TmpVideoHlsPath, vod.ExtStreamID)
+		hlsPlaylistPath := fmt.Sprintf("%s/%s-video.m3u8", vod.TmpVideoHlsPath, vod.ExtID)
 		assert.FileExists(t, hlsPlaylistPath, "HLS playlist file should exist for watch while archiving")
 	}
 
