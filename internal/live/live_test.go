@@ -253,7 +253,7 @@ func TestTwitchWatchedChannelLive(t *testing.T) {
 func TestTwitchWatchedChannelLiveWithWatchLive(t *testing.T) {
 	updatedConfig := config.Get()
 	updatedConfig.Livestream.WatchWhileArchiving = true
-	config.UpdateConfig(updatedConfig)
+	assert.NoError(t, config.UpdateConfig(updatedConfig))
 
 	app, liveChannel, channel := setupAppAndLiveChannel(t)
 	liveInput := live.Live{
