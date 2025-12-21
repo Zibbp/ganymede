@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"syscall"
 	"time"
 
 	twitchIRC "github.com/gempir/go-twitch-irc/v4"
@@ -111,6 +112,15 @@ func appendMessageToJSONArray(filename string, comment utils.LiveComment) error 
 		return fmt.Errorf("failed to open file: %w", err)
 	}
 	defer f.Close() //nolint:errcheck
+
+	// Acquire an exclusive advisory lock so concurrent goroutines/processes
+	// cannot simultaneously truncate/write the file and corrupt the JSON.
+	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
+		return fmt.Errorf("failed to lock file: %w", err)
+	}
+	defer func() {
+		_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+	}()
 
 	info, err := f.Stat()
 	if err != nil {

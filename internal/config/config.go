@@ -83,7 +83,7 @@ func Init() (*Config, error) {
 	configFile = env.ConfigDir + "/config.json"
 	onceInit.Do(func() {
 		cfg := &Config{}
-		cfg.setDefaults()
+		cfg.SetDefaults()
 
 		// Attempt to read existing file
 		data, err := os.ReadFile(configFile)
@@ -126,7 +126,7 @@ func Get() *Config {
 	}
 
 	cfg := &Config{}
-	cfg.setDefaults()
+	cfg.SetDefaults()
 	if err := json.Unmarshal(data, cfg); err != nil {
 		return instance
 	}
@@ -154,8 +154,8 @@ func saveConfigUnsafe(cfg *Config) error {
 	return os.WriteFile(configFile, data, 0644)
 }
 
-// setDefaults initializes all fields of Config to their default values.
-func (c *Config) setDefaults() {
+// SetDefaults initializes all fields of Config to their default values.
+func (c *Config) SetDefaults() {
 	c.LiveCheckInterval = 300
 	c.VideoCheckInterval = 180
 	c.RegistrationEnabled = true

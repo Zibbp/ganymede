@@ -26,7 +26,7 @@ import (
 
 var (
 	LiveArchiveCheckTimeout = 15 * time.Second // Maximum wait time for live archive to start
-	TestArchiveTimeout      = 300 * time.Second
+	TestArchiveTimeout      = 120 * time.Second
 )
 
 // waitForWatchedChannelToStartArchiving waits for the watched channel to start archiving.
@@ -146,7 +146,7 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.Equal(t, vod.FileName, expectedFileName, "File name should match the expected storage template")
 
 	t.Logf("Waiting for live stream to archive")
-	time.Sleep(1 * time.Minute)
+	time.Sleep(30 * time.Second)
 
 	// If watch while archiving is enabled, check that the hls playlist exists
 	if config.Get().Livestream.WatchWhileArchiving {
