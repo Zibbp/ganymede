@@ -76,6 +76,7 @@ const AdminSettingsPage = () => {
         proxies: data?.livestream.proxies || [],
         proxy_enabled: data?.livestream.proxy_enabled ?? true,
         proxy_whitelist: data?.livestream.proxy_whitelist || [],
+        watch_while_archiving: data?.livestream.watch_while_archiving ?? false,
       }
     }
   })
@@ -499,6 +500,15 @@ const AdminSettingsPage = () => {
             />
 
             <Title mt={10} order={3}>{t('videoSettings.liveStreamTitle')}</Title>
+
+            <Checkbox
+              mt={10}
+              label={t('videoSettings.watchWhileArchivingLabel')}
+              description={t('videoSettings.watchWhileArchivingDescription')}
+              key={form.key('livestream.watch_while_archiving')}
+              {...form.getInputProps('livestream.watch_while_archiving', { type: "checkbox" })}
+              mr={15}
+            />
 
             <Title mt={5} order={5}>{t('videoSettings.proxySettings')}</Title>
             <Text>{t('videoSettings.proxySettingsDescription')}</Text>

@@ -77,7 +77,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
         </div>
 
         {/* Chat player */}
-        {data.chat_path && !hideChat && (
+        {data.chat_path && !hideChat && !data.processing && (
           <div className={classes.chatColumnMobile}>
             <ChatPlayer video={data} />
           </div>
@@ -118,7 +118,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
 
 
         {/* Chat */}
-        {data.chat_path && !hideChat && (
+        {data.chat_path && !hideChat && !data.processing && (
           <div className={classes.rightColumn} style={{ height: "auto", maxHeight: "auto" }}>
             <div className={
               videoTheaterMode || fullscreen
@@ -137,17 +137,19 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
       {!videoTheaterMode && <VideoTitleBar video={data} />}
 
       {/* Video clips */}
-      <Container size="7xl" fluid={true} >
-        {videoClipsError && (
-          <div>Error loading clips</div>
-        )}
-        {((!videoClipsPending) && (videoClips && videoClips.length > 0)) && (
-          <VideoPageClips clips={videoClips} />
-        )}
-      </Container>
+      {!data.processing && (
+        <Container size="7xl" fluid={true} >
+          {videoClipsError && (
+            <div>Error loading clips</div>
+          )}
+          {((!videoClipsPending) && (videoClips && videoClips.length > 0)) && (
+            <VideoPageClips clips={videoClips} />
+          )}
+        </Container>
+      )}
 
       {/* Chat Histogram */}
-      {(data.chat_path && (data.type != VideoType.Clip) && !isMobile && showChatHistogram) && (
+      {(data.chat_path && (data.type != VideoType.Clip) && !isMobile && showChatHistogram && !data.processing) && (
         <Container size="7xl" fluid={true} >
           <VideoChatHistogram videoId={data.id} playerRef={player} />
         </Container>

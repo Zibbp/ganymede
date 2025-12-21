@@ -284,7 +284,7 @@
       "livestreamCheckIntervalDescription": "The interval in seconds to check for new live streams to archive. Recommended is 60 seconds, do not go less than 30 seconds. REQUIRES RESTART!",
       "videoCheckIntervalLabel": "Video Check Interval Minutes",
       "videoCheckIntervalDescription": "The interval in minutes to check for new videos to archive. REQUIRES RESTART!",
-      "mp4ToHLSConversionLabel": "Convert MP4 to HLS",
+      "mp4ToHLSConversionLabel": "Save as HLS instead of MP4",
       "generateSpriteThumbnailsLabel": "Generate Sprite Thumbnail",
       "generateSpriteThumbnailsDescription": "Generate a sprite thumbnail for the video. These are preview thumbnails when hovering over the video timeline.",
       "storageTemplateSettings": "Storage Template Settings",
@@ -310,7 +310,9 @@
       "proxyAddButton": "Add",
       "proxyTypeLabel": "Select Proxy Type",
       "whitelistChannelsLabel": "Whitelist Channels",
-      "whitelistChannelsDescription": "Select channels that are excluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to."
+      "whitelistChannelsDescription": "Select channels that are excluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to.",
+      "watchWhileArchivingLabel": "Enable Watching While Archiving",
+      "watchWhileArchivingDescription": "Download a separate HLS stream for watching while archiving live streams. This doubles the amount of storage used during live archiving. Only the video is watchable, chat is not included."
     },
     "chatSettings": {
       "header": "Chat Settings",

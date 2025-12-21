@@ -166,7 +166,11 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 
 	// update video duration for live archive
 	if dbItems.Queue.LiveArchive {
-		duration, err := exec.GetVideoDuration(ctx, dbItems.Video.TmpVideoDownloadPath)
+		tmpVideoPath := dbItems.Video.TmpVideoDownloadPath
+		if dbItems.Video.VideoHlsPath != "" {
+			tmpVideoPath = fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
+		}
+		duration, err := exec.GetVideoDuration(ctx, tmpVideoPath)
 		if err != nil {
 			return err
 		}
@@ -318,6 +322,15 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		if err != nil {
 			return err
 		}
+
+		// delete temp hls directory if exists for watching while live
+		if utils.DirectoryExists(dbItems.Video.TmpVideoHlsPath) {
+			err = utils.DeleteDirectory(dbItems.Video.TmpVideoHlsPath)
+			if err != nil {
+				return err
+			}
+		}
+
 	} else {
 		// move hls video
 		err := utils.MoveDirectory(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.VideoHlsPath)

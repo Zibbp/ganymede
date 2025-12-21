@@ -159,6 +159,7 @@ func (h *Handler) mapRoutes() {
 	// Static files if not using nginx
 	envConfig := config.GetEnvConfig()
 	h.Server.Static(envConfig.VideosDir, envConfig.VideosDir)
+	h.Server.Static(envConfig.TempDir, envConfig.TempDir)
 
 	// RiverUI
 	h.Server.Any("/riverui/", echo.WrapHandler(h.RiverUIServer), AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
