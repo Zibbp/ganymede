@@ -67,10 +67,18 @@ const VideoPlayer = ({ video, ref }: Params) => {
       videoType = "video/object";
     }
 
-    setVideoSource({
-      src: `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.video_path)}`,
-      type: videoType
-    })
+    // Allow for processing videos to be played via HLS from the temp directory if enabled
+    if (video.processing) {
+      setVideoSource({
+        src: `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.tmp_video_hls_path)}/${video.ext_id}-video.m3u8`,
+        type: "application/x-mpegurl"
+      })
+    } else {
+      setVideoSource({
+        src: `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.video_path)}`,
+        type: videoType
+      })
+    }
 
     if (video.thumbnail_path) {
       setVideoPoster(`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.thumbnail_path)}`)
@@ -121,7 +129,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
       })
 
       // mark video as finished if over duration threshold
-      if (playerTimeInt / video.duration >= 0.98) {
+      if (!video.processing && (playerTimeInt / video.duration >= 0.98)) {
         setPlaybackProgressMutation.mutate({
           axiosPrivate: axiosPrivate,
           videoId: video.id,
@@ -160,6 +168,10 @@ const VideoPlayer = ({ video, ref }: Params) => {
     };
   }, [player, video.clip_vod_offset, video.type]);
 
+  // thumbnails URL only when not processing
+  const thumbnails = !video.processing
+    ? `${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/vod/${video.id}/thumbnails/vtt`
+    : undefined
   return (
     <MediaPlayer
       ref={player}
@@ -178,18 +190,20 @@ const VideoPlayer = ({ video, ref }: Params) => {
     >
       <MediaProvider>
         <Poster className={`${classes.mediaPlayerPoster} vds-poster`} src={videoPoster} alt={video.title} />
-        <Track
-          src={`${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/chapter/video/${video.id}/webvtt`}
-          kind="chapters"
-          default={true}
-        />
+        {!video.processing && (
+          <Track
+            src={`${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/chapter/video/${video.id}/webvtt`}
+            kind="chapters"
+            default={true}
+          />
+        )}
       </MediaProvider>
       <DefaultVideoLayout icons={defaultLayoutIcons} noScrubGesture={false}
         slots={{
           beforeFullscreenButton: <VideoPlayerTheaterModeIcon />,
           afterFullscreenButton: <VideoPlayerHideChatIcon />
         }}
-        thumbnails={`${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/vod/${video.id}/thumbnails/vtt`}
+        thumbnails={thumbnails}
       />
     </MediaPlayer>
   );

@@ -241,33 +241,80 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		closestQuality = "audio_only"
 	}
 
-	// Build output path
-	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts+discardcorrupt", "-i", qualitiesURI[closestQuality], "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-movflags", "+faststart"}
-
-	if video.TmpVideoHlsPath == "" {
-		ffmpegArgs = append(ffmpegArgs, []string{"-bsf:a", "aac_adtstoasc", "-f", "mp4"}...)
-	} else {
-		ffmpegArgs = append(ffmpegArgs, []string{"-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("%s/%s_segment%s.ts", video.TmpVideoHlsPath, video.ExtID, "%d"), "-f", "hls"}...)
-
-		if err := utils.CreateDirectory(video.TmpVideoHlsPath); err != nil {
-			return fmt.Errorf("error creating hls directory: %w", err)
-		}
+	// Base ffmpeg args (shared between mp4 and hls)
+	ffmpegArgs := []string{
+		"-y",
+		"-hide_banner",
+		"-fflags", "+genpts+discardcorrupt",
+		"-i", qualitiesURI[closestQuality],
+		"-map", "0",
+		"-dn",
+		"-ignore_unknown",
+		"-c", "copy",
+		"-movflags", "+faststart",
 	}
 
-	// Append user defined video convert parameters
+	// Decide archive format.
+	archivingAsMP4 := (video.VideoHlsPath == "")
+
+	// Append user-defined (global) params before outputs
 	videoConvertString := config.Get().Parameters.VideoConvert
 	videoConvertArgs := strings.Fields(videoConvertString)
 	ffmpegArgs = append(ffmpegArgs, videoConvertArgs...)
 
-	ffmpegArgs = append(ffmpegArgs, video.TmpVideoDownloadPath)
+	// Archive output
+	if archivingAsMP4 {
+		// Archive as MP4
+		ffmpegArgs = append(ffmpegArgs,
+			"-bsf:a", "aac_adtstoasc",
+			"-f", "mp4",
+			video.TmpVideoDownloadPath,
+		)
 
-	// Create ffmpeg command without binding it to the job ctx so it isn't
-	// forcibly killed by CommandContext. We'll manage graceful shutdown
-	// ourselves (SIGTERM -> wait -> SIGKILL).
-	cmd := osExec.Command("ffmpeg", ffmpegArgs...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
+		// Also archive HLS for watch-while-archiving
+		if config.Get().Livestream.WatchWhileArchiving && video.TmpVideoHlsPath != "" {
+			if err := utils.CreateDirectory(video.TmpVideoHlsPath); err != nil {
+				return fmt.Errorf("error creating hls directory: %w", err)
+			}
+
+			playlistPath := fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)
+			segmentPattern := fmt.Sprintf("%s/%s_segment%%06d.ts", video.TmpVideoHlsPath, video.ExtID)
+
+			ffmpegArgs = append(ffmpegArgs,
+				"-start_number", "0",
+				"-hls_time", "10",
+				"-hls_list_size", "0",
+				"-hls_playlist_type", "event",
+				"-hls_flags", "append_list+independent_segments",
+				"-hls_segment_filename", segmentPattern,
+				"-f", "hls",
+				playlistPath,
+			)
+		}
+	} else {
+		// Archive as HLS
+		if err := utils.CreateDirectory(video.TmpVideoHlsPath); err != nil {
+			return fmt.Errorf("error creating hls directory: %w", err)
+		}
+
+		playlistPath := fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)
+		segmentPattern := fmt.Sprintf("%s/%s_segment%%06d.ts", video.TmpVideoHlsPath, video.ExtID)
+
+		ffmpegArgs = append(ffmpegArgs,
+			"-start_number", "0",
+			"-hls_time", "10",
+			"-hls_list_size", "0",
+			"-hls_playlist_type", "event",
+			"-hls_flags", "append_list+independent_segments",
+			"-hls_segment_filename", segmentPattern,
+			"-f", "hls",
+			playlistPath,
+		)
 	}
+
+	// Run ffmpeg
+	cmd := osExec.Command("ffmpeg", ffmpegArgs...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	log.Debug().Str("channel", channel.Name).Str("cmd", strings.Join(cmd.Args, " ")).Msgf("running ffmpeg")
 
@@ -324,14 +371,9 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	return nil
 }
 
-func PostProcessVideo(ctx context.Context, video ent.Vod) error {
+func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
-	configFfmpegArgs := config.Get().Parameters.VideoConvert
-	arr := strings.Fields(configFfmpegArgs)
-	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart"}
-
-	ffmpegArgs = append(ffmpegArgs, arr...)
-	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
+	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoConvertPath, "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("%s/%s_segment%s.ts", video.TmpVideoHlsPath, video.ExtID, "%d"), "-f", "hls", fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)}
 
 	// open log file
 	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
@@ -344,6 +386,7 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
+
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
 
 	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(ffmpegArgs, " ")).Msgf("running ffmpeg")
@@ -382,9 +425,14 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
-func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
+func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
-	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoConvertPath, "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("%s/%s_segment%s.ts", video.TmpVideoHlsPath, video.ExtID, "%d"), "-f", "hls", fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)}
+	configFfmpegArgs := config.Get().Parameters.VideoConvert
+	arr := strings.Fields(configFfmpegArgs)
+	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart"}
+
+	ffmpegArgs = append(ffmpegArgs, arr...)
+	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
 
 	// open log file
 	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
@@ -397,7 +445,6 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
-
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
 
 	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(ffmpegArgs, " ")).Msgf("running ffmpeg")

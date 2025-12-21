@@ -59,22 +59,20 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
 
   return (
     <Card radius="md" padding={5} className={classes.card}>
-
-      {video.processing && (
-        <LoadingOverlay visible zIndex={5} overlayProps={{ radius: "sm", blur: 1 }} loaderProps={{
-          children: <div><Text size="xl">{t('processingOverlayText')}</Text>
-            <Center>
-              <Box>
-                <Loader color="red" />
-              </Box>
-            </Center></div>
-        }} />
-      )}
-
       <Link href={`/videos/${video.id}`}>
-
         <Card.Section>
           <div className={classes.videoImageWrapper}>
+
+            {video.processing && (
+              <LoadingOverlay visible zIndex={5} overlayProps={{ radius: "sm", blur: 1 }} loaderProps={{
+                children: <div><Text size="xl">{t('processingOverlayText')}</Text>
+                  <Center>
+                    <Box>
+                      <Loader color="red" />
+                    </Box>
+                  </Center></div>
+              }} />
+            )}
             <Image
               className={classes.videoImage}
               src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
@@ -148,7 +146,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
       </Flex>
 
       {/* Title */}
-      <Link href={video.processing ? `#` : `/videos/${video.id}`}>
+      <Link href={`/videos/${video.id}`}>
         <Tooltip label={video.title} openDelay={250} withinPortal>
           <Title lineClamp={1} order={4} mt="xs">
             {video.title}
