@@ -282,7 +282,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 			ffmpegArgs = append(ffmpegArgs,
 				"-start_number", "0",
-				"-hls_time", "10",
+				"-hls_time", "2",
 				"-hls_list_size", "0",
 				"-hls_playlist_type", "event",
 				"-hls_flags", "append_list+independent_segments",
