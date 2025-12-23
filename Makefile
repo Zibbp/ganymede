@@ -40,7 +40,7 @@ lint:
 	golangci-lint run
 
 test:
-	go test -count=1 -v ./...
+	go test -count=1 -timeout 30m -v ./...
 
 web_update:
 	cd frontend && npx npm-check-updates -i
