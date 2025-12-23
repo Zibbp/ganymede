@@ -19,6 +19,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/server"
 	"github.com/zibbp/ganymede/internal/worker"
 )
@@ -139,6 +140,11 @@ func Setup(t *testing.T) (*server.Application, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Set config to defaults
+	cfg := config.Get()
+	cfg.SetDefaults()
+	assert.NoError(t, config.UpdateConfig(cfg))
 
 	// Start worker
 	workerClient, err := worker.SetupWorker(ctx)

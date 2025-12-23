@@ -62,13 +62,6 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     unzip twitchdownloader.zip && \
     rm twitchdownloader.zip
 
-# Clone chat-downloader
-RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
-# Apply Twitch fixes
-COPY chat_downloader_twitch_fix.patch /tmp/chat_downloader_twitch_fix.patch
-WORKDIR /tmp/chat-downloader
-RUN git apply /tmp/chat_downloader_twitch_fix.patch
-
 # Install yt-dlp
 COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
 
@@ -116,10 +109,6 @@ FROM golang:1.25-bookworm AS tests
 
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip ffmpeg make git
 
-# Copy and install chat-downloader
-COPY --from=tools /tmp/chat-downloader /tmp/chat-downloader
-RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
-
 # Setup fonts
 RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
 
@@ -164,10 +153,6 @@ RUN node --version && npm --version
 
 # Setup user
 RUN useradd -u 911 -d /data abc && usermod -a -G users abc
-
-# Copy and install chat-downloader
-COPY --from=tools /tmp/chat-downloader /tmp/chat-downloader
-RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
 
 # Install yt-dlp
 COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp

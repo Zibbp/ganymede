@@ -26,7 +26,7 @@ import (
 
 var (
 	LiveArchiveCheckTimeout = 15 * time.Second // Maximum wait time for live archive to start
-	TestArchiveTimeout      = 300 * time.Second
+	TestArchiveTimeout      = 120 * time.Second
 )
 
 // waitForWatchedChannelToStartArchiving waits for the watched channel to start archiving.
@@ -146,7 +146,13 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.Equal(t, vod.FileName, expectedFileName, "File name should match the expected storage template")
 
 	t.Logf("Waiting for live stream to archive")
-	time.Sleep(1 * time.Minute)
+	time.Sleep(60 * time.Second)
+
+	// If watch while archiving is enabled, check that the hls playlist exists
+	if config.Get().Livestream.WatchWhileArchiving {
+		hlsPlaylistPath := fmt.Sprintf("%s/%s-video.m3u8", vod.TmpVideoHlsPath, vod.ExtID)
+		assert.FileExists(t, hlsPlaylistPath, "HLS playlist file should exist for watch while archiving")
+	}
 
 	if stopArchive {
 		assert.NoError(t, app.QueueService.StopQueueItem(t.Context(), q.ID), "Failed to stop live archive")
@@ -225,6 +231,32 @@ func assertNoVodAndQueue(t *testing.T, app *server.Application, liveChannel plat
 // TestTwitchWatchedChannelLive tests the basic live archiving of a Twitch channel
 func TestTwitchWatchedChannelLive(t *testing.T) {
 	app, liveChannel, channel := setupAppAndLiveChannel(t)
+	liveInput := live.Live{
+		ID:                    channel.ID,
+		WatchLive:             true,
+		WatchVod:              false,
+		DownloadArchives:      false,
+		DownloadHighlights:    false,
+		DownloadUploads:       false,
+		ArchiveChat:           true,
+		Resolution:            "best",
+		RenderChat:            true,
+		DownloadSubOnly:       false,
+		UpdateMetadataMinutes: 1,
+	}
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
+	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
+	assertVodAndQueue(t, app, liveChannel, true)
+}
+
+// TestTwitchWatchedChannelLiveWithWatchLive tests the basic live archiving of a Twitch channel with the watch live feature
+func TestTwitchWatchedChannelLiveWithWatchLive(t *testing.T) {
+	app, liveChannel, channel := setupAppAndLiveChannel(t)
+
+	updatedConfig := config.Get()
+	updatedConfig.Livestream.WatchWhileArchiving = true
+	assert.NoError(t, config.UpdateConfig(updatedConfig))
+
 	liveInput := live.Live{
 		ID:                    channel.ID,
 		WatchLive:             true,

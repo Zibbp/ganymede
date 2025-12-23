@@ -48,6 +48,7 @@ export interface Video {
   file_name: string;
   tmp_video_download_path: string;
   tmp_video_convert_path: string;
+  tmp_video_hls_path: string;
   tmp_chat_download_path: string;
   tmp_live_chat_download_path: string;
   tmp_live_chat_convert_path: string;

@@ -27,10 +27,11 @@ type Config struct {
 	Notification     Notification    `json:"notifications"`     // Notification templates and settings.
 	StorageTemplates StorageTemplate `json:"storage_templates"` // Storage folder/file templates.
 	Livestream       struct {
-		Proxies         []ProxyListItem `json:"proxies" validate:"dive"` // List of proxies for live stream download.
-		ProxyEnabled    bool            `json:"proxy_enabled"`           // Enable proxy usage.
-		ProxyParameters string          `json:"proxy_parameters"`        // Query parameters for proxy URL.
-		ProxyWhitelist  []string        `json:"proxy_whitelist"`         // Channels exempt from proxy.
+		Proxies             []ProxyListItem `json:"proxies" validate:"dive"` // List of proxies for live stream download.
+		ProxyEnabled        bool            `json:"proxy_enabled"`           // Enable proxy usage.
+		ProxyParameters     string          `json:"proxy_parameters"`        // Query parameters for proxy URL.
+		ProxyWhitelist      []string        `json:"proxy_whitelist"`         // Channels exempt from proxy.
+		WatchWhileArchiving bool            `json:"watch_while_archiving"`   // Allow watching live streams while archiving them by downloading a temporary HLS stream.
 	} `json:"livestream"`
 	Experimental struct {
 		BetterLiveStreamDetectionAndCleanup bool `json:"better_live_stream_detection_and_cleanup"` // [EXPERIMENTAL] Enable enhanced detection and cleanup.
@@ -82,7 +83,7 @@ func Init() (*Config, error) {
 	configFile = env.ConfigDir + "/config.json"
 	onceInit.Do(func() {
 		cfg := &Config{}
-		cfg.setDefaults()
+		cfg.SetDefaults()
 
 		// Attempt to read existing file
 		data, err := os.ReadFile(configFile)
@@ -125,7 +126,7 @@ func Get() *Config {
 	}
 
 	cfg := &Config{}
-	cfg.setDefaults()
+	cfg.SetDefaults()
 	if err := json.Unmarshal(data, cfg); err != nil {
 		return instance
 	}
@@ -153,8 +154,8 @@ func saveConfigUnsafe(cfg *Config) error {
 	return os.WriteFile(configFile, data, 0644)
 }
 
-// setDefaults initializes all fields of Config to their default values.
-func (c *Config) setDefaults() {
+// SetDefaults initializes all fields of Config to their default values.
+func (c *Config) SetDefaults() {
 	c.LiveCheckInterval = 300
 	c.VideoCheckInterval = 180
 	c.RegistrationEnabled = true
@@ -191,6 +192,7 @@ func (c *Config) setDefaults() {
 	c.Livestream.ProxyEnabled = false
 	c.Livestream.ProxyParameters = "%3Fplayer%3Dtwitchweb%26type%3Dany%26allow_source%3Dtrue%26allow_audio_only%3Dtrue%26allow_spectre%3Dfalse%26fast_bread%3Dtrue"
 	c.Livestream.ProxyWhitelist = []string{}
+	c.Livestream.WatchWhileArchiving = false
 
 	// experimental features
 	c.Experimental.BetterLiveStreamDetectionAndCleanup = false

@@ -359,6 +359,14 @@ func FileExists(filename string) bool {
 	return !os.IsNotExist(err)
 }
 
+func DirectoryExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return info.IsDir()
+}
+
 func ReadChatFile(path string) ([]byte, error) {
 
 	data, err := os.ReadFile(path)
