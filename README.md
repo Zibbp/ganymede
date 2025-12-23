@@ -77,6 +77,17 @@ Feel free to use an existing Postgres database container if you don't want to sp
 4. Visit the address and port you specified for the frontend and login with username: `admin` password: `ganymede`.
 5. Change the admin password _or_ create a new user, grant admin permissions on that user, and delete the admin user.
 
+### Images
+
+Images are published to ghcr.io. There are four types of tags available.
+
+| Tag                  | Description                                                              |
+| -------------------- | ------------------------------------------------------------------------ |
+| latest               | Points to the latest release.                                            |
+| semver - e.g. 4.10.0 | The latest release in semver format.                                     |
+| dev                  | Build of the 'main' branch. Use for testing new features before release. |
+| pr-* - e.g. pr-123   | Build of a pull request. Gets deleted when the PR is closed.             |
+
 ### Rootless
 
 The API container can be run as a non root user. To do so add `PUID` and `PGID` environment variables, setting the value to your user. Read [linuxserver's docs](https://docs.linuxserver.io/general/understanding-puid-and-pgid) about this for more information.
