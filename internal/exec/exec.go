@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	sigintTimout = 300 * time.Second
+	sigintTimeout = 300 * time.Second
 )
 
 // DownloadTwitchVideo downloads a Twitch video.
@@ -337,7 +337,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 	// Wait for the command to finish or for ctx cancellation.
 	// When ctx is cancelled, allow ffmpeg to handle a graceful shutdown first:
-	// send SIGINT to the process group, wait up to sigintTimout, then SIGKILL
+	// send SIGINT to the process group, wait up to sigintTimeout, then SIGKILL
 	select {
 	case <-ctx.Done():
 		if cmd.Process != nil {
@@ -349,7 +349,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		select {
 		case <-done:
 			// exited after SIGINT
-		case <-time.After(sigintTimout):
+		case <-time.After(sigintTimeout):
 			if cmd.Process != nil {
 				log.Warn().Msg("ffmpeg process did not exit after SIGINT, sending SIGKILL")
 				err = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
