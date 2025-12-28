@@ -58,6 +58,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	// Create yt-dlp service
 	ytDlpCookies := []ytdlp.YtDlpCookie{}
 	if config.Get().Parameters.TwitchToken != "" {
+		log.Debug().Msgf("adding Twitch auth-token '%s' cookie for yt-dlp", config.Get().Parameters.TwitchToken)
 		ytDlpCookies = append(ytDlpCookies, ytdlp.YtDlpCookie{
 			Domain: ".twitch.tv",
 			Name:   "auth-token",
