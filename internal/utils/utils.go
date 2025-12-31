@@ -98,7 +98,45 @@ func SanitizeFileName(in string) string {
 		out = "unnamed_file"
 	}
 
+	if len(out) > 255 {
+		out = truncatePreserveExt(out, 255)
+		out = strings.Trim(out, "._- ~")
+		out = strings.Trim(out, "_")
+		if out == "" || out == "." || out == ".." {
+			out = "unnamed_file"
+		}
+	}
+
 	return out
+}
+
+// truncatePreserveExt truncates s to max length, preserving file extension if any
+func truncatePreserveExt(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	// Preserve last extension if it looks reasonable.
+	if i := strings.LastIndexByte(s, '.'); i > 0 && i < len(s)-1 {
+		base := s[:i]
+		ext := s[i:] // includes dot
+		keep := max - len(ext)
+		if keep <= 0 {
+			// Extension alone is too long; hard cut.
+			return s[:max]
+		}
+		if len(base) > keep {
+			base = base[:keep]
+		}
+		base = strings.TrimRight(base, "._- ~")
+		if base == "" {
+			base = "file"
+			if len(base)+len(ext) > max {
+				base = base[:max-len(ext)]
+			}
+		}
+		return base + ext
+	}
+	return s[:max]
 }
 
 // isUnreservedASCII reports whether r is an RFC3986 unreserved character
