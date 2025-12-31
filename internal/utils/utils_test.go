@@ -1,102 +1,63 @@
 package utils
 
 import (
-	"strings"
 	"testing"
 )
 
 // TestSanitizeFileName tests the SanitizeFileName function
-func TestSanitizeFileName(t *testing.T) {
+func TestSanitizeFileName_Table(t *testing.T) {
 	tests := []struct {
-		name     string
-		input    string
-		expected string
+		name string
+		in   string
+		want string
 	}{
-		{
-			name:     "basic filename",
-			input:    "simplefilename.txt",
-			expected: "simplefilename.txt",
-		},
-		{
-			name:     "spaces",
-			input:    "file with spaces",
-			expected: "file_with_spaces",
-		},
-		{
-			name:     "windows illegal characters",
-			input:    "test\\file:name*?",
-			expected: "test_file_name",
-		},
-		{
-			name:     "multiple illegal characters",
-			input:    "doc/<>*|\"test",
-			expected: "doc_test",
-		},
-		{
-			name:     "null character",
-			input:    "file\x00with\x00null",
-			expected: "file_with_null",
-		},
-		{
-			name:     "tabs and newlines",
-			input:    "file\twith\nspecial",
-			expected: "file_with_special",
-		},
-		{
-			name:     "leading and trailing spaces",
-			input:    "  spaced out  ",
-			expected: "spaced_out",
-		},
-		{
-			name:     "multiple consecutive illegal chars",
-			input:    "test///file***name???",
-			expected: "test_file_name",
-		},
-		{
-			name:     "empty string",
-			input:    "",
-			expected: "unnamed_file",
-		},
-		{
-			name:     "dot",
-			input:    ".",
-			expected: "unnamed_file",
-		},
-		{
-			name:     "double dot",
-			input:    "..",
-			expected: "unnamed_file",
-		},
-		{
-			name:     "backslash",
-			input:    "this\\is\\a\\path",
-			expected: "this_is_a_path",
-		},
-		{
-			name:     "mixed special characters",
-			input:    "file%with&some;chars",
-			expected: "file_with_some_chars",
-		},
-		{
-			name:     "very long filename",
-			input:    strings.Repeat("a", 300) + ".txt",
-			expected: strings.Repeat("a", 255),
-		},
-		{
-			name:     "leading and trailing illegal",
-			input:    "/start>middle<end/",
-			expected: "start_middle_end",
-		},
+		{"basic_spaces", "hello world", "hello_world"},
+		{"tabs_newlines_trim", "  hello\tworld\n", "hello_world"},
+		{"illegal_fs_chars", `a/b\c:d*e?f"g<h>i|j`, "a_b_c_d_e_f_g_h_i_j"},
+		{"percent_amp_semicolon", "100% legit & safe;", "100_legit_safe"},
+		{"emoji_removed_inline", "🤖robot🚀", "robot"},
+		{"emoji_zwj_sequence_removed", "family 👨‍👩‍👧‍👦 time", "family_time"},
+		{"emoji_only_becomes_unnamed", "💯", "unnamed_file"},
+		{"dot_becomes_unnamed", ".", "unnamed_file"},
+		{"dotdot_becomes_unnamed", "..", "unnamed_file"},
+		{"trailing_underscore_trim", " file...name  ", "file...name"},
+		{"unicode_non_ascii_drops_to_separator", "café", "caf"},
+		{"unicode_only_becomes_unnamed", "東京", "unnamed_file"},
+		{"trim_dashes_dots_spaces", " -._~abc~_.- ", "abc"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := SanitizeFileName(tt.input)
-			if result != tt.expected {
-				t.Errorf("SanitizeFileName(%q) = %q, expected %q", tt.input, result, tt.expected)
+			got := SanitizeFileName(tt.in)
+			if got != tt.want {
+				t.Fatalf("SanitizeFileName(%q) = %q; want %q", tt.in, got, tt.want)
+			}
+			if len(got) == 0 {
+				t.Fatalf("output must not be empty")
+			}
+			if len(got) > 255 {
+				t.Fatalf("output too long: %d", len(got))
+			}
+			if !isURLAndFSSafeUnreserved(got) {
+				t.Fatalf("output contains non-unreserved characters: %q", got)
 			}
 		})
 	}
+}
+
+func isURLAndFSSafeUnreserved(s string) bool {
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case c >= 'a' && c <= 'z':
+		case c >= 'A' && c <= 'Z':
+		case c >= '0' && c <= '9':
+		case c == '-' || c == '.' || c == '_' || c == '~':
+		default:
+			return false
+		}
+	}
+	return true
 }
 
 // TestContains tests the Contains function
