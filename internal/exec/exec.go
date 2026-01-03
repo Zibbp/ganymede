@@ -251,7 +251,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		"-dn",
 		"-ignore_unknown",
 		"-c", "copy",
-		"-movflags", "+faststart+frag_keyframe+empty_moov+default_base_moof",
+		"-movflags", "+faststart",
 	}
 
 	// Decide archive format.
