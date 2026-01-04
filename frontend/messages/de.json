@@ -310,7 +310,9 @@
       "proxyAddButton": "Hinzufügen",
       "proxyTypeLabel": "Wähle den Proxy-Typ",
       "whitelistChannelsLabel": "Whitelist-Kanäle",
-      "whitelistChannelsDescription": "Wähle Kanäle aus, die von der Verwendung des Proxys ausgeschlossen sind, falls aktiviert. Stattdessen wird dein Twitch-Token verwendet. Wähle Kanäle aus, die du abonniert hast."
+      "whitelistChannelsDescription": "Wähle Kanäle aus, die von der Verwendung des Proxys ausgeschlossen sind, falls aktiviert. Stattdessen wird dein Twitch-Token verwendet. Wähle Kanäle aus, die du abonniert hast.",
+      "watchWhileArchivingLabel": "Aktiviere Wiedergabe während des Archivierens",
+      "watchWhileArchivingDescription": "Lädt einen separaten HLS-Stream herunter, um Live-Streams während des Archivierens ansehen zu können. Dies verdoppelt den Speicherbedarf während der Live-Archivierung. Nur das Video ist abspielbar – der Chat wird nicht mit angezeigt."
     },
     "chatSettings": {
       "header": "Chat-Einstellungen",
