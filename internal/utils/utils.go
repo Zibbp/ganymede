@@ -46,9 +46,10 @@ func GetPathBeforePartial(fullPath, partialMatch string) string {
 	return filepath.Dir(fullPath[:index])
 }
 
-// SanitizeFileName sanitizes a string to be a safe filename
+// SanitizeFileName sanitizes a string to be a safe POSIX filename (keeps non-English, strips emoji).
 func SanitizeFileName(in string) string {
-	// Build a safe ASCII name (unreserved set) and strip emoji
+	const maxBytes = 255
+
 	var b strings.Builder
 	b.Grow(len(in))
 
@@ -68,29 +69,25 @@ func SanitizeFileName(in string) string {
 			continue
 		}
 
-		// Drop control chars entirely
-		if r <= 0x1F || r == 0x7F {
+		// Drop other control chars entirely
+		if unicode.IsControl(r) || r == 0 {
 			continue
 		}
 
-		// Keep RFC3986 "unreserved" only
-		if isUnreservedASCII(r) {
-			b.WriteByte(byte(r))
-			lastWasUnderscore = (r == '_')
+		// disallow path separator
+		if r == '/' || r == '%' {
+			if b.Len() > 0 && !lastWasUnderscore {
+				b.WriteByte('_')
+				lastWasUnderscore = true
+			}
 			continue
 		}
 
-		// Anything else becomes a separator
-		if b.Len() > 0 && !lastWasUnderscore {
-			b.WriteByte('_')
-			lastWasUnderscore = true
-		}
+		b.WriteRune(r)
+		lastWasUnderscore = (r == '_')
 	}
 
 	out := b.String()
-
-	// trim separators/dots/spaces and collapse underscores already handled above.
-	out = strings.Trim(out, "._- ~") // also avoids trailing dot/space issues
 	out = strings.Trim(out, "_")
 
 	// Handle empty/special names
@@ -98,9 +95,9 @@ func SanitizeFileName(in string) string {
 		out = "unnamed_file"
 	}
 
-	if len(out) > 255 {
-		out = truncatePreserveExt(out, 255)
-		out = strings.Trim(out, "._- ~")
+	// Truncate to maxBytes if needed
+	if len(out) > maxBytes {
+		out = truncatePreserveExtUTF8(out, maxBytes)
 		out = strings.Trim(out, "_")
 		if out == "" || out == "." || out == ".." {
 			out = "unnamed_file"
@@ -110,49 +107,50 @@ func SanitizeFileName(in string) string {
 	return out
 }
 
-// truncatePreserveExt truncates s to max length, preserving file extension if any
-func truncatePreserveExt(s string, max int) string {
+// truncatePreserveExtUTF8 truncates to max bytes without splitting UTF-8, preserving extension if any.
+func truncatePreserveExtUTF8(s string, max int) string {
 	if len(s) <= max {
 		return s
 	}
+
 	// Preserve last extension if it looks reasonable.
 	if i := strings.LastIndexByte(s, '.'); i > 0 && i < len(s)-1 {
 		base := s[:i]
 		ext := s[i:] // includes dot
+
 		keep := max - len(ext)
 		if keep <= 0 {
-			// Extension alone is too long; hard cut.
-			return s[:max]
+			return cutToMaxBytesUTF8(s, max)
 		}
-		if len(base) > keep {
-			base = base[:keep]
-		}
-		base = strings.TrimRight(base, "._- ~")
+
+		base = cutToMaxBytesUTF8(base, keep)
+		base = strings.TrimRight(base, "_")
 		if base == "" {
 			base = "file"
-			if len(base)+len(ext) > max {
-				base = base[:max-len(ext)]
-			}
+			base = cutToMaxBytesUTF8(base, max-len(ext))
 		}
 		return base + ext
 	}
-	return s[:max]
+
+	return cutToMaxBytesUTF8(s, max)
 }
 
-// isUnreservedASCII reports whether r is an RFC3986 unreserved character
-func isUnreservedASCII(r rune) bool {
-	switch {
-	case r >= 'a' && r <= 'z':
-		return true
-	case r >= 'A' && r <= 'Z':
-		return true
-	case r >= '0' && r <= '9':
-		return true
-	case r == '-' || r == '.' || r == '_' || r == '~':
-		return true
-	default:
-		return false
+// cutToMaxBytesUTF8 cuts s to at most max bytes without splitting UTF-8 runes.
+func cutToMaxBytesUTF8(s string, max int) string {
+	if len(s) <= max {
+		return s
 	}
+	cut := 0
+	for i := range s { // i iterates rune boundaries
+		if i > max {
+			break
+		}
+		cut = i
+	}
+	if max < len(s) && max > 0 && max == cut {
+		return s[:max]
+	}
+	return s[:cut]
 }
 
 // isEmojiRune reports whether r is an emoji or emoji-related rune
