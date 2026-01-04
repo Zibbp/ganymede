@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -13,17 +14,27 @@ func TestSanitizeFileName_Table(t *testing.T) {
 	}{
 		{"basic_spaces", "hello world", "hello_world"},
 		{"tabs_newlines_trim", "  hello\tworld\n", "hello_world"},
-		{"illegal_fs_chars", `a/b\c:d*e?f"g<h>i|j`, "a_b_c_d_e_f_g_h_i_j"},
-		{"percent_amp_semicolon", "100% legit & safe;", "100_legit_safe"},
+
+		// POSIX + URL-safety: treat "/" and "%" as separators.
+		{"posix_slash_and_percent", `a/b%c`, "a_b_c"},
+
+		// We keep other punctuation (since this never runs on Windows).
+		{"punctuation_kept", `100 legit & safe;`, `100_legit_&_safe;`},
+
 		{"emoji_removed_inline", "🤖robot🚀", "robot"},
 		{"emoji_zwj_sequence_removed", "family 👨‍👩‍👧‍👦 time", "family_time"},
 		{"emoji_only_becomes_unnamed", "💯", "unnamed_file"},
 		{"dot_becomes_unnamed", ".", "unnamed_file"},
 		{"dotdot_becomes_unnamed", "..", "unnamed_file"},
 		{"trailing_underscore_trim", " file...name  ", "file...name"},
-		{"unicode_non_ascii_drops_to_separator", "café", "caf"},
-		{"unicode_only_becomes_unnamed", "東京", "unnamed_file"},
-		{"trim_dashes_dots_spaces", " -._~abc~_.- ", "abc"},
+
+		// Non-English preserved
+		{"unicode_non_english_preserved", "café", "café"},
+		{"unicode_cjk_preserved", "東京", "東京"},
+		{"unicode_mixed_preserved", "東京 café", "東京_café"},
+
+		// Only underscores are trimmed at ends
+		{"trim_underscores_only", " _abc_ ", "abc"},
 	}
 
 	for _, tt := range tests {
@@ -38,26 +49,17 @@ func TestSanitizeFileName_Table(t *testing.T) {
 			if len(got) > 255 {
 				t.Fatalf("output too long: %d", len(got))
 			}
-			if !isURLAndFSSafeUnreserved(got) {
-				t.Fatalf("output contains non-unreserved characters: %q", got)
+			if strings.ContainsRune(got, '/') {
+				t.Fatalf("output must not contain '/': %q", got)
+			}
+			if strings.Contains(got, "\x00") {
+				t.Fatalf("output must not contain NUL: %q", got)
+			}
+			if strings.Contains(got, "__") {
+				t.Fatalf("output must not contain double underscores: %q", got)
 			}
 		})
 	}
-}
-
-func isURLAndFSSafeUnreserved(s string) bool {
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		switch {
-		case c >= 'a' && c <= 'z':
-		case c >= 'A' && c <= 'Z':
-		case c >= '0' && c <= '9':
-		case c == '-' || c == '.' || c == '_' || c == '~':
-		default:
-			return false
-		}
-	}
-	return true
 }
 
 // TestContains tests the Contains function
