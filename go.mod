@@ -17,7 +17,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grafov/m3u8 v0.12.1
 	github.com/joho/godotenv v1.5.1
-	github.com/labstack/echo/v4 v4.14.0
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.23.2
