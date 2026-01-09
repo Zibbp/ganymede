@@ -22,12 +22,25 @@ func NewService(store *database.Database) *Service {
 	}
 }
 
+// Chapter is the DTO for a Chapter
+// Update DBChapterToDto if you change this struct
 type Chapter struct {
 	ID    string `json:"id"`
 	Type  string `json:"type"`
 	Title string `json:"title"`
 	Start int    `json:"start"`
 	End   int    `json:"end"`
+}
+
+// DBChapterToDto converts a Ent Chapter to a Chapter DTO
+func DBChapterToDto(v *ent.Chapter) Chapter {
+	return Chapter{
+		ID:    v.ID.String(),
+		Type:  v.Type,
+		Title: v.Title,
+		Start: v.Start,
+		End:   v.End,
+	}
 }
 
 func (s *Service) CreateChapter(c Chapter, videoId uuid.UUID) (*ent.Chapter, error) {

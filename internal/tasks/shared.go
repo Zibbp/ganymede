@@ -49,6 +49,7 @@ var (
 	TaskUpdateVideoStorageUsage     = "update_video_storage_usage"
 	TaskUpdateChannelStorageUsage   = "update_channel_storage_usage"
 	TaskProcessPlaylistVideoRules   = "process_playlist_video_rules"
+	TaskExportVideoMetadata         = "export_video_metadata"
 )
 
 var (
