@@ -645,7 +645,7 @@
     "registerSuccessNotification": "Реєстрація успішна, будь ласка, увійдіть",
     "errorRegisteringNotification": "Помилка реєстрації",
     "welcomeText": "Ласкаво просимо до Ganymede",
-    "ssoButton": "Single Single On (SSO)",
+    "ssoButton": "Single Sign-On (SSO)",
     "localCredentialsLabel": "Або продовжити з локальними даними",
     "usernameLabel": "Нікнейм",
     "usernameDescription": "Ваше ім'я користувача",

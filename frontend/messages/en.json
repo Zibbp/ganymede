@@ -645,7 +645,7 @@
     "registerSuccessNotification": "Registered successfully, please login",
     "errorRegisteringNotification": "Error registering",
     "welcomeText": "Welcome to Ganymede",
-    "ssoButton": "Single Single On (SSO)",
+    "ssoButton": "Single Sign-On (SSO)",
     "localCredentialsLabel": "Or continue with local credentials",
     "usernameLabel": "Username",
     "usernameDescription": "Your username",
