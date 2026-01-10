@@ -178,9 +178,8 @@ func (s *YtDlpService) GetVideoInfo(ctx context.Context, video ent.Vod) (*YTDLPV
 	url := utils.CreateTwitchURL(video.ExtID, video.Type, video.Edges.Channel.Name)
 
 	args := []string{"-q", "-j", url}
-	log.Info().Msgf("running yt-dlp with args: %s", strings.Join(args, " "))
-
 	cmd, cookieFile, err := s.CreateCommand(ctx, args, true)
+	log.Info().Msgf("running yt-dlp command: %s", strings.Join(cmd.Args, " "))
 	defer func() {
 		if cookieFile != nil {
 			if err := cookieFile.Close(); err != nil {
@@ -273,6 +272,7 @@ func (s *YtDlpService) CreateCommand(ctx context.Context, inputArgs []string, en
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create cookies file: %w", err)
 		}
+		log.Debug().Msgf("using yt-dlp cookies file: %s", cookiesFile.Name())
 		args = append(args, "--cookies", cookiesFile.Name())
 	}
 
