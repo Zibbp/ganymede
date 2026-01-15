@@ -170,7 +170,7 @@ func (s *Service) PopulateExternalChannelID(ctx context.Context) {
 		if c.ExtID != "" {
 			continue
 		}
-		twitcChannel, err := s.PlatformTwitch.GetChannel(ctx, c.Name)
+		twitcChannel, err := s.PlatformTwitch.GetChannel(ctx, &c.Name, nil)
 		if err != nil {
 			log.Error().Msg("error getting twitch channel")
 			continue
@@ -191,7 +191,7 @@ func (s *Service) UpdateChannelImage(ctx context.Context, channelID uuid.UUID) e
 	}
 
 	// Fetch channel from Twitch API
-	twitchChannel, err := s.PlatformTwitch.GetChannel(ctx, channel.Name)
+	twitchChannel, err := s.PlatformTwitch.GetChannel(ctx, &channel.Name, nil)
 	if err != nil {
 		return fmt.Errorf("error fetching twitch channel: %v", err)
 	}

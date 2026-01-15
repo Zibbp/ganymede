@@ -52,7 +52,7 @@ func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.
 
 	env := config.GetEnvConfig()
 	// get channel from platform
-	platformChannel, err := s.PlatformTwitch.GetChannel(ctx, channelName)
+	platformChannel, err := s.PlatformTwitch.GetChannel(ctx, &channelName, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching twitch channel: %v", err)
 	}
