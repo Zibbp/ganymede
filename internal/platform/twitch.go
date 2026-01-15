@@ -227,8 +227,10 @@ func (c *TwitchConnection) GetChannel(ctx context.Context, channelName *string, 
 
 	if channelID != nil && *channelID != "" {
 		params.Set("id", *channelID)
-	} else {
+	} else if channelName != nil && *channelName != "" {
 		params.Set("login", *channelName)
+	} else {
+		return nil, fmt.Errorf("either channelName or channelID must be provided")
 	}
 
 	body, err := c.twitchMakeHTTPRequest("GET", "users", params, nil)

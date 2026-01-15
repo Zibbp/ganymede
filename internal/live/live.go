@@ -268,9 +268,18 @@ func (s *Service) Check(ctx context.Context) error {
 	var streams []platform.LiveStreamInfo
 	// generate query string for twitch api
 	for _, lwc := range liveWatchedChannelsSplit {
-		channelIDs := make([]string, 0)
+		channelIDs := make([]string, 0, len(lwc))
 		for _, lwc := range lwc {
+			if lwc.Edges.Channel.ExtID == "" {
+				log.Warn().
+					Str("channel_id", lwc.Edges.Channel.ID.String()).
+					Msg("missing twitch external ID; skipping live check for this channel")
+				continue
+			}
 			channelIDs = append(channelIDs, lwc.Edges.Channel.ExtID)
+		}
+		if len(channelIDs) == 0 {
+			continue
 		}
 		log.Debug().Str("channels", strings.Join(channelIDs, ", ")).Msg("checking live streams")
 		twitchStreams, err := s.PlatformTwitch.GetLiveStreams(ctx, channelIDs)
