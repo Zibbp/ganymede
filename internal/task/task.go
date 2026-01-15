@@ -119,6 +119,13 @@ func (s *Service) StartTask(ctx context.Context, task string) error {
 		}
 		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
 
+	case "update_platform_channels":
+		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.UpdateTwitchChannelsArgs{}, nil)
+		if err != nil {
+			return fmt.Errorf("error inserting task: %v", err)
+		}
+		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
+
 	}
 
 	return nil

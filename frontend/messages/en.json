@@ -347,7 +347,9 @@
     "updateVideoStorageUsage": "Update Video Storage Usage",
     "updateVideoStorageUsageDescription": "Update the storage usage for all videos. This is used to display the storage usage in the video list and statistics page. Runs every hour.",
     "processPlaylistVideoRules": "Process Playlist Video Rules",
-    "processPlaylistVideoRulesDescription": "Process video rules for playlists. This will check if videos should be added to playlists based on the rules defined. Runs every hour."
+    "processPlaylistVideoRulesDescription": "Process video rules for playlists. This will check if videos should be added to playlists based on the rules defined. Runs every hour.",
+    "updatePlatformChannels": "Update Platform Channels",
+    "updatePlatformChannelsDescription": "Update channel information from the platform for all channels. This includes display name and profile image. Runs every hour."
   },
   "AdminUsersPage": {
     "title": "Admin - Users",

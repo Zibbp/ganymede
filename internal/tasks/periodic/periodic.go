@@ -13,11 +13,14 @@ import (
 	entTwitchCategory "github.com/zibbp/ganymede/ent/twitchcategory"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/auth"
+	"github.com/zibbp/ganymede/internal/channel"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/playlist"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
+	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
 
@@ -415,6 +418,100 @@ func (w ProcessPlaylistVideoRulesWorker) Work(ctx context.Context, job *river.Jo
 				}
 			}
 		}
+	}
+
+	logger.Info().Msg("task completed")
+
+	return nil
+}
+
+// Update Twitch channels
+type UpdateTwitchChannelsArgs struct{}
+
+func (UpdateTwitchChannelsArgs) Kind() string { return tasks.TaskUpdateTwitchChannels }
+
+func (w UpdateTwitchChannelsArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		MaxAttempts: 5,
+	}
+}
+
+func (w UpdateTwitchChannelsArgs) Timeout(job *river.Job[UpdateTwitchChannelsArgs]) time.Duration {
+	return 1 * time.Minute
+}
+
+type UpdateTwitchChannelsWorker struct {
+	river.WorkerDefaults[UpdateTwitchChannelsArgs]
+}
+
+func (w UpdateTwitchChannelsWorker) Work(ctx context.Context, job *river.Job[UpdateTwitchChannelsArgs]) error {
+	logger := log.With().Str("task", job.Kind).Str("job_id", fmt.Sprintf("%d", job.ID)).Logger()
+	logger.Info().Msg("starting task")
+
+	store, err := tasks.StoreFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	platform, err := tasks.PlatformFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	channels, err := store.Client.Channel.Query().All(ctx)
+	if err != nil {
+		return err
+	}
+
+	channelService := channel.NewService(store, platform)
+	env := config.GetEnvConfig()
+
+	logger.Info().Msgf("updating %d channels", len(channels))
+
+	// TODO: if multi-platform is ever supported a platform field will need to be checked here
+	for _, c := range channels {
+		if c.ExtID == "" {
+			continue
+		}
+
+		platformChannel, err := platform.GetChannel(ctx, nil, &c.ExtID)
+		if err != nil {
+			logger.Error().Err(err).Str("channel_id", c.ID.String()).Msg("failed to get channel from platform")
+			continue
+		}
+
+		channelDirectory := fmt.Sprintf("%s/%s", env.VideosDir, platformChannel.Login)
+
+		channelDTO := channel.Channel{
+			ExtID:       platformChannel.ID,
+			Name:        platformChannel.Login,
+			DisplayName: platformChannel.DisplayName,
+			ImagePath:   fmt.Sprintf("%s/%s/profile.png", env.VideosDir, platformChannel.Login),
+		}
+
+		_, err = channelService.UpdateChannel(c.ID, channelDTO)
+		if err != nil {
+			logger.Error().Err(err).Str("channel_id", c.ID.String()).Msg("failed to update channel")
+			continue
+		}
+
+		// Check if channelDirectory exists
+		if !utils.DirectoryExists(channelDirectory) {
+			err = utils.CreateDirectory(channelDirectory)
+			if err != nil {
+				logger.Error().Err(err).Str("channel_id", c.ID.String()).Msg("failed to create channel directory")
+				continue
+			}
+		}
+
+		// Update channel profile image
+		err = channelService.UpdateChannelImage(ctx, c.ID)
+		if err != nil {
+			logger.Error().Err(err).Str("channel_id", c.ID.String()).Msg("failed to update channel image")
+			continue
+		}
+
+		logger.Debug().Str("channel_id", c.ID.String()).Msg("channel updated")
 	}
 
 	logger.Info().Msg("task completed")
