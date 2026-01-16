@@ -174,10 +174,10 @@ func (c *TwitchConnection) GetLiveStream(ctx context.Context, channelName string
 	return &info, nil
 }
 
-func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelNames []string) ([]LiveStreamInfo, error) {
+func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelIDs []string) ([]LiveStreamInfo, error) {
 	params := url.Values{}
-	for _, channel := range channelNames {
-		params.Add("user_login", channel)
+	for _, channel := range channelIDs {
+		params.Add("user_id", channel)
 	}
 
 	body, err := c.twitchMakeHTTPRequest("GET", "streams", params, nil)
@@ -221,10 +221,18 @@ func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelNames []st
 	return streams, nil
 }
 
-func (c *TwitchConnection) GetChannel(ctx context.Context, channelName string) (*ChannelInfo, error) {
-	params := url.Values{
-		"login": []string{channelName},
+// GetChannel retrieves channel information by its name or ID.
+func (c *TwitchConnection) GetChannel(ctx context.Context, channelName *string, channelID *string) (*ChannelInfo, error) {
+	params := url.Values{}
+
+	if channelID != nil && *channelID != "" {
+		params.Set("id", *channelID)
+	} else if channelName != nil && *channelName != "" {
+		params.Set("login", *channelName)
+	} else {
+		return nil, fmt.Errorf("either channelName or channelID must be provided")
 	}
+
 	body, err := c.twitchMakeHTTPRequest("GET", "users", params, nil)
 	if err != nil {
 		return nil, err

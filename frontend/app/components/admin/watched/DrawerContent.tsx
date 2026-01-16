@@ -301,7 +301,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
               description={t('updateMetadataDescription', { minutes: form.values.update_metadata_minutes })}
               key={form.key('update_metadata_minutes')}
               {...form.getInputProps('update_metadata_minutes')}
-              min={1}
+              min={0}
             />
           )}
 

@@ -29,7 +29,7 @@ func (h *Handler) GetTwitchChannel(c echo.Context) error {
 	if name == "" {
 		return ErrorResponse(c, http.StatusBadRequest, "channel name query param is required")
 	}
-	channel, err := h.Service.PlatformTwitch.GetChannel(c.Request().Context(), name)
+	channel, err := h.Service.PlatformTwitch.GetChannel(c.Request().Context(), &name, nil)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

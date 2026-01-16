@@ -268,17 +268,25 @@ func (s *Service) Check(ctx context.Context) error {
 	var streams []platform.LiveStreamInfo
 	// generate query string for twitch api
 	for _, lwc := range liveWatchedChannelsSplit {
-		channels := make([]string, 0)
+		channelIDs := make([]string, 0, len(lwc))
 		for _, lwc := range lwc {
-			channels = append(channels, lwc.Edges.Channel.Name)
+			if lwc.Edges.Channel.ExtID == "" {
+				log.Warn().
+					Str("channel_id", lwc.Edges.Channel.ID.String()).
+					Msg("missing twitch external ID; skipping live check for this channel")
+				continue
+			}
+			channelIDs = append(channelIDs, lwc.Edges.Channel.ExtID)
 		}
-		log.Debug().Str("channels", strings.Join(channels, ", ")).Msg("checking live streams")
-
-		twitchStreams, err := s.PlatformTwitch.GetLiveStreams(ctx, channels)
+		if len(channelIDs) == 0 {
+			continue
+		}
+		log.Debug().Str("channels", strings.Join(channelIDs, ", ")).Msg("checking live streams")
+		twitchStreams, err := s.PlatformTwitch.GetLiveStreams(ctx, channelIDs)
 		if err != nil {
 			var e platform.ErrorNoStreamsFound
 			if errors.As(err, &e) {
-				log.Debug().Msgf("live stream not found for channels: %s, skipping", strings.Join(channels, ", "))
+				log.Debug().Msgf("live stream not found for channels: %s, skipping", strings.Join(channelIDs, ", "))
 				continue
 			} else {
 				return fmt.Errorf("error getting live streams: %v", err)
@@ -292,7 +300,7 @@ func (s *Service) Check(ctx context.Context) error {
 OUTER:
 	for _, lwc := range liveWatchedChannels {
 		// Check if LWC is in twitchStreams.Data
-		stream := channelInLiveStreamInfo(lwc.Edges.Channel.Name, streams)
+		stream := channelInLiveStreamInfo(lwc.Edges.Channel.ExtID, streams)
 		if len(stream.ID) > 0 {
 			// Build map of channel watched categories
 			watchedChannelCategories := make(map[string]struct{}, len(lwc.Edges.Categories))
@@ -464,7 +472,7 @@ OUTER:
 // channelInLiveStreamInfo searches for a string in a slice of LiveStreamInfo and returns the first match.
 func channelInLiveStreamInfo(a string, list []platform.LiveStreamInfo) platform.LiveStreamInfo {
 	for _, b := range list {
-		if b.UserLogin == a {
+		if b.UserLogin == a || b.UserID == a {
 			return b
 		}
 	}

@@ -197,7 +197,7 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	if err != nil {
 		return err
 	}
-	channel, err := platform.GetChannel(ctx, dbItems.Channel.Name)
+	channel, err := platform.GetChannel(ctx, &dbItems.Channel.Name, nil)
 	if err != nil {
 		return err
 	}
