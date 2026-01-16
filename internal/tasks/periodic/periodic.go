@@ -505,7 +505,7 @@ func (w UpdateTwitchChannelsWorker) Work(ctx context.Context, job *river.Job[Upd
 		}
 
 		// Update channel profile image
-		err = channelService.UpdateChannelImage(ctx, c.ID)
+		err = channelService.UpdateChannelImage(ctx, c.ID, true)
 		if err != nil {
 			logger.Error().Err(err).Str("channel_id", c.ID.String()).Msg("failed to update channel image")
 			continue
