@@ -310,9 +310,9 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		),
 
 		// update twitch channels
-		// runs every hour
+		// runs every 12 hour
 		river.NewPeriodicJob(
-			river.PeriodicInterval(1*time.Hour),
+			river.PeriodicInterval(12*time.Hour),
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.UpdateTwitchChannelsArgs{}, nil
 			},

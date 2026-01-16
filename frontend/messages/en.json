@@ -349,7 +349,7 @@
     "processPlaylistVideoRules": "Process Playlist Video Rules",
     "processPlaylistVideoRulesDescription": "Process video rules for playlists. This will check if videos should be added to playlists based on the rules defined. Runs every hour.",
     "updatePlatformChannels": "Update Platform Channels",
-    "updatePlatformChannelsDescription": "Update channel information from the platform for all channels. This includes display name and profile image. Runs every hour."
+    "updatePlatformChannelsDescription": "Update channel information from the platform for all channels. This includes display name and profile image. Runs every 12 hours."
   },
   "AdminUsersPage": {
     "title": "Admin - Users",
