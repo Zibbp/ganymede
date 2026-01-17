@@ -347,7 +347,9 @@
     "updateVideoStorageUsage": "Speichernutzung für Videos aktualisieren",
     "updateVideoStorageUsageDescription": "Aktualisiere die Speichernutzung für alle Videos. Dies wird verwendet, um die Speichernutzung in der Videoliste und auf der Statistikseite anzuzeigen.",
     "processPlaylistVideoRules": "Playlist-Videoregeln verarbeiten",
-    "processPlaylistVideoRulesDescription": "Videoregeln für Playlists verarbeiten. Dies überprüft, ob Videos basierend auf den definierten Regeln zu den Playlists hinzugefügt werden sollten. Wird jede Stunde ausgeführt."
+    "processPlaylistVideoRulesDescription": "Videoregeln für Playlists verarbeiten. Dies überprüft, ob Videos basierend auf den definierten Regeln zu den Playlists hinzugefügt werden sollten. Wird jede Stunde ausgeführt.",
+    "updatePlatformChannels": "Plattformkanäle aktualisieren",
+    "updatePlatformChannelsDescription": "Aktualisiert die Kanalinformationen von der Plattform für alle Kanäle. Dazu gehören Anzeigename und Profilbild. Wird alle 12 Stunden ausgeführt."
   },
   "AdminUsersPage": {
     "title": "Admin - Benutzer",
