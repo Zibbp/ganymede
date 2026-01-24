@@ -270,9 +270,9 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		),
 
 		// authenticate to platform
-		// runs once a day at midnight
+		// runs every hour
 		river.NewPeriodicJob(
-			midnightCron,
+			river.PeriodicInterval(1*time.Hour),
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.AuthenticatePlatformArgs{}, nil
 			},
