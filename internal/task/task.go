@@ -341,6 +341,8 @@ func (s *Service) StorageMigration() error {
 
 		// Build the update query with the new paths.
 		update := tx.Vod.UpdateOne(video)
+		update = update.SetFolderName(folderName)
+		update = update.SetFileName(fileName)
 		if video.VideoPath != "" {
 			ext := path.Ext(video.VideoPath)
 			if ext == ".m3u8" {
