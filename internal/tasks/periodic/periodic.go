@@ -482,18 +482,19 @@ func (w UpdateTwitchChannelsWorker) Work(ctx context.Context, job *river.Job[Upd
 
 		channelDirectory := fmt.Sprintf("%s/%s", env.VideosDir, platformChannel.Login)
 
-		channelDTO := channel.Channel{
-			ExtID:       platformChannel.ID,
-			Name:        platformChannel.Login,
-			DisplayName: platformChannel.DisplayName,
-			ImagePath:   fmt.Sprintf("%s/%s/profile.png", env.VideosDir, platformChannel.Login),
-		}
+		imagePath := fmt.Sprintf("%s/%s/profile.png", env.VideosDir, platformChannel.Login)
+		updatedChannel, err := c.Update().
+			SetExtID(platformChannel.ID).
+			SetName(platformChannel.Login).
+			SetDisplayName(platformChannel.DisplayName).
+			SetImagePath(imagePath).
+			Save(ctx)
 
-		_, err = channelService.UpdateChannel(c.ID, channelDTO)
 		if err != nil {
-			logger.Error().Err(err).Str("channel_id", c.ID.String()).Msg("failed to update channel")
+			logger.Error().Err(err).Str("channel_id", c.ID.String()).Msg("failed to update channel in database")
 			continue
 		}
+		c = updatedChannel
 
 		// Check if channelDirectory exists
 		if !utils.DirectoryExists(channelDirectory) {
