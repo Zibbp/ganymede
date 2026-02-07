@@ -59,12 +59,12 @@ const useFetchPlaybackForVideo = (
   return useQuery<Playback, Error, Playback, [string, string]>({
     queryKey: ["playback-data", videoId],
     queryFn: () => fetchPlaybackForVideo(axiosPrivate, videoId),
-    ...options,
     refetchInterval: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchIntervalInBackground: false,
+    ...options,
   });
 };
 

@@ -42,6 +42,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
   const axiosPrivate = useAxiosPrivate();
   // get playback data
   const { data: playbackData } = useFetchPlaybackForVideo(axiosPrivate, video.id, {
+    refetchOnMount: "always",
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     retry: false,
@@ -97,7 +98,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
       }
     });
 
-    // set playback progress
+    // Resume from server-side playback progress.
     if (playbackData && playbackData.time) {
       player.current!.currentTime = playbackData.time
     }

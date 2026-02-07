@@ -157,9 +157,16 @@ func (h *Handler) mapRoutes() {
 	})
 
 	// Static files if not using nginx
-	envConfig := config.GetEnvConfig()
-	h.Server.Static(envConfig.VideosDir, envConfig.VideosDir)
-	h.Server.Static(envConfig.TempDir, envConfig.TempDir)
+	env := config.GetEnvConfig()
+	// Use one handler for both GET + HEAD
+	videosH := echo.WrapHandler(http.StripPrefix(env.VideosDir, http.FileServer(http.Dir(env.VideosDir))))
+	tempH := echo.WrapHandler(http.StripPrefix(env.TempDir, http.FileServer(http.Dir(env.TempDir))))
+
+	h.Server.GET(env.VideosDir+"/*", videosH)
+	h.Server.HEAD(env.VideosDir+"/*", videosH)
+
+	h.Server.GET(env.TempDir+"/*", tempH)
+	h.Server.HEAD(env.TempDir+"/*", tempH)
 
 	// RiverUI
 	h.Server.Any("/riverui/", echo.WrapHandler(h.RiverUIServer), AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
