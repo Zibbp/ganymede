@@ -179,51 +179,60 @@ func (s *Service) OAuthUserCheck(ctx context.Context, userClaims OIDCCLaims) (*e
 
 		log.Debug().Msgf("OAuth user not found, creating user: %v", userClaims.PreferredUsername)
 
-		// Determine role from groups
-		role := utils.UserRole
-		for _, group := range userClaims.Groups {
-			if strings.HasPrefix(group, "ganymede-") {
-				groupRole := strings.TrimPrefix(group, "ganymede-")
-				if utils.IsValidRole(groupRole) {
-					log.Debug().Msgf("Found Ganymede role in user group %v", group)
-					role = utils.Role(groupRole)
-					break
-				}
-			}
+		// Determine role from groups for newly created users.
+		// If no mapped role is present, default to user.
+		role, ok := roleFromGroups(userClaims.Groups)
+		if !ok {
+			role = utils.UserRole
 		}
 
-		// Create new user
-		if _, err := s.Store.Client.User.Create().
+		createdUser, err := s.Store.Client.User.Create().
 			SetSub(userClaims.Sub).
 			SetUsername(userClaims.PreferredUsername).
 			SetRole(role).
 			SetOauth(true).
-			Save(ctx); err != nil {
+			Save(ctx)
+		if err != nil {
 			return nil, fmt.Errorf("failed to create user: %w", err)
 		}
-		return user, nil
+		return createdUser, nil
 	}
 
-	// Determine role from groups
-	newRole := utils.UserRole
-	for _, group := range userClaims.Groups {
-		if strings.HasPrefix(group, "ganymede-") {
-			groupRole := strings.TrimPrefix(group, "ganymede-")
-			if utils.IsValidRole(groupRole) {
-				log.Debug().Msgf("Found Ganymede role in user group %v", group)
-				newRole = utils.Role(groupRole)
-				break
-			}
-		}
+	// Always keep username in sync with OIDC claim.
+	update := s.Store.Client.User.UpdateOne(user).SetUsername(userClaims.PreferredUsername)
+
+	// Only sync role when provider explicitly sends a ganymede-* or ganymede_* role group.
+	// This prevents manual role changes from being reset on each login.
+	if newRole, ok := roleFromGroups(userClaims.Groups); ok {
+		update = update.SetRole(newRole)
 	}
 
-	// Update existing user
-	if _, err := s.Store.Client.User.UpdateOne(user).
-		SetUsername(userClaims.PreferredUsername).
-		SetRole(newRole).
-		Save(ctx); err != nil {
+	updatedUser, err := update.Save(ctx)
+	if err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
 
-	return user, nil
+	return updatedUser, nil
+}
+
+func roleFromGroups(groups []string) (utils.Role, bool) {
+	for _, group := range groups {
+		var groupRole string
+		switch {
+		case strings.HasPrefix(group, "ganymede-"):
+			groupRole = strings.TrimPrefix(group, "ganymede-")
+		case strings.HasPrefix(group, "ganymede_"):
+			groupRole = strings.TrimPrefix(group, "ganymede_")
+		default:
+			continue
+		}
+		if !utils.IsValidRole(groupRole) {
+			continue
+		}
+
+		log.Debug().Msgf("Found Ganymede role in user group %v", group)
+		return utils.Role(groupRole), true
+	}
+
+	return "", false
 }
