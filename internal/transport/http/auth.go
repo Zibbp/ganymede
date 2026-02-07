@@ -212,6 +212,9 @@ func (h *Handler) OAuthCallback(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
+	if user == nil {
+		return ErrorResponse(c, http.StatusInternalServerError, "oauth callback returned nil user")
+	}
 
 	h.SessionManager.Put(c.Request().Context(), "user_id", user.ID.String())
 
