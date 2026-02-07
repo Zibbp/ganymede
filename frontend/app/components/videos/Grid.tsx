@@ -1,11 +1,20 @@
-import { Box, Center, Group, Pagination, SimpleGrid, ActionIcon, NumberInput, MultiSelect, Text, Select, Flex } from "@mantine/core";
-import { IconMinus, IconPlus } from "@tabler/icons-react";
-import { useRef, useState, useEffect } from "react";
+import { Box, Button, Center, Checkbox, Group, Menu, Modal, Pagination, SimpleGrid, ActionIcon, NumberInput, MultiSelect, Text, Select, Flex } from "@mantine/core";
+import { IconHourglassEmpty, IconHourglassHigh, IconLock, IconLockOpen, IconMinus, IconMovie, IconPhoto, IconPlaylistAdd, IconPlus, IconTrash } from "@tabler/icons-react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import type { NumberInputHandlers } from "@mantine/core";
 import VideoCard from "./Card";
-import { Video, VideoOrder, VideoSortBy, VideoType } from "@/app/hooks/useVideos";
+import { useGenerateSpriteThumbnails, useGenerateStaticThumbnail, useLockVideo, Video, VideoOrder, VideoSortBy, VideoType } from "@/app/hooks/useVideos";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";
 import { useTranslations } from "next-intl";
+import { useAxiosPrivate } from "@/app/hooks/useAxios";
+import { useDeletePlayback, useMarkVideoAsWatched } from "@/app/hooks/usePlayback";
+import { showNotification } from "@mantine/notifications";
+import { useDisclosure } from "@mantine/hooks";
+import PlaylistBulkAddModalContent from "../playlist/BulkAddModalContent";
+import MultiDeleteVideoModalContent from "../admin/video/MultiDeleteModalContent";
+import useAuthStore from "@/app/store/useAuthStore";
+import { UserRole } from "@/app/hooks/useAuthentication";
+import { useQueryClient } from "@tanstack/react-query";
 
 export type VideoGridProps<T extends Video> = {
   videos: T[];
@@ -22,6 +31,7 @@ export type VideoGridProps<T extends Video> = {
   showChannel?: boolean;
   showMenu?: boolean;
   showProgress?: boolean;
+  enableSelection?: boolean;
 };
 
 const VideoGrid = <T extends Video>({
@@ -39,14 +49,36 @@ const VideoGrid = <T extends Video>({
   showChannel = false,
   showMenu = true,
   showProgress = true,
+  enableSelection = true,
 }: VideoGridProps<T>) => {
   const t = useTranslations("VideoComponents");
+  const axiosPrivate = useAxiosPrivate();
+  const queryClient = useQueryClient();
+  const { hasPermission } = useAuthStore();
+  const canBulkManage = hasPermission(UserRole.Archiver);
+  const canBulkDelete = hasPermission(UserRole.Admin);
+  const selectionEnabled = enableSelection && canBulkManage;
   const handlersRef = useRef<NumberInputHandlers>(null);
   // Local state to handle the input value while typing
   const [localLimit, setLocalLimit] = useState(videoLimit);
   const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
   const [sortBy, setSortBy] = useState<VideoSortBy>(VideoSortBy.Date);
   const [order, setOrder] = useState<VideoOrder>(VideoOrder.Desc);
+  const [selectedVideos, setSelectedVideos] = useState<Record<string, T>>({});
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [playlistModalOpened, { open: openPlaylistModal, close: closePlaylistModal }] = useDisclosure(false);
+  const [multiDeleteModalOpened, { open: openMultiDeleteModal, close: closeMultiDeleteModal }] = useDisclosure(false);
+  const selectedVideoList = useMemo(() => Object.values(selectedVideos), [selectedVideos]);
+  const selectedVideoIdSet = useMemo(
+    () => new Set(selectedVideoList.map((video) => video.id)),
+    [selectedVideoList]
+  );
+
+  const markAsWatchedMutate = useMarkVideoAsWatched();
+  const deletePlaybackMutate = useDeletePlayback();
+  const lockVideoMutate = useLockVideo();
+  const generateStaticThumbnailMutate = useGenerateStaticThumbnail();
+  const generateSpriteThumbnailsMutate = useGenerateSpriteThumbnails();
 
   useEffect(() => {
     setLocalLimit(videoLimit);
@@ -118,9 +150,143 @@ const VideoGrid = <T extends Video>({
     onVideoLimitChange(newValue);
   };
 
+  const handleVideoSelectionChange = (video: T, selected: boolean) => {
+    setSelectedVideos((current) => {
+      const next = { ...current };
+      if (selected) {
+        next[video.id] = video;
+      } else {
+        delete next[video.id];
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAllOnPage = (selected: boolean) => {
+    setSelectedVideos((current) => {
+      const next = { ...current };
+      videos.forEach((video) => {
+        if (selected) {
+          next[video.id] = video;
+        } else {
+          delete next[video.id];
+        }
+      });
+      return next;
+    });
+  };
+
+  const runBulkOperation = async (
+    operation: (video: T) => Promise<unknown>,
+    successMessage: string,
+    onSuccess?: () => Promise<void> | void
+  ) => {
+    if (selectedVideoList.length === 0) return;
+    try {
+      setBulkActionLoading(true);
+      await Promise.all(selectedVideoList.map((video) => operation(video)));
+      if (onSuccess) {
+        await onSuccess();
+      }
+      showNotification({
+        message: successMessage,
+      });
+    } catch (error) {
+      showNotification({
+        title: t("error"),
+        message: error instanceof Error ? error.message : String(error),
+        color: "red",
+      });
+      console.error(error);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleMarkVideosAsWatched = async () => {
+    await runBulkOperation(
+      (video) =>
+        markAsWatchedMutate.mutateAsync({
+          axiosPrivate,
+          videoId: video.id,
+          invalidatePlaybackQuery: false,
+        }),
+      t("markedVideosAsWatchedNotification"),
+      async () => {
+        await queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+      }
+    );
+  };
+
+  const handleMarkVideosAsUnwatched = async () => {
+    await runBulkOperation(
+      (video) =>
+        deletePlaybackMutate.mutateAsync({
+          axiosPrivate,
+          videoId: video.id,
+          invalidatePlaybackQuery: false,
+        }),
+      t("markedVideosAsUnwatchedNotification"),
+      async () => {
+        await queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+      }
+    );
+  };
+
+  const handleLockVideos = async (locked: boolean) => {
+    await runBulkOperation(
+      (video) =>
+        lockVideoMutate.mutateAsync({
+          axiosPrivate,
+          videoId: video.id,
+          locked,
+          invalidateVideoQueries: false,
+        }),
+      t("videosLockedNotification", { status: locked ? t("locked") : t("unlocked") }),
+      async () => {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["videos"] }),
+          queryClient.invalidateQueries({ queryKey: ["channel_videos"] }),
+          queryClient.invalidateQueries({ queryKey: ["playlist_videos"] }),
+          queryClient.invalidateQueries({ queryKey: ["search"] }),
+        ]);
+      }
+    );
+  };
+
+  const handleGenerateStaticThumbnails = async () => {
+    await runBulkOperation(
+      (video) =>
+        generateStaticThumbnailMutate.mutateAsync({
+          axiosPrivate,
+          videoId: video.id,
+        }),
+      t("bulkGenerateStaticThumbnailsNotification")
+    );
+  };
+
+  const handleGenerateSpriteThumbnails = async () => {
+    await runBulkOperation(
+      (video) =>
+        generateSpriteThumbnailsMutate.mutateAsync({
+          axiosPrivate,
+          videoId: video.id,
+        }),
+      t("bulkGenerateSpriteThumbnailsNotification")
+    );
+  };
+
+  const handleCloseMultiDeleteModal = () => {
+    closeMultiDeleteModal();
+    setSelectedVideos({});
+  };
+
   if (isPending) {
     return <GanymedeLoadingText message={t('loadingVideos')} />;
   }
+
+  const allVisibleSelected = videos.length > 0 && videos.every((video) => selectedVideoIdSet.has(video.id));
+  const someVisibleSelected = videos.some((video) => selectedVideoIdSet.has(video.id)) && !allVisibleSelected;
 
   return (
     <Box>
@@ -156,6 +322,72 @@ const VideoGrid = <T extends Video>({
         </div>
       </Group>
 
+      {selectionEnabled && (
+        <Group justify="space-between" mb="sm">
+          <Group gap="sm">
+            <Checkbox
+              label={t("selectAllOnPage")}
+              checked={allVisibleSelected}
+              indeterminate={someVisibleSelected}
+              onChange={(event) => handleSelectAllOnPage(event.currentTarget.checked)}
+              disabled={videos.length === 0 || bulkActionLoading}
+            />
+            <Text size="sm">{t("selectedVideosCount", { count: selectedVideoList.length })}</Text>
+          </Group>
+          <Group gap="xs">
+            <Button
+              variant="default"
+              onClick={() => setSelectedVideos({})}
+              disabled={selectedVideoList.length === 0 || bulkActionLoading}
+            >
+              {t("clearSelectionButton")}
+            </Button>
+            <Menu shadow="md" width={270}>
+              <Menu.Target>
+                <Button loading={bulkActionLoading} disabled={selectedVideoList.length === 0}>
+                  {t("bulkActionsButton")}
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item onClick={handleMarkVideosAsWatched} leftSection={<IconHourglassHigh size={14} />}>
+                  {t("bulkActionMenu.markAsWatched")}
+                </Menu.Item>
+                <Menu.Item onClick={handleMarkVideosAsUnwatched} leftSection={<IconHourglassEmpty size={14} />}>
+                  {t("bulkActionMenu.markAsUnwatched")}
+                </Menu.Item>
+                <Menu.Item onClick={() => handleLockVideos(true)} leftSection={<IconLock size={14} />}>
+                  {t("bulkActionMenu.lock")}
+                </Menu.Item>
+                <Menu.Item onClick={() => handleLockVideos(false)} leftSection={<IconLockOpen size={14} />}>
+                  {t("bulkActionMenu.unlock")}
+                </Menu.Item>
+                <Menu.Item onClick={handleGenerateStaticThumbnails} leftSection={<IconPhoto size={14} />}>
+                  {t("bulkActionMenu.regenerateThumbnails")}
+                </Menu.Item>
+                <Menu.Item onClick={handleGenerateSpriteThumbnails} leftSection={<IconMovie size={14} />}>
+                  {t("bulkActionMenu.generateSpriteThumbnails")}
+                </Menu.Item>
+                <Menu.Item onClick={openPlaylistModal} leftSection={<IconPlaylistAdd size={14} />}>
+                  {t("bulkActionMenu.playlists")}
+                </Menu.Item>
+                {canBulkDelete && (
+                  <>
+                    <Menu.Divider />
+                    <Menu.Item
+                      color="red"
+                      onClick={openMultiDeleteModal}
+                      leftSection={<IconTrash size={14} />}
+                    >
+                      {t("bulkActionMenu.delete")}
+                    </Menu.Item>
+                  </>
+                )}
+              </Menu.Dropdown>
+            </Menu>
+          </Group>
+        </Group>
+      )}
+
       <SimpleGrid
         cols={{ base: 1, sm: 2, md: 3, lg: 4, xl: 5, xxl: 6 }}
         spacing="xs"
@@ -168,6 +400,9 @@ const VideoGrid = <T extends Video>({
             showChannel={showChannel}
             showMenu={showMenu}
             showProgress={showProgress}
+            selectable={selectionEnabled}
+            selected={selectedVideoIdSet.has(video.id)}
+            onSelectionChange={(selected) => handleVideoSelectionChange(video, selected)}
           />
         ))}
       </SimpleGrid>
@@ -216,6 +451,26 @@ const VideoGrid = <T extends Video>({
           </Group>
         </Center>
       </div>
+
+      <Modal
+        opened={playlistModalOpened}
+        onClose={closePlaylistModal}
+        title={t("bulkAddToPlaylistModalTitle")}
+      >
+        {selectedVideoList.length > 0 && (
+          <PlaylistBulkAddModalContent videos={selectedVideoList} handleClose={closePlaylistModal} />
+        )}
+      </Modal>
+
+      <Modal
+        opened={multiDeleteModalOpened}
+        onClose={closeMultiDeleteModal}
+        title={t("bulkDeleteVideosModalTitle")}
+      >
+        {selectedVideoList.length > 0 && (
+          <MultiDeleteVideoModalContent videos={selectedVideoList} handleClose={handleCloseMultiDeleteModal} />
+        )}
+      </Modal>
     </Box>
   );
 };

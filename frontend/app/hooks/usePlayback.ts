@@ -198,11 +198,13 @@ const markVideoAsWatched = async (
 export interface MarkVideoAsWatchedInput {
   axiosPrivate: AxiosInstance;
   videoId: string;
+  invalidatePlaybackQuery?: boolean;
 }
 
 export interface DeletePlaybackInput {
   axiosPrivate: AxiosInstance;
   videoId: string;
+  invalidatePlaybackQuery?: boolean;
 }
 
 const useMarkVideoAsWatched = () => {
@@ -211,8 +213,10 @@ const useMarkVideoAsWatched = () => {
     {
       mutationFn: ({ axiosPrivate, videoId }) =>
         markVideoAsWatched(axiosPrivate, videoId),
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+      onSuccess: (_, variables) => {
+        if (variables.invalidatePlaybackQuery !== false) {
+          queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+        }
       },
     }
   );
@@ -228,8 +232,10 @@ const useDeletePlayback = () => {
   return useMutation<ApiResponse<NullResponse>, Error, DeletePlaybackInput>({
     mutationFn: ({ axiosPrivate, videoId }) =>
       deletePlayback(axiosPrivate, videoId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+    onSuccess: (_, variables) => {
+      if (variables.invalidatePlaybackQuery !== false) {
+        queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+      }
     },
   });
 };
