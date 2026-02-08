@@ -66,6 +66,7 @@ const VideoGrid = <T extends Video>({
   const [order, setOrder] = useState<VideoOrder>(VideoOrder.Desc);
   const [selectedVideos, setSelectedVideos] = useState<Record<string, T>>({});
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [bulkMenuOpened, setBulkMenuOpened] = useState(false);
   const [playlistModalOpened, { open: openPlaylistModal, close: closePlaylistModal }] = useDisclosure(false);
   const [multiDeleteModalOpened, { open: openMultiDeleteModal, close: closeMultiDeleteModal }] = useDisclosure(false);
   const selectedVideoList = useMemo(() => Object.values(selectedVideos), [selectedVideos]);
@@ -204,6 +205,8 @@ const VideoGrid = <T extends Video>({
   };
 
   const handleMarkVideosAsWatched = async () => {
+    if (bulkActionLoading) return;
+    setBulkMenuOpened(false);
     await runBulkOperation(
       (video) =>
         markAsWatchedMutate.mutateAsync({
@@ -219,6 +222,8 @@ const VideoGrid = <T extends Video>({
   };
 
   const handleMarkVideosAsUnwatched = async () => {
+    if (bulkActionLoading) return;
+    setBulkMenuOpened(false);
     await runBulkOperation(
       (video) =>
         deletePlaybackMutate.mutateAsync({
@@ -234,6 +239,8 @@ const VideoGrid = <T extends Video>({
   };
 
   const handleLockVideos = async (locked: boolean) => {
+    if (bulkActionLoading) return;
+    setBulkMenuOpened(false);
     await runBulkOperation(
       (video) =>
         lockVideoMutate.mutateAsync({
@@ -255,6 +262,8 @@ const VideoGrid = <T extends Video>({
   };
 
   const handleGenerateStaticThumbnails = async () => {
+    if (bulkActionLoading) return;
+    setBulkMenuOpened(false);
     await runBulkOperation(
       (video) =>
         generateStaticThumbnailMutate.mutateAsync({
@@ -266,6 +275,8 @@ const VideoGrid = <T extends Video>({
   };
 
   const handleGenerateSpriteThumbnails = async () => {
+    if (bulkActionLoading) return;
+    setBulkMenuOpened(false);
     await runBulkOperation(
       (video) =>
         generateSpriteThumbnailsMutate.mutateAsync({
@@ -279,6 +290,18 @@ const VideoGrid = <T extends Video>({
   const handleCloseMultiDeleteModal = () => {
     closeMultiDeleteModal();
     setSelectedVideos({});
+  };
+
+  const handleOpenPlaylistModal = () => {
+    if (bulkActionLoading) return;
+    setBulkMenuOpened(false);
+    openPlaylistModal();
+  };
+
+  const handleOpenMultiDeleteModal = () => {
+    if (bulkActionLoading) return;
+    setBulkMenuOpened(false);
+    openMultiDeleteModal();
   };
 
   if (isPending) {
@@ -342,32 +365,60 @@ const VideoGrid = <T extends Video>({
             >
               {t("clearSelectionButton")}
             </Button>
-            <Menu shadow="md" width={270}>
+            <Menu shadow="md" width={270} opened={bulkMenuOpened} onChange={setBulkMenuOpened}>
               <Menu.Target>
                 <Button loading={bulkActionLoading} disabled={selectedVideoList.length === 0}>
                   {t("bulkActionsButton")}
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Item onClick={handleMarkVideosAsWatched} leftSection={<IconHourglassHigh size={14} />}>
+                <Menu.Item
+                  onClick={handleMarkVideosAsWatched}
+                  leftSection={<IconHourglassHigh size={14} />}
+                  disabled={bulkActionLoading}
+                >
                   {t("bulkActionMenu.markAsWatched")}
                 </Menu.Item>
-                <Menu.Item onClick={handleMarkVideosAsUnwatched} leftSection={<IconHourglassEmpty size={14} />}>
+                <Menu.Item
+                  onClick={handleMarkVideosAsUnwatched}
+                  leftSection={<IconHourglassEmpty size={14} />}
+                  disabled={bulkActionLoading}
+                >
                   {t("bulkActionMenu.markAsUnwatched")}
                 </Menu.Item>
-                <Menu.Item onClick={() => handleLockVideos(true)} leftSection={<IconLock size={14} />}>
+                <Menu.Item
+                  onClick={() => handleLockVideos(true)}
+                  leftSection={<IconLock size={14} />}
+                  disabled={bulkActionLoading}
+                >
                   {t("bulkActionMenu.lock")}
                 </Menu.Item>
-                <Menu.Item onClick={() => handleLockVideos(false)} leftSection={<IconLockOpen size={14} />}>
+                <Menu.Item
+                  onClick={() => handleLockVideos(false)}
+                  leftSection={<IconLockOpen size={14} />}
+                  disabled={bulkActionLoading}
+                >
                   {t("bulkActionMenu.unlock")}
                 </Menu.Item>
-                <Menu.Item onClick={handleGenerateStaticThumbnails} leftSection={<IconPhoto size={14} />}>
+                <Menu.Item
+                  onClick={handleGenerateStaticThumbnails}
+                  leftSection={<IconPhoto size={14} />}
+                  disabled={bulkActionLoading}
+                >
                   {t("bulkActionMenu.regenerateThumbnails")}
                 </Menu.Item>
-                <Menu.Item onClick={handleGenerateSpriteThumbnails} leftSection={<IconMovie size={14} />}>
+                <Menu.Item
+                  onClick={handleGenerateSpriteThumbnails}
+                  leftSection={<IconMovie size={14} />}
+                  disabled={bulkActionLoading}
+                >
                   {t("bulkActionMenu.generateSpriteThumbnails")}
                 </Menu.Item>
-                <Menu.Item onClick={openPlaylistModal} leftSection={<IconPlaylistAdd size={14} />}>
+                <Menu.Item
+                  onClick={handleOpenPlaylistModal}
+                  leftSection={<IconPlaylistAdd size={14} />}
+                  disabled={bulkActionLoading}
+                >
                   {t("bulkActionMenu.playlists")}
                 </Menu.Item>
                 {canBulkDelete && (
@@ -375,8 +426,9 @@ const VideoGrid = <T extends Video>({
                     <Menu.Divider />
                     <Menu.Item
                       color="red"
-                      onClick={openMultiDeleteModal}
+                      onClick={handleOpenMultiDeleteModal}
                       leftSection={<IconTrash size={14} />}
+                      disabled={bulkActionLoading}
                     >
                       {t("bulkActionMenu.delete")}
                     </Menu.Item>
