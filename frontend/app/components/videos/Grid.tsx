@@ -185,12 +185,38 @@ const VideoGrid = <T extends Video>({
     if (selectedVideoList.length === 0) return;
     try {
       setBulkActionLoading(true);
-      await Promise.all(selectedVideoList.map((video) => operation(video)));
-      if (onSuccess) {
+      const results = await Promise.allSettled(
+        selectedVideoList.map((video) => Promise.resolve().then(() => operation(video)))
+      );
+      const successCount = results.filter((result) => result.status === "fulfilled").length;
+      const failedResults = results.filter((result) => result.status === "rejected");
+      const failureCount = failedResults.length;
+
+      if (onSuccess && successCount > 0) {
         await onSuccess();
       }
+
+      failedResults.forEach((result) => {
+        console.error(result.reason);
+      });
+
       showNotification({
-        message: successMessage,
+        title:
+          failureCount === 0
+            ? successMessage
+            : failureCount === results.length
+              ? t("error")
+              : successMessage,
+        message:
+          failureCount === 0
+            ? `${successMessage} (${successCount}/${results.length})`
+            : `${successMessage} (${successCount}/${results.length}) • ${failureCount} failed`,
+        color:
+          failureCount === 0
+            ? undefined
+            : failureCount === results.length
+              ? "red"
+              : "yellow",
       });
     } catch (error) {
       showNotification({
