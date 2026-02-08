@@ -1,5 +1,5 @@
 import { Video } from "@/app/hooks/useVideos";
-import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box } from "@mantine/core";
+import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box, Checkbox } from "@mantine/core";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
@@ -26,9 +26,21 @@ type Props = {
   showMenu: boolean;
   showChannel: boolean;
   showViewCount?: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelectionChange?: (selected: boolean) => void;
 }
 
-const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = true, showViewCount = true }: Props) => {
+const VideoCard = ({
+  video,
+  showProgress = true,
+  showMenu = true,
+  showChannel = true,
+  showViewCount = true,
+  selectable = false,
+  selected = false,
+  onSelectionChange = () => { },
+}: Props) => {
   const t = useTranslations('VideoComponents')
   const { isLoggedIn, hasPermission } = useAuthStore()
   const [thumbnailError, setThumbnailError] = useState(false);
@@ -62,7 +74,6 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
       <Link href={`/videos/${video.id}`}>
         <Card.Section>
           <div className={classes.videoImageWrapper}>
-
             {video.processing && (
               <LoadingOverlay visible zIndex={5} overlayProps={{ radius: "sm", blur: 1 }} loaderProps={{
                 children: <div><Text size="xl">{t('processingOverlayText')}</Text>
@@ -207,6 +218,17 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
           <Badge variant="default" color="rgba(0, 0, 0, 1)" mt={4}>
             {video.type.toUpperCase()}
           </Badge>
+
+          {selectable && (
+            <Box pr={4} className={classes.selectionCheckboxInline}>
+              <Checkbox
+                checked={selected}
+                onChange={(event) => onSelectionChange(event.currentTarget.checked)}
+                aria-label={t('selectVideoCheckboxLabel')}
+                size="sm"
+              />
+            </Box>
+          )}
 
           {(showMenu && hasPermission(UserRole.Archiver)) && (
             <VideoMenu video={video} />

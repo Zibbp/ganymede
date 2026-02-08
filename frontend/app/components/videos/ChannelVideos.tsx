@@ -1,7 +1,12 @@
 // ChannelVideos.tsx
 import { useState } from "react";
 import { Channel } from "@/app/hooks/useChannels";
-import { useFetchVideosFilter, VideoOrder, VideoSortBy, VideoType } from "@/app/hooks/useVideos";
+import {
+  useFetchVideosFilter,
+  VideoOrder,
+  VideoSortBy,
+  VideoType,
+} from "@/app/hooks/useVideos";
 import useSettingsStore from "@/app/store/useSettingsStore";
 import VideoGrid from "./Grid";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";

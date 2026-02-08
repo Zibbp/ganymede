@@ -494,13 +494,22 @@ const useLockVideo = () => {
       axiosPrivate: AxiosInstance;
       videoId: string;
       locked: boolean;
+      invalidateVideoQueries?: boolean;
     }
   >({
     mutationFn: ({ axiosPrivate, videoId, locked }) =>
       lockVideo(axiosPrivate, videoId, locked),
-    onSuccess: () => {
-      // @ts-expect-error fine
-      queryClient.invalidateQueries(["channel_videos"]);
+    onSuccess: async (_, variables) => {
+      if (variables.invalidateVideoQueries === false) {
+        return;
+      }
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["videos"] }),
+        queryClient.invalidateQueries({ queryKey: ["channel_videos"] }),
+        queryClient.invalidateQueries({ queryKey: ["playlist_videos"] }),
+        queryClient.invalidateQueries({ queryKey: ["search"] }),
+      ]);
     },
   });
 };
