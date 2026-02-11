@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -875,6 +876,9 @@ func GenerateThumbnailsVTT(metadata SpriteMetadata) (string, error) {
 
 	// Generate VTT entries
 	for _, imagePath := range metadata.SpriteImages {
+		// Player / browser may not always escape the URL correctly, so we need to escape it ourselves to ensure it works in all cases
+		escapedImagePath := escapeURLPath(imagePath)
+
 		for row := 0; row < metadata.SpriteRows; row++ {
 			for col := 0; col < metadata.SpriteColumns; col++ {
 				start := frameIndex * metadata.SpriteInterval
@@ -889,7 +893,7 @@ func GenerateThumbnailsVTT(metadata SpriteMetadata) (string, error) {
 				y := row * metadata.SpriteHeight
 
 				entry := fmt.Sprintf("%s --> %s\n%s%s#xywh=%d,%d,%d,%d\n\n",
-					startTime, endTime, cdnUrl, imagePath, x, y, metadata.SpriteWidth, metadata.SpriteHeight)
+					startTime, endTime, cdnUrl, escapedImagePath, x, y, metadata.SpriteWidth, metadata.SpriteHeight)
 
 				builder.WriteString(entry)
 
@@ -902,6 +906,17 @@ func GenerateThumbnailsVTT(metadata SpriteMetadata) (string, error) {
 	}
 
 	return builder.String(), nil
+}
+
+func escapeURLPath(path string) string {
+	parts := strings.Split(path, "/")
+	for i, part := range parts {
+		if part == "" {
+			continue
+		}
+		parts[i] = url.PathEscape(part)
+	}
+	return strings.Join(parts, "/")
 }
 
 func formatTimestamp(seconds int) string {
