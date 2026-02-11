@@ -68,10 +68,10 @@ COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
 #
 # Frontend base
 #
-FROM node:24-alpine AS base-frontend
+FROM node:25-alpine AS base-frontend
 
 # Install dependencies only when needed
-FROM node:24-alpine AS deps
+FROM node:25-alpine AS deps
 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -87,7 +87,7 @@ RUN \
 #
 # Frontend build
 #
-FROM node:24-alpine AS build-frontend
+FROM node:25-alpine AS build-frontend
 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
