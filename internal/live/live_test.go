@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	osExec "os/exec"
 	"testing"
 	"time"
 
@@ -102,6 +103,26 @@ func startAndWaitForArchiving(t *testing.T, app *server.Application, watchedChan
 		assert.Error(t, waitForWatchedChannelToStartArchiving(t, app, watchedChannelID), "Expected error waiting for watched channel to start archiving")
 	} else {
 		assert.NoError(t, waitForWatchedChannelToStartArchiving(t, app, watchedChannelID), "Failed to wait for watched channel to start archiving")
+	}
+}
+
+func waitForQueueTaskStatus(t *testing.T, app *server.Application, queueID uuid.UUID, status utils.TaskStatus, timeout time.Duration) (*ent.Queue, error) {
+	start := time.Now()
+	for {
+		if time.Since(start) >= timeout {
+			return nil, fmt.Errorf("timeout reached waiting for queue task_video_download status %s", status)
+		}
+
+		q, err := app.Database.Client.Queue.Get(t.Context(), queueID)
+		if err != nil {
+			return nil, err
+		}
+
+		if q.TaskVideoDownload == status {
+			return q, nil
+		}
+
+		time.Sleep(2 * time.Second)
 	}
 }
 
@@ -247,6 +268,68 @@ func TestTwitchWatchedChannelLive(t *testing.T) {
 	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
 	assertVodAndQueue(t, app, liveChannel, true)
+}
+
+// TestTwitchWatchedChannelLiveFFmpegKilledStillFinalizes verifies that if ffmpeg dies during live recording,
+// the workflow still finalizes: live chat is cancelled and post-process/move tasks are allowed to continue.
+func TestTwitchWatchedChannelLiveFFmpegKilledStillFinalizes(t *testing.T) {
+	app, liveChannel, channel := setupAppAndLiveChannel(t)
+	liveInput := live.Live{
+		ID:                    channel.ID,
+		WatchLive:             true,
+		WatchVod:              false,
+		DownloadArchives:      false,
+		DownloadHighlights:    false,
+		DownloadUploads:       false,
+		ArchiveChat:           true,
+		Resolution:            "best",
+		RenderChat:            true,
+		DownloadSubOnly:       false,
+		UpdateMetadataMinutes: 1,
+	}
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
+	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
+
+	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).First(t.Context())
+	assert.NoError(t, err, "Failed to query VOD for live stream")
+	assert.NotNil(t, vod, "VOD should not be nil")
+
+	q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(entVod.ID(vod.ID))).Only(t.Context())
+	assert.NoError(t, err, "Failed to query queue item for VOD")
+	assert.NotNil(t, q, "Queue item should not be nil")
+
+	_, err = waitForQueueTaskStatus(t, app, q.ID, utils.Running, 60*time.Second)
+	assert.NoError(t, err, "Expected live video download task to reach running state")
+
+	// Kill ffmpeg process by matching VOD UUID present in ffmpeg command args
+	killMatched := false
+	for i := 0; i < 5; i++ {
+		cmd := osExec.Command("pkill", "-f", vod.ID.String())
+		if err := cmd.Run(); err == nil {
+			killMatched = true
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+	assert.True(t, killMatched, "Expected to kill at least one ffmpeg process for the live VOD")
+
+	q, err = waitForQueueTaskStatus(t, app, q.ID, utils.Success, 90*time.Second)
+	assert.NoError(t, err, "Expected queue task_video_download to be finalized after ffmpeg termination")
+	assert.Equal(t, utils.Success, q.TaskVideoDownload)
+
+	// Downstream tasks should be able to progress after ffmpeg is killed.
+	deadline := time.Now().Add(90 * time.Second)
+	for {
+		q, err = app.Database.Client.Queue.Get(t.Context(), q.ID)
+		assert.NoError(t, err)
+		if q.TaskVideoConvert != utils.Pending || q.TaskVideoMove != utils.Pending {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("expected post-process or move task to start after ffmpeg termination")
+		}
+		time.Sleep(2 * time.Second)
+	}
 }
 
 // TestTwitchWatchedChannelLiveWithWatchLive tests the basic live archiving of a Twitch channel with the watch live feature

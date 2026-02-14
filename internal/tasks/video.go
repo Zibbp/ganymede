@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -128,6 +129,22 @@ type PostProcessVideoWorker struct {
 	river.WorkerDefaults[PostProcessVideoArgs]
 }
 
+func validateNonEmptyFile(path string, label string) error {
+	if !utils.FileExists(path) {
+		return fmt.Errorf("missing %s: %s", label, path)
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("failed to stat %s %s: %w", label, path, err)
+	}
+	if info.Size() == 0 {
+		return fmt.Errorf("empty %s: %s", label, path)
+	}
+
+	return nil
+}
+
 func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostProcessVideoArgs]) error {
 	// get store from context
 	store, err := StoreFromContext(ctx)
@@ -154,6 +171,24 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {
 		return err
+	}
+
+	// explicit pre-flight validation so downstream failures are clear/actionable.
+	if !dbItems.Queue.LiveArchive {
+		if err := validateNonEmptyFile(dbItems.Video.TmpVideoDownloadPath, "downloaded video input"); err != nil {
+			return err
+		}
+	} else {
+		if dbItems.Video.VideoHlsPath == "" {
+			if err := validateNonEmptyFile(dbItems.Video.TmpVideoDownloadPath, "live downloaded video input"); err != nil {
+				return err
+			}
+		} else {
+			playlistPath := fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
+			if err := validateNonEmptyFile(playlistPath, "live HLS playlist"); err != nil {
+				return err
+			}
+		}
 	}
 
 	// download video non archive video
@@ -318,6 +353,10 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 			tmpVideoPath = dbItems.Video.TmpVideoConvertPath
 		}
 
+		if err := validateNonEmptyFile(tmpVideoPath, "video move source"); err != nil {
+			return err
+		}
+
 		err := utils.MoveFile(ctx, tmpVideoPath, dbItems.Video.VideoPath)
 		if err != nil {
 			return err
@@ -332,6 +371,11 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		}
 
 	} else {
+		playlistPath := fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
+		if err := validateNonEmptyFile(playlistPath, "HLS move source playlist"); err != nil {
+			return err
+		}
+
 		// move hls video
 		err := utils.MoveDirectory(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.VideoHlsPath)
 		if err != nil {
