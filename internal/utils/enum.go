@@ -180,11 +180,15 @@ func GetTaskName(s string) TaskName {
 		return TaskSaveInfo
 	case string(TaskDownloadVideo):
 		return TaskDownloadVideo
+	case string(TaskDownloadLiveVideo):
+		return TaskDownloadVideo
 	case string(TaskPostProcessVideo):
 		return TaskPostProcessVideo
 	case string(TaskMoveVideo):
 		return TaskMoveVideo
 	case string(TaskDownloadChat):
+		return TaskDownloadChat
+	case string(TaskDownloadLiveChat):
 		return TaskDownloadChat
 	case string(TaskConvertChat):
 		return TaskConvertChat
