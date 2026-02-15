@@ -191,8 +191,10 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		}
 	}
 
-	// download video non archive video
-	if !dbItems.Queue.LiveArchive {
+	// Post-process to a finalized MP4 when needed:
+	// - always for non-live archives
+	// - for live archives when final output is MP4
+	if !dbItems.Queue.LiveArchive || dbItems.Video.VideoHlsPath == "" {
 		err = exec.PostProcessVideo(ctx, dbItems.Video)
 		if err != nil {
 			return err
@@ -346,11 +348,11 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 
 	// move standard video
 	if dbItems.Video.VideoHlsPath == "" {
-		var tmpVideoPath string
-		if dbItems.Queue.LiveArchive {
+		// Standard (non-HLS) video move source should be the finalized converted MP4.
+		// Fallback to download path for backwards compatibility if conversion output is missing.
+		tmpVideoPath := dbItems.Video.TmpVideoConvertPath
+		if !utils.FileExists(tmpVideoPath) {
 			tmpVideoPath = dbItems.Video.TmpVideoDownloadPath
-		} else {
-			tmpVideoPath = dbItems.Video.TmpVideoConvertPath
 		}
 
 		if err := validateNonEmptyFile(tmpVideoPath, "video move source"); err != nil {

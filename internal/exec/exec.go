@@ -241,7 +241,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		closestQuality = "audio_only"
 	}
 
-	// Base ffmpeg args (shared between mp4 and hls)
+	// Base ffmpeg args (shared between transport-stream and hls live archiving)
 	ffmpegArgs := []string{
 		"-y",
 		"-hide_banner",
@@ -251,7 +251,6 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		"-dn",
 		"-ignore_unknown",
 		"-c", "copy",
-		"-movflags", "+faststart",
 	}
 
 	// Decide archive format.
@@ -264,10 +263,9 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 	// Archive output
 	if archivingAsMP4 {
-		// Archive as MP4
+		// Archive to crash-tolerant MPEG-TS while live; finalize to MP4 in post-process.
 		ffmpegArgs = append(ffmpegArgs,
-			"-bsf:a", "aac_adtstoasc",
-			"-f", "mp4",
+			"-f", "mpegts",
 			video.TmpVideoDownloadPath,
 		)
 
