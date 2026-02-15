@@ -180,8 +180,16 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		}
 	} else {
 		if dbItems.Video.VideoHlsPath == "" {
-			if err := validateNonEmptyFile(dbItems.Video.TmpVideoDownloadPath, "live downloaded video input"); err != nil {
-				return err
+			// Live archive finalizing to MP4 can be retried after remux succeeded.
+			// Accept either the original live temp input or the remuxed MP4 intermediate.
+			if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
+				if err := validateNonEmptyFile(dbItems.Video.TmpVideoConvertPath, "live converted video input"); err != nil {
+					return err
+				}
+			} else {
+				if err := validateNonEmptyFile(dbItems.Video.TmpVideoDownloadPath, "live downloaded video input"); err != nil {
+					return err
+				}
 			}
 		} else {
 			playlistPath := fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
@@ -191,8 +199,10 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		}
 	}
 
-	// download video non archive video
-	if !dbItems.Queue.LiveArchive {
+	// Post-process to a finalized MP4 when needed:
+	// - always for non-live archives
+	// - for live archives when final output is MP4
+	if !dbItems.Queue.LiveArchive || dbItems.Video.VideoHlsPath == "" {
 		err = exec.PostProcessVideo(ctx, dbItems.Video)
 		if err != nil {
 			return err
@@ -201,9 +211,11 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 
 	// update video duration for live archive
 	if dbItems.Queue.LiveArchive {
-		tmpVideoPath := dbItems.Video.TmpVideoDownloadPath
+		tmpVideoPath := dbItems.Video.TmpVideoConvertPath
 		if dbItems.Video.VideoHlsPath != "" {
 			tmpVideoPath = fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
+		} else if !utils.FileExists(tmpVideoPath) {
+			tmpVideoPath = dbItems.Video.TmpVideoDownloadPath
 		}
 		duration, err := exec.GetVideoDuration(ctx, tmpVideoPath)
 		if err != nil {
@@ -229,6 +241,15 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 						return err
 					}
 				}
+			}
+		}
+
+		// For live archives finalized as MP4, remove the temporary transport-stream source
+		// after successful remux + metadata update to avoid large temp file accumulation.
+		if dbItems.Video.VideoHlsPath == "" && utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
+			err = utils.DeleteFile(dbItems.Video.TmpVideoDownloadPath)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -346,11 +367,11 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 
 	// move standard video
 	if dbItems.Video.VideoHlsPath == "" {
-		var tmpVideoPath string
-		if dbItems.Queue.LiveArchive {
+		// Standard (non-HLS) video move source should be the finalized converted MP4.
+		// Fallback to download path for backwards compatibility if conversion output is missing.
+		tmpVideoPath := dbItems.Video.TmpVideoConvertPath
+		if !utils.FileExists(tmpVideoPath) {
 			tmpVideoPath = dbItems.Video.TmpVideoDownloadPath
-		} else {
-			tmpVideoPath = dbItems.Video.TmpVideoConvertPath
 		}
 
 		if err := validateNonEmptyFile(tmpVideoPath, "video move source"); err != nil {
