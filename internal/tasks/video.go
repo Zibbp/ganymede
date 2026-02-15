@@ -199,6 +199,15 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		if err != nil {
 			return err
 		}
+
+		// For live archives finalized as MP4, remove the temporary ts source
+		// after successful remux
+		if dbItems.Queue.LiveArchive && dbItems.Video.VideoHlsPath == "" && utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
+			err = utils.DeleteFile(dbItems.Video.TmpVideoDownloadPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	// update video duration for live archive
