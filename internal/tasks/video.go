@@ -180,8 +180,16 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		}
 	} else {
 		if dbItems.Video.VideoHlsPath == "" {
-			if err := validateNonEmptyFile(dbItems.Video.TmpVideoDownloadPath, "live downloaded video input"); err != nil {
-				return err
+			// Live archive finalizing to MP4 can be retried after remux succeeded.
+			// Accept either the original live temp input or the remuxed MP4 intermediate.
+			if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
+				if err := validateNonEmptyFile(dbItems.Video.TmpVideoConvertPath, "live converted video input"); err != nil {
+					return err
+				}
+			} else {
+				if err := validateNonEmptyFile(dbItems.Video.TmpVideoDownloadPath, "live downloaded video input"); err != nil {
+					return err
+				}
 			}
 		} else {
 			playlistPath := fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
@@ -199,22 +207,15 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		if err != nil {
 			return err
 		}
-
-		// For live archives finalized as MP4, remove the temporary ts source
-		// after successful remux
-		if dbItems.Queue.LiveArchive && dbItems.Video.VideoHlsPath == "" && utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
-			err = utils.DeleteFile(dbItems.Video.TmpVideoDownloadPath)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	// update video duration for live archive
 	if dbItems.Queue.LiveArchive {
-		tmpVideoPath := dbItems.Video.TmpVideoDownloadPath
+		tmpVideoPath := dbItems.Video.TmpVideoConvertPath
 		if dbItems.Video.VideoHlsPath != "" {
 			tmpVideoPath = fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
+		} else if !utils.FileExists(tmpVideoPath) {
+			tmpVideoPath = dbItems.Video.TmpVideoDownloadPath
 		}
 		duration, err := exec.GetVideoDuration(ctx, tmpVideoPath)
 		if err != nil {
@@ -240,6 +241,15 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 						return err
 					}
 				}
+			}
+		}
+
+		// For live archives finalized as MP4, remove the temporary transport-stream source
+		// after successful remux + metadata update to avoid large temp file accumulation.
+		if dbItems.Video.VideoHlsPath == "" && utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
+			err = utils.DeleteFile(dbItems.Video.TmpVideoDownloadPath)
+			if err != nil {
+				return err
 			}
 		}
 	}
