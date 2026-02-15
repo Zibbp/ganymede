@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -126,88 +127,262 @@ func appendMessageToJSONArray(filename string, comment utils.LiveComment) error 
 	if err != nil {
 		return fmt.Errorf("failed to stat file: %w", err)
 	}
-	size := info.Size()
 
-	// new file - write a complete array with a single element.
-	if size == 0 {
-		if _, err := f.Write([]byte("[\n")); err != nil {
+	copyFrom, copyPrefixUntil, isEmptyArray, needsOpeningBracket, err := inspectJSONArrayPrefix(f, info.Size())
+	if err != nil {
+		return fmt.Errorf("failed to inspect existing JSON array: %w", err)
+	}
+
+	// Write to a temp file and atomically rename it over the original.
+	// This avoids leaving a partially written/truncated JSON file on crashes.
+	dir := filepath.Dir(filename)
+	base := filepath.Base(filename)
+	tmp, err := os.CreateTemp(dir, base+".tmp-*")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tmpName := tmp.Name()
+	defer func() {
+		_ = tmp.Close()
+		_ = os.Remove(tmpName)
+	}()
+
+	if _, err := f.Seek(copyFrom, io.SeekStart); err != nil {
+		return fmt.Errorf("failed to seek original file: %w", err)
+	}
+
+	if needsOpeningBracket {
+		if _, err := tmp.Write([]byte("[\n")); err != nil {
 			return fmt.Errorf("failed to write opening bracket: %w", err)
 		}
-		if _, err := f.Write(msg); err != nil {
-			return fmt.Errorf("failed to write message: %w", err)
+	}
+
+	if copyPrefixUntil > copyFrom {
+		if _, err := io.CopyN(tmp, f, copyPrefixUntil-copyFrom); err != nil {
+			return fmt.Errorf("failed to copy existing JSON prefix: %w", err)
 		}
-		if _, err := f.Write([]byte("\n]\n")); err != nil {
-			return fmt.Errorf("failed to write closing bracket: %w", err)
-		}
-		return f.Sync()
 	}
 
-	// Read only a small tail of the file to find the closing ']' and
-	// determine whether the array is empty or not.
-	const tailSize = 1024
-	bufSize := size
-	if bufSize > tailSize {
-		bufSize = tailSize
-	}
-
-	buf := make([]byte, bufSize)
-	if _, err := f.ReadAt(buf, size-bufSize); err != nil && err != io.EOF {
-		return fmt.Errorf("failed to read file tail: %w", err)
-	}
-
-	// Find last non-whitespace char (should be ']').
-	i := int(bufSize - 1)
-	for ; i >= 0 && isSpace(buf[i]); i-- {
-	}
-	if i < 0 || buf[i] != ']' {
-		return fmt.Errorf("file %s is not a JSON array (missing closing ])", filename)
-	}
-
-	// Look backwards to see what’s before the closing ']' to check if array is empty.
-	j := i - 1
-	for ; j >= 0 && isSpace(buf[j]); j-- {
-	}
-
-	isEmptyArray := false
-	if j >= 0 && buf[j] == '[' {
-		isEmptyArray = true
-	} else if size <= 2 {
-		isEmptyArray = true
-	}
-
-	// Compute the absolute offset of the closing ']' in the file.
-	lastBracketOffset := (size - bufSize) + int64(i)
-
-	// Drop the closing ']' (and any trailing whitespace after it).
-	if err := f.Truncate(lastBracketOffset); err != nil {
-		return fmt.Errorf("failed to truncate file: %w", err)
-	}
-
-	// Seek to the end after truncation.
-	if _, err := f.Seek(0, io.SeekEnd); err != nil {
-		return fmt.Errorf("failed to seek: %w", err)
-	}
-
-	// If the array already has elements, add a comma; otherwise just a newline.
 	if isEmptyArray {
-		if _, err := f.Write([]byte("\n")); err != nil {
+		if _, err := tmp.Write([]byte("\n")); err != nil {
 			return fmt.Errorf("failed to write newline: %w", err)
 		}
 	} else {
-		if _, err := f.Write([]byte(",\n")); err != nil {
-			return fmt.Errorf("failed to write comma: %w", err)
+		if _, err := tmp.Write([]byte(",\n")); err != nil {
+			return fmt.Errorf("failed to write message separator: %w", err)
 		}
 	}
 
-	// Write the new message and close the array again.
-	if _, err := f.Write(msg); err != nil {
-		return fmt.Errorf("failed to write message: %w", err)
+	if _, err := tmp.Write(msg); err != nil {
+		return fmt.Errorf("failed to write chat message: %w", err)
 	}
-	if _, err := f.Write([]byte("\n]\n")); err != nil {
+	if _, err := tmp.Write([]byte("\n]\n")); err != nil {
 		return fmt.Errorf("failed to write closing bracket: %w", err)
 	}
+	if err := tmp.Sync(); err != nil {
+		return fmt.Errorf("failed to sync temp file: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		return fmt.Errorf("failed to close temp file: %w", err)
+	}
 
-	return f.Sync()
+	if err := os.Rename(tmpName, filename); err != nil {
+		return fmt.Errorf("failed to atomically replace file: %w", err)
+	}
+
+	// Best-effort sync of parent directory to increase rename durability.
+	if dirF, err := os.Open(dir); err == nil {
+		_ = dirF.Sync()
+		_ = dirF.Close()
+	}
+
+	return nil
+}
+
+// inspectJSONArrayPrefix inspects the existing file and returns:
+//   - copyPrefixUntil: number of bytes from the beginning to copy into the temp file
+//     before appending the next message
+//   - isEmptyArray: whether the array currently has zero elements
+//
+// It supports recovery from interrupted writes where trailing commas and/or the
+// closing bracket are missing.
+func inspectJSONArrayPrefix(f *os.File, size int64) (copyFrom, copyPrefixUntil int64, isEmptyArray, needsOpeningBracket bool, err error) {
+	if size == 0 {
+		return 0, 0, true, true, nil
+	}
+
+	firstIdx, firstByte, ok, err := findFirstNonSpaceInRange(f, 0, size)
+	if err != nil {
+		return 0, 0, false, false, err
+	}
+	if !ok {
+		// File contains only whitespace; treat as empty/repairable.
+		return 0, 0, true, true, nil
+	}
+
+	if firstByte != '[' {
+		// Recovery path: handle files missing the opening '[' due to prior
+		// interrupted/broken writes.
+		copyUntil, empty, recErr := inspectMissingOpeningBracketPrefix(f, firstIdx, size)
+		if recErr != nil {
+			return 0, 0, false, false, recErr
+		}
+		return firstIdx, copyUntil, empty, true, nil
+	}
+
+	lastIdx, lastByte, ok, err := findLastNonSpaceBefore(f, size)
+	if err != nil {
+		return 0, 0, false, false, err
+	}
+	if !ok {
+		return 0, 0, true, true, nil
+	}
+
+	if lastByte == ']' {
+		prevIdx, prevByte, ok, err := findLastNonSpaceBefore(f, lastIdx)
+		if err != nil {
+			return 0, 0, false, false, err
+		}
+		if !ok {
+			return 0, 0, false, false, fmt.Errorf("malformed JSON array")
+		}
+
+		return 0, lastIdx, prevIdx == firstIdx && prevByte == '[', false, nil
+	}
+
+	// Recovery path: file likely ended mid-write. Trim trailing commas/whitespace.
+	searchEnd := size
+	for {
+		idx, b, found, err := findLastNonSpaceBefore(f, searchEnd)
+		if err != nil {
+			return 0, 0, false, false, err
+		}
+		if !found {
+			return 0, firstIdx + 1, true, false, nil
+		}
+
+		if b == ',' {
+			searchEnd = idx
+			continue
+		}
+
+		copyPrefixUntil = idx + 1
+		break
+	}
+
+	if copyPrefixUntil <= firstIdx {
+		return 0, firstIdx + 1, true, false, nil
+	}
+
+	_, _, hasContentAfterOpenBracket, err := findFirstNonSpaceInRange(f, firstIdx+1, copyPrefixUntil)
+	if err != nil {
+		return 0, 0, false, false, err
+	}
+
+	return 0, copyPrefixUntil, !hasContentAfterOpenBracket, false, nil
+}
+
+func inspectMissingOpeningBracketPrefix(f *os.File, firstIdx, size int64) (copyPrefixUntil int64, isEmptyArray bool, err error) {
+	searchEnd := size
+
+	// If a trailing closing bracket exists, drop it first.
+	if idx, b, found, err := findLastNonSpaceBefore(f, searchEnd); err != nil {
+		return 0, false, err
+	} else if !found {
+		return firstIdx, true, nil
+	} else if b == ']' {
+		searchEnd = idx
+	}
+
+	for {
+		idx, b, found, err := findLastNonSpaceBefore(f, searchEnd)
+		if err != nil {
+			return 0, false, err
+		}
+		if !found {
+			return firstIdx, true, nil
+		}
+
+		if b == ',' {
+			searchEnd = idx
+			continue
+		}
+
+		if idx < firstIdx {
+			return firstIdx, true, nil
+		}
+
+		return idx + 1, false, nil
+	}
+}
+
+func findFirstNonSpaceInRange(f *os.File, start, end int64) (int64, byte, bool, error) {
+	if start >= end {
+		return 0, 0, false, nil
+	}
+
+	const chunkSize int64 = 4096
+	buf := make([]byte, chunkSize)
+
+	for offset := start; offset < end; {
+		toRead := end - offset
+		if toRead > chunkSize {
+			toRead = chunkSize
+		}
+
+		n, err := f.ReadAt(buf[:toRead], offset)
+		if err != nil && err != io.EOF {
+			return 0, 0, false, err
+		}
+
+		for i := 0; i < n; i++ {
+			if !isSpace(buf[i]) {
+				return offset + int64(i), buf[i], true, nil
+			}
+		}
+
+		offset += int64(n)
+		if n == 0 {
+			break
+		}
+	}
+
+	return 0, 0, false, nil
+}
+
+func findLastNonSpaceBefore(f *os.File, end int64) (int64, byte, bool, error) {
+	if end <= 0 {
+		return 0, 0, false, nil
+	}
+
+	const chunkSize int64 = 4096
+	buf := make([]byte, chunkSize)
+
+	for right := end; right > 0; {
+		left := right - chunkSize
+		if left < 0 {
+			left = 0
+		}
+
+		toRead := right - left
+		n, err := f.ReadAt(buf[:toRead], left)
+		if err != nil && err != io.EOF {
+			return 0, 0, false, err
+		}
+
+		for i := n - 1; i >= 0; i-- {
+			if !isSpace(buf[i]) {
+				return left + int64(i), buf[i], true, nil
+			}
+		}
+
+		right = left
+		if n == 0 {
+			break
+		}
+	}
+
+	return 0, 0, false, nil
 }
 
 // isSpace is sufficient for JSON whitespace around the closing bracket.
