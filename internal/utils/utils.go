@@ -74,8 +74,9 @@ func SanitizeFileName(in string) string {
 			continue
 		}
 
-		// disallow path separator
-		if r == '/' || r == '%' {
+		// Disallow URL-unsafe/path-separator punctuation (normalize to underscore).
+		// Keep non-English letters/numbers; those can be URL-encoded client-side.
+		if isURLUnsafeRune(r) {
 			if b.Len() > 0 && !lastWasUnderscore {
 				b.WriteByte('_')
 				lastWasUnderscore = true
@@ -105,6 +106,22 @@ func SanitizeFileName(in string) string {
 	}
 
 	return out
+}
+
+// isURLUnsafeRune reports whether r is punctuation that is unsafe in URL path segments
+// Intentionally keep letters/digits (including non-English) and underscores
+func isURLUnsafeRune(r rune) bool {
+	if r == '/' || r == '%' {
+		return true
+	}
+
+	switch r {
+	case '!', '|', '#', '?', '&', ';', ':', '@', '=', '+', '$', ',', '[', ']',
+		'(', ')', '*', '\'', '"', '<', '>', '\\', '^', '`', '{', '}':
+		return true
+	}
+
+	return false
 }
 
 // truncatePreserveExtUTF8 truncates to max bytes without splitting UTF-8, preserving extension if any.
