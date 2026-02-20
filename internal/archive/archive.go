@@ -557,6 +557,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 	}
 
 	videoExtension := "mp4"
+	tmpLiveExtension := "ts"
 
 	// Create VOD in DB
 	vodDTO := vod.Vod{
@@ -582,7 +583,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		FolderName:          folderName,
 		FileName:            fileName,
 		// create temporary paths
-		TmpVideoDownloadPath:    fmt.Sprintf("%s/%s_%s-video.%s", envConfig.TempDir, video.ID, vUUID, videoExtension),
+		TmpVideoDownloadPath:    fmt.Sprintf("%s/%s_%s-video.%s", envConfig.TempDir, video.ID, vUUID, tmpLiveExtension),
 		TmpVideoConvertPath:     fmt.Sprintf("%s/%s_%s-video-convert.%s", envConfig.TempDir, video.ID, vUUID, videoExtension),
 		TmpChatDownloadPath:     fmt.Sprintf("%s/%s_%s-chat.json", envConfig.TempDir, video.ID, vUUID),
 		TmpLiveChatDownloadPath: fmt.Sprintf("%s/%s_%s-live-chat.json", envConfig.TempDir, video.ID, vUUID),
