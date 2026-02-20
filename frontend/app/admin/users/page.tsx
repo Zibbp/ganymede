@@ -15,13 +15,18 @@ import AdminUserDrawerContent from "@/app/components/admin/user/DrawerContent";
 import DeleteUserModalContent from "@/app/components/admin/user/DeleteModalContent";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "@/app/util/util";
+import useSettingsStore from "@/app/store/useSettingsStore";
 
 const AdminUsersPage = () => {
   const t = useTranslations('AdminUsersPage')
   const miscT = useTranslations('MiscComponents')
   usePageTitle(t('title'))
+
+  const settingsAdminItemsPerPage = useSettingsStore((state) => state.adminItemsPerPage);
+  const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
+
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
   const [records, setRecords] = useState<User[]>([]);
   const [initialRecords, setInitialRecords] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<User>>({
@@ -37,6 +42,10 @@ const AdminUsersPage = () => {
 
   const axiosPrivate = useAxiosPrivate()
   const { data: users, isPending, isError } = useGetUsers(axiosPrivate)
+
+  useEffect(() => {
+    setPerPage(settingsAdminItemsPerPage);
+  }, [settingsAdminItemsPerPage]);
 
   useEffect(() => {
     if (!users || users.length == 0) return;
@@ -172,7 +181,11 @@ const AdminUsersPage = () => {
             recordsPerPage={perPage}
             onPageChange={(p) => setPage(p)}
             recordsPerPageOptions={[20, 40, 100]}
-            onRecordsPerPageChange={setPerPage}
+            onRecordsPerPageChange={(value) => {
+              setPerPage(value);
+              setSettingsAdminItemsPerPage(value);
+              setPage(1);
+            }}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
             recordsPerPageLabel={miscT('recordsPerPageLabel')}
