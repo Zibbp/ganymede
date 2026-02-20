@@ -19,14 +19,19 @@ import { useDeletePlayback, useMarkVideoAsWatched } from "@/app/hooks/usePlaybac
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { showNotification } from "@mantine/notifications";
 import PlaylistBulkAddModalContent from "@/app/components/playlist/BulkAddModalContent";
+import useSettingsStore from "@/app/store/useSettingsStore";
 
 const AdminVideosPage = () => {
   const t = useTranslations('AdminVideosPage')
   const miscT = useTranslations('MiscComponents')
   usePageTitle(t('title'))
   const axiosPrivate = useAxiosPrivate()
+
+  const settingsAdminItemsPerPage = useSettingsStore((state) => state.adminItemsPerPage);
+  const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
+
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
   const [records, setRecords] = useState<Video[]>([]);
   const [initialRecords, setInitialRecords] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<Video>>({
@@ -50,6 +55,10 @@ const AdminVideosPage = () => {
   const lockVideoMutate = useLockVideo()
 
   const { data: videos, isPending, isError } = useGetVideosNoPaginate()
+
+  useEffect(() => {
+    setPerPage(settingsAdminItemsPerPage);
+  }, [settingsAdminItemsPerPage]);
 
   useEffect(() => {
     if (!videos) return;
@@ -384,7 +393,11 @@ const AdminVideosPage = () => {
             recordsPerPage={perPage}
             onPageChange={(p) => setPage(p)}
             recordsPerPageOptions={[20, 40, 100]}
-            onRecordsPerPageChange={setPerPage}
+            onRecordsPerPageChange={(value) => {
+              setPerPage(value);
+              setSettingsAdminItemsPerPage(value);
+              setPage(1);
+            }}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
             selectedRecords={activeVideos ?? []}

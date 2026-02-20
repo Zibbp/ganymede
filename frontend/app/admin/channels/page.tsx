@@ -15,13 +15,18 @@ import PlatformChannelDrawerContent from "@/app/components/admin/channel/Platfor
 import DeleteChannelModalContent from "@/app/components/admin/channel/DeleteModalContent";
 import { useTranslations } from "next-intl";
 import { formatBytes, usePageTitle } from "@/app/util/util";
+import useSettingsStore from "@/app/store/useSettingsStore";
 
 const AdminChannelsPage = () => {
   const t = useTranslations("AdminChannelsPage");
   const miscT = useTranslations("MiscComponents");
   usePageTitle(t('title'))
+
+  const settingsAdminItemsPerPage = useSettingsStore((state) => state.adminItemsPerPage);
+  const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
+
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
   const [records, setRecords] = useState<Channel[]>([]);
   const [initialRecords, setInitialRecords] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<Channel>>({
@@ -39,6 +44,10 @@ const AdminChannelsPage = () => {
 
 
   const { data: channels, isPending, isError } = useFetchChannels()
+
+  useEffect(() => {
+    setPerPage(settingsAdminItemsPerPage);
+  }, [settingsAdminItemsPerPage]);
 
   useEffect(() => {
     if (!channels) return;
@@ -202,7 +211,11 @@ const AdminChannelsPage = () => {
             recordsPerPage={perPage}
             onPageChange={(p) => setPage(p)}
             recordsPerPageOptions={[20, 40, 100]}
-            onRecordsPerPageChange={setPerPage}
+            onRecordsPerPageChange={(value) => {
+              setPerPage(value);
+              setSettingsAdminItemsPerPage(value);
+              setPage(1);
+            }}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
             recordsPerPageLabel={miscT('recordsPerPageLabel')}

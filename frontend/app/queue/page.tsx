@@ -15,15 +15,18 @@ import { useQueryClient } from "@tanstack/react-query";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "../util/util";
+import useSettingsStore from "../store/useSettingsStore";
 
 const QueuePage = () => {
   const t = useTranslations("QueuePage");
   const miscT = useTranslations("MiscComponents");
   usePageTitle(t('pageTitle'))
 
+  const settingsAdminItemsPerPage = useSettingsStore((state) => state.adminItemsPerPage);
+  const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
 
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
   const [records, setRecords] = useState<Queue[]>([]);
   const [initialRecords, setInitialRecords] = useState(false);
   const [activeQueue, setActiveQueue] = useState<Queue | null>(null);
@@ -42,6 +45,10 @@ const QueuePage = () => {
   const blockVideoMutate = useBlockVideo()
 
   const { data: queueItems, isPending: queueIsPending, isError: queueIsError } = useGetQueueItems(axiosPrivate, true)
+
+  useEffect(() => {
+    setPerPage(settingsAdminItemsPerPage);
+  }, [settingsAdminItemsPerPage]);
 
   useEffect(() => {
     if (queueItems && !initialRecords) {
@@ -226,7 +233,11 @@ const QueuePage = () => {
           recordsPerPage={perPage}
           onPageChange={(p) => setPage(p)}
           recordsPerPageOptions={[10, 20, 50]}
-          onRecordsPerPageChange={setPerPage}
+          onRecordsPerPageChange={(value) => {
+            setPerPage(value);
+            setSettingsAdminItemsPerPage(value);
+            setPage(1);
+          }}
           recordsPerPageLabel={miscT('recordsPerPageLabel')}
         />
       </Container>
