@@ -202,7 +202,20 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 	// Post-process to a finalized MP4 when needed:
 	// - always for non-live archives
 	// - for live archives when final output is MP4
-	if !dbItems.Queue.LiveArchive || dbItems.Video.VideoHlsPath == "" {
+	shouldPostProcessVideo := !dbItems.Queue.LiveArchive || dbItems.Video.VideoHlsPath == ""
+
+	// Live archive MP4 retries must be idempotent. If the remux output already exists and
+	// is valid, skip rerunning post-process so retries still succeed after TS source cleanup.
+	if dbItems.Queue.LiveArchive && dbItems.Video.VideoHlsPath == "" {
+		if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
+			if err := validateNonEmptyFile(dbItems.Video.TmpVideoConvertPath, "live finalized MP4 output"); err != nil {
+				return err
+			}
+			shouldPostProcessVideo = false
+		}
+	}
+
+	if shouldPostProcessVideo {
 		err = exec.PostProcessVideo(ctx, dbItems.Video)
 		if err != nil {
 			return err
