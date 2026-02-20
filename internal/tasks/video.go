@@ -249,7 +249,7 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		if dbItems.Video.VideoHlsPath == "" && utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
 			err = utils.DeleteFile(dbItems.Video.TmpVideoDownloadPath)
 			if err != nil {
-				return err
+				log.Warn().Err(err).Str("path", dbItems.Video.TmpVideoDownloadPath).Msg("failed to delete temporary transport stream file; continuing")
 			}
 		}
 	}
