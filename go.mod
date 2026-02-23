@@ -1,8 +1,6 @@
 module github.com/zibbp/ganymede
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.25.0
 
 require (
 	entgo.io/ent v0.14.5
@@ -22,7 +20,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.23.2
 	github.com/riverqueue/river v0.30.2
-	github.com/riverqueue/river/rivertype v0.30.2
+	github.com/riverqueue/river/rivertype v0.31.0
 	github.com/rs/zerolog v1.34.0
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/shirou/gopsutil/v4 v4.26.1
