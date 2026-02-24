@@ -46,6 +46,7 @@ export interface Notification {
 export interface StorageTemplate {
   folder_template: string;
   file_template: string;
+  channel_folder_template: string;
 }
 
 export enum ProxyType {
