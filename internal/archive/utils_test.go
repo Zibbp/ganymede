@@ -275,4 +275,21 @@ func TestGetChannelFolderName(t *testing.T) {
 		assert.NotContains(t, result, "\\")
 		assert.Equal(t, ".._.._etc_passwd", result)
 	})
+
+	// Test that an empty variable value returns an error instead of
+	// silently producing "unnamed_file" (which would cause collisions).
+	t.Run("empty channel_id returns error", func(t *testing.T) {
+		c := config.Get()
+		c.StorageTemplates.ChannelFolderTemplate = "{{channel_id}}"
+		assert.NoError(t, config.UpdateConfig(c), "failed to update config with template")
+
+		emptyInput := archive.ChannelTemplateInput{
+			ChannelName:        "testchannel",
+			ChannelID:          "",
+			ChannelDisplayName: "TestChannel",
+		}
+		_, err := archive.GetChannelFolderName(emptyInput)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "resolved to empty string")
+	})
 }

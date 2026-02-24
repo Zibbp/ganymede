@@ -45,6 +45,9 @@ func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
 			return "", fmt.Errorf("variable %s not found in channel variable map", variableName)
 		}
 		valueString := fmt.Sprintf("%v", variableValue)
+		if valueString == "" {
+			return "", fmt.Errorf("variable %s resolved to empty string; ensure the channel has this field populated", variableName)
+		}
 		channelTemplate = strings.ReplaceAll(channelTemplate, match[0], valueString)
 	}
 
