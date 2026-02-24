@@ -26,6 +26,11 @@ var (
 	templateVariableRegex = regexp.MustCompile(`\{{([^}]+)\}}`)
 )
 
+const (
+	notificationMaxAttempts = 3
+	notificationRetryDelay  = 2 * time.Second
+)
+
 // redactURL masks the path and query of a URL to avoid leaking secrets (e.g. webhook tokens).
 // Returns "scheme://host/***" or the first 12 characters if parsing fails.
 func redactURL(raw string) string {
@@ -411,26 +416,73 @@ func (s *Service) sendWebhook(ctx context.Context, url string, body string) erro
 		return fmt.Errorf("error marshalling webhook request body: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
-	if err != nil {
-		return fmt.Errorf("error creating webhook request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
+	return s.postJSONWithRetry(ctx, url, jsonBody, "webhook")
+}
 
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("error sending webhook request: %w", err)
-	}
-	defer func() {
-		_, _ = io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
-	}()
+// postJSONWithRetry sends a POST request with JSON content and retries on failures.
+func (s *Service) postJSONWithRetry(ctx context.Context, targetURL string, jsonBody []byte, provider string) error {
+	var lastErr error
 
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("webhook returned status %d", resp.StatusCode)
+	for attempt := 1; attempt <= notificationMaxAttempts; attempt++ {
+		if ctx.Err() != nil {
+			return fmt.Errorf("%s request canceled before attempt %d: %w", provider, attempt, ctx.Err())
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, targetURL, bytes.NewReader(jsonBody))
+		if err != nil {
+			return fmt.Errorf("error creating %s request: %w", provider, err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := s.httpClient.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("error sending %s request: %w", provider, err)
+		} else {
+			func() {
+				defer func() {
+					_, _ = io.Copy(io.Discard, resp.Body)
+					resp.Body.Close()
+				}()
+
+				if resp.StatusCode >= 400 {
+					lastErr = fmt.Errorf("%s returned status %d", provider, resp.StatusCode)
+					return
+				}
+
+				lastErr = nil
+			}()
+
+			if lastErr == nil {
+				return nil
+			}
+		}
+
+		if attempt == notificationMaxAttempts {
+			break
+		}
+
+		retryDelay := notificationRetryDelay * time.Duration(attempt)
+		log.Warn().
+			Err(lastErr).
+			Str("provider", provider).
+			Str("url", redactURL(targetURL)).
+			Int("attempt", attempt).
+			Int("max_attempts", notificationMaxAttempts).
+			Dur("retry_in", retryDelay).
+			Msg("notification request failed, retrying")
+
+		timer := time.NewTimer(retryDelay)
+		select {
+		case <-ctx.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
+			return fmt.Errorf("%s request canceled while waiting to retry: %w", provider, ctx.Err())
+		case <-timer.C:
+		}
 	}
 
-	return nil
+	return fmt.Errorf("%s request failed after %d attempts: %w", provider, notificationMaxAttempts, lastErr)
 }
 
 // appriseRequestBody is the JSON payload for Apprise API notifications.
@@ -483,26 +535,7 @@ func (s *Service) sendAppriseWithTitle(ctx context.Context, n *ent.Notification,
 		return fmt.Errorf("error marshalling apprise request body: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", n.URL, bytes.NewBuffer(jsonBody))
-	if err != nil {
-		return fmt.Errorf("error creating apprise request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("error sending apprise request: %w", err)
-	}
-	defer func() {
-		_, _ = io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
-	}()
-
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("apprise returned status %d", resp.StatusCode)
-	}
-
-	return nil
+	return s.postJSONWithRetry(ctx, n.URL, jsonBody, "apprise")
 }
 
 // --- Template rendering ---
