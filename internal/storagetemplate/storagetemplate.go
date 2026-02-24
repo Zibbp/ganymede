@@ -60,9 +60,11 @@ func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
 }
 
 func getChannelVariableMap(input ChannelTemplateInput) map[string]interface{} {
+	safeDisplayName := utils.SanitizeFileName(input.ChannelDisplayName)
+
 	return map[string]interface{}{
 		"channel":              input.ChannelName,
 		"channel_id":           input.ChannelID,
-		"channel_display_name": input.ChannelDisplayName,
+		"channel_display_name": safeDisplayName,
 	}
 }
