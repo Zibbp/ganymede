@@ -451,16 +451,28 @@ func (s *Service) sendAppriseWithTitle(ctx context.Context, n *ent.Notification,
 	}
 
 	if n.AppriseUrls != "" {
-		payload.URLs = n.AppriseUrls
+		if variableMap != nil {
+			payload.URLs = renderTemplate(n.AppriseUrls, variableMap)
+		} else {
+			payload.URLs = n.AppriseUrls
+		}
 	}
 	if n.AppriseTitle != "" {
-		payload.Title = renderTemplate(n.AppriseTitle, variableMap)
+		if variableMap != nil {
+			payload.Title = renderTemplate(n.AppriseTitle, variableMap)
+		} else {
+			payload.Title = n.AppriseTitle
+		}
 	}
 	if n.AppriseType != "" {
 		payload.Type = string(n.AppriseType)
 	}
 	if n.AppriseTag != "" {
-		payload.Tag = n.AppriseTag
+		if variableMap != nil {
+			payload.Tag = renderTemplate(n.AppriseTag, variableMap)
+		} else {
+			payload.Tag = n.AppriseTag
+		}
 	}
 	if n.AppriseFormat != "" {
 		payload.Format = string(n.AppriseFormat)

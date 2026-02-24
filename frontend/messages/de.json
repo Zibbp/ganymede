@@ -944,7 +944,7 @@
       "appriseUrlsPlaceholder": "discord://webhook_id/webhook_token",
       "appriseTitleLabel": "Apprise-Titelvorlage",
       "appriseTitleDescription": "Unterstützt die gleichen Vorlagenvariablen wie Textvorlagen",
-      "appriseTitlePlaceholder": "{{channel_display_name}} - Benachrichtigung",
+      "appriseTitlePlaceholder": "'{{channel_display_name}}' - Benachrichtigung",
       "appriseTypeLabel": "Apprise-Benachrichtigungstyp",
       "appriseTagLabel": "Apprise-Tag (Stateful-Modus)",
       "appriseTagDescription": "Tag für Apprise-Stateful-Konfigurationen",
