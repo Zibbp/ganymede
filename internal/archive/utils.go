@@ -16,6 +16,8 @@ var (
 	storageTemplateVariableRegex = regexp.MustCompile(`\{{([^}]+)\}}`)
 )
 
+// StorageTemplateInput holds the variables used to resolve folder and file storage templates
+// for VOD, clip, and livestream archives.
 type StorageTemplateInput struct {
 	UUID               uuid.UUID
 	ID                 string
@@ -35,6 +37,8 @@ type StorageTemplateInput struct {
 // so callers in the archive package can use it without importing storagetemplate directly.
 type ChannelTemplateInput = storagetemplate.ChannelTemplateInput
 
+// GetFolderName resolves the VOD subfolder name from the folder_template config.
+// It substitutes template variables (e.g. {{id}}, {{channel}}, {{date}}) with values from the input.
 func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 
 	variableMap, err := getVariableMap(uuid, input)
@@ -67,6 +71,8 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 	return folderTemplate, nil
 }
 
+// GetFileName resolves the archive file name from the file_template config.
+// It substitutes template variables (e.g. {{id}}, {{title}}, {{type}}) with values from the input.
 func GetFileName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 
 	variableMap, err := getVariableMap(uuid, input)
@@ -107,6 +113,9 @@ func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
 	return storagetemplate.GetChannelFolderName(input)
 }
 
+// getVariableMap builds the variable substitution map used by GetFolderName and GetFileName.
+// It sanitizes user-controlled values (title, display name) and rejects any empty variable values
+// to prevent collisions from unnamed archives.
 func getVariableMap(uuid uuid.UUID, input StorageTemplateInput) (map[string]interface{}, error) {
 	safeTitle := utils.SanitizeFileName(input.Title)
 	safeDisplayName := utils.SanitizeFileName(input.ChannelDisplayName)

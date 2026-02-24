@@ -62,6 +62,8 @@ func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
 	return channelTemplate, nil
 }
 
+// getChannelVariableMap builds the variable substitution map for channel folder template resolution.
+// Display names are pre-sanitized to prevent path traversal via crafted Twitch display names.
 func getChannelVariableMap(input ChannelTemplateInput) map[string]interface{} {
 	safeDisplayName := utils.SanitizeFileName(input.ChannelDisplayName)
 
