@@ -14,6 +14,7 @@ import (
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
+	"github.com/zibbp/ganymede/internal/storagetemplate"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
@@ -150,7 +151,70 @@ func rollbackRenames(ops []renameOperation) {
 }
 
 // StorageMigration migrates video files to a new storage template. Files are moved first and then the database is updated. If any step fails, the operation is rolled back.
+// This handles both VOD subfolder/file template changes and channel folder template changes.
 func (s *Service) StorageMigration() error {
+	envConfig := config.GetEnvConfig()
+
+	// Phase 1: Migrate channel folders.
+	// Resolve the new channel folder name for each channel and rename the directory if it changed.
+	channels, err := s.Store.Client.Channel.Query().All(context.Background())
+	if err != nil {
+		return fmt.Errorf("error getting channels: %v", err)
+	}
+
+	// channelFolderMap stores the resolved channel folder name for each channel ID.
+	channelFolderMap := make(map[uuid.UUID]string)
+
+	for _, ch := range channels {
+		newChannelFolderName, err := storagetemplate.GetChannelFolderName(storagetemplate.ChannelTemplateInput{
+			ChannelName:        ch.Name,
+			ChannelID:          ch.ExtID,
+			ChannelDisplayName: ch.DisplayName,
+		})
+		if err != nil {
+			log.Error().Err(err).Msgf("error resolving channel folder template for channel %s, skipping", ch.Name)
+			channelFolderMap[ch.ID] = ch.Name
+			continue
+		}
+
+		channelFolderMap[ch.ID] = newChannelFolderName
+
+		// Detect the old channel folder from the channel's image path.
+		// Image path format: {VIDEOS_DIR}/{channel_folder}/profile.png
+		if ch.ImagePath != "" {
+			oldChannelDir := path.Dir(ch.ImagePath)
+			newChannelDir := fmt.Sprintf("%s/%s", envConfig.VideosDir, newChannelFolderName)
+
+			if oldChannelDir != newChannelDir {
+				log.Info().Msgf("migrating channel folder from %s to %s", oldChannelDir, newChannelDir)
+
+				// Create new directory if it doesn't exist
+				if err := os.MkdirAll(newChannelDir, 0755); err != nil {
+					log.Error().Err(err).Msgf("error creating new channel directory %s", newChannelDir)
+					continue
+				}
+
+				// Move profile image to new directory
+				oldProfilePath := ch.ImagePath
+				newProfilePath := fmt.Sprintf("%s/profile.png", newChannelDir)
+				if err := os.Rename(oldProfilePath, newProfilePath); err != nil {
+					if !os.IsNotExist(err) {
+						log.Error().Err(err).Msgf("error moving profile image for channel %s", ch.Name)
+					}
+				}
+
+				// Update channel image path in database
+				_, err := ch.Update().SetImagePath(newProfilePath).Save(context.Background())
+				if err != nil {
+					log.Error().Err(err).Msgf("error updating channel image path for channel %s", ch.Name)
+				}
+
+				log.Info().Msgf("migrated channel folder for %s", ch.Name)
+			}
+		}
+	}
+
+	// Phase 2: Migrate VOD subfolders and files.
 	// Get all videos from the database.
 	videos, err := s.Store.Client.Vod.Query().WithChannel().All(context.Background())
 	if err != nil {
@@ -159,14 +223,22 @@ func (s *Service) StorageMigration() error {
 
 	// Loop through each video.
 	for _, video := range videos {
+		// Resolve channel folder name for this video's channel.
+		channelFolderName, ok := channelFolderMap[video.Edges.Channel.ID]
+		if !ok {
+			channelFolderName = video.Edges.Channel.Name
+		}
+
 		// Prepare the template input.
 		storageTemplateInput := archive.StorageTemplateInput{
-			UUID:    video.ID,
-			ID:      video.ExtID,
-			Channel: video.Edges.Channel.Name,
-			Title:   video.Title,
-			Type:    string(video.Type),
-			Date:    video.StreamedAt.Format("2006-01-02"),
+			UUID:               video.ID,
+			ID:                 video.ExtID,
+			Channel:            video.Edges.Channel.Name,
+			ChannelID:          video.Edges.Channel.ExtID,
+			ChannelDisplayName: video.Edges.Channel.DisplayName,
+			Title:              video.Title,
+			Type:               string(video.Type),
+			Date:               video.StreamedAt.Format("2006-01-02"),
 		}
 
 		// Get folder and file names.
@@ -189,8 +261,7 @@ func (s *Service) StorageMigration() error {
 			oldRootFolderPath = path.Dir(video.VideoPath)
 		}
 
-		envConfig := config.GetEnvConfig()
-		newRootFolderPath := fmt.Sprintf("%s/%s/%s", envConfig.VideosDir, video.Edges.Channel.Name, folderName)
+		newRootFolderPath := fmt.Sprintf("%s/%s/%s", envConfig.VideosDir, channelFolderName, folderName)
 
 		// We'll record each successful rename here.
 		var renames []renameOperation
@@ -406,6 +477,15 @@ func (s *Service) StorageMigration() error {
 		// Remove old root path if it's empty.
 		if err := os.Remove(oldRootFolderPath); err != nil {
 			log.Warn().Err(err).Msgf("error removing old root folder '%s' likely files still exist in there", oldRootFolderPath)
+		}
+
+		// Try to remove old channel folder if it's now empty (e.g. after channel folder template change).
+		oldChannelDir := path.Dir(oldRootFolderPath)
+		if oldChannelDir != envConfig.VideosDir {
+			if err := os.Remove(oldChannelDir); err != nil {
+				// This is expected if other videos still exist in the old folder or it's the same folder.
+				log.Debug().Err(err).Msgf("old channel directory '%s' not removed (likely not empty or same as new)", oldChannelDir)
+			}
 		}
 
 	}
