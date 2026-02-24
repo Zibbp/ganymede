@@ -35,6 +35,9 @@ type Config struct {
 	Experimental struct {
 		BetterLiveStreamDetectionAndCleanup bool `json:"better_live_stream_detection_and_cleanup"` // [EXPERIMENTAL] Enable enhanced detection and cleanup.
 	} `json:"experimental"`
+	// Notifications preserves legacy config.json notifications during migration.
+	// Deprecated: notifications are now stored in the database.
+	Notifications *LegacyNotification `json:"notifications,omitempty"`
 }
 
 // LegacyNotification is the old config.json notification format used before
@@ -54,11 +57,6 @@ type LegacyNotification struct {
 	IsLiveEnabled          bool   `json:"is_live_enabled"`
 }
 
-// LegacyConfig is a minimal struct for reading the old config.json notifications field during migration.
-type LegacyConfig struct {
-	Notification LegacyNotification `json:"notifications"`
-}
-
 // ReadLegacyNotifications reads the old config.json and returns any legacy notification settings.
 // Returns nil if the config file doesn't exist or has no configured webhook URLs.
 func ReadLegacyNotifications() *LegacyNotification {
@@ -70,12 +68,17 @@ func ReadLegacyNotifications() *LegacyNotification {
 		return nil
 	}
 
-	var legacy LegacyConfig
-	if err := json.Unmarshal(data, &legacy); err != nil {
+	var cfg Config
+	cfg.SetDefaults()
+	if err := json.Unmarshal(data, &cfg); err != nil {
 		return nil
 	}
 
-	n := &legacy.Notification
+	if cfg.Notifications == nil {
+		return nil
+	}
+
+	n := cfg.Notifications
 	// Only return if at least one webhook URL was configured
 	if n.VideoSuccessWebhookUrl == "" && n.LiveSuccessWebhookUrl == "" && n.ErrorWebhookUrl == "" && n.IsLiveWebhookUrl == "" {
 		return nil
