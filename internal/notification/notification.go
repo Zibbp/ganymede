@@ -441,7 +441,7 @@ func (s *Service) postJSONWithRetry(ctx context.Context, targetURL string, jsonB
 			func() {
 				defer func() {
 					_, _ = io.Copy(io.Discard, resp.Body)
-					resp.Body.Close()
+					resp.Body.Close() //nolint:errcheck
 				}()
 
 				if resp.StatusCode >= 400 {
