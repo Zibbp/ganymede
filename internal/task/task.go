@@ -197,16 +197,27 @@ func (s *Service) StorageMigration() error {
 				// Move profile image to new directory
 				oldProfilePath := ch.ImagePath
 				newProfilePath := fmt.Sprintf("%s/profile.png", newChannelDir)
+				profileMoved := false
 				if err := os.Rename(oldProfilePath, newProfilePath); err != nil {
 					if !os.IsNotExist(err) {
 						log.Error().Err(err).Msgf("error moving profile image for channel %s", ch.Name)
 					}
+					// If file doesn't exist, proceed with DB update anyway
+				} else {
+					profileMoved = true
 				}
 
 				// Update channel image path in database
 				_, err := ch.Update().SetImagePath(newProfilePath).Save(context.Background())
 				if err != nil {
 					log.Error().Err(err).Msgf("error updating channel image path for channel %s", ch.Name)
+					// Rollback: move profile image back if we moved it
+					if profileMoved {
+						if rbErr := os.Rename(newProfilePath, oldProfilePath); rbErr != nil {
+							log.Error().Err(rbErr).Msgf("error rolling back profile image move for channel %s", ch.Name)
+						}
+					}
+					continue
 				}
 
 				log.Info().Msgf("migrated channel folder for %s", ch.Name)
@@ -223,6 +234,12 @@ func (s *Service) StorageMigration() error {
 
 	// Loop through each video.
 	for _, video := range videos {
+		// Guard against orphaned videos with no channel edge loaded.
+		if video.Edges.Channel == nil {
+			log.Warn().Msgf("video %s has no channel edge, skipping migration", video.ID)
+			continue
+		}
+
 		// Resolve channel folder name for this video's channel.
 		channelFolderName, ok := channelFolderMap[video.Edges.Channel.ID]
 		if !ok {
@@ -239,6 +256,10 @@ func (s *Service) StorageMigration() error {
 			Title:              video.Title,
 			Type:               string(video.Type),
 			Date:               video.StreamedAt.Format("2006-01-02"),
+			YYYY:               video.StreamedAt.Format("2006"),
+			MM:                 video.StreamedAt.Format("01"),
+			DD:                 video.StreamedAt.Format("02"),
+			HH:                 video.StreamedAt.Format("15"),
 		}
 
 		// Get folder and file names.
