@@ -108,7 +108,12 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 	h.Server.HideBanner = true
 
 	// If frontend is external then allow cors
+	// AllowOriginFunc reflects the request origin so credentials work (browsers
+	// reject Access-Control-Allow-Origin: * with credentials).
 	h.Server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOriginFunc: func(origin string) (bool, error) {
+			return true, nil
+		},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 		AllowCredentials: true,
 	}))
