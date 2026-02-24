@@ -54,7 +54,7 @@ func TestGetFolderName(t *testing.T) {
 		{
 			name:        "custom template with granular date",
 			template:    "s{{YYYY}}{{MM}}-{{DD}}{{HH}} - {{title}}",
-			expected:    "s202508-0412 - Test_Title",
+			expected:    "s202508-0412_-_Test_Title",
 			expectError: false,
 		},
 		{
@@ -140,7 +140,7 @@ func TestGetFileName(t *testing.T) {
 		{
 			name:        "custom template with granular date",
 			template:    "s{{YYYY}}{{MM}}-{{DD}}{{HH}} - {{title}}.mp4",
-			expected:    "s202508-0412 - Test_Title.mp4",
+			expected:    "s202508-0412_-_Test_Title.mp4",
 			expectError: false,
 		},
 	}

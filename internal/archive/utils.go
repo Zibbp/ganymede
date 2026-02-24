@@ -68,6 +68,11 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 
 	}
 
+	folderTemplate = utils.SanitizeFileName(folderTemplate)
+	if folderTemplate == "" {
+		return "", fmt.Errorf("resolved folder name is empty after sanitization")
+	}
+
 	return folderTemplate, nil
 }
 
@@ -102,6 +107,11 @@ func GetFileName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 
 	}
 
+	fileTemplate = utils.SanitizeFileName(fileTemplate)
+	if fileTemplate == "" {
+		return "", fmt.Errorf("resolved file name is empty after sanitization")
+	}
+
 	return fileTemplate, nil
 }
 
@@ -119,12 +129,13 @@ func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
 func getVariableMap(uuid uuid.UUID, input StorageTemplateInput) (map[string]interface{}, error) {
 	safeTitle := utils.SanitizeFileName(input.Title)
 	safeDisplayName := utils.SanitizeFileName(input.ChannelDisplayName)
+	safeChannelID := utils.SanitizeFileName(input.ChannelID)
 
 	variables := map[string]interface{}{
 		"uuid":                 uuid.String(),
 		"id":                   input.ID,
 		"channel":              input.Channel,
-		"channel_id":           input.ChannelID,
+		"channel_id":           safeChannelID,
 		"channel_display_name": safeDisplayName,
 		"title":                safeTitle,
 		"date":                 input.Date,
