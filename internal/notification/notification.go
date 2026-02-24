@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -25,12 +26,18 @@ var (
 
 // Service provides CRUD operations and dispatch logic for notifications.
 type Service struct {
-	Store *database.Database
+	Store      *database.Database
+	httpClient *http.Client
 }
 
 // NewService creates a new notification service.
 func NewService(store *database.Database) *Service {
-	return &Service{Store: store}
+	return &Service{
+		Store: store,
+		httpClient: &http.Client{
+			Timeout: 15 * time.Second,
+		},
+	}
 }
 
 // --- CRUD ---
@@ -135,7 +142,9 @@ func (s *Service) SendVideoArchiveSuccess(ctx context.Context, channelItem *ent.
 
 	for _, n := range notifications {
 		body := renderTemplate(n.VideoSuccessTemplate, variableMap)
-		s.send(n, body, variableMap)
+		if err := s.send(n, body, variableMap); err != nil {
+			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending video success notification")
+		}
 	}
 }
 
@@ -155,7 +164,9 @@ func (s *Service) SendLiveArchiveSuccess(ctx context.Context, channelItem *ent.C
 
 	for _, n := range notifications {
 		body := renderTemplate(n.LiveSuccessTemplate, variableMap)
-		s.send(n, body, variableMap)
+		if err := s.send(n, body, variableMap); err != nil {
+			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending live success notification")
+		}
 	}
 }
 
@@ -175,7 +186,9 @@ func (s *Service) SendError(ctx context.Context, channelItem *ent.Channel, vodIt
 
 	for _, n := range notifications {
 		body := renderTemplate(n.ErrorTemplate, variableMap)
-		s.send(n, body, variableMap)
+		if err := s.send(n, body, variableMap); err != nil {
+			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending error notification")
+		}
 	}
 }
 
@@ -195,12 +208,14 @@ func (s *Service) SendLive(ctx context.Context, channelItem *ent.Channel, vodIte
 
 	for _, n := range notifications {
 		body := renderTemplate(n.IsLiveTemplate, variableMap)
-		s.send(n, body, variableMap)
+		if err := s.send(n, body, variableMap); err != nil {
+			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending is-live notification")
+		}
 	}
 }
 
 // SendTestNotification sends a test notification using the config's own templates with dummy data.
-func (s *Service) SendTestNotification(n *ent.Notification, eventType string) {
+func (s *Service) SendTestNotification(n *ent.Notification, eventType string) error {
 	variableMap := getTestVariableMap()
 
 	var tmpl string
@@ -216,30 +231,25 @@ func (s *Service) SendTestNotification(n *ent.Notification, eventType string) {
 		variableMap["category"] = "Demo Game"
 		tmpl = n.IsLiveTemplate
 	default:
-		log.Error().Str("event_type", eventType).Msg("unknown test notification event type")
-		return
+		return fmt.Errorf("unknown test notification event type: %s", eventType)
 	}
 
 	body := renderTemplate(tmpl, variableMap)
-	s.send(n, body, variableMap)
+	return s.send(n, body, variableMap)
 }
 
 // --- Internal ---
 
 // send dispatches a notification based on its provider type.
 // variableMap is optional — when provided, it is used to render Apprise title templates dynamically.
-func (s *Service) send(n *ent.Notification, body string, variableMap map[string]interface{}) {
+func (s *Service) send(n *ent.Notification, body string, variableMap map[string]interface{}) error {
 	switch n.Type {
 	case entNotification.TypeWebhook:
-		if err := sendWebhook(n.URL, body); err != nil {
-			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending webhook notification")
-		}
+		return s.sendWebhook(n.URL, body)
 	case entNotification.TypeApprise:
-		if err := sendAppriseWithTitle(n, body, variableMap); err != nil {
-			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending apprise notification")
-		}
+		return s.sendAppriseWithTitle(n, body, variableMap)
 	default:
-		log.Error().Str("type", string(n.Type)).Msg("unknown notification provider type")
+		return fmt.Errorf("unknown notification provider type: %s", string(n.Type))
 	}
 }
 
@@ -250,7 +260,7 @@ type webhookRequestBody struct {
 }
 
 // sendWebhook posts a JSON body to the webhook URL.
-func sendWebhook(url string, body string) error {
+func (s *Service) sendWebhook(url string, body string) error {
 	payload := webhookRequestBody{
 		Content: body,
 		Body:    body,
@@ -261,21 +271,19 @@ func sendWebhook(url string, body string) error {
 		return fmt.Errorf("error marshalling webhook request body: %w", err)
 	}
 
-	client := &http.Client{Timeout: 15 * time.Second}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return fmt.Errorf("error creating webhook request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error sending webhook request: %w", err)
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Debug().Err(err).Msg("error closing response body")
-		}
+		_, _ = io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
 	}()
 
 	if resp.StatusCode >= 400 {
@@ -297,7 +305,7 @@ type appriseRequestBody struct {
 
 // sendAppriseWithTitle is used by dispatch methods when the variable map is available
 // to render the Apprise title template dynamically.
-func sendAppriseWithTitle(n *ent.Notification, body string, variableMap map[string]interface{}) error {
+func (s *Service) sendAppriseWithTitle(n *ent.Notification, body string, variableMap map[string]interface{}) error {
 	payload := appriseRequestBody{
 		Body: body,
 	}
@@ -323,21 +331,19 @@ func sendAppriseWithTitle(n *ent.Notification, body string, variableMap map[stri
 		return fmt.Errorf("error marshalling apprise request body: %w", err)
 	}
 
-	client := &http.Client{Timeout: 15 * time.Second}
 	req, err := http.NewRequest("POST", n.URL, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return fmt.Errorf("error creating apprise request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error sending apprise request: %w", err)
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Debug().Err(err).Msg("error closing response body")
-		}
+		_, _ = io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
 	}()
 
 	if resp.StatusCode >= 400 {
@@ -350,11 +356,16 @@ func sendAppriseWithTitle(n *ent.Notification, body string, variableMap map[stri
 // --- Template rendering ---
 
 // renderTemplate replaces all {{variable}} placeholders in the template with values from the variable map.
+// Unknown variables are left untouched in the output.
 func renderTemplate(tmpl string, variableMap map[string]interface{}) string {
 	res := templateVariableRegex.FindAllStringSubmatch(tmpl, -1)
 	for _, match := range res {
-		variableName := match[1]
-		variableValue := variableMap[variableName]
+		variableName := strings.TrimSpace(match[1])
+		variableValue, ok := variableMap[variableName]
+		if !ok || variableValue == nil {
+			// Leave unknown or nil variables untouched
+			continue
+		}
 		variableValueString := fmt.Sprintf("%v", variableValue)
 		tmpl = strings.ReplaceAll(tmpl, match[0], variableValueString)
 	}
@@ -362,35 +373,46 @@ func renderTemplate(tmpl string, variableMap map[string]interface{}) string {
 }
 
 // getVariableMap builds a map of template variables from the provided entities.
+// Nil entities are handled gracefully — their variables will be empty strings.
 func getVariableMap(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue, failedTask string, category *string) map[string]interface{} {
 	categoryValue := ""
 	if category != nil {
 		categoryValue = *category
 	}
 	variables := map[string]interface{}{
-		// Channel variables
-		"channel_id":           channelItem.ID,
-		"channel_ext_id":       channelItem.ExtID,
-		"channel_display_name": channelItem.DisplayName,
-		// Vod variables
-		"vod_id":          vodItem.ID,
-		"vod_ext_id":      vodItem.ExtID,
-		"vod_platform":    vodItem.Platform,
-		"vod_type":        vodItem.Type,
-		"vod_title":       vodItem.Title,
-		"vod_duration":    vodItem.Duration,
-		"vod_views":       vodItem.Views,
-		"vod_resolution":  vodItem.Resolution,
-		"vod_streamed_at": vodItem.StreamedAt,
-		"vod_created_at":  vodItem.CreatedAt,
-		// Queue variables
-		"queue_id":         qItem.ID,
-		"queue_created_at": qItem.CreatedAt,
 		// Error
 		"failed_task": failedTask,
 		// Live stream
 		"category": categoryValue,
 	}
+
+	// Channel variables
+	if channelItem != nil {
+		variables["channel_id"] = channelItem.ID
+		variables["channel_ext_id"] = channelItem.ExtID
+		variables["channel_display_name"] = channelItem.DisplayName
+	}
+
+	// Vod variables
+	if vodItem != nil {
+		variables["vod_id"] = vodItem.ID
+		variables["vod_ext_id"] = vodItem.ExtID
+		variables["vod_platform"] = vodItem.Platform
+		variables["vod_type"] = vodItem.Type
+		variables["vod_title"] = vodItem.Title
+		variables["vod_duration"] = vodItem.Duration
+		variables["vod_views"] = vodItem.Views
+		variables["vod_resolution"] = vodItem.Resolution
+		variables["vod_streamed_at"] = vodItem.StreamedAt
+		variables["vod_created_at"] = vodItem.CreatedAt
+	}
+
+	// Queue variables
+	if qItem != nil {
+		variables["queue_id"] = qItem.ID
+		variables["queue_created_at"] = qItem.CreatedAt
+	}
+
 	return variables
 }
 

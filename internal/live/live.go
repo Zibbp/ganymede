@@ -442,7 +442,14 @@ OUTER:
 					log.Error().Err(err).Msg("error getting vod")
 					continue
 				}
-				go s.NotificationService.SendLive(ctx, lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
+				go func() {
+					defer func() {
+						if r := recover(); r != nil {
+							log.Error().Interface("panic", r).Msg("panic in SendLive notification")
+						}
+					}()
+					s.NotificationService.SendLive(ctx, lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
+				}()
 
 				// Create initial chapter
 				_, err = s.ChapterService.CreateChapter(chapter.Chapter{

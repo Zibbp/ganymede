@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	entNotification "github.com/zibbp/ganymede/ent/notification"
 )
@@ -18,7 +19,7 @@ type NotificationService interface {
 	GetNotifications(ctx context.Context) ([]*ent.Notification, error)
 	UpdateNotification(ctx context.Context, id uuid.UUID, n *ent.Notification) (*ent.Notification, error)
 	DeleteNotification(ctx context.Context, id uuid.UUID) error
-	SendTestNotification(n *ent.Notification, eventType string)
+	SendTestNotification(n *ent.Notification, eventType string) error
 }
 
 // CreateNotificationRequest is the request body for creating a notification.
@@ -64,7 +65,7 @@ type UpdateNotificationRequest struct {
 }
 
 // validateNotificationRequest performs custom validation beyond struct tags.
-func validateNotificationRequest(triggerVideoSuccess, triggerLiveSuccess, triggerError, triggerIsLive bool, videoSuccessTemplate, liveSuccessTemplate, errorTemplate, isLiveTemplate string) error {
+func validateNotificationRequest(notifType string, triggerVideoSuccess, triggerLiveSuccess, triggerError, triggerIsLive bool, videoSuccessTemplate, liveSuccessTemplate, errorTemplate, isLiveTemplate, appriseUrls, appriseTag string) error {
 	// At least one trigger must be enabled
 	if !triggerVideoSuccess && !triggerLiveSuccess && !triggerError && !triggerIsLive {
 		return fmt.Errorf("at least one trigger must be enabled")
@@ -84,6 +85,11 @@ func validateNotificationRequest(triggerVideoSuccess, triggerLiveSuccess, trigge
 		return fmt.Errorf("is live template is required when is live trigger is enabled")
 	}
 
+	// Apprise requires at least one of urls or tag
+	if notifType == "apprise" && appriseUrls == "" && appriseTag == "" {
+		return fmt.Errorf("apprise notifications require either apprise_urls (stateless) or apprise_tag (stateful)")
+	}
+
 	return nil
 }
 
@@ -96,7 +102,8 @@ type TestNotificationRequest struct {
 func (h *Handler) GetNotifications(c echo.Context) error {
 	notifications, err := h.Service.NotificationService.GetNotifications(c.Request().Context())
 	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		log.Error().Err(err).Msg("error getting notifications")
+		return ErrorResponse(c, http.StatusInternalServerError, "error getting notifications")
 	}
 	return SuccessResponse(c, notifications, "notifications")
 }
@@ -110,7 +117,11 @@ func (h *Handler) GetNotification(c echo.Context) error {
 
 	n, err := h.Service.NotificationService.GetNotification(c.Request().Context(), id)
 	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		if ent.IsNotFound(err) {
+			return ErrorResponse(c, http.StatusNotFound, "notification not found")
+		}
+		log.Error().Err(err).Str("id", id.String()).Msg("error getting notification")
+		return ErrorResponse(c, http.StatusInternalServerError, "error getting notification")
 	}
 	return SuccessResponse(c, n, "notification")
 }
@@ -119,14 +130,16 @@ func (h *Handler) GetNotification(c echo.Context) error {
 func (h *Handler) CreateNotification(c echo.Context) error {
 	var req CreateNotificationRequest
 	if err := c.Bind(&req); err != nil {
-		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, "invalid request body")
 	}
 	if err := h.Server.Validator.Validate(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := validateNotificationRequest(
+		req.Type,
 		req.TriggerVideoSuccess, req.TriggerLiveSuccess, req.TriggerError, req.TriggerIsLive,
 		req.VideoSuccessTemplate, req.LiveSuccessTemplate, req.ErrorTemplate, req.IsLiveTemplate,
+		req.AppriseUrls, req.AppriseTag,
 	); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
@@ -153,7 +166,8 @@ func (h *Handler) CreateNotification(c echo.Context) error {
 
 	created, err := h.Service.NotificationService.CreateNotification(c.Request().Context(), n)
 	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		log.Error().Err(err).Msg("error creating notification")
+		return ErrorResponse(c, http.StatusInternalServerError, "error creating notification")
 	}
 	return SuccessResponse(c, created, "notification created")
 }
@@ -167,14 +181,16 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 
 	var req UpdateNotificationRequest
 	if err := c.Bind(&req); err != nil {
-		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, "invalid request body")
 	}
 	if err := h.Server.Validator.Validate(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if err := validateNotificationRequest(
+		req.Type,
 		req.TriggerVideoSuccess, req.TriggerLiveSuccess, req.TriggerError, req.TriggerIsLive,
 		req.VideoSuccessTemplate, req.LiveSuccessTemplate, req.ErrorTemplate, req.IsLiveTemplate,
+		req.AppriseUrls, req.AppriseTag,
 	); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
@@ -201,7 +217,11 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 
 	updated, err := h.Service.NotificationService.UpdateNotification(c.Request().Context(), id, n)
 	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		if ent.IsNotFound(err) {
+			return ErrorResponse(c, http.StatusNotFound, "notification not found")
+		}
+		log.Error().Err(err).Str("id", id.String()).Msg("error updating notification")
+		return ErrorResponse(c, http.StatusInternalServerError, "error updating notification")
 	}
 	return SuccessResponse(c, updated, "notification updated")
 }
@@ -214,7 +234,11 @@ func (h *Handler) DeleteNotification(c echo.Context) error {
 	}
 
 	if err := h.Service.NotificationService.DeleteNotification(c.Request().Context(), id); err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		if ent.IsNotFound(err) {
+			return ErrorResponse(c, http.StatusNotFound, "notification not found")
+		}
+		log.Error().Err(err).Str("id", id.String()).Msg("error deleting notification")
+		return ErrorResponse(c, http.StatusInternalServerError, "error deleting notification")
 	}
 	return SuccessResponse(c, nil, "notification deleted")
 }
@@ -228,7 +252,7 @@ func (h *Handler) TestNotification(c echo.Context) error {
 
 	var req TestNotificationRequest
 	if err := c.Bind(&req); err != nil {
-		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return ErrorResponse(c, http.StatusBadRequest, "invalid request body")
 	}
 	if err := h.Server.Validator.Validate(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -236,9 +260,16 @@ func (h *Handler) TestNotification(c echo.Context) error {
 
 	n, err := h.Service.NotificationService.GetNotification(c.Request().Context(), id)
 	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		if ent.IsNotFound(err) {
+			return ErrorResponse(c, http.StatusNotFound, "notification not found")
+		}
+		log.Error().Err(err).Str("id", id.String()).Msg("error getting notification for test")
+		return ErrorResponse(c, http.StatusInternalServerError, "error getting notification")
 	}
 
-	h.Service.NotificationService.SendTestNotification(n, req.EventType)
+	if err := h.Service.NotificationService.SendTestNotification(n, req.EventType); err != nil {
+		log.Error().Err(err).Str("id", id.String()).Msg("error sending test notification")
+		return ErrorResponse(c, http.StatusInternalServerError, "error sending test notification")
+	}
 	return SuccessResponse(c, nil, "test notification sent")
 }
