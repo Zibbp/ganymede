@@ -198,6 +198,7 @@ const AdminNotificationsPage = () => {
 
   const handleOpenEdit = (n: Notification) => {
     setEditingNotification(n);
+    form.clearErrors();
     form.setValues({
       name: n.name,
       enabled: n.enabled,

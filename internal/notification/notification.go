@@ -250,7 +250,7 @@ func (s *Service) SendVideoArchiveSuccess(ctx context.Context, channelItem *ent.
 
 	for _, n := range notifications {
 		body := renderTemplate(n.VideoSuccessTemplate, variableMap)
-		if err := s.send(n, body, variableMap); err != nil {
+		if err := s.send(ctx, n, body, variableMap); err != nil {
 			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending video success notification")
 		}
 	}
@@ -272,7 +272,7 @@ func (s *Service) SendLiveArchiveSuccess(ctx context.Context, channelItem *ent.C
 
 	for _, n := range notifications {
 		body := renderTemplate(n.LiveSuccessTemplate, variableMap)
-		if err := s.send(n, body, variableMap); err != nil {
+		if err := s.send(ctx, n, body, variableMap); err != nil {
 			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending live success notification")
 		}
 	}
@@ -294,7 +294,7 @@ func (s *Service) SendError(ctx context.Context, channelItem *ent.Channel, vodIt
 
 	for _, n := range notifications {
 		body := renderTemplate(n.ErrorTemplate, variableMap)
-		if err := s.send(n, body, variableMap); err != nil {
+		if err := s.send(ctx, n, body, variableMap); err != nil {
 			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending error notification")
 		}
 	}
@@ -316,14 +316,14 @@ func (s *Service) SendLive(ctx context.Context, channelItem *ent.Channel, vodIte
 
 	for _, n := range notifications {
 		body := renderTemplate(n.IsLiveTemplate, variableMap)
-		if err := s.send(n, body, variableMap); err != nil {
+		if err := s.send(ctx, n, body, variableMap); err != nil {
 			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending is-live notification")
 		}
 	}
 }
 
 // SendTestNotification sends a test notification using the config's own templates with dummy data.
-func (s *Service) SendTestNotification(n *ent.Notification, eventType string) error {
+func (s *Service) SendTestNotification(ctx context.Context, n *ent.Notification, eventType string) error {
 	variableMap := getTestVariableMap()
 
 	var tmpl string
@@ -343,19 +343,19 @@ func (s *Service) SendTestNotification(n *ent.Notification, eventType string) er
 	}
 
 	body := renderTemplate(tmpl, variableMap)
-	return s.send(n, body, variableMap)
+	return s.send(ctx, n, body, variableMap)
 }
 
 // --- Internal ---
 
 // send dispatches a notification based on its provider type.
 // variableMap is optional — when provided, it is used to render Apprise title templates dynamically.
-func (s *Service) send(n *ent.Notification, body string, variableMap map[string]interface{}) error {
+func (s *Service) send(ctx context.Context, n *ent.Notification, body string, variableMap map[string]interface{}) error {
 	switch n.Type {
 	case entNotification.TypeWebhook:
-		return s.sendWebhook(n.URL, body)
+		return s.sendWebhook(ctx, n.URL, body)
 	case entNotification.TypeApprise:
-		return s.sendAppriseWithTitle(n, body, variableMap)
+		return s.sendAppriseWithTitle(ctx, n, body, variableMap)
 	default:
 		return fmt.Errorf("unknown notification provider type: %s", string(n.Type))
 	}
@@ -368,7 +368,7 @@ type webhookRequestBody struct {
 }
 
 // sendWebhook posts a JSON body to the webhook URL.
-func (s *Service) sendWebhook(url string, body string) error {
+func (s *Service) sendWebhook(ctx context.Context, url string, body string) error {
 	payload := webhookRequestBody{
 		Content: body,
 		Body:    body,
@@ -379,7 +379,7 @@ func (s *Service) sendWebhook(url string, body string) error {
 		return fmt.Errorf("error marshalling webhook request body: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return fmt.Errorf("error creating webhook request: %w", err)
 	}
@@ -413,7 +413,7 @@ type appriseRequestBody struct {
 
 // sendAppriseWithTitle is used by dispatch methods when the variable map is available
 // to render the Apprise title template dynamically.
-func (s *Service) sendAppriseWithTitle(n *ent.Notification, body string, variableMap map[string]interface{}) error {
+func (s *Service) sendAppriseWithTitle(ctx context.Context, n *ent.Notification, body string, variableMap map[string]interface{}) error {
 	payload := appriseRequestBody{
 		Body: body,
 	}
@@ -439,7 +439,7 @@ func (s *Service) sendAppriseWithTitle(n *ent.Notification, body string, variabl
 		return fmt.Errorf("error marshalling apprise request body: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", n.URL, bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, "POST", n.URL, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return fmt.Errorf("error creating apprise request: %w", err)
 	}
@@ -480,33 +480,43 @@ func renderTemplate(tmpl string, variableMap map[string]interface{}) string {
 	return tmpl
 }
 
+// formatTime formats a time.Time to RFC3339 for template rendering.
+// Zero times are returned as an empty string to avoid printing Go zero-value timestamps.
+func formatTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format(time.RFC3339)
+}
+
 // getVariableMap builds a map of template variables from the provided entities.
-// All known keys are always initialized (with empty string defaults for nil entities),
-// so that renderTemplate can replace them even when entities are missing.
+// All known keys are always initialized with type-appropriate defaults (empty strings for
+// string/time fields, 0 for numeric fields) so that renderTemplate can replace them even
+// when entities are missing.
 func getVariableMap(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue, failedTask string, category *string) map[string]interface{} {
 	categoryValue := ""
 	if category != nil {
 		categoryValue = *category
 	}
 
-	// Initialize all keys with empty-string defaults
+	// Initialize all keys with type-appropriate defaults
 	variables := map[string]interface{}{
 		// Error
 		"failed_task": failedTask,
 		// Live stream
 		"category": categoryValue,
-		// Channel
+		// Channel (strings)
 		"channel_id":           "",
 		"channel_ext_id":       "",
 		"channel_display_name": "",
-		// Vod
+		// Vod (strings, numeric, times)
 		"vod_id":          "",
 		"vod_ext_id":      "",
 		"vod_platform":    "",
 		"vod_type":        "",
 		"vod_title":       "",
-		"vod_duration":    "",
-		"vod_views":       "",
+		"vod_duration":    0,
+		"vod_views":       0,
 		"vod_resolution":  "",
 		"vod_streamed_at": "",
 		"vod_created_at":  "",
@@ -531,13 +541,13 @@ func getVariableMap(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue
 		variables["vod_duration"] = vodItem.Duration
 		variables["vod_views"] = vodItem.Views
 		variables["vod_resolution"] = vodItem.Resolution
-		variables["vod_streamed_at"] = vodItem.StreamedAt
-		variables["vod_created_at"] = vodItem.CreatedAt
+		variables["vod_streamed_at"] = formatTime(vodItem.StreamedAt)
+		variables["vod_created_at"] = formatTime(vodItem.CreatedAt)
 	}
 
 	if qItem != nil {
 		variables["queue_id"] = qItem.ID
-		variables["queue_created_at"] = qItem.CreatedAt
+		variables["queue_created_at"] = formatTime(qItem.CreatedAt)
 	}
 
 	return variables
@@ -545,6 +555,7 @@ func getVariableMap(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue
 
 // getTestVariableMap builds a variable map with dummy test data.
 func getTestVariableMap() map[string]interface{} {
+	now := formatTime(time.Now())
 	return map[string]interface{}{
 		"channel_id":           uuid.New(),
 		"channel_ext_id":       "1234456789",
@@ -557,10 +568,10 @@ func getTestVariableMap() map[string]interface{} {
 		"vod_duration":         100,
 		"vod_views":            4510,
 		"vod_resolution":       "best",
-		"vod_streamed_at":      time.Now(),
-		"vod_created_at":       time.Now(),
+		"vod_streamed_at":      now,
+		"vod_created_at":       now,
 		"queue_id":             uuid.New(),
-		"queue_created_at":     time.Now(),
+		"queue_created_at":     now,
 		"failed_task":          "",
 		"category":             "",
 	}

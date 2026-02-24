@@ -21,50 +21,36 @@ type NotificationService interface {
 	GetNotifications(ctx context.Context) ([]*ent.Notification, error)
 	UpdateNotification(ctx context.Context, id uuid.UUID, n *ent.Notification) (*ent.Notification, error)
 	DeleteNotification(ctx context.Context, id uuid.UUID) error
-	SendTestNotification(n *ent.Notification, eventType string) error
+	SendTestNotification(ctx context.Context, n *ent.Notification, eventType string) error
+}
+
+// NotificationRequest is the shared request body for creating and updating a notification.
+// Create and Update use the same fields; separate type aliases are kept for clarity.
+type NotificationRequest struct {
+	Name                 string `json:"name" validate:"required"`
+	Enabled              bool   `json:"enabled"`
+	Type                 string `json:"type" validate:"required,oneof=webhook apprise"`
+	URL                  string `json:"url" validate:"required,http_url"`
+	TriggerVideoSuccess  bool   `json:"trigger_video_success"`
+	TriggerLiveSuccess   bool   `json:"trigger_live_success"`
+	TriggerError         bool   `json:"trigger_error"`
+	TriggerIsLive        bool   `json:"trigger_is_live"`
+	VideoSuccessTemplate string `json:"video_success_template"`
+	LiveSuccessTemplate  string `json:"live_success_template"`
+	ErrorTemplate        string `json:"error_template"`
+	IsLiveTemplate       string `json:"is_live_template"`
+	AppriseUrls          string `json:"apprise_urls"`
+	AppriseTitle         string `json:"apprise_title"`
+	AppriseType          string `json:"apprise_type" validate:"omitempty,oneof=info success warning failure"`
+	AppriseTag           string `json:"apprise_tag"`
+	AppriseFormat        string `json:"apprise_format" validate:"omitempty,oneof=text html markdown"`
 }
 
 // CreateNotificationRequest is the request body for creating a notification.
-type CreateNotificationRequest struct {
-	Name                 string `json:"name" validate:"required"`
-	Enabled              bool   `json:"enabled"`
-	Type                 string `json:"type" validate:"required,oneof=webhook apprise"`
-	URL                  string `json:"url" validate:"required,http_url"`
-	TriggerVideoSuccess  bool   `json:"trigger_video_success"`
-	TriggerLiveSuccess   bool   `json:"trigger_live_success"`
-	TriggerError         bool   `json:"trigger_error"`
-	TriggerIsLive        bool   `json:"trigger_is_live"`
-	VideoSuccessTemplate string `json:"video_success_template"`
-	LiveSuccessTemplate  string `json:"live_success_template"`
-	ErrorTemplate        string `json:"error_template"`
-	IsLiveTemplate       string `json:"is_live_template"`
-	AppriseUrls          string `json:"apprise_urls"`
-	AppriseTitle         string `json:"apprise_title"`
-	AppriseType          string `json:"apprise_type" validate:"omitempty,oneof=info success warning failure"`
-	AppriseTag           string `json:"apprise_tag"`
-	AppriseFormat        string `json:"apprise_format" validate:"omitempty,oneof=text html markdown"`
-}
+type CreateNotificationRequest = NotificationRequest
 
 // UpdateNotificationRequest is the request body for updating a notification.
-type UpdateNotificationRequest struct {
-	Name                 string `json:"name" validate:"required"`
-	Enabled              bool   `json:"enabled"`
-	Type                 string `json:"type" validate:"required,oneof=webhook apprise"`
-	URL                  string `json:"url" validate:"required,http_url"`
-	TriggerVideoSuccess  bool   `json:"trigger_video_success"`
-	TriggerLiveSuccess   bool   `json:"trigger_live_success"`
-	TriggerError         bool   `json:"trigger_error"`
-	TriggerIsLive        bool   `json:"trigger_is_live"`
-	VideoSuccessTemplate string `json:"video_success_template"`
-	LiveSuccessTemplate  string `json:"live_success_template"`
-	ErrorTemplate        string `json:"error_template"`
-	IsLiveTemplate       string `json:"is_live_template"`
-	AppriseUrls          string `json:"apprise_urls"`
-	AppriseTitle         string `json:"apprise_title"`
-	AppriseType          string `json:"apprise_type" validate:"omitempty,oneof=info success warning failure"`
-	AppriseTag           string `json:"apprise_tag"`
-	AppriseFormat        string `json:"apprise_format" validate:"omitempty,oneof=text html markdown"`
-}
+type UpdateNotificationRequest = NotificationRequest
 
 // NotificationResponse is a DTO that avoids the ent-generated omitempty on bool fields,
 // ensuring false values are always included in JSON responses.
@@ -329,7 +315,7 @@ func (h *Handler) TestNotification(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, "error getting notification")
 	}
 
-	if err := h.Service.NotificationService.SendTestNotification(n, req.EventType); err != nil {
+	if err := h.Service.NotificationService.SendTestNotification(c.Request().Context(), n, req.EventType); err != nil {
 		log.Error().Err(err).Str("id", id.String()).Msg("error sending test notification")
 		return ErrorResponse(c, http.StatusInternalServerError, "error sending test notification")
 	}
