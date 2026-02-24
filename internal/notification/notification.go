@@ -483,12 +483,8 @@ func (s *Service) sendAppriseWithTitle(ctx context.Context, n *ent.Notification,
 // Unknown or nil variables are left untouched in the output.
 func renderTemplate(tmpl string, variableMap map[string]interface{}) string {
 	return templateVariableRegex.ReplaceAllStringFunc(tmpl, func(match string) string {
-		// Extract the variable name from the {{...}} match
-		inner := templateVariableRegex.FindStringSubmatch(match)
-		if len(inner) < 2 {
-			return match
-		}
-		variableName := strings.TrimSpace(inner[1])
+		// match is guaranteed to be "{{...}}" by the regex — strip delimiters and trim whitespace
+		variableName := strings.TrimSpace(match[2 : len(match)-2])
 		variableValue, ok := variableMap[variableName]
 		if !ok || variableValue == nil {
 			return match
