@@ -193,6 +193,35 @@ var (
 			},
 		},
 	}
+	// NotificationsColumns holds the columns for the "notifications" table.
+	NotificationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"webhook", "apprise"}},
+		{Name: "url", Type: field.TypeString},
+		{Name: "trigger_video_success", Type: field.TypeBool, Default: false},
+		{Name: "trigger_live_success", Type: field.TypeBool, Default: false},
+		{Name: "trigger_error", Type: field.TypeBool, Default: false},
+		{Name: "trigger_is_live", Type: field.TypeBool, Default: false},
+		{Name: "video_success_template", Type: field.TypeString, Default: "✅ Video Archived: {{vod_title}} by {{channel_display_name}}."},
+		{Name: "live_success_template", Type: field.TypeString, Default: "✅ Live Stream Archived: {{vod_title}} by {{channel_display_name}}."},
+		{Name: "error_template", Type: field.TypeString, Default: "⚠️ Error: Queue {{queue_id}} failed at task {{failed_task}}."},
+		{Name: "is_live_template", Type: field.TypeString, Default: "🔴 {{channel_display_name}} is live!"},
+		{Name: "apprise_urls", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "apprise_title", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "apprise_type", Type: field.TypeEnum, Nullable: true, Enums: []string{"info", "success", "warning", "failure"}, Default: "info"},
+		{Name: "apprise_tag", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "apprise_format", Type: field.TypeEnum, Nullable: true, Enums: []string{"text", "html", "markdown"}, Default: "text"},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// NotificationsTable holds the schema information for the "notifications" table.
+	NotificationsTable = &schema.Table{
+		Name:       "notifications",
+		Columns:    NotificationsColumns,
+		PrimaryKey: []*schema.Column{NotificationsColumns[0]},
+	}
 	// PlaybacksColumns holds the columns for the "playbacks" table.
 	PlaybacksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -461,6 +490,7 @@ var (
 		LiveTitleRegexesTable,
 		MultistreamInfosTable,
 		MutedSegmentsTable,
+		NotificationsTable,
 		PlaybacksTable,
 		PlaylistsTable,
 		PlaylistRulesTable,
