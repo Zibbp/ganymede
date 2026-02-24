@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/config"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 var (
@@ -25,6 +26,7 @@ type ChannelTemplateInput struct {
 
 // GetChannelFolderName resolves the channel-level folder name from the channel_folder_template config.
 // The default template is "{{channel}}" which preserves backward compatibility.
+// The resolved name is sanitized to prevent path traversal and invalid filesystem characters.
 func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
 	channelTemplate := config.Get().StorageTemplates.ChannelFolderTemplate
 	if channelTemplate == "" {
@@ -44,6 +46,14 @@ func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
 		}
 		valueString := fmt.Sprintf("%v", variableValue)
 		channelTemplate = strings.ReplaceAll(channelTemplate, match[0], valueString)
+	}
+
+	// Sanitize the resolved name to prevent path traversal (e.g., "../" or "/")
+	// and invalid filesystem characters.
+	channelTemplate = utils.SanitizeFileName(channelTemplate)
+
+	if channelTemplate == "" {
+		return "", fmt.Errorf("resolved channel folder name is empty after sanitization")
 	}
 
 	return channelTemplate, nil

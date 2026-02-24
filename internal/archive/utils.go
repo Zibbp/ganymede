@@ -109,13 +109,14 @@ func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
 
 func getVariableMap(uuid uuid.UUID, input StorageTemplateInput) (map[string]interface{}, error) {
 	safeTitle := utils.SanitizeFileName(input.Title)
+	safeDisplayName := utils.SanitizeFileName(input.ChannelDisplayName)
 
 	variables := map[string]interface{}{
 		"uuid":                 uuid.String(),
 		"id":                   input.ID,
 		"channel":              input.Channel,
 		"channel_id":           input.ChannelID,
-		"channel_display_name": input.ChannelDisplayName,
+		"channel_display_name": safeDisplayName,
 		"title":                safeTitle,
 		"date":                 input.Date,
 		"type":                 input.Type,
