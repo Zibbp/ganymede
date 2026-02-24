@@ -218,6 +218,18 @@ func TestGetChannelFolderName(t *testing.T) {
 			expected:    "",
 			expectError: true,
 		},
+		{
+			name:        "path traversal in template literal is sanitized",
+			template:    "../../etc",
+			expected:    "etc",
+			expectError: false,
+		},
+		{
+			name:        "path separator in template literal is sanitized",
+			template:    "foo/bar",
+			expected:    "foo_bar",
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -242,4 +254,21 @@ func TestGetChannelFolderName(t *testing.T) {
 			}
 		})
 	}
+
+	// Test with unsafe display name containing path traversal characters
+	t.Run("display name with path traversal is sanitized", func(t *testing.T) {
+		c := config.Get()
+		c.StorageTemplates.ChannelFolderTemplate = "{{channel_display_name}}"
+		assert.NoError(t, config.UpdateConfig(c), "failed to update config with template")
+
+		unsafeInput := archive.ChannelTemplateInput{
+			ChannelName:        "testchannel",
+			ChannelID:          "12345",
+			ChannelDisplayName: "../../etc/passwd",
+		}
+		result, err := archive.GetChannelFolderName(unsafeInput)
+		assert.NoError(t, err)
+		assert.NotContains(t, result, "..")
+		assert.NotContains(t, result, "/")
+	})
 }
