@@ -12,6 +12,7 @@ import (
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/platform"
+	"github.com/zibbp/ganymede/internal/storagetemplate"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -198,16 +199,27 @@ func (s *Service) UpdateChannelImage(ctx context.Context, channelID uuid.UUID, c
 
 	env := config.GetEnvConfig()
 
+	// Resolve channel folder name from template
+	channelFolderName, chErr := storagetemplate.GetChannelFolderName(storagetemplate.ChannelTemplateInput{
+		ChannelName:        twitchChannel.Login,
+		ChannelID:          twitchChannel.ID,
+		ChannelDisplayName: twitchChannel.DisplayName,
+	})
+	if chErr != nil {
+		log.Warn().Err(chErr).Msg("error resolving channel folder template, falling back to channel login name")
+		channelFolderName = twitchChannel.Login
+	}
+
 	// Download channel profile image
 	if checkIfExists {
-		exists := utils.FileExists(fmt.Sprintf("%s/%s/%s", env.VideosDir, twitchChannel.Login, "profile.png"))
+		exists := utils.FileExists(fmt.Sprintf("%s/%s/%s", env.VideosDir, channelFolderName, "profile.png"))
 		if exists {
 			log.Debug().Msgf("channel profile image already exists for channel: %s", twitchChannel.Login)
 			return nil
 		}
 	}
 
-	err = utils.DownloadFile(twitchChannel.ProfileImageURL, fmt.Sprintf("%s/%s/%s", env.VideosDir, twitchChannel.Login, "profile.png"))
+	err = utils.DownloadFile(twitchChannel.ProfileImageURL, fmt.Sprintf("%s/%s/%s", env.VideosDir, channelFolderName, "profile.png"))
 	if err != nil {
 		return fmt.Errorf("error downloading channel profile image: %v", err)
 	}
