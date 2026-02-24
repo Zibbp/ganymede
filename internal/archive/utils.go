@@ -64,14 +64,14 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 		}
 		// Replace variable in template
 		folderString := fmt.Sprintf("%v", variableValue)
+		if folderString == "" {
+			return "", fmt.Errorf("variable %s resolved to empty string; ensure the archive has this field populated", variableName)
+		}
 		folderTemplate = strings.ReplaceAll(folderTemplate, match[0], folderString)
 
 	}
 
 	folderTemplate = utils.SanitizeFileName(folderTemplate)
-	if folderTemplate == "" {
-		return "", fmt.Errorf("resolved folder name is empty after sanitization")
-	}
 
 	return folderTemplate, nil
 }
@@ -103,14 +103,14 @@ func GetFileName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 		}
 		// Replace variable in template
 		fileString := fmt.Sprintf("%v", variableValue)
+		if fileString == "" {
+			return "", fmt.Errorf("variable %s resolved to empty string; ensure the archive has this field populated", variableName)
+		}
 		fileTemplate = strings.ReplaceAll(fileTemplate, match[0], fileString)
 
 	}
 
 	fileTemplate = utils.SanitizeFileName(fileTemplate)
-	if fileTemplate == "" {
-		return "", fmt.Errorf("resolved file name is empty after sanitization")
-	}
 
 	return fileTemplate, nil
 }
@@ -124,20 +124,17 @@ func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
 }
 
 // getVariableMap builds the variable substitution map used by GetFolderName and GetFileName.
-// It sanitizes user-controlled values (title, display name) and rejects any empty variable values
-// to prevent collisions from unnamed archives.
+// Values are stored raw so that per-variable emptiness checks in the caller can detect missing
+// fields. The final output is sanitized by the caller via utils.SanitizeFileName to handle
+// path-unsafe characters.
 func getVariableMap(uuid uuid.UUID, input StorageTemplateInput) (map[string]interface{}, error) {
-	safeTitle := utils.SanitizeFileName(input.Title)
-	safeDisplayName := utils.SanitizeFileName(input.ChannelDisplayName)
-	safeChannelID := utils.SanitizeFileName(input.ChannelID)
-
 	variables := map[string]interface{}{
 		"uuid":                 uuid.String(),
 		"id":                   input.ID,
 		"channel":              input.Channel,
-		"channel_id":           safeChannelID,
-		"channel_display_name": safeDisplayName,
-		"title":                safeTitle,
+		"channel_id":           input.ChannelID,
+		"channel_display_name": input.ChannelDisplayName,
+		"title":                input.Title,
 		"date":                 input.Date,
 		"type":                 input.Type,
 		"YYYY":                 input.YYYY,
