@@ -22,6 +22,7 @@ import (
 	_ "github.com/zibbp/ganymede/internal/kv"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/metrics"
+	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/playback"
 	"github.com/zibbp/ganymede/internal/playlist"
@@ -35,27 +36,28 @@ import (
 )
 
 type Application struct {
-	EnvConfig         config.EnvConfig
-	Database          *database.Database
-	Store             *database.Database
-	ArchiveService    *archive.Service
-	PlatformTwitch    platform.Platform
-	AdminService      *admin.Service
-	AuthService       *auth.Service
-	ChannelService    *channel.Service
-	VodService        *vod.Service
-	QueueService      *queue.Service
-	UserService       *user.Service
-	LiveService       *live.Service
-	PlaybackService   *playback.Service
-	MetricsService    *metrics.Service
-	PlaylistService   *playlist.Service
-	TaskService       *task.Service
-	ChapterService    *chapter.Service
-	CategoryService   *category.Service
-	BlockedVodService *blocked.Service
-	RiverUIServer     *riverui.Handler
-	RiverClient       *tasks_client.RiverClient
+	EnvConfig           config.EnvConfig
+	Database            *database.Database
+	Store               *database.Database
+	ArchiveService      *archive.Service
+	PlatformTwitch      platform.Platform
+	AdminService        *admin.Service
+	AuthService         *auth.Service
+	ChannelService      *channel.Service
+	VodService          *vod.Service
+	QueueService        *queue.Service
+	UserService         *user.Service
+	LiveService         *live.Service
+	PlaybackService     *playback.Service
+	MetricsService      *metrics.Service
+	PlaylistService     *playlist.Service
+	TaskService         *task.Service
+	ChapterService      *chapter.Service
+	CategoryService     *category.Service
+	BlockedVodService   *blocked.Service
+	NotificationService *notification.Service
+	RiverUIServer       *riverui.Handler
+	RiverClient         *tasks_client.RiverClient
 }
 
 func SetupApplication(ctx context.Context) (*Application, error) {
@@ -145,11 +147,12 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	vodService := vod.NewService(db, riverClient, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodService := blocked.NewService(db)
+	notificationService := notification.NewService(db)
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch)
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
 	chapterService := chapter.NewService(db)
-	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService)
+	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService, notificationService)
 	playbackService := playback.NewService(db)
 	metricsService := metrics.NewService(db, riverClient)
 	playlistService := playlist.NewService(db)
@@ -157,26 +160,27 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	categoryService := category.NewService(db)
 
 	return &Application{
-		EnvConfig:         envConfig,
-		Database:          db,
-		AuthService:       authService,
-		ChannelService:    channelService,
-		VodService:        vodService,
-		QueueService:      queueService,
-		BlockedVodService: blockedVodService,
-		ArchiveService:    archiveService,
-		AdminService:      adminService,
-		UserService:       userService,
-		LiveService:       liveService,
-		PlaybackService:   playbackService,
-		MetricsService:    metricsService,
-		PlaylistService:   playlistService,
-		TaskService:       taskService,
-		ChapterService:    chapterService,
-		CategoryService:   categoryService,
-		PlatformTwitch:    platformTwitch,
-		RiverUIServer:     riverUIServer,
-		RiverClient:       riverClient,
+		EnvConfig:           envConfig,
+		Database:            db,
+		AuthService:         authService,
+		ChannelService:      channelService,
+		VodService:          vodService,
+		QueueService:        queueService,
+		BlockedVodService:   blockedVodService,
+		ArchiveService:      archiveService,
+		AdminService:        adminService,
+		UserService:         userService,
+		LiveService:         liveService,
+		PlaybackService:     playbackService,
+		MetricsService:      metricsService,
+		PlaylistService:     playlistService,
+		TaskService:         taskService,
+		ChapterService:      chapterService,
+		CategoryService:     categoryService,
+		NotificationService: notificationService,
+		PlatformTwitch:      platformTwitch,
+		RiverUIServer:       riverUIServer,
+		RiverClient:         riverClient,
 	}, nil
 }
 
@@ -187,7 +191,7 @@ func Run(ctx context.Context) error {
 		return err
 	}
 
-	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.PlatformTwitch, app.RiverUIServer)
+	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.NotificationService, app.PlatformTwitch, app.RiverUIServer)
 
 	if err := httpHandler.Serve(ctx); err != nil {
 		return err

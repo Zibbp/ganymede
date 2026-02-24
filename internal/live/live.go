@@ -29,11 +29,12 @@ import (
 )
 
 type Service struct {
-	Store          *database.Database
-	ArchiveService *archive.Service
-	PlatformTwitch platform.Platform
-	ChapterService *chapter.Service
-	QueueService   *queue.Service
+	Store               *database.Database
+	ArchiveService      *archive.Service
+	PlatformTwitch      platform.Platform
+	ChapterService      *chapter.Service
+	QueueService        *queue.Service
+	NotificationService *notification.Service
 }
 
 type Live struct {
@@ -78,8 +79,8 @@ type ArchiveLive struct {
 	RenderChat  bool      `json:"render_chat"`
 }
 
-func NewService(store *database.Database, archiveService *archive.Service, platformTwitch platform.Platform, chapterService *chapter.Service, queueService *queue.Service) *Service {
-	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch, ChapterService: chapterService, QueueService: queueService}
+func NewService(store *database.Database, archiveService *archive.Service, platformTwitch platform.Platform, chapterService *chapter.Service, queueService *queue.Service, notificationService *notification.Service) *Service {
+	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch, ChapterService: chapterService, QueueService: queueService, NotificationService: notificationService}
 }
 
 func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
@@ -441,7 +442,7 @@ OUTER:
 					log.Error().Err(err).Msg("error getting vod")
 					continue
 				}
-				go notification.SendLiveNotification(lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
+				go s.NotificationService.SendLive(ctx, lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
 
 				// Create initial chapter
 				_, err = s.ChapterService.CreateChapter(chapter.Chapter{
