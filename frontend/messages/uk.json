@@ -906,6 +906,11 @@
     "triggerError": "Помилка",
     "triggerIsLive": "У ефірі",
     "triggersNone": "Немає",
+    "actions": {
+      "edit": "Редагувати",
+      "test": "Тестувати",
+      "delete": "Видалити"
+    },
     "drawer": {
       "titleCreate": "Створити сповіщення",
       "titleEdit": "Редагувати сповіщення",

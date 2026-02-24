@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -24,6 +25,19 @@ import (
 var (
 	templateVariableRegex = regexp.MustCompile(`\{{([^}]+)\}}`)
 )
+
+// redactURL masks the path and query of a URL to avoid leaking secrets (e.g. webhook tokens).
+// Returns "scheme://host/***" or the first 12 characters if parsing fails.
+func redactURL(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil || u.Host == "" {
+		if len(raw) > 12 {
+			return raw[:12] + "***"
+		}
+		return "***"
+	}
+	return u.Scheme + "://" + u.Host + "/***"
+}
 
 // Service provides CRUD operations and dispatch logic for notifications.
 type Service struct {
@@ -217,10 +231,10 @@ func (s *Service) MigrateFromLegacyConfig(ctx context.Context, legacy *config.Le
 		}
 
 		if _, err := builder.Save(ctx); err != nil {
-			return fmt.Errorf("error creating migrated notification for %s: %w", url, err)
+			return fmt.Errorf("error creating migrated notification for %s: %w", redactURL(url), err)
 		}
 
-		log.Info().Str("name", name).Str("url", url).Msg("migrated legacy notification to database")
+		log.Info().Str("name", name).Str("url", redactURL(url)).Msg("migrated legacy notification to database")
 	}
 
 	log.Info().Int("count", len(groups)).Msg("legacy notification migration complete")
@@ -464,20 +478,23 @@ func (s *Service) sendAppriseWithTitle(ctx context.Context, n *ent.Notification,
 // --- Template rendering ---
 
 // renderTemplate replaces all {{variable}} placeholders in the template with values from the variable map.
-// Unknown variables are left untouched in the output.
+// Each placeholder is resolved exactly once in a single left-to-right pass — replacement values
+// that happen to contain {{...}} are never re-processed.
+// Unknown or nil variables are left untouched in the output.
 func renderTemplate(tmpl string, variableMap map[string]interface{}) string {
-	res := templateVariableRegex.FindAllStringSubmatch(tmpl, -1)
-	for _, match := range res {
-		variableName := strings.TrimSpace(match[1])
+	return templateVariableRegex.ReplaceAllStringFunc(tmpl, func(match string) string {
+		// Extract the variable name from the {{...}} match
+		inner := templateVariableRegex.FindStringSubmatch(match)
+		if len(inner) < 2 {
+			return match
+		}
+		variableName := strings.TrimSpace(inner[1])
 		variableValue, ok := variableMap[variableName]
 		if !ok || variableValue == nil {
-			// Leave unknown or nil variables untouched
-			continue
+			return match
 		}
-		variableValueString := fmt.Sprintf("%v", variableValue)
-		tmpl = strings.ReplaceAll(tmpl, match[0], variableValueString)
-	}
-	return tmpl
+		return fmt.Sprintf("%v", variableValue)
+	})
 }
 
 // formatTime formats a time.Time to RFC3339 for template rendering.
@@ -554,6 +571,8 @@ func getVariableMap(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue
 }
 
 // getTestVariableMap builds a variable map with dummy test data.
+// Note: "failed_task" and "category" are left empty here — SendTestNotification
+// overwrites them with test values for the relevant event types.
 func getTestVariableMap() map[string]interface{} {
 	now := formatTime(time.Now())
 	return map[string]interface{}{

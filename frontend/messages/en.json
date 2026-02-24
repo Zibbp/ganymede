@@ -908,6 +908,11 @@
     "triggerError": "Error",
     "triggerIsLive": "Is Live",
     "triggersNone": "None",
+    "actions": {
+      "edit": "Edit",
+      "test": "Test",
+      "delete": "Delete"
+    },
     "drawer": {
       "titleCreate": "Create Notification",
       "titleEdit": "Edit Notification",

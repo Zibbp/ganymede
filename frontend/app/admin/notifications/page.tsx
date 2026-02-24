@@ -380,6 +380,8 @@ const AdminNotificationsPage = () => {
                     <ActionIcon
                       variant="light"
                       color="blue"
+                      aria-label={t("actions.edit")}
+                      title={t("actions.edit")}
                       onClick={() => handleOpenEdit(n)}
                     >
                       <IconEdit size={18} />
@@ -387,6 +389,8 @@ const AdminNotificationsPage = () => {
                     <ActionIcon
                       variant="light"
                       color="violet"
+                      aria-label={t("actions.test")}
+                      title={t("actions.test")}
                       onClick={() => {
                         setTestingNotification(n);
                         openTestModal();
@@ -397,6 +401,8 @@ const AdminNotificationsPage = () => {
                     <ActionIcon
                       variant="light"
                       color="red"
+                      aria-label={t("actions.delete")}
+                      title={t("actions.delete")}
                       onClick={() => {
                         setDeletingNotification(n);
                         openDeleteModal();

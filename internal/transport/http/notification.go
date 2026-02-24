@@ -113,32 +113,55 @@ func toNotificationResponses(notifications []*ent.Notification) []NotificationRe
 }
 
 // validateNotificationRequest performs custom validation beyond struct tags.
-func validateNotificationRequest(notifType string, triggerVideoSuccess, triggerLiveSuccess, triggerError, triggerIsLive bool, videoSuccessTemplate, liveSuccessTemplate, errorTemplate, isLiveTemplate, appriseUrls, appriseTag string) error {
+func validateNotificationRequest(req NotificationRequest) error {
 	// At least one trigger must be enabled
-	if !triggerVideoSuccess && !triggerLiveSuccess && !triggerError && !triggerIsLive {
+	if !req.TriggerVideoSuccess && !req.TriggerLiveSuccess && !req.TriggerError && !req.TriggerIsLive {
 		return fmt.Errorf("at least one trigger must be enabled")
 	}
 
 	// Enabled triggers must have a non-whitespace template
-	if triggerVideoSuccess && strings.TrimSpace(videoSuccessTemplate) == "" {
+	if req.TriggerVideoSuccess && strings.TrimSpace(req.VideoSuccessTemplate) == "" {
 		return fmt.Errorf("video success template is required when video success trigger is enabled")
 	}
-	if triggerLiveSuccess && strings.TrimSpace(liveSuccessTemplate) == "" {
+	if req.TriggerLiveSuccess && strings.TrimSpace(req.LiveSuccessTemplate) == "" {
 		return fmt.Errorf("live success template is required when live success trigger is enabled")
 	}
-	if triggerError && strings.TrimSpace(errorTemplate) == "" {
+	if req.TriggerError && strings.TrimSpace(req.ErrorTemplate) == "" {
 		return fmt.Errorf("error template is required when error trigger is enabled")
 	}
-	if triggerIsLive && strings.TrimSpace(isLiveTemplate) == "" {
+	if req.TriggerIsLive && strings.TrimSpace(req.IsLiveTemplate) == "" {
 		return fmt.Errorf("is live template is required when is live trigger is enabled")
 	}
 
 	// Apprise requires at least one of urls or tag
-	if notifType == "apprise" && strings.TrimSpace(appriseUrls) == "" && strings.TrimSpace(appriseTag) == "" {
+	if req.Type == "apprise" && strings.TrimSpace(req.AppriseUrls) == "" && strings.TrimSpace(req.AppriseTag) == "" {
 		return fmt.Errorf("apprise notifications require either apprise_urls (stateless) or apprise_tag (stateful)")
 	}
 
 	return nil
+}
+
+// notificationFromRequest maps a NotificationRequest to an ent.Notification struct.
+func notificationFromRequest(req NotificationRequest) *ent.Notification {
+	return &ent.Notification{
+		Name:                 req.Name,
+		Enabled:              req.Enabled,
+		Type:                 entNotification.Type(req.Type),
+		URL:                  req.URL,
+		TriggerVideoSuccess:  req.TriggerVideoSuccess,
+		TriggerLiveSuccess:   req.TriggerLiveSuccess,
+		TriggerError:         req.TriggerError,
+		TriggerIsLive:        req.TriggerIsLive,
+		VideoSuccessTemplate: req.VideoSuccessTemplate,
+		LiveSuccessTemplate:  req.LiveSuccessTemplate,
+		ErrorTemplate:        req.ErrorTemplate,
+		IsLiveTemplate:       req.IsLiveTemplate,
+		AppriseUrls:          req.AppriseUrls,
+		AppriseTitle:         req.AppriseTitle,
+		AppriseType:          entNotification.AppriseType(req.AppriseType),
+		AppriseTag:           req.AppriseTag,
+		AppriseFormat:        entNotification.AppriseFormat(req.AppriseFormat),
+	}
 }
 
 // TestNotificationRequest is the request body for testing a notification.
@@ -183,36 +206,11 @@ func (h *Handler) CreateNotification(c echo.Context) error {
 	if err := h.Server.Validator.Validate(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
-	if err := validateNotificationRequest(
-		req.Type,
-		req.TriggerVideoSuccess, req.TriggerLiveSuccess, req.TriggerError, req.TriggerIsLive,
-		req.VideoSuccessTemplate, req.LiveSuccessTemplate, req.ErrorTemplate, req.IsLiveTemplate,
-		req.AppriseUrls, req.AppriseTag,
-	); err != nil {
+	if err := validateNotificationRequest(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
-	n := &ent.Notification{
-		Name:                 req.Name,
-		Enabled:              req.Enabled,
-		Type:                 entNotification.Type(req.Type),
-		URL:                  req.URL,
-		TriggerVideoSuccess:  req.TriggerVideoSuccess,
-		TriggerLiveSuccess:   req.TriggerLiveSuccess,
-		TriggerError:         req.TriggerError,
-		TriggerIsLive:        req.TriggerIsLive,
-		VideoSuccessTemplate: req.VideoSuccessTemplate,
-		LiveSuccessTemplate:  req.LiveSuccessTemplate,
-		ErrorTemplate:        req.ErrorTemplate,
-		IsLiveTemplate:       req.IsLiveTemplate,
-		AppriseUrls:          req.AppriseUrls,
-		AppriseTitle:         req.AppriseTitle,
-		AppriseType:          entNotification.AppriseType(req.AppriseType),
-		AppriseTag:           req.AppriseTag,
-		AppriseFormat:        entNotification.AppriseFormat(req.AppriseFormat),
-	}
-
-	created, err := h.Service.NotificationService.CreateNotification(c.Request().Context(), n)
+	created, err := h.Service.NotificationService.CreateNotification(c.Request().Context(), notificationFromRequest(req))
 	if err != nil {
 		log.Error().Err(err).Msg("error creating notification")
 		return ErrorResponse(c, http.StatusInternalServerError, "error creating notification")
@@ -234,36 +232,11 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 	if err := h.Server.Validator.Validate(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
-	if err := validateNotificationRequest(
-		req.Type,
-		req.TriggerVideoSuccess, req.TriggerLiveSuccess, req.TriggerError, req.TriggerIsLive,
-		req.VideoSuccessTemplate, req.LiveSuccessTemplate, req.ErrorTemplate, req.IsLiveTemplate,
-		req.AppriseUrls, req.AppriseTag,
-	); err != nil {
+	if err := validateNotificationRequest(req); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
-	n := &ent.Notification{
-		Name:                 req.Name,
-		Enabled:              req.Enabled,
-		Type:                 entNotification.Type(req.Type),
-		URL:                  req.URL,
-		TriggerVideoSuccess:  req.TriggerVideoSuccess,
-		TriggerLiveSuccess:   req.TriggerLiveSuccess,
-		TriggerError:         req.TriggerError,
-		TriggerIsLive:        req.TriggerIsLive,
-		VideoSuccessTemplate: req.VideoSuccessTemplate,
-		LiveSuccessTemplate:  req.LiveSuccessTemplate,
-		ErrorTemplate:        req.ErrorTemplate,
-		IsLiveTemplate:       req.IsLiveTemplate,
-		AppriseUrls:          req.AppriseUrls,
-		AppriseTitle:         req.AppriseTitle,
-		AppriseType:          entNotification.AppriseType(req.AppriseType),
-		AppriseTag:           req.AppriseTag,
-		AppriseFormat:        entNotification.AppriseFormat(req.AppriseFormat),
-	}
-
-	updated, err := h.Service.NotificationService.UpdateNotification(c.Request().Context(), id, n)
+	updated, err := h.Service.NotificationService.UpdateNotification(c.Request().Context(), id, notificationFromRequest(req))
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrorResponse(c, http.StatusNotFound, "notification not found")

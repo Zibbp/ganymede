@@ -908,6 +908,11 @@
     "triggerError": "Fehler",
     "triggerIsLive": "Ist Live",
     "triggersNone": "Keine",
+    "actions": {
+      "edit": "Bearbeiten",
+      "test": "Testen",
+      "delete": "Löschen"
+    },
     "drawer": {
       "titleCreate": "Benachrichtigung erstellen",
       "titleEdit": "Benachrichtigung bearbeiten",
