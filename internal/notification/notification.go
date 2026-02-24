@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	entNotification "github.com/zibbp/ganymede/ent/notification"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 )
 
@@ -117,6 +118,119 @@ func (s *Service) UpdateNotification(ctx context.Context, id uuid.UUID, n *ent.N
 	}
 
 	return builder.Save(ctx)
+}
+
+// MigrateFromLegacyConfig migrates old config.json notification settings to the database.
+// It groups triggers by webhook URL — if multiple triggers share the same URL, they become
+// one notification config. This is idempotent: it skips migration if any notification configs
+// already exist in the database.
+func (s *Service) MigrateFromLegacyConfig(ctx context.Context, legacy *config.LegacyNotification) error {
+	// Skip if there are already notification configs in the database
+	count, err := s.Store.Client.Notification.Query().Count(ctx)
+	if err != nil {
+		return fmt.Errorf("error checking existing notifications: %w", err)
+	}
+	if count > 0 {
+		log.Debug().Msg("notification configs already exist, skipping legacy migration")
+		return nil
+	}
+
+	// Group triggers by webhook URL
+	type triggerGroup struct {
+		name                 string
+		triggerVideoSuccess  bool
+		videoSuccessTemplate string
+		triggerLiveSuccess   bool
+		liveSuccessTemplate  string
+		triggerError         bool
+		errorTemplate        string
+		triggerIsLive        bool
+		isLiveTemplate       string
+	}
+
+	groups := make(map[string]*triggerGroup)
+
+	addTrigger := func(url string, label string, apply func(g *triggerGroup)) {
+		if url == "" {
+			return
+		}
+		g, ok := groups[url]
+		if !ok {
+			g = &triggerGroup{name: label}
+			groups[url] = g
+		}
+		apply(g)
+	}
+
+	if legacy.VideoSuccessEnabled && legacy.VideoSuccessWebhookUrl != "" {
+		addTrigger(legacy.VideoSuccessWebhookUrl, "Video Success", func(g *triggerGroup) {
+			g.triggerVideoSuccess = true
+			g.videoSuccessTemplate = legacy.VideoSuccessTemplate
+		})
+	}
+	if legacy.LiveSuccessEnabled && legacy.LiveSuccessWebhookUrl != "" {
+		addTrigger(legacy.LiveSuccessWebhookUrl, "Live Success", func(g *triggerGroup) {
+			g.triggerLiveSuccess = true
+			g.liveSuccessTemplate = legacy.LiveSuccessTemplate
+		})
+	}
+	if legacy.ErrorEnabled && legacy.ErrorWebhookUrl != "" {
+		addTrigger(legacy.ErrorWebhookUrl, "Error", func(g *triggerGroup) {
+			g.triggerError = true
+			g.errorTemplate = legacy.ErrorTemplate
+		})
+	}
+	if legacy.IsLiveEnabled && legacy.IsLiveWebhookUrl != "" {
+		addTrigger(legacy.IsLiveWebhookUrl, "Is Live", func(g *triggerGroup) {
+			g.triggerIsLive = true
+			g.isLiveTemplate = legacy.IsLiveTemplate
+		})
+	}
+
+	if len(groups) == 0 {
+		log.Debug().Msg("no legacy notifications to migrate")
+		return nil
+	}
+
+	for url, g := range groups {
+		// Build a descriptive name
+		name := "Migrated Webhook"
+		if len(groups) > 1 {
+			name = "Migrated: " + g.name
+		}
+
+		builder := s.Store.Client.Notification.Create().
+			SetName(name).
+			SetEnabled(true).
+			SetType(entNotification.TypeWebhook).
+			SetURL(url).
+			SetTriggerVideoSuccess(g.triggerVideoSuccess).
+			SetTriggerLiveSuccess(g.triggerLiveSuccess).
+			SetTriggerError(g.triggerError).
+			SetTriggerIsLive(g.triggerIsLive)
+
+		if g.videoSuccessTemplate != "" {
+			builder.SetVideoSuccessTemplate(g.videoSuccessTemplate)
+		}
+		if g.liveSuccessTemplate != "" {
+			builder.SetLiveSuccessTemplate(g.liveSuccessTemplate)
+		}
+		if g.errorTemplate != "" {
+			builder.SetErrorTemplate(g.errorTemplate)
+		}
+		if g.isLiveTemplate != "" {
+			builder.SetIsLiveTemplate(g.isLiveTemplate)
+		}
+
+		if _, err := builder.Save(ctx); err != nil {
+			return fmt.Errorf("error creating migrated notification for %s: %w", url, err)
+		}
+
+		log.Info().Str("name", name).Str("url", url).Msg("migrated legacy notification to database")
+	}
+
+	log.Info().Int("count", len(groups)).Msg("legacy notification migration complete")
+	return nil
 }
 
 // DeleteNotification deletes a notification configuration by ID.

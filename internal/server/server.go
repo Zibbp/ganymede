@@ -148,6 +148,14 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodService := blocked.NewService(db)
 	notificationService := notification.NewService(db)
+
+	// Migrate legacy config.json notifications to database (idempotent)
+	if legacyNotif := config.ReadLegacyNotifications(); legacyNotif != nil {
+		if err := notificationService.MigrateFromLegacyConfig(ctx, legacyNotif); err != nil {
+			log.Error().Err(err).Msg("error migrating legacy notifications from config.json")
+		}
+	}
+
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch)
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
