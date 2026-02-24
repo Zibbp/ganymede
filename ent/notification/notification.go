@@ -108,18 +108,32 @@ var (
 	DefaultTriggerIsLive bool
 	// DefaultVideoSuccessTemplate holds the default value on creation for the "video_success_template" field.
 	DefaultVideoSuccessTemplate string
+	// VideoSuccessTemplateValidator is a validator for the "video_success_template" field. It is called by the builders before save.
+	VideoSuccessTemplateValidator func(string) error
 	// DefaultLiveSuccessTemplate holds the default value on creation for the "live_success_template" field.
 	DefaultLiveSuccessTemplate string
+	// LiveSuccessTemplateValidator is a validator for the "live_success_template" field. It is called by the builders before save.
+	LiveSuccessTemplateValidator func(string) error
 	// DefaultErrorTemplate holds the default value on creation for the "error_template" field.
 	DefaultErrorTemplate string
+	// ErrorTemplateValidator is a validator for the "error_template" field. It is called by the builders before save.
+	ErrorTemplateValidator func(string) error
 	// DefaultIsLiveTemplate holds the default value on creation for the "is_live_template" field.
 	DefaultIsLiveTemplate string
+	// IsLiveTemplateValidator is a validator for the "is_live_template" field. It is called by the builders before save.
+	IsLiveTemplateValidator func(string) error
 	// DefaultAppriseUrls holds the default value on creation for the "apprise_urls" field.
 	DefaultAppriseUrls string
+	// AppriseUrlsValidator is a validator for the "apprise_urls" field. It is called by the builders before save.
+	AppriseUrlsValidator func(string) error
 	// DefaultAppriseTitle holds the default value on creation for the "apprise_title" field.
 	DefaultAppriseTitle string
+	// AppriseTitleValidator is a validator for the "apprise_title" field. It is called by the builders before save.
+	AppriseTitleValidator func(string) error
 	// DefaultAppriseTag holds the default value on creation for the "apprise_tag" field.
 	DefaultAppriseTag string
+	// AppriseTagValidator is a validator for the "apprise_tag" field. It is called by the builders before save.
+	AppriseTagValidator func(string) error
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.

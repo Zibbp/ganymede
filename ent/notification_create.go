@@ -429,18 +429,53 @@ func (_c *NotificationCreate) check() error {
 	if _, ok := _c.mutation.VideoSuccessTemplate(); !ok {
 		return &ValidationError{Name: "video_success_template", err: errors.New(`ent: missing required field "Notification.video_success_template"`)}
 	}
+	if v, ok := _c.mutation.VideoSuccessTemplate(); ok {
+		if err := notification.VideoSuccessTemplateValidator(v); err != nil {
+			return &ValidationError{Name: "video_success_template", err: fmt.Errorf(`ent: validator failed for field "Notification.video_success_template": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.LiveSuccessTemplate(); !ok {
 		return &ValidationError{Name: "live_success_template", err: errors.New(`ent: missing required field "Notification.live_success_template"`)}
+	}
+	if v, ok := _c.mutation.LiveSuccessTemplate(); ok {
+		if err := notification.LiveSuccessTemplateValidator(v); err != nil {
+			return &ValidationError{Name: "live_success_template", err: fmt.Errorf(`ent: validator failed for field "Notification.live_success_template": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.ErrorTemplate(); !ok {
 		return &ValidationError{Name: "error_template", err: errors.New(`ent: missing required field "Notification.error_template"`)}
 	}
+	if v, ok := _c.mutation.ErrorTemplate(); ok {
+		if err := notification.ErrorTemplateValidator(v); err != nil {
+			return &ValidationError{Name: "error_template", err: fmt.Errorf(`ent: validator failed for field "Notification.error_template": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.IsLiveTemplate(); !ok {
 		return &ValidationError{Name: "is_live_template", err: errors.New(`ent: missing required field "Notification.is_live_template"`)}
+	}
+	if v, ok := _c.mutation.IsLiveTemplate(); ok {
+		if err := notification.IsLiveTemplateValidator(v); err != nil {
+			return &ValidationError{Name: "is_live_template", err: fmt.Errorf(`ent: validator failed for field "Notification.is_live_template": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.AppriseUrls(); ok {
+		if err := notification.AppriseUrlsValidator(v); err != nil {
+			return &ValidationError{Name: "apprise_urls", err: fmt.Errorf(`ent: validator failed for field "Notification.apprise_urls": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.AppriseTitle(); ok {
+		if err := notification.AppriseTitleValidator(v); err != nil {
+			return &ValidationError{Name: "apprise_title", err: fmt.Errorf(`ent: validator failed for field "Notification.apprise_title": %w`, err)}
+		}
 	}
 	if v, ok := _c.mutation.AppriseType(); ok {
 		if err := notification.AppriseTypeValidator(v); err != nil {
 			return &ValidationError{Name: "apprise_type", err: fmt.Errorf(`ent: validator failed for field "Notification.apprise_type": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.AppriseTag(); ok {
+		if err := notification.AppriseTagValidator(v); err != nil {
+			return &ValidationError{Name: "apprise_tag", err: fmt.Errorf(`ent: validator failed for field "Notification.apprise_tag": %w`, err)}
 		}
 	}
 	if v, ok := _c.mutation.AppriseFormat(); ok {
