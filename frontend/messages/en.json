@@ -267,17 +267,7 @@
     },
     "applicationSettings": {
       "header": "Application Settings",
-      "registrationEnabledLabel": "Registration Enabled",
-      "notificationSettingsButton": "Notification Settings",
-      "enabledLabel": "Enabled",
-      "testButton": "Test",
-      "webhookUrlLabel": "Webhook URL",
-      "templateLabel": "Template",
-      "availableVariables": "Available variables to use in the template:",
-      "videoArchiveSuccessNotification": "Video Archive Success Notification",
-      "liveArchiveSuccessNotification": "Live Archive Success Notification",
-      "channelIsLiveNotification": "Channel is Live Notification",
-      "errorNotification": "Error Notification"
+      "registrationEnabledLabel": "Registration Enabled"
     },
     "archiveSettings": {
       "header": "Archive Settings",

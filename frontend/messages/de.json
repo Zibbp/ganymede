@@ -267,17 +267,7 @@
     },
     "applicationSettings": {
       "header": "Anwendungseinstellungen",
-      "registrationEnabledLabel": "Registrierung aktiviert",
-      "notificationSettingsButton": "Benachrichtigungseinstellungen",
-      "enabledLabel": "Aktiviert",
-      "testButton": "Testen",
-      "webhookUrlLabel": "Webhook-URL",
-      "templateLabel": "Vorlage",
-      "availableVariables": "Verfügbare Variablen zur Verwendung in der Vorlage:",
-      "videoArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Video-Archivierung",
-      "liveArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Live-Archivierung",
-      "channelIsLiveNotification": "Kanal ist Live-Benachrichtigung",
-      "errorNotification": "Fehlerbenachrichtigung"
+      "registrationEnabledLabel": "Registrierung aktiviert"
     },
     "archiveSettings": {
       "header": "Archivierungs-Einstellungen",

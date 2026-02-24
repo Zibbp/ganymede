@@ -22,6 +22,7 @@ import { useForm } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { DataTable } from "mantine-datatable";
 import { useState } from "react";
+import { AxiosError } from "axios";
 import { IconEdit, IconPlayerPlay, IconTrash } from "@tabler/icons-react";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
@@ -39,6 +40,17 @@ import {
   useTestNotification,
 } from "@/app/hooks/useNotification";
 import { usePageTitle } from "@/app/util/util";
+
+// Extract error message from axios error or generic Error
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof AxiosError && error.response?.data?.message) {
+    return error.response.data.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+};
 
 // Template variable definitions grouped by category
 const CHANNEL_VARS = ["channel_id", "channel_ext_id", "channel_display_name"];
@@ -172,6 +184,11 @@ const AdminNotificationsPage = () => {
         errors.is_live_template = "Template is required when trigger is enabled";
       }
 
+      // Apprise requires at least one of urls or tag
+      if (values.type === NotificationType.Apprise && !values.apprise_urls.trim() && !values.apprise_tag.trim()) {
+        errors.apprise_urls = "Either Apprise URLs (stateless) or Apprise Tag (stateful) is required";
+      }
+
       return errors;
     },
   });
@@ -233,7 +250,7 @@ const AdminNotificationsPage = () => {
     } catch (error) {
       showNotification({
         title: "Error",
-        message: `Failed to ${editingNotification ? "update" : "create"} notification`,
+        message: getErrorMessage(error, `Failed to ${editingNotification ? "update" : "create"} notification`),
         color: "red",
       });
     }
@@ -254,7 +271,7 @@ const AdminNotificationsPage = () => {
     } catch (error) {
       showNotification({
         title: "Error",
-        message: "Failed to delete notification",
+        message: getErrorMessage(error, "Failed to delete notification"),
         color: "red",
       });
     }
@@ -276,7 +293,7 @@ const AdminNotificationsPage = () => {
     } catch (error) {
       showNotification({
         title: "Error",
-        message: "Failed to send test notification",
+        message: getErrorMessage(error, "Failed to send test notification"),
         color: "red",
       });
     }

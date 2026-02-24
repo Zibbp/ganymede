@@ -267,17 +267,7 @@
     },
     "applicationSettings": {
       "header": "Налаштування застосунку",
-      "registrationEnabledLabel": "Увімкнути реєстрацію",
-      "notificationSettingsButton": "Налаштування сповіщень",
-      "enabledLabel": "Увімкнено",
-      "testButton": "Тестове сповіщення",
-      "webhookUrlLabel": "Webhook URL",
-      "templateLabel": "Шаблон",
-      "availableVariables": "Доступні змінні для використання в шаблоні:",
-      "videoArchiveSuccessNotification": "Сповіщення про успішне архівування VOD'у",
-      "liveArchiveSuccessNotification": "Сповіщення про успішне архівування трансляції",
-      "channelIsLiveNotification": "Сповіщення про початок трансляції",
-      "errorNotification": "Сповіщення про помилку"
+      "registrationEnabledLabel": "Увімкнути реєстрацію"
     },
     "archiveSettings": {
       "header": "Налаштування архівування",
