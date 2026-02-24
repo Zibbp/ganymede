@@ -1,8 +1,8 @@
 "use client"
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText"
 import { useAxiosPrivate } from "@/app/hooks/useAxios"
-import { Config, NotificationType, ProxyListItem, ProxyType, useEditConfig, useGetConfig, useTestNotification } from "@/app/hooks/useConfig"
-import { ActionIcon, Button, Card, Checkbox, Code, Collapse, Container, Flex, MultiSelect, NumberInput, Select, Text, Textarea, TextInput, Title } from "@mantine/core"
+import { Config, ProxyListItem, ProxyType, useEditConfig, useGetConfig } from "@/app/hooks/useConfig"
+import { ActionIcon, Button, Card, Checkbox, Code, Collapse, Container, MultiSelect, NumberInput, Select, Text, Textarea, TextInput, Title } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
@@ -21,12 +21,9 @@ interface SelectOption {
 const AdminSettingsPage = () => {
   const t = useTranslations('AdminSettingsPage');
   usePageTitle(t('title'))
-  const [notificationsOpened, { toggle: toggleNotifications }] = useDisclosure(false);
   const [storageTemplateOpened, { toggle: toggleStorageTemplate }] = useDisclosure(false);
   const [channelSelect, setChannelSelect] = useState<SelectOption[]>([]);
   const axiosPrivate = useAxiosPrivate()
-
-  const testNotificationMutate = useTestNotification()
 
   const editConfigMutate = useEditConfig()
 
@@ -53,20 +50,6 @@ const AdminSettingsPage = () => {
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
         generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true
-      },
-      notifications: {
-        video_success_webhook_url: data?.notifications.video_success_webhook_url || "",
-        video_success_template: data?.notifications.video_success_template || "",
-        video_success_enabled: data?.notifications.video_success_enabled ?? false,
-        live_success_webhook_url: data?.notifications.live_success_webhook_url || "",
-        live_success_template: data?.notifications.live_success_template || "",
-        live_success_enabled: data?.notifications.live_success_enabled ?? false,
-        error_webhook_url: data?.notifications.error_webhook_url || "",
-        error_template: data?.notifications.error_template || "",
-        error_enabled: data?.notifications.error_enabled ?? false,
-        is_live_webhook_url: data?.notifications.is_live_webhook_url || "",
-        is_live_template: data?.notifications.is_live_template || "",
-        is_live_enabled: data?.notifications.is_live_enabled ?? false,
       },
       storage_templates: {
         folder_template: data?.storage_templates.folder_template || "",
@@ -150,207 +133,6 @@ const AdminSettingsPage = () => {
               key={form.key('registration_enabled')}
               {...form.getInputProps('registration_enabled', { type: "checkbox" })}
             />
-
-            <Button
-              mt={15}
-              onClick={toggleNotifications}
-              fullWidth
-              radius="md"
-              size="md"
-              variant="outline"
-              color="orange"
-            >
-              {t('applicationSettings.notificationSettingsButton')}
-            </Button>
-
-            <Collapse in={notificationsOpened} px={25} pt={10}>
-              <Text>Must be a webhook URL or an Apprise HTTP URL, visit the <a href="https://github.com/Zibbp/ganymede/wiki/Notifications" target="_blank">wiki</a> for more information.</Text>
-
-              {/* video archive success */}
-              <Title order={3}>{t('applicationSettings.videoArchiveSuccessNotification')}</Title>
-              <Flex>
-                <Checkbox
-                  mt={10}
-                  label={t('applicationSettings.enabledLabel')}
-                  key={form.key('notifications.video_success_enabled')}
-                  {...form.getInputProps('notifications.video_success_enabled', { type: "checkbox" })}
-                  mr={15}
-                />
-                <Button variant="outline" color="violet"
-                  onClick={() => testNotificationMutate.mutate({ axiosPrivate, type: NotificationType.VideoSuccess })}>
-                  {t('applicationSettings.testButton')}
-                </Button>
-              </Flex>
-              <TextInput
-                label={t('applicationSettings.webhookUrlLabel')}
-                placeholder="https://webhook.curl"
-                key={form.key('notifications.video_success_webhook_url')}
-                {...form.getInputProps('notifications.video_success_webhook_url')}
-              />
-              <Textarea
-                label={t('applicationSettings.templateLabel')}
-                placeholder=""
-                key={form.key('notifications.video_success_template')}
-                {...form.getInputProps('notifications.video_success_template')}
-              />
-
-              <Text>{t('applicationSettings.availableVariables')}:</Text>
-              <div>
-                <Text>Channel</Text>
-                <Code>
-                  {"{{channel_id}} {{channel_ext_id}} {{channel_display_name}}"}
-                </Code>
-                <Text>Video</Text>
-                <Code>
-                  {
-                    "{{vod_id}} {{vod_ext_id}} {{vod_platform}} {{vod_type}} {{vod_title}} {{vod_duration}} {{vod_views}} {{vod_resolution}} {{vod_streamed_at}} {{vod_created_at}}"
-                  }
-                </Code>
-                <Text>Queue</Text>
-                <Code>{"{{queue_id}} {{queue_created_at}}"}</Code>
-              </div>
-
-              {/* live archive success */}
-              <Title order={3}>{t('applicationSettings.liveArchiveSuccessNotification')}</Title>
-              <Flex>
-                <Checkbox
-                  mt={10}
-                  label={t('applicationSettings.enabledLabel')}
-                  key={form.key('notifications.live_success_enabled')}
-                  {...form.getInputProps('notifications.live_success_enabled', { type: "checkbox" })}
-                  mr={15}
-                />
-                <Button variant="outline" color="violet"
-                  onClick={() => testNotificationMutate.mutate({ axiosPrivate, type: NotificationType.LiveSuccess })}>
-                  {t('applicationSettings.testButton')}
-                </Button>
-              </Flex>
-              <TextInput
-                label={t('applicationSettings.webhookUrlLabel')}
-                placeholder="https://webhook.curl"
-                key={form.key('notifications.live_success_webhook_url')}
-                {...form.getInputProps('notifications.live_success_webhook_url')}
-              />
-              <Textarea
-                label={t('applicationSettings.templateLabel')}
-                placeholder=""
-                key={form.key('notifications.live_success_template')}
-                {...form.getInputProps('notifications.live_success_template')}
-              />
-
-              <Text>{t('applicationSettings.availableVariables')}:</Text>
-              <div>
-                <Text>Channel</Text>
-                <Code>
-                  {"{{channel_id}} {{channel_ext_id}} {{channel_display_name}}"}
-                </Code>
-                <Text>Video</Text>
-                <Code>
-                  {
-                    "{{vod_id}} {{vod_ext_id}} {{vod_platform}} {{vod_type}} {{vod_title}} {{vod_duration}} {{vod_views}} {{vod_resolution}} {{vod_streamed_at}} {{vod_created_at}}"
-                  }
-                </Code>
-                <Text>Queue</Text>
-                <Code>{"{{queue_id}} {{queue_created_at}}"}</Code>
-              </div>
-
-              {/* is live */}
-              <Title order={3}>{t('applicationSettings.channelIsLiveNotification')}</Title>
-              <Flex>
-                <Checkbox
-                  mt={10}
-                  label={t('applicationSettings.enabledLabel')}
-                  key={form.key('notifications.is_live_enabled')}
-                  {...form.getInputProps('notifications.is_live_enabled', { type: "checkbox" })}
-                  mr={15}
-                />
-                <Button variant="outline" color="violet"
-                  onClick={() => testNotificationMutate.mutate({ axiosPrivate, type: NotificationType.IsLive })}>
-                  {t('applicationSettings.testButton')}
-                </Button>
-              </Flex>
-              <TextInput
-                label={t('applicationSettings.webhookUrlLabel')}
-                placeholder="https://webhook.curl"
-                key={form.key('notifications.is_live_webhook_url')}
-                {...form.getInputProps('notifications.is_live_webhook_url')}
-              />
-              <Textarea
-                label={t('applicationSettings.templateLabel')}
-                placeholder=""
-                key={form.key('notifications.is_live_template')}
-                {...form.getInputProps('notifications.is_live_template')}
-              />
-
-              <Text>{t('applicationSettings.availableVariables')}:</Text>
-              <div>
-                <Text>Channel</Text>
-                <Code>
-                  {"{{channel_id}} {{channel_ext_id}} {{channel_display_name}}"}
-                </Code>
-                <Text>Video</Text>
-                <Code>
-                  {
-                    "{{vod_id}} {{vod_ext_id}} {{vod_platform}} {{vod_type}} {{vod_title}} {{vod_duration}} {{vod_views}} {{vod_resolution}} {{vod_streamed_at}} {{vod_created_at}}"
-                  }
-                </Code>
-                <Text>Live Stream</Text>
-                <Code>
-                  {
-                    "{{category}}"
-                  }
-                </Code>
-                <Text>Queue</Text>
-                <Code>{"{{queue_id}} {{queue_created_at}}"}</Code>
-              </div>
-
-              {/* error */}
-              <Title order={3}>{t('applicationSettings.errorNotification')}</Title>
-              <Flex>
-                <Checkbox
-                  mt={10}
-                  label={t('applicationSettings.enabledLabel')}
-                  key={form.key('notifications.error_enabled')}
-                  {...form.getInputProps('notifications.error_enabled', { type: "checkbox" })}
-                  mr={15}
-                />
-                <Button variant="outline" color="violet"
-                  onClick={() => testNotificationMutate.mutate({ axiosPrivate, type: NotificationType.Error })}>
-                  {t('applicationSettings.testButton')}
-                </Button>
-              </Flex>
-              <TextInput
-                label={t('applicationSettings.webhookUrlLabel')}
-                placeholder="https://webhook.curl"
-                key={form.key('notifications.error_webhook_url')}
-                {...form.getInputProps('notifications.error_webhook_url')}
-              />
-              <Textarea
-                label={t('applicationSettings.templateLabel')}
-                placeholder=""
-                key={form.key('notifications.error_template')}
-                {...form.getInputProps('notifications.error_template')}
-              />
-
-              <Text>{t('applicationSettings.availableVariables')}:</Text>
-              <div>
-                <Text>Task</Text>
-                <Code>{"{{failed_task}}"}</Code>
-                <Text>Channel</Text>
-                <Code>
-                  {"{{channel_id}} {{channel_ext_id}} {{channel_display_name}}"}
-                </Code>
-                <Text>Video</Text>
-                <Code>
-                  {
-                    "{{vod_id}} {{vod_ext_id}} {{vod_platform}} {{vod_type}} {{vod_title}} {{vod_duration}} {{vod_views}} {{vod_resolution}} {{vod_streamed_at}} {{vod_created_at}}"
-                  }
-                </Code>
-                <Text>Queue</Text>
-                <Code>{"{{queue_id}} {{queue_created_at}}"}</Code>
-              </div>
-
-            </Collapse>
 
             <Title mt={10} order={3}>{t('archiveSettings.header')}</Title>
 
