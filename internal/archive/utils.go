@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/config"
+	"github.com/zibbp/ganymede/internal/storagetemplate"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -16,17 +17,23 @@ var (
 )
 
 type StorageTemplateInput struct {
-	UUID    uuid.UUID
-	ID      string
-	Channel string
-	Title   string
-	Type    string
-	Date    string // parsed date
-	YYYY    string // year
-	MM      string // month
-	DD      string // day
-	HH      string // hour
+	UUID               uuid.UUID
+	ID                 string
+	Channel            string
+	ChannelID          string // external platform ID (e.g., Twitch User ID)
+	ChannelDisplayName string // channel display name
+	Title              string
+	Type               string
+	Date               string // parsed date
+	YYYY               string // year
+	MM                 string // month
+	DD                 string // day
+	HH                 string // hour
 }
+
+// ChannelTemplateInput is an alias for storagetemplate.ChannelTemplateInput
+// so callers in the archive package can use it without importing storagetemplate directly.
+type ChannelTemplateInput = storagetemplate.ChannelTemplateInput
 
 func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 
@@ -92,20 +99,30 @@ func GetFileName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 	return fileTemplate, nil
 }
 
+// GetChannelFolderName resolves the channel-level folder name from the channel_folder_template config.
+// The default template is "{{channel}}" which preserves backward compatibility.
+// This delegates to the storagetemplate package so that other packages (e.g. tasks)
+// can also resolve channel folder names without importing archive.
+func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
+	return storagetemplate.GetChannelFolderName(input)
+}
+
 func getVariableMap(uuid uuid.UUID, input StorageTemplateInput) (map[string]interface{}, error) {
 	safeTitle := utils.SanitizeFileName(input.Title)
 
 	variables := map[string]interface{}{
-		"uuid":    uuid.String(),
-		"id":      input.ID,
-		"channel": input.Channel,
-		"title":   safeTitle,
-		"date":    input.Date,
-		"type":    input.Type,
-		"YYYY":    input.YYYY,
-		"MM":      input.MM,
-		"DD":      input.DD,
-		"HH":      input.HH,
+		"uuid":                 uuid.String(),
+		"id":                   input.ID,
+		"channel":              input.Channel,
+		"channel_id":           input.ChannelID,
+		"channel_display_name": input.ChannelDisplayName,
+		"title":                safeTitle,
+		"date":                 input.Date,
+		"type":                 input.Type,
+		"YYYY":                 input.YYYY,
+		"MM":                   input.MM,
+		"DD":                   input.DD,
+		"HH":                   input.HH,
 	}
 	return variables, nil
 }
