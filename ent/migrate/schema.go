@@ -210,9 +210,9 @@ var (
 		{Name: "is_live_template", Type: field.TypeString, Size: 4096, Default: "🔴 {{channel_display_name}} is live!"},
 		{Name: "apprise_urls", Type: field.TypeString, Nullable: true, Size: 4096, Default: ""},
 		{Name: "apprise_title", Type: field.TypeString, Nullable: true, Size: 4096, Default: ""},
-		{Name: "apprise_type", Type: field.TypeEnum, Nullable: true, Enums: []string{"info", "success", "warning", "failure"}, Default: "info"},
+		{Name: "apprise_type", Type: field.TypeEnum, Enums: []string{"info", "success", "warning", "failure"}, Default: "info"},
 		{Name: "apprise_tag", Type: field.TypeString, Nullable: true, Size: 255, Default: ""},
-		{Name: "apprise_format", Type: field.TypeEnum, Nullable: true, Enums: []string{"text", "html", "markdown"}, Default: "text"},
+		{Name: "apprise_format", Type: field.TypeEnum, Enums: []string{"text", "html", "markdown"}, Default: "text"},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 	}

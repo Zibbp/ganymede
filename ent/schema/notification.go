@@ -37,9 +37,9 @@ func (Notification) Fields() []ent.Field {
 		// Apprise-specific fields (optional, only used when type=apprise)
 		field.String("apprise_urls").Optional().Default("").MaxLen(4096).Comment("Stateless Apprise URLs parameter."),
 		field.String("apprise_title").Optional().Default("").MaxLen(4096).Comment("Apprise notification title template."),
-		field.Enum("apprise_type").Values("info", "success", "warning", "failure").Default("info").Optional().Comment("Apprise notification type."),
+		field.Enum("apprise_type").Values("info", "success", "warning", "failure").Default("info").Comment("Apprise notification type."),
 		field.String("apprise_tag").Optional().Default("").MaxLen(255).Comment("Apprise tag for stateful mode."),
-		field.Enum("apprise_format").Values("text", "html", "markdown").Default("text").Optional().Comment("Apprise message format."),
+		field.Enum("apprise_format").Values("text", "html", "markdown").Default("text").Comment("Apprise message format."),
 
 		// Timestamps
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),

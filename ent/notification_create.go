@@ -468,6 +468,9 @@ func (_c *NotificationCreate) check() error {
 			return &ValidationError{Name: "apprise_title", err: fmt.Errorf(`ent: validator failed for field "Notification.apprise_title": %w`, err)}
 		}
 	}
+	if _, ok := _c.mutation.AppriseType(); !ok {
+		return &ValidationError{Name: "apprise_type", err: errors.New(`ent: missing required field "Notification.apprise_type"`)}
+	}
 	if v, ok := _c.mutation.AppriseType(); ok {
 		if err := notification.AppriseTypeValidator(v); err != nil {
 			return &ValidationError{Name: "apprise_type", err: fmt.Errorf(`ent: validator failed for field "Notification.apprise_type": %w`, err)}
@@ -477,6 +480,9 @@ func (_c *NotificationCreate) check() error {
 		if err := notification.AppriseTagValidator(v); err != nil {
 			return &ValidationError{Name: "apprise_tag", err: fmt.Errorf(`ent: validator failed for field "Notification.apprise_tag": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.AppriseFormat(); !ok {
+		return &ValidationError{Name: "apprise_format", err: errors.New(`ent: missing required field "Notification.apprise_format"`)}
 	}
 	if v, ok := _c.mutation.AppriseFormat(); ok {
 		if err := notification.AppriseFormatValidator(v); err != nil {
@@ -845,12 +851,6 @@ func (u *NotificationUpsert) UpdateAppriseType() *NotificationUpsert {
 	return u
 }
 
-// ClearAppriseType clears the value of the "apprise_type" field.
-func (u *NotificationUpsert) ClearAppriseType() *NotificationUpsert {
-	u.SetNull(notification.FieldAppriseType)
-	return u
-}
-
 // SetAppriseTag sets the "apprise_tag" field.
 func (u *NotificationUpsert) SetAppriseTag(v string) *NotificationUpsert {
 	u.Set(notification.FieldAppriseTag, v)
@@ -878,12 +878,6 @@ func (u *NotificationUpsert) SetAppriseFormat(v notification.AppriseFormat) *Not
 // UpdateAppriseFormat sets the "apprise_format" field to the value that was provided on create.
 func (u *NotificationUpsert) UpdateAppriseFormat() *NotificationUpsert {
 	u.SetExcluded(notification.FieldAppriseFormat)
-	return u
-}
-
-// ClearAppriseFormat clears the value of the "apprise_format" field.
-func (u *NotificationUpsert) ClearAppriseFormat() *NotificationUpsert {
-	u.SetNull(notification.FieldAppriseFormat)
 	return u
 }
 
@@ -1174,13 +1168,6 @@ func (u *NotificationUpsertOne) UpdateAppriseType() *NotificationUpsertOne {
 	})
 }
 
-// ClearAppriseType clears the value of the "apprise_type" field.
-func (u *NotificationUpsertOne) ClearAppriseType() *NotificationUpsertOne {
-	return u.Update(func(s *NotificationUpsert) {
-		s.ClearAppriseType()
-	})
-}
-
 // SetAppriseTag sets the "apprise_tag" field.
 func (u *NotificationUpsertOne) SetAppriseTag(v string) *NotificationUpsertOne {
 	return u.Update(func(s *NotificationUpsert) {
@@ -1213,13 +1200,6 @@ func (u *NotificationUpsertOne) SetAppriseFormat(v notification.AppriseFormat) *
 func (u *NotificationUpsertOne) UpdateAppriseFormat() *NotificationUpsertOne {
 	return u.Update(func(s *NotificationUpsert) {
 		s.UpdateAppriseFormat()
-	})
-}
-
-// ClearAppriseFormat clears the value of the "apprise_format" field.
-func (u *NotificationUpsertOne) ClearAppriseFormat() *NotificationUpsertOne {
-	return u.Update(func(s *NotificationUpsert) {
-		s.ClearAppriseFormat()
 	})
 }
 
@@ -1679,13 +1659,6 @@ func (u *NotificationUpsertBulk) UpdateAppriseType() *NotificationUpsertBulk {
 	})
 }
 
-// ClearAppriseType clears the value of the "apprise_type" field.
-func (u *NotificationUpsertBulk) ClearAppriseType() *NotificationUpsertBulk {
-	return u.Update(func(s *NotificationUpsert) {
-		s.ClearAppriseType()
-	})
-}
-
 // SetAppriseTag sets the "apprise_tag" field.
 func (u *NotificationUpsertBulk) SetAppriseTag(v string) *NotificationUpsertBulk {
 	return u.Update(func(s *NotificationUpsert) {
@@ -1718,13 +1691,6 @@ func (u *NotificationUpsertBulk) SetAppriseFormat(v notification.AppriseFormat) 
 func (u *NotificationUpsertBulk) UpdateAppriseFormat() *NotificationUpsertBulk {
 	return u.Update(func(s *NotificationUpsert) {
 		s.UpdateAppriseFormat()
-	})
-}
-
-// ClearAppriseFormat clears the value of the "apprise_format" field.
-func (u *NotificationUpsertBulk) ClearAppriseFormat() *NotificationUpsertBulk {
-	return u.Update(func(s *NotificationUpsert) {
-		s.ClearAppriseFormat()
 	})
 }
 

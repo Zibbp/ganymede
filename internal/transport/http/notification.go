@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -64,6 +66,66 @@ type UpdateNotificationRequest struct {
 	AppriseFormat        string `json:"apprise_format" validate:"omitempty,oneof=text html markdown"`
 }
 
+// NotificationResponse is a DTO that avoids the ent-generated omitempty on bool fields,
+// ensuring false values are always included in JSON responses.
+type NotificationResponse struct {
+	ID                   uuid.UUID `json:"id"`
+	Name                 string    `json:"name"`
+	Enabled              bool      `json:"enabled"`
+	Type                 string    `json:"type"`
+	URL                  string    `json:"url"`
+	TriggerVideoSuccess  bool      `json:"trigger_video_success"`
+	TriggerLiveSuccess   bool      `json:"trigger_live_success"`
+	TriggerError         bool      `json:"trigger_error"`
+	TriggerIsLive        bool      `json:"trigger_is_live"`
+	VideoSuccessTemplate string    `json:"video_success_template"`
+	LiveSuccessTemplate  string    `json:"live_success_template"`
+	ErrorTemplate        string    `json:"error_template"`
+	IsLiveTemplate       string    `json:"is_live_template"`
+	AppriseUrls          string    `json:"apprise_urls"`
+	AppriseTitle         string    `json:"apprise_title"`
+	AppriseType          string    `json:"apprise_type"`
+	AppriseTag           string    `json:"apprise_tag"`
+	AppriseFormat        string    `json:"apprise_format"`
+	UpdatedAt            time.Time `json:"updated_at"`
+	CreatedAt            time.Time `json:"created_at"`
+}
+
+// toNotificationResponse converts an ent.Notification to a NotificationResponse DTO.
+func toNotificationResponse(n *ent.Notification) NotificationResponse {
+	return NotificationResponse{
+		ID:                   n.ID,
+		Name:                 n.Name,
+		Enabled:              n.Enabled,
+		Type:                 string(n.Type),
+		URL:                  n.URL,
+		TriggerVideoSuccess:  n.TriggerVideoSuccess,
+		TriggerLiveSuccess:   n.TriggerLiveSuccess,
+		TriggerError:         n.TriggerError,
+		TriggerIsLive:        n.TriggerIsLive,
+		VideoSuccessTemplate: n.VideoSuccessTemplate,
+		LiveSuccessTemplate:  n.LiveSuccessTemplate,
+		ErrorTemplate:        n.ErrorTemplate,
+		IsLiveTemplate:       n.IsLiveTemplate,
+		AppriseUrls:          n.AppriseUrls,
+		AppriseTitle:         n.AppriseTitle,
+		AppriseType:          string(n.AppriseType),
+		AppriseTag:           n.AppriseTag,
+		AppriseFormat:        string(n.AppriseFormat),
+		UpdatedAt:            n.UpdatedAt,
+		CreatedAt:            n.CreatedAt,
+	}
+}
+
+// toNotificationResponses converts a slice of ent.Notification to a slice of NotificationResponse DTOs.
+func toNotificationResponses(notifications []*ent.Notification) []NotificationResponse {
+	result := make([]NotificationResponse, len(notifications))
+	for i, n := range notifications {
+		result[i] = toNotificationResponse(n)
+	}
+	return result
+}
+
 // validateNotificationRequest performs custom validation beyond struct tags.
 func validateNotificationRequest(notifType string, triggerVideoSuccess, triggerLiveSuccess, triggerError, triggerIsLive bool, videoSuccessTemplate, liveSuccessTemplate, errorTemplate, isLiveTemplate, appriseUrls, appriseTag string) error {
 	// At least one trigger must be enabled
@@ -71,22 +133,22 @@ func validateNotificationRequest(notifType string, triggerVideoSuccess, triggerL
 		return fmt.Errorf("at least one trigger must be enabled")
 	}
 
-	// Enabled triggers must have a non-empty template
-	if triggerVideoSuccess && videoSuccessTemplate == "" {
+	// Enabled triggers must have a non-whitespace template
+	if triggerVideoSuccess && strings.TrimSpace(videoSuccessTemplate) == "" {
 		return fmt.Errorf("video success template is required when video success trigger is enabled")
 	}
-	if triggerLiveSuccess && liveSuccessTemplate == "" {
+	if triggerLiveSuccess && strings.TrimSpace(liveSuccessTemplate) == "" {
 		return fmt.Errorf("live success template is required when live success trigger is enabled")
 	}
-	if triggerError && errorTemplate == "" {
+	if triggerError && strings.TrimSpace(errorTemplate) == "" {
 		return fmt.Errorf("error template is required when error trigger is enabled")
 	}
-	if triggerIsLive && isLiveTemplate == "" {
+	if triggerIsLive && strings.TrimSpace(isLiveTemplate) == "" {
 		return fmt.Errorf("is live template is required when is live trigger is enabled")
 	}
 
 	// Apprise requires at least one of urls or tag
-	if notifType == "apprise" && appriseUrls == "" && appriseTag == "" {
+	if notifType == "apprise" && strings.TrimSpace(appriseUrls) == "" && strings.TrimSpace(appriseTag) == "" {
 		return fmt.Errorf("apprise notifications require either apprise_urls (stateless) or apprise_tag (stateful)")
 	}
 
@@ -105,7 +167,7 @@ func (h *Handler) GetNotifications(c echo.Context) error {
 		log.Error().Err(err).Msg("error getting notifications")
 		return ErrorResponse(c, http.StatusInternalServerError, "error getting notifications")
 	}
-	return SuccessResponse(c, notifications, "notifications")
+	return SuccessResponse(c, toNotificationResponses(notifications), "notifications")
 }
 
 // GetNotification returns a single notification configuration.
@@ -123,7 +185,7 @@ func (h *Handler) GetNotification(c echo.Context) error {
 		log.Error().Err(err).Str("id", id.String()).Msg("error getting notification")
 		return ErrorResponse(c, http.StatusInternalServerError, "error getting notification")
 	}
-	return SuccessResponse(c, n, "notification")
+	return SuccessResponse(c, toNotificationResponse(n), "notification")
 }
 
 // CreateNotification creates a new notification configuration.
@@ -169,7 +231,7 @@ func (h *Handler) CreateNotification(c echo.Context) error {
 		log.Error().Err(err).Msg("error creating notification")
 		return ErrorResponse(c, http.StatusInternalServerError, "error creating notification")
 	}
-	return SuccessResponse(c, created, "notification created")
+	return SuccessResponse(c, toNotificationResponse(created), "notification created")
 }
 
 // UpdateNotification updates an existing notification configuration.
@@ -223,7 +285,7 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 		log.Error().Err(err).Str("id", id.String()).Msg("error updating notification")
 		return ErrorResponse(c, http.StatusInternalServerError, "error updating notification")
 	}
-	return SuccessResponse(c, updated, "notification updated")
+	return SuccessResponse(c, toNotificationResponse(updated), "notification updated")
 }
 
 // DeleteNotification deletes a notification configuration.

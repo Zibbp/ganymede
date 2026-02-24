@@ -765,16 +765,6 @@ func AppriseTypeNotIn(vs ...AppriseType) predicate.Notification {
 	return predicate.Notification(sql.FieldNotIn(FieldAppriseType, vs...))
 }
 
-// AppriseTypeIsNil applies the IsNil predicate on the "apprise_type" field.
-func AppriseTypeIsNil() predicate.Notification {
-	return predicate.Notification(sql.FieldIsNull(FieldAppriseType))
-}
-
-// AppriseTypeNotNil applies the NotNil predicate on the "apprise_type" field.
-func AppriseTypeNotNil() predicate.Notification {
-	return predicate.Notification(sql.FieldNotNull(FieldAppriseType))
-}
-
 // AppriseTagEQ applies the EQ predicate on the "apprise_tag" field.
 func AppriseTagEQ(v string) predicate.Notification {
 	return predicate.Notification(sql.FieldEQ(FieldAppriseTag, v))
@@ -868,16 +858,6 @@ func AppriseFormatIn(vs ...AppriseFormat) predicate.Notification {
 // AppriseFormatNotIn applies the NotIn predicate on the "apprise_format" field.
 func AppriseFormatNotIn(vs ...AppriseFormat) predicate.Notification {
 	return predicate.Notification(sql.FieldNotIn(FieldAppriseFormat, vs...))
-}
-
-// AppriseFormatIsNil applies the IsNil predicate on the "apprise_format" field.
-func AppriseFormatIsNil() predicate.Notification {
-	return predicate.Notification(sql.FieldIsNull(FieldAppriseFormat))
-}
-
-// AppriseFormatNotNil applies the NotNil predicate on the "apprise_format" field.
-func AppriseFormatNotNil() predicate.Notification {
-	return predicate.Notification(sql.FieldNotNull(FieldAppriseFormat))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

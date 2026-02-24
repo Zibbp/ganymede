@@ -57,20 +57,14 @@ func (s *Service) CreateNotification(ctx context.Context, n *ent.Notification) (
 		SetVideoSuccessTemplate(n.VideoSuccessTemplate).
 		SetLiveSuccessTemplate(n.LiveSuccessTemplate).
 		SetErrorTemplate(n.ErrorTemplate).
-		SetIsLiveTemplate(n.IsLiveTemplate)
+		SetIsLiveTemplate(n.IsLiveTemplate).
+		SetAppriseUrls(n.AppriseUrls).
+		SetAppriseTitle(n.AppriseTitle).
+		SetAppriseTag(n.AppriseTag)
 
-	// Set Apprise-specific fields
-	if n.AppriseUrls != "" {
-		builder.SetAppriseUrls(n.AppriseUrls)
-	}
-	if n.AppriseTitle != "" {
-		builder.SetAppriseTitle(n.AppriseTitle)
-	}
+	// Enum fields: only set when non-empty so the DB default applies on create
 	if n.AppriseType != "" {
 		builder.SetAppriseType(entNotification.AppriseType(n.AppriseType))
-	}
-	if n.AppriseTag != "" {
-		builder.SetAppriseTag(n.AppriseTag)
 	}
 	if n.AppriseFormat != "" {
 		builder.SetAppriseFormat(entNotification.AppriseFormat(n.AppriseFormat))
@@ -487,27 +481,47 @@ func renderTemplate(tmpl string, variableMap map[string]interface{}) string {
 }
 
 // getVariableMap builds a map of template variables from the provided entities.
-// Nil entities are handled gracefully — their variables will be empty strings.
+// All known keys are always initialized (with empty string defaults for nil entities),
+// so that renderTemplate can replace them even when entities are missing.
 func getVariableMap(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue, failedTask string, category *string) map[string]interface{} {
 	categoryValue := ""
 	if category != nil {
 		categoryValue = *category
 	}
+
+	// Initialize all keys with empty-string defaults
 	variables := map[string]interface{}{
 		// Error
 		"failed_task": failedTask,
 		// Live stream
 		"category": categoryValue,
+		// Channel
+		"channel_id":           "",
+		"channel_ext_id":       "",
+		"channel_display_name": "",
+		// Vod
+		"vod_id":          "",
+		"vod_ext_id":      "",
+		"vod_platform":    "",
+		"vod_type":        "",
+		"vod_title":       "",
+		"vod_duration":    "",
+		"vod_views":       "",
+		"vod_resolution":  "",
+		"vod_streamed_at": "",
+		"vod_created_at":  "",
+		// Queue
+		"queue_id":         "",
+		"queue_created_at": "",
 	}
 
-	// Channel variables
+	// Overwrite with real values when entities are present
 	if channelItem != nil {
 		variables["channel_id"] = channelItem.ID
 		variables["channel_ext_id"] = channelItem.ExtID
 		variables["channel_display_name"] = channelItem.DisplayName
 	}
 
-	// Vod variables
 	if vodItem != nil {
 		variables["vod_id"] = vodItem.ID
 		variables["vod_ext_id"] = vodItem.ExtID
@@ -521,7 +535,6 @@ func getVariableMap(channelItem *ent.Channel, vodItem *ent.Vod, qItem *ent.Queue
 		variables["vod_created_at"] = vodItem.CreatedAt
 	}
 
-	// Queue variables
 	if qItem != nil {
 		variables["queue_id"] = qItem.ID
 		variables["queue_created_at"] = qItem.CreatedAt

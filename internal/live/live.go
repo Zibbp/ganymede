@@ -436,20 +436,24 @@ OUTER:
 				log.Info().Msgf("started live archive of %s", lwc.Edges.Channel.Name)
 
 				// Notification
-				// Fetch channel for notification
+				// Fetch vod for notification and chapter creation
 				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).First(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error getting vod")
 					continue
 				}
-				go func() {
-					defer func() {
-						if r := recover(); r != nil {
-							log.Error().Interface("panic", r).Msg("panic in SendLive notification")
-						}
+				if s.NotificationService != nil {
+					// Use a detached context so the notification is not cancelled when the parent context ends
+					notifCtx := context.WithoutCancel(ctx)
+					go func() {
+						defer func() {
+							if r := recover(); r != nil {
+								log.Error().Interface("panic", r).Msg("panic in SendLive notification")
+							}
+						}()
+						s.NotificationService.SendLive(notifCtx, lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
 					}()
-					s.NotificationService.SendLive(ctx, lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
-				}()
+				}
 
 				// Create initial chapter
 				_, err = s.ChapterService.CreateChapter(chapter.Chapter{

@@ -250,12 +250,6 @@ func (_u *NotificationUpdate) SetNillableAppriseType(v *notification.AppriseType
 	return _u
 }
 
-// ClearAppriseType clears the value of the "apprise_type" field.
-func (_u *NotificationUpdate) ClearAppriseType() *NotificationUpdate {
-	_u.mutation.ClearAppriseType()
-	return _u
-}
-
 // SetAppriseTag sets the "apprise_tag" field.
 func (_u *NotificationUpdate) SetAppriseTag(v string) *NotificationUpdate {
 	_u.mutation.SetAppriseTag(v)
@@ -287,12 +281,6 @@ func (_u *NotificationUpdate) SetNillableAppriseFormat(v *notification.AppriseFo
 	if v != nil {
 		_u.SetAppriseFormat(*v)
 	}
-	return _u
-}
-
-// ClearAppriseFormat clears the value of the "apprise_format" field.
-func (_u *NotificationUpdate) ClearAppriseFormat() *NotificationUpdate {
-	_u.mutation.ClearAppriseFormat()
 	return _u
 }
 
@@ -471,9 +459,6 @@ func (_u *NotificationUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if value, ok := _u.mutation.AppriseType(); ok {
 		_spec.SetField(notification.FieldAppriseType, field.TypeEnum, value)
 	}
-	if _u.mutation.AppriseTypeCleared() {
-		_spec.ClearField(notification.FieldAppriseType, field.TypeEnum)
-	}
 	if value, ok := _u.mutation.AppriseTag(); ok {
 		_spec.SetField(notification.FieldAppriseTag, field.TypeString, value)
 	}
@@ -482,9 +467,6 @@ func (_u *NotificationUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if value, ok := _u.mutation.AppriseFormat(); ok {
 		_spec.SetField(notification.FieldAppriseFormat, field.TypeEnum, value)
-	}
-	if _u.mutation.AppriseFormatCleared() {
-		_spec.ClearField(notification.FieldAppriseFormat, field.TypeEnum)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(notification.FieldUpdatedAt, field.TypeTime, value)
@@ -731,12 +713,6 @@ func (_u *NotificationUpdateOne) SetNillableAppriseType(v *notification.AppriseT
 	return _u
 }
 
-// ClearAppriseType clears the value of the "apprise_type" field.
-func (_u *NotificationUpdateOne) ClearAppriseType() *NotificationUpdateOne {
-	_u.mutation.ClearAppriseType()
-	return _u
-}
-
 // SetAppriseTag sets the "apprise_tag" field.
 func (_u *NotificationUpdateOne) SetAppriseTag(v string) *NotificationUpdateOne {
 	_u.mutation.SetAppriseTag(v)
@@ -768,12 +744,6 @@ func (_u *NotificationUpdateOne) SetNillableAppriseFormat(v *notification.Appris
 	if v != nil {
 		_u.SetAppriseFormat(*v)
 	}
-	return _u
-}
-
-// ClearAppriseFormat clears the value of the "apprise_format" field.
-func (_u *NotificationUpdateOne) ClearAppriseFormat() *NotificationUpdateOne {
-	_u.mutation.ClearAppriseFormat()
 	return _u
 }
 
@@ -982,9 +952,6 @@ func (_u *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notificati
 	if value, ok := _u.mutation.AppriseType(); ok {
 		_spec.SetField(notification.FieldAppriseType, field.TypeEnum, value)
 	}
-	if _u.mutation.AppriseTypeCleared() {
-		_spec.ClearField(notification.FieldAppriseType, field.TypeEnum)
-	}
 	if value, ok := _u.mutation.AppriseTag(); ok {
 		_spec.SetField(notification.FieldAppriseTag, field.TypeString, value)
 	}
@@ -993,9 +960,6 @@ func (_u *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notificati
 	}
 	if value, ok := _u.mutation.AppriseFormat(); ok {
 		_spec.SetField(notification.FieldAppriseFormat, field.TypeEnum, value)
-	}
-	if _u.mutation.AppriseFormatCleared() {
-		_spec.ClearField(notification.FieldAppriseFormat, field.TypeEnum)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(notification.FieldUpdatedAt, field.TypeTime, value)

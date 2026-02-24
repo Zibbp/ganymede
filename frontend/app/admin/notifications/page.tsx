@@ -311,7 +311,7 @@ const AdminNotificationsPage = () => {
 
         <Text mt={5} mb={10}>
           {t("description")}{" "}
-          <a href="https://github.com/Zibbp/ganymede/wiki/Notifications" target="_blank">
+          <a href="https://github.com/Zibbp/ganymede/wiki/Notifications" target="_blank" rel="noopener noreferrer">
             {t("descriptionWikiLink")}
           </a>{" "}
           {t("descriptionEnd")}
@@ -544,7 +544,7 @@ const AdminNotificationsPage = () => {
               <Title order={4} mt={20}>{t("drawer.appriseSettingsTitle")}</Title>
               <Text size="sm" c="dimmed">
                 {t("drawer.appriseSettingsDescription")}{" "}
-                <a href="https://github.com/caronc/apprise-api" target="_blank">
+                <a href="https://github.com/caronc/apprise-api" target="_blank" rel="noopener noreferrer">
                   {t("drawer.appriseSettingsLink")}
                 </a>{" "}
                 {t("drawer.appriseSettingsDescriptionEnd")}

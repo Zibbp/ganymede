@@ -6745,22 +6745,9 @@ func (m *NotificationMutation) OldAppriseType(ctx context.Context) (v notificati
 	return oldValue.AppriseType, nil
 }
 
-// ClearAppriseType clears the value of the "apprise_type" field.
-func (m *NotificationMutation) ClearAppriseType() {
-	m.apprise_type = nil
-	m.clearedFields[notification.FieldAppriseType] = struct{}{}
-}
-
-// AppriseTypeCleared returns if the "apprise_type" field was cleared in this mutation.
-func (m *NotificationMutation) AppriseTypeCleared() bool {
-	_, ok := m.clearedFields[notification.FieldAppriseType]
-	return ok
-}
-
 // ResetAppriseType resets all changes to the "apprise_type" field.
 func (m *NotificationMutation) ResetAppriseType() {
 	m.apprise_type = nil
-	delete(m.clearedFields, notification.FieldAppriseType)
 }
 
 // SetAppriseTag sets the "apprise_tag" field.
@@ -6843,22 +6830,9 @@ func (m *NotificationMutation) OldAppriseFormat(ctx context.Context) (v notifica
 	return oldValue.AppriseFormat, nil
 }
 
-// ClearAppriseFormat clears the value of the "apprise_format" field.
-func (m *NotificationMutation) ClearAppriseFormat() {
-	m.apprise_format = nil
-	m.clearedFields[notification.FieldAppriseFormat] = struct{}{}
-}
-
-// AppriseFormatCleared returns if the "apprise_format" field was cleared in this mutation.
-func (m *NotificationMutation) AppriseFormatCleared() bool {
-	_, ok := m.clearedFields[notification.FieldAppriseFormat]
-	return ok
-}
-
 // ResetAppriseFormat resets all changes to the "apprise_format" field.
 func (m *NotificationMutation) ResetAppriseFormat() {
 	m.apprise_format = nil
-	delete(m.clearedFields, notification.FieldAppriseFormat)
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -7296,14 +7270,8 @@ func (m *NotificationMutation) ClearedFields() []string {
 	if m.FieldCleared(notification.FieldAppriseTitle) {
 		fields = append(fields, notification.FieldAppriseTitle)
 	}
-	if m.FieldCleared(notification.FieldAppriseType) {
-		fields = append(fields, notification.FieldAppriseType)
-	}
 	if m.FieldCleared(notification.FieldAppriseTag) {
 		fields = append(fields, notification.FieldAppriseTag)
-	}
-	if m.FieldCleared(notification.FieldAppriseFormat) {
-		fields = append(fields, notification.FieldAppriseFormat)
 	}
 	return fields
 }
@@ -7325,14 +7293,8 @@ func (m *NotificationMutation) ClearField(name string) error {
 	case notification.FieldAppriseTitle:
 		m.ClearAppriseTitle()
 		return nil
-	case notification.FieldAppriseType:
-		m.ClearAppriseType()
-		return nil
 	case notification.FieldAppriseTag:
 		m.ClearAppriseTag()
-		return nil
-	case notification.FieldAppriseFormat:
-		m.ClearAppriseFormat()
 		return nil
 	}
 	return fmt.Errorf("unknown Notification nullable field %s", name)
