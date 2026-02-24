@@ -133,12 +133,28 @@ func (s *Service) UpdateNotification(ctx context.Context, id uuid.UUID, n *ent.N
 // one notification config. This is idempotent: it skips migration if any notification configs
 // already exist in the database.
 func (s *Service) MigrateFromLegacyConfig(ctx context.Context, legacy *config.LegacyNotification) error {
-	// Skip if there are already notification configs in the database
-	count, err := s.Store.Client.Notification.Query().Count(ctx)
+	// Run the entire migration in a transaction so the count check and all
+	// creates are atomic — a partial failure won't leave orphaned rows that
+	// cause subsequent runs to skip migration.
+	tx, err := s.Store.Client.Tx(ctx)
 	if err != nil {
+		return fmt.Errorf("error starting migration transaction: %w", err)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			_ = tx.Rollback()
+			panic(r)
+		}
+	}()
+
+	// Skip if there are already notification configs in the database
+	count, err := tx.Notification.Query().Count(ctx)
+	if err != nil {
+		_ = tx.Rollback()
 		return fmt.Errorf("error checking existing notifications: %w", err)
 	}
 	if count > 0 {
+		_ = tx.Rollback()
 		log.Debug().Msg("notification configs already exist, skipping legacy migration")
 		return nil
 	}
@@ -196,6 +212,7 @@ func (s *Service) MigrateFromLegacyConfig(ctx context.Context, legacy *config.Le
 	}
 
 	if len(groups) == 0 {
+		_ = tx.Rollback()
 		log.Debug().Msg("no legacy notifications to migrate")
 		return nil
 	}
@@ -207,7 +224,7 @@ func (s *Service) MigrateFromLegacyConfig(ctx context.Context, legacy *config.Le
 			name = "Migrated: " + g.name
 		}
 
-		builder := s.Store.Client.Notification.Create().
+		builder := tx.Notification.Create().
 			SetName(name).
 			SetEnabled(true).
 			SetType(entNotification.TypeWebhook).
@@ -231,6 +248,7 @@ func (s *Service) MigrateFromLegacyConfig(ctx context.Context, legacy *config.Le
 		}
 
 		if _, err := builder.Save(ctx); err != nil {
+			_ = tx.Rollback()
 			return fmt.Errorf("error creating migrated notification for %s: %w", redactURL(url), err)
 		}
 
@@ -238,7 +256,7 @@ func (s *Service) MigrateFromLegacyConfig(ctx context.Context, legacy *config.Le
 	}
 
 	log.Info().Int("count", len(groups)).Msg("legacy notification migration complete")
-	return nil
+	return tx.Commit()
 }
 
 // DeleteNotification deletes a notification configuration by ID.
