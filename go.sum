@@ -484,5 +484,5 @@ gotest.tools/v3 v3.5.2 h1:7koQfIKdy+I8UTetycgUqXWSDwpgv193Ka+qRsmBY8Q=
 gotest.tools/v3 v3.5.2/go.mod h1:LtdLGcnqToBH83WByAAi/wiwSFCArdFIUV/xxN4pcjA=
 moul.io/http2curl/v2 v2.3.0 h1:9r3JfDzWPcbIklMOs2TnIFzDYvfAZvjeavG6EzP7jYs=
 moul.io/http2curl/v2 v2.3.0/go.mod h1:RW4hyBjTWSYDOxapodpNEtX0g5Eb16sxklBqmd2RHcE=
-riverqueue.com/riverui v0.14.0 h1:nDHvKywBSzgvnARjvberwGc5CgBMdIdQM4Mcci3+flU=
-riverqueue.com/riverui v0.14.0/go.mod h1:uUwoeQGDO4+o4ofqenWL2UNuCED5/1/lwnkFKYR9vZw=
+riverqueue.com/riverui v0.15.0 h1:7Xm/tqv63jZrGSv4X2u4zpAvbtXSs835Qk4RFonBDdk=
+riverqueue.com/riverui v0.15.0/go.mod h1:J4fH8+zPe1cqmYWuMWVJdDdMmq1U2UPVofyOczGZNnw=
