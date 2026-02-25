@@ -194,7 +194,15 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 			}
 
 			if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
-				notifSvc.SendLiveArchiveSuccess(ctx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+				notifCtx := context.WithoutCancel(ctx)
+				go func() {
+					defer func() {
+						if r := recover(); r != nil {
+							log.Error().Interface("panic", r).Msg("panic in notification")
+						}
+					}()
+					notifSvc.SendLiveArchiveSuccess(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+				}()
 			}
 
 			// Queue task to calculate video storage usage
@@ -220,7 +228,15 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 			}
 
 			if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
-				notifSvc.SendVideoArchiveSuccess(ctx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+				notifCtx := context.WithoutCancel(ctx)
+				go func() {
+					defer func() {
+						if r := recover(); r != nil {
+							log.Error().Interface("panic", r).Msg("panic in notification")
+						}
+					}()
+					notifSvc.SendVideoArchiveSuccess(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+				}()
 			}
 
 			// Queue task to calculate video storage usage
@@ -411,7 +427,15 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 		}
 		// send error notification
 		if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
-			notifSvc.SendError(ctx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue, job.Kind)
+			notifCtx := context.WithoutCancel(ctx)
+			go func() {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Error().Interface("panic", r).Msg("panic in notification")
+					}
+				}()
+				notifSvc.SendError(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue, job.Kind)
+			}()
 		}
 	}
 	return nil
@@ -446,7 +470,15 @@ func (*CustomErrorHandler) HandlePanic(ctx context.Context, job *rivertype.JobRo
 		}
 		// send error notification
 		if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
-			notifSvc.SendError(ctx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue, job.Kind)
+			notifCtx := context.WithoutCancel(ctx)
+			go func() {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Error().Interface("panic", r).Msg("panic in notification")
+					}
+				}()
+				notifSvc.SendError(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue, job.Kind)
+			}()
 		}
 	}
 

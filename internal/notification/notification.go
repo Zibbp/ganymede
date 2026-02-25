@@ -123,10 +123,8 @@ func (s *Service) UpdateNotification(ctx context.Context, id uuid.UUID, n *ent.N
 		SetAppriseTitle(n.AppriseTitle).
 		SetAppriseTag(n.AppriseTag)
 
-	if n.AppriseType != "" {
+	if n.Type == entNotification.TypeApprise {
 		builder.SetAppriseType(entNotification.AppriseType(n.AppriseType))
-	}
-	if n.AppriseFormat != "" {
 		builder.SetAppriseFormat(entNotification.AppriseFormat(n.AppriseFormat))
 	}
 
@@ -492,12 +490,12 @@ func (s *Service) postJSONWithRetry(ctx context.Context, targetURL string, jsonB
 
 // appriseRequestBody is the JSON payload for Apprise API notifications.
 type appriseRequestBody struct {
-	URLs   string `json:"urls,omitempty"`
-	Body   string `json:"body"`
-	Title  string `json:"title,omitempty"`
-	Type   string `json:"type,omitempty"`
-	Tag    string `json:"tag,omitempty"`
-	Format string `json:"format,omitempty"`
+	URLs   []string `json:"urls,omitempty"`
+	Body   string   `json:"body"`
+	Title  string   `json:"title,omitempty"`
+	Type   string   `json:"type,omitempty"`
+	Tag    string   `json:"tag,omitempty"`
+	Format string   `json:"format,omitempty"`
 }
 
 // sendAppriseWithTitle is used by dispatch methods when the variable map is available
@@ -508,10 +506,16 @@ func (s *Service) sendAppriseWithTitle(ctx context.Context, n *ent.Notification,
 	}
 
 	if n.AppriseUrls != "" {
+		urlsRaw := n.AppriseUrls
 		if variableMap != nil {
-			payload.URLs = renderTemplate(n.AppriseUrls, variableMap)
-		} else {
-			payload.URLs = n.AppriseUrls
+			urlsRaw = renderTemplate(n.AppriseUrls, variableMap)
+		}
+
+		for _, entry := range strings.Split(urlsRaw, ",") {
+			trimmed := strings.TrimSpace(entry)
+			if trimmed != "" {
+				payload.URLs = append(payload.URLs, trimmed)
+			}
 		}
 	}
 	if n.AppriseTitle != "" {
@@ -641,7 +645,7 @@ func getTestVariableMap() map[string]interface{} {
 	now := formatTime(time.Now())
 	return map[string]interface{}{
 		"channel_id":           uuid.New(),
-		"channel_ext_id":       "1234456789",
+		"channel_ext_id":       "123456789",
 		"channel_display_name": "Test Channel",
 		"vod_id":               uuid.New(),
 		"vod_ext_id":           "987654321",
