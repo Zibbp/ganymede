@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/chapter"
@@ -14,7 +15,12 @@ import (
 )
 
 type TwitchGQLPlaybackAccessTokenResponse struct {
-	Data TwitchGQLPlaybackAccessTokenData `json:"data"`
+	Data   TwitchGQLPlaybackAccessTokenData `json:"data"`
+	Errors []TwitchGQLError                 `json:"errors"`
+}
+
+type TwitchGQLError struct {
+	Message string `json:"message"`
 }
 
 type TwitchGQLPlaybackAccessTokenData struct {
@@ -147,41 +153,75 @@ type TwitchGQLNodeVideo struct {
 
 // GQLRequest sends a generic GQL request and returns the response.
 func twitchGQLRequest(body string) ([]byte, error) {
+	return twitchGQLRequestWithAuth(body, true)
+}
+
+// twitchGQLRequestWithAuth sends a generic GQL request and optionally includes the configured Twitch OAuth token.
+func twitchGQLRequestWithAuth(body string, includeAuth bool) ([]byte, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", "https://gql.twitch.tv/gql", strings.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
+	const maxAttempts = 3
 
-	req.Header.Set("Client-ID", "kimne78kx3ncx6brgo4mv6wki5h1ko")
-	req.Header.Set("Content-Type", "text/plain;charset=UTF-8")
-	req.Header.Set("Origin", "https://www.twitch.tv")
-	req.Header.Set("Referer", "https://www.twitch.tv/")
-	req.Header.Set("Sec-Fetch-Mode", "cors")
-	req.Header.Set("Sec-Fetch-Site", "same-site")
-	req.Header.Set("User-Agent", utils.ChromeUserAgent)
-
-	twitchToken := config.Get().Parameters.TwitchToken
-	if twitchToken != "" {
-		req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", twitchToken))
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Debug().Err(err).Msg("error closing response body")
+	var lastErr error
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		req, err := http.NewRequest("POST", "https://gql.twitch.tv/gql", strings.NewReader(body))
+		if err != nil {
+			return nil, fmt.Errorf("error creating request: %w", err)
 		}
-	}()
 
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
+		req.Header.Set("Client-ID", "kimne78kx3ncx6brgo4mv6wki5h1ko")
+		req.Header.Set("Content-Type", "text/plain;charset=UTF-8")
+		req.Header.Set("Origin", "https://www.twitch.tv")
+		req.Header.Set("Referer", "https://www.twitch.tv/")
+		req.Header.Set("Sec-Fetch-Mode", "cors")
+		req.Header.Set("Sec-Fetch-Site", "same-site")
+		req.Header.Set("User-Agent", utils.ChromeUserAgent)
+
+		twitchToken := config.Get().Parameters.TwitchToken
+		if includeAuth && twitchToken != "" {
+			req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", twitchToken))
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("error sending request: %w", err)
+		} else {
+			bodyBytes, readErr := io.ReadAll(resp.Body)
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				log.Debug().Err(closeErr).Msg("error closing response body")
+			}
+
+			if readErr != nil {
+				lastErr = fmt.Errorf("error reading response body: %w", readErr)
+			} else if resp.StatusCode >= http.StatusInternalServerError || resp.StatusCode == http.StatusTooManyRequests {
+				lastErr = fmt.Errorf("received retryable status code: %d", resp.StatusCode)
+			} else {
+				return bodyBytes, nil
+			}
+		}
+
+		if attempt < maxAttempts {
+			time.Sleep(time.Duration(attempt) * 300 * time.Millisecond)
+		}
 	}
 
-	return bodyBytes, nil
+	return nil, lastErr
+}
+
+func parsePlaybackAccessTokenResponse(respBytes []byte) (*TwitchGQLPlaybackAccessToken, error) {
+	var resp TwitchGQLPlaybackAccessTokenResponse
+	if err := json.Unmarshal(respBytes, &resp); err != nil {
+		return nil, fmt.Errorf("error unmarshalling playback access token response: %w", err)
+	}
+
+	if len(resp.Errors) > 0 {
+		return nil, fmt.Errorf("gql playback access token error: %s", resp.Errors[0].Message)
+	}
+
+	if resp.Data.StreamPlaybackAccessToken.Signature == "" || resp.Data.StreamPlaybackAccessToken.Value == "" {
+		return nil, fmt.Errorf("empty playback access token response")
+	}
+
+	return &resp.Data.StreamPlaybackAccessToken, nil
 }
 
 func (c *TwitchConnection) TwitchGQLGetMutedSegments(id string) ([]TwitchGQLMutedSegment, error) {
@@ -247,18 +287,31 @@ func (c *TwitchConnection) TwitchGQLGetPlaybackAccessToken(channel string) (*Twi
 		"query": "query PlaybackAccessToken($isLive: Boolean!, $login: String!, $isVod: Boolean!, $vodID: ID!, $playerType: String!) {\nstreamPlaybackAccessToken(channelName: $login, params: {platform: \"web\", playerBackend: \"mediaplayer\", playerType: $playerType}) @include(if: $isLive) {\nvalue\nsignature\n}\nvideoPlaybackAccessToken(id: $vodID, params: {platform: \"web\", playerBackend: \"mediaplayer\", playerType: $playerType}) @include(if: $isVod) {\nvalue\nsignature\n}\n}"
 	}`, channel)
 
-	respBytes, err := twitchGQLRequest(body)
-	if err != nil {
-		return nil, fmt.Errorf("error getting playback access token: %w", err)
+	twitchToken := config.Get().Parameters.TwitchToken
+	if twitchToken != "" {
+		respBytes, err := twitchGQLRequestWithAuth(body, true)
+		if err != nil {
+			log.Warn().Err(err).Msg("failed to get playback access token with Twitch OAuth token, retrying without token")
+		} else {
+			token, parseErr := parsePlaybackAccessTokenResponse(respBytes)
+			if parseErr == nil {
+				return token, nil
+			}
+			log.Warn().Err(parseErr).Msg("configured Twitch OAuth token appears invalid for playback access, retrying without token")
+		}
 	}
 
-	var resp TwitchGQLPlaybackAccessTokenResponse
-	err = json.Unmarshal(respBytes, &resp)
+	respBytes, err := twitchGQLRequestWithAuth(body, false)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling playback access token response: %w", err)
+		return nil, fmt.Errorf("error getting playback access token without oauth token: %w", err)
 	}
 
-	return &resp.Data.StreamPlaybackAccessToken, nil
+	token, err := parsePlaybackAccessTokenResponse(respBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }
 
 // convertTwitchChaptersToChapters converts Twitch chapters to chapters. Twitch chapters are in milliseconds.
