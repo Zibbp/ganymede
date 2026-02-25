@@ -138,6 +138,11 @@ func (s *Service) UpdateNotification(ctx context.Context, id uuid.UUID, n *ent.N
 // one notification config. This is idempotent: it skips migration if any notification configs
 // already exist in the database.
 func (s *Service) MigrateFromLegacyConfig(ctx context.Context, legacy *config.LegacyNotification) error {
+	if legacy == nil {
+		log.Debug().Msg("no legacy notifications found, skipping migration")
+		return nil
+	}
+
 	// Run the entire migration in a transaction so the count check and all
 	// creates are atomic — a partial failure won't leave orphaned rows that
 	// cause subsequent runs to skip migration.
