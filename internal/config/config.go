@@ -24,7 +24,6 @@ type Config struct {
 		SaveAsHls                bool `json:"save_as_hls"`                // Save as HLS rather than MP4.
 		GenerateSpriteThumbnails bool `json:"generate_sprite_thumbnails"` // Generate sprite thumbnails for scrubbing.
 	} `json:"archive"`
-	Notification     Notification    `json:"notifications"`     // Notification templates and settings.
 	StorageTemplates StorageTemplate `json:"storage_templates"` // Storage folder/file templates.
 	Livestream       struct {
 		Proxies             []ProxyListItem `json:"proxies" validate:"dive"` // List of proxies for live stream download.
@@ -36,10 +35,14 @@ type Config struct {
 	Experimental struct {
 		BetterLiveStreamDetectionAndCleanup bool `json:"better_live_stream_detection_and_cleanup"` // [EXPERIMENTAL] Enable enhanced detection and cleanup.
 	} `json:"experimental"`
+	// Notifications preserves legacy config.json notifications during migration.
+	// Deprecated: notifications are now stored in the database.
+	Notifications *LegacyNotification `json:"notifications,omitempty"`
 }
 
-// Notification defines webhook URLs and templates for various events.
-type Notification struct {
+// LegacyNotification is the old config.json notification format used before
+// the database-backed notification system. It is only used for migration.
+type LegacyNotification struct {
 	VideoSuccessWebhookUrl string `json:"video_success_webhook_url"`
 	VideoSuccessTemplate   string `json:"video_success_template"`
 	VideoSuccessEnabled    bool   `json:"video_success_enabled"`
@@ -52,6 +55,36 @@ type Notification struct {
 	IsLiveWebhookUrl       string `json:"is_live_webhook_url"`
 	IsLiveTemplate         string `json:"is_live_template"`
 	IsLiveEnabled          bool   `json:"is_live_enabled"`
+}
+
+// ReadLegacyNotifications reads the old config.json and returns any legacy notification settings.
+// Returns nil if the config file doesn't exist or has no configured webhook URLs.
+func ReadLegacyNotifications() *LegacyNotification {
+	env := GetEnvConfig()
+	path := env.ConfigDir + "/config.json"
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+
+	var cfg Config
+	cfg.SetDefaults()
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return nil
+	}
+
+	if cfg.Notifications == nil {
+		return nil
+	}
+
+	n := cfg.Notifications
+	// Only return if at least one webhook URL was configured
+	if n.VideoSuccessWebhookUrl == "" && n.LiveSuccessWebhookUrl == "" && n.ErrorWebhookUrl == "" && n.IsLiveWebhookUrl == "" {
+		return nil
+	}
+
+	return n
 }
 
 // StorageTemplate defines folder and file naming patterns.
@@ -166,20 +199,6 @@ func (c *Config) SetDefaults() {
 
 	c.Archive.SaveAsHls = false
 	c.Archive.GenerateSpriteThumbnails = true
-
-	// notifications
-	c.Notification.VideoSuccessWebhookUrl = ""
-	c.Notification.VideoSuccessTemplate = "✅ Video Archived: {{vod_title}} by {{channel_display_name}}."
-	c.Notification.VideoSuccessEnabled = true
-	c.Notification.LiveSuccessWebhookUrl = ""
-	c.Notification.LiveSuccessTemplate = "✅ Live Stream Archived: {{vod_title}} by {{channel_display_name}}."
-	c.Notification.LiveSuccessEnabled = true
-	c.Notification.ErrorWebhookUrl = ""
-	c.Notification.ErrorTemplate = "⚠️ Error: Queue {{queue_id}} failed at task {{failed_task}}."
-	c.Notification.ErrorEnabled = true
-	c.Notification.IsLiveWebhookUrl = ""
-	c.Notification.IsLiveTemplate = "🔴 {{channel_display_name}} is live!"
-	c.Notification.IsLiveEnabled = true
 
 	// storage templates
 	c.StorageTemplates.FolderTemplate = "{{date}}-{{id}}-{{type}}-{{uuid}}"

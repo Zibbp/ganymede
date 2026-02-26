@@ -28,6 +28,8 @@ type Tx struct {
 	MultistreamInfo *MultistreamInfoClient
 	// MutedSegment is the client for interacting with the MutedSegment builders.
 	MutedSegment *MutedSegmentClient
+	// Notification is the client for interacting with the Notification builders.
+	Notification *NotificationClient
 	// Playback is the client for interacting with the Playback builders.
 	Playback *PlaybackClient
 	// Playlist is the client for interacting with the Playlist builders.
@@ -185,6 +187,7 @@ func (tx *Tx) init() {
 	tx.LiveTitleRegex = NewLiveTitleRegexClient(tx.config)
 	tx.MultistreamInfo = NewMultistreamInfoClient(tx.config)
 	tx.MutedSegment = NewMutedSegmentClient(tx.config)
+	tx.Notification = NewNotificationClient(tx.config)
 	tx.Playback = NewPlaybackClient(tx.config)
 	tx.Playlist = NewPlaylistClient(tx.config)
 	tx.PlaylistRule = NewPlaylistRuleClient(tx.config)

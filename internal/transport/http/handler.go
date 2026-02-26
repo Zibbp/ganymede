@@ -43,6 +43,7 @@ type Services struct {
 	ChapterService      ChapterService
 	CategoryService     CategoryService
 	BlockedVideoService BlockedVideoService
+	NotificationService NotificationService
 	PlatformTwitch      platform.Platform
 }
 
@@ -55,7 +56,7 @@ type Handler struct {
 
 var sessionManager *scs.SessionManager
 
-func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
+func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, notificationService NotificationService, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
 	log.Debug().Msg("creating route handler")
 	envConfig := config.GetEnvConfig()
 
@@ -84,6 +85,7 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 			ChapterService:      chapterService,
 			CategoryService:     categoryService,
 			BlockedVideoService: blockedVideoService,
+			NotificationService: notificationService,
 			PlatformTwitch:      platformTwitch,
 		},
 		SessionManager: sessionManager,
@@ -106,7 +108,12 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 	h.Server.HideBanner = true
 
 	// If frontend is external then allow cors
+	// AllowOriginFunc reflects the request origin so credentials work (browsers
+	// reject Access-Control-Allow-Origin: * with credentials).
 	h.Server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOriginFunc: func(origin string) (bool, error) {
+			return true, nil
+		},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 		AllowCredentials: true,
 	}))
@@ -313,7 +320,12 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 
 	// Notification
 	notificationGroup := e.Group("/notification")
-	notificationGroup.POST("/test", h.TestNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	notificationGroup.GET("", h.GetNotifications, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	notificationGroup.GET("/:id", h.GetNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	notificationGroup.POST("", h.CreateNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	notificationGroup.PUT("/:id", h.UpdateNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	notificationGroup.DELETE("/:id", h.DeleteNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	notificationGroup.POST("/:id/test", h.TestNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 
 	// Chapter
 	chapterGroup := e.Group("/chapter")

@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiResponse } from "./useAxios";
 import { AxiosInstance } from "axios";
 import { User } from "./useAuthentication";
-import { NullResponse } from "./usePlayback";
 
 export interface Config {
   live_check_interval_seconds: number;
@@ -18,7 +17,6 @@ export interface Config {
     save_as_hls: boolean;
     generate_sprite_thumbnails: boolean;
   };
-  notifications: Notification;
   storage_templates: StorageTemplate;
   livestream: {
     proxies: ProxyListItem[];
@@ -26,21 +24,6 @@ export interface Config {
     proxy_whitelist: string[];
     watch_while_archiving: boolean;
   };
-}
-
-export interface Notification {
-  video_success_webhook_url: string;
-  video_success_template: string;
-  video_success_enabled: boolean;
-  live_success_webhook_url: string;
-  live_success_template: string;
-  live_success_enabled: boolean;
-  error_webhook_url: string;
-  error_template: string;
-  error_enabled: boolean;
-  is_live_webhook_url: string;
-  is_live_template: string;
-  is_live_enabled: boolean;
 }
 
 export interface StorageTemplate {
@@ -98,39 +81,4 @@ const useEditConfig = () => {
   });
 };
 
-export enum NotificationType {
-  VideoSuccess = "video_success",
-  LiveSuccess = "live_success",
-  Error = "error",
-  IsLive = "is_live",
-}
-
-const testNotification = async (
-  axiosPrivate: AxiosInstance,
-  type: NotificationType
-): Promise<NullResponse> => {
-  const response = await axiosPrivate.post(
-    `/api/v1/notification/test`,
-    {},
-    {
-      params: {
-        type: type,
-      },
-    }
-  );
-  return response.data.data;
-};
-
-interface TestNotificationVariables {
-  axiosPrivate: AxiosInstance;
-  type: NotificationType;
-}
-
-const useTestNotification = () => {
-  return useMutation<NullResponse, Error, TestNotificationVariables>({
-    mutationFn: ({ axiosPrivate, type }) =>
-      testNotification(axiosPrivate, type),
-  });
-};
-
-export { useEditConfig, useGetConfig, useTestNotification };
+export { useEditConfig, useGetConfig };

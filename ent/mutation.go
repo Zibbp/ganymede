@@ -20,6 +20,7 @@ import (
 	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/mutedsegment"
+	"github.com/zibbp/ganymede/ent/notification"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/playlistrule"
@@ -50,6 +51,7 @@ const (
 	TypeLiveTitleRegex    = "LiveTitleRegex"
 	TypeMultistreamInfo   = "MultistreamInfo"
 	TypeMutedSegment      = "MutedSegment"
+	TypeNotification      = "Notification"
 	TypePlayback          = "Playback"
 	TypePlaylist          = "Playlist"
 	TypePlaylistRule      = "PlaylistRule"
@@ -6045,6 +6047,1370 @@ func (m *MutedSegmentMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown MutedSegment edge %s", name)
+}
+
+// NotificationMutation represents an operation that mutates the Notification nodes in the graph.
+type NotificationMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *uuid.UUID
+	name                   *string
+	enabled                *bool
+	_type                  *notification.Type
+	url                    *string
+	trigger_video_success  *bool
+	trigger_live_success   *bool
+	trigger_error          *bool
+	trigger_is_live        *bool
+	video_success_template *string
+	live_success_template  *string
+	error_template         *string
+	is_live_template       *string
+	apprise_urls           *string
+	apprise_title          *string
+	apprise_type           *notification.AppriseType
+	apprise_tag            *string
+	apprise_format         *notification.AppriseFormat
+	updated_at             *time.Time
+	created_at             *time.Time
+	clearedFields          map[string]struct{}
+	done                   bool
+	oldValue               func(context.Context) (*Notification, error)
+	predicates             []predicate.Notification
+}
+
+var _ ent.Mutation = (*NotificationMutation)(nil)
+
+// notificationOption allows management of the mutation configuration using functional options.
+type notificationOption func(*NotificationMutation)
+
+// newNotificationMutation creates new mutation for the Notification entity.
+func newNotificationMutation(c config, op Op, opts ...notificationOption) *NotificationMutation {
+	m := &NotificationMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeNotification,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withNotificationID sets the ID field of the mutation.
+func withNotificationID(id uuid.UUID) notificationOption {
+	return func(m *NotificationMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Notification
+		)
+		m.oldValue = func(ctx context.Context) (*Notification, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Notification.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withNotification sets the old Notification of the mutation.
+func withNotification(node *Notification) notificationOption {
+	return func(m *NotificationMutation) {
+		m.oldValue = func(context.Context) (*Notification, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m NotificationMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m NotificationMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Notification entities.
+func (m *NotificationMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *NotificationMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *NotificationMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Notification.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *NotificationMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *NotificationMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *NotificationMutation) ResetName() {
+	m.name = nil
+}
+
+// SetEnabled sets the "enabled" field.
+func (m *NotificationMutation) SetEnabled(b bool) {
+	m.enabled = &b
+}
+
+// Enabled returns the value of the "enabled" field in the mutation.
+func (m *NotificationMutation) Enabled() (r bool, exists bool) {
+	v := m.enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnabled returns the old "enabled" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnabled: %w", err)
+	}
+	return oldValue.Enabled, nil
+}
+
+// ResetEnabled resets all changes to the "enabled" field.
+func (m *NotificationMutation) ResetEnabled() {
+	m.enabled = nil
+}
+
+// SetType sets the "type" field.
+func (m *NotificationMutation) SetType(n notification.Type) {
+	m._type = &n
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *NotificationMutation) GetType() (r notification.Type, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldType(ctx context.Context) (v notification.Type, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *NotificationMutation) ResetType() {
+	m._type = nil
+}
+
+// SetURL sets the "url" field.
+func (m *NotificationMutation) SetURL(s string) {
+	m.url = &s
+}
+
+// URL returns the value of the "url" field in the mutation.
+func (m *NotificationMutation) URL() (r string, exists bool) {
+	v := m.url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldURL returns the old "url" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldURL: %w", err)
+	}
+	return oldValue.URL, nil
+}
+
+// ResetURL resets all changes to the "url" field.
+func (m *NotificationMutation) ResetURL() {
+	m.url = nil
+}
+
+// SetTriggerVideoSuccess sets the "trigger_video_success" field.
+func (m *NotificationMutation) SetTriggerVideoSuccess(b bool) {
+	m.trigger_video_success = &b
+}
+
+// TriggerVideoSuccess returns the value of the "trigger_video_success" field in the mutation.
+func (m *NotificationMutation) TriggerVideoSuccess() (r bool, exists bool) {
+	v := m.trigger_video_success
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTriggerVideoSuccess returns the old "trigger_video_success" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldTriggerVideoSuccess(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTriggerVideoSuccess is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTriggerVideoSuccess requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTriggerVideoSuccess: %w", err)
+	}
+	return oldValue.TriggerVideoSuccess, nil
+}
+
+// ResetTriggerVideoSuccess resets all changes to the "trigger_video_success" field.
+func (m *NotificationMutation) ResetTriggerVideoSuccess() {
+	m.trigger_video_success = nil
+}
+
+// SetTriggerLiveSuccess sets the "trigger_live_success" field.
+func (m *NotificationMutation) SetTriggerLiveSuccess(b bool) {
+	m.trigger_live_success = &b
+}
+
+// TriggerLiveSuccess returns the value of the "trigger_live_success" field in the mutation.
+func (m *NotificationMutation) TriggerLiveSuccess() (r bool, exists bool) {
+	v := m.trigger_live_success
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTriggerLiveSuccess returns the old "trigger_live_success" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldTriggerLiveSuccess(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTriggerLiveSuccess is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTriggerLiveSuccess requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTriggerLiveSuccess: %w", err)
+	}
+	return oldValue.TriggerLiveSuccess, nil
+}
+
+// ResetTriggerLiveSuccess resets all changes to the "trigger_live_success" field.
+func (m *NotificationMutation) ResetTriggerLiveSuccess() {
+	m.trigger_live_success = nil
+}
+
+// SetTriggerError sets the "trigger_error" field.
+func (m *NotificationMutation) SetTriggerError(b bool) {
+	m.trigger_error = &b
+}
+
+// TriggerError returns the value of the "trigger_error" field in the mutation.
+func (m *NotificationMutation) TriggerError() (r bool, exists bool) {
+	v := m.trigger_error
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTriggerError returns the old "trigger_error" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldTriggerError(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTriggerError is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTriggerError requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTriggerError: %w", err)
+	}
+	return oldValue.TriggerError, nil
+}
+
+// ResetTriggerError resets all changes to the "trigger_error" field.
+func (m *NotificationMutation) ResetTriggerError() {
+	m.trigger_error = nil
+}
+
+// SetTriggerIsLive sets the "trigger_is_live" field.
+func (m *NotificationMutation) SetTriggerIsLive(b bool) {
+	m.trigger_is_live = &b
+}
+
+// TriggerIsLive returns the value of the "trigger_is_live" field in the mutation.
+func (m *NotificationMutation) TriggerIsLive() (r bool, exists bool) {
+	v := m.trigger_is_live
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTriggerIsLive returns the old "trigger_is_live" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldTriggerIsLive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTriggerIsLive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTriggerIsLive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTriggerIsLive: %w", err)
+	}
+	return oldValue.TriggerIsLive, nil
+}
+
+// ResetTriggerIsLive resets all changes to the "trigger_is_live" field.
+func (m *NotificationMutation) ResetTriggerIsLive() {
+	m.trigger_is_live = nil
+}
+
+// SetVideoSuccessTemplate sets the "video_success_template" field.
+func (m *NotificationMutation) SetVideoSuccessTemplate(s string) {
+	m.video_success_template = &s
+}
+
+// VideoSuccessTemplate returns the value of the "video_success_template" field in the mutation.
+func (m *NotificationMutation) VideoSuccessTemplate() (r string, exists bool) {
+	v := m.video_success_template
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVideoSuccessTemplate returns the old "video_success_template" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldVideoSuccessTemplate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVideoSuccessTemplate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVideoSuccessTemplate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVideoSuccessTemplate: %w", err)
+	}
+	return oldValue.VideoSuccessTemplate, nil
+}
+
+// ResetVideoSuccessTemplate resets all changes to the "video_success_template" field.
+func (m *NotificationMutation) ResetVideoSuccessTemplate() {
+	m.video_success_template = nil
+}
+
+// SetLiveSuccessTemplate sets the "live_success_template" field.
+func (m *NotificationMutation) SetLiveSuccessTemplate(s string) {
+	m.live_success_template = &s
+}
+
+// LiveSuccessTemplate returns the value of the "live_success_template" field in the mutation.
+func (m *NotificationMutation) LiveSuccessTemplate() (r string, exists bool) {
+	v := m.live_success_template
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLiveSuccessTemplate returns the old "live_success_template" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldLiveSuccessTemplate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLiveSuccessTemplate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLiveSuccessTemplate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLiveSuccessTemplate: %w", err)
+	}
+	return oldValue.LiveSuccessTemplate, nil
+}
+
+// ResetLiveSuccessTemplate resets all changes to the "live_success_template" field.
+func (m *NotificationMutation) ResetLiveSuccessTemplate() {
+	m.live_success_template = nil
+}
+
+// SetErrorTemplate sets the "error_template" field.
+func (m *NotificationMutation) SetErrorTemplate(s string) {
+	m.error_template = &s
+}
+
+// ErrorTemplate returns the value of the "error_template" field in the mutation.
+func (m *NotificationMutation) ErrorTemplate() (r string, exists bool) {
+	v := m.error_template
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorTemplate returns the old "error_template" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldErrorTemplate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorTemplate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorTemplate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorTemplate: %w", err)
+	}
+	return oldValue.ErrorTemplate, nil
+}
+
+// ResetErrorTemplate resets all changes to the "error_template" field.
+func (m *NotificationMutation) ResetErrorTemplate() {
+	m.error_template = nil
+}
+
+// SetIsLiveTemplate sets the "is_live_template" field.
+func (m *NotificationMutation) SetIsLiveTemplate(s string) {
+	m.is_live_template = &s
+}
+
+// IsLiveTemplate returns the value of the "is_live_template" field in the mutation.
+func (m *NotificationMutation) IsLiveTemplate() (r string, exists bool) {
+	v := m.is_live_template
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsLiveTemplate returns the old "is_live_template" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldIsLiveTemplate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsLiveTemplate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsLiveTemplate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsLiveTemplate: %w", err)
+	}
+	return oldValue.IsLiveTemplate, nil
+}
+
+// ResetIsLiveTemplate resets all changes to the "is_live_template" field.
+func (m *NotificationMutation) ResetIsLiveTemplate() {
+	m.is_live_template = nil
+}
+
+// SetAppriseUrls sets the "apprise_urls" field.
+func (m *NotificationMutation) SetAppriseUrls(s string) {
+	m.apprise_urls = &s
+}
+
+// AppriseUrls returns the value of the "apprise_urls" field in the mutation.
+func (m *NotificationMutation) AppriseUrls() (r string, exists bool) {
+	v := m.apprise_urls
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAppriseUrls returns the old "apprise_urls" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldAppriseUrls(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAppriseUrls is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAppriseUrls requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAppriseUrls: %w", err)
+	}
+	return oldValue.AppriseUrls, nil
+}
+
+// ClearAppriseUrls clears the value of the "apprise_urls" field.
+func (m *NotificationMutation) ClearAppriseUrls() {
+	m.apprise_urls = nil
+	m.clearedFields[notification.FieldAppriseUrls] = struct{}{}
+}
+
+// AppriseUrlsCleared returns if the "apprise_urls" field was cleared in this mutation.
+func (m *NotificationMutation) AppriseUrlsCleared() bool {
+	_, ok := m.clearedFields[notification.FieldAppriseUrls]
+	return ok
+}
+
+// ResetAppriseUrls resets all changes to the "apprise_urls" field.
+func (m *NotificationMutation) ResetAppriseUrls() {
+	m.apprise_urls = nil
+	delete(m.clearedFields, notification.FieldAppriseUrls)
+}
+
+// SetAppriseTitle sets the "apprise_title" field.
+func (m *NotificationMutation) SetAppriseTitle(s string) {
+	m.apprise_title = &s
+}
+
+// AppriseTitle returns the value of the "apprise_title" field in the mutation.
+func (m *NotificationMutation) AppriseTitle() (r string, exists bool) {
+	v := m.apprise_title
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAppriseTitle returns the old "apprise_title" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldAppriseTitle(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAppriseTitle is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAppriseTitle requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAppriseTitle: %w", err)
+	}
+	return oldValue.AppriseTitle, nil
+}
+
+// ClearAppriseTitle clears the value of the "apprise_title" field.
+func (m *NotificationMutation) ClearAppriseTitle() {
+	m.apprise_title = nil
+	m.clearedFields[notification.FieldAppriseTitle] = struct{}{}
+}
+
+// AppriseTitleCleared returns if the "apprise_title" field was cleared in this mutation.
+func (m *NotificationMutation) AppriseTitleCleared() bool {
+	_, ok := m.clearedFields[notification.FieldAppriseTitle]
+	return ok
+}
+
+// ResetAppriseTitle resets all changes to the "apprise_title" field.
+func (m *NotificationMutation) ResetAppriseTitle() {
+	m.apprise_title = nil
+	delete(m.clearedFields, notification.FieldAppriseTitle)
+}
+
+// SetAppriseType sets the "apprise_type" field.
+func (m *NotificationMutation) SetAppriseType(nt notification.AppriseType) {
+	m.apprise_type = &nt
+}
+
+// AppriseType returns the value of the "apprise_type" field in the mutation.
+func (m *NotificationMutation) AppriseType() (r notification.AppriseType, exists bool) {
+	v := m.apprise_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAppriseType returns the old "apprise_type" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldAppriseType(ctx context.Context) (v notification.AppriseType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAppriseType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAppriseType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAppriseType: %w", err)
+	}
+	return oldValue.AppriseType, nil
+}
+
+// ResetAppriseType resets all changes to the "apprise_type" field.
+func (m *NotificationMutation) ResetAppriseType() {
+	m.apprise_type = nil
+}
+
+// SetAppriseTag sets the "apprise_tag" field.
+func (m *NotificationMutation) SetAppriseTag(s string) {
+	m.apprise_tag = &s
+}
+
+// AppriseTag returns the value of the "apprise_tag" field in the mutation.
+func (m *NotificationMutation) AppriseTag() (r string, exists bool) {
+	v := m.apprise_tag
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAppriseTag returns the old "apprise_tag" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldAppriseTag(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAppriseTag is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAppriseTag requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAppriseTag: %w", err)
+	}
+	return oldValue.AppriseTag, nil
+}
+
+// ClearAppriseTag clears the value of the "apprise_tag" field.
+func (m *NotificationMutation) ClearAppriseTag() {
+	m.apprise_tag = nil
+	m.clearedFields[notification.FieldAppriseTag] = struct{}{}
+}
+
+// AppriseTagCleared returns if the "apprise_tag" field was cleared in this mutation.
+func (m *NotificationMutation) AppriseTagCleared() bool {
+	_, ok := m.clearedFields[notification.FieldAppriseTag]
+	return ok
+}
+
+// ResetAppriseTag resets all changes to the "apprise_tag" field.
+func (m *NotificationMutation) ResetAppriseTag() {
+	m.apprise_tag = nil
+	delete(m.clearedFields, notification.FieldAppriseTag)
+}
+
+// SetAppriseFormat sets the "apprise_format" field.
+func (m *NotificationMutation) SetAppriseFormat(nf notification.AppriseFormat) {
+	m.apprise_format = &nf
+}
+
+// AppriseFormat returns the value of the "apprise_format" field in the mutation.
+func (m *NotificationMutation) AppriseFormat() (r notification.AppriseFormat, exists bool) {
+	v := m.apprise_format
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAppriseFormat returns the old "apprise_format" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldAppriseFormat(ctx context.Context) (v notification.AppriseFormat, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAppriseFormat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAppriseFormat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAppriseFormat: %w", err)
+	}
+	return oldValue.AppriseFormat, nil
+}
+
+// ResetAppriseFormat resets all changes to the "apprise_format" field.
+func (m *NotificationMutation) ResetAppriseFormat() {
+	m.apprise_format = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *NotificationMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *NotificationMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *NotificationMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *NotificationMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *NotificationMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *NotificationMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// Where appends a list predicates to the NotificationMutation builder.
+func (m *NotificationMutation) Where(ps ...predicate.Notification) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the NotificationMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *NotificationMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Notification, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *NotificationMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *NotificationMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Notification).
+func (m *NotificationMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *NotificationMutation) Fields() []string {
+	fields := make([]string, 0, 19)
+	if m.name != nil {
+		fields = append(fields, notification.FieldName)
+	}
+	if m.enabled != nil {
+		fields = append(fields, notification.FieldEnabled)
+	}
+	if m._type != nil {
+		fields = append(fields, notification.FieldType)
+	}
+	if m.url != nil {
+		fields = append(fields, notification.FieldURL)
+	}
+	if m.trigger_video_success != nil {
+		fields = append(fields, notification.FieldTriggerVideoSuccess)
+	}
+	if m.trigger_live_success != nil {
+		fields = append(fields, notification.FieldTriggerLiveSuccess)
+	}
+	if m.trigger_error != nil {
+		fields = append(fields, notification.FieldTriggerError)
+	}
+	if m.trigger_is_live != nil {
+		fields = append(fields, notification.FieldTriggerIsLive)
+	}
+	if m.video_success_template != nil {
+		fields = append(fields, notification.FieldVideoSuccessTemplate)
+	}
+	if m.live_success_template != nil {
+		fields = append(fields, notification.FieldLiveSuccessTemplate)
+	}
+	if m.error_template != nil {
+		fields = append(fields, notification.FieldErrorTemplate)
+	}
+	if m.is_live_template != nil {
+		fields = append(fields, notification.FieldIsLiveTemplate)
+	}
+	if m.apprise_urls != nil {
+		fields = append(fields, notification.FieldAppriseUrls)
+	}
+	if m.apprise_title != nil {
+		fields = append(fields, notification.FieldAppriseTitle)
+	}
+	if m.apprise_type != nil {
+		fields = append(fields, notification.FieldAppriseType)
+	}
+	if m.apprise_tag != nil {
+		fields = append(fields, notification.FieldAppriseTag)
+	}
+	if m.apprise_format != nil {
+		fields = append(fields, notification.FieldAppriseFormat)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, notification.FieldUpdatedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, notification.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *NotificationMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case notification.FieldName:
+		return m.Name()
+	case notification.FieldEnabled:
+		return m.Enabled()
+	case notification.FieldType:
+		return m.GetType()
+	case notification.FieldURL:
+		return m.URL()
+	case notification.FieldTriggerVideoSuccess:
+		return m.TriggerVideoSuccess()
+	case notification.FieldTriggerLiveSuccess:
+		return m.TriggerLiveSuccess()
+	case notification.FieldTriggerError:
+		return m.TriggerError()
+	case notification.FieldTriggerIsLive:
+		return m.TriggerIsLive()
+	case notification.FieldVideoSuccessTemplate:
+		return m.VideoSuccessTemplate()
+	case notification.FieldLiveSuccessTemplate:
+		return m.LiveSuccessTemplate()
+	case notification.FieldErrorTemplate:
+		return m.ErrorTemplate()
+	case notification.FieldIsLiveTemplate:
+		return m.IsLiveTemplate()
+	case notification.FieldAppriseUrls:
+		return m.AppriseUrls()
+	case notification.FieldAppriseTitle:
+		return m.AppriseTitle()
+	case notification.FieldAppriseType:
+		return m.AppriseType()
+	case notification.FieldAppriseTag:
+		return m.AppriseTag()
+	case notification.FieldAppriseFormat:
+		return m.AppriseFormat()
+	case notification.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case notification.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *NotificationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case notification.FieldName:
+		return m.OldName(ctx)
+	case notification.FieldEnabled:
+		return m.OldEnabled(ctx)
+	case notification.FieldType:
+		return m.OldType(ctx)
+	case notification.FieldURL:
+		return m.OldURL(ctx)
+	case notification.FieldTriggerVideoSuccess:
+		return m.OldTriggerVideoSuccess(ctx)
+	case notification.FieldTriggerLiveSuccess:
+		return m.OldTriggerLiveSuccess(ctx)
+	case notification.FieldTriggerError:
+		return m.OldTriggerError(ctx)
+	case notification.FieldTriggerIsLive:
+		return m.OldTriggerIsLive(ctx)
+	case notification.FieldVideoSuccessTemplate:
+		return m.OldVideoSuccessTemplate(ctx)
+	case notification.FieldLiveSuccessTemplate:
+		return m.OldLiveSuccessTemplate(ctx)
+	case notification.FieldErrorTemplate:
+		return m.OldErrorTemplate(ctx)
+	case notification.FieldIsLiveTemplate:
+		return m.OldIsLiveTemplate(ctx)
+	case notification.FieldAppriseUrls:
+		return m.OldAppriseUrls(ctx)
+	case notification.FieldAppriseTitle:
+		return m.OldAppriseTitle(ctx)
+	case notification.FieldAppriseType:
+		return m.OldAppriseType(ctx)
+	case notification.FieldAppriseTag:
+		return m.OldAppriseTag(ctx)
+	case notification.FieldAppriseFormat:
+		return m.OldAppriseFormat(ctx)
+	case notification.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case notification.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Notification field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *NotificationMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case notification.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case notification.FieldEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnabled(v)
+		return nil
+	case notification.FieldType:
+		v, ok := value.(notification.Type)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
+	case notification.FieldURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetURL(v)
+		return nil
+	case notification.FieldTriggerVideoSuccess:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTriggerVideoSuccess(v)
+		return nil
+	case notification.FieldTriggerLiveSuccess:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTriggerLiveSuccess(v)
+		return nil
+	case notification.FieldTriggerError:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTriggerError(v)
+		return nil
+	case notification.FieldTriggerIsLive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTriggerIsLive(v)
+		return nil
+	case notification.FieldVideoSuccessTemplate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVideoSuccessTemplate(v)
+		return nil
+	case notification.FieldLiveSuccessTemplate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLiveSuccessTemplate(v)
+		return nil
+	case notification.FieldErrorTemplate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorTemplate(v)
+		return nil
+	case notification.FieldIsLiveTemplate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsLiveTemplate(v)
+		return nil
+	case notification.FieldAppriseUrls:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAppriseUrls(v)
+		return nil
+	case notification.FieldAppriseTitle:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAppriseTitle(v)
+		return nil
+	case notification.FieldAppriseType:
+		v, ok := value.(notification.AppriseType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAppriseType(v)
+		return nil
+	case notification.FieldAppriseTag:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAppriseTag(v)
+		return nil
+	case notification.FieldAppriseFormat:
+		v, ok := value.(notification.AppriseFormat)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAppriseFormat(v)
+		return nil
+	case notification.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case notification.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Notification field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *NotificationMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *NotificationMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *NotificationMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Notification numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *NotificationMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(notification.FieldAppriseUrls) {
+		fields = append(fields, notification.FieldAppriseUrls)
+	}
+	if m.FieldCleared(notification.FieldAppriseTitle) {
+		fields = append(fields, notification.FieldAppriseTitle)
+	}
+	if m.FieldCleared(notification.FieldAppriseTag) {
+		fields = append(fields, notification.FieldAppriseTag)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *NotificationMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *NotificationMutation) ClearField(name string) error {
+	switch name {
+	case notification.FieldAppriseUrls:
+		m.ClearAppriseUrls()
+		return nil
+	case notification.FieldAppriseTitle:
+		m.ClearAppriseTitle()
+		return nil
+	case notification.FieldAppriseTag:
+		m.ClearAppriseTag()
+		return nil
+	}
+	return fmt.Errorf("unknown Notification nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *NotificationMutation) ResetField(name string) error {
+	switch name {
+	case notification.FieldName:
+		m.ResetName()
+		return nil
+	case notification.FieldEnabled:
+		m.ResetEnabled()
+		return nil
+	case notification.FieldType:
+		m.ResetType()
+		return nil
+	case notification.FieldURL:
+		m.ResetURL()
+		return nil
+	case notification.FieldTriggerVideoSuccess:
+		m.ResetTriggerVideoSuccess()
+		return nil
+	case notification.FieldTriggerLiveSuccess:
+		m.ResetTriggerLiveSuccess()
+		return nil
+	case notification.FieldTriggerError:
+		m.ResetTriggerError()
+		return nil
+	case notification.FieldTriggerIsLive:
+		m.ResetTriggerIsLive()
+		return nil
+	case notification.FieldVideoSuccessTemplate:
+		m.ResetVideoSuccessTemplate()
+		return nil
+	case notification.FieldLiveSuccessTemplate:
+		m.ResetLiveSuccessTemplate()
+		return nil
+	case notification.FieldErrorTemplate:
+		m.ResetErrorTemplate()
+		return nil
+	case notification.FieldIsLiveTemplate:
+		m.ResetIsLiveTemplate()
+		return nil
+	case notification.FieldAppriseUrls:
+		m.ResetAppriseUrls()
+		return nil
+	case notification.FieldAppriseTitle:
+		m.ResetAppriseTitle()
+		return nil
+	case notification.FieldAppriseType:
+		m.ResetAppriseType()
+		return nil
+	case notification.FieldAppriseTag:
+		m.ResetAppriseTag()
+		return nil
+	case notification.FieldAppriseFormat:
+		m.ResetAppriseFormat()
+		return nil
+	case notification.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case notification.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Notification field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *NotificationMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *NotificationMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *NotificationMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *NotificationMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *NotificationMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *NotificationMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *NotificationMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Notification unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *NotificationMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Notification edge %s", name)
 }
 
 // PlaybackMutation represents an operation that mutates the Playback nodes in the graph.

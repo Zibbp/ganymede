@@ -24,6 +24,7 @@ import (
 	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/mutedsegment"
+	"github.com/zibbp/ganymede/ent/notification"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/playlistrule"
@@ -56,6 +57,8 @@ type Client struct {
 	MultistreamInfo *MultistreamInfoClient
 	// MutedSegment is the client for interacting with the MutedSegment builders.
 	MutedSegment *MutedSegmentClient
+	// Notification is the client for interacting with the Notification builders.
+	Notification *NotificationClient
 	// Playback is the client for interacting with the Playback builders.
 	Playback *PlaybackClient
 	// Playlist is the client for interacting with the Playlist builders.
@@ -93,6 +96,7 @@ func (c *Client) init() {
 	c.LiveTitleRegex = NewLiveTitleRegexClient(c.config)
 	c.MultistreamInfo = NewMultistreamInfoClient(c.config)
 	c.MutedSegment = NewMutedSegmentClient(c.config)
+	c.Notification = NewNotificationClient(c.config)
 	c.Playback = NewPlaybackClient(c.config)
 	c.Playlist = NewPlaylistClient(c.config)
 	c.PlaylistRule = NewPlaylistRuleClient(c.config)
@@ -202,6 +206,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		LiveTitleRegex:    NewLiveTitleRegexClient(cfg),
 		MultistreamInfo:   NewMultistreamInfoClient(cfg),
 		MutedSegment:      NewMutedSegmentClient(cfg),
+		Notification:      NewNotificationClient(cfg),
 		Playback:          NewPlaybackClient(cfg),
 		Playlist:          NewPlaylistClient(cfg),
 		PlaylistRule:      NewPlaylistRuleClient(cfg),
@@ -238,6 +243,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		LiveTitleRegex:    NewLiveTitleRegexClient(cfg),
 		MultistreamInfo:   NewMultistreamInfoClient(cfg),
 		MutedSegment:      NewMutedSegmentClient(cfg),
+		Notification:      NewNotificationClient(cfg),
 		Playback:          NewPlaybackClient(cfg),
 		Playlist:          NewPlaylistClient(cfg),
 		PlaylistRule:      NewPlaylistRuleClient(cfg),
@@ -277,8 +283,9 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
-		c.MultistreamInfo, c.MutedSegment, c.Playback, c.Playlist, c.PlaylistRule,
-		c.PlaylistRuleGroup, c.Queue, c.Sessions, c.TwitchCategory, c.User, c.Vod,
+		c.MultistreamInfo, c.MutedSegment, c.Notification, c.Playback, c.Playlist,
+		c.PlaylistRule, c.PlaylistRuleGroup, c.Queue, c.Sessions, c.TwitchCategory,
+		c.User, c.Vod,
 	} {
 		n.Use(hooks...)
 	}
@@ -289,8 +296,9 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory, c.LiveTitleRegex,
-		c.MultistreamInfo, c.MutedSegment, c.Playback, c.Playlist, c.PlaylistRule,
-		c.PlaylistRuleGroup, c.Queue, c.Sessions, c.TwitchCategory, c.User, c.Vod,
+		c.MultistreamInfo, c.MutedSegment, c.Notification, c.Playback, c.Playlist,
+		c.PlaylistRule, c.PlaylistRuleGroup, c.Queue, c.Sessions, c.TwitchCategory,
+		c.User, c.Vod,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -315,6 +323,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.MultistreamInfo.mutate(ctx, m)
 	case *MutedSegmentMutation:
 		return c.MutedSegment.mutate(ctx, m)
+	case *NotificationMutation:
+		return c.Notification.mutate(ctx, m)
 	case *PlaybackMutation:
 		return c.Playback.mutate(ctx, m)
 	case *PlaylistMutation:
@@ -1575,6 +1585,139 @@ func (c *MutedSegmentClient) mutate(ctx context.Context, m *MutedSegmentMutation
 		return (&MutedSegmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown MutedSegment mutation op: %q", m.Op())
+	}
+}
+
+// NotificationClient is a client for the Notification schema.
+type NotificationClient struct {
+	config
+}
+
+// NewNotificationClient returns a client for the Notification from the given config.
+func NewNotificationClient(c config) *NotificationClient {
+	return &NotificationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `notification.Hooks(f(g(h())))`.
+func (c *NotificationClient) Use(hooks ...Hook) {
+	c.hooks.Notification = append(c.hooks.Notification, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `notification.Intercept(f(g(h())))`.
+func (c *NotificationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Notification = append(c.inters.Notification, interceptors...)
+}
+
+// Create returns a builder for creating a Notification entity.
+func (c *NotificationClient) Create() *NotificationCreate {
+	mutation := newNotificationMutation(c.config, OpCreate)
+	return &NotificationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Notification entities.
+func (c *NotificationClient) CreateBulk(builders ...*NotificationCreate) *NotificationCreateBulk {
+	return &NotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *NotificationClient) MapCreateBulk(slice any, setFunc func(*NotificationCreate, int)) *NotificationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &NotificationCreateBulk{err: fmt.Errorf("calling to NotificationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*NotificationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &NotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Notification.
+func (c *NotificationClient) Update() *NotificationUpdate {
+	mutation := newNotificationMutation(c.config, OpUpdate)
+	return &NotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NotificationClient) UpdateOne(_m *Notification) *NotificationUpdateOne {
+	mutation := newNotificationMutation(c.config, OpUpdateOne, withNotification(_m))
+	return &NotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NotificationClient) UpdateOneID(id uuid.UUID) *NotificationUpdateOne {
+	mutation := newNotificationMutation(c.config, OpUpdateOne, withNotificationID(id))
+	return &NotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Notification.
+func (c *NotificationClient) Delete() *NotificationDelete {
+	mutation := newNotificationMutation(c.config, OpDelete)
+	return &NotificationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NotificationClient) DeleteOne(_m *Notification) *NotificationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NotificationClient) DeleteOneID(id uuid.UUID) *NotificationDeleteOne {
+	builder := c.Delete().Where(notification.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NotificationDeleteOne{builder}
+}
+
+// Query returns a query builder for Notification.
+func (c *NotificationClient) Query() *NotificationQuery {
+	return &NotificationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNotification},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Notification entity by its id.
+func (c *NotificationClient) Get(ctx context.Context, id uuid.UUID) (*Notification, error) {
+	return c.Query().Where(notification.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NotificationClient) GetX(ctx context.Context, id uuid.UUID) *Notification {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *NotificationClient) Hooks() []Hook {
+	return c.hooks.Notification
+}
+
+// Interceptors returns the client interceptors.
+func (c *NotificationClient) Interceptors() []Interceptor {
+	return c.inters.Notification
+}
+
+func (c *NotificationClient) mutate(ctx context.Context, m *NotificationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NotificationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NotificationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Notification mutation op: %q", m.Op())
 	}
 }
 
@@ -2987,12 +3130,12 @@ func (c *VodClient) mutate(ctx context.Context, m *VodMutation) (Value, error) {
 type (
 	hooks struct {
 		BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
-		MultistreamInfo, MutedSegment, Playback, Playlist, PlaylistRule,
+		MultistreamInfo, MutedSegment, Notification, Playback, Playlist, PlaylistRule,
 		PlaylistRuleGroup, Queue, Sessions, TwitchCategory, User, Vod []ent.Hook
 	}
 	inters struct {
 		BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
-		MultistreamInfo, MutedSegment, Playback, Playlist, PlaylistRule,
+		MultistreamInfo, MutedSegment, Notification, Playback, Playlist, PlaylistRule,
 		PlaylistRuleGroup, Queue, Sessions, TwitchCategory, User, Vod []ent.Interceptor
 	}
 )
