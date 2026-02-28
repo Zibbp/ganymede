@@ -19,16 +19,18 @@ func TestGetFolderName(t *testing.T) {
 	// Setup test input
 	testUUID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 	input := archive.StorageTemplateInput{
-		UUID:    testUUID,
-		ID:      "testid",
-		Channel: "testchannel",
-		Title:   "Test Title",
-		Type:    "video",
-		Date:    "2025-08-04",
-		YYYY:    "2025",
-		MM:      "08",
-		DD:      "04",
-		HH:      "12",
+		UUID:               testUUID,
+		ID:                 "testid",
+		Channel:            "testchannel",
+		ChannelID:          "12345",
+		ChannelDisplayName: "TestChannel",
+		Title:              "Test Title",
+		Type:               "video",
+		Date:               "2025-08-04",
+		YYYY:               "2025",
+		MM:                 "08",
+		DD:                 "04",
+		HH:                 "12",
 	}
 
 	tests := []struct {
@@ -52,7 +54,19 @@ func TestGetFolderName(t *testing.T) {
 		{
 			name:        "custom template with granular date",
 			template:    "s{{YYYY}}{{MM}}-{{DD}}{{HH}} - {{title}}",
-			expected:    "s202508-0412 - Test_Title",
+			expected:    "s202508-0412_-_Test_Title",
+			expectError: false,
+		},
+		{
+			name:        "template with channel_id variable",
+			template:    "{{channel_id}}-{{id}}-{{uuid}}",
+			expected:    "12345-testid-123e4567-e89b-12d3-a456-426614174000",
+			expectError: false,
+		},
+		{
+			name:        "template with channel_display_name variable",
+			template:    "{{channel_display_name}}-{{date}}-{{id}}",
+			expected:    "TestChannel-2025-08-04-testid",
 			expectError: false,
 		},
 	}
@@ -91,16 +105,18 @@ func TestGetFileName(t *testing.T) {
 	// Setup test input
 	testUUID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 	input := archive.StorageTemplateInput{
-		UUID:    testUUID,
-		ID:      "testid",
-		Channel: "testchannel",
-		Title:   "Test Title",
-		Type:    "video",
-		Date:    "2025-08-04",
-		YYYY:    "2025",
-		MM:      "08",
-		DD:      "04",
-		HH:      "12",
+		UUID:               testUUID,
+		ID:                 "testid",
+		Channel:            "testchannel",
+		ChannelID:          "12345",
+		ChannelDisplayName: "TestChannel",
+		Title:              "Test Title",
+		Type:               "video",
+		Date:               "2025-08-04",
+		YYYY:               "2025",
+		MM:                 "08",
+		DD:                 "04",
+		HH:                 "12",
 	}
 
 	tests := []struct {
@@ -124,7 +140,7 @@ func TestGetFileName(t *testing.T) {
 		{
 			name:        "custom template with granular date",
 			template:    "s{{YYYY}}{{MM}}-{{DD}}{{HH}} - {{title}}.mp4",
-			expected:    "s202508-0412 - Test_Title.mp4",
+			expected:    "s202508-0412_-_Test_Title.mp4",
 			expectError: false,
 		},
 	}
@@ -151,4 +167,129 @@ func TestGetFileName(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestGetChannelFolderName tests the GetChannelFolderName function with various templates and inputs.
+func TestGetChannelFolderName(t *testing.T) {
+	// Setup the application
+	_, err := tests.Setup(t)
+	assert.NoError(t, err)
+
+	// Setup test input
+	channelInput := archive.ChannelTemplateInput{
+		ChannelName:        "testchannel",
+		ChannelID:          "12345",
+		ChannelDisplayName: "TestChannel",
+	}
+
+	tests := []struct {
+		name        string
+		template    string
+		expected    string
+		expectError bool
+	}{
+		{
+			name:        "default template (channel login name)",
+			template:    "{{channel}}",
+			expected:    "testchannel",
+			expectError: false,
+		},
+		{
+			name:        "channel ID template",
+			template:    "{{channel_id}}",
+			expected:    "12345",
+			expectError: false,
+		},
+		{
+			name:        "channel display name template",
+			template:    "{{channel_display_name}}",
+			expected:    "TestChannel",
+			expectError: false,
+		},
+		{
+			name:        "mixed template with ID and name",
+			template:    "{{channel_id}}_{{channel}}",
+			expected:    "12345_testchannel",
+			expectError: false,
+		},
+		{
+			name:        "invalid variable",
+			template:    "{{invalid_var}}",
+			expected:    "",
+			expectError: true,
+		},
+		{
+			name:        "path traversal in template literal has separators stripped",
+			template:    "../../etc",
+			expected:    ".._.._etc",
+			expectError: false,
+		},
+		{
+			name:        "path separator in template literal is sanitized",
+			template:    "foo/bar",
+			expected:    "foo_bar",
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.template != "" {
+				c := config.Get()
+				c.StorageTemplates.ChannelFolderTemplate = tt.template
+				assert.NoError(t, config.UpdateConfig(c), "failed to update config with template")
+			}
+			result, err := archive.GetChannelFolderName(channelInput)
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("expected error but got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+				if result != tt.expected {
+					t.Errorf("GetChannelFolderName() = %q, expected %q", result, tt.expected)
+				}
+			}
+		})
+	}
+
+	// Test with unsafe display name containing path traversal characters.
+	// SanitizeFileName strips path separators (/ and \) but keeps dots,
+	// so ".." remnants are harmless (they're flat directory name chars, not traversal).
+	t.Run("display name with path traversal has separators stripped", func(t *testing.T) {
+		c := config.Get()
+		c.StorageTemplates.ChannelFolderTemplate = "{{channel_display_name}}"
+		assert.NoError(t, config.UpdateConfig(c), "failed to update config with template")
+
+		unsafeInput := archive.ChannelTemplateInput{
+			ChannelName:        "testchannel",
+			ChannelID:          "12345",
+			ChannelDisplayName: "../../etc/passwd",
+		}
+		result, err := archive.GetChannelFolderName(unsafeInput)
+		assert.NoError(t, err)
+		// Path separators must be stripped — no traversal possible
+		assert.NotContains(t, result, "/")
+		assert.NotContains(t, result, "\\")
+		assert.Equal(t, ".._.._etc_passwd", result)
+	})
+
+	// Test that an empty variable value returns an error instead of
+	// silently producing "unnamed_file" (which would cause collisions).
+	t.Run("empty channel_id returns error", func(t *testing.T) {
+		c := config.Get()
+		c.StorageTemplates.ChannelFolderTemplate = "{{channel_id}}"
+		assert.NoError(t, config.UpdateConfig(c), "failed to update config with template")
+
+		emptyInput := archive.ChannelTemplateInput{
+			ChannelName:        "testchannel",
+			ChannelID:          "",
+			ChannelDisplayName: "TestChannel",
+		}
+		_, err := archive.GetChannelFolderName(emptyInput)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "resolved to empty string")
+	})
 }

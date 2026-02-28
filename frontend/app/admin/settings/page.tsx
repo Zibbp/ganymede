@@ -54,6 +54,7 @@ const AdminSettingsPage = () => {
       storage_templates: {
         folder_template: data?.storage_templates.folder_template || "",
         file_template: data?.storage_templates.file_template || "",
+        channel_folder_template: data?.storage_templates.channel_folder_template || "{{channel}}",
       },
       livestream: {
         proxies: data?.livestream.proxies || [],
@@ -67,8 +68,16 @@ const AdminSettingsPage = () => {
   useEffect(() => {
     if (!data || !form) return
 
-    form.setValues(data)
-    form.resetDirty(data)
+    const dataWithDefaults = {
+      ...data,
+      storage_templates: {
+        ...data.storage_templates,
+        channel_folder_template: data.storage_templates.channel_folder_template || "{{channel}}",
+      },
+    }
+
+    form.setValues(dataWithDefaults)
+    form.resetDirty(dataWithDefaults)
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
@@ -191,8 +200,20 @@ const AdminSettingsPage = () => {
                 <Text mb={10}>
                   {t('archiveSettings.storageTemplateSettingsDescription')}
                 </Text>
+
                 <div>
-                  <Title order={4}>{t('archiveSettings.folderTemplateText')}</Title>
+                  <Title order={4}>Channel Folder Template</Title>
+
+                  <Textarea
+                    description="Controls the top-level channel directory name. Use {{channel_id}} for a stable identifier that won't change when a channel renames."
+                    key={form.key('storage_templates.channel_folder_template')}
+                    {...form.getInputProps('storage_templates.channel_folder_template')}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Title mt={10} order={4}>{t('archiveSettings.folderTemplateText')}</Title>
 
                   <Textarea
                     description="{{uuid}} is required to be present for the folder template."
@@ -216,19 +237,24 @@ const AdminSettingsPage = () => {
                 </div>
 
                 <div>
-                  <Title mt={5} order={4}>
+                  <Title mt={10} order={4}>
                     Available Variables
                   </Title>
 
                   <div>
-                    <Text>Ganymede</Text>
+                    <Text fw={600}>Channel (all templates)</Text>
+                    <ul>
+                      <li><Code>{"{{channel}}"}</Code>: Channel login name (lowercase username)</li>
+                      <li><Code>{"{{channel_id}}"}</Code>: External platform ID (e.g., Twitch User ID) - stable, never changes</li>
+                      <li><Code>{"{{channel_display_name}}"}</Code>: Channel display name</li>
+                    </ul>
+                    <Text fw={600}>Ganymede (folder &amp; file templates only)</Text>
                     <ul>
                       <li><Code>{"{{uuid}}"}</Code>: Unique identifier for the archive</li>
                     </ul>
-                    <Text>Video</Text>
+                    <Text fw={600}>Video (folder &amp; file templates only)</Text>
                     <ul>
                       <li><Code>{"{{id}}"}</Code>: Video ID</li>
-                      <li><Code>{"{{channel}}"}</Code>: Channel name</li>
                       <li><Code>{"{{title}}"}</Code>: Video title (file safe)</li>
                       <li><Code>{"{{type}}"}</Code>: Video type (live, archive, highlight)</li>
                       <li><Code>{"{{date}}"}</Code>: Formatted date (YYYY-MM-DD)</li>
@@ -237,7 +263,6 @@ const AdminSettingsPage = () => {
                       <li><Code>{"{{DD}}"}</Code>: Day</li>
                       <li><Code>{"{{HH}}"}</Code>: Hour</li>
                     </ul>
-
                   </div>
                 </div>
 
@@ -246,10 +271,14 @@ const AdminSettingsPage = () => {
                     {t('archiveSettings.examplesText')}
                   </Title>
 
-                  <Text>Folder</Text>
+                  <Text>Channel Folder</Text>
+                  <Code block>{"{{channel}}"}</Code>
+                  <Code block>{"{{channel_id}}"}</Code>
+                  <Code block>{"{{channel_id}}_{{channel}}"}</Code>
+                  <Text mt={5}>VOD Folder</Text>
                   <Code block>{folderExample1}</Code>
                   <Code block>{folderExample2}</Code>
-                  <Text>File</Text>
+                  <Text mt={5}>File</Text>
                   <Code block>{fileExample1}</Code>
                 </div>
 
