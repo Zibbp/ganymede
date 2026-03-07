@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/config"
+	"github.com/zibbp/ganymede/internal/storagetemplate"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -15,19 +16,29 @@ var (
 	storageTemplateVariableRegex = regexp.MustCompile(`\{{([^}]+)\}}`)
 )
 
+// StorageTemplateInput holds the variables used to resolve folder and file storage templates
+// for VOD, clip, and livestream archives.
 type StorageTemplateInput struct {
-	UUID    uuid.UUID
-	ID      string
-	Channel string
-	Title   string
-	Type    string
-	Date    string // parsed date
-	YYYY    string // year
-	MM      string // month
-	DD      string // day
-	HH      string // hour
+	UUID               uuid.UUID
+	ID                 string
+	Channel            string
+	ChannelID          string // external platform ID (e.g., Twitch User ID)
+	ChannelDisplayName string // channel display name
+	Title              string
+	Type               string
+	Date               string // parsed date
+	YYYY               string // year
+	MM                 string // month
+	DD                 string // day
+	HH                 string // hour
 }
 
+// ChannelTemplateInput is an alias for storagetemplate.ChannelTemplateInput
+// so callers in the archive package can use it without importing storagetemplate directly.
+type ChannelTemplateInput = storagetemplate.ChannelTemplateInput
+
+// GetFolderName resolves the VOD subfolder name from the folder_template config.
+// It substitutes template variables (e.g. {{id}}, {{channel}}, {{date}}) with values from the input.
 func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 
 	variableMap, err := getVariableMap(uuid, input)
@@ -53,13 +64,20 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 		}
 		// Replace variable in template
 		folderString := fmt.Sprintf("%v", variableValue)
+		if folderString == "" {
+			return "", fmt.Errorf("variable %s resolved to empty string; ensure the archive has this field populated", variableName)
+		}
 		folderTemplate = strings.ReplaceAll(folderTemplate, match[0], folderString)
 
 	}
 
+	folderTemplate = utils.SanitizeFileName(folderTemplate)
+
 	return folderTemplate, nil
 }
 
+// GetFileName resolves the archive file name from the file_template config.
+// It substitutes template variables (e.g. {{id}}, {{title}}, {{type}}) with values from the input.
 func GetFileName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 
 	variableMap, err := getVariableMap(uuid, input)
@@ -85,27 +103,44 @@ func GetFileName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 		}
 		// Replace variable in template
 		fileString := fmt.Sprintf("%v", variableValue)
+		if fileString == "" {
+			return "", fmt.Errorf("variable %s resolved to empty string; ensure the archive has this field populated", variableName)
+		}
 		fileTemplate = strings.ReplaceAll(fileTemplate, match[0], fileString)
 
 	}
 
+	fileTemplate = utils.SanitizeFileName(fileTemplate)
+
 	return fileTemplate, nil
 }
 
-func getVariableMap(uuid uuid.UUID, input StorageTemplateInput) (map[string]interface{}, error) {
-	safeTitle := utils.SanitizeFileName(input.Title)
+// GetChannelFolderName resolves the channel-level folder name from the channel_folder_template config.
+// The default template is "{{channel}}" which preserves backward compatibility.
+// This delegates to the storagetemplate package so that other packages (e.g. tasks)
+// can also resolve channel folder names without importing archive.
+func GetChannelFolderName(input ChannelTemplateInput) (string, error) {
+	return storagetemplate.GetChannelFolderName(input)
+}
 
+// getVariableMap builds the variable substitution map used by GetFolderName and GetFileName.
+// Values are stored raw so that per-variable emptiness checks in the caller can detect missing
+// fields. The final output is sanitized by the caller via utils.SanitizeFileName to handle
+// path-unsafe characters.
+func getVariableMap(uuid uuid.UUID, input StorageTemplateInput) (map[string]interface{}, error) {
 	variables := map[string]interface{}{
-		"uuid":    uuid.String(),
-		"id":      input.ID,
-		"channel": input.Channel,
-		"title":   safeTitle,
-		"date":    input.Date,
-		"type":    input.Type,
-		"YYYY":    input.YYYY,
-		"MM":      input.MM,
-		"DD":      input.DD,
-		"HH":      input.HH,
+		"uuid":                 uuid.String(),
+		"id":                   input.ID,
+		"channel":              input.Channel,
+		"channel_id":           input.ChannelID,
+		"channel_display_name": input.ChannelDisplayName,
+		"title":                input.Title,
+		"date":                 input.Date,
+		"type":                 input.Type,
+		"YYYY":                 input.YYYY,
+		"MM":                   input.MM,
+		"DD":                   input.DD,
+		"HH":                   input.HH,
 	}
 	return variables, nil
 }

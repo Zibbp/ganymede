@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -12,19 +13,36 @@ import (
 // VideosDirMigrate migrates the videos directory if it has changed.
 // It will do nothing if the videos directory has not changed.
 func (db *Database) VideosDirMigrate(ctx context.Context, videosDir string) error {
-	// get latest video from database
-	video, err := db.Client.Vod.Query().WithChannel().Limit(1).Order(ent.Desc("created_at")).First(ctx)
+	// Try to detect old videos directory from channel image paths first.
+	// Channel image paths have the format: {VIDEOS_DIR}/{channel_folder}/profile.png
+	// So the VIDEOS_DIR is two levels up from the image path.
+	channels, err := db.Client.Channel.Query().All(ctx)
 	if err != nil {
-		// no videos found, likely a new instance. Return gracefully
-		if _, ok := err.(*ent.NotFoundError); ok {
-			return nil
-		} else {
-			return err
+		return err
+	}
+
+	var oldVideoPath string
+	for _, c := range channels {
+		if c.ImagePath != "" {
+			// {VIDEOS_DIR}/{channel_folder}/profile.png -> {VIDEOS_DIR}/{channel_folder} -> {VIDEOS_DIR}
+			oldVideoPath = filepath.Dir(filepath.Dir(c.ImagePath))
+			break
 		}
 	}
 
-	// get path of current videos directory
-	oldVideoPath := utils.GetPathBefore(video.VideoPath, video.Edges.Channel.Name)
+	// Fallback: try to detect from video paths using channel name as delimiter (legacy behavior).
+	if oldVideoPath == "" {
+		video, err := db.Client.Vod.Query().WithChannel().Limit(1).Order(ent.Desc("created_at")).First(ctx)
+		if err != nil {
+			// no videos found, likely a new instance. Return gracefully
+			if _, ok := err.(*ent.NotFoundError); ok {
+				return nil
+			} else {
+				return err
+			}
+		}
+		oldVideoPath = utils.GetPathBefore(video.VideoPath, video.Edges.Channel.Name)
+	}
 	oldVideoPath = strings.TrimRight(oldVideoPath, "/")
 
 	// check if videos directory has changed

@@ -89,8 +89,9 @@ func ReadLegacyNotifications() *LegacyNotification {
 
 // StorageTemplate defines folder and file naming patterns.
 type StorageTemplate struct {
-	FolderTemplate string `json:"folder_template"`
-	FileTemplate   string `json:"file_template"`
+	FolderTemplate        string `json:"folder_template"`
+	FileTemplate          string `json:"file_template"`
+	ChannelFolderTemplate string `json:"channel_folder_template"` // Template for channel-level directory naming. Available variables: {{channel}}, {{channel_id}}, {{channel_display_name}}.
 }
 
 // ProxyListItem defines a single proxy and optional header.
@@ -203,6 +204,7 @@ func (c *Config) SetDefaults() {
 	// storage templates
 	c.StorageTemplates.FolderTemplate = "{{date}}-{{id}}-{{type}}-{{uuid}}"
 	c.StorageTemplates.FileTemplate = "{{id}}"
+	c.StorageTemplates.ChannelFolderTemplate = "{{channel}}"
 
 	// livestream proxies
 	c.Livestream.Proxies = []ProxyListItem{
