@@ -25,6 +25,10 @@ type Metrics struct {
 	totalUsers               prometheus.Gauge
 	totalLiveWatchedChannels prometheus.Gauge
 	channelVodCount          *prometheus.GaugeVec
+	totalVodsDuration        prometheus.Gauge
+	channelVodDuration       *prometheus.GaugeVec
+	totalVodsBytes           prometheus.Gauge
+	channelVodBytes          *prometheus.GaugeVec
 	totalVodsInQueue         prometheus.Gauge
 	riverTotalPendingJobs    prometheus.Gauge
 	riverTotalScheduledJobs  prometheus.Gauge
@@ -58,6 +62,22 @@ func NewService(store *database.Database, riverClient *tasks_client.RiverClient)
 		channelVodCount: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "channel_vod_count",
 			Help: "Number of vods per channel",
+		}, []string{"channel"}),
+		totalVodsDuration: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "total_vods_duration_seconds",
+			Help: "Total duration of all VODs in seconds",
+		}),
+		channelVodDuration: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "channel_vod_duration_seconds",
+			Help: "Total duration of VODs per channel in seconds",
+		}, []string{"channel"}),
+		totalVodsBytes: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "total_vods_bytes",
+			Help: "Total size of all VODs in bytes",
+		}),
+		channelVodBytes: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "channel_vod_bytes",
+			Help: "Total size of VODs per channel in bytes",
 		}, []string{"channel"}),
 		totalVodsInQueue: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "total_vods_in_queue",
@@ -103,6 +123,10 @@ func NewService(store *database.Database, riverClient *tasks_client.RiverClient)
 		metrics.totalUsers,
 		metrics.totalLiveWatchedChannels,
 		metrics.channelVodCount,
+		metrics.totalVodsDuration,
+		metrics.channelVodDuration,
+		metrics.totalVodsBytes,
+		metrics.channelVodBytes,
 		metrics.totalVodsInQueue,
 		metrics.riverTotalPendingJobs,
 		metrics.riverTotalScheduledJobs,
@@ -214,7 +238,9 @@ func (s *Service) GatherMetrics() (*prometheus.Registry, error) {
 		s.metrics.totalLiveWatchedChannels.Set(0)
 	}
 	s.metrics.totalLiveWatchedChannels.Set(float64(lwCount))
-	// Get all channels and the number of VODs they have
+	// Get all channels with the number of VODs they have, their total duration and their size
+	var totalDurationSeconds int64 = 0
+	var totalBytes int64 = 0
 	channels, err := s.Store.Client.Channel.Query().WithVods().All(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("error getting all channels")
@@ -223,7 +249,19 @@ func (s *Service) GatherMetrics() (*prometheus.Registry, error) {
 	for _, channel := range channels {
 		cVCount := len(channel.Edges.Vods)
 		s.metrics.channelVodCount.With(prometheus.Labels{"channel": channel.Name}).Set(float64(cVCount))
+		var channelDuration int64 = 0
+		var channelBytes int64 = 0
+		for _, vod := range channel.Edges.Vods {
+			channelDuration += int64(vod.Duration)
+			channelBytes += vod.StorageSizeBytes
+		}
+		s.metrics.channelVodDuration.With(prometheus.Labels{"channel": channel.Name}).Set(float64(channelDuration))
+		s.metrics.channelVodBytes.With(prometheus.Labels{"channel": channel.Name}).Set(float64(channelBytes))
+		totalDurationSeconds += channelDuration
+		totalBytes += channelBytes
 	}
+	s.metrics.totalVodsDuration.Set(float64(totalDurationSeconds))
+	s.metrics.totalVodsBytes.Set(float64(totalBytes))
 	// Total VODs in queue
 	qCount, err := s.Store.Client.Queue.Query().Where(queue.Processing(true)).Count(context.Background())
 	if err != nil {

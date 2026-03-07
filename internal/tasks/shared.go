@@ -25,6 +25,7 @@ import (
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
+
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
 	"github.com/zibbp/ganymede/internal/utils"
 	vods_utility "github.com/zibbp/ganymede/internal/vod/utility"
@@ -94,6 +95,14 @@ func PlatformFromContext(ctx context.Context) (platform.Platform, error) {
 	}
 
 	return platform, nil
+}
+
+func NotificationServiceFromContext(ctx context.Context) (*notification.Service, error) {
+	svc, exists := ctx.Value(tasks_shared.NotificationServiceKey).(*notification.Service)
+	if !exists || svc == nil {
+		return nil, errors.New("notification service not found in context")
+	}
+	return svc, nil
 }
 
 // getDatabaseItems retrieves the database items associated with the provided queueId. This is used instead of passing all the structs to each job so that they can be easily updated in the database.
@@ -184,7 +193,17 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 				return err
 			}
 
-			notification.SendLiveArchiveSuccessNotification(&dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+			if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
+				notifCtx := context.WithoutCancel(ctx)
+				go func() {
+					defer func() {
+						if r := recover(); r != nil {
+							log.Error().Interface("panic", r).Msg("panic in notification")
+						}
+					}()
+					notifSvc.SendLiveArchiveSuccess(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+				}()
+			}
 
 			// Queue task to calculate video storage usage
 			_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateVideoStorageUsage{
@@ -208,7 +227,17 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 				return err
 			}
 
-			notification.SendVideoArchiveSuccessNotification(&dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+			if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
+				notifCtx := context.WithoutCancel(ctx)
+				go func() {
+					defer func() {
+						if r := recover(); r != nil {
+							log.Error().Interface("panic", r).Msg("panic in notification")
+						}
+					}()
+					notifSvc.SendVideoArchiveSuccess(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+				}()
+			}
 
 			// Queue task to calculate video storage usage
 			_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateVideoStorageUsage{
@@ -397,7 +426,17 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 			return nil
 		}
 		// send error notification
-		notification.SendErrorNotification(&dbItems.Channel, &dbItems.Video, &dbItems.Queue, job.Kind)
+		if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
+			notifCtx := context.WithoutCancel(ctx)
+			go func() {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Error().Interface("panic", r).Msg("panic in notification")
+					}
+				}()
+				notifSvc.SendError(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue, job.Kind)
+			}()
+		}
 	}
 	return nil
 }
@@ -430,7 +469,17 @@ func (*CustomErrorHandler) HandlePanic(ctx context.Context, job *rivertype.JobRo
 			return nil
 		}
 		// send error notification
-		notification.SendErrorNotification(&dbItems.Channel, &dbItems.Video, &dbItems.Queue, job.Kind)
+		if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
+			notifCtx := context.WithoutCancel(ctx)
+			go func() {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Error().Interface("panic", r).Msg("panic in notification")
+					}
+				}()
+				notifSvc.SendError(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue, job.Kind)
+			}()
+		}
 	}
 
 	return nil

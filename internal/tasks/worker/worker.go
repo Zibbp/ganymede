@@ -15,6 +15,7 @@ import (
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
+	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
@@ -25,6 +26,7 @@ type RiverWorkerInput struct {
 	DB_URL                  string
 	DB                      *database.Database
 	PlatformTwitch          platform.Platform
+	NotificationService     *notification.Service
 	VideoDownloadWorkers    int
 	VideoPostProcessWorkers int
 	ChatDownloadWorkers     int
@@ -172,6 +174,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 
 	// put platform in context for workers
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformTwitchKey, input.PlatformTwitch)
+
+	// put notification service in context for workers
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.NotificationServiceKey, input.NotificationService)
 
 	return rc, nil
 }

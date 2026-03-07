@@ -20,6 +20,7 @@ import (
 	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/multistreaminfo"
 	"github.com/zibbp/ganymede/ent/mutedsegment"
+	"github.com/zibbp/ganymede/ent/notification"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/playlistrule"
@@ -97,6 +98,7 @@ func checkColumn(t, c string) error {
 			livetitleregex.Table:    livetitleregex.ValidColumn,
 			multistreaminfo.Table:   multistreaminfo.ValidColumn,
 			mutedsegment.Table:      mutedsegment.ValidColumn,
+			notification.Table:      notification.ValidColumn,
 			playback.Table:          playback.ValidColumn,
 			playlist.Table:          playlist.ValidColumn,
 			playlistrule.Table:      playlistrule.ValidColumn,
