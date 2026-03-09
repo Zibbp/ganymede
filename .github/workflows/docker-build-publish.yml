@@ -87,7 +87,7 @@ jobs:
 
       # Login into GitHub Container Registry (only if OCI_PUSH is true and not run by Dependabot)
       - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         if: env.OCI_PUSH == 'true' && github.actor != 'dependabot[bot]'
         with:
           registry: ${{ env.REGISTRY }}
@@ -146,7 +146,7 @@ jobs:
           merge-multiple: true
 
       - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         if: github.actor != 'dependabot[bot]'
         with:
           registry: ${{ env.REGISTRY }}
