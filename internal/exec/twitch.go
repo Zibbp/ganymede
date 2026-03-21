@@ -451,41 +451,57 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 			}
 		}()
 
-		// Wait for either connection success, error, or context cancellation
-		select {
-		case <-ctx.Done():
-			err := client.Disconnect()
-			if err != nil {
-				log.Error().Err(err).Msg("error disconnecting from live chat")
-			}
-			return ctx.Err()
-		case err := <-errChan:
-			log.Error().Err(err).Msg("live chat connection error")
-			retryCount++
+		connectedOnce := false
+		shouldRetry := false
 
-			if retryCount >= maxRetries {
-				return fmt.Errorf("max retries (%d) reached: %w", maxRetries, err)
-			}
-
-			log.Warn().Msgf("Retrying in %v (attempt %d/%d)...", backoff, retryCount, maxRetries)
-
+		for {
 			select {
 			case <-ctx.Done():
-				return ctx.Err()
-			case <-time.After(backoff):
-				backoff *= 2
-				if backoff > maxBackoff {
-					backoff = maxBackoff
+				log.Info().Msg("Context cancelled, disconnecting from live chat...")
+				if err := client.Disconnect(); err != nil {
+					log.Error().Err(err).Msg("error disconnecting from live chat")
 				}
+				return ctx.Err()
+			case <-connected:
+				connectedOnce = true
+			case err := <-errChan:
+				if ctx.Err() != nil {
+					return ctx.Err()
+				}
+
+				if connectedOnce {
+					log.Warn().Err(err).Msg("live chat disconnected")
+				} else {
+					log.Error().Err(err).Msg("live chat connection error")
+				}
+
+				retryCount++
+				if retryCount >= maxRetries {
+					return fmt.Errorf("max retries (%d) reached: %w", maxRetries, err)
+				}
+
+				log.Warn().Msgf("Retrying in %v (attempt %d/%d)...", backoff, retryCount, maxRetries)
+
+				if disErr := client.Disconnect(); disErr != nil {
+					log.Error().Err(disErr).Msg("error disconnecting from live chat")
+				}
+
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case <-time.After(backoff):
+					backoff *= 2
+					if backoff > maxBackoff {
+						backoff = maxBackoff
+					}
+				}
+
+				shouldRetry = true
 			}
-			continue
-		case <-connected:
-			<-ctx.Done()
-			log.Info().Msg("Context cancelled, disconnecting from live chat...")
-			if err := client.Disconnect(); err != nil {
-				log.Error().Err(err).Msg("error disconnecting from live chat")
+
+			if shouldRetry {
+				break
 			}
-			return ctx.Err()
 		}
 	}
 }
