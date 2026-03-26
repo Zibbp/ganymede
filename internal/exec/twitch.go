@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -401,12 +402,18 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 		maxRetries     = 10
 		initialBackoff = 1 * time.Second
 		maxBackoff     = 1 * time.Minute
+		statusInterval = 2 * time.Minute
+		idleWarnAfter  = 10 * time.Minute
 	)
 
 	retryCount := 0
 	backoff := initialBackoff
 
 	for {
+		attemptStartedAt := time.Now()
+		logger := log.With().Str("channel", channel).Str("chat_file", filename).Logger()
+		logger.Debug().Msg("starting live chat connection attempt")
+
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -423,17 +430,51 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 		// cause a "close of closed channel" panic.
 		connected := make(chan struct{}, 1)
 
+		var messagesSaved atomic.Int64
+		var writeErrors atomic.Int64
+		var lastMessageReceivedUnixNano atomic.Int64
+		lastMessageReceivedUnixNano.Store(time.Now().UnixNano())
+
 		// Handle messages
 		client.OnPrivateMessage(func(message twitchIRC.PrivateMessage) {
+			receivedAt := time.Now()
+			lastMessageReceivedUnixNano.Store(receivedAt.UnixNano())
+
 			comment := convertToLiveComment(message)
+			writeStarted := time.Now()
 			if err := appendMessageToJSONArray(filename, comment); err != nil {
-				log.Error().Err(err).Msg("error saving chat message")
+				errors := writeErrors.Add(1)
+				logger.Error().Err(err).
+					Int64("message_write_errors", errors).
+					Str("message_id", message.ID).
+					Msg("error saving chat message")
+				return
+			}
+
+			writeDuration := time.Since(writeStarted)
+			count := messagesSaved.Add(1)
+
+			if writeDuration > 2*time.Second {
+				logger.Warn().
+					Dur("write_duration", writeDuration).
+					Int64("messages_saved", count).
+					Msg("slow chat message write")
+			}
+
+			if count == 1 || count%500 == 0 {
+				logger.Debug().
+					Int64("messages_saved", count).
+					Dur("message_age", receivedAt.Sub(message.Time)).
+					Time("twitch_message_time", message.Time).
+					Msg("live chat message saved")
 			}
 		})
 
 		// Handle connection
 		client.OnConnect(func() {
-			log.Info().Msgf("connected to %s live chat room", channel)
+			logger.Info().
+				Dur("connection_attempt_elapsed", time.Since(attemptStartedAt)).
+				Msgf("connected to %s live chat room", channel)
 			retryCount = 0
 			backoff = initialBackoff
 			select {
@@ -453,26 +494,55 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 
 		connectedOnce := false
 		shouldRetry := false
+		statusTicker := time.NewTicker(statusInterval)
+		defer statusTicker.Stop()
 
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info().Msg("Context cancelled, disconnecting from live chat...")
+				logger.Info().
+					Int64("messages_saved", messagesSaved.Load()).
+					Int64("message_write_errors", writeErrors.Load()).
+					Dur("run_elapsed", time.Since(attemptStartedAt)).
+					Msg("Context cancelled, disconnecting from live chat...")
 				if err := client.Disconnect(); err != nil {
-					log.Error().Err(err).Msg("error disconnecting from live chat")
+					logger.Error().Err(err).Msg("error disconnecting from live chat")
 				}
 				return ctx.Err()
 			case <-connected:
 				connectedOnce = true
+				logger.Debug().Msg("live chat connection marked as established")
+			case <-statusTicker.C:
+				lastMsgAt := time.Unix(0, lastMessageReceivedUnixNano.Load())
+				idleFor := time.Since(lastMsgAt)
+
+				event := logger.Debug()
+				if connectedOnce && idleFor > idleWarnAfter {
+					event = logger.Warn()
+				}
+
+				event.
+					Bool("connected_once", connectedOnce).
+					Int64("messages_saved", messagesSaved.Load()).
+					Int64("message_write_errors", writeErrors.Load()).
+					Dur("idle_for", idleFor).
+					Dur("run_elapsed", time.Since(attemptStartedAt)).
+					Msg("live chat ingest status")
 			case err := <-errChan:
 				if ctx.Err() != nil {
 					return ctx.Err()
 				}
 
 				if connectedOnce {
-					log.Warn().Err(err).Msg("live chat disconnected")
+					logger.Warn().Err(err).
+						Int64("messages_saved", messagesSaved.Load()).
+						Int64("message_write_errors", writeErrors.Load()).
+						Dur("run_elapsed", time.Since(attemptStartedAt)).
+						Msg("live chat disconnected")
 				} else {
-					log.Error().Err(err).Msg("live chat connection error")
+					logger.Error().Err(err).
+						Dur("run_elapsed", time.Since(attemptStartedAt)).
+						Msg("live chat connection error")
 				}
 
 				retryCount++
@@ -480,10 +550,10 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 					return fmt.Errorf("max retries (%d) reached: %w", maxRetries, err)
 				}
 
-				log.Warn().Msgf("Retrying in %v (attempt %d/%d)...", backoff, retryCount, maxRetries)
+				logger.Warn().Msgf("Retrying in %v (attempt %d/%d)...", backoff, retryCount, maxRetries)
 
 				if disErr := client.Disconnect(); disErr != nil {
-					log.Error().Err(disErr).Msg("error disconnecting from live chat")
+					logger.Error().Err(disErr).Msg("error disconnecting from live chat")
 				}
 
 				select {
