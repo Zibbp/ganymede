@@ -161,6 +161,9 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	userService := user.NewService(db)
 	chapterService := chapter.NewService(db)
 	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService, notificationService)
+	if err := liveService.ResetLiveStatus(ctx); err != nil {
+		return nil, err
+	}
 	playbackService := playback.NewService(db)
 	metricsService := metrics.NewService(db, riverClient)
 	playlistService := playlist.NewService(db)

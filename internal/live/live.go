@@ -83,6 +83,18 @@ func NewService(store *database.Database, archiveService *archive.Service, platf
 	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch, ChapterService: chapterService, QueueService: queueService, NotificationService: notificationService}
 }
 
+// ResetLiveStatus sets is_live=false for all watched channels.
+// This is intended to run on application startup so live detection starts from a clean state.
+func (s *Service) ResetLiveStatus(ctx context.Context) error {
+	updated, err := s.Store.Client.Live.Update().SetIsLive(false).Save(ctx)
+	if err != nil {
+		return fmt.Errorf("error resetting watched channels live status: %v", err)
+	}
+
+	log.Info().Int("channels", updated).Msg("reset watched channel live status")
+	return nil
+}
+
 func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
 	watchedChannels, err := s.Store.Client.Live.Query().WithChannel().WithCategories().WithTitleRegex().All(c.Request().Context())
 	if err != nil {
