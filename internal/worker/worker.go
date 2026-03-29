@@ -97,6 +97,10 @@ func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 		return nil, err
 	}
 
+	if err := liveService.ResetLiveStatus(ctx); err != nil {
+		return nil, err
+	}
+
 	// get periodic tasks
 	periodicTasks, err := riverWorkerClient.GetPeriodicTasks(liveService)
 	if err != nil {
