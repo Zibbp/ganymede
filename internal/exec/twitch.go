@@ -757,8 +757,6 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 			logger.Info().
 				Dur("connection_attempt_elapsed", time.Since(attemptStartedAt)).
 				Msgf("connected to %s live chat room", channel)
-			retryCount = 0
-			backoff = initialBackoff
 			select {
 			case connected <- struct{}{}:
 			default:
@@ -798,6 +796,8 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 				finalizeWriter()
 				return ctx.Err()
 			case <-connected:
+				retryCount = 0
+				backoff = initialBackoff
 				connectedOnce = true
 				logger.Debug().Msg("live chat connection marked as established")
 			case <-flushTicker.C:
