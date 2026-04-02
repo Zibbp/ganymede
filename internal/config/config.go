@@ -35,6 +35,7 @@ type Config struct {
 	Experimental struct {
 		BetterLiveStreamDetectionAndCleanup bool `json:"better_live_stream_detection_and_cleanup"` // [EXPERIMENTAL] Enable enhanced detection and cleanup.
 	} `json:"experimental"`
+	LogRetentionDays int `json:"log_retention_days"` // Number of days to retain log files.
 	// Notifications preserves legacy config.json notifications during migration.
 	// Deprecated: notifications are now stored in the database.
 	Notifications *LegacyNotification `json:"notifications,omitempty"`
@@ -214,6 +215,8 @@ func (c *Config) SetDefaults() {
 	c.Livestream.ProxyParameters = "%3Fplayer%3Dtwitchweb%26type%3Dany%26allow_source%3Dtrue%26allow_audio_only%3Dtrue%26allow_spectre%3Dfalse%26fast_bread%3Dtrue"
 	c.Livestream.ProxyWhitelist = []string{}
 	c.Livestream.WatchWhileArchiving = false
+
+	c.LogRetentionDays = 30
 
 	// experimental features
 	c.Experimental.BetterLiveStreamDetectionAndCleanup = false

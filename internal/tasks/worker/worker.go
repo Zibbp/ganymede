@@ -133,6 +133,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks_periodic.UpdateTwitchChannelsWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.PruneLogFilesWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 
@@ -322,6 +325,16 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 				return tasks_periodic.UpdateTwitchChannelsArgs{}, nil
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
+		),
+
+		// prune log files
+		// runs once a day at midnight
+		river.NewPeriodicJob(
+			midnightCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.PruneLogFilesArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 	}
 

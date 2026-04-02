@@ -51,6 +51,7 @@ var (
 	TaskUpdateChannelStorageUsage   = "update_channel_storage_usage"
 	TaskProcessPlaylistVideoRules   = "process_playlist_video_rules"
 	TaskUpdateTwitchChannels        = "update_twitch_channels"
+	TaskPruneLogFiles               = "prune_log_files"
 )
 
 var (
