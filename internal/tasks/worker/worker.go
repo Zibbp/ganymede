@@ -334,7 +334,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.PruneLogFilesArgs{}, nil
 			},
-			&river.PeriodicJobOpts{RunOnStart: true},
+			&river.PeriodicJobOpts{RunOnStart: false},
 		),
 	}
 
