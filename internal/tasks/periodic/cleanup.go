@@ -38,6 +38,14 @@ func (w PruneLogFilesWorker) Work(ctx context.Context, job *river.Job[PruneLogFi
 
 	logsDirectory := config.GetEnvConfig().LogsDir
 	logRetentionDays := config.Get().LogRetentionDays
+	cutoff := time.Now()
+	if logRetentionDays <= 0 {
+		logger.Warn().
+			Int("retention_days", logRetentionDays).
+			Time("cutoff", cutoff).
+			Msg("skipping log file pruning due to non-positive retention days")
+		return nil
+	}
 
 	var (
 		totalFiles     int
@@ -46,7 +54,7 @@ func (w PruneLogFilesWorker) Work(ctx context.Context, job *river.Job[PruneLogFi
 		totalInfoErr   int
 	)
 
-	cutoff := time.Now().AddDate(0, 0, -logRetentionDays)
+	cutoff = cutoff.AddDate(0, 0, -logRetentionDays)
 
 	logFiles, err := os.ReadDir(logsDirectory)
 	if err != nil {
