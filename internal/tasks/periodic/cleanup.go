@@ -13,7 +13,7 @@ import (
 	"github.com/zibbp/ganymede/internal/tasks"
 )
 
-// Check watched channels for live streams
+// PruneLogFilesArgs defines the arguments for the log file pruning task
 type PruneLogFilesArgs struct{}
 
 func (PruneLogFilesArgs) Kind() string { return tasks.TaskPruneLogFiles }
