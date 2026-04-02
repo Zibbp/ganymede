@@ -218,8 +218,16 @@ func (w *liveChatJSONArrayWriter) Append(comment utils.LiveComment) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
+	if w.pendingFile == nil {
+		return fmt.Errorf("cannot append: pending file is finalized")
+	}
+
 	if _, err := w.pendingFile.Write(msg); err != nil {
 		return fmt.Errorf("failed to append pending chat message: %w", err)
+	}
+
+	if w.pendingFile == nil {
+		return fmt.Errorf("cannot append: pending file is finalized")
 	}
 	if _, err := w.pendingFile.Write([]byte("\n")); err != nil {
 		return fmt.Errorf("failed to append pending chat newline: %w", err)
