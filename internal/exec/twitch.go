@@ -770,8 +770,10 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 		shouldRetry := false
 		statusTicker := time.NewTicker(statusInterval)
 		flushTicker := time.NewTicker(liveChatMainFlushInterval)
-		defer statusTicker.Stop()
-		defer flushTicker.Stop()
+		stopTickers := func() {
+			statusTicker.Stop()
+			flushTicker.Stop()
+		}
 
 		for {
 			select {
@@ -781,6 +783,7 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 					Int64("message_write_errors", writeErrors.Load()).
 					Dur("run_elapsed", time.Since(attemptStartedAt)).
 					Msg("Context cancelled, disconnecting from live chat...")
+				stopTickers()
 				if err := client.Disconnect(); err != nil {
 					logger.Error().Err(err).Msg("error disconnecting from live chat")
 				}
@@ -814,6 +817,7 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 					Msg("live chat ingest status")
 			case err := <-errChan:
 				if ctx.Err() != nil {
+					stopTickers()
 					finalizeWriter()
 					return ctx.Err()
 				}
@@ -832,6 +836,7 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 
 				retryCount++
 				if retryCount >= maxRetries {
+					stopTickers()
 					finalizeWriter()
 					return fmt.Errorf("max retries (%d) reached: %w", maxRetries, err)
 				}
@@ -846,6 +851,7 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 
 				select {
 				case <-ctx.Done():
+					stopTickers()
 					return ctx.Err()
 				case <-time.After(backoff):
 					backoff *= 2
@@ -858,6 +864,7 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 			}
 
 			if shouldRetry {
+				stopTickers()
 				break
 			}
 		}
