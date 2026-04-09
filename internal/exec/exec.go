@@ -333,11 +333,44 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		done <- cmd.Wait()
 	}()
 
+	// Stall detection: if the log file stops growing the ffmpeg process has frozen
+	stallCtx, stallCancel := context.WithCancel(ctx)
+	defer stallCancel()
+	go func() {
+		const (
+			checkInterval = 2 * time.Minute
+			stallTimeout  = 10 * time.Minute
+		)
+		ticker := time.NewTicker(checkInterval)
+		defer ticker.Stop()
+		var lastSize int64 = -1
+		lastChange := time.Now()
+		for {
+			select {
+			case <-stallCtx.Done():
+				return
+			case <-ticker.C:
+				info, statErr := os.Stat(logFilePath)
+				if statErr != nil {
+					continue
+				}
+				if sz := info.Size(); sz != lastSize {
+					lastSize = sz
+					lastChange = time.Now()
+				} else if time.Since(lastChange) >= stallTimeout {
+					log.Warn().Str("channel", channel.Name).Msg("ffmpeg stalled: no log progress detected, killing process")
+					stallCancel()
+					return
+				}
+			}
+		}
+	}()
+
 	// Wait for the command to finish or for ctx cancellation.
 	// When ctx is cancelled, allow ffmpeg to handle a graceful shutdown first:
 	// send SIGINT to the process group, wait up to sigintTimeout, then SIGKILL
 	select {
-	case <-ctx.Done():
+	case <-stallCtx.Done():
 		if cmd.Process != nil {
 			err = syscall.Kill(-cmd.Process.Pid, syscall.SIGINT)
 			if err != nil {
@@ -361,7 +394,10 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 			case <-time.After(5 * time.Second):
 			}
 		}
-		return ctx.Err()
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		return fmt.Errorf("ffmpeg stalled: no progress detected")
 	case err := <-done:
 		if err != nil {
 			log.Error().Err(err).Msg("error running ffmpeg")
