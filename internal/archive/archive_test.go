@@ -29,7 +29,7 @@ var (
 	TestTwitchChannelDisplayName = "sodapoppin"
 	TestTwitchChannelExtId       = "26301881"
 	TestTwitchVideoId            = "1989753443"
-	TestTwitchClipId             = "SarcasticDarkPanCoolCat-rgyYByzzfGqIwbWd"
+	TestTwitchClipId             = "PatientSeductiveInternBIRB-55ziJ1I-ayol2RHH"
 	TestArchiveTimeout           = 300 * time.Second
 )
 
