@@ -14,8 +14,8 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     concurrency:
-      group: ${{ github.event_name == 'pull_request' && github.actor == 'dependabot[bot]' && format('{0}-dependabot-pr-tests', github.workflow) || format('{0}-{1}', github.workflow, github.ref) }}
-      cancel-in-progress: ${{ !(github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') }}
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
 
     steps:
       - name: Checkout repository
