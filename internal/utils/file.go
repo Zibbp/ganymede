@@ -126,7 +126,9 @@ func writeIfDifferent(path string, data []byte) (bool, error) {
 	// Atomically rename to the final path
 	err = os.Rename(tmpPath, path)
 	if err != nil {
-		os.Remove(tmpPath) // Cleanup on failure
+		if removeErr := os.Remove(tmpPath); removeErr != nil {
+			log.Debug().Err(removeErr).Msg("error removing temporary file after rename failure")
+		}
 		return false, fmt.Errorf("error renaming temporary file: %v", err)
 	}
 
