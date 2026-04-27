@@ -811,6 +811,7 @@
     "theaterModeIconTooltip": "Theater Mode",
     "hideChatIconTooltip": "Chat verbergen",
     "showChatIconTooltip": "Chat anzeigen",
+    "absoluteTimeIconTooltip": "Absolute Zeit umschalten",
     "sourceViewsTooltip": "Quell-views",
     "localViewsTooltip": "Lokale views",
     "streamedOnTooltip": "Gestreamt am",
