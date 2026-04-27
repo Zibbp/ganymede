@@ -141,18 +141,24 @@ func writeIfDifferent(path string, data []byte) (bool, error) {
 	}()
 
 	if _, err := tmpFile.Write(data); err != nil {
-		tmpFile.Close()
+		if closeErr := tmpFile.Close(); closeErr != nil {
+			log.Debug().Err(closeErr).Msg("error closing temporary file after write failure")
+		}
 		return false, fmt.Errorf("error writing temporary file: %v", err)
 	}
 
 	// Flush to disk before rename
 	if err := tmpFile.Sync(); err != nil {
-		tmpFile.Close()
+		if closeErr := tmpFile.Close(); closeErr != nil {
+			log.Debug().Err(closeErr).Msg("error closing temporary file after sync failure")
+		}
 		return false, fmt.Errorf("error syncing temporary file: %v", err)
 	}
 
 	if err := tmpFile.Chmod(mode); err != nil {
-		tmpFile.Close()
+		if closeErr := tmpFile.Close(); closeErr != nil {
+			log.Debug().Err(closeErr).Msg("error closing temporary file after chmod failure")
+		}
 		return false, fmt.Errorf("error setting file permissions: %v", err)
 	}
 
