@@ -211,15 +211,21 @@ func (s *Service) UpdateChannelImage(ctx context.Context, channelID uuid.UUID, c
 	}
 
 	// Download channel profile image
+	imagePath := fmt.Sprintf("%s/%s/%s", env.VideosDir, channelFolderName, "profile.png")
 	if checkIfExists {
-		exists := utils.FileExists(fmt.Sprintf("%s/%s/%s", env.VideosDir, channelFolderName, "profile.png"))
-		if exists {
-			log.Debug().Msgf("channel profile image already exists for channel: %s", twitchChannel.Login)
-			return nil
+		changed, err := utils.DownloadFileIfChanged(twitchChannel.ProfileImageURL, imagePath)
+		if err != nil {
+			return fmt.Errorf("error downloading channel profile image: %v", err)
 		}
+		if !changed {
+			log.Debug().Msgf("channel profile image unchanged for channel: %s", twitchChannel.Login)
+		} else {
+			log.Debug().Msgf("channel profile image updated for channel: %s", twitchChannel.Login)
+		}
+		return nil
 	}
 
-	err = utils.DownloadFile(twitchChannel.ProfileImageURL, fmt.Sprintf("%s/%s/%s", env.VideosDir, channelFolderName, "profile.png"))
+	err = utils.DownloadFile(twitchChannel.ProfileImageURL, imagePath)
 	if err != nil {
 		return fmt.Errorf("error downloading channel profile image: %v", err)
 	}
