@@ -73,67 +73,42 @@ func DownloadAndSaveFile(url, path string) error {
 	return nil
 }
 
-// DownloadFile downloads file from url to the path provided
-func DownloadFile(url, path string) error {
-	log.Debug().Msgf("downloading file: %s", url)
-	// Get response bytes from URL
-	resp, err := http.Get(url)
+const maxDownloadSizeBytes = 5 * 1024 * 1024 // 5 MB limit for profile images and small downloads
+
+func fetchURL(ctx context.Context, url string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return fmt.Errorf("error downloading file: %v", err)
+		return nil, fmt.Errorf("error creating request: %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error downloading file: %v", err)
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Debug().Err(err).Msg("error closing response body")
 		}
 	}()
+
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error downloading file: %v", resp)
+		return nil, fmt.Errorf("error downloading file: %v", resp.Status)
 	}
 
-	// Create file
-	file, err := os.Create(path)
+	// Limit to 5MB to prevent huge memory usage
+	content, err := io.ReadAll(io.LimitReader(resp.Body, maxDownloadSizeBytes))
 	if err != nil {
-		return fmt.Errorf("error creating file: %v", err)
+		return nil, fmt.Errorf("error reading response body: %v", err)
 	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Debug().Err(err).Msg("error closing file")
-		}
-	}()
 
-	// Write bytes to file
-	_, err = io.Copy(file, resp.Body)
-	if err != nil {
-		return fmt.Errorf("error writing file: %v", err)
-	}
-	return nil
+	return content, nil
 }
 
-// DownloadFileIfChanged downloads file from url to the path provided only if the content is different
-func DownloadFileIfChanged(url, path string) (bool, error) {
-	log.Debug().Msgf("downloading file to check for changes: %s", url)
-	resp, err := http.Get(url)
-	if err != nil {
-		return false, fmt.Errorf("error downloading file: %v", err)
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Debug().Err(err).Msg("error closing response body")
-		}
-	}()
-	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("error downloading file: %v", resp)
-	}
-
-	newContent, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return false, fmt.Errorf("error reading response body: %v", err)
-	}
-
+func writeIfDifferent(path string, data []byte) (bool, error) {
 	if FileExists(path) {
 		existingContent, err := os.ReadFile(path)
 		if err == nil {
-			if bytes.Equal(existingContent, newContent) {
+			if bytes.Equal(existingContent, data) {
 				// Files are the same, no need to overwrite
 				return false, nil
 			}
@@ -142,12 +117,41 @@ func DownloadFileIfChanged(url, path string) (bool, error) {
 		}
 	}
 
-	err = os.WriteFile(path, newContent, 0644)
+	tmpPath := path + ".tmp"
+	err := os.WriteFile(tmpPath, data, 0644)
 	if err != nil {
-		return false, fmt.Errorf("error writing file: %v", err)
+		return false, fmt.Errorf("error writing temporary file: %v", err)
+	}
+
+	// Atomically rename to the final path
+	err = os.Rename(tmpPath, path)
+	if err != nil {
+		os.Remove(tmpPath) // Cleanup on failure
+		return false, fmt.Errorf("error renaming temporary file: %v", err)
 	}
 
 	return true, nil
+}
+
+// DownloadFile downloads file from url to the path provided
+func DownloadFile(ctx context.Context, url, path string) error {
+	log.Debug().Msgf("downloading file: %s", url)
+	data, err := fetchURL(ctx, url)
+	if err != nil {
+		return err
+	}
+	_, err = writeIfDifferent(path, data)
+	return err
+}
+
+// DownloadFileIfChanged downloads file from url to the path provided only if the content is different
+func DownloadFileIfChanged(ctx context.Context, url, path string) (bool, error) {
+	log.Debug().Msgf("downloading file to check for changes: %s", url)
+	data, err := fetchURL(ctx, url)
+	if err != nil {
+		return false, err
+	}
+	return writeIfDifferent(path, data)
 }
 
 func WriteJsonFile(j interface{}, path string) error {
