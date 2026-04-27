@@ -95,10 +95,13 @@ func fetchURL(ctx context.Context, url string) ([]byte, error) {
 		return nil, fmt.Errorf("error downloading file: %v", resp.Status)
 	}
 
-	// Limit to 5MB to prevent huge memory usage
-	content, err := io.ReadAll(io.LimitReader(resp.Body, maxDownloadSizeBytes))
+	// Read up to maxDownloadSizeBytes+1 to detect overflow
+	content, err := io.ReadAll(io.LimitReader(resp.Body, maxDownloadSizeBytes+1))
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %v", err)
+	}
+	if int64(len(content)) > maxDownloadSizeBytes {
+		return nil, fmt.Errorf("response exceeded maximum download size of %d bytes", maxDownloadSizeBytes)
 	}
 
 	return content, nil
