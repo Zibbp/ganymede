@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 const VideoPlayerAbsoluteTimeIcon = () => {
   const t = useTranslations("VideoComponents")
-  const { setShowAbsoluteTime } = useSettingsStore()
+  const setShowAbsoluteTime = useSettingsStore((state) => state.setShowAbsoluteTime);
   const showAbsoluteTime = useSettingsStore((state) => state.showAbsoluteTime);
 
   const toggleAbsoluteTime = () => {
