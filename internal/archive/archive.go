@@ -3,6 +3,7 @@ package archive
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/google/uuid"
@@ -81,7 +82,7 @@ func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.
 	}
 
 	// Download channel profile image
-	err = utils.DownloadFile(platformChannel.ProfileImageURL, fmt.Sprintf("%s/%s/%s", env.VideosDir, channelFolderName, "profile.png"))
+	err = utils.DownloadFile(ctx, platformChannel.ProfileImageURL, filepath.Join(env.VideosDir, channelFolderName, "profile.png"))
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading channel profile image")
 	}
@@ -91,7 +92,7 @@ func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.
 		ExtID:       platformChannel.ID,
 		Name:        platformChannel.Login,
 		DisplayName: platformChannel.DisplayName,
-		ImagePath:   fmt.Sprintf("%s/%s/profile.png", env.VideosDir, channelFolderName),
+		ImagePath:   filepath.Join(env.VideosDir, channelFolderName, "profile.png"),
 	}
 
 	dbC, err := s.ChannelService.CreateChannel(channelDTO)
