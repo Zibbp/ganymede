@@ -108,11 +108,14 @@ func fetchURL(ctx context.Context, url string) ([]byte, error) {
 }
 
 func writeIfDifferent(path string, data []byte) (bool, error) {
-	if FileExists(path) {
+	// Preserve existing file permissions, default to 0644
+	mode := os.FileMode(0644)
+	if info, err := os.Stat(path); err == nil {
+		mode = info.Mode()
+		// Compare contents to skip unnecessary writes
 		existingContent, err := os.ReadFile(path)
 		if err == nil {
 			if bytes.Equal(existingContent, data) {
-				// Files are the same, no need to overwrite
 				return false, nil
 			}
 		} else {
@@ -120,18 +123,45 @@ func writeIfDifferent(path string, data []byte) (bool, error) {
 		}
 	}
 
-	tmpPath := path + ".tmp"
-	err := os.WriteFile(tmpPath, data, 0644)
+	// Create a unique temp file in the same directory for atomic rename
+	dir := filepath.Dir(path)
+	tmpFile, err := os.CreateTemp(dir, filepath.Base(path)+".tmp.*")
 	if err != nil {
+		return false, fmt.Errorf("error creating temporary file: %v", err)
+	}
+	tmpPath := tmpFile.Name()
+
+	// Ensure cleanup on any error
+	defer func() {
+		// If we haven't renamed yet (i.e. tmpPath still exists after an error),
+		// clean up. After a successful rename this Remove is a harmless no-op error.
+		if removeErr := os.Remove(tmpPath); removeErr != nil && !os.IsNotExist(removeErr) {
+			log.Debug().Err(removeErr).Msg("error removing temporary file")
+		}
+	}()
+
+	if _, err := tmpFile.Write(data); err != nil {
+		tmpFile.Close()
 		return false, fmt.Errorf("error writing temporary file: %v", err)
 	}
 
+	// Flush to disk before rename
+	if err := tmpFile.Sync(); err != nil {
+		tmpFile.Close()
+		return false, fmt.Errorf("error syncing temporary file: %v", err)
+	}
+
+	if err := tmpFile.Chmod(mode); err != nil {
+		tmpFile.Close()
+		return false, fmt.Errorf("error setting file permissions: %v", err)
+	}
+
+	if err := tmpFile.Close(); err != nil {
+		return false, fmt.Errorf("error closing temporary file: %v", err)
+	}
+
 	// Atomically rename to the final path
-	err = os.Rename(tmpPath, path)
-	if err != nil {
-		if removeErr := os.Remove(tmpPath); removeErr != nil {
-			log.Debug().Err(removeErr).Msg("error removing temporary file after rename failure")
-		}
+	if err := os.Rename(tmpPath, path); err != nil {
 		return false, fmt.Errorf("error renaming temporary file: %v", err)
 	}
 
