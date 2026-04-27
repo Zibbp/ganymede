@@ -4,6 +4,39 @@
   font-size: 14px;
   margin-top: 6px;
   margin-bottom: 6px;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: baseline;
+}
+.chatMessageNoTimestamp {
+  display: block;
+}
+.timestamp {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--mantine-color-dimmed);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  padding: 0;
+  text-align: right;
+}
+.timestampPlaceholder {
+  width: 52px;
+}
+.content {
+  min-width: 0;
+}
+.timestamp:hover {
+  color: var(--mantine-color-violet-5);
+  text-decoration: underline;
+}
+.timestamp:focus-visible {
+  outline: 2px solid var(--mantine-color-violet-5);
+  outline-offset: 2px;
 }
 .message {
   font-weight: 400;

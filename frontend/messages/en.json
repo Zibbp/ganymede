@@ -81,6 +81,8 @@
       "smoothScrollDescription": "Enable smooth scrolling for new chat messages. May look bad if there is a large volume of messages per second.",
       "chatHistogram": "Show chat histogram",
       "chatHistogramDescription": "Display a visual representation of chat message throughout the video below the video player.",
+      "chatTimestamps": "Show chat timestamps",
+      "chatTimestampsDescription": "Show clickable timestamps next to chat messages for jumping to that moment in the video.",
       "showProcessingVideos": "Show Processing Videos in Recently Archived Videos",
       "showProcessingVideosDescription": "Display processing videos in the 'Recently Archived' videos section on the home page."
     },
@@ -744,6 +746,7 @@
     "chatTimeSkipDetected": "Time skip detected. Chat cleared.",
     "chatPlayerReady": "Chat player ready",
     "chatPlayerReadyStats": "Chat playback contains {lengthBadges} badges, {lengthSubBadges} subscription badges, and {lengthEmotes} emotes.",
+    "chatJumpToTimestamp": "Jump to {timestamp}",
     "loadingChat": "Loading chat playback",
     "chatError": "Error",
     "filterByLabel": "Filter by",

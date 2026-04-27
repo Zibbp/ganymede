@@ -1,4 +1,4 @@
-import { Video } from "@/app/hooks/useVideos";
+import { Video, VideoType } from "@/app/hooks/useVideos";
 import classes from "./ChatPlayer.module.css";
 import {
   Emote,
@@ -11,13 +11,14 @@ import {
   getChatForVideo,
   getSeekChatForVideo
 } from "@/app/hooks/useChat";
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { RefObject, useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Box, Center, Loader, Text } from "@mantine/core";
 import ChatMessage from "./ChatMessage";
 import { uuidv4 } from "@/app/util/util";
 import VideoEventBus from "@/app/util/VideoEventBus";
 import useSettingsStore from "@/app/store/useSettingsStore";
 import { useTranslations } from "next-intl";
+import { MediaPlayerInstance } from "@vidstack/react";
 
 // Constants moved to top level
 const CHAT_OFFSET_SIZE = 10;
@@ -39,6 +40,7 @@ interface ChatMaps {
 
 interface Params {
   video: Video;
+  playerRef: RefObject<MediaPlayerInstance | null>;
 }
 
 interface ChatError {
@@ -46,7 +48,7 @@ interface ChatError {
   timestamp: number;
 }
 
-const ChatPlayer = ({ video }: Params) => {
+const ChatPlayer = ({ video, playerRef }: Params) => {
   const t = useTranslations('VideoComponents')
   const [isReady, setIsReady] = useState(false);
   const [messages, setMessages] = useState<Comment[]>([]);
@@ -70,7 +72,7 @@ const ChatPlayer = ({ video }: Params) => {
   });
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const { chatPlaybackSmoothScroll } = useSettingsStore()
+  const { chatPlaybackSmoothScroll, showChatTimestamps } = useSettingsStore()
 
   // Custom hooks with error handling
   const { data: chatEmotes, error: emotesError } = useGetEmotesForVideo(video.id);
@@ -158,6 +160,26 @@ const ChatPlayer = ({ video }: Params) => {
     const comment = createSystemMessage(message);
     setMessagesWithScroll(prev => [...prev, comment]);
   }, [createSystemMessage, setMessagesWithScroll]);
+
+  const seekToComment = useCallback((seconds: number) => {
+    if (!playerRef.current) return;
+
+    const playerTime = video.type === VideoType.Clip && video.clip_vod_offset
+      ? seconds - video.clip_vod_offset
+      : seconds;
+
+    playerRef.current.currentTime = Math.max(0, playerTime);
+  }, [playerRef, video.clip_vod_offset, video.type]);
+
+  const getCommentTimestampSeconds = useCallback((comment: Comment): number | null => {
+    if (!Number.isFinite(comment.content_offset_seconds)) return null;
+
+    if (video.type === VideoType.Clip && video.clip_vod_offset) {
+      return Math.max(0, comment.content_offset_seconds - video.clip_vod_offset);
+    }
+
+    return comment.content_offset_seconds;
+  }, [video.clip_vod_offset, video.type]);
 
   // Optimized badge processing
   const addBadgesToFormattedComment = useCallback((comment: Comment) => {
@@ -476,7 +498,13 @@ const ChatPlayer = ({ video }: Params) => {
         </Box>
       )}
       {messages.map((comment) => (
-        <ChatMessage key={comment._id} comment={comment} />
+        <ChatMessage
+          key={comment._id}
+          comment={comment}
+          showTimestamp={showChatTimestamps}
+          timestampSeconds={showChatTimestamps ? getCommentTimestampSeconds(comment) : null}
+          onTimestampClick={() => seekToComment(comment.content_offset_seconds)}
+        />
       ))}
     </div>
   );

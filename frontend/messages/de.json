@@ -81,6 +81,8 @@
       "smoothScrollDescription": "Aktiviere sanftes Scrollen für neue Chat-Nachrichten. Kann bei einer großen Anzahl von Nachrichten pro Sekunde schlecht aussehen.",
       "chatHistogram": "Chat-Histogramm anzeigen",
       "chatHistogramDescription": "Zeige eine visuelle Darstellung der Chat-Nachrichten während des Videos unterhalb des Videoplayers an.",
+      "chatTimestamps": "Chat-Zeitstempel anzeigen",
+      "chatTimestampsDescription": "Zeige klickbare Zeitstempel neben Chat-Nachrichten an, um zu dieser Stelle im Video zu springen.",
       "showProcessingVideos": "Verarbeitende Videos in 'Kürzlich archivierte' Videos anzeigen",
       "showProcessingVideosDescription": "Verarbeitende Videos im Abschnitt 'Kürzlich archivierte' Videos auf der Startseite anzeigen."
     },
@@ -744,6 +746,7 @@
     "chatTimeSkipDetected": "Zeitsprung erkannt. Chat geleert.",
     "chatPlayerReady": "Chat-Player bereit",
     "chatPlayerReadyStats": "Chat-Wiedergabe enthält {lengthBadges} Badges, {lengthSubBadges} Abonnenten-Badges und {lengthEmotes} Emotes.",
+    "chatJumpToTimestamp": "Zu {timestamp} springen",
     "loadingChat": "Lade Chat-Wiedergabe",
     "chatError": "Fehler",
     "filterByLabel": "Nach Kriterium filtern",

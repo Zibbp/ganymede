@@ -79,7 +79,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
         {/* Chat player */}
         {data.chat_path && !hideChat && !data.processing && (
           <div className={classes.chatColumnMobile}>
-            <ChatPlayer video={data} />
+            <ChatPlayer video={data} playerRef={player} />
           </div>
         )}
 
@@ -126,7 +126,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
                 : classes.chatColumn
             }
             >
-              <ChatPlayer video={data} />
+              <ChatPlayer video={data} playerRef={player} />
             </div>
           </div>
         )}
