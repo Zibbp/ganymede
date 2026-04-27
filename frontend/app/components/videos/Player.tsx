@@ -15,6 +15,7 @@ import VideoEventBus from '@/app/util/VideoEventBus';
 import VideoPlayerTheaterModeIcon from './PlayerTheaterModeIcon';
 import useSettingsStore from '@/app/store/useSettingsStore';
 import VideoPlayerHideChatIcon from './PlayerHideChatIcon';
+import VideoPlayerAbsoluteTimeIcon from './PlayerAbsoluteTimeIcon';
 
 interface Params {
   video: Video;
@@ -202,7 +203,12 @@ const VideoPlayer = ({ video, ref }: Params) => {
       <DefaultVideoLayout icons={defaultLayoutIcons} noScrubGesture={false}
         slots={{
           beforeFullscreenButton: <VideoPlayerTheaterModeIcon />,
-          afterFullscreenButton: <VideoPlayerHideChatIcon />
+          afterFullscreenButton: (
+            <>
+              <VideoPlayerAbsoluteTimeIcon />
+              <VideoPlayerHideChatIcon />
+            </>
+          )
         }}
         thumbnails={thumbnails}
       />
