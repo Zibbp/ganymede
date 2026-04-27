@@ -14,6 +14,7 @@ import (
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/storagetemplate"
 	"github.com/zibbp/ganymede/internal/utils"
+	"path/filepath"
 )
 
 type Service struct {
@@ -211,9 +212,9 @@ func (s *Service) UpdateChannelImage(ctx context.Context, channelID uuid.UUID, c
 	}
 
 	// Download channel profile image
-	imagePath := fmt.Sprintf("%s/%s/%s", env.VideosDir, channelFolderName, "profile.png")
+	imagePath := filepath.Join(env.VideosDir, channelFolderName, "profile.png")
 	if checkIfExists {
-		changed, err := utils.DownloadFileIfChanged(twitchChannel.ProfileImageURL, imagePath)
+		changed, err := utils.DownloadFileIfChanged(ctx, twitchChannel.ProfileImageURL, imagePath)
 		if err != nil {
 			return fmt.Errorf("error downloading channel profile image: %v", err)
 		}
@@ -225,7 +226,7 @@ func (s *Service) UpdateChannelImage(ctx context.Context, channelID uuid.UUID, c
 		return nil
 	}
 
-	err = utils.DownloadFile(twitchChannel.ProfileImageURL, imagePath)
+	err = utils.DownloadFile(ctx, twitchChannel.ProfileImageURL, imagePath)
 	if err != nil {
 		return fmt.Errorf("error downloading channel profile image: %v", err)
 	}
