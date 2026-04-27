@@ -19,7 +19,6 @@ const VideoPlayerAbsoluteTimeIcon = () => {
           size="xl"
           variant="transparent"
           onClick={toggleAbsoluteTime}
-          onTouchStart={toggleAbsoluteTime}
           className={classes.customFullScreenButton}
         >
           <IconClock size="1.7rem" />
