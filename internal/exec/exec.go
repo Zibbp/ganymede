@@ -246,6 +246,8 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		"-y",
 		"-hide_banner",
 		"-fflags", "+genpts+discardcorrupt",
+		"-rw_timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
+		"-timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
 		"-i", qualitiesURI[closestQuality],
 		"-map", "0",
 		"-dn",
