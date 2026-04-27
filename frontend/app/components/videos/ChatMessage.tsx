@@ -79,10 +79,10 @@ const ChatMessage = ({ comment, showTimestamp, timestampSeconds, onTimestampClic
                     {fragment.text}
                   </Text>
                 )
-              case GanymedeFormattedMessageType.Emote:
+              case GanymedeFormattedMessageType.Emote: {
                 const emoteName = fragment.emote?.name || fragment.text;
                 // some emotes include a height, use the provided height or hardcode a standard height if not included
-                if (fragment.emote?.height != 0 && fragment.emote?.width != 0) {
+                if ((fragment.emote?.height ?? 0) !== 0 && (fragment.emote?.width ?? 0) !== 0) {
                   return (
                     <Tooltip key={`${comment._id}-emote-${index}`} label={emoteName} position="top">
                       <img
@@ -105,6 +105,7 @@ const ChatMessage = ({ comment, showTimestamp, timestampSeconds, onTimestampClic
                     </Tooltip>
                   );
                 }
+              }
 
             }
           }

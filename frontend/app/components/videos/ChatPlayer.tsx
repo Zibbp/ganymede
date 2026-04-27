@@ -73,6 +73,12 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const { chatPlaybackSmoothScroll, showChatTimestamps } = useSettingsStore()
+  const clipVodOffset = useMemo<number | null>(() => {
+    const offset = video.clip_vod_offset;
+    return video.type === VideoType.Clip && typeof offset === "number" && Number.isFinite(offset)
+      ? offset
+      : null;
+  }, [video.clip_vod_offset, video.type]);
 
   // Custom hooks with error handling
   const { data: chatEmotes, error: emotesError } = useGetEmotesForVideo(video.id);
@@ -163,23 +169,29 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
 
   const seekToComment = useCallback((seconds: number) => {
     if (!playerRef.current) return;
+    if (!Number.isFinite(seconds)) return;
 
-    const playerTime = video.type === VideoType.Clip && video.clip_vod_offset
-      ? seconds - video.clip_vod_offset
+    const playerTime = clipVodOffset !== null
+      ? seconds - clipVodOffset
       : seconds;
 
+    if (!Number.isFinite(playerTime)) return;
+
     playerRef.current.currentTime = Math.max(0, playerTime);
-  }, [playerRef, video.clip_vod_offset, video.type]);
+  }, [clipVodOffset, playerRef]);
 
   const getCommentTimestampSeconds = useCallback((comment: Comment): number | null => {
     if (!Number.isFinite(comment.content_offset_seconds)) return null;
 
-    if (video.type === VideoType.Clip && video.clip_vod_offset) {
-      return Math.max(0, comment.content_offset_seconds - video.clip_vod_offset);
+    if (clipVodOffset !== null) {
+      const timestampSeconds = comment.content_offset_seconds - clipVodOffset;
+      if (!Number.isFinite(timestampSeconds)) return null;
+
+      return Math.max(0, timestampSeconds);
     }
 
     return comment.content_offset_seconds;
-  }, [video.clip_vod_offset, video.type]);
+  }, [clipVodOffset]);
 
   // Optimized badge processing
   const addBadgesToFormattedComment = useCallback((comment: Comment) => {
@@ -503,7 +515,10 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
           comment={comment}
           showTimestamp={showChatTimestamps}
           timestampSeconds={showChatTimestamps ? getCommentTimestampSeconds(comment) : null}
-          onTimestampClick={() => seekToComment(comment.content_offset_seconds)}
+          onTimestampClick={() => {
+            if (!Number.isFinite(comment.content_offset_seconds)) return;
+            seekToComment(comment.content_offset_seconds);
+          }}
         />
       ))}
     </div>
