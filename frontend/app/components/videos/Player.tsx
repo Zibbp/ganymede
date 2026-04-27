@@ -1,10 +1,10 @@
 import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/default/layouts/video.css';
-import { MediaPlayer, MediaPlayerInstance, MediaProvider, MediaSrc, Poster, Track, VideoMimeType, useMediaStore } from '@vidstack/react';
+import { MediaPlayer, MediaPlayerInstance, MediaProvider, MediaSrc, Poster, Track, VideoMimeType, useMediaState } from '@vidstack/react';
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default';
 import { Video, VideoType } from '@/app/hooks/useVideos';
 import classes from "./Player.module.css"
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { env } from 'next-runtime-env';
 import dayjs from 'dayjs';
 import { escapeURL } from '@/app/util/util';
@@ -24,8 +24,12 @@ interface Params {
 }
 
 const AbsoluteTimeDisplay = ({ streamedAt }: { streamedAt: string | Date }) => {
-  const { currentTime } = useMediaStore();
-  const absoluteTime = dayjs(streamedAt).add(currentTime, 'second');
+  const currentTime = useMediaState('currentTime');
+  const flooredCurrentTime = Math.floor(currentTime);
+  const absoluteTime = useMemo(
+    () => dayjs(streamedAt).add(flooredCurrentTime, 'second'),
+    [streamedAt, flooredCurrentTime],
+  );
 
   return (
     <div className={classes.absoluteTimeOverlay}>
