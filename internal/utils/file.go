@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -106,6 +107,47 @@ func DownloadFile(url, path string) error {
 		return fmt.Errorf("error writing file: %v", err)
 	}
 	return nil
+}
+
+// DownloadFileIfChanged downloads file from url to the path provided only if the content is different
+func DownloadFileIfChanged(url, path string) (bool, error) {
+	log.Debug().Msgf("downloading file to check for changes: %s", url)
+	resp, err := http.Get(url)
+	if err != nil {
+		return false, fmt.Errorf("error downloading file: %v", err)
+	}
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Debug().Err(err).Msg("error closing response body")
+		}
+	}()
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("error downloading file: %v", resp)
+	}
+
+	newContent, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false, fmt.Errorf("error reading response body: %v", err)
+	}
+
+	if FileExists(path) {
+		existingContent, err := os.ReadFile(path)
+		if err == nil {
+			if bytes.Equal(existingContent, newContent) {
+				// Files are the same, no need to overwrite
+				return false, nil
+			}
+		} else {
+			log.Debug().Err(err).Msg("error reading existing file, proceeding to overwrite")
+		}
+	}
+
+	err = os.WriteFile(path, newContent, 0644)
+	if err != nil {
+		return false, fmt.Errorf("error writing file: %v", err)
+	}
+
+	return true, nil
 }
 
 func WriteJsonFile(j interface{}, path string) error {
