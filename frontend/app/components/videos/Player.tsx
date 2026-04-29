@@ -56,6 +56,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
   const showAbsoluteTime = useSettingsStore((state) => state.showAbsoluteTime);
+  const autoplayVideo = useSettingsStore((state) => state.autoplayVideo);
 
   const axiosPrivate = useAxiosPrivate();
   // get playback data
@@ -206,6 +207,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
       load="eager"
       posterLoad="eager"
       volume={playerVolume}
+      autoPlay={autoplayVideo}
     >
       {showAbsoluteTime && <AbsoluteTimeDisplay streamedAt={video.streamed_at} />}
       <MediaProvider>
