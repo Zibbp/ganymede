@@ -84,7 +84,9 @@
       "chatTimestamps": "Chat-Zeitstempel anzeigen",
       "chatTimestampsDescription": "Zeige klickbare Zeitstempel neben Chat-Nachrichten an, um zu dieser Stelle im Video zu springen.",
       "showProcessingVideos": "Verarbeitende Videos in 'Kürzlich archivierte' Videos anzeigen",
-      "showProcessingVideosDescription": "Verarbeitende Videos im Abschnitt 'Kürzlich archivierte' Videos auf der Startseite anzeigen."
+      "showProcessingVideosDescription": "Verarbeitende Videos im Abschnitt 'Kürzlich archivierte' Videos auf der Startseite anzeigen.",
+      "autoplayVideo": "Videos automatisch abspielen",
+      "autoplayVideoDescription": "Videos automatisch starten, wenn sie geladen sind."
     },
     "changePassword": {
       "title": "Passwort ändern",

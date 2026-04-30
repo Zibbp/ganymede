@@ -84,7 +84,9 @@
       "chatTimestamps": "Show chat timestamps",
       "chatTimestampsDescription": "Show clickable timestamps next to chat messages for jumping to that moment in the video.",
       "showProcessingVideos": "Show Processing Videos in Recently Archived Videos",
-      "showProcessingVideosDescription": "Display processing videos in the 'Recently Archived' videos section on the home page."
+      "showProcessingVideosDescription": "Display processing videos in the 'Recently Archived' videos section on the home page.",
+      "autoplayVideo": "Autoplay videos",
+      "autoplayVideoDescription": "Automatically start playing videos when they are loaded."
     },
     "changePassword": {
       "title": "Change Password",
