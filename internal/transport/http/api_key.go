@@ -17,29 +17,37 @@ import (
 // kept narrow so handler tests can stub it without spinning up the full
 // service.
 type ApiKeyService interface {
-	Create(ctx context.Context, name, description string, scope utils.ApiKeyScope) (*ent.ApiKey, string, error)
+	Create(ctx context.Context, name, description string, scopes []utils.ApiKeyScope) (*ent.ApiKey, string, error)
 	List(ctx context.Context) ([]*ent.ApiKey, error)
 	Revoke(ctx context.Context, id uuid.UUID) error
 }
 
 // CreateApiKeyRequest is the JSON body for POST /admin/api-keys.
+//
+// Each entry in Scopes must be a known utils.ApiKeyScope (resource:tier);
+// validation runs in the service layer (rather than via a struct tag) so
+// 400 responses can name the offending scope rather than dumping the full
+// catalog of 45+ valid strings.
 type CreateApiKeyRequest struct {
-	Name        string `json:"name"        validate:"required,min=3,max=50"`
-	Description string `json:"description" validate:"max=500"`
-	Scope       string `json:"scope"       validate:"required,oneof=read write admin"`
+	Name        string   `json:"name"        validate:"required,min=3,max=50"`
+	Description string   `json:"description" validate:"max=500"`
+	Scopes      []string `json:"scopes"      validate:"required,min=1"`
 }
 
 // apiKeyDTO is the JSON shape returned in list and create responses. We
 // build this explicitly rather than marshalling *ent.ApiKey so the
 // hashed_secret column never leaves the server, even by accident.
 type apiKeyDTO struct {
-	ID          uuid.UUID         `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Prefix      string            `json:"prefix"`
-	Scope       utils.ApiKeyScope `json:"scope"`
-	LastUsedAt  *time.Time        `json:"last_used_at"`
-	CreatedAt   time.Time         `json:"created_at"`
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Prefix      string    `json:"prefix"`
+	// Scopes is the raw list of resource:tier strings granted to the key.
+	// Frontend converts these to badges; clients use them to predict what
+	// requests will succeed.
+	Scopes     []string   `json:"scopes"`
+	LastUsedAt *time.Time `json:"last_used_at"`
+	CreatedAt  time.Time  `json:"created_at"`
 }
 
 // createApiKeyResponse is the response body for POST /admin/api-keys. The
@@ -51,12 +59,17 @@ type createApiKeyResponse struct {
 }
 
 func toAPIKeyDTO(k *ent.ApiKey) apiKeyDTO {
+	scopes := k.Scopes
+	if scopes == nil {
+		// Avoid serialising a null when the column happens to be empty.
+		scopes = []string{}
+	}
 	return apiKeyDTO{
 		ID:          k.ID,
 		Name:        k.Name,
 		Description: k.Description,
 		Prefix:      k.Prefix,
-		Scope:       k.Scope,
+		Scopes:      scopes,
 		LastUsedAt:  k.LastUsedAt,
 		CreatedAt:   k.CreatedAt,
 	}
@@ -112,14 +125,24 @@ func (h *Handler) CreateApiKey(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
+	scopes := utils.ApiKeyScopesFromStrings(req.Scopes)
+	for _, s := range scopes {
+		if !s.IsValid() {
+			return ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("unknown scope: %q", s))
+		}
+	}
+
 	created, secret, err := h.Service.ApiKeyService.Create(
 		c.Request().Context(),
 		req.Name,
 		req.Description,
-		utils.ApiKeyScope(req.Scope),
+		scopes,
 	)
 	if err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("error creating api key: %v", err))
+		// Distinguish service-side validation (e.g. empty list after dedup)
+		// from genuine internal failures so the admin gets an actionable
+		// 400 rather than a generic 500.
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("error creating api key: %v", err))
 	}
 
 	resp := createApiKeyResponse{

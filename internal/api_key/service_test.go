@@ -22,12 +22,12 @@ func TestApiKeyService(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Create persists hashed_secret distinct from plaintext", func(t *testing.T) {
-		key, full, err := svc.Create(ctx, "create-test", "first key", utils.ApiKeyScopeRead)
+		key, full, err := svc.Create(ctx, "create-test", "first key", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
 		require.NoError(t, err)
 		require.NotEmpty(t, full)
 		assert.NotEqual(t, full, key.HashedSecret, "hashed_secret must not equal plaintext token")
 		assert.NotEmpty(t, key.Prefix)
-		assert.Equal(t, utils.ApiKeyScopeRead, key.Scope)
+		assert.Equal(t, []string{string(utils.ApiKeyScopeVodRead)}, key.Scopes)
 
 		_, secret, err := api_key.Parse(full)
 		require.NoError(t, err)
@@ -35,14 +35,29 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("Create rejects unknown scope", func(t *testing.T) {
-		_, _, err := svc.Create(ctx, "bogus-scope", "", utils.ApiKeyScope("bogus"))
+		_, _, err := svc.Create(ctx, "bogus-scope", "", []utils.ApiKeyScope{utils.ApiKeyScope("bogus:read")})
 		assert.Error(t, err)
 	})
 
-	t.Run("List returns non-revoked keys, newest first", func(t *testing.T) {
-		toRevoke, _, err := svc.Create(ctx, "list-revoke-target", "", utils.ApiKeyScopeWrite)
+	t.Run("Create rejects empty scope list", func(t *testing.T) {
+		_, _, err := svc.Create(ctx, "no-scope", "", nil)
+		assert.Error(t, err)
+	})
+
+	t.Run("Create de-duplicates repeated scopes", func(t *testing.T) {
+		key, _, err := svc.Create(ctx, "dedup", "", []utils.ApiKeyScope{
+			utils.ApiKeyScopeVodWrite, utils.ApiKeyScopeVodWrite, utils.ApiKeyScopePlaylistRead,
+		})
 		require.NoError(t, err)
-		_, _, err = svc.Create(ctx, "list-keep", "", utils.ApiKeyScopeWrite)
+		assert.ElementsMatch(t, []string{
+			string(utils.ApiKeyScopeVodWrite), string(utils.ApiKeyScopePlaylistRead),
+		}, key.Scopes)
+	})
+
+	t.Run("List returns non-revoked keys, newest first", func(t *testing.T) {
+		toRevoke, _, err := svc.Create(ctx, "list-revoke-target", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodWrite})
+		require.NoError(t, err)
+		_, _, err = svc.Create(ctx, "list-keep", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodWrite})
 		require.NoError(t, err)
 
 		require.NoError(t, svc.Revoke(ctx, toRevoke.ID))
@@ -55,7 +70,7 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("GetByPrefix excludes revoked", func(t *testing.T) {
-		key, _, err := svc.Create(ctx, "revoke-prefix-target", "", utils.ApiKeyScopeAdmin)
+		key, _, err := svc.Create(ctx, "revoke-prefix-target", "", []utils.ApiKeyScope{utils.ApiKeyScopeAllAdmin})
 		require.NoError(t, err)
 		require.NoError(t, svc.Revoke(ctx, key.ID))
 
@@ -64,11 +79,11 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("Revoke flushes the verification cache", func(t *testing.T) {
-		key, full, err := svc.Create(ctx, "cache-flush", "", utils.ApiKeyScopeRead)
+		key, full, err := svc.Create(ctx, "cache-flush", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
 		require.NoError(t, err)
 
 		// Prime the cache.
-		svc.Cache.Set(full, key.ID, key.Scope)
+		svc.Cache.Set(full, key.ID, utils.ApiKeyScopesFromStrings(key.Scopes))
 		_, _, hit := svc.Cache.Get(full)
 		require.True(t, hit, "cache should be primed before revoke")
 
@@ -79,7 +94,7 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("TouchLastUsed updates after debounce window", func(t *testing.T) {
-		key, _, err := svc.Create(ctx, "touch-test", "", utils.ApiKeyScopeRead)
+		key, _, err := svc.Create(ctx, "touch-test", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
 		require.NoError(t, err)
 
 		require.NoError(t, svc.TouchLastUsed(ctx, key.ID))

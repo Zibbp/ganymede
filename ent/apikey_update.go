@@ -10,10 +10,10 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/zibbp/ganymede/ent/apikey"
 	"github.com/zibbp/ganymede/ent/predicate"
-	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // ApiKeyUpdate is the builder for updating ApiKey entities.
@@ -63,17 +63,15 @@ func (_u *ApiKeyUpdate) ClearDescription() *ApiKeyUpdate {
 	return _u
 }
 
-// SetScope sets the "scope" field.
-func (_u *ApiKeyUpdate) SetScope(v utils.ApiKeyScope) *ApiKeyUpdate {
-	_u.mutation.SetScope(v)
+// SetScopes sets the "scopes" field.
+func (_u *ApiKeyUpdate) SetScopes(v []string) *ApiKeyUpdate {
+	_u.mutation.SetScopes(v)
 	return _u
 }
 
-// SetNillableScope sets the "scope" field if the given value is not nil.
-func (_u *ApiKeyUpdate) SetNillableScope(v *utils.ApiKeyScope) *ApiKeyUpdate {
-	if v != nil {
-		_u.SetScope(*v)
-	}
+// AppendScopes appends value to the "scopes" field.
+func (_u *ApiKeyUpdate) AppendScopes(v []string) *ApiKeyUpdate {
+	_u.mutation.AppendScopes(v)
 	return _u
 }
 
@@ -171,11 +169,6 @@ func (_u *ApiKeyUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApiKey.name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Scope(); ok {
-		if err := apikey.ScopeValidator(v); err != nil {
-			return &ValidationError{Name: "scope", err: fmt.Errorf(`ent: validator failed for field "ApiKey.scope": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -200,8 +193,13 @@ func (_u *ApiKeyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(apikey.FieldDescription, field.TypeString)
 	}
-	if value, ok := _u.mutation.Scope(); ok {
-		_spec.SetField(apikey.FieldScope, field.TypeEnum, value)
+	if value, ok := _u.mutation.Scopes(); ok {
+		_spec.SetField(apikey.FieldScopes, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedScopes(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, apikey.FieldScopes, value)
+		})
 	}
 	if value, ok := _u.mutation.LastUsedAt(); ok {
 		_spec.SetField(apikey.FieldLastUsedAt, field.TypeTime, value)
@@ -272,17 +270,15 @@ func (_u *ApiKeyUpdateOne) ClearDescription() *ApiKeyUpdateOne {
 	return _u
 }
 
-// SetScope sets the "scope" field.
-func (_u *ApiKeyUpdateOne) SetScope(v utils.ApiKeyScope) *ApiKeyUpdateOne {
-	_u.mutation.SetScope(v)
+// SetScopes sets the "scopes" field.
+func (_u *ApiKeyUpdateOne) SetScopes(v []string) *ApiKeyUpdateOne {
+	_u.mutation.SetScopes(v)
 	return _u
 }
 
-// SetNillableScope sets the "scope" field if the given value is not nil.
-func (_u *ApiKeyUpdateOne) SetNillableScope(v *utils.ApiKeyScope) *ApiKeyUpdateOne {
-	if v != nil {
-		_u.SetScope(*v)
-	}
+// AppendScopes appends value to the "scopes" field.
+func (_u *ApiKeyUpdateOne) AppendScopes(v []string) *ApiKeyUpdateOne {
+	_u.mutation.AppendScopes(v)
 	return _u
 }
 
@@ -393,11 +389,6 @@ func (_u *ApiKeyUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApiKey.name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Scope(); ok {
-		if err := apikey.ScopeValidator(v); err != nil {
-			return &ValidationError{Name: "scope", err: fmt.Errorf(`ent: validator failed for field "ApiKey.scope": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -439,8 +430,13 @@ func (_u *ApiKeyUpdateOne) sqlSave(ctx context.Context) (_node *ApiKey, err erro
 	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(apikey.FieldDescription, field.TypeString)
 	}
-	if value, ok := _u.mutation.Scope(); ok {
-		_spec.SetField(apikey.FieldScope, field.TypeEnum, value)
+	if value, ok := _u.mutation.Scopes(); ok {
+		_spec.SetField(apikey.FieldScopes, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedScopes(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, apikey.FieldScopes, value)
+		})
 	}
 	if value, ok := _u.mutation.LastUsedAt(); ok {
 		_spec.SetField(apikey.FieldLastUsedAt, field.TypeTime, value)

@@ -45,6 +45,10 @@ func init() {
 	apikeyDescHashedSecret := apikeyFields[4].Descriptor()
 	// apikey.HashedSecretValidator is a validator for the "hashed_secret" field. It is called by the builders before save.
 	apikey.HashedSecretValidator = apikeyDescHashedSecret.Validators[0].(func(string) error)
+	// apikeyDescScopes is the schema descriptor for scopes field.
+	apikeyDescScopes := apikeyFields[5].Descriptor()
+	// apikey.DefaultScopes holds the default value on creation for the scopes field.
+	apikey.DefaultScopes = apikeyDescScopes.Default.([]string)
 	// apikeyDescUpdatedAt is the schema descriptor for updated_at field.
 	apikeyDescUpdatedAt := apikeyFields[8].Descriptor()
 	// apikey.DefaultUpdatedAt holds the default value on creation for the updated_at field.

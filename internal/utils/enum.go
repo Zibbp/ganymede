@@ -145,17 +145,6 @@ type ApiKeyScope string
 // Predeclared scopes. Routes use these in calls to RequireRoleOrScope;
 // the create form offers them in its catalog.
 const (
-	// Legacy bare-tier scopes. Predate the resource:tier model; retained
-	// as transitional so existing routes/tests/ent enum values keep
-	// compiling and validating during the migration. The follow-up
-	// commit that flips the schema to a JSON list also retags routes to
-	// the precise per-resource scopes below and removes these.
-	//
-	// Deprecated: use the resource-specific scopes (e.g. ApiKeyScopeVodRead).
-	ApiKeyScopeRead  ApiKeyScope = "read"
-	ApiKeyScopeWrite ApiKeyScope = "write"
-	ApiKeyScopeAdmin ApiKeyScope = "admin"
-
 	// Wildcard scopes apply across every resource.
 	ApiKeyScopeAllRead  ApiKeyScope = "*:read"
 	ApiKeyScopeAllWrite ApiKeyScope = "*:write"
@@ -288,19 +277,6 @@ func AllApiKeyScopes() []ApiKeyScope {
 // wrapper for callers that have a string and don't want to convert.
 func IsValidApiKeyScope(scope string) bool {
 	return ApiKeyScope(scope).IsValid()
-}
-
-// Values implements ent's EnumValues interface. Returns the legacy
-// bare-tier values so the existing field.Enum("scope") schema and its
-// generated ScopeValidator keep accepting current DB rows. The schema
-// flips to a JSON list of resource:tier strings in a follow-up commit,
-// at which point this method is no longer reachable.
-func (ApiKeyScope) Values() []string {
-	return []string{
-		string(ApiKeyScopeRead),
-		string(ApiKeyScopeWrite),
-		string(ApiKeyScopeAdmin),
-	}
 }
 
 // ApiKeyScopes is a typed slice with helper methods. A key's permissions

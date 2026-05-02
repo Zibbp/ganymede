@@ -3,12 +3,10 @@
 package apikey
 
 import (
-	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/zibbp/ganymede/internal/utils"
 )
 
 const (
@@ -24,8 +22,8 @@ const (
 	FieldPrefix = "prefix"
 	// FieldHashedSecret holds the string denoting the hashed_secret field in the database.
 	FieldHashedSecret = "hashed_secret"
-	// FieldScope holds the string denoting the scope field in the database.
-	FieldScope = "scope"
+	// FieldScopes holds the string denoting the scopes field in the database.
+	FieldScopes = "scopes"
 	// FieldLastUsedAt holds the string denoting the last_used_at field in the database.
 	FieldLastUsedAt = "last_used_at"
 	// FieldRevokedAt holds the string denoting the revoked_at field in the database.
@@ -45,7 +43,7 @@ var Columns = []string{
 	FieldDescription,
 	FieldPrefix,
 	FieldHashedSecret,
-	FieldScope,
+	FieldScopes,
 	FieldLastUsedAt,
 	FieldRevokedAt,
 	FieldUpdatedAt,
@@ -69,6 +67,8 @@ var (
 	PrefixValidator func(string) error
 	// HashedSecretValidator is a validator for the "hashed_secret" field. It is called by the builders before save.
 	HashedSecretValidator func(string) error
+	// DefaultScopes holds the default value on creation for the "scopes" field.
+	DefaultScopes []string
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
@@ -78,16 +78,6 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
-
-// ScopeValidator is a validator for the "scope" field enum values. It is called by the builders before save.
-func ScopeValidator(s utils.ApiKeyScope) error {
-	switch s {
-	case "read", "write", "admin":
-		return nil
-	default:
-		return fmt.Errorf("apikey: invalid enum value for scope field: %q", s)
-	}
-}
 
 // OrderOption defines the ordering options for the ApiKey queries.
 type OrderOption func(*sql.Selector)
@@ -115,11 +105,6 @@ func ByPrefix(opts ...sql.OrderTermOption) OrderOption {
 // ByHashedSecret orders the results by the hashed_secret field.
 func ByHashedSecret(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldHashedSecret, opts...).ToFunc()
-}
-
-// ByScope orders the results by the scope field.
-func ByScope(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldScope, opts...).ToFunc()
 }
 
 // ByLastUsedAt orders the results by the last_used_at field.

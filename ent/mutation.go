@@ -75,7 +75,8 @@ type ApiKeyMutation struct {
 	description   *string
 	prefix        *string
 	hashed_secret *string
-	scope         *utils.ApiKeyScope
+	scopes        *[]string
+	appendscopes  []string
 	last_used_at  *time.Time
 	revoked_at    *time.Time
 	updated_at    *time.Time
@@ -347,40 +348,55 @@ func (m *ApiKeyMutation) ResetHashedSecret() {
 	m.hashed_secret = nil
 }
 
-// SetScope sets the "scope" field.
-func (m *ApiKeyMutation) SetScope(uks utils.ApiKeyScope) {
-	m.scope = &uks
+// SetScopes sets the "scopes" field.
+func (m *ApiKeyMutation) SetScopes(s []string) {
+	m.scopes = &s
+	m.appendscopes = nil
 }
 
-// Scope returns the value of the "scope" field in the mutation.
-func (m *ApiKeyMutation) Scope() (r utils.ApiKeyScope, exists bool) {
-	v := m.scope
+// Scopes returns the value of the "scopes" field in the mutation.
+func (m *ApiKeyMutation) Scopes() (r []string, exists bool) {
+	v := m.scopes
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldScope returns the old "scope" field's value of the ApiKey entity.
+// OldScopes returns the old "scopes" field's value of the ApiKey entity.
 // If the ApiKey object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ApiKeyMutation) OldScope(ctx context.Context) (v utils.ApiKeyScope, err error) {
+func (m *ApiKeyMutation) OldScopes(ctx context.Context) (v []string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldScope is only allowed on UpdateOne operations")
+		return v, errors.New("OldScopes is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldScope requires an ID field in the mutation")
+		return v, errors.New("OldScopes requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldScope: %w", err)
+		return v, fmt.Errorf("querying old value for OldScopes: %w", err)
 	}
-	return oldValue.Scope, nil
+	return oldValue.Scopes, nil
 }
 
-// ResetScope resets all changes to the "scope" field.
-func (m *ApiKeyMutation) ResetScope() {
-	m.scope = nil
+// AppendScopes adds s to the "scopes" field.
+func (m *ApiKeyMutation) AppendScopes(s []string) {
+	m.appendscopes = append(m.appendscopes, s...)
+}
+
+// AppendedScopes returns the list of values that were appended to the "scopes" field in this mutation.
+func (m *ApiKeyMutation) AppendedScopes() ([]string, bool) {
+	if len(m.appendscopes) == 0 {
+		return nil, false
+	}
+	return m.appendscopes, true
+}
+
+// ResetScopes resets all changes to the "scopes" field.
+func (m *ApiKeyMutation) ResetScopes() {
+	m.scopes = nil
+	m.appendscopes = nil
 }
 
 // SetLastUsedAt sets the "last_used_at" field.
@@ -600,8 +616,8 @@ func (m *ApiKeyMutation) Fields() []string {
 	if m.hashed_secret != nil {
 		fields = append(fields, apikey.FieldHashedSecret)
 	}
-	if m.scope != nil {
-		fields = append(fields, apikey.FieldScope)
+	if m.scopes != nil {
+		fields = append(fields, apikey.FieldScopes)
 	}
 	if m.last_used_at != nil {
 		fields = append(fields, apikey.FieldLastUsedAt)
@@ -631,8 +647,8 @@ func (m *ApiKeyMutation) Field(name string) (ent.Value, bool) {
 		return m.Prefix()
 	case apikey.FieldHashedSecret:
 		return m.HashedSecret()
-	case apikey.FieldScope:
-		return m.Scope()
+	case apikey.FieldScopes:
+		return m.Scopes()
 	case apikey.FieldLastUsedAt:
 		return m.LastUsedAt()
 	case apikey.FieldRevokedAt:
@@ -658,8 +674,8 @@ func (m *ApiKeyMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldPrefix(ctx)
 	case apikey.FieldHashedSecret:
 		return m.OldHashedSecret(ctx)
-	case apikey.FieldScope:
-		return m.OldScope(ctx)
+	case apikey.FieldScopes:
+		return m.OldScopes(ctx)
 	case apikey.FieldLastUsedAt:
 		return m.OldLastUsedAt(ctx)
 	case apikey.FieldRevokedAt:
@@ -705,12 +721,12 @@ func (m *ApiKeyMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetHashedSecret(v)
 		return nil
-	case apikey.FieldScope:
-		v, ok := value.(utils.ApiKeyScope)
+	case apikey.FieldScopes:
+		v, ok := value.([]string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetScope(v)
+		m.SetScopes(v)
 		return nil
 	case apikey.FieldLastUsedAt:
 		v, ok := value.(time.Time)
@@ -822,8 +838,8 @@ func (m *ApiKeyMutation) ResetField(name string) error {
 	case apikey.FieldHashedSecret:
 		m.ResetHashedSecret()
 		return nil
-	case apikey.FieldScope:
-		m.ResetScope()
+	case apikey.FieldScopes:
+		m.ResetScopes()
 		return nil
 	case apikey.FieldLastUsedAt:
 		m.ResetLastUsedAt()

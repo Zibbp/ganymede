@@ -48,16 +48,34 @@ func TestApiKeyHTTP(t *testing.T) {
 
 	t.Run("CreateRequiresAdminBody", func(t *testing.T) {
 		e.POST("/admin/api-keys").
-			WithJSON(internalHttp.CreateApiKeyRequest{Name: "x", Scope: "read"}).
+			WithJSON(internalHttp.CreateApiKeyRequest{Name: "x", Scopes: []string{"vod:read"}}).
 			Expect().
 			Status(http.StatusBadRequest) // name too short
+	})
+
+	t.Run("CreateRejectsUnknownScope", func(t *testing.T) {
+		e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{Name: "bogus-scope-test", Scopes: []string{"bogus:read"}}).
+			Expect().
+			Status(http.StatusBadRequest)
+	})
+
+	t.Run("CreateRequiresAtLeastOneScope", func(t *testing.T) {
+		e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{Name: "no-scope-test", Scopes: []string{}}).
+			Expect().
+			Status(http.StatusBadRequest)
 	})
 
 	var fullSecret, prefix string
 
 	t.Run("AdminCreateReturnsSecretOnce", func(t *testing.T) {
 		obj := e.POST("/admin/api-keys").
-			WithJSON(internalHttp.CreateApiKeyRequest{Name: "test-admin-key", Description: "integration", Scope: "admin"}).
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:        "test-admin-key",
+				Description: "integration",
+				Scopes:      []string{"*:admin"},
+			}).
 			Expect().
 			Status(http.StatusCreated).
 			JSON().Object()
@@ -66,6 +84,8 @@ func TestApiKeyHTTP(t *testing.T) {
 		fullSecret = data.Value("secret").String().NotEmpty().Raw()
 		prefix = data.Value("api_key").Object().Value("prefix").String().NotEmpty().Raw()
 		assert.NotEqual(t, fullSecret, prefix)
+		// Scopes round-trip on the response DTO.
+		data.Value("api_key").Object().Value("scopes").Array().ContainsAll("*:admin")
 	})
 
 	t.Run("ListReturnsCreatedKeyWithoutSecret", func(t *testing.T) {
@@ -93,7 +113,7 @@ func TestApiKeyHTTP(t *testing.T) {
 	var revokedSecret string
 	t.Run("RevokedKeyIsRejected", func(t *testing.T) {
 		obj := e.POST("/admin/api-keys").
-			WithJSON(internalHttp.CreateApiKeyRequest{Name: "to-revoke", Scope: "admin"}).
+			WithJSON(internalHttp.CreateApiKeyRequest{Name: "to-revoke", Scopes: []string{"*:admin"}}).
 			Expect().Status(http.StatusCreated).JSON().Object()
 		revokedSecret = obj.Path("$.data.secret").String().NotEmpty().Raw()
 		id := obj.Path("$.data.api_key.id").String().NotEmpty().Raw()

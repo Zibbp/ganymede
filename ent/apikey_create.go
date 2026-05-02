@@ -14,7 +14,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/apikey"
-	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // ApiKeyCreate is the builder for creating a ApiKey entity.
@@ -57,9 +56,9 @@ func (_c *ApiKeyCreate) SetHashedSecret(v string) *ApiKeyCreate {
 	return _c
 }
 
-// SetScope sets the "scope" field.
-func (_c *ApiKeyCreate) SetScope(v utils.ApiKeyScope) *ApiKeyCreate {
-	_c.mutation.SetScope(v)
+// SetScopes sets the "scopes" field.
+func (_c *ApiKeyCreate) SetScopes(v []string) *ApiKeyCreate {
+	_c.mutation.SetScopes(v)
 	return _c
 }
 
@@ -168,6 +167,10 @@ func (_c *ApiKeyCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *ApiKeyCreate) defaults() {
+	if _, ok := _c.mutation.Scopes(); !ok {
+		v := apikey.DefaultScopes
+		_c.mutation.SetScopes(v)
+	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := apikey.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
@@ -208,13 +211,8 @@ func (_c *ApiKeyCreate) check() error {
 			return &ValidationError{Name: "hashed_secret", err: fmt.Errorf(`ent: validator failed for field "ApiKey.hashed_secret": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.Scope(); !ok {
-		return &ValidationError{Name: "scope", err: errors.New(`ent: missing required field "ApiKey.scope"`)}
-	}
-	if v, ok := _c.mutation.Scope(); ok {
-		if err := apikey.ScopeValidator(v); err != nil {
-			return &ValidationError{Name: "scope", err: fmt.Errorf(`ent: validator failed for field "ApiKey.scope": %w`, err)}
-		}
+	if _, ok := _c.mutation.Scopes(); !ok {
+		return &ValidationError{Name: "scopes", err: errors.New(`ent: missing required field "ApiKey.scopes"`)}
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ApiKey.updated_at"`)}
@@ -274,9 +272,9 @@ func (_c *ApiKeyCreate) createSpec() (*ApiKey, *sqlgraph.CreateSpec) {
 		_spec.SetField(apikey.FieldHashedSecret, field.TypeString, value)
 		_node.HashedSecret = value
 	}
-	if value, ok := _c.mutation.Scope(); ok {
-		_spec.SetField(apikey.FieldScope, field.TypeEnum, value)
-		_node.Scope = value
+	if value, ok := _c.mutation.Scopes(); ok {
+		_spec.SetField(apikey.FieldScopes, field.TypeJSON, value)
+		_node.Scopes = value
 	}
 	if value, ok := _c.mutation.LastUsedAt(); ok {
 		_spec.SetField(apikey.FieldLastUsedAt, field.TypeTime, value)
@@ -376,15 +374,15 @@ func (u *ApiKeyUpsert) ClearDescription() *ApiKeyUpsert {
 	return u
 }
 
-// SetScope sets the "scope" field.
-func (u *ApiKeyUpsert) SetScope(v utils.ApiKeyScope) *ApiKeyUpsert {
-	u.Set(apikey.FieldScope, v)
+// SetScopes sets the "scopes" field.
+func (u *ApiKeyUpsert) SetScopes(v []string) *ApiKeyUpsert {
+	u.Set(apikey.FieldScopes, v)
 	return u
 }
 
-// UpdateScope sets the "scope" field to the value that was provided on create.
-func (u *ApiKeyUpsert) UpdateScope() *ApiKeyUpsert {
-	u.SetExcluded(apikey.FieldScope)
+// UpdateScopes sets the "scopes" field to the value that was provided on create.
+func (u *ApiKeyUpsert) UpdateScopes() *ApiKeyUpsert {
+	u.SetExcluded(apikey.FieldScopes)
 	return u
 }
 
@@ -528,17 +526,17 @@ func (u *ApiKeyUpsertOne) ClearDescription() *ApiKeyUpsertOne {
 	})
 }
 
-// SetScope sets the "scope" field.
-func (u *ApiKeyUpsertOne) SetScope(v utils.ApiKeyScope) *ApiKeyUpsertOne {
+// SetScopes sets the "scopes" field.
+func (u *ApiKeyUpsertOne) SetScopes(v []string) *ApiKeyUpsertOne {
 	return u.Update(func(s *ApiKeyUpsert) {
-		s.SetScope(v)
+		s.SetScopes(v)
 	})
 }
 
-// UpdateScope sets the "scope" field to the value that was provided on create.
-func (u *ApiKeyUpsertOne) UpdateScope() *ApiKeyUpsertOne {
+// UpdateScopes sets the "scopes" field to the value that was provided on create.
+func (u *ApiKeyUpsertOne) UpdateScopes() *ApiKeyUpsertOne {
 	return u.Update(func(s *ApiKeyUpsert) {
-		s.UpdateScope()
+		s.UpdateScopes()
 	})
 }
 
@@ -857,17 +855,17 @@ func (u *ApiKeyUpsertBulk) ClearDescription() *ApiKeyUpsertBulk {
 	})
 }
 
-// SetScope sets the "scope" field.
-func (u *ApiKeyUpsertBulk) SetScope(v utils.ApiKeyScope) *ApiKeyUpsertBulk {
+// SetScopes sets the "scopes" field.
+func (u *ApiKeyUpsertBulk) SetScopes(v []string) *ApiKeyUpsertBulk {
 	return u.Update(func(s *ApiKeyUpsert) {
-		s.SetScope(v)
+		s.SetScopes(v)
 	})
 }
 
-// UpdateScope sets the "scope" field to the value that was provided on create.
-func (u *ApiKeyUpsertBulk) UpdateScope() *ApiKeyUpsertBulk {
+// UpdateScopes sets the "scopes" field to the value that was provided on create.
+func (u *ApiKeyUpsertBulk) UpdateScopes() *ApiKeyUpsertBulk {
 	return u.Update(func(s *ApiKeyUpsert) {
-		s.UpdateScope()
+		s.UpdateScopes()
 	})
 }
 

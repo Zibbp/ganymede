@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/apikey"
-	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // ApiKey is the model entity for the ApiKey schema.
@@ -27,8 +27,8 @@ type ApiKey struct {
 	Prefix string `json:"prefix,omitempty"`
 	// HashedSecret holds the value of the "hashed_secret" field.
 	HashedSecret string `json:"-"`
-	// Scope holds the value of the "scope" field.
-	Scope utils.ApiKeyScope `json:"scope,omitempty"`
+	// Scopes holds the value of the "scopes" field.
+	Scopes []string `json:"scopes,omitempty"`
 	// LastUsedAt holds the value of the "last_used_at" field.
 	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
 	// RevokedAt holds the value of the "revoked_at" field.
@@ -45,7 +45,9 @@ func (*ApiKey) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case apikey.FieldName, apikey.FieldDescription, apikey.FieldPrefix, apikey.FieldHashedSecret, apikey.FieldScope:
+		case apikey.FieldScopes:
+			values[i] = new([]byte)
+		case apikey.FieldName, apikey.FieldDescription, apikey.FieldPrefix, apikey.FieldHashedSecret:
 			values[i] = new(sql.NullString)
 		case apikey.FieldLastUsedAt, apikey.FieldRevokedAt, apikey.FieldUpdatedAt, apikey.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -96,11 +98,13 @@ func (_m *ApiKey) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.HashedSecret = value.String
 			}
-		case apikey.FieldScope:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field scope", values[i])
-			} else if value.Valid {
-				_m.Scope = utils.ApiKeyScope(value.String)
+		case apikey.FieldScopes:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field scopes", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Scopes); err != nil {
+					return fmt.Errorf("unmarshal field scopes: %w", err)
+				}
 			}
 		case apikey.FieldLastUsedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -175,8 +179,8 @@ func (_m *ApiKey) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("hashed_secret=<sensitive>")
 	builder.WriteString(", ")
-	builder.WriteString("scope=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Scope))
+	builder.WriteString("scopes=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Scopes))
 	builder.WriteString(", ")
 	if v := _m.LastUsedAt; v != nil {
 		builder.WriteString("last_used_at=")

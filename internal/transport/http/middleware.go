@@ -44,9 +44,9 @@ func extractBearerToken(c echo.Context) string {
 // On success the middleware sets:
 //
 //	auth_method     = "api_key" | "local"
-//	api_key.id      (uuid.UUID, only when auth_method = api_key)
-//	api_key.scope   (string,    only when auth_method = api_key)
-//	user.id         (string,    only when auth_method = local)
+//	api_key.id      (uuid.UUID,           only when auth_method = api_key)
+//	api_key.scopes  (utils.ApiKeyScopes,  only when auth_method = api_key)
+//	user.id         (string,              only when auth_method = local)
 //
 // When Config.ApiKeysEnabled is false the Authorization header is
 // silently ignored — the request falls through to the session check —
@@ -58,13 +58,13 @@ func AuthAPIKeyOrSessionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		cfg := config.Get()
 
 		if token != "" && cfg != nil && cfg.ApiKeysEnabled && apiKeyService != nil {
-			id, scope, err := authenticateAPIKey(c.Request().Context(), token)
+			id, scopes, err := authenticateAPIKey(c.Request().Context(), token)
 			if err != nil {
 				return ErrorInvalidAccessTokenResponse(c)
 			}
 			c.Set("auth_method", authMethodAPIKey)
 			c.Set("api_key.id", id)
-			c.Set("api_key.scope", string(scope))
+			c.Set("api_key.scopes", scopes)
 			return next(c)
 		}
 
@@ -79,15 +79,15 @@ func AuthAPIKeyOrSessionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-// authenticateAPIKey resolves a presented Bearer token to a (key id, scope)
+// authenticateAPIKey resolves a presented Bearer token to a (key id, scopes)
 // pair, hitting the verification cache first and falling back to a DB
 // lookup + bcrypt verify. To prevent prefix enumeration via response
 // timing it always pays a bcrypt cost, even when the prefix is unknown.
-func authenticateAPIKey(ctx context.Context, token string) (uuid.UUID, utils.ApiKeyScope, error) {
+func authenticateAPIKey(ctx context.Context, token string) (uuid.UUID, utils.ApiKeyScopes, error) {
 	// Fast path: cached positive verification.
-	if id, scope, hit := apiKeyService.Cache.Get(token); hit {
+	if id, scopes, hit := apiKeyService.Cache.Get(token); hit {
 		touchAsync(id)
-		return id, scope, nil
+		return id, scopes, nil
 	}
 
 	prefix, secret, err := api_key.Parse(token)
@@ -95,22 +95,23 @@ func authenticateAPIKey(ctx context.Context, token string) (uuid.UUID, utils.Api
 		// Run a constant-time bcrypt anyway so a malformed token cannot
 		// be distinguished from a wrong-secret one via timing.
 		api_key.VerifyDummy()
-		return uuid.Nil, "", err
+		return uuid.Nil, nil, err
 	}
 
 	row, err := apiKeyService.GetByPrefix(ctx, prefix)
 	if err != nil {
 		api_key.VerifyDummy()
-		return uuid.Nil, "", err
+		return uuid.Nil, nil, err
 	}
 
 	if err := api_key.Verify(row.HashedSecret, secret); err != nil {
-		return uuid.Nil, "", err
+		return uuid.Nil, nil, err
 	}
 
-	apiKeyService.Cache.Set(token, row.ID, row.Scope)
+	scopes := utils.ApiKeyScopesFromStrings(row.Scopes)
+	apiKeyService.Cache.Set(token, row.ID, scopes)
 	touchAsync(row.ID)
-	return row.ID, row.Scope, nil
+	return row.ID, scopes, nil
 }
 
 // touchAsync fires last_used_at update in a background goroutine using a
@@ -226,7 +227,9 @@ func roleSatisfies(actual, required utils.Role) bool {
 // RequireRoleOrScope enforces permission for routes that accept both
 // session and API key authentication. Session requests are checked
 // against the role hierarchy (matching AuthUserRoleMiddleware); API key
-// requests are checked against the scope hierarchy.
+// requests are checked against the scope hierarchy: the key's scopes
+// list satisfies the requirement if any element Includes the required
+// scope (resource match-or-wildcard + tier hierarchy).
 //
 // Call this *after* AuthAPIKeyOrSessionMiddleware and
 // AuthGetUserMiddleware in the route's middleware chain.
@@ -236,8 +239,8 @@ func RequireRoleOrScope(role utils.Role, scope utils.ApiKeyScope) echo.Middlewar
 			authMethod, _ := c.Get("auth_method").(string)
 			switch authMethod {
 			case authMethodAPIKey:
-				rawScope, _ := c.Get("api_key.scope").(string)
-				if utils.ApiKeyScope(rawScope).Includes(scope) {
+				scopes, _ := c.Get("api_key.scopes").(utils.ApiKeyScopes)
+				if scopes.Includes(scope) {
 					return next(c)
 				}
 				return ErrorUnauthorizedResponse(c)

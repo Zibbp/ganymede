@@ -43,9 +43,15 @@ func NewService(store *database.Database) *Service {
 // Create mints a fresh API key, persists the prefix and bcrypt-hashed
 // secret, and returns the new ent row alongside the full secret token to
 // surface to the admin exactly once.
-func (s *Service) Create(ctx context.Context, name, description string, scope utils.ApiKeyScope) (*ent.ApiKey, string, error) {
-	if !utils.IsValidApiKeyScope(string(scope)) {
-		return nil, "", fmt.Errorf("invalid api key scope: %q", scope)
+//
+// The scopes slice must be non-empty and every entry must be a valid
+// utils.ApiKeyScope (resource:tier with both halves in the catalog).
+// Duplicates are silently de-duplicated; the validation reports the
+// first invalid entry so an admin gets a precise 400 message.
+func (s *Service) Create(ctx context.Context, name, description string, scopes []utils.ApiKeyScope) (*ent.ApiKey, string, error) {
+	normalized, err := normalizeScopes(scopes)
+	if err != nil {
+		return nil, "", err
 	}
 
 	full, prefix, secret, err := Generate()
@@ -63,12 +69,34 @@ func (s *Service) Create(ctx context.Context, name, description string, scope ut
 		SetDescription(description).
 		SetPrefix(prefix).
 		SetHashedSecret(hashed).
-		SetScope(scope).
+		SetScopes(normalized.Strings()).
 		Save(ctx)
 	if err != nil {
 		return nil, "", fmt.Errorf("error creating api key: %w", err)
 	}
 	return created, full, nil
+}
+
+// normalizeScopes validates a presented scope list and returns a typed,
+// de-duplicated slice in input order. Returns a 400-friendly error on
+// the first invalid scope or if the list is empty.
+func normalizeScopes(in []utils.ApiKeyScope) (utils.ApiKeyScopes, error) {
+	if len(in) == 0 {
+		return nil, fmt.Errorf("at least one scope is required")
+	}
+	seen := make(map[utils.ApiKeyScope]struct{}, len(in))
+	out := make(utils.ApiKeyScopes, 0, len(in))
+	for _, s := range in {
+		if !s.IsValid() {
+			return nil, fmt.Errorf("unknown scope: %q", s)
+		}
+		if _, dup := seen[s]; dup {
+			continue
+		}
+		seen[s] = struct{}{}
+		out = append(out, s)
+	}
+	return out, nil
 }
 
 // List returns every non-revoked API key, ordered most-recently-created

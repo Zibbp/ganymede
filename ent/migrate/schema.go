@@ -15,7 +15,7 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "prefix", Type: field.TypeString, Unique: true},
 		{Name: "hashed_secret", Type: field.TypeString},
-		{Name: "scope", Type: field.TypeEnum, Enums: []string{"read", "write", "admin"}},
+		{Name: "scopes", Type: field.TypeJSON},
 		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
 		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},

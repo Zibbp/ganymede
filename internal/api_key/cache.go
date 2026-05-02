@@ -15,7 +15,7 @@ import (
 // memory once the bcrypt verify has succeeded.
 type cacheEntry struct {
 	apiKeyID  uuid.UUID
-	scope     utils.ApiKeyScope
+	scopes    utils.ApiKeyScopes
 	expiresAt time.Time
 }
 
@@ -58,34 +58,38 @@ func keyFor(fullToken string) string {
 
 // Get returns a cached positive result for fullToken if one exists and
 // has not expired. The boolean second return is false on miss/expired.
-func (c *VerificationCache) Get(fullToken string) (uuid.UUID, utils.ApiKeyScope, bool) {
+func (c *VerificationCache) Get(fullToken string) (uuid.UUID, utils.ApiKeyScopes, bool) {
 	k := keyFor(fullToken)
 	c.mu.RLock()
 	entry, ok := c.entries[k]
 	c.mu.RUnlock()
 	if !ok {
-		return uuid.Nil, "", false
+		return uuid.Nil, nil, false
 	}
 	if c.now().After(entry.expiresAt) {
 		// Opportunistic eviction; safe to do under write lock.
 		c.mu.Lock()
 		delete(c.entries, k)
 		c.mu.Unlock()
-		return uuid.Nil, "", false
+		return uuid.Nil, nil, false
 	}
-	return entry.apiKeyID, entry.scope, true
+	return entry.apiKeyID, entry.scopes, true
 }
 
 // Set stores a positive verification result keyed by sha256(fullToken).
 // Existing entries for the same token are overwritten and their TTL
 // reset.
-func (c *VerificationCache) Set(fullToken string, apiKeyID uuid.UUID, scope utils.ApiKeyScope) {
+func (c *VerificationCache) Set(fullToken string, apiKeyID uuid.UUID, scopes utils.ApiKeyScopes) {
 	k := keyFor(fullToken)
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	// Defensive copy so a later mutation of the caller's slice cannot
+	// silently change the cached scopes.
+	cp := make(utils.ApiKeyScopes, len(scopes))
+	copy(cp, scopes)
 	c.entries[k] = cacheEntry{
 		apiKeyID:  apiKeyID,
-		scope:     scope,
+		scopes:    cp,
 		expiresAt: c.now().Add(c.ttl),
 	}
 }

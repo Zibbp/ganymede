@@ -6,7 +6,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // ApiKey holds the schema definition for an admin-managed API key used to
@@ -29,7 +28,11 @@ func (ApiKey) Fields() []ent.Field {
 		// it from being printed via %v / zerolog struct logging, but does NOT
 		// stop JSON marshalling — handlers must scrub it via DTOs.
 		field.String("hashed_secret").Sensitive().Immutable().NotEmpty(),
-		field.Enum("scope").GoType(utils.ApiKeyScope("")),
+		// scopes is the list of granted permissions, each formatted as
+		// "<resource>:<tier>" (utils.ApiKeyScope). Stored as a JSON column;
+		// validated by the service layer before persistence. Replaces the
+		// previous single-tier `scope` ENUM column — see commit message.
+		field.JSON("scopes", []string{}).Default([]string{}),
 		field.Time("last_used_at").Optional().Nillable(),
 		// revoked_at is the soft-delete marker. List queries filter where
 		// revoked_at IS NULL.

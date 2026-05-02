@@ -8,7 +8,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/predicate"
-	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // ID filters vertices based on their ID field.
@@ -364,36 +363,6 @@ func HashedSecretEqualFold(v string) predicate.ApiKey {
 // HashedSecretContainsFold applies the ContainsFold predicate on the "hashed_secret" field.
 func HashedSecretContainsFold(v string) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldContainsFold(FieldHashedSecret, v))
-}
-
-// ScopeEQ applies the EQ predicate on the "scope" field.
-func ScopeEQ(v utils.ApiKeyScope) predicate.ApiKey {
-	vc := v
-	return predicate.ApiKey(sql.FieldEQ(FieldScope, vc))
-}
-
-// ScopeNEQ applies the NEQ predicate on the "scope" field.
-func ScopeNEQ(v utils.ApiKeyScope) predicate.ApiKey {
-	vc := v
-	return predicate.ApiKey(sql.FieldNEQ(FieldScope, vc))
-}
-
-// ScopeIn applies the In predicate on the "scope" field.
-func ScopeIn(vs ...utils.ApiKeyScope) predicate.ApiKey {
-	v := make([]any, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.ApiKey(sql.FieldIn(FieldScope, v...))
-}
-
-// ScopeNotIn applies the NotIn predicate on the "scope" field.
-func ScopeNotIn(vs ...utils.ApiKeyScope) predicate.ApiKey {
-	v := make([]any, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.ApiKey(sql.FieldNotIn(FieldScope, v...))
 }
 
 // LastUsedAtEQ applies the EQ predicate on the "last_used_at" field.
