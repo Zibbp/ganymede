@@ -381,7 +381,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 
 	// Task
 	taskGroup := e.Group("/task")
-	taskGroup.POST("/start", h.StartTask, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	taskGroup.POST("/start", h.StartTask, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeTaskAdmin))
 
 	// Notification
 	notificationGroup := e.Group("/notification")
