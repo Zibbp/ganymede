@@ -335,8 +335,8 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 
 	// Config
 	configGroup := e.Group("/config")
-	configGroup.GET("", h.GetConfig, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	configGroup.PUT("", h.UpdateConfig, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	configGroup.GET("", h.GetConfig, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeConfigRead))
+	configGroup.PUT("", h.UpdateConfig, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeConfigWrite))
 
 	// Live
 	liveGroup := e.Group("/live")
