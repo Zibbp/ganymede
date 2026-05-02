@@ -46,10 +46,15 @@ var (
 // by this user's role.
 const SystemUserUsername = "system:api"
 
-// touchDebounceWindow is the minimum interval between last_used_at writes
+// TouchDebounceWindow is the minimum interval between last_used_at writes
 // for a single key. Without it a busy key would generate one DB write per
 // request; with it we get at most one update per key per minute.
-const touchDebounceWindow = 60 * time.Second
+//
+// Exported because the HTTP middleware uses it to drive the in-memory
+// debounce in VerificationCache.ShouldTouch (skipping the goroutine + SQL
+// round-trip on cache-hit requests). Both layers must use the same window
+// or the SQL guard would race against the in-memory hint.
+const TouchDebounceWindow = 60 * time.Second
 
 // Service is the storage and lifecycle service for API keys.
 type Service struct {
@@ -263,7 +268,7 @@ func (s *Service) GetByPrefix(ctx context.Context, prefix string) (*ent.ApiKey, 
 // an error — there's nothing for the caller to do about it.
 func (s *Service) TouchLastUsed(ctx context.Context, id uuid.UUID) error {
 	now := time.Now()
-	cutoff := now.Add(-touchDebounceWindow)
+	cutoff := now.Add(-TouchDebounceWindow)
 	_, err := s.Store.Client.ApiKey.Update().
 		Where(
 			apikey.ID(id),

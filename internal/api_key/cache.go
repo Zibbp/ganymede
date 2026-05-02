@@ -28,11 +28,18 @@ type cacheEntry struct {
 // hitting the server in the last minute", which is tiny in practice
 // (typically <100), so a plain map without LRU eviction is fine. Expired
 // entries are reaped opportunistically on Get and Set.
+//
+// The cache also tracks an in-memory last-touched timestamp per key id
+// so the middleware's touchAsync can short-circuit before spawning a
+// goroutine + hitting the DB on a key that was just touched. Persistent
+// state still lives in api_keys.last_used_at; this is purely a debounce
+// hint that's lost on process restart.
 type VerificationCache struct {
-	mu      sync.RWMutex
-	entries map[string]cacheEntry
-	ttl     time.Duration
-	now     func() time.Time
+	mu          sync.RWMutex
+	entries     map[string]cacheEntry
+	lastTouched map[uuid.UUID]time.Time
+	ttl         time.Duration
+	now         func() time.Time
 }
 
 // NewVerificationCache constructs a cache with the given TTL. Pass 0 to
@@ -42,10 +49,32 @@ func NewVerificationCache(ttl time.Duration) *VerificationCache {
 		ttl = 60 * time.Second
 	}
 	return &VerificationCache{
-		entries: make(map[string]cacheEntry),
-		ttl:     ttl,
-		now:     time.Now,
+		entries:     make(map[string]cacheEntry),
+		lastTouched: make(map[uuid.UUID]time.Time),
+		ttl:         ttl,
+		now:         time.Now,
 	}
+}
+
+// ShouldTouch reports whether last_used_at for this key id should be
+// refreshed in the database. Returns true at most once per id per
+// debounce window; concurrent callers see only the first true. When
+// it returns true the cache atomically records the current time as the
+// last touch, so the caller doesn't need a follow-up "I touched it"
+// call — failing or succeeding, the next caller is debounced for
+// `debounce` from now.
+//
+// Used by the middleware's touchAsync to skip spawning a goroutine
+// (and the DB UPDATE that follows) on hot keys that were just touched.
+func (c *VerificationCache) ShouldTouch(id uuid.UUID, debounce time.Duration) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	now := c.now()
+	if last, ok := c.lastTouched[id]; ok && now.Sub(last) < debounce {
+		return false
+	}
+	c.lastTouched[id] = now
+	return true
 }
 
 // keyFor returns the SHA-256 hex digest of the full token, used as the
@@ -130,6 +159,10 @@ func (c *VerificationCache) InvalidateByID(id uuid.UUID) {
 			delete(c.entries, k)
 		}
 	}
+	// Also drop the touch debounce hint so a re-mint of this id (or the
+	// next touch on a not-yet-revoked key after a stale entry is cleared)
+	// is not silently suppressed by a stale timestamp.
+	delete(c.lastTouched, id)
 }
 
 // Clear empties the cache. Mainly useful for tests.
@@ -137,4 +170,5 @@ func (c *VerificationCache) Clear() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.entries = make(map[string]cacheEntry)
+	c.lastTouched = make(map[uuid.UUID]time.Time)
 }

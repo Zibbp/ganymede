@@ -115,10 +115,23 @@ func authenticateAPIKey(ctx context.Context, token string) (uuid.UUID, utils.Api
 }
 
 // touchAsync fires last_used_at update in a background goroutine using a
-// fresh context (the request context dies after the response). The
-// service-level debounce keeps this from generating one DB write per
-// request on busy keys.
+// fresh context (the request context dies after the response).
+//
+// Two-stage debounce so a hot key (10k+ RPS during a script run) does not
+// generate one goroutine + SQL UPDATE per request:
+//  1. In-memory hint via VerificationCache.ShouldTouch — atomically asks
+//     "has this id been touched within the window?" and records the
+//     attempt. Skips the goroutine entirely on subsequent hits.
+//  2. SQL guard inside Service.TouchLastUsed — conditional UPDATE WHERE
+//     last_used_at < cutoff so even if two processes race past stage (1)
+//     (separate caches), only the first UPDATE lands.
+//
+// Stage (1) is best-effort and lost on restart; stage (2) is the
+// authoritative debounce that survives across processes.
 func touchAsync(id uuid.UUID) {
+	if !apiKeyService.Cache.ShouldTouch(id, api_key.TouchDebounceWindow) {
+		return
+	}
 	go func() {
 		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
