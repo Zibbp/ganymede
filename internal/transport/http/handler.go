@@ -261,11 +261,11 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.GET("/:id/chat/emotes", h.GetChatEmotes)
 	vodGroup.GET("/:id/chat/badges", h.GetChatBadges)
 	vodGroup.GET("/:id/chat/histogram", h.GetVodChatHistogram)
-	vodGroup.POST("/:id/lock", h.LockVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	vodGroup.POST("/:id/generate-static-thumbnail", h.GenerateStaticThumbnail, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	vodGroup.POST("/:id/generate-sprite-thumbnails", h.GenerateSpriteThumbnails, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	vodGroup.POST("/:id/lock", h.LockVod, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
+	vodGroup.POST("/:id/generate-static-thumbnail", h.GenerateStaticThumbnail, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
+	vodGroup.POST("/:id/generate-sprite-thumbnails", h.GenerateSpriteThumbnails, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
 	vodGroup.GET("/:id/thumbnails/vtt", h.GetVodSpriteThumbnails)
-	vodGroup.POST("/:id/ffprobe", h.GetFFprobe, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
+	vodGroup.POST("/:id/ffprobe", h.GetFFprobe, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeVodWrite))
 
 	// Queue
 	//
