@@ -102,6 +102,104 @@ func TestGetFolderName(t *testing.T) {
 	}
 }
 
+// TestGetFolderName_PathSafety verifies that '/' and '..' coming from
+// substituted variable values cannot escape their folder segment. Template
+// '/' is preserved as a directory separator (covered by TestGetFolderName);
+// these cases pin the dual property that variable-value '/' gets flattened
+// and that bare "." / ".." segments are neutralized by SanitizeFileName.
+func TestGetFolderName_PathSafety(t *testing.T) {
+	// Setup the application
+	_, err := tests.Setup(t)
+	assert.NoError(t, err)
+
+	testUUID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+
+	tests := []struct {
+		name        string
+		template    string
+		input       archive.StorageTemplateInput
+		expected    string
+		expectError bool
+	}{
+		{
+			name:     "slash inside variable value is flattened, not treated as a separator",
+			template: "{{channel}}/{{title}}",
+			input: archive.StorageTemplateInput{
+				UUID:    testUUID,
+				ID:      "testid",
+				Channel: "testchannel",
+				Title:   "Series/Episode 1",
+				Type:    "video",
+				Date:    "2025-08-04",
+				YYYY:    "2025",
+				MM:      "08",
+				DD:      "04",
+				HH:      "12",
+			},
+			expected:    "testchannel/Series_Episode_1",
+			expectError: false,
+		},
+		{
+			name:     "double-dot variable value is neutralized to unnamed_file",
+			template: "{{channel}}/{{title}}",
+			input: archive.StorageTemplateInput{
+				UUID:    testUUID,
+				ID:      "testid",
+				Channel: "testchannel",
+				Title:   "..",
+				Type:    "video",
+				Date:    "2025-08-04",
+				YYYY:    "2025",
+				MM:      "08",
+				DD:      "04",
+				HH:      "12",
+			},
+			expected:    "testchannel/unnamed_file",
+			expectError: false,
+		},
+		{
+			name:     "single-dot variable value is neutralized to unnamed_file",
+			template: "{{channel}}/{{title}}",
+			input: archive.StorageTemplateInput{
+				UUID:    testUUID,
+				ID:      "testid",
+				Channel: "testchannel",
+				Title:   ".",
+				Type:    "video",
+				Date:    "2025-08-04",
+				YYYY:    "2025",
+				MM:      "08",
+				DD:      "04",
+				HH:      "12",
+			},
+			expected:    "testchannel/unnamed_file",
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := config.Get()
+			c.StorageTemplates.FolderTemplate = tt.template
+			assert.NoError(t, config.UpdateConfig(c), "failed to update config with template")
+
+			result, err := archive.GetFolderName(testUUID, tt.input)
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("expected error but got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+				if result != tt.expected {
+					t.Errorf("GetFolderName() = %q, expected %q", result, tt.expected)
+				}
+			}
+		})
+	}
+}
+
 // TestGetFileName tests the GetFileName function with various templates and inputs.
 func TestGetFileName(t *testing.T) {
 	// Setup the application
