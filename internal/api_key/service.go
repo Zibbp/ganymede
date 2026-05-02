@@ -309,6 +309,21 @@ func (s *Service) EnsureSystemUser(ctx context.Context) (*ent.User, error) {
 		SetRole(utils.SystemRole).
 		Save(ctx)
 	if err != nil {
+		// Bootstrap race: two replicas booting at once can both pass
+		// the Query miss above and both call Create. The unique
+		// constraint on username then makes one of them fail. Catch
+		// the constraint violation and re-query for the row that the
+		// other replica just created — Postgres has guaranteed it
+		// exists by the time the constraint fires.
+		if _, isConstraint := err.(*ent.ConstraintError); isConstraint {
+			existing, qErr := s.Store.Client.User.Query().
+				Where(user.Username(SystemUserUsername)).
+				Only(ctx)
+			if qErr == nil {
+				return existing, nil
+			}
+			return nil, fmt.Errorf("system user create lost a race but could not re-query: %w", qErr)
+		}
 		return nil, fmt.Errorf("error creating system user: %w", err)
 	}
 	return created, nil
