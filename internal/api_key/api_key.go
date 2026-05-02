@@ -74,8 +74,11 @@ func HashSecret(secret string) (string, error) {
 // Parse splits a full token into its prefix and secret components and
 // validates the brand/shape. It does NOT verify the secret against any
 // stored hash — pair with Verify for that.
+//
+// The secret is base64url-encoded and so may itself contain '_'. Only the
+// first two underscores are treated as separators.
 func Parse(full string) (prefix, secret string, err error) {
-	parts := strings.Split(full, "_")
+	parts := strings.SplitN(full, "_", 3)
 	if len(parts) != 3 {
 		return "", "", ErrMalformedToken
 	}
