@@ -285,6 +285,7 @@ func (h *Handler) UpdateApiKey(c echo.Context) error {
 //	@Param			id	path	string	true	"api key id"
 //	@Success		200
 //	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/admin/api-keys/{id} [delete]
 //	@Security		ApiKeyCookieAuth
@@ -298,7 +299,14 @@ func (h *Handler) DeleteApiKey(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, "invalid id")
 	}
 	if err := h.Service.ApiKeyService.Revoke(c.Request().Context(), id); err != nil {
-		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("error revoking api key: %v", err))
+		// Route through the shared error mapper so a missing/already-
+		// revoked id returns 404 rather than collapsing to 500.
+		status := statusForApiKeyServiceError(err)
+		msg := fmt.Sprintf("error revoking api key: %v", err)
+		if status == http.StatusNotFound {
+			msg = "api key not found"
+		}
+		return ErrorResponse(c, status, msg)
 	}
 	return SuccessResponse(c, nil, "api key revoked")
 }

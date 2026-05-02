@@ -212,13 +212,21 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, name, description st
 // authentication attempts with this key are rejected. The verification
 // cache is flushed so the change takes effect immediately rather than
 // after the cache TTL elapses.
+//
+// Returns ErrNotFound when the id either doesn't exist or has already
+// been revoked. Conditional UPDATE (RevokedAtIsNil filter) makes the
+// "first revoke wins" semantics explicit and atomic against double-
+// revoke, parallel to the Update path.
 func (s *Service) Revoke(ctx context.Context, id uuid.UUID) error {
-	now := time.Now()
-	_, err := s.Store.Client.ApiKey.UpdateOneID(id).
-		SetRevokedAt(now).
+	affected, err := s.Store.Client.ApiKey.Update().
+		Where(apikey.ID(id), apikey.RevokedAtIsNil()).
+		SetRevokedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("error revoking api key: %w", err)
+	}
+	if affected == 0 {
+		return ErrNotFound
 	}
 	if s.Cache != nil {
 		s.Cache.InvalidateByID(id)

@@ -383,6 +383,29 @@ func TestApiKeyHTTP(t *testing.T) {
 			Status(http.StatusBadRequest)
 	})
 
+	t.Run("DeleteRevokedKeyReturns404", func(t *testing.T) {
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "delete-revoked-http",
+				Scopes: []string{"vod:read"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		id := obj.Path("$.data.api_key.id").String().Raw()
+
+		// First revoke succeeds.
+		e.DELETE("/admin/api-keys/" + id).Expect().Status(http.StatusOK)
+		// Second revoke on the same id is no longer there to revoke;
+		// the conditional Update matches zero rows and Service.Revoke
+		// returns ErrNotFound, which the handler maps to 404.
+		e.DELETE("/admin/api-keys/" + id).Expect().Status(http.StatusNotFound)
+	})
+
+	t.Run("DeleteNonexistentKeyReturns404", func(t *testing.T) {
+		// Random uuid, no row exists.
+		e.DELETE("/admin/api-keys/00000000-0000-0000-0000-000000000000").
+			Expect().Status(http.StatusNotFound)
+	})
+
 	t.Run("UpdateRevokedKeyReturns404", func(t *testing.T) {
 		obj := e.POST("/admin/api-keys").
 			WithJSON(internalHttp.CreateApiKeyRequest{
