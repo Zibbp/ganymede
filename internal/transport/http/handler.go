@@ -20,6 +20,7 @@ import (
 	"github.com/rs/zerolog/log"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	_ "github.com/zibbp/ganymede/docs"
+	"github.com/zibbp/ganymede/internal/api_key"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/platform"
@@ -44,6 +45,7 @@ type Services struct {
 	CategoryService     CategoryService
 	BlockedVideoService BlockedVideoService
 	NotificationService NotificationService
+	ApiKeyService       *api_key.Service
 	PlatformTwitch      platform.Platform
 }
 
@@ -56,7 +58,7 @@ type Handler struct {
 
 var sessionManager *scs.SessionManager
 
-func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, notificationService NotificationService, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
+func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, notificationService NotificationService, apiKeyService *api_key.Service, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
 	log.Debug().Msg("creating route handler")
 	envConfig := config.GetEnvConfig()
 
@@ -86,6 +88,7 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 			CategoryService:     categoryService,
 			BlockedVideoService: blockedVideoService,
 			NotificationService: notificationService,
+			ApiKeyService:       apiKeyService,
 			PlatformTwitch:      platformTwitch,
 		},
 		SessionManager: sessionManager,
