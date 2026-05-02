@@ -35,7 +35,8 @@ type Config struct {
 	Experimental struct {
 		BetterLiveStreamDetectionAndCleanup bool `json:"better_live_stream_detection_and_cleanup"` // [EXPERIMENTAL] Enable enhanced detection and cleanup.
 	} `json:"experimental"`
-	LogRetentionDays int `json:"log_retention_days"` // Number of days to retain log files.
+	LogRetentionDays int  `json:"log_retention_days"` // Number of days to retain log files.
+	ApiKeysEnabled   bool `json:"api_keys_enabled"`   // Allow API key authentication via Authorization: Bearer header.
 	// Notifications preserves legacy config.json notifications during migration.
 	// Deprecated: notifications are now stored in the database.
 	Notifications *LegacyNotification `json:"notifications,omitempty"`
@@ -217,6 +218,10 @@ func (c *Config) SetDefaults() {
 	c.Livestream.WatchWhileArchiving = false
 
 	c.LogRetentionDays = 30
+
+	// API keys are enabled by default; admins still need to mint a key
+	// before any external client can authenticate.
+	c.ApiKeysEnabled = true
 
 	// experimental features
 	c.Experimental.BetterLiveStreamDetectionAndCleanup = false
