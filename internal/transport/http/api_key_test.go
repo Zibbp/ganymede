@@ -418,6 +418,32 @@ func TestApiKeyHTTP(t *testing.T) {
 			WithJSON(map[string]any{"username": "renamed-system", "role": "user"}).
 			Expect().
 			Status(http.StatusForbidden)
+
+		// Closing the rename-bypass: take a regular non-system user
+		// (the seeded admin) and try to rename them to the reserved
+		// system username. Must return 403 — the previous fix only
+		// guarded the system row from being mutated, not regular rows
+		// from being renamed INTO the system position.
+		nonSystemID := ""
+		for _, v := range users.Iter() {
+			if v.Object().Value("username").String().Raw() != "system:api" {
+				nonSystemID = v.Object().Value("id").String().Raw()
+				break
+			}
+		}
+		require.NotEmpty(t, nonSystemID, "test fixture must include at least one non-system user")
+		bearer.PUT("/user/"+nonSystemID).
+			WithHeader("Authorization", "Bearer "+token).
+			WithJSON(map[string]any{"username": "system:api", "role": "user"}).
+			Expect().
+			Status(http.StatusForbidden)
+
+		// Case-fold variant — "System:API" must also be rejected.
+		bearer.PUT("/user/"+nonSystemID).
+			WithHeader("Authorization", "Bearer "+token).
+			WithJSON(map[string]any{"username": "System:API", "role": "user"}).
+			Expect().
+			Status(http.StatusForbidden)
 	})
 
 	t.Run("AdminApiKeysIsAlwaysSessionOnly", func(t *testing.T) {

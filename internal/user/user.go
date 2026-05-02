@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -55,6 +56,18 @@ func (s *Service) AdminGetUser(c echo.Context, uID uuid.UUID) (*ent.User, error)
 }
 
 func (s *Service) AdminUpdateUser(c echo.Context, uDto User) (*ent.User, error) {
+	// Two reservation checks, both required:
+	//  - Reject *renaming* any user TO the reserved system username
+	//    (closes the bypass where assertNotSystemUser only checked the
+	//    current row's username, not the proposed new value). Without
+	//    this guard an admin could rename Alice → "system:api" and
+	//    EnsureSystemUser on next boot would self-heal that row to
+	//    SystemRole, leaving the attacker in control of the system
+	//    user account.
+	//  - Reject mutating the existing system row (assertNotSystemUser).
+	if strings.EqualFold(uDto.Username, api_key.SystemUserUsername) {
+		return nil, ErrSystemUserProtected
+	}
 	if err := s.assertNotSystemUser(c, uDto.ID); err != nil {
 		return nil, err
 	}
