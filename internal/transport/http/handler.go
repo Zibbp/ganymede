@@ -323,11 +323,15 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	adminGroup.DELETE("/api-keys/:id", h.DeleteApiKey, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 
 	// User
+	//
+	// All endpoints require AdminRole for sessions. API keys are gated
+	// at user:read for GETs, user:write for PUT, user:admin for DELETE
+	// — same tier-by-method pattern used elsewhere.
 	userGroup := e.Group("/user")
-	userGroup.GET("", h.GetUsers, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	userGroup.GET("/:id", h.GetUser, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	userGroup.PUT("/:id", h.UpdateUser, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	userGroup.DELETE("/:id", h.DeleteUser, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	userGroup.GET("", h.GetUsers, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeUserRead))
+	userGroup.GET("/:id", h.GetUser, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeUserRead))
+	userGroup.PUT("/:id", h.UpdateUser, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeUserWrite))
+	userGroup.DELETE("/:id", h.DeleteUser, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeUserAdmin))
 
 	// Config
 	configGroup := e.Group("/config")
