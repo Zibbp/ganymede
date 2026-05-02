@@ -134,6 +134,38 @@ const useCreateApiKey = () => {
   });
 };
 
+// updateApiKey replaces the editable fields of an existing key. The
+// server returns the updated apiKeyDTO; no secret is included (rotating
+// the secret still means revoke + create).
+const updateApiKey = async (
+  axiosPrivate: AxiosInstance,
+  id: string,
+  input: CreateApiKeyInput
+): Promise<ApiKey> => {
+  const response = await axiosPrivate.put<ApiResponse<ApiKey>>(
+    `/api/v1/admin/api-keys/${id}`,
+    input
+  );
+  return response.data.data;
+};
+
+interface UpdateApiKeyVariables {
+  axiosPrivate: AxiosInstance;
+  id: string;
+  input: CreateApiKeyInput;
+}
+
+const useUpdateApiKey = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ApiKey, Error, UpdateApiKeyVariables>({
+    mutationFn: ({ axiosPrivate, id, input }) =>
+      updateApiKey(axiosPrivate, id, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["apiKeys"] });
+    },
+  });
+};
+
 const deleteApiKey = async (axiosPrivate: AxiosInstance, id: string) => {
   const response = await axiosPrivate.delete(`/api/v1/admin/api-keys/${id}`);
   return response.data;
@@ -154,4 +186,4 @@ const useDeleteApiKey = () => {
   });
 };
 
-export { useGetApiKeys, useCreateApiKey, useDeleteApiKey };
+export { useGetApiKeys, useCreateApiKey, useUpdateApiKey, useDeleteApiKey };
