@@ -64,6 +64,12 @@ const (
 	ApiKeyResourceChapter      ApiKeyResource = "chapter"
 	ApiKeyResourceCategory     ApiKeyResource = "category"
 	ApiKeyResourceBlockedVideo ApiKeyResource = "blocked_video"
+
+	// ApiKeyResourceSystem covers server-wide stats and info endpoints
+	// under /admin/{video-statistics, system-overview, storage-distribution,
+	// info}. Named "system" rather than "admin" so the scope string
+	// reads cleanly (e.g. system:read instead of admin:admin).
+	ApiKeyResourceSystem ApiKeyResource = "system"
 )
 
 // AllApiKeyResources lists every defined resource. Used by the validator
@@ -85,6 +91,7 @@ func AllApiKeyResources() []ApiKeyResource {
 		ApiKeyResourceChapter,
 		ApiKeyResourceCategory,
 		ApiKeyResourceBlockedVideo,
+		ApiKeyResourceSystem,
 	}
 }
 
@@ -200,6 +207,9 @@ const (
 	ApiKeyScopeBlockedVideoRead  ApiKeyScope = "blocked_video:read"
 	ApiKeyScopeBlockedVideoWrite ApiKeyScope = "blocked_video:write"
 	ApiKeyScopeBlockedVideoAdmin ApiKeyScope = "blocked_video:admin"
+	ApiKeyScopeSystemRead        ApiKeyScope = "system:read"
+	ApiKeyScopeSystemWrite       ApiKeyScope = "system:write"
+	ApiKeyScopeSystemAdmin       ApiKeyScope = "system:admin"
 )
 
 // MakeApiKeyScope builds a scope from its components.
