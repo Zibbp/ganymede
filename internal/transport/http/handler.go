@@ -384,13 +384,17 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	taskGroup.POST("/start", h.StartTask, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeTaskAdmin))
 
 	// Notification
+	//
+	// All endpoints require AdminRole for sessions. API keys are gated
+	// at notification:read for GETs, notification:write for create/
+	// update/test, notification:admin for DELETE.
 	notificationGroup := e.Group("/notification")
-	notificationGroup.GET("", h.GetNotifications, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	notificationGroup.GET("/:id", h.GetNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	notificationGroup.POST("", h.CreateNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	notificationGroup.PUT("/:id", h.UpdateNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	notificationGroup.DELETE("/:id", h.DeleteNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	notificationGroup.POST("/:id/test", h.TestNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	notificationGroup.GET("", h.GetNotifications, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationRead))
+	notificationGroup.GET("/:id", h.GetNotification, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationRead))
+	notificationGroup.POST("", h.CreateNotification, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationWrite))
+	notificationGroup.PUT("/:id", h.UpdateNotification, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationWrite))
+	notificationGroup.DELETE("/:id", h.DeleteNotification, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationAdmin))
+	notificationGroup.POST("/:id/test", h.TestNotification, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationWrite))
 
 	// Chapter
 	chapterGroup := e.Group("/chapter")
