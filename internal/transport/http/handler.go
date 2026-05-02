@@ -302,12 +302,17 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	archiveGroup.POST("/video", h.ArchiveVideo, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeArchiveWrite))
 	archiveGroup.POST("/convert-twitch-live-chat", h.ConvertTwitchChat, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeArchiveAdmin))
 
-	// Admin
+	// Admin: system stats and info.
+	//
+	// Read-only system endpoints accept either a session cookie or an
+	// API key with system:read. The /admin/api-keys management endpoints
+	// further down stay session-only — minting keys requires the admin
+	// web UI to prevent key-mints-key escalation.
 	adminGroup := e.Group("/admin")
-	adminGroup.GET("/video-statistics", h.GetVideoStatistics, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	adminGroup.GET("/system-overview", h.GetSystemOverview, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	adminGroup.GET("/storage-distribution", h.GetStorageDistribution, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	adminGroup.GET("/info", h.GetInfo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.GET("/video-statistics", h.GetVideoStatistics, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
+	adminGroup.GET("/system-overview", h.GetSystemOverview, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
+	adminGroup.GET("/storage-distribution", h.GetStorageDistribution, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
+	adminGroup.GET("/info", h.GetInfo, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
 
 	// Admin: API keys. Session-only — admins must use the web UI to mint
 	// or revoke keys. This avoids the chicken-and-egg of needing a key
