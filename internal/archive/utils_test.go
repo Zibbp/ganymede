@@ -93,6 +93,12 @@ func TestGetFolderName(t *testing.T) {
 			expected:    "2025/08",
 			expectError: false,
 		},
+		{
+			name:        "template that resolves to no segments returns an error",
+			template:    "///",
+			expected:    "",
+			expectError: true,
+		},
 	}
 
 	for _, tt := range tests {

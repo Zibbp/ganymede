@@ -85,6 +85,9 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 		}
 		renderedSegments = append(renderedSegments, utils.SanitizeFileName(rendered))
 	}
+	if len(renderedSegments) == 0 {
+		return "", fmt.Errorf("rendered folder template is empty after processing; check folder_template configuration")
+	}
 	folderTemplate = strings.Join(renderedSegments, "/")
 
 	return folderTemplate, nil
