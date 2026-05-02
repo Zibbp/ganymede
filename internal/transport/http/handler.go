@@ -106,10 +106,18 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 		RiverUIServer:  riverUIServer,
 	}
 
-	// Enable gzip compression for API routes
+	// Enable gzip compression for API routes only.
+	//
+	// We use HasPrefix("/api/") rather than Contains("/api") because the
+	// catch-all at the bottom of mapRoutes proxies every non-matching
+	// path to the Next.js frontend, which serves its own gzipped
+	// responses. A frontend path that happens to contain the substring
+	// "api" (e.g. /admin/api-keys) was being double-gzipped: Next.js
+	// gzipped once, Echo gzipped again, and the browser decoded only the
+	// outer layer — leaving raw gzip bytes as the page body.
 	h.Server.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
-			return !strings.Contains(c.Request().URL.Path, "/api")
+			return !strings.HasPrefix(c.Request().URL.Path, "/api/")
 		},
 	}))
 
