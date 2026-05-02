@@ -58,6 +58,10 @@ func keyFor(fullToken string) string {
 
 // Get returns a cached positive result for fullToken if one exists and
 // has not expired. The boolean second return is false on miss/expired.
+//
+// Returns a copy of the scopes slice so callers can't mutate the cache
+// entry through the returned reference. Symmetric with Set, which
+// already takes a defensive copy on insert.
 func (c *VerificationCache) Get(fullToken string) (uuid.UUID, utils.ApiKeyScopes, bool) {
 	k := keyFor(fullToken)
 	c.mu.RLock()
@@ -67,13 +71,32 @@ func (c *VerificationCache) Get(fullToken string) (uuid.UUID, utils.ApiKeyScopes
 		return uuid.Nil, nil, false
 	}
 	if c.now().After(entry.expiresAt) {
-		// Opportunistic eviction; safe to do under write lock.
+		// Opportunistic eviction. Re-check under the write lock
+		// because a concurrent Set between the RUnlock above and the
+		// Lock below could have stored a fresh, non-expired entry —
+		// blindly deleting would discard it. Re-read entries[k] and
+		// only evict if it's still the expired version.
 		c.mu.Lock()
+		current, stillThere := c.entries[k]
+		if stillThere && !c.now().After(current.expiresAt) {
+			// Replaced under us; return the fresh entry instead of
+			// evicting.
+			c.mu.Unlock()
+			return current.apiKeyID, copyScopes(current.scopes), true
+		}
 		delete(c.entries, k)
 		c.mu.Unlock()
 		return uuid.Nil, nil, false
 	}
-	return entry.apiKeyID, entry.scopes, true
+	return entry.apiKeyID, copyScopes(entry.scopes), true
+}
+
+// copyScopes is the defensive-copy helper shared by Get and Set so the
+// cache and its callers never alias the same slice.
+func copyScopes(scopes utils.ApiKeyScopes) utils.ApiKeyScopes {
+	cp := make(utils.ApiKeyScopes, len(scopes))
+	copy(cp, scopes)
+	return cp
 }
 
 // Set stores a positive verification result keyed by sha256(fullToken).
@@ -83,13 +106,12 @@ func (c *VerificationCache) Set(fullToken string, apiKeyID uuid.UUID, scopes uti
 	k := keyFor(fullToken)
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	// Defensive copy so a later mutation of the caller's slice cannot
-	// silently change the cached scopes.
-	cp := make(utils.ApiKeyScopes, len(scopes))
-	copy(cp, scopes)
 	c.entries[k] = cacheEntry{
-		apiKeyID:  apiKeyID,
-		scopes:    cp,
+		apiKeyID: apiKeyID,
+		// Defensive copy so a later mutation of the caller's slice
+		// cannot silently change the cached scopes. Symmetric with
+		// the copy on Get.
+		scopes:    copyScopes(scopes),
 		expiresAt: c.now().Add(c.ttl),
 	}
 }
