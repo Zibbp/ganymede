@@ -100,11 +100,21 @@ func TestApiKeyHTTP(t *testing.T) {
 		}).Object().NotContainsKey("hashed_secret").NotContainsKey("secret")
 	})
 
+	// Bearer-auth assertions point at routes behind
+	// AuthAPIKeyOrSessionMiddleware (e.g. /queue with queue:read or
+	// /vod write endpoints). /admin/api-keys is intentionally
+	// session-only, so a Bearer header against it would always fail
+	// regardless of the key's validity — testing it here would prove
+	// the wrong invariant. The session-only behavior is asserted
+	// separately below in AdminApiKeysIsAlwaysSessionOnly.
+
 	t.Run("BearerTokenAuthenticatesAdminScope", func(t *testing.T) {
 		// Use a fresh httpexpect with no cookies so we know we're hitting
 		// the API key auth path, not the seeded admin session.
 		bearerOnly := bareHTTPClient(t)
-		bearerOnly.GET("/admin/api-keys").
+		// /queue requires queue:read; *:admin satisfies it via the
+		// wildcard hierarchy.
+		bearerOnly.GET("/queue").
 			WithHeader("Authorization", "Bearer "+fullSecret).
 			Expect().
 			Status(http.StatusOK)
@@ -118,12 +128,22 @@ func TestApiKeyHTTP(t *testing.T) {
 		revokedSecret = obj.Path("$.data.secret").String().NotEmpty().Raw()
 		id := obj.Path("$.data.api_key.id").String().NotEmpty().Raw()
 
+		// Prime the verification cache by hitting a flexible-auth
+		// route with the bearer first; the cache flush on revoke is
+		// part of what we're verifying.
+		bearerOnly := bareHTTPClient(t)
+		bearerOnly.GET("/queue").
+			WithHeader("Authorization", "Bearer "+revokedSecret).
+			Expect().
+			Status(http.StatusOK)
+
 		e.DELETE("/admin/api-keys/" + id).
 			Expect().
 			Status(http.StatusOK)
 
-		bearerOnly := bareHTTPClient(t)
-		bearerOnly.GET("/admin/api-keys").
+		// Revoke flushed the cache; the same flexible-auth route
+		// now rejects with 401.
+		bearerOnly.GET("/queue").
 			WithHeader("Authorization", "Bearer "+revokedSecret).
 			Expect().
 			Status(http.StatusUnauthorized)
@@ -131,7 +151,11 @@ func TestApiKeyHTTP(t *testing.T) {
 
 	t.Run("MalformedBearerIsRejected", func(t *testing.T) {
 		bearerOnly := bareHTTPClient(t)
-		bearerOnly.GET("/admin/api-keys").
+		// /queue accepts API keys, so a malformed Bearer reaches the
+		// verifier and is rejected there. (Hitting /admin/api-keys
+		// would also return 401 but only because that route is
+		// session-only — wrong invariant.)
+		bearerOnly.GET("/queue").
 			WithHeader("Authorization", "Bearer not-a-real-key").
 			Expect().
 			Status(http.StatusUnauthorized)
