@@ -214,4 +214,118 @@ func TestApiKeyHTTP(t *testing.T) {
 			Expect().
 			Status(http.StatusForbidden)
 	})
+
+	// Phase 3: smoke coverage for the newly-migrated route groups. Each
+	// case mints a narrow scope and verifies the matching endpoint
+	// authenticates while a route in a different group rejects the same
+	// key.
+
+	t.Run("SystemReadCoversAdminStats", func(t *testing.T) {
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "stats-only",
+				Scopes: []string{"system:read"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+
+		bearer := bareHTTPClient(t)
+		bearer.GET("/admin/system-overview").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusOK)
+		// Same key cannot mint or list keys — /admin/api-keys stays
+		// session-only on purpose.
+		bearer.GET("/admin/api-keys").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusUnauthorized)
+	})
+
+	t.Run("UserReadCannotEditUsers", func(t *testing.T) {
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "user-reader",
+				Scopes: []string{"user:read"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+
+		bearer := bareHTTPClient(t)
+		// GET succeeds with user:read.
+		bearer.GET("/user").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusOK)
+		// PUT requires user:write, which user:read does not include.
+		bearer.PUT("/user/00000000-0000-0000-0000-000000000000").
+			WithHeader("Authorization", "Bearer "+token).
+			WithJSON(map[string]any{"username": "x", "role": "user"}).
+			Expect().
+			Status(http.StatusForbidden)
+	})
+
+	t.Run("ConfigReadCanGetButNotPut", func(t *testing.T) {
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "config-reader",
+				Scopes: []string{"config:read"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+
+		bearer := bareHTTPClient(t)
+		bearer.GET("/config").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusOK)
+		bearer.PUT("/config").
+			WithHeader("Authorization", "Bearer "+token).
+			WithJSON(map[string]any{}).
+			Expect().
+			Status(http.StatusForbidden)
+	})
+
+	t.Run("ChannelWriteCannotDeleteChannel", func(t *testing.T) {
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "channel-writer",
+				Scopes: []string{"channel:write"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+
+		bearer := bareHTTPClient(t)
+		// DELETE requires channel:admin.
+		bearer.DELETE("/channel/00000000-0000-0000-0000-000000000000").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusForbidden)
+	})
+
+	t.Run("AdminApiKeysIsAlwaysSessionOnly", func(t *testing.T) {
+		// Even a *:admin key cannot reach /admin/api-keys via Bearer —
+		// the route is intentionally guarded by the session-only chain.
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "would-be-key-minter",
+				Scopes: []string{"*:admin"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+
+		bearer := bareHTTPClient(t)
+		bearer.GET("/admin/api-keys").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusUnauthorized)
+		bearer.POST("/admin/api-keys").
+			WithHeader("Authorization", "Bearer "+token).
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "minted-via-bearer",
+				Scopes: []string{"vod:read"},
+			}).
+			Expect().
+			Status(http.StatusUnauthorized)
+	})
 }
