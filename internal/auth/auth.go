@@ -89,7 +89,12 @@ func (s *Service) Register(ctx context.Context, user user.User) (*ent.User, erro
 	// every request would be theirs (with whatever password they set);
 	// any audit attribution and any role-based check involving the
 	// system user would point at the attacker's account.
-	if user.Username == api_key.SystemUserUsername {
+	//
+	// Case-fold so "System:API" / "SYSTEM:api" etc. don't sneak past:
+	// Postgres unique constraints are case-sensitive, so the attacker
+	// couldn't shadow the real row, but they could still create an
+	// audit-confusing lookalike entry. EqualFold removes that ambiguity.
+	if strings.EqualFold(user.Username, api_key.SystemUserUsername) {
 		return nil, fmt.Errorf("user already exists")
 	}
 	// hash password
