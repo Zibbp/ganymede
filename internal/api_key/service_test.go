@@ -139,13 +139,16 @@ func TestApiKeyService(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, svc.Revoke(ctx, key.ID))
 
-		// Bypass GetByPrefix (which already filters revoked) and inspect
-		// the row directly to assert last_used_at stays nil.
-		err = svc.TouchLastUsed(ctx, key.ID)
-		// NotFoundError is the expected outcome — the WHERE clause
-		// excluded the revoked row. The caller (touchAsync) discards
-		// this error.
-		assert.Error(t, err)
+		// Conditional UPDATE matches no rows (WHERE includes
+		// RevokedAtIsNil), so the call returns nil with zero rows
+		// affected. Verify last_used_at stays nil by reading the row
+		// directly through the ent client (GetByPrefix already filters
+		// revoked).
+		require.NoError(t, svc.TouchLastUsed(ctx, key.ID))
+
+		row, err := app.Database.Client.ApiKey.Get(ctx, key.ID)
+		require.NoError(t, err)
+		assert.Nil(t, row.LastUsedAt, "last_used_at must remain nil on a revoked key")
 	})
 
 	t.Run("Update changes editable fields and flushes cache", func(t *testing.T) {

@@ -20,14 +20,15 @@ import (
 // the row not existing (or being revoked) → 404; everything else is
 // an internal failure → 500.
 //
-// The string form of the error is preserved in the response body so
-// admins still see "unknown scope: \"bogus:read\"" rather than a
-// generic "bad request".
+// Both api_key.ErrNotFound (returned by the conditional-update path)
+// and ent.IsNotFound (returned by Only) map to 404. The string form
+// of the error is preserved in the response body so admins still see
+// "unknown scope: \"bogus:read\"" rather than a generic "bad request".
 func statusForApiKeyServiceError(err error) int {
 	switch {
 	case errors.Is(err, api_key.ErrInvalidScope), errors.Is(err, api_key.ErrEmptyScopes):
 		return http.StatusBadRequest
-	case ent.IsNotFound(err):
+	case errors.Is(err, api_key.ErrNotFound), ent.IsNotFound(err):
 		return http.StatusNotFound
 	default:
 		return http.StatusInternalServerError
@@ -264,8 +265,8 @@ func (h *Handler) UpdateApiKey(c echo.Context) error {
 		scopes,
 	)
 	if err != nil {
-		// statusForApiKeyServiceError maps validation → 400, ent
-		// not-found (revoked or missing) → 404, everything else → 500.
+		// statusForApiKeyServiceError maps validation → 400, not-found
+		// (revoked or missing) → 404, everything else → 500.
 		status := statusForApiKeyServiceError(err)
 		msg := fmt.Sprintf("error updating api key: %v", err)
 		if status == http.StatusNotFound {

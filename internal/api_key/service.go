@@ -30,6 +30,13 @@ var (
 	// catches the JSON-level "min=1" case; this guards the service
 	// layer for in-process callers and post-dedup empty lists.
 	ErrEmptyScopes = errors.New("at least one scope is required")
+
+	// ErrNotFound is returned when an Update or revoke target either
+	// doesn't exist or has been soft-deleted. The HTTP layer maps
+	// both this and ent.IsNotFound to 404. Used by the conditional-
+	// update path so we don't need to construct ent's internal
+	// NotFoundError type from outside the ent package.
+	ErrNotFound = errors.New("api key not found")
 )
 
 // SystemUserUsername is the reserved username of the singleton service-account
@@ -162,24 +169,30 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, name, description st
 		return nil, err
 	}
 
-	// Reject updates on revoked keys: a revoked key shouldn't be
-	// editable, otherwise admins could "un-revoke" by editing it back
-	// into circulation. Combined Where on (id, RevokedAtIsNil) returns
-	// not-found rather than fetching+checking in two steps.
-	row, err := s.Store.Client.ApiKey.Query().
+	// Single conditional UPDATE rather than read-then-update: if a
+	// concurrent Revoke commits between a SELECT and the subsequent
+	// UpdateOneID, the second write would land on a now-revoked row.
+	// Update().Where(ID, RevokedAtIsNil()).Save returns the count of
+	// matched rows; zero means the row doesn't exist or is revoked, in
+	// which case we surface the same NotFoundError the read-then-update
+	// path used to.
+	affected, err := s.Store.Client.ApiKey.Update().
 		Where(apikey.ID(id), apikey.RevokedAtIsNil()).
-		Only(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	updated, err := s.Store.Client.ApiKey.UpdateOneID(row.ID).
 		SetName(name).
 		SetDescription(description).
 		SetScopes(normalized.Strings()).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error updating api key: %w", err)
+	}
+	if affected == 0 {
+		return nil, ErrNotFound
+	}
+
+	// Re-read to return the fresh row to the caller.
+	updated, err := s.Store.Client.ApiKey.Query().Where(apikey.ID(id)).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error reloading updated api key: %w", err)
 	}
 
 	if s.Cache != nil {
@@ -222,30 +235,29 @@ func (s *Service) GetByPrefix(ctx context.Context, prefix string) (*ent.ApiKey, 
 // value is older than the debounce window. This avoids a write storm on
 // busy keys while keeping the timestamp accurate to within ~60 s.
 //
-// Filters on revoked_at IS NULL so a request that was already in flight
-// when an admin revoked a key (cache flushed AFTER the DB commit on
-// Revoke) doesn't bump last_used_at on the now-revoked row, which would
-// otherwise leave audit data with last_used_at > revoked_at.
+// Single conditional UPDATE rather than read-then-update: a concurrent
+// Revoke between the SELECT and the UpdateOneID would otherwise let
+// the touch land on the now-revoked row. The WHERE clause includes
+// revoked_at IS NULL and "last_used_at is null OR last_used_at <
+// (now - debounce)" so the debounce check is part of the same atomic
+// statement.
 //
 // Errors are non-fatal for the request; the caller fires this in a
-// goroutine and discards the error.
+// goroutine and discards the error. Zero affected rows (revoked,
+// missing, or still inside the debounce window) is not surfaced as
+// an error — there's nothing for the caller to do about it.
 func (s *Service) TouchLastUsed(ctx context.Context, id uuid.UUID) error {
-	row, err := s.Store.Client.ApiKey.Query().
-		Where(apikey.ID(id), apikey.RevokedAtIsNil()).
-		Select(apikey.FieldLastUsedAt).
-		Only(ctx)
-	if err != nil {
-		// Includes the case where the row exists but is revoked — Only
-		// returns NotFoundError because the WHERE filter excluded it.
-		// That's the intended behavior: silently no-op rather than
-		// updating audit columns on a revoked key.
-		return err
-	}
 	now := time.Now()
-	if row.LastUsedAt != nil && now.Sub(*row.LastUsedAt) < touchDebounceWindow {
-		return nil
-	}
-	_, err = s.Store.Client.ApiKey.UpdateOneID(id).
+	cutoff := now.Add(-touchDebounceWindow)
+	_, err := s.Store.Client.ApiKey.Update().
+		Where(
+			apikey.ID(id),
+			apikey.RevokedAtIsNil(),
+			apikey.Or(
+				apikey.LastUsedAtIsNil(),
+				apikey.LastUsedAtLT(cutoff),
+			),
+		).
 		SetLastUsedAt(now).
 		Save(ctx)
 	return err
