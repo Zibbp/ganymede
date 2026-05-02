@@ -424,7 +424,7 @@
     "revokeError": "API-Schlüssel konnte nicht widerrufen werden",
     "showOnce": {
       "warning": "Dies ist das einzige Mal, dass das Geheimnis angezeigt wird. Kopiere es jetzt und bewahre es sicher auf.",
-      "instructions": "Verwende es in Skripten als: Authorization: Bearer <secret>",
+      "instructions": "Verwende es in Skripten als: Authorization: Bearer gym_<prefix>_<secret>",
       "copy": "Geheimnis kopieren",
       "copied": "Kopiert",
       "closeBlocked": "Kopiere das Geheimnis, um Schließen zu aktivieren",

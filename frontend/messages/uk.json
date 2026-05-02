@@ -422,7 +422,7 @@
     "revokeError": "Не вдалося відкликати API ключ",
     "showOnce": {
       "warning": "Це єдиний раз, коли буде показано секрет. Скопіюйте його зараз і збережіть у безпечному місці.",
-      "instructions": "Використовуйте у скриптах: Authorization: Bearer <secret>",
+      "instructions": "Використовуйте у скриптах: Authorization: Bearer gym_<prefix>_<secret>",
       "copy": "Копіювати секрет",
       "copied": "Скопійовано",
       "closeBlocked": "Скопіюйте секрет, щоб увімкнути закриття",

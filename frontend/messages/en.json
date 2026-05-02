@@ -424,7 +424,7 @@
     "revokeError": "Failed to revoke API key",
     "showOnce": {
       "warning": "This is the only time the secret will be shown. Copy it now and store it somewhere safe.",
-      "instructions": "Use it in scripts as: Authorization: Bearer <secret>",
+      "instructions": "Use it in scripts as: Authorization: Bearer gym_<prefix>_<secret>",
       "copy": "Copy secret",
       "copied": "Copied",
       "closeBlocked": "Copy the secret to enable Close",
