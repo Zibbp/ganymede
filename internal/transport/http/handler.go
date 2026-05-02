@@ -320,6 +320,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// other keys.
 	adminGroup.GET("/api-keys", h.ListApiKeys, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 	adminGroup.POST("/api-keys", h.CreateApiKey, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.PUT("/api-keys/:id", h.UpdateApiKey, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 	adminGroup.DELETE("/api-keys/:id", h.DeleteApiKey, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 
 	// User

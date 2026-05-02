@@ -18,6 +18,7 @@ import (
 // service.
 type ApiKeyService interface {
 	Create(ctx context.Context, name, description string, scopes []utils.ApiKeyScope) (*ent.ApiKey, string, error)
+	Update(ctx context.Context, id uuid.UUID, name, description string, scopes []utils.ApiKeyScope) (*ent.ApiKey, error)
 	List(ctx context.Context) ([]*ent.ApiKey, error)
 	Revoke(ctx context.Context, id uuid.UUID) error
 }
@@ -29,6 +30,17 @@ type ApiKeyService interface {
 // 400 responses can name the offending scope rather than dumping the full
 // catalog of 45+ valid strings.
 type CreateApiKeyRequest struct {
+	Name        string   `json:"name"        validate:"required,min=3,max=50"`
+	Description string   `json:"description" validate:"max=500"`
+	Scopes      []string `json:"scopes"      validate:"required,min=1"`
+}
+
+// UpdateApiKeyRequest is the JSON body for PUT /admin/api-keys/:id.
+// Same shape as CreateApiKeyRequest but applies to an existing key —
+// the server replaces all editable fields (name, description, scopes)
+// in one call. The prefix and secret are immutable; rotating a key
+// still means revoke + create.
+type UpdateApiKeyRequest struct {
 	Name        string   `json:"name"        validate:"required,min=3,max=50"`
 	Description string   `json:"description" validate:"max=500"`
 	Scopes      []string `json:"scopes"      validate:"required,min=1"`
@@ -154,6 +166,65 @@ func (h *Handler) CreateApiKey(c echo.Context) error {
 		Data:    resp,
 		Message: "api key created — store the secret now, it will not be shown again",
 	})
+}
+
+// UpdateApiKey godoc
+//
+//	@Summary		Update an API key
+//	@Description	Replaces an existing API key's editable fields (name, description, scopes). Prefix and secret are immutable — rotating a key still means revoke + create.
+//	@Tags			admin
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string				true	"api key id"
+//	@Param			body	body		UpdateApiKeyRequest	true	"update api key payload"
+//	@Success		200		{object}	apiKeyDTO
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		404		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/admin/api-keys/{id} [put]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) UpdateApiKey(c echo.Context) error {
+	if h.Service.ApiKeyService == nil {
+		return ErrorResponse(c, http.StatusInternalServerError, "api key service not configured")
+	}
+	idParam := c.Param("id")
+	id, err := uuid.Parse(idParam)
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, "invalid id")
+	}
+
+	var req UpdateApiKeyRequest
+	if err := c.Bind(&req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(&req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+
+	scopes := utils.ApiKeyScopesFromStrings(req.Scopes)
+	for _, s := range scopes {
+		if !s.IsValid() {
+			return ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("unknown scope: %q", s))
+		}
+	}
+
+	updated, err := h.Service.ApiKeyService.Update(
+		c.Request().Context(),
+		id,
+		req.Name,
+		req.Description,
+		scopes,
+	)
+	if err != nil {
+		// Distinguish "key gone or revoked" (404) from validation
+		// problems (400). Service-side normalize errors and ent
+		// not-found both surface here.
+		if ent.IsNotFound(err) {
+			return ErrorResponse(c, http.StatusNotFound, "api key not found")
+		}
+		return ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("error updating api key: %v", err))
+	}
+	return SuccessResponse(c, toAPIKeyDTO(updated), "api key updated")
 }
 
 // DeleteApiKey godoc
