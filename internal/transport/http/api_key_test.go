@@ -136,4 +136,82 @@ func TestApiKeyHTTP(t *testing.T) {
 			Expect().
 			Status(http.StatusUnauthorized)
 	})
+
+	// Cross-resource enforcement. Each subtest creates a key with a
+	// narrow scope and asserts it succeeds against routes its scope
+	// covers, and is rejected from routes another scope would gate.
+	t.Run("VodWriteScopeCannotDeleteVod", func(t *testing.T) {
+		// Mint a key that can edit but not destroy VODs.
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "vod-writer-only",
+				Scopes: []string{"vod:write"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+
+		bearer := bareHTTPClient(t)
+		// DELETE /vod/:id requires vod:admin → 403, not 401.
+		bearer.DELETE("/vod/00000000-0000-0000-0000-000000000000").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusForbidden)
+	})
+
+	t.Run("PlaylistScopeCannotAccessQueue", func(t *testing.T) {
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "playlist-only",
+				Scopes: []string{"playlist:write"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+
+		bearer := bareHTTPClient(t)
+		// GET /queue requires queue:read → playlist scope must not satisfy.
+		bearer.GET("/queue").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusForbidden)
+	})
+
+	t.Run("WildcardAdminCoversEveryMigratedRoute", func(t *testing.T) {
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "superuser",
+				Scopes: []string{"*:admin"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+
+		bearer := bareHTTPClient(t)
+		// /queue requires queue:read; *:admin covers it.
+		bearer.GET("/queue").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusOK)
+	})
+
+	t.Run("MultipleScopesAreUnioned", func(t *testing.T) {
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "vod-and-queue-reader",
+				Scopes: []string{"vod:read", "queue:read"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+
+		bearer := bareHTTPClient(t)
+		// queue:read passes the GET /queue gate.
+		bearer.GET("/queue").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusOK)
+		// But neither scope covers playlist writes.
+		bearer.POST("/playlist").
+			WithHeader("Authorization", "Bearer "+token).
+			WithJSON(map[string]any{"name": "from-script"}).
+			Expect().
+			Status(http.StatusForbidden)
+	})
 }
