@@ -328,18 +328,22 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	playbackGroup.POST("/start", h.StartPlayback)
 
 	// Playlist
+	//
+	// All write endpoints accept either a session cookie or an API key.
+	// Issue #1070's second use case: scripts that auto-create or
+	// reorder playlists. GET endpoints stay unauthenticated.
 	playlistGroup := e.Group("/playlist")
 	playlistGroup.GET("/:id", h.GetPlaylist)
 	playlistGroup.GET("", h.GetPlaylists)
-	playlistGroup.POST("", h.CreatePlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.POST("/:id", h.AddVodToPlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.DELETE("/:id/vod", h.DeleteVodFromPlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.DELETE("/:id", h.DeletePlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.PUT("/:id", h.UpdatePlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.PUT("/:id/multistream/delay", h.SetVodDelayOnPlaylistMultistream, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.PUT("/:id/rules", h.SetPlaylistRules, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.GET("/:id/rules", h.GetPlaylistRules, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.POST("/:id/rules/test", h.TestPlaylistRules, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	playlistGroup.POST("", h.CreatePlaylist, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
+	playlistGroup.POST("/:id", h.AddVodToPlaylist, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
+	playlistGroup.DELETE("/:id/vod", h.DeleteVodFromPlaylist, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
+	playlistGroup.DELETE("/:id", h.DeletePlaylist, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
+	playlistGroup.PUT("/:id", h.UpdatePlaylist, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
+	playlistGroup.PUT("/:id/multistream/delay", h.SetVodDelayOnPlaylistMultistream, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
+	playlistGroup.PUT("/:id/rules", h.SetPlaylistRules, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
+	playlistGroup.GET("/:id/rules", h.GetPlaylistRules, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeRead))
+	playlistGroup.POST("/:id/rules/test", h.TestPlaylistRules, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
 
 	// Task
 	taskGroup := e.Group("/task")
