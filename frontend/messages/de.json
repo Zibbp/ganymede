@@ -380,7 +380,7 @@
     "never": "Nie",
     "columns": {
       "name": "Name",
-      "scope": "Bereich",
+      "scopes": "Bereiche",
       "prefix": "Präfix",
       "lastUsed": "Zuletzt verwendet",
       "createdAt": "Erstellt am",
@@ -390,14 +390,24 @@
   "AdminApiKeyComponents": {
     "validation": {
       "name": "Name muss zwischen 3 und 50 Zeichen lang sein",
-      "description": "Beschreibung darf höchstens 500 Zeichen haben"
+      "description": "Beschreibung darf höchstens 500 Zeichen haben",
+      "scopes": {
+        "required": "Wähle mindestens einen Bereich",
+        "unknown": "Unbekannter Bereich"
+      }
     },
     "nameLabel": "Name",
     "namePlaceholder": "vod-archiver-script",
     "descriptionLabel": "Beschreibung",
     "descriptionPlaceholder": "Optionale Notizen, wo dieser Schlüssel verwendet wird",
-    "scopeLabel": "Bereich",
-    "scopeDescription": "read = nur GET · write = erstellen/aktualisieren · admin = voller Zugriff",
+    "scopeLabel": "Bereiche",
+    "scopeDescription": "Jeder Bereich ist resource:tier — admin > write > read innerhalb einer Ressource. Verwende *:admin für vollen Zugriff oder wähle gezielt einzelne Bereiche.",
+    "scopePlaceholder": "Wähle einen oder mehrere Bereiche",
+    "presets": {
+      "fullAdmin": "Voller Admin (*:admin)",
+      "readAll": "Alles lesen (*:read)",
+      "clear": "Leeren"
+    },
     "createButton": "API-Schlüssel erstellen",
     "createNotification": "API-Schlüssel erstellt — kopiere das Geheimnis jetzt",
     "revokeConfirmText": "Bist du sicher, dass du diesen API-Schlüssel widerrufen möchtest? Dies kann nicht rückgängig gemacht werden.",

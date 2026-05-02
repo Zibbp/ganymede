@@ -380,7 +380,7 @@
     "never": "Never",
     "columns": {
       "name": "Name",
-      "scope": "Scope",
+      "scopes": "Scopes",
       "prefix": "Prefix",
       "lastUsed": "Last Used",
       "createdAt": "Created At",
@@ -390,14 +390,24 @@
   "AdminApiKeyComponents": {
     "validation": {
       "name": "Name must be between 3 and 50 characters",
-      "description": "Description must be at most 500 characters"
+      "description": "Description must be at most 500 characters",
+      "scopes": {
+        "required": "Pick at least one scope",
+        "unknown": "Unknown scope"
+      }
     },
     "nameLabel": "Name",
     "namePlaceholder": "vod-archiver-script",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Optional notes about where this key is used",
-    "scopeLabel": "Scope",
-    "scopeDescription": "read = GET only · write = create/update · admin = full access",
+    "scopeLabel": "Scopes",
+    "scopeDescription": "Each scope is resource:tier — admin > write > read within a resource. Use *:admin for full access, or pick specific scopes for least-privilege.",
+    "scopePlaceholder": "Pick one or more scopes",
+    "presets": {
+      "fullAdmin": "Full admin (*:admin)",
+      "readAll": "Read all (*:read)",
+      "clear": "Clear"
+    },
     "createButton": "Create API key",
     "createNotification": "API key created — copy the secret now",
     "revokeConfirmText": "Are you sure you want to revoke this API key? This cannot be undone.",

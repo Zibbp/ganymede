@@ -378,7 +378,7 @@
     "never": "Ніколи",
     "columns": {
       "name": "Назва",
-      "scope": "Область",
+      "scopes": "Області",
       "prefix": "Префікс",
       "lastUsed": "Востаннє використано",
       "createdAt": "Створено",
@@ -388,14 +388,24 @@
   "AdminApiKeyComponents": {
     "validation": {
       "name": "Назва має бути від 3 до 50 символів",
-      "description": "Опис має бути не більше 500 символів"
+      "description": "Опис має бути не більше 500 символів",
+      "scopes": {
+        "required": "Виберіть хоча б одну область",
+        "unknown": "Невідома область"
+      }
     },
     "nameLabel": "Назва",
     "namePlaceholder": "vod-archiver-script",
     "descriptionLabel": "Опис",
     "descriptionPlaceholder": "Необов'язкові примітки про використання ключа",
-    "scopeLabel": "Область",
-    "scopeDescription": "read = тільки GET · write = створення/оновлення · admin = повний доступ",
+    "scopeLabel": "Області",
+    "scopeDescription": "Кожна область має формат resource:tier — admin > write > read у межах ресурсу. Використовуйте *:admin для повного доступу або виберіть конкретні області для мінімальних привілеїв.",
+    "scopePlaceholder": "Виберіть одну або кілька областей",
+    "presets": {
+      "fullAdmin": "Повний адмін (*:admin)",
+      "readAll": "Читати все (*:read)",
+      "clear": "Очистити"
+    },
     "createButton": "Створити API ключ",
     "createNotification": "API ключ створено — скопіюйте секрет зараз",
     "revokeConfirmText": "Ви впевнені, що хочете відкликати цей API ключ? Цю дію не можна скасувати.",
