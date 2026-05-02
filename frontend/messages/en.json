@@ -379,6 +379,8 @@
     "showOnceModal": "API key created",
     "edit": "Edit",
     "revoke": "Revoke",
+    "revokedBadge": "Revoked",
+    "showRevoked": "Show revoked keys",
     "copyPrefix": "Copy prefix",
     "copied": "Copied",
     "never": "Never",

@@ -78,11 +78,24 @@ func TestApiKeyService(t *testing.T) {
 
 		require.NoError(t, svc.Revoke(ctx, toRevoke.ID))
 
-		keys, err := svc.List(ctx)
+		keys, err := svc.List(ctx, false)
 		require.NoError(t, err)
 		for _, k := range keys {
-			assert.NotEqual(t, toRevoke.ID, k.ID, "revoked key must not be in list")
+			assert.NotEqual(t, toRevoke.ID, k.ID, "revoked key must not be in default list")
 		}
+
+		// includeRevoked=true brings the revoked row back, with
+		// revoked_at populated.
+		all, err := svc.List(ctx, true)
+		require.NoError(t, err)
+		var foundRevoked bool
+		for _, k := range all {
+			if k.ID == toRevoke.ID {
+				foundRevoked = true
+				require.NotNil(t, k.RevokedAt, "revoked row must surface RevokedAt when included")
+			}
+		}
+		assert.True(t, foundRevoked, "List(includeRevoked=true) must return the revoked row")
 	})
 
 	t.Run("GetByPrefix excludes revoked", func(t *testing.T) {

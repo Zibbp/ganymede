@@ -9,6 +9,7 @@ import {
   Drawer,
   Group,
   Modal,
+  Switch,
   TextInput,
   Title,
   Tooltip,
@@ -72,6 +73,10 @@ const AdminApiKeysPage = () => {
   const [debouncedQuery] = useDebouncedValue(query, 500);
   const [activeKey, setActiveKey] = useState<ApiKey | null>(null);
   const [showOnceSecret, setShowOnceSecret] = useState<string | null>(null);
+  // includeRevoked surfaces soft-deleted rows so admins can audit
+  // historical state. Off by default — the common case is "what active
+  // keys do I have?".
+  const [includeRevoked, setIncludeRevoked] = useState(false);
 
   const [createDrawerOpened, { open: openCreateDrawer, close: closeCreateDrawer }] = useDisclosure(false);
   const [editDrawerOpened, { open: openEditDrawer, close: closeEditDrawer }] = useDisclosure(false);
@@ -88,7 +93,7 @@ const AdminApiKeysPage = () => {
   };
 
   const axiosPrivate = useAxiosPrivate();
-  const { data: apiKeys, isPending, isError } = useGetApiKeys(axiosPrivate);
+  const { data: apiKeys, isPending, isError } = useGetApiKeys(axiosPrivate, includeRevoked);
 
   useEffect(() => {
     setPerPage(settingsAdminItemsPerPage);
@@ -168,13 +173,20 @@ const AdminApiKeysPage = () => {
         </Group>
 
         <Box mt={5}>
-          <TextInput
-            placeholder={t("searchPlaceholder")}
-            leftSection={<IconSearch size={16} />}
-            value={query}
-            onChange={(e) => setQuery(e.currentTarget.value)}
-            mb={10}
-          />
+          <Group mb={10} align="flex-end" gap="md">
+            <TextInput
+              placeholder={t("searchPlaceholder")}
+              leftSection={<IconSearch size={16} />}
+              value={query}
+              onChange={(e) => setQuery(e.currentTarget.value)}
+              style={{ flex: 1 }}
+            />
+            <Switch
+              label={t("showRevoked")}
+              checked={includeRevoked}
+              onChange={(e) => setIncludeRevoked(e.currentTarget.checked)}
+            />
+          </Group>
 
           <DataTable<ApiKey>
             withTableBorder
@@ -188,6 +200,18 @@ const AdminApiKeysPage = () => {
                 accessor: "name",
                 title: t("columns.name"),
                 sortable: true,
+                // Tag revoked rows visibly so the audit view doesn't
+                // confuse them with active keys.
+                render: ({ name, revoked_at }) => (
+                  <Group gap="xs">
+                    <Text>{name}</Text>
+                    {revoked_at && (
+                      <Badge color="gray" variant="filled" size="xs">
+                        {t("revokedBadge")}
+                      </Badge>
+                    )}
+                  </Group>
+                ),
               },
               {
                 accessor: "scopes",
@@ -244,29 +268,43 @@ const AdminApiKeysPage = () => {
                 accessor: "actions",
                 title: t("columns.actions"),
                 width: "150px",
-                render: (key) => (
-                  <Group gap="xs">
-                    <Tooltip label={t("edit")}>
-                      <ActionIcon
-                        onClick={() => handleEditDrawer(key)}
-                        className={classes.actionButton}
-                        variant="light"
-                      >
-                        <IconPencil size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label={t("revoke")}>
-                      <ActionIcon
-                        onClick={() => handleDeleteModal(key)}
-                        className={classes.actionButton}
-                        variant="light"
-                        color="red"
-                      >
-                        <IconTrash size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
-                ),
+                render: (key) => {
+                  // Revoked keys aren't editable or revocable —
+                  // surfacing the actions would just produce 404s
+                  // from the server (Update/Revoke filter on
+                  // revoked_at IS NULL). Show a placeholder dash
+                  // instead.
+                  if (key.revoked_at) {
+                    return (
+                      <Text c="dimmed" size="sm">
+                        —
+                      </Text>
+                    );
+                  }
+                  return (
+                    <Group gap="xs">
+                      <Tooltip label={t("edit")}>
+                        <ActionIcon
+                          onClick={() => handleEditDrawer(key)}
+                          className={classes.actionButton}
+                          variant="light"
+                        >
+                          <IconPencil size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label={t("revoke")}>
+                        <ActionIcon
+                          onClick={() => handleDeleteModal(key)}
+                          className={classes.actionButton}
+                          variant="light"
+                          color="red"
+                        >
+                          <IconTrash size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  );
+                },
               },
             ]}
             totalRecords={totalRecords}

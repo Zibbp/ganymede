@@ -128,13 +128,16 @@ func normalizeScopes(in []utils.ApiKeyScope) (utils.ApiKeyScopes, error) {
 	return out, nil
 }
 
-// List returns every non-revoked API key, ordered most-recently-created
-// first.
-func (s *Service) List(ctx context.Context) ([]*ent.ApiKey, error) {
-	keys, err := s.Store.Client.ApiKey.Query().
-		Where(apikey.RevokedAtIsNil()).
-		Order(ent.Desc(apikey.FieldCreatedAt)).
-		All(ctx)
+// List returns API keys, ordered most-recently-created first.
+// Defaults to active keys only; pass includeRevoked=true to include
+// soft-deleted rows for forensic / audit views.
+func (s *Service) List(ctx context.Context, includeRevoked bool) ([]*ent.ApiKey, error) {
+	q := s.Store.Client.ApiKey.Query().
+		Order(ent.Desc(apikey.FieldCreatedAt))
+	if !includeRevoked {
+		q = q.Where(apikey.RevokedAtIsNil())
+	}
+	keys, err := q.All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error listing api keys: %w", err)
 	}

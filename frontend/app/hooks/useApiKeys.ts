@@ -79,6 +79,10 @@ export interface ApiKey {
   // before the audit edge was added (Phase 3 follow-up).
   created_by_id: string | null;
   last_used_at: string | null;
+  // ISO timestamp set when an admin revokes the key. Null for active
+  // keys; populated when `?include_revoked=true` surfaces historical
+  // rows in the audit view.
+  revoked_at: string | null;
   created_at: string;
 }
 
@@ -96,18 +100,23 @@ export interface CreateApiKeyResponse {
 }
 
 const getApiKeys = async (
-  axiosPrivate: AxiosInstance
+  axiosPrivate: AxiosInstance,
+  includeRevoked: boolean
 ): Promise<Array<ApiKey>> => {
   const response = await axiosPrivate.get<ApiResponse<Array<ApiKey>>>(
-    "/api/v1/admin/api-keys"
+    "/api/v1/admin/api-keys",
+    { params: includeRevoked ? { include_revoked: true } : undefined }
   );
   return response.data.data ?? [];
 };
 
-const useGetApiKeys = (axiosPrivate: AxiosInstance) => {
+// useGetApiKeys returns the key list. Pass includeRevoked=true to see
+// soft-deleted rows in the audit view; the query key is namespaced so
+// the active and full lists cache independently.
+const useGetApiKeys = (axiosPrivate: AxiosInstance, includeRevoked = false) => {
   return useQuery({
-    queryKey: ["apiKeys"],
-    queryFn: () => getApiKeys(axiosPrivate),
+    queryKey: ["apiKeys", { includeRevoked }],
+    queryFn: () => getApiKeys(axiosPrivate, includeRevoked),
   });
 };
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,7 +41,7 @@ func statusForApiKeyServiceError(err error) int {
 type ApiKeyService interface {
 	Create(ctx context.Context, name, description string, scopes []utils.ApiKeyScope, createdBy uuid.UUID) (*ent.ApiKey, string, error)
 	Update(ctx context.Context, id uuid.UUID, name, description string, scopes []utils.ApiKeyScope) (*ent.ApiKey, error)
-	List(ctx context.Context) ([]*ent.ApiKey, error)
+	List(ctx context.Context, includeRevoked bool) ([]*ent.ApiKey, error)
 	Revoke(ctx context.Context, id uuid.UUID) error
 }
 
@@ -84,7 +85,11 @@ type apiKeyDTO struct {
 	// it to show "minted by <username>" in the list and detail views.
 	CreatedByID *uuid.UUID `json:"created_by_id"`
 	LastUsedAt  *time.Time `json:"last_used_at"`
-	CreatedAt   time.Time  `json:"created_at"`
+	// RevokedAt is null for active keys; set when an admin revokes
+	// the key. Surfaced in list responses when ?include_revoked=true
+	// is passed so admins can audit historical state.
+	RevokedAt *time.Time `json:"revoked_at"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 // createApiKeyResponse is the response body for POST /admin/api-keys. The
@@ -109,6 +114,7 @@ func toAPIKeyDTO(k *ent.ApiKey) apiKeyDTO {
 		Scopes:      scopes,
 		CreatedByID: k.CreatedByID,
 		LastUsedAt:  k.LastUsedAt,
+		RevokedAt:   k.RevokedAt,
 		CreatedAt:   k.CreatedAt,
 	}
 }
@@ -116,18 +122,27 @@ func toAPIKeyDTO(k *ent.ApiKey) apiKeyDTO {
 // ListApiKeys godoc
 //
 //	@Summary		List API keys
-//	@Description	Returns all non-revoked API keys, newest first. Secrets are never returned by this endpoint.
+//	@Description	Returns API keys, newest first. By default only active (non-revoked) keys are returned; pass ?include_revoked=true for a full audit listing. Secrets are never returned by this endpoint.
 //	@Tags			admin
 //	@Produce		json
-//	@Success		200	{object}	[]apiKeyDTO
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Param			include_revoked	query		bool	false	"include revoked keys"
+//	@Success		200				{object}	[]apiKeyDTO
+//	@Failure		500				{object}	utils.ErrorResponse
 //	@Router			/admin/api-keys [get]
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) ListApiKeys(c echo.Context) error {
 	if h.Service.ApiKeyService == nil {
 		return ErrorResponse(c, http.StatusInternalServerError, "api key service not configured")
 	}
-	keys, err := h.Service.ApiKeyService.List(c.Request().Context())
+	// Accept the common boolean string forms ("true", "1") for the
+	// include_revoked toggle. strconv.ParseBool covers both.
+	includeRevoked := false
+	if raw := c.QueryParam("include_revoked"); raw != "" {
+		if v, err := strconv.ParseBool(raw); err == nil {
+			includeRevoked = v
+		}
+	}
+	keys, err := h.Service.ApiKeyService.List(c.Request().Context(), includeRevoked)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("error listing api keys: %v", err))
 	}

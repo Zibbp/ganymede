@@ -379,6 +379,8 @@
     "showOnceModal": "API-Schlüssel erstellt",
     "edit": "Bearbeiten",
     "revoke": "Widerrufen",
+    "revokedBadge": "Widerrufen",
+    "showRevoked": "Widerrufene Schlüssel anzeigen",
     "copyPrefix": "Präfix kopieren",
     "copied": "Kopiert",
     "never": "Nie",
