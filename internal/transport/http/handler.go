@@ -339,12 +339,15 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	configGroup.PUT("", h.UpdateConfig, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeConfigWrite))
 
 	// Live
+	//
+	// Editor-role surface: GETs at live:read, mutations at live:write
+	// (DELETE inclusive, mirroring the role tier).
 	liveGroup := e.Group("/live")
-	liveGroup.GET("", h.GetLiveWatchedChannels, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	liveGroup.POST("", h.AddLiveWatchedChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	liveGroup.GET("/check", h.Check, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	liveGroup.GET("", h.GetLiveWatchedChannels, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeLiveRead))
+	liveGroup.POST("", h.AddLiveWatchedChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeLiveWrite))
+	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeLiveWrite))
+	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeLiveWrite))
+	liveGroup.GET("/check", h.Check, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeLiveRead))
 	// liveGroup.GET("/vod", h.CheckVodWatchedChannels, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	// liveGroup.POST("/archive", h.ArchiveLiveChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
 
