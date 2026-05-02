@@ -188,12 +188,16 @@ func (h *Handler) CreateApiKey(c echo.Context) error {
 
 	// /admin/api-keys is session-only, so userFromContext is the
 	// authenticated admin; we record their id for audit attribution.
-	// Falls back to uuid.Nil if somehow absent — Create will skip the
-	// FK rather than blow up.
-	var createdBy uuid.UUID
-	if u := userFromContext(c); u != nil {
-		createdBy = u.ID
+	// The route's middleware chain (AuthGuardMiddleware →
+	// AuthGetUserMiddleware → AuthUserRoleMiddleware(AdminRole))
+	// should guarantee a user is loaded by the time we reach here.
+	// Fail closed if it's not — minting an unaudited key (createdBy =
+	// uuid.Nil) would silently break the audit trail.
+	u := userFromContext(c)
+	if u == nil {
+		return ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
 	}
+	createdBy := u.ID
 
 	created, secret, err := h.Service.ApiKeyService.Create(
 		c.Request().Context(),
