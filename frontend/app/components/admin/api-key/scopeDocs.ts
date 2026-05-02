@@ -25,10 +25,13 @@ export interface ResourceDocs {
   label: string;
   // One-line description of the resource as a whole.
   description: string;
-  // Per-tier documentation. A tier is omitted (rather than included as
-  // empty) when it grants nothing extra beyond the lower tier — for
-  // example, /vod has only public reads and a single DELETE, so its
-  // read tier grants nothing extra.
+  // Per-tier documentation. The frontend catalog emits every (resource,
+  // tier) combination so the create form lets admins pick any scope; we
+  // therefore document every tier here, even ones whose route list is
+  // empty today. Tiers that currently gate no routes have an empty
+  // `routes` array and a summary explaining why — usually "all reads
+  // are public" or "no endpoint is at this tier today" — so admins
+  // aren't surprised when they pick a scope and see no docs for it.
   tiers: Partial<Record<ApiKeyTier, TierDocs>>;
 }
 
@@ -62,6 +65,11 @@ export const SCOPE_DOCS: ResourceDocs[] = [
     label: "VODs (vod)",
     description: "Video metadata, locking, thumbnail generation, deletion.",
     tiers: {
+      [ApiKeyTier.Read]: {
+        summary:
+          "Reserved for future use. All VOD GET endpoints are currently public — granting this scope has no effect today.",
+        routes: [],
+      },
       [ApiKeyTier.Write]: {
         summary:
           "Create and update VODs, lock/unlock, generate thumbnails, run ffprobe.",
@@ -104,6 +112,11 @@ export const SCOPE_DOCS: ResourceDocs[] = [
           "POST /playlist/:id/rules/test",
         ],
       },
+      [ApiKeyTier.Admin]: {
+        summary:
+          "Reserved for future use. No /playlist endpoint is currently at admin tier — playlist:write already covers deletes and every other mutation.",
+        routes: [],
+      },
     },
   },
   {
@@ -136,6 +149,11 @@ export const SCOPE_DOCS: ResourceDocs[] = [
     label: "Channels (channel)",
     description: "Channel metadata and image management.",
     tiers: {
+      [ApiKeyTier.Read]: {
+        summary:
+          "Reserved for future use. All channel GET endpoints are currently public.",
+        routes: [],
+      },
       [ApiKeyTier.Write]: {
         summary: "Create and update channels, refresh channel images.",
         routes: [
@@ -155,6 +173,11 @@ export const SCOPE_DOCS: ResourceDocs[] = [
     label: "Archive (archive)",
     description: "Trigger archive jobs for channels, videos, and chat.",
     tiers: {
+      [ApiKeyTier.Read]: {
+        summary:
+          "Reserved for future use. /archive currently has no read endpoints.",
+        routes: [],
+      },
       [ApiKeyTier.Write]: {
         summary: "Submit channel and video archive jobs.",
         routes: ["POST /archive/channel", "POST /archive/video"],
@@ -178,6 +201,11 @@ export const SCOPE_DOCS: ResourceDocs[] = [
       [ApiKeyTier.Write]: {
         summary: "Add, edit, and remove watched channels.",
         routes: ["POST /live", "PUT /live/:id", "DELETE /live/:id"],
+      },
+      [ApiKeyTier.Admin]: {
+        summary:
+          "Reserved for future use. No /live endpoint is currently at admin tier — live:write covers all writes including delete.",
+        routes: [],
       },
     },
   },
@@ -213,6 +241,11 @@ export const SCOPE_DOCS: ResourceDocs[] = [
         summary: "Replace the config.",
         routes: ["PUT /config"],
       },
+      [ApiKeyTier.Admin]: {
+        summary:
+          "Reserved for future use. /config currently has no admin tier endpoints — config:write already replaces the entire config.",
+        routes: [],
+      },
     },
   },
   {
@@ -244,6 +277,16 @@ export const SCOPE_DOCS: ResourceDocs[] = [
     description:
       "Manually trigger admin-only background tasks (cleanup, re-indexing, etc.).",
     tiers: {
+      [ApiKeyTier.Read]: {
+        summary:
+          "Reserved for future use. /task currently has no read endpoints.",
+        routes: [],
+      },
+      [ApiKeyTier.Write]: {
+        summary:
+          "Reserved for future use. /task currently has no write endpoints — every task run is treated as admin tier.",
+        routes: [],
+      },
       [ApiKeyTier.Admin]: {
         summary: "Start any admin-only background task by name.",
         routes: ["POST /task/start"],
@@ -255,12 +298,22 @@ export const SCOPE_DOCS: ResourceDocs[] = [
     label: "Blocked Videos (blocked_video)",
     description: "Block list for videos that should be skipped during archival.",
     tiers: {
+      [ApiKeyTier.Read]: {
+        summary:
+          "Reserved for future use. /blocked-video GET endpoints are currently public.",
+        routes: [],
+      },
       [ApiKeyTier.Write]: {
         summary: "Add and remove videos from the block list.",
         routes: [
           "POST /blocked-video/:id",
           "DELETE /blocked-video/:id",
         ],
+      },
+      [ApiKeyTier.Admin]: {
+        summary:
+          "Reserved for future use. No /blocked-video endpoint is currently at admin tier — blocked_video:write covers add and remove.",
+        routes: [],
       },
     },
   },
@@ -278,6 +331,16 @@ export const SCOPE_DOCS: ResourceDocs[] = [
           "GET /admin/storage-distribution",
           "GET /admin/info",
         ],
+      },
+      [ApiKeyTier.Write]: {
+        summary:
+          "Reserved for future use. /admin currently exposes no system write endpoints.",
+        routes: [],
+      },
+      [ApiKeyTier.Admin]: {
+        summary:
+          "Reserved for future use. /admin currently exposes no system admin endpoints (key management at /admin/api-keys is intentionally session-only — see the footer below).",
+        routes: [],
       },
     },
   },
