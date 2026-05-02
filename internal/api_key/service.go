@@ -189,14 +189,21 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, name, description st
 		return nil, ErrNotFound
 	}
 
+	// Flush the cache before the re-read. The scope change has already
+	// committed; if the post-update Only() fails for a transient reason
+	// (DB blip, context cancel) and we haven't invalidated yet, an
+	// existing cache entry holding the previous broader scopes would
+	// stay valid until the 60s TTL elapses. Invalidating here means
+	// the new scopes take effect on the next request even if we bail
+	// out of this call.
+	if s.Cache != nil {
+		s.Cache.InvalidateByID(id)
+	}
+
 	// Re-read to return the fresh row to the caller.
 	updated, err := s.Store.Client.ApiKey.Query().Where(apikey.ID(id)).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error reloading updated api key: %w", err)
-	}
-
-	if s.Cache != nil {
-		s.Cache.InvalidateByID(id)
 	}
 	return updated, nil
 }
