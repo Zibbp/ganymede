@@ -144,10 +144,18 @@ func AuthGuardMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 // AuthGetUserMiddleware is a middleware that fetches the user from the database and sets it in the request context. AuthGuardMiddleware is expected to run before this to set the user ID from a session token.
+//
+// When auth_method == "api_key" the middleware injects the singleton
+// system service-account user (see api_key.SystemUserUsername). This
+// keeps handlers that read userFromContext working unchanged under API
+// key authentication; the actual permission decision is made by
+// RequireRoleOrScope based on the API key's scope, not this user's role.
 func AuthGetUserMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		authMethod := c.Get("auth_method").(string)
-		if authMethod == "local" {
+		authMethod, _ := c.Get("auth_method").(string)
+
+		switch authMethod {
+		case authMethodLocal:
 			idStr, ok := c.Get("user.id").(string)
 			if !ok {
 				log.Error().Msg("user id missing from context")
@@ -160,14 +168,23 @@ func AuthGetUserMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				return ErrorInvalidAccessTokenResponse(c)
 			}
 
-			user, err := database.DB().Client.User.Query().Where(user.ID(id)).Only(c.Request().Context())
+			u, err := database.DB().Client.User.Query().Where(user.ID(id)).Only(c.Request().Context())
 			if err != nil {
 				return ErrorInvalidAccessTokenResponse(c)
 			}
 
-			c.Set("user", user)
-
-			return next(c)
+			c.Set("user", u)
+		case authMethodAPIKey:
+			if apiKeyService == nil {
+				log.Error().Msg("api key service not configured")
+				return ErrorInvalidAccessTokenResponse(c)
+			}
+			sysUser, err := apiKeyService.GetSystemUser(c.Request().Context())
+			if err != nil {
+				log.Error().Err(err).Msg("error fetching api system user")
+				return ErrorInvalidAccessTokenResponse(c)
+			}
+			c.Set("user", sysUser)
 		}
 
 		return next(c)
