@@ -29,6 +29,43 @@ func IsValidRole(role string) bool {
 	return exists
 }
 
+// ApiKeyScope represents the permission scope of an API key.
+// Scopes are hierarchical: admin > write > read.
+type ApiKeyScope string
+
+const (
+	ApiKeyScopeRead  ApiKeyScope = "read"
+	ApiKeyScopeWrite ApiKeyScope = "write"
+	ApiKeyScopeAdmin ApiKeyScope = "admin"
+)
+
+func (ApiKeyScope) Values() (kinds []string) {
+	for _, s := range []ApiKeyScope{ApiKeyScopeRead, ApiKeyScopeWrite, ApiKeyScopeAdmin} {
+		kinds = append(kinds, string(s))
+	}
+	return
+}
+
+// Includes reports whether s grants at least the access of required.
+// admin includes write and read; write includes read.
+func (s ApiKeyScope) Includes(required ApiKeyScope) bool {
+	rank := map[ApiKeyScope]int{
+		ApiKeyScopeRead:  1,
+		ApiKeyScopeWrite: 2,
+		ApiKeyScopeAdmin: 3,
+	}
+	return rank[s] >= rank[required] && rank[required] > 0
+}
+
+// IsValidApiKeyScope checks if a string is a valid ApiKeyScope.
+func IsValidApiKeyScope(scope string) bool {
+	switch ApiKeyScope(scope) {
+	case ApiKeyScopeRead, ApiKeyScopeWrite, ApiKeyScopeAdmin:
+		return true
+	}
+	return false
+}
+
 type VideoPlatform string
 
 const (
