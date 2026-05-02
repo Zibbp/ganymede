@@ -303,6 +303,82 @@ func TestApiKeyHTTP(t *testing.T) {
 			Status(http.StatusForbidden)
 	})
 
+	t.Run("UpdateChangesScopesAndRevokesCachedAccess", func(t *testing.T) {
+		// Mint a key with vod:read so we can verify cache flush by
+		// proving the new scopes take effect on the next request.
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "update-target-http",
+				Scopes: []string{"vod:read"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+		id := obj.Path("$.data.api_key.id").String().Raw()
+
+		// Prime the verification cache by hitting any endpoint with
+		// the bearer.
+		bearer := bareHTTPClient(t)
+		bearer.GET("/vod").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusOK)
+
+		// Update: rename + swap scopes for queue:read.
+		updated := e.PUT("/admin/api-keys/"+id).
+			WithJSON(internalHttp.UpdateApiKeyRequest{
+				Name:   "update-target-http-renamed",
+				Scopes: []string{"queue:read"},
+			}).
+			Expect().Status(http.StatusOK).JSON().Object()
+		updated.Path("$.data.name").IsEqual("update-target-http-renamed")
+		updated.Path("$.data.scopes").Array().ContainsAll("queue:read")
+		updated.Path("$.data.scopes").Array().NotContainsAll("vod:read")
+
+		// New scopes took effect: queue read works…
+		bearer.GET("/queue").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusOK)
+	})
+
+	t.Run("UpdateRejectsUnknownScope", func(t *testing.T) {
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "update-bad-scope-http",
+				Scopes: []string{"vod:read"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		id := obj.Path("$.data.api_key.id").String().Raw()
+
+		e.PUT("/admin/api-keys/"+id).
+			WithJSON(internalHttp.UpdateApiKeyRequest{
+				Name:   "update-bad-scope-http",
+				Scopes: []string{"bogus:read"},
+			}).
+			Expect().
+			Status(http.StatusBadRequest)
+	})
+
+	t.Run("UpdateRevokedKeyReturns404", func(t *testing.T) {
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "update-revoked-http",
+				Scopes: []string{"vod:read"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		id := obj.Path("$.data.api_key.id").String().Raw()
+
+		e.DELETE("/admin/api-keys/" + id).Expect().Status(http.StatusOK)
+
+		e.PUT("/admin/api-keys/"+id).
+			WithJSON(internalHttp.UpdateApiKeyRequest{
+				Name:   "update-revoked-http",
+				Scopes: []string{"vod:read"},
+			}).
+			Expect().
+			Status(http.StatusNotFound)
+	})
+
 	t.Run("AdminApiKeysIsAlwaysSessionOnly", func(t *testing.T) {
 		// Even a *:admin key cannot reach /admin/api-keys via Bearer —
 		// the route is intentionally guarded by the session-only chain.
