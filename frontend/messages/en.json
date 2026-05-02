@@ -371,6 +371,8 @@
     "header": "Manage API Keys",
     "searchPlaceholder": "Search API keys...",
     "createButton": "Create API key",
+    "docsButton": "Documentation",
+    "docsModal": "API key scopes",
     "drawer": "Create API key",
     "deleteModal": "Revoke API key",
     "showOnceModal": "API key created",
@@ -420,6 +422,12 @@
       "copied": "Copied",
       "closeBlocked": "Copy the secret to enable Close",
       "closeAcknowledged": "I have saved this secret — close"
+    },
+    "docs": {
+      "scopeFormatTitle": "Scope format",
+      "scopeFormatBody": "Each scope is resource:tier. Tiers are hierarchical within a resource — admin includes write, write includes read. The wildcard resource * matches every resource, so *:admin grants full access.",
+      "sessionOnlyTitle": "Endpoints not reachable with API keys",
+      "sessionOnlyBody": "These endpoints are session-only by design. API keys cannot reach them regardless of scope."
     }
   },
   "AdminVideosPage": {

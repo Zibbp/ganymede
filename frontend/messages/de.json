@@ -371,6 +371,8 @@
     "header": "API-Schlüssel verwalten",
     "searchPlaceholder": "API-Schlüssel suchen...",
     "createButton": "API-Schlüssel erstellen",
+    "docsButton": "Dokumentation",
+    "docsModal": "API-Schlüssel-Bereiche",
     "drawer": "API-Schlüssel erstellen",
     "deleteModal": "API-Schlüssel widerrufen",
     "showOnceModal": "API-Schlüssel erstellt",
@@ -420,6 +422,12 @@
       "copied": "Kopiert",
       "closeBlocked": "Kopiere das Geheimnis, um Schließen zu aktivieren",
       "closeAcknowledged": "Ich habe das Geheimnis gespeichert — schließen"
+    },
+    "docs": {
+      "scopeFormatTitle": "Bereichsformat",
+      "scopeFormatBody": "Jeder Bereich hat das Format resource:tier. Tiers sind innerhalb einer Ressource hierarchisch — admin schließt write ein, write schließt read ein. Die Wildcard-Ressource * passt auf jede Ressource, also gewährt *:admin vollen Zugriff.",
+      "sessionOnlyTitle": "Endpunkte, die mit API-Schlüsseln nicht erreichbar sind",
+      "sessionOnlyBody": "Diese Endpunkte sind absichtlich nur per Session erreichbar. API-Schlüssel können sie unabhängig vom Bereich nicht ansprechen."
     }
   },
   "AdminVideosPage": {

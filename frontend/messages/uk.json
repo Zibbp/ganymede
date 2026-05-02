@@ -369,6 +369,8 @@
     "header": "Керування API ключами",
     "searchPlaceholder": "Пошук API ключів...",
     "createButton": "Створити API ключ",
+    "docsButton": "Документація",
+    "docsModal": "Області API ключів",
     "drawer": "Створити API ключ",
     "deleteModal": "Відкликати API ключ",
     "showOnceModal": "API ключ створено",
@@ -418,6 +420,12 @@
       "copied": "Скопійовано",
       "closeBlocked": "Скопіюйте секрет, щоб увімкнути закриття",
       "closeAcknowledged": "Я зберіг цей секрет — закрити"
+    },
+    "docs": {
+      "scopeFormatTitle": "Формат області",
+      "scopeFormatBody": "Кожна область має формат resource:tier. Рівні є ієрархічними в межах ресурсу — admin включає write, write включає read. Wildcard-ресурс * відповідає будь-якому ресурсу, тож *:admin надає повний доступ.",
+      "sessionOnlyTitle": "Endpoint-и, недоступні через API ключі",
+      "sessionOnlyBody": "Ці endpoint-и навмисно доступні лише через сесію. API ключі не можуть їх викликати незалежно від області."
     }
   },
   "AdminVideosPage": {
