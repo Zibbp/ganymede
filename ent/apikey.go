@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/apikey"
+	"github.com/zibbp/ganymede/ent/user"
 )
 
 // ApiKey is the model entity for the ApiKey schema.
@@ -29,6 +30,8 @@ type ApiKey struct {
 	HashedSecret string `json:"-"`
 	// Scopes holds the value of the "scopes" field.
 	Scopes []string `json:"scopes,omitempty"`
+	// CreatedByID holds the value of the "created_by_id" field.
+	CreatedByID *uuid.UUID `json:"created_by_id,omitempty"`
 	// LastUsedAt holds the value of the "last_used_at" field.
 	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
 	// RevokedAt holds the value of the "revoked_at" field.
@@ -36,8 +39,31 @@ type ApiKey struct {
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt    time.Time `json:"created_at,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ApiKeyQuery when eager-loading is set.
+	Edges        ApiKeyEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ApiKeyEdges holds the relations/edges for other nodes in the graph.
+type ApiKeyEdges struct {
+	// CreatedBy holds the value of the created_by edge.
+	CreatedBy *User `json:"created_by,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// CreatedByOrErr returns the CreatedBy value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ApiKeyEdges) CreatedByOrErr() (*User, error) {
+	if e.CreatedBy != nil {
+		return e.CreatedBy, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "created_by"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -45,6 +71,8 @@ func (*ApiKey) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case apikey.FieldCreatedByID:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case apikey.FieldScopes:
 			values[i] = new([]byte)
 		case apikey.FieldName, apikey.FieldDescription, apikey.FieldPrefix, apikey.FieldHashedSecret:
@@ -106,6 +134,13 @@ func (_m *ApiKey) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field scopes: %w", err)
 				}
 			}
+		case apikey.FieldCreatedByID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field created_by_id", values[i])
+			} else if value.Valid {
+				_m.CreatedByID = new(uuid.UUID)
+				*_m.CreatedByID = *value.S.(*uuid.UUID)
+			}
 		case apikey.FieldLastUsedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field last_used_at", values[i])
@@ -145,6 +180,11 @@ func (_m *ApiKey) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
+// QueryCreatedBy queries the "created_by" edge of the ApiKey entity.
+func (_m *ApiKey) QueryCreatedBy() *UserQuery {
+	return NewApiKeyClient(_m.config).QueryCreatedBy(_m)
+}
+
 // Update returns a builder for updating this ApiKey.
 // Note that you need to call ApiKey.Unwrap() before calling this method if this ApiKey
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -181,6 +221,11 @@ func (_m *ApiKey) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("scopes=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Scopes))
+	builder.WriteString(", ")
+	if v := _m.CreatedByID; v != nil {
+		builder.WriteString("created_by_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	if v := _m.LastUsedAt; v != nil {
 		builder.WriteString("last_used_at=")

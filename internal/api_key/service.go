@@ -63,11 +63,16 @@ func NewService(store *database.Database) *Service {
 // secret, and returns the new ent row alongside the full secret token to
 // surface to the admin exactly once.
 //
+// createdBy records which session user minted the key for audit
+// purposes. The HTTP layer reads it from request context (the admin's
+// session) and passes it here. uuid.Nil disables attribution — only
+// useful for tests; production callers should always pass a real id.
+//
 // The scopes slice must be non-empty and every entry must be a valid
 // utils.ApiKeyScope (resource:tier with both halves in the catalog).
 // Duplicates are silently de-duplicated; the validation reports the
 // first invalid entry so an admin gets a precise 400 message.
-func (s *Service) Create(ctx context.Context, name, description string, scopes []utils.ApiKeyScope) (*ent.ApiKey, string, error) {
+func (s *Service) Create(ctx context.Context, name, description string, scopes []utils.ApiKeyScope, createdBy uuid.UUID) (*ent.ApiKey, string, error) {
 	normalized, err := normalizeScopes(scopes)
 	if err != nil {
 		return nil, "", err
@@ -83,13 +88,17 @@ func (s *Service) Create(ctx context.Context, name, description string, scopes [
 		return nil, "", fmt.Errorf("error hashing api key secret: %w", err)
 	}
 
-	created, err := s.Store.Client.ApiKey.Create().
+	builder := s.Store.Client.ApiKey.Create().
 		SetName(name).
 		SetDescription(description).
 		SetPrefix(prefix).
 		SetHashedSecret(hashed).
-		SetScopes(normalized.Strings()).
-		Save(ctx)
+		SetScopes(normalized.Strings())
+	if createdBy != uuid.Nil {
+		builder = builder.SetCreatedByID(createdBy)
+	}
+
+	created, err := builder.Save(ctx)
 	if err != nil {
 		return nil, "", fmt.Errorf("error creating api key: %w", err)
 	}

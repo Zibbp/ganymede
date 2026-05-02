@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zibbp/ganymede/internal/api_key"
@@ -22,7 +23,7 @@ func TestApiKeyService(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Create persists hashed_secret distinct from plaintext", func(t *testing.T) {
-		key, full, err := svc.Create(ctx, "create-test", "first key", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		key, full, err := svc.Create(ctx, "create-test", "first key", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead}, uuid.Nil)
 		require.NoError(t, err)
 		require.NotEmpty(t, full)
 		assert.NotEqual(t, full, key.HashedSecret, "hashed_secret must not equal plaintext token")
@@ -35,19 +36,34 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("Create rejects unknown scope", func(t *testing.T) {
-		_, _, err := svc.Create(ctx, "bogus-scope", "", []utils.ApiKeyScope{utils.ApiKeyScope("bogus:read")})
+		_, _, err := svc.Create(ctx, "bogus-scope", "", []utils.ApiKeyScope{utils.ApiKeyScope("bogus:read")}, uuid.Nil)
 		assert.Error(t, err)
 	})
 
 	t.Run("Create rejects empty scope list", func(t *testing.T) {
-		_, _, err := svc.Create(ctx, "no-scope", "", nil)
+		_, _, err := svc.Create(ctx, "no-scope", "", nil, uuid.Nil)
 		assert.Error(t, err)
+	})
+
+	t.Run("Create records the creator id for audit attribution", func(t *testing.T) {
+		// The edge.To(User) generates a real foreign key, so we can't
+		// pass a random uuid — use the seeded admin user's id (from
+		// database.seedDatabase).
+		admins, err := app.Database.Client.User.Query().All(ctx)
+		require.NoError(t, err)
+		require.NotEmpty(t, admins, "seedDatabase should have created at least one user")
+		creator := admins[0].ID
+
+		key, _, err := svc.Create(ctx, "with-creator", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead}, creator)
+		require.NoError(t, err)
+		require.NotNil(t, key.CreatedByID)
+		assert.Equal(t, creator, *key.CreatedByID)
 	})
 
 	t.Run("Create de-duplicates repeated scopes", func(t *testing.T) {
 		key, _, err := svc.Create(ctx, "dedup", "", []utils.ApiKeyScope{
 			utils.ApiKeyScopeVodWrite, utils.ApiKeyScopeVodWrite, utils.ApiKeyScopePlaylistRead,
-		})
+		}, uuid.Nil)
 		require.NoError(t, err)
 		assert.ElementsMatch(t, []string{
 			string(utils.ApiKeyScopeVodWrite), string(utils.ApiKeyScopePlaylistRead),
@@ -55,9 +71,9 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("List returns non-revoked keys, newest first", func(t *testing.T) {
-		toRevoke, _, err := svc.Create(ctx, "list-revoke-target", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodWrite})
+		toRevoke, _, err := svc.Create(ctx, "list-revoke-target", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodWrite}, uuid.Nil)
 		require.NoError(t, err)
-		_, _, err = svc.Create(ctx, "list-keep", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodWrite})
+		_, _, err = svc.Create(ctx, "list-keep", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodWrite}, uuid.Nil)
 		require.NoError(t, err)
 
 		require.NoError(t, svc.Revoke(ctx, toRevoke.ID))
@@ -70,7 +86,7 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("GetByPrefix excludes revoked", func(t *testing.T) {
-		key, _, err := svc.Create(ctx, "revoke-prefix-target", "", []utils.ApiKeyScope{utils.ApiKeyScopeAllAdmin})
+		key, _, err := svc.Create(ctx, "revoke-prefix-target", "", []utils.ApiKeyScope{utils.ApiKeyScopeAllAdmin}, uuid.Nil)
 		require.NoError(t, err)
 		require.NoError(t, svc.Revoke(ctx, key.ID))
 
@@ -79,7 +95,7 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("Revoke flushes the verification cache", func(t *testing.T) {
-		key, full, err := svc.Create(ctx, "cache-flush", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		key, full, err := svc.Create(ctx, "cache-flush", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead}, uuid.Nil)
 		require.NoError(t, err)
 
 		// Prime the cache.
@@ -94,7 +110,7 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("TouchLastUsed updates after debounce window", func(t *testing.T) {
-		key, _, err := svc.Create(ctx, "touch-test", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		key, _, err := svc.Create(ctx, "touch-test", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead}, uuid.Nil)
 		require.NoError(t, err)
 
 		require.NoError(t, svc.TouchLastUsed(ctx, key.ID))
@@ -106,7 +122,7 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("TouchLastUsed silently no-ops on a revoked key", func(t *testing.T) {
-		key, _, err := svc.Create(ctx, "touch-after-revoke", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		key, _, err := svc.Create(ctx, "touch-after-revoke", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead}, uuid.Nil)
 		require.NoError(t, err)
 		require.NoError(t, svc.Revoke(ctx, key.ID))
 
@@ -120,7 +136,7 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("Update changes editable fields and flushes cache", func(t *testing.T) {
-		key, full, err := svc.Create(ctx, "update-target", "before", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		key, full, err := svc.Create(ctx, "update-target", "before", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead}, uuid.Nil)
 		require.NoError(t, err)
 
 		// Prime cache with the original scopes so we can assert flush.
@@ -143,14 +159,14 @@ func TestApiKeyService(t *testing.T) {
 	})
 
 	t.Run("Update rejects unknown scopes", func(t *testing.T) {
-		key, _, err := svc.Create(ctx, "update-bad-scope", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		key, _, err := svc.Create(ctx, "update-bad-scope", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead}, uuid.Nil)
 		require.NoError(t, err)
 		_, err = svc.Update(ctx, key.ID, "x", "", []utils.ApiKeyScope{utils.ApiKeyScope("bogus:read")})
 		assert.Error(t, err)
 	})
 
 	t.Run("Update on revoked key returns not-found", func(t *testing.T) {
-		key, _, err := svc.Create(ctx, "update-revoked", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		key, _, err := svc.Create(ctx, "update-revoked", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead}, uuid.Nil)
 		require.NoError(t, err)
 		require.NoError(t, svc.Revoke(ctx, key.ID))
 		_, err = svc.Update(ctx, key.ID, "x", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})

@@ -75,6 +75,9 @@ export interface ApiKey {
   prefix: string;
   // Granted permissions, each formatted as "<resource>:<tier>".
   scopes: ApiKeyScope[];
+  // UUID of the admin who minted this key. Null for keys created
+  // before the audit edge was added (Phase 3 follow-up).
+  created_by_id: string | null;
   last_used_at: string | null;
   created_at: string;
 }

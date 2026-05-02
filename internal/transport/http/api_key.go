@@ -38,7 +38,7 @@ func statusForApiKeyServiceError(err error) int {
 // kept narrow so handler tests can stub it without spinning up the full
 // service.
 type ApiKeyService interface {
-	Create(ctx context.Context, name, description string, scopes []utils.ApiKeyScope) (*ent.ApiKey, string, error)
+	Create(ctx context.Context, name, description string, scopes []utils.ApiKeyScope, createdBy uuid.UUID) (*ent.ApiKey, string, error)
 	Update(ctx context.Context, id uuid.UUID, name, description string, scopes []utils.ApiKeyScope) (*ent.ApiKey, error)
 	List(ctx context.Context) ([]*ent.ApiKey, error)
 	Revoke(ctx context.Context, id uuid.UUID) error
@@ -78,9 +78,13 @@ type apiKeyDTO struct {
 	// Scopes is the raw list of resource:tier strings granted to the key.
 	// Frontend converts these to badges; clients use them to predict what
 	// requests will succeed.
-	Scopes     []string   `json:"scopes"`
-	LastUsedAt *time.Time `json:"last_used_at"`
-	CreatedAt  time.Time  `json:"created_at"`
+	Scopes []string `json:"scopes"`
+	// CreatedByID is the UUID of the admin who minted this key. Null
+	// for keys created before the audit edge was added. Frontend uses
+	// it to show "minted by <username>" in the list and detail views.
+	CreatedByID *uuid.UUID `json:"created_by_id"`
+	LastUsedAt  *time.Time `json:"last_used_at"`
+	CreatedAt   time.Time  `json:"created_at"`
 }
 
 // createApiKeyResponse is the response body for POST /admin/api-keys. The
@@ -103,6 +107,7 @@ func toAPIKeyDTO(k *ent.ApiKey) apiKeyDTO {
 		Description: k.Description,
 		Prefix:      k.Prefix,
 		Scopes:      scopes,
+		CreatedByID: k.CreatedByID,
 		LastUsedAt:  k.LastUsedAt,
 		CreatedAt:   k.CreatedAt,
 	}
@@ -165,11 +170,21 @@ func (h *Handler) CreateApiKey(c echo.Context) error {
 		}
 	}
 
+	// /admin/api-keys is session-only, so userFromContext is the
+	// authenticated admin; we record their id for audit attribution.
+	// Falls back to uuid.Nil if somehow absent — Create will skip the
+	// FK rather than blow up.
+	var createdBy uuid.UUID
+	if u := userFromContext(c); u != nil {
+		createdBy = u.ID
+	}
+
 	created, secret, err := h.Service.ApiKeyService.Create(
 		c.Request().Context(),
 		req.Name,
 		req.Description,
 		scopes,
+		createdBy,
 	)
 	if err != nil {
 		return ErrorResponse(c, statusForApiKeyServiceError(err), fmt.Sprintf("error creating api key: %v", err))

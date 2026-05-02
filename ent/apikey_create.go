@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/apikey"
+	"github.com/zibbp/ganymede/ent/user"
 )
 
 // ApiKeyCreate is the builder for creating a ApiKey entity.
@@ -59,6 +60,20 @@ func (_c *ApiKeyCreate) SetHashedSecret(v string) *ApiKeyCreate {
 // SetScopes sets the "scopes" field.
 func (_c *ApiKeyCreate) SetScopes(v []string) *ApiKeyCreate {
 	_c.mutation.SetScopes(v)
+	return _c
+}
+
+// SetCreatedByID sets the "created_by_id" field.
+func (_c *ApiKeyCreate) SetCreatedByID(v uuid.UUID) *ApiKeyCreate {
+	_c.mutation.SetCreatedByID(v)
+	return _c
+}
+
+// SetNillableCreatedByID sets the "created_by_id" field if the given value is not nil.
+func (_c *ApiKeyCreate) SetNillableCreatedByID(v *uuid.UUID) *ApiKeyCreate {
+	if v != nil {
+		_c.SetCreatedByID(*v)
+	}
 	return _c
 }
 
@@ -130,6 +145,11 @@ func (_c *ApiKeyCreate) SetNillableID(v *uuid.UUID) *ApiKeyCreate {
 		_c.SetID(*v)
 	}
 	return _c
+}
+
+// SetCreatedBy sets the "created_by" edge to the User entity.
+func (_c *ApiKeyCreate) SetCreatedBy(v *User) *ApiKeyCreate {
+	return _c.SetCreatedByID(v.ID)
 }
 
 // Mutation returns the ApiKeyMutation object of the builder.
@@ -292,6 +312,23 @@ func (_c *ApiKeyCreate) createSpec() (*ApiKey, *sqlgraph.CreateSpec) {
 		_spec.SetField(apikey.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
+	if nodes := _c.mutation.CreatedByIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   apikey.CreatedByTable,
+			Columns: []string{apikey.CreatedByColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.CreatedByID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -383,6 +420,24 @@ func (u *ApiKeyUpsert) SetScopes(v []string) *ApiKeyUpsert {
 // UpdateScopes sets the "scopes" field to the value that was provided on create.
 func (u *ApiKeyUpsert) UpdateScopes() *ApiKeyUpsert {
 	u.SetExcluded(apikey.FieldScopes)
+	return u
+}
+
+// SetCreatedByID sets the "created_by_id" field.
+func (u *ApiKeyUpsert) SetCreatedByID(v uuid.UUID) *ApiKeyUpsert {
+	u.Set(apikey.FieldCreatedByID, v)
+	return u
+}
+
+// UpdateCreatedByID sets the "created_by_id" field to the value that was provided on create.
+func (u *ApiKeyUpsert) UpdateCreatedByID() *ApiKeyUpsert {
+	u.SetExcluded(apikey.FieldCreatedByID)
+	return u
+}
+
+// ClearCreatedByID clears the value of the "created_by_id" field.
+func (u *ApiKeyUpsert) ClearCreatedByID() *ApiKeyUpsert {
+	u.SetNull(apikey.FieldCreatedByID)
 	return u
 }
 
@@ -537,6 +592,27 @@ func (u *ApiKeyUpsertOne) SetScopes(v []string) *ApiKeyUpsertOne {
 func (u *ApiKeyUpsertOne) UpdateScopes() *ApiKeyUpsertOne {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.UpdateScopes()
+	})
+}
+
+// SetCreatedByID sets the "created_by_id" field.
+func (u *ApiKeyUpsertOne) SetCreatedByID(v uuid.UUID) *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetCreatedByID(v)
+	})
+}
+
+// UpdateCreatedByID sets the "created_by_id" field to the value that was provided on create.
+func (u *ApiKeyUpsertOne) UpdateCreatedByID() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateCreatedByID()
+	})
+}
+
+// ClearCreatedByID clears the value of the "created_by_id" field.
+func (u *ApiKeyUpsertOne) ClearCreatedByID() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearCreatedByID()
 	})
 }
 
@@ -866,6 +942,27 @@ func (u *ApiKeyUpsertBulk) SetScopes(v []string) *ApiKeyUpsertBulk {
 func (u *ApiKeyUpsertBulk) UpdateScopes() *ApiKeyUpsertBulk {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.UpdateScopes()
+	})
+}
+
+// SetCreatedByID sets the "created_by_id" field.
+func (u *ApiKeyUpsertBulk) SetCreatedByID(v uuid.UUID) *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetCreatedByID(v)
+	})
+}
+
+// UpdateCreatedByID sets the "created_by_id" field to the value that was provided on create.
+func (u *ApiKeyUpsertBulk) UpdateCreatedByID() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateCreatedByID()
+	})
+}
+
+// ClearCreatedByID clears the value of the "created_by_id" field.
+func (u *ApiKeyUpsertBulk) ClearCreatedByID() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearCreatedByID()
 	})
 }
 

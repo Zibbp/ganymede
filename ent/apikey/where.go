@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/predicate"
 )
@@ -73,6 +74,11 @@ func Prefix(v string) predicate.ApiKey {
 // HashedSecret applies equality check predicate on the "hashed_secret" field. It's identical to HashedSecretEQ.
 func HashedSecret(v string) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldEQ(FieldHashedSecret, v))
+}
+
+// CreatedByID applies equality check predicate on the "created_by_id" field. It's identical to CreatedByIDEQ.
+func CreatedByID(v uuid.UUID) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEQ(FieldCreatedByID, v))
 }
 
 // LastUsedAt applies equality check predicate on the "last_used_at" field. It's identical to LastUsedAtEQ.
@@ -365,6 +371,36 @@ func HashedSecretContainsFold(v string) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldContainsFold(FieldHashedSecret, v))
 }
 
+// CreatedByIDEQ applies the EQ predicate on the "created_by_id" field.
+func CreatedByIDEQ(v uuid.UUID) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEQ(FieldCreatedByID, v))
+}
+
+// CreatedByIDNEQ applies the NEQ predicate on the "created_by_id" field.
+func CreatedByIDNEQ(v uuid.UUID) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNEQ(FieldCreatedByID, v))
+}
+
+// CreatedByIDIn applies the In predicate on the "created_by_id" field.
+func CreatedByIDIn(vs ...uuid.UUID) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldIn(FieldCreatedByID, vs...))
+}
+
+// CreatedByIDNotIn applies the NotIn predicate on the "created_by_id" field.
+func CreatedByIDNotIn(vs ...uuid.UUID) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNotIn(FieldCreatedByID, vs...))
+}
+
+// CreatedByIDIsNil applies the IsNil predicate on the "created_by_id" field.
+func CreatedByIDIsNil() predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldIsNull(FieldCreatedByID))
+}
+
+// CreatedByIDNotNil applies the NotNil predicate on the "created_by_id" field.
+func CreatedByIDNotNil() predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNotNull(FieldCreatedByID))
+}
+
 // LastUsedAtEQ applies the EQ predicate on the "last_used_at" field.
 func LastUsedAtEQ(v time.Time) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldEQ(FieldLastUsedAt, v))
@@ -543,6 +579,29 @@ func CreatedAtLT(v time.Time) predicate.ApiKey {
 // CreatedAtLTE applies the LTE predicate on the "created_at" field.
 func CreatedAtLTE(v time.Time) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldLTE(FieldCreatedAt, v))
+}
+
+// HasCreatedBy applies the HasEdge predicate on the "created_by" edge.
+func HasCreatedBy() predicate.ApiKey {
+	return predicate.ApiKey(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, CreatedByTable, CreatedByColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCreatedByWith applies the HasEdge predicate on the "created_by" edge with a given conditions (other predicates).
+func HasCreatedByWith(preds ...predicate.User) predicate.ApiKey {
+	return predicate.ApiKey(func(s *sql.Selector) {
+		step := newCreatedByStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

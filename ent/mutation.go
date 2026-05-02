@@ -68,23 +68,25 @@ const (
 // ApiKeyMutation represents an operation that mutates the ApiKey nodes in the graph.
 type ApiKeyMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	name          *string
-	description   *string
-	prefix        *string
-	hashed_secret *string
-	scopes        *[]string
-	appendscopes  []string
-	last_used_at  *time.Time
-	revoked_at    *time.Time
-	updated_at    *time.Time
-	created_at    *time.Time
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*ApiKey, error)
-	predicates    []predicate.ApiKey
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	name              *string
+	description       *string
+	prefix            *string
+	hashed_secret     *string
+	scopes            *[]string
+	appendscopes      []string
+	last_used_at      *time.Time
+	revoked_at        *time.Time
+	updated_at        *time.Time
+	created_at        *time.Time
+	clearedFields     map[string]struct{}
+	created_by        *uuid.UUID
+	clearedcreated_by bool
+	done              bool
+	oldValue          func(context.Context) (*ApiKey, error)
+	predicates        []predicate.ApiKey
 }
 
 var _ ent.Mutation = (*ApiKeyMutation)(nil)
@@ -399,6 +401,55 @@ func (m *ApiKeyMutation) ResetScopes() {
 	m.appendscopes = nil
 }
 
+// SetCreatedByID sets the "created_by_id" field.
+func (m *ApiKeyMutation) SetCreatedByID(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedByID returns the value of the "created_by_id" field in the mutation.
+func (m *ApiKeyMutation) CreatedByID() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedByID returns the old "created_by_id" field's value of the ApiKey entity.
+// If the ApiKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApiKeyMutation) OldCreatedByID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedByID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedByID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedByID: %w", err)
+	}
+	return oldValue.CreatedByID, nil
+}
+
+// ClearCreatedByID clears the value of the "created_by_id" field.
+func (m *ApiKeyMutation) ClearCreatedByID() {
+	m.created_by = nil
+	m.clearedFields[apikey.FieldCreatedByID] = struct{}{}
+}
+
+// CreatedByIDCleared returns if the "created_by_id" field was cleared in this mutation.
+func (m *ApiKeyMutation) CreatedByIDCleared() bool {
+	_, ok := m.clearedFields[apikey.FieldCreatedByID]
+	return ok
+}
+
+// ResetCreatedByID resets all changes to the "created_by_id" field.
+func (m *ApiKeyMutation) ResetCreatedByID() {
+	m.created_by = nil
+	delete(m.clearedFields, apikey.FieldCreatedByID)
+}
+
 // SetLastUsedAt sets the "last_used_at" field.
 func (m *ApiKeyMutation) SetLastUsedAt(t time.Time) {
 	m.last_used_at = &t
@@ -569,6 +620,33 @@ func (m *ApiKeyMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
+// ClearCreatedBy clears the "created_by" edge to the User entity.
+func (m *ApiKeyMutation) ClearCreatedBy() {
+	m.clearedcreated_by = true
+	m.clearedFields[apikey.FieldCreatedByID] = struct{}{}
+}
+
+// CreatedByCleared reports if the "created_by" edge to the User entity was cleared.
+func (m *ApiKeyMutation) CreatedByCleared() bool {
+	return m.CreatedByIDCleared() || m.clearedcreated_by
+}
+
+// CreatedByIDs returns the "created_by" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CreatedByID instead. It exists only for internal usage by the builders.
+func (m *ApiKeyMutation) CreatedByIDs() (ids []uuid.UUID) {
+	if id := m.created_by; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCreatedBy resets all changes to the "created_by" edge.
+func (m *ApiKeyMutation) ResetCreatedBy() {
+	m.created_by = nil
+	m.clearedcreated_by = false
+}
+
 // Where appends a list predicates to the ApiKeyMutation builder.
 func (m *ApiKeyMutation) Where(ps ...predicate.ApiKey) {
 	m.predicates = append(m.predicates, ps...)
@@ -603,7 +681,7 @@ func (m *ApiKeyMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ApiKeyMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.name != nil {
 		fields = append(fields, apikey.FieldName)
 	}
@@ -618,6 +696,9 @@ func (m *ApiKeyMutation) Fields() []string {
 	}
 	if m.scopes != nil {
 		fields = append(fields, apikey.FieldScopes)
+	}
+	if m.created_by != nil {
+		fields = append(fields, apikey.FieldCreatedByID)
 	}
 	if m.last_used_at != nil {
 		fields = append(fields, apikey.FieldLastUsedAt)
@@ -649,6 +730,8 @@ func (m *ApiKeyMutation) Field(name string) (ent.Value, bool) {
 		return m.HashedSecret()
 	case apikey.FieldScopes:
 		return m.Scopes()
+	case apikey.FieldCreatedByID:
+		return m.CreatedByID()
 	case apikey.FieldLastUsedAt:
 		return m.LastUsedAt()
 	case apikey.FieldRevokedAt:
@@ -676,6 +759,8 @@ func (m *ApiKeyMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldHashedSecret(ctx)
 	case apikey.FieldScopes:
 		return m.OldScopes(ctx)
+	case apikey.FieldCreatedByID:
+		return m.OldCreatedByID(ctx)
 	case apikey.FieldLastUsedAt:
 		return m.OldLastUsedAt(ctx)
 	case apikey.FieldRevokedAt:
@@ -727,6 +812,13 @@ func (m *ApiKeyMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetScopes(v)
+		return nil
+	case apikey.FieldCreatedByID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedByID(v)
 		return nil
 	case apikey.FieldLastUsedAt:
 		v, ok := value.(time.Time)
@@ -789,6 +881,9 @@ func (m *ApiKeyMutation) ClearedFields() []string {
 	if m.FieldCleared(apikey.FieldDescription) {
 		fields = append(fields, apikey.FieldDescription)
 	}
+	if m.FieldCleared(apikey.FieldCreatedByID) {
+		fields = append(fields, apikey.FieldCreatedByID)
+	}
 	if m.FieldCleared(apikey.FieldLastUsedAt) {
 		fields = append(fields, apikey.FieldLastUsedAt)
 	}
@@ -811,6 +906,9 @@ func (m *ApiKeyMutation) ClearField(name string) error {
 	switch name {
 	case apikey.FieldDescription:
 		m.ClearDescription()
+		return nil
+	case apikey.FieldCreatedByID:
+		m.ClearCreatedByID()
 		return nil
 	case apikey.FieldLastUsedAt:
 		m.ClearLastUsedAt()
@@ -841,6 +939,9 @@ func (m *ApiKeyMutation) ResetField(name string) error {
 	case apikey.FieldScopes:
 		m.ResetScopes()
 		return nil
+	case apikey.FieldCreatedByID:
+		m.ResetCreatedByID()
+		return nil
 	case apikey.FieldLastUsedAt:
 		m.ResetLastUsedAt()
 		return nil
@@ -859,19 +960,28 @@ func (m *ApiKeyMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ApiKeyMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.created_by != nil {
+		edges = append(edges, apikey.EdgeCreatedBy)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ApiKeyMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case apikey.EdgeCreatedBy:
+		if id := m.created_by; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ApiKeyMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -883,25 +993,42 @@ func (m *ApiKeyMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ApiKeyMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedcreated_by {
+		edges = append(edges, apikey.EdgeCreatedBy)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ApiKeyMutation) EdgeCleared(name string) bool {
+	switch name {
+	case apikey.EdgeCreatedBy:
+		return m.clearedcreated_by
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ApiKeyMutation) ClearEdge(name string) error {
+	switch name {
+	case apikey.EdgeCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	}
 	return fmt.Errorf("unknown ApiKey unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ApiKeyMutation) ResetEdge(name string) error {
+	switch name {
+	case apikey.EdgeCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	}
 	return fmt.Errorf("unknown ApiKey edge %s", name)
 }
 

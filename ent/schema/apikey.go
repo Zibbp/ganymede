@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 )
@@ -33,6 +34,11 @@ func (ApiKey) Fields() []ent.Field {
 		// validated by the service layer before persistence. Replaces the
 		// previous single-tier `scope` ENUM column — see commit message.
 		field.JSON("scopes", []string{}).Default([]string{}),
+		// created_by_id is the FK column for the created_by edge below.
+		// Optional/nullable so rows that predate the audit edge remain
+		// valid; new keys minted via /admin/api-keys always set it to
+		// the session user's id.
+		field.UUID("created_by_id", uuid.UUID{}).Optional().Nillable(),
 		field.Time("last_used_at").Optional().Nillable(),
 		// revoked_at is the soft-delete marker. List queries filter where
 		// revoked_at IS NULL.
@@ -44,5 +50,13 @@ func (ApiKey) Fields() []ent.Field {
 
 // Edges of the ApiKey.
 func (ApiKey) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		// created_by records which admin user minted this key. Optional
+		// (Unique).Field("created_by_id") so ent stores the FK on the
+		// api_keys table rather than a join table; nullable so existing
+		// rows pre-migration remain valid.
+		edge.To("created_by", User.Type).
+			Unique().
+			Field("created_by_id"),
+	}
 }

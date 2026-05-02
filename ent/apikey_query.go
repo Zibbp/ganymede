@@ -14,15 +14,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/apikey"
 	"github.com/zibbp/ganymede/ent/predicate"
+	"github.com/zibbp/ganymede/ent/user"
 )
 
 // ApiKeyQuery is the builder for querying ApiKey entities.
 type ApiKeyQuery struct {
 	config
-	ctx        *QueryContext
-	order      []apikey.OrderOption
-	inters     []Interceptor
-	predicates []predicate.ApiKey
+	ctx           *QueryContext
+	order         []apikey.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.ApiKey
+	withCreatedBy *UserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -57,6 +59,28 @@ func (_q *ApiKeyQuery) Unique(unique bool) *ApiKeyQuery {
 func (_q *ApiKeyQuery) Order(o ...apikey.OrderOption) *ApiKeyQuery {
 	_q.order = append(_q.order, o...)
 	return _q
+}
+
+// QueryCreatedBy chains the current query on the "created_by" edge.
+func (_q *ApiKeyQuery) QueryCreatedBy() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(apikey.Table, apikey.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, apikey.CreatedByTable, apikey.CreatedByColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first ApiKey entity from the query.
@@ -246,15 +270,27 @@ func (_q *ApiKeyQuery) Clone() *ApiKeyQuery {
 		return nil
 	}
 	return &ApiKeyQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]apikey.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.ApiKey{}, _q.predicates...),
+		config:        _q.config,
+		ctx:           _q.ctx.Clone(),
+		order:         append([]apikey.OrderOption{}, _q.order...),
+		inters:        append([]Interceptor{}, _q.inters...),
+		predicates:    append([]predicate.ApiKey{}, _q.predicates...),
+		withCreatedBy: _q.withCreatedBy.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
+}
+
+// WithCreatedBy tells the query-builder to eager-load the nodes that are connected to
+// the "created_by" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ApiKeyQuery) WithCreatedBy(opts ...func(*UserQuery)) *ApiKeyQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withCreatedBy = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -333,8 +369,11 @@ func (_q *ApiKeyQuery) prepareQuery(ctx context.Context) error {
 
 func (_q *ApiKeyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ApiKey, error) {
 	var (
-		nodes = []*ApiKey{}
-		_spec = _q.querySpec()
+		nodes       = []*ApiKey{}
+		_spec       = _q.querySpec()
+		loadedTypes = [1]bool{
+			_q.withCreatedBy != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ApiKey).scanValues(nil, columns)
@@ -342,6 +381,7 @@ func (_q *ApiKeyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ApiKe
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &ApiKey{config: _q.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -353,7 +393,46 @@ func (_q *ApiKeyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ApiKe
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withCreatedBy; query != nil {
+		if err := _q.loadCreatedBy(ctx, query, nodes, nil,
+			func(n *ApiKey, e *User) { n.Edges.CreatedBy = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (_q *ApiKeyQuery) loadCreatedBy(ctx context.Context, query *UserQuery, nodes []*ApiKey, init func(*ApiKey), assign func(*ApiKey, *User)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*ApiKey)
+	for i := range nodes {
+		if nodes[i].CreatedByID == nil {
+			continue
+		}
+		fk := *nodes[i].CreatedByID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "created_by_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (_q *ApiKeyQuery) sqlCount(ctx context.Context) (int, error) {
@@ -380,6 +459,9 @@ func (_q *ApiKeyQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != apikey.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if _q.withCreatedBy != nil {
+			_spec.Node.AddColumnOnce(apikey.FieldCreatedByID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

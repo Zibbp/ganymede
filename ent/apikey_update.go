@@ -12,8 +12,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/apikey"
 	"github.com/zibbp/ganymede/ent/predicate"
+	"github.com/zibbp/ganymede/ent/user"
 )
 
 // ApiKeyUpdate is the builder for updating ApiKey entities.
@@ -75,6 +77,26 @@ func (_u *ApiKeyUpdate) AppendScopes(v []string) *ApiKeyUpdate {
 	return _u
 }
 
+// SetCreatedByID sets the "created_by_id" field.
+func (_u *ApiKeyUpdate) SetCreatedByID(v uuid.UUID) *ApiKeyUpdate {
+	_u.mutation.SetCreatedByID(v)
+	return _u
+}
+
+// SetNillableCreatedByID sets the "created_by_id" field if the given value is not nil.
+func (_u *ApiKeyUpdate) SetNillableCreatedByID(v *uuid.UUID) *ApiKeyUpdate {
+	if v != nil {
+		_u.SetCreatedByID(*v)
+	}
+	return _u
+}
+
+// ClearCreatedByID clears the value of the "created_by_id" field.
+func (_u *ApiKeyUpdate) ClearCreatedByID() *ApiKeyUpdate {
+	_u.mutation.ClearCreatedByID()
+	return _u
+}
+
 // SetLastUsedAt sets the "last_used_at" field.
 func (_u *ApiKeyUpdate) SetLastUsedAt(v time.Time) *ApiKeyUpdate {
 	_u.mutation.SetLastUsedAt(v)
@@ -121,9 +143,20 @@ func (_u *ApiKeyUpdate) SetUpdatedAt(v time.Time) *ApiKeyUpdate {
 	return _u
 }
 
+// SetCreatedBy sets the "created_by" edge to the User entity.
+func (_u *ApiKeyUpdate) SetCreatedBy(v *User) *ApiKeyUpdate {
+	return _u.SetCreatedByID(v.ID)
+}
+
 // Mutation returns the ApiKeyMutation object of the builder.
 func (_u *ApiKeyUpdate) Mutation() *ApiKeyMutation {
 	return _u.mutation
+}
+
+// ClearCreatedBy clears the "created_by" edge to the User entity.
+func (_u *ApiKeyUpdate) ClearCreatedBy() *ApiKeyUpdate {
+	_u.mutation.ClearCreatedBy()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -216,6 +249,35 @@ func (_u *ApiKeyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(apikey.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if _u.mutation.CreatedByCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   apikey.CreatedByTable,
+			Columns: []string{apikey.CreatedByColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CreatedByIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   apikey.CreatedByTable,
+			Columns: []string{apikey.CreatedByColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{apikey.Label}
@@ -282,6 +344,26 @@ func (_u *ApiKeyUpdateOne) AppendScopes(v []string) *ApiKeyUpdateOne {
 	return _u
 }
 
+// SetCreatedByID sets the "created_by_id" field.
+func (_u *ApiKeyUpdateOne) SetCreatedByID(v uuid.UUID) *ApiKeyUpdateOne {
+	_u.mutation.SetCreatedByID(v)
+	return _u
+}
+
+// SetNillableCreatedByID sets the "created_by_id" field if the given value is not nil.
+func (_u *ApiKeyUpdateOne) SetNillableCreatedByID(v *uuid.UUID) *ApiKeyUpdateOne {
+	if v != nil {
+		_u.SetCreatedByID(*v)
+	}
+	return _u
+}
+
+// ClearCreatedByID clears the value of the "created_by_id" field.
+func (_u *ApiKeyUpdateOne) ClearCreatedByID() *ApiKeyUpdateOne {
+	_u.mutation.ClearCreatedByID()
+	return _u
+}
+
 // SetLastUsedAt sets the "last_used_at" field.
 func (_u *ApiKeyUpdateOne) SetLastUsedAt(v time.Time) *ApiKeyUpdateOne {
 	_u.mutation.SetLastUsedAt(v)
@@ -328,9 +410,20 @@ func (_u *ApiKeyUpdateOne) SetUpdatedAt(v time.Time) *ApiKeyUpdateOne {
 	return _u
 }
 
+// SetCreatedBy sets the "created_by" edge to the User entity.
+func (_u *ApiKeyUpdateOne) SetCreatedBy(v *User) *ApiKeyUpdateOne {
+	return _u.SetCreatedByID(v.ID)
+}
+
 // Mutation returns the ApiKeyMutation object of the builder.
 func (_u *ApiKeyUpdateOne) Mutation() *ApiKeyMutation {
 	return _u.mutation
+}
+
+// ClearCreatedBy clears the "created_by" edge to the User entity.
+func (_u *ApiKeyUpdateOne) ClearCreatedBy() *ApiKeyUpdateOne {
+	_u.mutation.ClearCreatedBy()
+	return _u
 }
 
 // Where appends a list predicates to the ApiKeyUpdate builder.
@@ -452,6 +545,35 @@ func (_u *ApiKeyUpdateOne) sqlSave(ctx context.Context) (_node *ApiKey, err erro
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(apikey.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.CreatedByCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   apikey.CreatedByTable,
+			Columns: []string{apikey.CreatedByColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CreatedByIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   apikey.CreatedByTable,
+			Columns: []string{apikey.CreatedByColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &ApiKey{config: _u.config}
 	_spec.Assign = _node.assignValues
