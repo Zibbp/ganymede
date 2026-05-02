@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
@@ -55,8 +56,16 @@ func (ApiKey) Edges() []ent.Edge {
 		// (Unique).Field("created_by_id") so ent stores the FK on the
 		// api_keys table rather than a join table; nullable so existing
 		// rows pre-migration remain valid.
+		//
+		// ON DELETE SET NULL so deleting the admin who minted a key
+		// doesn't fail with a foreign-key violation: the key stays
+		// (it's still valid auth material) and the audit reference
+		// becomes null. Without this, an admin trying to remove a
+		// colleague's user account would get a 500 from the FK
+		// constraint as soon as that colleague had ever minted a key.
 		edge.To("created_by", User.Type).
 			Unique().
-			Field("created_by_id"),
+			Field("created_by_id").
+			Annotations(entsql.OnDelete(entsql.SetNull)),
 	}
 }
