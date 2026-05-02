@@ -26,9 +26,14 @@ func (ApiKey) Fields() []ent.Field {
 		// (e.g. "gym_abc123def456"). Indexed for O(log n) lookup on every
 		// authenticated request.
 		field.String("prefix").Unique().Immutable().NotEmpty(),
-		// hashed_secret is bcrypt(secret_half_of_token). Sensitive() prevents
-		// it from being printed via %v / zerolog struct logging, but does NOT
-		// stop JSON marshalling — handlers must scrub it via DTOs.
+		// hashed_secret is bcrypt(secret_half_of_token). Sensitive()
+		// does two things: prevents printing via %v / zerolog struct
+		// logging (the field renders as <sensitive> in String()), and
+		// generates a `json:"-"` tag on the struct field so direct
+		// JSON marshalling of *ent.ApiKey drops it. apiKeyDTO is the
+		// authoritative wire shape — the json tag is belt-and-
+		// suspenders for any future code that marshals the entity
+		// directly (debug dumps, logging libraries, etc.).
 		field.String("hashed_secret").Sensitive().Immutable().NotEmpty(),
 		// scopes is the list of granted permissions, each formatted as
 		// "<resource>:<tier>" (utils.ApiKeyScope). Stored as a JSON column;
