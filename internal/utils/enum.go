@@ -29,41 +29,315 @@ func IsValidRole(role string) bool {
 	return exists
 }
 
-// ApiKeyScope represents the permission scope of an API key.
-// Scopes are hierarchical: admin > write > read.
-type ApiKeyScope string
+// ApiKeyResource is the resource half of an ApiKeyScope. It maps to one of
+// the API route groups in internal/transport/http/handler.go.
+//
+// The catalog is intentionally complete (every existing route group is
+// listed) so future migrations of routes to RequireRoleOrScope only need
+// to retag the route, not extend this enum. Resources whose routes are
+// not yet migrated are flagged "reserved" in the wiki documentation —
+// keys can hold those scopes today but no route checks them yet.
+type ApiKeyResource string
 
 const (
+	// ApiKeyResourceWildcard matches every resource. Pair with a tier to
+	// grant cross-resource access (e.g. *:admin = full superuser).
+	ApiKeyResourceWildcard ApiKeyResource = "*"
+
+	// Resources whose routes already enforce API key scopes.
+	ApiKeyResourceVod      ApiKeyResource = "vod"
+	ApiKeyResourcePlaylist ApiKeyResource = "playlist"
+	ApiKeyResourceQueue    ApiKeyResource = "queue"
+
+	// Reserved resources — defined now so the catalog is forward-compatible.
+	// Routes for these groups still use AuthUserRoleMiddleware; granting
+	// these scopes today is harmless but has no effect until the matching
+	// routes are migrated to RequireRoleOrScope.
+	ApiKeyResourceChannel      ApiKeyResource = "channel"
+	ApiKeyResourceArchive      ApiKeyResource = "archive"
+	ApiKeyResourceLive         ApiKeyResource = "live"
+	ApiKeyResourceUser         ApiKeyResource = "user"
+	ApiKeyResourceConfig       ApiKeyResource = "config"
+	ApiKeyResourcePlayback     ApiKeyResource = "playback"
+	ApiKeyResourceNotification ApiKeyResource = "notification"
+	ApiKeyResourceTask         ApiKeyResource = "task"
+	ApiKeyResourceChapter      ApiKeyResource = "chapter"
+	ApiKeyResourceCategory     ApiKeyResource = "category"
+	ApiKeyResourceBlockedVideo ApiKeyResource = "blocked_video"
+)
+
+// AllApiKeyResources lists every defined resource. Used by the validator
+// and exposed to the frontend so the create form can offer the catalog.
+func AllApiKeyResources() []ApiKeyResource {
+	return []ApiKeyResource{
+		ApiKeyResourceWildcard,
+		ApiKeyResourceVod,
+		ApiKeyResourcePlaylist,
+		ApiKeyResourceQueue,
+		ApiKeyResourceChannel,
+		ApiKeyResourceArchive,
+		ApiKeyResourceLive,
+		ApiKeyResourceUser,
+		ApiKeyResourceConfig,
+		ApiKeyResourcePlayback,
+		ApiKeyResourceNotification,
+		ApiKeyResourceTask,
+		ApiKeyResourceChapter,
+		ApiKeyResourceCategory,
+		ApiKeyResourceBlockedVideo,
+	}
+}
+
+// IsValid reports whether r is a defined resource.
+func (r ApiKeyResource) IsValid() bool {
+	for _, valid := range AllApiKeyResources() {
+		if r == valid {
+			return true
+		}
+	}
+	return false
+}
+
+// ApiKeyTier is the permission level half of an ApiKeyScope. Tiers form a
+// hierarchy within a single resource: admin > write > read.
+//
+// We keep all three tiers (rather than collapsing to read/write) because
+// admin gates a meaningful safety boundary — destructive deletes (e.g.
+// DELETE /vod/:id) and queue-control actions (POST /queue, /queue/:id/stop).
+// A "modify metadata" key needs vod:write; a "wipe old VODs" key needs
+// vod:admin.
+type ApiKeyTier string
+
+const (
+	ApiKeyTierRead  ApiKeyTier = "read"
+	ApiKeyTierWrite ApiKeyTier = "write"
+	ApiKeyTierAdmin ApiKeyTier = "admin"
+)
+
+// AllApiKeyTiers lists every defined tier.
+func AllApiKeyTiers() []ApiKeyTier {
+	return []ApiKeyTier{ApiKeyTierRead, ApiKeyTierWrite, ApiKeyTierAdmin}
+}
+
+// rank gives a tier its position in the read < write < admin hierarchy.
+// Returns 0 for any unknown tier so unknown values never satisfy a check.
+func (t ApiKeyTier) rank() int {
+	switch t {
+	case ApiKeyTierRead:
+		return 1
+	case ApiKeyTierWrite:
+		return 2
+	case ApiKeyTierAdmin:
+		return 3
+	}
+	return 0
+}
+
+// IsValid reports whether t is one of the defined tiers.
+func (t ApiKeyTier) IsValid() bool {
+	return t.rank() > 0
+}
+
+// ApiKeyScope is the on-the-wire string form of a (resource, tier) pair,
+// formatted as "<resource>:<tier>" — e.g. "vod:write", "*:admin".
+type ApiKeyScope string
+
+// Predeclared scopes. Routes use these in calls to RequireRoleOrScope;
+// the create form offers them in its catalog.
+const (
+	// Legacy bare-tier scopes. Predate the resource:tier model; retained
+	// as transitional so existing routes/tests/ent enum values keep
+	// compiling and validating during the migration. The follow-up
+	// commit that flips the schema to a JSON list also retags routes to
+	// the precise per-resource scopes below and removes these.
+	//
+	// Deprecated: use the resource-specific scopes (e.g. ApiKeyScopeVodRead).
 	ApiKeyScopeRead  ApiKeyScope = "read"
 	ApiKeyScopeWrite ApiKeyScope = "write"
 	ApiKeyScopeAdmin ApiKeyScope = "admin"
+
+	// Wildcard scopes apply across every resource.
+	ApiKeyScopeAllRead  ApiKeyScope = "*:read"
+	ApiKeyScopeAllWrite ApiKeyScope = "*:write"
+	ApiKeyScopeAllAdmin ApiKeyScope = "*:admin"
+
+	// VOD scopes.
+	ApiKeyScopeVodRead  ApiKeyScope = "vod:read"
+	ApiKeyScopeVodWrite ApiKeyScope = "vod:write"
+	ApiKeyScopeVodAdmin ApiKeyScope = "vod:admin"
+
+	// Playlist scopes.
+	ApiKeyScopePlaylistRead  ApiKeyScope = "playlist:read"
+	ApiKeyScopePlaylistWrite ApiKeyScope = "playlist:write"
+	ApiKeyScopePlaylistAdmin ApiKeyScope = "playlist:admin"
+
+	// Queue scopes.
+	ApiKeyScopeQueueRead  ApiKeyScope = "queue:read"
+	ApiKeyScopeQueueWrite ApiKeyScope = "queue:write"
+	ApiKeyScopeQueueAdmin ApiKeyScope = "queue:admin"
+
+	// Reserved scopes — defined for the forward-compatible catalog. None
+	// are enforced today; granting them is harmless.
+	ApiKeyScopeChannelRead       ApiKeyScope = "channel:read"
+	ApiKeyScopeChannelWrite      ApiKeyScope = "channel:write"
+	ApiKeyScopeChannelAdmin      ApiKeyScope = "channel:admin"
+	ApiKeyScopeArchiveRead       ApiKeyScope = "archive:read"
+	ApiKeyScopeArchiveWrite      ApiKeyScope = "archive:write"
+	ApiKeyScopeArchiveAdmin      ApiKeyScope = "archive:admin"
+	ApiKeyScopeLiveRead          ApiKeyScope = "live:read"
+	ApiKeyScopeLiveWrite         ApiKeyScope = "live:write"
+	ApiKeyScopeLiveAdmin         ApiKeyScope = "live:admin"
+	ApiKeyScopeUserRead          ApiKeyScope = "user:read"
+	ApiKeyScopeUserWrite         ApiKeyScope = "user:write"
+	ApiKeyScopeUserAdmin         ApiKeyScope = "user:admin"
+	ApiKeyScopeConfigRead        ApiKeyScope = "config:read"
+	ApiKeyScopeConfigWrite       ApiKeyScope = "config:write"
+	ApiKeyScopeConfigAdmin       ApiKeyScope = "config:admin"
+	ApiKeyScopePlaybackRead      ApiKeyScope = "playback:read"
+	ApiKeyScopePlaybackWrite     ApiKeyScope = "playback:write"
+	ApiKeyScopePlaybackAdmin     ApiKeyScope = "playback:admin"
+	ApiKeyScopeNotificationRead  ApiKeyScope = "notification:read"
+	ApiKeyScopeNotificationWrite ApiKeyScope = "notification:write"
+	ApiKeyScopeNotificationAdmin ApiKeyScope = "notification:admin"
+	ApiKeyScopeTaskRead          ApiKeyScope = "task:read"
+	ApiKeyScopeTaskWrite         ApiKeyScope = "task:write"
+	ApiKeyScopeTaskAdmin         ApiKeyScope = "task:admin"
+	ApiKeyScopeChapterRead       ApiKeyScope = "chapter:read"
+	ApiKeyScopeChapterWrite      ApiKeyScope = "chapter:write"
+	ApiKeyScopeChapterAdmin      ApiKeyScope = "chapter:admin"
+	ApiKeyScopeCategoryRead      ApiKeyScope = "category:read"
+	ApiKeyScopeCategoryWrite     ApiKeyScope = "category:write"
+	ApiKeyScopeCategoryAdmin     ApiKeyScope = "category:admin"
+	ApiKeyScopeBlockedVideoRead  ApiKeyScope = "blocked_video:read"
+	ApiKeyScopeBlockedVideoWrite ApiKeyScope = "blocked_video:write"
+	ApiKeyScopeBlockedVideoAdmin ApiKeyScope = "blocked_video:admin"
 )
 
-func (ApiKeyScope) Values() (kinds []string) {
-	for _, s := range []ApiKeyScope{ApiKeyScopeRead, ApiKeyScopeWrite, ApiKeyScopeAdmin} {
-		kinds = append(kinds, string(s))
-	}
-	return
+// MakeApiKeyScope builds a scope from its components.
+func MakeApiKeyScope(r ApiKeyResource, t ApiKeyTier) ApiKeyScope {
+	return ApiKeyScope(string(r) + ":" + string(t))
 }
 
-// Includes reports whether s grants at least the access of required.
-// admin includes write and read; write includes read.
+// Parse splits a scope into its resource and tier. The boolean is false
+// if the string is malformed or names an unknown resource/tier.
+func (s ApiKeyScope) Parse() (ApiKeyResource, ApiKeyTier, bool) {
+	str := string(s)
+	colon := -1
+	for i := 0; i < len(str); i++ {
+		if str[i] == ':' {
+			colon = i
+			break
+		}
+	}
+	if colon < 1 || colon == len(str)-1 {
+		return "", "", false
+	}
+	r := ApiKeyResource(str[:colon])
+	t := ApiKeyTier(str[colon+1:])
+	if !r.IsValid() || !t.IsValid() {
+		return "", "", false
+	}
+	return r, t, true
+}
+
+// IsValid reports whether s is a well-formed scope naming a defined
+// resource and tier.
+func (s ApiKeyScope) IsValid() bool {
+	_, _, ok := s.Parse()
+	return ok
+}
+
+// Includes reports whether s grants at least the access named by required.
+// A holder scope satisfies a requirement when:
+//   - the holder's resource matches the required resource, OR the holder
+//     uses the wildcard resource ("*"); AND
+//   - the holder's tier rank is greater than or equal to the required tier
+//     rank (admin > write > read).
+//
+// Both s and required must be valid; an unknown resource/tier never
+// satisfies a check.
 func (s ApiKeyScope) Includes(required ApiKeyScope) bool {
-	rank := map[ApiKeyScope]int{
-		ApiKeyScopeRead:  1,
-		ApiKeyScopeWrite: 2,
-		ApiKeyScopeAdmin: 3,
+	holderRes, holderTier, ok := s.Parse()
+	if !ok {
+		return false
 	}
-	return rank[s] >= rank[required] && rank[required] > 0
+	requiredRes, requiredTier, ok := required.Parse()
+	if !ok {
+		return false
+	}
+	if holderRes != ApiKeyResourceWildcard && holderRes != requiredRes {
+		return false
+	}
+	return holderTier.rank() >= requiredTier.rank()
 }
 
-// IsValidApiKeyScope checks if a string is a valid ApiKeyScope.
+// AllApiKeyScopes lists every defined scope as a flat slice. Used by the
+// service-layer validator to reject unknown scopes on create, and by the
+// frontend hooks file to populate the create form's catalog.
+func AllApiKeyScopes() []ApiKeyScope {
+	out := make([]ApiKeyScope, 0, len(AllApiKeyResources())*len(AllApiKeyTiers()))
+	for _, r := range AllApiKeyResources() {
+		for _, t := range AllApiKeyTiers() {
+			out = append(out, MakeApiKeyScope(r, t))
+		}
+	}
+	return out
+}
+
+// IsValidApiKeyScope checks if a string is a defined scope. Convenience
+// wrapper for callers that have a string and don't want to convert.
 func IsValidApiKeyScope(scope string) bool {
-	switch ApiKeyScope(scope) {
-	case ApiKeyScopeRead, ApiKeyScopeWrite, ApiKeyScopeAdmin:
-		return true
+	return ApiKeyScope(scope).IsValid()
+}
+
+// Values implements ent's EnumValues interface. Returns the legacy
+// bare-tier values so the existing field.Enum("scope") schema and its
+// generated ScopeValidator keep accepting current DB rows. The schema
+// flips to a JSON list of resource:tier strings in a follow-up commit,
+// at which point this method is no longer reachable.
+func (ApiKeyScope) Values() []string {
+	return []string{
+		string(ApiKeyScopeRead),
+		string(ApiKeyScopeWrite),
+		string(ApiKeyScopeAdmin),
+	}
+}
+
+// ApiKeyScopes is a typed slice with helper methods. A key's permissions
+// are the union of its scopes.
+type ApiKeyScopes []ApiKeyScope
+
+// Includes reports whether any element of ss satisfies the required scope.
+func (ss ApiKeyScopes) Includes(required ApiKeyScope) bool {
+	for _, s := range ss {
+		if s.Includes(required) {
+			return true
+		}
 	}
 	return false
+}
+
+// Strings returns the scopes as a []string, useful for ent persistence
+// and JSON marshalling.
+func (ss ApiKeyScopes) Strings() []string {
+	out := make([]string, len(ss))
+	for i, s := range ss {
+		out[i] = string(s)
+	}
+	return out
+}
+
+// ApiKeyScopesFromStrings converts a []string (typically loaded from ent
+// or a request body) into a typed ApiKeyScopes. Invalid scope strings are
+// kept as-is so the caller can detect them via IsValid; this lets the
+// service layer return precise error messages rather than silently
+// dropping entries.
+func ApiKeyScopesFromStrings(in []string) ApiKeyScopes {
+	out := make(ApiKeyScopes, len(in))
+	for i, s := range in {
+		out[i] = ApiKeyScope(s)
+	}
+	return out
 }
 
 type VideoPlatform string
