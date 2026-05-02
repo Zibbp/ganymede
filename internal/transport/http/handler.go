@@ -257,15 +257,22 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.POST("/:id/ffprobe", h.GetFFprobe, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
 
 	// Queue
+	//
+	// Issue #1070 calls out "running actions" — i.e. starting tasks from
+	// scripts. The queue is the surface where archive/transcode jobs
+	// live, so we accept API keys on every queue endpoint. Read endpoints
+	// require read scope (matches ArchiverRole), writes require write
+	// scope (matches EditorRole), and POST/DELETE that previously
+	// required AdminRole now require admin scope.
 	queueGroup := e.Group("/queue")
-	queueGroup.POST("", h.CreateQueueItem, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	queueGroup.GET("", h.GetQueueItems, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
-	queueGroup.GET("/:id", h.GetQueueItem, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
-	queueGroup.PUT("/:id", h.UpdateQueueItem, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	queueGroup.DELETE("/:id", h.DeleteQueueItem, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	queueGroup.GET("/:id/tail", h.ReadQueueLogFile, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
-	queueGroup.POST("/:id/stop", h.StopQueueItem, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	queueGroup.POST("/task/start", h.StartQueueTask, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
+	queueGroup.POST("", h.CreateQueueItem, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeAdmin))
+	queueGroup.GET("", h.GetQueueItems, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeRead))
+	queueGroup.GET("/:id", h.GetQueueItem, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeRead))
+	queueGroup.PUT("/:id", h.UpdateQueueItem, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
+	queueGroup.DELETE("/:id", h.DeleteQueueItem, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeAdmin))
+	queueGroup.GET("/:id/tail", h.ReadQueueLogFile, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeRead))
+	queueGroup.POST("/:id/stop", h.StopQueueItem, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeAdmin))
+	queueGroup.POST("/task/start", h.StartQueueTask, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeWrite))
 
 	// Twitch
 	twitchGroup := e.Group("/twitch")
