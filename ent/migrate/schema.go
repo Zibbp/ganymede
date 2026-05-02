@@ -8,6 +8,25 @@ import (
 )
 
 var (
+	// APIKeysColumns holds the columns for the "api_keys" table.
+	APIKeysColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "prefix", Type: field.TypeString, Unique: true},
+		{Name: "hashed_secret", Type: field.TypeString},
+		{Name: "scope", Type: field.TypeEnum, Enums: []string{"read", "write", "admin"}},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// APIKeysTable holds the schema information for the "api_keys" table.
+	APIKeysTable = &schema.Table{
+		Name:       "api_keys",
+		Columns:    APIKeysColumns,
+		PrimaryKey: []*schema.Column{APIKeysColumns[0]},
+	}
 	// BlockedVideosColumns holds the columns for the "blocked_videos" table.
 	BlockedVideosColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -482,6 +501,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		APIKeysTable,
 		BlockedVideosTable,
 		ChannelsTable,
 		ChaptersTable,

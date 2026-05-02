@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// ApiKey is the predicate function for apikey builders.
+type ApiKey func(*sql.Selector)
+
 // BlockedVideos is the predicate function for blockedvideos builders.
 type BlockedVideos func(*sql.Selector)
 
