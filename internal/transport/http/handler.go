@@ -293,10 +293,14 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// twitchGroup.GET("/categories", h.GetTwitchCategories)
 
 	// Archive
+	//
+	// All POSTs accept either a session cookie or an API key. Archive
+	// channel/video are write-tier (Archiver role); the chat converter
+	// is admin-tier (Admin role).
 	archiveGroup := e.Group("/archive")
-	archiveGroup.POST("/channel", h.ArchiveChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
-	archiveGroup.POST("/video", h.ArchiveVideo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
-	archiveGroup.POST("/convert-twitch-live-chat", h.ConvertTwitchChat, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	archiveGroup.POST("/channel", h.ArchiveChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeArchiveWrite))
+	archiveGroup.POST("/video", h.ArchiveVideo, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeArchiveWrite))
+	archiveGroup.POST("/convert-twitch-live-chat", h.ConvertTwitchChat, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeArchiveAdmin))
 
 	// Admin
 	adminGroup := e.Group("/admin")
