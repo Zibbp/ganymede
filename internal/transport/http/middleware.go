@@ -195,25 +195,58 @@ func AuthUserRoleMiddleware(role utils.Role) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			user := userFromContext(c)
+			if user == nil {
+				return ErrorUnauthorizedResponse(c)
+			}
+			if roleSatisfies(user.Role, role) {
+				return next(c)
+			}
+			return ErrorUnauthorizedResponse(c)
+		}
+	}
+}
 
-			switch role {
-			case utils.AdminRole:
-				if user.Role == utils.AdminRole {
+// roleSatisfies reports whether actual is at least required, using the
+// existing hierarchy admin > editor > archiver > user.
+func roleSatisfies(actual, required utils.Role) bool {
+	switch required {
+	case utils.AdminRole:
+		return actual == utils.AdminRole
+	case utils.EditorRole:
+		return actual == utils.EditorRole || actual == utils.AdminRole
+	case utils.ArchiverRole:
+		return actual == utils.ArchiverRole || actual == utils.EditorRole || actual == utils.AdminRole
+	case utils.UserRole:
+		return actual == utils.UserRole || actual == utils.ArchiverRole || actual == utils.EditorRole || actual == utils.AdminRole
+	default:
+		return false
+	}
+}
+
+// RequireRoleOrScope enforces permission for routes that accept both
+// session and API key authentication. Session requests are checked
+// against the role hierarchy (matching AuthUserRoleMiddleware); API key
+// requests are checked against the scope hierarchy.
+//
+// Call this *after* AuthAPIKeyOrSessionMiddleware and
+// AuthGetUserMiddleware in the route's middleware chain.
+func RequireRoleOrScope(role utils.Role, scope utils.ApiKeyScope) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			authMethod, _ := c.Get("auth_method").(string)
+			switch authMethod {
+			case authMethodAPIKey:
+				rawScope, _ := c.Get("api_key.scope").(string)
+				if utils.ApiKeyScope(rawScope).Includes(scope) {
 					return next(c)
 				}
 				return ErrorUnauthorizedResponse(c)
-			case utils.EditorRole:
-				if user.Role == utils.EditorRole || user.Role == utils.AdminRole {
-					return next(c)
+			case authMethodLocal:
+				user := userFromContext(c)
+				if user == nil {
+					return ErrorUnauthorizedResponse(c)
 				}
-				return ErrorUnauthorizedResponse(c)
-			case utils.ArchiverRole:
-				if user.Role == utils.ArchiverRole || user.Role == utils.EditorRole || user.Role == utils.AdminRole {
-					return next(c)
-				}
-				return ErrorUnauthorizedResponse(c)
-			case utils.UserRole:
-				if user.Role == utils.UserRole || user.Role == utils.ArchiverRole || user.Role == utils.EditorRole || user.Role == utils.AdminRole {
+				if roleSatisfies(user.Role, role) {
 					return next(c)
 				}
 				return ErrorUnauthorizedResponse(c)
