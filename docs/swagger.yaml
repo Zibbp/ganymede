@@ -3791,6 +3791,11 @@ paths:
       tags:
         - vods
 securityDefinitions:
+  ApiKeyAuth:
+    description: 'Authorization: Bearer gym_<prefix>_<secret>. Mint a key via the admin UI.'
+    in: header
+    name: Authorization
+    type: apiKey
   ApiKeyCookieAuth:
     in: cookie
     name: access-token

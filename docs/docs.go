@@ -5764,6 +5764,12 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "Authorization: Bearer gym_<prefix>_<secret>. Mint a key via the admin UI.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
         "ApiKeyCookieAuth": {
             "type": "apiKey",
             "name": "access-token",
