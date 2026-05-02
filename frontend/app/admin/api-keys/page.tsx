@@ -71,6 +71,7 @@ const AdminApiKeysPage = () => {
   });
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebouncedValue(query, 500);
+  const [filteredCount, setFilteredCount] = useState(0);
   const [activeKey, setActiveKey] = useState<ApiKey | null>(null);
   const [showOnceSecret, setShowOnceSecret] = useState<string | null>(null);
   // includeRevoked surfaces soft-deleted rows so admins can audit
@@ -117,11 +118,14 @@ const AdminApiKeysPage = () => {
     const sorted = sortBy(filtered, sortStatus.columnAccessor);
     filtered = sortStatus.direction === "desc" ? sorted.reverse() : sorted;
 
+    setFilteredCount(filtered.length);
     const from = (page - 1) * perPage;
     setRecords(filtered.slice(from, from + perPage));
   }, [apiKeys, page, perPage, sortStatus, debouncedQuery]);
 
-  const totalRecords = useMemo(() => apiKeys?.length ?? 0, [apiKeys]);
+  // totalRecords drives the page count; must reflect the search filter
+  // so a narrowed result set doesn't render phantom pages.
+  const totalRecords = filteredCount;
 
   const handleDeleteModal = (key: ApiKey) => {
     setActiveKey(key);
