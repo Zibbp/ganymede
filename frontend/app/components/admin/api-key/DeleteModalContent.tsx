@@ -28,6 +28,13 @@ const DeleteApiKeyModalContent = ({ apiKey, handleClose }: Props) => {
       handleClose();
     } catch (error) {
       console.error(error);
+      // Surface the failure to the admin: without this the modal just
+      // sits there with the button re-enabled and there's no signal
+      // that the revoke didn't take effect.
+      showNotification({
+        color: "red",
+        message: t("revokeError"),
+      });
     } finally {
       setLoading(false);
     }

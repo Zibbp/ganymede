@@ -421,6 +421,7 @@
     "revokeConfirmText": "Bist du sicher, dass du diesen API-Schlüssel widerrufen möchtest? Dies kann nicht rückgängig gemacht werden.",
     "revokeButton": "Widerrufen",
     "revokeNotification": "API-Schlüssel widerrufen",
+    "revokeError": "API-Schlüssel konnte nicht widerrufen werden",
     "showOnce": {
       "warning": "Dies ist das einzige Mal, dass das Geheimnis angezeigt wird. Kopiere es jetzt und bewahre es sicher auf.",
       "instructions": "Verwende es in Skripten als: Authorization: Bearer <secret>",

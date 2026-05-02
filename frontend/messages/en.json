@@ -421,6 +421,7 @@
     "revokeConfirmText": "Are you sure you want to revoke this API key? This cannot be undone.",
     "revokeButton": "Revoke",
     "revokeNotification": "API key revoked",
+    "revokeError": "Failed to revoke API key",
     "showOnce": {
       "warning": "This is the only time the secret will be shown. Copy it now and store it somewhere safe.",
       "instructions": "Use it in scripts as: Authorization: Bearer <secret>",
