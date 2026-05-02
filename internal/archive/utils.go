@@ -71,7 +71,11 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 
 	}
 
-	folderTemplate = utils.SanitizeFileName(folderTemplate)
+	parts := strings.Split(folderTemplate, "/")
+	for i, p := range parts {
+		parts[i] = utils.SanitizeFileName(p)
+	}
+	folderTemplate = strings.Join(parts, "/")
 
 	return folderTemplate, nil
 }
