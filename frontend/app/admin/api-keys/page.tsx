@@ -3,8 +3,10 @@ import {
   ActionIcon,
   Badge,
   Box,
+  Button,
   Container,
   CopyButton,
+  Drawer,
   Group,
   Modal,
   TextInput,
@@ -17,12 +19,14 @@ import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useMemo, useState } from "react";
 import sortBy from "lodash/sortBy";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
-import { IconCheck, IconCopy, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import classes from "./AdminApiKeysPage.module.css";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { ApiKey, ApiKeyScope, useGetApiKeys } from "@/app/hooks/useApiKeys";
+import AdminApiKeyDrawerContent from "@/app/components/admin/api-key/DrawerContent";
 import DeleteApiKeyModalContent from "@/app/components/admin/api-key/DeleteModalContent";
+import ShowOnceModalContent from "@/app/components/admin/api-key/ShowOnceModal";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "@/app/util/util";
 import useSettingsStore from "@/app/store/useSettingsStore";
@@ -64,8 +68,19 @@ const AdminApiKeysPage = () => {
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebouncedValue(query, 500);
   const [activeKey, setActiveKey] = useState<ApiKey | null>(null);
+  const [showOnceSecret, setShowOnceSecret] = useState<string | null>(null);
 
+  const [createDrawerOpened, { open: openCreateDrawer, close: closeCreateDrawer }] = useDisclosure(false);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
+  const [showOnceOpened, { open: openShowOnceModal, close: closeShowOnceModalRaw }] = useDisclosure(false);
+
+  // Wrap close so the secret is wiped from React state as soon as the
+  // modal is dismissed — keeps the value out of memory longer than the
+  // user actually needs it.
+  const closeShowOnceModal = () => {
+    setShowOnceSecret(null);
+    closeShowOnceModalRaw();
+  };
 
   const axiosPrivate = useAxiosPrivate();
   const { data: apiKeys, isPending, isError } = useGetApiKeys(axiosPrivate);
@@ -102,6 +117,15 @@ const AdminApiKeysPage = () => {
     openDeleteModal();
   };
 
+  // Called by the create drawer once the API has minted a key. We surface
+  // the full secret in the show-once modal exactly here; the secret is
+  // never persisted in the table, query cache, or Zustand store.
+  const handleCreated = (secret: string) => {
+    closeCreateDrawer();
+    setShowOnceSecret(secret);
+    openShowOnceModal();
+  };
+
   if (isPending) return <GanymedeLoadingText message={t("loading")} />;
   if (isError) return <div>{t("error")}</div>;
 
@@ -110,6 +134,9 @@ const AdminApiKeysPage = () => {
       <Container size="7xl">
         <Group justify="space-between" mt={2}>
           <Title>{t("header")}</Title>
+          <Button leftSection={<IconPlus size={16} />} onClick={openCreateDrawer}>
+            {t("createButton")}
+          </Button>
         </Group>
 
         <Box mt={5}>
@@ -212,9 +239,32 @@ const AdminApiKeysPage = () => {
         </Box>
       </Container>
 
+      <Drawer
+        opened={createDrawerOpened}
+        onClose={closeCreateDrawer}
+        position="right"
+        title={t("drawer")}
+      >
+        <AdminApiKeyDrawerContent onCreated={handleCreated} />
+      </Drawer>
+
       <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t("deleteModal")}>
         {activeKey && (
           <DeleteApiKeyModalContent apiKey={activeKey} handleClose={closeDeleteModal} />
+        )}
+      </Modal>
+
+      <Modal
+        opened={showOnceOpened}
+        onClose={closeShowOnceModal}
+        title={t("showOnceModal")}
+        closeOnClickOutside={false}
+        closeOnEscape={false}
+        withCloseButton={false}
+        size="lg"
+      >
+        {showOnceSecret && (
+          <ShowOnceModalContent secret={showOnceSecret} handleClose={closeShowOnceModal} />
         )}
       </Modal>
     </div>
