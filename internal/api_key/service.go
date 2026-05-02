@@ -190,14 +190,23 @@ func (s *Service) GetByPrefix(ctx context.Context, prefix string) (*ent.ApiKey, 
 // value is older than the debounce window. This avoids a write storm on
 // busy keys while keeping the timestamp accurate to within ~60 s.
 //
+// Filters on revoked_at IS NULL so a request that was already in flight
+// when an admin revoked a key (cache flushed AFTER the DB commit on
+// Revoke) doesn't bump last_used_at on the now-revoked row, which would
+// otherwise leave audit data with last_used_at > revoked_at.
+//
 // Errors are non-fatal for the request; the caller fires this in a
 // goroutine and discards the error.
 func (s *Service) TouchLastUsed(ctx context.Context, id uuid.UUID) error {
 	row, err := s.Store.Client.ApiKey.Query().
-		Where(apikey.ID(id)).
+		Where(apikey.ID(id), apikey.RevokedAtIsNil()).
 		Select(apikey.FieldLastUsedAt).
 		Only(ctx)
 	if err != nil {
+		// Includes the case where the row exists but is revoked — Only
+		// returns NotFoundError because the WHERE filter excluded it.
+		// That's the intended behavior: silently no-op rather than
+		// updating audit columns on a revoked key.
 		return err
 	}
 	now := time.Now()
