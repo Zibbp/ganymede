@@ -1,0 +1,160 @@
+package http
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/utils"
+)
+
+// ApiKeyService is the surface the HTTP handlers need from the api_key
+// package. It mirrors the methods on *api_key.Service that handlers call;
+// kept narrow so handler tests can stub it without spinning up the full
+// service.
+type ApiKeyService interface {
+	Create(ctx context.Context, name, description string, scope utils.ApiKeyScope) (*ent.ApiKey, string, error)
+	List(ctx context.Context) ([]*ent.ApiKey, error)
+	Revoke(ctx context.Context, id uuid.UUID) error
+}
+
+// CreateApiKeyRequest is the JSON body for POST /admin/api-keys.
+type CreateApiKeyRequest struct {
+	Name        string `json:"name"        validate:"required,min=3,max=50"`
+	Description string `json:"description" validate:"max=500"`
+	Scope       string `json:"scope"       validate:"required,oneof=read write admin"`
+}
+
+// apiKeyDTO is the JSON shape returned in list and create responses. We
+// build this explicitly rather than marshalling *ent.ApiKey so the
+// hashed_secret column never leaves the server, even by accident.
+type apiKeyDTO struct {
+	ID          uuid.UUID         `json:"id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Prefix      string            `json:"prefix"`
+	Scope       utils.ApiKeyScope `json:"scope"`
+	LastUsedAt  *time.Time        `json:"last_used_at"`
+	CreatedAt   time.Time         `json:"created_at"`
+}
+
+// createApiKeyResponse is the response body for POST /admin/api-keys. The
+// secret is included exactly once, here at creation time. Subsequent GETs
+// only return the prefix.
+type createApiKeyResponse struct {
+	ApiKey apiKeyDTO `json:"api_key"`
+	Secret string    `json:"secret"`
+}
+
+func toAPIKeyDTO(k *ent.ApiKey) apiKeyDTO {
+	return apiKeyDTO{
+		ID:          k.ID,
+		Name:        k.Name,
+		Description: k.Description,
+		Prefix:      k.Prefix,
+		Scope:       k.Scope,
+		LastUsedAt:  k.LastUsedAt,
+		CreatedAt:   k.CreatedAt,
+	}
+}
+
+// ListApiKeys godoc
+//
+//	@Summary		List API keys
+//	@Description	Returns all non-revoked API keys, newest first. Secrets are never returned by this endpoint.
+//	@Tags			admin
+//	@Produce		json
+//	@Success		200	{object}	[]apiKeyDTO
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/admin/api-keys [get]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) ListApiKeys(c echo.Context) error {
+	if h.Service.ApiKeyService == nil {
+		return ErrorResponse(c, http.StatusInternalServerError, "api key service not configured")
+	}
+	keys, err := h.Service.ApiKeyService.List(c.Request().Context())
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("error listing api keys: %v", err))
+	}
+	out := make([]apiKeyDTO, 0, len(keys))
+	for _, k := range keys {
+		out = append(out, toAPIKeyDTO(k))
+	}
+	return SuccessResponse(c, out, "api keys")
+}
+
+// CreateApiKey godoc
+//
+//	@Summary		Create an API key
+//	@Description	Mints a new admin-managed API key. The full secret is returned in the response and is the only time it is visible — store it securely.
+//	@Tags			admin
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		CreateApiKeyRequest	true	"create api key payload"
+//	@Success		201		{object}	createApiKeyResponse
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/admin/api-keys [post]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) CreateApiKey(c echo.Context) error {
+	if h.Service.ApiKeyService == nil {
+		return ErrorResponse(c, http.StatusInternalServerError, "api key service not configured")
+	}
+	var req CreateApiKeyRequest
+	if err := c.Bind(&req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(&req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+
+	created, secret, err := h.Service.ApiKeyService.Create(
+		c.Request().Context(),
+		req.Name,
+		req.Description,
+		utils.ApiKeyScope(req.Scope),
+	)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("error creating api key: %v", err))
+	}
+
+	resp := createApiKeyResponse{
+		ApiKey: toAPIKeyDTO(created),
+		Secret: secret,
+	}
+	return c.JSON(http.StatusCreated, Response{
+		Success: true,
+		Data:    resp,
+		Message: "api key created — store the secret now, it will not be shown again",
+	})
+}
+
+// DeleteApiKey godoc
+//
+//	@Summary		Revoke an API key
+//	@Description	Soft-deletes an API key by setting revoked_at. The verification cache is flushed so the key stops authenticating immediately.
+//	@Tags			admin
+//	@Param			id	path	string	true	"api key id"
+//	@Success		200
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/admin/api-keys/{id} [delete]
+//	@Security		ApiKeyCookieAuth
+func (h *Handler) DeleteApiKey(c echo.Context) error {
+	if h.Service.ApiKeyService == nil {
+		return ErrorResponse(c, http.StatusInternalServerError, "api key service not configured")
+	}
+	idParam := c.Param("id")
+	id, err := uuid.Parse(idParam)
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, "invalid id")
+	}
+	if err := h.Service.ApiKeyService.Revoke(c.Request().Context(), id); err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("error revoking api key: %v", err))
+	}
+	return SuccessResponse(c, nil, "api key revoked")
+}

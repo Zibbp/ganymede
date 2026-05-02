@@ -45,7 +45,7 @@ type Services struct {
 	CategoryService     CategoryService
 	BlockedVideoService BlockedVideoService
 	NotificationService NotificationService
-	ApiKeyService       *api_key.Service
+	ApiKeyService       ApiKeyService
 	PlatformTwitch      platform.Platform
 }
 
@@ -281,6 +281,14 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	adminGroup.GET("/system-overview", h.GetSystemOverview, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 	adminGroup.GET("/storage-distribution", h.GetStorageDistribution, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 	adminGroup.GET("/info", h.GetInfo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+
+	// Admin: API keys. Session-only — admins must use the web UI to mint
+	// or revoke keys. This avoids the chicken-and-egg of needing a key
+	// to manage keys, and means a stolen key cannot mint or escalate
+	// other keys.
+	adminGroup.GET("/api-keys", h.ListApiKeys, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.POST("/api-keys", h.CreateApiKey, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.DELETE("/api-keys/:id", h.DeleteApiKey, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 
 	// User
 	userGroup := e.Group("/user")
