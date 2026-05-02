@@ -226,14 +226,17 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	authGroup.GET("/oauth/callback", h.OAuthCallback)
 
 	// Channel
+	//
+	// Write/admin endpoints accept either a session cookie or an API
+	// key. GETs stay public.
 	channelGroup := e.Group("/channel")
-	channelGroup.POST("", h.CreateChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	channelGroup.POST("", h.CreateChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeChannelWrite))
 	channelGroup.GET("", h.GetChannels)
 	channelGroup.GET("/:id", h.GetChannel)
 	channelGroup.GET("/name/:name", h.GetChannelByName)
-	channelGroup.PUT("/:id", h.UpdateChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	channelGroup.DELETE("/:id", h.DeleteChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	channelGroup.POST("/:id/update-image", h.UpdateChannelImage, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	channelGroup.PUT("/:id", h.UpdateChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeChannelWrite))
+	channelGroup.DELETE("/:id", h.DeleteChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeChannelAdmin))
+	channelGroup.POST("/:id/update-image", h.UpdateChannelImage, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeChannelWrite))
 
 	// VOD
 	//
