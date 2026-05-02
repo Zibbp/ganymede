@@ -59,9 +59,14 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 	// variable value (e.g. a video title) to '_' so it cannot create unintended
 	// directory levels. SanitizeFileName also maps a segment of "." or ".." to
 	// "unnamed_file", so path traversal from variable substitutions is neutralized.
+	// Empty segments produced by leading, trailing, or consecutive slashes are
+	// skipped so they do not become spurious "unnamed_file" directories.
 	templateSegments := strings.Split(folderTemplate, "/")
-	renderedSegments := make([]string, len(templateSegments))
-	for i, segment := range templateSegments {
+	renderedSegments := make([]string, 0, len(templateSegments))
+	for _, segment := range templateSegments {
+		if segment == "" {
+			continue
+		}
 		rendered := segment
 		for _, match := range storageTemplateVariableRegex.FindAllStringSubmatch(segment, -1) {
 			// Get variable name
@@ -78,7 +83,7 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 			}
 			rendered = strings.ReplaceAll(rendered, match[0], valueString)
 		}
-		renderedSegments[i] = utils.SanitizeFileName(rendered)
+		renderedSegments = append(renderedSegments, utils.SanitizeFileName(rendered))
 	}
 	folderTemplate = strings.Join(renderedSegments, "/")
 

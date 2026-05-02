@@ -75,6 +75,24 @@ func TestGetFolderName(t *testing.T) {
 			expected:    "2025/08/2025-08-04-video-123e4567-e89b-12d3-a456-426614174000",
 			expectError: false,
 		},
+		{
+			name:        "template with trailing slash drops the empty segment",
+			template:    "{{YYYY}}/{{MM}}/",
+			expected:    "2025/08",
+			expectError: false,
+		},
+		{
+			name:        "template with leading slash drops the empty segment",
+			template:    "/{{YYYY}}/{{MM}}",
+			expected:    "2025/08",
+			expectError: false,
+		},
+		{
+			name:        "template with consecutive slashes drops the empty segment",
+			template:    "{{YYYY}}//{{MM}}",
+			expected:    "2025/08",
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {
