@@ -185,6 +185,16 @@ func (s *Service) ChangePassword(ctx context.Context, userId uuid.UUID, oldPassw
 func (s *Service) OAuthUserCheck(ctx context.Context, userClaims OIDCCLaims) (*ent.User, error) {
 	log.Debug().Msgf("Checking if OAuth user exists: %v", userClaims.PreferredUsername)
 
+	// Reservation guard: an OIDC claim of "system:api" (or any
+	// case-variation) would, without this check, create or rename a
+	// user to the reserved system username — bypassing the Register
+	// guard via the OAuth flow. Reject the login outright; the IdP
+	// admin should rename the offending account or reconfigure the
+	// preferred_username claim.
+	if strings.EqualFold(userClaims.PreferredUsername, api_key.SystemUserUsername) {
+		return nil, fmt.Errorf("preferred_username %q is reserved", userClaims.PreferredUsername)
+	}
+
 	// Check if user exists
 	user, err := s.Store.Client.User.Query().Where(entUser.Sub(userClaims.Sub)).Only(ctx)
 	if err != nil {
