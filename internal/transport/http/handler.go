@@ -58,9 +58,20 @@ type Handler struct {
 
 var sessionManager *scs.SessionManager
 
-func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, notificationService NotificationService, apiKeyService *api_key.Service, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
+// apiKeyService is the package-level ApiKeyService used by the auth
+// middleware. It is wired in NewHandler, mirroring the sessionManager
+// pattern above so middleware functions stay parameter-free and chain
+// cleanly with Echo's middleware signature.
+var apiKeyService *api_key.Service
+
+func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, notificationService NotificationService, apiKeySvc *api_key.Service, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
 	log.Debug().Msg("creating route handler")
 	envConfig := config.GetEnvConfig()
+
+	// Stash the ApiKeyService at package scope so the auth middleware
+	// (which has the plain echo.MiddlewareFunc signature) can reach it
+	// without each route having to wrap a closure.
+	apiKeyService = apiKeySvc
 
 	sessionManager = scs.New()
 	sessionManager.Store = pgxstore.New(database.ConnPool)
@@ -88,7 +99,7 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 			CategoryService:     categoryService,
 			BlockedVideoService: blockedVideoService,
 			NotificationService: notificationService,
-			ApiKeyService:       apiKeyService,
+			ApiKeyService:       apiKeySvc,
 			PlatformTwitch:      platformTwitch,
 		},
 		SessionManager: sessionManager,
