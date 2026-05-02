@@ -136,6 +136,7 @@
       "blockedVideos": "Blocked Videos",
       "queue": "Queue",
       "users": "Users",
+      "apiKeys": "API Keys",
       "notifications": "Notifications",
       "settings": "Settings",
       "tasks": "Tasks",
@@ -362,6 +363,54 @@
     },
     "drawer": "User",
     "deleteModal": "Delete User"
+  },
+  "AdminApiKeysPage": {
+    "title": "Admin - API Keys",
+    "loading": "Loading API keys",
+    "error": "Error loading API keys",
+    "header": "Manage API Keys",
+    "searchPlaceholder": "Search API keys...",
+    "createButton": "Create API key",
+    "drawer": "Create API key",
+    "deleteModal": "Revoke API key",
+    "showOnceModal": "API key created",
+    "revoke": "Revoke",
+    "copyPrefix": "Copy prefix",
+    "copied": "Copied",
+    "never": "Never",
+    "columns": {
+      "name": "Name",
+      "scope": "Scope",
+      "prefix": "Prefix",
+      "lastUsed": "Last Used",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    }
+  },
+  "AdminApiKeyComponents": {
+    "validation": {
+      "name": "Name must be between 3 and 50 characters",
+      "description": "Description must be at most 500 characters"
+    },
+    "nameLabel": "Name",
+    "namePlaceholder": "vod-archiver-script",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Optional notes about where this key is used",
+    "scopeLabel": "Scope",
+    "scopeDescription": "read = GET only · write = create/update · admin = full access",
+    "createButton": "Create API key",
+    "createNotification": "API key created — copy the secret now",
+    "revokeConfirmText": "Are you sure you want to revoke this API key? This cannot be undone.",
+    "revokeButton": "Revoke",
+    "revokeNotification": "API key revoked",
+    "showOnce": {
+      "warning": "This is the only time the secret will be shown. Copy it now and store it somewhere safe.",
+      "instructions": "Use it in scripts as: Authorization: Bearer <secret>",
+      "copy": "Copy secret",
+      "copied": "Copied",
+      "closeBlocked": "Copy the secret to enable Close",
+      "closeAcknowledged": "I have saved this secret — close"
+    }
   },
   "AdminVideosPage": {
     "title": "Admin - Videos",

@@ -136,6 +136,7 @@
       "blockedVideos": "Заблоковані відео",
       "queue": "Черга",
       "users": "Користувачі",
+      "apiKeys": "API ключі",
       "notifications": "Сповіщення",
       "settings": "Налаштування",
       "tasks": "Завдання",
@@ -360,6 +361,54 @@
     },
     "drawer": "Користувач",
     "deleteModal": "Видалити користувача"
+  },
+  "AdminApiKeysPage": {
+    "title": "Адмін - API ключі",
+    "loading": "Завантаження API ключів",
+    "error": "Помилка завантаження API ключів",
+    "header": "Керування API ключами",
+    "searchPlaceholder": "Пошук API ключів...",
+    "createButton": "Створити API ключ",
+    "drawer": "Створити API ключ",
+    "deleteModal": "Відкликати API ключ",
+    "showOnceModal": "API ключ створено",
+    "revoke": "Відкликати",
+    "copyPrefix": "Копіювати префікс",
+    "copied": "Скопійовано",
+    "never": "Ніколи",
+    "columns": {
+      "name": "Назва",
+      "scope": "Область",
+      "prefix": "Префікс",
+      "lastUsed": "Востаннє використано",
+      "createdAt": "Створено",
+      "actions": "Дії"
+    }
+  },
+  "AdminApiKeyComponents": {
+    "validation": {
+      "name": "Назва має бути від 3 до 50 символів",
+      "description": "Опис має бути не більше 500 символів"
+    },
+    "nameLabel": "Назва",
+    "namePlaceholder": "vod-archiver-script",
+    "descriptionLabel": "Опис",
+    "descriptionPlaceholder": "Необов'язкові примітки про використання ключа",
+    "scopeLabel": "Область",
+    "scopeDescription": "read = тільки GET · write = створення/оновлення · admin = повний доступ",
+    "createButton": "Створити API ключ",
+    "createNotification": "API ключ створено — скопіюйте секрет зараз",
+    "revokeConfirmText": "Ви впевнені, що хочете відкликати цей API ключ? Цю дію не можна скасувати.",
+    "revokeButton": "Відкликати",
+    "revokeNotification": "API ключ відкликано",
+    "showOnce": {
+      "warning": "Це єдиний раз, коли буде показано секрет. Скопіюйте його зараз і збережіть у безпечному місці.",
+      "instructions": "Використовуйте у скриптах: Authorization: Bearer <secret>",
+      "copy": "Копіювати секрет",
+      "copied": "Скопійовано",
+      "closeBlocked": "Скопіюйте секрет, щоб увімкнути закриття",
+      "closeAcknowledged": "Я зберіг цей секрет — закрити"
+    }
   },
   "AdminVideosPage": {
     "title": "Адмін - Відео",
