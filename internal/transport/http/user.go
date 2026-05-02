@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -101,6 +102,9 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	}
 	u, err := h.Service.UserService.AdminUpdateUser(c, uDto)
 	if err != nil {
+		if errors.Is(err, user.ErrSystemUserProtected) {
+			return ErrorResponse(c, http.StatusForbidden, err.Error())
+		}
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 	return SuccessResponse(c, u, "user updated")
@@ -126,6 +130,9 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 	}
 	err = h.Service.UserService.AdminDeleteUser(c, id)
 	if err != nil {
+		if errors.Is(err, user.ErrSystemUserProtected) {
+			return ErrorResponse(c, http.StatusForbidden, err.Error())
+		}
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 

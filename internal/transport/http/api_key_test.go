@@ -379,6 +379,47 @@ func TestApiKeyHTTP(t *testing.T) {
 			Status(http.StatusNotFound)
 	})
 
+	t.Run("SystemUserCannotBeDeletedOrUpdated", func(t *testing.T) {
+		// Mint an admin-tier key so we hit the migrated /user/:id routes
+		// via Bearer rather than the seeded session — the protection
+		// must hold regardless of auth method.
+		obj := e.POST("/admin/api-keys").
+			WithJSON(internalHttp.CreateApiKeyRequest{
+				Name:   "system-user-protector",
+				Scopes: []string{"*:admin"},
+			}).
+			Expect().Status(http.StatusCreated).JSON().Object()
+		token := obj.Path("$.data.secret").String().Raw()
+
+		// Locate the system:api user via the admin list — it shows up
+		// because EnsureSystemUser ran at startup.
+		bearer := bareHTTPClient(t)
+		users := bearer.GET("/user").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().Status(http.StatusOK).JSON().Object().Value("data").Array()
+		systemID := ""
+		for _, v := range users.Iter() {
+			if v.Object().Value("username").String().Raw() == "system:api" {
+				systemID = v.Object().Value("id").String().Raw()
+				break
+			}
+		}
+		require.NotEmpty(t, systemID, "system:api user must exist in /user list")
+
+		// DELETE → 403 Forbidden, not 200.
+		bearer.DELETE("/user/"+systemID).
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusForbidden)
+
+		// PUT → 403 Forbidden as well.
+		bearer.PUT("/user/"+systemID).
+			WithHeader("Authorization", "Bearer "+token).
+			WithJSON(map[string]any{"username": "renamed-system", "role": "user"}).
+			Expect().
+			Status(http.StatusForbidden)
+	})
+
 	t.Run("AdminApiKeysIsAlwaysSessionOnly", func(t *testing.T) {
 		// Even a *:admin key cannot reach /admin/api-keys via Bearer —
 		// the route is intentionally guarded by the session-only chain.
