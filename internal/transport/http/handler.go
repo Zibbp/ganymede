@@ -406,10 +406,13 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	categoryGroup.GET("", h.GetCategories)
 
 	// Blocked
+	//
+	// Public reads stay public. Write endpoints (block/unblock) accept
+	// API keys at blocked_video:write — Editor role for sessions.
 	blockedGroup := e.Group("/blocked-video")
 	blockedGroup.GET("", h.GetBlockedVideos)
-	blockedGroup.POST("/:id", h.CreateBlockedVideo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	blockedGroup.DELETE("/:id", h.DeleteBlockedVideo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	blockedGroup.POST("/:id", h.CreateBlockedVideo, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeBlockedVideoWrite))
+	blockedGroup.DELETE("/:id", h.DeleteBlockedVideo, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeBlockedVideoWrite))
 	blockedGroup.GET("/:id", h.IsVideoBlocked)
 }
 
