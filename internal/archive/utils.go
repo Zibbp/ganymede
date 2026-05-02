@@ -53,25 +53,34 @@ func GetFolderName(uuid uuid.UUID, input StorageTemplateInput) (string, error) {
 		folderTemplate = "{{id}}-{{uuid}}"
 	}
 
-	res := storageTemplateVariableRegex.FindAllStringSubmatch(folderTemplate, -1)
-	for _, match := range res {
-		// Get variable name
-		variableName := match[1]
-		// Get variable value
-		variableValue, ok := variableMap[variableName]
-		if !ok {
-			return "", fmt.Errorf("variable %s not found in variable map", variableName)
+	// Split the template on '/' first, then render and sanitize each segment in
+	// isolation. This preserves '/' that the user wrote as directory separators
+	// in the template, while flattening any '/' that appears inside a substituted
+	// variable value (e.g. a video title) to '_' so it cannot create unintended
+	// directory levels. SanitizeFileName also maps a segment of "." or ".." to
+	// "unnamed_file", so path traversal from variable substitutions is neutralized.
+	templateSegments := strings.Split(folderTemplate, "/")
+	renderedSegments := make([]string, len(templateSegments))
+	for i, segment := range templateSegments {
+		rendered := segment
+		for _, match := range storageTemplateVariableRegex.FindAllStringSubmatch(segment, -1) {
+			// Get variable name
+			variableName := match[1]
+			// Get variable value
+			variableValue, ok := variableMap[variableName]
+			if !ok {
+				return "", fmt.Errorf("variable %s not found in variable map", variableName)
+			}
+			// Replace variable in segment
+			valueString := fmt.Sprintf("%v", variableValue)
+			if valueString == "" {
+				return "", fmt.Errorf("variable %s resolved to empty string; ensure the archive has this field populated", variableName)
+			}
+			rendered = strings.ReplaceAll(rendered, match[0], valueString)
 		}
-		// Replace variable in template
-		folderString := fmt.Sprintf("%v", variableValue)
-		if folderString == "" {
-			return "", fmt.Errorf("variable %s resolved to empty string; ensure the archive has this field populated", variableName)
-		}
-		folderTemplate = strings.ReplaceAll(folderTemplate, match[0], folderString)
-
+		renderedSegments[i] = utils.SanitizeFileName(rendered)
 	}
-
-	folderTemplate = utils.SanitizeFileName(folderTemplate)
+	folderTemplate = strings.Join(renderedSegments, "/")
 
 	return folderTemplate, nil
 }

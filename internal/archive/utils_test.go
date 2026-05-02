@@ -69,6 +69,12 @@ func TestGetFolderName(t *testing.T) {
 			expected:    "TestChannel-2025-08-04-testid",
 			expectError: false,
 		},
+		{
+			name:        "template with nested directory structure",
+			template:    "{{YYYY}}/{{MM}}/{{date}}-{{type}}-{{uuid}}",
+			expected:    "2025/08/2025-08-04-video-123e4567-e89b-12d3-a456-426614174000",
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {
