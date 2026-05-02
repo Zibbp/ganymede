@@ -23,7 +23,7 @@ import { IconCheck, IconCopy, IconPlus, IconSearch, IconTrash } from "@tabler/ic
 import dayjs from "dayjs";
 import classes from "./AdminApiKeysPage.module.css";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
-import { ApiKey, ApiKeyScope, useGetApiKeys } from "@/app/hooks/useApiKeys";
+import { ApiKey, ApiKeyTier, useGetApiKeys } from "@/app/hooks/useApiKeys";
 import AdminApiKeyDrawerContent from "@/app/components/admin/api-key/DrawerContent";
 import DeleteApiKeyModalContent from "@/app/components/admin/api-key/DeleteModalContent";
 import ShowOnceModalContent from "@/app/components/admin/api-key/ShowOnceModal";
@@ -31,15 +31,17 @@ import { useTranslations } from "next-intl";
 import { usePageTitle } from "@/app/util/util";
 import useSettingsStore from "@/app/store/useSettingsStore";
 
-// scopeBadgeColor maps an API key scope to a Mantine badge color so the
-// permission level is visually distinct in the list at a glance.
-const scopeBadgeColor = (scope: ApiKeyScope): string => {
-  switch (scope) {
-    case ApiKeyScope.Admin:
+// scopeBadgeColor picks a badge color from a scope's tier so admin
+// destructive perms are red, write is yellow, read is blue, and any
+// unrecognised tier falls back to gray.
+const scopeBadgeColor = (scope: string): string => {
+  const tier = scope.split(":", 2)[1] ?? "";
+  switch (tier as ApiKeyTier) {
+    case ApiKeyTier.Admin:
       return "red";
-    case ApiKeyScope.Write:
+    case ApiKeyTier.Write:
       return "yellow";
-    case ApiKeyScope.Read:
+    case ApiKeyTier.Read:
       return "blue";
     default:
       return "gray";
@@ -99,7 +101,8 @@ const AdminApiKeysPage = () => {
         (k) =>
           k.name.toLowerCase().includes(q) ||
           k.prefix.toLowerCase().includes(q) ||
-          (k.description ?? "").toLowerCase().includes(q)
+          (k.description ?? "").toLowerCase().includes(q) ||
+          (k.scopes ?? []).some((s) => s.toLowerCase().includes(q))
       );
     }
 
@@ -162,13 +165,23 @@ const AdminApiKeysPage = () => {
                 sortable: true,
               },
               {
-                accessor: "scope",
-                title: t("columns.scope"),
-                sortable: true,
-                render: ({ scope }) => (
-                  <Badge color={scopeBadgeColor(scope)} variant="light">
-                    {scope}
-                  </Badge>
+                accessor: "scopes",
+                title: t("columns.scopes"),
+                // A key can hold multiple scopes; render one badge per
+                // scope so admins can see the full grant at a glance.
+                render: ({ scopes }) => (
+                  <Group gap={4}>
+                    {(scopes ?? []).map((s) => (
+                      <Badge
+                        key={s}
+                        color={scopeBadgeColor(s)}
+                        variant="light"
+                        ff="monospace"
+                      >
+                        {s}
+                      </Badge>
+                    ))}
+                  </Group>
                 ),
               },
               {

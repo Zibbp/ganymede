@@ -1,6 +1,22 @@
-import { ApiKeyScope, useCreateApiKey } from "@/app/hooks/useApiKeys";
+import {
+  API_KEY_RESOURCE_META,
+  API_KEY_SCOPES_CATALOG,
+  ApiKeyResource,
+  ApiKeyScope,
+  ApiKeyTier,
+  makeScope,
+  useCreateApiKey,
+} from "@/app/hooks/useApiKeys";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
-import { Button, Select, Textarea, TextInput } from "@mantine/core";
+import {
+  Button,
+  Group,
+  MultiSelect,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
@@ -14,20 +30,54 @@ type Props = {
   onCreated: (secret: string) => void;
 };
 
+// Build the MultiSelect data once. Mantine's grouped form is
+// { group: "label", items: [{value, label}] }; resources whose routes
+// are not yet enforcing scopes are tagged in the option label so the
+// admin sees they're reserved for future migrations.
+const buildScopeOptions = () => {
+  const groups: { group: string; items: { value: string; label: string }[] }[] =
+    [];
+  for (const resource of Object.values(ApiKeyResource) as ApiKeyResource[]) {
+    const meta = API_KEY_RESOURCE_META[resource];
+    const items = (Object.values(ApiKeyTier) as ApiKeyTier[]).map((tier) => ({
+      value: makeScope(resource, tier),
+      label: meta.enforced
+        ? makeScope(resource, tier)
+        : `${makeScope(resource, tier)} (reserved)`,
+    }));
+    groups.push({
+      group: meta.enforced ? meta.label : `${meta.label} (reserved)`,
+      items,
+    });
+  }
+  return groups;
+};
+
 const AdminApiKeyDrawerContent = ({ onCreated }: Props) => {
   const t = useTranslations("AdminApiKeyComponents");
   const axiosPrivate = useAxiosPrivate();
   const createApiKey = useCreateApiKey();
   const [loading, setLoading] = useState(false);
 
-  // Bounds match the backend validator on CreateApiKeyRequest.
+  // Bounds match the backend validator on CreateApiKeyRequest plus
+  // strict membership in the catalog so the user can't paste a typo.
   const schema = z.object({
     name: z
       .string()
       .min(3, { message: t("validation.name") })
       .max(50, { message: t("validation.name") }),
     description: z.string().max(500, { message: t("validation.description") }),
-    scope: z.nativeEnum(ApiKeyScope),
+    scopes: z
+      .array(
+        z
+          .string()
+          .refine(
+            (s): s is ApiKeyScope =>
+              (API_KEY_SCOPES_CATALOG as string[]).includes(s),
+            { message: t("validation.scopes.unknown") }
+          )
+      )
+      .min(1, { message: t("validation.scopes.required") }),
   });
 
   const form = useForm({
@@ -35,15 +85,16 @@ const AdminApiKeyDrawerContent = ({ onCreated }: Props) => {
     initialValues: {
       name: "",
       description: "",
-      scope: ApiKeyScope.Read,
+      scopes: [] as ApiKeyScope[],
     },
     validate: zodResolver(schema),
   });
 
-  const scopeOptions = Object.values(ApiKeyScope).map((s) => ({
-    value: s,
-    label: s.charAt(0).toUpperCase() + s.slice(1),
-  }));
+  const scopeOptions = buildScopeOptions();
+
+  // Quick-pick presets reset the field to a single canonical scope so
+  // the admin doesn't have to find them in the grouped MultiSelect.
+  const setPreset = (scopes: ApiKeyScope[]) => form.setFieldValue("scopes", scopes);
 
   const handleSubmit = async () => {
     try {
@@ -66,38 +117,73 @@ const AdminApiKeyDrawerContent = ({ onCreated }: Props) => {
   return (
     <div>
       <form onSubmit={form.onSubmit(handleSubmit)}>
-        <TextInput
-          withAsterisk
-          label={t("nameLabel")}
-          placeholder={t("namePlaceholder")}
-          key={form.key("name")}
-          {...form.getInputProps("name")}
-        />
+        <Stack gap="sm">
+          <TextInput
+            withAsterisk
+            label={t("nameLabel")}
+            placeholder={t("namePlaceholder")}
+            key={form.key("name")}
+            {...form.getInputProps("name")}
+          />
 
-        <Textarea
-          mt="sm"
-          label={t("descriptionLabel")}
-          placeholder={t("descriptionPlaceholder")}
-          autosize
-          minRows={2}
-          key={form.key("description")}
-          {...form.getInputProps("description")}
-        />
+          <Textarea
+            label={t("descriptionLabel")}
+            placeholder={t("descriptionPlaceholder")}
+            autosize
+            minRows={2}
+            key={form.key("description")}
+            {...form.getInputProps("description")}
+          />
 
-        <Select
-          mt="sm"
-          withAsterisk
-          label={t("scopeLabel")}
-          description={t("scopeDescription")}
-          data={scopeOptions}
-          allowDeselect={false}
-          key={form.key("scope")}
-          {...form.getInputProps("scope")}
-        />
+          <div>
+            <Text size="sm" fw={500} mb={4}>
+              {t("scopeLabel")}{" "}
+              <Text span c="red">
+                *
+              </Text>
+            </Text>
+            <Text size="xs" c="dimmed" mb="xs">
+              {t("scopeDescription")}
+            </Text>
+            <Group gap="xs" mb="xs">
+              <Button
+                size="xs"
+                variant="light"
+                onClick={() => setPreset(["*:admin"])}
+              >
+                {t("presets.fullAdmin")}
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                onClick={() => setPreset(["*:read"])}
+              >
+                {t("presets.readAll")}
+              </Button>
+              <Button
+                size="xs"
+                variant="subtle"
+                color="gray"
+                onClick={() => setPreset([])}
+              >
+                {t("presets.clear")}
+              </Button>
+            </Group>
+            <MultiSelect
+              data={scopeOptions}
+              searchable
+              clearable
+              hidePickedOptions
+              placeholder={t("scopePlaceholder")}
+              key={form.key("scopes")}
+              {...form.getInputProps("scopes")}
+            />
+          </div>
 
-        <Button mt={15} type="submit" loading={loading} fullWidth>
-          {t("createButton")}
-        </Button>
+          <Button mt={5} type="submit" loading={loading} fullWidth>
+            {t("createButton")}
+          </Button>
+        </Stack>
       </form>
     </div>
   );
