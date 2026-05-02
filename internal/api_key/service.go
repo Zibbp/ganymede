@@ -112,6 +112,50 @@ func (s *Service) List(ctx context.Context) ([]*ent.ApiKey, error) {
 	return keys, nil
 }
 
+// Update replaces the editable fields of a non-revoked API key (name,
+// description, scopes). The prefix and hashed_secret are immutable —
+// rotating a key means revoking it and creating a fresh one. Returns
+// ent.NotFoundError when the id doesn't exist or the key has been
+// revoked.
+//
+// Like Create, scopes are normalized (validated, deduped) before
+// persistence so a 400-friendly error is returned for unknown scopes.
+//
+// The verification cache is flushed for this key id so the new scopes
+// take effect on the next request rather than after the cache TTL
+// elapses — same pattern Revoke uses.
+func (s *Service) Update(ctx context.Context, id uuid.UUID, name, description string, scopes []utils.ApiKeyScope) (*ent.ApiKey, error) {
+	normalized, err := normalizeScopes(scopes)
+	if err != nil {
+		return nil, err
+	}
+
+	// Reject updates on revoked keys: a revoked key shouldn't be
+	// editable, otherwise admins could "un-revoke" by editing it back
+	// into circulation. Combined Where on (id, RevokedAtIsNil) returns
+	// not-found rather than fetching+checking in two steps.
+	row, err := s.Store.Client.ApiKey.Query().
+		Where(apikey.ID(id), apikey.RevokedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	updated, err := s.Store.Client.ApiKey.UpdateOneID(row.ID).
+		SetName(name).
+		SetDescription(description).
+		SetScopes(normalized.Strings()).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error updating api key: %w", err)
+	}
+
+	if s.Cache != nil {
+		s.Cache.InvalidateByID(id)
+	}
+	return updated, nil
+}
+
 // Revoke marks the API key as revoked (soft delete). Subsequent
 // authentication attempts with this key are rejected. The verification
 // cache is flushed so the change takes effect immediately rather than

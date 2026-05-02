@@ -105,6 +105,44 @@ func TestApiKeyService(t *testing.T) {
 		assert.WithinDuration(t, time.Now(), *fresh.LastUsedAt, 5*time.Second)
 	})
 
+	t.Run("Update changes editable fields and flushes cache", func(t *testing.T) {
+		key, full, err := svc.Create(ctx, "update-target", "before", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		require.NoError(t, err)
+
+		// Prime cache with the original scopes so we can assert flush.
+		svc.Cache.Set(full, key.ID, utils.ApiKeyScopesFromStrings(key.Scopes))
+		_, _, hit := svc.Cache.Get(full)
+		require.True(t, hit, "cache primed before update")
+
+		updated, err := svc.Update(ctx, key.ID, "update-target-renamed", "after", []utils.ApiKeyScope{
+			utils.ApiKeyScopeVodWrite, utils.ApiKeyScopePlaylistRead,
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "update-target-renamed", updated.Name)
+		assert.Equal(t, "after", updated.Description)
+		assert.ElementsMatch(t, []string{
+			string(utils.ApiKeyScopeVodWrite), string(utils.ApiKeyScopePlaylistRead),
+		}, updated.Scopes)
+
+		_, _, hit = svc.Cache.Get(full)
+		assert.False(t, hit, "cache must be flushed after update so new scopes take effect")
+	})
+
+	t.Run("Update rejects unknown scopes", func(t *testing.T) {
+		key, _, err := svc.Create(ctx, "update-bad-scope", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		require.NoError(t, err)
+		_, err = svc.Update(ctx, key.ID, "x", "", []utils.ApiKeyScope{utils.ApiKeyScope("bogus:read")})
+		assert.Error(t, err)
+	})
+
+	t.Run("Update on revoked key returns not-found", func(t *testing.T) {
+		key, _, err := svc.Create(ctx, "update-revoked", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		require.NoError(t, err)
+		require.NoError(t, svc.Revoke(ctx, key.ID))
+		_, err = svc.Update(ctx, key.ID, "x", "", []utils.ApiKeyScope{utils.ApiKeyScopeVodRead})
+		assert.Error(t, err)
+	})
+
 	t.Run("EnsureSystemUser is idempotent", func(t *testing.T) {
 		first, err := svc.EnsureSystemUser(ctx)
 		require.NoError(t, err)
