@@ -49,20 +49,18 @@ const (
 	ApiKeyResourcePlaylist ApiKeyResource = "playlist"
 	ApiKeyResourceQueue    ApiKeyResource = "queue"
 
-	// Reserved resources — defined now so the catalog is forward-compatible.
-	// Routes for these groups still use AuthUserRoleMiddleware; granting
-	// these scopes today is harmless but has no effect until the matching
-	// routes are migrated to RequireRoleOrScope.
+	// Resources for route groups whose write/admin endpoints accept API
+	// keys. /chapter, /category and /twitch are intentionally absent —
+	// they only expose public reads, so no scope ever gates them.
+	// /playback is also absent: it's per-user UX state attributed via
+	// the session cookie, not a script-friendly automation surface.
 	ApiKeyResourceChannel      ApiKeyResource = "channel"
 	ApiKeyResourceArchive      ApiKeyResource = "archive"
 	ApiKeyResourceLive         ApiKeyResource = "live"
 	ApiKeyResourceUser         ApiKeyResource = "user"
 	ApiKeyResourceConfig       ApiKeyResource = "config"
-	ApiKeyResourcePlayback     ApiKeyResource = "playback"
 	ApiKeyResourceNotification ApiKeyResource = "notification"
 	ApiKeyResourceTask         ApiKeyResource = "task"
-	ApiKeyResourceChapter      ApiKeyResource = "chapter"
-	ApiKeyResourceCategory     ApiKeyResource = "category"
 	ApiKeyResourceBlockedVideo ApiKeyResource = "blocked_video"
 
 	// ApiKeyResourceSystem covers server-wide stats and info endpoints
@@ -85,11 +83,8 @@ func AllApiKeyResources() []ApiKeyResource {
 		ApiKeyResourceLive,
 		ApiKeyResourceUser,
 		ApiKeyResourceConfig,
-		ApiKeyResourcePlayback,
 		ApiKeyResourceNotification,
 		ApiKeyResourceTask,
-		ApiKeyResourceChapter,
-		ApiKeyResourceCategory,
 		ApiKeyResourceBlockedVideo,
 		ApiKeyResourceSystem,
 	}
@@ -172,8 +167,8 @@ const (
 	ApiKeyScopeQueueWrite ApiKeyScope = "queue:write"
 	ApiKeyScopeQueueAdmin ApiKeyScope = "queue:admin"
 
-	// Reserved scopes — defined for the forward-compatible catalog. None
-	// are enforced today; granting them is harmless.
+	// Per-resource scopes for route groups whose write/admin endpoints
+	// accept API keys.
 	ApiKeyScopeChannelRead       ApiKeyScope = "channel:read"
 	ApiKeyScopeChannelWrite      ApiKeyScope = "channel:write"
 	ApiKeyScopeChannelAdmin      ApiKeyScope = "channel:admin"
@@ -189,21 +184,12 @@ const (
 	ApiKeyScopeConfigRead        ApiKeyScope = "config:read"
 	ApiKeyScopeConfigWrite       ApiKeyScope = "config:write"
 	ApiKeyScopeConfigAdmin       ApiKeyScope = "config:admin"
-	ApiKeyScopePlaybackRead      ApiKeyScope = "playback:read"
-	ApiKeyScopePlaybackWrite     ApiKeyScope = "playback:write"
-	ApiKeyScopePlaybackAdmin     ApiKeyScope = "playback:admin"
 	ApiKeyScopeNotificationRead  ApiKeyScope = "notification:read"
 	ApiKeyScopeNotificationWrite ApiKeyScope = "notification:write"
 	ApiKeyScopeNotificationAdmin ApiKeyScope = "notification:admin"
 	ApiKeyScopeTaskRead          ApiKeyScope = "task:read"
 	ApiKeyScopeTaskWrite         ApiKeyScope = "task:write"
 	ApiKeyScopeTaskAdmin         ApiKeyScope = "task:admin"
-	ApiKeyScopeChapterRead       ApiKeyScope = "chapter:read"
-	ApiKeyScopeChapterWrite      ApiKeyScope = "chapter:write"
-	ApiKeyScopeChapterAdmin      ApiKeyScope = "chapter:admin"
-	ApiKeyScopeCategoryRead      ApiKeyScope = "category:read"
-	ApiKeyScopeCategoryWrite     ApiKeyScope = "category:write"
-	ApiKeyScopeCategoryAdmin     ApiKeyScope = "category:admin"
 	ApiKeyScopeBlockedVideoRead  ApiKeyScope = "blocked_video:read"
 	ApiKeyScopeBlockedVideoWrite ApiKeyScope = "blocked_video:write"
 	ApiKeyScopeBlockedVideoAdmin ApiKeyScope = "blocked_video:admin"
