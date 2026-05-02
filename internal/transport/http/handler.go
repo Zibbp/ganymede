@@ -228,14 +228,19 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	channelGroup.POST("/:id/update-image", h.UpdateChannelImage, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 
 	// VOD
+	//
+	// Write/admin endpoints (POST/PUT/DELETE for the VOD itself) accept
+	// either a session cookie or an API key — see issue #1070, where
+	// external scripts need to delete VODs after archiving them. Read
+	// endpoints stay unauthenticated as before.
 	vodGroup := e.Group("/vod")
-	vodGroup.POST("", h.CreateVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	vodGroup.POST("", h.CreateVod, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
 	vodGroup.GET("", h.GetVods)
 	vodGroup.GET("/:id", h.GetVod)
 	vodGroup.GET("/external_id/:external_id", h.GetVod)
 	vodGroup.GET("/search", h.SearchVods)
-	vodGroup.PUT("/:id", h.UpdateVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	vodGroup.DELETE("/:id", h.DeleteVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	vodGroup.PUT("/:id", h.UpdateVod, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeWrite))
+	vodGroup.DELETE("/:id", h.DeleteVod, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeAdmin))
 	vodGroup.GET("/:id/playlist", h.GetVodPlaylists)
 	vodGroup.GET("/:id/clips", h.GetVodClips)
 	vodGroup.GET("/paginate", h.GetVodsPagination)
