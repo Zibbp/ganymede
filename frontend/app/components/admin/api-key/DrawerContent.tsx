@@ -31,9 +31,9 @@ type Props = {
 };
 
 // Build the MultiSelect data once. Mantine's grouped form is
-// { group: "label", items: [{value, label}] }; resources whose routes
-// are not yet enforcing scopes are tagged in the option label so the
-// admin sees they're reserved for future migrations.
+// { group: "label", items: [{value, label}] }. Every resource is
+// enforced by at least one route after Phase 3, so labels are simple
+// resource:tier strings without "(reserved)" annotations.
 const buildScopeOptions = () => {
   const groups: { group: string; items: { value: string; label: string }[] }[] =
     [];
@@ -41,14 +41,9 @@ const buildScopeOptions = () => {
     const meta = API_KEY_RESOURCE_META[resource];
     const items = (Object.values(ApiKeyTier) as ApiKeyTier[]).map((tier) => ({
       value: makeScope(resource, tier),
-      label: meta.enforced
-        ? makeScope(resource, tier)
-        : `${makeScope(resource, tier)} (reserved)`,
+      label: makeScope(resource, tier),
     }));
-    groups.push({
-      group: meta.enforced ? meta.label : `${meta.label} (reserved)`,
-      items,
-    });
+    groups.push({ group: meta.label, items });
   }
   return groups;
 };

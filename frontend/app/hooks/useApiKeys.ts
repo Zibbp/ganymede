@@ -10,10 +10,11 @@ export enum ApiKeyTier {
   Admin = "admin",
 }
 
-// Resources mirror utils.ApiKeyResource on the backend. The catalog is
-// intentionally complete; resources whose routes are not yet migrated to
-// per-key scopes are flagged in API_KEY_RESOURCE_META below so the create
-// form can surface a "(reserved)" note.
+// Resources mirror utils.ApiKeyResource on the backend. Every resource
+// here has at least one route that gates access on the matching scope,
+// so granting any scope to a key produces a real, observable effect.
+// Resources whose routes are intentionally public (chapter, category,
+// twitch) or session-only (playback) are absent.
 export enum ApiKeyResource {
   Wildcard = "*",
   Vod = "vod",
@@ -24,38 +25,28 @@ export enum ApiKeyResource {
   Live = "live",
   User = "user",
   Config = "config",
-  Playback = "playback",
   Notification = "notification",
   Task = "task",
-  Chapter = "chapter",
-  Category = "category",
   BlockedVideo = "blocked_video",
+  System = "system",
 }
 
-// API_KEY_RESOURCE_META describes each resource for the create form. The
-// `enforced` flag tells the UI whether granting a scope on this resource
-// has any effect today — when false, the route group still uses
-// session-only auth and an API key holding the scope authenticates
-// nothing. The label is shown as the MultiSelect group heading.
-export const API_KEY_RESOURCE_META: Record<
-  ApiKeyResource,
-  { label: string; enforced: boolean }
-> = {
-  [ApiKeyResource.Wildcard]: { label: "All resources (wildcard)", enforced: true },
-  [ApiKeyResource.Vod]: { label: "VODs", enforced: true },
-  [ApiKeyResource.Playlist]: { label: "Playlists", enforced: true },
-  [ApiKeyResource.Queue]: { label: "Queue", enforced: true },
-  [ApiKeyResource.Channel]: { label: "Channels", enforced: false },
-  [ApiKeyResource.Archive]: { label: "Archive", enforced: false },
-  [ApiKeyResource.Live]: { label: "Live", enforced: false },
-  [ApiKeyResource.User]: { label: "Users", enforced: false },
-  [ApiKeyResource.Config]: { label: "Config", enforced: false },
-  [ApiKeyResource.Playback]: { label: "Playback", enforced: false },
-  [ApiKeyResource.Notification]: { label: "Notifications", enforced: false },
-  [ApiKeyResource.Task]: { label: "Tasks", enforced: false },
-  [ApiKeyResource.Chapter]: { label: "Chapters", enforced: false },
-  [ApiKeyResource.Category]: { label: "Categories", enforced: false },
-  [ApiKeyResource.BlockedVideo]: { label: "Blocked Videos", enforced: false },
+// API_KEY_RESOURCE_META labels each resource for the create form. Used
+// as the MultiSelect group heading.
+export const API_KEY_RESOURCE_META: Record<ApiKeyResource, { label: string }> = {
+  [ApiKeyResource.Wildcard]: { label: "All resources (wildcard)" },
+  [ApiKeyResource.Vod]: { label: "VODs" },
+  [ApiKeyResource.Playlist]: { label: "Playlists" },
+  [ApiKeyResource.Queue]: { label: "Queue" },
+  [ApiKeyResource.Channel]: { label: "Channels" },
+  [ApiKeyResource.Archive]: { label: "Archive" },
+  [ApiKeyResource.Live]: { label: "Live" },
+  [ApiKeyResource.User]: { label: "Users" },
+  [ApiKeyResource.Config]: { label: "Config" },
+  [ApiKeyResource.Notification]: { label: "Notifications" },
+  [ApiKeyResource.Task]: { label: "Tasks" },
+  [ApiKeyResource.BlockedVideo]: { label: "Blocked Videos" },
+  [ApiKeyResource.System]: { label: "System (admin stats)" },
 };
 
 // An ApiKeyScope is the on-the-wire string form: "<resource>:<tier>".
