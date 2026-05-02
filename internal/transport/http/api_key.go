@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,8 +10,28 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zibbp/ganymede/ent"
+	"github.com/zibbp/ganymede/internal/api_key"
 	"github.com/zibbp/ganymede/internal/utils"
 )
+
+// statusForApiKeyServiceError maps service-layer errors to HTTP
+// statuses: validation failures (unknown scope, empty list) → 400;
+// the row not existing (or being revoked) → 404; everything else is
+// an internal failure → 500.
+//
+// The string form of the error is preserved in the response body so
+// admins still see "unknown scope: \"bogus:read\"" rather than a
+// generic "bad request".
+func statusForApiKeyServiceError(err error) int {
+	switch {
+	case errors.Is(err, api_key.ErrInvalidScope), errors.Is(err, api_key.ErrEmptyScopes):
+		return http.StatusBadRequest
+	case ent.IsNotFound(err):
+		return http.StatusNotFound
+	default:
+		return http.StatusInternalServerError
+	}
+}
 
 // ApiKeyService is the surface the HTTP handlers need from the api_key
 // package. It mirrors the methods on *api_key.Service that handlers call;
@@ -151,10 +172,7 @@ func (h *Handler) CreateApiKey(c echo.Context) error {
 		scopes,
 	)
 	if err != nil {
-		// Distinguish service-side validation (e.g. empty list after dedup)
-		// from genuine internal failures so the admin gets an actionable
-		// 400 rather than a generic 500.
-		return ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("error creating api key: %v", err))
+		return ErrorResponse(c, statusForApiKeyServiceError(err), fmt.Sprintf("error creating api key: %v", err))
 	}
 
 	resp := createApiKeyResponse{
@@ -216,13 +234,14 @@ func (h *Handler) UpdateApiKey(c echo.Context) error {
 		scopes,
 	)
 	if err != nil {
-		// Distinguish "key gone or revoked" (404) from validation
-		// problems (400). Service-side normalize errors and ent
-		// not-found both surface here.
-		if ent.IsNotFound(err) {
-			return ErrorResponse(c, http.StatusNotFound, "api key not found")
+		// statusForApiKeyServiceError maps validation → 400, ent
+		// not-found (revoked or missing) → 404, everything else → 500.
+		status := statusForApiKeyServiceError(err)
+		msg := fmt.Sprintf("error updating api key: %v", err)
+		if status == http.StatusNotFound {
+			msg = "api key not found"
 		}
-		return ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("error updating api key: %v", err))
+		return ErrorResponse(c, status, msg)
 	}
 	return SuccessResponse(c, toAPIKeyDTO(updated), "api key updated")
 }

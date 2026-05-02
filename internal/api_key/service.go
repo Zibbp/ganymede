@@ -2,6 +2,7 @@ package api_key
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,6 +12,24 @@ import (
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
+)
+
+// Sentinel errors so the HTTP layer can distinguish input-validation
+// failures (400 Bad Request) from internal failures (500). Use
+// errors.Is to detect; the wrapping fmt.Errorf preserves the underlying
+// cause for logs while keeping the typed sentinel for matching.
+var (
+	// ErrInvalidScope is returned when Create/Update sees a scope
+	// string that doesn't parse as a known resource:tier in the
+	// catalog. Wrapped with fmt.Errorf("...: %w", ErrInvalidScope) so
+	// the caller still gets the offending value in the message.
+	ErrInvalidScope = errors.New("unknown scope")
+
+	// ErrEmptyScopes is returned when Create/Update is called with an
+	// empty (or all-duplicate) scope list. The HTTP validator already
+	// catches the JSON-level "min=1" case; this guards the service
+	// layer for in-process callers and post-dedup empty lists.
+	ErrEmptyScopes = errors.New("at least one scope is required")
 )
 
 // SystemUserUsername is the reserved username of the singleton service-account
@@ -78,17 +97,18 @@ func (s *Service) Create(ctx context.Context, name, description string, scopes [
 }
 
 // normalizeScopes validates a presented scope list and returns a typed,
-// de-duplicated slice in input order. Returns a 400-friendly error on
-// the first invalid scope or if the list is empty.
+// de-duplicated slice in input order. Returns ErrEmptyScopes for an
+// empty list and a wrapped ErrInvalidScope for the first unknown
+// entry; the HTTP layer uses errors.Is to map these to 400.
 func normalizeScopes(in []utils.ApiKeyScope) (utils.ApiKeyScopes, error) {
 	if len(in) == 0 {
-		return nil, fmt.Errorf("at least one scope is required")
+		return nil, ErrEmptyScopes
 	}
 	seen := make(map[utils.ApiKeyScope]struct{}, len(in))
 	out := make(utils.ApiKeyScopes, 0, len(in))
 	for _, s := range in {
 		if !s.IsValid() {
-			return nil, fmt.Errorf("unknown scope: %q", s)
+			return nil, fmt.Errorf("%w: %q", ErrInvalidScope, s)
 		}
 		if _, dup := seen[s]; dup {
 			continue
