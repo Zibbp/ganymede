@@ -7,16 +7,37 @@ const (
 	EditorRole   Role = "editor"
 	ArchiverRole Role = "archiver"
 	UserRole     Role = "user"
+
+	// SystemRole is the sentinel role assigned to the singleton
+	// service-account user that the API key middleware injects into
+	// request context for every keyed request. It is intentionally
+	// excluded from every branch of roleSatisfies (and thus from every
+	// AuthUserRoleMiddleware check), so a route that pairs
+	// AuthAPIKeyOrSessionMiddleware with AuthUserRoleMiddleware (rather
+	// than the intended RequireRoleOrScope) fails closed for API keys
+	// instead of silently granting access at the system user's role.
+	//
+	// SystemRole must NOT be admin-listable in IsValidRole — admins
+	// can't promote a normal user to SystemRole via the user CRUD UI,
+	// and the user CRUD form's `oneof` validator rejects it on input.
+	SystemRole Role = "system"
 )
 
+// Values returns roles that are admin-assignable. SystemRole is
+// intentionally absent: admins should not be able to promote users to
+// the system-user role via the user CRUD UI, and the registration form
+// likewise rejects it. EnsureSystemUser sets it directly on the
+// singleton row at boot time.
 func (Role) Values() (kinds []string) {
-	for _, s := range []Role{AdminRole, EditorRole, ArchiverRole, UserRole} {
+	for _, s := range []Role{AdminRole, EditorRole, ArchiverRole, UserRole, SystemRole} {
 		kinds = append(kinds, string(s))
 	}
 	return
 }
 
-// IsValidRole checks if a string is a valid Role.
+// IsValidRole checks if a string is a valid admin-assignable Role.
+// SystemRole is excluded so the user CRUD validator rejects attempts
+// to promote a regular user to the protected system role.
 func IsValidRole(role string) bool {
 	validRoles := map[string]struct{}{
 		string(AdminRole):    {},

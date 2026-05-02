@@ -157,13 +157,14 @@ func TestApiKeyService(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("EnsureSystemUser is idempotent", func(t *testing.T) {
+	t.Run("EnsureSystemUser is idempotent and uses SystemRole", func(t *testing.T) {
 		first, err := svc.EnsureSystemUser(ctx)
 		require.NoError(t, err)
 		second, err := svc.EnsureSystemUser(ctx)
 		require.NoError(t, err)
 		assert.Equal(t, first.ID, second.ID)
 		assert.Equal(t, api_key.SystemUserUsername, first.Username)
-		assert.Equal(t, utils.AdminRole, first.Role)
+		assert.Equal(t, utils.SystemRole, first.Role,
+			"system user must have SystemRole so legacy AuthUserRoleMiddleware fails closed for API keys")
 	})
 }

@@ -401,7 +401,7 @@ var (
 		{Name: "username", Type: field.TypeString, Unique: true},
 		{Name: "password", Type: field.TypeString, Nullable: true},
 		{Name: "oauth", Type: field.TypeBool, Default: false},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "editor", "archiver", "user"}, Default: "user"},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "editor", "archiver", "user", "system"}, Default: "user"},
 		{Name: "webhook", Type: field.TypeString, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},

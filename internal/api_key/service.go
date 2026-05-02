@@ -240,19 +240,39 @@ func (s *Service) TouchLastUsed(ctx context.Context, id uuid.UUID) error {
 }
 
 // EnsureSystemUser idempotently creates the singleton service-account
-// user used to satisfy handlers that call userFromContext under API key
-// authentication. The user has the admin role so any handler-level role
-// check that runs before scope enforcement does not reject it; the
-// actual permission decision is made by RequireRoleOrScope based on the
-// API key's scope.
+// user used by AuthGetUserMiddleware to satisfy handlers that read
+// userFromContext under API key authentication.
 //
-// The function is safe to call repeatedly; if the row already exists it
-// is returned unchanged.
+// The user has utils.SystemRole — a sentinel role that roleSatisfies
+// rejects unconditionally. This makes every legacy
+// AuthUserRoleMiddleware check fail closed for API key requests; the
+// only middleware that can authorise a keyed request is
+// RequireRoleOrScope (which keys off api_key.scopes, not user.role).
+// If a future route is mistakenly registered with the legacy chain,
+// API keys are rejected rather than silently granted.
+//
+// Existing deployments may have a row with role == admin from before
+// SystemRole was introduced; this function self-heals such rows on
+// every boot by setting the role to SystemRole.
+//
+// Safe to call repeatedly.
 func (s *Service) EnsureSystemUser(ctx context.Context) (*ent.User, error) {
 	existing, err := s.Store.Client.User.Query().
 		Where(user.Username(SystemUserUsername)).
 		Only(ctx)
 	if err == nil {
+		if existing.Role != utils.SystemRole {
+			// Self-heal: legacy row from before the sentinel role was
+			// introduced. Bump it to SystemRole so the middleware
+			// fail-closed property holds going forward.
+			updated, updErr := s.Store.Client.User.UpdateOneID(existing.ID).
+				SetRole(utils.SystemRole).
+				Save(ctx)
+			if updErr != nil {
+				return nil, fmt.Errorf("error migrating system user role: %w", updErr)
+			}
+			return updated, nil
+		}
 		return existing, nil
 	}
 	if !ent.IsNotFound(err) {
@@ -262,7 +282,7 @@ func (s *Service) EnsureSystemUser(ctx context.Context) (*ent.User, error) {
 	created, err := s.Store.Client.User.Create().
 		SetUsername(SystemUserUsername).
 		SetOauth(true).
-		SetRole(utils.AdminRole).
+		SetRole(utils.SystemRole).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error creating system user: %w", err)
