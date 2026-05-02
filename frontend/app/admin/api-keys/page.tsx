@@ -19,12 +19,12 @@ import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useMemo, useState } from "react";
 import sortBy from "lodash/sortBy";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
-import { IconBook, IconCheck, IconCopy, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconBook, IconCheck, IconCopy, IconPencil, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import classes from "./AdminApiKeysPage.module.css";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { ApiKey, ApiKeyTier, useGetApiKeys } from "@/app/hooks/useApiKeys";
-import AdminApiKeyDrawerContent from "@/app/components/admin/api-key/DrawerContent";
+import AdminApiKeyDrawerContent, { ApiKeyEditMode } from "@/app/components/admin/api-key/DrawerContent";
 import DeleteApiKeyModalContent from "@/app/components/admin/api-key/DeleteModalContent";
 import DocumentationModalContent from "@/app/components/admin/api-key/DocumentationModal";
 import ShowOnceModalContent from "@/app/components/admin/api-key/ShowOnceModal";
@@ -74,6 +74,7 @@ const AdminApiKeysPage = () => {
   const [showOnceSecret, setShowOnceSecret] = useState<string | null>(null);
 
   const [createDrawerOpened, { open: openCreateDrawer, close: closeCreateDrawer }] = useDisclosure(false);
+  const [editDrawerOpened, { open: openEditDrawer, close: closeEditDrawer }] = useDisclosure(false);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
   const [showOnceOpened, { open: openShowOnceModal, close: closeShowOnceModalRaw }] = useDisclosure(false);
   const [docsOpened, { open: openDocsModal, close: closeDocsModal }] = useDisclosure(false);
@@ -120,6 +121,19 @@ const AdminApiKeysPage = () => {
   const handleDeleteModal = (key: ApiKey) => {
     setActiveKey(key);
     openDeleteModal();
+  };
+
+  const handleEditDrawer = (key: ApiKey) => {
+    setActiveKey(key);
+    openEditDrawer();
+  };
+
+  // Called by the edit drawer once the API has accepted the update.
+  // The hook already invalidates the ["apiKeys"] query, so we just
+  // close the drawer and clear the active key.
+  const handleUpdated = () => {
+    closeEditDrawer();
+    setActiveKey(null);
   };
 
   // Called by the create drawer once the API has minted a key. We surface
@@ -229,9 +243,18 @@ const AdminApiKeysPage = () => {
               {
                 accessor: "actions",
                 title: t("columns.actions"),
-                width: "100px",
+                width: "150px",
                 render: (key) => (
-                  <Group>
+                  <Group gap="xs">
+                    <Tooltip label={t("edit")}>
+                      <ActionIcon
+                        onClick={() => handleEditDrawer(key)}
+                        className={classes.actionButton}
+                        variant="light"
+                      >
+                        <IconPencil size={18} />
+                      </ActionIcon>
+                    </Tooltip>
                     <Tooltip label={t("revoke")}>
                       <ActionIcon
                         onClick={() => handleDeleteModal(key)}
@@ -269,7 +292,29 @@ const AdminApiKeysPage = () => {
         position="right"
         title={t("drawer")}
       >
-        <AdminApiKeyDrawerContent onCreated={handleCreated} />
+        <AdminApiKeyDrawerContent
+          mode={ApiKeyEditMode.Create}
+          onCreated={handleCreated}
+        />
+      </Drawer>
+
+      <Drawer
+        opened={editDrawerOpened}
+        onClose={closeEditDrawer}
+        position="right"
+        title={t("editDrawer")}
+        // Re-key by the active row's id so Mantine remounts the form
+        // when switching from one key to another (initialValues only
+        // applies on mount in controlled mode).
+        key={activeKey?.id ?? "edit-empty"}
+      >
+        {activeKey && (
+          <AdminApiKeyDrawerContent
+            mode={ApiKeyEditMode.Edit}
+            apiKey={activeKey}
+            onUpdated={handleUpdated}
+          />
+        )}
       </Drawer>
 
       <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t("deleteModal")}>

@@ -1,4 +1,5 @@
 import {
+  ApiKey,
   API_KEY_RESOURCE_META,
   API_KEY_SCOPES_CATALOG,
   ApiKeyResource,
@@ -6,6 +7,7 @@ import {
   ApiKeyTier,
   makeScope,
   useCreateApiKey,
+  useUpdateApiKey,
 } from "@/app/hooks/useApiKeys";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import {
@@ -23,12 +25,28 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
 
-type Props = {
-  // onCreated is invoked with the freshly minted secret. The parent page
-  // is responsible for showing it in the show-once modal — the secret
-  // is intentionally not stored anywhere here.
-  onCreated: (secret: string) => void;
-};
+// ApiKeyEditMode discriminates the drawer's two flows. Mirrors the
+// pattern used by the channel admin drawer so the page-side code reads
+// consistently across admin sections.
+export enum ApiKeyEditMode {
+  Create = "create",
+  Edit = "edit",
+}
+
+// Discriminated union: create needs an onCreated handler (for the
+// show-once secret); edit needs the existing key to pre-fill plus an
+// onUpdated handler. TypeScript narrows based on `mode` so consumers
+// can't forget either prop.
+export type AdminApiKeyDrawerProps =
+  | {
+      mode: ApiKeyEditMode.Create;
+      onCreated: (secret: string) => void;
+    }
+  | {
+      mode: ApiKeyEditMode.Edit;
+      apiKey: ApiKey;
+      onUpdated: () => void;
+    };
 
 // Build the MultiSelect data once. Mantine's grouped form is
 // { group: "label", items: [{value, label}] }. Every resource is
@@ -48,14 +66,18 @@ const buildScopeOptions = () => {
   return groups;
 };
 
-const AdminApiKeyDrawerContent = ({ onCreated }: Props) => {
+const AdminApiKeyDrawerContent = (props: AdminApiKeyDrawerProps) => {
   const t = useTranslations("AdminApiKeyComponents");
   const axiosPrivate = useAxiosPrivate();
   const createApiKey = useCreateApiKey();
+  const updateApiKey = useUpdateApiKey();
   const [loading, setLoading] = useState(false);
 
-  // Bounds match the backend validator on CreateApiKeyRequest plus
-  // strict membership in the catalog so the user can't paste a typo.
+  const isEdit = props.mode === ApiKeyEditMode.Edit;
+
+  // Bounds match the backend validator on CreateApiKeyRequest /
+  // UpdateApiKeyRequest plus strict membership in the catalog so the
+  // user can't paste a typo.
   const schema = z.object({
     name: z
       .string()
@@ -75,13 +97,25 @@ const AdminApiKeyDrawerContent = ({ onCreated }: Props) => {
       .min(1, { message: t("validation.scopes.required") }),
   });
 
+  // Pre-fill from the existing row in edit mode; blank values for
+  // create. Mantine forms reset on remount, so the parent re-keying
+  // the drawer between rows isn't needed — but keeping the active
+  // key in state lives at the page level (page.tsx).
+  const initialValues = isEdit
+    ? {
+        name: props.apiKey.name,
+        description: props.apiKey.description ?? "",
+        scopes: (props.apiKey.scopes ?? []) as ApiKeyScope[],
+      }
+    : {
+        name: "",
+        description: "",
+        scopes: [] as ApiKeyScope[],
+      };
+
   const form = useForm({
     mode: "controlled",
-    initialValues: {
-      name: "",
-      description: "",
-      scopes: [] as ApiKeyScope[],
-    },
+    initialValues,
     validate: zodResolver(schema),
   });
 
@@ -94,14 +128,25 @@ const AdminApiKeyDrawerContent = ({ onCreated }: Props) => {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const result = await createApiKey.mutateAsync({
-        axiosPrivate,
-        input: form.getValues(),
-      });
-      showNotification({ message: t("createNotification") });
-      // Hand the secret straight to the parent's show-once modal; never
-      // persist it in component state, query cache, or local storage.
-      onCreated(result.secret);
+      if (props.mode === ApiKeyEditMode.Create) {
+        const result = await createApiKey.mutateAsync({
+          axiosPrivate,
+          input: form.getValues(),
+        });
+        showNotification({ message: t("createNotification") });
+        // Hand the secret straight to the parent's show-once modal;
+        // never persist it in component state, query cache, or local
+        // storage.
+        props.onCreated(result.secret);
+      } else {
+        await updateApiKey.mutateAsync({
+          axiosPrivate,
+          id: props.apiKey.id,
+          input: form.getValues(),
+        });
+        showNotification({ message: t("updateNotification") });
+        props.onUpdated();
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -176,7 +221,7 @@ const AdminApiKeyDrawerContent = ({ onCreated }: Props) => {
           </div>
 
           <Button mt={5} type="submit" loading={loading} fullWidth>
-            {t("createButton")}
+            {isEdit ? t("updateButton") : t("createButton")}
           </Button>
         </Stack>
       </form>
