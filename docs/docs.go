@@ -5876,7 +5876,7 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:4000",
 	BasePath:         "/api/v1",
-	Schemes:          []string{},
+	Schemes:          []string{"https"},
 	Title:            "Ganymede API",
 	Description:      "Authentication is handled using JWT tokens. The tokens are set as access-token and refresh-token cookies.\nFor information regarding which role is authorized for which endpoint, see the http handler https://github.com/Zibbp/ganymede/blob/main/internal/transport/http/handler.go.",
 	InfoInstanceName: "swagger",

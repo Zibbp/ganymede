@@ -1,4 +1,6 @@
 basePath: /api/v1
+schemes:
+  - https
 definitions:
   admin.GetStatsResp:
     properties:
