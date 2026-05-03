@@ -48,6 +48,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
   const [videoPoster, setVideoPoster] = useState<string>("");
 
   const hasStartedPlayback = useRef(false);
+  const hasInitializedPlaybackTime = useRef(false);
 
   const [playerVolume, setPlayerVolume] = useState(1);
 
@@ -117,15 +118,19 @@ const VideoPlayer = ({ video, ref }: Params) => {
       }
     });
 
-    // Resume from server-side playback progress.
-    if (playbackData && playbackData.time) {
-      player.current!.currentTime = playbackData.time
-    }
+    if (!hasInitializedPlaybackTime.current) {
+      // Resume from server-side playback progress.
+      if (playbackData && playbackData.time) {
+        player.current!.currentTime = playbackData.time
+        hasInitializedPlaybackTime.current = true
+      }
 
-    // Check if time is set in the url
-    const time = searchParams.get("t");
-    if (time) {
-      player.current!.currentTime = parseInt(time);
+      // Check if time is set in the url
+      const time = searchParams.get("t");
+      if (time) {
+        player.current!.currentTime = parseInt(time);
+        hasInitializedPlaybackTime.current = true
+      }
     }
 
   }, [player, video, playbackData, searchParams])
