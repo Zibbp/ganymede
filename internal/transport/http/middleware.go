@@ -199,6 +199,15 @@ func AuthGetUserMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				return ErrorInvalidAccessTokenResponse(c)
 			}
 			c.Set("user", sysUser)
+		default:
+			// Reject unknown / missing auth_method instead of falling
+			// through. This keeps the chain fail-closed if a route is
+			// ever wired with AuthGetUserMiddleware but no upstream
+			// AuthGuardMiddleware / AuthAPIKeyOrSessionMiddleware to
+			// set auth_method — handlers that read userFromContext
+			// would otherwise see a nil user and behave unpredictably.
+			log.Error().Str("auth_method", authMethod).Msg("missing or unknown auth_method in context")
+			return ErrorInvalidAccessTokenResponse(c)
 		}
 
 		return next(c)
