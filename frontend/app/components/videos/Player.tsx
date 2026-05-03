@@ -119,17 +119,17 @@ const VideoPlayer = ({ video, ref }: Params) => {
     });
 
     if (!hasInitializedPlaybackTime.current) {
-      // Resume from server-side playback progress.
-      if (playbackData && playbackData.time) {
+      if (playbackData && playbackData.time != null) {
+        // Resume from server-side playback progress.
         player.current!.currentTime = playbackData.time
         hasInitializedPlaybackTime.current = true
-      }
-
-      // Check if time is set in the url
-      const time = searchParams.get("t");
-      if (time) {
-        player.current!.currentTime = parseInt(time);
-        hasInitializedPlaybackTime.current = true
+      } else {
+        // Check if time is set in the url
+        const time = searchParams.get("t");
+        if (time !== null) {
+          player.current!.currentTime = parseInt(time);
+          hasInitializedPlaybackTime.current = true
+        }
       }
     }
 
