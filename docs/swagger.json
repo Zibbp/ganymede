@@ -1,23 +1,216 @@
 {
+    "schemes": [
+        "https"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "Authentication is handled using JWT tokens. The tokens are set as access-token and refresh-token cookies.\nFor information regarding which role is authorized for which endpoint, see the http handler https://github.com/Zibbp/ganymede/blob/main/internal/transport/http/handler.go.",
         "title": "Ganymede API",
-        "contact": {
-            "name": "Zibbp",
-            "url": "https://github.com/zibbp/ganymede"
-        },
-        "license": {
-            "name": "GPL-3.0"
-        },
+        "contact": {},
         "version": "1.0"
     },
     "host": "localhost:4000",
     "basePath": "/api/v1",
-    "schemes": [
-        "https"
-    ],
     "paths": {
+        "/admin/api-keys": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    }
+                ],
+                "description": "Returns API keys, newest first. By default only active (non-revoked) keys are returned; pass ?include_revoked=true for a full audit listing. Secrets are never returned by this endpoint.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List API keys",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "include revoked keys",
+                        "name": "include_revoked",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/http.apiKeyDTO"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    }
+                ],
+                "description": "Mints a new admin-managed API key. The full secret is returned in the response and is the only time it is visible — store it securely.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Create an API key",
+                "parameters": [
+                    {
+                        "description": "create api key payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.CreateApiKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/http.createApiKeyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/api-keys/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    }
+                ],
+                "description": "Replaces an existing API key's editable fields (name, description, scopes). Prefix and secret are immutable — rotating a key still means revoke + create.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Update an API key",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "api key id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "update api key payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.UpdateApiKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.apiKeyDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    }
+                ],
+                "description": "Soft-deletes an API key by setting revoked_at. The verification cache is flushed so the key stops authenticating immediately.",
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Revoke an API key",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "api key id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/info": {
             "get": {
                 "security": [
@@ -55,14 +248,17 @@
                 }
             }
         },
-        "/admin/stats": {
+        "/admin/storage-distribution": {
             "get": {
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get ganymede stats",
+                "description": "Get storage distribution",
                 "consumes": [
                     "application/json"
                 ],
@@ -72,12 +268,86 @@
                 "tags": [
                     "admin"
                 ],
-                "summary": "Get ganymede stats",
+                "summary": "Get storage distribution",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/admin.GetStatsResp"
+                            "$ref": "#/definitions/admin.GetStorageDistributionResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/system/overview": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get system overview",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get system overview",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/admin.GetSystemOverviewResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/video/statistics": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get Ganymede video statistics",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get Ganymede video statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/admin.GetVideoStatisticsResponse"
                         }
                     },
                     "500": {
@@ -143,66 +413,14 @@
                 }
             }
         },
-        "/archive/restart": {
+        "/archive/video": {
             "post": {
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Restart a task",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "archive"
-                ],
-                "summary": "Restart a task",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Queue ID",
-                        "name": "queue_id",
-                        "in": "path",
-                        "required": true
                     },
                     {
-                        "description": "Task",
-                        "name": "task",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.RestartTaskRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/archive/vod": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Archive a twitch vod",
@@ -223,7 +441,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.ArchiveVodRequest"
+                            "$ref": "#/definitions/http.ArchiveVideoRequest"
                         }
                     }
                 ],
@@ -463,129 +681,6 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/ent.User"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/oauth/logout": {
-            "get": {
-                "description": "Logout",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Logout",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/oauth/refresh": {
-            "get": {
-                "description": "Refresh access-token and refresh-token (sets access-token and refresh-token cookies)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Refresh access-token and refresh-token",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/refresh": {
-            "post": {
-                "description": "Refresh access-token and refresh-token (sets access-token and refresh-token cookies)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Refresh access-token and refresh-token",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
                         }
                     },
                     "400": {
@@ -994,7 +1089,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/config.Conf"
+                            "$ref": "#/definitions/config.Config"
                         }
                     },
                     "500": {
@@ -1032,7 +1127,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.UpdateConfigRequest"
+                            "$ref": "#/definitions/config.Config"
                         }
                     }
                 ],
@@ -1040,225 +1135,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/http.UpdateConfigRequest"
+                            "$ref": "#/definitions/config.Config"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/config/notification": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Get notification config",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "config"
-                ],
-                "summary": "Get notification config",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/config.Notification"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Update notification config",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "config"
-                ],
-                "summary": "Update notification config",
-                "parameters": [
-                    {
-                        "description": "Config",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.UpdateNotificationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/http.UpdateNotificationRequest"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/config/storage": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Get storage template config",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "config"
-                ],
-                "summary": "Get storage template config",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/config.StorageTemplate"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Update storage template config",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "config"
-                ],
-                "summary": "Update storage template config",
-                "parameters": [
-                    {
-                        "description": "Config",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.UpdateStorageTemplateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/http.UpdateStorageTemplateRequest"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/exec/ffprobe": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Get ffprobe data",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "exec"
-                ],
-                "summary": "Get ffprobe data",
-                "parameters": [
-                    {
-                        "description": "GetFfprobeDataRequest",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.GetFfprobeDataRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
                         }
                     },
                     "500": {
@@ -1337,191 +1220,6 @@
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/http.AddWatchedChannelRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ent.Live"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/live/archive": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Adhoc archive a channel's live stream.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Live"
-                ],
-                "summary": "Archive a channel's live stream",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/live/chat-convert": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Adhoc convert chat endpoint. This is what happens when a live stream chat is converted to a \"vod\" chat.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Live"
-                ],
-                "summary": "Convert chat",
-                "parameters": [
-                    {
-                        "description": "Convert chat",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.ConvertChatRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/live/check": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Check watched channels if they are live. This is what runs every X seconds in the config.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Live"
-                ],
-                "summary": "Check watched channels",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/live/multiple": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "This is useful to add multiple channels at once if they all have the same settings",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Live"
-                ],
-                "summary": "Add multiple watched channels at once",
-                "parameters": [
-                    {
-                        "description": "Add watched channel",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.AddMultipleWatchedChannelRequest"
                         }
                     }
                 ],
@@ -1658,14 +1356,17 @@
                 }
             }
         },
-        "/notification/test": {
+        "/notification": {
             "get": {
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Test notification",
+                "description": "Get all notification configurations",
                 "consumes": [
                     "application/json"
                 ],
@@ -1675,13 +1376,105 @@
                 "tags": [
                     "notification"
                 ],
-                "summary": "Test notification",
+                "summary": "Get all notification configurations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/http.NotificationResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new notification configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Create a notification configuration",
+                "parameters": [
+                    {
+                        "description": "Notification",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.NotificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.NotificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notification/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a single notification configuration by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Get a single notification configuration",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Type of notification to test",
-                        "name": "type",
-                        "in": "query",
+                        "description": "Notification ID",
+                        "name": "id",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -1689,7 +1482,201 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/http.NotificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an existing notification configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Update a notification configuration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Notification",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.NotificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.NotificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a notification configuration by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Delete a notification configuration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notification/{id}/test": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Send a test notification using dummy data for the given event type",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Test a notification configuration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Test event",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.TestNotificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
                         }
                     },
                     "500": {
@@ -1821,6 +1808,50 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/ent.Playback"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/playback/start": {
+            "post": {
+                "description": "Adds a view to the video local view count",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Playback"
+                ],
+                "summary": "Start playback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "vod id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -2042,6 +2073,12 @@
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "include multistream info",
+                        "name": "with_multistream_info",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2234,6 +2271,235 @@
                 }
             }
         },
+        "/playlist/{id}/multistream/delay": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Set delay of vod in playlist for multistream",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Playlist"
+                ],
+                "summary": "Set delay of vod in playlist for multistream",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "playlist id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "delay",
+                        "name": "delay",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.SetVodDelayPlaylistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/{id}/rules": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get rules for a playlist",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Playlist"
+                ],
+                "summary": "Get playlist rules",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "playlist id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ent.PlaylistRuleGroup"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Test rules for a playlist against a video id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Playlist"
+                ],
+                "summary": "Test playlist rules",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "playlist id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "video id",
+                        "name": "video_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    }
+                ],
+                "description": "Set rules for a playlist this will delete all existing rules and set new ones",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Playlist"
+                ],
+                "summary": "Set playlist rules",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "playlist id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "rules",
+                        "name": "rules",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.SetPlaylistRulesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/playlist/{id}/vod": {
             "delete": {
                 "security": [
@@ -2384,6 +2650,49 @@
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/ent.Queue"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/queue/task/start": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Start a specific queue task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "queue"
+                ],
+                "summary": "Start a queue task for a queue",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -2559,6 +2868,58 @@
                 }
             }
         },
+        "/queue/{id}/stop": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Stop processing the video and chat downloads of an active queue item",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "queue"
+                ],
+                "summary": "Stop a queue item",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Queue item id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/queue/{id}/tail": {
             "get": {
                 "security": [
@@ -2663,35 +3024,6 @@
                 }
             }
         },
-        "/twitch/categories": {
-            "get": {
-                "description": "Get a list of twitch categories",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "twitch"
-                ],
-                "summary": "Get a list of twitch categories",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/twitch.Category"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/twitch/channel": {
             "get": {
                 "description": "Get a twitch user/channel by name (uses twitch api)",
@@ -2718,7 +3050,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/twitch.Channel"
+                            "$ref": "#/definitions/platform.ChannelInfo"
                         }
                     },
                     "400": {
@@ -2736,51 +3068,7 @@
                 }
             }
         },
-        "/twitch/gql/video": {
-            "get": {
-                "description": "Get a twitch video by id (uses twitch graphql api)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "twitch"
-                ],
-                "summary": "Get a twitch video",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Twitch video id",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/twitch.Video"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/twitch/vod": {
+        "/twitch/video": {
             "get": {
                 "description": "Get a twitch vod by id (uses twitch api)",
                 "consumes": [
@@ -2806,7 +3094,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/twitch.Vod"
+                            "$ref": "#/definitions/platform.VideoInfo"
                         }
                     },
                     "400": {
@@ -3159,6 +3447,24 @@
                         "description": "Channel ID",
                         "name": "channel_id",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Types",
+                        "name": "types",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Playlist ID",
+                        "name": "playlist_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Processing. Set to false to exclude videos that are still processing.",
+                        "name": "processing",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3269,6 +3575,18 @@
                         "type": "string",
                         "description": "With channel",
                         "name": "with_channel",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "With chapters",
+                        "name": "with_chapters",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "With muted segments",
+                        "name": "with_muted_segments",
                         "in": "query"
                     }
                 ],
@@ -3518,10 +3836,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/chat.GanymedeBadges"
-                            }
+                            "$ref": "#/definitions/platform.Badges"
                         }
                     },
                     "400": {
@@ -3689,7 +4004,66 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vod/{id}/ffprobe": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get ffprobe data for video",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exec"
+                ],
+                "summary": "Get ffprobe data for video",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vod ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
                         }
                     },
                     "400": {
@@ -3771,14 +4145,60 @@
         }
     },
     "definitions": {
-        "admin.GetStatsResp": {
+        "admin.GetStorageDistributionResponse": {
+            "type": "object",
+            "properties": {
+                "storage_distribution": {
+                    "description": "Map of channel names to total storage used",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            }
+        },
+        "admin.GetSystemOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "cpu_cores": {
+                    "description": "Number of CPU cores",
+                    "type": "integer"
+                },
+                "memory_total": {
+                    "description": "Total memory in bytes",
+                    "type": "integer"
+                },
+                "videos_directory_free_space": {
+                    "description": "Free space in bytes",
+                    "type": "integer"
+                },
+                "videos_directory_used_space": {
+                    "description": "Used space in bytes",
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.GetVideoStatisticsResponse": {
             "type": "object",
             "properties": {
                 "channel_count": {
                     "type": "integer"
                 },
-                "vod_count": {
+                "channel_videos": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "video_count": {
                     "type": "integer"
+                },
+                "video_types": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -3788,16 +4208,16 @@
                 "build_time": {
                     "type": "string"
                 },
-                "git_hash": {
+                "commit_hash": {
                     "type": "string"
                 },
                 "program_versions": {
                     "$ref": "#/definitions/admin.ProgramVersions"
                 },
-                "uptime": {
+                "tag": {
                     "type": "string"
                 },
-                "version": {
+                "uptime": {
                     "type": "string"
                 }
             }
@@ -3805,16 +4225,13 @@
         "admin.ProgramVersions": {
             "type": "object",
             "properties": {
-                "chat_downloader": {
-                    "type": "string"
-                },
                 "ffmpeg": {
                     "type": "string"
                 },
-                "streamlink": {
+                "twitch_downloader": {
                     "type": "string"
                 },
-                "twitch_downloader": {
+                "yt_dlp": {
                     "type": "string"
                 }
             }
@@ -3827,6 +4244,26 @@
                 },
                 "vod": {
                     "$ref": "#/definitions/ent.Vod"
+                }
+            }
+        },
+        "chapter.Chapter": {
+            "type": "object",
+            "properties": {
+                "end": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },
@@ -3936,49 +4373,6 @@
                 }
             }
         },
-        "chat.GanymedeBadge": {
-            "type": "object",
-            "properties": {
-                "click_action": {
-                    "type": "string"
-                },
-                "click_url": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "image_url_1x": {
-                    "type": "string"
-                },
-                "image_url_2x": {
-                    "type": "string"
-                },
-                "image_url_4x": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                }
-            }
-        },
-        "chat.GanymedeBadges": {
-            "type": "object",
-            "properties": {
-                "badges": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/chat.GanymedeBadge"
-                    }
-                }
-            }
-        },
         "chat.GanymedeEmote": {
             "type": "object",
             "properties": {
@@ -4069,61 +4463,122 @@
                 "msg_id": {}
             }
         },
-        "config.Conf": {
+        "config.Config": {
             "type": "object",
             "properties": {
-                "active_queue_items": {
-                    "type": "integer"
+                "api_keys_enabled": {
+                    "description": "Allow API key authentication via Authorization: Bearer header.",
+                    "type": "boolean"
                 },
                 "archive": {
                     "type": "object",
                     "properties": {
+                        "generate_sprite_thumbnails": {
+                            "description": "Generate sprite thumbnails for scrubbing.",
+                            "type": "boolean"
+                        },
                         "save_as_hls": {
+                            "description": "Save as HLS rather than MP4.",
                             "type": "boolean"
                         }
                     }
                 },
-                "db_seeded": {
-                    "type": "boolean"
-                },
-                "debug": {
-                    "type": "boolean"
+                "experimental": {
+                    "type": "object",
+                    "properties": {
+                        "better_live_stream_detection_and_cleanup": {
+                            "description": "[EXPERIMENTAL] Enable enhanced detection and cleanup.",
+                            "type": "boolean"
+                        }
+                    }
                 },
                 "live_check_interval_seconds": {
+                    "description": "How often in seconds watched channels are checked for live streams.",
+                    "type": "integer"
+                },
+                "livestream": {
+                    "type": "object",
+                    "properties": {
+                        "proxies": {
+                            "description": "List of proxies for live stream download.",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/config.ProxyListItem"
+                            }
+                        },
+                        "proxy_enabled": {
+                            "description": "Enable proxy usage.",
+                            "type": "boolean"
+                        },
+                        "proxy_parameters": {
+                            "description": "Query parameters for proxy URL.",
+                            "type": "string"
+                        },
+                        "proxy_whitelist": {
+                            "description": "Channels exempt from proxy.",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "watch_while_archiving": {
+                            "description": "Allow watching live streams while archiving them by downloading a temporary HLS stream.",
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "log_retention_days": {
+                    "description": "Number of days to retain log files.",
                     "type": "integer"
                 },
                 "notifications": {
-                    "$ref": "#/definitions/config.Notification"
-                },
-                "oauth_enabled": {
-                    "type": "boolean"
+                    "description": "Notifications preserves legacy config.json notifications during migration.\nDeprecated: notifications are now stored in the database.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/config.LegacyNotification"
+                        }
+                    ]
                 },
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "chat_render": {
-                            "type": "string"
-                        },
-                        "streamlink_live": {
+                            "description": "TwitchDownloaderCLI arguments for chat rendering.",
                             "type": "string"
                         },
                         "twitch_token": {
+                            "description": "Twitch token for ad-free live streams or subscriber-only videos.",
                             "type": "string"
                         },
                         "video_convert": {
+                            "description": "FFmpeg arguments for video conversion.",
+                            "type": "string"
+                        },
+                        "yt_dlp_video": {
+                            "description": "yt-dlp arguments for video downloads.",
                             "type": "string"
                         }
                     }
                 },
                 "registration_enabled": {
+                    "description": "Enable registration.",
                     "type": "boolean"
                 },
                 "storage_templates": {
-                    "$ref": "#/definitions/config.StorageTemplate"
+                    "description": "Storage folder/file templates.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/config.StorageTemplate"
+                        }
+                    ]
+                },
+                "video_check_interval_minutes": {
+                    "description": "How often in minutes watched channels are checked for new videos.",
+                    "type": "integer"
                 }
             }
         },
-        "config.Notification": {
+        "config.LegacyNotification": {
             "type": "object",
             "properties": {
                 "error_enabled": {
@@ -4164,9 +4619,40 @@
                 }
             }
         },
+        "config.ProxyListItem": {
+            "type": "object",
+            "required": [
+                "proxy_type",
+                "url"
+            ],
+            "properties": {
+                "header": {
+                    "description": "Optional header to send with the proxy request.",
+                    "type": "string"
+                },
+                "proxy_type": {
+                    "description": "Type of proxy to use.",
+                    "minLength": 1,
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.ProxyType"
+                        }
+                    ]
+                },
+                "url": {
+                    "description": "URL of the proxy server.",
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
         "config.StorageTemplate": {
             "type": "object",
             "properties": {
+                "channel_folder_template": {
+                    "description": "Template for channel-level directory naming. Available variables: {{channel}}, {{channel_id}}, {{channel_display_name}}.",
+                    "type": "string"
+                },
                 "file_template": {
                     "type": "string"
                 },
@@ -4210,6 +4696,18 @@
                     "description": "Name holds the value of the \"name\" field.",
                     "type": "string"
                 },
+                "retention": {
+                    "description": "Retention holds the value of the \"retention\" field.",
+                    "type": "boolean"
+                },
+                "retention_days": {
+                    "description": "RetentionDays holds the value of the \"retention_days\" field.",
+                    "type": "integer"
+                },
+                "storage_size_bytes": {
+                    "description": "Total storage size in bytes for the channel's videos.",
+                    "type": "integer"
+                },
                 "updated_at": {
                     "description": "UpdatedAt holds the value of the \"updated_at\" field.",
                     "type": "string"
@@ -4235,12 +4733,82 @@
                 }
             }
         },
+        "ent.Chapter": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ChapterQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ChapterEdges"
+                        }
+                    ]
+                },
+                "end": {
+                    "description": "End holds the value of the \"end\" field.",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "start": {
+                    "description": "Start holds the value of the \"start\" field.",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "Title holds the value of the \"title\" field.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type holds the value of the \"type\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ChapterEdges": {
+            "type": "object",
+            "properties": {
+                "vod": {
+                    "description": "Vod holds the value of the vod edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Vod"
+                        }
+                    ]
+                }
+            }
+        },
         "ent.Live": {
             "type": "object",
             "properties": {
+                "apply_categories_to_live": {
+                    "description": "Whether the categories should be applied to livestreams.",
+                    "type": "boolean"
+                },
                 "archive_chat": {
                     "description": "Whether the chat archive is enabled.",
                     "type": "boolean"
+                },
+                "blacklist_categories": {
+                    "description": "Whether the selected categories are blacklisted.",
+                    "type": "boolean"
+                },
+                "clips_ignore_last_checked": {
+                    "description": "Ignore last checked time and check all clips.",
+                    "type": "boolean"
+                },
+                "clips_interval_days": {
+                    "description": "How often channel should be checked for clips to archive in days.",
+                    "type": "integer"
+                },
+                "clips_last_checked": {
+                    "description": "Time when clips were last checked.",
+                    "type": "string"
+                },
+                "clips_limit": {
+                    "description": "The number of clips to archive.",
+                    "type": "integer"
                 },
                 "created_at": {
                     "description": "CreatedAt holds the value of the \"created_at\" field.",
@@ -4290,9 +4858,25 @@
                     "description": "Resolution holds the value of the \"resolution\" field.",
                     "type": "string"
                 },
+                "strict_categories_live": {
+                    "description": "Stop live stream archive if category changes to one not selected.",
+                    "type": "boolean"
+                },
+                "update_metadata_minutes": {
+                    "description": "Queue metadata update X minutes after the stream is live. Set to 0 to disable.",
+                    "type": "integer"
+                },
                 "updated_at": {
                     "description": "UpdatedAt holds the value of the \"updated_at\" field.",
                     "type": "string"
+                },
+                "video_age": {
+                    "description": "Restrict fetching videos to a certain age.",
+                    "type": "integer"
+                },
+                "watch_clips": {
+                    "description": "Whether to download clips on a schedule.",
+                    "type": "boolean"
                 },
                 "watch_live": {
                     "description": "Watch live streams",
@@ -4353,6 +4937,135 @@
                     "allOf": [
                         {
                             "$ref": "#/definitions/ent.Channel"
+                        }
+                    ]
+                },
+                "title_regex": {
+                    "description": "TitleRegex holds the value of the title_regex edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.LiveTitleRegex"
+                    }
+                }
+            }
+        },
+        "ent.LiveTitleRegex": {
+            "type": "object",
+            "properties": {
+                "apply_to_videos": {
+                    "description": "Apply regex to videos and vods",
+                    "type": "boolean"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the LiveTitleRegexQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.LiveTitleRegexEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "negative": {
+                    "description": "Negative match of the regex",
+                    "type": "boolean"
+                },
+                "regex": {
+                    "description": "Title regex to match",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.LiveTitleRegexEdges": {
+            "type": "object",
+            "properties": {
+                "live": {
+                    "description": "Live holds the value of the live edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Live"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.MultistreamInfo": {
+            "type": "object",
+            "properties": {
+                "delay_ms": {
+                    "description": "DelayMs holds the value of the \"delay_ms\" field.",
+                    "type": "integer"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the MultistreamInfoQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.MultistreamInfoEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.MultistreamInfoEdges": {
+            "type": "object",
+            "properties": {
+                "playlist": {
+                    "description": "Playlist holds the value of the playlist edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Playlist"
+                        }
+                    ]
+                },
+                "vod": {
+                    "description": "Vod holds the value of the vod edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Vod"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.MutedSegment": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the MutedSegmentQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.MutedSegmentEdges"
+                        }
+                    ]
+                },
+                "end": {
+                    "description": "The end time of the muted segment",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "start": {
+                    "description": "The start time of the muted segment",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.MutedSegmentEdges": {
+            "type": "object",
+            "properties": {
+                "vod": {
+                    "description": "Vod holds the value of the vod edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Vod"
                         }
                     ]
                 }
@@ -4435,6 +5148,20 @@
         "ent.PlaylistEdges": {
             "type": "object",
             "properties": {
+                "multistream_info": {
+                    "description": "MultistreamInfo holds the value of the multistream_info edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.MultistreamInfo"
+                    }
+                },
+                "rule_groups": {
+                    "description": "RuleGroups holds the value of the rule_groups edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.PlaylistRuleGroup"
+                    }
+                },
                 "vods": {
                     "description": "Vods holds the value of the vods edge.",
                     "type": "array",
@@ -4444,9 +5171,124 @@
                 }
             }
         },
+        "ent.PlaylistRule": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the PlaylistRuleQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.PlaylistRuleEdges"
+                        }
+                    ]
+                },
+                "enabled": {
+                    "description": "Is the rule active?",
+                    "type": "boolean"
+                },
+                "field": {
+                    "description": "The field of the rule, used to determine which property of the VOD the rule applies to.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.PlaylistRuleField"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The name of the rule, used for display purposes.",
+                    "type": "string"
+                },
+                "operator": {
+                    "description": "The operator of the rule, used to determine how the rule is applied.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.PlaylistRuleOperator"
+                        }
+                    ]
+                },
+                "position": {
+                    "description": "Order within group",
+                    "type": "integer"
+                },
+                "value": {
+                    "description": "Value to match against.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.PlaylistRuleEdges": {
+            "type": "object",
+            "properties": {
+                "group": {
+                    "description": "Group holds the value of the group edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.PlaylistRuleGroup"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.PlaylistRuleGroup": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the PlaylistRuleGroupQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.PlaylistRuleGroupEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "operator": {
+                    "description": "Logical operator to combine rules in this group",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/playlistrulegroup.Operator"
+                        }
+                    ]
+                },
+                "position": {
+                    "description": "Used to order groups within the playlist",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.PlaylistRuleGroupEdges": {
+            "type": "object",
+            "properties": {
+                "playlist": {
+                    "description": "Playlist holds the value of the playlist edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Playlist"
+                        }
+                    ]
+                },
+                "rules": {
+                    "description": "Rules holds the value of the rules edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.PlaylistRule"
+                    }
+                }
+            }
+        },
         "ent.Queue": {
             "type": "object",
             "properties": {
+                "archive_chat": {
+                    "description": "ArchiveChat holds the value of the \"archive_chat\" field.",
+                    "type": "boolean"
+                },
                 "chat_processing": {
                     "description": "ChatProcessing holds the value of the \"chat_processing\" field.",
                     "type": "boolean"
@@ -4574,6 +5416,14 @@
                 "video_processing": {
                     "description": "VideoProcessing holds the value of the \"video_processing\" field.",
                     "type": "boolean"
+                },
+                "workflow_id": {
+                    "description": "WorkflowID holds the value of the \"workflow_id\" field.",
+                    "type": "string"
+                },
+                "workflow_run_id": {
+                    "description": "WorkflowRunID holds the value of the \"workflow_run_id\" field.",
+                    "type": "string"
                 }
             }
         },
@@ -4646,6 +5496,14 @@
                     "description": "ChatVideoPath holds the value of the \"chat_video_path\" field.",
                     "type": "string"
                 },
+                "clip_ext_vod_id": {
+                    "description": "The external VOD ID of a clip. This is only populated if the clip is linked to a video.",
+                    "type": "string"
+                },
+                "clip_vod_offset": {
+                    "description": "The offset in seconds to where the clip starts in the VOD. This is only populdated if the video is a clip.",
+                    "type": "integer"
+                },
                 "created_at": {
                     "description": "CreatedAt holds the value of the \"created_at\" field.",
                     "type": "string"
@@ -4663,7 +5521,11 @@
                     ]
                 },
                 "ext_id": {
-                    "description": "ExtID holds the value of the \"ext_id\" field.",
+                    "description": "The ID of the video on the external platform.",
+                    "type": "string"
+                },
+                "ext_stream_id": {
+                    "description": "The ID of the stream on the external platform, if applicable.",
                     "type": "string"
                 },
                 "file_name": {
@@ -4682,6 +5544,22 @@
                     "description": "InfoPath holds the value of the \"info_path\" field.",
                     "type": "string"
                 },
+                "live_chat_convert_path": {
+                    "description": "Path to the converted live chat file",
+                    "type": "string"
+                },
+                "live_chat_path": {
+                    "description": "Path to the raw live chat file",
+                    "type": "string"
+                },
+                "local_views": {
+                    "description": "LocalViews holds the value of the \"local_views\" field.",
+                    "type": "integer"
+                },
+                "locked": {
+                    "description": "Locked holds the value of the \"locked\" field.",
+                    "type": "boolean"
+                },
                 "platform": {
                     "description": "The platform the VOD is from, takes an enum.",
                     "allOf": [
@@ -4698,6 +5576,41 @@
                     "description": "Resolution holds the value of the \"resolution\" field.",
                     "type": "string"
                 },
+                "sprite_thumbnails_columns": {
+                    "description": "SpriteThumbnailsColumns holds the value of the \"sprite_thumbnails_columns\" field.",
+                    "type": "integer"
+                },
+                "sprite_thumbnails_enabled": {
+                    "description": "SpriteThumbnailsEnabled holds the value of the \"sprite_thumbnails_enabled\" field.",
+                    "type": "boolean"
+                },
+                "sprite_thumbnails_height": {
+                    "description": "SpriteThumbnailsHeight holds the value of the \"sprite_thumbnails_height\" field.",
+                    "type": "integer"
+                },
+                "sprite_thumbnails_images": {
+                    "description": "SpriteThumbnailsImages holds the value of the \"sprite_thumbnails_images\" field.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sprite_thumbnails_interval": {
+                    "description": "SpriteThumbnailsInterval holds the value of the \"sprite_thumbnails_interval\" field.",
+                    "type": "integer"
+                },
+                "sprite_thumbnails_rows": {
+                    "description": "SpriteThumbnailsRows holds the value of the \"sprite_thumbnails_rows\" field.",
+                    "type": "integer"
+                },
+                "sprite_thumbnails_width": {
+                    "description": "SpriteThumbnailsWidth holds the value of the \"sprite_thumbnails_width\" field.",
+                    "type": "integer"
+                },
+                "storage_size_bytes": {
+                    "description": "The size of the VOD in bytes.",
+                    "type": "integer"
+                },
                 "streamed_at": {
                     "description": "The time the VOD was streamed.",
                     "type": "string"
@@ -4710,6 +5623,34 @@
                     "description": "Title holds the value of the \"title\" field.",
                     "type": "string"
                 },
+                "tmp_chat_download_path": {
+                    "description": "The path where the chat is downloaded to",
+                    "type": "string"
+                },
+                "tmp_chat_render_path": {
+                    "description": "The path where the rendered chat is",
+                    "type": "string"
+                },
+                "tmp_live_chat_convert_path": {
+                    "description": "The path where the converted chat is",
+                    "type": "string"
+                },
+                "tmp_live_chat_download_path": {
+                    "description": "The path where the converted chat is",
+                    "type": "string"
+                },
+                "tmp_video_convert_path": {
+                    "description": "The path where the converted video is",
+                    "type": "string"
+                },
+                "tmp_video_download_path": {
+                    "description": "The path where the video is downloaded to",
+                    "type": "string"
+                },
+                "tmp_video_hls_path": {
+                    "description": "The path where the temporary video hls files are",
+                    "type": "string"
+                },
                 "type": {
                     "description": "The type of VOD, takes an enum.",
                     "allOf": [
@@ -4720,6 +5661,10 @@
                 },
                 "updated_at": {
                     "description": "UpdatedAt holds the value of the \"updated_at\" field.",
+                    "type": "string"
+                },
+                "video_hls_path": {
+                    "description": "The path where the video hls files are",
                     "type": "string"
                 },
                 "video_path": {
@@ -4747,6 +5692,27 @@
                         }
                     ]
                 },
+                "chapters": {
+                    "description": "Chapters holds the value of the chapters edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Chapter"
+                    }
+                },
+                "multistream_info": {
+                    "description": "MultistreamInfo holds the value of the multistream_info edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.MultistreamInfo"
+                    }
+                },
+                "muted_segments": {
+                    "description": "MutedSegments holds the value of the muted_segments edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.MutedSegment"
+                    }
+                },
                 "playlists": {
                     "description": "Playlists holds the value of the playlists edge.",
                     "type": "array",
@@ -4764,59 +5730,20 @@
                 }
             }
         },
-        "http.AddMultipleWatchedChannelRequest": {
+        "http.AddLiveTitleRegex": {
             "type": "object",
             "required": [
-                "channel_id",
-                "resolution"
+                "regex"
             ],
             "properties": {
-                "archive_chat": {
+                "apply_to_videos": {
                     "type": "boolean"
                 },
-                "categories": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "channel_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "download_archives": {
+                "negative": {
                     "type": "boolean"
                 },
-                "download_highlights": {
-                    "type": "boolean"
-                },
-                "download_sub_only": {
-                    "type": "boolean"
-                },
-                "download_uploads": {
-                    "type": "boolean"
-                },
-                "render_chat": {
-                    "type": "boolean"
-                },
-                "resolution": {
-                    "type": "string",
-                    "enum": [
-                        "best",
-                        "source",
-                        "720p60",
-                        "480p30",
-                        "360p30",
-                        "160p30"
-                    ]
-                },
-                "watch_live": {
-                    "type": "boolean"
-                },
-                "watch_vod": {
-                    "type": "boolean"
+                "regex": {
+                    "type": "string"
                 }
             }
         },
@@ -4838,7 +5765,13 @@
                 "resolution"
             ],
             "properties": {
+                "apply_categories_to_live": {
+                    "type": "boolean"
+                },
                 "archive_chat": {
+                    "type": "boolean"
+                },
+                "blacklist_categories": {
                     "type": "boolean"
                 },
                 "categories": {
@@ -4849,6 +5782,17 @@
                 },
                 "channel_id": {
                     "type": "string"
+                },
+                "clips_ignore_last_checked": {
+                    "type": "boolean"
+                },
+                "clips_interval_days": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "clips_limit": {
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "download_archives": {
                     "type": "boolean"
@@ -4862,6 +5806,12 @@
                 "download_uploads": {
                     "type": "boolean"
                 },
+                "regex": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.AddLiveTitleRegex"
+                    }
+                },
                 "render_chat": {
                     "type": "boolean"
                 },
@@ -4869,12 +5819,29 @@
                     "type": "string",
                     "enum": [
                         "best",
-                        "source",
-                        "720p60",
-                        "480p30",
-                        "360p30",
-                        "160p30"
+                        "1440p",
+                        "1080p",
+                        "720p",
+                        "480p",
+                        "360p",
+                        "160p",
+                        "audio"
                     ]
+                },
+                "strict_categories_live": {
+                    "type": "boolean"
+                },
+                "update_metadata_minutes": {
+                    "description": "Queue metadata update X minutes after the stream is live. Set to 0 to disable.",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "video_age": {
+                    "description": "restrict fetching videos to a certain age",
+                    "type": "integer"
+                },
+                "watch_clips": {
+                    "type": "boolean"
                 },
                 "watch_live": {
                     "type": "boolean"
@@ -4895,24 +5862,28 @@
                 }
             }
         },
-        "http.ArchiveVodRequest": {
+        "http.ArchiveVideoRequest": {
             "type": "object",
             "required": [
-                "quality",
-                "vod_id"
+                "quality"
             ],
             "properties": {
-                "chat": {
+                "archive_chat": {
                     "type": "boolean"
+                },
+                "channel_id": {
+                    "type": "string"
                 },
                 "quality": {
                     "enum": [
                         "best",
-                        "source",
-                        "720p60",
-                        "480p30",
-                        "360p30",
-                        "160p30"
+                        "1440p",
+                        "1080p",
+                        "720p",
+                        "480p",
+                        "360p",
+                        "160p",
+                        "audio"
                     ],
                     "allOf": [
                         {
@@ -4923,7 +5894,7 @@
                 "render_chat": {
                     "type": "boolean"
                 },
-                "vod_id": {
+                "video_id": {
                     "type": "string"
                 }
             }
@@ -4948,34 +5919,28 @@
                 }
             }
         },
-        "http.ConvertChatRequest": {
+        "http.CreateApiKeyRequest": {
             "type": "object",
             "required": [
-                "channel_id",
-                "channel_name",
-                "chat_start",
-                "file_name",
-                "vod_external_id",
-                "vod_id"
+                "name",
+                "scopes"
             ],
             "properties": {
-                "channel_id": {
-                    "type": "integer"
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
                 },
-                "channel_name": {
-                    "type": "string"
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
                 },
-                "chat_start": {
-                    "type": "string"
-                },
-                "file_name": {
-                    "type": "string"
-                },
-                "vod_external_id": {
-                    "type": "string"
-                },
-                "vod_id": {
-                    "type": "string"
+                "scopes": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -4992,6 +5957,9 @@
                     "maxLength": 50,
                     "minLength": 2
                 },
+                "ext_id": {
+                    "type": "string"
+                },
                 "image_path": {
                     "type": "string",
                     "minLength": 3
@@ -5000,6 +5968,12 @@
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 2
+                },
+                "retention": {
+                    "type": "boolean"
+                },
+                "retention_days": {
+                    "type": "integer"
                 }
             }
         },
@@ -5067,6 +6041,9 @@
                 "info_path": {
                     "type": "string"
                 },
+                "locked": {
+                    "type": "boolean"
+                },
                 "platform": {
                     "enum": [
                         "twitch",
@@ -5121,17 +6098,6 @@
                 }
             }
         },
-        "http.GetFfprobeDataRequest": {
-            "type": "object",
-            "required": [
-                "path"
-            ],
-            "properties": {
-                "path": {
-                    "type": "string"
-                }
-            }
-        },
         "http.LoginRequest": {
             "type": "object",
             "required": [
@@ -5143,6 +6109,147 @@
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.NotificationRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "type",
+                "url"
+            ],
+            "properties": {
+                "apprise_format": {
+                    "type": "string",
+                    "enum": [
+                        "text",
+                        "html",
+                        "markdown"
+                    ]
+                },
+                "apprise_tag": {
+                    "type": "string"
+                },
+                "apprise_title": {
+                    "type": "string"
+                },
+                "apprise_type": {
+                    "type": "string",
+                    "enum": [
+                        "info",
+                        "success",
+                        "warning",
+                        "failure"
+                    ]
+                },
+                "apprise_urls": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "error_template": {
+                    "type": "string"
+                },
+                "is_live_template": {
+                    "type": "string"
+                },
+                "live_success_template": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "trigger_error": {
+                    "type": "boolean"
+                },
+                "trigger_is_live": {
+                    "type": "boolean"
+                },
+                "trigger_live_success": {
+                    "type": "boolean"
+                },
+                "trigger_video_success": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "webhook",
+                        "apprise"
+                    ]
+                },
+                "url": {
+                    "type": "string"
+                },
+                "video_success_template": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.NotificationResponse": {
+            "type": "object",
+            "properties": {
+                "apprise_format": {
+                    "type": "string"
+                },
+                "apprise_tag": {
+                    "type": "string"
+                },
+                "apprise_title": {
+                    "type": "string"
+                },
+                "apprise_type": {
+                    "type": "string"
+                },
+                "apprise_urls": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "error_template": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_live_template": {
+                    "type": "string"
+                },
+                "live_success_template": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "trigger_error": {
+                    "type": "boolean"
+                },
+                "trigger_is_live": {
+                    "type": "boolean"
+                },
+                "trigger_live_success": {
+                    "type": "boolean"
+                },
+                "trigger_video_success": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "video_success_template": {
                     "type": "string"
                 }
             }
@@ -5160,38 +6267,103 @@
                 },
                 "username": {
                     "type": "string",
-                    "maxLength": 20,
+                    "maxLength": 50,
                     "minLength": 3
                 }
             }
         },
-        "http.RestartTaskRequest": {
+        "http.SetPlaylistRulesRequest": {
             "type": "object",
             "required": [
-                "queue_id",
-                "task"
+                "rule_groups"
             ],
             "properties": {
-                "cont": {
-                    "type": "boolean"
+                "rule_groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "operator",
+                            "rules"
+                        ],
+                        "properties": {
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "AND",
+                                    "OR"
+                                ]
+                            },
+                            "position": {
+                                "type": "integer"
+                            },
+                            "rules": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "required": [
+                                        "field",
+                                        "operator",
+                                        "value"
+                                    ],
+                                    "properties": {
+                                        "enabled": {
+                                            "type": "boolean"
+                                        },
+                                        "field": {
+                                            "enum": [
+                                                "title",
+                                                "category",
+                                                "type",
+                                                "platform",
+                                                "channel_name"
+                                            ],
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/utils.PlaylistRuleField"
+                                                }
+                                            ]
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "operator": {
+                                            "enum": [
+                                                "equals",
+                                                "contains",
+                                                "regex"
+                                            ],
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/utils.PlaylistRuleOperator"
+                                                }
+                                            ]
+                                        },
+                                        "position": {
+                                            "type": "integer"
+                                        },
+                                        "value": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "http.SetVodDelayPlaylistRequest": {
+            "type": "object",
+            "required": [
+                "vod_id"
+            ],
+            "properties": {
+                "delay_ms": {
+                    "type": "integer"
                 },
-                "queue_id": {
+                "vod_id": {
                     "type": "string"
-                },
-                "task": {
-                    "type": "string",
-                    "enum": [
-                        "vod_create_folder",
-                        "vod_download_thumbnail",
-                        "vod_save_info",
-                        "video_download",
-                        "video_convert",
-                        "video_move",
-                        "chat_download",
-                        "chat_convert",
-                        "chat_render",
-                        "chat_move"
-                    ]
                 }
             }
         },
@@ -5206,11 +6378,59 @@
                     "enum": [
                         "check_live",
                         "check_vod",
+                        "check_clips",
                         "get_jwks",
-                        "twitch_auth",
-                        "queue_hold_check",
-                        "storage_migration"
+                        "storage_migration",
+                        "prune_videos",
+                        "save_chapters",
+                        "update_stream_vod_ids",
+                        "generate_sprite_thumbnails",
+                        "update_video_storage_usage",
+                        "process_playlist_video_rules",
+                        "update_platform_channels"
                     ]
+                }
+            }
+        },
+        "http.TestNotificationRequest": {
+            "type": "object",
+            "required": [
+                "event_type"
+            ],
+            "properties": {
+                "event_type": {
+                    "type": "string",
+                    "enum": [
+                        "video_success",
+                        "live_success",
+                        "error",
+                        "is_live"
+                    ]
+                }
+            }
+        },
+        "http.UpdateApiKeyRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "scopes"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
+                },
+                "scopes": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -5234,84 +6454,6 @@
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 2
-                }
-            }
-        },
-        "http.UpdateConfigRequest": {
-            "type": "object",
-            "properties": {
-                "archive": {
-                    "type": "object",
-                    "properties": {
-                        "save_as_hls": {
-                            "type": "boolean"
-                        }
-                    }
-                },
-                "parameters": {
-                    "type": "object",
-                    "required": [
-                        "chat_render",
-                        "video_convert"
-                    ],
-                    "properties": {
-                        "chat_render": {
-                            "type": "string"
-                        },
-                        "streamlink_live": {
-                            "type": "string"
-                        },
-                        "twitch_token": {
-                            "type": "string"
-                        },
-                        "video_convert": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "registration_enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "http.UpdateNotificationRequest": {
-            "type": "object",
-            "properties": {
-                "error_enabled": {
-                    "type": "boolean"
-                },
-                "error_template": {
-                    "type": "string"
-                },
-                "error_webhook_url": {
-                    "type": "string"
-                },
-                "is_live_enabled": {
-                    "type": "boolean"
-                },
-                "is_live_template": {
-                    "type": "string"
-                },
-                "is_live_webhook_url": {
-                    "type": "string"
-                },
-                "live_success_enabled": {
-                    "type": "boolean"
-                },
-                "live_success_template": {
-                    "type": "string"
-                },
-                "live_success_webhook_url": {
-                    "type": "string"
-                },
-                "video_success_enabled": {
-                    "type": "boolean"
-                },
-                "video_success_template": {
-                    "type": "string"
-                },
-                "video_success_webhook_url": {
-                    "type": "string"
                 }
             }
         },
@@ -5514,28 +6656,19 @@
                 }
             }
         },
-        "http.UpdateStorageTemplateRequest": {
-            "type": "object",
-            "required": [
-                "file_template",
-                "folder_template"
-            ],
-            "properties": {
-                "file_template": {
-                    "type": "string"
-                },
-                "folder_template": {
-                    "type": "string"
-                }
-            }
-        },
         "http.UpdateWatchedChannelRequest": {
             "type": "object",
             "required": [
                 "resolution"
             ],
             "properties": {
+                "apply_categories_to_live": {
+                    "type": "boolean"
+                },
                 "archive_chat": {
+                    "type": "boolean"
+                },
+                "blacklist_categories": {
                     "type": "boolean"
                 },
                 "categories": {
@@ -5543,6 +6676,17 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "clips_ignore_last_checked": {
+                    "type": "boolean"
+                },
+                "clips_interval_days": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "clips_limit": {
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "download_archives": {
                     "type": "boolean"
@@ -5556,6 +6700,12 @@
                 "download_uploads": {
                     "type": "boolean"
                 },
+                "regex": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.AddLiveTitleRegex"
+                    }
+                },
                 "render_chat": {
                     "type": "boolean"
                 },
@@ -5563,12 +6713,29 @@
                     "type": "string",
                     "enum": [
                         "best",
-                        "source",
-                        "720p60",
-                        "480p30",
-                        "360p30",
-                        "160p30"
+                        "1440p",
+                        "1080p",
+                        "720p",
+                        "480p",
+                        "360p",
+                        "160p",
+                        "audio"
                     ]
+                },
+                "strict_categories_live": {
+                    "type": "boolean"
+                },
+                "update_metadata_minutes": {
+                    "description": "Queue metadata update X minutes after the stream is live. Set to 0 to disable.",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "video_age": {
+                    "description": "restrict fetching videos to a certain age",
+                    "type": "integer"
+                },
+                "watch_clips": {
+                    "type": "boolean"
                 },
                 "watch_live": {
                     "type": "boolean"
@@ -5578,18 +6745,102 @@
                 }
             }
         },
-        "twitch.Category": {
+        "http.apiKeyDTO": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by_id": {
+                    "description": "CreatedByID is the UUID of the admin who minted this key. Null\nfor keys created before the audit edge was added. Frontend uses\nit to show \"minted by \u003cusername\u003e\" in the list and detail views.",
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "last_used_at": {
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
+                },
+                "prefix": {
+                    "type": "string"
+                },
+                "revoked_at": {
+                    "description": "RevokedAt is null for active keys; set when an admin revokes\nthe key. Surfaced in list responses when ?include_revoked=true\nis passed so admins can audit historical state.",
+                    "type": "string"
+                },
+                "scopes": {
+                    "description": "Scopes is the raw list of resource:tier strings granted to the key.\nFrontend converts these to badges; clients use them to predict what\nrequests will succeed.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
-        "twitch.Channel": {
+        "http.createApiKeyResponse": {
+            "type": "object",
+            "properties": {
+                "api_key": {
+                    "$ref": "#/definitions/http.apiKeyDTO"
+                },
+                "secret": {
+                    "type": "string"
+                }
+            }
+        },
+        "platform.Badge": {
+            "type": "object",
+            "properties": {
+                "click_action": {
+                    "type": "string"
+                },
+                "click_url": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "image_url_1x": {
+                    "type": "string"
+                },
+                "image_url_2x": {
+                    "type": "string"
+                },
+                "image_url_4x": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "platform.Badges": {
+            "type": "object",
+            "properties": {
+                "badges": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/platform.Badge"
+                    }
+                }
+            }
+        },
+        "platform.ChannelInfo": {
             "type": "object",
             "properties": {
                 "broadcaster_type": {
@@ -5624,9 +6875,30 @@
                 }
             }
         },
-        "twitch.Video": {
+        "platform.MutedSegment": {
             "type": "object",
             "properties": {
+                "duration": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                }
+            }
+        },
+        "platform.VideoInfo": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "the default/main category of the video",
+                    "type": "string"
+                },
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/chapter.Chapter"
+                    }
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -5634,7 +6906,7 @@
                     "type": "string"
                 },
                 "duration": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "id": {
                     "type": "string"
@@ -5642,8 +6914,20 @@
                 "language": {
                     "type": "string"
                 },
-                "muted_segments": {},
+                "muted_segments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/platform.MutedSegment"
+                    }
+                },
                 "published_at": {
+                    "type": "string"
+                },
+                "restriction": {
+                    "description": "video restriction",
+                    "type": "string"
+                },
+                "sprite_thumbnails_manifest_url": {
                     "type": "string"
                 },
                 "stream_id": {
@@ -5678,59 +6962,18 @@
                 }
             }
         },
-        "twitch.Vod": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "duration": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "language": {
-                    "type": "string"
-                },
-                "muted_segments": {},
-                "published_at": {
-                    "type": "string"
-                },
-                "stream_id": {
-                    "type": "string"
-                },
-                "thumbnail_url": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                },
-                "user_login": {
-                    "type": "string"
-                },
-                "user_name": {
-                    "type": "string"
-                },
-                "view_count": {
-                    "type": "integer"
-                },
-                "viewable": {
-                    "type": "string"
-                }
-            }
+        "playlistrulegroup.Operator": {
+            "type": "string",
+            "enum": [
+                "AND",
+                "AND",
+                "OR"
+            ],
+            "x-enum-varnames": [
+                "DefaultOperator",
+                "OperatorAND",
+                "OperatorOR"
+            ]
         },
         "utils.ErrorResponse": {
             "type": "object",
@@ -5751,19 +6994,62 @@
                 "Finished"
             ]
         },
+        "utils.PlaylistRuleField": {
+            "type": "string",
+            "enum": [
+                "title",
+                "category",
+                "type",
+                "platform",
+                "channel_name"
+            ],
+            "x-enum-varnames": [
+                "FieldTitle",
+                "FieldCategory",
+                "FieldType",
+                "FieldPlatform",
+                "FieldChannelName"
+            ]
+        },
+        "utils.PlaylistRuleOperator": {
+            "type": "string",
+            "enum": [
+                "equals",
+                "contains",
+                "regex"
+            ],
+            "x-enum-varnames": [
+                "OperatorEquals",
+                "OperatorContains",
+                "OperatorRegex"
+            ]
+        },
+        "utils.ProxyType": {
+            "type": "string",
+            "enum": [
+                "twitch_hls",
+                "http"
+            ],
+            "x-enum-varnames": [
+                "ProxyTypeTwitchHLS",
+                "ProxyTypeHTTP"
+            ]
+        },
         "utils.Role": {
             "type": "string",
             "enum": [
                 "admin",
                 "editor",
                 "archiver",
-                "user"
+                "user",
+                "system"
             ],
             "x-enum-varnames": [
                 "AdminRole",
                 "EditorRole",
                 "ArchiverRole",
-                "UserRole"
+                "UserRole",
+                "SystemRole"
             ]
         },
         "utils.TaskStatus": {
@@ -5797,18 +7083,24 @@
             "enum": [
                 "best",
                 "source",
-                "720p60",
-                "480p30",
-                "360p30",
-                "160p30"
+                "1440",
+                "1080",
+                "720",
+                "480",
+                "360",
+                "160",
+                "audio"
             ],
             "x-enum-varnames": [
                 "Best",
                 "Source",
-                "R720P60",
-                "R480P30",
-                "R360P30",
-                "R160P30"
+                "R1440",
+                "R1080",
+                "R720",
+                "R480",
+                "R360",
+                "R160",
+                "Audio"
             ]
         },
         "utils.VodType": {
@@ -5854,7 +7146,7 @@
     },
     "securityDefinitions": {
         "ApiKeyAuth": {
-            "description": "Authorization: Bearer gym_<prefix>_<secret>. Mint a key via the admin UI.",
+            "description": "Authorization: Bearer gym_\u003cprefix\u003e_\u003csecret\u003e. Mint a key via the admin UI.",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
