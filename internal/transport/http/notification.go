@@ -169,7 +169,18 @@ type TestNotificationRequest struct {
 	EventType string `json:"event_type" validate:"required,oneof=video_success live_success error is_live"`
 }
 
-// GetNotifications returns all notification configurations.
+// GetNotifications godoc
+//
+//	@Summary		Get all notification configurations
+//	@Description	Get all notification configurations
+//	@Tags			notification
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{array}		NotificationResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/notification [get]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GetNotifications(c echo.Context) error {
 	notifications, err := h.Service.NotificationService.GetNotifications(c.Request().Context())
 	if err != nil {
@@ -179,7 +190,21 @@ func (h *Handler) GetNotifications(c echo.Context) error {
 	return SuccessResponse(c, toNotificationResponses(notifications), "notifications")
 }
 
-// GetNotification returns a single notification configuration.
+// GetNotification godoc
+//
+//	@Summary		Get a single notification configuration
+//	@Description	Get a single notification configuration by id
+//	@Tags			notification
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Notification ID"
+//	@Success		200	{object}	NotificationResponse
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/notification/{id} [get]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GetNotification(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -197,7 +222,20 @@ func (h *Handler) GetNotification(c echo.Context) error {
 	return SuccessResponse(c, toNotificationResponse(n), "notification")
 }
 
-// CreateNotification creates a new notification configuration.
+// CreateNotification godoc
+//
+//	@Summary		Create a notification configuration
+//	@Description	Create a new notification configuration
+//	@Tags			notification
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		NotificationRequest	true	"Notification"
+//	@Success		200		{object}	NotificationResponse
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/notification [post]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) CreateNotification(c echo.Context) error {
 	var req CreateNotificationRequest
 	if err := c.Bind(&req); err != nil {
@@ -218,7 +256,22 @@ func (h *Handler) CreateNotification(c echo.Context) error {
 	return SuccessResponse(c, toNotificationResponse(created), "notification created")
 }
 
-// UpdateNotification updates an existing notification configuration.
+// UpdateNotification godoc
+//
+//	@Summary		Update a notification configuration
+//	@Description	Update an existing notification configuration
+//	@Tags			notification
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string				true	"Notification ID"
+//	@Param			body	body		NotificationRequest	true	"Notification"
+//	@Success		200		{object}	NotificationResponse
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		404		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/notification/{id} [put]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) UpdateNotification(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -247,7 +300,21 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 	return SuccessResponse(c, toNotificationResponse(updated), "notification updated")
 }
 
-// DeleteNotification deletes a notification configuration.
+// DeleteNotification godoc
+//
+//	@Summary		Delete a notification configuration
+//	@Description	Delete a notification configuration by id
+//	@Tags			notification
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path	string	true	"Notification ID"
+//	@Success		200
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/notification/{id} [delete]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) DeleteNotification(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -264,7 +331,22 @@ func (h *Handler) DeleteNotification(c echo.Context) error {
 	return SuccessResponse(c, nil, "notification deleted")
 }
 
-// TestNotification tests a specific notification configuration with dummy data.
+// TestNotification godoc
+//
+//	@Summary		Test a notification configuration
+//	@Description	Send a test notification using dummy data for the given event type
+//	@Tags			notification
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string					true	"Notification ID"
+//	@Param			body	body		TestNotificationRequest	true	"Test event"
+//	@Success		200
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		404		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/notification/{id}/test [post]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) TestNotification(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

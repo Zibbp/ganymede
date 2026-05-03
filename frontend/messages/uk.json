@@ -136,6 +136,7 @@
       "blockedVideos": "Заблоковані відео",
       "queue": "Черга",
       "users": "Користувачі",
+      "apiKeys": "API ключі",
       "notifications": "Сповіщення",
       "settings": "Налаштування",
       "tasks": "Завдання",
@@ -360,6 +361,79 @@
     },
     "drawer": "Користувач",
     "deleteModal": "Видалити користувача"
+  },
+  "AdminApiKeysPage": {
+    "title": "Адмін - API ключі",
+    "loading": "Завантаження API ключів",
+    "error": "Помилка завантаження API ключів",
+    "header": "Керування API ключами",
+    "searchPlaceholder": "Пошук API ключів...",
+    "createButton": "Створити API ключ",
+    "docsButton": "Документація",
+    "docsModal": "Області API ключів",
+    "drawer": "Створити API ключ",
+    "editDrawer": "Редагувати API ключ",
+    "deleteModal": "Відкликати API ключ",
+    "showOnceModal": "API ключ створено",
+    "edit": "Редагувати",
+    "revoke": "Відкликати",
+    "revokedBadge": "Відкликано",
+    "showRevoked": "Показати відкликані ключі",
+    "copyPrefix": "Копіювати префікс",
+    "copied": "Скопійовано",
+    "never": "Ніколи",
+    "columns": {
+      "name": "Назва",
+      "scopes": "Області",
+      "prefix": "Префікс",
+      "lastUsed": "Востаннє використано",
+      "createdAt": "Створено",
+      "actions": "Дії"
+    }
+  },
+  "AdminApiKeyComponents": {
+    "validation": {
+      "name": "Назва має бути від 3 до 50 символів",
+      "description": "Опис має бути не більше 500 символів",
+      "scopes": {
+        "required": "Виберіть хоча б одну область",
+        "unknown": "Невідома область"
+      }
+    },
+    "nameLabel": "Назва",
+    "namePlaceholder": "vod-archiver-script",
+    "descriptionLabel": "Опис",
+    "descriptionPlaceholder": "Необов'язкові примітки про використання ключа",
+    "scopeLabel": "Області",
+    "scopeDescription": "Кожна область має формат resource:tier — admin > write > read у межах ресурсу. Використовуйте *:admin для повного доступу або виберіть конкретні області для мінімальних привілеїв.",
+    "scopePlaceholder": "Виберіть одну або кілька областей",
+    "presets": {
+      "fullAdmin": "Повний адмін (*:admin)",
+      "readAll": "Читати все (*:read)",
+      "clear": "Очистити"
+    },
+    "createButton": "Створити API ключ",
+    "createNotification": "API ключ створено — скопіюйте секрет зараз",
+    "updateButton": "Зберегти зміни",
+    "updateNotification": "API ключ оновлено",
+    "revokeConfirmText": "Ви впевнені, що хочете відкликати цей API ключ? Цю дію не можна скасувати.",
+    "revokeButton": "Відкликати",
+    "revokeNotification": "API ключ відкликано",
+    "revokeError": "Не вдалося відкликати API ключ",
+    "showOnce": {
+      "warning": "Це єдиний раз, коли буде показано секрет. Скопіюйте його зараз і збережіть у безпечному місці.",
+      "instructions": "Використовуйте у скриптах: Authorization: Bearer gym_<prefix>_<secret>",
+      "copy": "Копіювати секрет",
+      "copied": "Скопійовано",
+      "closeBlocked": "Скопіюйте секрет, щоб увімкнути закриття",
+      "closeAcknowledged": "Я зберіг цей секрет — закрити"
+    },
+    "docs": {
+      "scopeFormatTitle": "Формат області",
+      "scopeFormatBody": "Кожна область має формат resource:tier. Рівні є ієрархічними в межах ресурсу — admin включає write, write включає read. Wildcard-ресурс * відповідає будь-якому ресурсу, тож *:admin надає повний доступ.",
+      "sessionOnlyTitle": "Endpoint-и, недоступні через API ключі",
+      "sessionOnlyBody": "Ці endpoint-и навмисно доступні лише через сесію. API ключі не можуть їх викликати незалежно від області."
+    }
   },
   "AdminVideosPage": {
     "title": "Адмін - Відео",

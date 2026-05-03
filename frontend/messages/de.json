@@ -136,6 +136,7 @@
       "blockedVideos": "Blockierte Videos",
       "queue": "Warteschlange",
       "users": "Benutzer",
+      "apiKeys": "API-Schlüssel",
       "notifications": "Benachrichtigungen",
       "settings": "Einstellungen",
       "tasks": "Aufgaben",
@@ -362,6 +363,79 @@
     },
     "drawer": "Benutzer",
     "deleteModal": "Benutzer löschen"
+  },
+  "AdminApiKeysPage": {
+    "title": "Admin - API-Schlüssel",
+    "loading": "API-Schlüssel werden geladen",
+    "error": "Fehler beim Laden der API-Schlüssel",
+    "header": "API-Schlüssel verwalten",
+    "searchPlaceholder": "API-Schlüssel suchen...",
+    "createButton": "API-Schlüssel erstellen",
+    "docsButton": "Dokumentation",
+    "docsModal": "API-Schlüssel-Bereiche",
+    "drawer": "API-Schlüssel erstellen",
+    "editDrawer": "API-Schlüssel bearbeiten",
+    "deleteModal": "API-Schlüssel widerrufen",
+    "showOnceModal": "API-Schlüssel erstellt",
+    "edit": "Bearbeiten",
+    "revoke": "Widerrufen",
+    "revokedBadge": "Widerrufen",
+    "showRevoked": "Widerrufene Schlüssel anzeigen",
+    "copyPrefix": "Präfix kopieren",
+    "copied": "Kopiert",
+    "never": "Nie",
+    "columns": {
+      "name": "Name",
+      "scopes": "Bereiche",
+      "prefix": "Präfix",
+      "lastUsed": "Zuletzt verwendet",
+      "createdAt": "Erstellt am",
+      "actions": "Aktionen"
+    }
+  },
+  "AdminApiKeyComponents": {
+    "validation": {
+      "name": "Name muss zwischen 3 und 50 Zeichen lang sein",
+      "description": "Beschreibung darf höchstens 500 Zeichen haben",
+      "scopes": {
+        "required": "Wähle mindestens einen Bereich",
+        "unknown": "Unbekannter Bereich"
+      }
+    },
+    "nameLabel": "Name",
+    "namePlaceholder": "vod-archiver-script",
+    "descriptionLabel": "Beschreibung",
+    "descriptionPlaceholder": "Optionale Notizen, wo dieser Schlüssel verwendet wird",
+    "scopeLabel": "Bereiche",
+    "scopeDescription": "Jeder Bereich ist resource:tier — admin > write > read innerhalb einer Ressource. Verwende *:admin für vollen Zugriff oder wähle gezielt einzelne Bereiche.",
+    "scopePlaceholder": "Wähle einen oder mehrere Bereiche",
+    "presets": {
+      "fullAdmin": "Voller Admin (*:admin)",
+      "readAll": "Alles lesen (*:read)",
+      "clear": "Leeren"
+    },
+    "createButton": "API-Schlüssel erstellen",
+    "createNotification": "API-Schlüssel erstellt — kopiere das Geheimnis jetzt",
+    "updateButton": "Änderungen speichern",
+    "updateNotification": "API-Schlüssel aktualisiert",
+    "revokeConfirmText": "Bist du sicher, dass du diesen API-Schlüssel widerrufen möchtest? Dies kann nicht rückgängig gemacht werden.",
+    "revokeButton": "Widerrufen",
+    "revokeNotification": "API-Schlüssel widerrufen",
+    "revokeError": "API-Schlüssel konnte nicht widerrufen werden",
+    "showOnce": {
+      "warning": "Dies ist das einzige Mal, dass das Geheimnis angezeigt wird. Kopiere es jetzt und bewahre es sicher auf.",
+      "instructions": "Verwende es in Skripten als: Authorization: Bearer gym_<prefix>_<secret>",
+      "copy": "Geheimnis kopieren",
+      "copied": "Kopiert",
+      "closeBlocked": "Kopiere das Geheimnis, um Schließen zu aktivieren",
+      "closeAcknowledged": "Ich habe das Geheimnis gespeichert — schließen"
+    },
+    "docs": {
+      "scopeFormatTitle": "Bereichsformat",
+      "scopeFormatBody": "Jeder Bereich hat das Format resource:tier. Tiers sind innerhalb einer Ressource hierarchisch — admin schließt write ein, write schließt read ein. Die Wildcard-Ressource * passt auf jede Ressource, also gewährt *:admin vollen Zugriff.",
+      "sessionOnlyTitle": "Endpunkte, die mit API-Schlüsseln nicht erreichbar sind",
+      "sessionOnlyBody": "Diese Endpunkte sind absichtlich nur per Session erreichbar. API-Schlüssel können sie unabhängig vom Bereich nicht ansprechen."
+    }
   },
   "AdminVideosPage": {
     "title": "Admin - Videos",

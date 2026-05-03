@@ -1,0 +1,232 @@
+import {
+  ApiKey,
+  API_KEY_RESOURCE_META,
+  API_KEY_SCOPES_CATALOG,
+  ApiKeyResource,
+  ApiKeyScope,
+  ApiKeyTier,
+  makeScope,
+  useCreateApiKey,
+  useUpdateApiKey,
+} from "@/app/hooks/useApiKeys";
+import { useAxiosPrivate } from "@/app/hooks/useAxios";
+import {
+  Button,
+  Group,
+  MultiSelect,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
+import { useForm, zodResolver } from "@mantine/form";
+import { showNotification } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { z } from "zod";
+
+// ApiKeyEditMode discriminates the drawer's two flows. Mirrors the
+// pattern used by the channel admin drawer so the page-side code reads
+// consistently across admin sections.
+export enum ApiKeyEditMode {
+  Create = "create",
+  Edit = "edit",
+}
+
+// Discriminated union: create needs an onCreated handler (for the
+// show-once secret); edit needs the existing key to pre-fill plus an
+// onUpdated handler. TypeScript narrows based on `mode` so consumers
+// can't forget either prop.
+export type AdminApiKeyDrawerProps =
+  | {
+      mode: ApiKeyEditMode.Create;
+      onCreated: (secret: string) => void;
+    }
+  | {
+      mode: ApiKeyEditMode.Edit;
+      apiKey: ApiKey;
+      onUpdated: () => void;
+    };
+
+// Build the MultiSelect data once. Mantine's grouped form is
+// { group: "label", items: [{value, label}] }. Every resource is
+// enforced by at least one route after Phase 3, so labels are simple
+// resource:tier strings without "(reserved)" annotations.
+const buildScopeOptions = () => {
+  const groups: { group: string; items: { value: string; label: string }[] }[] =
+    [];
+  for (const resource of Object.values(ApiKeyResource) as ApiKeyResource[]) {
+    const meta = API_KEY_RESOURCE_META[resource];
+    const items = (Object.values(ApiKeyTier) as ApiKeyTier[]).map((tier) => ({
+      value: makeScope(resource, tier),
+      label: makeScope(resource, tier),
+    }));
+    groups.push({ group: meta.label, items });
+  }
+  return groups;
+};
+
+const AdminApiKeyDrawerContent = (props: AdminApiKeyDrawerProps) => {
+  const t = useTranslations("AdminApiKeyComponents");
+  const axiosPrivate = useAxiosPrivate();
+  const createApiKey = useCreateApiKey();
+  const updateApiKey = useUpdateApiKey();
+  const [loading, setLoading] = useState(false);
+
+  const isEdit = props.mode === ApiKeyEditMode.Edit;
+
+  // Bounds match the backend validator on CreateApiKeyRequest /
+  // UpdateApiKeyRequest plus strict membership in the catalog so the
+  // user can't paste a typo.
+  const schema = z.object({
+    name: z
+      .string()
+      .min(3, { message: t("validation.name") })
+      .max(50, { message: t("validation.name") }),
+    description: z.string().max(500, { message: t("validation.description") }),
+    scopes: z
+      .array(
+        z
+          .string()
+          .refine(
+            (s): s is ApiKeyScope =>
+              (API_KEY_SCOPES_CATALOG as string[]).includes(s),
+            { message: t("validation.scopes.unknown") }
+          )
+      )
+      .min(1, { message: t("validation.scopes.required") }),
+  });
+
+  // Pre-fill from the existing row in edit mode; blank values for
+  // create. Mantine forms reset on remount, so the parent re-keying
+  // the drawer between rows isn't needed — but keeping the active
+  // key in state lives at the page level (page.tsx).
+  const initialValues = isEdit
+    ? {
+        name: props.apiKey.name,
+        description: props.apiKey.description ?? "",
+        scopes: (props.apiKey.scopes ?? []) as ApiKeyScope[],
+      }
+    : {
+        name: "",
+        description: "",
+        scopes: [] as ApiKeyScope[],
+      };
+
+  const form = useForm({
+    mode: "controlled",
+    initialValues,
+    validate: zodResolver(schema),
+  });
+
+  const scopeOptions = buildScopeOptions();
+
+  // Quick-pick presets reset the field to a single canonical scope so
+  // the admin doesn't have to find them in the grouped MultiSelect.
+  const setPreset = (scopes: ApiKeyScope[]) => form.setFieldValue("scopes", scopes);
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      if (props.mode === ApiKeyEditMode.Create) {
+        const result = await createApiKey.mutateAsync({
+          axiosPrivate,
+          input: form.getValues(),
+        });
+        showNotification({ message: t("createNotification") });
+        // Hand the secret straight to the parent's show-once modal;
+        // never persist it in component state, query cache, or local
+        // storage.
+        props.onCreated(result.secret);
+      } else {
+        await updateApiKey.mutateAsync({
+          axiosPrivate,
+          id: props.apiKey.id,
+          input: form.getValues(),
+        });
+        showNotification({ message: t("updateNotification") });
+        props.onUpdated();
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <form onSubmit={form.onSubmit(handleSubmit)}>
+        <Stack gap="sm">
+          <TextInput
+            withAsterisk
+            label={t("nameLabel")}
+            placeholder={t("namePlaceholder")}
+            key={form.key("name")}
+            {...form.getInputProps("name")}
+          />
+
+          <Textarea
+            label={t("descriptionLabel")}
+            placeholder={t("descriptionPlaceholder")}
+            autosize
+            minRows={2}
+            key={form.key("description")}
+            {...form.getInputProps("description")}
+          />
+
+          <div>
+            <Text size="sm" fw={500} mb={4}>
+              {t("scopeLabel")}{" "}
+              <Text span c="red">
+                *
+              </Text>
+            </Text>
+            <Text size="xs" c="dimmed" mb="xs">
+              {t("scopeDescription")}
+            </Text>
+            <Group gap="xs" mb="xs">
+              <Button
+                size="xs"
+                variant="light"
+                onClick={() => setPreset(["*:admin"])}
+              >
+                {t("presets.fullAdmin")}
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                onClick={() => setPreset(["*:read"])}
+              >
+                {t("presets.readAll")}
+              </Button>
+              <Button
+                size="xs"
+                variant="subtle"
+                color="gray"
+                onClick={() => setPreset([])}
+              >
+                {t("presets.clear")}
+              </Button>
+            </Group>
+            <MultiSelect
+              data={scopeOptions}
+              searchable
+              clearable
+              hidePickedOptions
+              placeholder={t("scopePlaceholder")}
+              key={form.key("scopes")}
+              {...form.getInputProps("scopes")}
+            />
+          </div>
+
+          <Button mt={5} type="submit" loading={loading} fullWidth>
+            {isEdit ? t("updateButton") : t("createButton")}
+          </Button>
+        </Stack>
+      </form>
+    </div>
+  );
+};
+
+export default AdminApiKeyDrawerContent;

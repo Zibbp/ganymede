@@ -136,6 +136,7 @@
       "blockedVideos": "Blocked Videos",
       "queue": "Queue",
       "users": "Users",
+      "apiKeys": "API Keys",
       "notifications": "Notifications",
       "settings": "Settings",
       "tasks": "Tasks",
@@ -362,6 +363,79 @@
     },
     "drawer": "User",
     "deleteModal": "Delete User"
+  },
+  "AdminApiKeysPage": {
+    "title": "Admin - API Keys",
+    "loading": "Loading API keys",
+    "error": "Error loading API keys",
+    "header": "Manage API Keys",
+    "searchPlaceholder": "Search API keys...",
+    "createButton": "Create API key",
+    "docsButton": "Documentation",
+    "docsModal": "API key scopes",
+    "drawer": "Create API key",
+    "editDrawer": "Edit API key",
+    "deleteModal": "Revoke API key",
+    "showOnceModal": "API key created",
+    "edit": "Edit",
+    "revoke": "Revoke",
+    "revokedBadge": "Revoked",
+    "showRevoked": "Show revoked keys",
+    "copyPrefix": "Copy prefix",
+    "copied": "Copied",
+    "never": "Never",
+    "columns": {
+      "name": "Name",
+      "scopes": "Scopes",
+      "prefix": "Prefix",
+      "lastUsed": "Last Used",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    }
+  },
+  "AdminApiKeyComponents": {
+    "validation": {
+      "name": "Name must be between 3 and 50 characters",
+      "description": "Description must be at most 500 characters",
+      "scopes": {
+        "required": "Pick at least one scope",
+        "unknown": "Unknown scope"
+      }
+    },
+    "nameLabel": "Name",
+    "namePlaceholder": "vod-archiver-script",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Optional notes about where this key is used",
+    "scopeLabel": "Scopes",
+    "scopeDescription": "Each scope is resource:tier — admin > write > read within a resource. Use *:admin for full access, or pick specific scopes for least-privilege.",
+    "scopePlaceholder": "Pick one or more scopes",
+    "presets": {
+      "fullAdmin": "Full admin (*:admin)",
+      "readAll": "Read all (*:read)",
+      "clear": "Clear"
+    },
+    "createButton": "Create API key",
+    "createNotification": "API key created — copy the secret now",
+    "updateButton": "Save changes",
+    "updateNotification": "API key updated",
+    "revokeConfirmText": "Are you sure you want to revoke this API key? This cannot be undone.",
+    "revokeButton": "Revoke",
+    "revokeNotification": "API key revoked",
+    "revokeError": "Failed to revoke API key",
+    "showOnce": {
+      "warning": "This is the only time the secret will be shown. Copy it now and store it somewhere safe.",
+      "instructions": "Use it in scripts as: Authorization: Bearer gym_<prefix>_<secret>",
+      "copy": "Copy secret",
+      "copied": "Copied",
+      "closeBlocked": "Copy the secret to enable Close",
+      "closeAcknowledged": "I have saved this secret — close"
+    },
+    "docs": {
+      "scopeFormatTitle": "Scope format",
+      "scopeFormatBody": "Each scope is resource:tier. Tiers are hierarchical within a resource — admin includes write, write includes read. The wildcard resource * matches every resource, so *:admin grants full access.",
+      "sessionOnlyTitle": "Endpoints not reachable with API keys",
+      "sessionOnlyBody": "These endpoints are session-only by design. API keys cannot reach them regardless of scope."
+    }
   },
   "AdminVideosPage": {
     "title": "Admin - Videos",
