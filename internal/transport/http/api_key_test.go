@@ -328,41 +328,48 @@ func TestApiKeyHTTP(t *testing.T) {
 	})
 
 	t.Run("UpdateChangesScopesAndRevokesCachedAccess", func(t *testing.T) {
-		// Mint a key with vod:read so we can verify cache flush by
-		// proving the new scopes take effect on the next request.
+		// Cache-flush proof requires a flexible-auth route (one whose
+		// middleware actually consults the bearer). GET /queue is the
+		// canonical read-tier route used elsewhere in this file. The
+		// asymmetry of "queue:read worked, then queue:read stops
+		// working after we updated the scopes" can only happen if the
+		// cached entry was invalidated; otherwise the cached scopes
+		// for this token would still contain queue:read.
 		obj := e.POST("/admin/api-keys").
 			WithJSON(internalHttp.CreateApiKeyRequest{
 				Name:   "update-target-http",
-				Scopes: []string{"vod:read"},
+				Scopes: []string{"queue:read"},
 			}).
 			Expect().Status(http.StatusCreated).JSON().Object()
 		token := obj.Path("$.data.secret").String().Raw()
 		id := obj.Path("$.data.api_key.id").String().Raw()
 
-		// Prime the verification cache by hitting any endpoint with
-		// the bearer.
+		// Warm the verification cache by authenticating against a
+		// route that actually checks the bearer.
 		bearer := bareHTTPClient(t)
-		bearer.GET("/vod").
-			WithHeader("Authorization", "Bearer "+token).
-			Expect().
-			Status(http.StatusOK)
-
-		// Update: rename + swap scopes for queue:read.
-		updated := e.PUT("/admin/api-keys/"+id).
-			WithJSON(internalHttp.UpdateApiKeyRequest{
-				Name:   "update-target-http-renamed",
-				Scopes: []string{"queue:read"},
-			}).
-			Expect().Status(http.StatusOK).JSON().Object()
-		updated.Path("$.data.name").IsEqual("update-target-http-renamed")
-		updated.Path("$.data.scopes").Array().ContainsAll("queue:read")
-		updated.Path("$.data.scopes").Array().NotContainsAll("vod:read")
-
-		// New scopes took effect: queue read works…
 		bearer.GET("/queue").
 			WithHeader("Authorization", "Bearer "+token).
 			Expect().
 			Status(http.StatusOK)
+
+		// Update: rename + swap scopes for vod:read (drops queue
+		// access). If the cache held a stale entry with the old
+		// scopes, the next /queue hit would still pass.
+		updated := e.PUT("/admin/api-keys/"+id).
+			WithJSON(internalHttp.UpdateApiKeyRequest{
+				Name:   "update-target-http-renamed",
+				Scopes: []string{"vod:read"},
+			}).
+			Expect().Status(http.StatusOK).JSON().Object()
+		updated.Path("$.data.name").IsEqual("update-target-http-renamed")
+		updated.Path("$.data.scopes").Array().ContainsAll("vod:read")
+		updated.Path("$.data.scopes").Array().NotContainsAll("queue:read")
+
+		// Cache flushed: previously-allowed queue read is now denied.
+		bearer.GET("/queue").
+			WithHeader("Authorization", "Bearer "+token).
+			Expect().
+			Status(http.StatusForbidden)
 	})
 
 	t.Run("UpdateRejectsUnknownScope", func(t *testing.T) {
