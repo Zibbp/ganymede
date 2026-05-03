@@ -83,7 +83,13 @@ func TestApiKeyHTTP(t *testing.T) {
 		data := obj.Value("data").Object()
 		fullSecret = data.Value("secret").String().NotEmpty().Raw()
 		prefix = data.Value("api_key").Object().Value("prefix").String().NotEmpty().Raw()
-		assert.NotEqual(t, fullSecret, prefix)
+		// Lock the published token-format contract: gym_<12-hex>_<43-char>.
+		// A regression in either segment would break leak-scanner heuristics
+		// and prefix-lookup invariants.
+		assert.Regexp(t, `^gym_[0-9a-f]{12}_[A-Za-z0-9_-]{43}$`, fullSecret,
+			"token must follow gym_<12-hex>_<43-char base64url> shape")
+		assert.Equal(t, "gym_"+prefix, fullSecret[:len("gym_"+prefix)],
+			"token's prefix segment must match the prefix returned in the DTO")
 		// Scopes round-trip on the response DTO.
 		data.Value("api_key").Object().Value("scopes").Array().ContainsAll("*:admin")
 	})
@@ -156,6 +162,15 @@ func TestApiKeyHTTP(t *testing.T) {
 		// would also return 401 but only because that route is
 		// session-only — wrong invariant.)
 		bearerOnly.GET("/queue").
+			WithHeader("Authorization", "Bearer not-a-real-key").
+			Expect().
+			Status(http.StatusUnauthorized)
+
+		// Companion: the same malformed Bearer must still fail when a
+		// valid session is also present. Catches a regression where
+		// AuthAPIKeyOrSessionMiddleware silently falls through to
+		// session auth on a bad Bearer instead of failing closed.
+		e.GET("/queue").
 			WithHeader("Authorization", "Bearer not-a-real-key").
 			Expect().
 			Status(http.StatusUnauthorized)
