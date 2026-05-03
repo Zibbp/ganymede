@@ -14,7 +14,7 @@ import (
 //	@Tags			config
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	config.Conf
+//	@Success		200	{object}	config.Config
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/config [get]
 //	@Security		ApiKeyCookieAuth
@@ -31,8 +31,8 @@ func (h *Handler) GetConfig(c echo.Context) error {
 //	@Tags			config
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		UpdateConfigRequest	true	"Config"
-//	@Success		200		{object}	UpdateConfigRequest
+//	@Param			body	body		config.Config	true	"Config"
+//	@Success		200		{object}	config.Config
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/config [put]

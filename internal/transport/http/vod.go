@@ -681,7 +681,7 @@ func (h *Handler) GetChatEmotes(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Vod ID"
-//	@Success		200	{array}		chat.GanymedeBadges
+//	@Success		200	{object}	platform.Badges
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
@@ -830,12 +830,13 @@ func (h *Handler) GetVodSpriteThumbnails(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Vod ID"
-//	@Success		200	{object}	exec.FFprobeData
+//	@Success		200	{object}	object
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/ffprobe [get]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GetFFprobe(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

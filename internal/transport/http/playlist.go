@@ -221,7 +221,7 @@ func (h *Handler) UpdatePlaylist(c echo.Context) error {
 //	@Success		200		{object}	string
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
-//	@Router			/playlist/{id} [put]
+//	@Router			/playlist/{id}/multistream/delay [put]
 //	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) SetVodDelayOnPlaylistMultistream(c echo.Context) error {
