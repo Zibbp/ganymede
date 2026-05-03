@@ -1,7 +1,7 @@
 import { Video } from "@/app/hooks/useVideos";
 import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box, Checkbox } from "@mantine/core";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import localizedFormat from "dayjs/plugin/localizedFormat";
@@ -45,9 +45,6 @@ const VideoCard = ({
   const { isLoggedIn, hasPermission } = useAuthStore()
   const [thumbnailError, setThumbnailError] = useState(false);
 
-  const [playbackProgress, setPlaybackProgress] = useState(0);
-  const [playbackIsWatched, setPlaybackIsWatched] = useState(false)
-
   // Handle thumbnail loading error
   const handleThumbnailError = () => {
     setThumbnailError(true);
@@ -62,12 +59,8 @@ const VideoCard = ({
     }
   );
 
-  // Set playback state
-  useEffect(() => {
-    if (!playbackData) return
-    setPlaybackProgress(((playbackData.time) / video.duration) * 100);
-    setPlaybackIsWatched(playbackData.status == PlaybackStatus.Finished)
-  }, [playbackData, video.duration])
+  const playbackProgress = playbackData ? (playbackData.time / video.duration) * 100 : 0;
+  const playbackIsWatched = playbackData?.status === PlaybackStatus.Finished;
 
   return (
     <Card radius="md" padding={5} className={classes.card}>
