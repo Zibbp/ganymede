@@ -92,6 +92,7 @@ func (h *Handler) ArchiveChannel(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/archive/vod [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) ArchiveVideo(c echo.Context) error {
 	body := new(ArchiveVideoRequest)
 	if err := c.Bind(body); err != nil {

@@ -27,6 +27,7 @@ type AdminService interface {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/admin/video/statistics [get]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GetVideoStatistics(c echo.Context) error {
 	resp, err := h.Service.AdminService.GetVideoStatistics(c.Request().Context())
 	if err != nil {
@@ -46,6 +47,7 @@ func (h *Handler) GetVideoStatistics(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/admin/system/overview [get]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GetSystemOverview(c echo.Context) error {
 	resp, err := h.Service.AdminService.GetSystemOverview(c.Request().Context())
 	if err != nil {
