@@ -1846,13 +1846,6 @@ definitions:
       version:
         type: string
     type: object
-  platform.Badges:
-    properties:
-      badges:
-        items:
-          $ref: '#/definitions/platform.Badge'
-        type: array
-    type: object
   platform.ChannelInfo:
     properties:
       broadcaster_type:
@@ -4409,7 +4402,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/platform.Badges'
+            items:
+              $ref: '#/definitions/platform.Badge'
+            type: array
         "400":
           description: Bad Request
           schema:

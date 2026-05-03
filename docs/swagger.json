@@ -3836,7 +3836,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/platform.Badges"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/platform.Badge"
+                            }
                         }
                     },
                     "400": {
@@ -6826,17 +6829,6 @@
                 },
                 "version": {
                     "type": "string"
-                }
-            }
-        },
-        "platform.Badges": {
-            "type": "object",
-            "properties": {
-                "badges": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/platform.Badge"
-                    }
                 }
             }
         },

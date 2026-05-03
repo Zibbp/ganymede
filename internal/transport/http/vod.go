@@ -681,7 +681,7 @@ func (h *Handler) GetChatEmotes(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Vod ID"
-//	@Success		200	{object}	platform.Badges
+//	@Success		200	{array}		platform.Badge
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse

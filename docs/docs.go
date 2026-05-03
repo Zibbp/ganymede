@@ -3839,7 +3839,10 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/platform.Badges"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/platform.Badge"
+                            }
                         }
                     },
                     "400": {
@@ -6829,17 +6832,6 @@ const docTemplate = `{
                 },
                 "version": {
                     "type": "string"
-                }
-            }
-        },
-        "platform.Badges": {
-            "type": "object",
-            "properties": {
-                "badges": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/platform.Badge"
-                    }
                 }
             }
         },
