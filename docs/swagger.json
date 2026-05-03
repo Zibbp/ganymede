@@ -20,6 +20,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get ganymede info",
@@ -88,6 +91,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Archive a twitch channel (creates channel in database and download profile image)",
@@ -693,6 +699,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Create a channel",
@@ -842,6 +851,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update a channel",
@@ -904,6 +916,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete a channel",
@@ -956,6 +971,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get config",
@@ -988,6 +1006,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update config",
@@ -1251,6 +1272,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get all watched channels",
@@ -1286,6 +1310,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Add watched channel",
@@ -1428,6 +1455,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Check watched channels if they are live. This is what runs every X seconds in the config.",
@@ -1519,6 +1549,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update watched channel",
@@ -1575,6 +1608,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete watched channel",
@@ -1934,6 +1970,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Create playlist",
@@ -2027,6 +2066,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update playlist",
@@ -2083,6 +2125,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Add vod to playlist",
@@ -2139,6 +2184,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete playlist",
@@ -2188,6 +2236,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete vod from playlist",
@@ -2246,6 +2297,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get queue items",
@@ -2295,6 +2349,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Create a queue item",
@@ -2346,6 +2403,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get queue item",
@@ -2393,6 +2453,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update queue item",
@@ -2449,6 +2512,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete queue item",
@@ -2495,6 +2561,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Read queue log file",
@@ -2551,6 +2620,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Start a task",
@@ -2754,6 +2826,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get all users",
@@ -2797,6 +2872,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get user by id",
@@ -2844,6 +2922,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update user",
@@ -2900,6 +2981,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete user",
@@ -2990,6 +3074,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Create a vod",
@@ -3213,6 +3300,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update a vod",
@@ -3275,6 +3365,9 @@
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete a vod",

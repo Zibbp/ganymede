@@ -63,6 +63,7 @@ func CheckIDType(id string) string {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/archive/channel [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) ArchiveChannel(c echo.Context) error {
 	body := new(ArchiveChannelRequest)
 	if err := c.Bind(body); err != nil {

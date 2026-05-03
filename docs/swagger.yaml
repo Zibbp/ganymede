@@ -1444,6 +1444,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Get ganymede info
       tags:
         - admin
@@ -1499,6 +1500,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Archive a twitch channel
       tags:
         - archive
@@ -1896,6 +1898,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Create a channel
       tags:
         - channel
@@ -1929,6 +1932,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Delete a channel
       tags:
         - channel
@@ -2001,6 +2005,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Update a channel
       tags:
         - channel
@@ -2055,6 +2060,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Get config
       tags:
         - config
@@ -2086,6 +2092,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Update config
       tags:
         - config
@@ -2242,6 +2249,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Get all watched channels
       tags:
         - Live
@@ -2273,6 +2281,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Add watched channel
       tags:
         - Live
@@ -2304,6 +2313,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Delete watched channel
       tags:
         - Live
@@ -2340,6 +2350,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Update watched channel
       tags:
         - Live
@@ -2426,6 +2437,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Check watched channels
       tags:
         - Live
@@ -2688,6 +2700,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Create playlist
       tags:
         - Playlist
@@ -2719,6 +2732,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Delete playlist
       tags:
         - Playlist
@@ -2783,6 +2797,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Add vod to playlist
       tags:
         - Playlist
@@ -2819,6 +2834,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Update playlist
       tags:
         - Playlist
@@ -2856,6 +2872,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Delete vod from playlist
       tags:
         - Playlist
@@ -2888,6 +2905,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Get queue items
       tags:
         - queue
@@ -2919,6 +2937,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Create a queue item
       tags:
         - queue
@@ -2948,6 +2967,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Delete queue item
       tags:
         - queue
@@ -2978,6 +2998,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Get queue item
       tags:
         - queue
@@ -3014,6 +3035,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Update queue item
       tags:
         - queue
@@ -3050,6 +3072,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Read queue log file
       tags:
         - queue
@@ -3076,6 +3099,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Start a task
       tags:
         - task
@@ -3209,6 +3233,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Get all users
       tags:
         - user
@@ -3238,6 +3263,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Delete user
       tags:
         - user
@@ -3268,6 +3294,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Get user by id
       tags:
         - user
@@ -3304,6 +3331,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Update user
       tags:
         - user
@@ -3365,6 +3393,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Create a vod
       tags:
         - vods
@@ -3402,6 +3431,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Delete a vod
       tags:
         - vods
@@ -3478,6 +3508,7 @@ paths:
             $ref: "#/definitions/utils.ErrorResponse"
       security:
         - ApiKeyCookieAuth: []
+        - ApiKeyAuth: []
       summary: Update a vod
       tags:
         - vods

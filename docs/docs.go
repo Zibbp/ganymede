@@ -27,6 +27,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get ganymede info",
@@ -95,6 +98,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Archive a twitch channel (creates channel in database and download profile image)",
@@ -700,6 +706,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Create a channel",
@@ -849,6 +858,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update a channel",
@@ -911,6 +923,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete a channel",
@@ -963,6 +978,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get config",
@@ -995,6 +1013,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update config",
@@ -1258,6 +1279,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get all watched channels",
@@ -1293,6 +1317,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Add watched channel",
@@ -1435,6 +1462,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Check watched channels if they are live. This is what runs every X seconds in the config.",
@@ -1526,6 +1556,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update watched channel",
@@ -1582,6 +1615,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete watched channel",
@@ -1941,6 +1977,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Create playlist",
@@ -2034,6 +2073,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update playlist",
@@ -2090,6 +2132,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Add vod to playlist",
@@ -2146,6 +2191,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete playlist",
@@ -2195,6 +2243,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete vod from playlist",
@@ -2253,6 +2304,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get queue items",
@@ -2302,6 +2356,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Create a queue item",
@@ -2353,6 +2410,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get queue item",
@@ -2400,6 +2460,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update queue item",
@@ -2456,6 +2519,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete queue item",
@@ -2502,6 +2568,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Read queue log file",
@@ -2558,6 +2627,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Start a task",
@@ -2761,6 +2833,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get all users",
@@ -2804,6 +2879,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get user by id",
@@ -2851,6 +2929,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update user",
@@ -2907,6 +2988,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete user",
@@ -2997,6 +3081,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Create a vod",
@@ -3220,6 +3307,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Update a vod",
@@ -3282,6 +3372,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete a vod",
