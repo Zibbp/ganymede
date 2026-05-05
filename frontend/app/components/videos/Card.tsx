@@ -71,6 +71,10 @@ const VideoCard = ({
     setPlaybackIsWatched(playbackData.status == PlaybackStatus.Finished)
   }, [playbackData, video.duration])
 
+  useEffect(() => {
+    setThumbnailLoaded(false);
+  }, [video.web_thumbnail_path])
+
   return (
     <Card radius="md" padding={5} className={classes.card}>
       <Link href={`/videos/${video.id}`}>

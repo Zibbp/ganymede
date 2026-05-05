@@ -3,7 +3,7 @@
 import { Channel } from "@/app/hooks/useChannels";
 import { AspectRatio, Card, Center, Title, Image, Skeleton } from "@mantine/core";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { env } from "next-runtime-env";
 import classes from "./Card.module.css"
 
@@ -13,6 +13,10 @@ type Props = {
 
 const ChannelCard = ({ channel }: Props) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [channel.image_path]);
 
   return (
     <div>
