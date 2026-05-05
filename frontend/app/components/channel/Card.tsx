@@ -1,6 +1,9 @@
+"use client"
+
 import { Channel } from "@/app/hooks/useChannels";
-import { AspectRatio, Card, Center, Title, Image } from "@mantine/core";
+import { AspectRatio, Card, Center, Title, Image, Skeleton } from "@mantine/core";
 import Link from "next/link";
+import { useState } from "react";
 import { env } from "next-runtime-env";
 import classes from "./Card.module.css"
 
@@ -9,12 +12,22 @@ type Props = {
 }
 
 const ChannelCard = ({ channel }: Props) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   return (
     <div>
       <Link href={"/channels/" + channel.name} className={classes.link}>
         <Card key={channel.id} p="md" radius="md" >
           <AspectRatio ratio={300 / 300}>
-            <Image src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${channel.image_path}`} alt={`${channel.name}`} fallbackSrc="/images/ganymede_default_channel_image.webp" />
+            <Skeleton visible={!imageLoaded} animate radius="md">
+              <Image
+                src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${channel.image_path}`}
+                alt={`${channel.name}`}
+                fallbackSrc="/images/ganymede_default_channel_image.webp"
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageLoaded(true)}
+              />
+            </Skeleton>
           </AspectRatio>
           <Center mt={5}>
             <Title order={3} mt={5}>
