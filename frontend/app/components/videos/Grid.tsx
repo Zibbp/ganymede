@@ -242,7 +242,10 @@ const VideoGrid = <T extends Video>({
         }),
       t("markedVideosAsWatchedNotification"),
       async () => {
-        await queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["playback-data"] }),
+          queryClient.invalidateQueries({ queryKey: ["playback-videos"] }),
+        ]);
       }
     );
   };
@@ -259,7 +262,10 @@ const VideoGrid = <T extends Video>({
         }),
       t("markedVideosAsUnwatchedNotification"),
       async () => {
-        await queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["playback-data"] }),
+          queryClient.invalidateQueries({ queryKey: ["playback-videos"] }),
+        ]);
       }
     );
   };
