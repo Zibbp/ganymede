@@ -1,5 +1,5 @@
 import { Video } from "@/app/hooks/useVideos";
-import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box, Checkbox } from "@mantine/core";
+import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box, Checkbox, Skeleton } from "@mantine/core";
 import Link from "next/link";
 import { useState } from "react";
 import dayjs from "dayjs";
@@ -44,10 +44,12 @@ const VideoCard = ({
   const t = useTranslations('VideoComponents')
   const { isLoggedIn, hasPermission } = useAuthStore()
   const [thumbnailError, setThumbnailError] = useState(false);
+  const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
 
   // Handle thumbnail loading error
   const handleThumbnailError = () => {
     setThumbnailError(true);
+    setThumbnailLoaded(true);
   };
 
   const axiosPrivate = useAxiosPrivate();
@@ -61,6 +63,10 @@ const VideoCard = ({
 
   const playbackProgress = playbackData ? (playbackData.time / video.duration) * 100 : 0;
   const playbackIsWatched = playbackData?.status === PlaybackStatus.Finished;
+
+  useEffect(() => {
+    setThumbnailLoaded(false);
+  }, [video.web_thumbnail_path])
 
   return (
     <Card radius="md" padding={5} className={classes.card}>
@@ -77,17 +83,20 @@ const VideoCard = ({
                   </Center></div>
               }} />
             )}
-            <Image
-              className={classes.videoImage}
-              src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
-                video.web_thumbnail_path
-              )}`}
-              onError={handleThumbnailError}
-              width={thumbnailError ? "100%" : "100%"}
-              height={thumbnailError ? "100%" : "100%"}
-              fallbackSrc="/images/ganymede-thumbnail.webp"
-              alt={video.title}
-            />
+            <Skeleton visible={!thumbnailLoaded} animate radius={0} height="100%">
+              <Image
+                className={classes.videoImage}
+                src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
+                  video.web_thumbnail_path
+                )}`}
+                onLoad={() => setThumbnailLoaded(true)}
+                onError={handleThumbnailError}
+                width={thumbnailError ? "100%" : "100%"}
+                height={thumbnailError ? "100%" : "100%"}
+                fallbackSrc="/images/ganymede-thumbnail.webp"
+                alt={video.title}
+              />
+            </Skeleton>
 
             {video.sprite_thumbnails_enabled && (
               <VideoSpritePeek
