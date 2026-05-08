@@ -635,7 +635,9 @@ func extractSharedChatArgs(args []string) []string {
 		for _, flag := range sharedFlagNames {
 			if arg == flag {
 				result = append(result, arg)
-				if i+1 < len(args) {
+				// Only consume the next token as a value if it isn't itself a flag,
+				// otherwise `--stv --temp-path /p` would swallow `--temp-path`.
+				if i+1 < len(args) && !strings.HasPrefix(args[i+1], "--") {
 					result = append(result, args[i+1])
 					i++
 				}

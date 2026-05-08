@@ -52,6 +52,11 @@ func Test_extractSharedChatArgs(t *testing.T) {
 			want: []string{"--stv"},
 		},
 		{
+			name: "bare boolean does not swallow following flag",
+			in:   []string{"--stv", "--temp-path", "/var/cache/td"},
+			want: []string{"--stv", "--temp-path", "/var/cache/td"},
+		},
+		{
 			name: "does not match prefix-only flags",
 			in:   []string{"--stvthing", "--bttvfoo=1", "--temp-pathish"},
 			want: nil,
