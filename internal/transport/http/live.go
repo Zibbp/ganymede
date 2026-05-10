@@ -103,6 +103,7 @@ type ArchiveLiveChannelRequest struct {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/live [get]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
 	channels, err := h.Service.LiveService.GetLiveWatchedChannels(c)
 	if err != nil {
@@ -125,6 +126,7 @@ func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/live [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 	ccr := new(AddWatchedChannelRequest)
 	if err := c.Bind(ccr); err != nil {
@@ -204,6 +206,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/live/{id} [put]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 	id := c.Param("id")
 	lID, err := uuid.Parse(id)
@@ -282,6 +285,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/live/{id} [delete]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) DeleteLiveWatchedChannel(c echo.Context) error {
 	id := c.Param("id")
 	lID, err := uuid.Parse(id)

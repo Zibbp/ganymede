@@ -67,6 +67,7 @@ type UpdateQueueRequest struct {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) CreateQueueItem(c echo.Context) error {
 	cqt := new(CreateQueueRequest)
 	if err := c.Bind(cqt); err != nil {
@@ -102,6 +103,7 @@ func (h *Handler) CreateQueueItem(c echo.Context) error {
 //	@Failure		500			{object}	utils.ErrorResponse
 //	@Router			/queue [get]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GetQueueItems(c echo.Context) error {
 	processing := false
 	processingParam := c.QueryParam("processing")
@@ -137,6 +139,7 @@ func (h *Handler) GetQueueItems(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/queue/{id} [get]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GetQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -163,6 +166,7 @@ func (h *Handler) GetQueueItem(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/{id} [put]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) UpdateQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -214,6 +218,7 @@ func (h *Handler) UpdateQueueItem(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/queue/{id} [delete]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) DeleteQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -240,6 +245,7 @@ func (h *Handler) DeleteQueueItem(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/{id}/tail [get]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 	id := c.Param("id")
 
@@ -278,6 +284,7 @@ func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/{id}/stop [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) StopQueueItem(c echo.Context) error {
 	id := c.Param("id")
 
@@ -305,6 +312,7 @@ func (h *Handler) StopQueueItem(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/task/start [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) StartQueueTask(c echo.Context) error {
 	body := new(StartQueueTaskRequest)
 	if err := c.Bind(body); err != nil {

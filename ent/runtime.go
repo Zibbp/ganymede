@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/zibbp/ganymede/ent/apikey"
 	"github.com/zibbp/ganymede/ent/blockedvideos"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
@@ -30,6 +31,38 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	apikeyFields := schema.ApiKey{}.Fields()
+	_ = apikeyFields
+	// apikeyDescName is the schema descriptor for name field.
+	apikeyDescName := apikeyFields[1].Descriptor()
+	// apikey.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	apikey.NameValidator = apikeyDescName.Validators[0].(func(string) error)
+	// apikeyDescPrefix is the schema descriptor for prefix field.
+	apikeyDescPrefix := apikeyFields[3].Descriptor()
+	// apikey.PrefixValidator is a validator for the "prefix" field. It is called by the builders before save.
+	apikey.PrefixValidator = apikeyDescPrefix.Validators[0].(func(string) error)
+	// apikeyDescHashedSecret is the schema descriptor for hashed_secret field.
+	apikeyDescHashedSecret := apikeyFields[4].Descriptor()
+	// apikey.HashedSecretValidator is a validator for the "hashed_secret" field. It is called by the builders before save.
+	apikey.HashedSecretValidator = apikeyDescHashedSecret.Validators[0].(func(string) error)
+	// apikeyDescScopes is the schema descriptor for scopes field.
+	apikeyDescScopes := apikeyFields[5].Descriptor()
+	// apikey.DefaultScopes holds the default value on creation for the scopes field.
+	apikey.DefaultScopes = apikeyDescScopes.Default.([]string)
+	// apikeyDescUpdatedAt is the schema descriptor for updated_at field.
+	apikeyDescUpdatedAt := apikeyFields[9].Descriptor()
+	// apikey.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	apikey.DefaultUpdatedAt = apikeyDescUpdatedAt.Default.(func() time.Time)
+	// apikey.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	apikey.UpdateDefaultUpdatedAt = apikeyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// apikeyDescCreatedAt is the schema descriptor for created_at field.
+	apikeyDescCreatedAt := apikeyFields[10].Descriptor()
+	// apikey.DefaultCreatedAt holds the default value on creation for the created_at field.
+	apikey.DefaultCreatedAt = apikeyDescCreatedAt.Default.(func() time.Time)
+	// apikeyDescID is the schema descriptor for id field.
+	apikeyDescID := apikeyFields[0].Descriptor()
+	// apikey.DefaultID holds the default value on creation for the id field.
+	apikey.DefaultID = apikeyDescID.Default.(func() uuid.UUID)
 	blockedvideosFields := schema.BlockedVideos{}.Fields()
 	_ = blockedvideosFields
 	// blockedvideosDescCreatedAt is the schema descriptor for created_at field.

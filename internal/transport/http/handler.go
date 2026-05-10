@@ -20,6 +20,7 @@ import (
 	"github.com/rs/zerolog/log"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	_ "github.com/zibbp/ganymede/docs"
+	"github.com/zibbp/ganymede/internal/api_key"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/platform"
@@ -44,6 +45,7 @@ type Services struct {
 	CategoryService     CategoryService
 	BlockedVideoService BlockedVideoService
 	NotificationService NotificationService
+	ApiKeyService       ApiKeyService
 	PlatformTwitch      platform.Platform
 }
 
@@ -56,9 +58,20 @@ type Handler struct {
 
 var sessionManager *scs.SessionManager
 
-func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, notificationService NotificationService, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
+// apiKeyService is the package-level ApiKeyService used by the auth
+// middleware. It is wired in NewHandler, mirroring the sessionManager
+// pattern above so middleware functions stay parameter-free and chain
+// cleanly with Echo's middleware signature.
+var apiKeyService *api_key.Service
+
+func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, notificationService NotificationService, apiKeySvc *api_key.Service, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
 	log.Debug().Msg("creating route handler")
 	envConfig := config.GetEnvConfig()
+
+	// Stash the ApiKeyService at package scope so the auth middleware
+	// (which has the plain echo.MiddlewareFunc signature) can reach it
+	// without each route having to wrap a closure.
+	apiKeyService = apiKeySvc
 
 	sessionManager = scs.New()
 	sessionManager.Store = pgxstore.New(database.ConnPool)
@@ -86,16 +99,25 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 			CategoryService:     categoryService,
 			BlockedVideoService: blockedVideoService,
 			NotificationService: notificationService,
+			ApiKeyService:       apiKeySvc,
 			PlatformTwitch:      platformTwitch,
 		},
 		SessionManager: sessionManager,
 		RiverUIServer:  riverUIServer,
 	}
 
-	// Enable gzip compression for API routes
+	// Enable gzip compression for API routes only.
+	//
+	// We use HasPrefix("/api/") rather than Contains("/api") because the
+	// catch-all at the bottom of mapRoutes proxies every non-matching
+	// path to the Next.js frontend, which serves its own gzipped
+	// responses. A frontend path that happens to contain the substring
+	// "api" (e.g. /admin/api-keys) was being double-gzipped: Next.js
+	// gzipped once, Echo gzipped again, and the browser decoded only the
+	// outer layer — leaving raw gzip bytes as the page body.
 	h.Server.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
-			return !strings.Contains(c.Request().URL.Path, "/api")
+			return !strings.HasPrefix(c.Request().URL.Path, "/api/")
 		},
 	}))
 
@@ -204,24 +226,32 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	authGroup.GET("/oauth/callback", h.OAuthCallback)
 
 	// Channel
+	//
+	// Write/admin endpoints accept either a session cookie or an API
+	// key. GETs stay public.
 	channelGroup := e.Group("/channel")
-	channelGroup.POST("", h.CreateChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	channelGroup.POST("", h.CreateChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeChannelWrite))
 	channelGroup.GET("", h.GetChannels)
 	channelGroup.GET("/:id", h.GetChannel)
 	channelGroup.GET("/name/:name", h.GetChannelByName)
-	channelGroup.PUT("/:id", h.UpdateChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	channelGroup.DELETE("/:id", h.DeleteChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	channelGroup.POST("/:id/update-image", h.UpdateChannelImage, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	channelGroup.PUT("/:id", h.UpdateChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeChannelWrite))
+	channelGroup.DELETE("/:id", h.DeleteChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeChannelAdmin))
+	channelGroup.POST("/:id/update-image", h.UpdateChannelImage, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeChannelWrite))
 
 	// VOD
+	//
+	// Write/admin endpoints (POST/PUT/DELETE for the VOD itself) accept
+	// either a session cookie or an API key — see issue #1070, where
+	// external scripts need to delete VODs after archiving them. Read
+	// endpoints stay unauthenticated as before.
 	vodGroup := e.Group("/vod")
-	vodGroup.POST("", h.CreateVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	vodGroup.POST("", h.CreateVod, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
 	vodGroup.GET("", h.GetVods)
 	vodGroup.GET("/:id", h.GetVod)
 	vodGroup.GET("/external_id/:external_id", h.GetVod)
 	vodGroup.GET("/search", h.SearchVods)
-	vodGroup.PUT("/:id", h.UpdateVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	vodGroup.DELETE("/:id", h.DeleteVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	vodGroup.PUT("/:id", h.UpdateVod, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
+	vodGroup.DELETE("/:id", h.DeleteVod, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeVodAdmin))
 	vodGroup.GET("/:id/playlist", h.GetVodPlaylists)
 	vodGroup.GET("/:id/clips", h.GetVodClips)
 	vodGroup.GET("/paginate", h.GetVodsPagination)
@@ -231,22 +261,29 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.GET("/:id/chat/emotes", h.GetChatEmotes)
 	vodGroup.GET("/:id/chat/badges", h.GetChatBadges)
 	vodGroup.GET("/:id/chat/histogram", h.GetVodChatHistogram)
-	vodGroup.POST("/:id/lock", h.LockVod, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	vodGroup.POST("/:id/generate-static-thumbnail", h.GenerateStaticThumbnail, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	vodGroup.POST("/:id/generate-sprite-thumbnails", h.GenerateSpriteThumbnails, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	vodGroup.POST("/:id/lock", h.LockVod, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
+	vodGroup.POST("/:id/generate-static-thumbnail", h.GenerateStaticThumbnail, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
+	vodGroup.POST("/:id/generate-sprite-thumbnails", h.GenerateSpriteThumbnails, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
 	vodGroup.GET("/:id/thumbnails/vtt", h.GetVodSpriteThumbnails)
-	vodGroup.POST("/:id/ffprobe", h.GetFFprobe, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
+	vodGroup.POST("/:id/ffprobe", h.GetFFprobe, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeVodWrite))
 
 	// Queue
+	//
+	// Issue #1070 calls out "running actions" — i.e. starting tasks from
+	// scripts. The queue is the surface where archive/transcode jobs
+	// live, so we accept API keys on every queue endpoint. Read endpoints
+	// require read scope (matches ArchiverRole), writes require write
+	// scope (matches EditorRole), and POST/DELETE that previously
+	// required AdminRole now require admin scope.
 	queueGroup := e.Group("/queue")
-	queueGroup.POST("", h.CreateQueueItem, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	queueGroup.GET("", h.GetQueueItems, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
-	queueGroup.GET("/:id", h.GetQueueItem, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
-	queueGroup.PUT("/:id", h.UpdateQueueItem, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	queueGroup.DELETE("/:id", h.DeleteQueueItem, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	queueGroup.GET("/:id/tail", h.ReadQueueLogFile, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
-	queueGroup.POST("/:id/stop", h.StopQueueItem, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	queueGroup.POST("/task/start", h.StartQueueTask, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
+	queueGroup.POST("", h.CreateQueueItem, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeQueueAdmin))
+	queueGroup.GET("", h.GetQueueItems, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeQueueRead))
+	queueGroup.GET("/:id", h.GetQueueItem, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeQueueRead))
+	queueGroup.PUT("/:id", h.UpdateQueueItem, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeQueueWrite))
+	queueGroup.DELETE("/:id", h.DeleteQueueItem, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeQueueAdmin))
+	queueGroup.GET("/:id/tail", h.ReadQueueLogFile, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeQueueRead))
+	queueGroup.POST("/:id/stop", h.StopQueueItem, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeQueueAdmin))
+	queueGroup.POST("/task/start", h.StartQueueTask, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeQueueWrite))
 
 	// Twitch
 	twitchGroup := e.Group("/twitch")
@@ -256,37 +293,62 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	// twitchGroup.GET("/categories", h.GetTwitchCategories)
 
 	// Archive
+	//
+	// All POSTs accept either a session cookie or an API key. Archive
+	// channel/video are write-tier (Archiver role); the chat converter
+	// is admin-tier (Admin role).
 	archiveGroup := e.Group("/archive")
-	archiveGroup.POST("/channel", h.ArchiveChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
-	archiveGroup.POST("/video", h.ArchiveVideo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
-	archiveGroup.POST("/convert-twitch-live-chat", h.ConvertTwitchChat, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	archiveGroup.POST("/channel", h.ArchiveChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeArchiveWrite))
+	archiveGroup.POST("/video", h.ArchiveVideo, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.ArchiverRole, utils.ApiKeyScopeArchiveWrite))
+	archiveGroup.POST("/convert-twitch-live-chat", h.ConvertTwitchChat, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeArchiveAdmin))
 
-	// Admin
+	// Admin: system stats and info.
+	//
+	// Read-only system endpoints accept either a session cookie or an
+	// API key with system:read. The /admin/api-keys management endpoints
+	// further down stay session-only — minting keys requires the admin
+	// web UI to prevent key-mints-key escalation.
 	adminGroup := e.Group("/admin")
-	adminGroup.GET("/video-statistics", h.GetVideoStatistics, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	adminGroup.GET("/system-overview", h.GetSystemOverview, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	adminGroup.GET("/storage-distribution", h.GetStorageDistribution, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	adminGroup.GET("/info", h.GetInfo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.GET("/video-statistics", h.GetVideoStatistics, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
+	adminGroup.GET("/system-overview", h.GetSystemOverview, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
+	adminGroup.GET("/storage-distribution", h.GetStorageDistribution, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
+	adminGroup.GET("/info", h.GetInfo, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
+
+	// Admin: API keys. Session-only — admins must use the web UI to mint
+	// or revoke keys. This avoids the chicken-and-egg of needing a key
+	// to manage keys, and means a stolen key cannot mint or escalate
+	// other keys.
+	adminGroup.GET("/api-keys", h.ListApiKeys, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.POST("/api-keys", h.CreateApiKey, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.PUT("/api-keys/:id", h.UpdateApiKey, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	adminGroup.DELETE("/api-keys/:id", h.DeleteApiKey, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
 
 	// User
+	//
+	// All endpoints require AdminRole for sessions. API keys are gated
+	// at user:read for GETs, user:write for PUT, user:admin for DELETE
+	// — same tier-by-method pattern used elsewhere.
 	userGroup := e.Group("/user")
-	userGroup.GET("", h.GetUsers, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	userGroup.GET("/:id", h.GetUser, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	userGroup.PUT("/:id", h.UpdateUser, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	userGroup.DELETE("/:id", h.DeleteUser, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	userGroup.GET("", h.GetUsers, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeUserRead))
+	userGroup.GET("/:id", h.GetUser, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeUserRead))
+	userGroup.PUT("/:id", h.UpdateUser, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeUserWrite))
+	userGroup.DELETE("/:id", h.DeleteUser, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeUserAdmin))
 
 	// Config
 	configGroup := e.Group("/config")
-	configGroup.GET("", h.GetConfig, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	configGroup.PUT("", h.UpdateConfig, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	configGroup.GET("", h.GetConfig, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeConfigRead))
+	configGroup.PUT("", h.UpdateConfig, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeConfigWrite))
 
 	// Live
+	//
+	// Editor-role surface: GETs at live:read, mutations at live:write
+	// (DELETE inclusive, mirroring the role tier).
 	liveGroup := e.Group("/live")
-	liveGroup.GET("", h.GetLiveWatchedChannels, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	liveGroup.POST("", h.AddLiveWatchedChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	liveGroup.GET("/check", h.Check, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	liveGroup.GET("", h.GetLiveWatchedChannels, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeLiveRead))
+	liveGroup.POST("", h.AddLiveWatchedChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeLiveWrite))
+	liveGroup.PUT("/:id", h.UpdateLiveWatchedChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeLiveWrite))
+	liveGroup.DELETE("/:id", h.DeleteLiveWatchedChannel, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeLiveWrite))
+	liveGroup.GET("/check", h.Check, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeLiveRead))
 	// liveGroup.GET("/vod", h.CheckVodWatchedChannels, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
 	// liveGroup.POST("/archive", h.ArchiveLiveChannel, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.ArchiverRole))
 
@@ -301,31 +363,39 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	playbackGroup.POST("/start", h.StartPlayback)
 
 	// Playlist
+	//
+	// All write endpoints accept either a session cookie or an API key.
+	// Issue #1070's second use case: scripts that auto-create or
+	// reorder playlists. GET endpoints stay unauthenticated.
 	playlistGroup := e.Group("/playlist")
 	playlistGroup.GET("/:id", h.GetPlaylist)
 	playlistGroup.GET("", h.GetPlaylists)
-	playlistGroup.POST("", h.CreatePlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.POST("/:id", h.AddVodToPlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.DELETE("/:id/vod", h.DeleteVodFromPlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.DELETE("/:id", h.DeletePlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.PUT("/:id", h.UpdatePlaylist, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.PUT("/:id/multistream/delay", h.SetVodDelayOnPlaylistMultistream, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.PUT("/:id/rules", h.SetPlaylistRules, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.GET("/:id/rules", h.GetPlaylistRules, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	playlistGroup.POST("/:id/rules/test", h.TestPlaylistRules, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	playlistGroup.POST("", h.CreatePlaylist, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopePlaylistWrite))
+	playlistGroup.POST("/:id", h.AddVodToPlaylist, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopePlaylistWrite))
+	playlistGroup.DELETE("/:id/vod", h.DeleteVodFromPlaylist, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopePlaylistWrite))
+	playlistGroup.DELETE("/:id", h.DeletePlaylist, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopePlaylistWrite))
+	playlistGroup.PUT("/:id", h.UpdatePlaylist, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopePlaylistWrite))
+	playlistGroup.PUT("/:id/multistream/delay", h.SetVodDelayOnPlaylistMultistream, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopePlaylistWrite))
+	playlistGroup.PUT("/:id/rules", h.SetPlaylistRules, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopePlaylistWrite))
+	playlistGroup.GET("/:id/rules", h.GetPlaylistRules, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopePlaylistRead))
+	playlistGroup.POST("/:id/rules/test", h.TestPlaylistRules, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopePlaylistWrite))
 
 	// Task
 	taskGroup := e.Group("/task")
-	taskGroup.POST("/start", h.StartTask, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	taskGroup.POST("/start", h.StartTask, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeTaskAdmin))
 
 	// Notification
+	//
+	// All endpoints require AdminRole for sessions. API keys are gated
+	// at notification:read for GETs, notification:write for create/
+	// update/test, notification:admin for DELETE.
 	notificationGroup := e.Group("/notification")
-	notificationGroup.GET("", h.GetNotifications, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	notificationGroup.GET("/:id", h.GetNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	notificationGroup.POST("", h.CreateNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	notificationGroup.PUT("/:id", h.UpdateNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	notificationGroup.DELETE("/:id", h.DeleteNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
-	notificationGroup.POST("/:id/test", h.TestNotification, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.AdminRole))
+	notificationGroup.GET("", h.GetNotifications, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationRead))
+	notificationGroup.GET("/:id", h.GetNotification, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationRead))
+	notificationGroup.POST("", h.CreateNotification, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationWrite))
+	notificationGroup.PUT("/:id", h.UpdateNotification, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationWrite))
+	notificationGroup.DELETE("/:id", h.DeleteNotification, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationAdmin))
+	notificationGroup.POST("/:id/test", h.TestNotification, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeNotificationWrite))
 
 	// Chapter
 	chapterGroup := e.Group("/chapter")
@@ -337,10 +407,13 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	categoryGroup.GET("", h.GetCategories)
 
 	// Blocked
+	//
+	// Public reads stay public. Write endpoints (block/unblock) accept
+	// API keys at blocked_video:write — Editor role for sessions.
 	blockedGroup := e.Group("/blocked-video")
 	blockedGroup.GET("", h.GetBlockedVideos)
-	blockedGroup.POST("/:id", h.CreateBlockedVideo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
-	blockedGroup.DELETE("/:id", h.DeleteBlockedVideo, AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
+	blockedGroup.POST("/:id", h.CreateBlockedVideo, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeBlockedVideoWrite))
+	blockedGroup.DELETE("/:id", h.DeleteBlockedVideo, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeBlockedVideoWrite))
 	blockedGroup.GET("/:id", h.IsVideoBlocked)
 }
 

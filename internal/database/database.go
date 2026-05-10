@@ -102,6 +102,14 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 			log.Fatal().Err(err).Msg("error running auto migration")
 		}
 
+		// Post-migration housekeeping: drop columns that were removed from
+		// the schema. ent's auto-migrate runs without WithDropColumn and
+		// therefore leaves orphaned columns in place. Each statement here
+		// must be idempotent (use IF EXISTS) and safe to repeat on every
+		// boot. Runs under the same advisory lock as Schema.Create so two
+		// servers booting simultaneously don't race.
+		dropOrphanedColumns(ctx, conn)
+
 		// check if any users exist
 		users, err := client.User.Query().All(ctx)
 		if err != nil {
@@ -123,6 +131,34 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 	}
 
 	return db
+}
+
+// dropOrphanedColumns runs idempotent DROP COLUMN statements for fields
+// that have been removed from the ent schema. ent's auto-migration is
+// purposefully conservative — it never drops columns — so once a field
+// is removed from ent/schema/*.go we still need to clean up the DB
+// shape ourselves. Each statement uses IF EXISTS so it is safe to run
+// on every boot, and on every existing deploy regardless of whether the
+// column was ever present.
+//
+// Caller is expected to hold the migration advisory lock (see
+// pg_advisory_lock above) so two booting servers don't race.
+func dropOrphanedColumns(ctx context.Context, conn *pgxpool.Conn) {
+	statements := []struct{ name, sql string }{
+		{
+			// Removed when ApiKey.scope (single ENUM) was replaced by
+			// ApiKey.scopes (JSON list of resource:tier strings).
+			name: "api_keys.scope",
+			sql:  "ALTER TABLE api_keys DROP COLUMN IF EXISTS scope",
+		},
+	}
+	for _, s := range statements {
+		if _, err := conn.Exec(ctx, s.sql); err != nil {
+			// Don't panic — a missing column or a permissions issue
+			// shouldn't block the server from starting. Log and continue.
+			log.Warn().Err(err).Str("statement", s.name).Msg("drop orphaned column failed")
+		}
+	}
 }
 
 func seedDatabase(client *ent.Client) error {

@@ -93,6 +93,7 @@ type SearchQueryParams struct {
 //	@Failure		409		{object}	utils.ErrorResponse
 //	@Router			/vod [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) CreateVod(c echo.Context) error {
 	var req CreateVodRequest
 	if err := c.Bind(&req); err != nil {
@@ -276,6 +277,7 @@ func (h *Handler) GetVod(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id} [delete]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) DeleteVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -312,6 +314,7 @@ func (h *Handler) DeleteVod(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/vod/{id} [put]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) UpdateVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -678,7 +681,7 @@ func (h *Handler) GetChatEmotes(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Vod ID"
-//	@Success		200	{array}		chat.GanymedeBadges
+//	@Success		200	{array}		platform.Badge
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
@@ -827,12 +830,13 @@ func (h *Handler) GetVodSpriteThumbnails(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Vod ID"
-//	@Success		200	{object}	exec.FFprobeData
+//	@Success		200	{object}	object
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/ffprobe [get]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GetFFprobe(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
