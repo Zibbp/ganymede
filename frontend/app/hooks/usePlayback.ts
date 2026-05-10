@@ -60,7 +60,6 @@ const useFetchPlaybackForVideo = (
     queryKey: ["playback-data", videoId],
     queryFn: () => fetchPlaybackForVideo(axiosPrivate, videoId),
     refetchInterval: false,
-    refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchIntervalInBackground: false,
@@ -91,9 +90,14 @@ const useStartPlaybackForVideo = (
     "queryKey" | "queryFn"
   >
 ) => {
+  const queryClient = useQueryClient();
   return useMutation<ApiResponse<NullResponse>, Error, void, [string, string]>({
     mutationFn: () => startPlaybackForVideo(axiosPrivate, videoId),
     ...options,
+    onSuccess: (data, variables, onMutateResult, context) => {
+      queryClient.invalidateQueries({ queryKey: ["playback-videos"] });
+      options?.onSuccess?.(data, variables, onMutateResult, context);
+    },
   });
 };
 
@@ -118,6 +122,7 @@ const updatePlaybackProgressForVideo = async (
 
 // Custom hook that uses the mutation with proper typing
 const useUpdatePlaybackProgressForVideo = () => {
+  const queryClient = useQueryClient();
   return useMutation<
     ApiResponse<NullResponse>,
     Error,
@@ -125,6 +130,10 @@ const useUpdatePlaybackProgressForVideo = () => {
   >({
     mutationFn: ({ axiosPrivate, videoId, time }) =>
       updatePlaybackProgressForVideo(axiosPrivate, videoId, time),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["playback-videos"] });
+      queryClient.invalidateQueries({ queryKey: ["playback-data", variables.videoId] });
+    },
   });
 };
 
@@ -149,6 +158,7 @@ const setPlaybackProgressForVideo = async (
 
 // Custom hook that uses the mutation with proper typing
 const useSetPlaybackProgressForVideo = () => {
+  const queryClient = useQueryClient();
   return useMutation<
     ApiResponse<NullResponse>,
     Error,
@@ -156,6 +166,10 @@ const useSetPlaybackProgressForVideo = () => {
   >({
     mutationFn: ({ axiosPrivate, videoId, status }) =>
       setPlaybackProgressForVideo(axiosPrivate, videoId, status),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["playback-videos"] });
+      queryClient.invalidateQueries({ queryKey: ["playback-data", variables.videoId] });
+    },
   });
 };
 
@@ -216,6 +230,7 @@ const useMarkVideoAsWatched = () => {
       onSuccess: (_, variables) => {
         if (variables.invalidatePlaybackQuery !== false) {
           queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+          queryClient.invalidateQueries({ queryKey: ["playback-videos"] });
         }
       },
     }
@@ -235,6 +250,7 @@ const useDeletePlayback = () => {
     onSuccess: (_, variables) => {
       if (variables.invalidatePlaybackQuery !== false) {
         queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+        queryClient.invalidateQueries({ queryKey: ["playback-videos"] });
       }
     },
   });
