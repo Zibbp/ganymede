@@ -502,7 +502,15 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chatdownload output to %s", logFilePath)
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, "chatdownload", "--id", video.ExtID, "--embed-images", "--collision", "overwrite", "-o", video.TmpChatDownloadPath)
+	cmdArgs = append(cmdArgs, "chatdownload", "--id", video.ExtID, "--embed-images", "--collision", "overwrite")
+
+	// Forward shared chat flags from the chat render config so the user's
+	// --bttv/--ffz/--stv/--temp-path preferences also apply to chatdownload,
+	// which fetches emotes for embedding when --embed-images is set.
+	configRenderArgs := config.Get().Parameters.ChatRender
+	cmdArgs = append(cmdArgs, extractSharedChatArgs(strings.Fields(configRenderArgs))...)
+
+	cmdArgs = append(cmdArgs, "-o", video.TmpChatDownloadPath)
 
 	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running TwitchDownloaderCLI")
 
@@ -616,6 +624,34 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
+// extractSharedChatArgs returns the subset of args from a chatrender arg list
+// that are also valid for chatupdate and chatdownload.
+func extractSharedChatArgs(args []string) []string {
+	// --collision is omitted: every caller hardcodes it.
+	sharedFlagNames := []string{"--bttv", "--ffz", "--stv", "--temp-path"}
+	var result []string
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		for _, flag := range sharedFlagNames {
+			if arg == flag {
+				result = append(result, arg)
+				// Only consume the next token as a value if it isn't itself a flag,
+				// otherwise `--stv --temp-path /p` would swallow `--temp-path`.
+				if i+1 < len(args) && !strings.HasPrefix(args[i+1], "--") {
+					result = append(result, args[i+1])
+					i++
+				}
+				break
+			}
+			if strings.HasPrefix(arg, flag+"=") {
+				result = append(result, arg)
+				break
+			}
+		}
+	}
+	return result
+}
+
 // checkLogForNoElements returns true if the log file contains the expected message.
 //
 // Used to check if the chat render failure was caused by no messages in the chat.
@@ -660,7 +696,16 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging TwitchDownloader output to %s", logFilePath)
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, "chatupdate", "-i", video.TmpLiveChatConvertPath, "--embed-missing", "--collision", "overwrite", "-o", video.TmpChatDownloadPath)
+	cmdArgs = append(cmdArgs, "chatupdate", "-i", video.TmpLiveChatConvertPath, "--embed-missing", "--collision", "overwrite")
+
+	// Forward shared chat flags from the chat render config so the user's
+	// --bttv/--ffz/--stv/--temp-path preferences also apply to chatupdate,
+	// which fetches emotes for embedding and can otherwise hang on a
+	// third-party timeout.
+	configRenderArgs := config.Get().Parameters.ChatRender
+	cmdArgs = append(cmdArgs, extractSharedChatArgs(strings.Fields(configRenderArgs))...)
+
+	cmdArgs = append(cmdArgs, "-o", video.TmpChatDownloadPath)
 
 	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running TwitchDownloaderCLI")
 
