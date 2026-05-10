@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,7 +15,9 @@ import (
 )
 
 var (
-	TwitchApiUrl = "https://api.twitch.tv/helix"
+	TwitchApiUrl             = "https://api.twitch.tv/helix"
+	TwitchAuthUrl            = "https://id.twitch.tv/oauth2/token"
+	twitchTokenRefreshBuffer = 5 * time.Minute
 )
 
 // authentication response
@@ -175,10 +178,10 @@ type TwitchSpriteManifest []struct {
 }
 
 // authenticate sends a POST request to Twitch for authentication using client credentials. An AuthenTokenResponse is returned on success containing the access token.
-func twitchAuthenticate(clientId string, clientSecret string) (*AuthTokenResponse, error) {
+func twitchAuthenticate(ctx context.Context, clientId string, clientSecret string) (*AuthTokenResponse, error) {
 	client := &http.Client{}
 
-	req, err := http.NewRequest("POST", "https://id.twitch.tv/oauth2/token", nil)
+	req, err := http.NewRequestWithContext(ctx, "POST", TwitchAuthUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -218,11 +221,16 @@ func twitchAuthenticate(clientId string, clientSecret string) (*AuthTokenRespons
 	return &authTokenResponse, nil
 }
 
-func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams url.Values, headers map[string]string) ([]byte, error) {
+func (c *TwitchConnection) twitchMakeHTTPRequest(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string) ([]byte, error) {
 	client := &http.Client{}
+	tokenRefreshedAfterUnauthorized := false
 
 	for attempt := 0; attempt < maxRetryAttempts; attempt++ {
-		req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", TwitchApiUrl, url), nil)
+		if err := c.ensureValidAccessToken(ctx); err != nil {
+			return nil, fmt.Errorf("failed to refresh twitch access token: %v", err)
+		}
+
+		req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("%s/%s", TwitchApiUrl, url), nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %v", err)
 		}
@@ -234,7 +242,7 @@ func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams
 
 		// Set auth headers
 		req.Header.Set("Client-ID", c.ClientId)
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.currentAccessToken()))
 
 		// Set query parameters
 		req.URL.RawQuery = queryParams.Encode()
@@ -243,11 +251,6 @@ func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams
 		if err != nil {
 			return nil, fmt.Errorf("failed to make request: %v", err)
 		}
-		defer func() {
-			if err := resp.Body.Close(); err != nil {
-				log.Debug().Err(err).Msg("error closing response body")
-			}
-		}()
 
 		// Log rate limit usage if over threshold
 		rateLimit := 0
@@ -278,6 +281,9 @@ func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams
 		if rateLimitResetStr := resp.Header.Get("Ratelimit-Reset"); rateLimitResetStr != "" {
 			unixTime, err := strconv.ParseInt(rateLimitResetStr, 10, 64)
 			if err != nil {
+				if closeErr := resp.Body.Close(); closeErr != nil {
+					log.Debug().Err(closeErr).Msg("error closing response body")
+				}
 				return nil, fmt.Errorf("failed to parse Ratelimit-Reset: %v", err)
 			}
 			rateLimitReset = time.Unix(unixTime, 0)
@@ -296,8 +302,19 @@ func (c *TwitchConnection) twitchMakeHTTPRequest(method, url string, queryParams
 		}
 
 		body, err := io.ReadAll(resp.Body)
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Debug().Err(closeErr).Msg("error closing response body")
+		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to read response body: %v", err)
+		}
+
+		if resp.StatusCode == http.StatusUnauthorized && !tokenRefreshedAfterUnauthorized {
+			if err := c.forceRefreshAccessToken(ctx); err != nil {
+				return nil, fmt.Errorf("failed to refresh twitch access token after unauthorized response: %v", err)
+			}
+			tokenRefreshedAfterUnauthorized = true
+			continue
 		}
 
 		if resp.StatusCode == http.StatusTooManyRequests {

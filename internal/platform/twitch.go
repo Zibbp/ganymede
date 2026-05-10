@@ -23,7 +23,7 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters
 	params := url.Values{
 		"id": []string{id},
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "videos", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "videos", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (c *TwitchConnection) GetLiveStream(ctx context.Context, channelName string
 	params := url.Values{
 		"user_login": []string{channelName},
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "streams", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "streams", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelIDs []stri
 		params.Add("user_id", channel)
 	}
 
-	body, err := c.twitchMakeHTTPRequest("GET", "streams", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "streams", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +233,7 @@ func (c *TwitchConnection) GetChannel(ctx context.Context, channelName *string, 
 		return nil, fmt.Errorf("either channelName or channelID must be provided")
 	}
 
-	body, err := c.twitchMakeHTTPRequest("GET", "users", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "users", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +275,7 @@ func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, vide
 		"first":   []string{"100"},
 		"type":    []string{string(videoType)},
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "videos", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "videos", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, vide
 	for cursor != "" {
 		params.Del("after")
 		params.Set("after", cursor)
-		body, err = c.twitchMakeHTTPRequest("GET", "videos", params, nil)
+		body, err = c.twitchMakeHTTPRequest(ctx, "GET", "videos", params, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -361,7 +361,7 @@ func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, vide
 
 func (c *TwitchConnection) GetCategories(ctx context.Context) ([]Category, error) {
 	params := url.Values{}
-	body, err := c.twitchMakeHTTPRequest("GET", "games/top", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "games/top", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +380,7 @@ func (c *TwitchConnection) GetCategories(ctx context.Context) ([]Category, error
 	for cursor != "" {
 		params.Del("after")
 		params.Set("after", cursor)
-		body, err = c.twitchMakeHTTPRequest("GET", "games/top", params, nil)
+		body, err = c.twitchMakeHTTPRequest(ctx, "GET", "games/top", params, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -405,7 +405,7 @@ func (c *TwitchConnection) GetCategories(ctx context.Context) ([]Category, error
 }
 
 func (c *TwitchConnection) GetGlobalBadges(ctx context.Context) ([]Badge, error) {
-	body, err := c.twitchMakeHTTPRequest("GET", "chat/badges/global", nil, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "chat/badges/global", nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -446,7 +446,7 @@ func (c *TwitchConnection) GetChannelBadges(ctx context.Context, channelId strin
 	params := url.Values{
 		"broadcaster_id": []string{channelId},
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "chat/badges", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "chat/badges", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -484,7 +484,7 @@ func (c *TwitchConnection) GetChannelBadges(ctx context.Context, channelId strin
 }
 
 func (c *TwitchConnection) GetGlobalEmotes(ctx context.Context) ([]Emote, error) {
-	body, err := c.twitchMakeHTTPRequest("GET", "chat/emotes/global", nil, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "chat/emotes/global", nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -532,7 +532,7 @@ func (c *TwitchConnection) GetChannelEmotes(ctx context.Context, channelId strin
 	params := url.Values{
 		"broadcaster_id": []string{channelId},
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "chat/emotes", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "chat/emotes", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -646,7 +646,7 @@ func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string
 		"first":          []string{limitStr},
 	}
 
-	body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "clips", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -666,7 +666,7 @@ func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string
 		params.Del("after")
 		params.Set("after", cursor)
 
-		body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+		body, err := c.twitchMakeHTTPRequest(ctx, "GET", "clips", params, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -736,7 +736,7 @@ func (c *TwitchConnection) GetClip(ctx context.Context, id string) (*ClipInfo, e
 		"id": []string{id},
 	}
 
-	body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "clips", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -925,7 +925,7 @@ func (c *TwitchConnection) GetStreams(ctx context.Context, limit int) ([]LiveStr
 			params.Del("after")
 		}
 
-		body, err := c.twitchMakeHTTPRequest("GET", "streams", params, nil)
+		body, err := c.twitchMakeHTTPRequest(ctx, "GET", "streams", params, nil)
 		if err != nil {
 			return nil, err
 		}
