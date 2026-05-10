@@ -11,7 +11,6 @@ import {
 } from "@mantine/core";
 import { IconAlertTriangle, IconCheck, IconCopy } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 
 type Props = {
   // secret is the full Bearer token. It is shown to the admin exactly
@@ -22,9 +21,6 @@ type Props = {
 
 const ShowOnceModalContent = ({ secret, handleClose }: Props) => {
   const t = useTranslations("AdminApiKeyComponents");
-  // Acknowledge gates the close button so an admin can't dismiss the
-  // modal accidentally before saving the secret somewhere.
-  const [acknowledged, setAcknowledged] = useState(false);
 
   return (
     <Stack gap="md">
@@ -32,7 +28,11 @@ const ShowOnceModalContent = ({ secret, handleClose }: Props) => {
         {t("showOnce.warning")}
       </Alert>
 
-      <Text size="sm">{t("showOnce.instructions")}</Text>
+      <Text size="sm">
+        {t.rich("showOnce.instructions", {
+          code: (chunks) => <Code>{chunks}</Code>,
+        })}
+      </Text>
 
       <Group gap="xs" wrap="nowrap" align="flex-start">
         <Code block style={{ flex: 1, wordBreak: "break-all" }}>
@@ -45,12 +45,7 @@ const ShowOnceModalContent = ({ secret, handleClose }: Props) => {
                 size="lg"
                 variant="light"
                 color={copied ? "teal" : "blue"}
-                onClick={() => {
-                  copy();
-                  // Copying counts as acknowledgement — the admin clearly
-                  // intends to use the secret elsewhere.
-                  setAcknowledged(true);
-                }}
+                onClick={copy}
               >
                 {copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
               </ActionIcon>
@@ -61,12 +56,11 @@ const ShowOnceModalContent = ({ secret, handleClose }: Props) => {
 
       <Button
         color="red"
-        variant={acknowledged ? "filled" : "light"}
-        disabled={!acknowledged}
+        variant="filled"
         onClick={handleClose}
         fullWidth
       >
-        {acknowledged ? t("showOnce.closeAcknowledged") : t("showOnce.closeBlocked")}
+        {t("showOnce.close")}
       </Button>
     </Stack>
   );

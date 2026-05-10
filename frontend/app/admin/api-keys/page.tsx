@@ -14,20 +14,20 @@ import {
   Title,
   Tooltip,
   Text,
+  Anchor,
 } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useMemo, useState } from "react";
 import sortBy from "lodash/sortBy";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
-import { IconBook, IconCheck, IconCopy, IconPencil, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconPencil, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import classes from "./AdminApiKeysPage.module.css";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { ApiKey, ApiKeyTier, useGetApiKeys } from "@/app/hooks/useApiKeys";
 import AdminApiKeyDrawerContent, { ApiKeyEditMode } from "@/app/components/admin/api-key/DrawerContent";
 import DeleteApiKeyModalContent from "@/app/components/admin/api-key/DeleteModalContent";
-import DocumentationModalContent from "@/app/components/admin/api-key/DocumentationModal";
 import ShowOnceModalContent from "@/app/components/admin/api-key/ShowOnceModal";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "@/app/util/util";
@@ -83,7 +83,6 @@ const AdminApiKeysPage = () => {
   const [editDrawerOpened, { open: openEditDrawer, close: closeEditDrawer }] = useDisclosure(false);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
   const [showOnceOpened, { open: openShowOnceModal, close: closeShowOnceModalRaw }] = useDisclosure(false);
-  const [docsOpened, { open: openDocsModal, close: closeDocsModal }] = useDisclosure(false);
 
   // Wrap close so the secret is wiped from React state as soon as the
   // modal is dismissed — keeps the value out of memory longer than the
@@ -160,21 +159,26 @@ const AdminApiKeysPage = () => {
   return (
     <div>
       <Container size="7xl">
-        <Group justify="space-between" mt={2}>
+        <Group justify="space-between" align="center" mt={2}>
           <Title>{t("header")}</Title>
-          <Group gap="xs">
-            <Button
-              leftSection={<IconBook size={16} />}
-              variant="light"
-              onClick={openDocsModal}
-            >
-              {t("docsButton")}
-            </Button>
-            <Button leftSection={<IconPlus size={16} />} onClick={openCreateDrawer}>
-              {t("createButton")}
-            </Button>
-          </Group>
+          <Button leftSection={<IconPlus size={16} />} onClick={openCreateDrawer}>
+            {t("createButton")}
+          </Button>
         </Group>
+        <Text size="sm" mt="xs">
+          {t.rich("apiRoutesHelp", {
+            docs: (chunks) => (
+              <Anchor
+                href="/swagger/index.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                c="blue"
+              >
+                {chunks}
+              </Anchor>
+            ),
+          })}
+        </Text>
 
         <Box mt={5}>
           <Group mb={10} align="flex-end" gap="md">
@@ -377,15 +381,6 @@ const AdminApiKeysPage = () => {
         {showOnceSecret && (
           <ShowOnceModalContent secret={showOnceSecret} handleClose={closeShowOnceModal} />
         )}
-      </Modal>
-
-      <Modal
-        opened={docsOpened}
-        onClose={closeDocsModal}
-        title={t("docsModal")}
-        size="xl"
-      >
-        <DocumentationModalContent />
       </Modal>
     </div>
   );

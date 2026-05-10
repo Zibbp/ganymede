@@ -369,6 +369,7 @@
     "loading": "API-Schlüssel werden geladen",
     "error": "Fehler beim Laden der API-Schlüssel",
     "header": "API-Schlüssel verwalten",
+    "apiRoutesHelp": "Besuche <docs>/swagger/index.html</docs> für die API-Dokumentation oder prüfe die Netzwerkanfragen in den Browser-Tools, um API-Routen sowie Request-/Response-Payloads zu sehen.",
     "searchPlaceholder": "API-Schlüssel suchen...",
     "createButton": "API-Schlüssel erstellen",
     "docsButton": "Dokumentation",
@@ -424,11 +425,10 @@
     "revokeError": "API-Schlüssel konnte nicht widerrufen werden",
     "showOnce": {
       "warning": "Dies ist das einzige Mal, dass das Geheimnis angezeigt wird. Kopiere es jetzt und bewahre es sicher auf.",
-      "instructions": "Verwende es in Skripten als: Authorization: Bearer gym_<prefix>_<secret>",
+      "instructions": "Verwende es in Skripten als: Authorization: Bearer '<api_key>'",
       "copy": "Geheimnis kopieren",
       "copied": "Kopiert",
-      "closeBlocked": "Kopiere das Geheimnis, um Schließen zu aktivieren",
-      "closeAcknowledged": "Ich habe das Geheimnis gespeichert — schließen"
+      "close": "Schließen"
     },
     "docs": {
       "scopeFormatTitle": "Bereichsformat",

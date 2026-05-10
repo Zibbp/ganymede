@@ -369,6 +369,7 @@
     "loading": "Loading API keys",
     "error": "Error loading API keys",
     "header": "Manage API Keys",
+    "apiRoutesHelp": "Visit <docs>/swagger/index.html</docs> for API docs, or inspect network requests in your browser tools to see API routes and request/response payloads.",
     "searchPlaceholder": "Search API keys...",
     "createButton": "Create API key",
     "docsButton": "Documentation",
@@ -407,7 +408,7 @@
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Optional notes about where this key is used",
     "scopeLabel": "Scopes",
-    "scopeDescription": "Each scope is resource:tier — admin > write > read within a resource. Use *:admin for full access, or pick specific scopes for least-privilege.",
+    "scopeDescription": "Each scope is resource:tier - admin > write > read within a resource. Use *:admin for full access, or pick specific scopes for least-privilege.",
     "scopePlaceholder": "Pick one or more scopes",
     "presets": {
       "fullAdmin": "Full admin (*:admin)",
@@ -424,11 +425,10 @@
     "revokeError": "Failed to revoke API key",
     "showOnce": {
       "warning": "This is the only time the secret will be shown. Copy it now and store it somewhere safe.",
-      "instructions": "Use it in scripts as: Authorization: Bearer gym_<prefix>_<secret>",
+      "instructions": "Use it in scripts as: <code>Authorization: Bearer '<api_key>'</code>",
       "copy": "Copy secret",
       "copied": "Copied",
-      "closeBlocked": "Copy the secret to enable Close",
-      "closeAcknowledged": "I have saved this secret — close"
+      "close": "Close"
     },
     "docs": {
       "scopeFormatTitle": "Scope format",

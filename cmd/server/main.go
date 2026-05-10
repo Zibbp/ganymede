@@ -23,7 +23,7 @@ import (
 //	@securityDefinitions.apikey	ApiKeyAuth
 //	@in							header
 //	@name						Authorization
-//	@description				Authorization: Bearer gym_<prefix>_<secret>. Mint a key via the admin UI.
+//	@description				Authorization: Bearer <api_key>. Mint a key via the admin UI.
 
 //	@securityDefinitions.apikey	ApiKeyCookieAuth
 //	@in							cookie

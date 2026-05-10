@@ -7141,7 +7141,7 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "ApiKeyAuth": {
-            "description": "Authorization: Bearer gym_\u003cprefix\u003e_\u003csecret\u003e. Mint a key via the admin UI.",
+            "description": "Authorization: Bearer \u003capi_key\u003e. Mint a key via the admin UI.",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
