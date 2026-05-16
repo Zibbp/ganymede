@@ -66,6 +66,7 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
   const lastTimeRef = useRef(0);
   const lastCheckTimeRef = useRef(0);
   const pendingRangeRef = useRef<PendingChatRange | null>(null);
+  const pendingSeekRef = useRef<Promise<boolean> | null>(null);
   const isSeekLoadingRef = useRef(false);
   const requestGenerationRef = useRef(0);
   const retryCountRef = useRef(0);
@@ -347,6 +348,7 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
   const clearChat = useCallback(() => {
     requestGenerationRef.current += 1;
     pendingRangeRef.current = null;
+    pendingSeekRef.current = null;
     isSeekLoadingRef.current = false;
     internalMessagesRef.current = [];
     queuedIdsRef.current.clear();
@@ -480,13 +482,23 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
         console.log(`Player time skip detected - ${lastTimeRef.current} -> ${time}`);
         const generation = clearChat();
         lastCheckTimeRef.current = time;
-        getSeekChat(time, 50, generation);
-        getChat(time, time + CHAT_OFFSET_SIZE, generation);
+        const seekPromise = getSeekChat(time, 50, generation);
+        pendingSeekRef.current = seekPromise;
+        seekPromise.finally(() => {
+          if (pendingSeekRef.current === seekPromise) {
+            pendingSeekRef.current = null;
+          }
+          if (generation !== requestGenerationRef.current) return;
+          if (pendingRangeRef.current) return;
+
+          getChat(time, time + CHAT_OFFSET_SIZE, generation);
+        });
       }
 
       lastTimeRef.current = time;
 
       if (time <= lastCheckTimeRef.current) return;
+      if (pendingSeekRef.current) return;
       if (pendingRangeRef.current) return;
 
       const startTime = lastCheckTimeRef.current || time;
