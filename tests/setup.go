@@ -19,6 +19,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/server"
 	"github.com/zibbp/ganymede/internal/worker"
 )
@@ -74,24 +75,29 @@ func setupEnvironment(t *testing.T, postgresHost string, postgresPort string) {
 	assert.NoError(t, os.Setenv("DB_USER", TestPostgresUser))
 	assert.NoError(t, os.Setenv("DB_PASS", TestPostgresPassword))
 
+	testsTmpDir := os.Getenv("TESTS_TMP_DIR")
+	if testsTmpDir == "" {
+		testsTmpDir = "/tmp"
+	}
+
 	// Set paths
 	// set temporary directories
-	videosDir, err := os.MkdirTemp("/tmp", "ganymede-tests")
+	videosDir, err := os.MkdirTemp(testsTmpDir, "ganymede-tests")
 	assert.NoError(t, err)
 	assert.NoError(t, os.Setenv("VIDEOS_DIR", videosDir))
 	t.Log("VIDEOS_DIR", videosDir)
 
-	tempDir, err := os.MkdirTemp("/tmp", "ganymede-tests")
+	tempDir, err := os.MkdirTemp(testsTmpDir, "ganymede-tests")
 	assert.NoError(t, err)
 	assert.NoError(t, os.Setenv("TEMP_DIR", tempDir))
 	t.Log("TEMP_DIR", tempDir)
 
-	configDir, err := os.MkdirTemp("/tmp", "ganymede-tests")
+	configDir, err := os.MkdirTemp(testsTmpDir, "ganymede-tests")
 	assert.NoError(t, err)
 	assert.NoError(t, os.Setenv("CONFIG_DIR", configDir))
 	t.Log("CONFIG_DIR", configDir)
 
-	logsDir, err := os.MkdirTemp("/tmp", "ganymede-tests")
+	logsDir, err := os.MkdirTemp(testsTmpDir, "ganymede-tests")
 	assert.NoError(t, err)
 	assert.NoError(t, os.Setenv("LOGS_DIR", logsDir))
 	t.Log("LOGS_DIR", logsDir)
@@ -139,6 +145,11 @@ func Setup(t *testing.T) (*server.Application, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Set config to defaults
+	cfg := config.Get()
+	cfg.SetDefaults()
+	assert.NoError(t, config.UpdateConfig(cfg))
 
 	// Start worker
 	workerClient, err := worker.SetupWorker(ctx)

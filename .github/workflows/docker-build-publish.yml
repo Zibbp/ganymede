@@ -42,7 +42,7 @@ jobs:
 
       # Checkout the repo
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -76,18 +76,18 @@ jobs:
 
       # Set up Docker Buildx
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Extract metadata (tags, labels) for Docker
       - name: Extract Docker metadata (release)
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       # Login into GitHub Container Registry (only if OCI_PUSH is true and not run by Dependabot)
       - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         if: env.OCI_PUSH == 'true' && github.actor != 'dependabot[bot]'
         with:
           registry: ${{ env.REGISTRY }}
@@ -96,7 +96,7 @@ jobs:
 
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           push: ${{ env.OCI_PUSH == 'true' && github.actor != 'dependabot[bot]' }}
           platforms: ${{ matrix.platform }}
@@ -114,7 +114,7 @@ jobs:
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: env.OCI_PUSH == 'true' && github.actor != 'dependabot[bot]'
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
@@ -139,14 +139,14 @@ jobs:
           OCI_IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Download digests
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           path: ${{ runner.temp }}/digests
           pattern: digests-*
           merge-multiple: true
 
       - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         if: github.actor != 'dependabot[bot]'
         with:
           registry: ${{ env.REGISTRY }}
@@ -154,11 +154,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ steps.ociImageName.outputs.lowerCaseValue }}

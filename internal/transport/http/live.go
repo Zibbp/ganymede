@@ -33,6 +33,7 @@ type AddWatchedChannelRequest struct {
 	Categories             []string            `json:"categories"`
 	ApplyCategoriesToLive  bool                `json:"apply_categories_to_live" validate:"boolean"`
 	StrictCategoriesLive   bool                `json:"strict_categories_live" validate:"boolean"`
+	BlacklistCategories    bool                `json:"blacklist_categories" validate:"boolean"`
 	VideoAge               int64               `json:"video_age"` // restrict fetching videos to a certain age
 	Regex                  []AddLiveTitleRegex `json:"regex"`
 	WatchClips             bool                `json:"watch_clips" validate:"boolean"`
@@ -61,7 +62,8 @@ type UpdateWatchedChannelRequest struct {
 	Categories             []string            `json:"categories"`
 	ApplyCategoriesToLive  bool                `json:"apply_categories_to_live" validate:"boolean"`
 	StrictCategoriesLive   bool                `json:"strict_categories_live" validate:"boolean"`
-	VideoAge               int64               `json:"video_age"` // retrict fetching videos to a certain age
+	BlacklistCategories    bool                `json:"blacklist_categories" validate:"boolean"`
+	VideoAge               int64               `json:"video_age"` // restrict fetching videos to a certain age
 	Regex                  []AddLiveTitleRegex `json:"regex"`
 	WatchClips             bool                `json:"watch_clips" validate:"boolean"`
 	ClipsLimit             int                 `json:"clips_limit" validate:"number,gte=1"`
@@ -101,6 +103,7 @@ type ArchiveLiveChannelRequest struct {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/live [get]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
 	channels, err := h.Service.LiveService.GetLiveWatchedChannels(c)
 	if err != nil {
@@ -123,6 +126,7 @@ func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/live [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 	ccr := new(AddWatchedChannelRequest)
 	if err := c.Bind(ccr); err != nil {
@@ -140,6 +144,11 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, "categories cannot be empty if apply_categories_to_live is true")
 	}
 
+	// Validate conflicting options
+	if ccr.StrictCategoriesLive && ccr.BlacklistCategories {
+		return ErrorResponse(c, http.StatusBadRequest, "strict_categories_live and blacklist_categories cannot both be true")
+	}
+
 	liveDto := live.Live{
 		ID:                     cUUID,
 		WatchLive:              ccr.WatchLive,
@@ -155,6 +164,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		Categories:             ccr.Categories,
 		ApplyCategoriesToLive:  ccr.ApplyCategoriesToLive,
 		StrictCategoriesLive:   ccr.StrictCategoriesLive,
+		BlacklistCategories:    ccr.BlacklistCategories,
 		VideoAge:               ccr.VideoAge,
 		WatchClips:             ccr.WatchClips,
 		ClipsLimit:             ccr.ClipsLimit,
@@ -196,6 +206,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/live/{id} [put]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 	id := c.Param("id")
 	lID, err := uuid.Parse(id)
@@ -214,6 +225,11 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, "categories cannot be empty if apply_categories_to_live is true")
 	}
 
+	// Validate conflicting options
+	if ccr.StrictCategoriesLive && ccr.BlacklistCategories {
+		return ErrorResponse(c, http.StatusBadRequest, "strict_categories_live and blacklist_categories cannot both be true")
+	}
+
 	liveDto := live.Live{
 		ID:                     lID,
 		WatchLive:              ccr.WatchLive,
@@ -228,6 +244,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		Categories:             ccr.Categories,
 		ApplyCategoriesToLive:  ccr.ApplyCategoriesToLive,
 		StrictCategoriesLive:   ccr.StrictCategoriesLive,
+		BlacklistCategories:    ccr.BlacklistCategories,
 		VideoAge:               ccr.VideoAge,
 		WatchClips:             ccr.WatchClips,
 		ClipsLimit:             ccr.ClipsLimit,
@@ -268,6 +285,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/live/{id} [delete]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) DeleteLiveWatchedChannel(c echo.Context) error {
 	id := c.Param("id")
 	lID, err := uuid.Parse(id)

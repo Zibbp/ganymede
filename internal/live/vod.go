@@ -197,7 +197,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 					}
 				}
 
-				// Check if video is in category restrictions, continue if not
+				// Check category restrictions / blacklists
 				if len(channelVideoCategories) > 0 {
 					var found bool
 					for _, category := range videoCategories {
@@ -207,10 +207,31 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 								break
 							}
 						}
+						if found {
+							break
+						}
 					}
-					if !found {
-						logger.Info().Str("video_id", video.ID).Str("categories", strings.Join(videoCategories, ", ")).Str("expected_categories", strings.Join(channelVideoCategories, ", ")).Msg("video does not match category restrictions")
-						continue
+
+					if watch.BlacklistCategories {
+						// If blacklist mode and a matching category was found, skip
+						if found {
+							logger.Info().
+								Str("video_id", video.ID).
+								Str("categories", strings.Join(videoCategories, ", ")).
+								Str("blacklisted_categories", strings.Join(channelVideoCategories, ", ")).
+								Msg("skipping video; video is in blacklisted categories")
+							continue
+						}
+					} else {
+						// If whitelist mode and no matching category was found, skip
+						if !found {
+							logger.Info().
+								Str("video_id", video.ID).
+								Str("categories", strings.Join(videoCategories, ", ")).
+								Str("expected_categories", strings.Join(channelVideoCategories, ", ")).
+								Msg("video does not match category restrictions")
+							continue
+						}
 					}
 				}
 

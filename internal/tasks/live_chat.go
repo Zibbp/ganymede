@@ -68,8 +68,20 @@ func (w DownloadLiveChatWorker) Work(ctx context.Context, job *river.Job[Downloa
 		return err
 	}
 
-	// download video
-	err = exec.DownloadTwitchLiveChat(ctx, dbItems.Video, dbItems.Channel, dbItems.Queue)
+	// Set chat start time
+	if !dbItems.Queue.ChatStart.IsZero() {
+		log.Debug().Str("task_id", fmt.Sprintf("%d", job.ID)).Msg("chat start time already set, skipping")
+	} else {
+		chatStartTime := time.Now()
+		_, err = dbItems.Queue.Update().SetChatStart(chatStartTime).Save(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	// download chat
+	log.Info().Str("task_id", fmt.Sprintf("%d", job.ID)).Msgf("starting live chat download for %s", dbItems.Channel.Name)
+	err = exec.SaveTwitchLiveChatToFile(ctx, dbItems.Channel.Name, dbItems.Video.TmpLiveChatDownloadPath)
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			// create new context to finish the task
@@ -161,6 +173,12 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 		return err
 	}
 
+	// Ensure any crash-left pending live chat messages are merged into the
+	// primary JSON file before conversion/post-processing reads it.
+	if err := exec.RecoverTwitchLiveChatPendingFile(dbItems.Video.TmpLiveChatDownloadPath); err != nil {
+		return err
+	}
+
 	// check that the chat file exists
 	if !utils.FileExists(dbItems.Video.TmpLiveChatDownloadPath) {
 		log.Info().Str("task_id", fmt.Sprintf("%d", job.ID)).Msg("chat file does not exist; setting chat status to complete")
@@ -185,7 +203,7 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	if err != nil {
 		return err
 	}
-	channel, err := platform.GetChannel(ctx, dbItems.Channel.Name)
+	channel, err := platform.GetChannel(ctx, &dbItems.Channel.Name, nil)
 	if err != nil {
 		return err
 	}

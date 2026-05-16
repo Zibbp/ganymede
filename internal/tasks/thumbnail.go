@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/exec"
+	"github.com/zibbp/ganymede/internal/storagetemplate"
 )
 
 type GenerateStaticThumbnailArgs struct {
@@ -129,7 +131,26 @@ func (w GenerateSpriteThumbnailWorker) Work(ctx context.Context, job *river.Job[
 		return err
 	}
 
-	rootVideoPath := fmt.Sprintf("%s/%s/%s", env.VideosDir, channel.Name, video.FolderName)
+	// Derive rootVideoPath from the stored ThumbnailPath (which is always at
+	// {rootVideoPath}/{fileName}-thumbnail.jpg) rather than re-resolving the
+	// channel folder template. This avoids writing sprites to the wrong location
+	// if channel_folder_template changed after the video was originally archived.
+	var rootVideoPath string
+	if video.ThumbnailPath != "" {
+		rootVideoPath = filepath.Dir(video.ThumbnailPath)
+	} else {
+		// Fallback: resolve from current template (only for videos with no thumbnail path)
+		channelFolderName, chErr := storagetemplate.GetChannelFolderName(storagetemplate.ChannelTemplateInput{
+			ChannelName:        channel.Name,
+			ChannelID:          channel.ExtID,
+			ChannelDisplayName: channel.DisplayName,
+		})
+		if chErr != nil {
+			log.Warn().Err(chErr).Msg("error resolving channel folder template, falling back to channel login name")
+			channelFolderName = channel.Name
+		}
+		rootVideoPath = fmt.Sprintf("%s/%s/%s", env.VideosDir, channelFolderName, video.FolderName)
+	}
 	spritesDirectory := fmt.Sprintf("%s/sprites", rootVideoPath)
 
 	err = os.MkdirAll(spritesDirectory, os.ModePerm)

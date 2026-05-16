@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math"
 	"regexp"
 	"sort"
 	"strconv"
@@ -22,6 +23,10 @@ func parseQuality(q string) Quality {
 
 	// If it doesn’t look like "123p" or "123p45", see if it's just digits:
 	if len(matches) == 0 {
+		if q == "chunked" {
+			return Quality{Resolution: math.MaxInt, FPS: 60, Original: q}
+		}
+
 		if num, err := strconv.Atoi(q); err == nil {
 			// Treat "720" as Resolution=720, FPS=60 (default)
 			return Quality{Resolution: num, FPS: 60, Original: q}
@@ -38,25 +43,39 @@ func parseQuality(q string) Quality {
 }
 
 // SelectClosestQuality selects the best matching quality from available options.
-// Streams and video can vary quite a bit in quality, so it's important to select the closest match.
-// If an exact match is found, it returns that.
-// If an exact FPS match isn't found, it selects the closest lower FPS.
-// If no matching resolution is found, it falls back to "best".
-// If the target is a non-numeric string, it returns the input directly.
+// Behavior changes:
+// - if target == "audio_only" -> return "audio_only" (if present in options).
+// - when no resolution matches, pick the highest quality available (highest resolution, then highest FPS).
+// - existing FPS-selection logic is preserved for matching resolutions.
 func SelectClosestQuality(target string, options []string) string {
-	if len(target) == 0 || !unicode.IsDigit(rune(target[0])) {
-		return target // Return if non-numeric string
+	if len(target) == 0 {
+		return target
+	}
+
+	if target == "best" {
+		// check if "chunked" is in options
+		// this is typically the best quality for Twitch Enhanced Broadcast qualities in the HLS stream
+		for _, opt := range options {
+			if opt == "chunked" {
+				return "chunked"
+			}
+		}
+		return pickHighestQuality(options)
+	}
+
+	// If non-numeric target (not "best"), return directly
+	if !unicode.IsDigit(rune(target[0])) {
+		return target
 	}
 
 	targetQuality := parseQuality(target)
 
-	// Parse all options
 	var parsedOptions []Quality
 	for _, opt := range options {
 		parsedOptions = append(parsedOptions, parseQuality(opt))
 	}
 
-	// Filter options that match the target resolution
+	// Match resolutions
 	var matchingRes []Quality
 	for _, opt := range parsedOptions {
 		if opt.Resolution == targetQuality.Resolution {
@@ -65,18 +84,17 @@ func SelectClosestQuality(target string, options []string) string {
 	}
 
 	if len(matchingRes) == 0 {
-		return "best" // Fallback if no resolution matches
+		// NEW: instead of returning "best", actually pick it
+		return pickHighestQuality(options)
 	}
 
-	// If target specifies FPS (e.g., "720p60")
+	// FPS logic
 	if regexp.MustCompile(`\d+p\d+`).MatchString(target) {
-		// Look for an exact FPS match
 		for _, opt := range matchingRes {
 			if opt.FPS == targetQuality.FPS {
 				return opt.Original
 			}
 		}
-		// No exact match, find closest lower FPS or lowest if all higher
 		sort.Slice(matchingRes, func(i, j int) bool {
 			return matchingRes[i].FPS > matchingRes[j].FPS
 		})
@@ -85,12 +103,28 @@ func SelectClosestQuality(target string, options []string) string {
 				return opt.Original
 			}
 		}
-		return matchingRes[len(matchingRes)-1].Original // Lowest FPS if all higher
+		return matchingRes[len(matchingRes)-1].Original
 	} else {
-		// Target has no FPS (e.g., "720p"), pick highest FPS available
 		sort.Slice(matchingRes, func(i, j int) bool {
 			return matchingRes[i].FPS > matchingRes[j].FPS
 		})
-		return matchingRes[0].Original // Highest FPS option
+		return matchingRes[0].Original
 	}
+}
+
+func pickHighestQuality(options []string) string {
+	var parsed []Quality
+	for _, o := range options {
+		parsed = append(parsed, parseQuality(o))
+	}
+
+	// Sort by resolution DESC, FPS DESC
+	sort.Slice(parsed, func(i, j int) bool {
+		if parsed[i].Resolution == parsed[j].Resolution {
+			return parsed[i].FPS > parsed[j].FPS
+		}
+		return parsed[i].Resolution > parsed[j].Resolution
+	})
+
+	return parsed[0].Original
 }

@@ -63,6 +63,7 @@ func CheckIDType(id string) string {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/archive/channel [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) ArchiveChannel(c echo.Context) error {
 	body := new(ArchiveChannelRequest)
 	if err := c.Bind(body); err != nil {
@@ -85,12 +86,13 @@ func (h *Handler) ArchiveChannel(c echo.Context) error {
 //	@Tags			archive
 //	@Accept			json
 //	@Produce		json
-//	@Param			vod	body		ArchiveVodRequest	true	"Vod"
+//	@Param			vod	body		ArchiveVideoRequest	true	"Vod"
 //	@Success		200	{object}	archive.TwitchVodResponse
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/archive/vod [post]
+//	@Router			/archive/video [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) ArchiveVideo(c echo.Context) error {
 	body := new(ArchiveVideoRequest)
 	if err := c.Bind(body); err != nil {

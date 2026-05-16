@@ -7,11 +7,15 @@ import (
 	osExec "os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 // GetVideoDuration runs ffprobe on the given video file and returns its duration in seconds.
 func GetVideoDuration(ctx context.Context, path string) (int, error) {
 	cmd := osExec.CommandContext(ctx, "ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", path)
+
+	log.Debug().Msgf("Running ffprobe command: %s", strings.Join(cmd.Args, " "))
 
 	out, err := cmd.Output()
 	if err != nil {

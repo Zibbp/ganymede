@@ -26,6 +26,7 @@ interface NavLink {
 const languages = [
   { code: 'en', label: 'English' },
   { code: 'de', label: 'German' },
+  { code: 'uk', label: 'Ukrainian' },
 ];
 
 export function Navbar() {
@@ -67,6 +68,8 @@ export function Navbar() {
         { link: '/admin/blocked-videos', label: t('adminLinks.blockedVideos') },
         { link: '/admin/queue', label: t('adminLinks.queue') },
         { link: '/admin/users', label: t('adminLinks.users') },
+        { link: '/admin/api-keys', label: t('adminLinks.apiKeys') },
+        { link: '/admin/notifications', label: t('adminLinks.notifications') },
         { link: '/admin/settings', label: t('adminLinks.settings') },
         { link: '/admin/tasks', label: t('adminLinks.tasks') },
         { link: '/admin/info', label: t('adminLinks.information') },
@@ -151,7 +154,7 @@ export function Navbar() {
             <Collapse in={adminLinksOpened}>
               <div className={classes.collapseContent}>
                 {link.links.map(subLink => (
-                  <Link key={subLink.label} href={subLink.link} className={classes.link}>
+                  <Link key={subLink.label} href={subLink.link} className={classes.link} onClick={closeDrawer}>
                     {subLink.label}
                   </Link>
                 ))}
@@ -162,7 +165,7 @@ export function Navbar() {
       }
 
       return (
-        <Link key={link.label} href={link.link} className={className}>
+        <Link key={link.label} href={link.link} className={className} onClick={closeDrawer}>
           {link.label}
         </Link>
       );
@@ -252,10 +255,10 @@ export function Navbar() {
               <Menu.Dropdown>
                 <Menu.Label>{user?.username}</Menu.Label>
                 <Menu.Item component={Link} href={`/profile`}>
-                  Profile
+                  {t('profileDropdown.profile')}
                 </Menu.Item>
                 <Menu.Item onClick={handleLogout}>
-                  Logout
+                  {t('profileDropdown.logout')}
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>

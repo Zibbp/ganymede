@@ -1,5 +1,5 @@
 import { Video } from "@/app/hooks/useVideos";
-import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box } from "@mantine/core";
+import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box, Checkbox, Skeleton } from "@mantine/core";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
@@ -7,7 +7,7 @@ import duration from "dayjs/plugin/duration";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import classes from "./Card.module.css"
 import { env } from "next-runtime-env";
-import { escapeURL } from "@/app/util/util";
+import { durationToTime, escapeURL, prettyNumber } from "@/app/util/util";
 import { PlaybackStatus, useFetchPlaybackForVideo } from "@/app/hooks/usePlayback";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import useAuthStore from "@/app/store/useAuthStore";
@@ -15,6 +15,7 @@ import { IconCircleCheck, IconLock } from "@tabler/icons-react";
 import VideoMenu from "./Menu";
 import { UserRole } from "@/app/hooks/useAuthentication";
 import { useTranslations } from "next-intl";
+import VideoSpritePeek from "./VideoSpritePeek"
 
 dayjs.extend(duration);
 dayjs.extend(localizedFormat);
@@ -24,33 +25,31 @@ type Props = {
   showProgress: boolean;
   showMenu: boolean;
   showChannel: boolean;
+  showViewCount?: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelectionChange?: (selected: boolean) => void;
 }
 
-// durationToTime converts the provided video duration in seconds to 'HH:mm:ss'
-// dayjs.duration doesn't work well with longer >=24 hour durations
-function durationToTime(seconds: number) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  const formattedHours = String(hours).padStart(2, '0');
-  const formattedMinutes = String(minutes).padStart(2, '0');
-  const formattedSeconds = String(secs).padStart(2, '0');
-
-  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-}
-
-const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = true }: Props) => {
+const VideoCard = ({
+  video,
+  showProgress = true,
+  showMenu = true,
+  showChannel = true,
+  showViewCount = true,
+  selectable = false,
+  selected = false,
+  onSelectionChange = () => { },
+}: Props) => {
   const t = useTranslations('VideoComponents')
   const { isLoggedIn, hasPermission } = useAuthStore()
   const [thumbnailError, setThumbnailError] = useState(false);
-
-  const [playbackProgress, setPlaybackProgress] = useState(0);
-  const [playbackIsWatched, setPlaybackIsWatched] = useState(false)
+  const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
 
   // Handle thumbnail loading error
   const handleThumbnailError = () => {
     setThumbnailError(true);
+    setThumbnailLoaded(true);
   };
 
   const axiosPrivate = useAxiosPrivate();
@@ -62,41 +61,54 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
     }
   );
 
-  // Set playback state
+  const playbackProgress = playbackData ? (playbackData.time / video.duration) * 100 : 0;
+  const playbackIsWatched = playbackData?.status === PlaybackStatus.Finished;
+
   useEffect(() => {
-    if (!playbackData) return
-    setPlaybackProgress(((playbackData.time) / video.duration) * 100);
-    setPlaybackIsWatched(playbackData.status == PlaybackStatus.Finished)
-  }, [playbackData, video.duration])
+    setThumbnailLoaded(false);
+  }, [video.web_thumbnail_path])
 
   return (
     <Card radius="md" padding={5} className={classes.card}>
-
-      {video.processing && (
-        <LoadingOverlay visible zIndex={5} overlayProps={{ radius: "sm", blur: 1 }} loaderProps={{
-          children: <div><Text size="xl">{t('processingOverlayText')}</Text>
-            <Center>
-              <Box>
-                <Loader color="red" />
-              </Box>
-            </Center></div>
-        }} />
-      )}
-
       <Link href={`/videos/${video.id}`}>
-
         <Card.Section>
-          <Image
-            className={classes.videoImage}
-            src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
-              video.web_thumbnail_path
-            )}`}
-            onError={handleThumbnailError}
-            width={thumbnailError ? "100%" : "100%"}
-            height={thumbnailError ? "100%" : "100%"}
-            fallbackSrc="/images/ganymede-thumbnail.webp"
-            alt={video.title}
-          />
+          <div className={classes.videoImageWrapper}>
+            {video.processing && (
+              <LoadingOverlay visible zIndex={5} overlayProps={{ radius: "sm", blur: 1 }} loaderProps={{
+                children: <div><Text size="xl">{t('processingOverlayText')}</Text>
+                  <Center>
+                    <Box>
+                      <Loader color="red" />
+                    </Box>
+                  </Center></div>
+              }} />
+            )}
+            <Skeleton visible={!thumbnailLoaded} animate radius={0} height="100%">
+              <Image
+                className={classes.videoImage}
+                src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
+                  video.web_thumbnail_path
+                )}`}
+                onLoad={() => setThumbnailLoaded(true)}
+                onError={handleThumbnailError}
+                width={thumbnailError ? "100%" : "100%"}
+                height={thumbnailError ? "100%" : "100%"}
+                fallbackSrc="/images/ganymede-thumbnail.webp"
+                alt={video.title}
+              />
+            </Skeleton>
+
+            {video.sprite_thumbnails_enabled && (
+              <VideoSpritePeek
+                video={video}
+                progressDisplayed={
+                  showProgress &&
+                  Math.round(playbackProgress) > 0 &&
+                  !playbackIsWatched
+                }
+              />
+            )}
+          </div>
           {showProgress && Math.round(playbackProgress) > 0 && !playbackIsWatched && (
             <Tooltip label={`${Math.round(playbackProgress)}% ${t('watched')}`}>
               <Progress
@@ -111,7 +123,6 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
         </Card.Section>
 
       </Link>
-
 
       {/* Duration badge */}
       <Badge py={0} px={5} className={classes.durationBadge} radius="md">
@@ -147,10 +158,8 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
         )}
       </Flex>
 
-
-
       {/* Title */}
-      <Link href={video.processing ? `#` : `/videos/${video.id}`}>
+      <Link href={`/videos/${video.id}`}>
         <Tooltip label={video.title} openDelay={250} withinPortal>
           <Title lineClamp={1} order={4} mt="xs">
             {video.title}
@@ -180,7 +189,7 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
       )}
 
       {/* Additional video information and menu */}
-      <Flex gap="xs" justify="flex-start"
+      <Flex justify="flex-start"
         align="center" pt={2}>
 
         <Tooltip
@@ -194,20 +203,42 @@ const VideoCard = ({ video, showProgress = true, showMenu = true, showChannel = 
         </Tooltip>
 
         <div className={classes.vodMenu}>
+          <Box pt={4} pr={5}>
+            {showViewCount && (
+              <Tooltip
+                multiline
+                label={`${video.views} ${t('sourceViewsText')}
+               ${video.local_views ?? 0} ${t('localViewsText')}`}
+              >
+                <Text size="sm">
+                  {prettyNumber(video.views)} {t('viewsText')}
+                </Text>
+              </Tooltip>
+            )}
+          </Box>
+
           <Badge variant="default" color="rgba(0, 0, 0, 1)" mt={4}>
             {video.type.toUpperCase()}
           </Badge>
+
+          {selectable && (
+            <Box pr={4} className={classes.selectionCheckboxInline}>
+              <Checkbox
+                checked={selected}
+                onChange={(event) => onSelectionChange(event.currentTarget.checked)}
+                aria-label={t('selectVideoCheckboxLabel')}
+                size="sm"
+              />
+            </Box>
+          )}
 
           {(showMenu && hasPermission(UserRole.Archiver)) && (
             <VideoMenu video={video} />
           )}
         </div>
-
-
       </Flex>
 
-
-    </Card>
+    </Card >
   );
 }
 

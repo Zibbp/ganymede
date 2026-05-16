@@ -241,6 +241,24 @@ const AdminTasksPage = () => {
             </Tooltip>
           </Group>
 
+          <Group justify="space-between" py={5} wrap="nowrap">
+            <Box>
+              <Text fw={"bold"}>{t('updatePlatformChannels')}</Text>
+              <Text size="xs">{t('updatePlatformChannelsDescription')}</Text>
+            </Box>
+            <Tooltip label={t('startTaskButton')}>
+              <ActionIcon
+                onClick={() => startTask(Task.UpdatePlatformChannels)}
+                loading={loading}
+                color="green"
+                variant="filled"
+                size="lg"
+              >
+                <IconPlayerPlay size={24} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+
 
         </Card>
       </Container>

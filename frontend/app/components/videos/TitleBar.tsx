@@ -124,11 +124,20 @@ const VideoTitleBar = ({ video }: Params) => {
 
             <Group>
               <Tooltip label={t('videoTypeTooltip')} openDelay={250}>
-                <div className={classes.titleBarBadge}>
-                  <Badge variant="default">
-                    {video.type}
-                  </Badge>
-                </div>
+                {video.processing ? (
+                  <div className={classes.titleBarBadge}>
+                    <Badge color="red">
+                      {video.type} - {t('processingOverlayText')}
+                    </Badge>
+                  </div>
+                ) : (
+                  <div className={classes.titleBarBadge}>
+                    <Badge variant="default">
+                      {video.type}
+                    </Badge>
+                  </div>
+                )}
+
               </Tooltip>
             </Group>
           </div>

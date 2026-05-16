@@ -1,7 +1,7 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { SearchField, useSearchVideos, VideoType } from "../hooks/useVideos";
+import { SearchField, useSearchVideos, VideoOrder, VideoSortBy, VideoType } from "../hooks/useVideos";
 import useSettingsStore from "../store/useSettingsStore";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import VideoGrid from "../components/videos/Grid";
@@ -30,6 +30,9 @@ const SearchPage = () => {
 
   const [activePage, setActivePage] = useState(1);
   const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
+  const [sortBy, setSortBy] = useState<VideoSortBy>(VideoSortBy.Date);
+  const [order, setOrder] = useState<VideoOrder>(VideoOrder.Desc);
+
   const videoLimit = useSettingsStore((s) => s.videoLimit);
   const setVideoLimit = useSettingsStore((s) => s.setVideoLimit);
 
@@ -48,6 +51,8 @@ const SearchPage = () => {
     query,
     types: videoTypes,
     fields: [field],
+    sort_by: sortBy,
+    order: order,
   });
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -153,6 +158,8 @@ const SearchPage = () => {
           videoLimit={videoLimit}
           onVideoLimitChange={setVideoLimit}
           onVideoTypeChange={setVideoTypes}
+          onSortByChange={setSortBy}
+          onOrderChange={setOrder}
           showChannel={true}
         />
       </Container>

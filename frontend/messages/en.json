@@ -81,8 +81,12 @@
       "smoothScrollDescription": "Enable smooth scrolling for new chat messages. May look bad if there is a large volume of messages per second.",
       "chatHistogram": "Show chat histogram",
       "chatHistogramDescription": "Display a visual representation of chat message throughout the video below the video player.",
+      "chatTimestamps": "Show chat timestamps",
+      "chatTimestampsDescription": "Show clickable timestamps next to chat messages for jumping to that moment in the video.",
       "showProcessingVideos": "Show Processing Videos in Recently Archived Videos",
-      "showProcessingVideosDescription": "Display processing videos in the 'Recently Archived' videos section on the home page."
+      "showProcessingVideosDescription": "Display processing videos in the 'Recently Archived' videos section on the home page.",
+      "autoplayVideo": "Autoplay videos",
+      "autoplayVideoDescription": "Automatically start playing videos when they are loaded."
     },
     "changePassword": {
       "title": "Change Password",
@@ -132,9 +136,15 @@
       "blockedVideos": "Blocked Videos",
       "queue": "Queue",
       "users": "Users",
+      "apiKeys": "API Keys",
+      "notifications": "Notifications",
       "settings": "Settings",
       "tasks": "Tasks",
       "information": "Information"
+    },
+    "profileDropdown": {
+      "profile": "Profile",
+      "logout": "Logout"
     },
     "errorLoggingOut": "Error logging out",
     "search": "Search",
@@ -262,17 +272,7 @@
     },
     "applicationSettings": {
       "header": "Application Settings",
-      "registrationEnabledLabel": "Registration Enabled",
-      "notificationSettingsButton": "Notification Settings",
-      "enabledLabel": "Enabled",
-      "testButton": "Test",
-      "webhookUrlLabel": "Webhook URL",
-      "templateLabel": "Template",
-      "availableVariables": "Available variables to use in the template:",
-      "videoArchiveSuccessNotification": "Video Archive Success Notification",
-      "liveArchiveSuccessNotification": "Live Archive Success Notification",
-      "channelIsLiveNotification": "Channel is Live Notification",
-      "errorNotification": "Error Notification"
+      "registrationEnabledLabel": "Registration Enabled"
     },
     "archiveSettings": {
       "header": "Archive Settings",
@@ -280,7 +280,7 @@
       "livestreamCheckIntervalDescription": "The interval in seconds to check for new live streams to archive. Recommended is 60 seconds, do not go less than 30 seconds. REQUIRES RESTART!",
       "videoCheckIntervalLabel": "Video Check Interval Minutes",
       "videoCheckIntervalDescription": "The interval in minutes to check for new videos to archive. REQUIRES RESTART!",
-      "mp4ToHLSConversionLabel": "Convert MP4 to HLS",
+      "mp4ToHLSConversionLabel": "Save as HLS instead of MP4",
       "generateSpriteThumbnailsLabel": "Generate Sprite Thumbnail",
       "generateSpriteThumbnailsDescription": "Generate a sprite thumbnail for the video. These are preview thumbnails when hovering over the video timeline.",
       "storageTemplateSettings": "Storage Template Settings",
@@ -297,8 +297,6 @@
       "convertFFmpegArgsDescription": "Custom FFmpeg arguments to use when converting the video. This is used for both live and VOD archives.",
       "ytdlpVideoArgsLabel": "YT-DLP Video Arguments",
       "ytdlpVideoArgsDescription": "Custom yt-dlp arguments to use when downloading a video. This is only used for VOD downloads.",
-      "ytdlpLiveArgsLabel": "YT-DLP Live Arguments",
-      "ytdlpLiveArgsDescription": "Custom yt-dlp arguments to use when downloading a live stream. This is only used for live stream downloads.",
       "liveStreamTitle": "Live Stream",
       "proxySettings": "Proxy Settings",
       "proxySettingsDescription": "Archive live streams through a proxy to prevent ads. Your Twitch token is not sent to the proxy.",
@@ -308,7 +306,9 @@
       "proxyAddButton": "Add",
       "proxyTypeLabel": "Select Proxy Type",
       "whitelistChannelsLabel": "Whitelist Channels",
-      "whitelistChannelsDescription": "Select channels that are excluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to."
+      "whitelistChannelsDescription": "Select channels that are excluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to.",
+      "watchWhileArchivingLabel": "Enable Watching While Archiving",
+      "watchWhileArchivingDescription": "Download a separate HLS stream for watching while archiving live streams. This doubles the amount of storage used during live archiving. Only the video is watchable, chat is not included."
     },
     "chatSettings": {
       "header": "Chat Settings",
@@ -343,7 +343,9 @@
     "updateVideoStorageUsage": "Update Video Storage Usage",
     "updateVideoStorageUsageDescription": "Update the storage usage for all videos. This is used to display the storage usage in the video list and statistics page. Runs every hour.",
     "processPlaylistVideoRules": "Process Playlist Video Rules",
-    "processPlaylistVideoRulesDescription": "Process video rules for playlists. This will check if videos should be added to playlists based on the rules defined. Runs every hour."
+    "processPlaylistVideoRulesDescription": "Process video rules for playlists. This will check if videos should be added to playlists based on the rules defined. Runs every hour.",
+    "updatePlatformChannels": "Update Platform Channels",
+    "updatePlatformChannelsDescription": "Update channel information from the platform for all channels. This includes display name and profile image. Runs every 12 hours."
   },
   "AdminUsersPage": {
     "title": "Admin - Users",
@@ -361,6 +363,79 @@
     },
     "drawer": "User",
     "deleteModal": "Delete User"
+  },
+  "AdminApiKeysPage": {
+    "title": "Admin - API Keys",
+    "loading": "Loading API keys",
+    "error": "Error loading API keys",
+    "header": "Manage API Keys",
+    "apiRoutesHelp": "Visit <docs>/swagger/index.html</docs> for API docs, or inspect network requests in your browser tools to see API routes and request/response payloads.",
+    "searchPlaceholder": "Search API keys...",
+    "createButton": "Create API key",
+    "docsButton": "Documentation",
+    "docsModal": "API key scopes",
+    "drawer": "Create API key",
+    "editDrawer": "Edit API key",
+    "deleteModal": "Revoke API key",
+    "showOnceModal": "API key created",
+    "edit": "Edit",
+    "revoke": "Revoke",
+    "revokedBadge": "Revoked",
+    "showRevoked": "Show revoked keys",
+    "copyPrefix": "Copy prefix",
+    "copied": "Copied",
+    "never": "Never",
+    "columns": {
+      "name": "Name",
+      "scopes": "Scopes",
+      "prefix": "Prefix",
+      "lastUsed": "Last Used",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    }
+  },
+  "AdminApiKeyComponents": {
+    "validation": {
+      "name": "Name must be between 3 and 50 characters",
+      "description": "Description must be at most 500 characters",
+      "scopes": {
+        "required": "Pick at least one scope",
+        "unknown": "Unknown scope"
+      }
+    },
+    "nameLabel": "Name",
+    "namePlaceholder": "vod-archiver-script",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Optional notes about where this key is used",
+    "scopeLabel": "Scopes",
+    "scopeDescription": "Each scope is resource:tier - admin > write > read within a resource. Use *:admin for full access, or pick specific scopes for least-privilege.",
+    "scopePlaceholder": "Pick one or more scopes",
+    "presets": {
+      "fullAdmin": "Full admin (*:admin)",
+      "readAll": "Read all (*:read)",
+      "clear": "Clear"
+    },
+    "createButton": "Create API key",
+    "createNotification": "API key created — copy the secret now",
+    "updateButton": "Save changes",
+    "updateNotification": "API key updated",
+    "revokeConfirmText": "Are you sure you want to revoke this API key? This cannot be undone.",
+    "revokeButton": "Revoke",
+    "revokeNotification": "API key revoked",
+    "revokeError": "Failed to revoke API key",
+    "showOnce": {
+      "warning": "This is the only time the secret will be shown. Copy it now and store it somewhere safe.",
+      "instructions": "Use it in scripts as: <code>Authorization: Bearer '<api_key>'</code>",
+      "copy": "Copy secret",
+      "copied": "Copied",
+      "close": "Close"
+    },
+    "docs": {
+      "scopeFormatTitle": "Scope format",
+      "scopeFormatBody": "Each scope is resource:tier. Tiers are hierarchical within a resource — admin includes write, write includes read. The wildcard resource * matches every resource, so *:admin grants full access.",
+      "sessionOnlyTitle": "Endpoints not reachable with API keys",
+      "sessionOnlyBody": "These endpoints are session-only by design. API keys cannot reach them regardless of scope."
+    }
   },
   "AdminVideosPage": {
     "title": "Admin - Videos",
@@ -610,11 +685,13 @@
     "applyToVideosLabel": "Apply to video downloads",
     "applyToVideosDescription": "Apply this regex to video downloads, applies to live streams only by default",
     "categoriesText": "Categories",
-    "categoriesDescription": "Archive videos and live streams from select categories. Leave blank to archive all categories.",
+    "categoriesDescription": "Archive videos and live streams from select categories. Leave blank to archive all categories. Category selection is a whitelist by default. Use the options below to change this behavior.",
     "categoriesApplyToLivestreamsLabel": "Apply to Live Streams",
     "categoriesApplyToLivestreamsDescription": "Apply category restrictions to live streams",
     "strictCategoriesLiveLabel": "Strict Live Stream Categories",
     "strictCategoriesLiveDescription": "Stop live stream archive if category changes to one that is not selected",
+    "blacklistCategoriesLiveLabel": "Blacklist Categories",
+    "blacklistCategoriesLiveDescription": "Do not archive live streams and videos that are in the selected categories",
     "categoriesLoadButton": "Load Categories",
     "categoriesSearchPlaceholder": "Search categories...",
     "submitButton": "Create Watched Channel",
@@ -639,7 +716,7 @@
     "registerSuccessNotification": "Registered successfully, please login",
     "errorRegisteringNotification": "Error registering",
     "welcomeText": "Welcome to Ganymede",
-    "ssoButton": "Single Single On (SSO)",
+    "ssoButton": "Single Sign-On (SSO)",
     "localCredentialsLabel": "Or continue with local credentials",
     "usernameLabel": "Username",
     "usernameDescription": "Your username",
@@ -734,6 +811,9 @@
     "watchedVideoText": "You have already watched this video",
     "lockedText": "Video is locked",
     "streamedOnText": "Streamed on",
+    "sourceViewsText": "source views",
+    "localViewsText": "local views",
+    "viewsText": "views",
     "loadingVideos": "Loading videos",
     "errorLoadingVideos": "Error loading videos",
     "loadingChatHistogram": "Loading chat histogram",
@@ -742,15 +822,21 @@
     "chatTimeSkipDetected": "Time skip detected. Chat cleared.",
     "chatPlayerReady": "Chat player ready",
     "chatPlayerReadyStats": "Chat playback contains {lengthBadges} badges, {lengthSubBadges} subscription badges, and {lengthEmotes} emotes.",
+    "chatJumpToTimestamp": "Jump to {timestamp}",
     "loadingChat": "Loading chat playback",
     "chatError": "Error",
     "filterByLabel": "Filter by",
     "filterByPlaceholder": "Filter by video types",
+    "orderByLabel": "Order by",
+    "orderByPlaceholder": "Order by",
+    "sortByLabel": "Sort by",
+    "sortByPlaceholder": "Sort by",
     "videosCount": "{count} videos",
     "loginRequiredText": "You must be logged in to watch this video",
     "markedAsWatchedNotification": "Video marked as watched",
     "markedAsUnwatchedNotification": "Video marked as unwatched",
     "videoLockedNotification": "Video has been {status}.",
+    "videosLockedNotification": "Videos have been {status}.",
     "locked": "locked",
     "unlocked": "unlocked",
     "generateStaticThumbnailsNotification": "Queued task to generate static thumbnails",
@@ -758,7 +844,7 @@
     "copiedToClipboardText": "Copied to clipboard",
     "copiedToClipboardMessage": "The video url has been copied to your clipboard",
     "error": "Error",
-    "clipboardAPIErrorNotification": "The clipboard API requires HTTP, falling back to a prompt",
+    "clipboardAPIErrorNotification": "The clipboard API requires HTTPS, falling back to a prompt",
     "clipboardPromptText": "Copy to clipboard: Ctrl+C, Enter",
     "menu": {
       "playlists": "Playlists",
@@ -772,6 +858,28 @@
       "share": "Share",
       "delete": "Delete Video"
     },
+    "selectForBulkTooltip": "Select for bulk actions",
+    "selectVideoCheckboxLabel": "Select video",
+    "selectAllOnPage": "Select all on page",
+    "selectedVideosCount": "{count} selected",
+    "clearSelectionButton": "Clear Selection",
+    "bulkActionsButton": "Bulk Actions",
+    "bulkAddToPlaylistModalTitle": "Add Videos to Playlist",
+    "bulkDeleteVideosModalTitle": "Delete Videos",
+    "markedVideosAsWatchedNotification": "Videos marked as watched",
+    "markedVideosAsUnwatchedNotification": "Videos marked as unwatched",
+    "bulkGenerateStaticThumbnailsNotification": "Queued tasks to generate static thumbnails",
+    "bulkGenerateSpriteThumbnailsNotification": "Queued tasks to generate sprite thumbnails",
+    "bulkActionMenu": {
+      "markAsWatched": "Mark as Watched",
+      "markAsUnwatched": "Mark as Unwatched",
+      "lock": "Lock Videos",
+      "unlock": "Unlock Videos",
+      "regenerateThumbnails": "Regenerate Thumbnails",
+      "generateSpriteThumbnails": "Generate Sprite Thumbnails",
+      "playlists": "Add to Playlist",
+      "delete": "Delete Videos"
+    },
     "videoInformationModalTitle": "Video Information",
     "videoInformationModal": {
       "informationTitle": "Video Information",
@@ -780,12 +888,34 @@
     "managePlaylistsDrawerTitle": "Manage Playlists",
     "deleteVideoModalTitle": "Delete Video",
     "theaterModeIconTooltip": "Theater Mode",
+    "hideChatIconTooltip": "Hide Chat",
+    "showChatIconTooltip": "Show Chat",
+    "absoluteTimeIconTooltip": "Toggle Absolute Time",
     "sourceViewsTooltip": "source views",
     "localViewsTooltip": "local views",
     "streamedOnTooltip": "Streamed on",
     "videoTypeTooltip": "Video type",
     "videoClipsTitle": "Video Clips",
-    "storageSizeTooltip": "Storage Size"
+    "storageSizeTooltip": "Storage Size",
+    "enums": {
+      "VideoSortBy": {
+        "date": "Date",
+        "views": "Views",
+        "local_views": "Local Views",
+        "created": "Created"
+      },
+      "VideoOrder": {
+        "asc": "Ascending",
+        "desc": "Descending"
+      },
+      "VideoType": {
+        "archive": "Archive",
+        "clip": "Clip",
+        "live": "Live",
+        "highlight": "Highlight",
+        "upload": "Upload"
+      }
+    }
   },
   "MultistreamComponents": {
     "seekBackTooltip": "Seek back {seconds} seconds",
@@ -834,5 +964,116 @@
       "topLargeVideosText": "Top Largest Videos",
       "noLargeVideosText": "No videos found"
     }
+  },
+  "AdminNotificationsPage": {
+    "title": "Notifications",
+    "loading": "Loading notifications...",
+    "error": "Error loading notifications",
+    "header": "Notifications",
+    "description": "Configure notification destinations. Each notification can subscribe to one or more event types and be sent via webhook or Apprise. Visit the",
+    "descriptionWikiLink": "wiki",
+    "descriptionEnd": "for more information.",
+    "createButton": "Create Notification",
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "enabled": "Enabled",
+      "triggers": "Triggers",
+      "actions": "Actions"
+    },
+    "enabledYes": "Yes",
+    "enabledNo": "No",
+    "triggerVideoSuccess": "Video Success",
+    "triggerLiveSuccess": "Live Success",
+    "triggerError": "Error",
+    "triggerIsLive": "Is Live",
+    "triggersNone": "None",
+    "actions": {
+      "edit": "Edit",
+      "test": "Test",
+      "delete": "Delete"
+    },
+    "drawer": {
+      "titleCreate": "Create Notification",
+      "titleEdit": "Edit Notification",
+      "nameLabel": "Name",
+      "namePlaceholderWebhook": "My Discord Webhook",
+      "namePlaceholderApprise": "My Apprise Notification",
+      "enabledLabel": "Enabled",
+      "typeLabel": "Type",
+      "urlLabelWebhook": "Webhook URL",
+      "urlLabelApprise": "Apprise API URL",
+      "urlDescriptionWebhook": "The webhook URL to send notifications to (e.g. Discord, Slack)",
+      "urlDescriptionApprise": "The URL of your Apprise API instance (e.g. http://apprise:8000/notify/ for stateful or http://apprise:8000/notify for stateless)",
+      "urlPlaceholderWebhook": "https://discord.com/api/webhooks/...",
+      "urlPlaceholderApprise": "http://apprise:8000/notify",
+      "eventTriggersLabel": "Event Triggers",
+      "eventTriggersDescription": "Select at least one event. A message template is required for each enabled trigger.",
+      "triggerVideoArchiveSuccess": "Video Archive Success",
+      "triggerLiveArchiveSuccess": "Live Archive Success",
+      "triggerError": "Error",
+      "triggerChannelIsLive": "Channel Is Live",
+      "messageLabel": "Message",
+      "variablesLabel": "Variables:",
+      "appriseSettingsTitle": "Apprise Settings",
+      "appriseSettingsDescription": "These fields are only used when the type is Apprise. Visit the",
+      "appriseSettingsLink": "Apprise API documentation",
+      "appriseSettingsDescriptionEnd": "for more information.",
+      "appriseUrlsLabel": "Apprise URLs (stateless mode)",
+      "appriseUrlsDescription": "Comma-separated Apprise notification URLs for stateless mode",
+      "appriseUrlsPlaceholder": "discord://webhook_id/webhook_token",
+      "appriseTitleLabel": "Apprise Title Template",
+      "appriseTitleDescription": "Supports the same template variables as body templates",
+      "appriseTitlePlaceholder": "'{{channel_display_name}}' - Notification",
+      "appriseTypeLabel": "Apprise Notification Type",
+      "appriseTagLabel": "Apprise Tag (stateful mode)",
+      "appriseTagDescription": "Tag for Apprise stateful configurations",
+      "appriseTagPlaceholder": "all",
+      "appriseFormatLabel": "Apprise Format",
+      "submitCreate": "Create",
+      "submitUpdate": "Update"
+    },
+    "deleteModal": {
+      "title": "Delete Notification",
+      "confirmText": "Are you sure you want to delete the notification",
+      "cancelButton": "Cancel",
+      "deleteButton": "Delete"
+    },
+    "testModal": {
+      "title": "Test Notification",
+      "description": "Send a test notification to",
+      "descriptionEnd": "with dummy data.",
+      "eventTypeLabel": "Event Type",
+      "eventVideoSuccess": "Video Archive Success",
+      "eventLiveSuccess": "Live Archive Success",
+      "eventError": "Error",
+      "eventIsLive": "Channel Is Live",
+      "cancelButton": "Cancel",
+      "sendButton": "Send Test"
+    },
+    "validation": {
+      "nameRequired": "Name is required",
+      "urlRequired": "URL is required",
+      "urlInvalidProtocol": "URL must start with http:// or https://",
+      "urlInvalid": "Must be a valid URL",
+      "triggerRequired": "At least one trigger must be enabled",
+      "templateRequired": "Template is required when trigger is enabled",
+      "appriseUrlsOrTagRequired": "Either Apprise URLs (stateless) or Apprise Tag (stateful) is required"
+    },
+    "toast": {
+      "successTitle": "Success",
+      "errorTitle": "Error",
+      "notificationCreated": "Notification created",
+      "notificationUpdated": "Notification updated",
+      "notificationDeleted": "Notification deleted",
+      "testSent": "Test notification sent",
+      "createFailed": "Failed to create notification",
+      "updateFailed": "Failed to update notification",
+      "deleteFailed": "Failed to delete notification",
+      "testFailed": "Failed to send test notification"
+    }
+  },
+  "MiscComponents": {
+    "recordsPerPageLabel": "Records per page"
   }
 }

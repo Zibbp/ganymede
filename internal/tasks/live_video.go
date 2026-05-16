@@ -92,19 +92,30 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	}()
 
 	// download live video
-	err = exec.DownloadTwitchLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload)
-	if err != nil {
-		if errors.Is(err, context.Canceled) {
+	// Note: even when download fails unexpectedly, continue with finalization steps
+	// (cancel live chat, mark channel not live, enqueue post-process) so partial archive
+	// can still be completed/moved instead of being left in a stuck state.
+	downloadErr := exec.DownloadTwitchLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload)
+	if downloadErr != nil {
+		if errors.Is(downloadErr, context.Canceled) {
 			// create new context to finish the task
 			ctx = context.Background()
 		} else {
-			return err
+			// keep task context alive to perform graceful shutdown/finalization
+			ctx = context.Background()
+			log.Error().Err(downloadErr).Str("queue_id", job.Args.Input.QueueId.String()).Msg("live video download failed; continuing with archive finalization")
 		}
 	}
 
 	// cancel chat download when video download is done
 	// get chat download job id
-	params := river.NewJobListParams().States(rivertype.JobStateRunning, rivertype.JobStateRetryable).First(10000)
+	params := river.NewJobListParams().States(
+		rivertype.JobStateAvailable,
+		rivertype.JobStatePending,
+		rivertype.JobStateScheduled,
+		rivertype.JobStateRunning,
+		rivertype.JobStateRetryable,
+	).First(10000)
 	chatDownloadJobId, err := getTaskId(ctx, client, GetTaskFilter{
 		Kind:    string(utils.TaskDownloadLiveChat),
 		QueueId: job.Args.Input.QueueId,
@@ -126,9 +137,11 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 		return err
 	}
 
-	// set queue status to completed
+	// keep download task as success so downstream finalize tasks can run and complete archive.
+	// if ffmpeg failed unexpectedly, post-process/move tasks will surface any unrecoverable issues.
+	downloadStatus := utils.Success
 	err = setQueueStatus(ctx, store.Client, QueueStatusInput{
-		Status:  utils.Success,
+		Status:  downloadStatus,
 		QueueId: job.Args.Input.QueueId,
 		Task:    utils.TaskDownloadVideo,
 	})

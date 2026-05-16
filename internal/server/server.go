@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/zibbp/ganymede/internal/admin"
+	"github.com/zibbp/ganymede/internal/api_key"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/auth"
 	"github.com/zibbp/ganymede/internal/blocked"
@@ -22,6 +23,7 @@ import (
 	_ "github.com/zibbp/ganymede/internal/kv"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/metrics"
+	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/playback"
 	"github.com/zibbp/ganymede/internal/playlist"
@@ -35,27 +37,29 @@ import (
 )
 
 type Application struct {
-	EnvConfig         config.EnvConfig
-	Database          *database.Database
-	Store             *database.Database
-	ArchiveService    *archive.Service
-	PlatformTwitch    platform.Platform
-	AdminService      *admin.Service
-	AuthService       *auth.Service
-	ChannelService    *channel.Service
-	VodService        *vod.Service
-	QueueService      *queue.Service
-	UserService       *user.Service
-	LiveService       *live.Service
-	PlaybackService   *playback.Service
-	MetricsService    *metrics.Service
-	PlaylistService   *playlist.Service
-	TaskService       *task.Service
-	ChapterService    *chapter.Service
-	CategoryService   *category.Service
-	BlockedVodService *blocked.Service
-	RiverUIServer     *riverui.Handler
-	RiverClient       *tasks_client.RiverClient
+	EnvConfig           config.EnvConfig
+	Database            *database.Database
+	Store               *database.Database
+	ArchiveService      *archive.Service
+	PlatformTwitch      platform.Platform
+	AdminService        *admin.Service
+	AuthService         *auth.Service
+	ChannelService      *channel.Service
+	VodService          *vod.Service
+	QueueService        *queue.Service
+	UserService         *user.Service
+	LiveService         *live.Service
+	PlaybackService     *playback.Service
+	MetricsService      *metrics.Service
+	PlaylistService     *playlist.Service
+	TaskService         *task.Service
+	ChapterService      *chapter.Service
+	CategoryService     *category.Service
+	BlockedVodService   *blocked.Service
+	NotificationService *notification.Service
+	ApiKeyService       *api_key.Service
+	RiverUIServer       *riverui.Handler
+	RiverClient         *tasks_client.RiverClient
 }
 
 func SetupApplication(ctx context.Context) (*Application, error) {
@@ -145,38 +149,56 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	vodService := vod.NewService(db, riverClient, platformTwitch)
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodService := blocked.NewService(db)
+	notificationService := notification.NewService(db)
+
+	// Migrate legacy config.json notifications to database (idempotent)
+	if legacyNotif := config.ReadLegacyNotifications(); legacyNotif != nil {
+		if err := notificationService.MigrateFromLegacyConfig(ctx, legacyNotif); err != nil {
+			log.Error().Err(err).Msg("error migrating legacy notifications from config.json")
+		}
+	}
+
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch)
 	adminService := admin.NewService(db)
 	userService := user.NewService(db)
 	chapterService := chapter.NewService(db)
-	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService)
+	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService, notificationService)
+	if err := liveService.ResetLiveStatus(ctx); err != nil {
+		return nil, err
+	}
 	playbackService := playback.NewService(db)
 	metricsService := metrics.NewService(db, riverClient)
 	playlistService := playlist.NewService(db)
 	taskService := task.NewService(db, liveService, riverClient)
 	categoryService := category.NewService(db)
+	apiKeyService := api_key.NewService(db)
+	if _, err := apiKeyService.EnsureSystemUser(ctx); err != nil {
+		return nil, fmt.Errorf("error ensuring api key system user: %v", err)
+	}
 
 	return &Application{
-		EnvConfig:         envConfig,
-		Database:          db,
-		AuthService:       authService,
-		ChannelService:    channelService,
-		VodService:        vodService,
-		QueueService:      queueService,
-		BlockedVodService: blockedVodService,
-		ArchiveService:    archiveService,
-		AdminService:      adminService,
-		UserService:       userService,
-		LiveService:       liveService,
-		PlaybackService:   playbackService,
-		MetricsService:    metricsService,
-		PlaylistService:   playlistService,
-		TaskService:       taskService,
-		ChapterService:    chapterService,
-		CategoryService:   categoryService,
-		PlatformTwitch:    platformTwitch,
-		RiverUIServer:     riverUIServer,
-		RiverClient:       riverClient,
+		EnvConfig:           envConfig,
+		Database:            db,
+		AuthService:         authService,
+		ChannelService:      channelService,
+		VodService:          vodService,
+		QueueService:        queueService,
+		BlockedVodService:   blockedVodService,
+		ArchiveService:      archiveService,
+		AdminService:        adminService,
+		UserService:         userService,
+		LiveService:         liveService,
+		PlaybackService:     playbackService,
+		MetricsService:      metricsService,
+		PlaylistService:     playlistService,
+		TaskService:         taskService,
+		ChapterService:      chapterService,
+		CategoryService:     categoryService,
+		NotificationService: notificationService,
+		ApiKeyService:       apiKeyService,
+		PlatformTwitch:      platformTwitch,
+		RiverUIServer:       riverUIServer,
+		RiverClient:         riverClient,
 	}, nil
 }
 
@@ -187,7 +209,7 @@ func Run(ctx context.Context) error {
 		return err
 	}
 
-	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.PlatformTwitch, app.RiverUIServer)
+	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.NotificationService, app.ApiKeyService, app.PlatformTwitch, app.RiverUIServer)
 
 	if err := httpHandler.Serve(ctx); err != nil {
 		return err

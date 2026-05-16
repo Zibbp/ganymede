@@ -1,5 +1,5 @@
-ARG TWITCHDOWNLOADER_VERSION="1.56.1"
-ARG YT_DLP_VERSION="2025.09.05"
+ARG TWITCHDOWNLOADER_VERSION="1.56.4"
+ARG YT_DLP_VERSION="2026.02.04"
 
 #
 # API Build
@@ -31,9 +31,9 @@ RUN pip install requests --break-system-packages
 # Clone yt-dlp repository
 RUN git clone --depth 1 --branch ${YT_DLP_VERSION} https://github.com/yt-dlp/yt-dlp.git /app/yt-dlp
 # Copy patch for Twitch Ganymede 
-COPY ganymede_twitch_yt_dlp_git.patch /tmp/ganymede_twitch_yt_dlp_git.patch
+#COPY ganymede_twitch_yt_dlp_git.patch /tmp/ganymede_twitch_yt_dlp_git.patch
 WORKDIR /app/yt-dlp
-RUN git apply /tmp/ganymede_twitch_yt_dlp_git.patch
+#RUN git apply /tmp/ganymede_twitch_yt_dlp_git.patch
 # Build
 RUN make
 
@@ -62,18 +62,16 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     unzip twitchdownloader.zip && \
     rm twitchdownloader.zip
 
-RUN git clone --depth 1 https://github.com/xenova/chat-downloader.git
-
 # Install yt-dlp
 COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
 
 #
 # Frontend base
 #
-FROM node:24-alpine AS base-frontend
+FROM node:26-alpine AS base-frontend
 
 # Install dependencies only when needed
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -89,7 +87,7 @@ RUN \
 #
 # Frontend build
 #
-FROM node:24-alpine AS build-frontend
+FROM node:26-alpine AS build-frontend
 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -105,15 +103,11 @@ RUN \
     fi
 
 #
-# Tests stage. Inclues depedencies required for tests
+# Tests stage. Includes dependencies required for tests
 #
 FROM golang:1.25-bookworm AS tests
 
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip ffmpeg make git
-
-# Copy and install chat-downloader
-COPY --from=tools /tmp/chat-downloader /tmp/chat-downloader
-RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
 
 # Setup fonts
 RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
@@ -159,10 +153,6 @@ RUN node --version && npm --version
 
 # Setup user
 RUN useradd -u 911 -d /data abc && usermod -a -G users abc
-
-# Copy and install chat-downloader
-COPY --from=tools /tmp/chat-downloader /tmp/chat-downloader
-RUN cd /tmp/chat-downloader && python3 setup.py install && cd .. && rm -rf chat-downloader
 
 # Install yt-dlp
 COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp

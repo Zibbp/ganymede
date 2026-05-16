@@ -10,8 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/grafov/m3u8"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/chapter"
+	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/dto"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -21,7 +23,7 @@ func (c *TwitchConnection) GetVideo(ctx context.Context, id string, withChapters
 	params := url.Values{
 		"id": []string{id},
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "videos", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "videos", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +136,7 @@ func (c *TwitchConnection) GetLiveStream(ctx context.Context, channelName string
 	params := url.Values{
 		"user_login": []string{channelName},
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "streams", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "streams", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -172,13 +174,13 @@ func (c *TwitchConnection) GetLiveStream(ctx context.Context, channelName string
 	return &info, nil
 }
 
-func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelNames []string) ([]LiveStreamInfo, error) {
+func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelIDs []string) ([]LiveStreamInfo, error) {
 	params := url.Values{}
-	for _, channel := range channelNames {
-		params.Add("user_login", channel)
+	for _, channel := range channelIDs {
+		params.Add("user_id", channel)
 	}
 
-	body, err := c.twitchMakeHTTPRequest("GET", "streams", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "streams", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -219,11 +221,19 @@ func (c *TwitchConnection) GetLiveStreams(ctx context.Context, channelNames []st
 	return streams, nil
 }
 
-func (c *TwitchConnection) GetChannel(ctx context.Context, channelName string) (*ChannelInfo, error) {
-	params := url.Values{
-		"login": []string{channelName},
+// GetChannel retrieves channel information by its name or ID.
+func (c *TwitchConnection) GetChannel(ctx context.Context, channelName *string, channelID *string) (*ChannelInfo, error) {
+	params := url.Values{}
+
+	if channelID != nil && *channelID != "" {
+		params.Set("id", *channelID)
+	} else if channelName != nil && *channelName != "" {
+		params.Set("login", *channelName)
+	} else {
+		return nil, fmt.Errorf("either channelName or channelID must be provided")
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "users", params, nil)
+
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "users", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +275,7 @@ func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, vide
 		"first":   []string{"100"},
 		"type":    []string{string(videoType)},
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "videos", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "videos", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +294,7 @@ func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, vide
 	for cursor != "" {
 		params.Del("after")
 		params.Set("after", cursor)
-		body, err = c.twitchMakeHTTPRequest("GET", "videos", params, nil)
+		body, err = c.twitchMakeHTTPRequest(ctx, "GET", "videos", params, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -351,7 +361,7 @@ func (c *TwitchConnection) GetVideos(ctx context.Context, channelId string, vide
 
 func (c *TwitchConnection) GetCategories(ctx context.Context) ([]Category, error) {
 	params := url.Values{}
-	body, err := c.twitchMakeHTTPRequest("GET", "games/top", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "games/top", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +380,7 @@ func (c *TwitchConnection) GetCategories(ctx context.Context) ([]Category, error
 	for cursor != "" {
 		params.Del("after")
 		params.Set("after", cursor)
-		body, err = c.twitchMakeHTTPRequest("GET", "games/top", params, nil)
+		body, err = c.twitchMakeHTTPRequest(ctx, "GET", "games/top", params, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -395,7 +405,7 @@ func (c *TwitchConnection) GetCategories(ctx context.Context) ([]Category, error
 }
 
 func (c *TwitchConnection) GetGlobalBadges(ctx context.Context) ([]Badge, error) {
-	body, err := c.twitchMakeHTTPRequest("GET", "chat/badges/global", nil, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "chat/badges/global", nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -436,7 +446,7 @@ func (c *TwitchConnection) GetChannelBadges(ctx context.Context, channelId strin
 	params := url.Values{
 		"broadcaster_id": []string{channelId},
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "chat/badges", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "chat/badges", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -474,7 +484,7 @@ func (c *TwitchConnection) GetChannelBadges(ctx context.Context, channelId strin
 }
 
 func (c *TwitchConnection) GetGlobalEmotes(ctx context.Context) ([]Emote, error) {
-	body, err := c.twitchMakeHTTPRequest("GET", "chat/emotes/global", nil, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "chat/emotes/global", nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -522,7 +532,7 @@ func (c *TwitchConnection) GetChannelEmotes(ctx context.Context, channelId strin
 	params := url.Values{
 		"broadcaster_id": []string{channelId},
 	}
-	body, err := c.twitchMakeHTTPRequest("GET", "chat/emotes", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "chat/emotes", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -636,7 +646,7 @@ func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string
 		"first":          []string{limitStr},
 	}
 
-	body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "clips", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -656,7 +666,7 @@ func (c *TwitchConnection) GetChannelClips(ctx context.Context, channelId string
 		params.Del("after")
 		params.Set("after", cursor)
 
-		body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+		body, err := c.twitchMakeHTTPRequest(ctx, "GET", "clips", params, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -726,7 +736,7 @@ func (c *TwitchConnection) GetClip(ctx context.Context, id string) (*ClipInfo, e
 		"id": []string{id},
 	}
 
-	body, err := c.twitchMakeHTTPRequest("GET", "clips", params, nil)
+	body, err := c.twitchMakeHTTPRequest(ctx, "GET", "clips", params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -827,6 +837,77 @@ func (c *TwitchConnection) CheckIfStreamIsLive(ctx context.Context, channelName 
 	return true, nil
 }
 
+// GetStream fetches the m3u8 playlist for a live Twitch stream.
+func (c *TwitchConnection) GetStream(ctx context.Context, channelName string) (*m3u8.MasterPlaylist, error) {
+	token, err := c.TwitchGQLGetPlaybackAccessToken(channelName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get playback access token: %v", err)
+	}
+
+	proxyParams := config.Get().Livestream.ProxyParameters
+
+	decoded, err := url.QueryUnescape(proxyParams)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query unescape proxy parameters: %v", err)
+	}
+
+	if len(decoded) > 0 && decoded[0] == '?' {
+		decoded = decoded[1:]
+	}
+
+	values, err := url.ParseQuery(decoded)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse query proxy parameters: %v", err)
+	}
+
+	values.Set("sig", token.Signature)
+	values.Set("token", token.Value)
+
+	// Custom parameters to get the best quality possible (Enhanced Broadcast)
+	values.Set("supported_codecs", "av1,h265,h264")
+	values.Set("playlist_include_framerate", "true")
+
+	query := values.Encode()
+
+	m3u8URL := fmt.Sprintf("https://usher.ttvnw.net/api/channel/hls/%s.m3u8?%s", channelName, query)
+
+	log.Debug().Msgf("Twitch m3u8 URL for %s: %s", channelName, m3u8URL)
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	// HTTP request to fetch the m3u8 playlist
+	req, err := http.NewRequest("GET", m3u8URL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+	req.Header.Set("User-Agent", utils.ChromeUserAgent)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch m3u8 playlist: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck
+
+	// If the response status is not 200 or 403 the stream is not live
+	// This request is not authenticated, so it can return 403 if the stream is sub-only or geo-blocked
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusForbidden {
+		return nil, fmt.Errorf("received unexpected status code: %d", resp.StatusCode)
+	}
+
+	playlist, _, err := m3u8.DecodeFrom(resp.Body, false)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding m3u8 response body: %v", err)
+	}
+
+	masterPlaylist, ok := playlist.(*m3u8.MasterPlaylist)
+	if !ok {
+		return nil, fmt.Errorf("failed to cast playlist to a master playlist: %v", err)
+	}
+
+	return masterPlaylist, nil
+}
+
 // GetStreams fetches live streams from Twitch sorted by viewership. It supports pagination and limits the number of streams returned.
 func (c *TwitchConnection) GetStreams(ctx context.Context, limit int) ([]LiveStreamInfo, error) {
 	params := url.Values{
@@ -844,7 +925,7 @@ func (c *TwitchConnection) GetStreams(ctx context.Context, limit int) ([]LiveStr
 			params.Del("after")
 		}
 
-		body, err := c.twitchMakeHTTPRequest("GET", "streams", params, nil)
+		body, err := c.twitchMakeHTTPRequest(ctx, "GET", "streams", params, nil)
 		if err != nil {
 			return nil, err
 		}

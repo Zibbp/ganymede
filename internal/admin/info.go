@@ -20,7 +20,6 @@ type InfoResp struct {
 type ProgramVersions struct {
 	FFmpeg           string `json:"ffmpeg"`
 	TwitchDownloader string `json:"twitch_downloader"`
-	ChatDownloader   string `json:"chat_downloader"`
 	YtDlp            string `json:"yt_dlp"`
 }
 
@@ -44,12 +43,6 @@ func (s *Service) GetInfo(ctx context.Context) (InfoResp, error) {
 		return resp, fmt.Errorf("error getting TwitchDownloaderCLI version: %v", err)
 	}
 	programVersion.TwitchDownloader = twitchDownloaderVersion
-
-	chatDownloaderVersion, err := getChatDownloaderVersion()
-	if err != nil {
-		return resp, fmt.Errorf("error getting chat_downloader version: %v", err)
-	}
-	programVersion.ChatDownloader = chatDownloaderVersion
 
 	ytdlpVersion, err := getYtDlpVersion()
 	if err != nil {
@@ -78,15 +71,6 @@ func getTwitchDownloaderVersion() (string, error) {
 		// TwitchDownloaderCLI throws exit status 1 on --version
 		// so we ignore the error
 		return string(out), nil
-	}
-	return string(out), nil
-}
-
-func getChatDownloaderVersion() (string, error) {
-	run := exec.Command("chat_downloader", "--version")
-	out, err := run.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("error getting chat_downloader version: %v", err)
 	}
 	return string(out), nil
 }

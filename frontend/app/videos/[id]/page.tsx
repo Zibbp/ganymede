@@ -31,6 +31,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const t = useTranslations("VideoPage");
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
+  const hideChat = useSettingsStore((state) => state.hideChat);
   const showChatHistogram = useSettingsStore((state) => state.showChatHistogram);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { ref, toggle, fullscreen } = useFullscreen();
@@ -66,92 +67,77 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
     return <VideoLoginRequired video={data} />
   }
 
-  if (isMobile) {
-    return (
-      <Box className={classes.containerMobile}>
-
-        {/* Video player */}
-        <div>
-          <VideoPlayer video={data} ref={player} />
-        </div>
-
-        {/* Chat player */}
-        {data.chat_path && (
-          <div className={classes.chatColumnMobile}>
-            <ChatPlayer video={data} />
-          </div>
-        )}
-
-        {/* Title bar */}
-        {!videoTheaterMode && <VideoTitleBar video={data} />}
-
-        {/* Items below the player are not available in mobile */}
-
-      </Box>
-    )
-  }
-
   return (
     <div>
-      {/* Hide navbar. I don't like doing this but the navbar ruins the experience */}
-      <style jsx>{`
-        :global(html)::-webkit-scrollbar {
-          display: none;
-        }
-        :global(html) {
-          -ms-overflow-style: none; /* IE and Edge */
-          scrollbar-width: none; /* Firefox */
-        }
-      `}</style>
-
-      {/* Player and chat section */}
-      <Box className={classes.container}>
+      {/* Player and chat section — single tree on both layouts so VideoPlayer/ChatPlayer instances persist across the breakpoint flip */}
+      <Box className={isMobile ? classes.containerMobile : classes.container}>
         {/* Player */}
-        <div className={!data.chat_path ? classes.leftColumnNoChat : classes.leftColumn}>
+        <div className={
+          isMobile
+            ? undefined
+            : (!data.chat_path ? classes.leftColumnNoChat : classes.leftColumn)
+        }>
           <div className={
-            videoTheaterMode || fullscreen ? classes.videoPlayerTheaterMode : classes.videoPlayer
+            isMobile
+              ? undefined
+              : (videoTheaterMode || fullscreen ? classes.videoPlayerTheaterMode : classes.videoPlayer)
           }>
             <VideoPlayer video={data} ref={player} />
           </div>
         </div>
 
-
         {/* Chat */}
-        {data.chat_path && (
-          <div className={classes.rightColumn} style={{ height: "auto", maxHeight: "auto" }}>
-            <div className={
-              videoTheaterMode || fullscreen
-                ? classes.chatColumnTheaterMode
-                : classes.chatColumn
-            }
+        {data.chat_path && !hideChat && !data.processing && (
+          <div
+            className={isMobile ? classes.chatColumnMobile : classes.rightColumn}
+            style={isMobile ? undefined : { height: "auto", maxHeight: "auto" }}
+          >
+            <div
+              className={
+                isMobile
+                  ? undefined
+                  : (videoTheaterMode || fullscreen ? classes.chatColumnTheaterMode : classes.chatColumn)
+              }
+              style={isMobile ? { height: "100%" } : undefined}
             >
-              <ChatPlayer video={data} />
+              <ChatPlayer video={data} playerRef={player} />
             </div>
           </div>
         )}
-
       </Box>
 
       {/* Title bar */}
       {!videoTheaterMode && <VideoTitleBar video={data} />}
 
-      {/* Video clips */}
-      <Container size="7xl" fluid={true} >
-        {videoClipsError && (
-          <div>Error loading clips</div>
-        )}
-        {((!videoClipsPending) && (videoClips && videoClips.length > 0)) && (
-          <VideoPageClips clips={videoClips} />
-        )}
-      </Container>
+      {/* Desktop-only sections render after the player/chat block so toggling them doesn't shift player position */}
+      {!isMobile && !data.processing && (
+        <Container size="7xl" fluid={true} >
+          {videoClipsError && (
+            <div>Error loading clips</div>
+          )}
+          {((!videoClipsPending) && (videoClips && videoClips.length > 0)) && (
+            <VideoPageClips clips={videoClips} />
+          )}
+        </Container>
+      )}
 
-      {/* Chat Histogram */}
-      {(data.chat_path && (data.type != VideoType.Clip) && !isMobile && showChatHistogram) && (
+      {(!isMobile && data.chat_path && (data.type != VideoType.Clip) && showChatHistogram && !data.processing) && (
         <Container size="7xl" fluid={true} >
           <VideoChatHistogram videoId={data.id} playerRef={player} />
         </Container>
       )}
 
+      {!isMobile && (
+        <style jsx>{`
+          :global(html)::-webkit-scrollbar {
+            display: none;
+          }
+          :global(html) {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+          }
+        `}</style>
+      )}
     </div>
   );
 }

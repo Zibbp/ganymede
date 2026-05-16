@@ -1,7 +1,7 @@
-ARG TWITCHDOWNLOADER_VERSION="1.56.1"
-ARG YT_DLP_VERSION="2025.09.05"
+ARG TWITCHDOWNLOADER_VERSION="1.56.4"
+ARG YT_DLP_VERSION="2026.02.04"
 
-FROM mcr.microsoft.com/devcontainers/go:1.25
+FROM mcr.microsoft.com/devcontainers/go:2-1.26
 
 ARG TWITCHDOWNLOADER_VERSION
 ARG YT_DLP_VERSION
@@ -28,3 +28,6 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
 
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/yt-dlp -o /usr/local/bin/yt-dlp && \
   chmod +x /usr/local/bin/yt-dlp
+
+WORKDIR /workspace
+

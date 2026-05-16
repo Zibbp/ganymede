@@ -29,11 +29,12 @@ import (
 )
 
 type Service struct {
-	Store          *database.Database
-	ArchiveService *archive.Service
-	PlatformTwitch platform.Platform
-	ChapterService *chapter.Service
-	QueueService   *queue.Service
+	Store               *database.Database
+	ArchiveService      *archive.Service
+	PlatformTwitch      platform.Platform
+	ChapterService      *chapter.Service
+	QueueService        *queue.Service
+	NotificationService *notification.Service
 }
 
 type Live struct {
@@ -49,10 +50,11 @@ type Live struct {
 	LastLive               time.Time            `json:"last_live"`
 	RenderChat             bool                 `json:"render_chat"`
 	DownloadSubOnly        bool                 `json:"download_sub_only"`
-	Categories             []string             `json:"categories"`
-	ApplyCategoriesToLive  bool                 `json:"apply_categories_to_live"`
-	StrictCategoriesLive   bool                 `json:"strict_categories_live"`
-	VideoAge               int64                `json:"video_age"` // Restrict fetching videos to a certain age.
+	Categories             []string             `json:"categories"`               // List of category names
+	ApplyCategoriesToLive  bool                 `json:"apply_categories_to_live"` // Apply category restrictions to live streams
+	StrictCategoriesLive   bool                 `json:"strict_categories_live"`   // Strictly enforce category restrictions for live streams. Stop archiving if category changes to one that is not selected.
+	BlacklistCategories    bool                 `json:"blacklist_categories"`     // Blacklist selected categories for live streams and videos.
+	VideoAge               int64                `json:"video_age"`                // Restrict fetching videos to a certain age.
 	TitleRegex             []ent.LiveTitleRegex `json:"title_regex"`
 	WatchClips             bool                 `json:"watch_clips"`
 	ClipsLimit             int                  `json:"clips_limit"`
@@ -77,8 +79,20 @@ type ArchiveLive struct {
 	RenderChat  bool      `json:"render_chat"`
 }
 
-func NewService(store *database.Database, archiveService *archive.Service, platformTwitch platform.Platform, chapterService *chapter.Service, queueService *queue.Service) *Service {
-	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch, ChapterService: chapterService, QueueService: queueService}
+func NewService(store *database.Database, archiveService *archive.Service, platformTwitch platform.Platform, chapterService *chapter.Service, queueService *queue.Service, notificationService *notification.Service) *Service {
+	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch, ChapterService: chapterService, QueueService: queueService, NotificationService: notificationService}
+}
+
+// ResetLiveStatus sets is_live=false for all watched channels.
+// This is intended to run on application startup so live detection starts from a clean state.
+func (s *Service) ResetLiveStatus(ctx context.Context) error {
+	updated, err := s.Store.Client.Live.Update().SetIsLive(false).Save(ctx)
+	if err != nil {
+		return fmt.Errorf("error resetting watched channels live status: %v", err)
+	}
+
+	log.Info().Int("channels", updated).Msg("reset watched channel live status")
+	return nil
 }
 
 func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
@@ -99,7 +113,32 @@ func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent
 		return nil, fmt.Errorf("channel already watched")
 	}
 
-	l, err := s.Store.Client.Live.Create().SetChannelID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetStrictCategoriesLive(liveDto.StrictCategoriesLive).SetWatchClips(liveDto.WatchClips).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).Save(ctx)
+	// Validate conflicting options
+	if liveDto.StrictCategoriesLive && liveDto.BlacklistCategories {
+		return nil, fmt.Errorf("conflicting category options: strict_categories_live and blacklist_categories cannot both be enabled")
+	}
+
+	l, err := s.Store.Client.Live.Create().
+		SetChannelID(liveDto.ID).
+		SetWatchLive(liveDto.WatchLive).
+		SetWatchVod(liveDto.WatchVod).
+		SetDownloadArchives(liveDto.DownloadArchives).
+		SetDownloadHighlights(liveDto.DownloadHighlights).
+		SetDownloadUploads(liveDto.DownloadUploads).
+		SetResolution(liveDto.Resolution).
+		SetArchiveChat(liveDto.ArchiveChat).
+		SetRenderChat(liveDto.RenderChat).
+		SetDownloadSubOnly(liveDto.DownloadSubOnly).
+		SetVideoAge(liveDto.VideoAge).
+		SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).
+		SetStrictCategoriesLive(liveDto.StrictCategoriesLive).
+		SetBlacklistCategories(liveDto.BlacklistCategories).
+		SetWatchClips(liveDto.WatchClips).
+		SetClipsLimit(liveDto.ClipsLimit).
+		SetClipsIntervalDays(liveDto.ClipsIntervalDays).
+		SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).
+		SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).
+		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error adding watched channel: %v", err)
 	}
@@ -125,7 +164,31 @@ func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent
 }
 
 func (s *Service) UpdateLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent.Live, error) {
-	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).SetWatchLive(liveDto.WatchLive).SetWatchVod(liveDto.WatchVod).SetDownloadArchives(liveDto.DownloadArchives).SetDownloadHighlights(liveDto.DownloadHighlights).SetDownloadUploads(liveDto.DownloadUploads).SetResolution(liveDto.Resolution).SetArchiveChat(liveDto.ArchiveChat).SetRenderChat(liveDto.RenderChat).SetDownloadSubOnly(liveDto.DownloadSubOnly).SetVideoAge(liveDto.VideoAge).SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).SetStrictCategoriesLive(liveDto.StrictCategoriesLive).SetClipsLimit(liveDto.ClipsLimit).SetClipsIntervalDays(liveDto.ClipsIntervalDays).SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).SetWatchClips(liveDto.WatchClips).SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).Save(ctx)
+	// Validate conflicting options
+	if liveDto.StrictCategoriesLive && liveDto.BlacklistCategories {
+		return nil, fmt.Errorf("conflicting category options: strict_categories_live and blacklist_categories cannot both be enabled")
+	}
+
+	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).
+		SetWatchLive(liveDto.WatchLive).
+		SetWatchVod(liveDto.WatchVod).
+		SetDownloadArchives(liveDto.DownloadArchives).
+		SetDownloadHighlights(liveDto.DownloadHighlights).
+		SetDownloadUploads(liveDto.DownloadUploads).
+		SetResolution(liveDto.Resolution).
+		SetArchiveChat(liveDto.ArchiveChat).
+		SetRenderChat(liveDto.RenderChat).
+		SetDownloadSubOnly(liveDto.DownloadSubOnly).
+		SetVideoAge(liveDto.VideoAge).
+		SetApplyCategoriesToLive(liveDto.ApplyCategoriesToLive).
+		SetStrictCategoriesLive(liveDto.StrictCategoriesLive).
+		SetBlacklistCategories(liveDto.BlacklistCategories).
+		SetClipsLimit(liveDto.ClipsLimit).
+		SetClipsIntervalDays(liveDto.ClipsIntervalDays).
+		SetClipsIgnoreLastChecked(liveDto.ClipsIgnoreLastChecked).
+		SetWatchClips(liveDto.WatchClips).
+		SetUpdateMetadataMinutes(liveDto.UpdateMetadataMinutes).
+		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error updating watched channel: %v", err)
 	}
@@ -218,17 +281,25 @@ func (s *Service) Check(ctx context.Context) error {
 	var streams []platform.LiveStreamInfo
 	// generate query string for twitch api
 	for _, lwc := range liveWatchedChannelsSplit {
-		channels := make([]string, 0)
+		channelIDs := make([]string, 0, len(lwc))
 		for _, lwc := range lwc {
-			channels = append(channels, lwc.Edges.Channel.Name)
+			if lwc.Edges.Channel.ExtID == "" {
+				log.Warn().
+					Str("channel_id", lwc.Edges.Channel.ID.String()).
+					Msg("missing twitch external ID; skipping live check for this channel")
+				continue
+			}
+			channelIDs = append(channelIDs, lwc.Edges.Channel.ExtID)
 		}
-		log.Debug().Str("channels", strings.Join(channels, ", ")).Msg("checking live streams")
-
-		twitchStreams, err := s.PlatformTwitch.GetLiveStreams(ctx, channels)
+		if len(channelIDs) == 0 {
+			continue
+		}
+		log.Debug().Str("channels", strings.Join(channelIDs, ", ")).Msg("checking live streams")
+		twitchStreams, err := s.PlatformTwitch.GetLiveStreams(ctx, channelIDs)
 		if err != nil {
 			var e platform.ErrorNoStreamsFound
 			if errors.As(err, &e) {
-				log.Debug().Msgf("live stream not found for channels: %s, skipping", strings.Join(channels, ", "))
+				log.Debug().Msgf("live stream not found for channels: %s, skipping", strings.Join(channelIDs, ", "))
 				continue
 			} else {
 				return fmt.Errorf("error getting live streams: %v", err)
@@ -242,7 +313,7 @@ func (s *Service) Check(ctx context.Context) error {
 OUTER:
 	for _, lwc := range liveWatchedChannels {
 		// Check if LWC is in twitchStreams.Data
-		stream := channelInLiveStreamInfo(lwc.Edges.Channel.Name, streams)
+		stream := channelInLiveStreamInfo(lwc.Edges.Channel.ExtID, streams)
 		if len(stream.ID) > 0 {
 			// Build map of channel watched categories
 			watchedChannelCategories := make(map[string]struct{}, len(lwc.Edges.Categories))
@@ -312,11 +383,20 @@ OUTER:
 
 				// check for category restrictions
 				if lwc.ApplyCategoriesToLive && len(lwc.Edges.Categories) > 0 {
-					if _, found := watchedChannelCategories[strings.ToLower(stream.GameName)]; found {
+					_, found := watchedChannelCategories[strings.ToLower(stream.GameName)]
+
+					if lwc.BlacklistCategories {
+						if found {
+							log.Debug().Str("category", stream.GameName).Str("blacklist_categories", strings.Join(categoryNamesForLog, ", ")).Msgf("%s is in blacklist categories, skipping", lwc.Edges.Channel.Name)
+							continue OUTER
+						}
+						log.Debug().Str("category", stream.GameName).Str("blacklist_categories", strings.Join(categoryNamesForLog, ", ")).Msgf("%s is not in blacklist categories", lwc.Edges.Channel.Name)
+					} else { // Whitelist mode
+						if !found {
+							log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msgf("%s does not match category restrictions", lwc.Edges.Channel.Name)
+							continue OUTER
+						}
 						log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msgf("%s matches category restrictions", lwc.Edges.Channel.Name)
-					} else {
-						log.Debug().Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msgf("%s does not match category restrictions", lwc.Edges.Channel.Name)
-						continue
 					}
 				}
 
@@ -368,13 +448,24 @@ OUTER:
 				log.Info().Msgf("started live archive of %s", lwc.Edges.Channel.Name)
 
 				// Notification
-				// Fetch channel for notification
+				// Fetch vod for notification and chapter creation
 				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).First(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error getting vod")
 					continue
 				}
-				go notification.SendLiveNotification(lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
+				if s.NotificationService != nil {
+					// Use a detached context so the notification is not cancelled when the parent context ends
+					notifCtx := context.WithoutCancel(ctx)
+					go func() {
+						defer func() {
+							if r := recover(); r != nil {
+								log.Error().Interface("panic", r).Msg("panic in SendLive notification")
+							}
+						}()
+						s.NotificationService.SendLive(notifCtx, lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
+					}()
+				}
 
 				// Create initial chapter
 				_, err = s.ChapterService.CreateChapter(chapter.Chapter{
@@ -405,7 +496,7 @@ OUTER:
 // channelInLiveStreamInfo searches for a string in a slice of LiveStreamInfo and returns the first match.
 func channelInLiveStreamInfo(a string, list []platform.LiveStreamInfo) platform.LiveStreamInfo {
 	for _, b := range list {
-		if b.UserLogin == a {
+		if b.UserLogin == a || b.UserID == a {
 			return b
 		}
 	}

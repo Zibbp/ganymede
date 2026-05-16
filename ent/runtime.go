@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/zibbp/ganymede/ent/apikey"
 	"github.com/zibbp/ganymede/ent/blockedvideos"
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/chapter"
@@ -13,6 +14,7 @@ import (
 	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/livetitleregex"
 	"github.com/zibbp/ganymede/ent/mutedsegment"
+	"github.com/zibbp/ganymede/ent/notification"
 	"github.com/zibbp/ganymede/ent/playback"
 	"github.com/zibbp/ganymede/ent/playlist"
 	"github.com/zibbp/ganymede/ent/playlistrule"
@@ -29,6 +31,38 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	apikeyFields := schema.ApiKey{}.Fields()
+	_ = apikeyFields
+	// apikeyDescName is the schema descriptor for name field.
+	apikeyDescName := apikeyFields[1].Descriptor()
+	// apikey.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	apikey.NameValidator = apikeyDescName.Validators[0].(func(string) error)
+	// apikeyDescPrefix is the schema descriptor for prefix field.
+	apikeyDescPrefix := apikeyFields[3].Descriptor()
+	// apikey.PrefixValidator is a validator for the "prefix" field. It is called by the builders before save.
+	apikey.PrefixValidator = apikeyDescPrefix.Validators[0].(func(string) error)
+	// apikeyDescHashedSecret is the schema descriptor for hashed_secret field.
+	apikeyDescHashedSecret := apikeyFields[4].Descriptor()
+	// apikey.HashedSecretValidator is a validator for the "hashed_secret" field. It is called by the builders before save.
+	apikey.HashedSecretValidator = apikeyDescHashedSecret.Validators[0].(func(string) error)
+	// apikeyDescScopes is the schema descriptor for scopes field.
+	apikeyDescScopes := apikeyFields[5].Descriptor()
+	// apikey.DefaultScopes holds the default value on creation for the scopes field.
+	apikey.DefaultScopes = apikeyDescScopes.Default.([]string)
+	// apikeyDescUpdatedAt is the schema descriptor for updated_at field.
+	apikeyDescUpdatedAt := apikeyFields[9].Descriptor()
+	// apikey.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	apikey.DefaultUpdatedAt = apikeyDescUpdatedAt.Default.(func() time.Time)
+	// apikey.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	apikey.UpdateDefaultUpdatedAt = apikeyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// apikeyDescCreatedAt is the schema descriptor for created_at field.
+	apikeyDescCreatedAt := apikeyFields[10].Descriptor()
+	// apikey.DefaultCreatedAt holds the default value on creation for the created_at field.
+	apikey.DefaultCreatedAt = apikeyDescCreatedAt.Default.(func() time.Time)
+	// apikeyDescID is the schema descriptor for id field.
+	apikeyDescID := apikeyFields[0].Descriptor()
+	// apikey.DefaultID holds the default value on creation for the id field.
+	apikey.DefaultID = apikeyDescID.Default.(func() uuid.UUID)
 	blockedvideosFields := schema.BlockedVideos{}.Fields()
 	_ = blockedvideosFields
 	// blockedvideosDescCreatedAt is the schema descriptor for created_at field.
@@ -123,36 +157,40 @@ func init() {
 	liveDescStrictCategoriesLive := liveFields[14].Descriptor()
 	// live.DefaultStrictCategoriesLive holds the default value on creation for the strict_categories_live field.
 	live.DefaultStrictCategoriesLive = liveDescStrictCategoriesLive.Default.(bool)
+	// liveDescBlacklistCategories is the schema descriptor for blacklist_categories field.
+	liveDescBlacklistCategories := liveFields[15].Descriptor()
+	// live.DefaultBlacklistCategories holds the default value on creation for the blacklist_categories field.
+	live.DefaultBlacklistCategories = liveDescBlacklistCategories.Default.(bool)
 	// liveDescWatchClips is the schema descriptor for watch_clips field.
-	liveDescWatchClips := liveFields[15].Descriptor()
+	liveDescWatchClips := liveFields[16].Descriptor()
 	// live.DefaultWatchClips holds the default value on creation for the watch_clips field.
 	live.DefaultWatchClips = liveDescWatchClips.Default.(bool)
 	// liveDescClipsLimit is the schema descriptor for clips_limit field.
-	liveDescClipsLimit := liveFields[16].Descriptor()
+	liveDescClipsLimit := liveFields[17].Descriptor()
 	// live.DefaultClipsLimit holds the default value on creation for the clips_limit field.
 	live.DefaultClipsLimit = liveDescClipsLimit.Default.(int)
 	// liveDescClipsIntervalDays is the schema descriptor for clips_interval_days field.
-	liveDescClipsIntervalDays := liveFields[17].Descriptor()
+	liveDescClipsIntervalDays := liveFields[18].Descriptor()
 	// live.DefaultClipsIntervalDays holds the default value on creation for the clips_interval_days field.
 	live.DefaultClipsIntervalDays = liveDescClipsIntervalDays.Default.(int)
 	// liveDescClipsIgnoreLastChecked is the schema descriptor for clips_ignore_last_checked field.
-	liveDescClipsIgnoreLastChecked := liveFields[19].Descriptor()
+	liveDescClipsIgnoreLastChecked := liveFields[20].Descriptor()
 	// live.DefaultClipsIgnoreLastChecked holds the default value on creation for the clips_ignore_last_checked field.
 	live.DefaultClipsIgnoreLastChecked = liveDescClipsIgnoreLastChecked.Default.(bool)
 	// liveDescUpdateMetadataMinutes is the schema descriptor for update_metadata_minutes field.
-	liveDescUpdateMetadataMinutes := liveFields[20].Descriptor()
+	liveDescUpdateMetadataMinutes := liveFields[21].Descriptor()
 	// live.DefaultUpdateMetadataMinutes holds the default value on creation for the update_metadata_minutes field.
 	live.DefaultUpdateMetadataMinutes = liveDescUpdateMetadataMinutes.Default.(int)
 	// live.UpdateMetadataMinutesValidator is a validator for the "update_metadata_minutes" field. It is called by the builders before save.
 	live.UpdateMetadataMinutesValidator = liveDescUpdateMetadataMinutes.Validators[0].(func(int) error)
 	// liveDescUpdatedAt is the schema descriptor for updated_at field.
-	liveDescUpdatedAt := liveFields[21].Descriptor()
+	liveDescUpdatedAt := liveFields[22].Descriptor()
 	// live.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	live.DefaultUpdatedAt = liveDescUpdatedAt.Default.(func() time.Time)
 	// live.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	live.UpdateDefaultUpdatedAt = liveDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// liveDescCreatedAt is the schema descriptor for created_at field.
-	liveDescCreatedAt := liveFields[22].Descriptor()
+	liveDescCreatedAt := liveFields[23].Descriptor()
 	// live.DefaultCreatedAt holds the default value on creation for the created_at field.
 	live.DefaultCreatedAt = liveDescCreatedAt.Default.(func() time.Time)
 	// liveDescID is the schema descriptor for id field.
@@ -185,6 +223,120 @@ func init() {
 	mutedsegmentDescID := mutedsegmentFields[0].Descriptor()
 	// mutedsegment.DefaultID holds the default value on creation for the id field.
 	mutedsegment.DefaultID = mutedsegmentDescID.Default.(func() uuid.UUID)
+	notificationFields := schema.Notification{}.Fields()
+	_ = notificationFields
+	// notificationDescName is the schema descriptor for name field.
+	notificationDescName := notificationFields[1].Descriptor()
+	// notification.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	notification.NameValidator = func() func(string) error {
+		validators := notificationDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// notificationDescEnabled is the schema descriptor for enabled field.
+	notificationDescEnabled := notificationFields[2].Descriptor()
+	// notification.DefaultEnabled holds the default value on creation for the enabled field.
+	notification.DefaultEnabled = notificationDescEnabled.Default.(bool)
+	// notificationDescURL is the schema descriptor for url field.
+	notificationDescURL := notificationFields[4].Descriptor()
+	// notification.URLValidator is a validator for the "url" field. It is called by the builders before save.
+	notification.URLValidator = func() func(string) error {
+		validators := notificationDescURL.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(url string) error {
+			for _, fn := range fns {
+				if err := fn(url); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// notificationDescTriggerVideoSuccess is the schema descriptor for trigger_video_success field.
+	notificationDescTriggerVideoSuccess := notificationFields[5].Descriptor()
+	// notification.DefaultTriggerVideoSuccess holds the default value on creation for the trigger_video_success field.
+	notification.DefaultTriggerVideoSuccess = notificationDescTriggerVideoSuccess.Default.(bool)
+	// notificationDescTriggerLiveSuccess is the schema descriptor for trigger_live_success field.
+	notificationDescTriggerLiveSuccess := notificationFields[6].Descriptor()
+	// notification.DefaultTriggerLiveSuccess holds the default value on creation for the trigger_live_success field.
+	notification.DefaultTriggerLiveSuccess = notificationDescTriggerLiveSuccess.Default.(bool)
+	// notificationDescTriggerError is the schema descriptor for trigger_error field.
+	notificationDescTriggerError := notificationFields[7].Descriptor()
+	// notification.DefaultTriggerError holds the default value on creation for the trigger_error field.
+	notification.DefaultTriggerError = notificationDescTriggerError.Default.(bool)
+	// notificationDescTriggerIsLive is the schema descriptor for trigger_is_live field.
+	notificationDescTriggerIsLive := notificationFields[8].Descriptor()
+	// notification.DefaultTriggerIsLive holds the default value on creation for the trigger_is_live field.
+	notification.DefaultTriggerIsLive = notificationDescTriggerIsLive.Default.(bool)
+	// notificationDescVideoSuccessTemplate is the schema descriptor for video_success_template field.
+	notificationDescVideoSuccessTemplate := notificationFields[9].Descriptor()
+	// notification.DefaultVideoSuccessTemplate holds the default value on creation for the video_success_template field.
+	notification.DefaultVideoSuccessTemplate = notificationDescVideoSuccessTemplate.Default.(string)
+	// notification.VideoSuccessTemplateValidator is a validator for the "video_success_template" field. It is called by the builders before save.
+	notification.VideoSuccessTemplateValidator = notificationDescVideoSuccessTemplate.Validators[0].(func(string) error)
+	// notificationDescLiveSuccessTemplate is the schema descriptor for live_success_template field.
+	notificationDescLiveSuccessTemplate := notificationFields[10].Descriptor()
+	// notification.DefaultLiveSuccessTemplate holds the default value on creation for the live_success_template field.
+	notification.DefaultLiveSuccessTemplate = notificationDescLiveSuccessTemplate.Default.(string)
+	// notification.LiveSuccessTemplateValidator is a validator for the "live_success_template" field. It is called by the builders before save.
+	notification.LiveSuccessTemplateValidator = notificationDescLiveSuccessTemplate.Validators[0].(func(string) error)
+	// notificationDescErrorTemplate is the schema descriptor for error_template field.
+	notificationDescErrorTemplate := notificationFields[11].Descriptor()
+	// notification.DefaultErrorTemplate holds the default value on creation for the error_template field.
+	notification.DefaultErrorTemplate = notificationDescErrorTemplate.Default.(string)
+	// notification.ErrorTemplateValidator is a validator for the "error_template" field. It is called by the builders before save.
+	notification.ErrorTemplateValidator = notificationDescErrorTemplate.Validators[0].(func(string) error)
+	// notificationDescIsLiveTemplate is the schema descriptor for is_live_template field.
+	notificationDescIsLiveTemplate := notificationFields[12].Descriptor()
+	// notification.DefaultIsLiveTemplate holds the default value on creation for the is_live_template field.
+	notification.DefaultIsLiveTemplate = notificationDescIsLiveTemplate.Default.(string)
+	// notification.IsLiveTemplateValidator is a validator for the "is_live_template" field. It is called by the builders before save.
+	notification.IsLiveTemplateValidator = notificationDescIsLiveTemplate.Validators[0].(func(string) error)
+	// notificationDescAppriseUrls is the schema descriptor for apprise_urls field.
+	notificationDescAppriseUrls := notificationFields[13].Descriptor()
+	// notification.DefaultAppriseUrls holds the default value on creation for the apprise_urls field.
+	notification.DefaultAppriseUrls = notificationDescAppriseUrls.Default.(string)
+	// notification.AppriseUrlsValidator is a validator for the "apprise_urls" field. It is called by the builders before save.
+	notification.AppriseUrlsValidator = notificationDescAppriseUrls.Validators[0].(func(string) error)
+	// notificationDescAppriseTitle is the schema descriptor for apprise_title field.
+	notificationDescAppriseTitle := notificationFields[14].Descriptor()
+	// notification.DefaultAppriseTitle holds the default value on creation for the apprise_title field.
+	notification.DefaultAppriseTitle = notificationDescAppriseTitle.Default.(string)
+	// notification.AppriseTitleValidator is a validator for the "apprise_title" field. It is called by the builders before save.
+	notification.AppriseTitleValidator = notificationDescAppriseTitle.Validators[0].(func(string) error)
+	// notificationDescAppriseTag is the schema descriptor for apprise_tag field.
+	notificationDescAppriseTag := notificationFields[16].Descriptor()
+	// notification.DefaultAppriseTag holds the default value on creation for the apprise_tag field.
+	notification.DefaultAppriseTag = notificationDescAppriseTag.Default.(string)
+	// notification.AppriseTagValidator is a validator for the "apprise_tag" field. It is called by the builders before save.
+	notification.AppriseTagValidator = notificationDescAppriseTag.Validators[0].(func(string) error)
+	// notificationDescUpdatedAt is the schema descriptor for updated_at field.
+	notificationDescUpdatedAt := notificationFields[18].Descriptor()
+	// notification.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	notification.DefaultUpdatedAt = notificationDescUpdatedAt.Default.(func() time.Time)
+	// notification.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	notification.UpdateDefaultUpdatedAt = notificationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// notificationDescCreatedAt is the schema descriptor for created_at field.
+	notificationDescCreatedAt := notificationFields[19].Descriptor()
+	// notification.DefaultCreatedAt holds the default value on creation for the created_at field.
+	notification.DefaultCreatedAt = notificationDescCreatedAt.Default.(func() time.Time)
+	// notificationDescID is the schema descriptor for id field.
+	notificationDescID := notificationFields[0].Descriptor()
+	// notification.DefaultID holds the default value on creation for the id field.
+	notification.DefaultID = notificationDescID.Default.(func() uuid.UUID)
 	playbackFields := schema.Playback{}.Fields()
 	_ = playbackFields
 	// playbackDescTime is the schema descriptor for time field.

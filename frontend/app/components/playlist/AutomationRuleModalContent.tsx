@@ -278,7 +278,7 @@ const PlaylistAutomationRuleModalContent = ({ playlist, handleClose }: Props) =>
                       position: group.rules.length + 1,
                       enabled: true,
                     };
-                    form.insertListItem(`rule_groups.${groupIdx}.rules`, newRule);
+                    form.insertListItem(`rule_groups.${groupIdx}.rules`, newRule as any);
                   }}
                 >
                   {t('automationRules.addRuleButton')}
@@ -299,7 +299,7 @@ const PlaylistAutomationRuleModalContent = ({ playlist, handleClose }: Props) =>
                   position: form.values.rule_groups.length,
                   rules: [],
                 };
-                form.insertListItem("rule_groups", newGroup);
+                form.insertListItem("rule_groups", newGroup as any);
               }}
             >
               {t('automationRules.addRuleGroupButton')}

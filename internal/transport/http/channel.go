@@ -19,7 +19,7 @@ type ChannelService interface {
 	GetChannelByName(channelName string) (*ent.Channel, error)
 	DeleteChannel(channelID uuid.UUID) error
 	UpdateChannel(channelID uuid.UUID, channelDto channel.Channel) (*ent.Channel, error)
-	UpdateChannelImage(ctx context.Context, channelID uuid.UUID) error
+	UpdateChannelImage(ctx context.Context, channelID uuid.UUID, checkIfExists bool) error
 }
 
 type CreateChannelRequest struct {
@@ -44,6 +44,7 @@ type CreateChannelRequest struct {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/channel [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) CreateChannel(c echo.Context) error {
 	ccr := new(CreateChannelRequest)
 	if err := c.Bind(ccr); err != nil {
@@ -136,6 +137,7 @@ func (h *Handler) GetChannel(c echo.Context) error {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/channel/{id} [delete]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) DeleteChannel(c echo.Context) error {
 	id := c.Param("id")
 	cUUID, err := uuid.Parse(id)
@@ -167,6 +169,7 @@ func (h *Handler) DeleteChannel(c echo.Context) error {
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/channel/{id} [put]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) UpdateChannel(c echo.Context) error {
 	id := c.Param("id")
 	cUUID, err := uuid.Parse(id)
@@ -231,7 +234,7 @@ func (h *Handler) UpdateChannelImage(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
-	err = h.Service.ChannelService.UpdateChannelImage(c.Request().Context(), cUUID)
+	err = h.Service.ChannelService.UpdateChannelImage(c.Request().Context(), cUUID, false)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

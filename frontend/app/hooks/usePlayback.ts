@@ -59,12 +59,11 @@ const useFetchPlaybackForVideo = (
   return useQuery<Playback, Error, Playback, [string, string]>({
     queryKey: ["playback-data", videoId],
     queryFn: () => fetchPlaybackForVideo(axiosPrivate, videoId),
-    ...options,
     refetchInterval: false,
-    refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchIntervalInBackground: false,
+    ...options,
   });
 };
 
@@ -91,9 +90,14 @@ const useStartPlaybackForVideo = (
     "queryKey" | "queryFn"
   >
 ) => {
+  const queryClient = useQueryClient();
   return useMutation<ApiResponse<NullResponse>, Error, void, [string, string]>({
     mutationFn: () => startPlaybackForVideo(axiosPrivate, videoId),
     ...options,
+    onSuccess: (data, variables, onMutateResult, context) => {
+      queryClient.invalidateQueries({ queryKey: ["playback-videos"] });
+      options?.onSuccess?.(data, variables, onMutateResult, context);
+    },
   });
 };
 
@@ -118,6 +122,7 @@ const updatePlaybackProgressForVideo = async (
 
 // Custom hook that uses the mutation with proper typing
 const useUpdatePlaybackProgressForVideo = () => {
+  const queryClient = useQueryClient();
   return useMutation<
     ApiResponse<NullResponse>,
     Error,
@@ -125,6 +130,10 @@ const useUpdatePlaybackProgressForVideo = () => {
   >({
     mutationFn: ({ axiosPrivate, videoId, time }) =>
       updatePlaybackProgressForVideo(axiosPrivate, videoId, time),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["playback-videos"] });
+      queryClient.invalidateQueries({ queryKey: ["playback-data", variables.videoId] });
+    },
   });
 };
 
@@ -149,6 +158,7 @@ const setPlaybackProgressForVideo = async (
 
 // Custom hook that uses the mutation with proper typing
 const useSetPlaybackProgressForVideo = () => {
+  const queryClient = useQueryClient();
   return useMutation<
     ApiResponse<NullResponse>,
     Error,
@@ -156,6 +166,10 @@ const useSetPlaybackProgressForVideo = () => {
   >({
     mutationFn: ({ axiosPrivate, videoId, status }) =>
       setPlaybackProgressForVideo(axiosPrivate, videoId, status),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["playback-videos"] });
+      queryClient.invalidateQueries({ queryKey: ["playback-data", variables.videoId] });
+    },
   });
 };
 
@@ -198,11 +212,13 @@ const markVideoAsWatched = async (
 export interface MarkVideoAsWatchedInput {
   axiosPrivate: AxiosInstance;
   videoId: string;
+  invalidatePlaybackQuery?: boolean;
 }
 
 export interface DeletePlaybackInput {
   axiosPrivate: AxiosInstance;
   videoId: string;
+  invalidatePlaybackQuery?: boolean;
 }
 
 const useMarkVideoAsWatched = () => {
@@ -211,8 +227,11 @@ const useMarkVideoAsWatched = () => {
     {
       mutationFn: ({ axiosPrivate, videoId }) =>
         markVideoAsWatched(axiosPrivate, videoId),
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+      onSuccess: (_, variables) => {
+        if (variables.invalidatePlaybackQuery !== false) {
+          queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+          queryClient.invalidateQueries({ queryKey: ["playback-videos"] });
+        }
       },
     }
   );
@@ -228,8 +247,11 @@ const useDeletePlayback = () => {
   return useMutation<ApiResponse<NullResponse>, Error, DeletePlaybackInput>({
     mutationFn: ({ axiosPrivate, videoId }) =>
       deletePlayback(axiosPrivate, videoId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+    onSuccess: (_, variables) => {
+      if (variables.invalidatePlaybackQuery !== false) {
+        queryClient.invalidateQueries({ queryKey: ["playback-data"] });
+        queryClient.invalidateQueries({ queryKey: ["playback-videos"] });
+      }
     },
   });
 };

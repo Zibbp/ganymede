@@ -12,6 +12,7 @@ import (
 	entUser "github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/api_key"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/utils"
 	"golang.org/x/crypto/bcrypt"
@@ -81,6 +82,20 @@ func NewService(store *database.Database, envConfig *config.EnvConfig) *Service 
 func (s *Service) Register(ctx context.Context, user user.User) (*ent.User, error) {
 	if !config.Get().RegistrationEnabled {
 		return nil, fmt.Errorf("registration is disabled")
+	}
+	// Reserve the system:api username so a malicious actor can't
+	// pre-register the row that EnsureSystemUser later expects to find.
+	// If they could, the system user the API key middleware injects on
+	// every request would be theirs (with whatever password they set);
+	// any audit attribution and any role-based check involving the
+	// system user would point at the attacker's account.
+	//
+	// Case-fold so "System:API" / "SYSTEM:api" etc. don't sneak past:
+	// Postgres unique constraints are case-sensitive, so the attacker
+	// couldn't shadow the real row, but they could still create an
+	// audit-confusing lookalike entry. EqualFold removes that ambiguity.
+	if strings.EqualFold(user.Username, api_key.SystemUserUsername) {
+		return nil, fmt.Errorf("user already exists")
 	}
 	// hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
@@ -170,6 +185,16 @@ func (s *Service) ChangePassword(ctx context.Context, userId uuid.UUID, oldPassw
 func (s *Service) OAuthUserCheck(ctx context.Context, userClaims OIDCCLaims) (*ent.User, error) {
 	log.Debug().Msgf("Checking if OAuth user exists: %v", userClaims.PreferredUsername)
 
+	// Reservation guard: an OIDC claim of "system:api" (or any
+	// case-variation) would, without this check, create or rename a
+	// user to the reserved system username — bypassing the Register
+	// guard via the OAuth flow. Reject the login outright; the IdP
+	// admin should rename the offending account or reconfigure the
+	// preferred_username claim.
+	if strings.EqualFold(userClaims.PreferredUsername, api_key.SystemUserUsername) {
+		return nil, fmt.Errorf("preferred_username %q is reserved", userClaims.PreferredUsername)
+	}
+
 	// Check if user exists
 	user, err := s.Store.Client.User.Query().Where(entUser.Sub(userClaims.Sub)).Only(ctx)
 	if err != nil {
@@ -179,51 +204,60 @@ func (s *Service) OAuthUserCheck(ctx context.Context, userClaims OIDCCLaims) (*e
 
 		log.Debug().Msgf("OAuth user not found, creating user: %v", userClaims.PreferredUsername)
 
-		// Determine role from groups
-		role := utils.UserRole
-		for _, group := range userClaims.Groups {
-			if strings.HasPrefix(group, "ganymede-") {
-				groupRole := strings.TrimPrefix(group, "ganymede-")
-				if utils.IsValidRole(groupRole) {
-					log.Debug().Msgf("Found Ganymede role in user group %v", group)
-					role = utils.Role(groupRole)
-					break
-				}
-			}
+		// Determine role from groups for newly created users.
+		// If no mapped role is present, default to user.
+		role, ok := roleFromGroups(userClaims.Groups)
+		if !ok {
+			role = utils.UserRole
 		}
 
-		// Create new user
-		if _, err := s.Store.Client.User.Create().
+		createdUser, err := s.Store.Client.User.Create().
 			SetSub(userClaims.Sub).
 			SetUsername(userClaims.PreferredUsername).
 			SetRole(role).
 			SetOauth(true).
-			Save(ctx); err != nil {
+			Save(ctx)
+		if err != nil {
 			return nil, fmt.Errorf("failed to create user: %w", err)
 		}
-		return user, nil
+		return createdUser, nil
 	}
 
-	// Determine role from groups
-	newRole := utils.UserRole
-	for _, group := range userClaims.Groups {
-		if strings.HasPrefix(group, "ganymede-") {
-			groupRole := strings.TrimPrefix(group, "ganymede-")
-			if utils.IsValidRole(groupRole) {
-				log.Debug().Msgf("Found Ganymede role in user group %v", group)
-				newRole = utils.Role(groupRole)
-				break
-			}
-		}
+	// Always keep username in sync with OIDC claim.
+	update := s.Store.Client.User.UpdateOne(user).SetUsername(userClaims.PreferredUsername)
+
+	// Only sync role when provider explicitly sends a ganymede-* or ganymede_* role group.
+	// This prevents manual role changes from being reset on each login.
+	if newRole, ok := roleFromGroups(userClaims.Groups); ok {
+		update = update.SetRole(newRole)
 	}
 
-	// Update existing user
-	if _, err := s.Store.Client.User.UpdateOne(user).
-		SetUsername(userClaims.PreferredUsername).
-		SetRole(newRole).
-		Save(ctx); err != nil {
+	updatedUser, err := update.Save(ctx)
+	if err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
 
-	return user, nil
+	return updatedUser, nil
+}
+
+func roleFromGroups(groups []string) (utils.Role, bool) {
+	for _, group := range groups {
+		var groupRole string
+		switch {
+		case strings.HasPrefix(group, "ganymede-"):
+			groupRole = strings.TrimPrefix(group, "ganymede-")
+		case strings.HasPrefix(group, "ganymede_"):
+			groupRole = strings.TrimPrefix(group, "ganymede_")
+		default:
+			continue
+		}
+		if !utils.IsValidRole(groupRole) {
+			continue
+		}
+
+		log.Debug().Msgf("Found Ganymede role in user group %v", group)
+		return utils.Role(groupRole), true
+	}
+
+	return "", false
 }

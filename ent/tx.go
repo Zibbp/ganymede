@@ -12,6 +12,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// ApiKey is the client for interacting with the ApiKey builders.
+	ApiKey *ApiKeyClient
 	// BlockedVideos is the client for interacting with the BlockedVideos builders.
 	BlockedVideos *BlockedVideosClient
 	// Channel is the client for interacting with the Channel builders.
@@ -28,6 +30,8 @@ type Tx struct {
 	MultistreamInfo *MultistreamInfoClient
 	// MutedSegment is the client for interacting with the MutedSegment builders.
 	MutedSegment *MutedSegmentClient
+	// Notification is the client for interacting with the Notification builders.
+	Notification *NotificationClient
 	// Playback is the client for interacting with the Playback builders.
 	Playback *PlaybackClient
 	// Playlist is the client for interacting with the Playlist builders.
@@ -177,6 +181,7 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.ApiKey = NewApiKeyClient(tx.config)
 	tx.BlockedVideos = NewBlockedVideosClient(tx.config)
 	tx.Channel = NewChannelClient(tx.config)
 	tx.Chapter = NewChapterClient(tx.config)
@@ -185,6 +190,7 @@ func (tx *Tx) init() {
 	tx.LiveTitleRegex = NewLiveTitleRegexClient(tx.config)
 	tx.MultistreamInfo = NewMultistreamInfoClient(tx.config)
 	tx.MutedSegment = NewMutedSegmentClient(tx.config)
+	tx.Notification = NewNotificationClient(tx.config)
 	tx.Playback = NewPlaybackClient(tx.config)
 	tx.Playlist = NewPlaylistClient(tx.config)
 	tx.PlaylistRule = NewPlaylistRuleClient(tx.config)
@@ -203,7 +209,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: BlockedVideos.QueryXXX(), the query will be executed
+// applies a query, for example: ApiKey.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

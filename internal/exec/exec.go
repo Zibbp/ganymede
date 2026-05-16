@@ -13,12 +13,18 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/grafov/m3u8"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/exec/ytdlp"
+	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
+)
+
+const (
+	sigintTimeout = 300 * time.Second
 )
 
 // DownloadTwitchVideo downloads a Twitch video.
@@ -170,22 +176,15 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		}
 	}()
 
-	log.Debug().Str("video_id", video.ID.String()).Msgf("logging yt-dlp output to %s", logFilePath)
+	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
 
-	// Get user arguments from config
-	configYtDlpArgs := config.Get().Parameters.YtDlpLive
-	configYtDlpArgsArr := strings.Split(configYtDlpArgs, ",")
+	proxyFound := false // Whether a proxy was found
+	var masterPlaylist *m3u8.MasterPlaylist
 
-	proxyEnabled := false                 // Whether to use a proxy
-	proxyFound := false                   // Whether a proxy was found
-	proxyType := utils.ProxyTypeTwitchHLS // The type of proxy to use, default is Twitch HLS
-	proxyHeader := ""                     // The header to use for the proxy if found
-	proxyHTTPUrl := ""                    // The http proxy URL to use if found
-
-	url := utils.CreateTwitchURL(video.ExtID, video.Type, channel.Name)
+	twitchURL := utils.CreateTwitchURL(video.ExtID, video.Type, channel.Name)
 
 	// Handle proxy setting
-	proxyEnabled = config.Get().Livestream.ProxyEnabled
+	proxyEnabled := config.Get().Livestream.ProxyEnabled
 	whitelistedChannels := config.Get().Livestream.ProxyWhitelist // list of channels that are whitelisted from using proxy
 	if proxyEnabled {
 		if utils.Contains(whitelistedChannels, channel.Name) {
@@ -196,104 +195,130 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 			log.Debug().Str("proxy_list", fmt.Sprintf("%v", proxyList)).Msg("proxy list")
 
-			// Test proxies - the first one that works will be used
+			// Try proxies - the first one that works will be used
 			for _, proxy := range proxyList {
-				// proxyUrl is url that will be sent to yt-dlp for download
+				// proxyUrl is url that will be sent to ffmpeg for download
 				// this can be a direct URL or a proxy URL
-				proxyUrl := url
+				proxyUrl := twitchURL
 				if proxy.ProxyType == utils.ProxyTypeTwitchHLS {
 					proxyUrl = fmt.Sprintf("%s/playlist/%s.m3u8%s", proxy.URL, channel.Name, proxyParams)
 				}
-				// Test the proxy server
-				if testProxyServer(proxy.URL, proxyUrl, proxy.Header, proxy.ProxyType) {
+				// Try the proxy server
+				var ok bool
+				masterPlaylist, ok = tryProxyServer(proxy.URL, proxyUrl, proxy.Header, proxy.ProxyType)
+				if ok {
 					log.Debug().Str("channel_name", channel.Name).Str("proxy_url", proxy.URL).Msg("proxy found")
 					proxyFound = true
-					url = proxyUrl
-					proxyHeader = proxy.Header
-					proxyType = proxy.ProxyType
-					if proxy.ProxyType == utils.ProxyTypeHTTP {
-						proxyHTTPUrl = proxy.URL
-					}
 					break
 				}
 			}
 		}
 	}
 
-	// Create yt-dlp service
-	ytDlpCookies := []ytdlp.YtDlpCookie{}
-	if config.Get().Parameters.TwitchToken != "" {
-		ytDlpCookies = append(ytDlpCookies, ytdlp.YtDlpCookie{
-			Domain: ".twitch.tv",
-			Name:   "auth-token",
-			Value:  config.Get().Parameters.TwitchToken,
-		})
+	if !proxyFound {
+		tc := &platform.TwitchConnection{}
+		masterPlaylist, err = tc.GetStream(ctx, channel.Name)
+		if err != nil {
+			return fmt.Errorf("failed to get stream: %v", err)
+		}
 	}
-	ytdlpSvc := ytdlp.NewYtDlpService(ytdlp.YtDlpOptions{Cookies: ytDlpCookies})
 
-	qualities, err := ytdlpSvc.GetVideoQualities(ctx, video)
-	if err != nil {
-		return fmt.Errorf("error getting video quality options: %w", err)
+	qualities := make([]string, 0, len(masterPlaylist.Variants))
+	qualitiesURI := make(map[string]string, len(masterPlaylist.Variants))
+	for _, variant := range masterPlaylist.Variants {
+		qualities = append(qualities, variant.Video)
+		qualitiesURI[variant.Video] = variant.URI
+	}
+	log.Debug().Strs("available_qualities", qualities).Msg("available stream qualities")
+	for b, a := range qualitiesURI {
+		log.Debug().Str("quality", b).Str("quality_uri", a).Msg("quality uri")
 	}
 
 	closestQuality := utils.SelectClosestQuality(video.Resolution, qualities)
 	log.Info().Str("requested_quality", video.Resolution).Msgf("selected closest quality %s", closestQuality)
 
-	// Create yt-dlp quality string
-	qualityString := ytdlpSvc.CreateQualityOption(closestQuality)
-
-	// Build output path
-	// yt-dlp will sometimes download two separate files for audio and video
-	// so we need to remove the extension and let yt-dlp add the extension
-	tmpVideoDownloadExt := filepath.Ext(video.TmpVideoDownloadPath)
-	tmpVideoDownloadPathNoExt := strings.TrimSuffix(video.TmpVideoDownloadPath, tmpVideoDownloadExt)
-
-	var cmdArgs []string
-	cmdArgs = append(cmdArgs,
-		"-f", qualityString,
-		url,
-		"-o", fmt.Sprintf("%s.%%(ext)s", tmpVideoDownloadPathNoExt),
-		"--no-part",
-		"--no-warnings", "--progress", "--newline", "--no-check-certificate",
-		"--hls-use-mpegts",
-	)
-
-	// Set proxy header if enabled
-	if proxyHeader != "" {
-		cmdArgs = append(cmdArgs, "--add-headers", proxyHeader)
+	if closestQuality == "audio" {
+		closestQuality = "audio_only"
 	}
 
-	// Set HTTP proxy if enabled
-	if proxyFound && proxyType == utils.ProxyTypeHTTP {
-		cmdArgs = append(cmdArgs, "--proxy", proxyHTTPUrl)
+	// Base ffmpeg args (shared between transport-stream and hls live archiving)
+	ffmpegArgs := []string{
+		"-y",
+		"-hide_banner",
+		"-fflags", "+genpts+discardcorrupt",
+		"-rw_timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
+		"-timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
+		"-i", qualitiesURI[closestQuality],
+		"-map", "0",
+		"-dn",
+		"-ignore_unknown",
+		"-c", "copy",
 	}
 
-	// Sanitize config args before appending
-	for _, arg := range configYtDlpArgsArr {
-		if strings.TrimSpace(arg) != "" {
-			cmdArgs = append(cmdArgs, arg)
-		}
-	}
+	// Decide archive format.
+	archivingAsMP4 := (video.VideoHlsPath == "")
 
-	// Create yt-dlp command
-	// Only enable cookies if proxy is found - cookies are not set if proxy is used!
-	// This means the quality requested may not be the one downloaded because of the proxy
-	cmd, cookieFile, err := ytdlpSvc.CreateCommand(ctx, cmdArgs, !proxyFound)
-	defer func() {
-		if cookieFile != nil {
-			if err := cookieFile.Close(); err != nil {
-				log.Debug().Err(err).Msg("failed to close cookies file")
+	// Append user-defined (global) params before outputs
+	videoConvertString := config.Get().Parameters.VideoConvert
+	videoConvertArgs := strings.Fields(videoConvertString)
+	ffmpegArgs = append(ffmpegArgs, videoConvertArgs...)
+
+	// Archive output
+	if archivingAsMP4 {
+		// Archive to crash-tolerant MPEG-TS while live; finalize to MP4 in post-process.
+		ffmpegArgs = append(ffmpegArgs,
+			"-f", "mpegts",
+			video.TmpVideoDownloadPath,
+		)
+
+		// Also archive HLS for watch-while-archiving
+		if config.Get().Livestream.WatchWhileArchiving && video.TmpVideoHlsPath != "" {
+			if err := utils.CreateDirectory(video.TmpVideoHlsPath); err != nil {
+				return fmt.Errorf("error creating hls directory: %w", err)
 			}
-			if err := os.Remove(cookieFile.Name()); err != nil {
-				log.Debug().Err(err).Msg("failed to remove cookies file")
-			}
+
+			playlistPath := fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)
+			segmentPattern := fmt.Sprintf("%s/%s_segment%%06d.ts", video.TmpVideoHlsPath, video.ExtID)
+
+			ffmpegArgs = append(ffmpegArgs,
+				"-start_number", "0",
+				"-hls_time", "2",
+				"-hls_list_size", "0",
+				"-hls_playlist_type", "event",
+				"-hls_flags", "append_list+independent_segments",
+				"-c:v", "copy",
+				"-c:a", "copy",
+				"-hls_segment_filename", segmentPattern,
+				"-f", "hls",
+				playlistPath,
+			)
 		}
-	}()
-	if err != nil {
-		return fmt.Errorf("error creating yt-dlp command: %w", err)
+	} else {
+		// Archive as HLS
+		if err := utils.CreateDirectory(video.TmpVideoHlsPath); err != nil {
+			return fmt.Errorf("error creating hls directory: %w", err)
+		}
+
+		playlistPath := fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)
+		segmentPattern := fmt.Sprintf("%s/%s_segment%%06d.ts", video.TmpVideoHlsPath, video.ExtID)
+
+		ffmpegArgs = append(ffmpegArgs,
+			"-start_number", "0",
+			"-hls_time", "10",
+			"-hls_list_size", "0",
+			"-hls_playlist_type", "event",
+			"-hls_flags", "append_list+independent_segments",
+			"-hls_segment_filename", segmentPattern,
+			"-f", "hls",
+			playlistPath,
+		)
 	}
 
-	log.Debug().Str("channel", channel.Name).Str("cmd", strings.Join(cmd.Args, " ")).Msgf("running yt-dlp")
+	// Run ffmpeg
+	cmd := osExec.Command("ffmpeg", ffmpegArgs...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+	log.Debug().Str("channel", channel.Name).Str("cmd", strings.Join(cmd.Args, " ")).Msgf("running ffmpeg")
 
 	// start chat download
 	startChat <- true
@@ -301,11 +326,81 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	cmd.Stderr = file
 	cmd.Stdout = file
 
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true, // Set the process group ID to allow killing child processes
-	}
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting yt-dlp: %w", err)
+		return fmt.Errorf("error starting ffmpeg: %w", err)
+	}
+
+	done := make(chan error)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	// Wait for the command to finish or for ctx cancellation.
+	// When ctx is cancelled, allow ffmpeg to handle a graceful shutdown first:
+	// send SIGINT to the process group, wait up to sigintTimeout, then SIGKILL
+	select {
+	case <-ctx.Done():
+		if cmd.Process != nil {
+			err = syscall.Kill(-cmd.Process.Pid, syscall.SIGINT)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to send SIGINT to ffmpeg process")
+			}
+		}
+		select {
+		case <-done:
+			// exited after SIGINT
+		case <-time.After(sigintTimeout):
+			if cmd.Process != nil {
+				log.Warn().Msg("ffmpeg process did not exit after SIGINT, sending SIGKILL")
+				err = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+				if err != nil {
+					log.Error().Err(err).Msg("failed to send SIGKILL to ffmpeg process")
+				}
+			}
+			// wait for it to actually exit (best effort)
+			select {
+			case <-done:
+			case <-time.After(5 * time.Second):
+			}
+		}
+		return ctx.Err()
+	case err := <-done:
+		if err != nil {
+			log.Error().Err(err).Msg("error running ffmpeg")
+			return fmt.Errorf("error running ffmpeg: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
+	env := config.GetEnvConfig()
+	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoConvertPath, "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("%s/%s_segment%s.ts", video.TmpVideoHlsPath, video.ExtID, "%d"), "-f", "hls", fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)}
+
+	// open log file
+	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
+	file, err := os.Create(logFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to open log file: %w", err)
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
+
+	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
+
+	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(ffmpegArgs, " ")).Msgf("running ffmpeg")
+
+	cmd := osExec.CommandContext(ctx, "ffmpeg", ffmpegArgs...)
+
+	cmd.Stderr = file
+	cmd.Stdout = file
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("error starting ffmpeg: %w", err)
 	}
 
 	done := make(chan error)
@@ -316,27 +411,17 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	// Wait for the command to finish or context to be cancelled
 	select {
 	case <-ctx.Done():
-		// Context was cancelled, kill only ffmpeg child process if running
-		if cmd.Process != nil {
-			err := killYtDlp(cmd.Process.Pid)
-			if err != nil {
-				return fmt.Errorf("failed to kill yt-dlp process: %v", err)
-			}
-		}
-		_, err := cmd.Process.Wait()
-		if err != nil {
-			log.Debug().Err(err).Msg("error waiting for yt-dlp process")
+		// Context was cancelled, kill the process
+		if err := cmd.Process.Kill(); err != nil {
+			return fmt.Errorf("failed to kill ffmpeg process: %v", err)
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
 	case err := <-done:
 		// Command finished normally
 		if err != nil {
-			if exitError, ok := err.(*osExec.ExitError); ok {
-				log.Error().Err(err).Str("exitCode", strconv.Itoa(exitError.ExitCode())).Str("exit_error", exitError.Error()).Msg("error running yt-dlp")
-				return fmt.Errorf("error running yt-dlp")
-			}
-			return fmt.Errorf("error running yt-dlp: %w", err)
+			log.Error().Err(err).Msg("error running ffmpeg")
+			return fmt.Errorf("error running ffmpeg: %w", err)
 		}
 	}
 
@@ -401,60 +486,6 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
-func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
-	env := config.GetEnvConfig()
-	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoConvertPath, "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("%s/%s_segment%s.ts", video.TmpVideoHlsPath, video.ExtID, "%d"), "-f", "hls", fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)}
-
-	// open log file
-	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
-	file, err := os.Create(logFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to open log file: %w", err)
-	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Debug().Err(err).Msg("failed to close log file")
-		}
-	}()
-
-	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
-
-	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(ffmpegArgs, " ")).Msgf("running ffmpeg")
-
-	cmd := osExec.CommandContext(ctx, "ffmpeg", ffmpegArgs...)
-
-	cmd.Stderr = file
-	cmd.Stdout = file
-
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting ffmpeg: %w", err)
-	}
-
-	done := make(chan error)
-	go func() {
-		done <- cmd.Wait()
-	}()
-
-	// Wait for the command to finish or context to be cancelled
-	select {
-	case <-ctx.Done():
-		// Context was cancelled, kill the process
-		if err := cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("failed to kill ffmpeg process: %v", err)
-		}
-		<-done // Wait for copying to finish
-		return ctx.Err()
-	case err := <-done:
-		// Command finished normally
-		if err != nil {
-			log.Error().Err(err).Msg("error running ffmpeg")
-			return fmt.Errorf("error running ffmpeg: %w", err)
-		}
-	}
-
-	return nil
-}
-
 func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
 	// open log file
@@ -471,7 +502,15 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chatdownload output to %s", logFilePath)
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, "chatdownload", "--id", video.ExtID, "--embed-images", "--collision", "overwrite", "-o", video.TmpChatDownloadPath)
+	cmdArgs = append(cmdArgs, "chatdownload", "--id", video.ExtID, "--embed-images", "--collision", "overwrite")
+
+	// Forward shared chat flags from the chat render config so the user's
+	// --bttv/--ffz/--stv/--temp-path preferences also apply to chatdownload,
+	// which fetches emotes for embedding when --embed-images is set.
+	configRenderArgs := config.Get().Parameters.ChatRender
+	cmdArgs = append(cmdArgs, extractSharedChatArgs(strings.Fields(configRenderArgs))...)
+
+	cmdArgs = append(cmdArgs, "-o", video.TmpChatDownloadPath)
 
 	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running TwitchDownloaderCLI")
 
@@ -513,74 +552,6 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
-func DownloadTwitchLiveChat(ctx context.Context, video ent.Vod, channel ent.Channel, queue ent.Queue) error {
-	env := config.GetEnvConfig()
-	// set chat start time
-	chatStarTime := time.Now()
-	_, err := queue.Update().SetChatStart(chatStarTime).Save(ctx)
-	if err != nil {
-		return err
-	}
-
-	// open log file
-	logFilePath := fmt.Sprintf("%s/%s-chat.log", env.LogsDir, video.ID.String())
-	file, err := os.Create(logFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to open log file: %w", err)
-	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Debug().Err(err).Msg("failed to close log file")
-		}
-	}()
-	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chat downloader output to %s", logFilePath)
-
-	var cmdArgs []string
-	cmdArgs = append(cmdArgs, fmt.Sprintf("https://twitch.tv/%s", channel.Name), "--output", video.TmpLiveChatDownloadPath, "-q")
-
-	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running chat_downloader")
-
-	cmd := osExec.CommandContext(ctx, "chat_downloader", cmdArgs...)
-
-	cmd.Stderr = file
-	cmd.Stdout = file
-
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting TwitchDownloader: %w", err)
-	}
-
-	done := make(chan error)
-	go func() {
-		done <- cmd.Wait()
-	}()
-
-	// Wait for the command to finish or context to be cancelled
-	select {
-	case <-ctx.Done():
-		// Context was cancelled, kill the process
-		if err := cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("failed to kill TwitchDownloaderCLI process: %v", err)
-		}
-		<-done // Wait for copying to finish
-		return ctx.Err()
-	case err := <-done:
-		// Command finished normally
-		if err != nil {
-			if exitError, ok := err.(*osExec.ExitError); ok {
-				if status, ok := exitError.Sys().(interface{ ExitStatus() int }); ok {
-					if status.ExitStatus() != -1 {
-						fmt.Println("chat_downloader terminated - exit code:", status.ExitStatus())
-					}
-				}
-			}
-			log.Error().Err(err).Msg("error running chat_downloader")
-			return fmt.Errorf("error running chat_downloader: %w", err)
-		}
-	}
-
-	return nil
-}
-
 func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
 	// open log file
@@ -594,7 +565,7 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 			log.Debug().Err(err).Msg("failed to close log file")
 		}
 	}()
-	log.Debug().Str("video_id", video.ID.String()).Msgf("logging chat_downloader output to %s", logFilePath)
+	log.Debug().Str("video_id", video.ID.String()).Msgf("logging TwitchDownloaderCLI output to %s", logFilePath)
 
 	var cmdArgs []string
 
@@ -653,6 +624,34 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
+// extractSharedChatArgs returns the subset of args from a chatrender arg list
+// that are also valid for chatupdate and chatdownload.
+func extractSharedChatArgs(args []string) []string {
+	// --collision is omitted: every caller hardcodes it.
+	sharedFlagNames := []string{"--bttv", "--ffz", "--stv", "--temp-path"}
+	var result []string
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		for _, flag := range sharedFlagNames {
+			if arg == flag {
+				result = append(result, arg)
+				// Only consume the next token as a value if it isn't itself a flag,
+				// otherwise `--stv --temp-path /p` would swallow `--temp-path`.
+				if i+1 < len(args) && !strings.HasPrefix(args[i+1], "--") {
+					result = append(result, args[i+1])
+					i++
+				}
+				break
+			}
+			if strings.HasPrefix(arg, flag+"=") {
+				result = append(result, arg)
+				break
+			}
+		}
+	}
+	return result
+}
+
 // checkLogForNoElements returns true if the log file contains the expected message.
 //
 // Used to check if the chat render failure was caused by no messages in the chat.
@@ -697,7 +696,16 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging TwitchDownloader output to %s", logFilePath)
 
 	var cmdArgs []string
-	cmdArgs = append(cmdArgs, "chatupdate", "-i", video.TmpLiveChatConvertPath, "--embed-missing", "--collision", "overwrite", "-o", video.TmpChatDownloadPath)
+	cmdArgs = append(cmdArgs, "chatupdate", "-i", video.TmpLiveChatConvertPath, "--embed-missing", "--collision", "overwrite")
+
+	// Forward shared chat flags from the chat render config so the user's
+	// --bttv/--ffz/--stv/--temp-path preferences also apply to chatupdate,
+	// which fetches emotes for embedding and can otherwise hang on a
+	// third-party timeout.
+	configRenderArgs := config.Get().Parameters.ChatRender
+	cmdArgs = append(cmdArgs, extractSharedChatArgs(strings.Fields(configRenderArgs))...)
+
+	cmdArgs = append(cmdArgs, "-o", video.TmpChatDownloadPath)
 
 	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(cmdArgs, " ")).Msgf("running TwitchDownloaderCLI")
 

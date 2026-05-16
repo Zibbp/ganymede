@@ -15,6 +15,7 @@ import (
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
+	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
@@ -25,6 +26,7 @@ type RiverWorkerInput struct {
 	DB_URL                  string
 	DB                      *database.Database
 	PlatformTwitch          platform.Platform
+	NotificationService     *notification.Service
 	VideoDownloadWorkers    int
 	VideoPostProcessWorkers int
 	ChatDownloadWorkers     int
@@ -128,6 +130,12 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	if err := river.AddWorkerSafely(workers, &tasks_periodic.ProcessPlaylistVideoRulesWorker{}); err != nil {
 		return rc, err
 	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.UpdateTwitchChannelsWorker{}); err != nil {
+		return rc, err
+	}
+	if err := river.AddWorkerSafely(workers, &tasks_periodic.PruneLogFilesWorker{}); err != nil {
+		return rc, err
+	}
 
 	rc.Ctx = context.Background()
 
@@ -169,6 +177,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 
 	// put platform in context for workers
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformTwitchKey, input.PlatformTwitch)
+
+	// put notification service in context for workers
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.NotificationServiceKey, input.NotificationService)
 
 	return rc, nil
 }
@@ -267,9 +278,9 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		),
 
 		// authenticate to platform
-		// runs once a day at midnight
+		// runs every hour
 		river.NewPeriodicJob(
-			midnightCron,
+			river.PeriodicInterval(1*time.Hour),
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.AuthenticatePlatformArgs{}, nil
 			},
@@ -302,6 +313,26 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 			river.PeriodicInterval(1*time.Hour),
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.ProcessPlaylistVideoRulesArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: false},
+		),
+
+		// update twitch channels
+		// runs every 12 hour
+		river.NewPeriodicJob(
+			river.PeriodicInterval(12*time.Hour),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.UpdateTwitchChannelsArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: false},
+		),
+
+		// prune log files
+		// runs once a day at midnight
+		river.NewPeriodicJob(
+			midnightCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.PruneLogFilesArgs{}, nil
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),

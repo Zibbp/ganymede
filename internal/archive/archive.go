@@ -3,6 +3,7 @@ package archive
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/google/uuid"
@@ -47,12 +48,12 @@ func NewService(store *database.Database, channelService *channel.Service, vodSe
 // ArchiveChannel - Create channel entry in database along with folder, profile image, etc.
 func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.Channel, error) {
 	if s.PlatformTwitch == nil {
-        return nil, fmt.Errorf("twitch platform is not configured; set TWITCH_CLIENT_ID/SECRET")
-    }
+		return nil, fmt.Errorf("twitch platform is not configured; set TWITCH_CLIENT_ID/SECRET")
+	}
 
 	env := config.GetEnvConfig()
 	// get channel from platform
-	platformChannel, err := s.PlatformTwitch.GetChannel(ctx, channelName)
+	platformChannel, err := s.PlatformTwitch.GetChannel(ctx, &channelName, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching twitch channel: %v", err)
 	}
@@ -63,14 +64,25 @@ func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.
 		return nil, fmt.Errorf("channel already exists")
 	}
 
+	// Resolve channel folder name from template
+	channelFolderName, err := GetChannelFolderName(ChannelTemplateInput{
+		ChannelName:        platformChannel.Login,
+		ChannelID:          platformChannel.ID,
+		ChannelDisplayName: platformChannel.DisplayName,
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("error resolving channel folder template, falling back to channel login name")
+		channelFolderName = platformChannel.Login
+	}
+
 	// Create channel folder
-	err = utils.CreateDirectory(fmt.Sprintf("%s/%s", env.VideosDir, platformChannel.Login))
+	err = utils.CreateDirectory(fmt.Sprintf("%s/%s", env.VideosDir, channelFolderName))
 	if err != nil {
 		return nil, fmt.Errorf("error creating channel folder: %v", err)
 	}
 
 	// Download channel profile image
-	err = utils.DownloadFile(platformChannel.ProfileImageURL, fmt.Sprintf("%s/%s/%s", env.VideosDir, platformChannel.Login, "profile.png"))
+	err = utils.DownloadFile(ctx, platformChannel.ProfileImageURL, filepath.Join(env.VideosDir, channelFolderName, "profile.png"))
 	if err != nil {
 		log.Error().Err(err).Msg("error downloading channel profile image")
 	}
@@ -80,7 +92,7 @@ func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.
 		ExtID:       platformChannel.ID,
 		Name:        platformChannel.Login,
 		DisplayName: platformChannel.DisplayName,
-		ImagePath:   fmt.Sprintf("%s/%s/profile.png", env.VideosDir, platformChannel.Login),
+		ImagePath:   filepath.Join(env.VideosDir, channelFolderName, "profile.png"),
 	}
 
 	dbC, err := s.ChannelService.CreateChannel(channelDTO)
@@ -156,17 +168,30 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*A
 		return nil, fmt.Errorf("error creating vod uuid: %v", err)
 	}
 
+	// Resolve channel folder name from template
+	channelFolderName, err := GetChannelFolderName(ChannelTemplateInput{
+		ChannelName:        channel.Name,
+		ChannelID:          channel.ExtID,
+		ChannelDisplayName: channel.DisplayName,
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("error resolving channel folder template, falling back to channel login name")
+		channelFolderName = channel.Name
+	}
+
 	storageTemplateInput := StorageTemplateInput{
-		UUID:    vUUID,
-		ID:      input.VideoId,
-		Channel: channel.Name,
-		Title:   video.Title,
-		Type:    video.Type,
-		Date:    video.CreatedAt.Format("2006-01-02"),
-		YYYY:    video.CreatedAt.Format("2006"),
-		MM:      video.CreatedAt.Format("01"),
-		DD:      video.CreatedAt.Format("02"),
-		HH:      video.CreatedAt.Format("15"),
+		UUID:               vUUID,
+		ID:                 input.VideoId,
+		Channel:            channel.Name,
+		ChannelID:          channel.ExtID,
+		ChannelDisplayName: channel.DisplayName,
+		Title:              video.Title,
+		Type:               video.Type,
+		Date:               video.CreatedAt.Format("2006-01-02"),
+		YYYY:               video.CreatedAt.Format("2006"),
+		MM:                 video.CreatedAt.Format("01"),
+		DD:                 video.CreatedAt.Format("02"),
+		HH:                 video.CreatedAt.Format("15"),
 	}
 	// Create directory paths
 	folderName, err := GetFolderName(vUUID, storageTemplateInput)
@@ -181,7 +206,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*A
 	}
 
 	// set facts
-	rootVideoPath := fmt.Sprintf("%s/%s/%s", envConfig.VideosDir, video.UserLogin, folderName)
+	rootVideoPath := fmt.Sprintf("%s/%s/%s", envConfig.VideosDir, channelFolderName, folderName)
 	chatPath := ""
 	chatVideoPath := ""
 	liveChatPath := ""
@@ -355,17 +380,30 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*Arc
 		return nil, fmt.Errorf("error creating vod uuid: %v", err)
 	}
 
+	// Resolve channel folder name from template
+	channelFolderName, err := GetChannelFolderName(ChannelTemplateInput{
+		ChannelName:        channel.Name,
+		ChannelID:          channel.ExtID,
+		ChannelDisplayName: channel.DisplayName,
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("error resolving channel folder template, falling back to channel login name")
+		channelFolderName = channel.Name
+	}
+
 	storageTemplateInput := StorageTemplateInput{
-		UUID:    vUUID,
-		ID:      clip.ID,
-		Channel: channel.Name,
-		Title:   clip.Title,
-		Type:    string(utils.Clip),
-		Date:    clip.CreatedAt.Format("2006-01-02"),
-		YYYY:    clip.CreatedAt.Format("2006"),
-		MM:      clip.CreatedAt.Format("01"),
-		DD:      clip.CreatedAt.Format("02"),
-		HH:      clip.CreatedAt.Format("15"),
+		UUID:               vUUID,
+		ID:                 clip.ID,
+		Channel:            channel.Name,
+		ChannelID:          channel.ExtID,
+		ChannelDisplayName: channel.DisplayName,
+		Title:              clip.Title,
+		Type:               string(utils.Clip),
+		Date:               clip.CreatedAt.Format("2006-01-02"),
+		YYYY:               clip.CreatedAt.Format("2006"),
+		MM:                 clip.CreatedAt.Format("01"),
+		DD:                 clip.CreatedAt.Format("02"),
+		HH:                 clip.CreatedAt.Format("15"),
 	}
 	// Create directory paths
 	folderName, err := GetFolderName(vUUID, storageTemplateInput)
@@ -380,7 +418,7 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*Arc
 	}
 
 	// set facts
-	rootVideoPath := fmt.Sprintf("%s/%s/%s", envConfig.VideosDir, channel.Name, folderName)
+	rootVideoPath := fmt.Sprintf("%s/%s/%s", envConfig.VideosDir, channelFolderName, folderName)
 	chatPath := ""
 	chatVideoPath := ""
 	liveChatPath := ""
@@ -518,17 +556,30 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		return nil, fmt.Errorf("error creating vod uuid: %v", err)
 	}
 
+	// Resolve channel folder name from template
+	channelFolderName, err := GetChannelFolderName(ChannelTemplateInput{
+		ChannelName:        channel.Name,
+		ChannelID:          channel.ExtID,
+		ChannelDisplayName: channel.DisplayName,
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("error resolving channel folder template, falling back to channel login name")
+		channelFolderName = channel.Name
+	}
+
 	storageTemplateInput := StorageTemplateInput{
-		UUID:    vUUID,
-		ID:      video.ID,
-		Channel: channel.Name,
-		Title:   video.Title,
-		Type:    video.Type,
-		Date:    video.StartedAt.Format("2006-01-02"),
-		YYYY:    video.StartedAt.Format("2006"),
-		MM:      video.StartedAt.Format("01"),
-		DD:      video.StartedAt.Format("02"),
-		HH:      video.StartedAt.Format("15"),
+		UUID:               vUUID,
+		ID:                 video.ID,
+		Channel:            channel.Name,
+		ChannelID:          channel.ExtID,
+		ChannelDisplayName: channel.DisplayName,
+		Title:              video.Title,
+		Type:               video.Type,
+		Date:               video.StartedAt.Format("2006-01-02"),
+		YYYY:               video.StartedAt.Format("2006"),
+		MM:                 video.StartedAt.Format("01"),
+		DD:                 video.StartedAt.Format("02"),
+		HH:                 video.StartedAt.Format("15"),
 	}
 	// Create directory paths
 	folderName, err := GetFolderName(vUUID, storageTemplateInput)
@@ -543,7 +594,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 	}
 
 	// set facts
-	rootVideoPath := fmt.Sprintf("%s/%s/%s", envConfig.VideosDir, video.UserLogin, folderName)
+	rootVideoPath := fmt.Sprintf("%s/%s/%s", envConfig.VideosDir, channelFolderName, folderName)
 	chatPath := ""
 	chatVideoPath := ""
 	liveChatPath := ""
@@ -557,6 +608,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 	}
 
 	videoExtension := "mp4"
+	tmpLiveExtension := "ts"
 
 	// Create VOD in DB
 	vodDTO := vod.Vod{
@@ -582,7 +634,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		FolderName:          folderName,
 		FileName:            fileName,
 		// create temporary paths
-		TmpVideoDownloadPath:    fmt.Sprintf("%s/%s_%s-video.%s", envConfig.TempDir, video.ID, vUUID, videoExtension),
+		TmpVideoDownloadPath:    fmt.Sprintf("%s/%s_%s-video.%s", envConfig.TempDir, video.ID, vUUID, tmpLiveExtension),
 		TmpVideoConvertPath:     fmt.Sprintf("%s/%s_%s-video-convert.%s", envConfig.TempDir, video.ID, vUUID, videoExtension),
 		TmpChatDownloadPath:     fmt.Sprintf("%s/%s_%s-chat.json", envConfig.TempDir, video.ID, vUUID),
 		TmpLiveChatDownloadPath: fmt.Sprintf("%s/%s_%s-live-chat.json", envConfig.TempDir, video.ID, vUUID),
@@ -590,8 +642,9 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		TmpChatRenderPath:       fmt.Sprintf("%s/%s_%s-chat.mp4", envConfig.TempDir, video.ID, vUUID),
 	}
 
+	vodDTO.TmpVideoHLSPath = fmt.Sprintf("%s/%s_%s-video_hls0", envConfig.TempDir, video.ID, vUUID)
 	if config.Get().Archive.SaveAsHls {
-		vodDTO.TmpVideoHLSPath = fmt.Sprintf("%s/%s_%s-video_hls0", envConfig.TempDir, video.ID, vUUID)
+		vodDTO.TmpVideoDownloadPath = fmt.Sprintf("%s/%s-video.m3u8", vodDTO.TmpVideoHLSPath, video.ID)
 		vodDTO.VideoHLSPath = fmt.Sprintf("%s/%s-video_hls", rootVideoPath, fileName)
 		vodDTO.VideoPath = fmt.Sprintf("%s/%s-video_hls/%s-video.m3u8", rootVideoPath, fileName, video.ID)
 	}

@@ -17,6 +17,23 @@
   opacity: 2;
 }
 
+.videoImageWrapper {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.selectionCheckboxInline {
+  display: flex;
+  align-items: center;
+  margin-left: var(--mantine-spacing-xs);
+  opacity: 0.75;
+}
+
+.selectionCheckboxInline:hover {
+  opacity: 1;
+}
+
 .videoImage {
   pointer-events: none;
   cursor: default;

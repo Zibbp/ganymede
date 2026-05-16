@@ -12,7 +12,7 @@ type TaskService interface {
 }
 
 type StartTaskRequest struct {
-	Task string `json:"task" validate:"required,oneof=check_live check_vod check_clips get_jwks storage_migration prune_videos save_chapters update_stream_vod_ids generate_sprite_thumbnails update_video_storage_usage process_playlist_video_rules"`
+	Task string `json:"task" validate:"required,oneof=check_live check_vod check_clips get_jwks storage_migration prune_videos save_chapters update_stream_vod_ids generate_sprite_thumbnails update_video_storage_usage process_playlist_video_rules update_platform_channels"`
 }
 
 // StartTask godoc
@@ -27,6 +27,7 @@ type StartTaskRequest struct {
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/task/start [post]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) StartTask(c echo.Context) error {
 	str := new(StartTaskRequest)
 	if err := c.Bind(str); err != nil {

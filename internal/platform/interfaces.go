@@ -23,7 +23,7 @@ type VideoInfo struct {
 	ViewCount                   int64             `json:"view_count"`
 	Language                    string            `json:"language"`
 	Type                        string            `json:"type"`
-	Duration                    time.Duration     `json:"duration"`
+	Duration                    time.Duration     `json:"duration" swaggertype:"integer"`
 	Category                    *string           `json:"category"`    // the default/main category of the video
 	Restriction                 *string           `json:"restriction"` // video restriction
 	Chapters                    []chapter.Chapter `json:"chapters"`
@@ -126,10 +126,10 @@ type Platform interface {
 	GetVideo(ctx context.Context, id string, withChapters bool, withMutedSegments bool) (*VideoInfo, error)
 	// GetLiveStream retrieves live stream information for a given channel name.
 	GetLiveStream(ctx context.Context, channelName string) (*LiveStreamInfo, error)
-	// GetLiveStreams retrieves live streams for multiple channel names.
-	GetLiveStreams(ctx context.Context, channelNames []string) ([]LiveStreamInfo, error)
-	// GetChannel retrieves channel information by its name.
-	GetChannel(ctx context.Context, channelName string) (*ChannelInfo, error)
+	// GetLiveStreams retrieves live streams for multiple channel IDs.
+	GetLiveStreams(ctx context.Context, channelIDs []string) ([]LiveStreamInfo, error)
+	// GetChannel retrieves channel information by its name or ID.
+	GetChannel(ctx context.Context, channelName *string, channelID *string) (*ChannelInfo, error)
 	// GetVideos retrieves videos for a given channel ID and video type.
 	GetVideos(ctx context.Context, channelId string, videoType VideoType, withChapters bool, withMutedSegments bool) ([]VideoInfo, error)
 	// GetCategories retrieves categories from the platform.

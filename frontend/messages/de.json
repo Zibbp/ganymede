@@ -81,8 +81,12 @@
       "smoothScrollDescription": "Aktiviere sanftes Scrollen für neue Chat-Nachrichten. Kann bei einer großen Anzahl von Nachrichten pro Sekunde schlecht aussehen.",
       "chatHistogram": "Chat-Histogramm anzeigen",
       "chatHistogramDescription": "Zeige eine visuelle Darstellung der Chat-Nachrichten während des Videos unterhalb des Videoplayers an.",
+      "chatTimestamps": "Chat-Zeitstempel anzeigen",
+      "chatTimestampsDescription": "Zeige klickbare Zeitstempel neben Chat-Nachrichten an, um zu dieser Stelle im Video zu springen.",
       "showProcessingVideos": "Verarbeitende Videos in 'Kürzlich archivierte' Videos anzeigen",
-      "showProcessingVideosDescription": "Verarbeitende Videos im Abschnitt 'Kürzlich archivierte' Videos auf der Startseite anzeigen."
+      "showProcessingVideosDescription": "Verarbeitende Videos im Abschnitt 'Kürzlich archivierte' Videos auf der Startseite anzeigen.",
+      "autoplayVideo": "Videos automatisch abspielen",
+      "autoplayVideoDescription": "Videos automatisch starten, wenn sie geladen sind."
     },
     "changePassword": {
       "title": "Passwort ändern",
@@ -118,7 +122,7 @@
       "home": "Startseite",
       "channels": "Kanäle",
       "videos": "Videos",
-      "archive": "Archiv",
+      "archive": "Archivieren",
       "playlists": "Wiedergabelisten",
       "queue": "Warteschlange",
       "tasks": "Aufgaben"
@@ -127,14 +131,20 @@
       "overview": "Übersicht",
       "admin": "Admin",
       "channels": "Kanäle",
-      "watchedChannels": "Beobachtete Kanäle",
+      "watchedChannels": "Überwachte Kanäle",
       "videos": "Videos",
       "blockedVideos": "Blockierte Videos",
       "queue": "Warteschlange",
       "users": "Benutzer",
+      "apiKeys": "API-Schlüssel",
+      "notifications": "Benachrichtigungen",
       "settings": "Einstellungen",
       "tasks": "Aufgaben",
       "information": "Informationen"
+    },
+    "profileDropdown": {
+      "profile": "Profil",
+      "logout": "Abmelden"
     },
     "errorLoggingOut": "Fehler beim Abmelden",
     "search": "Suche",
@@ -150,7 +160,7 @@
     "errorLoadingChannel": "Error loading channel"
   },
   "ArchivePage": {
-    "title": "Archiv",
+    "title": "Archivieren",
     "inputTitle": "Eingabe erforderlich",
     "inputMessage": "Bitte gib eine Video-ID ein oder wähle einen Kanal aus",
     "invalidTitle": "Ungültige Auswahl",
@@ -241,7 +251,7 @@
       "externalId": "Externe ID",
       "processing": "In Bearbeitung",
       "onHold": "Pausiert",
-      "liveArchive": "Live-Archiv",
+      "liveArchive": "Live-Archivierung",
       "createdAt": "Erstellt am",
       "actions": "Aktionen"
     },
@@ -262,20 +272,10 @@
     },
     "applicationSettings": {
       "header": "Anwendungseinstellungen",
-      "registrationEnabledLabel": "Registrierung aktiviert",
-      "notificationSettingsButton": "Benachrichtigungseinstellungen",
-      "enabledLabel": "Aktiviert",
-      "testButton": "Testen",
-      "webhookUrlLabel": "Webhook-URL",
-      "templateLabel": "Vorlage",
-      "availableVariables": "Verfügbare Variablen zur Verwendung in der Vorlage:",
-      "videoArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Videoarchivierung",
-      "liveArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Live-Archivierung",
-      "channelIsLiveNotification": "Kanal ist Live-Benachrichtigung",
-      "errorNotification": "Fehlerbenachrichtigung"
+      "registrationEnabledLabel": "Registrierung aktiviert"
     },
     "archiveSettings": {
-      "header": "Archiv-Einstellungen",
+      "header": "Archivierungs-Einstellungen",
       "livestreamCheckIntervalLabel": "Livestream-Prüfintervall (Sekunden)",
       "livestreamCheckIntervalDescription": "Das Intervall in Sekunden, um nach neuen Live-Streams zum Archivieren zu suchen. ERFORDERT NEUSTART!",
       "videoCheckIntervalLabel": "Video-Prüfintervall (Minuten)",
@@ -294,11 +294,9 @@
       "twitchTokenLabel": "Twitch-Token",
       "twitchTokenDescription": "Gib dein Twitch-Token an, um werbefreie Live-Streams und VODs nur für Abonnenten herunterzuladen.",
       "convertFFmpegArgsLabel": "Video-Konvertierungs-FFmpeg-Argumente",
-      "convertFFmpegArgsDescription": "Benutzerdefinierte FFmpeg-Argumente, die bei der Konvertierung des Videos verwendet werden sollen. Dies wird sowohl für Live- als auch für VOD-Archive verwendet.",
+      "convertFFmpegArgsDescription": "Benutzerdefinierte FFmpeg-Argumente, die bei der Konvertierung des Videos verwendet werden sollen. Dies wird sowohl für Live- als auch für VOD-Archivierungen verwendet.",
       "ytdlpVideoArgsLabel": "YT-DLP Video-Argumente",
       "ytdlpVideoArgsDescription": "Benutzerdefinierte yt-dlp-Argumente zur Verwendung beim Herunterladen eines Videos. Dies wird nur für VOD-Downloads verwendet.",
-      "ytdlpLiveArgsLabel": "YT-DLP Live-Argumente",
-      "ytdlpLiveArgsDescription": "Benutzerdefinierte yt-dlp-Argumente, die beim Herunterladen eines Livestreams verwendet werden. Dies wird nur für Livestream-Downloads verwendet.",
       "liveStreamTitle": "Live-Stream",
       "proxySettings": "Proxy-Einstellungen",
       "proxySettingsDescription": "Archiviere Live-Streams über einen Proxy, um Werbung zu verhindern. Dein Twitch-Token wird nicht an den Proxy gesendet.",
@@ -308,7 +306,9 @@
       "proxyAddButton": "Hinzufügen",
       "proxyTypeLabel": "Wähle den Proxy-Typ",
       "whitelistChannelsLabel": "Whitelist-Kanäle",
-      "whitelistChannelsDescription": "Wähle Kanäle aus, die von der Verwendung des Proxys ausgeschlossen sind, falls aktiviert. Stattdessen wird dein Twitch-Token verwendet. Wähle Kanäle aus, die du abonniert hast."
+      "whitelistChannelsDescription": "Wähle Kanäle aus, die von der Verwendung des Proxys ausgeschlossen sind, falls aktiviert. Stattdessen wird dein Twitch-Token verwendet. Wähle Kanäle aus, die du abonniert hast.",
+      "watchWhileArchivingLabel": "Aktiviere Wiedergabe während des Archivierens",
+      "watchWhileArchivingDescription": "Lädt einen separaten HLS-Stream herunter, um Live-Streams während des Archivierens ansehen zu können. Dies verdoppelt den Speicherbedarf während der Live-Archivierung. Nur das Video ist abspielbar – der Chat wird nicht mit angezeigt."
     },
     "chatSettings": {
       "header": "Chat-Einstellungen",
@@ -335,15 +335,17 @@
     "jwks": "JSON Web Key Sets (JWKS) vom SSO-Anbieter abrufen",
     "jwksDescription": "Erfolgt täglich um 00:00 Uhr.",
     "saveChaptersForVideos": "Kapitel für Videos speichern",
-    "saveChaptersForVideosDescription": "Speichere Kapitel für Videos, die archiviert wurden (geschieht automatisch für neue Archive).",
+    "saveChaptersForVideosDescription": "Speichere Kapitel für Videos, die archiviert wurden (geschieht automatisch für neue Archivierungen).",
     "updateLiveStreamIds": "Live-Stream-IDs mit Video-IDs aktualisieren",
-    "updateLiveStreamIdsDescription": "Versuche, Live-Stream-Archive mit ihrer entsprechenden Video-ID zu aktualisieren (geschieht automatisch, nachdem die Live-Archivierung abgeschlossen ist).",
+    "updateLiveStreamIdsDescription": "Versuche, Live-Stream-Archivierungen mit ihrer entsprechenden Video-ID zu aktualisieren (geschieht automatisch, nachdem die Live-Archivierung abgeschlossen ist).",
     "generateSpriteThumbnails": "Sprite-Thumbnails generieren",
     "generateSpriteThumbnailsDescription": "Generiere Vorschaubilder, die beim Bewegen der Maus über die Fortschrittsanzeige des Players für alle Videos angezeigt werden. Dies wird automatisch nach jeder Videoarchivierung ausgeführt.",
     "updateVideoStorageUsage": "Speichernutzung für Videos aktualisieren",
     "updateVideoStorageUsageDescription": "Aktualisiere die Speichernutzung für alle Videos. Dies wird verwendet, um die Speichernutzung in der Videoliste und auf der Statistikseite anzuzeigen.",
     "processPlaylistVideoRules": "Playlist-Videoregeln verarbeiten",
-    "processPlaylistVideoRulesDescription": "Videoregeln für Playlists verarbeiten. Dies überprüft, ob Videos basierend auf den definierten Regeln zu den Playlists hinzugefügt werden sollten. Wird jede Stunde ausgeführt."
+    "processPlaylistVideoRulesDescription": "Videoregeln für Playlists verarbeiten. Dies überprüft, ob Videos basierend auf den definierten Regeln zu den Playlists hinzugefügt werden sollten. Wird jede Stunde ausgeführt.",
+    "updatePlatformChannels": "Plattformkanäle aktualisieren",
+    "updatePlatformChannelsDescription": "Aktualisiert die Kanalinformationen von der Plattform für alle Kanäle. Dazu gehören Anzeigename und Profilbild. Wird alle 12 Stunden ausgeführt."
   },
   "AdminUsersPage": {
     "title": "Admin - Benutzer",
@@ -361,6 +363,79 @@
     },
     "drawer": "Benutzer",
     "deleteModal": "Benutzer löschen"
+  },
+  "AdminApiKeysPage": {
+    "title": "Admin - API-Schlüssel",
+    "loading": "API-Schlüssel werden geladen",
+    "error": "Fehler beim Laden der API-Schlüssel",
+    "header": "API-Schlüssel verwalten",
+    "apiRoutesHelp": "Besuche <docs>/swagger/index.html</docs> für die API-Dokumentation oder prüfe die Netzwerkanfragen in den Browser-Tools, um API-Routen sowie Request-/Response-Payloads zu sehen.",
+    "searchPlaceholder": "API-Schlüssel suchen...",
+    "createButton": "API-Schlüssel erstellen",
+    "docsButton": "Dokumentation",
+    "docsModal": "API-Schlüssel-Bereiche",
+    "drawer": "API-Schlüssel erstellen",
+    "editDrawer": "API-Schlüssel bearbeiten",
+    "deleteModal": "API-Schlüssel widerrufen",
+    "showOnceModal": "API-Schlüssel erstellt",
+    "edit": "Bearbeiten",
+    "revoke": "Widerrufen",
+    "revokedBadge": "Widerrufen",
+    "showRevoked": "Widerrufene Schlüssel anzeigen",
+    "copyPrefix": "Präfix kopieren",
+    "copied": "Kopiert",
+    "never": "Nie",
+    "columns": {
+      "name": "Name",
+      "scopes": "Bereiche",
+      "prefix": "Präfix",
+      "lastUsed": "Zuletzt verwendet",
+      "createdAt": "Erstellt am",
+      "actions": "Aktionen"
+    }
+  },
+  "AdminApiKeyComponents": {
+    "validation": {
+      "name": "Name muss zwischen 3 und 50 Zeichen lang sein",
+      "description": "Beschreibung darf höchstens 500 Zeichen haben",
+      "scopes": {
+        "required": "Wähle mindestens einen Bereich",
+        "unknown": "Unbekannter Bereich"
+      }
+    },
+    "nameLabel": "Name",
+    "namePlaceholder": "vod-archiver-script",
+    "descriptionLabel": "Beschreibung",
+    "descriptionPlaceholder": "Optionale Notizen, wo dieser Schlüssel verwendet wird",
+    "scopeLabel": "Bereiche",
+    "scopeDescription": "Jeder Bereich ist resource:tier — admin > write > read innerhalb einer Ressource. Verwende *:admin für vollen Zugriff oder wähle gezielt einzelne Bereiche.",
+    "scopePlaceholder": "Wähle einen oder mehrere Bereiche",
+    "presets": {
+      "fullAdmin": "Voller Admin (*:admin)",
+      "readAll": "Alles lesen (*:read)",
+      "clear": "Leeren"
+    },
+    "createButton": "API-Schlüssel erstellen",
+    "createNotification": "API-Schlüssel erstellt — kopiere das Geheimnis jetzt",
+    "updateButton": "Änderungen speichern",
+    "updateNotification": "API-Schlüssel aktualisiert",
+    "revokeConfirmText": "Bist du sicher, dass du diesen API-Schlüssel widerrufen möchtest? Dies kann nicht rückgängig gemacht werden.",
+    "revokeButton": "Widerrufen",
+    "revokeNotification": "API-Schlüssel widerrufen",
+    "revokeError": "API-Schlüssel konnte nicht widerrufen werden",
+    "showOnce": {
+      "warning": "Dies ist das einzige Mal, dass das Geheimnis angezeigt wird. Kopiere es jetzt und bewahre es sicher auf.",
+      "instructions": "Verwende es in Skripten als: Authorization: Bearer '<api_key>'",
+      "copy": "Geheimnis kopieren",
+      "copied": "Kopiert",
+      "close": "Schließen"
+    },
+    "docs": {
+      "scopeFormatTitle": "Bereichsformat",
+      "scopeFormatBody": "Jeder Bereich hat das Format resource:tier. Tiers sind innerhalb einer Ressource hierarchisch — admin schließt write ein, write schließt read ein. Die Wildcard-Ressource * passt auf jede Ressource, also gewährt *:admin vollen Zugriff.",
+      "sessionOnlyTitle": "Endpunkte, die mit API-Schlüsseln nicht erreichbar sind",
+      "sessionOnlyBody": "Diese Endpunkte sind absichtlich nur per Session erreichbar. API-Schlüssel können sie unabhängig vom Bereich nicht ansprechen."
+    }
   },
   "AdminVideosPage": {
     "title": "Admin - Videos",
@@ -407,23 +482,23 @@
     "addVideosToPlaylistModalTitle": "Füge Videos zur Wiedergabeliste hinzu"
   },
   "AdminWatchedChannelsPage": {
-    "title": "Admin - Beobachtete Kanäle",
-    "loading": "Beobachtete Kanäle werden geladen",
-    "error": "Fehler beim Laden der beobachteten Kanäle",
-    "header": "Beobachtete Kanäle verwalten",
-    "addButton": "Beobachteten Kanal hinzufügen",
-    "searchPlaceholder": "Beobachtete Kanäle suchen...",
+    "title": "Admin - Überwachte Kanäle",
+    "loading": "Überwachte Kanäle werden geladen",
+    "error": "Fehler beim Laden der überwachten Kanäle",
+    "header": "Überwachte Kanäle verwalten",
+    "addButton": "Kanal-Überwachung hinzufügen",
+    "searchPlaceholder": "Überwachte Kanäle durchsuchen...",
     "columns": {
       "id": "ID",
       "channel": "Kanal",
-      "watchLive": "Live ansehen",
+      "watchLive": "Live überwachen",
       "isLive": "Ist Live",
-      "watchVideos": "Videos ansehen",
-      "watchClips": "Clips ansehen",
+      "watchVideos": "Videos überwachen",
+      "watchClips": "Clips überwachen",
       "actions": "Aktionen"
     },
-    "drawer": "Beobachteter Kanal",
-    "deleteModal": "Beobachteten Kanal löschen"
+    "drawer": "Überwachter Kanal",
+    "deleteModal": "Kanal-Überwachung löschen"
   },
   "AdminBlockedVideosComponents": {
     "validation": {
@@ -483,7 +558,7 @@
     "onHoldLabel": "Pausiert",
     "videoProcessingLabel": "Videoverarbeitung",
     "chatProcessingLabel": "Chatverarbeitung",
-    "liveArchiveLabel": "Live-Archiv",
+    "liveArchiveLabel": "Live-Archivierung",
     "taskCreateFolderLabel": "Aufgabe Ordner erstellen",
     "taskDownloadThumbnailLabel": "Aufgabe Thumbnail herunterladen",
     "taskSaveInformationLabel": "Aufgabe Informationen speichern",
@@ -558,11 +633,11 @@
     "multiDeleteButton": "Videos löschen"
   },
   "AdminWatchedComponents": {
-    "deleteNotification": "Beobachteter Kanal gelöscht",
+    "deleteNotification": "Kanal-Überwachung gelöscht",
     "deleteConfirmText": "Bist du sicher, dass du diesen beobachteten Kanal löschen möchtest?",
-    "deleteButton": "Beobachteten Kanal löschen",
-    "editNotification": "Beobachteter Kanal bearbeitet",
-    "createNotification": "Beobachteter Kanal erstellt",
+    "deleteButton": "Kanal-Überwachung löschen",
+    "editNotification": "Kanal-Überwachung bearbeitet",
+    "createNotification": "Kanal-Überwachung erstellt",
     "failedCreateNotification": "Fehler beim Erstellen des beobachteten Kanals",
     "failedEditNotification": "Fehler beim Bearbeiten des beobachteten Kanals",
     "headerText": "Lies die Wiki-Seite zum beobachteten Kanal <wiki>Wiki-Seite</wiki>, um weitere Informationen zu den einzelnen Funktionen zu erhalten.",
@@ -573,11 +648,11 @@
     "renderChatLabel": "Chat rendern",
     "liveStreamsText": "Live-Streams",
     "liveStreamsDescription": "Archiviere Live-Streams, während sie gestreamt werden.",
-    "watchLiveLabel": "Live ansehen",
+    "watchLiveLabel": "Live überwachen",
     "videosText": "Kanalvideos",
     "videosDescription": "Archiviere vergangene Kanalvideos.",
     "videosOccurrence": "Die Suche nach neuen Videos erfolgt einmal täglich.",
-    "watchVideosLabel": "Videos ansehen",
+    "watchVideosLabel": "Videos überwachen",
     "downloadArchivesLabel": "Vergangene Live-Streams herunterladen",
     "downloadArchivesDescription": "Vergangene Live-Streams herunterladen",
     "downloadHighlightsLabel": "Highlights herunterladen",
@@ -591,7 +666,7 @@
     "channelClipsDescription1": "Diese Funktion dient dazu, die beliebtesten (Anzahl der Aufrufe) Clips der letzten 'Intervall'-Tage zu archivieren. Wenn du beispielsweise die Anzahl der Clips auf 5 und das Intervall auf 7 festlegst, werden die Top 5 Clips der letzten 7 Tage archiviert. Sie wird erst nach 7 Tagen wieder ausgeführt. Es werden keine Einschränkungen (Kategorien, Alter, Titel, Regex usw.) angewendet.",
     "channelClipsMoreInformationButton": "Weitere Informationen",
     "channelClipsMoreInformationText": "Wenn du einen einmaligen Import der beliebtesten Clips eines Kanals durchführen möchtest, stelle das Intervall auf eine große Zahl (1000) und die Anzahl der Clips auf eine große Zahl (250) ein. Dadurch werden die Top 250 Clips der letzten 1000 Tage importiert. Es wird empfohlen, das Intervall und die Anzahl der Clips nach dem ersten Import auf eine niedrigere Zahl zu ändern.",
-    "watchClipsLabel": "Clips ansehen",
+    "watchClipsLabel": "Clips überwachen",
     "numberOfClipsLabel": "Anzahl der Clips",
     "numberOfClipsDescription": "Anzahl der zu archivierenden Clips.",
     "intervalDaysLabel": "Intervall (Tage)",
@@ -615,12 +690,14 @@
     "categoriesApplyToLivestreamsDescription": "Kategoriebeschränkungen auf Live-Streams anwenden",
     "strictCategoriesLiveLabel": "Strikte Live-Stream-Kategorien",
     "strictCategoriesLiveDescription": "Archivierung des Live-Streams stoppen, wenn die Kategorie zu einer nicht ausgewählten wechselt",
+    "blacklistCategoriesLiveLabel": "Blacklist-Kategorien",
+    "blacklistCategoriesLiveDescription": "Archiviere keine Live-Streams und Videos, die in den ausgewählten Kategorien sind",
     "categoriesLoadButton": "Kategorien laden",
     "categoriesSearchPlaceholder": "Kategorien suchen...",
-    "submitButton": "Beobachteten Kanal erstellen",
-    "editButton": "Beobachteten Kanal bearbeiten",
+    "submitButton": "Kanal-Überwachung erstellen",
+    "editButton": "Kanal-Überwachung bearbeiten",
     "updateMetadataLabel": "Metadaten aktualisieren",
-    "updateMetadataDescription": "Aktualisiere die Metadaten des Livestreams nach {minutes} Minuten, nachdem das Livestream-Archivieren gestartet wurde. Dazu gehören Thumbnails und Titel. Auf 0 setzen, um es zu deaktivieren."
+    "updateMetadataDescription": "Aktualisiere die Metadaten des Livestreams nach {minutes} Minuten, nachdem die Livestream-Archivierung gestartet wurde. Dazu gehören Thumbnails und Titel. Auf 0 setzen, um es zu deaktivieren."
   },
   "AuthComponents": {
     "validation": {
@@ -639,7 +716,7 @@
     "registerSuccessNotification": "Erfolgreich registriert, bitte Anmelden",
     "errorRegisteringNotification": "Fehler bei der Registrierung",
     "welcomeText": "Willkommen bei Ganymede",
-    "ssoButton": "Single Single On (SSO)",
+    "ssoButton": "Single Sign-On (SSO)",
     "localCredentialsLabel": "Oder mit lokalen Anmeldeinformationen fortfahren",
     "usernameLabel": "Benutzername",
     "usernameDescription": "Dein Benutzername",
@@ -734,6 +811,9 @@
     "watchedVideoText": "Dieses Video hast du bereits angesehen",
     "lockedText": "Video ist gesperrt",
     "streamedOnText": "Gestreamt am",
+    "sourceViewsText": "Aufrufe der Quelle",
+    "localViewsText": "Lokale Aufrufe",
+    "viewsText": "Aufrufe",
     "loadingVideos": "Videos werden geladen",
     "errorLoadingVideos": "Fehler beim Laden der Videos",
     "loadingChatHistogram": "Lade Chat-Histogramm",
@@ -742,15 +822,21 @@
     "chatTimeSkipDetected": "Zeitsprung erkannt. Chat geleert.",
     "chatPlayerReady": "Chat-Player bereit",
     "chatPlayerReadyStats": "Chat-Wiedergabe enthält {lengthBadges} Badges, {lengthSubBadges} Abonnenten-Badges und {lengthEmotes} Emotes.",
+    "chatJumpToTimestamp": "Zu {timestamp} springen",
     "loadingChat": "Lade Chat-Wiedergabe",
     "chatError": "Fehler",
     "filterByLabel": "Nach Kriterium filtern",
     "filterByPlaceholder": "Nach Videoarten filtern",
+    "orderByLabel": "Sortierreihenfolge",
+    "orderByPlaceholder": "Sortierreihenfolge",
+    "sortByLabel": "Sortiere nach",
+    "sortByPlaceholder": "Sortiere nach",
     "videosCount": "{count} Videos",
     "loginRequiredText": "Du musst angemeldet sein, um dieses Video anzusehen",
     "markedAsWatchedNotification": "Video als angesehen markiert",
     "markedAsUnwatchedNotification": "Video als nicht angesehen markiert",
     "videoLockedNotification": "Das Video wurde {status}.",
+    "videosLockedNotification": "Videos wurden {status}.",
     "locked": "gesperrt",
     "unlocked": "entsperren",
     "generateStaticThumbnailsNotification": "Aufgabe zum Erstellen von statischen Thumbnails zur Warteschlange hinzugefügt",
@@ -772,6 +858,28 @@
       "share": "Teilen",
       "delete": "Video löschen"
     },
+    "selectForBulkTooltip": "Für Massenaktionen auswählen",
+    "selectVideoCheckboxLabel": "Video auswählen",
+    "selectAllOnPage": "Alle auf Seite auswählen",
+    "selectedVideosCount": "{count} ausgewählt",
+    "clearSelectionButton": "Auswahl aufheben",
+    "bulkActionsButton": "Massenaktionen",
+    "bulkAddToPlaylistModalTitle": "Videos zur Wiedergabeliste hinzufügen",
+    "bulkDeleteVideosModalTitle": "Videos löschen",
+    "markedVideosAsWatchedNotification": "Videos als angesehen markiert",
+    "markedVideosAsUnwatchedNotification": "Videos als nicht angesehen markiert",
+    "bulkGenerateStaticThumbnailsNotification": "Aufgaben zum Erstellen von statischen Thumbnails zur Warteschlange hinzugefügt",
+    "bulkGenerateSpriteThumbnailsNotification": "Aufgaben zum Erstellen von Sprite-Thumbnails zur Warteschlange hinzugefügt",
+    "bulkActionMenu": {
+      "markAsWatched": "Als angesehen markieren",
+      "markAsUnwatched": "Als nicht angesehen markieren",
+      "lock": "Videos sperren",
+      "unlock": "Videos entsperren",
+      "regenerateThumbnails": "Thumbnails neu erstellen",
+      "generateSpriteThumbnails": "Sprite-Thumbnails erstellen",
+      "playlists": "Zur Wiedergabeliste hinzufügen",
+      "delete": "Videos löschen"
+    },
     "videoInformationModalTitle": "Video Informationen",
     "videoInformationModal": {
       "informationTitle": "Video Informationen",
@@ -780,12 +888,34 @@
     "managePlaylistsDrawerTitle": "Wiedergabelisten verwalten",
     "deleteVideoModalTitle": "Video löschen",
     "theaterModeIconTooltip": "Theater Mode",
+    "hideChatIconTooltip": "Chat verbergen",
+    "showChatIconTooltip": "Chat anzeigen",
+    "absoluteTimeIconTooltip": "Absolute Zeit umschalten",
     "sourceViewsTooltip": "Quell-views",
     "localViewsTooltip": "Lokale views",
     "streamedOnTooltip": "Gestreamt am",
     "videoTypeTooltip": "Videotyp",
     "videoClipsTitle": "Video-Clips",
-    "storageSizeTooltip": "Speicherplatz"
+    "storageSizeTooltip": "Speicherplatz",
+    "enums": {
+      "VideoSortBy": {
+        "date": "Datum",
+        "views": "Aufrufe",
+        "local_views": "Lokale Aufrufe",
+        "created": "Erstellt"
+      },
+      "VideoOrder": {
+        "asc": "Aufsteigend",
+        "desc": "Absteigend"
+      },
+      "VideoType": {
+        "archive": "Archiv",
+        "clip": "Clip",
+        "live": "Live",
+        "highlight": "Highlight",
+        "upload": "Hochgeladen"
+      }
+    }
   },
   "MultistreamComponents": {
     "seekBackTooltip": "{seconds} Sekunden zurückspringen",
@@ -834,5 +964,116 @@
       "topLargeVideosText": "Größte Videos",
       "noLargeVideosText": "Keine Videos gefunden"
     }
+  },
+  "AdminNotificationsPage": {
+    "title": "Benachrichtigungen",
+    "loading": "Benachrichtigungen werden geladen...",
+    "error": "Fehler beim Laden der Benachrichtigungen",
+    "header": "Benachrichtigungen",
+    "description": "Benachrichtigungsziele konfigurieren. Jede Benachrichtigung kann ein oder mehrere Ereignistypen abonnieren und per Webhook oder Apprise gesendet werden. Besuche das",
+    "descriptionWikiLink": "Wiki",
+    "descriptionEnd": "für weitere Informationen.",
+    "createButton": "Benachrichtigung erstellen",
+    "columns": {
+      "name": "Name",
+      "type": "Typ",
+      "enabled": "Aktiviert",
+      "triggers": "Auslöser",
+      "actions": "Aktionen"
+    },
+    "enabledYes": "Ja",
+    "enabledNo": "Nein",
+    "triggerVideoSuccess": "Video-Erfolg",
+    "triggerLiveSuccess": "Live-Erfolg",
+    "triggerError": "Fehler",
+    "triggerIsLive": "Ist Live",
+    "triggersNone": "Keine",
+    "actions": {
+      "edit": "Bearbeiten",
+      "test": "Testen",
+      "delete": "Löschen"
+    },
+    "drawer": {
+      "titleCreate": "Benachrichtigung erstellen",
+      "titleEdit": "Benachrichtigung bearbeiten",
+      "nameLabel": "Name",
+      "namePlaceholderWebhook": "Mein Discord Webhook",
+      "namePlaceholderApprise": "Meine Apprise-Benachrichtigung",
+      "enabledLabel": "Aktiviert",
+      "typeLabel": "Typ",
+      "urlLabelWebhook": "Webhook-URL",
+      "urlLabelApprise": "Apprise-API-URL",
+      "urlDescriptionWebhook": "Die Webhook-URL zum Senden von Benachrichtigungen (z.B. Discord, Slack)",
+      "urlDescriptionApprise": "Die URL deiner Apprise-API-Instanz (z.B. http://apprise:8000/notify/ für Stateful oder http://apprise:8000/notify für Stateless)",
+      "urlPlaceholderWebhook": "https://discord.com/api/webhooks/...",
+      "urlPlaceholderApprise": "http://apprise:8000/notify",
+      "eventTriggersLabel": "Ereignis-Auslöser",
+      "eventTriggersDescription": "Wähle mindestens ein Ereignis. Für jeden aktivierten Auslöser ist eine Nachrichtenvorlage erforderlich.",
+      "triggerVideoArchiveSuccess": "Video-Archivierung erfolgreich",
+      "triggerLiveArchiveSuccess": "Live-Archivierung erfolgreich",
+      "triggerError": "Fehler",
+      "triggerChannelIsLive": "Kanal ist Live",
+      "messageLabel": "Nachricht",
+      "variablesLabel": "Variablen:",
+      "appriseSettingsTitle": "Apprise-Einstellungen",
+      "appriseSettingsDescription": "Diese Felder werden nur verwendet, wenn der Typ Apprise ist. Besuche die",
+      "appriseSettingsLink": "Apprise-API-Dokumentation",
+      "appriseSettingsDescriptionEnd": "für weitere Informationen.",
+      "appriseUrlsLabel": "Apprise-URLs (Stateless-Modus)",
+      "appriseUrlsDescription": "Kommagetrennte Apprise-Benachrichtigungs-URLs für Stateless-Modus",
+      "appriseUrlsPlaceholder": "discord://webhook_id/webhook_token",
+      "appriseTitleLabel": "Apprise-Titelvorlage",
+      "appriseTitleDescription": "Unterstützt die gleichen Vorlagenvariablen wie Textvorlagen",
+      "appriseTitlePlaceholder": "'{{channel_display_name}}' - Benachrichtigung",
+      "appriseTypeLabel": "Apprise-Benachrichtigungstyp",
+      "appriseTagLabel": "Apprise-Tag (Stateful-Modus)",
+      "appriseTagDescription": "Tag für Apprise-Stateful-Konfigurationen",
+      "appriseTagPlaceholder": "all",
+      "appriseFormatLabel": "Apprise-Format",
+      "submitCreate": "Erstellen",
+      "submitUpdate": "Aktualisieren"
+    },
+    "deleteModal": {
+      "title": "Benachrichtigung löschen",
+      "confirmText": "Möchtest du die Benachrichtigung wirklich löschen",
+      "cancelButton": "Abbrechen",
+      "deleteButton": "Löschen"
+    },
+    "testModal": {
+      "title": "Benachrichtigung testen",
+      "description": "Testbenachrichtigung senden an",
+      "descriptionEnd": "mit Testdaten.",
+      "eventTypeLabel": "Ereignistyp",
+      "eventVideoSuccess": "Video-Archivierung erfolgreich",
+      "eventLiveSuccess": "Live-Archivierung erfolgreich",
+      "eventError": "Fehler",
+      "eventIsLive": "Kanal ist Live",
+      "cancelButton": "Abbrechen",
+      "sendButton": "Test senden"
+    },
+    "validation": {
+      "nameRequired": "Name ist erforderlich",
+      "urlRequired": "URL ist erforderlich",
+      "urlInvalidProtocol": "URL muss mit http:// oder https:// beginnen",
+      "urlInvalid": "Muss eine gültige URL sein",
+      "triggerRequired": "Mindestens ein Auslöser muss aktiviert sein",
+      "templateRequired": "Vorlage ist erforderlich, wenn der Auslöser aktiviert ist",
+      "appriseUrlsOrTagRequired": "Entweder Apprise-URLs (Stateless) oder Apprise-Tag (Stateful) ist erforderlich"
+    },
+    "toast": {
+      "successTitle": "Erfolg",
+      "errorTitle": "Fehler",
+      "notificationCreated": "Benachrichtigung erstellt",
+      "notificationUpdated": "Benachrichtigung aktualisiert",
+      "notificationDeleted": "Benachrichtigung gelöscht",
+      "testSent": "Testbenachrichtigung gesendet",
+      "createFailed": "Benachrichtigung konnte nicht erstellt werden",
+      "updateFailed": "Benachrichtigung konnte nicht aktualisiert werden",
+      "deleteFailed": "Benachrichtigung konnte nicht gelöscht werden",
+      "testFailed": "Testbenachrichtigung konnte nicht gesendet werden"
+    }
+  },
+  "MiscComponents": {
+    "recordsPerPageLabel": "Einträge pro Seite"
   }
 }
