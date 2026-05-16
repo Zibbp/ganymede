@@ -48,6 +48,12 @@ interface ChatError {
   timestamp: number;
 }
 
+interface PendingChatRange {
+  start: number;
+  end: number;
+  generation: number;
+}
+
 const ChatPlayer = ({ video, playerRef }: Params) => {
   const t = useTranslations('VideoComponents')
   const [isReady, setIsReady] = useState(false);
@@ -59,9 +65,13 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
   const internalMessagesRef = useRef<Comment[]>([]);
   const lastTimeRef = useRef(0);
   const lastCheckTimeRef = useRef(0);
-  const lastEndTimeRef = useRef(0);
-  const isLoadingRef = useRef(false);
+  const pendingRangeRef = useRef<PendingChatRange | null>(null);
+  const isSeekLoadingRef = useRef(false);
+  const requestGenerationRef = useRef(0);
   const retryCountRef = useRef(0);
+  const queuedIdsRef = useRef<Set<string>>(new Set());
+  const processedIdsRef = useRef<Set<string>>(new Set());
+  const processedIdsOrderRef = useRef<string[]>([]);
   const chatMapsRef = useRef<ChatMaps>({
     emoteMap: new Map(),
     thirdPartyEmoteMap: new Map(),
@@ -264,64 +274,104 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
     }
   }, [handleError]);
 
-  // Optimized chat fetching with rate limiting and error handling
-  const getChat = useCallback(async (start: number, end: number) => {
-    if (isLoadingRef.current) return;
+  const enqueueComments = useCallback((comments?: Comment[]) => {
+    if (!comments?.length) return;
+
+    const nextMessages = [...internalMessagesRef.current];
+    let addedMessage = false;
+
+    comments.forEach((comment) => {
+      if (!comment._id) return;
+      if (queuedIdsRef.current.has(comment._id) || processedIdsRef.current.has(comment._id)) return;
+
+      queuedIdsRef.current.add(comment._id);
+      nextMessages.push(comment);
+      addedMessage = true;
+    });
+
+    if (!addedMessage) return;
+
+    nextMessages.sort((a, b) => a.content_offset_seconds - b.content_offset_seconds);
+    internalMessagesRef.current = nextMessages;
+  }, []);
+
+  // Optimized chat fetching with stale response protection.
+  const getChat = useCallback(async (start: number, end: number, generation = requestGenerationRef.current) => {
+    if (pendingRangeRef.current) return false;
+
+    pendingRangeRef.current = { start, end, generation };
 
     try {
-      isLoadingRef.current = true;
       const data = await getChatForVideo(video.id, start, end);
-      if (data?.length) {
-        internalMessagesRef.current.push(...data);
-      }
+      if (generation !== requestGenerationRef.current) return false;
+
+      enqueueComments(data);
+      lastCheckTimeRef.current = Math.max(lastCheckTimeRef.current, end);
+      return true;
     } catch (error) {
       handleError(error as Error, "Chat fetching");
+      return false;
     } finally {
-      isLoadingRef.current = false;
+      const pendingRange = pendingRangeRef.current;
+      if (
+        pendingRange?.generation === generation &&
+        pendingRange.start === start &&
+        pendingRange.end === end
+      ) {
+        pendingRangeRef.current = null;
+      }
     }
-  }, [video.id, handleError]);
+  }, [enqueueComments, video.id, handleError]);
 
-  const getSeekChat = useCallback(async (start: number, count: number) => {
-    if (isLoadingRef.current) return;
+  const getSeekChat = useCallback(async (start: number, count: number, generation = requestGenerationRef.current) => {
+    if (isSeekLoadingRef.current) return false;
+
+    isSeekLoadingRef.current = true;
 
     try {
-      isLoadingRef.current = true;
       const data = await getSeekChatForVideo(video.id, start, count);
-      if (data?.length) {
-        internalMessagesRef.current.push(...data);
-      }
+      if (generation !== requestGenerationRef.current) return false;
+
+      enqueueComments(data);
+      return true;
     } catch (error) {
       handleError(error as Error, "Seek chat fetching");
+      return false;
     } finally {
-      isLoadingRef.current = false;
-    }
-  }, [video.id, handleError]);
-
-  const clearChat = useCallback(() => {
-    setMessagesWithScroll([]);
-    internalMessagesRef.current = [];
-    addCustomComment(t('chatTimeSkipDetected'));
-  }, [addCustomComment, setMessagesWithScroll]);
-
-  // Tracking processed IDs
-  const processedIds = new Set<string>();
-  const processedIdsOrder: Array<string> = [];
-
-  // Function to add an ID to the processed set
-  const addProcessedId = (id: string) => {
-    if (processedIds.has(id)) return;
-
-    processedIds.add(id);
-    processedIdsOrder.push(id);
-
-    // Remove oldest IDs if size exceeds MAX_CHAT_MESSAGES * 2
-    while (processedIdsOrder.length > MAX_CHAT_MESSAGES * 2) {
-      const oldestId = processedIdsOrder.shift();
-      if (oldestId) {
-        processedIds.delete(oldestId);
+      if (generation === requestGenerationRef.current) {
+        isSeekLoadingRef.current = false;
       }
     }
-  };
+  }, [enqueueComments, video.id, handleError]);
+
+  const clearChat = useCallback(() => {
+    requestGenerationRef.current += 1;
+    pendingRangeRef.current = null;
+    isSeekLoadingRef.current = false;
+    internalMessagesRef.current = [];
+    queuedIdsRef.current.clear();
+    processedIdsRef.current.clear();
+    processedIdsOrderRef.current = [];
+    setMessagesWithScroll([]);
+    addCustomComment(t('chatTimeSkipDetected'));
+    return requestGenerationRef.current;
+  }, [addCustomComment, setMessagesWithScroll, t]);
+
+  // Function to add an ID to the processed set
+  const addProcessedId = useCallback((id: string) => {
+    if (processedIdsRef.current.has(id)) return;
+
+    processedIdsRef.current.add(id);
+    processedIdsOrderRef.current.push(id);
+
+    // Remove oldest IDs if size exceeds MAX_CHAT_MESSAGES * 2
+    while (processedIdsOrderRef.current.length > MAX_CHAT_MESSAGES * 2) {
+      const oldestId = processedIdsOrderRef.current.shift();
+      if (oldestId) {
+        processedIdsRef.current.delete(oldestId);
+      }
+    }
+  }, []);
 
   // chatTick handles processing of chat messages
   const chatTick = useCallback(async (time: number) => {
@@ -338,9 +388,10 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
 
         // Remove the message from the queue
         internalMessagesRef.current.shift();
+        queuedIdsRef.current.delete(comment._id);
 
         // Skip duplicates
-        if (processedIds.has(comment._id)) continue;
+        if (processedIdsRef.current.has(comment._id)) continue;
 
         // Process the message (e.g. add badges and emotes)
         const processedComment = addBadgesToFormattedComment(comment);
@@ -362,7 +413,7 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
     } catch (error) {
       handleError(error as Error, "Chat processing");
     }
-  }, [addBadgesToFormattedComment, addEmotesToFormattedComment, handleError, setMessagesWithScroll]);
+  }, [addBadgesToFormattedComment, addEmotesToFormattedComment, addProcessedId, handleError, setMessagesWithScroll]);
 
   // Initialize chat data
   useEffect(() => {
@@ -427,24 +478,19 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
 
       if (Math.abs(time - lastTimeRef.current) > TIME_SKIP_THRESHOLD) {
         console.log(`Player time skip detected - ${lastTimeRef.current} -> ${time}`);
-        clearChat();
-        lastEndTimeRef.current = 0;
+        const generation = clearChat();
         lastCheckTimeRef.current = time;
-        // clear processed IDs to prevent duplicates
-        processedIds.clear();
-        processedIdsOrder.length = 0;
-        getSeekChat(time, 50);
+        getSeekChat(time, 50, generation);
+        getChat(time, time + CHAT_OFFSET_SIZE, generation);
       }
 
       lastTimeRef.current = time;
 
       if (time <= lastCheckTimeRef.current) return;
+      if (pendingRangeRef.current) return;
 
       const startTime = lastCheckTimeRef.current || time;
       const endTime = startTime + CHAT_OFFSET_SIZE;
-
-      lastCheckTimeRef.current = endTime;
-      lastEndTimeRef.current = endTime;
 
       getChat(startTime, endTime);
     }, TICK_INTERVAL);
