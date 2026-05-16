@@ -1,7 +1,7 @@
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { BlockedVideo, useBlockVideo } from "@/app/hooks/useBlockedVideos";
 import { Button, TextInput } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
+import { useForm, schemaResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 import { z } from "zod";
@@ -26,7 +26,7 @@ const AdminBlockedVideosDrawerContent = ({ blockedVideo, handleClose }: Props) =
       id: blockedVideo?.id || "",
     },
 
-    validate: zodResolver(schema),
+    validate: schemaResolver(schema),
   })
 
   const handleSubmitForm = async () => {

@@ -194,7 +194,7 @@ const AdminSettingsPage = () => {
               {t('archiveSettings.storageTemplateSettings')}
             </Button>
 
-            <Collapse in={storageTemplateOpened} px={25} pt={10}>
+            <Collapse expanded={storageTemplateOpened} px={25} pt={10}>
 
               <div>
                 <Text mb={10}>
