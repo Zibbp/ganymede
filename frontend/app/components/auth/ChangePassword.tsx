@@ -1,6 +1,6 @@
 import { authChangePassword } from "@/app/hooks/useAuthentication";
 import { Button, PasswordInput } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
+import { useForm, schemaResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -28,7 +28,7 @@ const AuthChangePassword = ({ handleClose }: Props) => {
       confirm_new_password: '',
     },
 
-    validate: zodResolver(schema),
+    validate: schemaResolver(schema),
   });
 
   const handleSubmit = async (password: string, newPassword: string, confirmNewPassword: string) => {

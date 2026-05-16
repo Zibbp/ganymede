@@ -1,7 +1,7 @@
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Queue, QueueTaskStatus, useEditQueue } from "@/app/hooks/useQueue";
 import { Button, TextInput, Checkbox, Select } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
+import { useForm, schemaResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -59,7 +59,7 @@ const AdminQueueDrawerContent = ({ queue, handleClose }: Props) => {
       task_chat_move: queue.task_chat_move,
     },
 
-    validate: zodResolver(schema),
+    validate: schemaResolver(schema),
   })
 
   const handleSubmitForm = async () => {
@@ -110,26 +110,31 @@ const AdminQueueDrawerContent = ({ queue, handleClose }: Props) => {
           label={t('isProcessingLabel')}
           key={form.key('processing')}
           {...form.getInputProps('processing', { type: "checkbox" })}
+          py={3}
         />
         <Checkbox
           label={t('onHoldLabel')}
           key={form.key('on_hold')}
           {...form.getInputProps('on_hold', { type: "checkbox" })}
+          py={3}
         />
         <Checkbox
           label={t('videoProcessingLabel')}
           key={form.key('video_processing')}
           {...form.getInputProps('video_processing', { type: "checkbox" })}
+          py={3}
         />
         <Checkbox
           label={t('chatProcessingLabel')}
           key={form.key('chat_processing')}
           {...form.getInputProps('chat_processing', { type: "checkbox" })}
+          py={3}
         />
         <Checkbox
           label={t('liveArchiveLabel')}
           key={form.key('live_archive')}
           {...form.getInputProps('live_archive', { type: "checkbox" })}
+          py={3}
         />
 
         <Select
