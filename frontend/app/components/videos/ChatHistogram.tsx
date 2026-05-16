@@ -51,13 +51,7 @@ const VideoChatHistogram = ({ videoId, playerRef }: Props) => {
         dataKey="Time"
         barChartProps={{
           style: { cursor: "pointer" },
-          onClick: ({ activeLabel }) => {
-            if (activeLabel === undefined || playerRef.current === null) {
-              return;
-            }
-
-            playerRef.current.currentTime = HHMMToseconds(String(activeLabel));
-          },
+          onClick: (data) => playerRef.current!.currentTime = HHMMToseconds(data.activeLabel!)
         }}
         series={[
           { name: 'Messages', color: 'violet.6' },

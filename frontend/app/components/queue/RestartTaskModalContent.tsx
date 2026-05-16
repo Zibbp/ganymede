@@ -19,9 +19,6 @@ const QueueRestartTaskModalContent = ({ queue, task, closeModal }: Params) => {
   const axiosPrivate = useAxiosPrivate()
 
   const useStartQueueTaskMutate = useStartQueueTask()
-  const [restartTextBeforeTask, restartTextAfterTask] = t('taskRestartText', {
-    taskName: '__TASK_NAME__',
-  }).split('__TASK_NAME__');
 
   const restartTask = async () => {
     try {
@@ -47,9 +44,9 @@ const QueueRestartTaskModalContent = ({ queue, task, closeModal }: Params) => {
   return (
     <div>
       <div>
-        {restartTextBeforeTask}
-        <Code>{task}</Code>
-        {restartTextAfterTask}
+        {t.rich('taskRestartText', {
+          taskName: (chunks) => <code>{task}</code>,
+        })}
       </div>
       <div>
         <Switch

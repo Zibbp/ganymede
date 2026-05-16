@@ -367,7 +367,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           <Link href="#">
             <Text c="blue" mt={5} size="xs" onClick={clipMoreInfoToggle}>{t('channelClipsMoreInformationButton')}</Text>
           </Link>
-          <Collapse expanded={clipMoreInfoOpened}>
+          <Collapse in={clipMoreInfoOpened}>
             <Text size="xs" mt={5}>
               {t('channelClipsMoreInformationText')}
             </Text>

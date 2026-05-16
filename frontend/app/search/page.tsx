@@ -117,7 +117,7 @@ const SearchPage = () => {
             </Flex>
           </Group>
 
-          <Collapse expanded={advancedSearchOpened}>
+          <Collapse in={advancedSearchOpened}>
             <Text>{t('advancedSearchText1')}</Text>
             <Text>{t.rich('advancedSearchText2', {
               code: (chunks) => <Code>{chunks}</Code>,

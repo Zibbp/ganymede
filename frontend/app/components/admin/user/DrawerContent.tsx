@@ -2,7 +2,7 @@ import { User, UserRole } from "@/app/hooks/useAuthentication";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { useEditUser } from "@/app/hooks/useUsers";
 import { Button, TextInput, Select } from "@mantine/core";
-import { useForm, schemaResolver } from "@mantine/form";
+import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -35,7 +35,7 @@ const AdminUserDrawerContent = ({ user, handleClose }: Props) => {
       created_at: user.created_at
     },
 
-    validate: schemaResolver(schema),
+    validate: zodResolver(schema),
   })
 
   const handleSubmitForm = async () => {

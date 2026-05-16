@@ -2,7 +2,7 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Channel, useFetchChannels } from "@/app/hooks/useChannels";
 import { CreateVodRequest, Platform, useCreateVideo, useEditVideo, Video, VideoType } from "@/app/hooks/useVideos";
 import { Select, Button, NumberInput, TextInput, Checkbox, Flex } from "@mantine/core";
-import { useForm, schemaResolver } from "@mantine/form";
+import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -68,7 +68,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
       locked: video?.locked ?? false
     },
 
-    validate: schemaResolver(schema),
+    validate: zodResolver(schema),
   })
 
   const editVideoMutate = useEditVideo()

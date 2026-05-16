@@ -1,6 +1,6 @@
 'use client'
 import { upperFirst } from '@mantine/hooks';
-import { useForm, schemaResolver } from '@mantine/form';
+import { useForm, zodResolver } from '@mantine/form';
 import {
   TextInput,
   PasswordInput,
@@ -51,7 +51,7 @@ export function AuthenticationForm({ type }: Props) {
       password: '',
     },
 
-    validate: schemaResolver(schema),
+    validate: zodResolver(schema),
   });
 
   // If force SSO is enabled redirect immediately

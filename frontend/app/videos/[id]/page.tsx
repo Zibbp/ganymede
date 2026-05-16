@@ -8,7 +8,7 @@ import VideoTitleBar from "@/app/components/videos/TitleBar";
 import ChatPlayer from "@/app/components/videos/ChatPlayer";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import useSettingsStore from "@/app/store/useSettingsStore";
-import { useFullscreenDocument, useMediaQuery } from "@mantine/hooks";
+import { useFullscreen, useMediaQuery } from "@mantine/hooks";
 import { env } from "next-runtime-env";
 import VideoLoginRequired from "@/app/components/videos/LoginRequired";
 import useAuthStore from "@/app/store/useAuthStore";
@@ -33,7 +33,8 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
   const hideChat = useSettingsStore((state) => state.hideChat);
   const showChatHistogram = useSettingsStore((state) => state.showChatHistogram);
-  const { fullscreen } = useFullscreenDocument();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { ref, toggle, fullscreen } = useFullscreen();
 
   const { data, isPending, isError } = useFetchVideo({ id, with_channel: true, with_chapters: true, with_muted_segments: true })
 

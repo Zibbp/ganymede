@@ -8,7 +8,6 @@ import clsx from "clsx";
 import {
   useDebouncedCallback,
   useElementSize,
-  useMergedRef,
   useThrottledCallback,
 } from "@mantine/hooks";
 
@@ -28,13 +27,8 @@ const VideoSpritePeek = ({ video, progressDisplayed }: Props) => {
   const [opened, setOpened] = useState<boolean>(false);
   const [hoveredTimeElement, setHoveredTimeElement] =
     useState<HoveredTimeElement | null>(null);
-  const spritePeekContainerElementRef = useRef<HTMLDivElement | null>(null);
   const { ref: spritePeekContainerRef, width: spritePeekContainerWidth } =
-    useElementSize<HTMLDivElement>();
-  const mergedSpritePeekContainerRef = useMergedRef(
-    spritePeekContainerElementRef,
-    spritePeekContainerRef
-  );
+    useElementSize();
 
   const onPointerMove = useThrottledCallback(
     (e: React.PointerEvent<HTMLDivElement>, currentTarget: HTMLDivElement) => {
@@ -79,7 +73,7 @@ const VideoSpritePeek = ({ video, progressDisplayed }: Props) => {
       position="top"
       offset={{
         crossAxis:
-          hoveredTimeElement && spritePeekContainerElementRef.current
+          hoveredTimeElement && spritePeekContainerRef.current
             ? 0.5 *
               (hoveredTimeElement.time / video.duration - 0.5) *
               spritePeekContainerWidth
@@ -91,7 +85,7 @@ const VideoSpritePeek = ({ video, progressDisplayed }: Props) => {
           data-opened={opened}
           data-with-progress={progressDisplayed ? "true" : "false"}
           className={classes.spritePeekContainer}
-          ref={mergedSpritePeekContainerRef}
+          ref={spritePeekContainerRef}
           onPointerEnter={() => setOpened(true)}
           onPointerLeave={() => setOpened(false)}
           onPointerMove={(e) => onPointerMove(e, e.currentTarget)}

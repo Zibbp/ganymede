@@ -151,7 +151,7 @@ export function Navbar() {
                 {adminLinksOpened ? <IconChevronUp size="0.9rem" /> : <IconChevronDown size="0.9rem" />}
               </Group>
             </UnstyledButton>
-            <Collapse expanded={adminLinksOpened}>
+            <Collapse in={adminLinksOpened}>
               <div className={classes.collapseContent}>
                 {link.links.map(subLink => (
                   <Link key={subLink.label} href={subLink.link} className={classes.link} onClick={closeDrawer}>
@@ -329,7 +329,7 @@ export function Navbar() {
                 </Button>
               </Tooltip>
 
-              <Collapse expanded={drawerLanguageButtonOpened}>
+              <Collapse in={drawerLanguageButtonOpened}>
                 {languages.map((lang) => (
                   <Button variant="transparent" key={lang.code} onClick={() => setUserLocale(lang.code)}>
                     {lang.label}

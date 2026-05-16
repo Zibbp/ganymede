@@ -19,7 +19,7 @@ import {
   Textarea,
   TextInput,
 } from "@mantine/core";
-import { useForm, schemaResolver } from "@mantine/form";
+import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -39,14 +39,14 @@ export enum ApiKeyEditMode {
 // can't forget either prop.
 export type AdminApiKeyDrawerProps =
   | {
-    mode: ApiKeyEditMode.Create;
-    onCreated: (secret: string) => void;
-  }
+      mode: ApiKeyEditMode.Create;
+      onCreated: (secret: string) => void;
+    }
   | {
-    mode: ApiKeyEditMode.Edit;
-    apiKey: ApiKey;
-    onUpdated: () => void;
-  };
+      mode: ApiKeyEditMode.Edit;
+      apiKey: ApiKey;
+      onUpdated: () => void;
+    };
 
 // Build the MultiSelect data once. Mantine's grouped form is
 // { group: "label", items: [{value, label}] }. Every resource is
@@ -103,20 +103,20 @@ const AdminApiKeyDrawerContent = (props: AdminApiKeyDrawerProps) => {
   // key in state lives at the page level (page.tsx).
   const initialValues = isEdit
     ? {
-      name: props.apiKey.name,
-      description: props.apiKey.description ?? "",
-      scopes: (props.apiKey.scopes ?? []) as ApiKeyScope[],
-    }
+        name: props.apiKey.name,
+        description: props.apiKey.description ?? "",
+        scopes: (props.apiKey.scopes ?? []) as ApiKeyScope[],
+      }
     : {
-      name: "",
-      description: "",
-      scopes: [] as ApiKeyScope[],
-    };
+        name: "",
+        description: "",
+        scopes: [] as ApiKeyScope[],
+      };
 
   const form = useForm({
     mode: "controlled",
     initialValues,
-    validate: schemaResolver(schema),
+    validate: zodResolver(schema),
   });
 
   const scopeOptions = buildScopeOptions();
