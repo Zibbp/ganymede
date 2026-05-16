@@ -15,6 +15,7 @@ import (
 	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/platform"
+	"github.com/zibbp/ganymede/internal/storagetemplate"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -75,7 +76,16 @@ func (w CreateDirectoryWorker) Work(ctx context.Context, job *river.Job[CreateDi
 	// create directory
 	// uses the videos directory from the the environment config
 	c := config.GetEnvConfig()
-	path := fmt.Sprintf("%s/%s/%s", c.VideosDir, dbItems.Channel.Name, dbItems.Video.FolderName)
+	channelFolderName, err := storagetemplate.GetChannelFolderName(storagetemplate.ChannelTemplateInput{
+		ChannelName:        dbItems.Channel.Name,
+		ChannelID:          dbItems.Channel.ExtID,
+		ChannelDisplayName: dbItems.Channel.DisplayName,
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("error resolving channel folder template, falling back to channel login name")
+		channelFolderName = dbItems.Channel.Name
+	}
+	path := fmt.Sprintf("%s/%s/%s", c.VideosDir, channelFolderName, dbItems.Video.FolderName)
 	err = utils.CreateDirectory(path)
 	if err != nil {
 		return err
@@ -215,7 +225,16 @@ func (w SaveVideoInfoWorker) Work(ctx context.Context, job *river.Job[SaveVideoI
 	}
 
 	// write info to file
-	err = utils.WriteJsonFile(info, fmt.Sprintf("%s/%s/%s/%s-info.json", config.GetEnvConfig().VideosDir, dbItems.Channel.Name, dbItems.Video.FolderName, dbItems.Video.FileName))
+	infoChannelFolderName, err := storagetemplate.GetChannelFolderName(storagetemplate.ChannelTemplateInput{
+		ChannelName:        dbItems.Channel.Name,
+		ChannelID:          dbItems.Channel.ExtID,
+		ChannelDisplayName: dbItems.Channel.DisplayName,
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("error resolving channel folder template for info file, falling back to channel login name")
+		infoChannelFolderName = dbItems.Channel.Name
+	}
+	err = utils.WriteJsonFile(info, fmt.Sprintf("%s/%s/%s/%s-info.json", config.GetEnvConfig().VideosDir, infoChannelFolderName, dbItems.Video.FolderName, dbItems.Video.FileName))
 	if err != nil {
 		return err
 	}

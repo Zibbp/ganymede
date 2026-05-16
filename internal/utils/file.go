@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -72,40 +73,126 @@ func DownloadAndSaveFile(url, path string) error {
 	return nil
 }
 
-// DownloadFile downloads file from url to the path provided
-func DownloadFile(url, path string) error {
-	log.Debug().Msgf("downloading file: %s", url)
-	// Get response bytes from URL
-	resp, err := http.Get(url)
+const maxDownloadSizeBytes = 5 * 1024 * 1024 // 5 MB limit for profile images and small downloads
+
+func fetchURL(ctx context.Context, url string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return fmt.Errorf("error downloading file: %v", err)
+		return nil, fmt.Errorf("error creating request: %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error downloading file: %v", err)
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Debug().Err(err).Msg("error closing response body")
 		}
 	}()
+
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error downloading file: %v", resp)
+		return nil, fmt.Errorf("error downloading file: %v", resp.Status)
 	}
 
-	// Create file
-	file, err := os.Create(path)
+	// Read up to maxDownloadSizeBytes+1 to detect overflow
+	content, err := io.ReadAll(io.LimitReader(resp.Body, maxDownloadSizeBytes+1))
 	if err != nil {
-		return fmt.Errorf("error creating file: %v", err)
+		return nil, fmt.Errorf("error reading response body: %v", err)
 	}
+	if int64(len(content)) > maxDownloadSizeBytes {
+		return nil, fmt.Errorf("response exceeded maximum download size of %d bytes", maxDownloadSizeBytes)
+	}
+
+	return content, nil
+}
+
+func writeIfDifferent(path string, data []byte) (bool, error) {
+	// Preserve existing file permissions, default to 0644
+	mode := os.FileMode(0644)
+	if info, err := os.Stat(path); err == nil {
+		mode = info.Mode()
+		// Compare contents to skip unnecessary writes
+		existingContent, err := os.ReadFile(path)
+		if err == nil {
+			if bytes.Equal(existingContent, data) {
+				return false, nil
+			}
+		} else {
+			log.Debug().Err(err).Msg("error reading existing file, proceeding to overwrite")
+		}
+	}
+
+	// Create a unique temp file in the same directory for atomic rename
+	dir := filepath.Dir(path)
+	tmpFile, err := os.CreateTemp(dir, filepath.Base(path)+".tmp.*")
+	if err != nil {
+		return false, fmt.Errorf("error creating temporary file: %v", err)
+	}
+	tmpPath := tmpFile.Name()
+
+	// Ensure cleanup on any error
 	defer func() {
-		if err := file.Close(); err != nil {
-			log.Debug().Err(err).Msg("error closing file")
+		// If we haven't renamed yet (i.e. tmpPath still exists after an error),
+		// clean up. After a successful rename this Remove is a harmless no-op error.
+		if removeErr := os.Remove(tmpPath); removeErr != nil && !os.IsNotExist(removeErr) {
+			log.Debug().Err(removeErr).Msg("error removing temporary file")
 		}
 	}()
 
-	// Write bytes to file
-	_, err = io.Copy(file, resp.Body)
-	if err != nil {
-		return fmt.Errorf("error writing file: %v", err)
+	if _, err := tmpFile.Write(data); err != nil {
+		if closeErr := tmpFile.Close(); closeErr != nil {
+			log.Debug().Err(closeErr).Msg("error closing temporary file after write failure")
+		}
+		return false, fmt.Errorf("error writing temporary file: %v", err)
 	}
-	return nil
+
+	// Flush to disk before rename
+	if err := tmpFile.Sync(); err != nil {
+		if closeErr := tmpFile.Close(); closeErr != nil {
+			log.Debug().Err(closeErr).Msg("error closing temporary file after sync failure")
+		}
+		return false, fmt.Errorf("error syncing temporary file: %v", err)
+	}
+
+	if err := tmpFile.Chmod(mode); err != nil {
+		if closeErr := tmpFile.Close(); closeErr != nil {
+			log.Debug().Err(closeErr).Msg("error closing temporary file after chmod failure")
+		}
+		return false, fmt.Errorf("error setting file permissions: %v", err)
+	}
+
+	if err := tmpFile.Close(); err != nil {
+		return false, fmt.Errorf("error closing temporary file: %v", err)
+	}
+
+	// Atomically rename to the final path
+	if err := os.Rename(tmpPath, path); err != nil {
+		return false, fmt.Errorf("error renaming temporary file: %v", err)
+	}
+
+	return true, nil
+}
+
+// DownloadFile downloads file from url to the path provided
+func DownloadFile(ctx context.Context, url, path string) error {
+	log.Debug().Msgf("downloading file: %s", url)
+	data, err := fetchURL(ctx, url)
+	if err != nil {
+		return err
+	}
+	_, err = writeIfDifferent(path, data)
+	return err
+}
+
+// DownloadFileIfChanged downloads file from url to the path provided only if the content is different
+func DownloadFileIfChanged(ctx context.Context, url, path string) (bool, error) {
+	log.Debug().Msgf("downloading file to check for changes: %s", url)
+	data, err := fetchURL(ctx, url)
+	if err != nil {
+		return false, err
+	}
+	return writeIfDifferent(path, data)
 }
 
 func WriteJsonFile(j interface{}, path string) error {

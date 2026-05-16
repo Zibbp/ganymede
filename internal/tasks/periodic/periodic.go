@@ -18,6 +18,7 @@ import (
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/playlist"
+	"github.com/zibbp/ganymede/internal/storagetemplate"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -480,9 +481,20 @@ func (w UpdateTwitchChannelsWorker) Work(ctx context.Context, job *river.Job[Upd
 			continue
 		}
 
-		channelDirectory := fmt.Sprintf("%s/%s", env.VideosDir, platformChannel.Login)
+		// Resolve channel folder name from template
+		channelFolderName, chErr := storagetemplate.GetChannelFolderName(storagetemplate.ChannelTemplateInput{
+			ChannelName:        platformChannel.Login,
+			ChannelID:          platformChannel.ID,
+			ChannelDisplayName: platformChannel.DisplayName,
+		})
+		if chErr != nil {
+			logger.Warn().Err(chErr).Str("channel_id", c.ID.String()).Msg("error resolving channel folder template, falling back to channel login name")
+			channelFolderName = platformChannel.Login
+		}
 
-		imagePath := fmt.Sprintf("%s/%s/profile.png", env.VideosDir, platformChannel.Login)
+		channelDirectory := fmt.Sprintf("%s/%s", env.VideosDir, channelFolderName)
+
+		imagePath := fmt.Sprintf("%s/%s/profile.png", env.VideosDir, channelFolderName)
 		updatedChannel, err := c.Update().
 			SetExtID(platformChannel.ID).
 			SetName(platformChannel.Login).

@@ -307,7 +307,7 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 		}
 
 		// user badges
-		if (liveComment.Author.Badges != nil) && (len(liveComment.Author.Badges) > 0) {
+		if len(liveComment.Author.Badges) > 0 {
 			for _, liveCommentBadge := range liveComment.Author.Badges {
 				liveCommentUserBadge := UserBadge{
 					ID:      liveCommentBadge.Name,

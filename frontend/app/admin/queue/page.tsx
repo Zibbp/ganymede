@@ -16,13 +16,18 @@ import Link from "next/link";
 import MultiDeleteQueueModalContent from "@/app/components/admin/queue/MultiDeleteModalContext";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "@/app/util/util";
+import useSettingsStore from "@/app/store/useSettingsStore";
 
 const AdminQueuePage = () => {
   const t = useTranslations('AdminQueuePage');
   const miscT = useTranslations('MiscComponents');
   usePageTitle(t('title'))
+
+  const settingsAdminItemsPerPage = useSettingsStore((state) => state.adminItemsPerPage);
+  const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
+
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
   const [records, setRecords] = useState<Queue[]>([]);
   const [initialRecords, setInitialRecords] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<Queue>>({
@@ -41,6 +46,10 @@ const AdminQueuePage = () => {
 
   const axiosPrivate = useAxiosPrivate()
   const { data: queues, isPending, isError } = useGetQueueItems(axiosPrivate, false)
+
+  useEffect(() => {
+    setPerPage(settingsAdminItemsPerPage);
+  }, [settingsAdminItemsPerPage]);
 
   useEffect(() => {
     if (!queues) return;
@@ -232,7 +241,11 @@ const AdminQueuePage = () => {
             recordsPerPage={perPage}
             onPageChange={(p) => setPage(p)}
             recordsPerPageOptions={[20, 40, 100]}
-            onRecordsPerPageChange={setPerPage}
+            onRecordsPerPageChange={(value) => {
+              setPerPage(value);
+              setSettingsAdminItemsPerPage(value);
+              setPage(1);
+            }}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
             selectedRecords={activeQueueItems ?? []}

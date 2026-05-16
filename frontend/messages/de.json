@@ -81,8 +81,12 @@
       "smoothScrollDescription": "Aktiviere sanftes Scrollen für neue Chat-Nachrichten. Kann bei einer großen Anzahl von Nachrichten pro Sekunde schlecht aussehen.",
       "chatHistogram": "Chat-Histogramm anzeigen",
       "chatHistogramDescription": "Zeige eine visuelle Darstellung der Chat-Nachrichten während des Videos unterhalb des Videoplayers an.",
+      "chatTimestamps": "Chat-Zeitstempel anzeigen",
+      "chatTimestampsDescription": "Zeige klickbare Zeitstempel neben Chat-Nachrichten an, um zu dieser Stelle im Video zu springen.",
       "showProcessingVideos": "Verarbeitende Videos in 'Kürzlich archivierte' Videos anzeigen",
-      "showProcessingVideosDescription": "Verarbeitende Videos im Abschnitt 'Kürzlich archivierte' Videos auf der Startseite anzeigen."
+      "showProcessingVideosDescription": "Verarbeitende Videos im Abschnitt 'Kürzlich archivierte' Videos auf der Startseite anzeigen.",
+      "autoplayVideo": "Videos automatisch abspielen",
+      "autoplayVideoDescription": "Videos automatisch starten, wenn sie geladen sind."
     },
     "changePassword": {
       "title": "Passwort ändern",
@@ -132,6 +136,8 @@
       "blockedVideos": "Blockierte Videos",
       "queue": "Warteschlange",
       "users": "Benutzer",
+      "apiKeys": "API-Schlüssel",
+      "notifications": "Benachrichtigungen",
       "settings": "Einstellungen",
       "tasks": "Aufgaben",
       "information": "Informationen"
@@ -266,17 +272,7 @@
     },
     "applicationSettings": {
       "header": "Anwendungseinstellungen",
-      "registrationEnabledLabel": "Registrierung aktiviert",
-      "notificationSettingsButton": "Benachrichtigungseinstellungen",
-      "enabledLabel": "Aktiviert",
-      "testButton": "Testen",
-      "webhookUrlLabel": "Webhook-URL",
-      "templateLabel": "Vorlage",
-      "availableVariables": "Verfügbare Variablen zur Verwendung in der Vorlage:",
-      "videoArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Video-Archivierung",
-      "liveArchiveSuccessNotification": "Benachrichtigung über erfolgreiche Live-Archivierung",
-      "channelIsLiveNotification": "Kanal ist Live-Benachrichtigung",
-      "errorNotification": "Fehlerbenachrichtigung"
+      "registrationEnabledLabel": "Registrierung aktiviert"
     },
     "archiveSettings": {
       "header": "Archivierungs-Einstellungen",
@@ -367,6 +363,79 @@
     },
     "drawer": "Benutzer",
     "deleteModal": "Benutzer löschen"
+  },
+  "AdminApiKeysPage": {
+    "title": "Admin - API-Schlüssel",
+    "loading": "API-Schlüssel werden geladen",
+    "error": "Fehler beim Laden der API-Schlüssel",
+    "header": "API-Schlüssel verwalten",
+    "apiRoutesHelp": "Besuche <docs>/swagger/index.html</docs> für die API-Dokumentation oder prüfe die Netzwerkanfragen in den Browser-Tools, um API-Routen sowie Request-/Response-Payloads zu sehen.",
+    "searchPlaceholder": "API-Schlüssel suchen...",
+    "createButton": "API-Schlüssel erstellen",
+    "docsButton": "Dokumentation",
+    "docsModal": "API-Schlüssel-Bereiche",
+    "drawer": "API-Schlüssel erstellen",
+    "editDrawer": "API-Schlüssel bearbeiten",
+    "deleteModal": "API-Schlüssel widerrufen",
+    "showOnceModal": "API-Schlüssel erstellt",
+    "edit": "Bearbeiten",
+    "revoke": "Widerrufen",
+    "revokedBadge": "Widerrufen",
+    "showRevoked": "Widerrufene Schlüssel anzeigen",
+    "copyPrefix": "Präfix kopieren",
+    "copied": "Kopiert",
+    "never": "Nie",
+    "columns": {
+      "name": "Name",
+      "scopes": "Bereiche",
+      "prefix": "Präfix",
+      "lastUsed": "Zuletzt verwendet",
+      "createdAt": "Erstellt am",
+      "actions": "Aktionen"
+    }
+  },
+  "AdminApiKeyComponents": {
+    "validation": {
+      "name": "Name muss zwischen 3 und 50 Zeichen lang sein",
+      "description": "Beschreibung darf höchstens 500 Zeichen haben",
+      "scopes": {
+        "required": "Wähle mindestens einen Bereich",
+        "unknown": "Unbekannter Bereich"
+      }
+    },
+    "nameLabel": "Name",
+    "namePlaceholder": "vod-archiver-script",
+    "descriptionLabel": "Beschreibung",
+    "descriptionPlaceholder": "Optionale Notizen, wo dieser Schlüssel verwendet wird",
+    "scopeLabel": "Bereiche",
+    "scopeDescription": "Jeder Bereich ist resource:tier — admin > write > read innerhalb einer Ressource. Verwende *:admin für vollen Zugriff oder wähle gezielt einzelne Bereiche.",
+    "scopePlaceholder": "Wähle einen oder mehrere Bereiche",
+    "presets": {
+      "fullAdmin": "Voller Admin (*:admin)",
+      "readAll": "Alles lesen (*:read)",
+      "clear": "Leeren"
+    },
+    "createButton": "API-Schlüssel erstellen",
+    "createNotification": "API-Schlüssel erstellt — kopiere das Geheimnis jetzt",
+    "updateButton": "Änderungen speichern",
+    "updateNotification": "API-Schlüssel aktualisiert",
+    "revokeConfirmText": "Bist du sicher, dass du diesen API-Schlüssel widerrufen möchtest? Dies kann nicht rückgängig gemacht werden.",
+    "revokeButton": "Widerrufen",
+    "revokeNotification": "API-Schlüssel widerrufen",
+    "revokeError": "API-Schlüssel konnte nicht widerrufen werden",
+    "showOnce": {
+      "warning": "Dies ist das einzige Mal, dass das Geheimnis angezeigt wird. Kopiere es jetzt und bewahre es sicher auf.",
+      "instructions": "Verwende es in Skripten als: Authorization: Bearer '<api_key>'",
+      "copy": "Geheimnis kopieren",
+      "copied": "Kopiert",
+      "close": "Schließen"
+    },
+    "docs": {
+      "scopeFormatTitle": "Bereichsformat",
+      "scopeFormatBody": "Jeder Bereich hat das Format resource:tier. Tiers sind innerhalb einer Ressource hierarchisch — admin schließt write ein, write schließt read ein. Die Wildcard-Ressource * passt auf jede Ressource, also gewährt *:admin vollen Zugriff.",
+      "sessionOnlyTitle": "Endpunkte, die mit API-Schlüsseln nicht erreichbar sind",
+      "sessionOnlyBody": "Diese Endpunkte sind absichtlich nur per Session erreichbar. API-Schlüssel können sie unabhängig vom Bereich nicht ansprechen."
+    }
   },
   "AdminVideosPage": {
     "title": "Admin - Videos",
@@ -753,6 +822,7 @@
     "chatTimeSkipDetected": "Zeitsprung erkannt. Chat geleert.",
     "chatPlayerReady": "Chat-Player bereit",
     "chatPlayerReadyStats": "Chat-Wiedergabe enthält {lengthBadges} Badges, {lengthSubBadges} Abonnenten-Badges und {lengthEmotes} Emotes.",
+    "chatJumpToTimestamp": "Zu {timestamp} springen",
     "loadingChat": "Lade Chat-Wiedergabe",
     "chatError": "Fehler",
     "filterByLabel": "Nach Kriterium filtern",
@@ -820,6 +890,7 @@
     "theaterModeIconTooltip": "Theater Mode",
     "hideChatIconTooltip": "Chat verbergen",
     "showChatIconTooltip": "Chat anzeigen",
+    "absoluteTimeIconTooltip": "Absolute Zeit umschalten",
     "sourceViewsTooltip": "Quell-views",
     "localViewsTooltip": "Lokale views",
     "streamedOnTooltip": "Gestreamt am",
@@ -892,6 +963,114 @@
       "channelStorageDistributionText": "Kanalspeicherverteilung",
       "topLargeVideosText": "Größte Videos",
       "noLargeVideosText": "Keine Videos gefunden"
+    }
+  },
+  "AdminNotificationsPage": {
+    "title": "Benachrichtigungen",
+    "loading": "Benachrichtigungen werden geladen...",
+    "error": "Fehler beim Laden der Benachrichtigungen",
+    "header": "Benachrichtigungen",
+    "description": "Benachrichtigungsziele konfigurieren. Jede Benachrichtigung kann ein oder mehrere Ereignistypen abonnieren und per Webhook oder Apprise gesendet werden. Besuche das",
+    "descriptionWikiLink": "Wiki",
+    "descriptionEnd": "für weitere Informationen.",
+    "createButton": "Benachrichtigung erstellen",
+    "columns": {
+      "name": "Name",
+      "type": "Typ",
+      "enabled": "Aktiviert",
+      "triggers": "Auslöser",
+      "actions": "Aktionen"
+    },
+    "enabledYes": "Ja",
+    "enabledNo": "Nein",
+    "triggerVideoSuccess": "Video-Erfolg",
+    "triggerLiveSuccess": "Live-Erfolg",
+    "triggerError": "Fehler",
+    "triggerIsLive": "Ist Live",
+    "triggersNone": "Keine",
+    "actions": {
+      "edit": "Bearbeiten",
+      "test": "Testen",
+      "delete": "Löschen"
+    },
+    "drawer": {
+      "titleCreate": "Benachrichtigung erstellen",
+      "titleEdit": "Benachrichtigung bearbeiten",
+      "nameLabel": "Name",
+      "namePlaceholderWebhook": "Mein Discord Webhook",
+      "namePlaceholderApprise": "Meine Apprise-Benachrichtigung",
+      "enabledLabel": "Aktiviert",
+      "typeLabel": "Typ",
+      "urlLabelWebhook": "Webhook-URL",
+      "urlLabelApprise": "Apprise-API-URL",
+      "urlDescriptionWebhook": "Die Webhook-URL zum Senden von Benachrichtigungen (z.B. Discord, Slack)",
+      "urlDescriptionApprise": "Die URL deiner Apprise-API-Instanz (z.B. http://apprise:8000/notify/ für Stateful oder http://apprise:8000/notify für Stateless)",
+      "urlPlaceholderWebhook": "https://discord.com/api/webhooks/...",
+      "urlPlaceholderApprise": "http://apprise:8000/notify",
+      "eventTriggersLabel": "Ereignis-Auslöser",
+      "eventTriggersDescription": "Wähle mindestens ein Ereignis. Für jeden aktivierten Auslöser ist eine Nachrichtenvorlage erforderlich.",
+      "triggerVideoArchiveSuccess": "Video-Archivierung erfolgreich",
+      "triggerLiveArchiveSuccess": "Live-Archivierung erfolgreich",
+      "triggerError": "Fehler",
+      "triggerChannelIsLive": "Kanal ist Live",
+      "messageLabel": "Nachricht",
+      "variablesLabel": "Variablen:",
+      "appriseSettingsTitle": "Apprise-Einstellungen",
+      "appriseSettingsDescription": "Diese Felder werden nur verwendet, wenn der Typ Apprise ist. Besuche die",
+      "appriseSettingsLink": "Apprise-API-Dokumentation",
+      "appriseSettingsDescriptionEnd": "für weitere Informationen.",
+      "appriseUrlsLabel": "Apprise-URLs (Stateless-Modus)",
+      "appriseUrlsDescription": "Kommagetrennte Apprise-Benachrichtigungs-URLs für Stateless-Modus",
+      "appriseUrlsPlaceholder": "discord://webhook_id/webhook_token",
+      "appriseTitleLabel": "Apprise-Titelvorlage",
+      "appriseTitleDescription": "Unterstützt die gleichen Vorlagenvariablen wie Textvorlagen",
+      "appriseTitlePlaceholder": "'{{channel_display_name}}' - Benachrichtigung",
+      "appriseTypeLabel": "Apprise-Benachrichtigungstyp",
+      "appriseTagLabel": "Apprise-Tag (Stateful-Modus)",
+      "appriseTagDescription": "Tag für Apprise-Stateful-Konfigurationen",
+      "appriseTagPlaceholder": "all",
+      "appriseFormatLabel": "Apprise-Format",
+      "submitCreate": "Erstellen",
+      "submitUpdate": "Aktualisieren"
+    },
+    "deleteModal": {
+      "title": "Benachrichtigung löschen",
+      "confirmText": "Möchtest du die Benachrichtigung wirklich löschen",
+      "cancelButton": "Abbrechen",
+      "deleteButton": "Löschen"
+    },
+    "testModal": {
+      "title": "Benachrichtigung testen",
+      "description": "Testbenachrichtigung senden an",
+      "descriptionEnd": "mit Testdaten.",
+      "eventTypeLabel": "Ereignistyp",
+      "eventVideoSuccess": "Video-Archivierung erfolgreich",
+      "eventLiveSuccess": "Live-Archivierung erfolgreich",
+      "eventError": "Fehler",
+      "eventIsLive": "Kanal ist Live",
+      "cancelButton": "Abbrechen",
+      "sendButton": "Test senden"
+    },
+    "validation": {
+      "nameRequired": "Name ist erforderlich",
+      "urlRequired": "URL ist erforderlich",
+      "urlInvalidProtocol": "URL muss mit http:// oder https:// beginnen",
+      "urlInvalid": "Muss eine gültige URL sein",
+      "triggerRequired": "Mindestens ein Auslöser muss aktiviert sein",
+      "templateRequired": "Vorlage ist erforderlich, wenn der Auslöser aktiviert ist",
+      "appriseUrlsOrTagRequired": "Entweder Apprise-URLs (Stateless) oder Apprise-Tag (Stateful) ist erforderlich"
+    },
+    "toast": {
+      "successTitle": "Erfolg",
+      "errorTitle": "Fehler",
+      "notificationCreated": "Benachrichtigung erstellt",
+      "notificationUpdated": "Benachrichtigung aktualisiert",
+      "notificationDeleted": "Benachrichtigung gelöscht",
+      "testSent": "Testbenachrichtigung gesendet",
+      "createFailed": "Benachrichtigung konnte nicht erstellt werden",
+      "updateFailed": "Benachrichtigung konnte nicht aktualisiert werden",
+      "deleteFailed": "Benachrichtigung konnte nicht gelöscht werden",
+      "testFailed": "Testbenachrichtigung konnte nicht gesendet werden"
     }
   },
   "MiscComponents": {

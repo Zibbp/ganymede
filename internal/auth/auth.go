@@ -12,6 +12,7 @@ import (
 	entUser "github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/api_key"
 	"github.com/zibbp/ganymede/internal/user"
 	"github.com/zibbp/ganymede/internal/utils"
 	"golang.org/x/crypto/bcrypt"
@@ -81,6 +82,20 @@ func NewService(store *database.Database, envConfig *config.EnvConfig) *Service 
 func (s *Service) Register(ctx context.Context, user user.User) (*ent.User, error) {
 	if !config.Get().RegistrationEnabled {
 		return nil, fmt.Errorf("registration is disabled")
+	}
+	// Reserve the system:api username so a malicious actor can't
+	// pre-register the row that EnsureSystemUser later expects to find.
+	// If they could, the system user the API key middleware injects on
+	// every request would be theirs (with whatever password they set);
+	// any audit attribution and any role-based check involving the
+	// system user would point at the attacker's account.
+	//
+	// Case-fold so "System:API" / "SYSTEM:api" etc. don't sneak past:
+	// Postgres unique constraints are case-sensitive, so the attacker
+	// couldn't shadow the real row, but they could still create an
+	// audit-confusing lookalike entry. EqualFold removes that ambiguity.
+	if strings.EqualFold(user.Username, api_key.SystemUserUsername) {
+		return nil, fmt.Errorf("user already exists")
 	}
 	// hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
@@ -169,6 +184,16 @@ func (s *Service) ChangePassword(ctx context.Context, userId uuid.UUID, oldPassw
 // OAuthUserCheck checks if the user from an OIDC flow needs to be created or updated.
 func (s *Service) OAuthUserCheck(ctx context.Context, userClaims OIDCCLaims) (*ent.User, error) {
 	log.Debug().Msgf("Checking if OAuth user exists: %v", userClaims.PreferredUsername)
+
+	// Reservation guard: an OIDC claim of "system:api" (or any
+	// case-variation) would, without this check, create or rename a
+	// user to the reserved system username — bypassing the Register
+	// guard via the OAuth flow. Reject the login outright; the IdP
+	// admin should rename the offending account or reconfigure the
+	// preferred_username claim.
+	if strings.EqualFold(userClaims.PreferredUsername, api_key.SystemUserUsername) {
+		return nil, fmt.Errorf("preferred_username %q is reserved", userClaims.PreferredUsername)
+	}
 
 	// Check if user exists
 	user, err := s.Store.Client.User.Query().Where(entUser.Sub(userClaims.Sub)).Only(ctx)

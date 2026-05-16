@@ -13,13 +13,18 @@ import AdminWatchedChannelDrawerContent, { WatchedChannelEditMode } from "@/app/
 import DeleteWatchedChannelModalContent from "@/app/components/admin/watched/DeleteModalContent";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "@/app/util/util";
+import useSettingsStore from "@/app/store/useSettingsStore";
 
 const AdminWatchChannelsPage = () => {
   const t = useTranslations('AdminWatchedChannelsPage')
   const miscT = useTranslations('MiscComponents')
   usePageTitle(t('title'))
+
+  const settingsAdminItemsPerPage = useSettingsStore((state) => state.adminItemsPerPage);
+  const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
+
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
   const [records, setRecords] = useState<WatchedChannel[]>([]);
   const [initialRecords, setInitialRecords] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<WatchedChannel>>({
@@ -37,6 +42,10 @@ const AdminWatchChannelsPage = () => {
   const axiosPrivate = useAxiosPrivate()
 
   const { data: channels, isPending, isError } = useGetWatchedChannesl(axiosPrivate)
+
+  useEffect(() => {
+    setPerPage(settingsAdminItemsPerPage);
+  }, [settingsAdminItemsPerPage]);
 
   useEffect(() => {
     if (!channels) return;
@@ -191,7 +200,11 @@ const AdminWatchChannelsPage = () => {
             recordsPerPage={perPage}
             onPageChange={(p) => setPage(p)}
             recordsPerPageOptions={[20, 40, 100]}
-            onRecordsPerPageChange={setPerPage}
+            onRecordsPerPageChange={(value) => {
+              setPerPage(value);
+              setSettingsAdminItemsPerPage(value);
+              setPage(1);
+            }}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
             recordsPerPageLabel={miscT('recordsPerPageLabel')}

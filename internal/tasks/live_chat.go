@@ -173,6 +173,12 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 		return err
 	}
 
+	// Ensure any crash-left pending live chat messages are merged into the
+	// primary JSON file before conversion/post-processing reads it.
+	if err := exec.RecoverTwitchLiveChatPendingFile(dbItems.Video.TmpLiveChatDownloadPath); err != nil {
+		return err
+	}
+
 	// check that the chat file exists
 	if !utils.FileExists(dbItems.Video.TmpLiveChatDownloadPath) {
 		log.Info().Str("task_id", fmt.Sprintf("%d", job.ID)).Msg("chat file does not exist; setting chat status to complete")

@@ -1,11 +1,12 @@
 import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/default/layouts/video.css';
-import { MediaPlayer, MediaPlayerInstance, MediaProvider, MediaSrc, Poster, Track, VideoMimeType } from '@vidstack/react';
+import { MediaPlayer, MediaPlayerInstance, MediaProvider, MediaSrc, Poster, Track, VideoMimeType, useMediaState } from '@vidstack/react';
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default';
 import { Video, VideoType } from '@/app/hooks/useVideos';
 import classes from "./Player.module.css"
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { env } from 'next-runtime-env';
+import dayjs from 'dayjs';
 import { escapeURL } from '@/app/util/util';
 import { PlaybackStatus, useFetchPlaybackForVideo, useSetPlaybackProgressForVideo, useStartPlaybackForVideo, useUpdatePlaybackProgressForVideo } from '@/app/hooks/usePlayback';
 import { useAxiosPrivate } from '@/app/hooks/useAxios';
@@ -15,11 +16,27 @@ import VideoEventBus from '@/app/util/VideoEventBus';
 import VideoPlayerTheaterModeIcon from './PlayerTheaterModeIcon';
 import useSettingsStore from '@/app/store/useSettingsStore';
 import VideoPlayerHideChatIcon from './PlayerHideChatIcon';
+import VideoPlayerAbsoluteTimeIcon from './PlayerAbsoluteTimeIcon';
 
 interface Params {
   video: Video;
   ref: RefObject<MediaPlayerInstance | null>;
 }
+
+const AbsoluteTimeDisplay = ({ streamedAt }: { streamedAt: string | Date }) => {
+  const currentTime = useMediaState('currentTime');
+  const flooredCurrentTime = Math.floor(currentTime);
+  const absoluteTime = useMemo(
+    () => dayjs(streamedAt).add(flooredCurrentTime, 'second'),
+    [streamedAt, flooredCurrentTime],
+  );
+
+  return (
+    <div className={classes.absoluteTimeOverlay}>
+      <span className={classes.absoluteTimeText}>{absoluteTime.format('YYYY-MM-DD HH:mm:ss')}</span>
+    </div>
+  );
+};
 
 const VideoPlayer = ({ video, ref }: Params) => {
   const searchParams = useSearchParams()
@@ -31,6 +48,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
   const [videoPoster, setVideoPoster] = useState<string>("");
 
   const hasStartedPlayback = useRef(false);
+  const hasInitializedPlaybackTime = useRef(false);
 
   const [playerVolume, setPlayerVolume] = useState(1);
 
@@ -38,6 +56,8 @@ const VideoPlayer = ({ video, ref }: Params) => {
   const setPlaybackProgressMutation = useSetPlaybackProgressForVideo()
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
+  const showAbsoluteTime = useSettingsStore((state) => state.showAbsoluteTime);
+  const autoplayVideo = useSettingsStore((state) => state.autoplayVideo);
 
   const axiosPrivate = useAxiosPrivate();
   // get playback data
@@ -98,15 +118,19 @@ const VideoPlayer = ({ video, ref }: Params) => {
       }
     });
 
-    // Resume from server-side playback progress.
-    if (playbackData && playbackData.time) {
-      player.current!.currentTime = playbackData.time
-    }
-
-    // Check if time is set in the url
-    const time = searchParams.get("t");
-    if (time) {
-      player.current!.currentTime = parseInt(time);
+    if (!hasInitializedPlaybackTime.current) {
+      if (playbackData && playbackData.time != null) {
+        // Resume from server-side playback progress.
+        player.current!.currentTime = playbackData.time
+        hasInitializedPlaybackTime.current = true
+      } else {
+        // Check if time is set in the url
+        const time = searchParams.get("t");
+        if (time !== null) {
+          player.current!.currentTime = parseInt(time);
+          hasInitializedPlaybackTime.current = true
+        }
+      }
     }
 
   }, [player, video, playbackData, searchParams])
@@ -188,7 +212,9 @@ const VideoPlayer = ({ video, ref }: Params) => {
       load="eager"
       posterLoad="eager"
       volume={playerVolume}
+      autoPlay={autoplayVideo}
     >
+      {showAbsoluteTime && <AbsoluteTimeDisplay streamedAt={video.streamed_at} />}
       <MediaProvider>
         <Poster className={`${classes.mediaPlayerPoster} vds-poster`} src={videoPoster} alt={video.title} />
         {!video.processing && (
@@ -202,7 +228,12 @@ const VideoPlayer = ({ video, ref }: Params) => {
       <DefaultVideoLayout icons={defaultLayoutIcons} noScrubGesture={false}
         slots={{
           beforeFullscreenButton: <VideoPlayerTheaterModeIcon />,
-          afterFullscreenButton: <VideoPlayerHideChatIcon />
+          afterFullscreenButton: (
+            <>
+              <VideoPlayerAbsoluteTimeIcon />
+              <VideoPlayerHideChatIcon />
+            </>
+          )
         }}
         thumbnails={thumbnails}
       />

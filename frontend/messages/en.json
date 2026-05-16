@@ -81,8 +81,12 @@
       "smoothScrollDescription": "Enable smooth scrolling for new chat messages. May look bad if there is a large volume of messages per second.",
       "chatHistogram": "Show chat histogram",
       "chatHistogramDescription": "Display a visual representation of chat message throughout the video below the video player.",
+      "chatTimestamps": "Show chat timestamps",
+      "chatTimestampsDescription": "Show clickable timestamps next to chat messages for jumping to that moment in the video.",
       "showProcessingVideos": "Show Processing Videos in Recently Archived Videos",
-      "showProcessingVideosDescription": "Display processing videos in the 'Recently Archived' videos section on the home page."
+      "showProcessingVideosDescription": "Display processing videos in the 'Recently Archived' videos section on the home page.",
+      "autoplayVideo": "Autoplay videos",
+      "autoplayVideoDescription": "Automatically start playing videos when they are loaded."
     },
     "changePassword": {
       "title": "Change Password",
@@ -132,6 +136,8 @@
       "blockedVideos": "Blocked Videos",
       "queue": "Queue",
       "users": "Users",
+      "apiKeys": "API Keys",
+      "notifications": "Notifications",
       "settings": "Settings",
       "tasks": "Tasks",
       "information": "Information"
@@ -266,17 +272,7 @@
     },
     "applicationSettings": {
       "header": "Application Settings",
-      "registrationEnabledLabel": "Registration Enabled",
-      "notificationSettingsButton": "Notification Settings",
-      "enabledLabel": "Enabled",
-      "testButton": "Test",
-      "webhookUrlLabel": "Webhook URL",
-      "templateLabel": "Template",
-      "availableVariables": "Available variables to use in the template:",
-      "videoArchiveSuccessNotification": "Video Archive Success Notification",
-      "liveArchiveSuccessNotification": "Live Archive Success Notification",
-      "channelIsLiveNotification": "Channel is Live Notification",
-      "errorNotification": "Error Notification"
+      "registrationEnabledLabel": "Registration Enabled"
     },
     "archiveSettings": {
       "header": "Archive Settings",
@@ -367,6 +363,79 @@
     },
     "drawer": "User",
     "deleteModal": "Delete User"
+  },
+  "AdminApiKeysPage": {
+    "title": "Admin - API Keys",
+    "loading": "Loading API keys",
+    "error": "Error loading API keys",
+    "header": "Manage API Keys",
+    "apiRoutesHelp": "Visit <docs>/swagger/index.html</docs> for API docs, or inspect network requests in your browser tools to see API routes and request/response payloads.",
+    "searchPlaceholder": "Search API keys...",
+    "createButton": "Create API key",
+    "docsButton": "Documentation",
+    "docsModal": "API key scopes",
+    "drawer": "Create API key",
+    "editDrawer": "Edit API key",
+    "deleteModal": "Revoke API key",
+    "showOnceModal": "API key created",
+    "edit": "Edit",
+    "revoke": "Revoke",
+    "revokedBadge": "Revoked",
+    "showRevoked": "Show revoked keys",
+    "copyPrefix": "Copy prefix",
+    "copied": "Copied",
+    "never": "Never",
+    "columns": {
+      "name": "Name",
+      "scopes": "Scopes",
+      "prefix": "Prefix",
+      "lastUsed": "Last Used",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    }
+  },
+  "AdminApiKeyComponents": {
+    "validation": {
+      "name": "Name must be between 3 and 50 characters",
+      "description": "Description must be at most 500 characters",
+      "scopes": {
+        "required": "Pick at least one scope",
+        "unknown": "Unknown scope"
+      }
+    },
+    "nameLabel": "Name",
+    "namePlaceholder": "vod-archiver-script",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Optional notes about where this key is used",
+    "scopeLabel": "Scopes",
+    "scopeDescription": "Each scope is resource:tier - admin > write > read within a resource. Use *:admin for full access, or pick specific scopes for least-privilege.",
+    "scopePlaceholder": "Pick one or more scopes",
+    "presets": {
+      "fullAdmin": "Full admin (*:admin)",
+      "readAll": "Read all (*:read)",
+      "clear": "Clear"
+    },
+    "createButton": "Create API key",
+    "createNotification": "API key created — copy the secret now",
+    "updateButton": "Save changes",
+    "updateNotification": "API key updated",
+    "revokeConfirmText": "Are you sure you want to revoke this API key? This cannot be undone.",
+    "revokeButton": "Revoke",
+    "revokeNotification": "API key revoked",
+    "revokeError": "Failed to revoke API key",
+    "showOnce": {
+      "warning": "This is the only time the secret will be shown. Copy it now and store it somewhere safe.",
+      "instructions": "Use it in scripts as: <code>Authorization: Bearer '<api_key>'</code>",
+      "copy": "Copy secret",
+      "copied": "Copied",
+      "close": "Close"
+    },
+    "docs": {
+      "scopeFormatTitle": "Scope format",
+      "scopeFormatBody": "Each scope is resource:tier. Tiers are hierarchical within a resource — admin includes write, write includes read. The wildcard resource * matches every resource, so *:admin grants full access.",
+      "sessionOnlyTitle": "Endpoints not reachable with API keys",
+      "sessionOnlyBody": "These endpoints are session-only by design. API keys cannot reach them regardless of scope."
+    }
   },
   "AdminVideosPage": {
     "title": "Admin - Videos",
@@ -753,6 +822,7 @@
     "chatTimeSkipDetected": "Time skip detected. Chat cleared.",
     "chatPlayerReady": "Chat player ready",
     "chatPlayerReadyStats": "Chat playback contains {lengthBadges} badges, {lengthSubBadges} subscription badges, and {lengthEmotes} emotes.",
+    "chatJumpToTimestamp": "Jump to {timestamp}",
     "loadingChat": "Loading chat playback",
     "chatError": "Error",
     "filterByLabel": "Filter by",
@@ -820,6 +890,7 @@
     "theaterModeIconTooltip": "Theater Mode",
     "hideChatIconTooltip": "Hide Chat",
     "showChatIconTooltip": "Show Chat",
+    "absoluteTimeIconTooltip": "Toggle Absolute Time",
     "sourceViewsTooltip": "source views",
     "localViewsTooltip": "local views",
     "streamedOnTooltip": "Streamed on",
@@ -892,6 +963,114 @@
       "channelStorageDistributionText": "Channel Storage Distribution",
       "topLargeVideosText": "Top Largest Videos",
       "noLargeVideosText": "No videos found"
+    }
+  },
+  "AdminNotificationsPage": {
+    "title": "Notifications",
+    "loading": "Loading notifications...",
+    "error": "Error loading notifications",
+    "header": "Notifications",
+    "description": "Configure notification destinations. Each notification can subscribe to one or more event types and be sent via webhook or Apprise. Visit the",
+    "descriptionWikiLink": "wiki",
+    "descriptionEnd": "for more information.",
+    "createButton": "Create Notification",
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "enabled": "Enabled",
+      "triggers": "Triggers",
+      "actions": "Actions"
+    },
+    "enabledYes": "Yes",
+    "enabledNo": "No",
+    "triggerVideoSuccess": "Video Success",
+    "triggerLiveSuccess": "Live Success",
+    "triggerError": "Error",
+    "triggerIsLive": "Is Live",
+    "triggersNone": "None",
+    "actions": {
+      "edit": "Edit",
+      "test": "Test",
+      "delete": "Delete"
+    },
+    "drawer": {
+      "titleCreate": "Create Notification",
+      "titleEdit": "Edit Notification",
+      "nameLabel": "Name",
+      "namePlaceholderWebhook": "My Discord Webhook",
+      "namePlaceholderApprise": "My Apprise Notification",
+      "enabledLabel": "Enabled",
+      "typeLabel": "Type",
+      "urlLabelWebhook": "Webhook URL",
+      "urlLabelApprise": "Apprise API URL",
+      "urlDescriptionWebhook": "The webhook URL to send notifications to (e.g. Discord, Slack)",
+      "urlDescriptionApprise": "The URL of your Apprise API instance (e.g. http://apprise:8000/notify/ for stateful or http://apprise:8000/notify for stateless)",
+      "urlPlaceholderWebhook": "https://discord.com/api/webhooks/...",
+      "urlPlaceholderApprise": "http://apprise:8000/notify",
+      "eventTriggersLabel": "Event Triggers",
+      "eventTriggersDescription": "Select at least one event. A message template is required for each enabled trigger.",
+      "triggerVideoArchiveSuccess": "Video Archive Success",
+      "triggerLiveArchiveSuccess": "Live Archive Success",
+      "triggerError": "Error",
+      "triggerChannelIsLive": "Channel Is Live",
+      "messageLabel": "Message",
+      "variablesLabel": "Variables:",
+      "appriseSettingsTitle": "Apprise Settings",
+      "appriseSettingsDescription": "These fields are only used when the type is Apprise. Visit the",
+      "appriseSettingsLink": "Apprise API documentation",
+      "appriseSettingsDescriptionEnd": "for more information.",
+      "appriseUrlsLabel": "Apprise URLs (stateless mode)",
+      "appriseUrlsDescription": "Comma-separated Apprise notification URLs for stateless mode",
+      "appriseUrlsPlaceholder": "discord://webhook_id/webhook_token",
+      "appriseTitleLabel": "Apprise Title Template",
+      "appriseTitleDescription": "Supports the same template variables as body templates",
+      "appriseTitlePlaceholder": "'{{channel_display_name}}' - Notification",
+      "appriseTypeLabel": "Apprise Notification Type",
+      "appriseTagLabel": "Apprise Tag (stateful mode)",
+      "appriseTagDescription": "Tag for Apprise stateful configurations",
+      "appriseTagPlaceholder": "all",
+      "appriseFormatLabel": "Apprise Format",
+      "submitCreate": "Create",
+      "submitUpdate": "Update"
+    },
+    "deleteModal": {
+      "title": "Delete Notification",
+      "confirmText": "Are you sure you want to delete the notification",
+      "cancelButton": "Cancel",
+      "deleteButton": "Delete"
+    },
+    "testModal": {
+      "title": "Test Notification",
+      "description": "Send a test notification to",
+      "descriptionEnd": "with dummy data.",
+      "eventTypeLabel": "Event Type",
+      "eventVideoSuccess": "Video Archive Success",
+      "eventLiveSuccess": "Live Archive Success",
+      "eventError": "Error",
+      "eventIsLive": "Channel Is Live",
+      "cancelButton": "Cancel",
+      "sendButton": "Send Test"
+    },
+    "validation": {
+      "nameRequired": "Name is required",
+      "urlRequired": "URL is required",
+      "urlInvalidProtocol": "URL must start with http:// or https://",
+      "urlInvalid": "Must be a valid URL",
+      "triggerRequired": "At least one trigger must be enabled",
+      "templateRequired": "Template is required when trigger is enabled",
+      "appriseUrlsOrTagRequired": "Either Apprise URLs (stateless) or Apprise Tag (stateful) is required"
+    },
+    "toast": {
+      "successTitle": "Success",
+      "errorTitle": "Error",
+      "notificationCreated": "Notification created",
+      "notificationUpdated": "Notification updated",
+      "notificationDeleted": "Notification deleted",
+      "testSent": "Test notification sent",
+      "createFailed": "Failed to create notification",
+      "updateFailed": "Failed to update notification",
+      "deleteFailed": "Failed to delete notification",
+      "testFailed": "Failed to send test notification"
     }
   },
   "MiscComponents": {

@@ -20,7 +20,7 @@ type TwitchService interface {
 //	@Accept			json
 //	@Produce		json
 //	@Param			name	query		string	true	"Twitch user login name"
-//	@Success		200		{object}	twitch.Channel
+//	@Success		200		{object}	platform.ChannelInfo
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/twitch/channel [get]
@@ -44,7 +44,7 @@ func (h *Handler) GetTwitchChannel(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	query		string	true	"Twitch vod id"
-//	@Success		200	{object}	twitch.Vod
+//	@Success		200	{object}	platform.VideoInfo
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/twitch/video [get]

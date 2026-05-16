@@ -1,18 +1,28 @@
 package exec
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
 	twitchIRC "github.com/gempir/go-twitch-irc/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/utils"
+)
+
+const (
+	liveChatPendingFileSuffix = ".pending.ndjson"
+	liveChatSyncInterval      = 2 * time.Second
+	liveChatMainFlushInterval = 5 * time.Second
 )
 
 // convertToLiveComment converts a Twitch IRC message to LiveComment format (old chat-downloader format)
@@ -98,26 +108,258 @@ func convertToLiveComment(msg twitchIRC.PrivateMessage) utils.LiveComment {
 	return comment
 }
 
-// appendMessageToJSONArray appends a message to a JSON array file
-// without loading the whole file into memory.
-func appendMessageToJSONArray(filename string, comment utils.LiveComment) error {
+type liveChatJSONArrayWriter struct {
+	filename    string
+	pendingPath string
+	pendingFile *os.File
+
+	mu              sync.Mutex
+	lastPendingSync time.Time
+}
+
+func newLiveChatJSONArrayWriter(filename string) (*liveChatJSONArrayWriter, error) {
+	if err := ensureJSONArrayFileExists(filename); err != nil {
+		return nil, err
+	}
+
+	if err := RecoverTwitchLiveChatPendingFile(filename); err != nil {
+		return nil, err
+	}
+
+	pendingPath := filename + liveChatPendingFileSuffix
+
+	pendingFile, err := os.OpenFile(pendingPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open pending chat file: %w", err)
+	}
+
+	return &liveChatJSONArrayWriter{
+		filename:        filename,
+		pendingPath:     pendingPath,
+		pendingFile:     pendingFile,
+		lastPendingSync: time.Now(),
+	}, nil
+}
+
+func ensureJSONArrayFileExists(filename string) error {
+	if _, err := os.Stat(filename); err == nil {
+		return nil
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("failed to stat chat file: %w", err)
+	}
+
+	if err := os.WriteFile(filename, []byte("[]\n"), 0o644); err != nil {
+		return fmt.Errorf("failed to initialize chat file: %w", err)
+	}
+
+	return nil
+}
+
+// RecoverTwitchLiveChatPendingFile merges any crash-left pending live chat
+// messages into the main JSON file, keeping the main file valid JSON.
+func RecoverTwitchLiveChatPendingFile(filename string) error {
+	pendingPath := filename + liveChatPendingFileSuffix
+
+	mainExists := true
+	if _, err := os.Stat(filename); err != nil {
+		if os.IsNotExist(err) {
+			mainExists = false
+		} else {
+			return fmt.Errorf("failed to stat chat file: %w", err)
+		}
+	}
+
+	pendingExists := true
+	if _, err := os.Stat(pendingPath); err != nil {
+		if os.IsNotExist(err) {
+			pendingExists = false
+		} else {
+			return fmt.Errorf("failed to stat pending chat file: %w", err)
+		}
+	}
+
+	if !mainExists && !pendingExists {
+		return nil
+	}
+
+	if !mainExists {
+		if err := ensureJSONArrayFileExists(filename); err != nil {
+			return err
+		}
+	}
+
+	mergedCount, skippedInvalidCount, err := mergePendingNDJSONIntoJSONArray(filename, pendingPath)
+	if err != nil {
+		return fmt.Errorf("failed to recover pending chat messages: %w", err)
+	}
+
+	if err := os.Remove(pendingPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove recovered pending chat file: %w", err)
+	}
+
+	if mergedCount > 0 || skippedInvalidCount > 0 {
+		log.Debug().
+			Str("chat_file", filename).
+			Int("recovered_messages", mergedCount).
+			Int("skipped_invalid_pending_messages", skippedInvalidCount).
+			Msg("recovered pending live chat messages")
+	}
+
+	return nil
+}
+
+func (w *liveChatJSONArrayWriter) Append(comment utils.LiveComment) error {
 	// Encode the new comment once.
 	msg, err := json.Marshal(comment)
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	// Open (or create) the file for read/write.
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	if w.pendingFile == nil {
+		return fmt.Errorf("cannot append: pending file is finalized")
+	}
+
+	if _, err := w.pendingFile.Write(msg); err != nil {
+		return fmt.Errorf("failed to append pending chat message: %w", err)
+	}
+
+	if w.pendingFile == nil {
+		return fmt.Errorf("cannot append: pending file is finalized")
+	}
+	if _, err := w.pendingFile.Write([]byte("\n")); err != nil {
+		return fmt.Errorf("failed to append pending chat newline: %w", err)
+	}
+
+	if time.Since(w.lastPendingSync) >= liveChatSyncInterval {
+		if err := w.pendingFile.Sync(); err != nil {
+			return fmt.Errorf("failed to sync pending chat file: %w", err)
+		}
+		w.lastPendingSync = time.Now()
+	}
+
+	return nil
+}
+
+func (w *liveChatJSONArrayWriter) Flush() error {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	return w.flushLocked()
+}
+
+func (w *liveChatJSONArrayWriter) flushLocked() error {
+	if w.pendingFile == nil {
+		return nil
+	}
+
+	if err := w.pendingFile.Sync(); err != nil {
+		return fmt.Errorf("failed to sync pending chat file before flush: %w", err)
+	}
+
+	info, err := w.pendingFile.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat pending chat file before flush: %w", err)
+	}
+
+	if info.Size() == 0 {
+		w.lastPendingSync = time.Now()
+		return nil
+	}
+
+	if err := w.pendingFile.Close(); err != nil {
+		return fmt.Errorf("failed to close pending chat file before flush: %w", err)
+	}
+	w.pendingFile = nil
+
+	mergedCount, skippedInvalidCount, err := mergePendingNDJSONIntoJSONArray(w.filename, w.pendingPath)
+	if err != nil {
+		// Best effort reopen so ingestion can continue if merge failed.
+		reopenErr := w.reopenPendingFile(false)
+		if reopenErr != nil {
+			return fmt.Errorf("failed to merge pending chat into primary JSON: %w; also failed to reopen pending chat file: %v", err, reopenErr)
+		}
+
+		return fmt.Errorf("failed to merge pending chat into primary JSON: %w", err)
+	}
+
+	if err := w.reopenPendingFile(true); err != nil {
+		return err
+	}
+	w.lastPendingSync = time.Now()
+
+	if mergedCount > 0 || skippedInvalidCount > 0 {
+		log.Debug().
+			Str("chat_file", w.filename).
+			Int("merged_messages", mergedCount).
+			Int("skipped_invalid_pending_messages", skippedInvalidCount).
+			Msg("flushed pending live chat messages")
+	}
+
+	return nil
+}
+
+func (w *liveChatJSONArrayWriter) reopenPendingFile(truncate bool) error {
+	flags := os.O_APPEND | os.O_CREATE | os.O_WRONLY
+	if truncate {
+		flags |= os.O_TRUNC
+	}
+
+	pendingFile, err := os.OpenFile(w.pendingPath, flags, 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to reopen pending chat file: %w", err)
+	}
+	w.pendingFile = pendingFile
+
+	return nil
+}
+
+func (w *liveChatJSONArrayWriter) Finalize() error {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	if w.pendingFile == nil {
+		return nil
+	}
+
+	if err := w.flushLocked(); err != nil {
+		return err
+	}
+
+	if err := w.pendingFile.Close(); err != nil {
+		return fmt.Errorf("failed to close pending chat file before finalize: %w", err)
+	}
+	w.pendingFile = nil
+
+	if err := os.Remove(w.pendingPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove pending chat file: %w", err)
+	}
+
+	return nil
+}
+
+func mergePendingNDJSONIntoJSONArray(filename, pendingPath string) (mergedCount, skippedInvalidCount int, err error) {
+	pf, err := os.Open(pendingPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, 0, nil
+		}
+		return 0, 0, fmt.Errorf("failed to open pending chat file: %w", err)
+	}
+	defer pf.Close() //nolint:errcheck
+
+	// Open (or create) the destination JSON file for read/write.
 	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0o644)
 	if err != nil {
-		return fmt.Errorf("failed to open file: %w", err)
+		return 0, 0, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer f.Close() //nolint:errcheck
 
-	// Acquire an exclusive advisory lock so concurrent goroutines/processes
-	// cannot simultaneously truncate/write the file and corrupt the JSON.
+	// Acquire an exclusive advisory lock so only one finalizer mutates file state.
 	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
-		return fmt.Errorf("failed to lock file: %w", err)
+		return 0, 0, fmt.Errorf("failed to lock file: %w", err)
 	}
 	defer func() {
 		_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
@@ -125,21 +367,19 @@ func appendMessageToJSONArray(filename string, comment utils.LiveComment) error 
 
 	info, err := f.Stat()
 	if err != nil {
-		return fmt.Errorf("failed to stat file: %w", err)
+		return 0, 0, fmt.Errorf("failed to stat file: %w", err)
 	}
 
 	copyFrom, copyPrefixUntil, isEmptyArray, needsOpeningBracket, err := inspectJSONArrayPrefix(f, info.Size())
 	if err != nil {
-		return fmt.Errorf("failed to inspect existing JSON array: %w", err)
+		return 0, 0, fmt.Errorf("failed to inspect existing JSON array: %w", err)
 	}
 
-	// Write to a temp file and atomically rename it over the original.
-	// This avoids leaving a partially written/truncated JSON file on crashes.
 	dir := filepath.Dir(filename)
 	base := filepath.Base(filename)
 	tmp, err := os.CreateTemp(dir, base+".tmp-*")
 	if err != nil {
-		return fmt.Errorf("failed to create temp file: %w", err)
+		return 0, 0, fmt.Errorf("failed to create temp file: %w", err)
 	}
 	tmpName := tmp.Name()
 	defer func() {
@@ -148,46 +388,77 @@ func appendMessageToJSONArray(filename string, comment utils.LiveComment) error 
 	}()
 
 	if _, err := f.Seek(copyFrom, io.SeekStart); err != nil {
-		return fmt.Errorf("failed to seek original file: %w", err)
+		return 0, 0, fmt.Errorf("failed to seek original file: %w", err)
 	}
 
 	if needsOpeningBracket {
 		if _, err := tmp.Write([]byte("[\n")); err != nil {
-			return fmt.Errorf("failed to write opening bracket: %w", err)
+			return 0, 0, fmt.Errorf("failed to write opening bracket: %w", err)
 		}
 	}
 
 	if copyPrefixUntil > copyFrom {
 		if _, err := io.CopyN(tmp, f, copyPrefixUntil-copyFrom); err != nil {
-			return fmt.Errorf("failed to copy existing JSON prefix: %w", err)
+			return 0, 0, fmt.Errorf("failed to copy existing JSON prefix: %w", err)
 		}
 	}
 
-	if isEmptyArray {
+	hasAnyElement := !isEmptyArray
+	reader := bufio.NewReader(pf)
+
+	for {
+		line, readErr := reader.ReadBytes('\n')
+		if len(line) > 0 {
+			trimmed := bytes.TrimSpace(line)
+			if len(trimmed) > 0 {
+				if json.Valid(trimmed) {
+					if hasAnyElement {
+						if _, err := tmp.Write([]byte(",\n")); err != nil {
+							return mergedCount, skippedInvalidCount, fmt.Errorf("failed to write message separator: %w", err)
+						}
+					} else {
+						if _, err := tmp.Write([]byte("\n")); err != nil {
+							return mergedCount, skippedInvalidCount, fmt.Errorf("failed to write newline: %w", err)
+						}
+						hasAnyElement = true
+					}
+
+					if _, err := tmp.Write(trimmed); err != nil {
+						return mergedCount, skippedInvalidCount, fmt.Errorf("failed to write pending chat message: %w", err)
+					}
+					mergedCount++
+				} else {
+					skippedInvalidCount++
+				}
+			}
+		}
+
+		if readErr == io.EOF {
+			break
+		}
+		if readErr != nil {
+			return mergedCount, skippedInvalidCount, fmt.Errorf("failed reading pending chat file: %w", readErr)
+		}
+	}
+
+	if !hasAnyElement {
 		if _, err := tmp.Write([]byte("\n")); err != nil {
-			return fmt.Errorf("failed to write newline: %w", err)
-		}
-	} else {
-		if _, err := tmp.Write([]byte(",\n")); err != nil {
-			return fmt.Errorf("failed to write message separator: %w", err)
+			return mergedCount, skippedInvalidCount, fmt.Errorf("failed to write empty array newline: %w", err)
 		}
 	}
 
-	if _, err := tmp.Write(msg); err != nil {
-		return fmt.Errorf("failed to write chat message: %w", err)
-	}
 	if _, err := tmp.Write([]byte("\n]\n")); err != nil {
-		return fmt.Errorf("failed to write closing bracket: %w", err)
+		return mergedCount, skippedInvalidCount, fmt.Errorf("failed to write closing bracket: %w", err)
 	}
 	if err := tmp.Sync(); err != nil {
-		return fmt.Errorf("failed to sync temp file: %w", err)
+		return mergedCount, skippedInvalidCount, fmt.Errorf("failed to sync temp file: %w", err)
 	}
 	if err := tmp.Close(); err != nil {
-		return fmt.Errorf("failed to close temp file: %w", err)
+		return mergedCount, skippedInvalidCount, fmt.Errorf("failed to close temp file: %w", err)
 	}
 
 	if err := os.Rename(tmpName, filename); err != nil {
-		return fmt.Errorf("failed to atomically replace file: %w", err)
+		return mergedCount, skippedInvalidCount, fmt.Errorf("failed to atomically replace file: %w", err)
 	}
 
 	// Best-effort sync of parent directory to increase rename durability.
@@ -196,7 +467,7 @@ func appendMessageToJSONArray(filename string, comment utils.LiveComment) error 
 		_ = dirF.Close()
 	}
 
-	return nil
+	return mergedCount, skippedInvalidCount, nil
 }
 
 // inspectJSONArrayPrefix inspects the existing file and returns:
@@ -401,14 +672,32 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 		maxRetries     = 10
 		initialBackoff = 1 * time.Second
 		maxBackoff     = 1 * time.Minute
+		statusInterval = 2 * time.Minute
+		idleWarnAfter  = 10 * time.Minute
 	)
 
 	retryCount := 0
 	backoff := initialBackoff
 
 	for {
+		attemptStartedAt := time.Now()
+		logger := log.With().Str("channel", channel).Str("chat_file", filename).Logger()
+		logger.Debug().Msg("starting live chat connection attempt")
+
+		chatWriter, err := newLiveChatJSONArrayWriter(filename)
+		if err != nil {
+			return fmt.Errorf("failed to initialize live chat writer: %w", err)
+		}
+
+		finalizeWriter := func() {
+			if err := chatWriter.Finalize(); err != nil {
+				logger.Error().Err(err).Msg("failed to finalize live chat writer")
+			}
+		}
+
 		select {
 		case <-ctx.Done():
+			finalizeWriter()
 			return ctx.Err()
 		default:
 		}
@@ -423,19 +712,51 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 		// cause a "close of closed channel" panic.
 		connected := make(chan struct{}, 1)
 
+		var messagesSaved atomic.Int64
+		var writeErrors atomic.Int64
+		var lastMessageReceivedUnixNano atomic.Int64
+		lastMessageReceivedUnixNano.Store(time.Now().UnixNano())
+
 		// Handle messages
 		client.OnPrivateMessage(func(message twitchIRC.PrivateMessage) {
+			receivedAt := time.Now()
+			lastMessageReceivedUnixNano.Store(receivedAt.UnixNano())
+
 			comment := convertToLiveComment(message)
-			if err := appendMessageToJSONArray(filename, comment); err != nil {
-				log.Error().Err(err).Msg("error saving chat message")
+			writeStarted := time.Now()
+			if err := chatWriter.Append(comment); err != nil {
+				errors := writeErrors.Add(1)
+				logger.Error().Err(err).
+					Int64("message_write_errors", errors).
+					Str("message_id", message.ID).
+					Msg("error saving chat message")
+				return
+			}
+
+			writeDuration := time.Since(writeStarted)
+			count := messagesSaved.Add(1)
+
+			if writeDuration > 2*time.Second {
+				logger.Warn().
+					Dur("write_duration", writeDuration).
+					Int64("messages_saved", count).
+					Msg("slow chat message write")
+			}
+
+			if count == 1 || count%500 == 0 {
+				logger.Debug().
+					Int64("messages_saved", count).
+					Dur("message_age", receivedAt.Sub(message.Time)).
+					Time("twitch_message_time", message.Time).
+					Msg("live chat message saved")
 			}
 		})
 
 		// Handle connection
 		client.OnConnect(func() {
-			log.Info().Msgf("connected to %s live chat room", channel)
-			retryCount = 0
-			backoff = initialBackoff
+			logger.Info().
+				Dur("connection_attempt_elapsed", time.Since(attemptStartedAt)).
+				Msgf("connected to %s live chat room", channel)
 			select {
 			case connected <- struct{}{}:
 			default:
@@ -451,41 +772,109 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 			}
 		}()
 
-		// Wait for either connection success, error, or context cancellation
-		select {
-		case <-ctx.Done():
-			err := client.Disconnect()
-			if err != nil {
-				log.Error().Err(err).Msg("error disconnecting from live chat")
-			}
-			return ctx.Err()
-		case err := <-errChan:
-			log.Error().Err(err).Msg("live chat connection error")
-			retryCount++
+		connectedOnce := false
+		shouldRetry := false
+		statusTicker := time.NewTicker(statusInterval)
+		flushTicker := time.NewTicker(liveChatMainFlushInterval)
+		stopTickers := func() {
+			statusTicker.Stop()
+			flushTicker.Stop()
+		}
 
-			if retryCount >= maxRetries {
-				return fmt.Errorf("max retries (%d) reached: %w", maxRetries, err)
-			}
-
-			log.Warn().Msgf("Retrying in %v (attempt %d/%d)...", backoff, retryCount, maxRetries)
-
+		for {
 			select {
 			case <-ctx.Done():
-				return ctx.Err()
-			case <-time.After(backoff):
-				backoff *= 2
-				if backoff > maxBackoff {
-					backoff = maxBackoff
+				logger.Info().
+					Int64("messages_saved", messagesSaved.Load()).
+					Int64("message_write_errors", writeErrors.Load()).
+					Dur("run_elapsed", time.Since(attemptStartedAt)).
+					Msg("Context cancelled, disconnecting from live chat...")
+				stopTickers()
+				if err := client.Disconnect(); err != nil {
+					logger.Error().Err(err).Msg("error disconnecting from live chat")
 				}
+				finalizeWriter()
+				return ctx.Err()
+			case <-connected:
+				retryCount = 0
+				backoff = initialBackoff
+				connectedOnce = true
+				logger.Debug().Msg("live chat connection marked as established")
+			case <-flushTicker.C:
+				if err := chatWriter.Flush(); err != nil {
+					errors := writeErrors.Add(1)
+					logger.Error().Err(err).
+						Int64("message_write_errors", errors).
+						Msg("error flushing pending live chat messages to primary JSON")
+				}
+			case <-statusTicker.C:
+				lastMsgAt := time.Unix(0, lastMessageReceivedUnixNano.Load())
+				idleFor := time.Since(lastMsgAt)
+
+				event := logger.Debug()
+				if connectedOnce && idleFor > idleWarnAfter {
+					event = logger.Warn()
+				}
+
+				event.
+					Bool("connected_once", connectedOnce).
+					Int64("messages_saved", messagesSaved.Load()).
+					Int64("message_write_errors", writeErrors.Load()).
+					Dur("idle_for", idleFor).
+					Dur("run_elapsed", time.Since(attemptStartedAt)).
+					Msg("live chat ingest status")
+			case err := <-errChan:
+				if ctx.Err() != nil {
+					stopTickers()
+					finalizeWriter()
+					return ctx.Err()
+				}
+
+				if connectedOnce {
+					logger.Warn().Err(err).
+						Int64("messages_saved", messagesSaved.Load()).
+						Int64("message_write_errors", writeErrors.Load()).
+						Dur("run_elapsed", time.Since(attemptStartedAt)).
+						Msg("live chat disconnected")
+				} else {
+					logger.Error().Err(err).
+						Dur("run_elapsed", time.Since(attemptStartedAt)).
+						Msg("live chat connection error")
+				}
+
+				retryCount++
+				if retryCount >= maxRetries {
+					stopTickers()
+					finalizeWriter()
+					return fmt.Errorf("max retries (%d) reached: %w", maxRetries, err)
+				}
+
+				logger.Warn().Msgf("Retrying in %v (attempt %d/%d)...", backoff, retryCount, maxRetries)
+
+				if disErr := client.Disconnect(); disErr != nil {
+					logger.Error().Err(disErr).Msg("error disconnecting from live chat")
+				}
+
+				finalizeWriter()
+
+				select {
+				case <-ctx.Done():
+					stopTickers()
+					return ctx.Err()
+				case <-time.After(backoff):
+					backoff *= 2
+					if backoff > maxBackoff {
+						backoff = maxBackoff
+					}
+				}
+
+				shouldRetry = true
 			}
-			continue
-		case <-connected:
-			<-ctx.Done()
-			log.Info().Msg("Context cancelled, disconnecting from live chat...")
-			if err := client.Disconnect(); err != nil {
-				log.Error().Err(err).Msg("error disconnecting from live chat")
+
+			if shouldRetry {
+				stopTickers()
+				break
 			}
-			return ctx.Err()
 		}
 	}
 }

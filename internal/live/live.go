@@ -29,11 +29,12 @@ import (
 )
 
 type Service struct {
-	Store          *database.Database
-	ArchiveService *archive.Service
-	PlatformTwitch platform.Platform
-	ChapterService *chapter.Service
-	QueueService   *queue.Service
+	Store               *database.Database
+	ArchiveService      *archive.Service
+	PlatformTwitch      platform.Platform
+	ChapterService      *chapter.Service
+	QueueService        *queue.Service
+	NotificationService *notification.Service
 }
 
 type Live struct {
@@ -78,8 +79,20 @@ type ArchiveLive struct {
 	RenderChat  bool      `json:"render_chat"`
 }
 
-func NewService(store *database.Database, archiveService *archive.Service, platformTwitch platform.Platform, chapterService *chapter.Service, queueService *queue.Service) *Service {
-	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch, ChapterService: chapterService, QueueService: queueService}
+func NewService(store *database.Database, archiveService *archive.Service, platformTwitch platform.Platform, chapterService *chapter.Service, queueService *queue.Service, notificationService *notification.Service) *Service {
+	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch, ChapterService: chapterService, QueueService: queueService, NotificationService: notificationService}
+}
+
+// ResetLiveStatus sets is_live=false for all watched channels.
+// This is intended to run on application startup so live detection starts from a clean state.
+func (s *Service) ResetLiveStatus(ctx context.Context) error {
+	updated, err := s.Store.Client.Live.Update().SetIsLive(false).Save(ctx)
+	if err != nil {
+		return fmt.Errorf("error resetting watched channels live status: %v", err)
+	}
+
+	log.Info().Int("channels", updated).Msg("reset watched channel live status")
+	return nil
 }
 
 func (s *Service) GetLiveWatchedChannels(c echo.Context) ([]*ent.Live, error) {
@@ -435,13 +448,24 @@ OUTER:
 				log.Info().Msgf("started live archive of %s", lwc.Edges.Channel.Name)
 
 				// Notification
-				// Fetch channel for notification
+				// Fetch vod for notification and chapter creation
 				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).First(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error getting vod")
 					continue
 				}
-				go notification.SendLiveNotification(lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
+				if s.NotificationService != nil {
+					// Use a detached context so the notification is not cancelled when the parent context ends
+					notifCtx := context.WithoutCancel(ctx)
+					go func() {
+						defer func() {
+							if r := recover(); r != nil {
+								log.Error().Interface("panic", r).Msg("panic in SendLive notification")
+							}
+						}()
+						s.NotificationService.SendLive(notifCtx, lwc.Edges.Channel, vod, vod.Edges.Queue, stream.GameName)
+					}()
+				}
 
 				// Create initial chapter
 				_, err = s.ChapterService.CreateChapter(chapter.Chapter{

@@ -23,7 +23,11 @@ const ProfilePage = () => {
     showChatHistogram,
     setShowChatHistogram,
     showProcessingVideosInRecentlyArchived,
-    setShowProcessingVideosInRecentlyArchived
+    setShowProcessingVideosInRecentlyArchived,
+    showChatTimestamps,
+    setShowChatTimestamps,
+    autoplayVideo,
+    setAutoplayVideo
   } = useSettingsStore();
 
   const toggleSmoothScroll = () => {
@@ -36,6 +40,14 @@ const ProfilePage = () => {
 
   const toggleProcessingVideosInRecentlyArchived = () => {
     setShowProcessingVideosInRecentlyArchived(!showProcessingVideosInRecentlyArchived);
+  }
+
+  const toggleChatTimestamps = () => {
+    setShowChatTimestamps(!showChatTimestamps);
+  }
+
+  const toggleAutoplayVideo = () => {
+    setAutoplayVideo(!autoplayVideo);
   }
 
   useEffect(() => {
@@ -77,10 +89,24 @@ const ProfilePage = () => {
                 my={5}
               />
               <Checkbox
+                label={t('settings.chatTimestamps')}
+                description={t('settings.chatTimestampsDescription')}
+                checked={showChatTimestamps}
+                onChange={toggleChatTimestamps}
+                my={5}
+              />
+              <Checkbox
                 label={t('settings.showProcessingVideos')}
                 description={t('settings.showProcessingVideosDescription')}
                 checked={showProcessingVideosInRecentlyArchived}
                 onChange={toggleProcessingVideosInRecentlyArchived}
+                my={5}
+              />
+              <Checkbox
+                label={t('settings.autoplayVideo')}
+                description={t('settings.autoplayVideoDescription')}
+                checked={autoplayVideo}
+                onChange={toggleAutoplayVideo}
                 my={5}
               />
             </Box>

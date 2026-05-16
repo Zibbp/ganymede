@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// ApiKey is the predicate function for apikey builders.
+type ApiKey func(*sql.Selector)
+
 // BlockedVideos is the predicate function for blockedvideos builders.
 type BlockedVideos func(*sql.Selector)
 
@@ -29,6 +32,9 @@ type MultistreamInfo func(*sql.Selector)
 
 // MutedSegment is the predicate function for mutedsegment builders.
 type MutedSegment func(*sql.Selector)
+
+// Notification is the predicate function for notification builders.
+type Notification func(*sql.Selector)
 
 // Playback is the predicate function for playback builders.
 type Playback func(*sql.Selector)

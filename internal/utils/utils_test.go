@@ -15,11 +15,14 @@ func TestSanitizeFileName_Table(t *testing.T) {
 		{"basic_spaces", "hello world", "hello_world"},
 		{"tabs_newlines_trim", "  hello\tworld\n", "hello_world"},
 
-		// POSIX + URL-safety: treat "/" and "%" as separators.
-		{"posix_slash_and_percent", `a/b%c`, "a_b_c"},
+		// URL-safety separators.
+		{"url_separators_slash_percent", `a/b%c`, "a_b_c"},
+		{"url_separators_bang_pipe", `a!b|c`, "a_b_c"},
+		{"url_separators_reserved", `a?b&c#d=e+f`, "a_b_c_d_e_f"},
+		{"url_separators_brackets_quotes", `a[b]"c"'d`, "a_b_c_d"},
 
-		// We keep other punctuation (since this never runs on Windows).
-		{"punctuation_kept", `100 legit & safe;`, `100_legit_&_safe;`},
+		// Dots and hyphens remain allowed.
+		{"dots_hyphens_kept", `my-file.v1.2`, `my-file.v1.2`},
 
 		{"emoji_removed_inline", "🤖robot🚀", "robot"},
 		{"emoji_zwj_sequence_removed", "family 👨‍👩‍👧‍👦 time", "family_time"},

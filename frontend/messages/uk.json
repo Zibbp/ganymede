@@ -81,8 +81,12 @@
       "smoothScrollDescription": "Увімкнути плавну прокрутку для нових повідомлень чату. Може виглядати погано, якщо повідомлень надходить дуже багато за секунду.",
       "chatHistogram": "Увімкнути гістограму чату",
       "chatHistogramDescription": "Показувати візуальне представлення повідомлень чату протягом відео під відеоплеєром.",
+      "chatTimestamps": "Показувати часові позначки чату",
+      "chatTimestampsDescription": "Показувати клікабельні часові позначки біля повідомлень чату для переходу до цього моменту у відео.",
       "showProcessingVideos": "Показувати відео, що оброблюються в нещодавно заархівованих",
-      "showProcessingVideosDescription": "Показувати відео, які знаходяться в обробці в 'Нещодавно заархівовані' на головній сторінці."
+      "showProcessingVideosDescription": "Показувати відео, які знаходяться в обробці в 'Нещодавно заархівовані' на головній сторінці.",
+      "autoplayVideo": "Автоматичне відтворення відео",
+      "autoplayVideoDescription": "Автоматично починати відтворення відео після їх завантаження."
     },
     "changePassword": {
       "title": "Зміна пароля",
@@ -132,6 +136,8 @@
       "blockedVideos": "Заблоковані відео",
       "queue": "Черга",
       "users": "Користувачі",
+      "apiKeys": "API ключі",
+      "notifications": "Сповіщення",
       "settings": "Налаштування",
       "tasks": "Завдання",
       "information": "Інформація"
@@ -266,17 +272,7 @@
     },
     "applicationSettings": {
       "header": "Налаштування застосунку",
-      "registrationEnabledLabel": "Увімкнути реєстрацію",
-      "notificationSettingsButton": "Налаштування сповіщень",
-      "enabledLabel": "Увімкнено",
-      "testButton": "Тестове сповіщення",
-      "webhookUrlLabel": "Webhook URL",
-      "templateLabel": "Шаблон",
-      "availableVariables": "Доступні змінні для використання в шаблоні:",
-      "videoArchiveSuccessNotification": "Сповіщення про успішне архівування VOD'у",
-      "liveArchiveSuccessNotification": "Сповіщення про успішне архівування трансляції",
-      "channelIsLiveNotification": "Сповіщення про початок трансляції",
-      "errorNotification": "Сповіщення про помилку"
+      "registrationEnabledLabel": "Увімкнути реєстрацію"
     },
     "archiveSettings": {
       "header": "Налаштування архівування",
@@ -347,7 +343,9 @@
     "updateVideoStorageUsage": "Оновити використання сховища відео",
     "updateVideoStorageUsageDescription": "Оновити використання сховища для всіх відео. Використовується для показу зайнятого місця у списку відео та на сторінці статистики. Запускається щогодини.",
     "processPlaylistVideoRules": "Обробити правила відео для плейлістів",
-    "processPlaylistVideoRulesDescription": "Обробити правила відео для плейлістів. Перевіряє, чи потрібно додати відео до плейлістів на основі заданих правил. Запускається щогодини."
+    "processPlaylistVideoRulesDescription": "Обробити правила відео для плейлістів. Перевіряє, чи потрібно додати відео до плейлістів на основі заданих правил. Запускається щогодини.",
+    "updatePlatformChannels": "Оновити канали платформи",
+    "updatePlatformChannelsDescription": "Оновити інформацію про канали з платформи для всіх каналів. Це включає відображувану назву та зображення профілю. Запускається кожні 12 годин."
   },
   "AdminUsersPage": {
     "title": "Адмін - Користувачі",
@@ -365,6 +363,79 @@
     },
     "drawer": "Користувач",
     "deleteModal": "Видалити користувача"
+  },
+  "AdminApiKeysPage": {
+    "title": "Адмін - API ключі",
+    "loading": "Завантаження API ключів",
+    "error": "Помилка завантаження API ключів",
+    "header": "Керування API ключами",
+    "apiRoutesHelp": "Відвідайте <docs>/swagger/index.html</docs> для документації API або перегляньте мережеві запити в інструментах браузера, щоб побачити API-маршрути та payload-и запитів/відповідей.",
+    "searchPlaceholder": "Пошук API ключів...",
+    "createButton": "Створити API ключ",
+    "docsButton": "Документація",
+    "docsModal": "Області API ключів",
+    "drawer": "Створити API ключ",
+    "editDrawer": "Редагувати API ключ",
+    "deleteModal": "Відкликати API ключ",
+    "showOnceModal": "API ключ створено",
+    "edit": "Редагувати",
+    "revoke": "Відкликати",
+    "revokedBadge": "Відкликано",
+    "showRevoked": "Показати відкликані ключі",
+    "copyPrefix": "Копіювати префікс",
+    "copied": "Скопійовано",
+    "never": "Ніколи",
+    "columns": {
+      "name": "Назва",
+      "scopes": "Області",
+      "prefix": "Префікс",
+      "lastUsed": "Востаннє використано",
+      "createdAt": "Створено",
+      "actions": "Дії"
+    }
+  },
+  "AdminApiKeyComponents": {
+    "validation": {
+      "name": "Назва має бути від 3 до 50 символів",
+      "description": "Опис має бути не більше 500 символів",
+      "scopes": {
+        "required": "Виберіть хоча б одну область",
+        "unknown": "Невідома область"
+      }
+    },
+    "nameLabel": "Назва",
+    "namePlaceholder": "vod-archiver-script",
+    "descriptionLabel": "Опис",
+    "descriptionPlaceholder": "Необов'язкові примітки про використання ключа",
+    "scopeLabel": "Області",
+    "scopeDescription": "Кожна область має формат resource:tier — admin > write > read у межах ресурсу. Використовуйте *:admin для повного доступу або виберіть конкретні області для мінімальних привілеїв.",
+    "scopePlaceholder": "Виберіть одну або кілька областей",
+    "presets": {
+      "fullAdmin": "Повний адмін (*:admin)",
+      "readAll": "Читати все (*:read)",
+      "clear": "Очистити"
+    },
+    "createButton": "Створити API ключ",
+    "createNotification": "API ключ створено — скопіюйте секрет зараз",
+    "updateButton": "Зберегти зміни",
+    "updateNotification": "API ключ оновлено",
+    "revokeConfirmText": "Ви впевнені, що хочете відкликати цей API ключ? Цю дію не можна скасувати.",
+    "revokeButton": "Відкликати",
+    "revokeNotification": "API ключ відкликано",
+    "revokeError": "Не вдалося відкликати API ключ",
+    "showOnce": {
+      "warning": "Це єдиний раз, коли буде показано секрет. Скопіюйте його зараз і збережіть у безпечному місці.",
+      "instructions": "Використовуйте у скриптах: Authorization: Bearer '<api_key>'",
+      "copy": "Копіювати секрет",
+      "copied": "Скопійовано",
+      "close": "Закрити"
+    },
+    "docs": {
+      "scopeFormatTitle": "Формат області",
+      "scopeFormatBody": "Кожна область має формат resource:tier. Рівні є ієрархічними в межах ресурсу — admin включає write, write включає read. Wildcard-ресурс * відповідає будь-якому ресурсу, тож *:admin надає повний доступ.",
+      "sessionOnlyTitle": "Endpoint-и, недоступні через API ключі",
+      "sessionOnlyBody": "Ці endpoint-и навмисно доступні лише через сесію. API ключі не можуть їх викликати незалежно від області."
+    }
   },
   "AdminVideosPage": {
     "title": "Адмін - Відео",
@@ -751,6 +822,7 @@
     "chatTimeSkipDetected": "Виявлено пропуск часу. Чат очищено.",
     "chatPlayerReady": "Плеєр чату готовий",
     "chatPlayerReadyStats": "Цей чат містить {lengthBadges} значків, {lengthSubBadges} значків підписки та {lengthEmotes} емотів.",
+    "chatJumpToTimestamp": "Перейти до {timestamp}",
     "loadingChat": "Завантаження відтворення чату",
     "chatError": "Помилка",
     "filterByLabel": "Фільтрувати за",
@@ -818,6 +890,7 @@
     "theaterModeIconTooltip": "Театральний режим",
     "hideChatIconTooltip": "Приховати чат",
     "showChatIconTooltip": "Показати чат",
+    "absoluteTimeIconTooltip": "Перемкнути абсолютний час",
     "sourceViewsTooltip": "перегляди джерела",
     "localViewsTooltip": "локальні перегляди",
     "streamedOnTooltip": "Трансляція від",
@@ -890,6 +963,114 @@
       "channelStorageDistributionText": "Розподіл сховища за каналами",
       "topLargeVideosText": "Найбільші відео",
       "noLargeVideosText": "Відео не знайдено"
+    }
+  },
+  "AdminNotificationsPage": {
+    "title": "Сповіщення",
+    "loading": "Завантаження сповіщень...",
+    "error": "Помилка завантаження сповіщень",
+    "header": "Сповіщення",
+    "description": "Налаштування цілей сповіщень. Кожне сповіщення може підписатися на один або кілька типів подій і надсилатися через Webhook або Apprise. Відвідайте",
+    "descriptionWikiLink": "вікі",
+    "descriptionEnd": "для додаткової інформації.",
+    "createButton": "Створити сповіщення",
+    "columns": {
+      "name": "Назва",
+      "type": "Тип",
+      "enabled": "Увімкнено",
+      "triggers": "Тригери",
+      "actions": "Дії"
+    },
+    "enabledYes": "Так",
+    "enabledNo": "Ні",
+    "triggerVideoSuccess": "Успіх відео",
+    "triggerLiveSuccess": "Успіх трансляції",
+    "triggerError": "Помилка",
+    "triggerIsLive": "У ефірі",
+    "triggersNone": "Немає",
+    "actions": {
+      "edit": "Редагувати",
+      "test": "Тестувати",
+      "delete": "Видалити"
+    },
+    "drawer": {
+      "titleCreate": "Створити сповіщення",
+      "titleEdit": "Редагувати сповіщення",
+      "nameLabel": "Назва",
+      "namePlaceholderWebhook": "Мій Discord Webhook",
+      "namePlaceholderApprise": "Моє сповіщення Apprise",
+      "enabledLabel": "Увімкнено",
+      "typeLabel": "Тип",
+      "urlLabelWebhook": "URL Webhook",
+      "urlLabelApprise": "URL API Apprise",
+      "urlDescriptionWebhook": "URL Webhook для надсилання сповіщень (напр. Discord, Slack)",
+      "urlDescriptionApprise": "URL вашого екземпляра API Apprise (напр. http://apprise:8000/notify/ для Stateful або http://apprise:8000/notify для Stateless)",
+      "urlPlaceholderWebhook": "https://discord.com/api/webhooks/...",
+      "urlPlaceholderApprise": "http://apprise:8000/notify",
+      "eventTriggersLabel": "Тригери подій",
+      "eventTriggersDescription": "Виберіть принаймні одну подію. Для кожного увімкненого тригера потрібен шаблон повідомлення.",
+      "triggerVideoArchiveSuccess": "Успішне архівування відео",
+      "triggerLiveArchiveSuccess": "Успішне архівування трансляції",
+      "triggerError": "Помилка",
+      "triggerChannelIsLive": "Канал у ефірі",
+      "messageLabel": "Повідомлення",
+      "variablesLabel": "Змінні:",
+      "appriseSettingsTitle": "Налаштування Apprise",
+      "appriseSettingsDescription": "Ці поля використовуються лише коли тип — Apprise. Відвідайте",
+      "appriseSettingsLink": "документацію API Apprise",
+      "appriseSettingsDescriptionEnd": "для додаткової інформації.",
+      "appriseUrlsLabel": "URL-адреси Apprise (Stateless режим)",
+      "appriseUrlsDescription": "URL-адреси сповіщень Apprise через кому для Stateless режиму",
+      "appriseUrlsPlaceholder": "discord://webhook_id/webhook_token",
+      "appriseTitleLabel": "Шаблон заголовка Apprise",
+      "appriseTitleDescription": "Підтримує ті ж змінні шаблону, що й шаблони тексту",
+      "appriseTitlePlaceholder": "'{{channel_display_name}}' - Сповіщення",
+      "appriseTypeLabel": "Тип сповіщення Apprise",
+      "appriseTagLabel": "Тег Apprise (Stateful режим)",
+      "appriseTagDescription": "Тег для Stateful конфігурацій Apprise",
+      "appriseTagPlaceholder": "all",
+      "appriseFormatLabel": "Формат Apprise",
+      "submitCreate": "Створити",
+      "submitUpdate": "Оновити"
+    },
+    "deleteModal": {
+      "title": "Видалити сповіщення",
+      "confirmText": "Ви впевнені, що хочете видалити сповіщення",
+      "cancelButton": "Скасувати",
+      "deleteButton": "Видалити"
+    },
+    "testModal": {
+      "title": "Тестове сповіщення",
+      "description": "Надіслати тестове сповіщення до",
+      "descriptionEnd": "з тестовими даними.",
+      "eventTypeLabel": "Тип події",
+      "eventVideoSuccess": "Успішне архівування відео",
+      "eventLiveSuccess": "Успішне архівування трансляції",
+      "eventError": "Помилка",
+      "eventIsLive": "Канал у ефірі",
+      "cancelButton": "Скасувати",
+      "sendButton": "Надіслати тест"
+    },
+    "validation": {
+      "nameRequired": "Назва обов'язкова",
+      "urlRequired": "URL обов'язковий",
+      "urlInvalidProtocol": "URL повинен починатися з http:// або https://",
+      "urlInvalid": "Має бути дійсним URL",
+      "triggerRequired": "Має бути увімкнено принаймні один тригер",
+      "templateRequired": "Шаблон обов'язковий, коли тригер увімкнено",
+      "appriseUrlsOrTagRequired": "Потрібні або URL-адреси Apprise (Stateless), або тег Apprise (Stateful)"
+    },
+    "toast": {
+      "successTitle": "Успіх",
+      "errorTitle": "Помилка",
+      "notificationCreated": "Сповіщення створено",
+      "notificationUpdated": "Сповіщення оновлено",
+      "notificationDeleted": "Сповіщення видалено",
+      "testSent": "Тестове сповіщення надіслано",
+      "createFailed": "Не вдалося створити сповіщення",
+      "updateFailed": "Не вдалося оновити сповіщення",
+      "deleteFailed": "Не вдалося видалити сповіщення",
+      "testFailed": "Не вдалося надіслати тестове сповіщення"
     }
   },
   "MiscComponents": {

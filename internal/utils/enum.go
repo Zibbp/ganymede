@@ -7,16 +7,37 @@ const (
 	EditorRole   Role = "editor"
 	ArchiverRole Role = "archiver"
 	UserRole     Role = "user"
+
+	// SystemRole is the sentinel role assigned to the singleton
+	// service-account user that the API key middleware injects into
+	// request context for every keyed request. It is intentionally
+	// excluded from every branch of roleSatisfies (and thus from every
+	// AuthUserRoleMiddleware check), so a route that pairs
+	// AuthAPIKeyOrSessionMiddleware with AuthUserRoleMiddleware (rather
+	// than the intended RequireRoleOrScope) fails closed for API keys
+	// instead of silently granting access at the system user's role.
+	//
+	// SystemRole must NOT be admin-listable in IsValidRole — admins
+	// can't promote a normal user to SystemRole via the user CRUD UI,
+	// and the user CRUD form's `oneof` validator rejects it on input.
+	SystemRole Role = "system"
 )
 
+// Values returns roles that are admin-assignable. SystemRole is
+// intentionally absent: admins should not be able to promote users to
+// the system-user role via the user CRUD UI, and the registration form
+// likewise rejects it. EnsureSystemUser sets it directly on the
+// singleton row at boot time.
 func (Role) Values() (kinds []string) {
-	for _, s := range []Role{AdminRole, EditorRole, ArchiverRole, UserRole} {
+	for _, s := range []Role{AdminRole, EditorRole, ArchiverRole, UserRole, SystemRole} {
 		kinds = append(kinds, string(s))
 	}
 	return
 }
 
-// IsValidRole checks if a string is a valid Role.
+// IsValidRole checks if a string is a valid admin-assignable Role.
+// SystemRole is excluded so the user CRUD validator rejects attempts
+// to promote a regular user to the protected system role.
 func IsValidRole(role string) bool {
 	validRoles := map[string]struct{}{
 		string(AdminRole):    {},
@@ -27,6 +48,289 @@ func IsValidRole(role string) bool {
 
 	_, exists := validRoles[role]
 	return exists
+}
+
+// ApiKeyResource is the resource half of an ApiKeyScope. It maps to one of
+// the API route groups in internal/transport/http/handler.go.
+//
+// The catalog is intentionally complete (every existing route group is
+// listed) so future migrations of routes to RequireRoleOrScope only need
+// to retag the route, not extend this enum. Resources whose routes are
+// not yet migrated are flagged "reserved" in the wiki documentation —
+// keys can hold those scopes today but no route checks them yet.
+type ApiKeyResource string
+
+const (
+	// ApiKeyResourceWildcard matches every resource. Pair with a tier to
+	// grant cross-resource access (e.g. *:admin = full superuser).
+	ApiKeyResourceWildcard ApiKeyResource = "*"
+
+	// Resources whose routes already enforce API key scopes.
+	ApiKeyResourceVod      ApiKeyResource = "vod"
+	ApiKeyResourcePlaylist ApiKeyResource = "playlist"
+	ApiKeyResourceQueue    ApiKeyResource = "queue"
+
+	// Resources for route groups whose write/admin endpoints accept API
+	// keys. /chapter, /category and /twitch are intentionally absent —
+	// they only expose public reads, so no scope ever gates them.
+	// /playback is also absent: it's per-user UX state attributed via
+	// the session cookie, not a script-friendly automation surface.
+	ApiKeyResourceChannel      ApiKeyResource = "channel"
+	ApiKeyResourceArchive      ApiKeyResource = "archive"
+	ApiKeyResourceLive         ApiKeyResource = "live"
+	ApiKeyResourceUser         ApiKeyResource = "user"
+	ApiKeyResourceConfig       ApiKeyResource = "config"
+	ApiKeyResourceNotification ApiKeyResource = "notification"
+	ApiKeyResourceTask         ApiKeyResource = "task"
+	ApiKeyResourceBlockedVideo ApiKeyResource = "blocked_video"
+
+	// ApiKeyResourceSystem covers server-wide stats and info endpoints
+	// under /admin/{video-statistics, system-overview, storage-distribution,
+	// info}. Named "system" rather than "admin" so the scope string
+	// reads cleanly (e.g. system:read instead of admin:admin).
+	ApiKeyResourceSystem ApiKeyResource = "system"
+)
+
+// AllApiKeyResources lists every defined resource. Used by the validator
+// and exposed to the frontend so the create form can offer the catalog.
+func AllApiKeyResources() []ApiKeyResource {
+	return []ApiKeyResource{
+		ApiKeyResourceWildcard,
+		ApiKeyResourceVod,
+		ApiKeyResourcePlaylist,
+		ApiKeyResourceQueue,
+		ApiKeyResourceChannel,
+		ApiKeyResourceArchive,
+		ApiKeyResourceLive,
+		ApiKeyResourceUser,
+		ApiKeyResourceConfig,
+		ApiKeyResourceNotification,
+		ApiKeyResourceTask,
+		ApiKeyResourceBlockedVideo,
+		ApiKeyResourceSystem,
+	}
+}
+
+// IsValid reports whether r is a defined resource.
+func (r ApiKeyResource) IsValid() bool {
+	for _, valid := range AllApiKeyResources() {
+		if r == valid {
+			return true
+		}
+	}
+	return false
+}
+
+// ApiKeyTier is the permission level half of an ApiKeyScope. Tiers form a
+// hierarchy within a single resource: admin > write > read.
+//
+// We keep all three tiers (rather than collapsing to read/write) because
+// admin gates a meaningful safety boundary — destructive deletes (e.g.
+// DELETE /vod/:id) and queue-control actions (POST /queue, /queue/:id/stop).
+// A "modify metadata" key needs vod:write; a "wipe old VODs" key needs
+// vod:admin.
+type ApiKeyTier string
+
+const (
+	ApiKeyTierRead  ApiKeyTier = "read"
+	ApiKeyTierWrite ApiKeyTier = "write"
+	ApiKeyTierAdmin ApiKeyTier = "admin"
+)
+
+// AllApiKeyTiers lists every defined tier.
+func AllApiKeyTiers() []ApiKeyTier {
+	return []ApiKeyTier{ApiKeyTierRead, ApiKeyTierWrite, ApiKeyTierAdmin}
+}
+
+// rank gives a tier its position in the read < write < admin hierarchy.
+// Returns 0 for any unknown tier so unknown values never satisfy a check.
+func (t ApiKeyTier) rank() int {
+	switch t {
+	case ApiKeyTierRead:
+		return 1
+	case ApiKeyTierWrite:
+		return 2
+	case ApiKeyTierAdmin:
+		return 3
+	}
+	return 0
+}
+
+// IsValid reports whether t is one of the defined tiers.
+func (t ApiKeyTier) IsValid() bool {
+	return t.rank() > 0
+}
+
+// ApiKeyScope is the on-the-wire string form of a (resource, tier) pair,
+// formatted as "<resource>:<tier>" — e.g. "vod:write", "*:admin".
+type ApiKeyScope string
+
+// Predeclared scopes. Routes use these in calls to RequireRoleOrScope;
+// the create form offers them in its catalog.
+const (
+	// Wildcard scopes apply across every resource.
+	ApiKeyScopeAllRead  ApiKeyScope = "*:read"
+	ApiKeyScopeAllWrite ApiKeyScope = "*:write"
+	ApiKeyScopeAllAdmin ApiKeyScope = "*:admin"
+
+	// VOD scopes.
+	ApiKeyScopeVodRead  ApiKeyScope = "vod:read"
+	ApiKeyScopeVodWrite ApiKeyScope = "vod:write"
+	ApiKeyScopeVodAdmin ApiKeyScope = "vod:admin"
+
+	// Playlist scopes.
+	ApiKeyScopePlaylistRead  ApiKeyScope = "playlist:read"
+	ApiKeyScopePlaylistWrite ApiKeyScope = "playlist:write"
+	ApiKeyScopePlaylistAdmin ApiKeyScope = "playlist:admin"
+
+	// Queue scopes.
+	ApiKeyScopeQueueRead  ApiKeyScope = "queue:read"
+	ApiKeyScopeQueueWrite ApiKeyScope = "queue:write"
+	ApiKeyScopeQueueAdmin ApiKeyScope = "queue:admin"
+
+	// Per-resource scopes for route groups whose write/admin endpoints
+	// accept API keys.
+	ApiKeyScopeChannelRead       ApiKeyScope = "channel:read"
+	ApiKeyScopeChannelWrite      ApiKeyScope = "channel:write"
+	ApiKeyScopeChannelAdmin      ApiKeyScope = "channel:admin"
+	ApiKeyScopeArchiveRead       ApiKeyScope = "archive:read"
+	ApiKeyScopeArchiveWrite      ApiKeyScope = "archive:write"
+	ApiKeyScopeArchiveAdmin      ApiKeyScope = "archive:admin"
+	ApiKeyScopeLiveRead          ApiKeyScope = "live:read"
+	ApiKeyScopeLiveWrite         ApiKeyScope = "live:write"
+	ApiKeyScopeLiveAdmin         ApiKeyScope = "live:admin"
+	ApiKeyScopeUserRead          ApiKeyScope = "user:read"
+	ApiKeyScopeUserWrite         ApiKeyScope = "user:write"
+	ApiKeyScopeUserAdmin         ApiKeyScope = "user:admin"
+	ApiKeyScopeConfigRead        ApiKeyScope = "config:read"
+	ApiKeyScopeConfigWrite       ApiKeyScope = "config:write"
+	ApiKeyScopeConfigAdmin       ApiKeyScope = "config:admin"
+	ApiKeyScopeNotificationRead  ApiKeyScope = "notification:read"
+	ApiKeyScopeNotificationWrite ApiKeyScope = "notification:write"
+	ApiKeyScopeNotificationAdmin ApiKeyScope = "notification:admin"
+	ApiKeyScopeTaskRead          ApiKeyScope = "task:read"
+	ApiKeyScopeTaskWrite         ApiKeyScope = "task:write"
+	ApiKeyScopeTaskAdmin         ApiKeyScope = "task:admin"
+	ApiKeyScopeBlockedVideoRead  ApiKeyScope = "blocked_video:read"
+	ApiKeyScopeBlockedVideoWrite ApiKeyScope = "blocked_video:write"
+	ApiKeyScopeBlockedVideoAdmin ApiKeyScope = "blocked_video:admin"
+	ApiKeyScopeSystemRead        ApiKeyScope = "system:read"
+	ApiKeyScopeSystemWrite       ApiKeyScope = "system:write"
+	ApiKeyScopeSystemAdmin       ApiKeyScope = "system:admin"
+)
+
+// MakeApiKeyScope builds a scope from its components.
+func MakeApiKeyScope(r ApiKeyResource, t ApiKeyTier) ApiKeyScope {
+	return ApiKeyScope(string(r) + ":" + string(t))
+}
+
+// Parse splits a scope into its resource and tier. The boolean is false
+// if the string is malformed or names an unknown resource/tier.
+func (s ApiKeyScope) Parse() (ApiKeyResource, ApiKeyTier, bool) {
+	str := string(s)
+	colon := -1
+	for i := 0; i < len(str); i++ {
+		if str[i] == ':' {
+			colon = i
+			break
+		}
+	}
+	if colon < 1 || colon == len(str)-1 {
+		return "", "", false
+	}
+	r := ApiKeyResource(str[:colon])
+	t := ApiKeyTier(str[colon+1:])
+	if !r.IsValid() || !t.IsValid() {
+		return "", "", false
+	}
+	return r, t, true
+}
+
+// IsValid reports whether s is a well-formed scope naming a defined
+// resource and tier.
+func (s ApiKeyScope) IsValid() bool {
+	_, _, ok := s.Parse()
+	return ok
+}
+
+// Includes reports whether s grants at least the access named by required.
+// A holder scope satisfies a requirement when:
+//   - the holder's resource matches the required resource, OR the holder
+//     uses the wildcard resource ("*"); AND
+//   - the holder's tier rank is greater than or equal to the required tier
+//     rank (admin > write > read).
+//
+// Both s and required must be valid; an unknown resource/tier never
+// satisfies a check.
+func (s ApiKeyScope) Includes(required ApiKeyScope) bool {
+	holderRes, holderTier, ok := s.Parse()
+	if !ok {
+		return false
+	}
+	requiredRes, requiredTier, ok := required.Parse()
+	if !ok {
+		return false
+	}
+	if holderRes != ApiKeyResourceWildcard && holderRes != requiredRes {
+		return false
+	}
+	return holderTier.rank() >= requiredTier.rank()
+}
+
+// AllApiKeyScopes lists every defined scope as a flat slice. Used by the
+// service-layer validator to reject unknown scopes on create, and by the
+// frontend hooks file to populate the create form's catalog.
+func AllApiKeyScopes() []ApiKeyScope {
+	out := make([]ApiKeyScope, 0, len(AllApiKeyResources())*len(AllApiKeyTiers()))
+	for _, r := range AllApiKeyResources() {
+		for _, t := range AllApiKeyTiers() {
+			out = append(out, MakeApiKeyScope(r, t))
+		}
+	}
+	return out
+}
+
+// IsValidApiKeyScope checks if a string is a defined scope. Convenience
+// wrapper for callers that have a string and don't want to convert.
+func IsValidApiKeyScope(scope string) bool {
+	return ApiKeyScope(scope).IsValid()
+}
+
+// ApiKeyScopes is a typed slice with helper methods. A key's permissions
+// are the union of its scopes.
+type ApiKeyScopes []ApiKeyScope
+
+// Includes reports whether any element of ss satisfies the required scope.
+func (ss ApiKeyScopes) Includes(required ApiKeyScope) bool {
+	for _, s := range ss {
+		if s.Includes(required) {
+			return true
+		}
+	}
+	return false
+}
+
+// Strings returns the scopes as a []string, useful for ent persistence
+// and JSON marshalling.
+func (ss ApiKeyScopes) Strings() []string {
+	out := make([]string, len(ss))
+	for i, s := range ss {
+		out[i] = string(s)
+	}
+	return out
+}
+
+// ApiKeyScopesFromStrings converts a []string (typically loaded from ent
+// or a request body) into a typed ApiKeyScopes. Invalid scope strings are
+// kept as-is so the caller can detect them via IsValid; this lets the
+// service layer return precise error messages rather than silently
+// dropping entries.
+func ApiKeyScopesFromStrings(in []string) ApiKeyScopes {
+	out := make(ApiKeyScopes, len(in))
+	for i, s := range in {
+		out[i] = ApiKeyScope(s)
+	}
+	return out
 }
 
 type VideoPlatform string

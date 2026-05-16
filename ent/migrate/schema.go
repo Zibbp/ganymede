@@ -8,6 +8,34 @@ import (
 )
 
 var (
+	// APIKeysColumns holds the columns for the "api_keys" table.
+	APIKeysColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "prefix", Type: field.TypeString, Unique: true},
+		{Name: "hashed_secret", Type: field.TypeString},
+		{Name: "scopes", Type: field.TypeJSON},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// APIKeysTable holds the schema information for the "api_keys" table.
+	APIKeysTable = &schema.Table{
+		Name:       "api_keys",
+		Columns:    APIKeysColumns,
+		PrimaryKey: []*schema.Column{APIKeysColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "api_keys_users_created_by",
+				Columns:    []*schema.Column{APIKeysColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// BlockedVideosColumns holds the columns for the "blocked_videos" table.
 	BlockedVideosColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -193,6 +221,35 @@ var (
 			},
 		},
 	}
+	// NotificationsColumns holds the columns for the "notifications" table.
+	NotificationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"webhook", "apprise"}},
+		{Name: "url", Type: field.TypeString, Size: 2048},
+		{Name: "trigger_video_success", Type: field.TypeBool, Default: false},
+		{Name: "trigger_live_success", Type: field.TypeBool, Default: false},
+		{Name: "trigger_error", Type: field.TypeBool, Default: false},
+		{Name: "trigger_is_live", Type: field.TypeBool, Default: false},
+		{Name: "video_success_template", Type: field.TypeString, Size: 4096, Default: "✅ Video Archived: {{vod_title}} by {{channel_display_name}}."},
+		{Name: "live_success_template", Type: field.TypeString, Size: 4096, Default: "✅ Live Stream Archived: {{vod_title}} by {{channel_display_name}}."},
+		{Name: "error_template", Type: field.TypeString, Size: 4096, Default: "⚠️ Error: Queue {{queue_id}} failed at task {{failed_task}}."},
+		{Name: "is_live_template", Type: field.TypeString, Size: 4096, Default: "🔴 {{channel_display_name}} is live!"},
+		{Name: "apprise_urls", Type: field.TypeString, Nullable: true, Size: 4096, Default: ""},
+		{Name: "apprise_title", Type: field.TypeString, Nullable: true, Size: 4096, Default: ""},
+		{Name: "apprise_type", Type: field.TypeEnum, Enums: []string{"info", "success", "warning", "failure"}, Default: "info"},
+		{Name: "apprise_tag", Type: field.TypeString, Nullable: true, Size: 255, Default: ""},
+		{Name: "apprise_format", Type: field.TypeEnum, Enums: []string{"text", "html", "markdown"}, Default: "text"},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// NotificationsTable holds the schema information for the "notifications" table.
+	NotificationsTable = &schema.Table{
+		Name:       "notifications",
+		Columns:    NotificationsColumns,
+		PrimaryKey: []*schema.Column{NotificationsColumns[0]},
+	}
 	// PlaybacksColumns holds the columns for the "playbacks" table.
 	PlaybacksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -353,7 +410,7 @@ var (
 		{Name: "username", Type: field.TypeString, Unique: true},
 		{Name: "password", Type: field.TypeString, Nullable: true},
 		{Name: "oauth", Type: field.TypeBool, Default: false},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "editor", "archiver", "user"}, Default: "user"},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "editor", "archiver", "user", "system"}, Default: "user"},
 		{Name: "webhook", Type: field.TypeString, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
@@ -453,6 +510,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		APIKeysTable,
 		BlockedVideosTable,
 		ChannelsTable,
 		ChaptersTable,
@@ -461,6 +519,7 @@ var (
 		LiveTitleRegexesTable,
 		MultistreamInfosTable,
 		MutedSegmentsTable,
+		NotificationsTable,
 		PlaybacksTable,
 		PlaylistsTable,
 		PlaylistRulesTable,
@@ -475,6 +534,7 @@ var (
 )
 
 func init() {
+	APIKeysTable.ForeignKeys[0].RefTable = UsersTable
 	ChaptersTable.ForeignKeys[0].RefTable = VodsTable
 	LivesTable.ForeignKeys[0].RefTable = ChannelsTable
 	LiveCategoriesTable.ForeignKeys[0].RefTable = LivesTable

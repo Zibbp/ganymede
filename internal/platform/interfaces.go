@@ -23,7 +23,7 @@ type VideoInfo struct {
 	ViewCount                   int64             `json:"view_count"`
 	Language                    string            `json:"language"`
 	Type                        string            `json:"type"`
-	Duration                    time.Duration     `json:"duration"`
+	Duration                    time.Duration     `json:"duration" swaggertype:"integer"`
 	Category                    *string           `json:"category"`    // the default/main category of the video
 	Restriction                 *string           `json:"restriction"` // video restriction
 	Chapters                    []chapter.Chapter `json:"chapters"`
