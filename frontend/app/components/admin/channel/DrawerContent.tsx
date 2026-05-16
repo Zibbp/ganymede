@@ -1,7 +1,7 @@
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Channel, useCreateChannel, useEditChannel, useUpdateChannelImage } from "@/app/hooks/useChannels";
 import { ActionIcon, Button, NumberInput, TextInput, Tooltip, Text, Divider, Checkbox } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
+import { useForm, schemaResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { IconHelpCircle } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
@@ -45,7 +45,7 @@ const AdminChannelDrawerContent = ({ channel, mode, handleClose }: Props) => {
       retention_days: channel?.retention_days || 7,
     },
 
-    validate: zodResolver(schema),
+    validate: schemaResolver(schema),
   })
 
   const handleSubmitForm = async () => {
