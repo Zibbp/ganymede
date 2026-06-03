@@ -644,6 +644,8 @@
     "idLabel": "Auto Generated",
     "channelLabel": "Channel",
     "resolutionLabel": "Quality",
+    "liveResolutionLabel": "Live Quality",
+    "vodResolutionLabel": "Video Quality",
     "archiveChatLabel": "Archive Chat",
     "renderChatLabel": "Render Chat",
     "liveStreamsText": "Live Streams",

@@ -46,7 +46,7 @@ definitions:
       commit_hash:
         type: string
       program_versions:
-        $ref: "#/definitions/admin.ProgramVersions"
+        $ref: '#/definitions/admin.ProgramVersions'
       tag:
         type: string
       uptime:
@@ -64,9 +64,9 @@ definitions:
   archive.TwitchVodResponse:
     properties:
       queue:
-        $ref: "#/definitions/ent.Queue"
+        $ref: '#/definitions/ent.Queue'
       vod:
-        $ref: "#/definitions/ent.Vod"
+        $ref: '#/definitions/ent.Vod'
     type: object
   chapter.Chapter:
     properties:
@@ -88,7 +88,7 @@ definitions:
       channel_id:
         type: string
       commenter:
-        $ref: "#/definitions/chat.Commenter"
+        $ref: '#/definitions/chat.Commenter'
       content_id:
         type: string
       content_offset_seconds:
@@ -98,7 +98,7 @@ definitions:
       created_at:
         type: string
       message:
-        $ref: "#/definitions/chat.Message"
+        $ref: '#/definitions/chat.Message'
       more_replies:
         type: boolean
       source:
@@ -139,7 +139,7 @@ definitions:
   chat.Fragment:
     properties:
       emoticon:
-        $ref: "#/definitions/chat.FragmentEmoticon"
+        $ref: '#/definitions/chat.FragmentEmoticon'
       text:
         type: string
     type: object
@@ -171,7 +171,7 @@ definitions:
     properties:
       emotes:
         items:
-          $ref: "#/definitions/chat.GanymedeEmote"
+          $ref: '#/definitions/chat.GanymedeEmote'
         type: array
     type: object
   chat.Message:
@@ -182,22 +182,22 @@ definitions:
         type: string
       emoticons:
         items:
-          $ref: "#/definitions/chat.EmoticonElement"
+          $ref: '#/definitions/chat.EmoticonElement'
         type: array
       fragments:
         items:
-          $ref: "#/definitions/chat.Fragment"
+          $ref: '#/definitions/chat.Fragment'
         type: array
       is_action:
         type: boolean
       user_badges:
         items:
-          $ref: "#/definitions/chat.UserBadge"
+          $ref: '#/definitions/chat.UserBadge'
         type: array
       user_color:
         type: string
       user_notice_params:
-        $ref: "#/definitions/chat.UserNoticeParams"
+        $ref: '#/definitions/chat.UserNoticeParams'
     type: object
   chat.UserBadge:
     properties:
@@ -212,7 +212,7 @@ definitions:
   config.Config:
     properties:
       api_keys_enabled:
-        description: "Allow API key authentication via Authorization: Bearer header."
+        description: 'Allow API key authentication via Authorization: Bearer header.'
         type: boolean
       archive:
         properties:
@@ -226,7 +226,7 @@ definitions:
       experimental:
         properties:
           better_live_stream_detection_and_cleanup:
-            description: "[EXPERIMENTAL] Enable enhanced detection and cleanup."
+            description: '[EXPERIMENTAL] Enable enhanced detection and cleanup.'
             type: boolean
         type: object
       live_check_interval_seconds:
@@ -237,7 +237,7 @@ definitions:
           proxies:
             description: List of proxies for live stream download.
             items:
-              $ref: "#/definitions/config.ProxyListItem"
+              $ref: '#/definitions/config.ProxyListItem'
             type: array
           proxy_enabled:
             description: Enable proxy usage.
@@ -251,8 +251,7 @@ definitions:
               type: string
             type: array
           watch_while_archiving:
-            description:
-              Allow watching live streams while archiving them by downloading
+            description: Allow watching live streams while archiving them by downloading
               a temporary HLS stream.
             type: boolean
         type: object
@@ -261,7 +260,7 @@ definitions:
         type: integer
       notifications:
         allOf:
-          - $ref: "#/definitions/config.LegacyNotification"
+        - $ref: '#/definitions/config.LegacyNotification'
         description: |-
           Notifications preserves legacy config.json notifications during migration.
           Deprecated: notifications are now stored in the database.
@@ -271,8 +270,7 @@ definitions:
             description: TwitchDownloaderCLI arguments for chat rendering.
             type: string
           twitch_token:
-            description:
-              Twitch token for ad-free live streams or subscriber-only
+            description: Twitch token for ad-free live streams or subscriber-only
               videos.
             type: string
           video_convert:
@@ -287,7 +285,7 @@ definitions:
         type: boolean
       storage_templates:
         allOf:
-          - $ref: "#/definitions/config.StorageTemplate"
+        - $ref: '#/definitions/config.StorageTemplate'
         description: Storage folder/file templates.
       video_check_interval_minutes:
         description: How often in minutes watched channels are checked for new videos.
@@ -327,7 +325,7 @@ definitions:
         type: string
       proxy_type:
         allOf:
-          - $ref: "#/definitions/utils.ProxyType"
+        - $ref: '#/definitions/utils.ProxyType'
         description: Type of proxy to use.
         minLength: 1
       url:
@@ -335,15 +333,14 @@ definitions:
         minLength: 1
         type: string
     required:
-      - proxy_type
-      - url
+    - proxy_type
+    - url
     type: object
   config.StorageTemplate:
     properties:
       channel_folder_template:
-        description:
-          "Template for channel-level directory naming. Available variables:
-          {{channel}}, {{channel_id}}, {{channel_display_name}}."
+        description: 'Template for channel-level directory naming. Available variables:
+          {{channel}}, {{channel_id}}, {{channel_display_name}}.'
         type: string
       file_template:
         type: string
@@ -360,7 +357,7 @@ definitions:
         type: string
       edges:
         allOf:
-          - $ref: "#/definitions/ent.ChannelEdges"
+        - $ref: '#/definitions/ent.ChannelEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the ChannelQuery when eager-loading is set.
@@ -394,19 +391,19 @@ definitions:
       live:
         description: Live holds the value of the live edge.
         items:
-          $ref: "#/definitions/ent.Live"
+          $ref: '#/definitions/ent.Live'
         type: array
       vods:
         description: Vods holds the value of the vods edge.
         items:
-          $ref: "#/definitions/ent.Vod"
+          $ref: '#/definitions/ent.Vod'
         type: array
     type: object
   ent.Chapter:
     properties:
       edges:
         allOf:
-          - $ref: "#/definitions/ent.ChapterEdges"
+        - $ref: '#/definitions/ent.ChapterEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the ChapterQuery when eager-loading is set.
@@ -430,7 +427,7 @@ definitions:
     properties:
       vod:
         allOf:
-          - $ref: "#/definitions/ent.Vod"
+        - $ref: '#/definitions/ent.Vod'
         description: Vod holds the value of the vod edge.
     type: object
   ent.Live:
@@ -473,7 +470,7 @@ definitions:
         type: boolean
       edges:
         allOf:
-          - $ref: "#/definitions/ent.LiveEdges"
+        - $ref: '#/definitions/ent.LiveEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the LiveQuery when eager-loading is set.
@@ -490,14 +487,13 @@ definitions:
         description: Whether the chat should be rendered.
         type: boolean
       resolution:
-        description: Resolution holds the value of the "resolution" field.
+        description: Live stream archive quality.
         type: string
       strict_categories_live:
         description: Stop live stream archive if category changes to one not selected.
         type: boolean
       update_metadata_minutes:
-        description:
-          Queue metadata update X minutes after the stream is live. Set
+        description: Queue metadata update X minutes after the stream is live. Set
           to 0 to disable.
         type: integer
       updated_at:
@@ -506,6 +502,9 @@ definitions:
       video_age:
         description: Restrict fetching videos to a certain age.
         type: integer
+      vod_resolution:
+        description: Video and clip archive quality.
+        type: string
       watch_clips:
         description: Whether to download clips on a schedule.
         type: boolean
@@ -520,7 +519,7 @@ definitions:
     properties:
       edges:
         allOf:
-          - $ref: "#/definitions/ent.LiveCategoryEdges"
+        - $ref: '#/definitions/ent.LiveCategoryEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the LiveCategoryQuery when eager-loading is set.
@@ -535,7 +534,7 @@ definitions:
     properties:
       live:
         allOf:
-          - $ref: "#/definitions/ent.Live"
+        - $ref: '#/definitions/ent.Live'
         description: Live holds the value of the live edge.
     type: object
   ent.LiveEdges:
@@ -543,16 +542,16 @@ definitions:
       categories:
         description: Categories holds the value of the categories edge.
         items:
-          $ref: "#/definitions/ent.LiveCategory"
+          $ref: '#/definitions/ent.LiveCategory'
         type: array
       channel:
         allOf:
-          - $ref: "#/definitions/ent.Channel"
+        - $ref: '#/definitions/ent.Channel'
         description: Channel holds the value of the channel edge.
       title_regex:
         description: TitleRegex holds the value of the title_regex edge.
         items:
-          $ref: "#/definitions/ent.LiveTitleRegex"
+          $ref: '#/definitions/ent.LiveTitleRegex'
         type: array
     type: object
   ent.LiveTitleRegex:
@@ -562,7 +561,7 @@ definitions:
         type: boolean
       edges:
         allOf:
-          - $ref: "#/definitions/ent.LiveTitleRegexEdges"
+        - $ref: '#/definitions/ent.LiveTitleRegexEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the LiveTitleRegexQuery when eager-loading is set.
@@ -580,7 +579,7 @@ definitions:
     properties:
       live:
         allOf:
-          - $ref: "#/definitions/ent.Live"
+        - $ref: '#/definitions/ent.Live'
         description: Live holds the value of the live edge.
     type: object
   ent.MultistreamInfo:
@@ -590,7 +589,7 @@ definitions:
         type: integer
       edges:
         allOf:
-          - $ref: "#/definitions/ent.MultistreamInfoEdges"
+        - $ref: '#/definitions/ent.MultistreamInfoEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the MultistreamInfoQuery when eager-loading is set.
@@ -602,18 +601,18 @@ definitions:
     properties:
       playlist:
         allOf:
-          - $ref: "#/definitions/ent.Playlist"
+        - $ref: '#/definitions/ent.Playlist'
         description: Playlist holds the value of the playlist edge.
       vod:
         allOf:
-          - $ref: "#/definitions/ent.Vod"
+        - $ref: '#/definitions/ent.Vod'
         description: Vod holds the value of the vod edge.
     type: object
   ent.MutedSegment:
     properties:
       edges:
         allOf:
-          - $ref: "#/definitions/ent.MutedSegmentEdges"
+        - $ref: '#/definitions/ent.MutedSegmentEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the MutedSegmentQuery when eager-loading is set.
@@ -631,7 +630,7 @@ definitions:
     properties:
       vod:
         allOf:
-          - $ref: "#/definitions/ent.Vod"
+        - $ref: '#/definitions/ent.Vod'
         description: Vod holds the value of the vod edge.
     type: object
   ent.Playback:
@@ -644,7 +643,7 @@ definitions:
         type: string
       status:
         allOf:
-          - $ref: "#/definitions/utils.PlaybackStatus"
+        - $ref: '#/definitions/utils.PlaybackStatus'
         description: Status holds the value of the "status" field.
       time:
         description: Time holds the value of the "time" field.
@@ -669,7 +668,7 @@ definitions:
         type: string
       edges:
         allOf:
-          - $ref: "#/definitions/ent.PlaylistEdges"
+        - $ref: '#/definitions/ent.PlaylistEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the PlaylistQuery when eager-loading is set.
@@ -691,24 +690,24 @@ definitions:
       multistream_info:
         description: MultistreamInfo holds the value of the multistream_info edge.
         items:
-          $ref: "#/definitions/ent.MultistreamInfo"
+          $ref: '#/definitions/ent.MultistreamInfo'
         type: array
       rule_groups:
         description: RuleGroups holds the value of the rule_groups edge.
         items:
-          $ref: "#/definitions/ent.PlaylistRuleGroup"
+          $ref: '#/definitions/ent.PlaylistRuleGroup'
         type: array
       vods:
         description: Vods holds the value of the vods edge.
         items:
-          $ref: "#/definitions/ent.Vod"
+          $ref: '#/definitions/ent.Vod'
         type: array
     type: object
   ent.PlaylistRule:
     properties:
       edges:
         allOf:
-          - $ref: "#/definitions/ent.PlaylistRuleEdges"
+        - $ref: '#/definitions/ent.PlaylistRuleEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the PlaylistRuleQuery when eager-loading is set.
@@ -717,9 +716,8 @@ definitions:
         type: boolean
       field:
         allOf:
-          - $ref: "#/definitions/utils.PlaylistRuleField"
-        description:
-          The field of the rule, used to determine which property of the
+        - $ref: '#/definitions/utils.PlaylistRuleField'
+        description: The field of the rule, used to determine which property of the
           VOD the rule applies to.
       id:
         description: ID of the ent.
@@ -729,7 +727,7 @@ definitions:
         type: string
       operator:
         allOf:
-          - $ref: "#/definitions/utils.PlaylistRuleOperator"
+        - $ref: '#/definitions/utils.PlaylistRuleOperator'
         description: The operator of the rule, used to determine how the rule is applied.
       position:
         description: Order within group
@@ -742,14 +740,14 @@ definitions:
     properties:
       group:
         allOf:
-          - $ref: "#/definitions/ent.PlaylistRuleGroup"
+        - $ref: '#/definitions/ent.PlaylistRuleGroup'
         description: Group holds the value of the group edge.
     type: object
   ent.PlaylistRuleGroup:
     properties:
       edges:
         allOf:
-          - $ref: "#/definitions/ent.PlaylistRuleGroupEdges"
+        - $ref: '#/definitions/ent.PlaylistRuleGroupEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the PlaylistRuleGroupQuery when eager-loading is set.
@@ -758,7 +756,7 @@ definitions:
         type: string
       operator:
         allOf:
-          - $ref: "#/definitions/playlistrulegroup.Operator"
+        - $ref: '#/definitions/playlistrulegroup.Operator'
         description: Logical operator to combine rules in this group
       position:
         description: Used to order groups within the playlist
@@ -768,12 +766,12 @@ definitions:
     properties:
       playlist:
         allOf:
-          - $ref: "#/definitions/ent.Playlist"
+        - $ref: '#/definitions/ent.Playlist'
         description: Playlist holds the value of the playlist edge.
       rules:
         description: Rules holds the value of the rules edge.
         items:
-          $ref: "#/definitions/ent.PlaylistRule"
+          $ref: '#/definitions/ent.PlaylistRule'
         type: array
     type: object
   ent.Queue:
@@ -792,7 +790,7 @@ definitions:
         type: string
       edges:
         allOf:
-          - $ref: "#/definitions/ent.QueueEdges"
+        - $ref: '#/definitions/ent.QueueEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the QueueQuery when eager-loading is set.
@@ -813,53 +811,48 @@ definitions:
         type: boolean
       task_chat_convert:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         description: TaskChatConvert holds the value of the "task_chat_convert" field.
       task_chat_download:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
-        description:
-          TaskChatDownload holds the value of the "task_chat_download"
+        - $ref: '#/definitions/utils.TaskStatus'
+        description: TaskChatDownload holds the value of the "task_chat_download"
           field.
       task_chat_move:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         description: TaskChatMove holds the value of the "task_chat_move" field.
       task_chat_render:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         description: TaskChatRender holds the value of the "task_chat_render" field.
       task_video_convert:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
-        description:
-          TaskVideoConvert holds the value of the "task_video_convert"
+        - $ref: '#/definitions/utils.TaskStatus'
+        description: TaskVideoConvert holds the value of the "task_video_convert"
           field.
       task_video_download:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
-        description:
-          TaskVideoDownload holds the value of the "task_video_download"
+        - $ref: '#/definitions/utils.TaskStatus'
+        description: TaskVideoDownload holds the value of the "task_video_download"
           field.
       task_video_move:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         description: TaskVideoMove holds the value of the "task_video_move" field.
       task_vod_create_folder:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
-        description:
-          TaskVodCreateFolder holds the value of the "task_vod_create_folder"
+        - $ref: '#/definitions/utils.TaskStatus'
+        description: TaskVodCreateFolder holds the value of the "task_vod_create_folder"
           field.
       task_vod_download_thumbnail:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
-        description:
-          TaskVodDownloadThumbnail holds the value of the "task_vod_download_thumbnail"
+        - $ref: '#/definitions/utils.TaskStatus'
+        description: TaskVodDownloadThumbnail holds the value of the "task_vod_download_thumbnail"
           field.
       task_vod_save_info:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         description: TaskVodSaveInfo holds the value of the "task_vod_save_info" field.
       updated_at:
         description: UpdatedAt holds the value of the "updated_at" field.
@@ -878,7 +871,7 @@ definitions:
     properties:
       vod:
         allOf:
-          - $ref: "#/definitions/ent.Vod"
+        - $ref: '#/definitions/ent.Vod'
         description: Vod holds the value of the vod edge.
     type: object
   ent.User:
@@ -894,7 +887,7 @@ definitions:
         type: boolean
       role:
         allOf:
-          - $ref: "#/definitions/utils.Role"
+        - $ref: '#/definitions/utils.Role'
         description: Role holds the value of the "role" field.
       sub:
         description: Sub holds the value of the "sub" field.
@@ -921,13 +914,11 @@ definitions:
         description: ChatVideoPath holds the value of the "chat_video_path" field.
         type: string
       clip_ext_vod_id:
-        description:
-          The external VOD ID of a clip. This is only populated if the
+        description: The external VOD ID of a clip. This is only populated if the
           clip is linked to a video.
         type: string
       clip_vod_offset:
-        description:
-          The offset in seconds to where the clip starts in the VOD. This
+        description: The offset in seconds to where the clip starts in the VOD. This
           is only populdated if the video is a clip.
         type: integer
       created_at:
@@ -938,7 +929,7 @@ definitions:
         type: integer
       edges:
         allOf:
-          - $ref: "#/definitions/ent.VodEdges"
+        - $ref: '#/definitions/ent.VodEdges'
         description: |-
           Edges holds the relations/edges for other nodes in the graph.
           The values are being populated by the VodQuery when eager-loading is set.
@@ -974,7 +965,7 @@ definitions:
         type: boolean
       platform:
         allOf:
-          - $ref: "#/definitions/utils.VideoPlatform"
+        - $ref: '#/definitions/utils.VideoPlatform'
         description: The platform the VOD is from, takes an enum.
       processing:
         description: Whether the VOD is currently processing.
@@ -983,40 +974,33 @@ definitions:
         description: Resolution holds the value of the "resolution" field.
         type: string
       sprite_thumbnails_columns:
-        description:
-          SpriteThumbnailsColumns holds the value of the "sprite_thumbnails_columns"
+        description: SpriteThumbnailsColumns holds the value of the "sprite_thumbnails_columns"
           field.
         type: integer
       sprite_thumbnails_enabled:
-        description:
-          SpriteThumbnailsEnabled holds the value of the "sprite_thumbnails_enabled"
+        description: SpriteThumbnailsEnabled holds the value of the "sprite_thumbnails_enabled"
           field.
         type: boolean
       sprite_thumbnails_height:
-        description:
-          SpriteThumbnailsHeight holds the value of the "sprite_thumbnails_height"
+        description: SpriteThumbnailsHeight holds the value of the "sprite_thumbnails_height"
           field.
         type: integer
       sprite_thumbnails_images:
-        description:
-          SpriteThumbnailsImages holds the value of the "sprite_thumbnails_images"
+        description: SpriteThumbnailsImages holds the value of the "sprite_thumbnails_images"
           field.
         items:
           type: string
         type: array
       sprite_thumbnails_interval:
-        description:
-          SpriteThumbnailsInterval holds the value of the "sprite_thumbnails_interval"
+        description: SpriteThumbnailsInterval holds the value of the "sprite_thumbnails_interval"
           field.
         type: integer
       sprite_thumbnails_rows:
-        description:
-          SpriteThumbnailsRows holds the value of the "sprite_thumbnails_rows"
+        description: SpriteThumbnailsRows holds the value of the "sprite_thumbnails_rows"
           field.
         type: integer
       sprite_thumbnails_width:
-        description:
-          SpriteThumbnailsWidth holds the value of the "sprite_thumbnails_width"
+        description: SpriteThumbnailsWidth holds the value of the "sprite_thumbnails_width"
           field.
         type: integer
       storage_size_bytes:
@@ -1054,7 +1038,7 @@ definitions:
         type: string
       type:
         allOf:
-          - $ref: "#/definitions/utils.VodType"
+        - $ref: '#/definitions/utils.VodType'
         description: The type of VOD, takes an enum.
       updated_at:
         description: UpdatedAt holds the value of the "updated_at" field.
@@ -1069,8 +1053,7 @@ definitions:
         description: Views holds the value of the "views" field.
         type: integer
       web_thumbnail_path:
-        description:
-          WebThumbnailPath holds the value of the "web_thumbnail_path"
+        description: WebThumbnailPath holds the value of the "web_thumbnail_path"
           field.
         type: string
     type: object
@@ -1078,31 +1061,31 @@ definitions:
     properties:
       channel:
         allOf:
-          - $ref: "#/definitions/ent.Channel"
+        - $ref: '#/definitions/ent.Channel'
         description: Channel holds the value of the channel edge.
       chapters:
         description: Chapters holds the value of the chapters edge.
         items:
-          $ref: "#/definitions/ent.Chapter"
+          $ref: '#/definitions/ent.Chapter'
         type: array
       multistream_info:
         description: MultistreamInfo holds the value of the multistream_info edge.
         items:
-          $ref: "#/definitions/ent.MultistreamInfo"
+          $ref: '#/definitions/ent.MultistreamInfo'
         type: array
       muted_segments:
         description: MutedSegments holds the value of the muted_segments edge.
         items:
-          $ref: "#/definitions/ent.MutedSegment"
+          $ref: '#/definitions/ent.MutedSegment'
         type: array
       playlists:
         description: Playlists holds the value of the playlists edge.
         items:
-          $ref: "#/definitions/ent.Playlist"
+          $ref: '#/definitions/ent.Playlist'
         type: array
       queue:
         allOf:
-          - $ref: "#/definitions/ent.Queue"
+        - $ref: '#/definitions/ent.Queue'
         description: Queue holds the value of the queue edge.
     type: object
   http.AddLiveTitleRegex:
@@ -1114,14 +1097,14 @@ definitions:
       regex:
         type: string
     required:
-      - regex
+    - regex
     type: object
   http.AddVodToPlaylistRequest:
     properties:
       vod_id:
         type: string
     required:
-      - vod_id
+    - vod_id
     type: object
   http.AddWatchedChannelRequest:
     properties:
@@ -1155,32 +1138,42 @@ definitions:
         type: boolean
       regex:
         items:
-          $ref: "#/definitions/http.AddLiveTitleRegex"
+          $ref: '#/definitions/http.AddLiveTitleRegex'
         type: array
       render_chat:
         type: boolean
       resolution:
         enum:
-          - best
-          - 1440p
-          - 1080p
-          - 720p
-          - 480p
-          - 360p
-          - 160p
-          - audio
+        - best
+        - 1440p
+        - 1080p
+        - 720p
+        - 480p
+        - 360p
+        - 160p
+        - audio
         type: string
       strict_categories_live:
         type: boolean
       update_metadata_minutes:
-        description:
-          Queue metadata update X minutes after the stream is live. Set
+        description: Queue metadata update X minutes after the stream is live. Set
           to 0 to disable.
         minimum: 0
         type: integer
       video_age:
         description: restrict fetching videos to a certain age
         type: integer
+      vod_resolution:
+        enum:
+        - best
+        - 1440p
+        - 1080p
+        - 720p
+        - 480p
+        - 360p
+        - 160p
+        - audio
+        type: string
       watch_clips:
         type: boolean
       watch_live:
@@ -1188,15 +1181,15 @@ definitions:
       watch_vod:
         type: boolean
     required:
-      - channel_id
-      - resolution
+    - channel_id
+    - resolution
     type: object
   http.ArchiveChannelRequest:
     properties:
       channel_name:
         type: string
     required:
-      - channel_name
+    - channel_name
     type: object
   http.ArchiveVideoRequest:
     properties:
@@ -1206,22 +1199,22 @@ definitions:
         type: string
       quality:
         allOf:
-          - $ref: "#/definitions/utils.VodQuality"
+        - $ref: '#/definitions/utils.VodQuality'
         enum:
-          - best
-          - 1440p
-          - 1080p
-          - 720p
-          - 480p
-          - 360p
-          - 160p
-          - audio
+        - best
+        - 1440p
+        - 1080p
+        - 720p
+        - 480p
+        - 360p
+        - 160p
+        - audio
       render_chat:
         type: boolean
       video_id:
         type: string
     required:
-      - quality
+    - quality
     type: object
   http.ChangePasswordRequest:
     properties:
@@ -1233,9 +1226,9 @@ definitions:
       old_password:
         type: string
     required:
-      - confirm_new_password
-      - new_password
-      - old_password
+    - confirm_new_password
+    - new_password
+    - old_password
     type: object
   http.CreateApiKeyRequest:
     properties:
@@ -1252,8 +1245,8 @@ definitions:
         minItems: 1
         type: array
     required:
-      - name
-      - scopes
+    - name
+    - scopes
     type: object
   http.CreateChannelRequest:
     properties:
@@ -1275,9 +1268,9 @@ definitions:
       retention_days:
         type: integer
     required:
-      - display_name
-      - image_path
-      - name
+    - display_name
+    - image_path
+    - name
     type: object
   http.CreatePlaylistRequest:
     properties:
@@ -1286,14 +1279,14 @@ definitions:
       name:
         type: string
     required:
-      - name
+    - name
     type: object
   http.CreateQueueRequest:
     properties:
       vod_id:
         type: string
     required:
-      - vod_id
+    - vod_id
     type: object
   http.CreateVodRequest:
     properties:
@@ -1318,10 +1311,10 @@ definitions:
         type: boolean
       platform:
         allOf:
-          - $ref: "#/definitions/utils.VideoPlatform"
+        - $ref: '#/definitions/utils.VideoPlatform'
         enum:
-          - twitch
-          - youtube
+        - twitch
+        - youtube
       processing:
         type: boolean
       resolution:
@@ -1335,13 +1328,13 @@ definitions:
         type: string
       type:
         allOf:
-          - $ref: "#/definitions/utils.VodType"
+        - $ref: '#/definitions/utils.VodType'
         enum:
-          - archive
-          - live
-          - highlight
-          - upload
-          - clip
+        - archive
+        - live
+        - highlight
+        - upload
+        - clip
       video_path:
         minLength: 1
         type: string
@@ -1351,15 +1344,15 @@ definitions:
         minLength: 1
         type: string
     required:
-      - channel_id
-      - duration
-      - platform
-      - streamed_at
-      - title
-      - type
-      - video_path
-      - views
-      - web_thumbnail_path
+    - channel_id
+    - duration
+    - platform
+    - streamed_at
+    - title
+    - type
+    - video_path
+    - views
+    - web_thumbnail_path
     type: object
   http.LoginRequest:
     properties:
@@ -1368,16 +1361,16 @@ definitions:
       username:
         type: string
     required:
-      - password
-      - username
+    - password
+    - username
     type: object
   http.NotificationRequest:
     properties:
       apprise_format:
         enum:
-          - text
-          - html
-          - markdown
+        - text
+        - html
+        - markdown
         type: string
       apprise_tag:
         type: string
@@ -1385,10 +1378,10 @@ definitions:
         type: string
       apprise_type:
         enum:
-          - info
-          - success
-          - warning
-          - failure
+        - info
+        - success
+        - warning
+        - failure
         type: string
       apprise_urls:
         type: string
@@ -1412,17 +1405,17 @@ definitions:
         type: boolean
       type:
         enum:
-          - webhook
-          - apprise
+        - webhook
+        - apprise
         type: string
       url:
         type: string
       video_success_template:
         type: string
     required:
-      - name
-      - type
-      - url
+    - name
+    - type
+    - url
     type: object
   http.NotificationResponse:
     properties:
@@ -1477,8 +1470,8 @@ definitions:
         minLength: 3
         type: string
     required:
-      - password
-      - username
+    - password
+    - username
     type: object
   http.SetPlaylistRulesRequest:
     properties:
@@ -1487,8 +1480,8 @@ definitions:
           properties:
             operator:
               enum:
-                - AND
-                - OR
+              - AND
+              - OR
               type: string
             position:
               type: integer
@@ -1499,39 +1492,39 @@ definitions:
                     type: boolean
                   field:
                     allOf:
-                      - $ref: "#/definitions/utils.PlaylistRuleField"
+                    - $ref: '#/definitions/utils.PlaylistRuleField'
                     enum:
-                      - title
-                      - category
-                      - type
-                      - platform
-                      - channel_name
+                    - title
+                    - category
+                    - type
+                    - platform
+                    - channel_name
                   name:
                     type: string
                   operator:
                     allOf:
-                      - $ref: "#/definitions/utils.PlaylistRuleOperator"
+                    - $ref: '#/definitions/utils.PlaylistRuleOperator'
                     enum:
-                      - equals
-                      - contains
-                      - regex
+                    - equals
+                    - contains
+                    - regex
                   position:
                     type: integer
                   value:
                     type: string
                 required:
-                  - field
-                  - operator
-                  - value
+                - field
+                - operator
+                - value
                 type: object
               type: array
           required:
-            - operator
-            - rules
+          - operator
+          - rules
           type: object
         type: array
     required:
-      - rule_groups
+    - rule_groups
     type: object
   http.SetVodDelayPlaylistRequest:
     properties:
@@ -1540,39 +1533,39 @@ definitions:
       vod_id:
         type: string
     required:
-      - vod_id
+    - vod_id
     type: object
   http.StartTaskRequest:
     properties:
       task:
         enum:
-          - check_live
-          - check_vod
-          - check_clips
-          - get_jwks
-          - storage_migration
-          - prune_videos
-          - save_chapters
-          - update_stream_vod_ids
-          - generate_sprite_thumbnails
-          - update_video_storage_usage
-          - process_playlist_video_rules
-          - update_platform_channels
+        - check_live
+        - check_vod
+        - check_clips
+        - get_jwks
+        - storage_migration
+        - prune_videos
+        - save_chapters
+        - update_stream_vod_ids
+        - generate_sprite_thumbnails
+        - update_video_storage_usage
+        - process_playlist_video_rules
+        - update_platform_channels
         type: string
     required:
-      - task
+    - task
     type: object
   http.TestNotificationRequest:
     properties:
       event_type:
         enum:
-          - video_success
-          - live_success
-          - error
-          - is_live
+        - video_success
+        - live_success
+        - error
+        - is_live
         type: string
     required:
-      - event_type
+    - event_type
     type: object
   http.UpdateApiKeyRequest:
     properties:
@@ -1589,25 +1582,25 @@ definitions:
         minItems: 1
         type: array
     required:
-      - name
-      - scopes
+    - name
+    - scopes
     type: object
   http.UpdateChannelRequest:
     properties:
       role:
         enum:
-          - admin
-          - editor
-          - archiver
-          - user
+        - admin
+        - editor
+        - archiver
+        - user
         type: string
       username:
         maxLength: 50
         minLength: 2
         type: string
     required:
-      - role
-      - username
+    - role
+    - username
     type: object
   http.UpdateProgressRequest:
     properties:
@@ -1616,8 +1609,8 @@ definitions:
       vod_id:
         type: string
     required:
-      - time
-      - vod_id
+    - time
+    - vod_id
     type: object
   http.UpdateQueueRequest:
     properties:
@@ -1633,110 +1626,110 @@ definitions:
         type: boolean
       task_chat_convert:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         enum:
-          - pending
-          - running
-          - success
-          - failed
+        - pending
+        - running
+        - success
+        - failed
       task_chat_download:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         enum:
-          - pending
-          - running
-          - success
-          - failed
+        - pending
+        - running
+        - success
+        - failed
       task_chat_move:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         enum:
-          - pending
-          - running
-          - success
-          - failed
+        - pending
+        - running
+        - success
+        - failed
       task_chat_render:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         enum:
-          - pending
-          - running
-          - success
-          - failed
+        - pending
+        - running
+        - success
+        - failed
       task_video_convert:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         enum:
-          - pending
-          - running
-          - success
-          - failed
+        - pending
+        - running
+        - success
+        - failed
       task_video_download:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         enum:
-          - pending
-          - running
-          - success
-          - failed
+        - pending
+        - running
+        - success
+        - failed
       task_video_move:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         enum:
-          - pending
-          - running
-          - success
-          - failed
+        - pending
+        - running
+        - success
+        - failed
       task_vod_create_folder:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         enum:
-          - pending
-          - running
-          - success
-          - failed
+        - pending
+        - running
+        - success
+        - failed
       task_vod_download_thumbnail:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         enum:
-          - pending
-          - running
-          - success
-          - failed
+        - pending
+        - running
+        - success
+        - failed
       task_vod_save_info:
         allOf:
-          - $ref: "#/definitions/utils.TaskStatus"
+        - $ref: '#/definitions/utils.TaskStatus'
         enum:
-          - pending
-          - running
-          - success
-          - failed
+        - pending
+        - running
+        - success
+        - failed
       video_processing:
         type: boolean
     required:
-      - task_chat_convert
-      - task_chat_download
-      - task_chat_move
-      - task_chat_render
-      - task_video_convert
-      - task_video_download
-      - task_video_move
-      - task_vod_create_folder
-      - task_vod_download_thumbnail
-      - task_vod_save_info
+    - task_chat_convert
+    - task_chat_download
+    - task_chat_move
+    - task_chat_render
+    - task_video_convert
+    - task_video_download
+    - task_video_move
+    - task_vod_create_folder
+    - task_vod_download_thumbnail
+    - task_vod_save_info
     type: object
   http.UpdateStatusRequest:
     properties:
       status:
         enum:
-          - in_progress
-          - finished
+        - in_progress
+        - finished
         type: string
       vod_id:
         type: string
     required:
-      - status
-      - vod_id
+    - status
+    - vod_id
     type: object
   http.UpdateWatchedChannelRequest:
     properties:
@@ -1768,32 +1761,42 @@ definitions:
         type: boolean
       regex:
         items:
-          $ref: "#/definitions/http.AddLiveTitleRegex"
+          $ref: '#/definitions/http.AddLiveTitleRegex'
         type: array
       render_chat:
         type: boolean
       resolution:
         enum:
-          - best
-          - 1440p
-          - 1080p
-          - 720p
-          - 480p
-          - 360p
-          - 160p
-          - audio
+        - best
+        - 1440p
+        - 1080p
+        - 720p
+        - 480p
+        - 360p
+        - 160p
+        - audio
         type: string
       strict_categories_live:
         type: boolean
       update_metadata_minutes:
-        description:
-          Queue metadata update X minutes after the stream is live. Set
+        description: Queue metadata update X minutes after the stream is live. Set
           to 0 to disable.
         minimum: 0
         type: integer
       video_age:
         description: restrict fetching videos to a certain age
         type: integer
+      vod_resolution:
+        enum:
+        - best
+        - 1440p
+        - 1080p
+        - 720p
+        - 480p
+        - 360p
+        - 160p
+        - audio
+        type: string
       watch_clips:
         type: boolean
       watch_live:
@@ -1801,7 +1804,7 @@ definitions:
       watch_vod:
         type: boolean
     required:
-      - resolution
+    - resolution
     type: object
   http.apiKeyDTO:
     properties:
@@ -1841,7 +1844,7 @@ definitions:
   http.createApiKeyResponse:
     properties:
       api_key:
-        $ref: "#/definitions/http.apiKeyDTO"
+        $ref: '#/definitions/http.apiKeyDTO'
       secret:
         type: string
     type: object
@@ -1905,7 +1908,7 @@ definitions:
         type: string
       chapters:
         items:
-          $ref: "#/definitions/chapter.Chapter"
+          $ref: '#/definitions/chapter.Chapter'
         type: array
       created_at:
         type: string
@@ -1919,7 +1922,7 @@ definitions:
         type: string
       muted_segments:
         items:
-          $ref: "#/definitions/platform.MutedSegment"
+          $ref: '#/definitions/platform.MutedSegment'
         type: array
       published_at:
         type: string
@@ -1951,14 +1954,14 @@ definitions:
     type: object
   playlistrulegroup.Operator:
     enum:
-      - AND
-      - AND
-      - OR
+    - AND
+    - AND
+    - OR
     type: string
     x-enum-varnames:
-      - DefaultOperator
-      - OperatorAND
-      - OperatorOR
+    - DefaultOperator
+    - OperatorAND
+    - OperatorOR
   utils.ErrorResponse:
     properties:
       message:
@@ -1966,119 +1969,119 @@ definitions:
     type: object
   utils.PlaybackStatus:
     enum:
-      - in_progress
-      - finished
+    - in_progress
+    - finished
     type: string
     x-enum-varnames:
-      - InProgress
-      - Finished
+    - InProgress
+    - Finished
   utils.PlaylistRuleField:
     enum:
-      - title
-      - category
-      - type
-      - platform
-      - channel_name
+    - title
+    - category
+    - type
+    - platform
+    - channel_name
     type: string
     x-enum-varnames:
-      - FieldTitle
-      - FieldCategory
-      - FieldType
-      - FieldPlatform
-      - FieldChannelName
+    - FieldTitle
+    - FieldCategory
+    - FieldType
+    - FieldPlatform
+    - FieldChannelName
   utils.PlaylistRuleOperator:
     enum:
-      - equals
-      - contains
-      - regex
+    - equals
+    - contains
+    - regex
     type: string
     x-enum-varnames:
-      - OperatorEquals
-      - OperatorContains
-      - OperatorRegex
+    - OperatorEquals
+    - OperatorContains
+    - OperatorRegex
   utils.ProxyType:
     enum:
-      - twitch_hls
-      - http
+    - twitch_hls
+    - http
     type: string
     x-enum-varnames:
-      - ProxyTypeTwitchHLS
-      - ProxyTypeHTTP
+    - ProxyTypeTwitchHLS
+    - ProxyTypeHTTP
   utils.Role:
     enum:
-      - admin
-      - editor
-      - archiver
-      - user
-      - system
+    - admin
+    - editor
+    - archiver
+    - user
+    - system
     type: string
     x-enum-varnames:
-      - AdminRole
-      - EditorRole
-      - ArchiverRole
-      - UserRole
-      - SystemRole
+    - AdminRole
+    - EditorRole
+    - ArchiverRole
+    - UserRole
+    - SystemRole
   utils.TaskStatus:
     enum:
-      - success
-      - running
-      - pending
-      - failed
+    - success
+    - running
+    - pending
+    - failed
     type: string
     x-enum-varnames:
-      - Success
-      - Running
-      - Pending
-      - Failed
+    - Success
+    - Running
+    - Pending
+    - Failed
   utils.VideoPlatform:
     enum:
-      - twitch
-      - youtube
+    - twitch
+    - youtube
     type: string
     x-enum-varnames:
-      - PlatformTwitch
-      - PlatformYoutube
+    - PlatformTwitch
+    - PlatformYoutube
   utils.VodQuality:
     enum:
-      - best
-      - source
-      - "1440"
-      - "1080"
-      - "720"
-      - "480"
-      - "360"
-      - "160"
-      - audio
+    - best
+    - source
+    - "1440"
+    - "1080"
+    - "720"
+    - "480"
+    - "360"
+    - "160"
+    - audio
     type: string
     x-enum-varnames:
-      - Best
-      - Source
-      - R1440
-      - R1080
-      - R720
-      - R480
-      - R360
-      - R160
-      - Audio
+    - Best
+    - Source
+    - R1440
+    - R1080
+    - R720
+    - R480
+    - R360
+    - R160
+    - Audio
   utils.VodType:
     enum:
-      - archive
-      - live
-      - highlight
-      - upload
-      - clip
+    - archive
+    - live
+    - highlight
+    - upload
+    - clip
     type: string
     x-enum-varnames:
-      - Archive
-      - Live
-      - Highlight
-      - Upload
-      - Clip
+    - Archive
+    - Live
+    - Highlight
+    - Upload
+    - Clip
   vod.Pagination:
     properties:
       data:
         items:
-          $ref: "#/definitions/ent.Vod"
+          $ref: '#/definitions/ent.Vod'
         type: array
       limit:
         type: integer
@@ -2100,310 +2103,305 @@ info:
 paths:
   /admin/api-keys:
     get:
-      description:
-        Returns API keys, newest first. By default only active (non-revoked)
+      description: Returns API keys, newest first. By default only active (non-revoked)
         keys are returned; pass ?include_revoked=true for a full audit listing. Secrets
         are never returned by this endpoint.
       parameters:
-        - description: include revoked keys
-          in: query
-          name: include_revoked
-          type: boolean
+      - description: include revoked keys
+        in: query
+        name: include_revoked
+        type: boolean
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/http.apiKeyDTO"
+              $ref: '#/definitions/http.apiKeyDTO'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: List API keys
       tags:
-        - admin
+      - admin
     post:
       consumes:
-        - application/json
-      description:
-        Mints a new admin-managed API key. The full secret is returned
+      - application/json
+      description: Mints a new admin-managed API key. The full secret is returned
         in the response and is the only time it is visible — store it securely.
       parameters:
-        - description: create api key payload
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.CreateApiKeyRequest"
+      - description: create api key payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateApiKeyRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: "#/definitions/http.createApiKeyResponse"
+            $ref: '#/definitions/http.createApiKeyResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Create an API key
       tags:
-        - admin
+      - admin
   /admin/api-keys/{id}:
     delete:
-      description:
-        Soft-deletes an API key by setting revoked_at. The verification
+      description: Soft-deletes an API key by setting revoked_at. The verification
         cache is flushed so the key stops authenticating immediately.
       parameters:
-        - description: api key id
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: api key id
+        in: path
+        name: id
+        required: true
+        type: string
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Revoke an API key
       tags:
-        - admin
+      - admin
     put:
       consumes:
-        - application/json
-      description:
-        Replaces an existing API key's editable fields (name, description,
+      - application/json
+      description: Replaces an existing API key's editable fields (name, description,
         scopes). Prefix and secret are immutable — rotating a key still means revoke
         + create.
       parameters:
-        - description: api key id
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: update api key payload
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.UpdateApiKeyRequest"
+      - description: api key id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: update api key payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.UpdateApiKeyRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/http.apiKeyDTO"
+            $ref: '#/definitions/http.apiKeyDTO'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Update an API key
       tags:
-        - admin
+      - admin
   /admin/info:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get ganymede info
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/admin.InfoResp"
+            $ref: '#/definitions/admin.InfoResp'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get ganymede info
       tags:
-        - admin
+      - admin
   /admin/storage-distribution:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get storage distribution
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/admin.GetStorageDistributionResponse"
+            $ref: '#/definitions/admin.GetStorageDistributionResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get storage distribution
       tags:
-        - admin
+      - admin
   /admin/system/overview:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get system overview
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/admin.GetSystemOverviewResponse"
+            $ref: '#/definitions/admin.GetSystemOverviewResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get system overview
       tags:
-        - admin
+      - admin
   /admin/video/statistics:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get Ganymede video statistics
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/admin.GetVideoStatisticsResponse"
+            $ref: '#/definitions/admin.GetVideoStatisticsResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get Ganymede video statistics
       tags:
-        - admin
+      - admin
   /archive/channel:
     post:
       consumes:
-        - application/json
-      description:
-        Archive a twitch channel (creates channel in database and download
+      - application/json
+      description: Archive a twitch channel (creates channel in database and download
         profile image)
       parameters:
-        - description: Channel
-          in: body
-          name: channel
-          required: true
-          schema:
-            $ref: "#/definitions/http.ArchiveChannelRequest"
+      - description: Channel
+        in: body
+        name: channel
+        required: true
+        schema:
+          $ref: '#/definitions/http.ArchiveChannelRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Channel"
+            $ref: '#/definitions/ent.Channel'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Archive a twitch channel
       tags:
-        - archive
+      - archive
   /archive/video:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Archive a twitch vod
       parameters:
-        - description: Vod
-          in: body
-          name: vod
-          required: true
-          schema:
-            $ref: "#/definitions/http.ArchiveVideoRequest"
+      - description: Vod
+        in: body
+        name: vod
+        required: true
+        schema:
+          $ref: '#/definitions/http.ArchiveVideoRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/archive.TwitchVodResponse"
+            $ref: '#/definitions/archive.TwitchVodResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Archive a twitch vod
       tags:
-        - archive
+      - archive
   /auth/change-password:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Change password
       parameters:
-        - description: Change password
-          in: body
-          name: change-password
-          required: true
-          schema:
-            $ref: "#/definitions/http.ChangePasswordRequest"
+      - description: Change password
+        in: body
+        name: change-password
+        required: true
+        schema:
+          $ref: '#/definitions/http.ChangePasswordRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -2412,92 +2410,91 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Change password
       tags:
-        - auth
+      - auth
   /auth/login:
     post:
       consumes:
-        - application/json
-      description:
-        Login a user (sets access-token and refresh-token cookies). Access
+      - application/json
+      description: Login a user (sets access-token and refresh-token cookies). Access
         token lasts for 1 hour. Refresh token lasts for 1 month.
       parameters:
-        - description: Login
-          in: body
-          name: login
-          required: true
-          schema:
-            $ref: "#/definitions/http.LoginRequest"
+      - description: Login
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/http.LoginRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.User"
+            $ref: '#/definitions/ent.User'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Login a user
       tags:
-        - auth
+      - auth
   /auth/me:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get current user
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.User"
+            $ref: '#/definitions/ent.User'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Get current user
       tags:
-        - auth
+      - auth
   /auth/oauth/callback:
     get:
       consumes:
-        - application/json
+      - application/json
       description: OAuth callback for OAuth provider
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -2506,697 +2503,697 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: OAuth callback
       tags:
-        - auth
+      - auth
   /auth/oauth/login:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Login a user with OAuth (sets access-token and refresh-token cookies)
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.User"
+            $ref: '#/definitions/ent.User'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Login a user with OAuth
       tags:
-        - auth
+      - auth
   /auth/register:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Register a user (does not log in)
       parameters:
-        - description: Register
-          in: body
-          name: register
-          required: true
-          schema:
-            $ref: "#/definitions/http.RegisterRequest"
+      - description: Register
+        in: body
+        name: register
+        required: true
+        schema:
+          $ref: '#/definitions/http.RegisterRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.User"
+            $ref: '#/definitions/ent.User'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Register a user
       tags:
-        - auth
+      - auth
   /channel:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Returns all channels
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/ent.Channel"
+              $ref: '#/definitions/ent.Channel'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get all channels
       tags:
-        - channel
+      - channel
     post:
       consumes:
-        - application/json
+      - application/json
       description: Create a channel
       parameters:
-        - description: Channel
-          in: body
-          name: channel
-          required: true
-          schema:
-            $ref: "#/definitions/http.CreateChannelRequest"
+      - description: Channel
+        in: body
+        name: channel
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateChannelRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Channel"
+            $ref: '#/definitions/ent.Channel'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Create a channel
       tags:
-        - channel
+      - channel
   /channel/{id}:
     delete:
       consumes:
-        - application/json
+      - application/json
       description: Delete a channel
       parameters:
-        - description: Channel ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Delete a channel
       tags:
-        - channel
+      - channel
     get:
       consumes:
-        - application/json
+      - application/json
       description: Returns a channel
       parameters:
-        - description: Channel ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Channel"
+            $ref: '#/definitions/ent.Channel'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get a channel
       tags:
-        - channel
+      - channel
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update a channel
       parameters:
-        - description: Channel ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Channel
-          in: body
-          name: channel
-          required: true
-          schema:
-            $ref: "#/definitions/http.CreateChannelRequest"
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Channel
+        in: body
+        name: channel
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateChannelRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Channel"
+            $ref: '#/definitions/ent.Channel'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Update a channel
       tags:
-        - channel
+      - channel
   /channel/name/{name}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Returns a channel by name
       parameters:
-        - description: Channel name
-          in: path
-          name: name
-          required: true
-          type: string
+      - description: Channel name
+        in: path
+        name: name
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Channel"
+            $ref: '#/definitions/ent.Channel'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get a channel by name
       tags:
-        - channel
+      - channel
   /config:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get config
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/config.Config"
+            $ref: '#/definitions/config.Config'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get config
       tags:
-        - config
+      - config
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update config
       parameters:
-        - description: Config
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/config.Config"
+      - description: Config
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/config.Config'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/config.Config"
+            $ref: '#/definitions/config.Config'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Update config
       tags:
-        - config
+      - config
   /live:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get all watched channels
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/ent.Live"
+              $ref: '#/definitions/ent.Live'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get all watched channels
       tags:
-        - Live
+      - Live
     post:
       consumes:
-        - application/json
+      - application/json
       description: Add watched channel
       parameters:
-        - description: Add watched channel
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.AddWatchedChannelRequest"
+      - description: Add watched channel
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.AddWatchedChannelRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Live"
+            $ref: '#/definitions/ent.Live'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Add watched channel
       tags:
-        - Live
+      - Live
   /live/{id}:
     delete:
       consumes:
-        - application/json
+      - application/json
       description: Delete watched channel
       parameters:
-        - description: Channel ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Live"
+            $ref: '#/definitions/ent.Live'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Delete watched channel
       tags:
-        - Live
+      - Live
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update watched channel
       parameters:
-        - description: Channel ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Update watched channel
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.UpdateWatchedChannelRequest"
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update watched channel
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.UpdateWatchedChannelRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Live"
+            $ref: '#/definitions/ent.Live'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Update watched channel
       tags:
-        - Live
+      - Live
   /notification:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get all notification configurations
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/http.NotificationResponse"
+              $ref: '#/definitions/http.NotificationResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get all notification configurations
       tags:
-        - notification
+      - notification
     post:
       consumes:
-        - application/json
+      - application/json
       description: Create a new notification configuration
       parameters:
-        - description: Notification
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.NotificationRequest"
+      - description: Notification
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.NotificationRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/http.NotificationResponse"
+            $ref: '#/definitions/http.NotificationResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Create a notification configuration
       tags:
-        - notification
+      - notification
   /notification/{id}:
     delete:
       consumes:
-        - application/json
+      - application/json
       description: Delete a notification configuration by id
       parameters:
-        - description: Notification ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Delete a notification configuration
       tags:
-        - notification
+      - notification
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get a single notification configuration by id
       parameters:
-        - description: Notification ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/http.NotificationResponse"
+            $ref: '#/definitions/http.NotificationResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get a single notification configuration
       tags:
-        - notification
+      - notification
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update an existing notification configuration
       parameters:
-        - description: Notification ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Notification
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.NotificationRequest"
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Notification
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.NotificationRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/http.NotificationResponse"
+            $ref: '#/definitions/http.NotificationResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Update a notification configuration
       tags:
-        - notification
+      - notification
   /notification/{id}/test:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Send a test notification using dummy data for the given event type
       parameters:
-        - description: Notification ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Test event
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.TestNotificationRequest"
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Test event
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.TestNotificationRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Test a notification configuration
       tags:
-        - notification
+      - notification
   /playback:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get all playback progress
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/ent.Playback"
+              $ref: '#/definitions/ent.Playback'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Get all progress
       tags:
-        - Playback
+      - Playback
   /playback/{id}:
     delete:
       consumes:
-        - application/json
+      - application/json
       description: Delete playback progress
       parameters:
-        - description: vod id
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: vod id
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3205,30 +3202,30 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Delete progress
       tags:
-        - Playback
+      - Playback
   /playback/progress:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Update playback progress
       parameters:
-        - description: progress
-          in: body
-          name: progress
-          required: true
-          schema:
-            $ref: "#/definitions/http.UpdateProgressRequest"
+      - description: progress
+        in: body
+        name: progress
+        required: true
+        schema:
+          $ref: '#/definitions/http.UpdateProgressRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3237,60 +3234,60 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Update progress
       tags:
-        - Playback
+      - Playback
   /playback/progress/{id}:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get playback progress
       parameters:
-        - description: vod id
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: vod id
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Playback"
+            $ref: '#/definitions/ent.Playback'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Get progress
       tags:
-        - Playback
+      - Playback
   /playback/start:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Adds a view to the video local view count
       parameters:
-        - description: vod id
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: vod id
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3299,28 +3296,28 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Start playback
       tags:
-        - Playback
+      - Playback
   /playback/status:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Update playback status
       parameters:
-        - description: status
-          in: body
-          name: status
-          required: true
-          schema:
-            $ref: "#/definitions/http.UpdateStatusRequest"
+      - description: status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/http.UpdateStatusRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3329,82 +3326,82 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Update status
       tags:
-        - Playback
+      - Playback
   /playlist:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get playlists
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/ent.Playlist"
+              $ref: '#/definitions/ent.Playlist'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get playlists
       tags:
-        - Playlist
+      - Playlist
     post:
       consumes:
-        - application/json
+      - application/json
       description: Create playlist
       parameters:
-        - description: playlist
-          in: body
-          name: playlist
-          required: true
-          schema:
-            $ref: "#/definitions/http.CreatePlaylistRequest"
+      - description: playlist
+        in: body
+        name: playlist
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreatePlaylistRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Playlist"
+            $ref: '#/definitions/ent.Playlist'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Create playlist
       tags:
-        - Playlist
+      - Playlist
   /playlist/{id}:
     delete:
       consumes:
-        - application/json
+      - application/json
       description: Delete playlist
       parameters:
-        - description: playlist id
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: playlist id
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3413,67 +3410,67 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Delete playlist
       tags:
-        - Playlist
+      - Playlist
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get playlist
       parameters:
-        - description: playlist id
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: include multistream info
-          in: query
-          name: with_multistream_info
-          type: boolean
+      - description: playlist id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: include multistream info
+        in: query
+        name: with_multistream_info
+        type: boolean
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Playlist"
+            $ref: '#/definitions/ent.Playlist'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get playlist
       tags:
-        - Playlist
+      - Playlist
     post:
       consumes:
-        - application/json
+      - application/json
       description: Add vod to playlist
       parameters:
-        - description: playlist id
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: vod
-          in: body
-          name: vod
-          required: true
-          schema:
-            $ref: "#/definitions/http.AddVodToPlaylistRequest"
+      - description: playlist id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: vod
+        in: body
+        name: vod
+        required: true
+        schema:
+          $ref: '#/definitions/http.AddVodToPlaylistRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3482,73 +3479,73 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Add vod to playlist
       tags:
-        - Playlist
+      - Playlist
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update playlist
       parameters:
-        - description: playlist id
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: playlist
-          in: body
-          name: playlist
-          required: true
-          schema:
-            $ref: "#/definitions/http.CreatePlaylistRequest"
+      - description: playlist id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: playlist
+        in: body
+        name: playlist
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreatePlaylistRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Playlist"
+            $ref: '#/definitions/ent.Playlist'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Update playlist
       tags:
-        - Playlist
+      - Playlist
   /playlist/{id}/multistream/delay:
     put:
       consumes:
-        - application/json
+      - application/json
       description: Set delay of vod in playlist for multistream
       parameters:
-        - description: playlist id
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: delay
-          in: body
-          name: delay
-          required: true
-          schema:
-            $ref: "#/definitions/http.SetVodDelayPlaylistRequest"
+      - description: playlist id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: delay
+        in: body
+        name: delay
+        required: true
+        schema:
+          $ref: '#/definitions/http.SetVodDelayPlaylistRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3557,71 +3554,70 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Set delay of vod in playlist for multistream
       tags:
-        - Playlist
+      - Playlist
   /playlist/{id}/rules:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get rules for a playlist
       parameters:
-        - description: playlist id
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: playlist id
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/ent.PlaylistRuleGroup"
+              $ref: '#/definitions/ent.PlaylistRuleGroup'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get playlist rules
       tags:
-        - Playlist
+      - Playlist
     post:
       consumes:
-        - application/json
-      description:
-        Set rules for a playlist this will delete all existing rules and
+      - application/json
+      description: Set rules for a playlist this will delete all existing rules and
         set new ones
       parameters:
-        - description: playlist id
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: rules
-          in: body
-          name: rules
-          required: true
-          schema:
-            $ref: "#/definitions/http.SetPlaylistRulesRequest"
+      - description: playlist id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: rules
+        in: body
+        name: rules
+        required: true
+        schema:
+          $ref: '#/definitions/http.SetPlaylistRulesRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3630,33 +3626,33 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
+      - ApiKeyCookieAuth: []
       summary: Set playlist rules
       tags:
-        - Playlist
+      - Playlist
     put:
       consumes:
-        - application/json
+      - application/json
       description: Test rules for a playlist against a video id
       parameters:
-        - description: playlist id
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: video id
-          in: query
-          name: video_id
-          required: true
-          type: string
+      - description: playlist id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: video id
+        in: query
+        name: video_id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3665,36 +3661,36 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Test playlist rules
       tags:
-        - Playlist
+      - Playlist
   /playlist/{id}/vod:
     delete:
       consumes:
-        - application/json
+      - application/json
       description: Delete vod from playlist
       parameters:
-        - description: playlist id
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: vod
-          in: body
-          name: vod
-          required: true
-          schema:
-            $ref: "#/definitions/http.AddVodToPlaylistRequest"
+      - description: playlist id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: vod
+        in: body
+        name: vod
+        required: true
+        schema:
+          $ref: '#/definitions/http.AddVodToPlaylistRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3703,195 +3699,194 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Delete vod from playlist
       tags:
-        - Playlist
+      - Playlist
   /queue:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get queue items
       parameters:
-        - description: Get processing queue items
-          in: query
-          name: processing
-          type: string
+      - description: Get processing queue items
+        in: query
+        name: processing
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/ent.Queue"
+              $ref: '#/definitions/ent.Queue'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get queue items
       tags:
-        - queue
+      - queue
     post:
       consumes:
-        - application/json
+      - application/json
       description: Create a queue item
       parameters:
-        - description: Create queue item
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.CreateQueueRequest"
+      - description: Create queue item
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateQueueRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: "#/definitions/ent.Queue"
+            $ref: '#/definitions/ent.Queue'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Create a queue item
       tags:
-        - queue
+      - queue
   /queue/{id}:
     delete:
       consumes:
-        - application/json
+      - application/json
       description: Delete queue item
       parameters:
-        - description: Queue item id
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Queue item id
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "204":
           description: No Content
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Delete queue item
       tags:
-        - queue
+      - queue
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get queue item
       parameters:
-        - description: Queue item id
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Queue item id
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Queue"
+            $ref: '#/definitions/ent.Queue'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get queue item
       tags:
-        - queue
+      - queue
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update queue item
       parameters:
-        - description: Queue item id
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Update queue item
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.UpdateQueueRequest"
+      - description: Queue item id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update queue item
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.UpdateQueueRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Queue"
+            $ref: '#/definitions/ent.Queue'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Update queue item
       tags:
-        - queue
+      - queue
   /queue/{id}/stop:
     post:
       consumes:
-        - application/json
-      description:
-        Stop processing the video and chat downloads of an active queue
+      - application/json
+      description: Stop processing the video and chat downloads of an active queue
         item
       parameters:
-        - description: Queue item id
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Queue item id
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3900,35 +3895,35 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Stop a queue item
       tags:
-        - queue
+      - queue
   /queue/{id}/tail:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Read queue log file
       parameters:
-        - description: Queue item id
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: "Log type: video, video-convert, chat, chat-render, or chat-convert"
-          in: query
-          name: type
-          required: true
-          type: string
+      - description: Queue item id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 'Log type: video, video-convert, chat, chat-render, or chat-convert'
+        in: query
+        name: type
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3937,24 +3932,24 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Read queue log file
       tags:
-        - queue
+      - queue
   /queue/task/start:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Start a specific queue task
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -3963,586 +3958,585 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Start a queue task for a queue
       tags:
-        - queue
+      - queue
   /task/start:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Start a task
       parameters:
-        - description: StartTaskRequest
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.StartTaskRequest"
+      - description: StartTaskRequest
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.StartTaskRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Start a task
       tags:
-        - task
+      - task
   /twitch/channel:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get a twitch user/channel by name (uses twitch api)
       parameters:
-        - description: Twitch user login name
-          in: query
-          name: name
-          required: true
-          type: string
+      - description: Twitch user login name
+        in: query
+        name: name
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/platform.ChannelInfo"
+            $ref: '#/definitions/platform.ChannelInfo'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get a twitch channel
       tags:
-        - twitch
+      - twitch
   /twitch/video:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get a twitch vod by id (uses twitch api)
       parameters:
-        - description: Twitch vod id
-          in: query
-          name: id
-          required: true
-          type: string
+      - description: Twitch vod id
+        in: query
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/platform.VideoInfo"
+            $ref: '#/definitions/platform.VideoInfo'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get a twitch vod
       tags:
-        - twitch
+      - twitch
   /user:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get all users
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/ent.User"
+              $ref: '#/definitions/ent.User'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get all users
       tags:
-        - user
+      - user
   /user/{id}:
     delete:
       consumes:
-        - application/json
+      - application/json
       description: Delete user
       parameters:
-        - description: User ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Delete user
       tags:
-        - user
+      - user
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get user by id
       parameters:
-        - description: User ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.User"
+            $ref: '#/definitions/ent.User'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get user by id
       tags:
-        - user
+      - user
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update user
       parameters:
-        - description: User ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: User data
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.UpdateChannelRequest"
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.UpdateChannelRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.User"
+            $ref: '#/definitions/ent.User'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Update user
       tags:
-        - user
+      - user
   /vod:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get vods
       parameters:
-        - description: Channel ID
-          in: query
-          name: channel_id
-          type: string
+      - description: Channel ID
+        in: query
+        name: channel_id
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/ent.Vod"
+              $ref: '#/definitions/ent.Vod'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get vods
       tags:
-        - vods
+      - vods
     post:
       consumes:
-        - application/json
+      - application/json
       description: Create a vod
       parameters:
-        - description: Create vod request
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.CreateVodRequest"
+      - description: Create vod request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateVodRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: "#/definitions/ent.Vod"
+            $ref: '#/definitions/ent.Vod'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Create a vod
       tags:
-        - vods
+      - vods
   /vod/{id}:
     delete:
       consumes:
-        - application/json
+      - application/json
       description: Delete a vod
       parameters:
-        - description: Vod ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Delete files
-          in: query
-          name: delete_files
-          type: string
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Delete files
+        in: query
+        name: delete_files
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Delete a vod
       tags:
-        - vods
+      - vods
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get a vod
       parameters:
-        - description: Vod ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: With channel
-          in: query
-          name: with_channel
-          type: string
-        - description: With chapters
-          in: query
-          name: with_chapters
-          type: string
-        - description: With muted segments
-          in: query
-          name: with_muted_segments
-          type: string
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: With channel
+        in: query
+        name: with_channel
+        type: string
+      - description: With chapters
+        in: query
+        name: with_chapters
+        type: string
+      - description: With muted segments
+        in: query
+        name: with_muted_segments
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Vod"
+            $ref: '#/definitions/ent.Vod'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get a vod
       tags:
-        - vods
+      - vods
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update a vod
       parameters:
-        - description: Vod ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Vod
-          in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/http.CreateVodRequest"
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Vod
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateVodRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ent.Vod"
+            $ref: '#/definitions/ent.Vod'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Update a vod
       tags:
-        - vods
+      - vods
   /vod/{id}/chat:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get vod chat comments
       parameters:
-        - description: Vod ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Start time
-          in: query
-          name: start
-          type: string
-        - description: End time
-          in: query
-          name: end
-          type: string
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start time
+        in: query
+        name: start
+        type: string
+      - description: End time
+        in: query
+        name: end
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
               items:
-                $ref: "#/definitions/chat.Comment"
+                $ref: '#/definitions/chat.Comment'
               type: array
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get vod chat comments
       tags:
-        - vods
+      - vods
   /vod/{id}/chat/badges:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get vod chat badges
       parameters:
-        - description: Vod ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/platform.Badge"
+              $ref: '#/definitions/platform.Badge'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get vod chat badges
       tags:
-        - vods
+      - vods
   /vod/{id}/chat/emotes:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get vod chat emotes
       parameters:
-        - description: Vod ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/chat.GanymedeEmotes"
+              $ref: '#/definitions/chat.GanymedeEmotes'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get vod chat emotes
       tags:
-        - vods
+      - vods
   /vod/{id}/chat/seek:
     get:
       consumes:
-        - application/json
-      description:
-        Get N number of vod chat comments before the start time (used for
+      - application/json
+      description: Get N number of vod chat comments before the start time (used for
         seeking)
       parameters:
-        - description: Vod ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Start time
-          in: query
-          name: start
-          type: string
-        - description: Count
-          in: query
-          name: count
-          type: string
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start time
+        in: query
+        name: start
+        type: string
+      - description: Count
+        in: query
+        name: count
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/chat.Comment"
+              $ref: '#/definitions/chat.Comment'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get number of vod chat comments
       tags:
-        - vods
+      - vods
   /vod/{id}/chat/userid:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get user id from chat json file
       parameters:
-        - description: Vod ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -4552,31 +4546,31 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get user id from chat
       tags:
-        - vods
+      - vods
   /vod/{id}/ffprobe:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get ffprobe data for video
       parameters:
-        - description: Vod ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -4585,155 +4579,154 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
-        - ApiKeyCookieAuth: []
-        - ApiKeyAuth: []
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Get ffprobe data for video
       tags:
-        - exec
+      - exec
   /vod/{id}/playlist:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get vod playlists
       parameters:
-        - description: Vod ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
               items:
-                $ref: "#/definitions/ent.Playlist"
+                $ref: '#/definitions/ent.Playlist'
               type: array
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get vod playlists
       tags:
-        - vods
+      - vods
   /vod/pagination:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get vods pagination
       parameters:
-        - default: 10
-          description: Limit
-          in: query
-          name: limit
-          type: integer
-        - default: 0
-          description: Offset
-          in: query
-          name: offset
-          type: integer
-        - description: Channel ID
-          in: query
-          name: channel_id
-          type: string
-        - description: Types
-          in: query
-          name: types
-          type: string
-        - description: Playlist ID
-          in: query
-          name: playlist_id
-          type: string
-        - description: Processing. Set to false to exclude videos that are still processing.
-          in: query
-          name: processing
-          type: string
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Channel ID
+        in: query
+        name: channel_id
+        type: string
+      - description: Types
+        in: query
+        name: types
+        type: string
+      - description: Playlist ID
+        in: query
+        name: playlist_id
+        type: string
+      - description: Processing. Set to false to exclude videos that are still processing.
+        in: query
+        name: processing
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/vod.Pagination"
+            $ref: '#/definitions/vod.Pagination'
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Get vods pagination
       tags:
-        - vods
+      - vods
   /vod/search:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Search vods
       parameters:
-        - description: Search query
-          in: query
-          name: q
-          required: true
-          type: string
-        - default: 10
-          description: Limit
-          in: query
-          name: limit
-          type: integer
-        - default: 0
-          description: Offset
-          in: query
-          name: offset
-          type: integer
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/ent.Vod"
+              $ref: '#/definitions/ent.Vod'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/utils.ErrorResponse"
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Search vods
       tags:
-        - vods
+      - vods
 schemes:
-  - https
+- https
 securityDefinitions:
   ApiKeyAuth:
-    description: "Authorization: Bearer <api_key>. Mint a key via the
-      admin UI."
+    description: 'Authorization: Bearer <api_key>. Mint a key via the admin UI.'
     in: header
     name: Authorization
     type: apiKey

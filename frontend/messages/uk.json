@@ -644,6 +644,8 @@
     "idLabel": "Автоматично згенеровано",
     "channelLabel": "Канал",
     "resolutionLabel": "Якість",
+    "liveResolutionLabel": "Якість трансляції",
+    "vodResolutionLabel": "Якість відео",
     "archiveChatLabel": "Архівувати чат",
     "renderChatLabel": "Рендерити чат",
     "liveStreamsText": "Прямі трансляції",

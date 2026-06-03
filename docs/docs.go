@@ -4861,7 +4861,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "resolution": {
-                    "description": "Resolution holds the value of the \"resolution\" field.",
+                    "description": "Live stream archive quality.",
                     "type": "string"
                 },
                 "strict_categories_live": {
@@ -4879,6 +4879,10 @@ const docTemplate = `{
                 "video_age": {
                     "description": "Restrict fetching videos to a certain age.",
                     "type": "integer"
+                },
+                "vod_resolution": {
+                    "description": "Video and clip archive quality.",
+                    "type": "string"
                 },
                 "watch_clips": {
                     "description": "Whether to download clips on a schedule.",
@@ -5846,6 +5850,19 @@ const docTemplate = `{
                     "description": "restrict fetching videos to a certain age",
                     "type": "integer"
                 },
+                "vod_resolution": {
+                    "type": "string",
+                    "enum": [
+                        "best",
+                        "1440p",
+                        "1080p",
+                        "720p",
+                        "480p",
+                        "360p",
+                        "160p",
+                        "audio"
+                    ]
+                },
                 "watch_clips": {
                     "type": "boolean"
                 },
@@ -6739,6 +6756,19 @@ const docTemplate = `{
                 "video_age": {
                     "description": "restrict fetching videos to a certain age",
                     "type": "integer"
+                },
+                "vod_resolution": {
+                    "type": "string",
+                    "enum": [
+                        "best",
+                        "1440p",
+                        "1080p",
+                        "720p",
+                        "480p",
+                        "360p",
+                        "160p",
+                        "audio"
+                    ]
                 },
                 "watch_clips": {
                     "type": "boolean"

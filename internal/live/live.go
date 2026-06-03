@@ -47,6 +47,7 @@ type Live struct {
 	IsLive                 bool                 `json:"is_live"`
 	ArchiveChat            bool                 `json:"archive_chat"`
 	Resolution             string               `json:"resolution"`
+	VodResolution          string               `json:"vod_resolution"`
 	LastLive               time.Time            `json:"last_live"`
 	RenderChat             bool                 `json:"render_chat"`
 	DownloadSubOnly        bool                 `json:"download_sub_only"`
@@ -117,6 +118,9 @@ func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent
 	if liveDto.StrictCategoriesLive && liveDto.BlacklistCategories {
 		return nil, fmt.Errorf("conflicting category options: strict_categories_live and blacklist_categories cannot both be enabled")
 	}
+	if liveDto.VodResolution == "" {
+		liveDto.VodResolution = liveDto.Resolution
+	}
 
 	l, err := s.Store.Client.Live.Create().
 		SetChannelID(liveDto.ID).
@@ -126,6 +130,7 @@ func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent
 		SetDownloadHighlights(liveDto.DownloadHighlights).
 		SetDownloadUploads(liveDto.DownloadUploads).
 		SetResolution(liveDto.Resolution).
+		SetVodResolution(liveDto.VodResolution).
 		SetArchiveChat(liveDto.ArchiveChat).
 		SetRenderChat(liveDto.RenderChat).
 		SetDownloadSubOnly(liveDto.DownloadSubOnly).
@@ -168,6 +173,9 @@ func (s *Service) UpdateLiveWatchedChannel(ctx context.Context, liveDto Live) (*
 	if liveDto.StrictCategoriesLive && liveDto.BlacklistCategories {
 		return nil, fmt.Errorf("conflicting category options: strict_categories_live and blacklist_categories cannot both be enabled")
 	}
+	if liveDto.VodResolution == "" {
+		liveDto.VodResolution = liveDto.Resolution
+	}
 
 	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).
 		SetWatchLive(liveDto.WatchLive).
@@ -176,6 +184,7 @@ func (s *Service) UpdateLiveWatchedChannel(ctx context.Context, liveDto Live) (*
 		SetDownloadHighlights(liveDto.DownloadHighlights).
 		SetDownloadUploads(liveDto.DownloadUploads).
 		SetResolution(liveDto.Resolution).
+		SetVodResolution(liveDto.VodResolution).
 		SetArchiveChat(liveDto.ArchiveChat).
 		SetRenderChat(liveDto.RenderChat).
 		SetDownloadSubOnly(liveDto.DownloadSubOnly).

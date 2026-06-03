@@ -238,7 +238,7 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 				// archive the video
 				input := archive.ArchiveVideoInput{
 					VideoId:     video.ID,
-					Quality:     utils.VodQuality(watch.Resolution),
+					Quality:     utils.VodQuality(watch.VodResolution),
 					ArchiveChat: watch.ArchiveChat,
 					RenderChat:  watch.RenderChat,
 				}
