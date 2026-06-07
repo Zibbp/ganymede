@@ -180,17 +180,18 @@ func columnExists(ctx context.Context, conn *pgxpool.Conn, tableName, columnName
 	`, tableName, columnName).Scan(&exists)
 	if err != nil {
 		log.Warn().Err(err).Str("table", tableName).Str("column", columnName).Msg("column existence check failed")
-		return true
+		return false
 	}
 	return exists
 }
 
 func backfillLiveVodResolution(ctx context.Context, conn *pgxpool.Conn) {
 	stmt := fmt.Sprintf(
-		`UPDATE %s SET %s = %s WHERE %s IS NULL OR %s = ''`,
+		`UPDATE %s SET %s = %s WHERE %s IS NULL OR %s = '' OR %s = 'best'`,
 		entLive.Table,
 		entLive.FieldVodResolution,
 		entLive.FieldResolution,
+		entLive.FieldVodResolution,
 		entLive.FieldVodResolution,
 		entLive.FieldVodResolution,
 	)
