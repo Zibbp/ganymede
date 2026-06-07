@@ -1,19 +1,21 @@
 package exec
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/grafov/m3u8"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
-func tryProxyServer(proxyURL string, testURL string, header string, proxyType utils.ProxyType) (*m3u8.MasterPlaylist, bool) {
+func tryProxyServer(proxyURL string, testURL string, header string, proxyType utils.ProxyType) (*hls.Multivariant, bool) {
 	switch proxyType {
 	case utils.ProxyTypeTwitchHLS:
 		return tryTwitchHLSProxy(proxyURL, testURL, header)
@@ -25,7 +27,7 @@ func tryProxyServer(proxyURL string, testURL string, header string, proxyType ut
 	}
 }
 
-func tryTwitchHLSProxy(proxyURL string, testURL string, header string) (*m3u8.MasterPlaylist, bool) {
+func tryTwitchHLSProxy(proxyURL string, testURL string, header string) (*hls.Multivariant, bool) {
 	log.Debug().Msgf("testing Twitch HLS proxy server: %s", proxyURL)
 	client := &http.Client{
 		Timeout: 5 * time.Second,
@@ -55,15 +57,15 @@ func tryTwitchHLSProxy(proxyURL string, testURL string, header string) (*m3u8.Ma
 		return nil, false
 	}
 
-	playlist, _, err := m3u8.DecodeFrom(resp.Body, false)
+	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, hls.MaxPlaylistSize+1))
 	if err != nil {
-		log.Error().Err(err).Msg("error decoding m3u8 response body for Twitch HLS proxy server test")
+		log.Error().Err(err).Msg("error reading response body for Twitch HLS proxy server test")
 		return nil, false
 	}
 
-	masterPlaylist, ok := playlist.(*m3u8.MasterPlaylist)
-	if !ok {
-		log.Error().Msg("error casting playlist to a master playlist for Twitch HLS proxy server test")
+	masterPlaylist, err := hls.DecodeMultivariant(bytes.NewReader(bodyBytes))
+	if err != nil {
+		log.Error().Err(err).Msg("error decoding m3u8 response body for Twitch HLS proxy server test")
 		return nil, false
 	}
 
@@ -71,7 +73,7 @@ func tryTwitchHLSProxy(proxyURL string, testURL string, header string) (*m3u8.Ma
 	return masterPlaylist, true
 }
 
-func tryHTTPProxy(proxyURL string, testURL string, header string) (*m3u8.MasterPlaylist, bool) {
+func tryHTTPProxy(proxyURL string, testURL string, header string) (*hls.Multivariant, bool) {
 	log.Debug().Msgf("testing HTTP proxy server: %s", proxyURL)
 	parsedURL, err := url.Parse(proxyURL)
 	if err != nil {
@@ -123,15 +125,9 @@ func tryHTTPProxy(proxyURL string, testURL string, header string) (*m3u8.MasterP
 		return nil, false
 	}
 
-	playlist, _, err := m3u8.DecodeFrom(resp.Body, false)
+	masterPlaylist, err := hls.DecodeMultivariant(resp.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("error decoding m3u8 response body for HTTP proxy server test")
-		return nil, false
-	}
-
-	masterPlaylist, ok := playlist.(*m3u8.MasterPlaylist)
-	if !ok {
-		log.Error().Msg("error casting playlist to a master playlist for HTTP proxy server test")
 		return nil, false
 	}
 

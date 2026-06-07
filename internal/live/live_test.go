@@ -17,6 +17,7 @@ import (
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/config"
+	internalExec "github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/server"
@@ -238,6 +239,86 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 
 }
 
+func assertAudioOnlyFile(t *testing.T, path string) {
+	t.Helper()
+
+	probeData, err := internalExec.GetFfprobeVideoData(t.Context(), path)
+	assert.NoError(t, err, "Failed to probe archived media")
+	assert.NotNil(t, probeData, "Expected ffprobe data for archived media")
+
+	audioStreams := 0
+	videoStreams := 0
+	for _, stream := range probeData.Streams {
+		switch stream.CodecType {
+		case "audio":
+			audioStreams++
+		case "video":
+			videoStreams++
+		}
+	}
+
+	assert.Greater(t, audioStreams, 0, "Archived media should contain at least one audio stream")
+	assert.Zero(t, videoStreams, "Archived media should not contain video streams")
+}
+
+func assertAudioOnlyVodAndQueue(t *testing.T, app *server.Application, liveChannel platform.LiveStreamInfo) {
+	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).WithChannel().WithChapters().First(t.Context())
+	assert.NoError(t, err, "Failed to query VOD for live stream")
+	assert.NotNil(t, vod, "VOD should not be nil")
+
+	q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(entVod.ID(vod.ID))).Only(t.Context())
+	assert.NoError(t, err, "Failed to query queue item for VOD")
+	assert.NotNil(t, q, "Queue item for VOD should not be nil")
+
+	t.Logf("Waiting for audio-only live stream to archive")
+	time.Sleep(60 * time.Second)
+
+	assert.NoError(t, app.QueueService.StopQueueItem(t.Context(), q.ID), "Failed to stop live archive")
+	tests_shared.WaitForArchiveCompletion(t, app, vod.ID, TestArchiveTimeout)
+
+	vod, err = app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).WithChannel().WithChapters().First(t.Context())
+	assert.NoError(t, err, "Failed to query VOD for live stream")
+	assert.NotNil(t, vod, "VOD should not be nil")
+
+	q, err = app.Database.Client.Queue.Get(t.Context(), q.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, q)
+	assert.Equal(t, true, q.LiveArchive)
+	assert.Equal(t, false, q.ArchiveChat)
+	assert.Equal(t, false, q.RenderChat)
+	assert.Equal(t, false, q.ChatProcessing)
+	assert.Equal(t, false, q.VideoProcessing)
+	assert.Equal(t, utils.Success, q.TaskChatDownload)
+	assert.Equal(t, utils.Success, q.TaskChatConvert)
+	assert.Equal(t, utils.Success, q.TaskChatRender)
+	assert.Equal(t, utils.Success, q.TaskChatMove)
+	assert.Equal(t, utils.Success, q.TaskVideoDownload)
+	assert.Equal(t, utils.Success, q.TaskVideoConvert)
+	assert.Equal(t, utils.Success, q.TaskVideoMove)
+
+	assert.FileExists(t, vod.ThumbnailPath)
+	assert.FileExists(t, vod.WebThumbnailPath)
+	assert.FileExists(t, vod.VideoPath)
+	assert.Empty(t, vod.ChatPath)
+	assert.Empty(t, vod.ChatVideoPath)
+	assert.NotEqual(t, 0, vod.StorageSizeBytes)
+	assertAudioOnlyFile(t, vod.VideoPath)
+
+	assert.NotEmpty(t, vod.Edges.Chapters, "Expected at least one chapter to be present")
+
+	infoFileInfo, err := os.Stat(vod.InfoPath)
+	assert.NoError(t, err)
+	assert.Greater(t, infoFileInfo.Size(), int64(0), "Info file should not be empty")
+
+	thumbnailFileInfo, err := os.Stat(vod.ThumbnailPath)
+	assert.NoError(t, err)
+	assert.Greater(t, thumbnailFileInfo.Size(), int64(0), "Thumbnail file should not be empty")
+
+	webThumbnailFileInfo, err := os.Stat(vod.WebThumbnailPath)
+	assert.NoError(t, err)
+	assert.Greater(t, webThumbnailFileInfo.Size(), int64(0), "Web thumbnail file should not be empty")
+}
+
 // Helper to assert no VOD and queue item exist
 func assertNoVodAndQueue(t *testing.T, app *server.Application, liveChannel platform.LiveStreamInfo) {
 	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).Only(t.Context())
@@ -268,6 +349,27 @@ func TestTwitchWatchedChannelLive(t *testing.T) {
 	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
 	assertVodAndQueue(t, app, liveChannel, true)
+}
+
+// TestTwitchWatchedChannelLiveAudioOnlyNoChat tests live archiving audio only without chat.
+func TestTwitchWatchedChannelLiveAudioOnlyNoChat(t *testing.T) {
+	app, liveChannel, channel := setupAppAndLiveChannel(t)
+	liveInput := live.Live{
+		ID:                    channel.ID,
+		WatchLive:             true,
+		WatchVod:              false,
+		DownloadArchives:      false,
+		DownloadHighlights:    false,
+		DownloadUploads:       false,
+		ArchiveChat:           false,
+		Resolution:            "audio",
+		RenderChat:            false,
+		DownloadSubOnly:       false,
+		UpdateMetadataMinutes: 1,
+	}
+	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
+	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
+	assertAudioOnlyVodAndQueue(t, app, liveChannel)
 }
 
 // TestTwitchWatchedChannelLiveFFmpegKilledStillFinalizes verifies that if ffmpeg dies during live recording,
