@@ -3,7 +3,6 @@ package exec
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -58,15 +57,11 @@ func tryTwitchHLSProxy(proxyURL string, testURL string, header string) (*hls.Mul
 		return nil, false
 	}
 
-	fmt.Println("===")
-	// print body
-	bodyBytes, err := io.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, hls.MaxPlaylistSize+1))
 	if err != nil {
 		log.Error().Err(err).Msg("error reading response body for Twitch HLS proxy server test")
 		return nil, false
 	}
-	fmt.Println(string(bodyBytes))
-	fmt.Println("===")
 
 	masterPlaylist, err := hls.DecodeMultivariant(bytes.NewReader(bodyBytes))
 	if err != nil {

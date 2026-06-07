@@ -13,6 +13,9 @@ import (
 
 const maxPlaylistSize = 1 * 1024 * 1024
 
+// MaxPlaylistSize is the maximum allowed size for an HLS playlist.
+const MaxPlaylistSize = maxPlaylistSize
+
 // Multivariant is a parsed HLS multivariant playlist.
 type Multivariant = playlist.Multivariant
 
