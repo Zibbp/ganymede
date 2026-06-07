@@ -14,6 +14,7 @@ import (
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/config"
+	internalExec "github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/server"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/tests"
@@ -60,6 +61,28 @@ func (s *ArchiveTest) ArchiveChannelTest(t *testing.T) {
 	fileInfo, err := os.Stat(archivedPlatformChannel.ImagePath)
 	assert.NoError(t, err)
 	assert.NotEqual(t, 0, fileInfo.Size())
+}
+
+func assertAudioOnlyFile(t *testing.T, path string) {
+	t.Helper()
+
+	probeData, err := internalExec.GetFfprobeVideoData(t.Context(), path)
+	assert.NoError(t, err, "Failed to probe archived media")
+	assert.NotNil(t, probeData, "Expected ffprobe data for archived media")
+
+	audioStreams := 0
+	videoStreams := 0
+	for _, stream := range probeData.Streams {
+		switch stream.CodecType {
+		case "audio":
+			audioStreams++
+		case "video":
+			videoStreams++
+		}
+	}
+
+	assert.Greater(t, audioStreams, 0, "Archived media should contain at least one audio stream")
+	assert.Zero(t, videoStreams, "Archived media should not contain video streams")
 }
 
 // ArchiveVideo tests the full archive process for a video with chat downloading, processing, and rendering
@@ -267,6 +290,81 @@ func TestArchiveVideoNoChat(t *testing.T) {
 
 	// Assert video is playable
 	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
+}
+
+// ArchiveVideo tests the full archive process for an audio-only video without chat downloading, processing, and rendering.
+func TestArchiveVideoAudioOnlyNoChat(t *testing.T) {
+	// Setup the application
+	app, err := tests.Setup(t)
+	assert.NoError(t, err)
+
+	// Archive the video
+	_, err = app.ArchiveService.ArchiveVideo(context.Background(), archive.ArchiveVideoInput{
+		VideoId:     TestTwitchVideoId,
+		Quality:     utils.Audio,
+		ArchiveChat: false,
+		RenderChat:  false,
+	})
+	assert.NoError(t, err)
+
+	// Assert video was created
+	v, err := app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+
+	// Assert queue item was created
+	q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+
+	assert.Equal(t, false, q.ChatProcessing)
+	assert.Equal(t, true, q.VideoProcessing)
+	assert.Equal(t, false, q.RenderChat)
+	assert.Equal(t, false, q.ArchiveChat)
+	assert.NotNil(t, q.WorkflowID)
+	assert.NotNil(t, q.WorkflowRunID)
+	assert.Equal(t, utils.Success, q.TaskChatDownload)
+	assert.Equal(t, utils.Success, q.TaskChatRender)
+	assert.Equal(t, utils.Success, q.TaskChatMove)
+	assert.Equal(t, utils.Pending, q.TaskVideoDownload)
+	assert.Equal(t, utils.Pending, q.TaskVideoConvert)
+	assert.Equal(t, utils.Pending, q.TaskVideoMove)
+
+	// Wait for the video to be archived
+	tests_shared.WaitForArchiveCompletion(t, app, v.ID, TestArchiveTimeout)
+
+	// Requery video
+	v, err = app.Database.Client.Vod.Query().Where(vod.ExtID(TestTwitchVideoId)).WithChapters().Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+
+	// Assert queue item was updated
+	q, err = app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(v.ID))).Only(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+	assert.Equal(t, false, q.ChatProcessing)
+	assert.Equal(t, false, q.VideoProcessing)
+	assert.Equal(t, utils.Success, q.TaskChatDownload)
+	assert.Equal(t, utils.Success, q.TaskChatRender)
+	assert.Equal(t, utils.Success, q.TaskChatMove)
+	assert.Equal(t, utils.Success, q.TaskVideoDownload)
+	assert.Equal(t, utils.Success, q.TaskVideoConvert)
+	assert.Equal(t, utils.Success, q.TaskVideoMove)
+
+	// Assert files exist
+	assert.FileExists(t, v.ThumbnailPath)
+	assert.FileExists(t, v.WebThumbnailPath)
+	assert.FileExists(t, v.VideoPath)
+	assert.NoFileExists(t, v.ChatPath)
+	assert.NoFileExists(t, v.ChatVideoPath)
+
+	// Assert at least one chapter exists
+	assert.NotEmpty(t, v.Edges.Chapters, "Expected at least one chapter to be present")
+
+	assert.NotEqual(t, 0, v.StorageSizeBytes)
+
+	// Assert archived media is audio-only
+	assertAudioOnlyFile(t, v.VideoPath)
 }
 
 // ArchiveVideo tests the full archive process for a video without chat rendering
