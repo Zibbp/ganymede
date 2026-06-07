@@ -13,12 +13,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/grafov/m3u8"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/exec/ytdlp"
+	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -179,7 +179,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
 
 	proxyFound := false // Whether a proxy was found
-	var masterPlaylist *m3u8.MasterPlaylist
+	var masterPlaylist *hls.Multivariant
 
 	twitchURL := utils.CreateTwitchURL(video.ExtID, video.Type, channel.Name)
 

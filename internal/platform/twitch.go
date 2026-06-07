@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/grafov/m3u8"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/chapter"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/dto"
+	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -838,7 +838,7 @@ func (c *TwitchConnection) CheckIfStreamIsLive(ctx context.Context, channelName 
 }
 
 // GetStream fetches the m3u8 playlist for a live Twitch stream.
-func (c *TwitchConnection) GetStream(ctx context.Context, channelName string) (*m3u8.MasterPlaylist, error) {
+func (c *TwitchConnection) GetStream(ctx context.Context, channelName string) (*hls.Multivariant, error) {
 	token, err := c.TwitchGQLGetPlaybackAccessToken(channelName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get playback access token: %v", err)
@@ -895,14 +895,9 @@ func (c *TwitchConnection) GetStream(ctx context.Context, channelName string) (*
 		return nil, fmt.Errorf("received unexpected status code: %d", resp.StatusCode)
 	}
 
-	playlist, _, err := m3u8.DecodeFrom(resp.Body, false)
+	masterPlaylist, err := hls.DecodeMultivariant(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error decoding m3u8 response body: %v", err)
-	}
-
-	masterPlaylist, ok := playlist.(*m3u8.MasterPlaylist)
-	if !ok {
-		return nil, fmt.Errorf("failed to cast playlist to a master playlist: %v", err)
 	}
 
 	return masterPlaylist, nil

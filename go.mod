@@ -6,6 +6,7 @@ require (
 	entgo.io/ent v0.14.6
 	github.com/alexedwards/scs/pgxstore v0.0.0-20240316134038-7e11d57e8885
 	github.com/alexedwards/scs/v2 v2.9.0
+	github.com/bluenviron/gohlslib/v2 v2.4.0
 	github.com/canidam/echo-scs-session v1.0.0
 	github.com/coreos/go-oidc/v3 v3.18.0
 	github.com/gavv/httpexpect/v2 v2.17.0
@@ -13,7 +14,6 @@ require (
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
-	github.com/grafov/m3u8 v0.12.1
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.15.2
 	github.com/lib/pq v1.12.3
