@@ -25,87 +25,119 @@ const (
 	liveChatMainFlushInterval = 5 * time.Second
 )
 
-// convertToLiveComment converts a Twitch IRC message to LiveComment format (old chat-downloader format)
+// convertToLiveComment converts a Twitch IRC message to LiveComment format (old chat-downloader format).
 func convertToLiveComment(msg twitchIRC.PrivateMessage) utils.LiveComment {
+	messageType := "text"
+	if msg.Tags["msg-id"] == "highlighted-message" {
+		messageType = "highlighted_message"
+	}
+
+	comment := newLiveComment(msg.User, msg.Tags, msg.RoomID, msg.ID, msg.Message, messageType, msg.Time)
+	comment.BitsSpent = msg.Bits
+	comment.IsAction = msg.Action
+	comment.IsFirstMessage = msg.FirstMessage
+	comment.CustomRewardID = msg.CustomRewardID
+	comment.Emotes = convertLiveCommentEmotes(msg.Emotes, 0)
+
+	if msg.Reply != nil {
+		comment.Reply = &utils.LiveCommentReply{
+			ParentMsgID:       msg.Reply.ParentMsgID,
+			ParentUserID:      msg.Reply.ParentUserID,
+			ParentUserLogin:   msg.Reply.ParentUserLogin,
+			ParentDisplayName: msg.Reply.ParentDisplayName,
+			ParentMsgBody:     msg.Reply.ParentMsgBody,
+		}
+	}
+
+	return comment
+}
+
+func convertUserNoticeToLiveComment(msg twitchIRC.UserNoticeMessage) utils.LiveComment {
+	message, emoteOffset := userNoticeDisplayMessage(msg.SystemMsg, msg.Message)
+	comment := newLiveComment(msg.User, msg.Tags, msg.RoomID, msg.ID, message, "user_notice", msg.Time)
+	comment.Emotes = convertLiveCommentEmotes(msg.Emotes, emoteOffset)
+	comment.UserNoticeParams = make(map[string]string, len(msg.MsgParams)+2)
+	comment.UserNoticeParams["msg-id"] = msg.MsgID
+	comment.UserNoticeParams["system-msg"] = msg.SystemMsg
+	if msg.Message != "" {
+		comment.UserNoticeParams["user-message"] = msg.Message
+	}
+
+	for key, value := range msg.MsgParams {
+		comment.UserNoticeParams[key] = value
+	}
+
+	return comment
+}
+
+func newLiveComment(user twitchIRC.User, tags map[string]string, roomID, id, message, messageType string, timestamp time.Time) utils.LiveComment {
 	comment := utils.LiveComment{
 		ActionType:       "add_chat_message",
-		ChannelID:        msg.RoomID,
-		ClientNonce:      msg.ID,
-		Colour:           msg.User.Color,
-		Flags:            msg.Tags["flags"],
-		Message:          msg.Message,
-		MessageID:        msg.ID,
-		MessageType:      "text",
-		ReturningChatter: msg.Tags["returning-chatter"],
-		Timestamp:        msg.Time.UnixMicro(),
-		UserType:         msg.Tags["user-type"],
+		ChannelID:        roomID,
+		ClientNonce:      id,
+		Colour:           user.Color,
+		Flags:            tags["flags"],
+		Message:          message,
+		MessageID:        id,
+		MessageType:      messageType,
+		ReturningChatter: tags["returning-chatter"],
+		Timestamp:        timestamp.UnixMicro(),
+		UserType:         tags["user-type"],
 	}
 
-	// Parse first-msg tag
-	if firstMsg := msg.Tags["first-msg"]; firstMsg == "1" {
-		comment.IsFirstMessage = true
-	}
+	comment.Author.DisplayName = user.DisplayName
+	comment.Author.ID = user.ID
+	comment.Author.Name = user.Name
+	comment.Author.IsModerator = user.Badges["moderator"] == 1 || tags["mod"] == "1"
+	comment.Author.IsSubscriber = user.Badges["subscriber"] == 1 || tags["subscriber"] == "1"
+	comment.Author.IsTurbo = user.Badges["turbo"] == 1 || tags["turbo"] == "1"
+	comment.Author.Badges = convertLiveCommentBadges(user.Badges)
 
-	// Set author fields
-	comment.Author.DisplayName = msg.User.DisplayName
-	comment.Author.ID = msg.User.ID
-	comment.Author.Name = msg.User.Name
-	comment.Author.IsModerator = msg.User.Badges["moderator"] == 1 || msg.Tags["mod"] == "1"
-	comment.Author.IsSubscriber = msg.User.Badges["subscriber"] == 1
-	comment.Author.IsTurbo = msg.User.Badges["turbo"] == 1
+	return comment
+}
 
-	// Convert badges
-	for badgeName, badgeVersion := range msg.User.Badges {
-		badge := struct {
-			ClickAction string `json:"click_action"`
-			ClickURL    string `json:"click_url"`
-			Description string `json:"description"`
-			Icons       []struct {
-				Height int    `json:"height"`
-				ID     string `json:"id"`
-				URL    string `json:"url"`
-				Width  int    `json:"width"`
-			} `json:"icons"`
-			ID      string      `json:"id"`
-			Name    string      `json:"name"`
-			Title   string      `json:"title"`
-			Version interface{} `json:"version"`
-		}{
+func convertLiveCommentBadges(badges map[string]int) []utils.LiveCommentBadge {
+	liveBadges := make([]utils.LiveCommentBadge, 0, len(badges))
+	for badgeName, badgeVersion := range badges {
+		liveBadges = append(liveBadges, utils.LiveCommentBadge{
 			ID:      badgeName,
 			Name:    badgeName,
 			Title:   badgeName,
 			Version: badgeVersion,
-		}
-		comment.Author.Badges = append(comment.Author.Badges, badge)
+		})
 	}
 
-	// Convert emotes
-	for _, emote := range msg.Emotes {
-		commentEmote := struct {
-			ID     string `json:"id"`
-			Images []struct {
-				Height int    `json:"height"`
-				ID     string `json:"id"`
-				URL    string `json:"url"`
-				Width  int    `json:"width"`
-			} `json:"images"`
-			Locations []string `json:"locations"`
-			Name      string   `json:"name"`
-		}{
+	return liveBadges
+}
+
+func convertLiveCommentEmotes(emotes []*twitchIRC.Emote, offset int) []utils.LiveCommentEmote {
+	liveEmotes := make([]utils.LiveCommentEmote, 0, len(emotes))
+	for _, emote := range emotes {
+		commentEmote := utils.LiveCommentEmote{
 			ID:   emote.ID,
 			Name: emote.Name,
 		}
 
-		// Convert emote positions to location strings
 		for _, position := range emote.Positions {
-			location := fmt.Sprintf("%d-%d", position.Start, position.End)
+			location := fmt.Sprintf("%d-%d", position.Start+offset, position.End+offset)
 			commentEmote.Locations = append(commentEmote.Locations, location)
 		}
 
-		comment.Emotes = append(comment.Emotes, commentEmote)
+		liveEmotes = append(liveEmotes, commentEmote)
 	}
 
-	return comment
+	return liveEmotes
+}
+
+func userNoticeDisplayMessage(systemMessage, userMessage string) (string, int) {
+	switch {
+	case systemMessage == "":
+		return userMessage, 0
+	case userMessage == "":
+		return systemMessage, 0
+	default:
+		return systemMessage + " " + userMessage, len(systemMessage) + 1
+	}
 }
 
 type liveChatJSONArrayWriter struct {
@@ -717,19 +749,15 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 		var lastMessageReceivedUnixNano atomic.Int64
 		lastMessageReceivedUnixNano.Store(time.Now().UnixNano())
 
-		// Handle messages
-		client.OnPrivateMessage(func(message twitchIRC.PrivateMessage) {
-			receivedAt := time.Now()
-			lastMessageReceivedUnixNano.Store(receivedAt.UnixNano())
-
-			comment := convertToLiveComment(message)
+		saveLiveComment := func(comment utils.LiveComment, receivedAt time.Time, twitchMessageTime time.Time) {
 			writeStarted := time.Now()
 			if err := chatWriter.Append(comment); err != nil {
 				errors := writeErrors.Add(1)
 				logger.Error().Err(err).
 					Int64("message_write_errors", errors).
-					Str("message_id", message.ID).
-					Msg("error saving chat message")
+					Str("message_id", comment.MessageID).
+					Str("message_type", comment.MessageType).
+					Msg("error saving live chat item")
 				return
 			}
 
@@ -746,10 +774,26 @@ func SaveTwitchLiveChatToFile(ctx context.Context, channel, filename string) err
 			if count == 1 || count%500 == 0 {
 				logger.Debug().
 					Int64("messages_saved", count).
-					Dur("message_age", receivedAt.Sub(message.Time)).
-					Time("twitch_message_time", message.Time).
-					Msg("live chat message saved")
+					Dur("message_age", receivedAt.Sub(twitchMessageTime)).
+					Time("twitch_message_time", twitchMessageTime).
+					Str("message_type", comment.MessageType).
+					Msg("live chat item saved")
 			}
+		}
+
+		// Handle messages
+		client.OnPrivateMessage(func(message twitchIRC.PrivateMessage) {
+			receivedAt := time.Now()
+			lastMessageReceivedUnixNano.Store(receivedAt.UnixNano())
+
+			saveLiveComment(convertToLiveComment(message), receivedAt, message.Time)
+		})
+
+		client.OnUserNoticeMessage(func(message twitchIRC.UserNoticeMessage) {
+			receivedAt := time.Now()
+			lastMessageReceivedUnixNano.Store(receivedAt.UnixNano())
+
+			saveLiveComment(convertUserNoticeToLiveComment(message), receivedAt, message.Time)
 		})
 
 		// Handle connection

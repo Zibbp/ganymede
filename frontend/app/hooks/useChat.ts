@@ -40,6 +40,8 @@ export interface Comment {
   // format complex object into simpler ones for rendering
   ganymede_formatted_badges: GanymedeFormattedBadge[];
   ganymede_formatted_message: GanymedeFormattedMessageFragment[];
+  ganymede_chat_message_kind?: GanymedeChatMessageKind;
+  ganymede_event_label?: string;
 }
 
 export interface GanymedeFormattedBadge {
@@ -59,6 +61,14 @@ export interface GanymedeFormattedMessageFragment {
 export enum GanymedeFormattedMessageType {
   Text = "text",
   Emote = "emote",
+}
+
+export enum GanymedeChatMessageKind {
+  Normal = "normal",
+  Action = "action",
+  Bits = "bits",
+  Highlighted = "highlighted",
+  UserNotice = "user_notice",
 }
 
 export interface GanymedeFormattedEmote {
@@ -83,18 +93,19 @@ export interface Commenter {
 
 export interface Message {
   body: string;
-  bits_spent: string;
+  bits_spent: number;
   fragments: Fragment[];
   is_action: boolean;
   user_badges: UserBadge[];
   user_color: string;
   user_notice_params: UserNoticeParams;
   Emoticons: EmoticonElement[];
+  reply?: Reply;
 }
 
 export interface Fragment {
   text: string;
-  emoticon: FragmentEmoticon;
+  emoticon: FragmentEmoticon | null;
 }
 
 export interface FragmentEmoticon {
@@ -108,7 +119,17 @@ export interface UserBadge {
 }
 
 export interface UserNoticeParams {
-  msg_id: string;
+  msg_id?: string | null;
+  system_msg?: string;
+  params?: Record<string, string>;
+}
+
+export interface Reply {
+  parent_msg_id: string;
+  parent_user_id: string;
+  parent_user_login: string;
+  parent_display_name: string;
+  parent_msg_body: string;
 }
 
 export interface EmoticonElement {

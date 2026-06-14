@@ -118,6 +118,15 @@ type Message struct {
 	UserColor        *string           `json:"user_color"`
 	UserNoticeParams UserNoticeParams  `json:"user_notice_params"`
 	Emoticons        []EmoticonElement `json:"emoticons"`
+	Reply            *Reply            `json:"reply,omitempty"`
+}
+
+type Reply struct {
+	ParentMsgID       string `json:"parent_msg_id"`
+	ParentUserID      string `json:"parent_user_id"`
+	ParentUserLogin   string `json:"parent_user_login"`
+	ParentDisplayName string `json:"parent_display_name"`
+	ParentMsgBody     string `json:"parent_msg_body"`
 }
 
 type EmoticonElement struct {
@@ -142,7 +151,9 @@ type UserBadge struct {
 }
 
 type UserNoticeParams struct {
-	MsgID interface{} `json:"msg_id"`
+	MsgID     interface{}       `json:"msg_id"`
+	SystemMsg string            `json:"system_msg,omitempty"`
+	Params    map[string]string `json:"params,omitempty"`
 }
 
 type Streamer struct {
