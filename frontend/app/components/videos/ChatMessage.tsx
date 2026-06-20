@@ -114,7 +114,7 @@ const ChatMessage = ({ comment, showTimestamp, timestampSeconds, onTimestampClic
         {isEvent && (
           <span className={classes.eventLabel}>
             <IconStar size={13} stroke={1.9} aria-hidden="true" />
-            {comment.ganymede_event_label || "Event"}
+            {t(comment.ganymede_event_label || "chatEventGeneric")}
           </span>
         )}
         {/* badges */}

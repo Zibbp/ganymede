@@ -77,3 +77,31 @@ func Test_extractSharedChatArgs(t *testing.T) {
 		})
 	}
 }
+
+func Test_appendFFmpegLiveOutputStreamArgs(t *testing.T) {
+	tests := []struct {
+		name      string
+		audioOnly bool
+		want      []string
+	}{
+		{
+			name:      "all streams",
+			audioOnly: false,
+			want:      []string{"-map", "0", "-dn", "-ignore_unknown", "-c", "copy"},
+		},
+		{
+			name:      "audio only",
+			audioOnly: true,
+			want:      []string{"-map", "0:a", "-dn", "-ignore_unknown", "-c", "copy"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := appendFFmpegLiveOutputStreamArgs(nil, tt.audioOnly)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("appendFFmpegLiveOutputStreamArgs(nil, %t) = %v, want %v", tt.audioOnly, got, tt.want)
+			}
+		})
+	}
+}

@@ -30,15 +30,15 @@ const IGNORED_BADGES = new Set(['no_audio', 'no_video', 'predictions']);
 const SUBSCRIPTION_BADGES = new Set(['subscriber', 'sub-gifter', 'sub_gifter', 'bits']);
 const SCROLL_THRESHOLD = 100; // px from bottom to trigger auto-scroll
 const EVENT_LABELS: Record<string, string> = {
-  sub: "Sub",
-  resub: "Resub",
-  subgift: "Gift Sub",
-  anonsubgift: "Gift Sub",
-  submysterygift: "Gift Bomb",
-  raid: "Raid",
-  unraid: "Raid",
-  ritual: "Ritual",
-  announcement: "Announcement",
+  sub: "chatEventSub",
+  resub: "chatEventResub",
+  subgift: "chatEventGiftSub",
+  anonsubgift: "chatEventGiftSub",
+  submysterygift: "chatEventGiftBomb",
+  raid: "chatEventRaid",
+  unraid: "chatEventRaid",
+  ritual: "chatEventRitual",
+  announcement: "chatEventAnnouncement",
 };
 
 interface ChatMaps {
@@ -293,7 +293,7 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
 
     if (noticeID && noticeID !== "highlighted-message") {
       comment.ganymede_chat_message_kind = GanymedeChatMessageKind.UserNotice;
-      comment.ganymede_event_label = EVENT_LABELS[noticeID] ?? "Event";
+      comment.ganymede_event_label = EVENT_LABELS[noticeID] ?? "chatEventGeneric";
       return comment;
     }
 

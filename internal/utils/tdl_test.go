@@ -218,6 +218,9 @@ func TestEnrichTwitchChatMetadataFromLiveChat(t *testing.T) {
 	if !enriched.EmbeddedData["kept"] {
 		t.Fatal("expected unrelated top-level fields to be preserved")
 	}
+	if len(enriched.Comments) < 3 {
+		t.Fatalf("expected at least 3 enriched comments, got %d", len(enriched.Comments))
+	}
 	if enriched.Comments[0].Message.Reply != nil || enriched.Comments[0].Message.UserNoticeParams.MsgID != "" {
 		t.Fatalf("expected untouched normal comment, got %#v", enriched.Comments[0].Message)
 	}

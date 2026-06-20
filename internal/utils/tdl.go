@@ -78,8 +78,8 @@ type UserBadge struct {
 }
 
 type UserNoticParams struct {
-	MsgID     *string           `json:"msg-id,omitempty"`
-	SystemMsg string            `json:"system-msg,omitempty"`
+	MsgID     *string           `json:"msg_id,omitempty"`
+	SystemMsg string            `json:"system_msg,omitempty"`
 	Params    map[string]string `json:"params,omitempty"`
 }
 
