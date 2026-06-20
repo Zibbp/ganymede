@@ -101,6 +101,11 @@ func Resolution(v string) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldResolution, v))
 }
 
+// VodResolution applies equality check predicate on the "vod_resolution" field. It's identical to VodResolutionEQ.
+func VodResolution(v string) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldVodResolution, v))
+}
+
 // LastLive applies equality check predicate on the "last_live" field. It's identical to LastLiveEQ.
 func LastLive(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldLastLive, v))
@@ -324,6 +329,81 @@ func ResolutionEqualFold(v string) predicate.Live {
 // ResolutionContainsFold applies the ContainsFold predicate on the "resolution" field.
 func ResolutionContainsFold(v string) predicate.Live {
 	return predicate.Live(sql.FieldContainsFold(FieldResolution, v))
+}
+
+// VodResolutionEQ applies the EQ predicate on the "vod_resolution" field.
+func VodResolutionEQ(v string) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldVodResolution, v))
+}
+
+// VodResolutionNEQ applies the NEQ predicate on the "vod_resolution" field.
+func VodResolutionNEQ(v string) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldVodResolution, v))
+}
+
+// VodResolutionIn applies the In predicate on the "vod_resolution" field.
+func VodResolutionIn(vs ...string) predicate.Live {
+	return predicate.Live(sql.FieldIn(FieldVodResolution, vs...))
+}
+
+// VodResolutionNotIn applies the NotIn predicate on the "vod_resolution" field.
+func VodResolutionNotIn(vs ...string) predicate.Live {
+	return predicate.Live(sql.FieldNotIn(FieldVodResolution, vs...))
+}
+
+// VodResolutionGT applies the GT predicate on the "vod_resolution" field.
+func VodResolutionGT(v string) predicate.Live {
+	return predicate.Live(sql.FieldGT(FieldVodResolution, v))
+}
+
+// VodResolutionGTE applies the GTE predicate on the "vod_resolution" field.
+func VodResolutionGTE(v string) predicate.Live {
+	return predicate.Live(sql.FieldGTE(FieldVodResolution, v))
+}
+
+// VodResolutionLT applies the LT predicate on the "vod_resolution" field.
+func VodResolutionLT(v string) predicate.Live {
+	return predicate.Live(sql.FieldLT(FieldVodResolution, v))
+}
+
+// VodResolutionLTE applies the LTE predicate on the "vod_resolution" field.
+func VodResolutionLTE(v string) predicate.Live {
+	return predicate.Live(sql.FieldLTE(FieldVodResolution, v))
+}
+
+// VodResolutionContains applies the Contains predicate on the "vod_resolution" field.
+func VodResolutionContains(v string) predicate.Live {
+	return predicate.Live(sql.FieldContains(FieldVodResolution, v))
+}
+
+// VodResolutionHasPrefix applies the HasPrefix predicate on the "vod_resolution" field.
+func VodResolutionHasPrefix(v string) predicate.Live {
+	return predicate.Live(sql.FieldHasPrefix(FieldVodResolution, v))
+}
+
+// VodResolutionHasSuffix applies the HasSuffix predicate on the "vod_resolution" field.
+func VodResolutionHasSuffix(v string) predicate.Live {
+	return predicate.Live(sql.FieldHasSuffix(FieldVodResolution, v))
+}
+
+// VodResolutionIsNil applies the IsNil predicate on the "vod_resolution" field.
+func VodResolutionIsNil() predicate.Live {
+	return predicate.Live(sql.FieldIsNull(FieldVodResolution))
+}
+
+// VodResolutionNotNil applies the NotNil predicate on the "vod_resolution" field.
+func VodResolutionNotNil() predicate.Live {
+	return predicate.Live(sql.FieldNotNull(FieldVodResolution))
+}
+
+// VodResolutionEqualFold applies the EqualFold predicate on the "vod_resolution" field.
+func VodResolutionEqualFold(v string) predicate.Live {
+	return predicate.Live(sql.FieldEqualFold(FieldVodResolution, v))
+}
+
+// VodResolutionContainsFold applies the ContainsFold predicate on the "vod_resolution" field.
+func VodResolutionContainsFold(v string) predicate.Live {
+	return predicate.Live(sql.FieldContainsFold(FieldVodResolution, v))
 }
 
 // LastLiveEQ applies the EQ predicate on the "last_live" field.

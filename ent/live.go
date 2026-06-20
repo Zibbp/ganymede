@@ -35,8 +35,10 @@ type Live struct {
 	IsLive bool `json:"is_live"`
 	// Whether the chat archive is enabled.
 	ArchiveChat bool `json:"archive_chat"`
-	// Resolution holds the value of the "resolution" field.
+	// Live stream archive quality.
 	Resolution string `json:"resolution"`
+	// Video and clip archive quality.
+	VodResolution string `json:"vod_resolution"`
 	// The time the channel last went live.
 	LastLive time.Time `json:"last_live"`
 	// Whether the chat should be rendered.
@@ -123,7 +125,7 @@ func (*Live) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case live.FieldVideoAge, live.FieldClipsLimit, live.FieldClipsIntervalDays, live.FieldUpdateMetadataMinutes:
 			values[i] = new(sql.NullInt64)
-		case live.FieldResolution:
+		case live.FieldResolution, live.FieldVodResolution:
 			values[i] = new(sql.NullString)
 		case live.FieldLastLive, live.FieldClipsLastChecked, live.FieldUpdatedAt, live.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -205,6 +207,12 @@ func (_m *Live) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field resolution", values[i])
 			} else if value.Valid {
 				_m.Resolution = value.String
+			}
+		case live.FieldVodResolution:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field vod_resolution", values[i])
+			} else if value.Valid {
+				_m.VodResolution = value.String
 			}
 		case live.FieldLastLive:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -374,6 +382,9 @@ func (_m *Live) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("resolution=")
 	builder.WriteString(_m.Resolution)
+	builder.WriteString(", ")
+	builder.WriteString("vod_resolution=")
+	builder.WriteString(_m.VodResolution)
 	builder.WriteString(", ")
 	builder.WriteString("last_live=")
 	builder.WriteString(_m.LastLive.Format(time.ANSIC))

@@ -153,6 +153,20 @@ func (_c *LiveCreate) SetNillableResolution(v *string) *LiveCreate {
 	return _c
 }
 
+// SetVodResolution sets the "vod_resolution" field.
+func (_c *LiveCreate) SetVodResolution(v string) *LiveCreate {
+	_c.mutation.SetVodResolution(v)
+	return _c
+}
+
+// SetNillableVodResolution sets the "vod_resolution" field if the given value is not nil.
+func (_c *LiveCreate) SetNillableVodResolution(v *string) *LiveCreate {
+	if v != nil {
+		_c.SetVodResolution(*v)
+	}
+	return _c
+}
+
 // SetLastLive sets the "last_live" field.
 func (_c *LiveCreate) SetLastLive(v time.Time) *LiveCreate {
 	_c.mutation.SetLastLive(v)
@@ -475,6 +489,10 @@ func (_c *LiveCreate) defaults() {
 		v := live.DefaultResolution
 		_c.mutation.SetResolution(v)
 	}
+	if _, ok := _c.mutation.VodResolution(); !ok {
+		v := live.DefaultVodResolution
+		_c.mutation.SetVodResolution(v)
+	}
 	if _, ok := _c.mutation.LastLive(); !ok {
 		v := live.DefaultLastLive()
 		_c.mutation.SetLastLive(v)
@@ -677,6 +695,10 @@ func (_c *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Resolution(); ok {
 		_spec.SetField(live.FieldResolution, field.TypeString, value)
 		_node.Resolution = value
+	}
+	if value, ok := _c.mutation.VodResolution(); ok {
+		_spec.SetField(live.FieldVodResolution, field.TypeString, value)
+		_node.VodResolution = value
 	}
 	if value, ok := _c.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
@@ -946,6 +968,24 @@ func (u *LiveUpsert) UpdateResolution() *LiveUpsert {
 // ClearResolution clears the value of the "resolution" field.
 func (u *LiveUpsert) ClearResolution() *LiveUpsert {
 	u.SetNull(live.FieldResolution)
+	return u
+}
+
+// SetVodResolution sets the "vod_resolution" field.
+func (u *LiveUpsert) SetVodResolution(v string) *LiveUpsert {
+	u.Set(live.FieldVodResolution, v)
+	return u
+}
+
+// UpdateVodResolution sets the "vod_resolution" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateVodResolution() *LiveUpsert {
+	u.SetExcluded(live.FieldVodResolution)
+	return u
+}
+
+// ClearVodResolution clears the value of the "vod_resolution" field.
+func (u *LiveUpsert) ClearVodResolution() *LiveUpsert {
+	u.SetNull(live.FieldVodResolution)
 	return u
 }
 
@@ -1316,6 +1356,27 @@ func (u *LiveUpsertOne) UpdateResolution() *LiveUpsertOne {
 func (u *LiveUpsertOne) ClearResolution() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
 		s.ClearResolution()
+	})
+}
+
+// SetVodResolution sets the "vod_resolution" field.
+func (u *LiveUpsertOne) SetVodResolution(v string) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetVodResolution(v)
+	})
+}
+
+// UpdateVodResolution sets the "vod_resolution" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateVodResolution() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateVodResolution()
+	})
+}
+
+// ClearVodResolution clears the value of the "vod_resolution" field.
+func (u *LiveUpsertOne) ClearVodResolution() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.ClearVodResolution()
 	})
 }
 
@@ -1884,6 +1945,27 @@ func (u *LiveUpsertBulk) UpdateResolution() *LiveUpsertBulk {
 func (u *LiveUpsertBulk) ClearResolution() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
 		s.ClearResolution()
+	})
+}
+
+// SetVodResolution sets the "vod_resolution" field.
+func (u *LiveUpsertBulk) SetVodResolution(v string) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetVodResolution(v)
+	})
+}
+
+// UpdateVodResolution sets the "vod_resolution" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateVodResolution() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateVodResolution()
+	})
+}
+
+// ClearVodResolution clears the value of the "vod_resolution" field.
+func (u *LiveUpsertBulk) ClearVodResolution() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.ClearVodResolution()
 	})
 }
 

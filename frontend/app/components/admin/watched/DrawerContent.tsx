@@ -60,6 +60,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
       download_highlights: watchedChannel?.download_highlights ?? true,
       download_uploads: watchedChannel?.download_uploads ?? true,
       resolution: watchedChannel?.resolution || "best",
+      vod_resolution: watchedChannel?.vod_resolution || watchedChannel?.resolution || "best",
       archive_chat: watchedChannel?.archive_chat ?? true,
       channel_id: watchedChannel?.edges.channel.id || "",
       render_chat: watchedChannel?.render_chat ?? true,
@@ -132,6 +133,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           download_highlights: formValues.download_highlights,
           download_uploads: formValues.download_uploads,
           resolution: formValues.resolution,
+          vod_resolution: formValues.vod_resolution,
           archive_chat: formValues.archive_chat,
           render_chat: formValues.render_chat,
           download_sub_only: formValues.download_sub_only,
@@ -177,6 +179,7 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           download_highlights: formValues.download_highlights,
           download_uploads: formValues.download_uploads,
           resolution: formValues.resolution,
+          vod_resolution: formValues.vod_resolution,
           archive_chat: formValues.archive_chat,
           render_chat: formValues.render_chat,
           download_sub_only: formValues.download_sub_only,
@@ -259,14 +262,6 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
           searchable
         />
 
-        <Select
-          label={t('resolutionLabel')}
-          data={qualityOptions}
-          key={form.key('resolution')}
-          {...form.getInputProps('resolution')}
-          searchable
-        />
-
         <Checkbox
           mt={10}
           label={t('archiveChatLabel')}
@@ -292,6 +287,15 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
             label={t('watchLiveLabel')}
             key={form.key('watch_live')}
             {...form.getInputProps('watch_live', { type: "checkbox" })}
+          />
+
+          <Select
+            mt={5}
+            label={t('liveResolutionLabel')}
+            data={qualityOptions}
+            key={form.key('resolution')}
+            {...form.getInputProps('resolution')}
+            searchable
           />
 
           {form.values.watch_live && (
@@ -321,6 +325,15 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }:
             label={t('watchVideosLabel')}
             key={form.key('watch_vod')}
             {...form.getInputProps('watch_vod', { type: "checkbox" })}
+          />
+
+          <Select
+            mt={5}
+            label={t('vodResolutionLabel')}
+            data={qualityOptions}
+            key={form.key('vod_resolution')}
+            {...form.getInputProps('vod_resolution')}
+            searchable
           />
 
           <Box ml={30}>
