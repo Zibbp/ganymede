@@ -40,6 +40,7 @@ const EVENT_LABELS: Record<string, string> = {
   ritual: "chatEventRitual",
   announcement: "chatEventAnnouncement",
 };
+const FIRST_MESSAGE_LABEL = "chatEventFirstMessage";
 
 interface ChatMaps {
   emoteMap: Map<string, Emote>;
@@ -290,15 +291,30 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
   const classifyComment = useCallback((comment: Comment) => {
     const msgID = comment.message.user_notice_params?.msg_id;
     const noticeID = typeof msgID === "string" ? msgID : "";
+    const noticeParams = comment.message.user_notice_params?.params ?? {};
+    const isFirstMessage = comment.message.is_first_message
+      || comment.message.user_badges?.some(badge => badge._id === "first-msg")
+      || (
+        noticeID === "ritual"
+        && noticeParams["msg-param-ritual-name"] === "new_chatter"
+      );
 
     if (noticeID && noticeID !== "highlighted-message") {
       comment.ganymede_chat_message_kind = GanymedeChatMessageKind.UserNotice;
-      comment.ganymede_event_label = EVENT_LABELS[noticeID] ?? "chatEventGeneric";
+      comment.ganymede_event_label = isFirstMessage
+        ? FIRST_MESSAGE_LABEL
+        : EVENT_LABELS[noticeID] ?? "chatEventGeneric";
       return comment;
     }
 
     if (noticeID === "highlighted-message") {
       comment.ganymede_chat_message_kind = GanymedeChatMessageKind.Highlighted;
+      return comment;
+    }
+
+    if (isFirstMessage) {
+      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.FirstMessage;
+      comment.ganymede_event_label = FIRST_MESSAGE_LABEL;
       return comment;
     }
 

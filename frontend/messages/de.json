@@ -830,6 +830,7 @@
     "chatEventGiftBomb": "Abo-Geschenkaktion",
     "chatEventRaid": "Raid",
     "chatEventRitual": "Ritual",
+    "chatEventFirstMessage": "Erste Nachricht",
     "chatEventAnnouncement": "Ankündigung",
     "loadingChat": "Lade Chat-Wiedergabe",
     "chatError": "Fehler",

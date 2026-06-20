@@ -51,6 +51,7 @@ type Message struct {
 	BitsSpent        int             `json:"bits_spent"`
 	Fragments        []Fragment      `json:"fragments"`
 	IsAction         bool            `json:"is_action"`
+	IsFirstMessage   bool            `json:"is_first_message,omitempty"`
 	UserBadges       []UserBadge     `json:"user_badges"`
 	UserColor        string          `json:"user_color"`
 	UserNoticeParams UserNoticParams `json:"user_notice_params"`
@@ -170,11 +171,12 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 				IsTurbo:      liveComment.Author.IsTurbo,
 			},
 			Message: Message{
-				Body:       liveComment.Message,
-				BitsSpent:  liveComment.BitsSpent,
-				IsAction:   liveComment.IsAction,
-				UserBadges: []UserBadge{},
-				UserColor:  liveComment.Colour,
+				Body:           liveComment.Message,
+				BitsSpent:      liveComment.BitsSpent,
+				IsAction:       liveComment.IsAction,
+				IsFirstMessage: liveComment.IsFirstMessage,
+				UserBadges:     []UserBadge{},
+				UserColor:      liveComment.Colour,
 				UserNoticeParams: UserNoticParams{
 					MsgID: nil,
 				},
@@ -382,6 +384,7 @@ func writeTDLChat(parsedChat TDLChat, outPath string) error {
 type liveChatMetadata struct {
 	BitsSpent        int
 	IsAction         bool
+	IsFirstMessage   bool
 	Reply            *LiveCommentReply
 	UserNoticeParams map[string]string
 }
@@ -420,11 +423,12 @@ func EnrichTwitchChatMetadataFromLiveChat(liveChatPath string, chatPath string) 
 		metadata := liveChatMetadata{
 			BitsSpent:        liveComment.BitsSpent,
 			IsAction:         liveComment.IsAction,
+			IsFirstMessage:   liveComment.IsFirstMessage,
 			Reply:            liveComment.Reply,
 			UserNoticeParams: userNoticeParams,
 		}
 
-		if metadata.BitsSpent == 0 && !metadata.IsAction && metadata.Reply == nil && len(metadata.UserNoticeParams) == 0 {
+		if metadata.BitsSpent == 0 && !metadata.IsAction && !metadata.IsFirstMessage && metadata.Reply == nil && len(metadata.UserNoticeParams) == 0 {
 			continue
 		}
 
@@ -477,6 +481,9 @@ func EnrichTwitchChatMetadataFromLiveChat(liveChatPath string, chatPath string) 
 		}
 		if metadata.IsAction {
 			message["is_action"] = true
+		}
+		if metadata.IsFirstMessage {
+			message["is_first_message"] = true
 		}
 		if metadata.Reply != nil {
 			message["reply"] = finalChatReply{

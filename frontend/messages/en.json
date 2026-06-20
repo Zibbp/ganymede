@@ -830,6 +830,7 @@
     "chatEventGiftBomb": "Gift Bomb",
     "chatEventRaid": "Raid",
     "chatEventRitual": "Ritual",
+    "chatEventFirstMessage": "First Message",
     "chatEventAnnouncement": "Announcement",
     "loadingChat": "Loading chat playback",
     "chatError": "Error",

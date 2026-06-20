@@ -114,6 +114,7 @@ type Message struct {
 	BitsSpent        int64             `json:"bits_spent"`
 	Fragments        []Fragment        `json:"fragments"`
 	IsAction         bool              `json:"is_action"`
+	IsFirstMessage   bool              `json:"is_first_message,omitempty"`
 	UserBadges       []UserBadge       `json:"user_badges"`
 	UserColor        *string           `json:"user_color"`
 	UserNoticeParams UserNoticeParams  `json:"user_notice_params"`

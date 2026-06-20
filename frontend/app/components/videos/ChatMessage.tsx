@@ -22,8 +22,9 @@ const ChatMessage = ({ comment, showTimestamp, timestampSeconds, onTimestampClic
     : "";
   const messageKind = comment.ganymede_chat_message_kind ?? GanymedeChatMessageKind.Normal;
   const isEvent = messageKind === GanymedeChatMessageKind.UserNotice;
+  const isFirstMessage = messageKind === GanymedeChatMessageKind.FirstMessage;
   const isHighlighted = messageKind === GanymedeChatMessageKind.Highlighted;
-  const isAction = messageKind === GanymedeChatMessageKind.Action;
+  const isAction = messageKind === GanymedeChatMessageKind.Action || comment.message.is_action;
   const bitsSpent = comment.message.bits_spent ?? 0;
   const eventSystemMessage = isEvent ? comment.message.user_notice_params?.system_msg?.trim() : "";
   const eventUserMessageFromParams = isEvent ? comment.message.user_notice_params?.params?.["user-message"]?.trim() : "";
@@ -35,6 +36,7 @@ const ChatMessage = ({ comment, showTimestamp, timestampSeconds, onTimestampClic
     classes.chatMessage,
     !showTimestamp ? classes.chatMessageNoTimestamp : "",
     isEvent ? classes.eventMessage : "",
+    isFirstMessage ? classes.firstMessage : "",
     isHighlighted ? classes.highlightedMessage : "",
     isAction ? classes.actionMessage : "",
   ].filter(Boolean).join(" ");
@@ -111,7 +113,7 @@ const ChatMessage = ({ comment, showTimestamp, timestampSeconds, onTimestampClic
             </Text>
           </span>
         )}
-        {isEvent && (
+        {(isEvent || isFirstMessage) && (
           <span className={classes.eventLabel}>
             <IconStar size={13} stroke={1.9} aria-hidden="true" />
             {t(comment.ganymede_event_label || "chatEventGeneric")}

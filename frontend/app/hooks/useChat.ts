@@ -67,6 +67,7 @@ export enum GanymedeChatMessageKind {
   Normal = "normal",
   Action = "action",
   Bits = "bits",
+  FirstMessage = "first_message",
   Highlighted = "highlighted",
   UserNotice = "user_notice",
 }
@@ -96,6 +97,7 @@ export interface Message {
   bits_spent: number;
   fragments: Fragment[];
   is_action: boolean;
+  is_first_message?: boolean;
   user_badges: UserBadge[];
   user_color: string;
   user_notice_params: UserNoticeParams;

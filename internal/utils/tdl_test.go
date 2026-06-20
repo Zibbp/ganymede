@@ -15,15 +15,16 @@ func TestConvertTwitchLiveChatToTDLChatKeepsMessagesAndUserNotices(t *testing.T)
 	chatStart := time.Unix(1_700_000_000, 0)
 
 	normalComment := LiveComment{
-		ActionType:  "add_chat_message",
-		ChannelID:   "408892348",
-		Colour:      "#1FD2FF",
-		Message:     "hello chat",
-		MessageID:   "normal-message-id",
-		MessageType: "text",
-		Timestamp:   chatStart.Add(2 * time.Second).UnixMicro(),
-		BitsSpent:   50,
-		IsAction:    true,
+		ActionType:     "add_chat_message",
+		ChannelID:      "408892348",
+		Colour:         "#1FD2FF",
+		Message:        "hello chat",
+		MessageID:      "normal-message-id",
+		MessageType:    "text",
+		Timestamp:      chatStart.Add(2 * time.Second).UnixMicro(),
+		BitsSpent:      50,
+		IsAction:       true,
+		IsFirstMessage: true,
 		Reply: &LiveCommentReply{
 			ParentMsgID:       "parent-message-id",
 			ParentUserID:      "222",
@@ -100,6 +101,9 @@ func TestConvertTwitchLiveChatToTDLChatKeepsMessagesAndUserNotices(t *testing.T)
 	if !convertedNormal.Message.IsAction {
 		t.Fatal("expected action flag")
 	}
+	if !convertedNormal.Message.IsFirstMessage {
+		t.Fatal("expected first message flag")
+	}
 	if convertedNormal.Message.Reply == nil {
 		t.Fatal("expected reply metadata")
 	}
@@ -144,11 +148,12 @@ func TestEnrichTwitchChatMetadataFromLiveChat(t *testing.T) {
 			Timestamp: chatStart.UnixMicro(),
 		},
 		{
-			Message:   "reply body",
-			MessageID: "reply-message-id",
-			Timestamp: chatStart.Add(time.Second).UnixMicro(),
-			BitsSpent: 25,
-			IsAction:  true,
+			Message:        "reply body",
+			MessageID:      "reply-message-id",
+			Timestamp:      chatStart.Add(time.Second).UnixMicro(),
+			BitsSpent:      25,
+			IsAction:       true,
+			IsFirstMessage: true,
 			Reply: &LiveCommentReply{
 				ParentMsgID:       "parent-id",
 				ParentUserID:      "222",
@@ -205,6 +210,7 @@ func TestEnrichTwitchChatMetadataFromLiveChat(t *testing.T) {
 			Message struct {
 				BitsSpent        int                       `json:"bits_spent"`
 				IsAction         bool                      `json:"is_action"`
+				IsFirstMessage   bool                      `json:"is_first_message"`
 				Reply            *finalChatReply           `json:"reply"`
 				UserNoticeParams finalChatUserNoticeParams `json:"user_notice_params"`
 			} `json:"message"`
@@ -226,6 +232,9 @@ func TestEnrichTwitchChatMetadataFromLiveChat(t *testing.T) {
 	}
 	if enriched.Comments[1].Message.BitsSpent != 25 || !enriched.Comments[1].Message.IsAction {
 		t.Fatalf("expected bits/action metadata, got %#v", enriched.Comments[1].Message)
+	}
+	if !enriched.Comments[1].Message.IsFirstMessage {
+		t.Fatalf("expected first-message metadata, got %#v", enriched.Comments[1].Message)
 	}
 	if enriched.Comments[1].Message.Reply == nil || enriched.Comments[1].Message.Reply.ParentMsgID != "parent-id" {
 		t.Fatalf("expected reply metadata, got %#v", enriched.Comments[1].Message.Reply)

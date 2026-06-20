@@ -830,6 +830,7 @@
     "chatEventGiftBomb": "Масове дарування підписок",
     "chatEventRaid": "Рейд",
     "chatEventRitual": "Ритуал",
+    "chatEventFirstMessage": "Перше повідомлення",
     "chatEventAnnouncement": "Оголошення",
     "loadingChat": "Завантаження відтворення чату",
     "chatError": "Помилка",
