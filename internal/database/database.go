@@ -9,6 +9,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
+	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -97,9 +98,14 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 			}
 		}()
 
+		hasLiveVodResolution := columnExists(ctx, conn, entLive.Table, entLive.FieldVodResolution)
+
 		// Run auto migration (under lock)
 		if err := client.Schema.Create(ctx); err != nil {
 			log.Fatal().Err(err).Msg("error running auto migration")
+		}
+		if !hasLiveVodResolution {
+			backfillLiveVodResolution(ctx, conn)
 		}
 
 		// Post-migration housekeeping: drop columns that were removed from
@@ -158,6 +164,39 @@ func dropOrphanedColumns(ctx context.Context, conn *pgxpool.Conn) {
 			// shouldn't block the server from starting. Log and continue.
 			log.Warn().Err(err).Str("statement", s.name).Msg("drop orphaned column failed")
 		}
+	}
+}
+
+func columnExists(ctx context.Context, conn *pgxpool.Conn, tableName, columnName string) bool {
+	var exists bool
+	err := conn.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1
+			FROM information_schema.columns
+			WHERE table_schema = CURRENT_SCHEMA()
+				AND table_name = $1
+				AND column_name = $2
+		)
+	`, tableName, columnName).Scan(&exists)
+	if err != nil {
+		log.Warn().Err(err).Str("table", tableName).Str("column", columnName).Msg("column existence check failed")
+		return false
+	}
+	return exists
+}
+
+func backfillLiveVodResolution(ctx context.Context, conn *pgxpool.Conn) {
+	stmt := fmt.Sprintf(
+		`UPDATE %s SET %s = %s WHERE %s IS NULL OR %s = '' OR %s = 'best'`,
+		entLive.Table,
+		entLive.FieldVodResolution,
+		entLive.FieldResolution,
+		entLive.FieldVodResolution,
+		entLive.FieldVodResolution,
+		entLive.FieldVodResolution,
+	)
+	if _, err := conn.Exec(ctx, stmt); err != nil {
+		log.Warn().Err(err).Msg("backfill live vod resolution failed")
 	}
 }
 

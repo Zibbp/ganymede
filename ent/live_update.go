@@ -164,6 +164,26 @@ func (_u *LiveUpdate) ClearResolution() *LiveUpdate {
 	return _u
 }
 
+// SetVodResolution sets the "vod_resolution" field.
+func (_u *LiveUpdate) SetVodResolution(v string) *LiveUpdate {
+	_u.mutation.SetVodResolution(v)
+	return _u
+}
+
+// SetNillableVodResolution sets the "vod_resolution" field if the given value is not nil.
+func (_u *LiveUpdate) SetNillableVodResolution(v *string) *LiveUpdate {
+	if v != nil {
+		_u.SetVodResolution(*v)
+	}
+	return _u
+}
+
+// ClearVodResolution clears the value of the "vod_resolution" field.
+func (_u *LiveUpdate) ClearVodResolution() *LiveUpdate {
+	_u.mutation.ClearVodResolution()
+	return _u
+}
+
 // SetLastLive sets the "last_live" field.
 func (_u *LiveUpdate) SetLastLive(v time.Time) *LiveUpdate {
 	_u.mutation.SetLastLive(v)
@@ -557,6 +577,12 @@ func (_u *LiveUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.ResolutionCleared() {
 		_spec.ClearField(live.FieldResolution, field.TypeString)
 	}
+	if value, ok := _u.mutation.VodResolution(); ok {
+		_spec.SetField(live.FieldVodResolution, field.TypeString, value)
+	}
+	if _u.mutation.VodResolutionCleared() {
+		_spec.ClearField(live.FieldVodResolution, field.TypeString)
+	}
 	if value, ok := _u.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
 	}
@@ -879,6 +905,26 @@ func (_u *LiveUpdateOne) SetNillableResolution(v *string) *LiveUpdateOne {
 // ClearResolution clears the value of the "resolution" field.
 func (_u *LiveUpdateOne) ClearResolution() *LiveUpdateOne {
 	_u.mutation.ClearResolution()
+	return _u
+}
+
+// SetVodResolution sets the "vod_resolution" field.
+func (_u *LiveUpdateOne) SetVodResolution(v string) *LiveUpdateOne {
+	_u.mutation.SetVodResolution(v)
+	return _u
+}
+
+// SetNillableVodResolution sets the "vod_resolution" field if the given value is not nil.
+func (_u *LiveUpdateOne) SetNillableVodResolution(v *string) *LiveUpdateOne {
+	if v != nil {
+		_u.SetVodResolution(*v)
+	}
+	return _u
+}
+
+// ClearVodResolution clears the value of the "vod_resolution" field.
+func (_u *LiveUpdateOne) ClearVodResolution() *LiveUpdateOne {
+	_u.mutation.ClearVodResolution()
 	return _u
 }
 
@@ -1304,6 +1350,12 @@ func (_u *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) {
 	}
 	if _u.mutation.ResolutionCleared() {
 		_spec.ClearField(live.FieldResolution, field.TypeString)
+	}
+	if value, ok := _u.mutation.VodResolution(); ok {
+		_spec.SetField(live.FieldVodResolution, field.TypeString, value)
+	}
+	if _u.mutation.VodResolutionCleared() {
+		_spec.ClearField(live.FieldVodResolution, field.TypeString)
 	}
 	if value, ok := _u.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
