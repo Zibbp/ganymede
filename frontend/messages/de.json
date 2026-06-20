@@ -79,6 +79,8 @@
       "description": "Einstellungen werden im lokalen Browser-Speicher gespeichert",
       "smoothScroll": "Sanftes Chat-Scrollen",
       "smoothScrollDescription": "Aktiviere sanftes Scrollen für neue Chat-Nachrichten. Kann bei einer großen Anzahl von Nachrichten pro Sekunde schlecht aussehen.",
+      "chatOnLeft": "Chat links anzeigen",
+      "chatOnLeftDescription": "Platziere den Chat in Desktop-Layouts links neben dem Videoplayer.",
       "chatHistogram": "Chat-Histogramm anzeigen",
       "chatHistogramDescription": "Zeige eine visuelle Darstellung der Chat-Nachrichten während des Videos unterhalb des Videoplayers an.",
       "chatTimestamps": "Chat-Zeitstempel anzeigen",

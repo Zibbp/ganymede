@@ -20,6 +20,8 @@ const ProfilePage = () => {
   const {
     chatPlaybackSmoothScroll,
     setChatPlaybackSmoothScroll,
+    chatOnLeft,
+    setChatOnLeft,
     showChatHistogram,
     setShowChatHistogram,
     showProcessingVideosInRecentlyArchived,
@@ -33,6 +35,10 @@ const ProfilePage = () => {
   const toggleSmoothScroll = () => {
     setChatPlaybackSmoothScroll(!chatPlaybackSmoothScroll);
   };
+
+  const toggleChatOnLeft = () => {
+    setChatOnLeft(!chatOnLeft);
+  }
 
   const toggleChatHistogram = () => {
     setShowChatHistogram(!showChatHistogram);
@@ -79,6 +85,13 @@ const ProfilePage = () => {
                 description={t('settings.smoothScrollDescription')}
                 checked={chatPlaybackSmoothScroll}
                 onChange={toggleSmoothScroll}
+                my={5}
+              />
+              <Checkbox
+                label={t('settings.chatOnLeft')}
+                description={t('settings.chatOnLeftDescription')}
+                checked={chatOnLeft}
+                onChange={toggleChatOnLeft}
                 my={5}
               />
               <Checkbox

@@ -33,6 +33,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
   const hideChat = useSettingsStore((state) => state.hideChat);
   const showChatHistogram = useSettingsStore((state) => state.showChatHistogram);
+  const chatOnLeft = useSettingsStore((state) => state.chatOnLeft);
   const { fullscreen } = useFullscreenDocument();
 
   const { data, isPending, isError } = useFetchVideo({ id, with_channel: true, with_chapters: true, with_muted_segments: true })
@@ -69,7 +70,13 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   return (
     <div>
       {/* Player and chat section — single tree on both layouts so VideoPlayer/ChatPlayer instances persist across the breakpoint flip */}
-      <Box className={isMobile ? classes.containerMobile : classes.container}>
+      <Box
+        className={
+          isMobile
+            ? classes.containerMobile
+            : `${classes.container} ${chatOnLeft ? classes.containerChatOnLeft : ""}`
+        }
+      >
         {/* Player */}
         <div className={
           isMobile
