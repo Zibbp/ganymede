@@ -252,6 +252,9 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	if err != nil {
 		return err
 	}
+	if err := utils.EnrichTwitchChatMetadataFromLiveChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpChatDownloadPath); err != nil {
+		return err
+	}
 
 	// set queue status to completed
 	err = setQueueStatus(ctx, store.Client, QueueStatusInput{

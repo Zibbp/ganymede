@@ -6,6 +6,7 @@ import {
   useGetEmotesForVideo,
   useGetBadgesForVideo,
   Comment,
+  GanymedeChatMessageKind,
   GanymedeFormattedMessageFragment,
   GanymedeFormattedMessageType,
   getChatForVideo,
@@ -28,6 +29,18 @@ const TIME_SKIP_THRESHOLD = 2;
 const IGNORED_BADGES = new Set(['no_audio', 'no_video', 'predictions']);
 const SUBSCRIPTION_BADGES = new Set(['subscriber', 'sub-gifter', 'sub_gifter', 'bits']);
 const SCROLL_THRESHOLD = 100; // px from bottom to trigger auto-scroll
+const EVENT_LABELS: Record<string, string> = {
+  sub: "chatEventSub",
+  resub: "chatEventResub",
+  subgift: "chatEventGiftSub",
+  anonsubgift: "chatEventGiftSub",
+  submysterygift: "chatEventGiftBomb",
+  raid: "chatEventRaid",
+  unraid: "chatEventRaid",
+  ritual: "chatEventRitual",
+  announcement: "chatEventAnnouncement",
+};
+const FIRST_MESSAGE_LABEL = "chatEventFirstMessage";
 
 interface ChatMaps {
   emoteMap: Map<string, Emote>;
@@ -275,6 +288,50 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
     }
   }, [handleError]);
 
+  const classifyComment = useCallback((comment: Comment) => {
+    const msgID = comment.message.user_notice_params?.msg_id;
+    const noticeID = typeof msgID === "string" ? msgID : "";
+    const noticeParams = comment.message.user_notice_params?.params ?? {};
+    const isFirstMessage = comment.message.is_first_message
+      || comment.message.user_badges?.some(badge => badge._id === "first-msg")
+      || (
+        noticeID === "ritual"
+        && noticeParams["msg-param-ritual-name"] === "new_chatter"
+      );
+
+    if (noticeID && noticeID !== "highlighted-message") {
+      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.UserNotice;
+      comment.ganymede_event_label = isFirstMessage
+        ? FIRST_MESSAGE_LABEL
+        : EVENT_LABELS[noticeID] ?? "chatEventGeneric";
+      return comment;
+    }
+
+    if (noticeID === "highlighted-message") {
+      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.Highlighted;
+      return comment;
+    }
+
+    if (isFirstMessage) {
+      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.FirstMessage;
+      comment.ganymede_event_label = FIRST_MESSAGE_LABEL;
+      return comment;
+    }
+
+    if (comment.message.is_action) {
+      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.Action;
+      return comment;
+    }
+
+    if ((comment.message.bits_spent ?? 0) > 0) {
+      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.Bits;
+      return comment;
+    }
+
+    comment.ganymede_chat_message_kind = GanymedeChatMessageKind.Normal;
+    return comment;
+  }, []);
+
   const enqueueComments = useCallback((comments?: Comment[]) => {
     if (!comments?.length) return;
 
@@ -398,6 +455,7 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
         // Process the message (e.g. add badges and emotes)
         const processedComment = addBadgesToFormattedComment(comment);
         processedComment.ganymede_formatted_message = addEmotesToFormattedComment(processedComment);
+        classifyComment(processedComment);
 
         // Add to batch and mark as processed
         newMessagesToAdd.push(processedComment);
@@ -415,7 +473,7 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
     } catch (error) {
       handleError(error as Error, "Chat processing");
     }
-  }, [addBadgesToFormattedComment, addEmotesToFormattedComment, addProcessedId, handleError, setMessagesWithScroll]);
+  }, [addBadgesToFormattedComment, addEmotesToFormattedComment, addProcessedId, classifyComment, handleError, setMessagesWithScroll]);
 
   // Initialize chat data
   useEffect(() => {

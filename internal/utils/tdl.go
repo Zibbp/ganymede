@@ -50,9 +50,20 @@ type Message struct {
 	Body             string          `json:"body"`
 	BitsSpent        int             `json:"bits_spent"`
 	Fragments        []Fragment      `json:"fragments"`
+	IsAction         bool            `json:"is_action"`
+	IsFirstMessage   bool            `json:"is_first_message,omitempty"`
 	UserBadges       []UserBadge     `json:"user_badges"`
 	UserColor        string          `json:"user_color"`
 	UserNoticeParams UserNoticParams `json:"user_notice_params"`
+	Reply            *ChatReply      `json:"reply,omitempty"`
+}
+
+type ChatReply struct {
+	ParentMsgID       string `json:"parent_msg_id"`
+	ParentUserID      string `json:"parent_user_id"`
+	ParentUserLogin   string `json:"parent_user_login"`
+	ParentDisplayName string `json:"parent_display_name"`
+	ParentMsgBody     string `json:"parent_msg_body"`
 }
 
 type Fragment struct {
@@ -68,7 +79,9 @@ type UserBadge struct {
 }
 
 type UserNoticParams struct {
-	MsgID *string `json:"msg-id"`
+	MsgID     *string           `json:"msg_id,omitempty"`
+	SystemMsg string            `json:"system_msg,omitempty"`
+	Params    map[string]string `json:"params,omitempty"`
 }
 
 type Emoticon struct {
@@ -158,19 +171,34 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 				IsTurbo:      liveComment.Author.IsTurbo,
 			},
 			Message: Message{
-				Body:       liveComment.Message,
-				BitsSpent:  0,
-				UserBadges: []UserBadge{},
-				UserColor:  liveComment.Colour,
+				Body:           liveComment.Message,
+				BitsSpent:      liveComment.BitsSpent,
+				IsAction:       liveComment.IsAction,
+				IsFirstMessage: liveComment.IsFirstMessage,
+				UserBadges:     []UserBadge{},
+				UserColor:      liveComment.Colour,
 				UserNoticeParams: UserNoticParams{
 					MsgID: nil,
 				},
 			},
 		}
 
+		if liveComment.Reply != nil {
+			tdlComment.Message.Reply = liveCommentReplyToChatReply(liveComment.Reply)
+		}
+
 		if liveComment.MessageType == "highlighted_message" {
 			var highlightString = "highlighted-message"
 			tdlComment.Message.UserNoticeParams.MsgID = &highlightString
+		}
+		if msgID, ok := liveComment.UserNoticeParams["msg-id"]; ok && msgID != "" {
+			tdlComment.Message.UserNoticeParams.MsgID = &msgID
+		}
+		if systemMsg, ok := liveComment.UserNoticeParams["system-msg"]; ok {
+			tdlComment.Message.UserNoticeParams.SystemMsg = systemMsg
+		}
+		if len(liveComment.UserNoticeParams) > 0 {
+			tdlComment.Message.UserNoticeParams.Params = liveUserNoticeParams(liveComment.UserNoticeParams)
 		}
 
 		// create the first message fragment
@@ -351,6 +379,175 @@ func writeTDLChat(parsedChat TDLChat, outPath string) error {
 		return fmt.Errorf("failed to write parsed comments: %v", err)
 	}
 	return nil
+}
+
+type liveChatMetadata struct {
+	BitsSpent        int
+	IsAction         bool
+	IsFirstMessage   bool
+	Reply            *LiveCommentReply
+	UserNoticeParams map[string]string
+}
+
+type finalChatReply struct {
+	ParentMsgID       string `json:"parent_msg_id"`
+	ParentUserID      string `json:"parent_user_id"`
+	ParentUserLogin   string `json:"parent_user_login"`
+	ParentDisplayName string `json:"parent_display_name"`
+	ParentMsgBody     string `json:"parent_msg_body"`
+}
+
+type finalChatUserNoticeParams struct {
+	MsgID     string            `json:"msg_id,omitempty"`
+	SystemMsg string            `json:"system_msg,omitempty"`
+	Params    map[string]string `json:"params,omitempty"`
+}
+
+func EnrichTwitchChatMetadataFromLiveChat(liveChatPath string, chatPath string) error {
+	liveComments, err := OpenLiveChatFile(liveChatPath)
+	if err != nil {
+		return err
+	}
+
+	metadataByID := make(map[string]liveChatMetadata)
+	for _, liveComment := range liveComments {
+		if liveComment.MessageID == "" {
+			continue
+		}
+
+		userNoticeParams := liveComment.UserNoticeParams
+		if liveComment.MessageType == "highlighted_message" && len(userNoticeParams) == 0 {
+			userNoticeParams = map[string]string{"msg-id": "highlighted-message"}
+		}
+
+		metadata := liveChatMetadata{
+			BitsSpent:        liveComment.BitsSpent,
+			IsAction:         liveComment.IsAction,
+			IsFirstMessage:   liveComment.IsFirstMessage,
+			Reply:            liveComment.Reply,
+			UserNoticeParams: userNoticeParams,
+		}
+
+		if metadata.BitsSpent == 0 && !metadata.IsAction && !metadata.IsFirstMessage && metadata.Reply == nil && len(metadata.UserNoticeParams) == 0 {
+			continue
+		}
+
+		metadataByID[liveComment.MessageID] = metadata
+	}
+
+	if len(metadataByID) == 0 {
+		return nil
+	}
+
+	data, err := os.ReadFile(chatPath)
+	if err != nil {
+		return fmt.Errorf("failed to read chat file for metadata enrichment: %w", err)
+	}
+
+	var chatData map[string]interface{}
+	if err := json.Unmarshal(data, &chatData); err != nil {
+		return fmt.Errorf("failed to unmarshal chat file for metadata enrichment: %w", err)
+	}
+
+	rawComments, ok := chatData["comments"].([]interface{})
+	if !ok {
+		return fmt.Errorf("failed to enrich chat metadata: comments field missing or invalid")
+	}
+
+	enrichedCount := 0
+	for _, rawComment := range rawComments {
+		comment, ok := rawComment.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		id, ok := comment["_id"].(string)
+		if !ok || id == "" {
+			continue
+		}
+
+		metadata, ok := metadataByID[id]
+		if !ok {
+			continue
+		}
+
+		message, ok := comment["message"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		if metadata.BitsSpent > 0 {
+			message["bits_spent"] = metadata.BitsSpent
+		}
+		if metadata.IsAction {
+			message["is_action"] = true
+		}
+		if metadata.IsFirstMessage {
+			message["is_first_message"] = true
+		}
+		if metadata.Reply != nil {
+			message["reply"] = finalChatReply{
+				ParentMsgID:       metadata.Reply.ParentMsgID,
+				ParentUserID:      metadata.Reply.ParentUserID,
+				ParentUserLogin:   metadata.Reply.ParentUserLogin,
+				ParentDisplayName: metadata.Reply.ParentDisplayName,
+				ParentMsgBody:     metadata.Reply.ParentMsgBody,
+			}
+		}
+		if len(metadata.UserNoticeParams) > 0 {
+			message["user_notice_params"] = finalUserNoticeParams(metadata.UserNoticeParams)
+		}
+
+		enrichedCount++
+	}
+
+	output, err := json.Marshal(chatData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal enriched chat metadata: %w", err)
+	}
+	if err := os.WriteFile(chatPath, output, 0o644); err != nil {
+		return fmt.Errorf("failed to write enriched chat metadata: %w", err)
+	}
+
+	log.Debug().
+		Str("live_chat_file", liveChatPath).
+		Str("chat_file", chatPath).
+		Int("enriched_comments", enrichedCount).
+		Msg("enriched Twitch chat metadata")
+
+	return nil
+}
+
+func liveCommentReplyToChatReply(reply *LiveCommentReply) *ChatReply {
+	return &ChatReply{
+		ParentMsgID:       reply.ParentMsgID,
+		ParentUserID:      reply.ParentUserID,
+		ParentUserLogin:   reply.ParentUserLogin,
+		ParentDisplayName: reply.ParentDisplayName,
+		ParentMsgBody:     reply.ParentMsgBody,
+	}
+}
+
+func liveUserNoticeParams(params map[string]string) map[string]string {
+	noticeParams := make(map[string]string, len(params))
+	for key, value := range params {
+		if key == "msg-id" || key == "system-msg" {
+			continue
+		}
+		noticeParams[key] = value
+	}
+	if len(noticeParams) == 0 {
+		return nil
+	}
+	return noticeParams
+}
+
+func finalUserNoticeParams(params map[string]string) finalChatUserNoticeParams {
+	return finalChatUserNoticeParams{
+		MsgID:     params["msg-id"],
+		SystemMsg: params["system-msg"],
+		Params:    liveUserNoticeParams(params),
+	}
 }
 
 func microSecondToMillisecondUnix(t int64) (time.Time, error) {

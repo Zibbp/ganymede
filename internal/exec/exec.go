@@ -27,6 +27,20 @@ const (
 	sigintTimeout = 300 * time.Second
 )
 
+func appendFFmpegLiveOutputStreamArgs(args []string, audioOnly bool) []string {
+	streamMap := "0"
+	if audioOnly {
+		streamMap = "0:a"
+	}
+
+	return append(args,
+		"-map", streamMap,
+		"-dn",
+		"-ignore_unknown",
+		"-c", "copy",
+	)
+}
+
 // DownloadTwitchVideo downloads a Twitch video.
 func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	// Get video channel
@@ -241,6 +255,8 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		closestQuality = "audio_only"
 	}
 
+	audioOnly := closestQuality == "audio_only"
+
 	// Base ffmpeg args (shared between transport-stream and hls live archiving)
 	ffmpegArgs := []string{
 		"-y",
@@ -249,11 +265,8 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		"-rw_timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
 		"-timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
 		"-i", qualitiesURI[closestQuality],
-		"-map", "0",
-		"-dn",
-		"-ignore_unknown",
-		"-c", "copy",
 	}
+	ffmpegArgs = appendFFmpegLiveOutputStreamArgs(ffmpegArgs, audioOnly)
 
 	// Decide archive format.
 	archivingAsMP4 := (video.VideoHlsPath == "")
@@ -281,13 +294,14 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 			segmentPattern := fmt.Sprintf("%s/%s_segment%%06d.ts", video.TmpVideoHlsPath, video.ExtID)
 
 			ffmpegArgs = append(ffmpegArgs,
+				appendFFmpegLiveOutputStreamArgs(nil, audioOnly)...,
+			)
+			ffmpegArgs = append(ffmpegArgs,
 				"-start_number", "0",
 				"-hls_time", "2",
 				"-hls_list_size", "0",
 				"-hls_playlist_type", "event",
 				"-hls_flags", "append_list+independent_segments",
-				"-c:v", "copy",
-				"-c:a", "copy",
 				"-hls_segment_filename", segmentPattern,
 				"-f", "hls",
 				playlistPath,
@@ -302,6 +316,9 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		playlistPath := fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)
 		segmentPattern := fmt.Sprintf("%s/%s_segment%%06d.ts", video.TmpVideoHlsPath, video.ExtID)
 
+		ffmpegArgs = append(ffmpegArgs,
+			appendFFmpegLiveOutputStreamArgs(nil, audioOnly)...,
+		)
 		ffmpegArgs = append(ffmpegArgs,
 			"-start_number", "0",
 			"-hls_time", "10",

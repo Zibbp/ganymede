@@ -8,6 +8,9 @@
   grid-template-columns: 52px minmax(0, 1fr);
   column-gap: 8px;
   align-items: baseline;
+  border-left: 2px solid transparent;
+  border-radius: 4px;
+  padding: 2px 4px 2px 2px;
 }
 .chatMessageNoTimestamp {
   display: block;
@@ -42,6 +45,94 @@
   font-weight: 400;
   line-height: 20px;
   font-size: 14px;
+}
+.eventMessage {
+  background: color-mix(in srgb, var(--mantine-color-violet-6) 12%, transparent);
+  border-left-color: var(--mantine-color-violet-5);
+}
+.firstMessage {
+  background: color-mix(in srgb, var(--mantine-color-teal-6) 12%, transparent);
+  border-left-color: var(--mantine-color-teal-5);
+}
+.highlightedMessage {
+  background: color-mix(in srgb, var(--mantine-color-yellow-6) 14%, transparent);
+  border-left-color: var(--mantine-color-yellow-5);
+}
+.actionMessage .message {
+  font-style: italic;
+}
+.replyPreview {
+  align-items: center;
+  color: var(--mantine-color-dimmed);
+  display: flex;
+  font-size: 12px;
+  gap: 4px;
+  line-height: 16px;
+  margin-bottom: 1px;
+  min-width: 0;
+}
+.replyAuthor {
+  color: var(--mantine-color-gray-5);
+  flex: 0 1 auto;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.replyBody {
+  color: var(--mantine-color-dimmed);
+  flex: 1 1 auto;
+  font-size: 12px;
+  line-height: 16px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.eventLabel,
+.bitsLabel {
+  align-items: center;
+  border-radius: 4px;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 2px;
+  line-height: 16px;
+  margin-right: 4px;
+  padding: 0 4px;
+  vertical-align: middle;
+}
+.eventLabel {
+  background: color-mix(in srgb, var(--mantine-color-violet-5) 20%, transparent);
+  color: var(--mantine-color-violet-2);
+}
+.bitsLabel {
+  background: color-mix(in srgb, var(--mantine-color-yellow-5) 22%, transparent);
+  color: var(--mantine-color-yellow-2);
+}
+.eventBody {
+  display: block;
+  margin-top: 2px;
+}
+.eventSystemMessage {
+  background: color-mix(in srgb, var(--mantine-color-violet-5) 14%, transparent);
+  border-radius: 4px;
+  color: var(--mantine-color-violet-1);
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+  margin-right: 4px;
+  padding: 1px 5px;
+}
+.eventUserMessage {
+  color: var(--mantine-color-text);
+  display: inline;
+  font-size: 14px;
+  line-height: 20px;
 }
 .emoteImage {
   padding-right: 2px;
