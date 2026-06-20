@@ -5,6 +5,7 @@ interface SettingsState {
   videoLimit: number;
   adminItemsPerPage: number;
   chatPlaybackSmoothScroll: boolean;
+  chatOnLeft: boolean;
   videoTheaterMode: boolean;
   hideChat: boolean;
   showChatHistogram: boolean;
@@ -15,6 +16,7 @@ interface SettingsState {
   setVideoLimit: (limit: number) => void;
   setAdminItemsPerPage: (limit: number) => void;
   setChatPlaybackSmoothScroll: (smooth: boolean) => void;
+  setChatOnLeft: (show: boolean) => void;
   setVideoTheaterMode: (theaterMode: boolean) => void;
   setHideChat: (hide: boolean) => void;
   setShowChatHistogram: (show: boolean) => void;
@@ -32,6 +34,7 @@ const useSettingsStore = create<SettingsState>()(
       videoLimit: 24,
       adminItemsPerPage: 20,
       chatPlaybackSmoothScroll: false,
+      chatOnLeft: false,
       videoTheaterMode: false,
       hideChat: false,
       showChatHistogram: true,
@@ -47,6 +50,8 @@ const useSettingsStore = create<SettingsState>()(
 
       setChatPlaybackSmoothScroll: (smooth: boolean) =>
         set({ chatPlaybackSmoothScroll: smooth }),
+
+      setChatOnLeft: (show: boolean) => set({ chatOnLeft: show }),
 
       setVideoTheaterMode: (theaterMode: boolean) =>
         set({ videoTheaterMode: theaterMode }),
@@ -72,6 +77,7 @@ const useSettingsStore = create<SettingsState>()(
         videoLimit: state.videoLimit,
         adminItemsPerPage: state.adminItemsPerPage,
         chatPlaybackSmoothScroll: state.chatPlaybackSmoothScroll,
+        chatOnLeft: state.chatOnLeft,
         showChatHistogram: state.showChatHistogram,
         showProcessingVideosInRecentlyArchived:
           state.showProcessingVideosInRecentlyArchived,

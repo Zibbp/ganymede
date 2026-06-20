@@ -2,6 +2,10 @@
   display: flex;
 }
 
+.containerChatOnLeft {
+  flex-direction: row-reverse;
+}
+
 .leftColumn {
   flex-grow: 1;
   width: calc(100vw - 340px);

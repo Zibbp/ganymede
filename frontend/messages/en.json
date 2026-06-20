@@ -79,6 +79,8 @@
       "description": "Settings are persisted in local browser storage",
       "smoothScroll": "Smooth chat scrolling",
       "smoothScrollDescription": "Enable smooth scrolling for new chat messages. May look bad if there is a large volume of messages per second.",
+      "chatOnLeft": "Show chat on the left",
+      "chatOnLeftDescription": "Place chat on the left side of the video player on desktop layouts.",
       "chatHistogram": "Show chat histogram",
       "chatHistogramDescription": "Display a visual representation of chat message throughout the video below the video player.",
       "chatTimestamps": "Show chat timestamps",
