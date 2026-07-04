@@ -116,7 +116,7 @@ func syncDir(path string) error {
 	if err != nil {
 		return err
 	}
-	defer dir.Close()
+	defer dir.Close() //nolint:errcheck
 
 	return dir.Sync()
 }
