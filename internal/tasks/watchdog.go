@@ -232,6 +232,9 @@ func recoverInterruptedLiveVideoArchive(ctx context.Context, store *database.Dat
 			Str("queue_id", queueID.String()).
 			Str("video_id", dbItems.Video.ID.String()).
 			Msg("live video archive recovery skipped because captured media is missing or empty")
+		if err := setWatchChannelAsNotLive(ctx, store, dbItems.Channel.ID); err != nil {
+			return err
+		}
 		return setQueueStatus(ctx, store.Client, QueueStatusInput{
 			Status:  utils.Failed,
 			QueueId: queueID,

@@ -1,10 +1,12 @@
 package hls
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"math"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -66,7 +68,57 @@ func FinalizeMediaPlaylist(path string) error {
 		playlistText += "\n"
 	}
 
-	return os.WriteFile(path, []byte(playlistText), 0o644)
+	return writeFileAtomic(path, []byte(playlistText))
+}
+
+func writeFileAtomic(path string, data []byte) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	dir := filepath.Dir(path)
+	tmpFile, err := os.CreateTemp(dir, filepath.Base(path)+".tmp.*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmpFile.Name()
+	renamed := false
+	defer func() {
+		if !renamed {
+			_ = os.Remove(tmpPath)
+		}
+	}()
+
+	if _, err := tmpFile.Write(data); err != nil {
+		return errors.Join(err, tmpFile.Close())
+	}
+	if err := tmpFile.Chmod(info.Mode()); err != nil {
+		return errors.Join(err, tmpFile.Close())
+	}
+	if err := tmpFile.Sync(); err != nil {
+		return errors.Join(err, tmpFile.Close())
+	}
+	if err := tmpFile.Close(); err != nil {
+		return err
+	}
+
+	if err := os.Rename(tmpPath, path); err != nil {
+		return err
+	}
+	renamed = true
+
+	return syncDir(dir)
+}
+
+func syncDir(path string) error {
+	dir, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer dir.Close()
+
+	return dir.Sync()
 }
 
 func normalizeTwitchMultivariant(byts []byte) ([]byte, error) {
