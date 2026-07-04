@@ -1,6 +1,8 @@
 package hls
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -92,5 +94,72 @@ https://example.com/source/index-dvr.m3u8
 	}
 	if pl.Variants[0].Video != "chunked" {
 		t.Fatalf("expected existing VIDEO to be preserved, got %q", pl.Variants[0].Video)
+	}
+}
+
+func TestFinalizeMediaPlaylistClosesInterruptedEventPlaylist(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "video.m3u8")
+	input := `#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-PLAYLIST-TYPE:EVENT
+#EXTINF:10.0,
+segment0.ts
+`
+	if err := os.WriteFile(path, []byte(input), 0o644); err != nil {
+		t.Fatalf("failed to write playlist: %v", err)
+	}
+
+	if err := FinalizeMediaPlaylist(path); err != nil {
+		t.Fatalf("FinalizeMediaPlaylist returned error: %v", err)
+	}
+
+	outputBytes, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read playlist: %v", err)
+	}
+	output := string(outputBytes)
+	if strings.Contains(output, "#EXT-X-PLAYLIST-TYPE:EVENT") {
+		t.Fatalf("expected EVENT playlist type to be replaced, got:\n%s", output)
+	}
+	if !strings.Contains(output, "#EXT-X-PLAYLIST-TYPE:VOD") {
+		t.Fatalf("expected VOD playlist type, got:\n%s", output)
+	}
+	if !strings.HasSuffix(output, "#EXT-X-ENDLIST\n") {
+		t.Fatalf("expected playlist to end with ENDLIST, got:\n%s", output)
+	}
+	if !strings.Contains(output, "segment0.ts") {
+		t.Fatalf("expected segment entries to be preserved, got:\n%s", output)
+	}
+}
+
+func TestFinalizeMediaPlaylistIsIdempotent(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "video.m3u8")
+	input := `#EXTM3U
+#EXT-X-PLAYLIST-TYPE:VOD
+#EXTINF:10.0,
+segment0.ts
+#EXT-X-ENDLIST
+`
+	if err := os.WriteFile(path, []byte(input), 0o644); err != nil {
+		t.Fatalf("failed to write playlist: %v", err)
+	}
+
+	if err := FinalizeMediaPlaylist(path); err != nil {
+		t.Fatalf("first FinalizeMediaPlaylist returned error: %v", err)
+	}
+	if err := FinalizeMediaPlaylist(path); err != nil {
+		t.Fatalf("second FinalizeMediaPlaylist returned error: %v", err)
+	}
+
+	outputBytes, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read playlist: %v", err)
+	}
+	output := string(outputBytes)
+	if strings.Count(output, "#EXT-X-ENDLIST") != 1 {
+		t.Fatalf("expected one ENDLIST marker, got:\n%s", output)
+	}
+	if strings.Count(output, "#EXT-X-PLAYLIST-TYPE:VOD") != 1 {
+		t.Fatalf("expected one VOD playlist type, got:\n%s", output)
 	}
 }

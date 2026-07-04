@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"os"
 	"strconv"
 	"strings"
 
@@ -45,6 +46,27 @@ func DecodeMultivariant(r io.Reader) (*Multivariant, error) {
 	}
 
 	return multivariant, nil
+}
+
+// FinalizeMediaPlaylist makes an interrupted live/event media playlist look
+// like a completed VOD playlist. It is safe to call repeatedly.
+func FinalizeMediaPlaylist(path string) error {
+	byts, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	playlistText := string(byts)
+	playlistText = strings.ReplaceAll(playlistText, "#EXT-X-PLAYLIST-TYPE:EVENT", "#EXT-X-PLAYLIST-TYPE:VOD")
+
+	trimmed := strings.TrimRight(playlistText, "\r\n")
+	if !strings.Contains(trimmed, "#EXT-X-ENDLIST") {
+		playlistText = trimmed + "\n#EXT-X-ENDLIST\n"
+	} else if playlistText != "" && !strings.HasSuffix(playlistText, "\n") {
+		playlistText += "\n"
+	}
+
+	return os.WriteFile(path, []byte(playlistText), 0o644)
 }
 
 func normalizeTwitchMultivariant(byts []byte) ([]byte, error) {

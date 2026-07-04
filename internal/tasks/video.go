@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/exec"
+	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -196,6 +197,9 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 			if err := validateNonEmptyFile(playlistPath, "live HLS playlist"); err != nil {
 				return err
 			}
+			if err := hls.FinalizeMediaPlaylist(playlistPath); err != nil {
+				return fmt.Errorf("failed to finalize live HLS playlist: %w", err)
+			}
 		}
 	}
 
@@ -227,6 +231,9 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		tmpVideoPath := dbItems.Video.TmpVideoConvertPath
 		if dbItems.Video.VideoHlsPath != "" {
 			tmpVideoPath = fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
+			if err := hls.FinalizeMediaPlaylist(tmpVideoPath); err != nil {
+				return fmt.Errorf("failed to finalize live HLS playlist: %w", err)
+			}
 		} else if !utils.FileExists(tmpVideoPath) {
 			tmpVideoPath = dbItems.Video.TmpVideoDownloadPath
 		}
@@ -408,6 +415,9 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		playlistPath := fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
 		if err := validateNonEmptyFile(playlistPath, "HLS move source playlist"); err != nil {
 			return err
+		}
+		if err := hls.FinalizeMediaPlaylist(playlistPath); err != nil {
+			return fmt.Errorf("failed to finalize HLS move source playlist: %w", err)
 		}
 
 		// move hls video
