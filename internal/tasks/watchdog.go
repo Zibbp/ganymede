@@ -6,10 +6,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/ent"
+	entQueue "github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -101,34 +105,7 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 					// if job was live video download then proceed with next jobs
 					if job.Kind == string(utils.TaskDownloadLiveVideo) {
 						logger.Info().Str("job_id", fmt.Sprintf("%d", job.ID)).Msg("detected job was live video download; proceeding with next jobs")
-						// get db items
-						dbItems, err := getDatabaseItems(ctx, store.Client, args.Input.QueueId)
-						if err != nil {
-							return err
-						}
-
-						// mark channel as not live
-						if err := setWatchChannelAsNotLive(ctx, store, dbItems.Channel.ID); err != nil {
-							return err
-						}
-
-						// set queue status to completed
-						err = setQueueStatus(ctx, store.Client, QueueStatusInput{
-							Status:  utils.Success,
-							QueueId: dbItems.Queue.ID,
-							Task:    utils.TaskDownloadVideo,
-						})
-						if err != nil {
-							return err
-						}
-						// queue video postprocess
-						_, err = riverClient.Insert(ctx, &PostProcessVideoArgs{
-							Continue: true,
-							Input: ArchiveVideoInput{
-								QueueId: args.Input.QueueId,
-							},
-						}, nil)
-						if err != nil {
+						if err := recoverInterruptedLiveVideoArchive(ctx, store, riverClient, args.Input.QueueId); err != nil {
 							return err
 						}
 					}
@@ -172,5 +149,165 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 		}
 	}
 
+	if err := recoverOrphanedLiveVideoArchives(ctx, store, riverClient); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func recoverOrphanedLiveVideoArchives(ctx context.Context, store *database.Database, riverClient *river.Client[pgx.Tx]) error {
+	activeLiveDownloads, err := activeArchiveJobQueues(ctx, riverClient, string(utils.TaskDownloadLiveVideo))
+	if err != nil {
+		return err
+	}
+
+	stuckQueues, err := store.Client.Queue.Query().
+		Where(
+			entQueue.LiveArchive(true),
+			entQueue.Processing(true),
+			entQueue.TaskVideoDownloadEQ(utils.Running),
+		).
+		All(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, q := range stuckQueues {
+		if activeLiveDownloads[q.ID] {
+			continue
+		}
+
+		log.Info().
+			Str("queue_id", q.ID.String()).
+			Msg("detected orphaned live video archive queue with no active download job; attempting recovery")
+		if err := recoverInterruptedLiveVideoArchive(ctx, store, riverClient, q.ID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func activeArchiveJobQueues(ctx context.Context, riverClient *river.Client[pgx.Tx], kind string) (map[uuid.UUID]bool, error) {
+	params := river.NewJobListParams().States(
+		rivertype.JobStateAvailable,
+		rivertype.JobStatePending,
+		rivertype.JobStateScheduled,
+		rivertype.JobStateRunning,
+		rivertype.JobStateRetryable,
+	).First(10000)
+	jobs, err := riverClient.JobList(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	queues := make(map[uuid.UUID]bool)
+	for _, job := range jobs.Jobs {
+		if job.Kind != kind || !utils.Contains(job.Tags, "archive") {
+			continue
+		}
+
+		var args RiverJobArgs
+		if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
+			return nil, err
+		}
+		if args.Input.QueueId != uuid.Nil {
+			queues[args.Input.QueueId] = true
+		}
+	}
+
+	return queues, nil
+}
+
+func recoverInterruptedLiveVideoArchive(ctx context.Context, store *database.Database, riverClient *river.Client[pgx.Tx], queueID uuid.UUID) error {
+	dbItems, err := getDatabaseItems(ctx, store.Client, queueID)
+	if err != nil {
+		return err
+	}
+
+	if err := validateRecoverableLiveVideoInput(&dbItems.Video); err != nil {
+		log.Error().
+			Err(err).
+			Str("queue_id", queueID.String()).
+			Str("video_id", dbItems.Video.ID.String()).
+			Msg("live video archive recovery skipped because captured media is missing or empty")
+		if err := setWatchChannelAsNotLive(ctx, store, dbItems.Channel.ID); err != nil {
+			return err
+		}
+		return setQueueStatus(ctx, store.Client, QueueStatusInput{
+			Status:  utils.Failed,
+			QueueId: queueID,
+			Task:    utils.TaskDownloadVideo,
+		})
+	}
+
+	if err := setWatchChannelAsNotLive(ctx, store, dbItems.Channel.ID); err != nil {
+		return err
+	}
+
+	params := river.NewJobListParams().States(
+		rivertype.JobStateAvailable,
+		rivertype.JobStatePending,
+		rivertype.JobStateScheduled,
+		rivertype.JobStateRunning,
+		rivertype.JobStateRetryable,
+	).First(10000)
+	postProcessJobID, err := getTaskId(ctx, riverClient, GetTaskFilter{
+		Kind:    string(utils.TaskPostProcessVideo),
+		QueueId: queueID,
+		Tags:    []string{"archive"},
+	}, params)
+	if err != nil {
+		return err
+	}
+	if postProcessJobID != 0 {
+		log.Info().
+			Str("queue_id", queueID.String()).
+			Int64("job_id", postProcessJobID).
+			Msg("live video archive recovery found existing post-process job")
+		return setQueueStatus(ctx, store.Client, QueueStatusInput{
+			Status:  utils.Success,
+			QueueId: queueID,
+			Task:    utils.TaskDownloadVideo,
+		})
+	}
+
+	_, err = riverClient.Insert(ctx, &PostProcessVideoArgs{
+		Continue: true,
+		Input: ArchiveVideoInput{
+			QueueId: queueID,
+		},
+	}, nil)
+	if err != nil {
+		return err
+	}
+
+	if err := setQueueStatus(ctx, store.Client, QueueStatusInput{
+		Status:  utils.Success,
+		QueueId: queueID,
+		Task:    utils.TaskDownloadVideo,
+	}); err != nil {
+		return err
+	}
+
+	log.Info().
+		Str("queue_id", queueID.String()).
+		Str("video_id", dbItems.Video.ID.String()).
+		Msg("live video archive recovery queued post-process")
+
+	return nil
+}
+
+func validateRecoverableLiveVideoInput(video *ent.Vod) error {
+	if video.VideoHlsPath != "" {
+		playlistPath := fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)
+		return validateNonEmptyFile(playlistPath, "live HLS playlist")
+	}
+
+	if video.TmpVideoConvertPath != "" && utils.FileExists(video.TmpVideoConvertPath) {
+		return validateNonEmptyFile(video.TmpVideoConvertPath, "live converted video input")
+	}
+
+	return validateNonEmptyFile(video.TmpVideoDownloadPath, "live downloaded video input")
 }

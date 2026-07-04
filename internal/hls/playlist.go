@@ -1,9 +1,12 @@
 package hls
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"math"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -45,6 +48,77 @@ func DecodeMultivariant(r io.Reader) (*Multivariant, error) {
 	}
 
 	return multivariant, nil
+}
+
+// FinalizeMediaPlaylist makes an interrupted live/event media playlist look
+// like a completed VOD playlist. It is safe to call repeatedly.
+func FinalizeMediaPlaylist(path string) error {
+	byts, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	playlistText := string(byts)
+	playlistText = strings.ReplaceAll(playlistText, "#EXT-X-PLAYLIST-TYPE:EVENT", "#EXT-X-PLAYLIST-TYPE:VOD")
+
+	trimmed := strings.TrimRight(playlistText, "\r\n")
+	if !strings.Contains(trimmed, "#EXT-X-ENDLIST") {
+		playlistText = trimmed + "\n#EXT-X-ENDLIST\n"
+	} else if playlistText != "" && !strings.HasSuffix(playlistText, "\n") {
+		playlistText += "\n"
+	}
+
+	return writeFileAtomic(path, []byte(playlistText))
+}
+
+func writeFileAtomic(path string, data []byte) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	dir := filepath.Dir(path)
+	tmpFile, err := os.CreateTemp(dir, filepath.Base(path)+".tmp.*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmpFile.Name()
+	renamed := false
+	defer func() {
+		if !renamed {
+			_ = os.Remove(tmpPath)
+		}
+	}()
+
+	if _, err := tmpFile.Write(data); err != nil {
+		return errors.Join(err, tmpFile.Close())
+	}
+	if err := tmpFile.Chmod(info.Mode()); err != nil {
+		return errors.Join(err, tmpFile.Close())
+	}
+	if err := tmpFile.Sync(); err != nil {
+		return errors.Join(err, tmpFile.Close())
+	}
+	if err := tmpFile.Close(); err != nil {
+		return err
+	}
+
+	if err := os.Rename(tmpPath, path); err != nil {
+		return err
+	}
+	renamed = true
+
+	return syncDir(dir)
+}
+
+func syncDir(path string) error {
+	dir, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer dir.Close() //nolint:errcheck
+
+	return dir.Sync()
 }
 
 func normalizeTwitchMultivariant(byts []byte) ([]byte, error) {
