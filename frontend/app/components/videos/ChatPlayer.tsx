@@ -665,7 +665,9 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
             if (!Number.isFinite(comment.content_offset_seconds)) return;
             seekToComment(comment.content_offset_seconds);
           }}
-          onUserNameClick={(ev) => openChatterMessagesWindow(comment.commenter._id, comment.commenter.display_name, comment._id, ev)}
+          onUserNameClick={comment.commenter._id
+            ? (ev) => openChatterMessagesWindow(comment.commenter._id, comment.commenter.display_name, comment._id, ev)
+            : undefined}
         />
       ))}
       {Object.keys(chatterMessagesWindows).map(chatterId => {

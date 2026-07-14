@@ -493,11 +493,6 @@ func (s *Service) GetVodChatCommentsFromChatter(c echo.Context, vodID uuid.UUID,
 		return nil, fmt.Errorf("error setting cache: %v", err)
 	}
 
-	// Cleanup
-	comments = nil
-
-	defer runtime.GC()
-
 	return &filteredComments, nil
 }
 
