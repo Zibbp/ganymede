@@ -211,6 +211,25 @@ const useGetSeekChatForVideo = (
   });
 };
 
+const getChatForChatterInVideo = async (
+  videoId: string,
+  chatterId: string
+): Promise<Array<Comment>> => {
+  const response = await useAxios.get(`/api/v1/vod/${videoId}/chat/chatter/${chatterId}`);
+  return response.data.data;
+};
+
+
+const useGetChatForChatterInVideo = (videoId: string, chatterId: string) => {
+  return useQuery<Array<Comment>>({
+    queryKey: ["video", "chat", "chatter", videoId, chatterId],
+    queryFn: () => getChatForChatterInVideo(videoId, chatterId),
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+  });
+};
+
 const getBadgesForVideo = async (videoId: string): Promise<Array<Badge>> => {
   const response = await useAxios.get(`/api/v1/vod/${videoId}/chat/badges`);
   return response.data.data;
@@ -235,4 +254,5 @@ export {
   useGetSeekChatForVideo,
   getChatForVideo,
   getSeekChatForVideo,
+  useGetChatForChatterInVideo,
 };

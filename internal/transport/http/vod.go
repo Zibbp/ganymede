@@ -38,6 +38,7 @@ type VodService interface {
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
 	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID, processing bool, sortBy utils.VideoSort, sortOrder utils.SortOrder) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
+	GetVodChatCommentsFromChatter(c echo.Context, vodID uuid.UUID, chatterID string) (*[]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error)
 	GetChatEmotes(ctx context.Context, vodID uuid.UUID) (*platform.Emotes, error)
 	GetChatBadges(ctx context.Context, vodID uuid.UUID) (*platform.Badges, error)
@@ -644,6 +645,37 @@ func (h *Handler) GetVodChatComments(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 	return SuccessResponse(c, v, fmt.Sprintf("comments for %s %f - %f", vID, startFloat, endFloat))
+}
+
+// GetVodChatCommentsFromChatter godoc
+//
+//	@Summary		Get vod chat comments from a specific chatter
+//	@Description	Get vod chat comments from a specific chatter
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id			path		string	true	"Vod ID"
+//	@Param			chatter_id	path		string	true	"Chatter ID"
+//	@Success		200			{array}		[]chat.Comment
+//	@Failure		400			{object}	utils.ErrorResponse
+//	@Failure		404			{object}	utils.ErrorResponse
+//	@Failure		500			{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/chat/chatter/{chatter_id} [get]
+func (h *Handler) GetVodChatCommentsFromChatter(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+	chatterID := c.Param("chatter_id")
+	if chatterID == "" {
+		return ErrorResponse(c, http.StatusBadRequest, "chatter_id is required")
+	}
+
+	v, err := h.Service.VodService.GetVodChatCommentsFromChatter(c, vID, chatterID)
+	if err != nil {
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+	return SuccessResponse(c, v, fmt.Sprintf("comments for %s from chatter %s", vID, chatterID))
 }
 
 // GetChatEmotes godoc

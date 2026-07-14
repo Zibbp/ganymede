@@ -446,6 +446,61 @@ func (s *Service) GetVodChatComments(c echo.Context, vodID uuid.UUID, start floa
 	return &filteredComments, nil
 }
 
+func (s *Service) GetVodChatCommentsFromChatter(c echo.Context, vodID uuid.UUID, chatterID string) (*[]chat.Comment, error) {
+	v, err := s.Store.Client.Vod.Query().Where(vod.ID(vodID)).Only(c.Request().Context())
+	if err != nil {
+		log.Debug().Err(err).Msg("error getting vod chat")
+		return nil, fmt.Errorf("error getting vod chat: %v", err)
+	}
+
+	cachedUserComments, exists := cache.Cache().Get(v.ID.String() + "#c:" + chatterID)
+
+	if exists {
+		comments := cachedUserComments.([]chat.Comment)
+		return &comments, nil
+	}
+
+	var comments []chat.Comment
+	cacheData, exists := cache.Cache().Get(v.ID.String())
+	if !exists {
+		err = loadChatIntoCache(v)
+		if err != nil {
+			log.Debug().Err(err).Msg("error loading chat into cache")
+			return nil, fmt.Errorf("error loading chat into cache: %v", err)
+		}
+		cacheData, _ = cache.Cache().Get(v.ID.String())
+	}
+	comments = cacheData.([]chat.Comment)
+
+	// Reset the cache
+	err = cache.Cache().Set(v.ID.String(), comments, 10*time.Minute)
+	if err != nil {
+		log.Debug().Err(err).Msg("error setting cache")
+		return nil, fmt.Errorf("error setting cache: %v", err)
+	}
+
+	var filteredComments []chat.Comment
+
+	for _, comment := range comments {
+		if comment.Commenter.ID == chatterID {
+			filteredComments = append(filteredComments, comment)
+		}
+	}
+
+	err = cache.Cache().Set(v.ID.String()+"#c:"+chatterID, filteredComments, 10*time.Minute)
+	if err != nil {
+		log.Debug().Err(err).Msg("error setting cache")
+		return nil, fmt.Errorf("error setting cache: %v", err)
+	}
+
+	// Cleanup
+	comments = nil
+
+	defer runtime.GC()
+
+	return &filteredComments, nil
+}
+
 func loadChatIntoCache(vod *ent.Vod) error {
 	var chatData *chat.ChatNoEmotes
 	var comments []chat.Comment

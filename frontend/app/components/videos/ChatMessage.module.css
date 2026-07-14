@@ -12,6 +12,26 @@
   border-radius: 4px;
   padding: 2px 4px 2px 2px;
 }
+.highlightAnimation {
+  animation: highlightAnimation 3s ease-in-out;
+}
+@keyframes highlightAnimation {
+  0% {
+    background-color: transparent;
+  }
+  10% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: color-mix(in srgb, var(--mantine-color-yellow-6) 14%, transparent);
+  }
+  60% {
+    background-color: color-mix(in srgb, var(--mantine-color-yellow-6) 14%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
 .chatMessageNoTimestamp {
   display: block;
 }

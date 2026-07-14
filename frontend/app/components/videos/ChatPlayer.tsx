@@ -12,7 +12,7 @@ import {
   getChatForVideo,
   getSeekChatForVideo
 } from "@/app/hooks/useChat";
-import { RefObject, useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { RefObject, useEffect, useRef, useState, useCallback, useMemo, MouseEvent } from "react";
 import { Box, Center, Loader, Text } from "@mantine/core";
 import ChatMessage from "./ChatMessage";
 import { uuidv4 } from "@/app/util/util";
@@ -20,6 +20,8 @@ import VideoEventBus from "@/app/util/VideoEventBus";
 import useSettingsStore from "@/app/store/useSettingsStore";
 import { useTranslations } from "next-intl";
 import { MediaPlayerInstance } from "@vidstack/react";
+import { UseFloatingWindowOptions } from "@mantine/hooks"
+import ChatChatterMessages from "./ChatChatterMessages"
 
 // Constants moved to top level
 const CHAT_OFFSET_SIZE = 10;
@@ -67,6 +69,13 @@ interface PendingChatRange {
   generation: number;
 }
 
+interface ChatterMessagesWindow {
+  chatterId: string;
+  chatterName: string;
+  initialPosition: UseFloatingWindowOptions['initialPosition'];
+  initialScrollMessageId: string;
+}
+
 const ChatPlayer = ({ video, playerRef }: Params) => {
   const t = useTranslations('VideoComponents')
   const [isReady, setIsReady] = useState(false);
@@ -95,6 +104,7 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
     bitBadgeMap: new Map()
   });
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [chatterMessagesWindows, setChatterMessagesWindows] = useState<Record<string, ChatterMessagesWindow>>({});
 
   const { chatPlaybackSmoothScroll, showChatTimestamps } = useSettingsStore()
   const clipVodOffset = useMemo<number | null>(() => {
@@ -166,6 +176,26 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
       }, backoffTime);
     }
   }, []);
+
+  const openChatterMessagesWindow = useCallback((chatterId: string, chatterName: string, initialScrollMessageId: string, clickEvent: MouseEvent) => {
+    const initialPosition: UseFloatingWindowOptions['initialPosition'] = { right: window.innerWidth - clickEvent.clientX };
+    if (clickEvent.clientY + 400 > window.innerHeight) {
+      initialPosition.bottom = window.innerHeight - clickEvent.clientY;
+    } else {
+      initialPosition.top = clickEvent.clientY;
+    }
+    setChatterMessagesWindows(prev => ({
+      ...prev,
+      [chatterId]: { chatterId, chatterName, initialPosition, initialScrollMessageId }
+    }));
+  }, [video.id, chatterMessagesWindows]);
+  const closeChatterMessagesWindow = useCallback((chatterId: string) => {
+    setChatterMessagesWindows(prev => {
+      const newWindows = { ...prev };
+      delete newWindows[chatterId];
+      return newWindows;
+    });
+  }, [])
 
   // Memoized system message creator
   const createSystemMessage = useMemo(() => (message: string): Comment => ({
@@ -635,8 +665,31 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
             if (!Number.isFinite(comment.content_offset_seconds)) return;
             seekToComment(comment.content_offset_seconds);
           }}
+          onUserNameClick={(ev) => openChatterMessagesWindow(comment.commenter._id, comment.commenter.display_name, comment._id, ev)}
         />
       ))}
+      {Object.keys(chatterMessagesWindows).map(chatterId => {
+        const windowData = chatterMessagesWindows[chatterId];
+        if (!windowData) return null;
+
+        return (
+          <ChatChatterMessages
+            key={chatterId}
+            videoId={video.id}
+            timestampSeconds={getCommentTimestampSeconds}
+            onTimestampClick={(contentOffsetSeconds) => {
+              if (!Number.isFinite(contentOffsetSeconds)) return;
+              seekToComment(contentOffsetSeconds);
+            }}
+            chatterId={windowData.chatterId}
+            chatterName={windowData.chatterName}
+            initialPosition={windowData.initialPosition}
+            initialScrollMessageId={windowData.initialScrollMessageId}
+            onClose={() => closeChatterMessagesWindow(chatterId)}
+            chatMapsRef={chatMapsRef}
+          />
+        );
+      })}
     </div>
   );
 };
