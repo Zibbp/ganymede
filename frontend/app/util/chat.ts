@@ -15,6 +15,13 @@ const EVENT_LABELS: Record<string, string> = {
 };
 const FIRST_MESSAGE_LABEL = "chatEventFirstMessage";
 
+interface ChatProcessingMaps {
+  subscriptionBadgeMap: Map<string, Badge>;
+  generalBadgeMap: Map<string, Badge>;
+  emoteMap: Map<string, Emote>;
+  thirdPartyEmoteMap: Map<string, Emote>;
+}
+
 const getBadgesToFormattedComment = (
   comment: Comment,
   subscriptionBadgeMap: Map<string, Badge>,
@@ -142,24 +149,29 @@ const classifyComment = (comment: Comment): { ganymede_chat_message_kind: Ganyme
 
 const processComment = (
   comment: Comment,
-  subscriptionBadgeMap: Map<string, Badge>,
-  generalBadgeMap: Map<string, Badge>,
-  emoteMap: Map<string, Emote>,
-  thirdPartyEmoteMap: Map<string, Emote>,
+  maps: ChatProcessingMaps,
   onError: (error: Error) => void,
 ): Comment => {
   return {
     ...comment,
-    ganymede_formatted_badges: getBadgesToFormattedComment(comment, subscriptionBadgeMap, generalBadgeMap),
-    ganymede_formatted_message: getEmotesToFormattedComment(comment, emoteMap, thirdPartyEmoteMap, onError),
+    ganymede_formatted_badges: getBadgesToFormattedComment(
+      comment,
+      maps.subscriptionBadgeMap,
+      maps.generalBadgeMap,
+    ),
+    ganymede_formatted_message: getEmotesToFormattedComment(
+      comment,
+      maps.emoteMap,
+      maps.thirdPartyEmoteMap,
+      onError,
+    ),
     ...classifyComment(comment),
   }
 }
 
 export {
   IGNORED_BADGES,
-  SUBSCRIPTION_BADGES,
-  EVENT_LABELS,
-  FIRST_MESSAGE_LABEL,
   processComment,
 }
+
+export type { ChatProcessingMaps }

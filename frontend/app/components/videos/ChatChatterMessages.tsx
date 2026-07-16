@@ -1,4 +1,4 @@
-import { Badge, Comment, Emote, useGetChatForChatterInVideo } from "@/app/hooks/useChat";
+import { Comment, useGetChatForChatterInVideo } from "@/app/hooks/useChat";
 import {
   CloseButton,
   FloatingWindow,
@@ -10,32 +10,29 @@ import GanymedeLoadingText from "../utils/GanymedeLoadingText";
 import { useTranslations } from "next-intl";
 import ChatMessage from "./ChatMessage";
 import { UseFloatingWindowOptions } from "@mantine/hooks"
-import { RefObject, useEffect, useLayoutEffect, useMemo, useRef } from "react"
-import { processComment } from "@/app/util/chat"
-
-interface ChatMaps {
-  emoteMap: Map<string, Emote>;
-  thirdPartyEmoteMap: Map<string, Emote>;
-  generalBadgeMap: Map<string, Badge>;
-  subscriptionBadgeMap: Map<string, Badge>;
-}
+import { RefObject, useEffect, useMemo, useRef } from "react"
+import { processComment, type ChatProcessingMaps } from "@/app/util/chat"
 
 interface Params {
   videoId: string;
   chatterId: string;
+  chatterLogin: string;
   chatterName: string;
+  isLiveArchive: boolean;
   initialScrollMessageId?: string;
   timestampSeconds: ((comment: Comment) => number | null) | null;
   onTimestampClick: (timestamp: number) => void;
   onClose: () => void;
   initialPosition: UseFloatingWindowOptions['initialPosition'];
-  chatMapsRef: RefObject<ChatMaps>;
+  chatMapsRef: RefObject<ChatProcessingMaps>;
 }
 
 const ChatChatterMessages = ({
   videoId,
   chatterId,
+  chatterLogin,
   chatterName,
+  isLiveArchive,
   initialScrollMessageId,
   timestampSeconds,
   onTimestampClick,
@@ -47,7 +44,7 @@ const ChatChatterMessages = ({
     data: comments,
     isLoading,
     isError,
-  } = useGetChatForChatterInVideo(videoId, chatterId);
+  } = useGetChatForChatterInVideo(videoId, chatterId, chatterLogin, isLiveArchive);
   const t = useTranslations("VideoComponents");
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -55,15 +52,12 @@ const ChatChatterMessages = ({
     if (!comments) return null;
     return comments.map((comment) => processComment(
       comment,
-      chatMapsRef.current.subscriptionBadgeMap,
-      chatMapsRef.current.generalBadgeMap,
-      chatMapsRef.current.emoteMap,
-      chatMapsRef.current.thirdPartyEmoteMap,
+      chatMapsRef.current,
       (error) => {
         console.error(error);
       }
     ));
-  }, [comments, chatMapsRef.current.emoteMap, chatMapsRef.current.thirdPartyEmoteMap, chatMapsRef.current.generalBadgeMap, chatMapsRef.current.subscriptionBadgeMap]);
+  }, [comments, chatMapsRef]);
 
   useEffect(() => {
     const handle = requestAnimationFrame(() => {

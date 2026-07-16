@@ -6,8 +6,6 @@ import {
   useGetEmotesForVideo,
   useGetBadgesForVideo,
   Comment,
-  GanymedeChatMessageKind,
-  GanymedeFormattedMessageFragment,
   GanymedeFormattedMessageType,
   getChatForVideo,
   getSeekChatForVideo
@@ -22,27 +20,14 @@ import { useTranslations } from "next-intl";
 import { MediaPlayerInstance } from "@vidstack/react";
 import { UseFloatingWindowOptions } from "@mantine/hooks"
 import ChatChatterMessages from "./ChatChatterMessages"
+import { IGNORED_BADGES, processComment } from "@/app/util/chat";
 
 // Constants moved to top level
 const CHAT_OFFSET_SIZE = 10;
 const MAX_CHAT_MESSAGES = 50;
 const TICK_INTERVAL = 100;
 const TIME_SKIP_THRESHOLD = 2;
-const IGNORED_BADGES = new Set(['no_audio', 'no_video', 'predictions']);
-const SUBSCRIPTION_BADGES = new Set(['subscriber', 'sub-gifter', 'sub_gifter', 'bits']);
 const SCROLL_THRESHOLD = 100; // px from bottom to trigger auto-scroll
-const EVENT_LABELS: Record<string, string> = {
-  sub: "chatEventSub",
-  resub: "chatEventResub",
-  subgift: "chatEventGiftSub",
-  anonsubgift: "chatEventGiftSub",
-  submysterygift: "chatEventGiftBomb",
-  raid: "chatEventRaid",
-  unraid: "chatEventRaid",
-  ritual: "chatEventRitual",
-  announcement: "chatEventAnnouncement",
-};
-const FIRST_MESSAGE_LABEL = "chatEventFirstMessage";
 
 interface ChatMaps {
   emoteMap: Map<string, Emote>;
@@ -71,6 +56,7 @@ interface PendingChatRange {
 
 interface ChatterMessagesWindow {
   chatterId: string;
+  chatterLogin: string;
   chatterName: string;
   initialPosition: UseFloatingWindowOptions['initialPosition'];
   initialScrollMessageId: string;
@@ -177,18 +163,23 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
     }
   }, []);
 
-  const openChatterMessagesWindow = useCallback((chatterId: string, chatterName: string, initialScrollMessageId: string, clickEvent: MouseEvent) => {
+  const handleCommentProcessingError = useCallback((error: Error) => {
+    handleError(error, "Emote processing");
+  }, [handleError]);
+
+  const openChatterMessagesWindow = useCallback((chatterId: string, chatterLogin: string, chatterName: string, initialScrollMessageId: string, clickEvent: MouseEvent) => {
     const initialPosition: UseFloatingWindowOptions['initialPosition'] = { right: window.innerWidth - clickEvent.clientX };
     if (clickEvent.clientY + 400 > window.innerHeight) {
       initialPosition.bottom = window.innerHeight - clickEvent.clientY;
     } else {
       initialPosition.top = clickEvent.clientY;
     }
+    const chatterKey = chatterId || chatterLogin.toLowerCase();
     setChatterMessagesWindows(prev => ({
       ...prev,
-      [chatterId]: { chatterId, chatterName, initialPosition, initialScrollMessageId }
+      [chatterKey]: { chatterId, chatterLogin, chatterName, initialPosition, initialScrollMessageId }
     }));
-  }, [video.id, chatterMessagesWindows]);
+  }, []);
   const closeChatterMessagesWindow = useCallback((chatterId: string) => {
     setChatterMessagesWindows(prev => {
       const newWindows = { ...prev };
@@ -246,121 +237,6 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
 
     return comment.content_offset_seconds;
   }, [clipVodOffset]);
-
-  // Optimized badge processing
-  const addBadgesToFormattedComment = useCallback((comment: Comment) => {
-    if (!comment.message.user_badges) {
-      comment.ganymede_formatted_badges = [];
-      return comment;
-    }
-
-    comment.ganymede_formatted_badges = comment.message.user_badges
-      .filter(badge => !IGNORED_BADGES.has(badge._id))
-      .map(badge => {
-        const isSubscriptionBadge = SUBSCRIPTION_BADGES.has(badge._id);
-        const badgeMap = isSubscriptionBadge
-          ? chatMapsRef.current.subscriptionBadgeMap.get(badge.version)
-          : chatMapsRef.current.generalBadgeMap.get(badge._id);
-
-        return {
-          _id: badge._id,
-          id: badge._id,
-          version: badge.version,
-          title: badgeMap?.title || '',
-          url: badgeMap?.image_url_1x || '',
-        };
-      });
-
-    return comment;
-  }, []);
-
-  // Optimized emote processing with error handling
-  const addEmotesToFormattedComment = useCallback((comment: Comment): GanymedeFormattedMessageFragment[] => {
-    if (!comment.message.fragments?.length) return [];
-
-    try {
-      return comment.message.fragments.flatMap(fragment => {
-        if (fragment.emoticon) {
-          const emote = chatMapsRef.current.emoteMap.get(fragment.emoticon.emoticon_id);
-          if (!emote) {
-            throw new Error(`Emote not found for ID: ${fragment.emoticon.emoticon_id}`);
-          }
-          return [{
-            type: GanymedeFormattedMessageType.Emote,
-            text: fragment.text,
-            url: emote.type === "embed"
-              ? `data:image/png;base64,${emote.url}`
-              : emote.url,
-            emote,
-          }];
-        }
-
-        return fragment.text.split(" ").map(word => {
-          const thirdPartyEmote = chatMapsRef.current.thirdPartyEmoteMap.get(word);
-          return thirdPartyEmote
-            ? {
-              type: GanymedeFormattedMessageType.Emote,
-              text: word,
-              url: thirdPartyEmote.type === "embed"
-                ? `data:image/png;base64,${thirdPartyEmote.url}`
-                : thirdPartyEmote.url,
-              emote: thirdPartyEmote,
-            }
-            : {
-              type: GanymedeFormattedMessageType.Text,
-              text: ` ${word} `,
-            };
-        });
-      });
-    } catch (error) {
-      handleError(error as Error, "Emote processing");
-      return [{ type: GanymedeFormattedMessageType.Text, text: comment.message.body }];
-    }
-  }, [handleError]);
-
-  const classifyComment = useCallback((comment: Comment) => {
-    const msgID = comment.message.user_notice_params?.msg_id;
-    const noticeID = typeof msgID === "string" ? msgID : "";
-    const noticeParams = comment.message.user_notice_params?.params ?? {};
-    const isFirstMessage = comment.message.is_first_message
-      || comment.message.user_badges?.some(badge => badge._id === "first-msg")
-      || (
-        noticeID === "ritual"
-        && noticeParams["msg-param-ritual-name"] === "new_chatter"
-      );
-
-    if (noticeID && noticeID !== "highlighted-message") {
-      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.UserNotice;
-      comment.ganymede_event_label = isFirstMessage
-        ? FIRST_MESSAGE_LABEL
-        : EVENT_LABELS[noticeID] ?? "chatEventGeneric";
-      return comment;
-    }
-
-    if (noticeID === "highlighted-message") {
-      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.Highlighted;
-      return comment;
-    }
-
-    if (isFirstMessage) {
-      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.FirstMessage;
-      comment.ganymede_event_label = FIRST_MESSAGE_LABEL;
-      return comment;
-    }
-
-    if (comment.message.is_action) {
-      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.Action;
-      return comment;
-    }
-
-    if ((comment.message.bits_spent ?? 0) > 0) {
-      comment.ganymede_chat_message_kind = GanymedeChatMessageKind.Bits;
-      return comment;
-    }
-
-    comment.ganymede_chat_message_kind = GanymedeChatMessageKind.Normal;
-    return comment;
-  }, []);
 
   const enqueueComments = useCallback((comments?: Comment[]) => {
     if (!comments?.length) return;
@@ -482,10 +358,12 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
         // Skip duplicates
         if (processedIdsRef.current.has(comment._id)) continue;
 
-        // Process the message (e.g. add badges and emotes)
-        const processedComment = addBadgesToFormattedComment(comment);
-        processedComment.ganymede_formatted_message = addEmotesToFormattedComment(processedComment);
-        classifyComment(processedComment);
+        // Process formatting without changing the queue, deduplication, or batching flow.
+        const processedComment = processComment(
+          comment,
+          chatMapsRef.current,
+          handleCommentProcessingError,
+        );
 
         // Add to batch and mark as processed
         newMessagesToAdd.push(processedComment);
@@ -503,7 +381,7 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
     } catch (error) {
       handleError(error as Error, "Chat processing");
     }
-  }, [addBadgesToFormattedComment, addEmotesToFormattedComment, addProcessedId, classifyComment, handleError, setMessagesWithScroll]);
+  }, [addProcessedId, handleCommentProcessingError, handleError, setMessagesWithScroll]);
 
   // Initialize chat data
   useEffect(() => {
@@ -665,8 +543,14 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
             if (!Number.isFinite(comment.content_offset_seconds)) return;
             seekToComment(comment.content_offset_seconds);
           }}
-          onUserNameClick={comment.commenter._id
-            ? (ev) => openChatterMessagesWindow(comment.commenter._id, comment.commenter.display_name, comment._id, ev)
+          onUserNameClick={comment.commenter._id || (video.type === VideoType.Live && (comment.commenter.name || comment.commenter.display_name))
+            ? (ev) => openChatterMessagesWindow(
+              comment.commenter._id,
+              comment.commenter.name || comment.commenter.display_name,
+              comment.commenter.display_name,
+              comment._id,
+              ev,
+            )
             : undefined}
         />
       ))}
@@ -684,7 +568,9 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
               seekToComment(contentOffsetSeconds);
             }}
             chatterId={windowData.chatterId}
+            chatterLogin={windowData.chatterLogin}
             chatterName={windowData.chatterName}
+            isLiveArchive={video.type === VideoType.Live}
             initialPosition={windowData.initialPosition}
             initialScrollMessageId={windowData.initialScrollMessageId}
             onClose={() => closeChatterMessagesWindow(chatterId)}
