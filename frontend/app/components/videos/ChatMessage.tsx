@@ -2,18 +2,21 @@
 import { Comment, GanymedeChatMessageKind, GanymedeFormattedBadge, GanymedeFormattedMessageFragment, GanymedeFormattedMessageType } from "@/app/hooks/useChat";
 import { durationToTime } from "@/app/util/util";
 import classes from "./ChatMessage.module.css"
-import { Text, Tooltip } from "@mantine/core"
+import { Text, Tooltip, UnstyledButton } from "@mantine/core"
 import { useTranslations } from "next-intl";
 import { IconBolt, IconMessageCircle, IconStar } from "@tabler/icons-react";
+import { MouseEvent } from "react"
 
 interface Params {
   comment: Comment;
+  highlightAnimation?: boolean;
   showTimestamp: boolean;
   timestampSeconds: number | null;
   onTimestampClick: () => void;
+  onUserNameClick?: (event: MouseEvent<HTMLButtonElement>) => void;
 }
 
-const ChatMessage = ({ comment, showTimestamp, timestampSeconds, onTimestampClick }: Params) => {
+const ChatMessage = ({ comment, highlightAnimation, showTimestamp, timestampSeconds, onTimestampClick, onUserNameClick }: Params) => {
   const t = useTranslations("VideoComponents");
   const hasTimestamp = timestampSeconds !== null;
   const timestampLabel = hasTimestamp ? durationToTime(Math.floor(timestampSeconds)) : "";
@@ -39,6 +42,7 @@ const ChatMessage = ({ comment, showTimestamp, timestampSeconds, onTimestampClic
     isFirstMessage ? classes.firstMessage : "",
     isHighlighted ? classes.highlightedMessage : "",
     isAction ? classes.actionMessage : "",
+    highlightAnimation ? classes.highlightAnimation : "",
   ].filter(Boolean).join(" ");
 
   const renderFormattedMessage = () => (
@@ -84,8 +88,20 @@ const ChatMessage = ({ comment, showTimestamp, timestampSeconds, onTimestampClic
     )
   );
 
+  const usernameComponent = (
+    <Text
+      fw={700}
+      lh={1}
+      size="sm"
+      style={{ color: comment.message.user_color }}
+      span
+    >
+      {comment.commenter.display_name}
+    </Text>
+  );
+
   return (
-    <div key={comment._id} className={rowClassName}>
+    <div key={comment._id} className={rowClassName} data-message-id={comment._id}>
       {showTimestamp && (
         hasTimestamp ? (
           <button
@@ -144,15 +160,15 @@ const ChatMessage = ({ comment, showTimestamp, timestampSeconds, onTimestampClic
           </span>
         )}
         {/* username */}
-        <Text
-          fw={700}
-          lh={1}
-          size="sm"
-          style={{ color: comment.message.user_color }}
-          span
-        >
-          {comment.commenter.display_name}
-        </Text>
+        {
+          onUserNameClick ? (
+            <UnstyledButton onClick={onUserNameClick} type="button">
+              {usernameComponent}
+            </UnstyledButton>
+          ) : (
+            usernameComponent
+          )
+        }
         <Text className={classes.message} span>
           {isAction ? " " : ": "}
         </Text>

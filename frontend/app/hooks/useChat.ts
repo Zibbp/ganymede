@@ -211,6 +211,45 @@ const useGetSeekChatForVideo = (
   });
 };
 
+const getChatForChatterInVideo = async (
+  videoId: string,
+  chatterId: string,
+  chatterLogin: string,
+  isLiveArchive: boolean,
+): Promise<Array<Comment>> => {
+  if (isLiveArchive) {
+    // Converted live archives do not reliably expose commenter._id, so fetch
+    // the archive once and identify the chatter by their Twitch login instead.
+    const comments = await getChatForVideo(videoId, 0, Number.MAX_SAFE_INTEGER);
+    const normalizedLogin = chatterLogin.toLowerCase();
+
+    return comments.filter((comment) =>
+      (chatterId !== "" && comment.commenter._id === chatterId)
+      || comment.commenter.name?.toLowerCase() === normalizedLogin
+      || comment.commenter.display_name?.toLowerCase() === normalizedLogin
+    );
+  }
+
+  const response = await useAxios.get(`/api/v1/vod/${videoId}/chat/chatter/${chatterId}`);
+  return response.data.data;
+};
+
+
+const useGetChatForChatterInVideo = (
+  videoId: string,
+  chatterId: string,
+  chatterLogin: string,
+  isLiveArchive: boolean,
+) => {
+  return useQuery<Array<Comment>>({
+    queryKey: ["video", "chat", "chatter", videoId, chatterId, chatterLogin, isLiveArchive],
+    queryFn: () => getChatForChatterInVideo(videoId, chatterId, chatterLogin, isLiveArchive),
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+  });
+};
+
 const getBadgesForVideo = async (videoId: string): Promise<Array<Badge>> => {
   const response = await useAxios.get(`/api/v1/vod/${videoId}/chat/badges`);
   return response.data.data;
@@ -235,4 +274,5 @@ export {
   useGetSeekChatForVideo,
   getChatForVideo,
   getSeekChatForVideo,
+  useGetChatForChatterInVideo,
 };
