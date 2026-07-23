@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -13,7 +14,8 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, stopSignals := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stopSignals()
 
 	if os.Getenv("DEVELOPMENT") == "true" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
@@ -27,22 +29,22 @@ func main() {
 		log.Panic().Err(err).Msg("Error setting up river worker")
 	}
 
-	// start worker in a goroutine
-	go func() {
-		if err := riverWorkerClient.Start(); err != nil {
-			log.Panic().Err(err).Msg("Error running river worker")
+	defer func() {
+		if err := riverWorkerClient.Close(); err != nil {
+			log.Error().Err(err).Msg("error closing worker resources")
 		}
 	}()
 
-	// Set up channel to listen for OS signals
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	if err := riverWorkerClient.Start(); err != nil {
+		log.Panic().Err(err).Msg("Error running river worker")
+	}
 
-	// Block until a signal is received
-	<-sigs
+	<-ctx.Done()
 
 	// Gracefully stop the worker
-	if err := riverWorkerClient.Stop(); err != nil {
+	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancelShutdown()
+	if err := riverWorkerClient.Stop(shutdownCtx); err != nil {
 		log.Panic().Err(err).Msg("Error stopping river worker")
 	}
 

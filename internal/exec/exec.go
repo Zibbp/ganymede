@@ -139,9 +139,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	cmd.Stderr = file
 	cmd.Stdout = file
 
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true, // Set the process group ID to allow killing child processes
-	}
+	cmd.SysProcAttr = vodArchiveProcessAttributes()
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error starting yt-dlp: %w", err)
 	}
@@ -333,7 +331,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 	// Run ffmpeg
 	cmd := osExec.Command("ffmpeg", ffmpegArgs...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.SysProcAttr = liveArchiveProcessAttributes()
 
 	log.Debug().Str("channel", channel.Name).Str("cmd", strings.Join(cmd.Args, " ")).Msgf("running ffmpeg")
 
@@ -389,6 +387,20 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 
 	return nil
+}
+
+func liveArchiveProcessAttributes() *syscall.SysProcAttr {
+	return &syscall.SysProcAttr{
+		Setpgid:   true,
+		Pdeathsig: syscall.SIGINT,
+	}
+}
+
+func vodArchiveProcessAttributes() *syscall.SysProcAttr {
+	return &syscall.SysProcAttr{
+		Setpgid:   true,
+		Pdeathsig: syscall.SIGTERM,
+	}
 }
 
 func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {

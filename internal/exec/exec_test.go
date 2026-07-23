@@ -2,8 +2,33 @@ package exec
 
 import (
 	"reflect"
+	"syscall"
 	"testing"
 )
+
+func TestLiveArchiveProcessAttributes(t *testing.T) {
+	t.Parallel()
+
+	attrs := liveArchiveProcessAttributes()
+	if !attrs.Setpgid {
+		t.Fatal("live archive process must run in its own process group")
+	}
+	if attrs.Pdeathsig != syscall.SIGINT {
+		t.Fatalf("parent death signal = %v, want SIGINT", attrs.Pdeathsig)
+	}
+}
+
+func TestVodArchiveProcessAttributes(t *testing.T) {
+	t.Parallel()
+
+	attrs := vodArchiveProcessAttributes()
+	if !attrs.Setpgid {
+		t.Fatal("VOD archive process must run in its own process group")
+	}
+	if attrs.Pdeathsig != syscall.SIGTERM {
+		t.Fatalf("parent death signal = %v, want SIGTERM", attrs.Pdeathsig)
+	}
+}
 
 func Test_extractSharedChatArgs(t *testing.T) {
 	tests := []struct {

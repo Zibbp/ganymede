@@ -16,10 +16,10 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.15.4
-	github.com/lib/pq v1.12.3
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.23.2
 	github.com/riverqueue/river v0.40.0
+	github.com/riverqueue/river/riverdriver/riverdatabasesql v0.40.0
 	github.com/riverqueue/river/rivertype v0.40.0
 	github.com/rs/zerolog v1.35.1
 	github.com/sethvargo/go-envconfig v1.3.0
@@ -74,6 +74,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.5 // indirect
+	github.com/lib/pq v1.12.3 // indirect
 	github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect

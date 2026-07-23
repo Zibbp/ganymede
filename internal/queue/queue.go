@@ -62,8 +62,12 @@ type Queue struct {
 }
 
 func (s *Service) CreateQueueItem(queueDto Queue, vID uuid.UUID) (*ent.Queue, error) {
+	return s.CreateQueueItemWithClient(context.Background(), s.Store.Client, queueDto, vID)
+}
+
+func (s *Service) CreateQueueItemWithClient(ctx context.Context, client *ent.Client, queueDto Queue, vID uuid.UUID) (*ent.Queue, error) {
 	if queueDto.LiveArchive {
-		q, err := s.Store.Client.Queue.Create().SetVodID(vID).SetLiveArchive(true).SetArchiveChat(queueDto.ArchiveChat).SetRenderChat(queueDto.RenderChat).Save(context.Background())
+		q, err := client.Queue.Create().SetVodID(vID).SetLiveArchive(true).SetArchiveChat(queueDto.ArchiveChat).SetRenderChat(queueDto.RenderChat).Save(ctx)
 		if err != nil {
 			if _, ok := err.(*ent.ConstraintError); ok {
 				return nil, fmt.Errorf("queue item exists for vod or vod does not exist")
@@ -73,7 +77,7 @@ func (s *Service) CreateQueueItem(queueDto Queue, vID uuid.UUID) (*ent.Queue, er
 		}
 		return q, nil
 	} else {
-		q, err := s.Store.Client.Queue.Create().SetVodID(vID).SetArchiveChat(queueDto.ArchiveChat).SetRenderChat(queueDto.RenderChat).Save(context.Background())
+		q, err := client.Queue.Create().SetVodID(vID).SetArchiveChat(queueDto.ArchiveChat).SetRenderChat(queueDto.RenderChat).Save(ctx)
 		if err != nil {
 			if _, ok := err.(*ent.ConstraintError); ok {
 				return nil, fmt.Errorf("queue item exists for vod or vod does not exist")

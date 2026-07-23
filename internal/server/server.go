@@ -2,11 +2,11 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"os"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
@@ -103,20 +103,15 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 
 	// Initialize river client
 	riverClient, err := tasks_client.NewRiverClient(tasks_client.RiverClientInput{
-		DB_URL: dbString,
+		Database: db,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating river client: %v", err)
 	}
 
-	err = riverClient.RunMigrations()
-	if err != nil {
-		return nil, fmt.Errorf("error running migrations: %v", err)
-	}
-
 	// Setup RiverUI server
 	riverUIOpts := &riverui.HandlerOpts{
-		Endpoints: riverui.NewEndpoints[pgx.Tx](riverClient.Client, nil),
+		Endpoints: riverui.NewEndpoints[*sql.Tx](riverClient.Client, nil),
 		Logger:    slog.New(slog.NewTextHandler(os.Stderr, nil)),
 		Prefix:    "/riverui",
 	}
@@ -125,11 +120,9 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 		return nil, fmt.Errorf("error creating riverui server: %v", err)
 	}
 
-	go func() {
-		if err := riverUIServer.Start(ctx); err != nil {
-			log.Error().Err(err).Msg("error running riverui server")
-		}
-	}()
+	if err := riverUIServer.Start(ctx); err != nil {
+		return nil, fmt.Errorf("start riverui server: %w", err)
+	}
 
 	var platformTwitch platform.Platform
 	// setup twitch platform
@@ -208,6 +201,11 @@ func Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err := app.Database.Close(); err != nil {
+			log.Error().Err(err).Msg("error closing database")
+		}
+	}()
 
 	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.NotificationService, app.ApiKeyService, app.PlatformTwitch, app.RiverUIServer)
 

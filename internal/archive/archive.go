@@ -2,6 +2,7 @@ package archive
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
+	entQueue "github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/blocked"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
@@ -43,6 +45,68 @@ type ArchiveResponse struct {
 
 func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, blockedVodService *blocked.Service, riverClient *tasks_client.RiverClient, platformTwitch platform.Platform) *Service {
 	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, BlockedVodsService: blockedVodService, RiverClient: riverClient, PlatformTwitch: platformTwitch}
+}
+
+// createArchiveRecordsAndEnqueue atomically creates the VOD and queue state,
+// applies disabled-chat options, and inserts the first River job.
+func (s *Service) createArchiveRecordsAndEnqueue(ctx context.Context, vodDTO vod.Vod, channelID uuid.UUID, queueDTO queue.Queue) (*ArchiveResponse, error) {
+	var queueID uuid.UUID
+	err := s.Store.WithTx(ctx, func(txClient *ent.Client, tx *sql.Tx) error {
+		v, err := s.VodService.CreateVodWithClient(ctx, txClient, vodDTO, channelID)
+		if err != nil {
+			return err
+		}
+		q, err := s.QueueService.CreateQueueItemWithClient(ctx, txClient, queueDTO, v.ID)
+		if err != nil {
+			return err
+		}
+		queueID = q.ID
+
+		if !queueDTO.ArchiveChat {
+			update := txClient.Queue.UpdateOneID(q.ID).
+				SetChatProcessing(false).
+				SetTaskChatDownload(utils.Success).
+				SetTaskChatRender(utils.Success).
+				SetTaskChatMove(utils.Success)
+			if queueDTO.LiveArchive {
+				update.SetTaskChatConvert(utils.Success)
+			}
+			if _, err := update.Save(ctx); err != nil {
+				return err
+			}
+			if _, err := txClient.Vod.UpdateOneID(v.ID).SetChatPath("").SetChatVideoPath("").Save(ctx); err != nil {
+				return err
+			}
+		}
+
+		if !queueDTO.RenderChat {
+			if _, err := txClient.Queue.UpdateOneID(q.ID).SetTaskChatRender(utils.Success).SetRenderChat(false).Save(ctx); err != nil {
+				return err
+			}
+			if _, err := txClient.Vod.UpdateOneID(v.ID).SetChatVideoPath("").Save(ctx); err != nil {
+				return err
+			}
+		}
+
+		_, err = s.RiverClient.InsertTx(ctx, tx, tasks.CreateDirectoryArgs{
+			Continue: true,
+			Input:    tasks.ArchiveVideoInput{QueueId: q.ID},
+		}, nil)
+		return err
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create archive and enqueue first task: %w", err)
+	}
+
+	q, err := s.Store.Client.Queue.Query().Where(entQueue.ID(queueID)).WithVod().Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	v, err := s.Store.Client.Vod.Get(ctx, vodDTO.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &ArchiveResponse{Queue: q, Video: v}, nil
 }
 
 // ArchiveChannel - Create channel entry in database along with folder, profile image, etc.
@@ -127,7 +191,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*A
 	}
 
 	// get video
-	video, err := s.PlatformTwitch.GetVideo(context.Background(), input.VideoId, false, false)
+	video, err := s.PlatformTwitch.GetVideo(ctx, input.VideoId, false, false)
 	if err != nil {
 		return nil, err
 	}
@@ -260,65 +324,11 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*A
 		vodDTO.VideoPath = fmt.Sprintf("%s/%s-video_hls/%s-video.m3u8", rootVideoPath, fileName, video.ID)
 	}
 
-	v, err := s.VodService.CreateVod(vodDTO, channel.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error creating vod: %v", err)
-	}
-
-	// Create queue item
-	q, err := s.QueueService.CreateQueueItem(queue.Queue{LiveArchive: false, ArchiveChat: input.ArchiveChat, RenderChat: input.RenderChat}, v.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error creating queue item: %v", err)
-	}
-
-	// If chat is disabled update queue
-	if !input.ArchiveChat {
-		_, err := q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating queue item: %v", err)
-		}
-		_, err = v.Update().SetChatPath("").SetChatVideoPath("").Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating vod: %v", err)
-		}
-	}
-
-	// If render chat is disabled update queue
-	if !input.RenderChat {
-		_, err := q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating queue item: %v", err)
-		}
-		_, err = v.Update().SetChatVideoPath("").Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating vod: %v", err)
-		}
-	}
-
-	// Re-query queue from DB for updated values
-	q, err = s.QueueService.GetQueueItem(q.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching queue item: %v", err)
-	}
-
-	taskInput := tasks.ArchiveVideoInput{
-		QueueId: q.ID,
-	}
-
-	// enqueue first task
-	_, err = s.RiverClient.Client.Insert(ctx, tasks.CreateDirectoryArgs{
-		Continue: true,
-		Input:    taskInput,
-	}, nil)
-
-	if err != nil {
-		return nil, fmt.Errorf("error enqueueing task: %v", err)
-	}
-
-	return &ArchiveResponse{
-		Queue: q,
-		Video: v,
-	}, nil
+	return s.createArchiveRecordsAndEnqueue(ctx, vodDTO, channel.ID, queue.Queue{
+		LiveArchive: false,
+		ArchiveChat: input.ArchiveChat,
+		RenderChat:  input.RenderChat,
+	})
 }
 
 type ArchiveClipInput struct {
@@ -344,7 +354,7 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*Arc
 	}
 
 	// get clip
-	clip, err := s.PlatformTwitch.GetClip(context.Background(), input.ID)
+	clip, err := s.PlatformTwitch.GetClip(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -475,65 +485,11 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*Arc
 		vodDTO.VideoPath = fmt.Sprintf("%s/%s-video_hls/%s-video.m3u8", rootVideoPath, fileName, clip.ID)
 	}
 
-	v, err := s.VodService.CreateVod(vodDTO, channel.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error creating vod: %v", err)
-	}
-
-	// Create queue item
-	q, err := s.QueueService.CreateQueueItem(queue.Queue{LiveArchive: false, ArchiveChat: input.ArchiveChat, RenderChat: input.RenderChat}, v.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error creating queue item: %v", err)
-	}
-
-	// If chat is disabled update queue
-	if !input.ArchiveChat {
-		_, err := q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating queue item: %v", err)
-		}
-		_, err = v.Update().SetChatPath("").SetChatVideoPath("").Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating vod: %v", err)
-		}
-	}
-
-	// If render chat is disabled update queue
-	if !input.RenderChat {
-		_, err := q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating queue item: %v", err)
-		}
-		_, err = v.Update().SetChatVideoPath("").Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating vod: %v", err)
-		}
-	}
-
-	// Re-query queue from DB for updated values
-	q, err = s.QueueService.GetQueueItem(q.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching queue item: %v", err)
-	}
-
-	taskInput := tasks.ArchiveVideoInput{
-		QueueId: q.ID,
-	}
-
-	// enqueue first task
-	_, err = s.RiverClient.Client.Insert(ctx, tasks.CreateDirectoryArgs{
-		Continue: true,
-		Input:    taskInput,
-	}, nil)
-
-	if err != nil {
-		return nil, fmt.Errorf("error enqueueing task: %v", err)
-	}
-
-	return &ArchiveResponse{
-		Queue: q,
-		Video: v,
-	}, nil
+	return s.createArchiveRecordsAndEnqueue(ctx, vodDTO, channel.ID, queue.Queue{
+		LiveArchive: false,
+		ArchiveChat: input.ArchiveChat,
+		RenderChat:  input.RenderChat,
+	})
 }
 
 func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput) (*ArchiveResponse, error) {
@@ -545,7 +501,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 	}
 
 	// get video
-	video, err := s.PlatformTwitch.GetLiveStream(context.Background(), channel.Name)
+	video, err := s.PlatformTwitch.GetLiveStream(ctx, channel.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -649,63 +605,9 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		vodDTO.VideoPath = fmt.Sprintf("%s/%s-video_hls/%s-video.m3u8", rootVideoPath, fileName, video.ID)
 	}
 
-	v, err := s.VodService.CreateVod(vodDTO, channel.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error creating vod: %v", err)
-	}
-
-	// Create queue item
-	q, err := s.QueueService.CreateQueueItem(queue.Queue{LiveArchive: true, ArchiveChat: input.ArchiveChat, RenderChat: input.RenderChat}, v.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error creating queue item: %v", err)
-	}
-
-	// If chat is disabled update queue
-	if !input.ArchiveChat {
-		_, err := q.Update().SetChatProcessing(false).SetTaskChatDownload(utils.Success).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating queue item: %v", err)
-		}
-		_, err = v.Update().SetChatPath("").SetChatVideoPath("").Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating vod: %v", err)
-		}
-	}
-
-	// If render chat is disabled update queue
-	if !input.RenderChat {
-		_, err := q.Update().SetTaskChatRender(utils.Success).SetRenderChat(false).Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating queue item: %v", err)
-		}
-		_, err = v.Update().SetChatVideoPath("").Save(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error updating vod: %v", err)
-		}
-	}
-
-	// Re-query queue from DB for updated values
-	q, err = s.QueueService.GetQueueItem(q.ID)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching queue item: %v", err)
-	}
-
-	taskInput := tasks.ArchiveVideoInput{
-		QueueId: q.ID,
-	}
-
-	// enqueue first task
-	_, err = s.RiverClient.Client.Insert(ctx, tasks.CreateDirectoryArgs{
-		Continue: true,
-		Input:    taskInput,
-	}, nil)
-
-	if err != nil {
-		return nil, fmt.Errorf("error enqueueing task: %v", err)
-	}
-
-	return &ArchiveResponse{
-		Queue: q,
-		Video: v,
-	}, nil
+	return s.createArchiveRecordsAndEnqueue(ctx, vodDTO, channel.ID, queue.Queue{
+		LiveArchive: true,
+		ArchiveChat: input.ArchiveChat,
+		RenderChat:  input.RenderChat,
+	})
 }

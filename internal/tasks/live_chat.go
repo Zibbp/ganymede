@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -28,10 +28,11 @@ func (args DownloadLiveChatArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 1,
 		Tags:        []string{"archive"},
+		UniqueOpts:  archiveUniqueOpts(),
 	}
 }
 
-func (w DownloadLiveChatArgs) Timeout(job *river.Job[DownloadLiveChatArgs]) time.Duration {
+func (w *DownloadLiveChatWorker) Timeout(job *river.Job[DownloadLiveChatArgs]) time.Duration {
 	return 49 * time.Hour
 }
 
@@ -45,8 +46,6 @@ func (w DownloadLiveChatWorker) Work(ctx context.Context, job *river.Job[Downloa
 	if err != nil {
 		return err
 	}
-	client := river.ClientFromContext[pgx.Tx](ctx)
-
 	// set queue status to running
 	err = setQueueStatus(ctx, store.Client, QueueStatusInput{
 		Status:  utils.Running,
@@ -56,12 +55,6 @@ func (w DownloadLiveChatWorker) Work(ctx context.Context, job *river.Job[Downloa
 	if err != nil {
 		return err
 	}
-
-	// start task heartbeat
-	go startHeartBeatForTask(ctx, HeartBeatInput{
-		TaskId: job.ID,
-		conn:   store.ConnPool,
-	})
 
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {
@@ -82,39 +75,42 @@ func (w DownloadLiveChatWorker) Work(ctx context.Context, job *river.Job[Downloa
 	// download chat
 	log.Info().Str("task_id", fmt.Sprintf("%d", job.ID)).Msgf("starting live chat download for %s", dbItems.Channel.Name)
 	err = exec.SaveTwitchLiveChatToFile(ctx, dbItems.Channel.Name, dbItems.Video.TmpLiveChatDownloadPath)
+	remotelyCancelled := false
+	var cancellationErr error
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
-			// create new context to finish the task
-			ctx = context.Background()
+			if !errors.Is(context.Cause(ctx), rivertype.ErrJobCancelledRemotely) {
+				return err
+			}
+			remotelyCancelled = true
+			cancellationErr = err
+			finalizeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), liveArchiveFinalizationTimeout)
+			defer cancel()
+			ctx = finalizeCtx
 		} else {
 			return err
 		}
 	}
 
-	// set queue status to completed
-	err = setQueueStatus(ctx, store.Client, QueueStatusInput{
+	next := []transactionalJob{}
+	if job.Args.Continue {
+		next = append(next, transactionalJob{Args: &ConvertLiveChatArgs{Continue: true, Input: nextArchiveInput(job.Args.Input)}})
+	}
+	err = setQueueStatusAndEnqueue(ctx, store, QueueStatusInput{
 		Status:  utils.Success,
 		QueueId: job.Args.Input.QueueId,
 		Task:    utils.TaskDownloadChat,
-	})
+	}, next...)
 	if err != nil {
 		return err
-	}
-
-	// continue with next job
-	if job.Args.Continue {
-		_, err := client.Insert(ctx, &ConvertLiveChatArgs{
-			Continue: true,
-			Input:    job.Args.Input,
-		}, nil)
-		if err != nil {
-			return err
-		}
 	}
 
 	// check if tasks are done
 	if err := checkIfTasksAreDone(ctx, store.Client, job.Args.Input); err != nil {
 		return err
+	}
+	if remotelyCancelled {
+		return cancellationErr
 	}
 
 	return nil
@@ -134,10 +130,11 @@ func (args ConvertLiveChatArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 5,
 		Tags:        []string{"archive"},
+		UniqueOpts:  archiveUniqueOpts(),
 	}
 }
 
-func (w ConvertLiveChatArgs) Timeout(job *river.Job[ConvertLiveChatArgs]) time.Duration {
+func (w *ConvertLiveChatWorker) Timeout(job *river.Job[ConvertLiveChatArgs]) time.Duration {
 	return 49 * time.Hour
 }
 
@@ -161,12 +158,6 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	if err != nil {
 		return err
 	}
-
-	// start task heartbeat
-	go startHeartBeatForTask(ctx, HeartBeatInput{
-		TaskId: job.ID,
-		conn:   store.ConnPool,
-	})
 
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {
@@ -195,7 +186,7 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 			return err
 		}
 
-		return nil
+		return checkIfTasksAreDone(ctx, store.Client, job.Args.Input)
 	}
 
 	// get channel
@@ -256,38 +247,21 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 		return err
 	}
 
-	// set queue status to completed
-	err = setQueueStatus(ctx, store.Client, QueueStatusInput{
+	next := []transactionalJob{}
+	if job.Args.Continue {
+		if dbItems.Queue.TaskChatRender != utils.Success {
+			next = append(next, transactionalJob{Args: &RenderChatArgs{Continue: true, Input: nextArchiveInput(job.Args.Input)}})
+		} else {
+			next = append(next, transactionalJob{Args: &MoveChatArgs{Continue: true, Input: nextArchiveInput(job.Args.Input)}})
+		}
+	}
+	err = setQueueStatusAndEnqueue(ctx, store, QueueStatusInput{
 		Status:  utils.Success,
 		QueueId: job.Args.Input.QueueId,
 		Task:    utils.TaskConvertChat,
-	})
+	}, next...)
 	if err != nil {
 		return err
-	}
-
-	// continue with next job
-	if job.Args.Continue {
-		client := river.ClientFromContext[pgx.Tx](ctx)
-		// render chat if needed
-		if dbItems.Queue.TaskChatRender != utils.Success {
-			_, err := client.Insert(ctx, &RenderChatArgs{
-				Continue: true,
-				Input:    job.Args.Input,
-			}, nil)
-			if err != nil {
-				return err
-			}
-			// else move chat as rendering is not needed
-		} else {
-			_, err := client.Insert(ctx, &MoveChatArgs{
-				Continue: true,
-				Input:    job.Args.Input,
-			}, nil)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	// check if tasks are done
