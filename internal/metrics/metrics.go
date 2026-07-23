@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"context"
+	"errors"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
@@ -158,18 +159,17 @@ func (s *Service) gatherRiverJobMetrics(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 	for rows.Next() {
 		var state string
 		var count int64
 		if err := rows.Scan(&state, &count); err != nil {
-			return err
+			return errors.Join(err, rows.Close())
 		}
 		if gauge, ok := gauges[state]; ok {
 			gauge.Set(float64(count))
 		}
 	}
-	return rows.Err()
+	return errors.Join(rows.Err(), rows.Close())
 }
 
 func (s *Service) GatherMetrics(ctx context.Context) (*prometheus.Registry, error) {

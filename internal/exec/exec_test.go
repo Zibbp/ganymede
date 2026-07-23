@@ -1,10 +1,33 @@
 package exec
 
 import (
+	osExec "os/exec"
 	"reflect"
 	"syscall"
 	"testing"
+	"time"
 )
+
+func TestStartArchiveCommand(t *testing.T) {
+	t.Parallel()
+
+	cmd := osExec.Command("sh", "-c", "exit 0")
+	cmd.SysProcAttr = vodArchiveProcessAttributes()
+
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
+		t.Fatalf("start archive command: %v", err)
+	}
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("wait for archive command: %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for archive command")
+	}
+}
 
 func TestLiveArchiveProcessAttributes(t *testing.T) {
 	t.Parallel()

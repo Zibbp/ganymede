@@ -31,6 +31,8 @@ var (
 	TestArchiveTimeout          = 500 * time.Second
 )
 
+const riverJobPageSize = 500
+
 // IsPlayableVideo checks if a video file is playable using ffprobe.
 func IsPlayableVideo(path string) bool {
 	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
@@ -79,17 +81,42 @@ func WaitForArchiveCompletion(t *testing.T, app *server.Application, videoId uui
 		if err != nil {
 			t.Fatalf("Error querying queue item: %v", err)
 		}
-		runningJobsParams := river.NewJobListParams().States(rivertype.JobStateRunning).First(500)
-		runningJobs, err := app.RiverClient.JobList(context.Background(), runningJobsParams)
-		if err != nil {
-			t.Fatalf("Error listing running jobs: %v", err)
-		}
+		runningJobsParams := river.NewJobListParams().States(rivertype.JobStateRunning).First(riverJobPageSize)
+		runningJob := findRiverJob(t, app, context.Background(), runningJobsParams, func(*rivertype.JobRow) bool {
+			return true
+		})
 
-		if !q.Processing && len(runningJobs.Jobs) == 0 {
+		if !q.Processing && runningJob == nil {
 			break
 		}
 
 		time.Sleep(10 * time.Second)
+	}
+}
+
+func findRiverJob(
+	t *testing.T,
+	app *server.Application,
+	ctx context.Context,
+	params *river.JobListParams,
+	match func(*rivertype.JobRow) bool,
+) *rivertype.JobRow {
+	t.Helper()
+
+	for {
+		result, err := app.RiverClient.JobList(ctx, params)
+		if err != nil {
+			t.Fatalf("list River jobs: %v", err)
+		}
+		for _, job := range result.Jobs {
+			if match(job) {
+				return job
+			}
+		}
+		if len(result.Jobs) < riverJobPageSize || result.LastCursor == nil {
+			return nil
+		}
+		params = params.After(result.LastCursor)
 	}
 }
 
@@ -174,12 +201,8 @@ func WaitForRunningVideoDownload(t *testing.T, app *server.Application, queueID 
 func FindArchiveJob(t *testing.T, app *server.Application, queueID uuid.UUID, kind string, states ...rivertype.JobState) *rivertype.JobRow {
 	t.Helper()
 
-	params := river.NewJobListParams().States(states...).Kinds(kind).First(500)
-	result, err := app.RiverClient.JobList(t.Context(), params)
-	if err != nil {
-		t.Fatalf("list River archive jobs: %v", err)
-	}
-	for _, job := range result.Jobs {
+	params := river.NewJobListParams().States(states...).Kinds(kind).First(riverJobPageSize)
+	return findRiverJob(t, app, t.Context(), params, func(job *rivertype.JobRow) bool {
 		var args struct {
 			Input struct {
 				QueueID uuid.UUID `json:"queue_id"`
@@ -189,10 +212,10 @@ func FindArchiveJob(t *testing.T, app *server.Application, queueID uuid.UUID, ki
 			t.Fatalf("decode River job %d args: %v", job.ID, err)
 		}
 		if args.Input.QueueID == queueID {
-			return job
+			return true
 		}
-	}
-	return nil
+		return false
+	})
 }
 
 // WaitForCompletedArchiveRecovery proves that the watchdog inserted and
@@ -205,12 +228,8 @@ func WaitForCompletedArchiveRecovery(t *testing.T, app *server.Application, queu
 		params := river.NewJobListParams().
 			States(rivertype.JobStateCompleted).
 			Kinds(kind).
-			First(500)
-		result, err := app.RiverClient.JobList(t.Context(), params)
-		if err != nil {
-			t.Fatalf("list completed River archive jobs: %v", err)
-		}
-		for _, job := range result.Jobs {
+			First(riverJobPageSize)
+		job := findRiverJob(t, app, t.Context(), params, func(job *rivertype.JobRow) bool {
 			var metadata struct {
 				Ganymede struct {
 					QueueID            uuid.UUID `json:"queue_id"`
@@ -221,8 +240,12 @@ func WaitForCompletedArchiveRecovery(t *testing.T, app *server.Application, queu
 				t.Fatalf("decode River job %d metadata: %v", job.ID, err)
 			}
 			if metadata.Ganymede.QueueID == queueID && metadata.Ganymede.RecoveryGeneration > 0 {
-				return job
+				return true
 			}
+			return false
+		})
+		if job != nil {
+			return job
 		}
 		if time.Now().After(deadline) {
 			t.Fatalf("timeout waiting for completed recovery job for queue %s", queueID)

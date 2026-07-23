@@ -8,6 +8,7 @@ import (
 	"os"
 	osExec "os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -140,14 +141,10 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	cmd.Stdout = file
 
 	cmd.SysProcAttr = vodArchiveProcessAttributes()
-	if err := cmd.Start(); err != nil {
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
 		return fmt.Errorf("error starting yt-dlp: %w", err)
 	}
-
-	done := make(chan error)
-	go func() {
-		done <- cmd.Wait()
-	}()
 
 	// Wait for the command to finish or context to be cancelled
 	select {
@@ -341,14 +338,10 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	cmd.Stderr = file
 	cmd.Stdout = file
 
-	if err := cmd.Start(); err != nil {
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
 		return fmt.Errorf("error starting ffmpeg: %w", err)
 	}
-
-	done := make(chan error)
-	go func() {
-		done <- cmd.Wait()
-	}()
 
 	// Wait for the command to finish or for ctx cancellation.
 	// When ctx is cancelled, allow ffmpeg to handle a graceful shutdown first:
@@ -387,6 +380,32 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 
 	return nil
+}
+
+// startArchiveCommand keeps the goroutine that creates the child locked to its
+// OS thread until Wait returns. On Linux, SysProcAttr.Pdeathsig is tied to the
+// creating thread rather than the parent process, so allowing that thread to
+// terminate early could signal an otherwise healthy archive child.
+func startArchiveCommand(cmd *osExec.Cmd) (<-chan error, error) {
+	started := make(chan error, 1)
+	done := make(chan error, 1)
+
+	go func() {
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+
+		if err := cmd.Start(); err != nil {
+			started <- err
+			return
+		}
+		started <- nil
+		done <- cmd.Wait()
+	}()
+
+	if err := <-started; err != nil {
+		return nil, err
+	}
+	return done, nil
 }
 
 func liveArchiveProcessAttributes() *syscall.SysProcAttr {

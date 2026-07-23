@@ -34,7 +34,7 @@ type Database struct {
 
 const (
 	migrationLockKey      int64 = 9876543210
-	riverMigrationVersion       = 7
+	riverMigrationVersion int   = 7
 )
 
 func DB() *Database {

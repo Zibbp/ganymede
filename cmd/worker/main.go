@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,6 +13,8 @@ import (
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/worker"
 )
+
+const workerShutdownTimeout = 300*time.Second + 5*time.Second
 
 func main() {
 	ctx, stopSignals := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -42,10 +45,14 @@ func main() {
 	<-ctx.Done()
 
 	// Gracefully stop the worker
-	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), 45*time.Second)
+	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), workerShutdownTimeout)
 	defer cancelShutdown()
 	if err := riverWorkerClient.Stop(shutdownCtx); err != nil {
-		log.Panic().Err(err).Msg("Error stopping river worker")
+		if errors.Is(err, context.DeadlineExceeded) {
+			log.Warn().Err(err).Msg("worker shutdown timed out; exiting")
+		} else {
+			log.Panic().Err(err).Msg("Error stopping river worker")
+		}
 	}
 
 	log.Info().Msg("worker stopped")
