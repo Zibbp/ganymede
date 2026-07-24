@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog"
@@ -33,6 +33,11 @@ import (
 
 var archive_tag = "archive"
 var allow_fail_tag = "allow_fail"
+
+// Live download workers switch to a detached context after River asks them to
+// stop so they can flush partial media and atomically enqueue the next stage.
+// The watchdog must allow this entire window to elapse before taking over.
+const liveArchiveFinalizationTimeout = 2 * time.Minute
 
 var (
 	TaskUpdateStreamVideoId         = "update_stream_video_id"
@@ -63,8 +68,26 @@ var (
 )
 
 type ArchiveVideoInput struct {
-	QueueId       uuid.UUID `json:"queue_id"`
-	HeartBeatTime time.Time `json:"heartbeat_time"` // do not set this field
+	QueueId            uuid.UUID `json:"queue_id" river:"unique"`
+	RecoveryGeneration int       `json:"recovery_generation,omitempty" river:"unique"`
+	HeartBeatTime      time.Time `json:"heartbeat_time,omitempty"` // legacy read-only field
+}
+
+func archiveUniqueOpts() river.UniqueOpts {
+	return river.UniqueOpts{
+		ByArgs: true,
+		ByState: []rivertype.JobState{
+			rivertype.JobStateAvailable,
+			rivertype.JobStatePending,
+			rivertype.JobStateRunning,
+			rivertype.JobStateRetryable,
+			rivertype.JobStateScheduled,
+		},
+	}
+}
+
+func nextArchiveInput(input ArchiveVideoInput) ArchiveVideoInput {
+	return ArchiveVideoInput{QueueId: input.QueueId}
 }
 
 type GetDatabaseItemsResponse struct {
@@ -77,6 +100,11 @@ type QueueStatusInput struct {
 	Status  utils.TaskStatus
 	QueueId uuid.UUID
 	Task    utils.TaskName
+}
+
+type transactionalJob struct {
+	Args river.JobArgs
+	Opts *river.InsertOpts
 }
 
 func StoreFromContext(ctx context.Context) (*database.Database, error) {
@@ -104,6 +132,14 @@ func NotificationServiceFromContext(ctx context.Context) (*notification.Service,
 		return nil, errors.New("notification service not found in context")
 	}
 	return svc, nil
+}
+
+func EnqueuerFromContext(ctx context.Context) (tasks_shared.Enqueuer, error) {
+	enqueuer, exists := ctx.Value(tasks_shared.EnqueuerKey).(tasks_shared.Enqueuer)
+	if !exists || enqueuer == nil {
+		return nil, errors.New("transactional River enqueuer not found in context")
+	}
+	return enqueuer, nil
 }
 
 // getDatabaseItems retrieves the database items associated with the provided queueId. This is used instead of passing all the structs to each job so that they can be easily updated in the database.
@@ -163,6 +199,27 @@ func setQueueStatus(ctx context.Context, entClient *ent.Client, queueStatusInput
 	return nil
 }
 
+// setQueueStatusAndEnqueue commits a stage transition and all of its successor
+// jobs atomically. A crash can therefore leave either the old stage state or
+// the complete handoff, but never a successful stage with no next job.
+func setQueueStatusAndEnqueue(ctx context.Context, store *database.Database, status QueueStatusInput, jobs ...transactionalJob) error {
+	enqueuer, err := EnqueuerFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	return store.WithTx(ctx, func(txClient *ent.Client, tx *sql.Tx) error {
+		if err := setQueueStatus(ctx, txClient, status); err != nil {
+			return err
+		}
+		for _, next := range jobs {
+			if _, err := enqueuer.InsertTx(ctx, tx, next.Args, next.Opts); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 // replaceThumbnailPlaceholders replaces the placeholders in the provided url with the provided width and height.
 func replaceThumbnailPlaceholders(url, width, height string, isLive bool) string {
 	if isLive {
@@ -180,112 +237,65 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 		return err
 	}
 
+	videoDone := dbItems.Queue.TaskVideoDownload == utils.Success && dbItems.Queue.TaskVideoConvert == utils.Success && dbItems.Queue.TaskVideoMove == utils.Success
+	chatDone := dbItems.Queue.TaskChatDownload == utils.Success && dbItems.Queue.TaskChatRender == utils.Success && dbItems.Queue.TaskChatMove == utils.Success
 	if dbItems.Queue.LiveArchive {
-		if dbItems.Queue.TaskVideoDownload == utils.Success && dbItems.Queue.TaskVideoConvert == utils.Success && dbItems.Queue.TaskVideoMove == utils.Success && dbItems.Queue.TaskChatDownload == utils.Success && dbItems.Queue.TaskChatConvert == utils.Success && dbItems.Queue.TaskChatRender == utils.Success && dbItems.Queue.TaskChatMove == utils.Success {
-			log.Debug().Msgf("all tasks for video %s are done", dbItems.Video.ID.String())
-
-			_, err := dbItems.Queue.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).Save(context.Background())
-			if err != nil {
-				return err
-			}
-
-			_, err = entClient.Vod.UpdateOneID(dbItems.Video.ID).SetProcessing(false).Save(context.Background())
-			if err != nil {
-				return err
-			}
-
-			if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
-				notifCtx := context.WithoutCancel(ctx)
-				go func() {
-					defer func() {
-						if r := recover(); r != nil {
-							log.Error().Interface("panic", r).Msg("panic in notification")
-						}
-					}()
-					notifSvc.SendLiveArchiveSuccess(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue)
-				}()
-			}
-
-			// Queue task to calculate video storage usage
-			_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateVideoStorageUsage{
-				VideoID: &dbItems.Video.ID,
-			}, nil)
-			if err != nil {
-				log.Error().Err(err).Msg("error queuing video storage usage update task")
-			}
-		}
-	} else {
-		if dbItems.Queue.TaskVideoDownload == utils.Success && dbItems.Queue.TaskVideoConvert == utils.Success && dbItems.Queue.TaskVideoMove == utils.Success && dbItems.Queue.TaskChatDownload == utils.Success && dbItems.Queue.TaskChatRender == utils.Success && dbItems.Queue.TaskChatMove == utils.Success {
-			log.Debug().Msgf("all tasks for video %s are done", dbItems.Video.ID.String())
-
-			_, err := dbItems.Queue.Update().SetVideoProcessing(false).SetChatProcessing(false).SetProcessing(false).Save(context.Background())
-			if err != nil {
-				return err
-			}
-
-			_, err = entClient.Vod.UpdateOneID(dbItems.Video.ID).SetProcessing(false).Save(context.Background())
-			if err != nil {
-				return err
-			}
-
-			if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
-				notifCtx := context.WithoutCancel(ctx)
-				go func() {
-					defer func() {
-						if r := recover(); r != nil {
-							log.Error().Interface("panic", r).Msg("panic in notification")
-						}
-					}()
-					notifSvc.SendVideoArchiveSuccess(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue)
-				}()
-			}
-
-			// Queue task to calculate video storage usage
-			_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateVideoStorageUsage{
-				VideoID: &dbItems.Video.ID,
-			}, nil)
-			if err != nil {
-				log.Error().Err(err).Msg("error queuing video storage usage update task")
-			}
-		}
+		chatDone = chatDone && dbItems.Queue.TaskChatConvert == utils.Success
+	}
+	if !videoDone || !chatDone || !dbItems.Queue.Processing {
+		return nil
 	}
 
-	return nil
-}
-
-// forceJobRetry forces a job to be retried. River's retry function does not touch running jobs, so we have to do it ourselves.
-func forceJobRetry(ctx context.Context, conn *pgxpool.Pool, id int64) error {
-	query := `
-		UPDATE river_job
-		SET state = $1
-		WHERE id = $2
-	`
-
-	r, err := conn.Exec(ctx, query, rivertype.JobStateRetryable, id)
+	store, err := StoreFromContext(ctx)
 	if err != nil {
 		return err
 	}
-	if r.RowsAffected() == 0 {
-		return fmt.Errorf("job not found")
-	}
-
-	return nil
-}
-
-// forceDeleteJob forces a job to be deleted. River's delete function does not touch running jobs, so we have to do it ourselves.
-func forceDeleteJob(ctx context.Context, conn *pgxpool.Pool, id int64) error {
-	query := `
-		DELETE FROM river_job
-		WHERE id = $1
-		RETURNING id
-	`
-
-	r, err := conn.Exec(ctx, query, id)
+	enqueuer, err := EnqueuerFromContext(ctx)
 	if err != nil {
 		return err
 	}
-	if r.RowsAffected() == 0 {
-		return fmt.Errorf("job not found")
+	finalized := false
+	if err := store.WithTx(ctx, func(txClient *ent.Client, tx *sql.Tx) error {
+		if _, err := txClient.Queue.UpdateOneID(dbItems.Queue.ID).
+			Where(queue.Processing(true)).
+			SetVideoProcessing(false).
+			SetChatProcessing(false).
+			SetProcessing(false).
+			Save(ctx); err != nil {
+			if ent.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+		finalized = true
+		if _, err := txClient.Vod.UpdateOneID(dbItems.Video.ID).SetProcessing(false).Save(ctx); err != nil {
+			return err
+		}
+		_, err := enqueuer.InsertTx(ctx, tx, &UpdateVideoStorageUsage{VideoID: &dbItems.Video.ID}, nil)
+		return err
+	}); err != nil {
+		return err
+	}
+	if !finalized {
+		return nil
+	}
+
+	log.Debug().Msgf("all tasks for video %s are done", dbItems.Video.ID.String())
+	if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
+		go func() {
+			notifCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+			defer cancel()
+			defer func() {
+				if r := recover(); r != nil {
+					log.Error().Interface("panic", r).Msg("panic in notification")
+				}
+			}()
+			if dbItems.Queue.LiveArchive {
+				notifSvc.SendLiveArchiveSuccess(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+			} else {
+				notifSvc.SendVideoArchiveSuccess(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue)
+			}
+		}()
 	}
 
 	return nil
@@ -298,32 +308,37 @@ type GetTaskFilter struct {
 }
 
 func getTaskId(ctx context.Context, client *river.Client[pgx.Tx], filter GetTaskFilter, params *river.JobListParams) (int64, error) {
-	jobs, err := client.JobList(ctx, params)
-	if err != nil {
-		return 0, err
+	if filter.Kind != "" {
+		params = params.Kinds(filter.Kind)
 	}
-
-	for _, job := range jobs.Jobs {
-		var args RiverJobArgs
-		if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
+	for {
+		jobs, err := client.JobList(ctx, params)
+		if err != nil {
 			return 0, err
 		}
 
-		// Apply filters
-		if filter.Kind != "" && job.Kind != filter.Kind {
-			continue
-		}
-		if filter.QueueId != uuid.Nil && args.Input.QueueId != filter.QueueId {
-			continue
-		}
-		if len(filter.Tags) > 0 && !containsAllTags(job.Tags, filter.Tags) {
-			continue
-		}
+		for _, job := range jobs.Jobs {
+			var args RiverJobArgs
+			if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
+				return 0, err
+			}
 
-		// If all filters pass, return the job ID
-		return job.ID, nil
+			if filter.Kind != "" && job.Kind != filter.Kind {
+				continue
+			}
+			if filter.QueueId != uuid.Nil && args.Input.QueueId != filter.QueueId {
+				continue
+			}
+			if len(filter.Tags) > 0 && !containsAllTags(job.Tags, filter.Tags) {
+				continue
+			}
+			return job.ID, nil
+		}
+		if len(jobs.Jobs) < 500 || jobs.LastCursor == nil {
+			return 0, nil
+		}
+		params = params.After(jobs.LastCursor)
 	}
-	return 0, nil
 }
 
 // Helper function to check if job tags contain all filter tags
@@ -345,7 +360,7 @@ func containsAllTags(jobTags, filterTags []string) bool {
 type CustomErrorHandler struct{}
 
 func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRow, err error) *river.ErrorHandlerResult {
-	log.Error().Str("job_id", fmt.Sprintf("%d", job.ID)).Str("attempt", fmt.Sprintf("%d", job.Attempt)).Str("attempted_by", job.AttemptedBy[job.Attempt-1]).Str("args", string(job.EncodedArgs)).Err(err).Msg("task error")
+	log.Error().Str("job_id", fmt.Sprintf("%d", job.ID)).Str("attempt", fmt.Sprintf("%d", job.Attempt)).Str("attempted_by", attemptedBy(job)).Str("args", string(job.EncodedArgs)).Err(err).Msg("task error")
 
 	// Check if this is a phantom live stream and cleanup (GH#760)
 	// This is behind an experimental flag
@@ -401,6 +416,15 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 		}
 	}
 
+	// River invokes the error handler after every failed attempt. Keep queue
+	// failure state and notifications for terminal errors only. A remote cancel
+	// of a live capture is terminal in River, but the worker deliberately
+	// finalizes its partial media before returning, so don't overwrite that
+	// successful handoff. A client shutdown is likewise recovered on restart.
+	if !shouldFinalizeArchiveError(ctx, job, err) {
+		return nil
+	}
+
 	// if the job is an archive job, mark it as failed in the queue and send an error notification
 	if utils.Contains(job.Tags, archive_tag) && !utils.Contains(job.Tags, allow_fail_tag) {
 		// unmarshal custom arguments
@@ -428,8 +452,9 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 		}
 		// send error notification
 		if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
-			notifCtx := context.WithoutCancel(ctx)
 			go func() {
+				notifCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+				defer cancel()
 				defer func() {
 					if r := recover(); r != nil {
 						log.Error().Interface("panic", r).Msg("panic in notification")
@@ -443,7 +468,10 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 }
 
 func (*CustomErrorHandler) HandlePanic(ctx context.Context, job *rivertype.JobRow, panicVal any, trace string) *river.ErrorHandlerResult {
-	log.Error().Str("job_id", fmt.Sprintf("%d", job.ID)).Str("attempt", fmt.Sprintf("%d", job.Attempt)).Str("attempted_by", job.AttemptedBy[job.Attempt-1]).Str("args", string(job.EncodedArgs)).Str("panic_val", fmt.Sprintf("%v", panicVal)).Str("trace", trace).Msg("task error")
+	log.Error().Str("job_id", fmt.Sprintf("%d", job.ID)).Str("attempt", fmt.Sprintf("%d", job.Attempt)).Str("attempted_by", attemptedBy(job)).Str("args", string(job.EncodedArgs)).Str("panic_val", fmt.Sprintf("%v", panicVal)).Str("trace", trace).Msg("task error")
+	if ctx.Err() != nil || job.Attempt < job.MaxAttempts {
+		return nil
+	}
 
 	// if the job is an archive job, mark it as failed in the queue and send an error notification
 	if utils.Contains(job.Tags, archive_tag) && !utils.Contains(job.Tags, allow_fail_tag) {
@@ -471,8 +499,9 @@ func (*CustomErrorHandler) HandlePanic(ctx context.Context, job *rivertype.JobRo
 		}
 		// send error notification
 		if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
-			notifCtx := context.WithoutCancel(ctx)
 			go func() {
+				notifCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+				defer cancel()
 				defer func() {
 					if r := recover(); r != nil {
 						log.Error().Interface("panic", r).Msg("panic in notification")
@@ -484,6 +513,25 @@ func (*CustomErrorHandler) HandlePanic(ctx context.Context, job *rivertype.JobRo
 	}
 
 	return nil
+}
+
+func attemptedBy(job *rivertype.JobRow) string {
+	index := job.Attempt - 1
+	if index < 0 || index >= len(job.AttemptedBy) {
+		return ""
+	}
+	return job.AttemptedBy[index]
+}
+
+func shouldFinalizeArchiveError(ctx context.Context, job *rivertype.JobRow, err error) bool {
+	remoteCancellation := errors.Is(err, rivertype.ErrJobCancelledRemotely)
+	if remoteCancellation {
+		return job.Kind != string(utils.TaskDownloadLiveVideo) && job.Kind != string(utils.TaskDownloadLiveChat)
+	}
+	if ctx.Err() != nil && errors.Is(err, context.Canceled) {
+		return false
+	}
+	return job.Attempt >= job.MaxAttempts
 }
 
 // setWatchChannelAsNotLive marks the watched channel as not live
@@ -520,7 +568,7 @@ func (w UpdateVideoStorageUsage) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w UpdateVideoStorageUsage) Timeout(job *river.Job[UpdateVideoStorageUsage]) time.Duration {
+func (w *UpdateVideoStorageUsageWorker) Timeout(job *river.Job[UpdateVideoStorageUsage]) time.Duration {
 	return 5 * time.Minute
 }
 
@@ -597,7 +645,11 @@ func (w UpdateVideoStorageUsageWorker) Work(ctx context.Context, job *river.Job[
 	}
 
 	// Queue task to update channel storage usage
-	_, err = river.ClientFromContext[pgx.Tx](ctx).Insert(ctx, &UpdateChannelStorageUsage{}, nil)
+	enqueuer, err := EnqueuerFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = enqueuer.Insert(ctx, &UpdateChannelStorageUsage{}, nil)
 	if err != nil {
 		logger.Error().Err(err).Msg("error queuing channel storage usage update task")
 		return fmt.Errorf("error queuing channel storage usage update task: %w", err)
@@ -619,7 +671,7 @@ func (w UpdateChannelStorageUsage) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w UpdateChannelStorageUsage) Timeout(job *river.Job[UpdateChannelStorageUsage]) time.Duration {
+func (w *UpdateChannelStorageUsageWorker) Timeout(job *river.Job[UpdateChannelStorageUsage]) time.Duration {
 	return 5 * time.Minute
 }
 

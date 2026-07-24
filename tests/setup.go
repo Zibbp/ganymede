@@ -21,6 +21,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/server"
+	tasks_worker "github.com/zibbp/ganymede/internal/tasks/worker"
 	"github.com/zibbp/ganymede/internal/worker"
 )
 
@@ -79,6 +80,9 @@ func setupEnvironment(t *testing.T, postgresHost string, postgresPort string) {
 	if testsTmpDir == "" {
 		testsTmpDir = "/tmp"
 	}
+	if info, err := os.Stat(testsTmpDir); err != nil || !info.IsDir() {
+		testsTmpDir = os.TempDir()
+	}
 
 	// Set paths
 	// set temporary directories
@@ -108,13 +112,25 @@ func setupEnvironment(t *testing.T, postgresHost string, postgresPort string) {
 // A Postgres Testcontainer is used to provide a real database for further tersting.
 // Used for service tests in internal/<service>/<service>_test.go
 func Setup(t *testing.T) (*server.Application, error) {
+	return setup(t, true)
+}
+
+// SetupWithoutWorker initializes the integration test application and
+// database without starting an in-process River worker. Tests that need to
+// simulate an ungraceful worker crash can start a disposable worker
+// subprocess with StartCrashableWorker.
+func SetupWithoutWorker(t *testing.T) (*server.Application, error) {
+	return setup(t, false)
+}
+
+func setup(t *testing.T, startWorker bool) (*server.Application, error) {
 	// Skip tests that require secret environment variables (e.g. if running in CI against a fork)
 	if os.Getenv("SKIP_SECRET_TESTS") == "true" {
 		t.Skip("Skipping test that requires secret environment variables")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
 	postgresContainer, err := setupPostgresTestContainer(ctx)
 	if err != nil {
@@ -125,7 +141,9 @@ func Setup(t *testing.T) (*server.Application, error) {
 	t.Cleanup(func() {
 		Cleanup(t)
 		if postgresContainer != nil {
-			_ = postgresContainer.Terminate(ctx)
+			cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cleanupCancel()
+			_ = postgresContainer.Terminate(cleanupCtx)
 		}
 	})
 
@@ -151,17 +169,33 @@ func Setup(t *testing.T) (*server.Application, error) {
 	cfg.SetDefaults()
 	assert.NoError(t, config.UpdateConfig(cfg))
 
-	// Start worker
-	workerClient, err := worker.SetupWorker(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		if err := workerClient.Start(); err != nil {
-			log.Panic().Err(err).Msg("Error running river worker")
+	var workerClient *tasks_worker.RiverWorkerClient
+	if startWorker {
+		workerClient, err = worker.SetupWorker(ctx)
+		if err != nil {
+			return nil, err
 		}
-	}()
+
+		if err := workerClient.Start(); err != nil {
+			return nil, err
+		}
+	}
+	t.Cleanup(func() {
+		cancel()
+		if workerClient != nil {
+			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 45*time.Second)
+			defer shutdownCancel()
+			if err := workerClient.Stop(shutdownCtx); err != nil {
+				log.Error().Err(err).Msg("error stopping test River worker")
+			}
+			if err := workerClient.Close(); err != nil {
+				log.Error().Err(err).Msg("error closing test River worker")
+			}
+		}
+		if err := app.Database.Close(); err != nil {
+			log.Error().Err(err).Msg("error closing test application database")
+		}
+	})
 
 	return app, nil
 
@@ -174,7 +208,8 @@ func SetupHTTP(t *testing.T) (*httpexpect.Expect, error) {
 	if os.Getenv("SKIP_SECRET_TESTS") == "true" {
 		t.Skip("Skipping test that requires secret environment variables")
 	}
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
 
 	postgresContainer, err := setupPostgresTestContainer(ctx)
 	if err != nil {
@@ -185,7 +220,9 @@ func SetupHTTP(t *testing.T) (*httpexpect.Expect, error) {
 	t.Cleanup(func() {
 		Cleanup(t)
 		if postgresContainer != nil {
-			_ = postgresContainer.Terminate(ctx)
+			cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cleanupCancel()
+			_ = postgresContainer.Terminate(cleanupCtx)
 		}
 	})
 
@@ -206,10 +243,20 @@ func SetupHTTP(t *testing.T) (*httpexpect.Expect, error) {
 	assert.NoError(t, os.Setenv("APP_PORT", fmt.Sprintf("%d", port)))
 
 	// Start the application
+	serverDone := make(chan struct{})
 	go func() {
+		defer close(serverDone)
 		err = server.Run(ctx)
 		assert.NoError(t, err)
 	}()
+	t.Cleanup(func() {
+		cancel()
+		select {
+		case <-serverDone:
+		case <-time.After(15 * time.Second):
+			log.Error().Msg("timed out waiting for test server shutdown")
+		}
+	})
 
 	// Wait for the application to start
 	time.Sleep(5 * time.Second)

@@ -8,6 +8,7 @@ import (
 	"os"
 	osExec "os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -24,7 +25,21 @@ import (
 )
 
 const (
-	sigintTimeout = 300 * time.Second
+	archiveShutdownTimeout = 300 * time.Second
+
+	archiveProcessForwarder = `
+forward_term() {
+	trap - TERM
+	kill -s TERM -- "-$$"
+}
+
+trap 'forward_term' TERM
+
+"$@" &
+child_pid=$!
+wait "$child_pid"
+exit $?
+`
 )
 
 func appendFFmpegLiveOutputStreamArgs(args []string, audioOnly bool) []string {
@@ -139,24 +154,19 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	cmd.Stderr = file
 	cmd.Stdout = file
 
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true, // Set the process group ID to allow killing child processes
-	}
-	if err := cmd.Start(); err != nil {
+	cmd.SysProcAttr = vodArchiveProcessAttributes()
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
 		return fmt.Errorf("error starting yt-dlp: %w", err)
 	}
-
-	done := make(chan error)
-	go func() {
-		done <- cmd.Wait()
-	}()
 
 	// Wait for the command to finish or context to be cancelled
 	select {
 	case <-ctx.Done():
-		// Context was cancelled, kill the process
-		if err := cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("failed to kill yt-dlp process: %v", err)
+		// Context was cancelled, kill the forwarder process group, including
+		// yt-dlp and any ffmpeg process it spawned.
+		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
+			return fmt.Errorf("failed to kill yt-dlp process group: %v", err)
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
@@ -333,7 +343,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 	// Run ffmpeg
 	cmd := osExec.Command("ffmpeg", ffmpegArgs...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.SysProcAttr = liveArchiveProcessAttributes()
 
 	log.Debug().Str("channel", channel.Name).Str("cmd", strings.Join(cmd.Args, " ")).Msgf("running ffmpeg")
 
@@ -343,32 +353,28 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	cmd.Stderr = file
 	cmd.Stdout = file
 
-	if err := cmd.Start(); err != nil {
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
 		return fmt.Errorf("error starting ffmpeg: %w", err)
 	}
 
-	done := make(chan error)
-	go func() {
-		done <- cmd.Wait()
-	}()
-
 	// Wait for the command to finish or for ctx cancellation.
 	// When ctx is cancelled, allow ffmpeg to handle a graceful shutdown first:
-	// send SIGINT to the process group, wait up to sigintTimeout, then SIGKILL
+	// send SIGTERM to the process group, wait up to archiveShutdownTimeout, then SIGKILL.
 	select {
 	case <-ctx.Done():
 		if cmd.Process != nil {
-			err = syscall.Kill(-cmd.Process.Pid, syscall.SIGINT)
+			err = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
 			if err != nil {
-				log.Error().Err(err).Msg("failed to send SIGINT to ffmpeg process")
+				log.Error().Err(err).Msg("failed to send SIGTERM to ffmpeg process")
 			}
 		}
 		select {
 		case <-done:
-			// exited after SIGINT
-		case <-time.After(sigintTimeout):
+			// exited after SIGTERM
+		case <-time.After(archiveShutdownTimeout):
 			if cmd.Process != nil {
-				log.Warn().Msg("ffmpeg process did not exit after SIGINT, sending SIGKILL")
+				log.Warn().Msg("ffmpeg process did not exit after SIGTERM, sending SIGKILL")
 				err = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 				if err != nil {
 					log.Error().Err(err).Msg("failed to send SIGKILL to ffmpeg process")
@@ -389,6 +395,60 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 
 	return nil
+}
+
+// startArchiveCommand launches a forwarding shim as the worker's direct child.
+// If Pdeathsig is delivered to the shim, it forwards the signal to its process
+// group so descendants such as yt-dlp's ffmpeg process terminate as well.
+//
+// The goroutine that creates the shim remains locked to its OS thread until
+// Wait returns because Linux ties Pdeathsig to the creating thread.
+func startArchiveCommand(cmd *osExec.Cmd) (<-chan error, error) {
+	targetPath := cmd.Path
+	targetArgs := append([]string(nil), cmd.Args[1:]...)
+	shellPath, err := osExec.LookPath("sh")
+	if err != nil {
+		return nil, fmt.Errorf("find archive process forwarder shell: %w", err)
+	}
+	cmd.Path = shellPath
+	cmd.Args = append(
+		[]string{shellPath, "-c", archiveProcessForwarder, "archive-process-forwarder", targetPath},
+		targetArgs...,
+	)
+
+	started := make(chan error, 1)
+	done := make(chan error, 1)
+
+	go func() {
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+
+		if err := cmd.Start(); err != nil {
+			started <- err
+			return
+		}
+		started <- nil
+		done <- cmd.Wait()
+	}()
+
+	if err := <-started; err != nil {
+		return nil, err
+	}
+	return done, nil
+}
+
+func liveArchiveProcessAttributes() *syscall.SysProcAttr {
+	return &syscall.SysProcAttr{
+		Setpgid:   true,
+		Pdeathsig: syscall.SIGTERM,
+	}
+}
+
+func vodArchiveProcessAttributes() *syscall.SysProcAttr {
+	return &syscall.SysProcAttr{
+		Setpgid:   true,
+		Pdeathsig: syscall.SIGTERM,
+	}
 }
 
 func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {

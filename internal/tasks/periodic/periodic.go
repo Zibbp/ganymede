@@ -45,7 +45,7 @@ func (w CheckChannelsForLivestreamsArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w CheckChannelsForLivestreamsArgs) Timeout(job *river.Job[CheckChannelsForLivestreamsArgs]) time.Duration {
+func (w *CheckChannelsForLivestreamsWorker) Timeout(job *river.Job[CheckChannelsForLivestreamsArgs]) time.Duration {
 	return 10 * time.Minute
 }
 
@@ -83,7 +83,7 @@ func (w CheckChannelsForNewVideosArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w CheckChannelsForNewVideosArgs) Timeout(job *river.Job[CheckChannelsForNewVideosArgs]) time.Duration {
+func (w *CheckChannelsForNewVideosWorker) Timeout(job *river.Job[CheckChannelsForNewVideosArgs]) time.Duration {
 	return 10 * time.Minute
 }
 
@@ -121,7 +121,7 @@ func (w TaskCheckChannelForNewClipsArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w TaskCheckChannelForNewClipsArgs) Timeout(job *river.Job[TaskCheckChannelForNewClipsArgs]) time.Duration {
+func (w *TaskCheckChannelForNewClipsWorker) Timeout(job *river.Job[TaskCheckChannelForNewClipsArgs]) time.Duration {
 	return 10 * time.Minute
 }
 
@@ -159,7 +159,7 @@ func (w PruneVideosArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w PruneVideosArgs) Timeout(job *river.Job[PruneVideosArgs]) time.Duration {
+func (w *PruneVideosWorker) Timeout(job *river.Job[PruneVideosArgs]) time.Duration {
 	return 1 * time.Minute
 }
 
@@ -197,7 +197,7 @@ func (w ImportCategoriesArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w ImportCategoriesArgs) Timeout(job *river.Job[ImportCategoriesArgs]) time.Duration {
+func (w *ImportCategoriesWorker) Timeout(job *river.Job[ImportCategoriesArgs]) time.Duration {
 	return 1 * time.Minute
 }
 
@@ -228,7 +228,7 @@ func (w ImportCategoriesWorker) Work(ctx context.Context, job *river.Job[ImportC
 
 	// upsert categories
 	for _, category := range categories {
-		err = store.Client.TwitchCategory.Create().SetID(category.ID).SetName(category.Name).OnConflictColumns(entTwitchCategory.FieldID).UpdateNewValues().Exec(context.Background())
+		err = store.Client.TwitchCategory.Create().SetID(category.ID).SetName(category.Name).OnConflictColumns(entTwitchCategory.FieldID).UpdateNewValues().Exec(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to upsert twitch category: %v", err)
 		}
@@ -250,7 +250,7 @@ func (w AuthenticatePlatformArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w AuthenticatePlatformArgs) Timeout(job *river.Job[AuthenticatePlatformArgs]) time.Duration {
+func (w *AuthenticatePlatformWorker) Timeout(job *river.Job[AuthenticatePlatformArgs]) time.Duration {
 	return 1 * time.Minute
 }
 
@@ -288,7 +288,7 @@ func (w FetchJWKSArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w FetchJWKSArgs) Timeout(job *river.Job[FetchJWKSArgs]) time.Duration {
+func (w *FetchJWKSWorker) Timeout(job *river.Job[FetchJWKSArgs]) time.Duration {
 	return 1 * time.Minute
 }
 
@@ -321,7 +321,7 @@ func (w ProcessPlaylistVideoRulesArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w ProcessPlaylistVideoRulesArgs) Timeout(job *river.Job[ProcessPlaylistVideoRulesArgs]) time.Duration {
+func (w *ProcessPlaylistVideoRulesWorker) Timeout(job *river.Job[ProcessPlaylistVideoRulesArgs]) time.Duration {
 	return 5 * time.Minute
 }
 
@@ -437,7 +437,7 @@ func (w UpdateTwitchChannelsArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w UpdateTwitchChannelsArgs) Timeout(job *river.Job[UpdateTwitchChannelsArgs]) time.Duration {
+func (w *UpdateTwitchChannelsWorker) Timeout(job *river.Job[UpdateTwitchChannelsArgs]) time.Duration {
 	return 1 * time.Minute
 }
 

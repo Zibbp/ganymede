@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -30,7 +32,8 @@ import (
 //	@name						access-token
 
 func main() {
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	if os.Getenv("DEVELOPMENT") == "true" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})

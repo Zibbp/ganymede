@@ -4,9 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
-	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/errors"
 	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -27,10 +25,11 @@ func (args DownloadChatArgs) InsertOpts() river.InsertOpts {
 		MaxAttempts: 5,
 		Queue:       QueueChatDownload,
 		Tags:        []string{"archive"},
+		UniqueOpts:  archiveUniqueOpts(),
 	}
 }
 
-func (w DownloadChatArgs) Timeout(job *river.Job[DownloadChatArgs]) time.Duration {
+func (w *DownloadChatWorker) Timeout(job *river.Job[DownloadChatArgs]) time.Duration {
 	return 49 * time.Hour
 }
 
@@ -55,12 +54,6 @@ func (w DownloadChatWorker) Work(ctx context.Context, job *river.Job[DownloadCha
 		return err
 	}
 
-	// start task heartbeat
-	go startHeartBeatForTask(ctx, HeartBeatInput{
-		TaskId: job.ID,
-		conn:   store.ConnPool,
-	})
-
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {
 		return err
@@ -72,36 +65,21 @@ func (w DownloadChatWorker) Work(ctx context.Context, job *river.Job[DownloadCha
 		return err
 	}
 
-	// set queue status to completed
-	err = setQueueStatus(ctx, store.Client, QueueStatusInput{
+	next := []transactionalJob{}
+	if job.Args.Continue {
+		if dbItems.Queue.RenderChat {
+			next = append(next, transactionalJob{Args: &RenderChatArgs{Continue: true, Input: nextArchiveInput(job.Args.Input)}})
+		} else {
+			next = append(next, transactionalJob{Args: &MoveChatArgs{Continue: true, Input: nextArchiveInput(job.Args.Input)}})
+		}
+	}
+	err = setQueueStatusAndEnqueue(ctx, store, QueueStatusInput{
 		Status:  utils.Success,
 		QueueId: job.Args.Input.QueueId,
 		Task:    utils.TaskDownloadChat,
-	})
+	}, next...)
 	if err != nil {
 		return err
-	}
-
-	// continue with next job
-	if job.Args.Continue {
-		client := river.ClientFromContext[pgx.Tx](ctx)
-		if dbItems.Queue.RenderChat {
-			_, err = client.Insert(ctx, &RenderChatArgs{
-				Continue: true,
-				Input:    job.Args.Input,
-			}, nil)
-			if err != nil {
-				return err
-			}
-		} else {
-			_, err = client.Insert(ctx, &MoveChatArgs{
-				Continue: true,
-				Input:    job.Args.Input,
-			}, nil)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	// check if tasks are done
@@ -127,10 +105,11 @@ func (args RenderChatArgs) InsertOpts() river.InsertOpts {
 		MaxAttempts: 5,
 		Queue:       QueueChatRender,
 		Tags:        []string{"archive"},
+		UniqueOpts:  archiveUniqueOpts(),
 	}
 }
 
-func (w RenderChatArgs) Timeout(job *river.Job[RenderChatArgs]) time.Duration {
+func (w *RenderChatWorker) Timeout(job *river.Job[RenderChatArgs]) time.Duration {
 	return 49 * time.Hour
 }
 
@@ -155,12 +134,6 @@ func (w RenderChatWorker) Work(ctx context.Context, job *river.Job[RenderChatArg
 		return err
 	}
 
-	// start task heartbeat
-	go startHeartBeatForTask(ctx, HeartBeatInput{
-		TaskId: job.ID,
-		conn:   store.ConnPool,
-	})
-
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {
 		return err
@@ -177,12 +150,12 @@ func (w RenderChatWorker) Work(ctx context.Context, job *river.Job[RenderChatArg
 		if errors.Is(err, errors.ErrNoChatMessages) {
 			continueArchive = false
 			// set video chat path to empty
-			_, err = database.DB().Client.Vod.UpdateOneID(dbItems.Video.ID).SetChatPath("").SetChatVideoPath("").Save(ctx)
+			_, err = store.Client.Vod.UpdateOneID(dbItems.Video.ID).SetChatPath("").SetChatVideoPath("").Save(ctx)
 			if err != nil {
 				return err
 			}
 			// set queue chat to completed
-			_, err = database.DB().Client.Queue.UpdateOneID(job.Args.Input.QueueId).SetChatProcessing(false).SetTaskChatMove(utils.Success).Save(ctx)
+			_, err = store.Client.Queue.UpdateOneID(job.Args.Input.QueueId).SetChatProcessing(false).SetTaskChatMove(utils.Success).Save(ctx)
 			if err != nil {
 				return err
 			}
@@ -191,26 +164,17 @@ func (w RenderChatWorker) Work(ctx context.Context, job *river.Job[RenderChatArg
 		}
 	}
 
-	// set queue status to completed
-	err = setQueueStatus(ctx, store.Client, QueueStatusInput{
+	next := []transactionalJob{}
+	if job.Args.Continue && continueArchive {
+		next = append(next, transactionalJob{Args: &MoveChatArgs{Continue: true, Input: nextArchiveInput(job.Args.Input)}})
+	}
+	err = setQueueStatusAndEnqueue(ctx, store, QueueStatusInput{
 		Status:  utils.Success,
 		QueueId: job.Args.Input.QueueId,
 		Task:    utils.TaskRenderChat,
-	})
+	}, next...)
 	if err != nil {
 		return err
-	}
-
-	// continue with next job
-	if job.Args.Continue && continueArchive {
-		client := river.ClientFromContext[pgx.Tx](ctx)
-		_, err := client.Insert(ctx, &MoveChatArgs{
-			Continue: true,
-			Input:    job.Args.Input,
-		}, nil)
-		if err != nil {
-			return err
-		}
 	}
 
 	// check if tasks are done
@@ -235,10 +199,11 @@ func (args MoveChatArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 5,
 		Tags:        []string{"archive"},
+		UniqueOpts:  archiveUniqueOpts(),
 	}
 }
 
-func (w MoveChatArgs) Timeout(job *river.Job[MoveChatArgs]) time.Duration {
+func (w *MoveChatWorker) Timeout(job *river.Job[MoveChatArgs]) time.Duration {
 	return 49 * time.Hour
 }
 
@@ -262,12 +227,6 @@ func (w MoveChatWorker) Work(ctx context.Context, job *river.Job[MoveChatArgs]) 
 	if err != nil {
 		return err
 	}
-
-	// start task heartbeat
-	go startHeartBeatForTask(ctx, HeartBeatInput{
-		TaskId: job.ID,
-		conn:   store.ConnPool,
-	})
 
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {

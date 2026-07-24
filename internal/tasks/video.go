@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/config"
@@ -30,10 +29,11 @@ func (args DownloadVideoArgs) InsertOpts() river.InsertOpts {
 		MaxAttempts: 5,
 		Queue:       QueueVideoDownload,
 		Tags:        []string{"archive"},
+		UniqueOpts:  archiveUniqueOpts(),
 	}
 }
 
-func (w DownloadVideoArgs) Timeout(job *river.Job[DownloadVideoArgs]) time.Duration {
+func (w *DownloadVideoWorker) Timeout(job *river.Job[DownloadVideoArgs]) time.Duration {
 	return 49 * time.Hour
 }
 
@@ -57,12 +57,6 @@ func (w DownloadVideoWorker) Work(ctx context.Context, job *river.Job[DownloadVi
 		return err
 	}
 
-	// start task heartbeat
-	go startHeartBeatForTask(ctx, HeartBeatInput{
-		TaskId: job.ID,
-		conn:   store.ConnPool,
-	})
-
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {
 		return err
@@ -74,26 +68,17 @@ func (w DownloadVideoWorker) Work(ctx context.Context, job *river.Job[DownloadVi
 		return err
 	}
 
-	// set queue status to completed
-	err = setQueueStatus(ctx, store.Client, QueueStatusInput{
+	next := []transactionalJob{}
+	if job.Args.Continue {
+		next = append(next, transactionalJob{Args: &PostProcessVideoArgs{Continue: true, Input: nextArchiveInput(job.Args.Input)}})
+	}
+	err = setQueueStatusAndEnqueue(ctx, store, QueueStatusInput{
 		Status:  utils.Success,
 		QueueId: job.Args.Input.QueueId,
 		Task:    utils.TaskDownloadVideo,
-	})
+	}, next...)
 	if err != nil {
 		return err
-	}
-
-	// continue with next job
-	if job.Args.Continue {
-		client := river.ClientFromContext[pgx.Tx](ctx)
-		_, err = client.Insert(ctx, &PostProcessVideoArgs{
-			Continue: true,
-			Input:    job.Args.Input,
-		}, nil)
-		if err != nil {
-			return err
-		}
 	}
 
 	// check if tasks are done
@@ -119,10 +104,11 @@ func (args PostProcessVideoArgs) InsertOpts() river.InsertOpts {
 		MaxAttempts: 5,
 		Queue:       QueueVideoPostProcess,
 		Tags:        []string{"archive"},
+		UniqueOpts:  archiveUniqueOpts(),
 	}
 }
 
-func (w *PostProcessVideoArgs) Timeout(job *river.Job[PostProcessVideoArgs]) time.Duration {
+func (w *PostProcessVideoWorker) Timeout(job *river.Job[PostProcessVideoArgs]) time.Duration {
 	return 24 * time.Hour
 }
 
@@ -162,12 +148,6 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 	if err != nil {
 		return err
 	}
-
-	// start task heartbeat
-	go startHeartBeatForTask(ctx, HeartBeatInput{
-		TaskId: job.ID,
-		conn:   store.ConnPool,
-	})
 
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {
@@ -299,26 +279,17 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		}
 	}
 
-	// set queue status to completed
-	err = setQueueStatus(ctx, store.Client, QueueStatusInput{
+	next := []transactionalJob{}
+	if job.Args.Continue {
+		next = append(next, transactionalJob{Args: &MoveVideoArgs{Continue: true, Input: nextArchiveInput(job.Args.Input)}})
+	}
+	err = setQueueStatusAndEnqueue(ctx, store, QueueStatusInput{
 		Status:  utils.Success,
 		QueueId: job.Args.Input.QueueId,
 		Task:    utils.TaskPostProcessVideo,
-	})
+	}, next...)
 	if err != nil {
 		return err
-	}
-
-	// continue with next job
-	if job.Args.Continue {
-		client := river.ClientFromContext[pgx.Tx](ctx)
-		_, err = client.Insert(ctx, &MoveVideoArgs{
-			Continue: true,
-			Input:    job.Args.Input,
-		}, nil)
-		if err != nil {
-			return err
-		}
 	}
 
 	// check if tasks are done
@@ -344,10 +315,11 @@ func (args MoveVideoArgs) InsertOpts() river.InsertOpts {
 		MaxAttempts: 5,
 		Queue:       "default",
 		Tags:        []string{"archive"},
+		UniqueOpts:  archiveUniqueOpts(),
 	}
 }
 
-func (w *MoveVideoArgs) Timeout(job *river.Job[MoveVideoArgs]) time.Duration {
+func (w *MoveVideoWorker) Timeout(job *river.Job[MoveVideoArgs]) time.Duration {
 	return 24 * time.Hour
 }
 
@@ -373,12 +345,6 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 	if err != nil {
 		return err
 	}
-
-	// start task heartbeat
-	go startHeartBeatForTask(ctx, HeartBeatInput{
-		TaskId: job.ID,
-		conn:   store.ConnPool,
-	})
 
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {
@@ -439,12 +405,20 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		}
 	}
 
-	// set queue status to completed
-	err = setQueueStatus(ctx, store.Client, QueueStatusInput{
+	next := []transactionalJob{}
+	if dbItems.Video.Type == utils.Live {
+		logger.Debug().Msg("queueing task to regenerate static thumbnail")
+		next = append(next, transactionalJob{Args: GenerateStaticThumbnailArgs{VideoId: dbItems.Video.ID.String()}})
+	}
+	if !dbItems.Video.SpriteThumbnailsEnabled && config.Get().Archive.GenerateSpriteThumbnails {
+		logger.Debug().Msg("queueing task to generate sprite thumbnails")
+		next = append(next, transactionalJob{Args: GenerateSpriteThumbnailArgs{VideoId: dbItems.Video.ID.String()}})
+	}
+	err = setQueueStatusAndEnqueue(ctx, store, QueueStatusInput{
 		Status:  utils.Success,
 		QueueId: job.Args.Input.QueueId,
 		Task:    utils.TaskMoveVideo,
-	})
+	}, next...)
 	if err != nil {
 		return err
 	}
@@ -452,31 +426,6 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 	// check if tasks are done
 	if err := checkIfTasksAreDone(ctx, store.Client, job.Args.Input); err != nil {
 		return err
-	}
-
-	// Queue extra tasks that are not critical to the archive process
-
-	// Queue task to regenerate thumbnail if livestream
-	client := river.ClientFromContext[pgx.Tx](ctx)
-	if dbItems.Video.Type == utils.Live {
-		logger.Debug().Msg("queueing task to regenerate static thumbnail")
-		_, err = client.Insert(ctx, GenerateStaticThumbnailArgs{
-			VideoId: dbItems.Video.ID.String(),
-		}, nil)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Queue task to generate sprite thumbnails if enabled
-	if !dbItems.Video.SpriteThumbnailsEnabled && config.Get().Archive.GenerateSpriteThumbnails {
-		logger.Debug().Msg("queueing task to generate sprite thumbnails")
-		_, err = client.Insert(ctx, GenerateSpriteThumbnailArgs{
-			VideoId: dbItems.Video.ID.String(),
-		}, nil)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
