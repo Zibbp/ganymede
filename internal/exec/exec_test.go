@@ -42,8 +42,8 @@ func TestLiveArchiveProcessAttributes(t *testing.T) {
 	if !attrs.Setpgid {
 		t.Fatal("live archive process must run in its own process group")
 	}
-	if attrs.Pdeathsig != syscall.SIGINT {
-		t.Fatalf("parent death signal = %v, want SIGINT", attrs.Pdeathsig)
+	if attrs.Pdeathsig != syscall.SIGTERM {
+		t.Fatalf("parent death signal = %v, want SIGTERM", attrs.Pdeathsig)
 	}
 }
 
@@ -94,6 +94,15 @@ done
 
 	ytDlpPID := waitForPIDFile(t, ytDlpPIDPath)
 	ffmpegPID := waitForPIDFile(t, ffmpegPIDPath)
+	processGroupID, err := syscall.Getpgid(ytDlpPID)
+	if err != nil {
+		t.Fatalf("get archive process group: %v", err)
+	}
+	t.Cleanup(func() {
+		killTestProcess(t, -processGroupID, "archive process group")
+		killTestProcess(t, ytDlpPID, "yt-dlp")
+		killTestProcess(t, ffmpegPID, "ffmpeg")
+	})
 
 	if err := worker.Process.Kill(); err != nil {
 		t.Fatalf("hard-crash worker helper: %v", err)
@@ -104,6 +113,62 @@ done
 
 	waitForProcessExit(t, "yt-dlp", ytDlpPID)
 	waitForProcessExit(t, "ffmpeg", ffmpegPID)
+}
+
+func TestLiveArchiveProcessGroupExitsAfterWorkerHardCrash(t *testing.T) {
+	tempDir := t.TempDir()
+	ffmpegPIDPath := filepath.Join(tempDir, "ffmpeg.pid")
+	descendantPIDPath := filepath.Join(tempDir, "ffmpeg-descendant.pid")
+
+	writeExecutable(t, filepath.Join(tempDir, "ffmpeg"), `#!/bin/sh
+printf '%s' "$$" > "$1"
+ffmpeg-descendant "$2" &
+wait
+`)
+	writeExecutable(t, filepath.Join(tempDir, "ffmpeg-descendant"), `#!/bin/sh
+printf '%s' "$$" > "$1"
+while :; do
+	sleep 1
+done
+`)
+
+	worker := osExec.Command(os.Args[0], "-test.run=^TestLiveArchiveWorkerHelper$")
+	worker.Env = append(os.Environ(),
+		"GANYMEDE_LIVE_ARCHIVE_WORKER_HELPER=1",
+		"GANYMEDE_ARCHIVE_TEST_DIR="+tempDir,
+		"PATH="+tempDir+string(os.PathListSeparator)+os.Getenv("PATH"),
+	)
+	if err := worker.Start(); err != nil {
+		t.Fatalf("start live worker helper: %v", err)
+	}
+	t.Cleanup(func() {
+		if worker.Process != nil {
+			_ = worker.Process.Kill()
+		}
+		_ = worker.Wait()
+	})
+
+	ffmpegPID := waitForPIDFile(t, ffmpegPIDPath)
+	descendantPID := waitForPIDFile(t, descendantPIDPath)
+	processGroupID, err := syscall.Getpgid(ffmpegPID)
+	if err != nil {
+		t.Fatalf("get live archive process group: %v", err)
+	}
+	t.Cleanup(func() {
+		killTestProcess(t, -processGroupID, "live archive process group")
+		killTestProcess(t, ffmpegPID, "ffmpeg")
+		killTestProcess(t, descendantPID, "ffmpeg descendant")
+	})
+
+	if err := worker.Process.Kill(); err != nil {
+		t.Fatalf("hard-crash live worker helper: %v", err)
+	}
+	if err := worker.Wait(); err == nil {
+		t.Fatal("hard-crashed live worker helper exited successfully")
+	}
+
+	waitForProcessExit(t, "ffmpeg", ffmpegPID)
+	waitForProcessExit(t, "ffmpeg descendant", descendantPID)
 }
 
 func TestVodArchiveWorkerHelper(t *testing.T) {
@@ -125,6 +190,28 @@ func TestVodArchiveWorkerHelper(t *testing.T) {
 	}
 	if err := <-done; err != nil {
 		t.Fatalf("wait for archive command: %v", err)
+	}
+}
+
+func TestLiveArchiveWorkerHelper(t *testing.T) {
+	if os.Getenv("GANYMEDE_LIVE_ARCHIVE_WORKER_HELPER") != "1" {
+		return
+	}
+
+	tempDir := os.Getenv("GANYMEDE_ARCHIVE_TEST_DIR")
+	cmd := osExec.Command(
+		filepath.Join(tempDir, "ffmpeg"),
+		filepath.Join(tempDir, "ffmpeg.pid"),
+		filepath.Join(tempDir, "ffmpeg-descendant.pid"),
+	)
+	cmd.SysProcAttr = liveArchiveProcessAttributes()
+
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
+		t.Fatalf("start live archive command: %v", err)
+	}
+	if err := <-done; err != nil {
+		t.Fatalf("wait for live archive command: %v", err)
 	}
 }
 
@@ -164,7 +251,7 @@ func waitForProcessExit(t *testing.T, name string, pid int) {
 	deadline := time.Now().Add(5 * time.Second)
 	for {
 		stat, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
-		if errors.Is(err, os.ErrNotExist) {
+		if errors.Is(err, os.ErrNotExist) || errors.Is(err, syscall.ESRCH) {
 			return
 		}
 		if err != nil {
@@ -178,6 +265,14 @@ func waitForProcessExit(t *testing.T, name string, pid int) {
 			t.Fatalf("%s process %d remained after worker hard crash", name, pid)
 		}
 		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func killTestProcess(t *testing.T, pid int, name string) {
+	t.Helper()
+
+	if err := syscall.Kill(pid, syscall.SIGKILL); err != nil && !errors.Is(err, syscall.ESRCH) {
+		t.Errorf("clean up %s: %v", name, err)
 	}
 }
 

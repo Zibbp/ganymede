@@ -25,17 +25,15 @@ import (
 )
 
 const (
-	sigintTimeout = 300 * time.Second
+	archiveShutdownTimeout = 300 * time.Second
 
 	archiveProcessForwarder = `
-forward_signal() {
-	signal="$1"
-	trap - "$signal"
-	kill -s "$signal" -- "-$$"
+forward_term() {
+	trap - TERM
+	kill -s TERM -- "-$$"
 }
 
-trap 'forward_signal INT' INT
-trap 'forward_signal TERM' TERM
+trap 'forward_term' TERM
 
 "$@" &
 child_pid=$!
@@ -362,21 +360,21 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 	// Wait for the command to finish or for ctx cancellation.
 	// When ctx is cancelled, allow ffmpeg to handle a graceful shutdown first:
-	// send SIGINT to the process group, wait up to sigintTimeout, then SIGKILL
+	// send SIGTERM to the process group, wait up to archiveShutdownTimeout, then SIGKILL.
 	select {
 	case <-ctx.Done():
 		if cmd.Process != nil {
-			err = syscall.Kill(-cmd.Process.Pid, syscall.SIGINT)
+			err = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
 			if err != nil {
-				log.Error().Err(err).Msg("failed to send SIGINT to ffmpeg process")
+				log.Error().Err(err).Msg("failed to send SIGTERM to ffmpeg process")
 			}
 		}
 		select {
 		case <-done:
-			// exited after SIGINT
-		case <-time.After(sigintTimeout):
+			// exited after SIGTERM
+		case <-time.After(archiveShutdownTimeout):
 			if cmd.Process != nil {
-				log.Warn().Msg("ffmpeg process did not exit after SIGINT, sending SIGKILL")
+				log.Warn().Msg("ffmpeg process did not exit after SIGTERM, sending SIGKILL")
 				err = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 				if err != nil {
 					log.Error().Err(err).Msg("failed to send SIGKILL to ffmpeg process")
@@ -442,7 +440,7 @@ func startArchiveCommand(cmd *osExec.Cmd) (<-chan error, error) {
 func liveArchiveProcessAttributes() *syscall.SysProcAttr {
 	return &syscall.SysProcAttr{
 		Setpgid:   true,
-		Pdeathsig: syscall.SIGINT,
+		Pdeathsig: syscall.SIGTERM,
 	}
 }
 
