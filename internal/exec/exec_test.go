@@ -1,8 +1,14 @@
 package exec
 
 import (
+	"errors"
+	"fmt"
+	"os"
 	osExec "os/exec"
+	"path/filepath"
 	"reflect"
+	"strconv"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -50,6 +56,128 @@ func TestVodArchiveProcessAttributes(t *testing.T) {
 	}
 	if attrs.Pdeathsig != syscall.SIGTERM {
 		t.Fatalf("parent death signal = %v, want SIGTERM", attrs.Pdeathsig)
+	}
+}
+
+func TestVodArchiveProcessGroupExitsAfterWorkerHardCrash(t *testing.T) {
+	tempDir := t.TempDir()
+	ytDlpPIDPath := filepath.Join(tempDir, "yt-dlp.pid")
+	ffmpegPIDPath := filepath.Join(tempDir, "ffmpeg.pid")
+
+	writeExecutable(t, filepath.Join(tempDir, "yt-dlp"), `#!/bin/sh
+printf '%s' "$$" > "$1"
+ffmpeg "$2" &
+wait
+`)
+	writeExecutable(t, filepath.Join(tempDir, "ffmpeg"), `#!/bin/sh
+printf '%s' "$$" > "$1"
+while :; do
+	sleep 1
+done
+`)
+
+	worker := osExec.Command(os.Args[0], "-test.run=^TestVodArchiveWorkerHelper$")
+	worker.Env = append(os.Environ(),
+		"GANYMEDE_ARCHIVE_WORKER_HELPER=1",
+		"GANYMEDE_ARCHIVE_TEST_DIR="+tempDir,
+		"PATH="+tempDir+string(os.PathListSeparator)+os.Getenv("PATH"),
+	)
+	if err := worker.Start(); err != nil {
+		t.Fatalf("start worker helper: %v", err)
+	}
+	t.Cleanup(func() {
+		if worker.Process != nil {
+			_ = worker.Process.Kill()
+		}
+		_ = worker.Wait()
+	})
+
+	ytDlpPID := waitForPIDFile(t, ytDlpPIDPath)
+	ffmpegPID := waitForPIDFile(t, ffmpegPIDPath)
+
+	if err := worker.Process.Kill(); err != nil {
+		t.Fatalf("hard-crash worker helper: %v", err)
+	}
+	if err := worker.Wait(); err == nil {
+		t.Fatal("hard-crashed worker helper exited successfully")
+	}
+
+	waitForProcessExit(t, "yt-dlp", ytDlpPID)
+	waitForProcessExit(t, "ffmpeg", ffmpegPID)
+}
+
+func TestVodArchiveWorkerHelper(t *testing.T) {
+	if os.Getenv("GANYMEDE_ARCHIVE_WORKER_HELPER") != "1" {
+		return
+	}
+
+	tempDir := os.Getenv("GANYMEDE_ARCHIVE_TEST_DIR")
+	cmd := osExec.Command(
+		filepath.Join(tempDir, "yt-dlp"),
+		filepath.Join(tempDir, "yt-dlp.pid"),
+		filepath.Join(tempDir, "ffmpeg.pid"),
+	)
+	cmd.SysProcAttr = vodArchiveProcessAttributes()
+
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
+		t.Fatalf("start archive command: %v", err)
+	}
+	if err := <-done; err != nil {
+		t.Fatalf("wait for archive command: %v", err)
+	}
+}
+
+func writeExecutable(t *testing.T, path string, content string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(content), 0o755); err != nil {
+		t.Fatalf("write executable %s: %v", path, err)
+	}
+}
+
+func waitForPIDFile(t *testing.T, path string) int {
+	t.Helper()
+
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		contents, err := os.ReadFile(path)
+		if err == nil {
+			pid, err := strconv.Atoi(strings.TrimSpace(string(contents)))
+			if err != nil {
+				t.Fatalf("parse PID from %s: %v", path, err)
+			}
+			return pid
+		}
+		if !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("read PID file %s: %v", path, err)
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("timeout waiting for PID file %s", path)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func waitForProcessExit(t *testing.T, name string, pid int) {
+	t.Helper()
+
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		stat, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
+		if errors.Is(err, os.ErrNotExist) {
+			return
+		}
+		if err != nil {
+			t.Fatalf("read %s process state: %v", name, err)
+		}
+		fields := strings.Fields(string(stat))
+		if len(fields) >= 3 && fields[2] == "Z" {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("%s process %d remained after worker hard crash", name, pid)
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 

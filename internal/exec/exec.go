@@ -26,6 +26,22 @@ import (
 
 const (
 	sigintTimeout = 300 * time.Second
+
+	archiveProcessForwarder = `
+forward_signal() {
+	signal="$1"
+	trap - "$signal"
+	kill -s "$signal" -- "-$$"
+}
+
+trap 'forward_signal INT' INT
+trap 'forward_signal TERM' TERM
+
+"$@" &
+child_pid=$!
+wait "$child_pid"
+exit $?
+`
 )
 
 func appendFFmpegLiveOutputStreamArgs(args []string, audioOnly bool) []string {
@@ -149,9 +165,10 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	// Wait for the command to finish or context to be cancelled
 	select {
 	case <-ctx.Done():
-		// Context was cancelled, kill the process
-		if err := cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("failed to kill yt-dlp process: %v", err)
+		// Context was cancelled, kill the forwarder process group, including
+		// yt-dlp and any ffmpeg process it spawned.
+		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
+			return fmt.Errorf("failed to kill yt-dlp process group: %v", err)
 		}
 		<-done // Wait for copying to finish
 		return ctx.Err()
@@ -382,11 +399,25 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	return nil
 }
 
-// startArchiveCommand keeps the goroutine that creates the child locked to its
-// OS thread until Wait returns. On Linux, SysProcAttr.Pdeathsig is tied to the
-// creating thread rather than the parent process, so allowing that thread to
-// terminate early could signal an otherwise healthy archive child.
+// startArchiveCommand launches a forwarding shim as the worker's direct child.
+// If Pdeathsig is delivered to the shim, it forwards the signal to its process
+// group so descendants such as yt-dlp's ffmpeg process terminate as well.
+//
+// The goroutine that creates the shim remains locked to its OS thread until
+// Wait returns because Linux ties Pdeathsig to the creating thread.
 func startArchiveCommand(cmd *osExec.Cmd) (<-chan error, error) {
+	targetPath := cmd.Path
+	targetArgs := append([]string(nil), cmd.Args[1:]...)
+	shellPath, err := osExec.LookPath("sh")
+	if err != nil {
+		return nil, fmt.Errorf("find archive process forwarder shell: %w", err)
+	}
+	cmd.Path = shellPath
+	cmd.Args = append(
+		[]string{shellPath, "-c", archiveProcessForwarder, "archive-process-forwarder", targetPath},
+		targetArgs...,
+	)
+
 	started := make(chan error, 1)
 	done := make(chan error, 1)
 
