@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	stdErrors "errors"
 	"fmt"
 	"os"
 	osExec "os/exec"
@@ -165,7 +166,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	case <-ctx.Done():
 		// Context was cancelled, kill the forwarder process group, including
 		// yt-dlp and any ffmpeg process it spawned.
-		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
+		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil && !stdErrors.Is(err, syscall.ESRCH) {
 			return fmt.Errorf("failed to kill yt-dlp process group: %v", err)
 		}
 		<-done // Wait for copying to finish
