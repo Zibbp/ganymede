@@ -27,7 +27,7 @@
     "embla-carousel-react": "^8.6.0",
     "lodash": "^4.18.1",
     "mantine-datatable": "^9.2.0",
-    "next": "^16.2.6",
+    "next": "^16.2.11",
     "next-intl": "^4.12.0",
     "next-runtime-env": "^3.3.0",
     "react": "^19.2.6",
