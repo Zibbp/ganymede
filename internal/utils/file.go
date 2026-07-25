@@ -34,11 +34,15 @@ func DeleteDirectory(path string) error {
 }
 
 // DownloadAndSaveFile - downloads file from url to destination
-func DownloadAndSaveFile(url, path string) error {
+func DownloadAndSaveFile(ctx context.Context, url, path string) error {
 	client := &http.Client{}
 
 	// Send GET request to the URL
-	resp, err := client.Get(url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return fmt.Errorf("error creating GET request: %v", err)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error making GET request: %v", err)
 	}

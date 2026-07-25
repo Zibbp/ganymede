@@ -8,7 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/rivertype"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -16,6 +19,7 @@ import (
 	"github.com/zibbp/ganymede/internal/config"
 	internalExec "github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/server"
+	"github.com/zibbp/ganymede/internal/tasks"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/tests"
 	tests_shared "github.com/zibbp/ganymede/tests/shared"
@@ -290,6 +294,92 @@ func TestArchiveVideoNoChat(t *testing.T) {
 
 	// Assert video is playable
 	assert.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "Video file is not playable")
+}
+
+// TestArchiveVideoRecoversAfterWorkerCrash verifies that a hard worker crash
+// during a real yt-dlp transfer is recovered by the archive watchdog. The
+// worker runs in a subprocess so SIGKILL cannot trigger River's graceful stop
+// path.
+func TestArchiveVideoRecoversAfterWorkerCrash(t *testing.T) {
+	app, err := tests.SetupWithoutWorker(t)
+	require.NoError(t, err)
+
+	workerProcess := tests.StartCrashableWorker(t, "TestWorkerCrashHelper")
+
+	_, err = app.ArchiveService.ArchiveVideo(t.Context(), archive.ArchiveVideoInput{
+		VideoId:     TestTwitchVideoId,
+		Quality:     utils.R160,
+		ArchiveChat: false,
+		RenderChat:  false,
+	})
+	require.NoError(t, err)
+
+	v, err := app.Database.Client.Vod.Query().
+		Where(vod.ExtID(TestTwitchVideoId)).
+		Only(t.Context())
+	require.NoError(t, err)
+
+	q, err := app.Database.Client.Queue.Query().
+		Where(queue.HasVodWith(vod.ID(v.ID))).
+		Only(t.Context())
+	require.NoError(t, err)
+
+	capturedBytes := tests_shared.WaitForRunningVideoDownload(t, app, q.ID, v.TmpVideoDownloadPath, 1, 90*time.Second)
+	originalJob := tests_shared.FindArchiveJob(
+		t,
+		app,
+		q.ID,
+		string(utils.TaskDownloadVideo),
+		rivertype.JobStateRunning,
+	)
+	require.NotNil(t, originalJob, "expected the original VOD download River job")
+
+	require.NoError(t, workerProcess.Crash())
+	tests_shared.WaitForProcessExit(t, v.ID.String(), 5*time.Second)
+	info, err := os.Stat(v.TmpVideoDownloadPath)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, info.Size(), capturedBytes)
+
+	_ = tests.StartCrashableWorker(t, "TestWorkerCrashHelper")
+
+	// Advance only the persisted heartbeat used by this isolated fixture. This
+	// avoids sleeping through the production 90-second timeout while still
+	// exercising the real watchdog cancellation and replacement paths.
+	_, err = app.RiverClient.Client.JobUpdate(t.Context(), originalJob.ID, &river.JobUpdateParams{
+		Output: tasks.ArchiveProgressOutput{HeartbeatAt: time.Now().Add(-5 * time.Minute)},
+	})
+	require.NoError(t, err)
+	_, err = app.RiverClient.Insert(t.Context(), tasks.WatchdogArgs{}, nil)
+	require.NoError(t, err)
+
+	tests_shared.WaitForArchiveJobCancellation(t, app, originalJob.ID, 30*time.Second)
+	q = tests_shared.WaitForArchiveCompletionAfterCrash(t, app, v.ID, TestArchiveTimeout)
+	recoveredJob := tests_shared.WaitForCompletedArchiveRecovery(
+		t,
+		app,
+		q.ID,
+		string(utils.TaskDownloadVideo),
+		30*time.Second,
+	)
+	require.NotEqual(t, originalJob.ID, recoveredJob.ID)
+
+	v = tests_shared.WaitForArchiveMetadataFinalization(t, app, v.ID, 30*time.Second)
+
+	require.False(t, q.Processing)
+	require.False(t, q.VideoProcessing)
+	require.Equal(t, utils.Success, q.TaskVideoDownload)
+	require.Equal(t, utils.Success, q.TaskVideoConvert)
+	require.Equal(t, utils.Success, q.TaskVideoMove)
+	require.FileExists(t, v.VideoPath)
+	require.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "recovered VOD is not playable")
+	require.NotZero(t, v.StorageSizeBytes)
+	require.NotEmpty(t, v.Edges.Chapters)
+}
+
+// TestWorkerCrashHelper is executed in a child copy of this test binary by
+// StartCrashableWorker. During an ordinary package test it returns immediately.
+func TestWorkerCrashHelper(t *testing.T) {
+	tests.RunWorkerCrashHelper(t)
 }
 
 // ArchiveVideo tests the full archive process for an audio-only video without chat downloading, processing, and rendering.

@@ -24,7 +24,7 @@ func (w PruneLogFilesArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w PruneLogFilesArgs) Timeout(job *river.Job[PruneLogFilesArgs]) time.Duration {
+func (w *PruneLogFilesWorker) Timeout(job *river.Job[PruneLogFilesArgs]) time.Duration {
 	return 10 * time.Minute
 }
 

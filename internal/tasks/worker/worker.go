@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/riverqueue/river/rivertype"
 	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/config"
@@ -19,14 +20,18 @@ import (
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
+	"github.com/zibbp/ganymede/internal/tasks/registry"
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
 )
 
 type RiverWorkerInput struct {
+	Context                 context.Context
 	DB_URL                  string
 	DB                      *database.Database
+	LiveService             *live.Service
 	PlatformTwitch          platform.Platform
 	NotificationService     *notification.Service
+	Enqueuer                tasks_shared.Enqueuer
 	VideoDownloadWorkers    int
 	VideoPostProcessWorkers int
 	ChatDownloadWorkers     int
@@ -36,6 +41,7 @@ type RiverWorkerInput struct {
 
 type RiverWorkerClient struct {
 	Ctx            context.Context
+	Database       *database.Database
 	PgxPool        *pgxpool.Pool
 	RiverPgxDriver *riverpgxv5.Driver
 	Client         *river.Client[pgx.Tx]
@@ -43,101 +49,27 @@ type RiverWorkerClient struct {
 
 func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	rc := &RiverWorkerClient{}
+	rc.Database = input.DB
 
-	workers := river.NewWorkers()
-	if err := river.AddWorkerSafely(workers, &tasks.WatchdogWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.CreateDirectoryWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.SaveVideoInfoWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.DownloadTumbnailsWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.DownloadVideoWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.PostProcessVideoWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.MoveVideoWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.DownloadChatWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.RenderChatWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.MoveChatWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.DownloadLiveVideoWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.DownloadLiveChatWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.ConvertLiveChatWorker{}); err != nil {
-		return rc, err
-	}
-	// periodic tasks
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.CheckChannelsForNewVideosWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.PruneVideosWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.ImportCategoriesWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.AuthenticatePlatformWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.FetchJWKSWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.SaveVideoChaptersWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.UpdateStreamVideoIdWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.GenerateStaticThubmnailWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.GenerateSpriteThumbnailWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.UpdateLiveStreamMetadataWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.TaskCheckChannelForNewClipsWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.CheckChannelsForLivestreamsWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.UpdateVideoStorageUsageWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks.UpdateChannelStorageUsageWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.ProcessPlaylistVideoRulesWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.UpdateTwitchChannelsWorker{}); err != nil {
-		return rc, err
-	}
-	if err := river.AddWorkerSafely(workers, &tasks_periodic.PruneLogFilesWorker{}); err != nil {
+	workers, err := registry.New()
+	if err != nil {
 		return rc, err
 	}
 
-	rc.Ctx = context.Background()
+	if input.Context == nil {
+		return rc, fmt.Errorf("worker context is required")
+	}
+	rc.Ctx = input.Context
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.StoreKey, input.DB)
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformTwitchKey, input.PlatformTwitch)
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.NotificationServiceKey, input.NotificationService)
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.LiveServiceKey, input.LiveService)
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.EnqueuerKey, input.Enqueuer)
+
+	periodicJobs, err := getPeriodicTasks()
+	if err != nil {
+		return rc, err
+	}
 
 	// create postgres pool connection
 	pool, err := pgxpool.New(rc.Ctx, input.DB_URL)
@@ -150,6 +82,7 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	rc.RiverPgxDriver = riverpgxv5.New(rc.PgxPool)
 
 	// create river client
+	archiveMiddleware := tasks.NewArchiveMiddleware()
 	riverClient, err := river.NewClient(rc.RiverPgxDriver, &river.Config{
 		Queues: map[string]river.QueueConfig{
 			river.QueueDefault:                  {MaxWorkers: 100}, // non-resource intensive tasks or time sensitive tasks (live videos and chat)
@@ -159,10 +92,15 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 			tasks.QueueChatRender:               {MaxWorkers: input.ChatRenderWorkers},
 			tasks.QueueGenerateThumbnailSprites: {MaxWorkers: input.SpriteThumbnailWorkers},
 		},
-		Workers:              workers,
-		JobTimeout:           -1,
-		RescueStuckJobsAfter: 49 * time.Hour,
-		ErrorHandler:         &tasks.CustomErrorHandler{},
+		Workers:         workers,
+		Middleware:      []rivertype.Middleware{archiveMiddleware},
+		PeriodicJobs:    periodicJobs,
+		SoftStopTimeout: 30 * time.Second,
+		ErrorHandler:    &tasks.CustomErrorHandler{},
+		JobStuckHandler: func(ctx context.Context, params river.JobStuckHandlerParams) river.JobStuckHandlerResult {
+			log.Error().Int64("job_id", params.ID).Str("kind", params.Kind).Str("queue", params.Queue).Int("total_stuck_jobs", params.TotalStuckJobs).Msg("River job did not stop after its timeout")
+			return river.JobStuckHandlerResult{AddWorkerSlot: false}
+		},
 	})
 	if err != nil {
 		return rc, fmt.Errorf("error creating river client: %v", err)
@@ -171,15 +109,7 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	log.Info().Str("default_workers", "100").Str("download_workers", strconv.Itoa(input.VideoDownloadWorkers)).Str("post_process_workers", strconv.Itoa(input.VideoPostProcessWorkers)).Str("chat_download_workers", strconv.Itoa(input.ChatDownloadWorkers)).Str("chat_render_workers", strconv.Itoa(input.ChatRenderWorkers)).Str("sprite_thumbnail_workers", strconv.Itoa(input.SpriteThumbnailWorkers)).Msg("created river client")
 
 	rc.Client = riverClient
-
-	// put store in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.StoreKey, input.DB)
-
-	// put platform in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformTwitchKey, input.PlatformTwitch)
-
-	// put notification service in context for workers
-	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.NotificationServiceKey, input.NotificationService)
+	archiveMiddleware.SetWorkerClient(riverClient)
 
 	return rc, nil
 }
@@ -192,22 +122,29 @@ func (rc *RiverWorkerClient) Start() error {
 	return nil
 }
 
-func (rc *RiverWorkerClient) Stop() error {
-	if err := rc.Client.Stop(rc.Ctx); err != nil {
+func (rc *RiverWorkerClient) Stop(ctx context.Context) error {
+	if err := rc.Client.Stop(ctx); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*river.PeriodicJob, error) {
+func (rc *RiverWorkerClient) Close() error {
+	if rc.PgxPool != nil {
+		rc.PgxPool.Close()
+	}
+	if rc.Database != nil {
+		return rc.Database.Close()
+	}
+	return nil
+}
+
+func getPeriodicTasks() ([]*river.PeriodicJob, error) {
 	env := config.GetEnvConfig()
 	midnightCron, err := cron.ParseStandard("0 0 * * *")
 	if err != nil {
 		return nil, err
 	}
-
-	// put services in ctx for workers
-	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.LiveServiceKey, liveService)
 
 	// get interval configs
 	configCheckLiveInterval := config.Get().LiveCheckInterval
@@ -217,12 +154,14 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 	}
 
 	periodicJobs := []*river.PeriodicJob{
-		// archive watchdog
-		// runs every 5 minutes
+		// Archive jobs heartbeat once per minute and are considered stale after
+		// 90 seconds. Run the watchdog every minute so a cancellation that is
+		// inside its finalization grace window is revisited promptly instead of
+		// waiting another five minutes.
 		river.NewPeriodicJob(
-			river.PeriodicInterval(5*time.Minute),
+			river.PeriodicInterval(time.Minute),
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks.WatchdogArgs{}, nil
+				return tasks.WatchdogArgs{}, periodicInsertOpts(time.Minute)
 			},
 			&river.PeriodicJobOpts{RunOnStart: true},
 		),
@@ -232,7 +171,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			river.PeriodicInterval(time.Duration(configCheckLiveInterval)*time.Second),
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.CheckChannelsForLivestreamsArgs{}, nil
+				return tasks_periodic.CheckChannelsForLivestreamsArgs{}, periodicInsertOpts(time.Duration(configCheckLiveInterval) * time.Second)
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
@@ -242,7 +181,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			river.PeriodicInterval(time.Duration(configCheckVideoInterval)*time.Minute),
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.CheckChannelsForNewVideosArgs{}, nil
+				return tasks_periodic.CheckChannelsForNewVideosArgs{}, periodicInsertOpts(time.Duration(configCheckVideoInterval) * time.Minute)
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
@@ -252,7 +191,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			midnightCron,
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.TaskCheckChannelForNewClipsArgs{}, nil
+				return tasks_periodic.TaskCheckChannelForNewClipsArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: true},
 		),
@@ -262,7 +201,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			midnightCron,
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.PruneVideosArgs{}, nil
+				return tasks_periodic.PruneVideosArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
@@ -272,7 +211,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			midnightCron,
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.ImportCategoriesArgs{}, nil
+				return tasks_periodic.ImportCategoriesArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: true},
 		),
@@ -282,7 +221,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			river.PeriodicInterval(1*time.Hour),
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.AuthenticatePlatformArgs{}, nil
+				return tasks_periodic.AuthenticatePlatformArgs{}, periodicInsertOpts(time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: true},
 		),
@@ -292,7 +231,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			midnightCron,
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks.UpdateVideoStorageUsage{}, nil
+				return tasks.UpdateVideoStorageUsage{}, periodicInsertOpts(24 * time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
@@ -302,7 +241,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			river.PeriodicInterval(1*time.Hour),
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks.UpdateChannelStorageUsage{}, nil
+				return tasks.UpdateChannelStorageUsage{}, periodicInsertOpts(time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: true},
 		),
@@ -312,7 +251,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			river.PeriodicInterval(1*time.Hour),
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.ProcessPlaylistVideoRulesArgs{}, nil
+				return tasks_periodic.ProcessPlaylistVideoRulesArgs{}, periodicInsertOpts(time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
@@ -322,7 +261,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			river.PeriodicInterval(12*time.Hour),
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.UpdateTwitchChannelsArgs{}, nil
+				return tasks_periodic.UpdateTwitchChannelsArgs{}, periodicInsertOpts(12 * time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
@@ -332,7 +271,7 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		river.NewPeriodicJob(
 			midnightCron,
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.PruneLogFilesArgs{}, nil
+				return tasks_periodic.PruneLogFilesArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
@@ -344,11 +283,15 @@ func (rc *RiverWorkerClient) GetPeriodicTasks(liveService *live.Service) ([]*riv
 		periodicJobs = append(periodicJobs, river.NewPeriodicJob(
 			midnightCron,
 			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.FetchJWKSArgs{}, nil
+				return tasks_periodic.FetchJWKSArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: true},
 		))
 	}
 
 	return periodicJobs, nil
+}
+
+func periodicInsertOpts(period time.Duration) *river.InsertOpts {
+	return &river.InsertOpts{UniqueOpts: river.UniqueOpts{ByPeriod: period}}
 }

@@ -28,10 +28,11 @@ func (args DownloadLiveVideoArgs) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 1,
 		Tags:        []string{"archive"},
+		UniqueOpts:  archiveUniqueOpts(),
 	}
 }
 
-func (w DownloadLiveVideoArgs) Timeout(job *river.Job[DownloadLiveVideoArgs]) time.Duration {
+func (w *DownloadLiveVideoWorker) Timeout(job *river.Job[DownloadLiveVideoArgs]) time.Duration {
 	return 49 * time.Hour
 }
 
@@ -56,12 +57,6 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	}
 	client := river.ClientFromContext[pgx.Tx](ctx)
 
-	// start task heartbeat
-	go startHeartBeatForTask(ctx, HeartBeatInput{
-		TaskId: job.ID,
-		conn:   store.ConnPool,
-	})
-
 	dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 	if err != nil {
 		return err
@@ -69,40 +64,49 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 
 	startChatDownload := make(chan bool)
 
-	go func() {
+	go func(workCtx context.Context) {
 		for {
 			select {
 			case <-startChatDownload:
 				// start chat download if requested
 				if dbItems.Queue.ArchiveChat {
 					log.Debug().Str("channel", dbItems.Channel.Name).Msgf("starting chat download for %s", dbItems.Video.ExtID)
-					client := river.ClientFromContext[pgx.Tx](ctx)
-					_, err = client.Insert(ctx, &DownloadLiveChatArgs{
+					client := river.ClientFromContext[pgx.Tx](workCtx)
+					_, insertErr := client.Insert(workCtx, &DownloadLiveChatArgs{
 						Continue: true,
-						Input:    job.Args.Input,
+						Input:    nextArchiveInput(job.Args.Input),
 					}, nil)
-					if err != nil {
-						log.Error().Err(err).Msg("failed to start chat download")
+					if insertErr != nil {
+						log.Error().Err(insertErr).Msg("failed to start chat download")
 					}
 				}
-			case <-ctx.Done():
+			case <-workCtx.Done():
 				return
 			}
 		}
-	}()
+	}(ctx)
 
 	// download live video
 	// Note: even when download fails unexpectedly, continue with finalization steps
 	// (cancel live chat, mark channel not live, enqueue post-process) so partial archive
 	// can still be completed/moved instead of being left in a stuck state.
 	downloadErr := exec.DownloadTwitchLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload)
+	remotelyCancelled := false
 	if downloadErr != nil {
 		if errors.Is(downloadErr, context.Canceled) {
-			// create new context to finish the task
-			ctx = context.Background()
+			if !errors.Is(context.Cause(ctx), rivertype.ErrJobCancelledRemotely) {
+				// Process shutdown is recovered from the partial media by the
+				// watchdog after restart; don't hide it as a successful job.
+				return downloadErr
+			}
+			remotelyCancelled = true
+			finalizeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), liveArchiveFinalizationTimeout)
+			defer cancel()
+			ctx = finalizeCtx
 		} else {
-			// keep task context alive to perform graceful shutdown/finalization
-			ctx = context.Background()
+			finalizeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), liveArchiveFinalizationTimeout)
+			defer cancel()
+			ctx = finalizeCtx
 			log.Error().Err(downloadErr).Str("queue_id", job.Args.Input.QueueId.String()).Msg("live video download failed; continuing with archive finalization")
 		}
 	}
@@ -115,7 +119,7 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 		rivertype.JobStateScheduled,
 		rivertype.JobStateRunning,
 		rivertype.JobStateRetryable,
-	).First(10000)
+	).First(500)
 	chatDownloadJobId, err := getTaskId(ctx, client, GetTaskFilter{
 		Kind:    string(utils.TaskDownloadLiveChat),
 		QueueId: job.Args.Input.QueueId,
@@ -137,43 +141,31 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 		return err
 	}
 
-	// keep download task as success so downstream finalize tasks can run and complete archive.
-	// if ffmpeg failed unexpectedly, post-process/move tasks will surface any unrecoverable issues.
-	downloadStatus := utils.Success
-	err = setQueueStatus(ctx, store.Client, QueueStatusInput{
-		Status:  downloadStatus,
+	next := []transactionalJob{}
+	if job.Args.Continue {
+		next = append(next,
+			transactionalJob{Args: &PostProcessVideoArgs{Continue: true, Input: nextArchiveInput(job.Args.Input)}},
+			transactionalJob{
+				Args: &UpdateStreamVideoIdArgs{Input: nextArchiveInput(job.Args.Input)},
+				Opts: &river.InsertOpts{ScheduledAt: time.Now().Add(10 * time.Minute)},
+			},
+		)
+	}
+	err = setQueueStatusAndEnqueue(ctx, store, QueueStatusInput{
+		Status:  utils.Success,
 		QueueId: job.Args.Input.QueueId,
 		Task:    utils.TaskDownloadVideo,
-	})
+	}, next...)
 	if err != nil {
 		return err
-	}
-
-	// continue with next job
-	if job.Args.Continue {
-		_, err = client.Insert(ctx, &PostProcessVideoArgs{
-			Continue: true,
-			Input:    job.Args.Input,
-		}, nil)
-		if err != nil {
-			return err
-		}
-
-		// insert task to update stream id with video id
-		_, err := client.Insert(ctx, &UpdateStreamVideoIdArgs{
-			Input: job.Args.Input,
-		}, &river.InsertOpts{
-			// schedule task to run after 10 minutes to ensure the video is processed by the platform
-			ScheduledAt: time.Now().Add(10 * time.Minute),
-		})
-		if err != nil {
-			return err
-		}
 	}
 
 	// check if tasks are done
 	if err := checkIfTasksAreDone(ctx, store.Client, job.Args.Input); err != nil {
 		return err
+	}
+	if remotelyCancelled {
+		return downloadErr
 	}
 
 	return nil

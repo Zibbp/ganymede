@@ -175,7 +175,7 @@ func (h *Handler) mapRoutes() {
 
 	// Setup Prometheus metrics route
 	h.Server.GET("/metrics", func(c echo.Context) error {
-		r, err := h.GatherMetrics()
+		r, err := h.GatherMetrics(c.Request().Context())
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}

@@ -28,7 +28,7 @@ func (args GenerateStaticThumbnailArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w GenerateStaticThumbnailArgs) Timeout(job *river.Job[GenerateStaticThumbnailArgs]) time.Duration {
+func (w *GenerateStaticThubmnailWorker) Timeout(job *river.Job[GenerateStaticThumbnailArgs]) time.Duration {
 	return 1 * time.Minute
 }
 
@@ -84,7 +84,7 @@ func (args GenerateSpriteThumbnailArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w GenerateSpriteThumbnailArgs) Timeout(job *river.Job[GenerateSpriteThumbnailArgs]) time.Duration {
+func (w *GenerateSpriteThumbnailWorker) Timeout(job *river.Job[GenerateSpriteThumbnailArgs]) time.Duration {
 	return 1 * time.Hour
 }
 
@@ -99,12 +99,6 @@ func (w GenerateSpriteThumbnailWorker) Work(ctx context.Context, job *river.Job[
 	if err != nil {
 		return err
 	}
-
-	// Start task heartbeat
-	go startHeartBeatForTask(ctx, HeartBeatInput{
-		TaskId: job.ID,
-		conn:   store.ConnPool,
-	})
 
 	videoUUID, err := uuid.Parse(job.Args.VideoId)
 	if err != nil {
@@ -185,7 +179,7 @@ func (w GenerateSpriteThumbnailWorker) Work(ctx context.Context, job *river.Job[
 		Width:        thumbnailWidth,
 		Height:       thumbnailHeight,
 	}
-	err = exec.GenerateThumbnails(generateThumbnailsConfig)
+	err = exec.GenerateThumbnails(ctx, generateThumbnailsConfig)
 	if err != nil {
 		return fmt.Errorf("error generating thumbnails: %v", err)
 	}

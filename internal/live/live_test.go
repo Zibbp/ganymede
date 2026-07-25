@@ -9,7 +9,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/rivertype"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zibbp/ganymede/ent"
 	entChannel "github.com/zibbp/ganymede/ent/channel"
 	entLive "github.com/zibbp/ganymede/ent/live"
@@ -21,6 +24,7 @@ import (
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/server"
+	"github.com/zibbp/ganymede/internal/tasks"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/tests"
 	tests_shared "github.com/zibbp/ganymede/tests/shared"
@@ -432,6 +436,135 @@ func TestTwitchWatchedChannelLiveFFmpegKilledStillFinalizes(t *testing.T) {
 		}
 		time.Sleep(2 * time.Second)
 	}
+}
+
+// TestTwitchLiveArchiveRecoversAfterWorkerCrash verifies the complete
+// watchdog path after SIGKILL: the live capture child exits with its worker,
+// the partial transport stream is finalized, and the resulting archive is
+// playable.
+func TestTwitchLiveArchiveRecoversAfterWorkerCrash(t *testing.T) {
+	app, err := tests.SetupWithoutWorker(t)
+	require.NoError(t, err)
+
+	liveChannels, err := app.PlatformTwitch.GetStreams(t.Context(), 1)
+	require.NoError(t, err)
+	require.NotEmpty(t, liveChannels, "expected at least one live channel")
+	liveChannel := liveChannels[0]
+
+	_, err = app.ArchiveService.ArchiveChannel(t.Context(), liveChannel.UserLogin)
+	require.NoError(t, err)
+	channel, err := app.Database.Client.Channel.Query().
+		Where(entChannel.ExtID(liveChannel.UserID)).
+		Only(t.Context())
+	require.NoError(t, err)
+
+	workerProcess := tests.StartCrashableWorker(t, "TestWorkerCrashHelper")
+	watchedChannel := createWatchedChannel(t, app, live.Live{
+		ID:                    channel.ID,
+		WatchLive:             true,
+		WatchVod:              false,
+		DownloadArchives:      false,
+		DownloadHighlights:    false,
+		DownloadUploads:       false,
+		ArchiveChat:           false,
+		Resolution:            utils.R160.String(),
+		RenderChat:            false,
+		DownloadSubOnly:       false,
+		UpdateMetadataMinutes: 1,
+	}, channel.ID, nil, nil)
+	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
+
+	v, err := app.Database.Client.Vod.Query().
+		Where(entVod.ExtStreamID(liveChannel.ID)).
+		Only(t.Context())
+	require.NoError(t, err)
+	q, err := app.Database.Client.Queue.Query().
+		Where(queue.HasVodWith(entVod.ID(v.ID))).
+		Only(t.Context())
+	require.NoError(t, err)
+
+	capturedBytes := tests_shared.WaitForRunningVideoDownload(
+		t,
+		app,
+		q.ID,
+		v.TmpVideoDownloadPath,
+		256*1024,
+		90*time.Second,
+	)
+	originalJob := tests_shared.FindArchiveJob(
+		t,
+		app,
+		q.ID,
+		string(utils.TaskDownloadLiveVideo),
+		rivertype.JobStateRunning,
+	)
+	require.NotNil(t, originalJob, "expected the original live download River job")
+
+	require.NoError(t, workerProcess.Crash())
+	tests_shared.WaitForProcessExit(t, v.ID.String(), 5*time.Second)
+	info, err := os.Stat(v.TmpVideoDownloadPath)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, info.Size(), capturedBytes)
+
+	_ = tests.StartCrashableWorker(t, "TestWorkerCrashHelper")
+
+	// Advance the isolated job heartbeat so the explicitly queued watchdog
+	// observes the worker claim as stale immediately.
+	_, err = app.RiverClient.Client.JobUpdate(t.Context(), originalJob.ID, &river.JobUpdateParams{
+		Output: tasks.ArchiveProgressOutput{HeartbeatAt: time.Now().Add(-5 * time.Minute)},
+	})
+	require.NoError(t, err)
+	_, err = app.RiverClient.Insert(t.Context(), tasks.WatchdogArgs{}, nil)
+	require.NoError(t, err)
+	tests_shared.WaitForArchiveJobCancellation(t, app, originalJob.ID, 30*time.Second)
+
+	// The production grace and media-quiet windows are time based. Backdating
+	// only this test container's cancellation marker and partial file models
+	// their expiry without adding several minutes to every integration run.
+	result, err := app.Database.SQLDB.ExecContext(t.Context(), `
+		UPDATE river_job
+		SET metadata = jsonb_set(
+			metadata,
+			'{cancel_attempted_at}',
+			to_jsonb($1::text),
+			true
+		)
+		WHERE id = $2
+	`, time.Now().Add(-5*time.Minute).Format(time.RFC3339Nano), originalJob.ID)
+	require.NoError(t, err)
+	updated, err := result.RowsAffected()
+	require.NoError(t, err)
+	require.EqualValues(t, 1, updated)
+
+	quietTime := time.Now().Add(-time.Minute)
+	require.NoError(t, os.Chtimes(v.TmpVideoDownloadPath, quietTime, quietTime))
+	_, err = app.RiverClient.Insert(t.Context(), tasks.WatchdogArgs{}, nil)
+	require.NoError(t, err)
+
+	q = tests_shared.WaitForArchiveCompletionAfterCrash(t, app, v.ID, TestArchiveTimeout)
+	v = tests_shared.WaitForArchiveMetadataFinalization(t, app, v.ID, 30*time.Second)
+
+	require.True(t, q.LiveArchive)
+	require.False(t, q.Processing)
+	require.False(t, q.VideoProcessing)
+	require.False(t, q.ChatProcessing)
+	require.Equal(t, utils.Success, q.TaskVideoDownload)
+	require.Equal(t, utils.Success, q.TaskVideoConvert)
+	require.Equal(t, utils.Success, q.TaskVideoMove)
+	require.Equal(t, utils.Success, q.TaskChatDownload)
+	require.Equal(t, utils.Success, q.TaskChatConvert)
+	require.Equal(t, utils.Success, q.TaskChatRender)
+	require.Equal(t, utils.Success, q.TaskChatMove)
+	require.FileExists(t, v.VideoPath)
+	require.True(t, tests_shared.IsPlayableVideo(v.VideoPath), "recovered live archive is not playable")
+	require.NotZero(t, v.StorageSizeBytes)
+	require.NotEmpty(t, v.Edges.Chapters)
+}
+
+// TestWorkerCrashHelper is executed in a child copy of this test binary by
+// StartCrashableWorker. During an ordinary package test it returns immediately.
+func TestWorkerCrashHelper(t *testing.T) {
+	tests.RunWorkerCrashHelper(t)
 }
 
 // TestTwitchWatchedChannelLiveWithWatchLive tests the basic live archiving of a Twitch channel with the watch live feature

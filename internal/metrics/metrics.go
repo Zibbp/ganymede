@@ -2,10 +2,9 @@ package metrics
 
 import (
 	"context"
+	"errors"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/riverqueue/river"
-	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/database"
@@ -141,98 +140,63 @@ func NewService(store *database.Database, riverClient *tasks_client.RiverClient)
 	return &Service{Store: store, riverClient: riverClient, metrics: metrics, Registry: registry}
 }
 
-func (s *Service) gatherRiverJobMetrics() error {
-	pendingJobsParams := river.NewJobListParams().States(rivertype.JobStatePending).First(10000)
-	pendingJobs, err := s.riverClient.JobList(context.Background(), pendingJobsParams)
+func (s *Service) gatherRiverJobMetrics(ctx context.Context) error {
+	gauges := map[string]prometheus.Gauge{
+		"pending":   s.metrics.riverTotalPendingJobs,
+		"scheduled": s.metrics.riverTotalScheduledJobs,
+		"available": s.metrics.riverTotalAvailableJobs,
+		"running":   s.metrics.riverTotalRunningJobs,
+		"retryable": s.metrics.riverTotalRetryableJobs,
+		"cancelled": s.metrics.riverTotalCancelledJobs,
+		"discarded": s.metrics.riverTotalDiscardedJobs,
+		"completed": s.metrics.riverTotalCompletedJobs,
+	}
+	for _, gauge := range gauges {
+		gauge.Set(0)
+	}
+
+	rows, err := s.Store.SQLDB.QueryContext(ctx, `SELECT state, COUNT(*) FROM river_job GROUP BY state`)
 	if err != nil {
 		return err
 	}
-	s.metrics.riverTotalPendingJobs.Set(float64(len(pendingJobs.Jobs)))
-
-	scheduledJobsParams := river.NewJobListParams().States(rivertype.JobStateScheduled).First(10000)
-	scheduledJobs, err := s.riverClient.JobList(context.Background(), scheduledJobsParams)
-	if err != nil {
-		return err
+	for rows.Next() {
+		var state string
+		var count int64
+		if err := rows.Scan(&state, &count); err != nil {
+			return errors.Join(err, rows.Close())
+		}
+		if gauge, ok := gauges[state]; ok {
+			gauge.Set(float64(count))
+		}
 	}
-	s.metrics.riverTotalScheduledJobs.Set(float64(len(scheduledJobs.Jobs)))
-
-	availableJobsParams := river.NewJobListParams().States(rivertype.JobStateAvailable).First(10000)
-	availableJobs, err := s.riverClient.JobList(context.Background(), availableJobsParams)
-	if err != nil {
-		return err
-	}
-	s.metrics.riverTotalAvailableJobs.Set(float64(len(availableJobs.Jobs)))
-
-	runningJobsParams := river.NewJobListParams().States(rivertype.JobStateRunning).First(10000)
-	runningJobs, err := s.riverClient.JobList(context.Background(), runningJobsParams)
-	if err != nil {
-		return err
-	}
-	s.metrics.riverTotalRunningJobs.Set(float64(len(runningJobs.Jobs)))
-
-	retryableJobsParams := river.NewJobListParams().States(rivertype.JobStateRetryable).First(10000)
-	retryableJobs, err := s.riverClient.JobList(context.Background(), retryableJobsParams)
-	if err != nil {
-		return err
-	}
-	s.metrics.riverTotalRetryableJobs.Set(float64(len(retryableJobs.Jobs)))
-
-	cancelledJobsParams := river.NewJobListParams().States(rivertype.JobStateCancelled).First(10000)
-	cancelledJobs, err := s.riverClient.JobList(context.Background(), cancelledJobsParams)
-	if err != nil {
-		return err
-	}
-	s.metrics.riverTotalCancelledJobs.Set(float64(len(cancelledJobs.Jobs)))
-
-	discardedJobsParams := river.NewJobListParams().States(rivertype.JobStateDiscarded).First(10000)
-	discardedJobs, err := s.riverClient.JobList(context.Background(), discardedJobsParams)
-	if err != nil {
-		return err
-	}
-	s.metrics.riverTotalDiscardedJobs.Set(float64(len(discardedJobs.Jobs)))
-
-	cancelledJobsParams = river.NewJobListParams().States(rivertype.JobStateCancelled).First(10000)
-	cancelledJobs, err = s.riverClient.JobList(context.Background(), cancelledJobsParams)
-	if err != nil {
-		return err
-	}
-	s.metrics.riverTotalCancelledJobs.Set(float64(len(cancelledJobs.Jobs)))
-
-	completedJobsParams := river.NewJobListParams().States(rivertype.JobStateCompleted).First(10000)
-	completedJobs, err := s.riverClient.JobList(context.Background(), completedJobsParams)
-	if err != nil {
-		return err
-	}
-	s.metrics.riverTotalCompletedJobs.Set(float64(len(completedJobs.Jobs)))
-
-	return nil
+	return errors.Join(rows.Err(), rows.Close())
 }
 
-func (s *Service) GatherMetrics() (*prometheus.Registry, error) {
+func (s *Service) GatherMetrics(ctx context.Context) (*prometheus.Registry, error) {
 	// Gather metric data
 	// Total number of Vods
-	vCount, err := s.Store.Client.Vod.Query().Count(context.Background())
+	vCount, err := s.Store.Client.Vod.Query().Count(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting total vods")
 		s.metrics.totalVods.Set(0)
 	}
 	s.metrics.totalVods.Set(float64(vCount))
 	// Total number of Channels
-	cCount, err := s.Store.Client.Channel.Query().Count(context.Background())
+	cCount, err := s.Store.Client.Channel.Query().Count(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting total channels")
 		s.metrics.totalChannels.Set(0)
 	}
 	s.metrics.totalChannels.Set(float64(cCount))
 	// Total number of Users
-	uCount, err := s.Store.Client.User.Query().Count(context.Background())
+	uCount, err := s.Store.Client.User.Query().Count(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting total users")
 		s.metrics.totalUsers.Set(0)
 	}
 	s.metrics.totalUsers.Set(float64(uCount))
 	// Total number of Live Watched Channels
-	lwCount, err := s.Store.Client.Live.Query().Count(context.Background())
+	lwCount, err := s.Store.Client.Live.Query().Count(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting total live watched channels")
 		s.metrics.totalLiveWatchedChannels.Set(0)
@@ -241,7 +205,7 @@ func (s *Service) GatherMetrics() (*prometheus.Registry, error) {
 	// Get all channels with the number of VODs they have, their total duration and their size
 	var totalDurationSeconds int64 = 0
 	var totalBytes int64 = 0
-	channels, err := s.Store.Client.Channel.Query().WithVods().All(context.Background())
+	channels, err := s.Store.Client.Channel.Query().WithVods().All(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting all channels")
 		return nil, err
@@ -263,7 +227,7 @@ func (s *Service) GatherMetrics() (*prometheus.Registry, error) {
 	s.metrics.totalVodsDuration.Set(float64(totalDurationSeconds))
 	s.metrics.totalVodsBytes.Set(float64(totalBytes))
 	// Total VODs in queue
-	qCount, err := s.Store.Client.Queue.Query().Where(queue.Processing(true)).Count(context.Background())
+	qCount, err := s.Store.Client.Queue.Query().Where(queue.Processing(true)).Count(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting total vods in queue")
 		s.metrics.totalVodsInQueue.Set(0)
@@ -271,7 +235,7 @@ func (s *Service) GatherMetrics() (*prometheus.Registry, error) {
 	s.metrics.totalVodsInQueue.Set(float64(qCount))
 
 	// gather River job metrics
-	err = s.gatherRiverJobMetrics()
+	err = s.gatherRiverJobMetrics(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("error gathering river job metrics")
 		return nil, err

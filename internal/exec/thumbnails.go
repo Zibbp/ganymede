@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"image/draw"
@@ -32,9 +33,9 @@ type CreateSpritesInput struct {
 }
 
 // GenerateThumbnails extracts frames from the video at specified intervals.
-func GenerateThumbnails(config GenerateThumbnailsInput) error {
+func GenerateThumbnails(ctx context.Context, config GenerateThumbnailsInput) error {
 	// Get video duration using ffprobe
-	cmd := exec.Command("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", config.Video)
+	cmd := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", config.Video)
 	output, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to get video duration: %w", err)
@@ -49,6 +50,9 @@ func GenerateThumbnails(config GenerateThumbnailsInput) error {
 	// Extract frames at intervals
 	format := fmt.Sprintf("frame%%0%dd.jpg", 8)
 	for t := 0; t < int(duration); t += config.Interval {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		outputPath := filepath.Join(config.ThumbnailDir, fmt.Sprintf(format, t))
 
 		// Try fast method: seek to time and select I-frame
@@ -66,7 +70,7 @@ func GenerateThumbnails(config GenerateThumbnailsInput) error {
 			outputPath,
 		}
 
-		cmd := exec.Command("ffmpeg", argsSelect...)
+		cmd := exec.CommandContext(ctx, "ffmpeg", argsSelect...)
 		out, err := cmd.CombinedOutput()
 		if err == nil {
 			// verify file exists and is non-zero
@@ -89,7 +93,7 @@ func GenerateThumbnails(config GenerateThumbnailsInput) error {
 			outputPath,
 		}
 
-		cmd2 := exec.Command("ffmpeg", argsFallback...)
+		cmd2 := exec.CommandContext(ctx, "ffmpeg", argsFallback...)
 		out2, err2 := cmd2.CombinedOutput()
 		if err2 != nil {
 			// both attempts failed

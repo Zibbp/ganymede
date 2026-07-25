@@ -25,7 +25,7 @@ func (w SaveVideoChaptersArgs) InsertOpts() river.InsertOpts {
 	}
 }
 
-func (w SaveVideoChaptersArgs) Timeout(job *river.Job[SaveVideoChaptersArgs]) time.Duration {
+func (w *SaveVideoChaptersWorker) Timeout(job *river.Job[SaveVideoChaptersArgs]) time.Duration {
 	return 10 * time.Minute
 }
 
