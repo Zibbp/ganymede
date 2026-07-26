@@ -363,6 +363,9 @@ func convertLiveCommentToTDLComment(liveComment LiveComment, chatStartTime time.
 				var pos1, pos2 int
 				var emoteFragment Fragment
 				emotePositions := strings.Split(liveCommentEmoteLocation, "-")
+				if len(emotePositions) < 2 {
+					return Comment{}, false, fmt.Errorf("failed to convert emote position: invalid emote location %q", liveCommentEmoteLocation)
+				}
 				pos1, err = strconv.Atoi(emotePositions[0])
 				if err != nil {
 					return Comment{}, false, fmt.Errorf("failed to convert emote position: %v", err)
@@ -418,6 +421,14 @@ func convertLiveCommentToTDLComment(liveComment LiveComment, chatStartTime time.
 
 	formattedEmoteFragments := []Fragment{}
 	for i, emoteFragment := range emoteFragments {
+		if emoteFragment.Pos1 < 0 ||
+			emoteFragment.Pos1 > len(tdlComment.Message.Body) ||
+			emoteFragment.Pos2 < emoteFragment.Pos1 ||
+			emoteFragment.Pos2 > len(tdlComment.Message.Body) {
+			log.Warn().Str("message_id", liveComment.MessageID).Msg("skipping invalid emote fragment range")
+			continue
+		}
+
 		if i == 0 {
 			fragmentText := tdlComment.Message.Body[:emoteFragment.Pos1]
 			fragment := Fragment{
@@ -431,7 +442,14 @@ func convertLiveCommentToTDLComment(liveComment LiveComment, chatStartTime time.
 				log.Warn().Str("message_id", liveComment.MessageID).Msg("skipping invalid emote position")
 				continue
 			}
-			fragmentText := tdlComment.Message.Body[emoteFragments[i-1].Pos2:emoteFragment.Pos1]
+			previousPos2 := emoteFragments[i-1].Pos2
+			if previousPos2 < 0 ||
+				previousPos2 > len(tdlComment.Message.Body) ||
+				previousPos2 > emoteFragment.Pos1 {
+				log.Warn().Str("message_id", liveComment.MessageID).Msg("skipping overlapping or invalid emote fragment")
+				continue
+			}
+			fragmentText := tdlComment.Message.Body[previousPos2:emoteFragment.Pos1]
 			fragment := Fragment{
 				Text:     fragmentText,
 				Emoticon: nil,

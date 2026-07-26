@@ -377,6 +377,65 @@ func TestConvertTwitchLiveChatToTDLChatDoesNotReplaceOutputOnInvalidInput(t *tes
 	}
 }
 
+func TestConvertLiveCommentToTDLCommentRejectsMalformedEmoteLocations(t *testing.T) {
+	chatStart := time.Unix(1_700_000_000, 0)
+
+	for _, location := range []string{"", "missing-delimiter"} {
+		t.Run(location, func(t *testing.T) {
+			comment := LiveComment{
+				Message:   "Kappa",
+				MessageID: "message-id",
+				Timestamp: chatStart.UnixMicro(),
+				Emotes: []LiveCommentEmote{
+					{
+						Name:      "Kappa",
+						Locations: []string{location},
+					},
+				},
+			}
+
+			if _, _, err := convertLiveCommentToTDLComment(comment, chatStart); err == nil {
+				t.Fatalf("expected malformed emote location %q to return an error", location)
+			}
+		})
+	}
+}
+
+func TestConvertLiveCommentToTDLCommentSkipsOverlappingEmoteFragments(t *testing.T) {
+	chatStart := time.Unix(1_700_000_000, 0)
+	comment := LiveComment{
+		Message:   "Kappa",
+		MessageID: "message-id",
+		Timestamp: chatStart.UnixMicro(),
+		Emotes: []LiveCommentEmote{
+			{
+				ID:        "first-emote",
+				Name:      "Kappa",
+				Locations: []string{"0-4"},
+			},
+			{
+				ID:        "overlapping-emote",
+				Name:      "appa",
+				Locations: []string{"1-4"},
+			},
+		},
+	}
+
+	converted, include, err := convertLiveCommentToTDLComment(comment, chatStart)
+	if err != nil {
+		t.Fatalf("expected overlapping emote to be skipped, got error: %v", err)
+	}
+	if !include {
+		t.Fatal("expected comment to be included")
+	}
+
+	for _, fragment := range converted.Message.Fragments {
+		if fragment.Emoticon != nil && fragment.Emoticon.EmoticonID == "overlapping-emote" {
+			t.Fatalf("expected overlapping emote fragment to be skipped, got %#v", converted.Message.Fragments)
+		}
+	}
+}
+
 func TestEnrichTwitchChatMetadataFromLiveChat(t *testing.T) {
 	tmpDir := t.TempDir()
 	liveChatPath := filepath.Join(tmpDir, "live-chat.json")
