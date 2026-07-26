@@ -45,7 +45,7 @@
     "@types/react-dom": "^19",
     "eslint": "^10",
     "eslint-config-next": "^16.2.6",
-    "postcss": "^8.5.14",
+    "postcss": "^8.5.18",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
     "typescript": "^6"
