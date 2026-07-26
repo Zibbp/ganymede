@@ -2,6 +2,8 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -132,6 +134,305 @@ func TestConvertTwitchLiveChatToTDLChatKeepsMessagesAndUserNotices(t *testing.T)
 	}
 	if convertedNotice.Message.UserNoticeParams.Params["msg-param-months"] != "12" {
 		t.Fatalf("expected notice params, got %#v", convertedNotice.Message.UserNoticeParams.Params)
+	}
+}
+
+func TestStreamLiveCommentsProcessesCommentBeforeEOF(t *testing.T) {
+	firstComment := LiveComment{
+		Message:   "first",
+		MessageID: "first-message-id",
+	}
+	secondComment := LiveComment{
+		Message:   "second",
+		MessageID: "second-message-id",
+	}
+
+	firstJSON, err := json.Marshal(firstComment)
+	if err != nil {
+		t.Fatalf("failed to marshal first comment: %v", err)
+	}
+	secondJSON, err := json.Marshal(secondComment)
+	if err != nil {
+		t.Fatalf("failed to marshal second comment: %v", err)
+	}
+
+	reader, writer := io.Pipe()
+	firstProcessed := make(chan struct{})
+	producerErr := make(chan error, 1)
+
+	go func() {
+		if _, err := fmt.Fprintf(writer, "[%s,", firstJSON); err != nil {
+			producerErr <- err
+			return
+		}
+
+		select {
+		case <-firstProcessed:
+		case <-time.After(2 * time.Second):
+			err := fmt.Errorf("first comment was not processed before EOF")
+			_ = writer.CloseWithError(err)
+			producerErr <- err
+			return
+		}
+
+		if _, err := fmt.Fprintf(writer, "%s]", secondJSON); err != nil {
+			producerErr <- err
+			return
+		}
+		producerErr <- writer.Close()
+	}()
+
+	var messageIDs []string
+	err = streamLiveComments(reader, func(comment LiveComment) error {
+		messageIDs = append(messageIDs, comment.MessageID)
+		if len(messageIDs) == 1 {
+			close(firstProcessed)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("streamLiveComments returned error: %v", err)
+	}
+	if err := <-producerErr; err != nil {
+		t.Fatalf("failed to produce streamed input: %v", err)
+	}
+
+	if len(messageIDs) != 2 {
+		t.Fatalf("expected two streamed comments, got %d", len(messageIDs))
+	}
+	if messageIDs[0] != firstComment.MessageID || messageIDs[1] != secondComment.MessageID {
+		t.Fatalf("unexpected streamed comment order: %#v", messageIDs)
+	}
+}
+
+func TestConvertTwitchLiveChatToTDLChatStreamsLargeInput(t *testing.T) {
+	const commentCount = 5_000
+
+	tmpDir := t.TempDir()
+	inputPath := filepath.Join(tmpDir, "large-live-chat.json")
+	outputPath := filepath.Join(tmpDir, "large-tdl-chat.json")
+	chatStart := time.Unix(1_700_000_000, 0)
+
+	inputFile, err := os.Create(inputPath)
+	if err != nil {
+		t.Fatalf("failed to create input chat: %v", err)
+	}
+	if _, err := inputFile.WriteString("["); err != nil {
+		_ = inputFile.Close()
+		t.Fatalf("failed to write input chat header: %v", err)
+	}
+	for i := 0; i < commentCount; i++ {
+		comment := LiveComment{
+			Message:   fmt.Sprintf("message-%d", i),
+			MessageID: fmt.Sprintf("message-id-%d", i),
+			Timestamp: chatStart.Add(time.Duration(i+1) * time.Second).UnixMicro(),
+		}
+		comment.Author.DisplayName = "StreamedUser"
+		comment.Author.ID = "streamed-user-id"
+		comment.Author.Name = "streameduser"
+
+		data, err := json.Marshal(comment)
+		if err != nil {
+			_ = inputFile.Close()
+			t.Fatalf("failed to marshal input comment %d: %v", i, err)
+		}
+		if i > 0 {
+			if _, err := inputFile.WriteString(","); err != nil {
+				_ = inputFile.Close()
+				t.Fatalf("failed to write input separator: %v", err)
+			}
+		}
+		if _, err := inputFile.Write(data); err != nil {
+			_ = inputFile.Close()
+			t.Fatalf("failed to write input comment %d: %v", i, err)
+		}
+	}
+	if _, err := inputFile.WriteString("]"); err != nil {
+		_ = inputFile.Close()
+		t.Fatalf("failed to write input chat footer: %v", err)
+	}
+	if err := inputFile.Close(); err != nil {
+		t.Fatalf("failed to close input chat: %v", err)
+	}
+
+	if err := ConvertTwitchLiveChatToTDLChat(inputPath, outputPath, "channel", "video-id", "external-id", 123, chatStart, "previous-video-id"); err != nil {
+		t.Fatalf("ConvertTwitchLiveChatToTDLChat returned error: %v", err)
+	}
+
+	outputFile, err := os.Open(outputPath)
+	if err != nil {
+		t.Fatalf("failed to open output chat: %v", err)
+	}
+	defer outputFile.Close() //nolint:errcheck
+
+	decoder := json.NewDecoder(outputFile)
+	token, err := decoder.Token()
+	if err != nil {
+		t.Fatalf("failed to read output object: %v", err)
+	}
+	if delimiter, ok := token.(json.Delim); !ok || delimiter != '{' {
+		t.Fatalf("expected output object, got %v", token)
+	}
+
+	var video Video
+	convertedCount := 0
+	lastMessageID := ""
+	for decoder.More() {
+		fieldToken, err := decoder.Token()
+		if err != nil {
+			t.Fatalf("failed to read output field: %v", err)
+		}
+		field, ok := fieldToken.(string)
+		if !ok {
+			t.Fatalf("expected output field name, got %v", fieldToken)
+		}
+
+		switch field {
+		case "video":
+			if err := decoder.Decode(&video); err != nil {
+				t.Fatalf("failed to decode video metadata: %v", err)
+			}
+		case "comments":
+			token, err := decoder.Token()
+			if err != nil {
+				t.Fatalf("failed to read comments array: %v", err)
+			}
+			if delimiter, ok := token.(json.Delim); !ok || delimiter != '[' {
+				t.Fatalf("expected comments array, got %v", token)
+			}
+			for decoder.More() {
+				var comment Comment
+				if err := decoder.Decode(&comment); err != nil {
+					t.Fatalf("failed to decode streamed comment: %v", err)
+				}
+				convertedCount++
+				lastMessageID = comment.ID
+			}
+			if _, err := decoder.Token(); err != nil {
+				t.Fatalf("failed to read end of comments array: %v", err)
+			}
+		default:
+			var ignored json.RawMessage
+			if err := decoder.Decode(&ignored); err != nil {
+				t.Fatalf("failed to skip output field %q: %v", field, err)
+			}
+		}
+	}
+	if _, err := decoder.Token(); err != nil {
+		t.Fatalf("failed to read end of output object: %v", err)
+	}
+
+	if convertedCount != commentCount+1 {
+		t.Fatalf("expected initial comment plus %d live comments, got %d", commentCount, convertedCount)
+	}
+	expectedLastMessageID := fmt.Sprintf("message-id-%d", commentCount-1)
+	if lastMessageID != expectedLastMessageID {
+		t.Fatalf("expected last message ID %q, got %q", expectedLastMessageID, lastMessageID)
+	}
+	if video.End != commentCount {
+		t.Fatalf("expected video end %d, got %d", commentCount, video.End)
+	}
+}
+
+func TestConvertTwitchLiveChatToTDLChatDoesNotReplaceOutputOnInvalidInput(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputPath := filepath.Join(tmpDir, "invalid-live-chat.json")
+	outputPath := filepath.Join(tmpDir, "existing-tdl-chat.json")
+	originalOutput := []byte(`{"existing":true}`)
+
+	commentJSON, err := json.Marshal(LiveComment{
+		Message:   "valid first message",
+		MessageID: "first-message-id",
+		Timestamp: time.Now().UnixMicro(),
+	})
+	if err != nil {
+		t.Fatalf("failed to marshal input comment: %v", err)
+	}
+	if err := os.WriteFile(inputPath, append(append([]byte("["), commentJSON...), ','), 0o644); err != nil {
+		t.Fatalf("failed to write invalid input chat: %v", err)
+	}
+	if err := os.WriteFile(outputPath, originalOutput, 0o640); err != nil {
+		t.Fatalf("failed to write existing output chat: %v", err)
+	}
+
+	err = ConvertTwitchLiveChatToTDLChat(inputPath, outputPath, "channel", "video-id", "external-id", 123, time.Now(), "previous-video-id")
+	if err == nil {
+		t.Fatal("expected conversion error for truncated input")
+	}
+
+	output, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("failed to read existing output chat: %v", err)
+	}
+	if string(output) != string(originalOutput) {
+		t.Fatalf("expected existing output to remain unchanged, got %q", output)
+	}
+
+	tempFiles, err := filepath.Glob(outputPath + ".tmp-*")
+	if err != nil {
+		t.Fatalf("failed to inspect temporary output files: %v", err)
+	}
+	if len(tempFiles) != 0 {
+		t.Fatalf("expected temporary output files to be cleaned up, got %#v", tempFiles)
+	}
+}
+
+func TestConvertLiveCommentToTDLCommentRejectsMalformedEmoteLocations(t *testing.T) {
+	chatStart := time.Unix(1_700_000_000, 0)
+
+	for _, location := range []string{"", "missing-delimiter"} {
+		t.Run(location, func(t *testing.T) {
+			comment := LiveComment{
+				Message:   "Kappa",
+				MessageID: "message-id",
+				Timestamp: chatStart.UnixMicro(),
+				Emotes: []LiveCommentEmote{
+					{
+						Name:      "Kappa",
+						Locations: []string{location},
+					},
+				},
+			}
+
+			if _, _, err := convertLiveCommentToTDLComment(comment, chatStart); err == nil {
+				t.Fatalf("expected malformed emote location %q to return an error", location)
+			}
+		})
+	}
+}
+
+func TestConvertLiveCommentToTDLCommentSkipsOverlappingEmoteFragments(t *testing.T) {
+	chatStart := time.Unix(1_700_000_000, 0)
+	comment := LiveComment{
+		Message:   "Kappa",
+		MessageID: "message-id",
+		Timestamp: chatStart.UnixMicro(),
+		Emotes: []LiveCommentEmote{
+			{
+				ID:        "first-emote",
+				Name:      "Kappa",
+				Locations: []string{"0-4"},
+			},
+			{
+				ID:        "overlapping-emote",
+				Name:      "appa",
+				Locations: []string{"1-4"},
+			},
+		},
+	}
+
+	converted, include, err := convertLiveCommentToTDLComment(comment, chatStart)
+	if err != nil {
+		t.Fatalf("expected overlapping emote to be skipped, got error: %v", err)
+	}
+	if !include {
+		t.Fatal("expected comment to be included")
+	}
+
+	for _, fragment := range converted.Message.Fragments {
+		if fragment.Emoticon != nil && fragment.Emoticon.EmoticonID == "overlapping-emote" {
+			t.Fatalf("expected overlapping emote fragment to be skipped, got %#v", converted.Message.Fragments)
+		}
 	}
 }
 
