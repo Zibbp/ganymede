@@ -216,11 +216,20 @@ func WriteJsonFile(j interface{}, path string) error {
 //
 // os.Rename is used if possible, and falls back to copy and delete if it fails (e.g. cross-device link)
 func MoveFile(ctx context.Context, source, dest string) error {
+	return moveFile(ctx, source, dest, os.Rename)
+}
+
+func moveFile(ctx context.Context, source, dest string, rename func(string, string) error) error {
 	// Try to rename the file first
-	err := os.Rename(source, dest)
-	if err == nil {
+	renameErr := rename(source, dest)
+	if renameErr == nil {
 		return nil
 	}
+	log.Debug().
+		Err(renameErr).
+		Str("source", source).
+		Str("destination", dest).
+		Msg("rename failed; falling back to copy")
 
 	// If rename fails (e.g. cross-device link), fall back to copy and delete
 	srcFile, err := os.Open(source)
@@ -228,8 +237,11 @@ func MoveFile(ctx context.Context, source, dest string) error {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
 	defer func() {
+		if srcFile == nil {
+			return
+		}
 		if err := srcFile.Close(); err != nil {
-			log.Debug().Msg("error closing source file")
+			log.Debug().Err(err).Msg("error closing source file")
 		}
 	}()
 
@@ -238,38 +250,39 @@ func MoveFile(ctx context.Context, source, dest string) error {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
 	defer func() {
+		if destFile == nil {
+			return
+		}
 		if err := destFile.Close(); err != nil {
 			log.Debug().Err(err).Msg("error closing destination file")
 		}
 	}()
 
 	// Use io.Copy with context to respect cancellation
-	_, err = io.Copy(destFile, &contextReader{ctx: ctx, r: srcFile})
-	if err != nil {
-		err = destFile.Close()
-		if err != nil {
-			log.Error().Err(err).Msg("error closing destination file after copy")
+	_, copyErr := io.Copy(destFile, &contextReader{ctx: ctx, r: srcFile})
+	if copyErr != nil {
+		if closeErr := destFile.Close(); closeErr != nil {
+			log.Error().Err(closeErr).Msg("error closing destination file after copy")
 		}
-		err = os.Remove(dest) // Clean up the partially written file
-		if err != nil {
-			log.Error().Err(err).Msg("error removing destination file after copy failure")
+		destFile = nil
+		if removeErr := os.Remove(dest); removeErr != nil {
+			log.Error().Err(removeErr).Msg("error removing destination file after copy failure")
 		}
-		return fmt.Errorf("failed to copy file: %w", err)
+		return fmt.Errorf("failed to copy file: %w", copyErr)
 	}
 
 	// Close files before attempting to remove the source
-	err = srcFile.Close()
-	if err != nil {
-		log.Debug().Msg("error closing source file after copy")
+	if closeErr := srcFile.Close(); closeErr != nil {
+		log.Debug().Err(closeErr).Msg("error closing source file after copy")
 	}
-	err = destFile.Close()
-	if err != nil {
-		log.Error().Err(err).Msg("error closing destination file after copy")
+	srcFile = nil
+	if closeErr := destFile.Close(); closeErr != nil {
+		log.Error().Err(closeErr).Msg("error closing destination file after copy")
 	}
+	destFile = nil
 
 	// Remove the source file
-	err = os.Remove(source)
-	if err != nil {
+	if err := os.Remove(source); err != nil {
 		return fmt.Errorf("failed to remove source file: %w", err)
 	}
 
