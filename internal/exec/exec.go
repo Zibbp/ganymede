@@ -509,11 +509,7 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
 	configFfmpegArgs := config.Get().Parameters.VideoConvert
-	arr := strings.Fields(configFfmpegArgs)
-	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart"}
-
-	ffmpegArgs = append(ffmpegArgs, arr...)
-	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
+	ffmpegArgs := postProcessVideoFFmpegArgs(video, configFfmpegArgs)
 
 	// open log file
 	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
@@ -562,6 +558,17 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	}
 
 	return nil
+}
+
+func postProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string) []string {
+	arr := strings.Fields(configFfmpegArgs)
+	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart"}
+
+	ffmpegArgs = append(ffmpegArgs, "-metadata", "title="+video.Title)
+	ffmpegArgs = append(ffmpegArgs, arr...)
+	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
+
+	return ffmpegArgs
 }
 
 func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {

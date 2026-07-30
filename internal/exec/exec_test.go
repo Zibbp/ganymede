@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/zibbp/ganymede/ent"
 )
 
 func TestStartArchiveCommand(t *testing.T) {
@@ -56,6 +58,34 @@ func TestVodArchiveProcessAttributes(t *testing.T) {
 	}
 	if attrs.Pdeathsig != syscall.SIGTERM {
 		t.Fatalf("parent death signal = %v, want SIGTERM", attrs.Pdeathsig)
+	}
+}
+
+func TestPostProcessVideoFFmpegArgsIncludesTitleMetadata(t *testing.T) {
+	t.Parallel()
+
+	video := ent.Vod{
+		Title:                "A Twitch stream title with spaces",
+		TmpVideoDownloadPath: "/tmp/input.ts",
+		TmpVideoConvertPath:  "/tmp/output.mp4",
+	}
+
+	args := postProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy")
+
+	titleMetadataIndex := -1
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == "-metadata" && args[i+1] == "title="+video.Title {
+			titleMetadataIndex = i
+			break
+		}
+	}
+
+	if titleMetadataIndex == -1 {
+		t.Fatalf("FFmpeg arguments do not contain title metadata: %v", args)
+	}
+
+	if args[len(args)-1] != video.TmpVideoConvertPath {
+		t.Fatalf("last FFmpeg argument = %q, want output path %q", args[len(args)-1], video.TmpVideoConvertPath)
 	}
 }
 
