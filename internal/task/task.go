@@ -14,6 +14,7 @@ import (
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/live"
+	"github.com/zibbp/ganymede/internal/nfo"
 	"github.com/zibbp/ganymede/internal/storagetemplate"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
@@ -122,6 +123,13 @@ func (s *Service) StartTask(ctx context.Context, task string) error {
 
 	case "update_platform_channels":
 		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.UpdateTwitchChannelsArgs{}, nil)
+		if err != nil {
+			return fmt.Errorf("error inserting task: %v", err)
+		}
+		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
+
+	case "generate_nfo_files":
+		task, err := s.RiverClient.Client.Insert(ctx, tasks.GenerateNFOFilesArgs{}, nil)
 		if err != nil {
 			return fmt.Errorf("error inserting task: %v", err)
 		}
@@ -327,6 +335,38 @@ func (s *Service) StorageMigration() error {
 					log.Error().Err(err).Msgf("error renaming video file for video %s", video.ID)
 					rollbackRenames(renames)
 					continue
+				}
+
+				oldNFOPath, nfoPathErr := nfo.SidecarPath(video.VideoPath)
+				if nfoPathErr == nil {
+					if _, statErr := os.Lstat(oldNFOPath); statErr == nil {
+						newNFOPath, err := nfo.SidecarPath(newVideoPath)
+						if err != nil {
+							log.Error().Err(err).Msgf("error resolving destination NFO path for video %s", video.ID)
+							rollbackRenames(renames)
+							continue
+						}
+						if oldNFOPath != newNFOPath {
+							if _, targetErr := os.Lstat(newNFOPath); targetErr == nil {
+								log.Error().Str("path", newNFOPath).Msgf("destination NFO already exists for video %s", video.ID)
+								rollbackRenames(renames)
+								continue
+							} else if !os.IsNotExist(targetErr) {
+								log.Error().Err(targetErr).Msgf("error checking destination NFO path for video %s", video.ID)
+								rollbackRenames(renames)
+								continue
+							}
+							if err := safeRename(oldNFOPath, newNFOPath); err != nil {
+								log.Error().Err(err).Msgf("error renaming NFO file for video %s", video.ID)
+								rollbackRenames(renames)
+								continue
+							}
+						}
+					} else if !os.IsNotExist(statErr) {
+						log.Error().Err(statErr).Msgf("error checking NFO file for video %s", video.ID)
+						rollbackRenames(renames)
+						continue
+					}
 				}
 			}
 		}

@@ -48,6 +48,7 @@ func New() (*river.Workers, error) {
 		func() error { return river.AddWorkerSafely(workers, &tasks_periodic.ProcessPlaylistVideoRulesWorker{}) },
 		func() error { return river.AddWorkerSafely(workers, &tasks_periodic.UpdateTwitchChannelsWorker{}) },
 		func() error { return river.AddWorkerSafely(workers, &tasks_periodic.PruneLogFilesWorker{}) },
+		func() error { return river.AddWorkerSafely(workers, &tasks.GenerateNFOFilesWorker{}) },
 	}
 
 	for _, register := range registrations {
