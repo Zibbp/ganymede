@@ -15,7 +15,6 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	entChapter "github.com/zibbp/ganymede/ent/chapter"
 	entVod "github.com/zibbp/ganymede/ent/vod"
-	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/nfo"
 )
 
@@ -45,11 +44,6 @@ type GenerateNFOFilesWorker struct {
 func (w GenerateNFOFilesWorker) Work(ctx context.Context, job *river.Job[GenerateNFOFilesArgs]) error {
 	logger := log.With().Str("task", job.Kind).Int64("job_id", job.ID).Logger()
 	logger.Info().Msg("starting task")
-
-	if !config.Get().Archive.GenerateNFOFiles {
-		logger.Info().Msg("NFO generation is disabled; skipping task")
-		return nil
-	}
 
 	store, err := StoreFromContext(ctx)
 	if err != nil {

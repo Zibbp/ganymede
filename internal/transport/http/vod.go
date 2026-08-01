@@ -656,9 +656,8 @@ func (h *Handler) GetVodChatComments(c echo.Context) error {
 //	@Produce		json
 //	@Param			id			path		string	true	"Vod ID"
 //	@Param			chatter_id	path		string	true	"Chatter ID"
-//	@Success		200			{array}		[]chat.Comment
+//	@Success		200			{array}		chat.Comment
 //	@Failure		400			{object}	utils.ErrorResponse
-//	@Failure		404			{object}	utils.ErrorResponse
 //	@Failure		500			{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/chat/chatter/{chatter_id} [get]
 func (h *Handler) GetVodChatCommentsFromChatter(c echo.Context) error {

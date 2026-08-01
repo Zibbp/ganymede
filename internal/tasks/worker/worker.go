@@ -211,6 +211,9 @@ func getPeriodicTasks() ([]*river.PeriodicJob, error) {
 		river.NewPeriodicJob(
 			midnightCron,
 			func() (river.JobArgs, *river.InsertOpts) {
+				if !config.Get().Archive.GenerateNFOFiles {
+					return nil, nil
+				}
 				return tasks.GenerateNFOFilesArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
 			&river.PeriodicJobOpts{RunOnStart: true},

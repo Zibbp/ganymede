@@ -4495,16 +4495,10 @@ paths:
           description: OK
           schema:
             items:
-              items:
-                $ref: '#/definitions/chat.Comment'
-              type: array
+              $ref: '#/definitions/chat.Comment'
             type: array
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: Not Found
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
         "500":

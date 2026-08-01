@@ -71,8 +71,7 @@ func MarshalMovie(metadata MovieMetadata) ([]byte, error) {
 		return nil, fmt.Errorf("marshal movie NFO: %w", err)
 	}
 
-	result := make([]byte, 0, len(xml.Header)+len(data)+1)
-	result = append(result, xml.Header...)
+	result := []byte(xml.Header)
 	result = append(result, data...)
 	result = append(result, '\n')
 	return result, nil
