@@ -44,6 +44,55 @@ func TestGetVideoDuration_FileNotExist(t *testing.T) {
 	}
 }
 
+func TestGetVideoDurationPrefersStreamDurationWhenContainerTimelineIsAnomalous(t *testing.T) {
+	tmpDir := t.TempDir()
+	mediaPath := createTimestampOffsetMedia(t, tmpDir, "mpegts")
+
+	probe, err := ProbeMediaDuration(t.Context(), mediaPath)
+	if err != nil {
+		t.Fatalf("probe anomalous media: %v", err)
+	}
+	if !probe.HasTimestampAnomaly() {
+		t.Fatalf("expected timestamp anomaly, got format=%f stream=%f", probe.FormatDuration, probe.LongestStreamDuration)
+	}
+
+	duration, err := GetVideoDuration(t.Context(), mediaPath)
+	if err != nil {
+		t.Fatalf("get validated duration: %v", err)
+	}
+	if duration < 2 || duration > 4 {
+		t.Fatalf("validated duration = %d, want about 3 seconds", duration)
+	}
+}
+
+func createTimestampOffsetMedia(t *testing.T, dir, format string) string {
+	t.Helper()
+
+	extension := format
+	if format == "mpegts" {
+		extension = "ts"
+	}
+	mediaPath := filepath.Join(dir, "offset-timestamps."+extension)
+	args := []string{
+		"ffmpeg", "-v", "error", "-y",
+		"-f", "lavfi", "-i", "testsrc=size=320x180:rate=30:duration=3",
+		"-f", "lavfi", "-i", "sine=frequency=1000:sample_rate=48000:duration=3",
+		"-filter_complex", "[0:v]setpts=PTS+20000/TB[v];[1:a]asetpts=PTS[a]",
+		"-map", "[v]", "-map", "[a]",
+		"-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
+		"-c:a", "aac",
+	}
+	if format == "mpegts" {
+		args = append(args, "-muxdelay", "0")
+	}
+	args = append(args, "-f", format, mediaPath)
+	cmd := exec.Command(args[0], args[1:]...)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("create timestamp-offset media: %v, output: %s", err, out)
+	}
+	return mediaPath
+}
+
 func TestGetFfprobeData(t *testing.T) {
 	tmpDir := t.TempDir()
 	videoPath := createDummyVideo(t, tmpDir)

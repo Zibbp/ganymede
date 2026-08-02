@@ -3,6 +3,7 @@ package exec
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	osExec "os/exec"
 	"path/filepath"
@@ -86,6 +87,53 @@ func TestPostProcessVideoFFmpegArgsIncludesTitleMetadata(t *testing.T) {
 
 	if args[len(args)-1] != video.TmpVideoConvertPath {
 		t.Fatalf("last FFmpeg argument = %q, want output path %q", args[len(args)-1], video.TmpVideoConvertPath)
+	}
+}
+
+func TestNormalizedPostProcessVideoFFmpegArgsResetEachStream(t *testing.T) {
+	t.Parallel()
+
+	video := ent.Vod{
+		TmpVideoDownloadPath: "/tmp/input.ts",
+		TmpVideoConvertPath:  "/tmp/output.mp4",
+	}
+	args := normalizedPostProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy")
+
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == "-bsf" && args[i+1] == "setts=ts=TS-STARTDTS" {
+			return
+		}
+	}
+	t.Fatalf("normalized FFmpeg arguments do not reset stream timestamps: %v", args)
+}
+
+func TestPostProcessVideoNormalizesAnomalousContainerTimeline(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputPath := createTimestampOffsetMedia(t, tmpDir, "mp4")
+	outputPath := filepath.Join(tmpDir, "normalized.mp4")
+	video := ent.Vod{
+		Title:                "timestamp normalization regression",
+		TmpVideoDownloadPath: inputPath,
+		TmpVideoConvertPath:  outputPath,
+	}
+
+	if err := postProcessVideo(t.Context(), video, "-c:v copy -c:a copy", io.Discard); err != nil {
+		t.Fatalf("post-process timestamp-offset media: %v", err)
+	}
+
+	probe, err := ProbeMediaDuration(t.Context(), outputPath)
+	if err != nil {
+		t.Fatalf("probe normalized output: %v", err)
+	}
+	if probe.HasTimestampAnomaly() {
+		t.Fatalf("output still has a timestamp anomaly: format=%f stream=%f", probe.FormatDuration, probe.LongestStreamDuration)
+	}
+	if probe.FormatDuration < 2 || probe.FormatDuration > 4 {
+		t.Fatalf("normalized format duration = %f, want about 3 seconds", probe.FormatDuration)
+	}
+	decode := osExec.Command("ffmpeg", "-v", "error", "-i", outputPath, "-f", "null", "-")
+	if out, err := decode.CombinedOutput(); err != nil {
+		t.Fatalf("decode normalized output: %v, output: %s", err, out)
 	}
 }
 

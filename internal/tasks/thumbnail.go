@@ -174,6 +174,7 @@ func (w GenerateSpriteThumbnailWorker) Work(ctx context.Context, job *river.Job[
 	// Create thumbnails
 	generateThumbnailsConfig := exec.GenerateThumbnailsInput{
 		Video:        video.VideoPath,
+		Duration:     video.Duration,
 		ThumbnailDir: tmpThumbnailsDirectory,
 		Interval:     thumbnailInterval,
 		Width:        thumbnailWidth,
