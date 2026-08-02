@@ -51,3 +51,39 @@ func TestRiverJobBelongsToArchive(t *testing.T) {
 		})
 	}
 }
+
+func TestRiverJobBlocksArchiveCompletion(t *testing.T) {
+	videoID := uuid.New()
+	queueID := uuid.New()
+	queueArgs := []byte(`{"input":{"queue_id":"` + queueID.String() + `"}}`)
+
+	tests := []struct {
+		name string
+		job  *rivertype.JobRow
+		want bool
+	}{
+		{
+			name: "archive pipeline job",
+			job:  &rivertype.JobRow{Kind: "post_process_video", EncodedArgs: queueArgs},
+			want: true,
+		},
+		{
+			name: "post-archive stream ID enrichment",
+			job:  &rivertype.JobRow{Kind: postArchiveStreamVideoIDJobKind, EncodedArgs: queueArgs},
+			want: false,
+		},
+		{
+			name: "unrelated active job",
+			job:  &rivertype.JobRow{Kind: "periodic_cleanup", EncodedArgs: []byte(`{}`)},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := riverJobBlocksArchiveCompletion(tt.job, videoID, queueID); got != tt.want {
+				t.Fatalf("riverJobBlocksArchiveCompletion() = %t, want %t", got, tt.want)
+			}
+		})
+	}
+}

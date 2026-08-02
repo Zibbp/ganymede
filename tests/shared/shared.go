@@ -33,6 +33,11 @@ var (
 
 const riverJobPageSize = 500
 
+// update_stream_video_id is deliberately scheduled after a live archive has
+// finished. It enriches the completed VOD with its eventual platform ID, so it
+// must not keep archive assertions waiting for its ten-minute delay.
+const postArchiveStreamVideoIDJobKind = "update_stream_video_id"
+
 // IsPlayableVideo checks if a video file is playable using ffprobe.
 func IsPlayableVideo(path string) bool {
 	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
@@ -88,7 +93,7 @@ func WaitForArchiveCompletion(t *testing.T, app *server.Application, videoId uui
 			rivertype.JobStateScheduled,
 		).First(riverJobPageSize)
 		activeJob := findRiverJob(t, app, t.Context(), activeJobsParams, func(job *rivertype.JobRow) bool {
-			return riverJobBelongsToArchive(job, videoId, q.ID)
+			return riverJobBlocksArchiveCompletion(job, videoId, q.ID)
 		})
 
 		if !q.Processing && activeJob == nil {
@@ -102,6 +107,13 @@ func WaitForArchiveCompletion(t *testing.T, app *server.Application, videoId uui
 		}
 		time.Sleep(time.Second)
 	}
+}
+
+func riverJobBlocksArchiveCompletion(job *rivertype.JobRow, videoID, queueID uuid.UUID) bool {
+	if job.Kind == postArchiveStreamVideoIDJobKind {
+		return false
+	}
+	return riverJobBelongsToArchive(job, videoID, queueID)
 }
 
 func riverJobBelongsToArchive(job *rivertype.JobRow, videoID, queueID uuid.UUID) bool {
