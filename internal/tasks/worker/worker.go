@@ -206,6 +206,19 @@ func getPeriodicTasks() ([]*river.PeriodicJob, error) {
 			&river.PeriodicJobOpts{RunOnStart: false},
 		),
 
+		// ensure completed archives have NFO sidecars
+		// runs once a day at midnight and backfills on worker startup
+		river.NewPeriodicJob(
+			midnightCron,
+			func() (river.JobArgs, *river.InsertOpts) {
+				if !config.Get().Archive.GenerateNFOFiles {
+					return nil, nil
+				}
+				return tasks.GenerateNFOFilesArgs{}, periodicInsertOpts(24 * time.Hour)
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
+		),
+
 		// import categories
 		// runs once a day at midnight
 		river.NewPeriodicJob(

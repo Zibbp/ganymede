@@ -16,6 +16,7 @@ export interface Config {
   archive: {
     save_as_hls: boolean;
     generate_sprite_thumbnails: boolean;
+    generate_nfo_files: boolean;
   };
   storage_templates: StorageTemplate;
   livestream: {

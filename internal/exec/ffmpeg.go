@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	osExec "os/exec"
 	"strconv"
 	"strings"
@@ -11,23 +12,107 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// GetVideoDuration runs ffprobe on the given video file and returns its duration in seconds.
-func GetVideoDuration(ctx context.Context, path string) (int, error) {
-	cmd := osExec.CommandContext(ctx, "ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", path)
+const mediaDurationAnomalyTolerance = 10.0
+
+// MediaDuration contains the useful duration values reported by ffprobe. A
+// container can span hours when one stream has a bad starting timestamp even
+// though every encoded stream is only a few seconds long, so callers should
+// use Duration rather than FormatDuration.
+type MediaDuration struct {
+	Duration              float64
+	FormatDuration        float64
+	LongestStreamDuration float64
+}
+
+// HasTimestampAnomaly reports whether the container timeline is substantially
+// longer than its encoded streams. Small differences are normal because audio
+// and video do not necessarily end on the same timestamp.
+func (d MediaDuration) HasTimestampAnomaly() bool {
+	if d.LongestStreamDuration <= 0 || d.FormatDuration <= 0 {
+		return false
+	}
+	tolerance := math.Max(mediaDurationAnomalyTolerance, d.LongestStreamDuration*0.1)
+	return d.FormatDuration > d.LongestStreamDuration+tolerance
+}
+
+type mediaDurationProbe struct {
+	Streams []struct {
+		CodecType string `json:"codec_type"`
+		Duration  string `json:"duration"`
+	} `json:"streams"`
+	Format struct {
+		Duration string `json:"duration"`
+	} `json:"format"`
+}
+
+// ProbeMediaDuration reads both stream and container durations. Video stream
+// duration is preferred, with audio and finally the container as fallbacks.
+func ProbeMediaDuration(ctx context.Context, path string) (MediaDuration, error) {
+	cmd := osExec.CommandContext(ctx, "ffprobe",
+		"-v", "error",
+		"-show_entries", "stream=codec_type,duration:format=duration",
+		"-of", "json",
+		path,
+	)
 
 	log.Debug().Msgf("Running ffprobe command: %s", strings.Join(cmd.Args, " "))
 
 	out, err := cmd.Output()
 	if err != nil {
-		return 0, fmt.Errorf("error running ffprobe: %w", err)
+		return MediaDuration{}, fmt.Errorf("error running ffprobe: %w", err)
 	}
-	durationOut := strings.TrimSpace(string(out))
 
-	duration, err := strconv.ParseFloat(durationOut, 64)
-	if err != nil {
-		return 0, fmt.Errorf("error parsing duration: %w", err)
+	var probe mediaDurationProbe
+	if err := json.Unmarshal(out, &probe); err != nil {
+		return MediaDuration{}, fmt.Errorf("error parsing ffprobe output: %w", err)
 	}
-	return int(duration), nil
+
+	parseDuration := func(value string) float64 {
+		duration, err := strconv.ParseFloat(value, 64)
+		if err != nil || math.IsNaN(duration) || math.IsInf(duration, 0) || duration <= 0 {
+			return 0
+		}
+		return duration
+	}
+
+	var videoDuration, audioDuration float64
+	for _, stream := range probe.Streams {
+		duration := parseDuration(stream.Duration)
+		switch stream.CodecType {
+		case "video":
+			videoDuration = math.Max(videoDuration, duration)
+		case "audio":
+			audioDuration = math.Max(audioDuration, duration)
+		}
+	}
+
+	formatDuration := parseDuration(probe.Format.Duration)
+	streamDuration := videoDuration
+	if streamDuration == 0 {
+		streamDuration = audioDuration
+	}
+	if streamDuration == 0 {
+		streamDuration = formatDuration
+	}
+	if streamDuration == 0 {
+		return MediaDuration{}, fmt.Errorf("ffprobe returned no valid duration for %s", path)
+	}
+
+	return MediaDuration{
+		Duration:              streamDuration,
+		FormatDuration:        formatDuration,
+		LongestStreamDuration: math.Max(videoDuration, audioDuration),
+	}, nil
+}
+
+// GetVideoDuration runs ffprobe on the given video file and returns its
+// validated media-stream duration in seconds.
+func GetVideoDuration(ctx context.Context, path string) (int, error) {
+	duration, err := ProbeMediaDuration(ctx, path)
+	if err != nil {
+		return 0, err
+	}
+	return max(1, int(math.Ceil(duration.Duration))), nil
 }
 
 // GetFfprobeData runs ffprobe on the given path and returns parsed JSON output.

@@ -6,6 +6,7 @@ import (
 	"context"
 	stdErrors "errors"
 	"fmt"
+	"io"
 	"os"
 	osExec "os/exec"
 	"path/filepath"
@@ -509,11 +510,6 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
 	configFfmpegArgs := config.Get().Parameters.VideoConvert
-	arr := strings.Fields(configFfmpegArgs)
-	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart"}
-
-	ffmpegArgs = append(ffmpegArgs, arr...)
-	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
 
 	// open log file
 	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
@@ -528,40 +524,90 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
 
-	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(ffmpegArgs, " ")).Msgf("running ffmpeg")
+	return postProcessVideo(ctx, video, configFfmpegArgs, file)
+}
 
-	cmd := osExec.CommandContext(ctx, "ffmpeg", ffmpegArgs...)
-
-	cmd.Stderr = file
-	cmd.Stdout = file
-
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("error starting ffmpeg: %w", err)
+func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs string, output io.Writer) error {
+	if err := runPostProcessVideoFFmpeg(ctx, video, postProcessVideoFFmpegArgs(video, configFfmpegArgs), output); err != nil {
+		return err
 	}
 
-	done := make(chan error)
-	go func() {
-		done <- cmd.Wait()
-	}()
+	duration, err := ProbeMediaDuration(ctx, video.TmpVideoConvertPath)
+	if err != nil {
+		return fmt.Errorf("probe finalized video duration: %w", err)
+	}
+	if !duration.HasTimestampAnomaly() {
+		return nil
+	}
 
-	// Wait for the command to finish or context to be cancelled
-	select {
-	case <-ctx.Done():
-		// Context was cancelled, kill the process
-		if err := cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("failed to kill ffmpeg process: %v", err)
-		}
-		<-done // Wait for copying to finish
-		return ctx.Err()
-	case err := <-done:
-		// Command finished normally
-		if err != nil {
-			log.Error().Err(err).Msg("error running ffmpeg")
-			return fmt.Errorf("error running ffmpeg: %w", err)
-		}
+	log.Warn().
+		Str("video_id", video.ID.String()).
+		Float64("format_duration", duration.FormatDuration).
+		Float64("stream_duration", duration.LongestStreamDuration).
+		Msg("detected anomalous container timestamps; normalizing each stream")
+
+	if err := runPostProcessVideoFFmpeg(ctx, video, normalizedPostProcessVideoFFmpegArgs(video, configFfmpegArgs), output); err != nil {
+		return fmt.Errorf("normalize finalized video timestamps: %w", err)
+	}
+
+	duration, err = ProbeMediaDuration(ctx, video.TmpVideoConvertPath)
+	if err != nil {
+		return fmt.Errorf("probe timestamp-normalized video duration: %w", err)
+	}
+	if duration.HasTimestampAnomaly() {
+		return fmt.Errorf(
+			"timestamp normalization did not repair container duration: format=%f stream=%f",
+			duration.FormatDuration,
+			duration.LongestStreamDuration,
+		)
 	}
 
 	return nil
+}
+
+func runPostProcessVideoFFmpeg(ctx context.Context, video ent.Vod, ffmpegArgs []string, output io.Writer) error {
+	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(ffmpegArgs, " ")).Msg("running ffmpeg")
+
+	cmd := osExec.CommandContext(ctx, "ffmpeg", ffmpegArgs...)
+	cmd.Stderr = output
+	cmd.Stdout = output
+	if err := cmd.Run(); err != nil {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		log.Error().Err(err).Msg("error running ffmpeg")
+		return fmt.Errorf("error running ffmpeg: %w", err)
+	}
+	return nil
+}
+
+func postProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string) []string {
+	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, false)
+}
+
+func normalizedPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string) []string {
+	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, true)
+}
+
+func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, normalizeTimestamps bool) []string {
+	arr := strings.Fields(configFfmpegArgs)
+	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4"}
+	if !normalizeTimestamps {
+		ffmpegArgs = append(ffmpegArgs, "-bsf:a", "aac_adtstoasc")
+	}
+	ffmpegArgs = append(ffmpegArgs, "-movflags", "+faststart")
+
+	ffmpegArgs = append(ffmpegArgs, "-metadata", "title="+video.Title)
+	ffmpegArgs = append(ffmpegArgs, arr...)
+	if normalizeTimestamps {
+		// Apply one bitstream-filter instance per output stream. STARTDTS is
+		// therefore local to each stream, repairing large audio/video start
+		// offsets without decoding or re-encoding the media.
+		ffmpegArgs = append(ffmpegArgs, "-bsf", "setts=ts=TS-STARTDTS")
+	}
+	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
+
+	return ffmpegArgs
 }
 
 func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {

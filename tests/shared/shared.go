@@ -33,6 +33,11 @@ var (
 
 const riverJobPageSize = 500
 
+// update_stream_video_id is deliberately scheduled after a live archive has
+// finished. It enriches the completed VOD with its eventual platform ID, so it
+// must not keep archive assertions waiting for its ten-minute delay.
+const postArchiveStreamVideoIDJobKind = "update_stream_video_id"
+
 // IsPlayableVideo checks if a video file is playable using ffprobe.
 func IsPlayableVideo(path string) bool {
 	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
@@ -69,29 +74,76 @@ func WaitForProcessExit(t *testing.T, match string, timeout time.Duration) {
 	}
 }
 
-// WaitForArchiveCompletion waits until the queue item is done processing and no running jobs remain.
+// WaitForArchiveCompletion waits until the queue item and active River jobs
+// belonging to this archive are done. Unrelated periodic jobs must not delay an
+// archive assertion.
 func WaitForArchiveCompletion(t *testing.T, app *server.Application, videoId uuid.UUID, timeout time.Duration) {
-	startTime := time.Now()
+	t.Helper()
+	deadline := time.Now().Add(timeout)
 	for {
-		if time.Since(startTime) >= timeout {
-			t.Fatalf("Timeout reached while waiting for video to be archived")
-		}
-
-		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(videoId))).Only(context.Background())
+		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(videoId))).Only(t.Context())
 		if err != nil {
-			t.Fatalf("Error querying queue item: %v", err)
+			t.Fatalf("query archive queue: %v", err)
 		}
-		runningJobsParams := river.NewJobListParams().States(rivertype.JobStateRunning).First(riverJobPageSize)
-		runningJob := findRiverJob(t, app, context.Background(), runningJobsParams, func(*rivertype.JobRow) bool {
-			return true
+		activeJobsParams := river.NewJobListParams().States(
+			rivertype.JobStateAvailable,
+			rivertype.JobStatePending,
+			rivertype.JobStateRetryable,
+			rivertype.JobStateRunning,
+			rivertype.JobStateScheduled,
+		).First(riverJobPageSize)
+		activeJob := findRiverJob(t, app, t.Context(), activeJobsParams, func(job *rivertype.JobRow) bool {
+			return riverJobBlocksArchiveCompletion(job, videoId, q.ID)
 		})
 
-		if !q.Processing && runningJob == nil {
-			break
+		if !q.Processing && activeJob == nil {
+			return
 		}
-
-		time.Sleep(10 * time.Second)
+		if time.Now().After(deadline) {
+			if activeJob != nil {
+				t.Fatalf("timeout waiting for video %s to be archived: active job %d (%s)", videoId, activeJob.ID, activeJob.Kind)
+			}
+			t.Fatalf("timeout waiting for video %s to be archived: queue is still processing", videoId)
+		}
+		time.Sleep(time.Second)
 	}
+}
+
+func riverJobBlocksArchiveCompletion(job *rivertype.JobRow, videoID, queueID uuid.UUID) bool {
+	if job.Kind == postArchiveStreamVideoIDJobKind {
+		return false
+	}
+	return riverJobBelongsToArchive(job, videoID, queueID)
+}
+
+func riverJobBelongsToArchive(job *rivertype.JobRow, videoID, queueID uuid.UUID) bool {
+	var args struct {
+		VideoID string `json:"video_id"`
+		Input   struct {
+			QueueID uuid.UUID `json:"queue_id"`
+		} `json:"input"`
+	}
+	if err := json.Unmarshal(job.EncodedArgs, &args); err == nil {
+		if args.VideoID == videoID.String() || args.Input.QueueID == queueID {
+			return true
+		}
+	}
+
+	// UpdateVideoStorageUsage predates the snake_case JSON tags used by newer
+	// jobs, so retain compatibility with its default "VideoID" field name.
+	var legacyArgs struct {
+		VideoID string `json:"VideoID"`
+	}
+	if err := json.Unmarshal(job.EncodedArgs, &legacyArgs); err == nil && legacyArgs.VideoID == videoID.String() {
+		return true
+	}
+
+	var metadata struct {
+		Ganymede struct {
+			QueueID uuid.UUID `json:"queue_id"`
+		} `json:"ganymede"`
+	}
+	return json.Unmarshal(job.Metadata, &metadata) == nil && metadata.Ganymede.QueueID == queueID
 }
 
 func findRiverJob(

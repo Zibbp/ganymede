@@ -50,12 +50,13 @@ func TestEveryWorkerHasItsConfiguredTimeout(t *testing.T) {
 		{"check livestreams", (&tasks_periodic.CheckChannelsForLivestreamsWorker{}).Timeout(nil), 10 * time.Minute},
 		{"video storage", (&tasks.UpdateVideoStorageUsageWorker{}).Timeout(nil), 5 * time.Minute},
 		{"channel storage", (&tasks.UpdateChannelStorageUsageWorker{}).Timeout(nil), 5 * time.Minute},
+		{"generate NFO files", (&tasks.GenerateNFOFilesWorker{}).Timeout(nil), 10 * time.Minute},
 		{"playlist rules", (&tasks_periodic.ProcessPlaylistVideoRulesWorker{}).Timeout(nil), 5 * time.Minute},
 		{"update channels", (&tasks_periodic.UpdateTwitchChannelsWorker{}).Timeout(nil), time.Minute},
 		{"prune logs", (&tasks_periodic.PruneLogFilesWorker{}).Timeout(nil), 10 * time.Minute},
 	}
 
-	require.Len(t, tests, 30)
+	require.Len(t, tests, 31)
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			require.Equal(t, test.want, test.got)

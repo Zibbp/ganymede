@@ -57,6 +57,7 @@ var (
 	TaskProcessPlaylistVideoRules   = "process_playlist_video_rules"
 	TaskUpdateTwitchChannels        = "update_twitch_channels"
 	TaskPruneLogFiles               = "prune_log_files"
+	TaskGenerateNFOFiles            = "generate_nfo_files"
 )
 
 var (
@@ -271,8 +272,15 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 		if _, err := txClient.Vod.UpdateOneID(dbItems.Video.ID).SetProcessing(false).Save(ctx); err != nil {
 			return err
 		}
-		_, err := enqueuer.InsertTx(ctx, tx, &UpdateVideoStorageUsage{VideoID: &dbItems.Video.ID}, nil)
-		return err
+		if _, err := enqueuer.InsertTx(ctx, tx, &UpdateVideoStorageUsage{VideoID: &dbItems.Video.ID}, nil); err != nil {
+			return err
+		}
+		if config.Get().Archive.GenerateNFOFiles {
+			if _, err := enqueuer.InsertTx(ctx, tx, GenerateNFOFilesArgs{VideoID: &dbItems.Video.ID}, nil); err != nil {
+				return err
+			}
+		}
+		return nil
 	}); err != nil {
 		return err
 	}

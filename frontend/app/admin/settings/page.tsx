@@ -49,7 +49,8 @@ const AdminSettingsPage = () => {
       },
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
-        generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true
+        generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true,
+        generate_nfo_files: data?.archive.generate_nfo_files ?? true
       },
       storage_templates: {
         folder_template: data?.storage_templates.folder_template || "",
@@ -179,6 +180,15 @@ const AdminSettingsPage = () => {
               description={t('archiveSettings.generateSpriteThumbnailsDescription')}
               key={form.key('archive.generate_sprite_thumbnails')}
               {...form.getInputProps('archive.generate_sprite_thumbnails', { type: "checkbox" })}
+              mr={15}
+            />
+
+            <Checkbox
+              mt={15}
+              label={t('archiveSettings.generateNFOFilesLabel')}
+              description={t('archiveSettings.generateNFOFilesDescription')}
+              key={form.key('archive.generate_nfo_files')}
+              {...form.getInputProps('archive.generate_nfo_files', { type: "checkbox" })}
               mr={15}
             />
 

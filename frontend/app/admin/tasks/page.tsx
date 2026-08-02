@@ -207,6 +207,24 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
+              <Text fw={"bold"}>{t('generateNFOFiles')}</Text>
+              <Text size="xs">{t('generateNFOFilesDescription')}</Text>
+            </Box>
+            <Tooltip label={t('startTaskButton')}>
+              <ActionIcon
+                onClick={() => startTask(Task.GenerateNFOFiles)}
+                loading={loading}
+                color="green"
+                variant="filled"
+                size="lg"
+              >
+                <IconPlayerPlay size={24} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+
+          <Group justify="space-between" py={5} wrap="nowrap">
+            <Box>
               <Text fw={"bold"}>{t('updateVideoStorageUsage')}</Text>
               <Text size="xs">{t('updateVideoStorageUsageDescription')}</Text>
             </Box>
