@@ -286,7 +286,7 @@
       "generateSpriteThumbnailsLabel": "Sprite-Thumbnails generieren",
       "generateSpriteThumbnailsDescription": "Generiere ein Sprite-Thumbnail für das Video. Dies sind Vorschaubilder, wenn du mit der Maus über die Video-Timeline fährst.",
       "generateNFOFilesLabel": "NFO-Metadatendateien generieren",
-      "generateNFOFilesDescription": "Kodi-kompatible NFO-Begleitdateien für Plex und Jellyfin generieren. Bestehende Archive werden automatisch ergänzt.",
+      "generateNFOFilesDescription": "Kodi-kompatible NFO-Begleitdateien für Plex und Jellyfin generieren. Führe die Aufgabe „NFO-Dateien generieren“ aus, um bestehende Archive zu ergänzen.",
       "storageTemplateSettings": "Speichervorlagen-Einstellungen",
       "storageTemplateSettingsDescription": "Passe die Benennung von Ordnern und Dateien an. Dies gilt nur für neue Dateien. Um dies auf bestehende Dateien anzuwenden, führe die Migrationsaufgabe auf der Aufgabenseite aus.",
       "folderTemplateText": "Ordner-Vorlage",

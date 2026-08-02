@@ -286,7 +286,7 @@
       "generateSpriteThumbnailsLabel": "Генерувати спрайт-мініатюри",
       "generateSpriteThumbnailsDescription": "Створювати спрайт-мініатюри для відео. Це прев’ю-кадри, що з’являються під час наведення на таймлайн відео.",
       "generateNFOFilesLabel": "Генерувати файли метаданих NFO",
-      "generateNFOFilesDescription": "Створювати сумісні з Kodi супровідні файли NFO для Plex і Jellyfin. Наявні архіви доповнюються автоматично.",
+      "generateNFOFilesDescription": "Створювати сумісні з Kodi супровідні файли NFO для Plex і Jellyfin. Запустіть завдання «Згенерувати файли NFO», щоб доповнити наявні архіви.",
       "storageTemplateSettings": "Налаштування шаблонів зберігання",
       "storageTemplateSettingsDescription": "Налаштуйте, як називаються папки та файли. Це застосовується лише до нових файлів. Щоб застосувати до наявних файлів, запустіть задачу міграції на сторінці завдань.",
       "folderTemplateText": "Шаблон папки",

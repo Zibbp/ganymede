@@ -286,7 +286,7 @@
       "generateSpriteThumbnailsLabel": "Generate Sprite Thumbnail",
       "generateSpriteThumbnailsDescription": "Generate a sprite thumbnail for the video. These are preview thumbnails when hovering over the video timeline.",
       "generateNFOFilesLabel": "Generate NFO metadata files",
-      "generateNFOFilesDescription": "Generate Kodi-compatible NFO sidecars for Plex and Jellyfin. Existing archives are backfilled automatically.",
+      "generateNFOFilesDescription": "Generate Kodi-compatible NFO sidecars for Plex and Jellyfin. Run the Generate NFO Files task to backfill existing archives.",
       "storageTemplateSettings": "Storage Template Settings",
       "storageTemplateSettingsDescription": "Customize how folders and files are named. This only applied to new files. To apply to existing files execute the migration task on the tasks page.",
       "folderTemplateText": "Folder Template",
