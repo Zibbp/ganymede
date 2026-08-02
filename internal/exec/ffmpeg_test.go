@@ -81,6 +81,11 @@ func createTimestampOffsetMedia(t *testing.T, dir, format string) string {
 		"-map", "[v]", "-map", "[a]",
 		"-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
 		"-c:a", "aac",
+		// Preserve the timestamp gap instead of filling it with hundreds of
+		// thousands of duplicate frames. The fixture must contain three seconds
+		// of media starting at an anomalous timestamp, not 20,003 seconds of
+		// encoded video.
+		"-fps_mode", "passthrough",
 	}
 	if format == "mpegts" {
 		args = append(args, "-muxdelay", "0")
