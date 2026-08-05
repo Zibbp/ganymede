@@ -19,7 +19,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.24.1
 	github.com/riverqueue/river v0.42.0
-	github.com/riverqueue/river/riverdriver/riverdatabasesql v0.40.0
+	github.com/riverqueue/river/riverdriver/riverdatabasesql v0.42.0
 	github.com/riverqueue/river/rivertype v0.42.0
 	github.com/rs/zerolog v1.35.1
 	github.com/sethvargo/go-envconfig v1.3.0
