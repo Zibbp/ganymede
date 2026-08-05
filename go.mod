@@ -22,7 +22,7 @@ require (
 	github.com/riverqueue/river/riverdriver/riverdatabasesql v0.42.0
 	github.com/riverqueue/river/rivertype v0.42.0
 	github.com/rs/zerolog v1.35.1
-	github.com/sethvargo/go-envconfig v1.3.0
+	github.com/sethvargo/go-envconfig v1.4.3
 	github.com/shirou/gopsutil/v4 v4.26.5
 	github.com/swaggo/swag v1.16.6
 	github.com/testcontainers/testcontainers-go v0.43.0
