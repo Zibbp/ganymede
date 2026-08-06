@@ -11,7 +11,7 @@
   },
   "VideoPage": {
     "loading": "Video laden",
-    "error": "Error loading video"
+    "error": "Fehler beim Laden des Videos"
   },
   "SearchPage": {
     "title": "Suche",
@@ -158,8 +158,8 @@
     "title": "Kanäle",
     "loading": "Kanäle werden geladen",
     "error": "Fehler beim Laden der Kanäle",
-    "loadingChannel": "Loading channel",
-    "errorLoadingChannel": "Error loading channel"
+    "loadingChannel": "Kanal wird geladen",
+    "errorLoadingChannel": "Fehler beim Laden des Kanals"
   },
   "ArchivePage": {
     "title": "Archivieren",
@@ -842,6 +842,9 @@
     "chatEventAnnouncement": "Ankündigung",
     "loadingChat": "Lade Chat-Wiedergabe",
     "chatError": "Fehler",
+    "loadingChatterMessages": "Benutzer-Chatnachrichten werden geladen",
+    "chatterMessages": "Nachrichten von {name}",
+    "noChat": "Keine Nachrichten gefunden",
     "filterByLabel": "Nach Kriterium filtern",
     "filterByPlaceholder": "Nach Videoarten filtern",
     "orderByLabel": "Sortierreihenfolge",
