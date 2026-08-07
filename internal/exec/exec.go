@@ -58,6 +58,48 @@ func appendFFmpegLiveOutputStreamArgs(args []string, audioOnly bool) []string {
 	)
 }
 
+func appendYtDlpVideoConfigArgs(args []string, configArgs string) []string {
+	skipValue := false
+	for _, arg := range strings.Split(configArgs, ",") {
+		trimmedArg := strings.TrimSpace(arg)
+		if skipValue {
+			skipValue = false
+			continue
+		}
+		if trimmedArg == "-o" || trimmedArg == "--output" || trimmedArg == "-P" || trimmedArg == "--paths" {
+			skipValue = true
+			continue
+		}
+		if strings.HasPrefix(trimmedArg, "--output=") || strings.HasPrefix(trimmedArg, "--paths=") ||
+			(len(trimmedArg) > 2 && (strings.HasPrefix(trimmedArg, "-o") || strings.HasPrefix(trimmedArg, "-P"))) {
+			continue
+		}
+		if trimmedArg != "" {
+			args = append(args, trimmedArg)
+		}
+	}
+	return args
+}
+
+func twitchVideoDownloadArgs(quality, url, outputPath, configArgs string) []string {
+	args := []string{
+		"-f", quality,
+		url,
+		"-o", outputPath,
+		"--merge-output-format", "mp4", "--no-part",
+		"--no-warnings", "--progress", "--newline", "--no-check-certificate",
+		// Twitch VOD playlists can change their fMP4 initialization segment after a
+		// discontinuity. The native HLS downloader rejects a second EXT-X-MAP, while
+		// ffmpeg handles the new initialization section correctly.
+		"--hls-prefer-ffmpeg",
+	}
+
+	// User arguments are intentionally last so an explicit downloader preference
+	// in the configuration can override the default. Output options are excluded
+	// so the application-owned temporary path remains authoritative.
+	return appendYtDlpVideoConfigArgs(args, configArgs)
+}
+
 // DownloadTwitchVideo downloads a Twitch video.
 func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	// Get video channel
@@ -115,25 +157,12 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	tmpVideoDownloadExt := filepath.Ext(video.TmpVideoDownloadPath)
 	tmpVideoDownloadPathNoExt := strings.TrimSuffix(video.TmpVideoDownloadPath, tmpVideoDownloadExt)
 
-	// Get user arguments from config
-	configYtDlpArgs := config.Get().Parameters.YtDlpVideo
-	configYtDlpArgsArr := strings.Split(configYtDlpArgs, ",")
-
-	var cmdArgs []string
-	cmdArgs = append(cmdArgs,
-		"-f", qualityString,
+	cmdArgs := twitchVideoDownloadArgs(
+		qualityString,
 		url,
-		"-o", fmt.Sprintf("%s.%%(ext)s", tmpVideoDownloadPathNoExt),
-		"--merge-output-format", "mp4", "--no-part",
-		"--no-warnings", "--progress", "--newline", "--no-check-certificate",
+		fmt.Sprintf("%s.%%(ext)s", tmpVideoDownloadPathNoExt),
+		config.Get().Parameters.YtDlpVideo,
 	)
-
-	// Sanitize config args before appending
-	for _, arg := range configYtDlpArgsArr {
-		if strings.TrimSpace(arg) != "" {
-			cmdArgs = append(cmdArgs, arg)
-		}
-	}
 
 	// Create yt-dlp command
 	cmd, cookieFile, err := ytdlpSvc.CreateCommand(ctx, cmdArgs, true)

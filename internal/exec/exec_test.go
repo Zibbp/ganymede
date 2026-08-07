@@ -62,6 +62,65 @@ func TestVodArchiveProcessAttributes(t *testing.T) {
 	}
 }
 
+func TestTwitchVideoDownloadArgsPreferFFmpegForHLS(t *testing.T) {
+	t.Parallel()
+
+	args := twitchVideoDownloadArgs(
+		"best[height=1080]/best",
+		"https://twitch.tv/videos/2838897713",
+		"/tmp/video.%(ext)s",
+		"--fragment-retries,20",
+	)
+
+	ffmpegPreference := -1
+	customArgs := -1
+	for i, arg := range args {
+		switch arg {
+		case "--hls-prefer-ffmpeg":
+			ffmpegPreference = i
+		case "--fragment-retries":
+			customArgs = i
+		}
+	}
+
+	if ffmpegPreference == -1 {
+		t.Fatalf("Twitch VOD arguments do not prefer the ffmpeg HLS downloader: %v", args)
+	}
+	if customArgs == -1 || customArgs < ffmpegPreference {
+		t.Fatalf("configured yt-dlp arguments must follow defaults: %v", args)
+	}
+}
+
+func TestAppendYtDlpVideoConfigArgsExcludesOutputOptions(t *testing.T) {
+	t.Parallel()
+
+	initial := []string{"-o", "/data/temp/video.%(ext)s"}
+	configArgs := strings.Join([]string{
+		"  --retries  ", "  10 ", "  ",
+		"-o", "/tmp/short-separated",
+		"--output", "/tmp/long-separated",
+		"-o=/tmp/short-equals",
+		"-o/tmp/short-attached",
+		"--output=/tmp/long-equals",
+		"-P", "/tmp/path-short-separated",
+		"--paths", "/tmp/path-long-separated",
+		"-P=/tmp/path-short-equals",
+		"-P/tmp/path-short-attached",
+		"--paths=/tmp/path-long-equals",
+		" --fragment-retries", "20 ",
+	}, ",")
+
+	got := appendYtDlpVideoConfigArgs(initial, configArgs)
+	want := []string{
+		"-o", "/data/temp/video.%(ext)s",
+		"--retries", "10",
+		"--fragment-retries", "20",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("appendYtDlpVideoConfigArgs() = %v, want %v", got, want)
+	}
+}
+
 func TestPostProcessVideoFFmpegArgsIncludesTitleMetadata(t *testing.T) {
 	t.Parallel()
 
