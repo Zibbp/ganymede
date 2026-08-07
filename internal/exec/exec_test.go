@@ -62,6 +62,35 @@ func TestVodArchiveProcessAttributes(t *testing.T) {
 	}
 }
 
+func TestTwitchVideoDownloadArgsPreferFFmpegForHLS(t *testing.T) {
+	t.Parallel()
+
+	args := twitchVideoDownloadArgs(
+		"best[height=1080]/best",
+		"https://twitch.tv/videos/2838897713",
+		"/tmp/video.%(ext)s",
+		"--fragment-retries,20",
+	)
+
+	ffmpegPreference := -1
+	customArgs := -1
+	for i, arg := range args {
+		switch arg {
+		case "--hls-prefer-ffmpeg":
+			ffmpegPreference = i
+		case "--fragment-retries":
+			customArgs = i
+		}
+	}
+
+	if ffmpegPreference == -1 {
+		t.Fatalf("Twitch VOD arguments do not prefer the ffmpeg HLS downloader: %v", args)
+	}
+	if customArgs == -1 || customArgs < ffmpegPreference {
+		t.Fatalf("configured yt-dlp arguments must follow defaults: %v", args)
+	}
+}
+
 func TestPostProcessVideoFFmpegArgsIncludesTitleMetadata(t *testing.T) {
 	t.Parallel()
 
