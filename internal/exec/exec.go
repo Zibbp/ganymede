@@ -58,6 +58,29 @@ func appendFFmpegLiveOutputStreamArgs(args []string, audioOnly bool) []string {
 	)
 }
 
+func appendYtDlpVideoConfigArgs(args []string, configArgs string) []string {
+	skipValue := false
+	for _, arg := range strings.Split(configArgs, ",") {
+		trimmedArg := strings.TrimSpace(arg)
+		if skipValue {
+			skipValue = false
+			continue
+		}
+		if trimmedArg == "-o" || trimmedArg == "--output" || trimmedArg == "-P" || trimmedArg == "--paths" {
+			skipValue = true
+			continue
+		}
+		if strings.HasPrefix(trimmedArg, "--output=") || strings.HasPrefix(trimmedArg, "--paths=") ||
+			(len(trimmedArg) > 2 && (strings.HasPrefix(trimmedArg, "-o") || strings.HasPrefix(trimmedArg, "-P"))) {
+			continue
+		}
+		if trimmedArg != "" {
+			args = append(args, trimmedArg)
+		}
+	}
+	return args
+}
+
 func twitchVideoDownloadArgs(quality, url, outputPath, configArgs string) []string {
 	args := []string{
 		"-f", quality,
@@ -72,14 +95,9 @@ func twitchVideoDownloadArgs(quality, url, outputPath, configArgs string) []stri
 	}
 
 	// User arguments are intentionally last so an explicit downloader preference
-	// in the configuration can override the default.
-	for _, arg := range strings.Split(configArgs, ",") {
-		if strings.TrimSpace(arg) != "" {
-			args = append(args, arg)
-		}
-	}
-
-	return args
+	// in the configuration can override the default. Output options are excluded
+	// so the application-owned temporary path remains authoritative.
+	return appendYtDlpVideoConfigArgs(args, configArgs)
 }
 
 // DownloadTwitchVideo downloads a Twitch video.

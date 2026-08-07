@@ -91,6 +91,36 @@ func TestTwitchVideoDownloadArgsPreferFFmpegForHLS(t *testing.T) {
 	}
 }
 
+func TestAppendYtDlpVideoConfigArgsExcludesOutputOptions(t *testing.T) {
+	t.Parallel()
+
+	initial := []string{"-o", "/data/temp/video.%(ext)s"}
+	configArgs := strings.Join([]string{
+		"  --retries  ", "  10 ", "  ",
+		"-o", "/tmp/short-separated",
+		"--output", "/tmp/long-separated",
+		"-o=/tmp/short-equals",
+		"-o/tmp/short-attached",
+		"--output=/tmp/long-equals",
+		"-P", "/tmp/path-short-separated",
+		"--paths", "/tmp/path-long-separated",
+		"-P=/tmp/path-short-equals",
+		"-P/tmp/path-short-attached",
+		"--paths=/tmp/path-long-equals",
+		" --fragment-retries", "20 ",
+	}, ",")
+
+	got := appendYtDlpVideoConfigArgs(initial, configArgs)
+	want := []string{
+		"-o", "/data/temp/video.%(ext)s",
+		"--retries", "10",
+		"--fragment-retries", "20",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("appendYtDlpVideoConfigArgs() = %v, want %v", got, want)
+	}
+}
+
 func TestPostProcessVideoFFmpegArgsIncludesTitleMetadata(t *testing.T) {
 	t.Parallel()
 
