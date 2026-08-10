@@ -20,7 +20,7 @@ require (
 	github.com/prometheus/client_golang v1.24.1
 	github.com/riverqueue/river v0.42.0
 	github.com/riverqueue/river/riverdriver/riverdatabasesql v0.42.0
-	github.com/riverqueue/river/rivertype v0.42.0
+	github.com/riverqueue/river/rivertype v0.43.0
 	github.com/rs/zerolog v1.35.1
 	github.com/sethvargo/go-envconfig v1.4.3
 	github.com/shirou/gopsutil/v4 v4.26.5
