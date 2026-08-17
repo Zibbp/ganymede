@@ -6,7 +6,7 @@ require (
 	entgo.io/ent v0.14.6
 	github.com/alexedwards/scs/pgxstore v0.0.0-20240316134038-7e11d57e8885
 	github.com/alexedwards/scs/v2 v2.9.0
-	github.com/bluenviron/gohlslib/v2 v2.4.0
+	github.com/bluenviron/gohlslib/v2 v2.4.2
 	github.com/canidam/echo-scs-session v1.0.0
 	github.com/coreos/go-oidc/v3 v3.20.0
 	github.com/gavv/httpexpect/v2 v2.17.0

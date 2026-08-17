@@ -30,8 +30,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
-github.com/bluenviron/gohlslib/v2 v2.4.0 h1:O0bmUvyOMVPuRx3givLqfGWUzOKicKwkSCInpGxsXQA=
-github.com/bluenviron/gohlslib/v2 v2.4.0/go.mod h1:iqU6QJ5geVuCDpUeAbK/Si2RtDC3ocBTp8LnPHBkN6U=
+github.com/bluenviron/gohlslib/v2 v2.4.2 h1:WU3FwwCn8hRIVe4DRBLfX95igUC+qU1bYxQ4+bP5588=
+github.com/bluenviron/gohlslib/v2 v2.4.2/go.mod h1:oWuUkEnWqDJ1FpC+i+NXef8/y8DE76IlAzryzhyDqwE=
 github.com/bmatcuk/doublestar v1.3.4 h1:gPypJ5xD31uhX6Tf54sDPUOBXTqKH4c9aPY66CyQrS0=
 github.com/bmatcuk/doublestar v1.3.4/go.mod h1:wiQtGV+rzVYxB7WIlirSN++5HPtPlXEo9MEoZQC/PmE=
 github.com/canidam/echo-scs-session v1.0.0 h1:ubWTgxTQJwJjxNcvVzVlHk0x5Wd7+AeoGyT2+iYXiZE=
