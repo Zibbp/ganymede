@@ -13,6 +13,8 @@ services:
       - TEMP_DIR=/data/temp
       - LOGS_DIR=/data/logs
       - CONFIG_DIR=/data/config
+      # Set to true if your storage does not support chown (e.g. NFS/SMB)
+      # - SKIP_CHOWN=false
       # Database settings
       - DB_HOST=ganymede-db
       - DB_PORT=5432
