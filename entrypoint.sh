@@ -23,10 +23,10 @@ SKIP_CHOWN=${SKIP_CHOWN:-false}
 # SKIP_CHOWN can be set to true to skip this, useful for network storage (NFS/SMB)
 # that does not support chown or POSIX permissions
 if [ "${SKIP_CHOWN}" != "true" ]; then
-  chown -R abc:abc ${LOGS_DIR}
-  chown -R abc:abc ${CONFIG_DIR}
-  chown -R abc:abc ${TEMP_DIR}
-  chown abc:abc ${VIDEOS_DIR}
+  chown -R abc:abc "${LOGS_DIR}"
+  chown -R abc:abc "${CONFIG_DIR}"
+  chown -R abc:abc "${TEMP_DIR}"
+  chown abc:abc "${VIDEOS_DIR}"
 else
   echo "Skipping chown because SKIP_CHOWN=true"
 fi
