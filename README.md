@@ -94,6 +94,8 @@ The API container can be run as a non root user. To do so add `PUID` and `PGID` 
 
 Note: On startup the container will `chown` the config, temp, and logs directory. It will not recursively `chown` the `/data/videos` directory. Ensure the mounted `/data/videos` directory is readable by the set user.
 
+If your storage does not support `chown`, such as an NFS or SMB mount (e.g. TrueNAS with NFSv4 ACLs), set `SKIP_CHOWN=true` to skip this step. Ensure the directories are already writable by the set user.
+
 ### Config
 
 A configuration file is generate on initial start of Ganymede. By default the configuration is at `/data/config/config.json`. See the [config.go](https://github.com/Zibbp/ganymede/blob/main/internal/config/config.go) file for a full list of configuration settings. Most of the settings can be configured in the Web UI by navigating to Admin > Settings.
@@ -111,6 +113,7 @@ The `docker-compose.yml` file has comments for each environment variable. Below 
 | `TEMP_DIR`                              | Path inside the container where temporary files are stored during archiving. Default: `/data/temp`.                             |
 | `LOGS_DIR`                              | Path inside the container where log files are stored. Default: `/data/logs`.                                                    |
 | `CONFIG_DIR`                            | Path inside the container where the config is stored. Default: `/data/config`.                                                  |
+| `SKIP_CHOWN`                            | _Optional_ Skip `chown` of the data directories on startup. Useful when storage does not support `chown`, e.g. NFS/SMB. Default: `false`. |
 | `PATH_MIGRATION_ENABLED`                | Enable path migration at startup. Default: `true`.                                                                              |
 | `TZ`                                    | Timezone.                                                                                                                       |
 | `DB_HOST`                               | Host of the database.                                                                                                           |
