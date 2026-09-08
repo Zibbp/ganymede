@@ -1,5 +1,6 @@
 ARG TWITCHDOWNLOADER_VERSION="1.56.5"
 ARG YT_DLP_VERSION="2026.07.04"
+ARG FFMPEG_VERSION="9.0"
 
 #
 # API Build
@@ -66,6 +67,38 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
 COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
 
 #
+# FFmpeg (static build, latest stable - Debian's ffmpeg is very old)
+# Uses BtbN static builds (linked from ffmpeg.org) to get the latest release.
+# Tracks the latest point release of the major version in FFMPEG_VERSION.
+#
+FROM debian:bookworm-slim AS ffmpeg
+ARG FFMPEG_VERSION
+
+WORKDIR /tmp
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl xz-utils ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    ARCH="$(uname -m)"; \
+    case "$ARCH" in \
+      x86_64) FFMPEG_ARCH="linux64" ;; \
+      aarch64) FFMPEG_ARCH="linuxarm64" ;; \
+      *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;; \
+    esac; \
+    FFMPEG_TAR="ffmpeg-n${FFMPEG_VERSION}-latest-${FFMPEG_ARCH}-gpl-${FFMPEG_VERSION}.tar.xz"; \
+    echo "Downloading ${FFMPEG_TAR} (FFmpeg ${FFMPEG_VERSION} latest, ${ARCH})"; \
+    curl -fSL "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/${FFMPEG_TAR}" -o ffmpeg.tar.xz; \
+    mkdir -p /tmp/ffmpeg-extract; \
+    tar -xJf ffmpeg.tar.xz -C /tmp/ffmpeg-extract --strip-components=1; \
+    cp /tmp/ffmpeg-extract/bin/ffmpeg /usr/local/bin/ffmpeg; \
+    cp /tmp/ffmpeg-extract/bin/ffprobe /usr/local/bin/ffprobe; \
+    chmod +x /usr/local/bin/ffmpeg /usr/local/bin/ffprobe; \
+    rm -rf /tmp/ffmpeg.tar.xz /tmp/ffmpeg-extract; \
+    ffmpeg -version; \
+    ffprobe -version
+
+#
 # Frontend base
 #
 FROM node:26-alpine AS base-frontend
@@ -107,10 +140,14 @@ RUN \
 #
 FROM golang:1.27-bookworm AS tests
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip ffmpeg make git
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip make git
 
-# Setup fonts
-RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
+# Copy ffmpeg/ffprobe (latest static build)
+COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
+COPY --from=ffmpeg /usr/local/bin/ffprobe /usr/local/bin/ffprobe
+
+# Setup fonts (if present)
+RUN if [ -d /usr/share/fonts ]; then chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts; fi
 
 # Copy TwitchDownloaderCLI
 COPY --from=tools /tmp/TwitchDownloaderCLI /usr/local/bin/
@@ -126,7 +163,7 @@ WORKDIR /opt/app
 
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip fontconfig ffmpeg tzdata procps supervisor \
+    python3 python3-pip fontconfig tzdata procps supervisor \
     fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-inter \
     curl \
     && rm -rf /var/lib/apt/lists/* \
@@ -156,6 +193,10 @@ RUN useradd -u 911 -d /data abc && usermod -a -G users abc
 
 # Install yt-dlp
 COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
+
+# Install ffmpeg/ffprobe (latest static build)
+COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
+COPY --from=ffmpeg /usr/local/bin/ffprobe /usr/local/bin/ffprobe
 
 # Setup fonts
 RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
