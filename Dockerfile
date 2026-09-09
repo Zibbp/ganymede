@@ -140,7 +140,7 @@ RUN \
 #
 FROM golang:1.27-bookworm AS tests
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip make git
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip make git libicu72
 
 # Copy ffmpeg/ffprobe (latest static build)
 COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
@@ -165,7 +165,7 @@ WORKDIR /opt/app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip fontconfig tzdata procps supervisor \
     fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-inter \
-    curl \
+    curl libicu72 \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf python3 /usr/bin/python
 
