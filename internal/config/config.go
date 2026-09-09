@@ -38,6 +38,9 @@ type Config struct {
 	} `json:"experimental"`
 	LogRetentionDays int  `json:"log_retention_days"` // Number of days to retain log files.
 	ApiKeysEnabled   bool `json:"api_keys_enabled"`   // Allow API key authentication via Authorization: Bearer header.
+	Tasks            struct {
+		PeriodicUpdateChannels bool `json:"periodic_update_channels"` // Enable periodic channel updates - can cause disks to spin up as it checks profile images.
+	} `json:"tasks"`
 	// Notifications preserves legacy config.json notifications during migration.
 	// Deprecated: notifications are now stored in the database.
 	Notifications *LegacyNotification `json:"notifications,omitempty"`
@@ -224,6 +227,8 @@ func (c *Config) SetDefaults() {
 	// API keys are enabled by default; admins still need to mint a key
 	// before any external client can authenticate.
 	c.ApiKeysEnabled = true
+
+	c.Tasks.PeriodicUpdateChannels = true
 
 	// experimental features
 	c.Experimental.BetterLiveStreamDetectionAndCleanup = false

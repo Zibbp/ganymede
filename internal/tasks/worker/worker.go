@@ -47,6 +47,13 @@ type RiverWorkerClient struct {
 	Client         *river.Client[pgx.Tx]
 }
 
+type periodicTask struct {
+	Job        *river.PeriodicJob
+	Kind       string
+	Schedule   string
+	RunOnStart bool
+}
+
 func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	rc := &RiverWorkerClient{}
 	rc.Database = input.DB
@@ -66,9 +73,17 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.LiveServiceKey, input.LiveService)
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.EnqueuerKey, input.Enqueuer)
 
-	periodicJobs, err := getPeriodicTasks()
+	periodicTasks, err := getPeriodicTasks()
 	if err != nil {
 		return rc, err
+	}
+
+	// Print out the periodic tasks that are registered and enabled
+	periodicJobs := make([]*river.PeriodicJob, 0, len(periodicTasks))
+	log.Info().Int("count", len(periodicTasks)).Msg("enabled periodic jobs registered")
+	for _, task := range periodicTasks {
+		periodicJobs = append(periodicJobs, task.Job)
+		log.Info().Str("kind", task.Kind).Str("schedule", task.Schedule).Bool("run_on_start", task.RunOnStart).Msg("enabled periodic job registered")
 	}
 
 	// create postgres pool connection
@@ -139,7 +154,7 @@ func (rc *RiverWorkerClient) Close() error {
 	return nil
 }
 
-func getPeriodicTasks() ([]*river.PeriodicJob, error) {
+func getPeriodicTasks() ([]periodicTask, error) {
 	env := config.GetEnvConfig()
 	midnightCron, err := cron.ParseStandard("0 0 * * *")
 	if err != nil {
@@ -149,160 +164,140 @@ func getPeriodicTasks() ([]*river.PeriodicJob, error) {
 	// get interval configs
 	configCheckLiveInterval := config.Get().LiveCheckInterval
 	configCheckVideoInterval := config.Get().VideoCheckInterval
+	configGenerateNFOFiles := config.Get().Archive.GenerateNFOFiles
 	if configCheckLiveInterval < 15 {
 		log.Warn().Msg("Live check interval should not be less than 15 seconds.")
 	}
+	configPeriodicUpdateChannels := config.Get().Tasks.PeriodicUpdateChannels
 
-	periodicJobs := []*river.PeriodicJob{
+	periodicTasks := []periodicTask{
 		// Archive jobs heartbeat once per minute and are considered stale after
 		// 90 seconds. Run the watchdog every minute so a cancellation that is
 		// inside its finalization grace window is revisited promptly instead of
 		// waiting another five minutes.
-		river.NewPeriodicJob(
-			river.PeriodicInterval(time.Minute),
+		newPeriodicTask(tasks.TaskArchiveWatchdog, river.PeriodicInterval(time.Minute), "1m", true,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks.WatchdogArgs{}, periodicInsertOpts(time.Minute)
 			},
-			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 
 		// check watched channels for live streams
 		// run at specified interval
-		river.NewPeriodicJob(
-			river.PeriodicInterval(time.Duration(configCheckLiveInterval)*time.Second),
+		newPeriodicTask(tasks.TaskCheckChannelsForLivestreams, river.PeriodicInterval(time.Duration(configCheckLiveInterval)*time.Second), fmt.Sprintf("%ds", configCheckLiveInterval), false,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.CheckChannelsForLivestreamsArgs{}, periodicInsertOpts(time.Duration(configCheckLiveInterval) * time.Second)
 			},
-			&river.PeriodicJobOpts{RunOnStart: false},
 		),
 
 		// check watched channels for new videos
 		// run at specified interval
-		river.NewPeriodicJob(
-			river.PeriodicInterval(time.Duration(configCheckVideoInterval)*time.Minute),
+		newPeriodicTask(tasks.TaskCheckChannelsForNewVideos, river.PeriodicInterval(time.Duration(configCheckVideoInterval)*time.Minute), fmt.Sprintf("%dm", configCheckVideoInterval), false,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.CheckChannelsForNewVideosArgs{}, periodicInsertOpts(time.Duration(configCheckVideoInterval) * time.Minute)
 			},
-			&river.PeriodicJobOpts{RunOnStart: false},
 		),
 
 		// check watched channels for new clips
 		// runs once a day at midnight
-		river.NewPeriodicJob(
-			midnightCron,
+		newPeriodicTask(tasks.TaskCheckChannelsForNewClips, midnightCron, "daily at midnight", true,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.TaskCheckChannelForNewClipsArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
-			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 
 		// prune videos
 		// runs once a day at midnight
-		river.NewPeriodicJob(
-			midnightCron,
+		newPeriodicTask(tasks.TaskPruneVideos, midnightCron, "daily at midnight", false,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.PruneVideosArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
-			&river.PeriodicJobOpts{RunOnStart: false},
-		),
-
-		// ensure completed archives have NFO sidecars
-		// runs once a day at midnight and backfills on worker startup
-		river.NewPeriodicJob(
-			midnightCron,
-			func() (river.JobArgs, *river.InsertOpts) {
-				if !config.Get().Archive.GenerateNFOFiles {
-					return nil, nil
-				}
-				return tasks.GenerateNFOFilesArgs{}, periodicInsertOpts(24 * time.Hour)
-			},
-			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 
 		// import categories
 		// runs once a day at midnight
-		river.NewPeriodicJob(
-			midnightCron,
+		newPeriodicTask(tasks.TaskImportVideos, midnightCron, "daily at midnight", true,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.ImportCategoriesArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
-			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 
 		// authenticate to platform
 		// runs every hour
-		river.NewPeriodicJob(
-			river.PeriodicInterval(1*time.Hour),
+		newPeriodicTask(tasks.TaskAuthenticatePlatform, river.PeriodicInterval(time.Hour), "1h", true,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.AuthenticatePlatformArgs{}, periodicInsertOpts(time.Hour)
 			},
-			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 
 		// update video storage usage
 		// runs once a day at midnight
-		river.NewPeriodicJob(
-			midnightCron,
+		newPeriodicTask(tasks.TaskUpdateVideoStorageUsage, midnightCron, "daily at midnight", false,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks.UpdateVideoStorageUsage{}, periodicInsertOpts(24 * time.Hour)
 			},
-			&river.PeriodicJobOpts{RunOnStart: false},
 		),
 
 		// update channel storage usage
 		// runs every hour
-		river.NewPeriodicJob(
-			river.PeriodicInterval(1*time.Hour),
+		newPeriodicTask(tasks.TaskUpdateChannelStorageUsage, river.PeriodicInterval(time.Hour), "1h", true,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks.UpdateChannelStorageUsage{}, periodicInsertOpts(time.Hour)
 			},
-			&river.PeriodicJobOpts{RunOnStart: true},
 		),
 
 		// process playlist video rules
 		// runs every hour
-		river.NewPeriodicJob(
-			river.PeriodicInterval(1*time.Hour),
+		newPeriodicTask(tasks.TaskProcessPlaylistVideoRules, river.PeriodicInterval(time.Hour), "1h", false,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.ProcessPlaylistVideoRulesArgs{}, periodicInsertOpts(time.Hour)
 			},
-			&river.PeriodicJobOpts{RunOnStart: false},
-		),
-
-		// update twitch channels
-		// runs every 12 hour
-		river.NewPeriodicJob(
-			river.PeriodicInterval(12*time.Hour),
-			func() (river.JobArgs, *river.InsertOpts) {
-				return tasks_periodic.UpdateTwitchChannelsArgs{}, periodicInsertOpts(12 * time.Hour)
-			},
-			&river.PeriodicJobOpts{RunOnStart: false},
 		),
 
 		// prune log files
 		// runs once a day at midnight
-		river.NewPeriodicJob(
-			midnightCron,
+		newPeriodicTask(tasks.TaskPruneLogFiles, midnightCron, "daily at midnight", false,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.PruneLogFilesArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
-			&river.PeriodicJobOpts{RunOnStart: false},
 		),
+	}
+
+	if configGenerateNFOFiles {
+		periodicTasks = append(periodicTasks, newPeriodicTask(tasks.TaskGenerateNFOFiles, midnightCron, "daily at midnight", true,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks.GenerateNFOFilesArgs{}, periodicInsertOpts(24 * time.Hour)
+			},
+		))
+	}
+
+	if configPeriodicUpdateChannels {
+		periodicTasks = append(periodicTasks, newPeriodicTask(tasks.TaskUpdateTwitchChannels, river.PeriodicInterval(12*time.Hour), "12h", false,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks_periodic.UpdateTwitchChannelsArgs{}, periodicInsertOpts(12 * time.Hour)
+			},
+		))
 	}
 
 	// check jwks
 	if env.OAuthEnabled {
 		// runs once a day at midnight
-		periodicJobs = append(periodicJobs, river.NewPeriodicJob(
-			midnightCron,
+		periodicTasks = append(periodicTasks, newPeriodicTask(tasks.TaskFetchJWKS, midnightCron, "daily at midnight", true,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks_periodic.FetchJWKSArgs{}, periodicInsertOpts(24 * time.Hour)
 			},
-			&river.PeriodicJobOpts{RunOnStart: true},
 		))
 	}
 
-	return periodicJobs, nil
+	return periodicTasks, nil
+}
+
+func newPeriodicTask(kind string, schedule river.PeriodicSchedule, scheduleDescription string, runOnStart bool, constructor river.PeriodicJobConstructor) periodicTask {
+	return periodicTask{
+		Job:        river.NewPeriodicJob(schedule, constructor, &river.PeriodicJobOpts{RunOnStart: runOnStart}),
+		Kind:       kind,
+		Schedule:   scheduleDescription,
+		RunOnStart: runOnStart,
+	}
 }
 
 func periodicInsertOpts(period time.Duration) *river.InsertOpts {
