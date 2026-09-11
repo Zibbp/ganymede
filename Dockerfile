@@ -144,7 +144,7 @@ RUN \
 #
 FROM golang:1.27-bookworm AS tests
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip make git libicu72
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip make git libicu72 libfontconfig1
 
 # Copy ffmpeg/ffprobe (latest static build)
 COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
