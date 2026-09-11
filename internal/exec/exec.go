@@ -31,7 +31,13 @@ const (
 
 	archiveProcessForwarder = `
 forward_term() {
-	trap - TERM
+	trap '' TERM
+	# Give the group a brief grace period, then escalate to SIGKILL. Some
+	# ffmpeg builds ignore the first SIGTERM while blocked on a network read
+	# (e.g. Twitch HLS), which would otherwise orphan the capture process after
+	# a worker crash. The subshell inherits the ignored TERM disposition, so it
+	# survives the group-wide SIGTERM below and force-kills any stubborn child.
+	( sleep 2; kill -s KILL -- "-$$" 2>/dev/null ) &
 	kill -s TERM -- "-$$"
 }
 
