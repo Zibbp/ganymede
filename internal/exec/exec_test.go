@@ -38,6 +38,64 @@ func TestStartArchiveCommand(t *testing.T) {
 	}
 }
 
+// TestStartArchiveCommandWaitsForEscalationCleanup mirrors the cancellation
+// path used by DownloadTwitchLiveVideo (SIGTERM to the process group) and
+// verifies that completion is not reported while the delayed SIGKILL helper is
+// still running, while a descendant that ignores SIGTERM is still cleaned up.
+func TestStartArchiveCommandWaitsForEscalationCleanup(t *testing.T) {
+	tempDir := t.TempDir()
+	ffmpegPIDPath := filepath.Join(tempDir, "ffmpeg.pid")
+	descendantPIDPath := filepath.Join(tempDir, "ffmpeg-descendant.pid")
+	descendantPath := filepath.Join(tempDir, "ffmpeg-descendant")
+
+	writeExecutable(t, filepath.Join(tempDir, "ffmpeg"), `#!/bin/sh
+printf '%s' "$$" > "$1"
+trap 'exit 0' TERM
+"$2" "$3" &
+wait
+`)
+	writeExecutable(t, descendantPath, `#!/bin/sh
+printf '%s' "$$" > "$1"
+trap '' TERM
+while :; do
+	sleep 1
+done
+`)
+
+	cmd := osExec.Command(filepath.Join(tempDir, "ffmpeg"), ffmpegPIDPath, descendantPath, descendantPIDPath)
+	cmd.SysProcAttr = liveArchiveProcessAttributes()
+
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
+		t.Fatalf("start archive command: %v", err)
+	}
+
+	ffmpegPID := waitForPIDFile(t, ffmpegPIDPath)
+	descendantPID := waitForPIDFile(t, descendantPIDPath)
+	pgid := cmd.Process.Pid
+	t.Cleanup(func() {
+		killTestProcess(t, -pgid, "live archive process group")
+		killTestProcess(t, ffmpegPID, "ffmpeg")
+		killTestProcess(t, descendantPID, "ffmpeg descendant")
+	})
+
+	if err := syscall.Kill(-pgid, syscall.SIGTERM); err != nil {
+		t.Fatalf("send SIGTERM to archive process group: %v", err)
+	}
+
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		t.Fatal("timed out waiting for archive command to finish after cancellation")
+	}
+
+	// The helper sleeps longer than this grace period, so a surviving helper
+	// (the bug this guards against) is reliably detected here.
+	waitForProcessGroupExit(t, pgid, time.Second)
+	waitForProcessExit(t, "ffmpeg", ffmpegPID)
+	waitForProcessExit(t, "ffmpeg descendant", descendantPID)
+}
+
 func TestLiveArchiveProcessAttributes(t *testing.T) {
 	t.Parallel()
 
@@ -473,6 +531,59 @@ func killTestProcess(t *testing.T, pid int, name string) {
 	if err := syscall.Kill(pid, syscall.SIGKILL); err != nil && !errors.Is(err, syscall.ESRCH) {
 		t.Errorf("clean up %s: %v", name, err)
 	}
+}
+
+// waitForProcessGroupExit waits until the process group has no live (non
+// zombie) members. Zombies are ignored because the test process is not their
+// parent and reaping is deferred to init.
+func waitForProcessGroupExit(t *testing.T, pgid int, timeout time.Duration) {
+	t.Helper()
+
+	deadline := time.Now().Add(timeout)
+	for {
+		if !processGroupHasLiveProcesses(pgid) {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("process group %d still has live members after archive completion", pgid)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func processGroupHasLiveProcesses(pgid int) bool {
+	entries, err := os.ReadDir("/proc")
+	if err != nil {
+		return false
+	}
+	for _, entry := range entries {
+		pid, err := strconv.Atoi(entry.Name())
+		if err != nil {
+			continue
+		}
+		stat, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
+		if err != nil {
+			continue
+		}
+		contents := string(stat)
+		closeParen := strings.LastIndex(contents, ")")
+		if closeParen == -1 || closeParen+2 >= len(contents) {
+			continue
+		}
+		// Remainder layout: state ppid pgrp ...
+		fields := strings.Fields(contents[closeParen+1:])
+		if len(fields) < 3 || fields[0] == "Z" {
+			continue
+		}
+		group, err := strconv.Atoi(fields[2])
+		if err != nil {
+			continue
+		}
+		if group == pgid {
+			return true
+		}
+	}
+	return false
 }
 
 func Test_extractSharedChatArgs(t *testing.T) {
