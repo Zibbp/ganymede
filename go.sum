@@ -237,8 +237,8 @@ github.com/riverqueue/river v0.47.0 h1:j8HOEyiOE8gRRhVS2wllKams372TH1WWiH6xCakXH
 github.com/riverqueue/river v0.47.0/go.mod h1:Wgmwx475ZBd8lQnNrJgyG2DWH7BfyNiSAtv0rC9bJBQ=
 github.com/riverqueue/river/riverdriver v0.47.0 h1:qU8VkjdMl9plqeRg57SxsDUM/i/eECaSYejZ7HynC60=
 github.com/riverqueue/river/riverdriver v0.47.0/go.mod h1:NOXl0fUiF1AT/TaQOjdx2A/c0Davn+SKbW8nAXWjfC4=
-github.com/riverqueue/river/riverdriver/riverdatabasesql v0.43.0 h1:zvUUpejlnwwQDZ0TnJg3hG0NtfTLCl+trZCK6n+eLmo=
-github.com/riverqueue/river/riverdriver/riverdatabasesql v0.43.0/go.mod h1:VXJKAlLrJS4mU+6ISPZkHRNr9X/KeaizjPFGKaWqIRM=
+github.com/riverqueue/river/riverdriver/riverdatabasesql v0.47.0 h1:4wckhMlLN08F76/GWxGF6vlrbs5HCMuV01dpUnvOGI4=
+github.com/riverqueue/river/riverdriver/riverdatabasesql v0.47.0/go.mod h1:EME1EGr7RU/vMUf61mpf9YXhsZJ+GlFk4AHrIHT+YdE=
 github.com/riverqueue/river/riverdriver/riverpgxv5 v0.47.0 h1:5N9nvemhQwbUElMxASw4oEaYJ/v6hiS5Y9VcOQfdC5g=
 github.com/riverqueue/river/riverdriver/riverpgxv5 v0.47.0/go.mod h1:ZboiXXZKC4+fTkxBxGRVmAsCuUu0NPYliqbWYuQAZyw=
 github.com/riverqueue/river/rivershared v0.47.0 h1:jdtFsBexCvLqTXf8wnDnGXvB/eeOtPKQZAmThkjFpLs=
