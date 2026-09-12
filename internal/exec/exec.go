@@ -31,7 +31,14 @@ const (
 
 	archiveProcessForwarder = `
 forward_term() {
-	trap - TERM
+	trap '' TERM
+	# Give the group a brief grace period, then escalate to SIGKILL. Some
+	# ffmpeg builds ignore the first SIGTERM while blocked on a network read
+	# (e.g. Twitch HLS), which would otherwise orphan the capture process after
+	# a worker crash. The subshell inherits the ignored TERM disposition, so it
+	# survives the group-wide SIGTERM below and force-kills any stubborn child.
+	( sleep 2; kill -s KILL -- "-$$" 2>/dev/null ) &
+	escalation_pid=$!
 	kill -s TERM -- "-$$"
 }
 
@@ -40,7 +47,17 @@ trap 'forward_term' TERM
 "$@" &
 child_pid=$!
 wait "$child_pid"
-exit $?
+status=$?
+
+# Do not report completion while the escalation helper is still running. If the
+# child exited before the grace period elapsed we wait for the helper to finish
+# (and reap it); if it never exited the helper has already escalated and this
+# forwarder was killed with the rest of the group.
+if [ -n "${escalation_pid:-}" ]; then
+	wait "$escalation_pid" 2>/dev/null
+fi
+
+exit $status
 `
 )
 
