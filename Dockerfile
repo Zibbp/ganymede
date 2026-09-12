@@ -1,5 +1,10 @@
 ARG TWITCHDOWNLOADER_VERSION="1.56.5"
 ARG YT_DLP_VERSION="2026.07.04"
+ARG FFMPEG_VERSION="9.0"
+ARG FFMPEG_RELEASE="autobuild-2026-09-10-15-31"
+ARG FFMPEG_BUILD="n9.0.1-27-g9b0578816c"
+ARG FFMPEG_SHA256_LINUX64="70b162b63517038ff18c8a50f4ea11f919a071f945c5881e87b0b2cd7173f8c7"
+ARG FFMPEG_SHA256_LINUXARM64="2de63f615df3a46ac26921ac0314f501c3536aaf9fd5197ffe03dd17cd01a404"
 
 #
 # API Build
@@ -66,6 +71,44 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
 COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
 
 #
+# FFmpeg (static build, latest stable - Debian's ffmpeg is very old)
+# Uses BtbN static builds (linked from ffmpeg.org) to get the latest release.
+# Tracks the latest point release of the major version in FFMPEG_VERSION.
+#
+FROM debian:bookworm-slim AS ffmpeg
+ARG FFMPEG_VERSION
+ARG FFMPEG_RELEASE
+ARG FFMPEG_BUILD
+ARG FFMPEG_SHA256_LINUX64
+ARG FFMPEG_SHA256_LINUXARM64
+
+WORKDIR /tmp
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl xz-utils ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    ARCH="$(uname -m)"; \
+    case "$ARCH" in \
+      x86_64) FFMPEG_ARCH="linux64"; EXPECTED_HASH="${FFMPEG_SHA256_LINUX64}" ;; \
+      aarch64) FFMPEG_ARCH="linuxarm64"; EXPECTED_HASH="${FFMPEG_SHA256_LINUXARM64}" ;; \
+      *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;; \
+    esac; \
+    FFMPEG_TAR="ffmpeg-${FFMPEG_BUILD}-${FFMPEG_ARCH}-gpl-${FFMPEG_VERSION}.tar.xz"; \
+    echo "Downloading ${FFMPEG_TAR} (FFmpeg ${FFMPEG_VERSION}, ${ARCH}) from ${FFMPEG_RELEASE}"; \
+    curl -fSL "https://github.com/BtbN/FFmpeg-Builds/releases/download/${FFMPEG_RELEASE}/${FFMPEG_TAR}" -o ffmpeg.tar.xz; \
+    if [ -z "$EXPECTED_HASH" ]; then echo "checksum entry not found for ${FFMPEG_TAR}" >&2; exit 1; fi; \
+    echo "${EXPECTED_HASH}  ffmpeg.tar.xz" | sha256sum -c -; \
+    mkdir -p /tmp/ffmpeg-extract; \
+    tar -xJf ffmpeg.tar.xz -C /tmp/ffmpeg-extract --strip-components=1; \
+    cp /tmp/ffmpeg-extract/bin/ffmpeg /usr/local/bin/ffmpeg; \
+    cp /tmp/ffmpeg-extract/bin/ffprobe /usr/local/bin/ffprobe; \
+    chmod +x /usr/local/bin/ffmpeg /usr/local/bin/ffprobe; \
+    rm -rf /tmp/ffmpeg.tar.xz /tmp/ffmpeg-extract; \
+    ffmpeg -version; \
+    ffprobe -version
+
+#
 # Frontend base
 #
 FROM node:26-alpine AS base-frontend
@@ -107,10 +150,14 @@ RUN \
 #
 FROM golang:1.27-bookworm AS tests
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip ffmpeg make git
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip make git libicu72 libfontconfig1
 
-# Setup fonts
-RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
+# Copy ffmpeg/ffprobe (latest static build)
+COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
+COPY --from=ffmpeg /usr/local/bin/ffprobe /usr/local/bin/ffprobe
+
+# Setup fonts (if present)
+RUN if [ -d /usr/share/fonts ]; then chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts; fi
 
 # Copy TwitchDownloaderCLI
 COPY --from=tools /tmp/TwitchDownloaderCLI /usr/local/bin/
@@ -126,9 +173,9 @@ WORKDIR /opt/app
 
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip fontconfig ffmpeg tzdata procps supervisor \
+    python3 python3-pip fontconfig tzdata procps supervisor \
     fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-inter \
-    curl \
+    curl libicu72 \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf python3 /usr/bin/python
 
@@ -156,6 +203,10 @@ RUN useradd -u 911 -d /data abc && usermod -a -G users abc
 
 # Install yt-dlp
 COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
+
+# Install ffmpeg/ffprobe (latest static build)
+COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
+COPY --from=ffmpeg /usr/local/bin/ffprobe /usr/local/bin/ffprobe
 
 # Setup fonts
 RUN chmod 644 /usr/share/fonts/* && chmod -R a+rX /usr/share/fonts
