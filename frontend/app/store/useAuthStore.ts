@@ -2,11 +2,14 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { getUserInfo, User, UserRole } from "../hooks/useAuthentication";
 
+// Literal keys: reading UserRole here would run during module initialization, and this module
+// is in an import cycle with useAuthentication and useAxios, so the enum can still be undefined
+// at that point. The mapped type keeps this exhaustive.
 const roleHierarchy: { [key in UserRole]: number } = {
-  [UserRole.Admin]: 4,
-  [UserRole.Editor]: 3,
-  [UserRole.Archiver]: 2,
-  [UserRole.User]: 1,
+  admin: 4,
+  editor: 3,
+  archiver: 2,
+  user: 1,
 };
 
 interface AuthState {
