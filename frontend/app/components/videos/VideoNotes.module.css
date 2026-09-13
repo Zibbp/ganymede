@@ -1,0 +1,19 @@
+.timestampLink {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--mantine-color-violet-5);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.timestampLink:hover {
+  color: var(--mantine-color-violet-4);
+}
+
+.timestampLink:focus-visible {
+  outline: 2px solid var(--mantine-color-violet-5);
+  outline-offset: 2px;
+}

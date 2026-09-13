@@ -48,6 +48,7 @@ type VodService interface {
 	GenerateSpriteThumbnails(ctx context.Context, videoID uuid.UUID) (*rivertype.JobInsertResult, error)
 	GetVodClips(ctx context.Context, id uuid.UUID) ([]*ent.Vod, error)
 	GetVodChatHistogram(ctx context.Context, vodID uuid.UUID, resolutionSeconds float64) (map[int]int, error)
+	UpdateVodNotes(ctx context.Context, vID uuid.UUID, notes string) (*ent.Vod, error)
 }
 
 type CreateVodRequest struct {
@@ -70,6 +71,7 @@ type CreateVodRequest struct {
 	CaptionPath      string              `json:"caption_path"`
 	StreamedAt       string              `json:"streamed_at" validate:"required"`
 	Locked           bool                `json:"locked"`
+	Notes            string              `json:"notes" validate:"max=10000"`
 }
 
 type SearchQueryParams struct {
@@ -146,6 +148,7 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		CaptionPath:      req.CaptionPath,
 		StreamedAt:       streamedAt,
 		Locked:           req.Locked,
+		Notes:            req.Notes,
 	}
 
 	v, err := h.Service.VodService.CreateVod(cvrDto, cUUID)
@@ -355,6 +358,7 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 		CaptionPath:      req.CaptionPath,
 		StreamedAt:       streamedAt,
 		Locked:           req.Locked,
+		Notes:            req.Notes,
 	}
 
 	v, err := h.Service.VodService.UpdateVod(c, vID, cvrDto, cUUID)
@@ -788,6 +792,48 @@ func (h *Handler) LockVod(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 	return SuccessResponse(c, "", "video locked")
+}
+
+type UpdateVodNotesRequest struct {
+	Notes string `json:"notes" validate:"max=10000"`
+}
+
+// UpdateVodNotes godoc
+//
+//	@Summary		Update vod notes
+//	@Description	Update user notes for a vod
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string					true	"Vod ID"
+//	@Param			body	body		UpdateVodNotesRequest	true	"Vod notes"
+//	@Success		200		{object}	ent.Vod
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		404		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/notes [put]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
+func (h *Handler) UpdateVodNotes(c echo.Context) error {
+	vID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+	var req UpdateVodNotesRequest
+	if err := c.Bind(&req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+	if err := c.Validate(&req); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+	v, err := h.Service.VodService.UpdateVodNotes(c.Request().Context(), vID, req.Notes)
+	if err != nil {
+		if err.Error() == "vod not found" {
+			return ErrorResponse(c, http.StatusNotFound, err.Error())
+		}
+		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+	return SuccessResponse(c, v, "video notes updated")
 }
 
 func (h *Handler) GenerateStaticThumbnail(c echo.Context) error {

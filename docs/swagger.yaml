@@ -313,6 +313,13 @@ definitions:
         allOf:
         - $ref: '#/definitions/config.StorageTemplate'
         description: Storage folder/file templates.
+      tasks:
+        properties:
+          periodic_update_channels:
+            description: Enable periodic channel updates - can cause disks to spin
+              up as it checks profile images.
+            type: boolean
+        type: object
       video_check_interval_minutes:
         description: How often in minutes watched channels are checked for new videos.
         type: integer
@@ -989,6 +996,9 @@ definitions:
       locked:
         description: Locked holds the value of the "locked" field.
         type: boolean
+      notes:
+        description: User notes about why the VOD was kept.
+        type: string
       platform:
         allOf:
         - $ref: '#/definitions/utils.VideoPlatform'
@@ -1335,6 +1345,9 @@ definitions:
         type: string
       locked:
         type: boolean
+      notes:
+        maxLength: 10000
+        type: string
       platform:
         allOf:
         - $ref: '#/definitions/utils.VideoPlatform'
@@ -1757,6 +1770,12 @@ definitions:
     required:
     - status
     - vod_id
+    type: object
+  http.UpdateVodNotesRequest:
+    properties:
+      notes:
+        maxLength: 10000
+        type: string
     type: object
   http.UpdateWatchedChannelRequest:
     properties:
@@ -4657,6 +4676,48 @@ paths:
       summary: Get ffprobe data for video
       tags:
       - exec
+  /vod/{id}/notes:
+    put:
+      consumes:
+      - application/json
+      description: Update user notes for a vod
+      parameters:
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Vod notes
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.UpdateVodNotesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.Vod'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Update vod notes
+      tags:
+      - vods
   /vod/{id}/playlist:
     get:
       consumes:

@@ -263,6 +263,7 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	vodGroup.GET("/:id/chat/badges", h.GetChatBadges)
 	vodGroup.GET("/:id/chat/histogram", h.GetVodChatHistogram)
 	vodGroup.POST("/:id/lock", h.LockVod, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
+	vodGroup.PUT("/:id/notes", h.UpdateVodNotes, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
 	vodGroup.POST("/:id/generate-static-thumbnail", h.GenerateStaticThumbnail, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
 	vodGroup.POST("/:id/generate-sprite-thumbnails", h.GenerateSpriteThumbnails, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.EditorRole, utils.ApiKeyScopeVodWrite))
 	vodGroup.GET("/:id/thumbnails/vtt", h.GetVodSpriteThumbnails)

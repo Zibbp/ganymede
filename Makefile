@@ -29,6 +29,9 @@ dev_web:
 ent_generate:
 	go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/upsert ./ent/schema
 
+swagger_generate:
+	go run -mod=mod github.com/swaggo/swag/cmd/swag init -g cmd/server/main.go -o docs
+
 ent_new_schema:
 	@read -p "Enter schema name:" schema; \
 	go run -mod=mod entgo.io/ent/cmd/ent new $$schema
