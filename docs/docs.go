@@ -4147,6 +4147,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/vod/{id}/notes": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update notes for a VOD",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vods"
+                ],
+                "summary": "Update vod notes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vod ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Vod notes",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.UpdateVodNotesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ent.Vod"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/vod/{id}/playlist": {
             "get": {
                 "description": "Get vod playlists",
@@ -4670,6 +4737,15 @@ const docTemplate = `{
                             "$ref": "#/definitions/config.StorageTemplate"
                         }
                     ]
+                },
+                "tasks": {
+                    "type": "object",
+                    "properties": {
+                        "periodic_update_channels": {
+                            "description": "Enable periodic channel updates - can cause disks to spin up as it checks profile images.",
+                            "type": "boolean"
+                        }
+                    }
                 },
                 "video_check_interval_minutes": {
                     "description": "How often in minutes watched channels are checked for new videos.",
@@ -5663,6 +5739,10 @@ const docTemplate = `{
                     "description": "Locked holds the value of the \"locked\" field.",
                     "type": "boolean"
                 },
+                "notes": {
+                    "description": "User notes about why the VOD was kept.",
+                    "type": "string"
+                },
                 "platform": {
                     "description": "The platform the VOD is from, takes an enum.",
                     "allOf": [
@@ -6159,6 +6239,10 @@ const docTemplate = `{
                 },
                 "locked": {
                     "type": "boolean"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 10000
                 },
                 "platform": {
                     "enum": [
@@ -6770,6 +6854,15 @@ const docTemplate = `{
                 },
                 "vod_id": {
                     "type": "string"
+                }
+            }
+        },
+        "http.UpdateVodNotesRequest": {
+            "type": "object",
+            "properties": {
+                "notes": {
+                    "type": "string",
+                    "maxLength": 10000
                 }
             }
         },

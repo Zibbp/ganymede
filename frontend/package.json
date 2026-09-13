@@ -32,7 +32,10 @@
     "next-runtime-env": "^3.3.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-markdown": "^10.1.0",
     "recharts": "^3.8.1",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
     "vidstack": "^1.12.13",
     "zod": "^4.4.3",
     "zustand": "^5.0.13"
