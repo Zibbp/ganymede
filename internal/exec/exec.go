@@ -574,7 +574,14 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 }
 
 func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs string, output io.Writer) error {
-	if err := runPostProcessVideoFFmpeg(ctx, video, postProcessVideoFFmpegArgs(video, configFfmpegArgs), output); err != nil {
+	// An unknown codec keeps ffmpeg's default tagging, so a failed probe must
+	// not fail the archive.
+	sourceVideoCodec, err := ProbeVideoCodec(ctx, video.TmpVideoDownloadPath)
+	if err != nil {
+		log.Warn().Err(err).Str("video_id", video.ID.String()).Msg("could not probe source video codec")
+	}
+
+	if err := runPostProcessVideoFFmpeg(ctx, video, postProcessVideoFFmpegArgs(video, configFfmpegArgs, sourceVideoCodec), output); err != nil {
 		return err
 	}
 
@@ -592,7 +599,7 @@ func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs strin
 		Float64("stream_duration", duration.LongestStreamDuration).
 		Msg("detected anomalous container timestamps; normalizing each stream")
 
-	if err := runPostProcessVideoFFmpeg(ctx, video, normalizedPostProcessVideoFFmpegArgs(video, configFfmpegArgs), output); err != nil {
+	if err := runPostProcessVideoFFmpeg(ctx, video, normalizedPostProcessVideoFFmpegArgs(video, configFfmpegArgs, sourceVideoCodec), output); err != nil {
 		return fmt.Errorf("normalize finalized video timestamps: %w", err)
 	}
 
@@ -627,21 +634,48 @@ func runPostProcessVideoFFmpeg(ctx context.Context, video ent.Vod, ffmpegArgs []
 	return nil
 }
 
-func postProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string) []string {
-	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, false)
+func postProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, sourceVideoCodec string) []string {
+	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, sourceVideoCodec, false)
 }
 
-func normalizedPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string) []string {
-	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, true)
+func normalizedPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, sourceVideoCodec string) []string {
+	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, sourceVideoCodec, true)
 }
 
-func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, normalizeTimestamps bool) []string {
+// videoStreamIsCopied reports whether the configured arguments leave the video
+// stream untouched. Re-encoding produces a different codec than the source, so
+// a sample entry tag derived from the source must not be applied.
+func videoStreamIsCopied(configFfmpegArgs string) bool {
+	arr := strings.Fields(configFfmpegArgs)
+	for i := 0; i < len(arr)-1; i++ {
+		switch arr[i] {
+		case "-c", "-codec", "-c:v", "-codec:v", "-vcodec":
+			if arr[i+1] != "copy" {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, sourceVideoCodec string, normalizeTimestamps bool) []string {
 	arr := strings.Fields(configFfmpegArgs)
 	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4"}
 	if !normalizeTimestamps {
 		ffmpegArgs = append(ffmpegArgs, "-bsf:a", "aac_adtstoasc")
 	}
 	ffmpegArgs = append(ffmpegArgs, "-movflags", "+faststart")
+
+	// Copying HEVC keeps the source sample entry tag, which is hev1 for Twitch
+	// streams. Apple platforms only decode hvc1, so those recordings never load
+	// in Safari or on iOS. Setting the tag is a container-level change; the
+	// encoded bitstream, including its in-band parameter sets, stays as it is.
+	// ffmpeg rejects the tag outright when the output is not HEVC, so it is only
+	// added for a copied HEVC stream. Configured arguments follow and can
+	// therefore still override it.
+	if sourceVideoCodec == "hevc" && videoStreamIsCopied(configFfmpegArgs) {
+		ffmpegArgs = append(ffmpegArgs, "-tag:v", "hvc1")
+	}
 
 	ffmpegArgs = append(ffmpegArgs, "-metadata", "title="+video.Title)
 	ffmpegArgs = append(ffmpegArgs, arr...)

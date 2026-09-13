@@ -188,7 +188,7 @@ func TestPostProcessVideoFFmpegArgsIncludesTitleMetadata(t *testing.T) {
 		TmpVideoConvertPath:  "/tmp/output.mp4",
 	}
 
-	args := postProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy")
+	args := postProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy", "h264")
 
 	titleMetadataIndex := -1
 	for i := 0; i < len(args)-1; i++ {
@@ -214,7 +214,7 @@ func TestNormalizedPostProcessVideoFFmpegArgsResetEachStream(t *testing.T) {
 		TmpVideoDownloadPath: "/tmp/input.ts",
 		TmpVideoConvertPath:  "/tmp/output.mp4",
 	}
-	args := normalizedPostProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy")
+	args := normalizedPostProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy", "h264")
 
 	for i := 0; i < len(args)-1; i++ {
 		if args[i] == "-bsf" && args[i+1] == "setts=ts=TS-STARTDTS" {
@@ -222,6 +222,53 @@ func TestNormalizedPostProcessVideoFFmpegArgsResetEachStream(t *testing.T) {
 		}
 	}
 	t.Fatalf("normalized FFmpeg arguments do not reset stream timestamps: %v", args)
+}
+
+func TestPostProcessVideoFFmpegArgsTagsCopiedHevcForApple(t *testing.T) {
+	t.Parallel()
+
+	video := ent.Vod{
+		TmpVideoDownloadPath: "/tmp/input.ts",
+		TmpVideoConvertPath:  "/tmp/output.mp4",
+	}
+
+	tests := []struct {
+		name        string
+		codec       string
+		configArgs  string
+		wantTagging bool
+	}{
+		{name: "copied hevc", codec: "hevc", configArgs: "-c:v copy -c:a copy", wantTagging: true},
+		{name: "copied h264", codec: "h264", configArgs: "-c:v copy -c:a copy", wantTagging: false},
+		{name: "unknown codec", codec: "", configArgs: "-c:v copy -c:a copy", wantTagging: false},
+		// ffmpeg refuses an hvc1 tag on anything but HEVC, so re-encoding away
+		// from HEVC must not be tagged.
+		{name: "re-encoded hevc", codec: "hevc", configArgs: "-c:v libx264 -c:a copy", wantTagging: false},
+		{name: "re-encoded hevc via -c", codec: "hevc", configArgs: "-c libx264", wantTagging: false},
+		{name: "hevc with audio re-encode only", codec: "hevc", configArgs: "-c:v copy -c:a aac", wantTagging: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			for _, args := range [][]string{
+				postProcessVideoFFmpegArgs(video, tt.configArgs, tt.codec),
+				normalizedPostProcessVideoFFmpegArgs(video, tt.configArgs, tt.codec),
+			} {
+				tagged := false
+				for i := 0; i < len(args)-1; i++ {
+					if args[i] == "-tag:v" && args[i+1] == "hvc1" {
+						tagged = true
+						break
+					}
+				}
+				if tagged != tt.wantTagging {
+					t.Fatalf("hvc1 tagging = %v, want %v: %v", tagged, tt.wantTagging, args)
+				}
+			}
+		})
+	}
 }
 
 func TestPostProcessVideoNormalizesAnomalousContainerTimeline(t *testing.T) {
