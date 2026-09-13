@@ -1,4 +1,5 @@
 import { authChangePassword } from "@/app/hooks/useAuthentication";
+import useAuthStore from "@/app/store/useAuthStore";
 import { Button, PasswordInput } from "@mantine/core";
 import { useForm, schemaResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
@@ -13,6 +14,7 @@ type Props = {
 const AuthChangePassword = ({ handleClose }: Props) => {
   const t = useTranslations('AuthComponents')
   const [loading, setLoading] = useState(false)
+  const user = useAuthStore((state) => state.user)
 
   const schema = z.object({
     password: z.string().min(8, { message: t('validation.password') }),
@@ -56,22 +58,40 @@ const AuthChangePassword = ({ handleClose }: Props) => {
   return (
     <div>
       <form onSubmit={form.onSubmit((values) => handleSubmit(values.password, values.new_password, values.confirm_new_password))}>
+        {/* hidden username so password managers update the existing entry instead of creating a new one */}
+        <input
+          type="text"
+          name="username"
+          autoComplete="username"
+          value={user?.username ?? ''}
+          readOnly
+          tabIndex={-1}
+          aria-hidden="true"
+          style={{ display: 'none' }}
+        />
         <PasswordInput
           label={t('currentPasswordLabel')}
           key={form.key('password')}
           {...form.getInputProps('password')}
+          // name/autoComplete let password managers detect the form
+          name="current-password"
+          autoComplete="current-password"
           radius="md"
         />
         <PasswordInput
           label={t('newPasswordLabel')}
           key={form.key('new_password')}
           {...form.getInputProps('new_password')}
+          name="new-password"
+          autoComplete="new-password"
           radius="md"
         />
         <PasswordInput
           label={t('confirmPasswordLabel')}
           key={form.key('confirm_new_password')}
           {...form.getInputProps('confirm_new_password')}
+          name="confirm-new-password"
+          autoComplete="new-password"
           radius="md"
         />
 
