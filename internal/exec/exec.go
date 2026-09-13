@@ -642,20 +642,43 @@ func normalizedPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string
 	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, sourceVideoCodec, true)
 }
 
-// videoStreamIsCopied reports whether the configured arguments leave the video
-// stream untouched. Re-encoding produces a different codec than the source, so
-// a sample entry tag derived from the source must not be applied.
-func videoStreamIsCopied(configFfmpegArgs string) bool {
-	arr := strings.Fields(configFfmpegArgs)
-	for i := 0; i < len(arr)-1; i++ {
-		switch arr[i] {
-		case "-c", "-codec", "-c:v", "-codec:v", "-vcodec":
-			if arr[i+1] != "copy" {
-				return false
-			}
-		}
+// codecOptionAffectsVideo reports whether a -c/-codec option applies to a video
+// stream. The stream specifier may be absent (every stream), select a type
+// ("v", "v:0") or select a bare index ("1"), which cannot be resolved without
+// probing and is therefore assumed to reach video.
+func codecOptionAffectsVideo(option string) bool {
+	name, spec, hasSpec := strings.Cut(option, ":")
+	switch name {
+	case "-vcodec":
+		return true
+	case "-c", "-codec":
+	default:
+		return false
+	}
+	if !hasSpec || spec == "" {
+		return true
+	}
+	switch spec[0] {
+	case 'a', 's', 'd', 't':
+		return false
 	}
 	return true
+}
+
+// videoStreamIsCopied reports whether the configured arguments leave the video
+// stream untouched. Re-encoding produces a different codec than the source, so
+// a sample entry tag derived from the source must not be applied. ffmpeg uses
+// the last codec option that matches a stream, so later arguments win here too.
+func videoStreamIsCopied(configFfmpegArgs string) bool {
+	// The caller's own arguments start with "-c copy".
+	videoCodec := "copy"
+	arr := strings.Fields(configFfmpegArgs)
+	for i := 0; i < len(arr)-1; i++ {
+		if codecOptionAffectsVideo(arr[i]) {
+			videoCodec = arr[i+1]
+		}
+	}
+	return videoCodec == "copy"
 }
 
 func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, sourceVideoCodec string, normalizeTimestamps bool) []string {

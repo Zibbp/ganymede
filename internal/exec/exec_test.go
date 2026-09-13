@@ -246,6 +246,16 @@ func TestPostProcessVideoFFmpegArgsTagsCopiedHevcForApple(t *testing.T) {
 		{name: "re-encoded hevc", codec: "hevc", configArgs: "-c:v libx264 -c:a copy", wantTagging: false},
 		{name: "re-encoded hevc via -c", codec: "hevc", configArgs: "-c libx264", wantTagging: false},
 		{name: "hevc with audio re-encode only", codec: "hevc", configArgs: "-c:v copy -c:a aac", wantTagging: true},
+		// ffmpeg applies the last codec option matching a stream, so a later
+		// -c:v copy reinstates copying and a later re-encode revokes it.
+		{name: "generic re-encode overridden by video copy", codec: "hevc", configArgs: "-c aac -c:v copy", wantTagging: true},
+		{name: "video copy overridden by re-encode", codec: "hevc", configArgs: "-c:v copy -c:v libx264", wantTagging: false},
+		{name: "indexed video re-encode", codec: "hevc", configArgs: "-c:v:0 libx264", wantTagging: false},
+		{name: "indexed video copy", codec: "hevc", configArgs: "-codec:v:0 copy", wantTagging: true},
+		// A bare index cannot be resolved without probing, so it is assumed to
+		// reach the video stream.
+		{name: "bare stream index re-encode", codec: "hevc", configArgs: "-c:1 libx264", wantTagging: false},
+		{name: "audio and subtitle options only", codec: "hevc", configArgs: "-c:a aac -c:s mov_text", wantTagging: true},
 	}
 
 	for _, tt := range tests {
