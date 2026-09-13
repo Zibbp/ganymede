@@ -192,7 +192,11 @@ func (h *Handler) DeleteProgress(c echo.Context) error {
 //	@Security		ApiKeyCookieAuth
 func (h *Handler) GetLastPlaybacks(c echo.Context) error {
 	user := userFromContext(c)
-	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	limitParam := c.QueryParam("limit")
+	if limitParam == "" {
+		limitParam = "10"
+	}
+	limit, err := strconv.Atoi(limitParam)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid limit")
 	}

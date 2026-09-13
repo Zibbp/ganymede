@@ -198,10 +198,10 @@ func (h *Handler) GetVods(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id					path		string	true	"Vod ID"
-//	@Param			with_channel		query		string	false	"With channel"
-//	@Param			with_chapters		query		string	false	"With chapters"
-//	@Param			with_muted_segments	query		string	false	"With muted segments"
-//	@Param			with_queue			query		string	false	"With queue"
+//	@Param			with_channel		query		boolean	false	"With channel"
+//	@Param			with_chapters		query		boolean	false	"With chapters"
+//	@Param			with_muted_segments	query		boolean	false	"With muted segments"
+//	@Param			with_queue			query		boolean	false	"With queue"
 //	@Success		200					{object}	ent.Vod
 //	@Failure		400					{object}	utils.ErrorResponse
 //	@Failure		404					{object}	utils.ErrorResponse
@@ -224,6 +224,9 @@ func (h *Handler) GetVod(c echo.Context) error {
 
 		v, err := h.Service.VodService.GetVodByExternalId(c.Request().Context(), id)
 		if err != nil {
+			if err.Error() == "vod not found" {
+				return echo.NewHTTPError(http.StatusNotFound, "VOD not found by external ID: "+err.Error())
+			}
 			return echo.NewHTTPError(http.StatusBadRequest, "VOD not found by external ID: "+err.Error())
 		}
 		videoUUID = v.ID
@@ -275,10 +278,10 @@ func (h *Handler) GetVod(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			external_id			path		string	true	"Vod external ID"
-//	@Param			with_channel		query		string	false	"With channel"
-//	@Param			with_chapters		query		string	false	"With chapters"
-//	@Param			with_muted_segments	query		string	false	"With muted segments"
-//	@Param			with_queue			query		string	false	"With queue"
+//	@Param			with_channel		query		boolean	false	"With channel"
+//	@Param			with_chapters		query		boolean	false	"With chapters"
+//	@Param			with_muted_segments	query		boolean	false	"With muted segments"
+//	@Param			with_queue			query		boolean	false	"With queue"
 //	@Success		200					{object}	ent.Vod
 //	@Failure		400					{object}	utils.ErrorResponse
 //	@Failure		404					{object}	utils.ErrorResponse
@@ -296,7 +299,7 @@ func (h *Handler) GetVodByExternalId(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	string	true	"Vod ID"
-//	@Param			delete_files	query	string	false	"Delete files"
+//	@Param			delete_files	query	boolean	false	"Delete files"
 //	@Success		200
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		404	{object}	utils.ErrorResponse
@@ -536,7 +539,7 @@ func (h *Handler) GetVodPlaylists(c echo.Context) error {
 //		@Param			channel_id	query		string	false	"Channel ID"
 //	 @Param			types		query		string	false	"Types"
 //		@Param			playlist_id	query		string	false	"Playlist ID"
-//		@Param			processing	query		string	false	"Processing. Set to false to exclude videos that are still processing."
+//		@Param			processing	query		boolean	false	"Processing. Set to false to exclude videos that are still processing."
 //		@Success		200			{object}	vod.Pagination
 //		@Failure		400			{object}	utils.ErrorResponse
 //		@Failure		500			{object}	utils.ErrorResponse
