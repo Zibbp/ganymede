@@ -22,6 +22,20 @@ type Props = {
   playerRef: RefObject<MediaPlayerInstance | null>;
 };
 
+// External images are not auto-loaded: stored notes are viewed by other users
+// (or anonymously when login is not required), so auto-fetching http(s) image
+// URLs would disclose viewer IP/UA/Referer to a third-party host.
+// External images render as click-to-open links instead.
+const isExternalImageSrc = (src?: string): boolean => {
+  if (!src) return false;
+  const trimmed = src.trim().toLowerCase();
+  return (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("//")
+  );
+};
+
 // Timestamps are stored as markdown links so they survive as plain text and
 // render as clickable seek buttons: [01:23:45](#t=5025)
 const parseTimestampHref = (href?: string): number | null => {
@@ -208,9 +222,39 @@ const VideoNotes = ({ video, playerRef }: Props) => {
                   );
                 }
                 return (
-                  <a href={href} target="_blank" rel="noreferrer">
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={classes.markdownLink}
+                  >
                     {children}
                   </a>
+                );
+              },
+              img: ({ src, alt, title }) => {
+                if (!src) return null;
+                if (isExternalImageSrc(src)) {
+                  return (
+                    <a
+                      href={src}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={classes.markdownLink}
+                    >
+                      {alt || src}
+                    </a>
+                  );
+                }
+                return (
+                  <img
+                    src={src}
+                    alt={alt}
+                    title={title}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    style={{ maxWidth: "100%" }}
+                  />
                 );
               },
             }}

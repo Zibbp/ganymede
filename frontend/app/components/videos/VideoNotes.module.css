@@ -1,3 +1,14 @@
+.markdownLink {
+  color: var(--mantine-color-anchor);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
+.markdownLink:hover {
+  opacity: 0.85;
+}
+
 .timestampLink {
   appearance: none;
   background: transparent;
