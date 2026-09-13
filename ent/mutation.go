@@ -29,6 +29,7 @@ import (
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/sessions"
+	"github.com/zibbp/ganymede/ent/storagefinding"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -60,6 +61,7 @@ const (
 	TypePlaylistRuleGroup = "PlaylistRuleGroup"
 	TypeQueue             = "Queue"
 	TypeSessions          = "Sessions"
+	TypeStorageFinding    = "StorageFinding"
 	TypeTwitchCategory    = "TwitchCategory"
 	TypeUser              = "User"
 	TypeVod               = "Vod"
@@ -13517,6 +13519,536 @@ func (m *SessionsMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *SessionsMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Sessions edge %s", name)
+}
+
+// StorageFindingMutation represents an operation that mutates the StorageFinding nodes in the graph.
+type StorageFindingMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	kind          *storagefinding.Kind
+	_path         *string
+	size_bytes    *int64
+	addsize_bytes *int64
+	detected_at   *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*StorageFinding, error)
+	predicates    []predicate.StorageFinding
+}
+
+var _ ent.Mutation = (*StorageFindingMutation)(nil)
+
+// storagefindingOption allows management of the mutation configuration using functional options.
+type storagefindingOption func(*StorageFindingMutation)
+
+// newStorageFindingMutation creates new mutation for the StorageFinding entity.
+func newStorageFindingMutation(c config, op Op, opts ...storagefindingOption) *StorageFindingMutation {
+	m := &StorageFindingMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeStorageFinding,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withStorageFindingID sets the ID field of the mutation.
+func withStorageFindingID(id uuid.UUID) storagefindingOption {
+	return func(m *StorageFindingMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *StorageFinding
+		)
+		m.oldValue = func(ctx context.Context) (*StorageFinding, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().StorageFinding.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withStorageFinding sets the old StorageFinding of the mutation.
+func withStorageFinding(node *StorageFinding) storagefindingOption {
+	return func(m *StorageFindingMutation) {
+		m.oldValue = func(context.Context) (*StorageFinding, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m StorageFindingMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m StorageFindingMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of StorageFinding entities.
+func (m *StorageFindingMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *StorageFindingMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *StorageFindingMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().StorageFinding.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetKind sets the "kind" field.
+func (m *StorageFindingMutation) SetKind(s storagefinding.Kind) {
+	m.kind = &s
+}
+
+// Kind returns the value of the "kind" field in the mutation.
+func (m *StorageFindingMutation) Kind() (r storagefinding.Kind, exists bool) {
+	v := m.kind
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKind returns the old "kind" field's value of the StorageFinding entity.
+// If the StorageFinding object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageFindingMutation) OldKind(ctx context.Context) (v storagefinding.Kind, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKind is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKind requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKind: %w", err)
+	}
+	return oldValue.Kind, nil
+}
+
+// ResetKind resets all changes to the "kind" field.
+func (m *StorageFindingMutation) ResetKind() {
+	m.kind = nil
+}
+
+// SetPath sets the "path" field.
+func (m *StorageFindingMutation) SetPath(s string) {
+	m._path = &s
+}
+
+// Path returns the value of the "path" field in the mutation.
+func (m *StorageFindingMutation) Path() (r string, exists bool) {
+	v := m._path
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPath returns the old "path" field's value of the StorageFinding entity.
+// If the StorageFinding object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageFindingMutation) OldPath(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPath is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPath requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPath: %w", err)
+	}
+	return oldValue.Path, nil
+}
+
+// ResetPath resets all changes to the "path" field.
+func (m *StorageFindingMutation) ResetPath() {
+	m._path = nil
+}
+
+// SetSizeBytes sets the "size_bytes" field.
+func (m *StorageFindingMutation) SetSizeBytes(i int64) {
+	m.size_bytes = &i
+	m.addsize_bytes = nil
+}
+
+// SizeBytes returns the value of the "size_bytes" field in the mutation.
+func (m *StorageFindingMutation) SizeBytes() (r int64, exists bool) {
+	v := m.size_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSizeBytes returns the old "size_bytes" field's value of the StorageFinding entity.
+// If the StorageFinding object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageFindingMutation) OldSizeBytes(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSizeBytes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSizeBytes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSizeBytes: %w", err)
+	}
+	return oldValue.SizeBytes, nil
+}
+
+// AddSizeBytes adds i to the "size_bytes" field.
+func (m *StorageFindingMutation) AddSizeBytes(i int64) {
+	if m.addsize_bytes != nil {
+		*m.addsize_bytes += i
+	} else {
+		m.addsize_bytes = &i
+	}
+}
+
+// AddedSizeBytes returns the value that was added to the "size_bytes" field in this mutation.
+func (m *StorageFindingMutation) AddedSizeBytes() (r int64, exists bool) {
+	v := m.addsize_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSizeBytes resets all changes to the "size_bytes" field.
+func (m *StorageFindingMutation) ResetSizeBytes() {
+	m.size_bytes = nil
+	m.addsize_bytes = nil
+}
+
+// SetDetectedAt sets the "detected_at" field.
+func (m *StorageFindingMutation) SetDetectedAt(t time.Time) {
+	m.detected_at = &t
+}
+
+// DetectedAt returns the value of the "detected_at" field in the mutation.
+func (m *StorageFindingMutation) DetectedAt() (r time.Time, exists bool) {
+	v := m.detected_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDetectedAt returns the old "detected_at" field's value of the StorageFinding entity.
+// If the StorageFinding object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageFindingMutation) OldDetectedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDetectedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDetectedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDetectedAt: %w", err)
+	}
+	return oldValue.DetectedAt, nil
+}
+
+// ResetDetectedAt resets all changes to the "detected_at" field.
+func (m *StorageFindingMutation) ResetDetectedAt() {
+	m.detected_at = nil
+}
+
+// Where appends a list predicates to the StorageFindingMutation builder.
+func (m *StorageFindingMutation) Where(ps ...predicate.StorageFinding) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the StorageFindingMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *StorageFindingMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.StorageFinding, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *StorageFindingMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *StorageFindingMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (StorageFinding).
+func (m *StorageFindingMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *StorageFindingMutation) Fields() []string {
+	fields := make([]string, 0, 4)
+	if m.kind != nil {
+		fields = append(fields, storagefinding.FieldKind)
+	}
+	if m._path != nil {
+		fields = append(fields, storagefinding.FieldPath)
+	}
+	if m.size_bytes != nil {
+		fields = append(fields, storagefinding.FieldSizeBytes)
+	}
+	if m.detected_at != nil {
+		fields = append(fields, storagefinding.FieldDetectedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *StorageFindingMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case storagefinding.FieldKind:
+		return m.Kind()
+	case storagefinding.FieldPath:
+		return m.Path()
+	case storagefinding.FieldSizeBytes:
+		return m.SizeBytes()
+	case storagefinding.FieldDetectedAt:
+		return m.DetectedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *StorageFindingMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case storagefinding.FieldKind:
+		return m.OldKind(ctx)
+	case storagefinding.FieldPath:
+		return m.OldPath(ctx)
+	case storagefinding.FieldSizeBytes:
+		return m.OldSizeBytes(ctx)
+	case storagefinding.FieldDetectedAt:
+		return m.OldDetectedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown StorageFinding field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *StorageFindingMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case storagefinding.FieldKind:
+		v, ok := value.(storagefinding.Kind)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKind(v)
+		return nil
+	case storagefinding.FieldPath:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPath(v)
+		return nil
+	case storagefinding.FieldSizeBytes:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSizeBytes(v)
+		return nil
+	case storagefinding.FieldDetectedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDetectedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown StorageFinding field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *StorageFindingMutation) AddedFields() []string {
+	var fields []string
+	if m.addsize_bytes != nil {
+		fields = append(fields, storagefinding.FieldSizeBytes)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *StorageFindingMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case storagefinding.FieldSizeBytes:
+		return m.AddedSizeBytes()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *StorageFindingMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case storagefinding.FieldSizeBytes:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSizeBytes(v)
+		return nil
+	}
+	return fmt.Errorf("unknown StorageFinding numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *StorageFindingMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *StorageFindingMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *StorageFindingMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown StorageFinding nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *StorageFindingMutation) ResetField(name string) error {
+	switch name {
+	case storagefinding.FieldKind:
+		m.ResetKind()
+		return nil
+	case storagefinding.FieldPath:
+		m.ResetPath()
+		return nil
+	case storagefinding.FieldSizeBytes:
+		m.ResetSizeBytes()
+		return nil
+	case storagefinding.FieldDetectedAt:
+		m.ResetDetectedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown StorageFinding field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *StorageFindingMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *StorageFindingMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *StorageFindingMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *StorageFindingMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *StorageFindingMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *StorageFindingMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *StorageFindingMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown StorageFinding unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *StorageFindingMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown StorageFinding edge %s", name)
 }
 
 // TwitchCategoryMutation represents an operation that mutates the TwitchCategory nodes in the graph.

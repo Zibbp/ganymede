@@ -29,6 +29,7 @@ func New() (*river.Workers, error) {
 		func() error { return river.AddWorkerSafely(workers, &tasks.ConvertLiveChatWorker{}) },
 		func() error { return river.AddWorkerSafely(workers, &tasks_periodic.CheckChannelsForNewVideosWorker{}) },
 		func() error { return river.AddWorkerSafely(workers, &tasks_periodic.PruneVideosWorker{}) },
+		func() error { return river.AddWorkerSafely(workers, &tasks_periodic.ReconcileStorageWorker{}) },
 		func() error { return river.AddWorkerSafely(workers, &tasks_periodic.ImportCategoriesWorker{}) },
 		func() error { return river.AddWorkerSafely(workers, &tasks_periodic.AuthenticatePlatformWorker{}) },
 		func() error { return river.AddWorkerSafely(workers, &tasks_periodic.FetchJWKSWorker{}) },

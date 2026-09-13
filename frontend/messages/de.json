@@ -141,6 +141,7 @@
       "apiKeys": "API-Schlüssel",
       "notifications": "Benachrichtigungen",
       "settings": "Einstellungen",
+      "storage": "Speicher",
       "tasks": "Aufgaben",
       "information": "Informationen"
     },
@@ -321,6 +322,44 @@
     },
     "submit": "Einstellungen speichern"
   },
+  "AdminStoragePage": {
+    "title": "Admin - Speicher",
+    "loading": "Speicherbefunde werden geladen",
+    "error": "Fehler beim Laden der Speicherbefunde",
+    "header": "Speicher verwalten",
+    "body": "Verzeichnisse, die die Dateien eines Videos enthalten, das nicht in der Datenbank steht. Sie bleiben zurück, wenn ein Video gelöscht wird, ohne seine Dateien zu löschen, und lassen sich wieder importieren oder von der Festplatte löschen. Ein Kanal wird nur durchsucht, wenn jedes seiner Videos dort liegt, wo die Datenbank es vermutet.",
+    "videosDirectory": "Video-Verzeichnis:",
+    "summary": "{length} Verzeichnisse belegen {size}.",
+    "search": "Verzeichnisse suchen...",
+    "scan": {
+      "start": "Jetzt suchen",
+      "running": "Suche läuft",
+      "runningSince": "Suche läuft seit {time}.",
+      "lastCompleted": "Letzte Suche abgeschlossen {time}.",
+      "lastFailed": "Letzte Suche fehlgeschlagen {time}, siehe Task-Protokoll.",
+      "never": "Es wurde noch nicht gesucht. Starte eine Suche, um Verzeichnisse zu finden.",
+      "unknown": "Die letzte Suche steht nicht mehr im Task-Verlauf, die Liste kann veraltet sein.",
+      "starting": "Suche wird gestartet.",
+      "finishedNotification": "Suche abgeschlossen, {length} Verzeichnisse gefunden.",
+      "failedNotification": "Die Suche ist fehlgeschlagen, siehe Task-Protokoll.",
+      "pendingNotification": "Die Suche ist noch nicht fertig, schau auf der Task-Seite nach."
+    },
+    "scanStartedNotification": "Suche gestartet",
+    "actions": {
+      "delete": "Verzeichnis löschen",
+      "import": "Verzeichnis importieren",
+      "deleteSelected": "{length} ausgewählte löschen",
+      "importSelected": "{length} ausgewählte importieren"
+    },
+    "deleteModal": "Verzeichnisse löschen",
+    "importModal": "Verzeichnisse importieren",
+    "columns": {
+      "path": "Pfad",
+      "size": "Größe",
+      "detectedAt": "Gefunden am",
+      "actions": "Aktionen"
+    }
+  },
   "AdminTasksPage": {
     "title": "Admin - Aufgaben",
     "taskStartedNotification": "Aufgabe gestartet, siehe Container-Protokolle für weitere Informationen.",
@@ -351,7 +390,9 @@
     "processPlaylistVideoRules": "Playlist-Videoregeln verarbeiten",
     "processPlaylistVideoRulesDescription": "Videoregeln für Playlists verarbeiten. Dies überprüft, ob Videos basierend auf den definierten Regeln zu den Playlists hinzugefügt werden sollten. Wird jede Stunde ausgeführt.",
     "updatePlatformChannels": "Plattformkanäle aktualisieren",
-    "updatePlatformChannelsDescription": "Aktualisiert die Kanalinformationen von der Plattform für alle Kanäle. Dazu gehören Anzeigename und Profilbild. Wird alle 12 Stunden ausgeführt."
+    "updatePlatformChannelsDescription": "Aktualisiert die Kanalinformationen von der Plattform für alle Kanäle. Dazu gehören Anzeigename und Profilbild. Wird alle 12 Stunden ausgeführt.",
+    "reconcileStorage": "Speicher abgleichen",
+    "reconcileStorageDescription": "Findet Verzeichnisse im Video-Verzeichnis, die die Dateien eines Videos enthalten, das nicht in der Datenbank steht. Das Ergebnis erscheint auf der Speicher-Seite."
   },
   "AdminUsersPage": {
     "title": "Admin - Benutzer",
@@ -706,6 +747,15 @@
     "editButton": "Kanal-Überwachung bearbeiten",
     "updateMetadataLabel": "Metadaten aktualisieren",
     "updateMetadataDescription": "Aktualisiere die Metadaten des Livestreams nach {minutes} Minuten, nachdem die Livestream-Archivierung gestartet wurde. Dazu gehören Thumbnails und Titel. Auf 0 setzen, um es zu deaktivieren."
+  },
+  "AdminStorageComponents": {
+    "deleteText": "Bist du sicher, dass du die {length} ausgewählten Verzeichnisse mit insgesamt {size} endgültig von der Festplatte löschen möchtest?",
+    "deleteButton": "Von der Festplatte löschen",
+    "deletedNotification": "{length} Verzeichnisse gelöscht",
+    "importText": "Die {length} ausgewählten Verzeichnisse mit insgesamt {size} als Videos importieren? Die Metadaten werden aus der Info-Datei gelesen, die der Archivierer neben dem Video abgelegt hat.",
+    "importButton": "Importieren",
+    "importedNotification": "{length} Verzeichnisse importiert",
+    "partialTitle": "{done} erledigt, {failed} fehlgeschlagen"
   },
   "AuthComponents": {
     "validation": {
