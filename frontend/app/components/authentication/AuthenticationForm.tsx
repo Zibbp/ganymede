@@ -121,6 +121,13 @@ export function AuthenticationForm({ type }: Props) {
             placeholder={t('usernameDescription')}
             key={form.key('username')}
             {...form.getInputProps('username')}
+            // name/id/autoComplete let password managers detect the form
+            id="username"
+            name="username"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             radius="md"
           />
 
@@ -129,6 +136,9 @@ export function AuthenticationForm({ type }: Props) {
             placeholder={t('passwordDescription')}
             key={form.key('password')}
             {...form.getInputProps('password')}
+            id="password"
+            name="password"
+            autoComplete={type == AuthFormType.Login ? "current-password" : "new-password"}
             radius="md"
           />
         </Stack>
