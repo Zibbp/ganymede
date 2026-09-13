@@ -288,7 +288,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/system/overview": {
+        "/admin/system-overview": {
             "get": {
                 "security": [
                     {
@@ -325,7 +325,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/video/statistics": {
+        "/admin/video-statistics": {
             "get": {
                 "security": [
                     {
@@ -399,6 +399,60 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/ent.Channel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/archive/convert-twitch-live-chat": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Convert a twitch live chat file to TDL chat format (debug route)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "archive"
+                ],
+                "summary": "Convert twitch live chat file",
+                "parameters": [
+                    {
+                        "description": "Convert chat",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.ConvertTwitchChatRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -579,6 +633,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    }
+                ],
+                "description": "Logout a user (destroys session)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout a user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/me": {
             "get": {
                 "security": [
@@ -748,6 +836,214 @@ const docTemplate = `{
                         "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/blocked-video": {
+            "get": {
+                "description": "Get all blocked videos",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blocked-video"
+                ],
+                "summary": "Get blocked videos",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ent.BlockedVideos"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/blocked-video/{id}": {
+            "get": {
+                "description": "Check if a video is on the blocked list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blocked-video"
+                ],
+                "summary": "Check if video is blocked",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Video ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Add a video to the blocked list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blocked-video"
+                ],
+                "summary": "Block a video",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Video ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Remove a video from the blocked list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blocked-video"
+                ],
+                "summary": "Unblock a video",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Video ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/category": {
+            "get": {
+                "description": "Get cached twitch categories",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category"
+                ],
+                "summary": "Get twitch categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ent.TwitchCategory"
+                            }
                         }
                     },
                     "500": {
@@ -1067,6 +1363,149 @@ const docTemplate = `{
                 }
             }
         },
+        "/channel/{id}/update-image": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update channel image from platform",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "channel"
+                ],
+                "summary": "Update channel image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Channel ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chapter/video/{videoId}": {
+            "get": {
+                "description": "Get chapters for a video",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chapter"
+                ],
+                "summary": "Get video chapters",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Video ID",
+                        "name": "videoId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ent.Chapter"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chapter/video/{videoId}/webvtt": {
+            "get": {
+                "description": "Get chapters for a video in WebVTT format",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "chapter"
+                ],
+                "summary": "Get video chapters as WebVTT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Video ID",
+                        "name": "videoId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/config": {
             "get": {
                 "security": [
@@ -1237,6 +1676,43 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/live/check": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Trigger a manual check for live streams on watched channels",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Live"
+                ],
+                "summary": "Manually check for live streams",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -1728,6 +2204,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/playback/last": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    }
+                ],
+                "description": "Get last playback entries for the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Playback"
+                ],
+                "summary": "Get last playbacks",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/playback.GetPlaybackResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/playback/progress": {
             "post": {
                 "security": [
@@ -1779,55 +2304,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/playback/progress/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Get playback progress",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Playback"
-                ],
-                "summary": "Get progress",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "vod id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ent.Playback"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/playback/start": {
             "post": {
                 "description": "Adds a view to the video local view count",
@@ -1845,8 +2321,8 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "vod id",
-                        "name": "id",
-                        "in": "path",
+                        "name": "video_id",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -1924,6 +2400,53 @@ const docTemplate = `{
             }
         },
         "/playback/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    }
+                ],
+                "description": "Get playback progress",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Playback"
+                ],
+                "summary": "Get progress",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "vod id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ent.Playback"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
@@ -2398,60 +2921,6 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Test rules for a playlist against a video id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Playlist"
-                ],
-                "summary": "Test playlist rules",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "playlist id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "video id",
-                        "name": "video_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
                 "description": "Set rules for a playlist this will delete all existing rules and set new ones",
                 "consumes": [
                     "application/json"
@@ -2486,6 +2955,65 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/{id}/rules/test": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Test rules for a playlist against a video id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Playlist"
+                ],
+                "summary": "Test playlist rules",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "playlist id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "video id",
+                        "name": "video_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
                         }
                     },
                     "400": {
@@ -2691,6 +3219,17 @@ const docTemplate = `{
                     "queue"
                 ],
                 "summary": "Start a queue task for a queue",
+                "parameters": [
+                    {
+                        "description": "Start queue task",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.StartQueueTaskRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3417,7 +3956,81 @@ const docTemplate = `{
                 }
             }
         },
-        "/vod/pagination": {
+        "/vod/external_id/{external_id}": {
+            "get": {
+                "description": "Get a vod by platform external ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vods"
+                ],
+                "summary": "Get a vod by external ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vod external ID",
+                        "name": "external_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "With channel",
+                        "name": "with_channel",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "With chapters",
+                        "name": "with_chapters",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "With muted segments",
+                        "name": "with_muted_segments",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "With queue",
+                        "name": "with_queue",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ent.Vod"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vod/paginate": {
             "get": {
                 "description": "Get vods pagination",
                 "consumes": [
@@ -3555,7 +4168,7 @@ const docTemplate = `{
         },
         "/vod/{id}": {
             "get": {
-                "description": "Get a vod",
+                "description": "Get a vod by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -3590,6 +4203,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "With muted segments",
                         "name": "with_muted_segments",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "With queue",
+                        "name": "with_queue",
                         "in": "query"
                     }
                 ],
@@ -3973,6 +4592,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/vod/{id}/chat/histogram": {
+            "get": {
+                "description": "Get a histogram of chat activity for a vod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vods"
+                ],
+                "summary": "Get vod chat histogram",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vod ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/vod/{id}/chat/seek": {
             "get": {
                 "description": "Get N number of vod chat comments before the start time (used for seeking)",
@@ -4089,8 +4752,55 @@ const docTemplate = `{
                 }
             }
         },
-        "/vod/{id}/ffprobe": {
+        "/vod/{id}/clips": {
             "get": {
+                "description": "Get clips that were created from a vod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vods"
+                ],
+                "summary": "Get clips of a vod",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vod ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ent.Vod"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vod/{id}/ffprobe": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyCookieAuth": []
@@ -4107,7 +4817,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "exec"
+                    "vods"
                 ],
                 "summary": "Get ffprobe data for video",
                 "parameters": [
@@ -4134,6 +4844,168 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vod/{id}/generate-sprite-thumbnails": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Queue a job to generate sprite thumbnails for a vod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vods"
+                ],
+                "summary": "Generate sprite thumbnails for a vod",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vod ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vod/{id}/generate-static-thumbnail": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Queue a job to generate a static thumbnail for a vod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vods"
+                ],
+                "summary": "Generate static thumbnail for a vod",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vod ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vod/{id}/lock": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Lock or unlock a vod to prevent deletion",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vods"
+                ],
+                "summary": "Lock or unlock a vod",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vod ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Set to false to unlock, defaults to true",
+                        "name": "locked",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -4257,6 +5129,50 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vod/{id}/thumbnails/vtt": {
+            "get": {
+                "description": "Get a WebVTT file describing sprite thumbnails for a vod",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "vods"
+                ],
+                "summary": "Get sprite thumbnails VTT for a vod",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vod ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -4832,6 +5748,19 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "folder_template": {
+                    "type": "string"
+                }
+            }
+        },
+        "ent.BlockedVideos": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "CreatedAt holds the value of the \"created_at\" field.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.\nThe ID of the blocked vod.",
                     "type": "string"
                 }
             }
@@ -5619,6 +6548,35 @@ const docTemplate = `{
                 }
             }
         },
+        "ent.TwitchCategory": {
+            "type": "object",
+            "properties": {
+                "box_art_url": {
+                    "description": "BoxArtURL holds the value of the \"box_art_url\" field.",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "CreatedAt holds the value of the \"created_at\" field.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "igdb_id": {
+                    "description": "IgdbID holds the value of the \"igdb_id\" field.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name holds the value of the \"name\" field.",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
+                    "type": "string"
+                }
+            }
+        },
         "ent.User": {
             "type": "object",
             "properties": {
@@ -6115,6 +7073,32 @@ const docTemplate = `{
                 }
             }
         },
+        "http.ConvertTwitchChatRequest": {
+            "type": "object",
+            "properties": {
+                "channel_id": {
+                    "type": "integer"
+                },
+                "channel_name": {
+                    "type": "string"
+                },
+                "first_message_epoch": {
+                    "type": "string"
+                },
+                "live_chat_path": {
+                    "type": "string"
+                },
+                "previous_video_id": {
+                    "type": "string"
+                },
+                "video_external_id": {
+                    "type": "string"
+                },
+                "video_id": {
+                    "type": "string"
+                }
+            }
+        },
         "http.CreateApiKeyRequest": {
             "type": "object",
             "required": [
@@ -6564,6 +7548,38 @@ const docTemplate = `{
                 },
                 "vod_id": {
                     "type": "string"
+                }
+            }
+        },
+        "http.StartQueueTaskRequest": {
+            "type": "object",
+            "required": [
+                "queue_id",
+                "task_name"
+            ],
+            "properties": {
+                "continue": {
+                    "type": "boolean"
+                },
+                "queue_id": {
+                    "type": "string"
+                },
+                "task_name": {
+                    "type": "string",
+                    "enum": [
+                        "task_vod_create_folder",
+                        "task_vod_download_thumbnail",
+                        "task_vod_save_info",
+                        "task_video_download",
+                        "task_video_convert",
+                        "task_video_move",
+                        "task_chat_download",
+                        "task_chat_convert",
+                        "task_chat_render",
+                        "task_chat_move",
+                        "task_live_chat_download",
+                        "task_live_video_download"
+                    ]
                 }
             }
         },
@@ -7171,6 +8187,34 @@ const docTemplate = `{
                 },
                 "viewable": {
                     "type": "string"
+                }
+            }
+        },
+        "playback.GetPlayback": {
+            "type": "object",
+            "properties": {
+                "playback": {
+                    "$ref": "#/definitions/ent.Playback"
+                },
+                "vod": {
+                    "$ref": "#/definitions/ent.Vod"
+                }
+            }
+        },
+        "playback.GetPlaybackResp": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/playback.GetPlayback"
+                    }
+                },
+                "playback": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Playback"
+                    }
                 }
             }
         },

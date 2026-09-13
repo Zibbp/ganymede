@@ -305,6 +305,18 @@ func (h *Handler) DeleteLiveWatchedChannel(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// Check godoc
+//
+//	@Summary		Manually check for live streams
+//	@Description	Trigger a manual check for live streams on watched channels
+//	@Tags			Live
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	string
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/live/check [get]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) Check(c echo.Context) error {
 	err := h.Service.LiveService.Check(c.Request().Context())
 	if err != nil {

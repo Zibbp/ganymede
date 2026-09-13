@@ -318,13 +318,14 @@ func (h *Handler) DeleteVodFromPlaylist(c echo.Context) error {
 //	@Tags			Playlist
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string					true	"playlist id"
+//	@Param			id		path		string					true	"playlist id"
 //	@Param			rules	body		SetPlaylistRulesRequest	true	"rules"
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/playlist/{id}/rules [post]
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/playlist/{id}/rules [put]
 //	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) SetPlaylistRules(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -397,12 +398,12 @@ func (h *Handler) GetPlaylistRules(c echo.Context) error {
 //	@Tags			Playlist
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string					true	"playlist id"
-//	@Param			video_id	query	string					true	"video id"
-//	@Success		200	{object}	bool
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/playlist/{id}/rules [put]
+//	@Param			id			path		string	true	"playlist id"
+//	@Param			video_id	query		string	true	"video id"
+//	@Success		200			{object}	bool
+//	@Failure		400			{object}	utils.ErrorResponse
+//	@Failure		500			{object}	utils.ErrorResponse
+//	@Router			/playlist/{id}/rules/test [post]
 //	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) TestPlaylistRules(c echo.Context) error {
