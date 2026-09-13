@@ -71,7 +71,7 @@ type CreateVodRequest struct {
 	CaptionPath      string              `json:"caption_path"`
 	StreamedAt       string              `json:"streamed_at" validate:"required"`
 	Locked           bool                `json:"locked"`
-	Notes            string              `json:"notes" validate:"max=10000"`
+	Notes            *string             `json:"notes" validate:"omitempty,max=10000"`
 }
 
 type SearchQueryParams struct {
@@ -801,7 +801,7 @@ type UpdateVodNotesRequest struct {
 // UpdateVodNotes godoc
 //
 //	@Summary		Update vod notes
-//	@Description	Update user notes for a vod
+//	@Description	Update notes for a VOD
 //	@Tags			vods
 //	@Accept			json
 //	@Produce		json

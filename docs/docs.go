@@ -4157,7 +4157,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update user notes for a vod",
+                "description": "Update notes for a VOD",
                 "consumes": [
                     "application/json"
                 ],

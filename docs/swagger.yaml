@@ -4680,7 +4680,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update user notes for a vod
+      description: Update notes for a VOD
       parameters:
       - description: Vod ID
         in: path
