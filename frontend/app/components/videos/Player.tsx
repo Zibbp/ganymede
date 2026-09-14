@@ -134,17 +134,19 @@ const VideoPlayer = ({ video, ref }: Params) => {
     });
 
     if (!hasInitializedPlaybackTime.current) {
-      if (playbackData && playbackData.time != null) {
+      // A shared link names the moment it wants to show, so it wins over
+      // whatever this viewer watched before. The order matters now that the
+      // source arrives asynchronously: this used to run before the saved
+      // position had been fetched, so the link won by timing rather than by
+      // rule, and would otherwise start losing that race.
+      const time = searchParams.get("t");
+      if (time !== null) {
+        player.current!.currentTime = parseInt(time);
+        hasInitializedPlaybackTime.current = true
+      } else if (playbackData && playbackData.time != null) {
         // Resume from server-side playback progress.
         player.current!.currentTime = playbackData.time
         hasInitializedPlaybackTime.current = true
-      } else {
-        // Check if time is set in the url
-        const time = searchParams.get("t");
-        if (time !== null) {
-          player.current!.currentTime = parseInt(time);
-          hasInitializedPlaybackTime.current = true
-        }
       }
     }
 
