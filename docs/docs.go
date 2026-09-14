@@ -4576,6 +4576,10 @@ const docTemplate = `{
                             "description": "Generate sprite thumbnails for scrubbing.",
                             "type": "boolean"
                         },
+                        "generate_video_playlist": {
+                            "description": "Write a playlist beside each video so long recordings play on Apple devices. Drops subtitle streams, which the HLS muxer rejects.",
+                            "type": "boolean"
+                        },
                         "save_as_hls": {
                             "description": "Save as HLS rather than MP4.",
                             "type": "boolean"

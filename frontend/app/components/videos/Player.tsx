@@ -7,7 +7,8 @@ import classes from "./Player.module.css"
 import { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { env } from 'next-runtime-env';
 import dayjs from 'dayjs';
-import { escapeURL } from '@/app/util/util';
+import { escapeURL, playlistPathForVideo } from '@/app/util/util';
+import { usePlaylistSource } from '@/app/hooks/usePlaylistSource';
 import { PlaybackStatus, useFetchPlaybackForVideo, useSetPlaybackProgressForVideo, useStartPlaybackForVideo, useUpdatePlaybackProgressForVideo } from '@/app/hooks/usePlayback';
 import { useAxiosPrivate } from '@/app/hooks/useAxios';
 import useAuthStore from '@/app/store/useAuthStore';
@@ -49,6 +50,9 @@ const VideoPlayer = ({ video, ref }: Params) => {
 
   const hasStartedPlayback = useRef(false);
   const hasInitializedPlaybackTime = useRef(false);
+  // Where to pick up after swapping the source, so giving up on a playlist
+  // mid-playback does not throw the viewer back to the start.
+  const resumeAfterSourceChange = useRef<number | null>(null);
 
   const [playerVolume, setPlayerVolume] = useState(1);
 
@@ -79,12 +83,25 @@ const VideoPlayer = ({ video, ref }: Params) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const { playlistUrl, dismissPlaylist } = usePlaylistSource(video.video_path, video.processing)
+
+  useEffect(() => {
+    if (video.thumbnail_path) {
+      setVideoPoster(`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.thumbnail_path)}`)
+    }
+  }, [video.thumbnail_path])
+
   useEffect(() => {
     if (!player) return
+    // Waiting for the playlist check keeps the player from loading the video
+    // file and switching away from it a moment later.
+    if (playlistUrl === undefined) return
 
-    const videoExtension = video.video_path.substr(video.video_path.length - 4)
+    // A video that is itself a playlist has none beside it, which is the same
+    // test playlistPathForVideo makes.
+    const videoIsPlaylist = playlistPathForVideo(video.video_path) == null
     let videoType: VideoMimeType = "video/mp4"
-    if (videoExtension == "m3u8") {
+    if (videoIsPlaylist) {
       videoType = "video/object";
     }
 
@@ -94,15 +111,13 @@ const VideoPlayer = ({ video, ref }: Params) => {
         src: `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.tmp_video_hls_path)}/${video.ext_id}-video.m3u8`,
         type: "application/x-mpegurl"
       })
+    } else if (playlistUrl) {
+      setVideoSource({ src: playlistUrl, type: "application/x-mpegurl" })
     } else {
       setVideoSource({
         src: `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.video_path)}`,
         type: videoType
       })
-    }
-
-    if (video.thumbnail_path) {
-      setVideoPoster(`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.thumbnail_path)}`)
     }
 
     // todo: captions?
@@ -133,7 +148,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
       }
     }
 
-  }, [player, video, playbackData, searchParams])
+  }, [player, video, playbackData, searchParams, playlistUrl])
 
 
   // Playback progress reporting
@@ -213,6 +228,24 @@ const VideoPlayer = ({ video, ref }: Params) => {
       posterLoad="eager"
       volume={playerVolume}
       autoPlay={autoplayVideo}
+      onError={() => {
+        if (!playlistUrl) return
+        // Changing the source resets the clock, so where to pick up is decided
+        // here and applied once the video file is ready: the position reached
+        // if playback had begun, otherwise the start this view was opened at.
+        // Deciding it now rather than re-running the source effect keeps the
+        // dying source from swallowing the seek.
+        const reached = player.current?.currentTime ?? 0
+        const openedAt = Number(searchParams.get("t") ?? playbackData?.time ?? 0)
+        const startAt = reached > 0.5 ? reached : openedAt
+        resumeAfterSourceChange.current = startAt > 0 ? startAt : null
+        dismissPlaylist()
+      }}
+      onCanPlay={() => {
+        if (resumeAfterSourceChange.current == null) return
+        player.current!.currentTime = resumeAfterSourceChange.current
+        resumeAfterSourceChange.current = null
+      }}
     >
       {showAbsoluteTime && <AbsoluteTimeDisplay streamedAt={video.streamed_at} />}
       <MediaProvider>
