@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"fmt"
+	"mime"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -187,6 +188,18 @@ func (h *Handler) mapRoutes() {
 
 	// Static files if not using nginx
 	env := config.GetEnvConfig()
+	// Go knows neither extension on its own and falls back to the system table,
+	// which a deployment outside the container image may not have. Apple devices
+	// refuse a playlist that arrives as plain text, which is the platform the
+	// playlist exists for.
+	for extension, mediaType := range map[string]string{
+		".m3u8": "application/vnd.apple.mpegurl",
+		".mp4":  "video/mp4",
+	} {
+		if err := mime.AddExtensionType(extension, mediaType); err != nil {
+			log.Debug().Err(err).Msgf("failed to register media type for %s", extension)
+		}
+	}
 	// Use one handler for both GET + HEAD
 	videosH := echo.WrapHandler(http.StripPrefix(env.VideosDir, http.FileServer(http.Dir(env.VideosDir))))
 	tempH := echo.WrapHandler(http.StripPrefix(env.TempDir, http.FileServer(http.Dir(env.TempDir))))
