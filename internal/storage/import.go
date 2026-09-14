@@ -254,6 +254,9 @@ func (s *Service) importDirectory(ctx context.Context, videosDir string, dir str
 // collectVideoFiles maps the entries of a directory onto the files the archiver writes.
 func collectVideoFiles(dir string) (videoFiles, error) {
 	var files videoFiles
+	// The name the video file is built from. The archiver gives every file of a video the same
+	// prefix, so one that disagrees with the info file belongs to a different video.
+	var videoPrefix string
 
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -276,6 +279,7 @@ func collectVideoFiles(dir string) (videoFiles, error) {
 				// An empty hls directory must not take the place of a video file that is there.
 				if playlist := hlsPlaylist(path); playlist != "" {
 					files.videoPath = playlist
+					videoPrefix = strings.TrimSuffix(name, hlsDirectorySuffix)
 				}
 			}
 			continue
@@ -306,13 +310,21 @@ func collectVideoFiles(dir string) (videoFiles, error) {
 		default:
 			for _, extension := range videoFileExtensions {
 				if strings.HasSuffix(name, "-video"+extension) && files.videoHLSPath == "" {
-					files.videoPath = path
-					if files.fileName == "" {
-						files.fileName = strings.TrimSuffix(name, "-video"+extension)
+					if files.videoPath != "" {
+						return files, errors.New("the directory holds more than one video file")
 					}
+					files.videoPath = path
+					videoPrefix = strings.TrimSuffix(name, "-video"+extension)
+					break
 				}
 			}
 		}
+	}
+
+	if files.fileName == "" {
+		files.fileName = videoPrefix
+	} else if videoPrefix != "" && videoPrefix != files.fileName {
+		return files, errors.New("the info file and the video file belong to different videos")
 	}
 
 	return files, nil

@@ -194,6 +194,10 @@ func Reconcile(references References) ([]Finding, error) {
 	for _, path := range paths {
 		finding, err := newFinding(path)
 		if err != nil {
+			// Deleted between the scan and the measurement, so there is nothing to report.
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
+			}
 			return nil, err
 		}
 		findings = append(findings, finding)
@@ -421,6 +425,11 @@ func findOrphanedDirectories(videosDir string, referenced referencedPaths) ([]st
 	for _, region := range regions {
 		entries, err := os.ReadDir(region)
 		if err != nil {
+			// The library keeps being written to while it is scanned. A directory that is gone
+			// by the time it is read is not a leftover and must not fail the whole scan.
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
+			}
 			return nil, fmt.Errorf("error reading directory %s: %w", region, err)
 		}
 
@@ -451,6 +460,9 @@ func findOrphanedDirectories(videosDir string, referenced referencedPaths) ([]st
 
 			orphan, err := isOrphanedDirectory(path, referenced.fileNames)
 			if err != nil {
+				if errors.Is(err, fs.ErrNotExist) {
+					continue
+				}
 				return nil, fmt.Errorf("error reading directory %s: %w", path, err)
 			}
 			if orphan {

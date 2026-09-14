@@ -531,3 +531,31 @@ func TestIsOutside(t *testing.T) {
 	assert.False(t, isOutside(filepath.Join("..channel", "video")))
 	assert.False(t, isOutside("channel"))
 }
+
+// TestFindOrphanedDirectoriesToleratesVanishedRegion checks that a directory deleted between
+// being resolved as a region and being read does not fail the whole scan. The library keeps
+// being written to while it is walked.
+func TestFindOrphanedDirectoriesToleratesVanishedRegion(t *testing.T) {
+	videosDir := t.TempDir()
+
+	archivedVideo := writeVideo(t, filepath.Join(videosDir, "channel_a", "video_1"), "video_1")
+	writeVideo(t, filepath.Join(videosDir, "channel_b", "video_2"), "video_2")
+	age(t, videosDir)
+
+	referenced := resolve(References{
+		VideosDir: videosDir,
+		Videos: []VideoReference{
+			{Paths: []string{archivedVideo}, ChannelFolders: []string{"channel_a"}},
+		},
+		Channels: []ChannelReference{
+			{Folders: []string{"channel_a"}},
+			{Folders: []string{"channel_b"}},
+		},
+	})
+
+	require.NoError(t, os.RemoveAll(filepath.Join(videosDir, "channel_b")))
+
+	orphans, err := findOrphanedDirectories(videosDir, referenced)
+	require.NoError(t, err)
+	assert.Empty(t, orphans)
+}
