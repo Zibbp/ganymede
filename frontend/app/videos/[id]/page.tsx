@@ -14,6 +14,7 @@ import VideoLoginRequired from "@/app/components/videos/LoginRequired";
 import useAuthStore from "@/app/store/useAuthStore";
 import VideoPageClips from "@/app/components/videos/VideoClips";
 import VideoChatHistogram from "@/app/components/videos/ChatHistogram";
+import VideoNotes from "@/app/components/videos/VideoNotes";
 import { MediaPlayerInstance } from "@vidstack/react";
 import { useTranslations } from "next-intl";
 
@@ -132,6 +133,11 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
           <VideoChatHistogram videoId={data.id} playerRef={player} />
         </Container>
       )}
+
+      {/* Notes live under the player (below chat histogram) and render on all layouts */}
+      <Container size="7xl" fluid={true} >
+        <VideoNotes video={data} playerRef={player} />
+      </Container>
 
       {!isMobile && (
         <style jsx>{`

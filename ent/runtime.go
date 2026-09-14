@@ -525,29 +525,29 @@ func init() {
 	// vod.DefaultLocked holds the default value on creation for the locked field.
 	vod.DefaultLocked = vodDescLocked.Default.(bool)
 	// vodDescLocalViews is the schema descriptor for local_views field.
-	vodDescLocalViews := vodFields[32].Descriptor()
+	vodDescLocalViews := vodFields[33].Descriptor()
 	// vod.DefaultLocalViews holds the default value on creation for the local_views field.
 	vod.DefaultLocalViews = vodDescLocalViews.Default.(int)
 	// vodDescSpriteThumbnailsEnabled is the schema descriptor for sprite_thumbnails_enabled field.
-	vodDescSpriteThumbnailsEnabled := vodFields[33].Descriptor()
+	vodDescSpriteThumbnailsEnabled := vodFields[34].Descriptor()
 	// vod.DefaultSpriteThumbnailsEnabled holds the default value on creation for the sprite_thumbnails_enabled field.
 	vod.DefaultSpriteThumbnailsEnabled = vodDescSpriteThumbnailsEnabled.Default.(bool)
 	// vodDescStorageSizeBytes is the schema descriptor for storage_size_bytes field.
-	vodDescStorageSizeBytes := vodFields[40].Descriptor()
+	vodDescStorageSizeBytes := vodFields[41].Descriptor()
 	// vod.DefaultStorageSizeBytes holds the default value on creation for the storage_size_bytes field.
 	vod.DefaultStorageSizeBytes = vodDescStorageSizeBytes.Default.(int64)
 	// vodDescStreamedAt is the schema descriptor for streamed_at field.
-	vodDescStreamedAt := vodFields[41].Descriptor()
+	vodDescStreamedAt := vodFields[42].Descriptor()
 	// vod.DefaultStreamedAt holds the default value on creation for the streamed_at field.
 	vod.DefaultStreamedAt = vodDescStreamedAt.Default.(func() time.Time)
 	// vodDescUpdatedAt is the schema descriptor for updated_at field.
-	vodDescUpdatedAt := vodFields[42].Descriptor()
+	vodDescUpdatedAt := vodFields[43].Descriptor()
 	// vod.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	vod.DefaultUpdatedAt = vodDescUpdatedAt.Default.(func() time.Time)
 	// vod.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	vod.UpdateDefaultUpdatedAt = vodDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// vodDescCreatedAt is the schema descriptor for created_at field.
-	vodDescCreatedAt := vodFields[43].Descriptor()
+	vodDescCreatedAt := vodFields[44].Descriptor()
 	// vod.DefaultCreatedAt holds the default value on creation for the created_at field.
 	vod.DefaultCreatedAt = vodDescCreatedAt.Default.(func() time.Time)
 	// vodDescID is the schema descriptor for id field.

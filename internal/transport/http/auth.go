@@ -110,6 +110,17 @@ func (h *Handler) Login(c echo.Context) error {
 	return SuccessResponse(c, u, "successfully logged in")
 }
 
+// Logout godoc
+//
+//	@Summary		Logout a user
+//	@Description	Logout a user (destroys session)
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	string
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/auth/logout [post]
+//	@Security		ApiKeyCookieAuth
 func (h *Handler) Logout(c echo.Context) error {
 	if err := h.SessionManager.Destroy(c.Request().Context()); err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, "error deleting session")

@@ -34,6 +34,16 @@ type ArchiveVideoRequest struct {
 	RenderChat  bool             `json:"render_chat"`
 }
 
+type ConvertTwitchChatRequest struct {
+	LiveChatPath      string `json:"live_chat_path"`
+	ChannelName       string `json:"channel_name"`
+	VideoID           string `json:"video_id"`
+	VideoExternalID   string `json:"video_external_id"`
+	ChannelID         int    `json:"channel_id"`
+	PreviousVideoID   string `json:"previous_video_id"`
+	FirstMessageEpoch string `json:"first_message_epoch"`
+}
+
 // CheckIDType checks if the provided ID is a video id (numeric) or clip (alphanumeric)
 func CheckIDType(id string) string {
 	// Try to parse as a number
@@ -164,18 +174,22 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 	return SuccessResponse(c, archiveResponse, "archive started")
 }
 
-// debug route to test converting chat files
+// ConvertTwitchChat godoc
+//
+//	@Summary		Convert twitch live chat file
+//	@Description	Convert a twitch live chat file to TDL chat format (debug route)
+//	@Tags			archive
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		ConvertTwitchChatRequest	true	"Convert chat"
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/archive/convert-twitch-live-chat [post]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) ConvertTwitchChat(c echo.Context) error {
-	type Body struct {
-		LiveChatPath      string `json:"live_chat_path"`
-		ChannelName       string `json:"channel_name"`
-		VideoID           string `json:"video_id"`
-		VideoExternalID   string `json:"video_external_id"`
-		ChannelID         int    `json:"channel_id"`
-		PreviousVideoID   string `json:"previous_video_id"`
-		FirstMessageEpoch string `json:"first_message_epoch"`
-	}
-	body := new(Body)
+	body := new(ConvertTwitchChatRequest)
 	if err := c.Bind(body); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}

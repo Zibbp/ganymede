@@ -25,7 +25,7 @@ type AdminService interface {
 //	@Produce		json
 //	@Success		200	{object}	admin.GetVideoStatisticsResponse
 //	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/admin/video/statistics [get]
+//	@Router			/admin/video-statistics [get]
 //	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetVideoStatistics(c echo.Context) error {
@@ -45,7 +45,7 @@ func (h *Handler) GetVideoStatistics(c echo.Context) error {
 //	@Produce		json
 //	@Success		200	{object}	admin.GetSystemOverviewResponse
 //	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/admin/system/overview [get]
+//	@Router			/admin/system-overview [get]
 //	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetSystemOverview(c echo.Context) error {

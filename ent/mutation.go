@@ -15450,6 +15450,7 @@ type VodMutation struct {
 	tmp_chat_render_path           *string
 	tmp_video_hls_path             *string
 	locked                         *bool
+	notes                          *string
 	local_views                    *int
 	addlocal_views                 *int
 	sprite_thumbnails_enabled      *bool
@@ -17046,6 +17047,55 @@ func (m *VodMutation) ResetLocked() {
 	m.locked = nil
 }
 
+// SetNotes sets the "notes" field.
+func (m *VodMutation) SetNotes(s string) {
+	m.notes = &s
+}
+
+// Notes returns the value of the "notes" field in the mutation.
+func (m *VodMutation) Notes() (r string, exists bool) {
+	v := m.notes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotes returns the old "notes" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldNotes(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotes: %w", err)
+	}
+	return oldValue.Notes, nil
+}
+
+// ClearNotes clears the value of the "notes" field.
+func (m *VodMutation) ClearNotes() {
+	m.notes = nil
+	m.clearedFields[vod.FieldNotes] = struct{}{}
+}
+
+// NotesCleared returns if the "notes" field was cleared in this mutation.
+func (m *VodMutation) NotesCleared() bool {
+	_, ok := m.clearedFields[vod.FieldNotes]
+	return ok
+}
+
+// ResetNotes resets all changes to the "notes" field.
+func (m *VodMutation) ResetNotes() {
+	m.notes = nil
+	delete(m.clearedFields, vod.FieldNotes)
+}
+
 // SetLocalViews sets the "local_views" field.
 func (m *VodMutation) SetLocalViews(i int) {
 	m.local_views = &i
@@ -18045,7 +18095,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 43)
+	fields := make([]string, 0, 44)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -18138,6 +18188,9 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.locked != nil {
 		fields = append(fields, vod.FieldLocked)
+	}
+	if m.notes != nil {
+		fields = append(fields, vod.FieldNotes)
 	}
 	if m.local_views != nil {
 		fields = append(fields, vod.FieldLocalViews)
@@ -18245,6 +18298,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.TmpVideoHlsPath()
 	case vod.FieldLocked:
 		return m.Locked()
+	case vod.FieldNotes:
+		return m.Notes()
 	case vod.FieldLocalViews:
 		return m.LocalViews()
 	case vod.FieldSpriteThumbnailsEnabled:
@@ -18340,6 +18395,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldTmpVideoHlsPath(ctx)
 	case vod.FieldLocked:
 		return m.OldLocked(ctx)
+	case vod.FieldNotes:
+		return m.OldNotes(ctx)
 	case vod.FieldLocalViews:
 		return m.OldLocalViews(ctx)
 	case vod.FieldSpriteThumbnailsEnabled:
@@ -18589,6 +18646,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetLocked(v)
+		return nil
+	case vod.FieldNotes:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotes(v)
 		return nil
 	case vod.FieldLocalViews:
 		v, ok := value.(int)
@@ -18890,6 +18954,9 @@ func (m *VodMutation) ClearedFields() []string {
 	if m.FieldCleared(vod.FieldTmpVideoHlsPath) {
 		fields = append(fields, vod.FieldTmpVideoHlsPath)
 	}
+	if m.FieldCleared(vod.FieldNotes) {
+		fields = append(fields, vod.FieldNotes)
+	}
 	if m.FieldCleared(vod.FieldSpriteThumbnailsImages) {
 		fields = append(fields, vod.FieldSpriteThumbnailsImages)
 	}
@@ -18984,6 +19051,9 @@ func (m *VodMutation) ClearField(name string) error {
 		return nil
 	case vod.FieldTmpVideoHlsPath:
 		m.ClearTmpVideoHlsPath()
+		return nil
+	case vod.FieldNotes:
+		m.ClearNotes()
 		return nil
 	case vod.FieldSpriteThumbnailsImages:
 		m.ClearSpriteThumbnailsImages()
@@ -19103,6 +19173,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldLocked:
 		m.ResetLocked()
+		return nil
+	case vod.FieldNotes:
+		m.ResetNotes()
 		return nil
 	case vod.FieldLocalViews:
 		m.ResetLocalViews()
