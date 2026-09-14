@@ -39,6 +39,17 @@ const AbsoluteTimeDisplay = ({ streamedAt }: { streamedAt: string | Date }) => {
   );
 };
 
+// sharedStartTime reads the moment a link asks for, in seconds. Anything that
+// is not a plain non-negative number is no request at all, so that a malformed
+// link falls through to this viewer's own position rather than suppressing it.
+const sharedStartTime = (searchParams: URLSearchParams): number | null => {
+  const requested = searchParams.get("t")
+  if (requested === null || !/^\d+(\.\d+)?$/.test(requested)) return null
+
+  const seconds = Number(requested)
+  return Number.isFinite(seconds) ? seconds : null
+}
+
 const VideoPlayer = ({ video, ref }: Params) => {
   const searchParams = useSearchParams()
 
@@ -139,9 +150,9 @@ const VideoPlayer = ({ video, ref }: Params) => {
       // source arrives asynchronously: this used to run before the saved
       // position had been fetched, so the link won by timing rather than by
       // rule, and would otherwise start losing that race.
-      const time = searchParams.get("t");
-      if (time !== null) {
-        player.current!.currentTime = parseInt(time);
+      const sharedTime = sharedStartTime(searchParams)
+      if (sharedTime !== null) {
+        player.current!.currentTime = sharedTime
         hasInitializedPlaybackTime.current = true
       } else if (playbackData && playbackData.time != null) {
         // Resume from server-side playback progress.
@@ -238,7 +249,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
         // Deciding it now rather than re-running the source effect keeps the
         // dying source from swallowing the seek.
         const reached = player.current?.currentTime ?? 0
-        const openedAt = Number(searchParams.get("t") ?? playbackData?.time ?? 0)
+        const openedAt = sharedStartTime(searchParams) ?? playbackData?.time ?? 0
         const startAt = reached > 0.5 ? reached : openedAt
         resumeAfterSourceChange.current = startAt > 0 ? startAt : null
         dismissPlaylist()
