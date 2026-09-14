@@ -254,9 +254,11 @@ func (s *Service) importDirectory(ctx context.Context, videosDir string, dir str
 // collectVideoFiles maps the entries of a directory onto the files the archiver writes.
 func collectVideoFiles(dir string) (videoFiles, error) {
 	var files videoFiles
-	// The name the video file is built from. The archiver gives every file of a video the same
-	// prefix, so one that disagrees with the info file belongs to a different video.
-	var videoPrefix string
+	// The names the media is built from. The archiver gives every file of a video the same
+	// prefix, so one that disagrees with the info file, or with the other kind of media,
+	// belongs to a different video.
+	var flatPrefix, hlsPrefix string
+	var flatVideoPath, hlsPlaylistPath string
 
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -276,11 +278,8 @@ func collectVideoFiles(dir string) (videoFiles, error) {
 					return files, errors.New("the directory holds more than one hls directory")
 				}
 				files.videoHLSPath = path
-				// An empty hls directory must not take the place of a video file that is there.
-				if playlist := hlsPlaylist(path); playlist != "" {
-					files.videoPath = playlist
-					videoPrefix = strings.TrimSuffix(name, hlsDirectorySuffix)
-				}
+				hlsPrefix = strings.TrimSuffix(name, hlsDirectorySuffix)
+				hlsPlaylistPath = hlsPlaylist(path)
 			}
 			continue
 		}
@@ -309,18 +308,34 @@ func collectVideoFiles(dir string) (videoFiles, error) {
 			files.captionPath = path
 		default:
 			for _, extension := range videoFileExtensions {
-				if strings.HasSuffix(name, "-video"+extension) && files.videoHLSPath == "" {
-					if files.videoPath != "" {
+				if strings.HasSuffix(name, "-video"+extension) {
+					if flatVideoPath != "" {
 						return files, errors.New("the directory holds more than one video file")
 					}
-					files.videoPath = path
-					videoPrefix = strings.TrimSuffix(name, "-video"+extension)
+					flatVideoPath = path
+					flatPrefix = strings.TrimSuffix(name, "-video"+extension)
 					break
 				}
 			}
 		}
 	}
 
+	// A video file and an hls directory of two different videos are two videos in one directory,
+	// whichever of them the import would end up using.
+	if flatPrefix != "" && hlsPrefix != "" && flatPrefix != hlsPrefix {
+		return files, errors.New("the directory holds more than one video file")
+	}
+
+	// An empty hls directory must not take the place of a video file that is there.
+	files.videoPath = hlsPlaylistPath
+	if files.videoPath == "" {
+		files.videoPath = flatVideoPath
+	}
+
+	videoPrefix := hlsPrefix
+	if videoPrefix == "" {
+		videoPrefix = flatPrefix
+	}
 	if files.fileName == "" {
 		files.fileName = videoPrefix
 	} else if videoPrefix != "" && videoPrefix != files.fileName {
