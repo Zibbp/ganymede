@@ -380,6 +380,17 @@ definitions:
       folder_template:
         type: string
     type: object
+  ent.BlockedVideos:
+    properties:
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      id:
+        description: |-
+          ID of the ent.
+          The ID of the blocked vod.
+        type: string
+    type: object
   ent.Channel:
     properties:
       created_at:
@@ -907,6 +918,27 @@ definitions:
         - $ref: '#/definitions/ent.Vod'
         description: Vod holds the value of the vod edge.
     type: object
+  ent.TwitchCategory:
+    properties:
+      box_art_url:
+        description: BoxArtURL holds the value of the "box_art_url" field.
+        type: string
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: string
+      igdb_id:
+        description: IgdbID holds the value of the "igdb_id" field.
+        type: string
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+    type: object
   ent.User:
     properties:
       created_at:
@@ -1266,6 +1298,23 @@ definitions:
     - new_password
     - old_password
     type: object
+  http.ConvertTwitchChatRequest:
+    properties:
+      channel_id:
+        type: integer
+      channel_name:
+        type: string
+      first_message_epoch:
+        type: string
+      live_chat_path:
+        type: string
+      previous_video_id:
+        type: string
+      video_external_id:
+        type: string
+      video_id:
+        type: string
+    type: object
   http.CreateApiKeyRequest:
     properties:
       description:
@@ -1573,6 +1622,31 @@ definitions:
         type: string
     required:
     - vod_id
+    type: object
+  http.StartQueueTaskRequest:
+    properties:
+      continue:
+        type: boolean
+      queue_id:
+        type: string
+      task_name:
+        enum:
+        - task_vod_create_folder
+        - task_vod_download_thumbnail
+        - task_vod_save_info
+        - task_video_download
+        - task_video_convert
+        - task_video_move
+        - task_chat_download
+        - task_chat_convert
+        - task_chat_render
+        - task_chat_move
+        - task_live_chat_download
+        - task_live_video_download
+        type: string
+    required:
+    - queue_id
+    - task_name
     type: object
   http.StartTaskRequest:
     properties:
@@ -1998,6 +2072,24 @@ definitions:
       viewable:
         type: string
     type: object
+  playback.GetPlayback:
+    properties:
+      playback:
+        $ref: '#/definitions/ent.Playback'
+      vod:
+        $ref: '#/definitions/ent.Vod'
+    type: object
+  playback.GetPlaybackResp:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/playback.GetPlayback'
+        type: array
+      playback:
+        items:
+          $ref: '#/definitions/ent.Playback'
+        type: array
+    type: object
   playlistrulegroup.Operator:
     enum:
     - AND
@@ -2323,7 +2415,7 @@ paths:
       summary: Get storage distribution
       tags:
       - admin
-  /admin/system/overview:
+  /admin/system-overview:
     get:
       consumes:
       - application/json
@@ -2345,7 +2437,7 @@ paths:
       summary: Get system overview
       tags:
       - admin
-  /admin/video/statistics:
+  /admin/video-statistics:
     get:
       consumes:
       - application/json
@@ -2399,6 +2491,39 @@ paths:
       - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Archive a twitch channel
+      tags:
+      - archive
+  /archive/convert-twitch-live-chat:
+    post:
+      consumes:
+      - application/json
+      description: Convert a twitch live chat file to TDL chat format (debug route)
+      parameters:
+      - description: Convert chat
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.ConvertTwitchChatRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Convert twitch live chat file
       tags:
       - archive
   /archive/video:
@@ -2503,6 +2628,27 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: Login a user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout a user (destroys session)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      summary: Logout a user
       tags:
       - auth
   /auth/me:
@@ -2622,6 +2768,139 @@ paths:
       summary: Register a user
       tags:
       - auth
+  /blocked-video:
+    get:
+      consumes:
+      - application/json
+      description: Get all blocked videos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ent.BlockedVideos'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get blocked videos
+      tags:
+      - blocked-video
+  /blocked-video/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a video from the blocked list
+      parameters:
+      - description: Video ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Unblock a video
+      tags:
+      - blocked-video
+    get:
+      consumes:
+      - application/json
+      description: Check if a video is on the blocked list
+      parameters:
+      - description: Video ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Check if video is blocked
+      tags:
+      - blocked-video
+    post:
+      consumes:
+      - application/json
+      description: Add a video to the blocked list
+      parameters:
+      - description: Video ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Block a video
+      tags:
+      - blocked-video
+  /category:
+    get:
+      consumes:
+      - application/json
+      description: Get cached twitch categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ent.TwitchCategory'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get twitch categories
+      tags:
+      - category
   /channel:
     get:
       consumes:
@@ -2786,6 +3065,38 @@ paths:
       summary: Update a channel
       tags:
       - channel
+  /channel/{id}/update-image:
+    post:
+      consumes:
+      - application/json
+      description: Update channel image from platform
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Update channel image
+      tags:
+      - channel
   /channel/name/{name}:
     get:
       consumes:
@@ -2819,6 +3130,66 @@ paths:
       summary: Get a channel by name
       tags:
       - channel
+  /chapter/video/{videoId}:
+    get:
+      consumes:
+      - application/json
+      description: Get chapters for a video
+      parameters:
+      - description: Video ID
+        in: path
+        name: videoId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ent.Chapter'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get video chapters
+      tags:
+      - chapter
+  /chapter/video/{videoId}/webvtt:
+    get:
+      consumes:
+      - application/json
+      description: Get chapters for a video in WebVTT format
+      parameters:
+      - description: Video ID
+        in: path
+        name: videoId
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get video chapters as WebVTT
+      tags:
+      - chapter
   /config:
     get:
       consumes:
@@ -2996,6 +3367,28 @@ paths:
       - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update watched channel
+      tags:
+      - Live
+  /live/check:
+    get:
+      consumes:
+      - application/json
+      description: Trigger a manual check for live streams on watched channels
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Manually check for live streams
       tags:
       - Live
   /notification:
@@ -3258,6 +3651,67 @@ paths:
       summary: Delete progress
       tags:
       - Playback
+    get:
+      consumes:
+      - application/json
+      description: Get playback progress
+      parameters:
+      - description: vod id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.Playback'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      summary: Get progress
+      tags:
+      - Playback
+  /playback/last:
+    get:
+      consumes:
+      - application/json
+      description: Get last playback entries for the current user
+      parameters:
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/playback.GetPlaybackResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      summary: Get last playbacks
+      tags:
+      - Playback
   /playback/progress:
     post:
       consumes:
@@ -3290,37 +3744,6 @@ paths:
       summary: Update progress
       tags:
       - Playback
-  /playback/progress/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get playback progress
-      parameters:
-      - description: vod id
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ent.Playback'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
-      summary: Get progress
-      tags:
-      - Playback
   /playback/start:
     post:
       consumes:
@@ -3328,8 +3751,8 @@ paths:
       description: Adds a view to the video local view count
       parameters:
       - description: vod id
-        in: path
-        name: id
+        in: query
+        name: video_id
         required: true
         type: string
       produces:
@@ -3645,7 +4068,7 @@ paths:
       summary: Get playlist rules
       tags:
       - Playlist
-    post:
+    put:
       consumes:
       - application/json
       description: Set rules for a playlist this will delete all existing rules and
@@ -3679,10 +4102,12 @@ paths:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
       - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
       summary: Set playlist rules
       tags:
       - Playlist
-    put:
+  /playlist/{id}/rules/test:
+    post:
       consumes:
       - application/json
       description: Test rules for a playlist against a video id
@@ -3994,6 +4419,13 @@ paths:
       consumes:
       - application/json
       description: Start a specific queue task
+      parameters:
+      - description: Start queue task
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.StartQueueTaskRequest'
       produces:
       - application/json
       responses:
@@ -4329,7 +4761,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get a vod
+      description: Get a vod by ID
       parameters:
       - description: Vod ID
         in: path
@@ -4347,6 +4779,10 @@ paths:
       - description: With muted segments
         in: query
         name: with_muted_segments
+        type: string
+      - description: With queue
+        in: query
+        name: with_queue
         type: string
       produces:
       - application/json
@@ -4562,6 +4998,35 @@ paths:
       summary: Get vod chat emotes
       tags:
       - vods
+  /vod/{id}/chat/histogram:
+    get:
+      consumes:
+      - application/json
+      description: Get a histogram of chat activity for a vod
+      parameters:
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get vod chat histogram
+      tags:
+      - vods
   /vod/{id}/chat/seek:
     get:
       consumes:
@@ -4640,8 +5105,39 @@ paths:
       summary: Get user id from chat
       tags:
       - vods
-  /vod/{id}/ffprobe:
+  /vod/{id}/clips:
     get:
+      consumes:
+      - application/json
+      description: Get clips that were created from a vod
+      parameters:
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ent.Vod'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get clips of a vod
+      tags:
+      - vods
+  /vod/{id}/ffprobe:
+    post:
       consumes:
       - application/json
       description: Get ffprobe data for video
@@ -4675,7 +5171,107 @@ paths:
       - ApiKeyAuth: []
       summary: Get ffprobe data for video
       tags:
-      - exec
+      - vods
+  /vod/{id}/generate-sprite-thumbnails:
+    post:
+      consumes:
+      - application/json
+      description: Queue a job to generate sprite thumbnails for a vod
+      parameters:
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Generate sprite thumbnails for a vod
+      tags:
+      - vods
+  /vod/{id}/generate-static-thumbnail:
+    post:
+      consumes:
+      - application/json
+      description: Queue a job to generate a static thumbnail for a vod
+      parameters:
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Generate static thumbnail for a vod
+      tags:
+      - vods
+  /vod/{id}/lock:
+    post:
+      consumes:
+      - application/json
+      description: Lock or unlock a vod to prevent deletion
+      parameters:
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Set to false to unlock, defaults to true
+        in: query
+        name: locked
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Lock or unlock a vod
+      tags:
+      - vods
   /vod/{id}/notes:
     put:
       consumes:
@@ -4755,7 +5351,85 @@ paths:
       summary: Get vod playlists
       tags:
       - vods
-  /vod/pagination:
+  /vod/{id}/thumbnails/vtt:
+    get:
+      consumes:
+      - application/json
+      description: Get a WebVTT file describing sprite thumbnails for a vod
+      parameters:
+      - description: Vod ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get sprite thumbnails VTT for a vod
+      tags:
+      - vods
+  /vod/external_id/{external_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a vod by platform external ID
+      parameters:
+      - description: Vod external ID
+        in: path
+        name: external_id
+        required: true
+        type: string
+      - description: With channel
+        in: query
+        name: with_channel
+        type: string
+      - description: With chapters
+        in: query
+        name: with_chapters
+        type: string
+      - description: With muted segments
+        in: query
+        name: with_muted_segments
+        type: string
+      - description: With queue
+        in: query
+        name: with_queue
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.Vod'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get a vod by external ID
+      tags:
+      - vods
+  /vod/paginate:
     get:
       consumes:
       - application/json

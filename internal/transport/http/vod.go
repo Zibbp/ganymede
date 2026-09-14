@@ -192,20 +192,21 @@ func (h *Handler) GetVods(c echo.Context) error {
 
 // GetVod godoc
 //
-//		@Summary		Get a vod
-//		@Description	Get a vod
-//		@Tags			vods
-//		@Accept			json
-//		@Produce		json
-//		@Param			id				path		string	true	"Vod ID"
-//		@Param			with_channel	query		string	false	"With channel"
-//	 	@Param			with_chapters	query		string	false	"With chapters"
-//		@Param			with_muted_segments	query	string	false	"With muted segments"
-//		@Success		200				{object}	ent.Vod
-//		@Failure		400				{object}	utils.ErrorResponse
-//		@Failure		404				{object}	utils.ErrorResponse
-//		@Failure		500				{object}	utils.ErrorResponse
-//		@Router			/vod/{id} [get]
+//	@Summary		Get a vod
+//	@Description	Get a vod by ID
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id					path		string	true	"Vod ID"
+//	@Param			with_channel		query		boolean	false	"With channel"
+//	@Param			with_chapters		query		boolean	false	"With chapters"
+//	@Param			with_muted_segments	query		boolean	false	"With muted segments"
+//	@Param			with_queue			query		boolean	false	"With queue"
+//	@Success		200					{object}	ent.Vod
+//	@Failure		400					{object}	utils.ErrorResponse
+//	@Failure		404					{object}	utils.ErrorResponse
+//	@Failure		500					{object}	utils.ErrorResponse
+//	@Router			/vod/{id} [get]
 func (h *Handler) GetVod(c echo.Context) error {
 	var id string
 	var videoUUID uuid.UUID
@@ -223,6 +224,9 @@ func (h *Handler) GetVod(c echo.Context) error {
 
 		v, err := h.Service.VodService.GetVodByExternalId(c.Request().Context(), id)
 		if err != nil {
+			if err.Error() == "vod not found" {
+				return echo.NewHTTPError(http.StatusNotFound, "VOD not found by external ID: "+err.Error())
+			}
 			return echo.NewHTTPError(http.StatusBadRequest, "VOD not found by external ID: "+err.Error())
 		}
 		videoUUID = v.ID
@@ -266,6 +270,27 @@ func (h *Handler) GetVod(c echo.Context) error {
 	return SuccessResponse(c, v, "video")
 }
 
+// GetVodByExternalId godoc
+//
+//	@Summary		Get a vod by external ID
+//	@Description	Get a vod by platform external ID
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			external_id			path		string	true	"Vod external ID"
+//	@Param			with_channel		query		boolean	false	"With channel"
+//	@Param			with_chapters		query		boolean	false	"With chapters"
+//	@Param			with_muted_segments	query		boolean	false	"With muted segments"
+//	@Param			with_queue			query		boolean	false	"With queue"
+//	@Success		200					{object}	ent.Vod
+//	@Failure		400					{object}	utils.ErrorResponse
+//	@Failure		404					{object}	utils.ErrorResponse
+//	@Failure		500					{object}	utils.ErrorResponse
+//	@Router			/vod/external_id/{external_id} [get]
+func (h *Handler) GetVodByExternalId(c echo.Context) error {
+	return h.GetVod(c)
+}
+
 // DeleteVod godoc
 //
 //	@Summary		Delete a vod
@@ -274,7 +299,7 @@ func (h *Handler) GetVod(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path	string	true	"Vod ID"
-//	@Param			delete_files	query	string	false	"Delete files"
+//	@Param			delete_files	query	boolean	false	"Delete files"
 //	@Success		200
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		404	{object}	utils.ErrorResponse
@@ -514,11 +539,11 @@ func (h *Handler) GetVodPlaylists(c echo.Context) error {
 //		@Param			channel_id	query		string	false	"Channel ID"
 //	 @Param			types		query		string	false	"Types"
 //		@Param			playlist_id	query		string	false	"Playlist ID"
-//		@Param			processing	query		string	false	"Processing. Set to false to exclude videos that are still processing."
+//		@Param			processing	query		boolean	false	"Processing. Set to false to exclude videos that are still processing."
 //		@Success		200			{object}	vod.Pagination
 //		@Failure		400			{object}	utils.ErrorResponse
 //		@Failure		500			{object}	utils.ErrorResponse
-//		@Router			/vod/pagination [get]
+//		@Router			/vod/paginate [get]
 func (h *Handler) GetVodsPagination(c echo.Context) error {
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil {
@@ -777,6 +802,21 @@ func (h *Handler) GetNumberOfVodChatCommentsFromTime(c echo.Context) error {
 	return SuccessResponse(c, v, fmt.Sprintf("comments for %s from %f", vID, startFloat))
 }
 
+// LockVod godoc
+//
+//	@Summary		Lock or unlock a vod
+//	@Description	Lock or unlock a vod to prevent deletion
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string	true	"Vod ID"
+//	@Param			locked	query		string	false	"Set to false to unlock, defaults to true"
+//	@Success		200		{object}	string
+//	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		500		{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/lock [post]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) LockVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -836,6 +876,20 @@ func (h *Handler) UpdateVodNotes(c echo.Context) error {
 	return SuccessResponse(c, v, "video notes updated")
 }
 
+// GenerateStaticThumbnail godoc
+//
+//	@Summary		Generate static thumbnail for a vod
+//	@Description	Queue a job to generate a static thumbnail for a vod
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Vod ID"
+//	@Success		200	{object}	string
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/generate-static-thumbnail [post]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GenerateStaticThumbnail(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -848,6 +902,18 @@ func (h *Handler) GenerateStaticThumbnail(c echo.Context) error {
 	return SuccessResponse(c, nil, fmt.Sprintf("job created: %d", job.Job.ID))
 }
 
+// GetVodClips godoc
+//
+//	@Summary		Get clips of a vod
+//	@Description	Get clips that were created from a vod
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Vod ID"
+//	@Success		200	{array}		ent.Vod
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/clips [get]
 func (h *Handler) GetVodClips(c echo.Context) error {
 	id := c.Param("id")
 	videoId, err := uuid.Parse(id)
@@ -862,6 +928,18 @@ func (h *Handler) GetVodClips(c echo.Context) error {
 	return SuccessResponse(c, clips, "clips for video")
 }
 
+// GetVodSpriteThumbnails godoc
+//
+//	@Summary		Get sprite thumbnails VTT for a vod
+//	@Description	Get a WebVTT file describing sprite thumbnails for a vod
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		text/plain
+//	@Param			id	path		string	true	"Vod ID"
+//	@Success		200	{object}	string
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/thumbnails/vtt [get]
 func (h *Handler) GetVodSpriteThumbnails(c echo.Context) error {
 	var id string
 	var videoUUID uuid.UUID
@@ -903,7 +981,7 @@ func (h *Handler) GetVodSpriteThumbnails(c echo.Context) error {
 //
 //	@Summary		Get ffprobe data for video
 //	@Description	Get ffprobe data for video
-//	@Tags			exec
+//	@Tags			vods
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Vod ID"
@@ -911,7 +989,7 @@ func (h *Handler) GetVodSpriteThumbnails(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
-//	@Router			/vod/{id}/ffprobe [get]
+//	@Router			/vod/{id}/ffprobe [post]
 //	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetFFprobe(c echo.Context) error {
@@ -1008,6 +1086,20 @@ func formatTimestamp(seconds int) string {
 	return fmt.Sprintf("%02d:%02d:%02d.%03d", hours, minutes, secs, milliseconds)
 }
 
+// GenerateSpriteThumbnails godoc
+//
+//	@Summary		Generate sprite thumbnails for a vod
+//	@Description	Queue a job to generate sprite thumbnails for a vod
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Vod ID"
+//	@Success		200	{object}	string
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/generate-sprite-thumbnails [post]
+//	@Security		ApiKeyCookieAuth
+//	@Security		ApiKeyAuth
 func (h *Handler) GenerateSpriteThumbnails(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -1020,6 +1112,18 @@ func (h *Handler) GenerateSpriteThumbnails(c echo.Context) error {
 	return SuccessResponse(c, nil, fmt.Sprintf("job created: %d", job.Job.ID))
 }
 
+// GetVodChatHistogram godoc
+//
+//	@Summary		Get vod chat histogram
+//	@Description	Get a histogram of chat activity for a vod
+//	@Tags			vods
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Vod ID"
+//	@Success		200	{object}	object
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/vod/{id}/chat/histogram [get]
 func (h *Handler) GetVodChatHistogram(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
