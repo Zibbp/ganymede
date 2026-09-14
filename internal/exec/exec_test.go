@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -188,7 +189,7 @@ func TestPostProcessVideoFFmpegArgsIncludesTitleMetadata(t *testing.T) {
 		TmpVideoConvertPath:  "/tmp/output.mp4",
 	}
 
-	args := postProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy", "h264")
+	args := postProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy", false)
 
 	titleMetadataIndex := -1
 	for i := 0; i < len(args)-1; i++ {
@@ -214,7 +215,7 @@ func TestNormalizedPostProcessVideoFFmpegArgsResetEachStream(t *testing.T) {
 		TmpVideoDownloadPath: "/tmp/input.ts",
 		TmpVideoConvertPath:  "/tmp/output.mp4",
 	}
-	args := normalizedPostProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy", "h264")
+	args := normalizedPostProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy", false)
 
 	for i := 0; i < len(args)-1; i++ {
 		if args[i] == "-bsf" && args[i+1] == "setts=ts=TS-STARTDTS" {
@@ -252,32 +253,185 @@ func TestPostProcessVideoFFmpegArgsTagsCopiedHevcForApple(t *testing.T) {
 		{name: "video copy overridden by re-encode", codec: "hevc", configArgs: "-c:v copy -c:v libx264", wantTagging: false},
 		{name: "indexed video re-encode", codec: "hevc", configArgs: "-c:v:0 libx264", wantTagging: false},
 		{name: "indexed video copy", codec: "hevc", configArgs: "-codec:v:0 copy", wantTagging: true},
-		// A bare index cannot be resolved without probing, so it is assumed to
-		// reach the video stream.
+		// Which output stream a bare index selects depends on the mapping, so
+		// such an option counts as re-encoding whatever it is set to. Tagging a
+		// stream that turns out to be re-encoded makes ffmpeg refuse the output
+		// outright; not tagging a copied one only leaves it as it was.
 		{name: "bare stream index re-encode", codec: "hevc", configArgs: "-c:1 libx264", wantTagging: false},
+		{name: "bare stream index copy", codec: "hevc", configArgs: "-c:1 copy", wantTagging: false},
+		{name: "bare stream index copy after video re-encode", codec: "hevc", configArgs: "-c:v libx264 -c:1 copy", wantTagging: false},
+		{name: "program specifier", codec: "hevc", configArgs: "-c:p:0 copy", wantTagging: false},
+		{name: "video without attached pictures", codec: "hevc", configArgs: "-c:V copy", wantTagging: true},
+		// A type specifier narrowed by a further selector can match no stream
+		// at all, so it cannot be read as copying the video.
+		{name: "second video stream copy after video re-encode", codec: "hevc", configArgs: "-c:v libx264 -c:v:1 copy", wantTagging: false},
+		{name: "video metadata selector copy after video re-encode", codec: "hevc", configArgs: "-c:v libx264 -c:v:m:language:eng copy", wantTagging: false},
+		// A negative map drops the probed stream and promotes another one, which
+		// ffmpeg then refuses to tag. A positive map only adds streams and is
+		// harmless, but resolving the layout to tell them apart is more than
+		// this is worth, so neither is tagged.
+		{name: "negative map", codec: "hevc", configArgs: "-c:v copy -map -0:v:0", wantTagging: false},
+		{name: "explicit map", codec: "hevc", configArgs: "-map 0:v -map 0:a", wantTagging: false},
 		{name: "audio and subtitle options only", codec: "hevc", configArgs: "-c:a aac -c:s mov_text", wantTagging: true},
+		{name: "legacy vcodec re-encode", codec: "hevc", configArgs: "-vcodec libx264", wantTagging: false},
+		{name: "no configured arguments", codec: "hevc", configArgs: "", wantTagging: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			for _, args := range [][]string{
-				postProcessVideoFFmpegArgs(video, tt.configArgs, tt.codec),
-				normalizedPostProcessVideoFFmpegArgs(video, tt.configArgs, tt.codec),
+			retag := shouldTagHevcAsHvc1(tt.codec, tt.configArgs)
+			for _, pass := range []struct {
+				name string
+				args []string
+			}{
+				{name: "plain", args: postProcessVideoFFmpegArgs(video, tt.configArgs, retag)},
+				{name: "normalized", args: normalizedPostProcessVideoFFmpegArgs(video, tt.configArgs, retag)},
 			} {
-				tagged := false
-				for i := 0; i < len(args)-1; i++ {
-					if args[i] == "-tag:v" && args[i+1] == "hvc1" {
-						tagged = true
+				tagIndex := -1
+				for i := 0; i < len(pass.args)-1; i++ {
+					if pass.args[i] == "-tag:v:0" && pass.args[i+1] == "hvc1" {
+						tagIndex = i
 						break
 					}
 				}
-				if tagged != tt.wantTagging {
-					t.Fatalf("hvc1 tagging = %v, want %v: %v", tagged, tt.wantTagging, args)
+				if (tagIndex >= 0) != tt.wantTagging {
+					t.Errorf("%s pass: hvc1 tagging = %v, want %v: %v", pass.name, tagIndex >= 0, tt.wantTagging, pass.args)
+					continue
+				}
+				if tagIndex < 0 || tt.configArgs == "" {
+					continue
+				}
+				// The tag is a default, so it has to stay ahead of the
+				// configured arguments for a user's own -tag:v to win. The
+				// configured arguments come last, so the final occurrence of
+				// their first option is certainly one of them.
+				firstConfigArg := strings.Fields(tt.configArgs)[0]
+				configIndex := -1
+				for i := len(pass.args) - 1; i >= 0; i-- {
+					if pass.args[i] == firstConfigArg {
+						configIndex = i
+						break
+					}
+				}
+				if configIndex < tagIndex {
+					t.Errorf("%s pass: tag at %d does not precede the configured arguments at %d: %v", pass.name, tagIndex, configIndex, pass.args)
 				}
 			}
 		})
+	}
+}
+
+// TestPostProcessVideoRetagsHevcForApple runs the real conversion, because the
+// argument table above cannot show that the probe, the decision and the tag
+// actually meet: the codec is handed to it by hand.
+func TestPostProcessVideoRetagsHevcForApple(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputPath := createHevcMedia(t, tmpDir, false)
+	requireHevcFixture(t, inputPath)
+
+	outputPath := retagHevcFixture(t, tmpDir, "retagged.mp4", inputPath, true)
+	if tag := probeStreamEntry(t, outputPath, "v:0", "codec_tag_string"); tag != "hvc1" {
+		t.Fatalf("output sample entry tag = %q, want hvc1", tag)
+	}
+	assertDecodesCleanly(t, outputPath)
+}
+
+// TestPostProcessVideoRetagsHevcFromLiveCapture covers the live path, whose
+// download is an MPEG-TS. For a container that carries programs, ffprobe
+// reports every stream twice, so a probe reading plain lines recognizes no
+// codec at all and the recording silently stays hev1.
+func TestPostProcessVideoRetagsHevcFromLiveCapture(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputPath := createHevcTransportStream(t, tmpDir)
+	if codec := probeStreamEntry(t, inputPath, "v:0", "codec_name"); codec != "hevc" {
+		t.Fatalf("input video codec = %q, want hevc; the fixture is not a live capture", codec)
+	}
+
+	outputPath := retagHevcFixture(t, tmpDir, "retagged-live.mp4", inputPath, true)
+	if tag := probeStreamEntry(t, outputPath, "v:0", "codec_tag_string"); tag != "hvc1" {
+		t.Fatalf("output sample entry tag = %q, want hvc1", tag)
+	}
+	assertDecodesCleanly(t, outputPath)
+}
+
+// TestPostProcessVideoRetagsHevcBesideCoverArt covers a download that carries
+// an embedded thumbnail. ffmpeg applies an unqualified -tag:v to every output
+// video stream and then refuses to write the file, so the tag has to name the
+// stream the codec was probed from.
+func TestPostProcessVideoRetagsHevcBesideCoverArt(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputPath := createHevcMedia(t, tmpDir, true)
+	requireHevcFixture(t, inputPath)
+	// Without the second video stream this test is only a copy of the one
+	// above, and its closing assertion would hold vacuously.
+	if codec := probeStreamEntry(t, inputPath, "v:1", "codec_name"); codec != "mjpeg" {
+		t.Fatalf("input second video stream = %q, want mjpeg; the fixture carries no cover art", codec)
+	}
+
+	outputPath := retagHevcFixture(t, tmpDir, "retagged-with-cover.mp4", inputPath, true)
+	if tag := probeStreamEntry(t, outputPath, "v:0", "codec_tag_string"); tag != "hvc1" {
+		t.Fatalf("output sample entry tag = %q, want hvc1", tag)
+	}
+	if tag := probeStreamEntry(t, outputPath, "v:1", "codec_tag_string"); tag == "hvc1" {
+		t.Fatalf("cover art was tagged hvc1 as well")
+	}
+}
+
+// TestPostProcessVideoKeepsHevcTagWhenRetaggingIsDisabled covers the setting an
+// installation turns off. The fixture is a transport stream because that is the
+// shape the setting exists for: only an Annex B capture loses its in-band
+// parameter sets to the retag.
+func TestPostProcessVideoKeepsHevcTagWhenRetaggingIsDisabled(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputPath := createHevcTransportStream(t, tmpDir)
+
+	outputPath := retagHevcFixture(t, tmpDir, "untouched.mp4", inputPath, false)
+	if tag := probeStreamEntry(t, outputPath, "v:0", "codec_tag_string"); tag != "hev1" {
+		t.Fatalf("output sample entry tag = %q, want hev1", tag)
+	}
+	assertDecodesCleanly(t, outputPath)
+}
+
+// requireHevcFixture checks that a fixture still carries the tag the
+// conversion is meant to correct.
+func requireHevcFixture(t *testing.T, path string) {
+	t.Helper()
+	if tag := probeStreamEntry(t, path, "v:0", "codec_tag_string"); tag != "hev1" {
+		t.Fatalf("input sample entry tag = %q, want hev1; the fixture no longer reproduces the problem", tag)
+	}
+}
+
+func retagHevcFixture(t *testing.T, dir, name, inputPath string, tagHevcAsHvc1 bool) string {
+	t.Helper()
+	outputPath := filepath.Join(dir, name)
+	video := ent.Vod{
+		Title:                "hevc sample entry tag regression",
+		TmpVideoDownloadPath: inputPath,
+		TmpVideoConvertPath:  outputPath,
+	}
+
+	// ffmpeg explains a rejected tag in its own output only, so keep it for
+	// the failure message instead of discarding it.
+	var conversionLog bytes.Buffer
+	if err := postProcessVideo(t.Context(), video, "-c:v copy -c:a copy", tagHevcAsHvc1, &conversionLog); err != nil {
+		t.Fatalf("post-process %s: %v\nffmpeg output:\n%s", filepath.Base(inputPath), err, conversionLog.String())
+	}
+	return outputPath
+}
+
+// assertDecodesCleanly fails when ffmpeg reports anything while decoding.
+// Decoding errors leave the exit status at zero, so the output has to be read
+// rather than the status checked.
+func assertDecodesCleanly(t *testing.T, path string) {
+	t.Helper()
+	out, err := osExec.Command("ffmpeg", "-v", "error", "-i", path, "-f", "null", "-").CombinedOutput()
+	if err != nil {
+		t.Fatalf("decode %s: %v, output: %s", filepath.Base(path), err, out)
+	}
+	if len(bytes.TrimSpace(out)) > 0 {
+		t.Fatalf("decoding %s reported: %s", filepath.Base(path), out)
 	}
 }
 
@@ -291,7 +445,7 @@ func TestPostProcessVideoNormalizesAnomalousContainerTimeline(t *testing.T) {
 		TmpVideoConvertPath:  outputPath,
 	}
 
-	if err := postProcessVideo(t.Context(), video, "-c:v copy -c:a copy", io.Discard); err != nil {
+	if err := postProcessVideo(t.Context(), video, "-c:v copy -c:a copy", true, io.Discard); err != nil {
 		t.Fatalf("post-process timestamp-offset media: %v", err)
 	}
 

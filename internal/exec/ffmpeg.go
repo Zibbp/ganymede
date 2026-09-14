@@ -45,6 +45,12 @@ type mediaDurationProbe struct {
 	} `json:"format"`
 }
 
+type videoCodecProbe struct {
+	Streams []struct {
+		CodecName string `json:"codec_name"`
+	} `json:"streams"`
+}
+
 // ProbeMediaDuration reads both stream and container durations. Video stream
 // duration is preferred, with audio and finally the container as fallbacks.
 func ProbeMediaDuration(ctx context.Context, path string) (MediaDuration, error) {
@@ -106,14 +112,20 @@ func ProbeMediaDuration(ctx context.Context, path string) (MediaDuration, error)
 }
 
 // ProbeVideoCodec returns the codec name of the first video stream, such as
-// "h264" or "hevc". The name is used rather than the sample entry tag because
-// the tag is what post-processing corrects.
+// "h264" or "hevc", or an empty name for media without a video stream. The
+// name is used rather than the sample entry tag because the tag is what
+// post-processing corrects.
+//
+// The result is read as JSON rather than as plain lines: for a container that
+// carries programs, such as the MPEG-TS a live archive is captured into,
+// ffprobe reports each stream twice, once inside its program and once at the
+// top level.
 func ProbeVideoCodec(ctx context.Context, path string) (string, error) {
 	cmd := osExec.CommandContext(ctx, "ffprobe",
 		"-v", "error",
 		"-select_streams", "v:0",
 		"-show_entries", "stream=codec_name",
-		"-of", "default=noprint_wrappers=1:nokey=1",
+		"-of", "json",
 		path,
 	)
 
@@ -124,7 +136,15 @@ func ProbeVideoCodec(ctx context.Context, path string) (string, error) {
 		return "", fmt.Errorf("error running ffprobe: %w", err)
 	}
 
-	return strings.TrimSpace(string(out)), nil
+	var probe videoCodecProbe
+	if err := json.Unmarshal(out, &probe); err != nil {
+		return "", fmt.Errorf("error parsing ffprobe output: %w", err)
+	}
+	if len(probe.Streams) == 0 {
+		return "", nil
+	}
+
+	return probe.Streams[0].CodecName, nil
 }
 
 // GetVideoDuration runs ffprobe on the given video file and returns its
