@@ -44,6 +44,8 @@ Domain packages generally expose a `Service` constructed with `*database.Databas
 
 Use Zerolog for structured logging. Add useful fields such as queue ID, VOD ID, job kind, or channel rather than formatting them only into the message. Return errors with operation context. Avoid panics outside process startup paths.
 
+Keep function and inline code comments concise and to the point. Explain intent, invariants, or non-obvious constraints that the code cannot express clearly; do not narrate straightforward code or write multi-paragraph essays for a single function. Prefer clearer names and smaller functions over lengthy explanatory comments.
+
 ### Persistence and transactions
 
 PostgreSQL is the only supported application database. Ent owns application schema, while River owns job schema. Startup serializes migration with a PostgreSQL advisory lock.
