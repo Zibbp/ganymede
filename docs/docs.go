@@ -288,6 +288,151 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/storage-findings": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "List directories that hold the files of a video that is not in the database, and the state of the reconciliation task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List storage findings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.ListFindingsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/storage-findings/delete": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete the directories of the given findings from disk",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete storage findings",
+                "parameters": [
+                    {
+                        "description": "Findings to delete",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.StorageFindingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.ActionResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/storage-findings/import": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyCookieAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Turn the directories of the given findings back into videos",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Import storage findings",
+                "parameters": [
+                    {
+                        "description": "Findings to import",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.StorageFindingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.ActionResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/system-overview": {
             "get": {
                 "security": [
@@ -3978,25 +4123,25 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With channel",
                         "name": "with_channel",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With chapters",
                         "name": "with_chapters",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With muted segments",
                         "name": "with_muted_segments",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With queue",
                         "name": "with_queue",
                         "in": "query"
@@ -4077,7 +4222,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "Processing. Set to false to exclude videos that are still processing.",
                         "name": "processing",
                         "in": "query"
@@ -4188,25 +4333,25 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With channel",
                         "name": "with_channel",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With chapters",
                         "name": "with_chapters",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With muted segments",
                         "name": "with_muted_segments",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With queue",
                         "name": "with_queue",
                         "in": "query"
@@ -4333,7 +4478,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "Delete files",
                         "name": "delete_files",
                         "in": "query"
@@ -7604,8 +7749,25 @@ const docTemplate = `{
                         "update_video_storage_usage",
                         "process_playlist_video_rules",
                         "update_platform_channels",
-                        "generate_nfo_files"
+                        "generate_nfo_files",
+                        "reconcile_storage"
                     ]
+                }
+            }
+        },
+        "http.StorageFindingsRequest": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -8230,6 +8392,107 @@ const docTemplate = `{
                 "OperatorAND",
                 "OperatorOR"
             ]
+        },
+        "storage.ActionFailure": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                }
+            }
+        },
+        "storage.ActionResult": {
+            "type": "object",
+            "properties": {
+                "done": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "failed": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.ActionFailure"
+                    }
+                }
+            }
+        },
+        "storage.ListFindingsResponse": {
+            "type": "object",
+            "properties": {
+                "findings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.StorageFinding"
+                    }
+                },
+                "scan": {
+                    "$ref": "#/definitions/storage.ScanStatus"
+                },
+                "videos_directory": {
+                    "type": "string"
+                }
+            }
+        },
+        "storage.ScanState": {
+            "type": "string",
+            "enum": [
+                "idle",
+                "queued",
+                "running"
+            ],
+            "x-enum-varnames": [
+                "ScanStateIdle",
+                "ScanStateQueued",
+                "ScanStateRunning"
+            ]
+        },
+        "storage.ScanStatus": {
+            "type": "object",
+            "properties": {
+                "last_completed_at": {
+                    "type": "string"
+                },
+                "last_failed_at": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "state": {
+                    "$ref": "#/definitions/storage.ScanState"
+                }
+            }
+        },
+        "storage.StorageFinding": {
+            "type": "object",
+            "properties": {
+                "detected_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "relative_path": {
+                    "type": "string"
+                },
+                "size_bytes": {
+                    "type": "integer"
+                }
+            }
         },
         "utils.ErrorResponse": {
             "type": "object",

@@ -1665,9 +1665,21 @@ definitions:
         - process_playlist_video_rules
         - update_platform_channels
         - generate_nfo_files
+        - reconcile_storage
         type: string
     required:
     - task
+    type: object
+  http.StorageFindingsRequest:
+    properties:
+      ids:
+        items:
+          type: string
+        maxItems: 100
+        minItems: 1
+        type: array
+    required:
+    - ids
     type: object
   http.TestNotificationRequest:
     properties:
@@ -2100,6 +2112,73 @@ definitions:
     - DefaultOperator
     - OperatorAND
     - OperatorOR
+  storage.ActionFailure:
+    properties:
+      error:
+        type: string
+      id:
+        type: string
+      path:
+        type: string
+    type: object
+  storage.ActionResult:
+    properties:
+      done:
+        items:
+          type: string
+        type: array
+      failed:
+        items:
+          $ref: '#/definitions/storage.ActionFailure'
+        type: array
+    type: object
+  storage.ListFindingsResponse:
+    properties:
+      findings:
+        items:
+          $ref: '#/definitions/storage.StorageFinding'
+        type: array
+      scan:
+        $ref: '#/definitions/storage.ScanStatus'
+      videos_directory:
+        type: string
+    type: object
+  storage.ScanState:
+    enum:
+    - idle
+    - queued
+    - running
+    type: string
+    x-enum-varnames:
+    - ScanStateIdle
+    - ScanStateQueued
+    - ScanStateRunning
+  storage.ScanStatus:
+    properties:
+      last_completed_at:
+        type: string
+      last_failed_at:
+        type: string
+      started_at:
+        type: string
+      state:
+        $ref: '#/definitions/storage.ScanState'
+    type: object
+  storage.StorageFinding:
+    properties:
+      detected_at:
+        type: string
+      id:
+        type: string
+      kind:
+        type: string
+      path:
+        type: string
+      relative_path:
+        type: string
+      size_bytes:
+        type: integer
+    type: object
   utils.ErrorResponse:
     properties:
       message:
@@ -2413,6 +2492,95 @@ paths:
       - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get storage distribution
+      tags:
+      - admin
+  /admin/storage-findings:
+    get:
+      consumes:
+      - application/json
+      description: List directories that hold the files of a video that is not in
+        the database, and the state of the reconciliation task
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.ListFindingsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: List storage findings
+      tags:
+      - admin
+  /admin/storage-findings/delete:
+    post:
+      consumes:
+      - application/json
+      description: Delete the directories of the given findings from disk
+      parameters:
+      - description: Findings to delete
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.StorageFindingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.ActionResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Delete storage findings
+      tags:
+      - admin
+  /admin/storage-findings/import:
+    post:
+      consumes:
+      - application/json
+      description: Turn the directories of the given findings back into videos
+      parameters:
+      - description: Findings to import
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.StorageFindingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.ActionResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyCookieAuth: []
+      - ApiKeyAuth: []
+      summary: Import storage findings
       tags:
       - admin
   /admin/system-overview:
@@ -4734,7 +4902,7 @@ paths:
       - description: Delete files
         in: query
         name: delete_files
-        type: string
+        type: boolean
       produces:
       - application/json
       responses:
@@ -4771,19 +4939,19 @@ paths:
       - description: With channel
         in: query
         name: with_channel
-        type: string
+        type: boolean
       - description: With chapters
         in: query
         name: with_chapters
-        type: string
+        type: boolean
       - description: With muted segments
         in: query
         name: with_muted_segments
-        type: string
+        type: boolean
       - description: With queue
         in: query
         name: with_queue
-        type: string
+        type: boolean
       produces:
       - application/json
       responses:
@@ -5394,19 +5562,19 @@ paths:
       - description: With channel
         in: query
         name: with_channel
-        type: string
+        type: boolean
       - description: With chapters
         in: query
         name: with_chapters
-        type: string
+        type: boolean
       - description: With muted segments
         in: query
         name: with_muted_segments
-        type: string
+        type: boolean
       - description: With queue
         in: query
         name: with_queue
-        type: string
+        type: boolean
       produces:
       - application/json
       responses:
@@ -5460,7 +5628,7 @@ paths:
       - description: Processing. Set to false to exclude videos that are still processing.
         in: query
         name: processing
-        type: string
+        type: boolean
       produces:
       - application/json
       responses:

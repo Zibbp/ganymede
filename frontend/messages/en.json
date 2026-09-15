@@ -141,6 +141,7 @@
       "apiKeys": "API Keys",
       "notifications": "Notifications",
       "settings": "Settings",
+      "storage": "Storage",
       "tasks": "Tasks",
       "information": "Information"
     },
@@ -321,6 +322,44 @@
     },
     "submit": "Save Settings"
   },
+  "AdminStoragePage": {
+    "title": "Admin - Storage",
+    "loading": "Loading storage findings",
+    "error": "Error loading storage findings",
+    "header": "Manage Storage",
+    "body": "Directories that hold the files of a video that is not in the database. They are left behind when a video is deleted without deleting its files, and can be imported back or deleted from disk. A channel is only looked at when every one of its videos is where the database says it is.",
+    "videosDirectory": "Videos directory:",
+    "summary": "{length} directories using {size}.",
+    "search": "Search directories...",
+    "scan": {
+      "start": "Scan now",
+      "running": "Scanning",
+      "runningSince": "Scan running since {time}.",
+      "lastCompleted": "Last scan completed {time}.",
+      "lastFailed": "Last scan failed {time}, see the task logs.",
+      "never": "No scan has run yet. Start one to look for directories.",
+      "unknown": "The last scan is no longer in the task history, the list can be out of date.",
+      "starting": "Scan starting.",
+      "finishedNotification": "Scan finished, {length} directories found.",
+      "failedNotification": "The scan failed, see the task logs.",
+      "pendingNotification": "The scan has not finished yet, check the tasks page."
+    },
+    "scanStartedNotification": "Scan started",
+    "actions": {
+      "delete": "Delete directory",
+      "import": "Import directory",
+      "deleteSelected": "Delete {length} selected",
+      "importSelected": "Import {length} selected"
+    },
+    "deleteModal": "Delete Directories",
+    "importModal": "Import Directories",
+    "columns": {
+      "path": "Path",
+      "size": "Size",
+      "detectedAt": "Found At",
+      "actions": "Actions"
+    }
+  },
   "AdminTasksPage": {
     "title": "Admin - Tasks",
     "taskStartedNotification": "Task started, see container logs for more information.",
@@ -351,7 +390,9 @@
     "processPlaylistVideoRules": "Process Playlist Video Rules",
     "processPlaylistVideoRulesDescription": "Process video rules for playlists. This will check if videos should be added to playlists based on the rules defined. Runs every hour.",
     "updatePlatformChannels": "Update Platform Channels",
-    "updatePlatformChannelsDescription": "Update channel information from the platform for all channels. This includes display name and profile image. Runs every 12 hours."
+    "updatePlatformChannelsDescription": "Update channel information from the platform for all channels. This includes display name and profile image. Runs every 12 hours.",
+    "reconcileStorage": "Reconcile Storage",
+    "reconcileStorageDescription": "Find directories in the videos directory that hold the files of a video that is not in the database. Results are shown on the Storage page."
   },
   "AdminUsersPage": {
     "title": "Admin - Users",
@@ -708,6 +749,15 @@
     "editButton": "Edit Watched Channel",
     "updateMetadataLabel": "Update Metadata",
     "updateMetadataDescription": "Update live stream metadata after {minutes} minutes of the live stream archive starting. This includes thumbnails and title. Set to 0 to disable."
+  },
+  "AdminStorageComponents": {
+    "deleteText": "Are you sure you want to permanently delete the {length} selected directories, {size} in total, from disk?",
+    "deleteButton": "Delete From Disk",
+    "deletedNotification": "{length} directories deleted",
+    "importText": "Import the {length} selected directories, {size} in total, as videos? The metadata is read from the info file the archiver wrote next to the video.",
+    "importButton": "Import",
+    "importedNotification": "{length} directories imported",
+    "partialTitle": "{done} done, {failed} failed"
   },
   "AuthComponents": {
     "validation": {

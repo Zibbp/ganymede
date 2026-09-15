@@ -54,6 +54,9 @@ type Queue func(*sql.Selector)
 // Sessions is the predicate function for sessions builders.
 type Sessions func(*sql.Selector)
 
+// StorageFinding is the predicate function for storagefinding builders.
+type StorageFinding func(*sql.Selector)
+
 // TwitchCategory is the predicate function for twitchcategory builders.
 type TwitchCategory func(*sql.Selector)
 

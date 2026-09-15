@@ -22,6 +22,7 @@ import (
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/schema"
 	"github.com/zibbp/ganymede/ent/sessions"
+	"github.com/zibbp/ganymede/ent/storagefinding"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -455,6 +456,24 @@ func init() {
 	sessionsDescData := sessionsFields[1].Descriptor()
 	// sessions.DataValidator is a validator for the "data" field. It is called by the builders before save.
 	sessions.DataValidator = sessionsDescData.Validators[0].(func([]byte) error)
+	storagefindingFields := schema.StorageFinding{}.Fields()
+	_ = storagefindingFields
+	// storagefindingDescPath is the schema descriptor for path field.
+	storagefindingDescPath := storagefindingFields[2].Descriptor()
+	// storagefinding.PathValidator is a validator for the "path" field. It is called by the builders before save.
+	storagefinding.PathValidator = storagefindingDescPath.Validators[0].(func(string) error)
+	// storagefindingDescSizeBytes is the schema descriptor for size_bytes field.
+	storagefindingDescSizeBytes := storagefindingFields[3].Descriptor()
+	// storagefinding.DefaultSizeBytes holds the default value on creation for the size_bytes field.
+	storagefinding.DefaultSizeBytes = storagefindingDescSizeBytes.Default.(int64)
+	// storagefindingDescDetectedAt is the schema descriptor for detected_at field.
+	storagefindingDescDetectedAt := storagefindingFields[4].Descriptor()
+	// storagefinding.DefaultDetectedAt holds the default value on creation for the detected_at field.
+	storagefinding.DefaultDetectedAt = storagefindingDescDetectedAt.Default.(func() time.Time)
+	// storagefindingDescID is the schema descriptor for id field.
+	storagefindingDescID := storagefindingFields[0].Descriptor()
+	// storagefinding.DefaultID holds the default value on creation for the id field.
+	storagefinding.DefaultID = storagefindingDescID.Default.(func() uuid.UUID)
 	twitchcategoryFields := schema.TwitchCategory{}.Fields()
 	_ = twitchcategoryFields
 	// twitchcategoryDescUpdatedAt is the schema descriptor for updated_at field.
