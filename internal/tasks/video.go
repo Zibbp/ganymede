@@ -190,12 +190,31 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 
 	// Live archive MP4 retries must be idempotent. If the remux output already exists and
 	// is valid, skip rerunning post-process so retries still succeed after TS source cleanup.
+	//
+	// The video file alone cannot show that the conversion finished: cut short,
+	// a fragmented video still reads as valid media. A playlist under its final
+	// name can, because post-processing renames it there as its last step. The
+	// condition has to match the one that decides whether a playlist is written
+	// at all, otherwise this waits for a file nobody produces.
+	//
+	// A converted video without one is accepted when the downloaded source is
+	// gone, because the source is only removed after a conversion succeeded.
+	// That covers videos converted before playlists existed, and it matters:
+	// re-converting is impossible without the source, and this file is then the
+	// only copy of the recording.
 	if dbItems.Queue.LiveArchive && dbItems.Video.VideoHlsPath == "" {
 		if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
-			if err := validateNonEmptyFile(dbItems.Video.TmpVideoConvertPath, "live finalized MP4 output"); err != nil {
-				return err
+			// Without playlists there is nothing to tell a finished conversion
+			// from an interrupted one, which is how it was before playlists
+			// existed: the video file being there has to be enough.
+			finishedConversion := !exec.ShouldGeneratePlaylist() ||
+				exec.ValidatePlaylist(exec.PlaylistPathForVideo(dbItems.Video.TmpVideoConvertPath)) == nil
+			if finishedConversion || !utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
+				if err := validateNonEmptyFile(dbItems.Video.TmpVideoConvertPath, "live finalized MP4 output"); err != nil {
+					return err
+				}
+				shouldPostProcessVideo = false
 			}
-			shouldPostProcessVideo = false
 		}
 	}
 
@@ -364,9 +383,41 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 			return err
 		}
 
+		// The playlist that addresses the video by byte ranges is moved first.
+		// It belongs to the converted video, never to the raw download, and
+		// moving it before the video keeps a failure here retryable: the video
+		// is still in place, so the retry repeats both moves.
+		tmpPlaylistPath := exec.PlaylistPathForVideo(dbItems.Video.TmpVideoConvertPath)
+		archivedPlaylistPath := exec.PlaylistPathForVideo(dbItems.Video.VideoPath)
+		if archivedPlaylistPath != "" && tmpVideoPath == dbItems.Video.TmpVideoConvertPath && utils.FileExists(tmpPlaylistPath) {
+			if err := utils.MoveFile(ctx, tmpPlaylistPath, archivedPlaylistPath); err != nil {
+				return err
+			}
+		}
+
 		err := utils.MoveFile(ctx, tmpVideoPath, dbItems.Video.VideoPath)
 		if err != nil {
 			return err
+		}
+
+		// The playlist addresses the video by byte offset, so the pair only
+		// works together. Shipping a playlist that does not match would break
+		// playback in a way no player can recover from, while dropping it falls
+		// back to the video file.
+		if archivedPlaylistPath != "" && utils.FileExists(archivedPlaylistPath) {
+			// Both halves have to agree: the ranges have to fit the file and
+			// the file has to be the one the playlist names. A rename between
+			// post-processing and here changes the name but not the bytes.
+			err := exec.ValidatePlaylistNamesVideo(archivedPlaylistPath, dbItems.Video.VideoPath)
+			if err == nil {
+				err = exec.ValidatePlaylistCoversVideo(archivedPlaylistPath, dbItems.Video.VideoPath)
+			}
+			if err != nil {
+				log.Error().Err(err).Str("video_id", dbItems.Video.ID.String()).Msg("playlist does not match the archived video, removing it")
+				if err := utils.DeleteFile(archivedPlaylistPath); err != nil {
+					return err
+				}
+			}
 		}
 
 		// delete temp hls directory if exists for watching while live
@@ -396,11 +447,12 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		if err := utils.DeleteDirectory(dbItems.Video.TmpVideoHlsPath); err != nil {
 			return err
 		}
-		// delete temp converted video
-		if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
-			err = utils.DeleteFile(dbItems.Video.TmpVideoConvertPath)
-			if err != nil {
-				return err
+		// delete temp converted video and the playlist that belongs to it
+		for _, path := range []string{dbItems.Video.TmpVideoConvertPath, exec.PlaylistPathForVideo(dbItems.Video.TmpVideoConvertPath)} {
+			if utils.FileExists(path) {
+				if err := utils.DeleteFile(path); err != nil {
+					return err
+				}
 			}
 		}
 	}

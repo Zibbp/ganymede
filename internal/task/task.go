@@ -13,6 +13,7 @@ import (
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/nfo"
 	"github.com/zibbp/ganymede/internal/storagetemplate"
@@ -144,6 +145,13 @@ func (s *Service) StartTask(ctx context.Context, task string) error {
 type renameOperation struct {
 	oldPath string
 	newPath string
+	// A playlist names the video it belongs to, so renaming it also rewrites
+	// its contents. Both have to be undone together.
+	playlistMediaNameBefore string
+	playlistMediaNameAfter  string
+	// Set on the video's own rename, which is the only one that can leave a
+	// playlist behind describing a file that is elsewhere.
+	isVideo bool
 }
 
 // rollbackRenames will undo the renames in reverse order.
@@ -152,8 +160,37 @@ func rollbackRenames(ops []renameOperation) {
 		op := ops[i]
 		if err := os.Rename(op.newPath, op.oldPath); err != nil {
 			log.Error().Err(err).Msgf("error rolling back rename from %s to %s", op.newPath, op.oldPath)
-		} else {
-			log.Info().Msgf("rolled back rename from %s to %s", op.newPath, op.oldPath)
+			// A video that could not be put back leaves any playlist that was
+			// already restored beside it describing a file that is elsewhere.
+			if playlistPath := exec.PlaylistPathForVideo(op.oldPath); op.isVideo && playlistPath != "" {
+				if _, statErr := os.Lstat(playlistPath); statErr == nil {
+					if err := os.Remove(playlistPath); err != nil {
+						log.Error().Err(err).Msgf("error removing playlist %s", playlistPath)
+					}
+				}
+			}
+			if op.playlistMediaNameBefore != "" {
+				// It names a file that is no longer beside it, and a playlist
+				// that parses cannot be recognised as wrong by any player.
+				if err := os.Remove(op.newPath); err != nil {
+					log.Error().Err(err).Msgf("error removing playlist %s", op.newPath)
+				}
+			}
+			continue
+		}
+		log.Info().Msgf("rolled back rename from %s to %s", op.newPath, op.oldPath)
+
+		if op.playlistMediaNameBefore == "" {
+			continue
+		}
+		if err := exec.RewritePlaylistMediaName(op.oldPath, op.playlistMediaNameAfter, op.playlistMediaNameBefore); err != nil {
+			// A playlist naming the wrong file breaks playback with no way for
+			// the player to notice, while a missing one simply falls back to
+			// the video itself.
+			log.Error().Err(err).Msgf("error rolling back playlist contents of %s, removing it", op.oldPath)
+			if err := os.Remove(op.oldPath); err != nil {
+				log.Error().Err(err).Msgf("error removing playlist %s", op.oldPath)
+			}
 		}
 	}
 }
@@ -321,7 +358,7 @@ func (s *Service) StorageMigration() error {
 		// Video file
 		if video.VideoPath != "" {
 			ext := path.Ext(video.VideoPath)
-			if ext == ".m3u8" {
+			if strings.EqualFold(ext, ".m3u8") {
 				oldHlsVideoRootPath := path.Dir(video.VideoPath)
 				newHlsVideoRootPath := fmt.Sprintf("%s/%s-video_hls", newRootFolderPath, fileName)
 				if err := safeRename(oldHlsVideoRootPath, newHlsVideoRootPath); err != nil {
@@ -331,10 +368,61 @@ func (s *Service) StorageMigration() error {
 				}
 			} else {
 				newVideoPath := fmt.Sprintf("%s/%s-video%s", newRootFolderPath, fileName, ext)
+				renamesBeforeVideo := len(renames)
 				if err := safeRename(video.VideoPath, newVideoPath); err != nil {
 					log.Error().Err(err).Msgf("error renaming video file for video %s", video.ID)
 					rollbackRenames(renames)
 					continue
+				}
+				// safeRename skips a video that is not there, and a playlist
+				// without its video is worse than no playlist: it parses, so
+				// the player commits to it and stalls instead of falling back.
+				videoWasRenamed := len(renames) > renamesBeforeVideo
+				if videoWasRenamed {
+					renames[len(renames)-1].isVideo = true
+				}
+
+				// The playlist addresses the video by name, so renaming one
+				// without the other leaves the video unplayable on Apple
+				// devices and an orphan behind.
+				oldPlaylistPath := exec.PlaylistPathForVideo(video.VideoPath)
+				newPlaylistPath := exec.PlaylistPathForVideo(newVideoPath)
+				_, playlistStatErr := os.Lstat(oldPlaylistPath)
+				if !videoWasRenamed {
+					playlistStatErr = os.ErrNotExist
+				}
+				if playlistStatErr != nil && !os.IsNotExist(playlistStatErr) {
+					log.Error().Err(playlistStatErr).Msgf("error reading playlist for video %s", video.ID)
+					rollbackRenames(renames)
+					continue
+				}
+				if playlistStatErr == nil && oldPlaylistPath != newPlaylistPath {
+					// An existing playlist at the destination is never
+					// overwritten; a rename cannot bring it back.
+					if _, statErr := os.Lstat(newPlaylistPath); statErr == nil || !os.IsNotExist(statErr) {
+						log.Error().Err(statErr).Msgf("destination playlist %s already exists or is unreadable for video %s", newPlaylistPath, video.ID)
+						rollbackRenames(renames)
+						continue
+					}
+					renamesBeforePlaylist := len(renames)
+					if err := safeRename(oldPlaylistPath, newPlaylistPath); err != nil {
+						log.Error().Err(err).Msgf("error renaming playlist for video %s", video.ID)
+						rollbackRenames(renames)
+						continue
+					}
+					// The rewrite is recorded with the rename it belongs to, so
+					// a later failure undoes both. It is skipped in the case
+					// safeRename records nothing, which needs the playlist to
+					// vanish between the check above and the rename itself.
+					if len(renames) > renamesBeforePlaylist {
+						if err := exec.RewritePlaylistMediaName(newPlaylistPath, path.Base(video.VideoPath), path.Base(newVideoPath)); err != nil {
+							log.Error().Err(err).Msgf("error updating playlist for video %s", video.ID)
+							rollbackRenames(renames)
+							continue
+						}
+						renames[len(renames)-1].playlistMediaNameBefore = path.Base(video.VideoPath)
+						renames[len(renames)-1].playlistMediaNameAfter = path.Base(newVideoPath)
+					}
 				}
 
 				oldNFOPath, nfoPathErr := nfo.SidecarPath(video.VideoPath)
@@ -477,7 +565,7 @@ func (s *Service) StorageMigration() error {
 		update = update.SetFileName(fileName)
 		if video.VideoPath != "" {
 			ext := path.Ext(video.VideoPath)
-			if ext == ".m3u8" {
+			if strings.EqualFold(ext, ".m3u8") {
 				newHlsVideoRootPath := fmt.Sprintf("%s/%s-video_hls", newRootFolderPath, fileName)
 				update = update.SetVideoPath(fmt.Sprintf("%s/%s-video.m3u8", newHlsVideoRootPath, video.ExtID))
 				update = update.SetVideoHlsPath(newHlsVideoRootPath)
