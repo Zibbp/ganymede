@@ -141,60 +141,64 @@ func init() {
 	liveDescVodResolution := liveFields[10].Descriptor()
 	// live.DefaultVodResolution holds the default value on creation for the vod_resolution field.
 	live.DefaultVodResolution = liveDescVodResolution.Default.(string)
+	// liveDescClipResolution is the schema descriptor for clip_resolution field.
+	liveDescClipResolution := liveFields[11].Descriptor()
+	// live.DefaultClipResolution holds the default value on creation for the clip_resolution field.
+	live.DefaultClipResolution = liveDescClipResolution.Default.(string)
 	// liveDescLastLive is the schema descriptor for last_live field.
-	liveDescLastLive := liveFields[11].Descriptor()
+	liveDescLastLive := liveFields[12].Descriptor()
 	// live.DefaultLastLive holds the default value on creation for the last_live field.
 	live.DefaultLastLive = liveDescLastLive.Default.(func() time.Time)
 	// liveDescRenderChat is the schema descriptor for render_chat field.
-	liveDescRenderChat := liveFields[12].Descriptor()
+	liveDescRenderChat := liveFields[13].Descriptor()
 	// live.DefaultRenderChat holds the default value on creation for the render_chat field.
 	live.DefaultRenderChat = liveDescRenderChat.Default.(bool)
 	// liveDescVideoAge is the schema descriptor for video_age field.
-	liveDescVideoAge := liveFields[13].Descriptor()
+	liveDescVideoAge := liveFields[14].Descriptor()
 	// live.DefaultVideoAge holds the default value on creation for the video_age field.
 	live.DefaultVideoAge = liveDescVideoAge.Default.(int64)
 	// liveDescApplyCategoriesToLive is the schema descriptor for apply_categories_to_live field.
-	liveDescApplyCategoriesToLive := liveFields[14].Descriptor()
+	liveDescApplyCategoriesToLive := liveFields[15].Descriptor()
 	// live.DefaultApplyCategoriesToLive holds the default value on creation for the apply_categories_to_live field.
 	live.DefaultApplyCategoriesToLive = liveDescApplyCategoriesToLive.Default.(bool)
 	// liveDescStrictCategoriesLive is the schema descriptor for strict_categories_live field.
-	liveDescStrictCategoriesLive := liveFields[15].Descriptor()
+	liveDescStrictCategoriesLive := liveFields[16].Descriptor()
 	// live.DefaultStrictCategoriesLive holds the default value on creation for the strict_categories_live field.
 	live.DefaultStrictCategoriesLive = liveDescStrictCategoriesLive.Default.(bool)
 	// liveDescBlacklistCategories is the schema descriptor for blacklist_categories field.
-	liveDescBlacklistCategories := liveFields[16].Descriptor()
+	liveDescBlacklistCategories := liveFields[17].Descriptor()
 	// live.DefaultBlacklistCategories holds the default value on creation for the blacklist_categories field.
 	live.DefaultBlacklistCategories = liveDescBlacklistCategories.Default.(bool)
 	// liveDescWatchClips is the schema descriptor for watch_clips field.
-	liveDescWatchClips := liveFields[17].Descriptor()
+	liveDescWatchClips := liveFields[18].Descriptor()
 	// live.DefaultWatchClips holds the default value on creation for the watch_clips field.
 	live.DefaultWatchClips = liveDescWatchClips.Default.(bool)
 	// liveDescClipsLimit is the schema descriptor for clips_limit field.
-	liveDescClipsLimit := liveFields[18].Descriptor()
+	liveDescClipsLimit := liveFields[19].Descriptor()
 	// live.DefaultClipsLimit holds the default value on creation for the clips_limit field.
 	live.DefaultClipsLimit = liveDescClipsLimit.Default.(int)
 	// liveDescClipsIntervalDays is the schema descriptor for clips_interval_days field.
-	liveDescClipsIntervalDays := liveFields[19].Descriptor()
+	liveDescClipsIntervalDays := liveFields[20].Descriptor()
 	// live.DefaultClipsIntervalDays holds the default value on creation for the clips_interval_days field.
 	live.DefaultClipsIntervalDays = liveDescClipsIntervalDays.Default.(int)
 	// liveDescClipsIgnoreLastChecked is the schema descriptor for clips_ignore_last_checked field.
-	liveDescClipsIgnoreLastChecked := liveFields[21].Descriptor()
+	liveDescClipsIgnoreLastChecked := liveFields[22].Descriptor()
 	// live.DefaultClipsIgnoreLastChecked holds the default value on creation for the clips_ignore_last_checked field.
 	live.DefaultClipsIgnoreLastChecked = liveDescClipsIgnoreLastChecked.Default.(bool)
 	// liveDescUpdateMetadataMinutes is the schema descriptor for update_metadata_minutes field.
-	liveDescUpdateMetadataMinutes := liveFields[22].Descriptor()
+	liveDescUpdateMetadataMinutes := liveFields[23].Descriptor()
 	// live.DefaultUpdateMetadataMinutes holds the default value on creation for the update_metadata_minutes field.
 	live.DefaultUpdateMetadataMinutes = liveDescUpdateMetadataMinutes.Default.(int)
 	// live.UpdateMetadataMinutesValidator is a validator for the "update_metadata_minutes" field. It is called by the builders before save.
 	live.UpdateMetadataMinutesValidator = liveDescUpdateMetadataMinutes.Validators[0].(func(int) error)
 	// liveDescUpdatedAt is the schema descriptor for updated_at field.
-	liveDescUpdatedAt := liveFields[23].Descriptor()
+	liveDescUpdatedAt := liveFields[24].Descriptor()
 	// live.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	live.DefaultUpdatedAt = liveDescUpdatedAt.Default.(func() time.Time)
 	// live.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	live.UpdateDefaultUpdatedAt = liveDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// liveDescCreatedAt is the schema descriptor for created_at field.
-	liveDescCreatedAt := liveFields[24].Descriptor()
+	liveDescCreatedAt := liveFields[25].Descriptor()
 	// live.DefaultCreatedAt holds the default value on creation for the created_at field.
 	live.DefaultCreatedAt = liveDescCreatedAt.Default.(func() time.Time)
 	// liveDescID is the schema descriptor for id field.

@@ -147,11 +147,15 @@ func migrate(ctx context.Context, sqlDB *sql.DB, client *ent.Client) error {
 	}
 
 	hasLiveVodResolution := columnExists(ctx, sqlDB, entLive.Table, entLive.FieldVodResolution)
+	hasLiveClipResolution := columnExists(ctx, sqlDB, entLive.Table, entLive.FieldClipResolution)
 	if err := client.Schema.Create(ctx); err != nil {
 		return fmt.Errorf("run Ent migrations: %w", err)
 	}
 	if !hasLiveVodResolution {
 		backfillLiveVodResolution(ctx, sqlDB)
+	}
+	if !hasLiveClipResolution {
+		backfillLiveClipResolution(ctx, sqlDB)
 	}
 	dropOrphanedColumns(ctx, sqlDB)
 
@@ -296,6 +300,40 @@ func backfillLiveVodResolution(ctx context.Context, conn sqlExecutor) {
 	)
 	if _, err := conn.ExecContext(ctx, stmt); err != nil {
 		log.Warn().Err(err).Msg("backfill live vod resolution failed")
+	}
+}
+
+// backfillLiveClipResolution copies the previous VOD-and-clip quality into the
+// new dedicated clip_resolution column. Rows whose VOD quality is audio-only,
+// empty, or NULL fall back to best because Twitch does not publish
+// audio-only clip renditions. Only NULL/empty clip values are touched so an
+// explicit user choice is never overwritten.
+func backfillLiveClipResolution(ctx context.Context, conn sqlExecutor) {
+	copyStmt := fmt.Sprintf(
+		`UPDATE %s SET %s = %s WHERE (%s IS NULL OR %s = '') AND %s IS NOT NULL AND %s <> '' AND %s <> 'audio'`,
+		entLive.Table,
+		entLive.FieldClipResolution,
+		entLive.FieldVodResolution,
+		entLive.FieldClipResolution,
+		entLive.FieldClipResolution,
+		entLive.FieldVodResolution,
+		entLive.FieldVodResolution,
+		entLive.FieldVodResolution,
+	)
+	if _, err := conn.ExecContext(ctx, copyStmt); err != nil {
+		log.Warn().Err(err).Msg("backfill live clip resolution failed")
+		return
+	}
+	defaultStmt := fmt.Sprintf(
+		`UPDATE %s SET %s = 'best' WHERE %s IS NULL OR %s = '' OR %s = 'audio'`,
+		entLive.Table,
+		entLive.FieldClipResolution,
+		entLive.FieldClipResolution,
+		entLive.FieldClipResolution,
+		entLive.FieldClipResolution,
+	)
+	if _, err := conn.ExecContext(ctx, defaultStmt); err != nil {
+		log.Warn().Err(err).Msg("backfill live clip resolution default failed")
 	}
 }
 

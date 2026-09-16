@@ -106,6 +106,11 @@ func VodResolution(v string) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldVodResolution, v))
 }
 
+// ClipResolution applies equality check predicate on the "clip_resolution" field. It's identical to ClipResolutionEQ.
+func ClipResolution(v string) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipResolution, v))
+}
+
 // LastLive applies equality check predicate on the "last_live" field. It's identical to LastLiveEQ.
 func LastLive(v time.Time) predicate.Live {
 	return predicate.Live(sql.FieldEQ(FieldLastLive, v))
@@ -404,6 +409,81 @@ func VodResolutionEqualFold(v string) predicate.Live {
 // VodResolutionContainsFold applies the ContainsFold predicate on the "vod_resolution" field.
 func VodResolutionContainsFold(v string) predicate.Live {
 	return predicate.Live(sql.FieldContainsFold(FieldVodResolution, v))
+}
+
+// ClipResolutionEQ applies the EQ predicate on the "clip_resolution" field.
+func ClipResolutionEQ(v string) predicate.Live {
+	return predicate.Live(sql.FieldEQ(FieldClipResolution, v))
+}
+
+// ClipResolutionNEQ applies the NEQ predicate on the "clip_resolution" field.
+func ClipResolutionNEQ(v string) predicate.Live {
+	return predicate.Live(sql.FieldNEQ(FieldClipResolution, v))
+}
+
+// ClipResolutionIn applies the In predicate on the "clip_resolution" field.
+func ClipResolutionIn(vs ...string) predicate.Live {
+	return predicate.Live(sql.FieldIn(FieldClipResolution, vs...))
+}
+
+// ClipResolutionNotIn applies the NotIn predicate on the "clip_resolution" field.
+func ClipResolutionNotIn(vs ...string) predicate.Live {
+	return predicate.Live(sql.FieldNotIn(FieldClipResolution, vs...))
+}
+
+// ClipResolutionGT applies the GT predicate on the "clip_resolution" field.
+func ClipResolutionGT(v string) predicate.Live {
+	return predicate.Live(sql.FieldGT(FieldClipResolution, v))
+}
+
+// ClipResolutionGTE applies the GTE predicate on the "clip_resolution" field.
+func ClipResolutionGTE(v string) predicate.Live {
+	return predicate.Live(sql.FieldGTE(FieldClipResolution, v))
+}
+
+// ClipResolutionLT applies the LT predicate on the "clip_resolution" field.
+func ClipResolutionLT(v string) predicate.Live {
+	return predicate.Live(sql.FieldLT(FieldClipResolution, v))
+}
+
+// ClipResolutionLTE applies the LTE predicate on the "clip_resolution" field.
+func ClipResolutionLTE(v string) predicate.Live {
+	return predicate.Live(sql.FieldLTE(FieldClipResolution, v))
+}
+
+// ClipResolutionContains applies the Contains predicate on the "clip_resolution" field.
+func ClipResolutionContains(v string) predicate.Live {
+	return predicate.Live(sql.FieldContains(FieldClipResolution, v))
+}
+
+// ClipResolutionHasPrefix applies the HasPrefix predicate on the "clip_resolution" field.
+func ClipResolutionHasPrefix(v string) predicate.Live {
+	return predicate.Live(sql.FieldHasPrefix(FieldClipResolution, v))
+}
+
+// ClipResolutionHasSuffix applies the HasSuffix predicate on the "clip_resolution" field.
+func ClipResolutionHasSuffix(v string) predicate.Live {
+	return predicate.Live(sql.FieldHasSuffix(FieldClipResolution, v))
+}
+
+// ClipResolutionIsNil applies the IsNil predicate on the "clip_resolution" field.
+func ClipResolutionIsNil() predicate.Live {
+	return predicate.Live(sql.FieldIsNull(FieldClipResolution))
+}
+
+// ClipResolutionNotNil applies the NotNil predicate on the "clip_resolution" field.
+func ClipResolutionNotNil() predicate.Live {
+	return predicate.Live(sql.FieldNotNull(FieldClipResolution))
+}
+
+// ClipResolutionEqualFold applies the EqualFold predicate on the "clip_resolution" field.
+func ClipResolutionEqualFold(v string) predicate.Live {
+	return predicate.Live(sql.FieldEqualFold(FieldClipResolution, v))
+}
+
+// ClipResolutionContainsFold applies the ContainsFold predicate on the "clip_resolution" field.
+func ClipResolutionContainsFold(v string) predicate.Live {
+	return predicate.Live(sql.FieldContainsFold(FieldClipResolution, v))
 }
 
 // LastLiveEQ applies the EQ predicate on the "last_live" field.

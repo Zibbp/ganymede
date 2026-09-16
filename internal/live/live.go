@@ -48,6 +48,7 @@ type Live struct {
 	ArchiveChat            bool                 `json:"archive_chat"`
 	Resolution             string               `json:"resolution"`
 	VodResolution          string               `json:"vod_resolution"`
+	ClipResolution         string               `json:"clip_resolution"`
 	LastLive               time.Time            `json:"last_live"`
 	RenderChat             bool                 `json:"render_chat"`
 	DownloadSubOnly        bool                 `json:"download_sub_only"`
@@ -82,6 +83,37 @@ type ArchiveLive struct {
 
 func NewService(store *database.Database, archiveService *archive.Service, platformTwitch platform.Platform, chapterService *chapter.Service, queueService *queue.Service, notificationService *notification.Service) *Service {
 	return &Service{Store: store, ArchiveService: archiveService, PlatformTwitch: platformTwitch, ChapterService: chapterService, QueueService: queueService, NotificationService: notificationService}
+}
+
+// ResolveClipResolution returns the effective clip archive quality following
+// clip_resolution -> vod_resolution -> resolution. It keeps older rows and
+// API clients that omit clip_resolution working.
+func ResolveClipResolution(clipResolution, vodResolution, resolution string) string {
+	if clipResolution != "" {
+		return clipResolution
+	}
+	if vodResolution != "" {
+		return vodResolution
+	}
+	return resolution
+}
+
+// ResolveClipResolutionForLive resolves the effective clip quality for a
+// persisted watched channel entity.
+func ResolveClipResolutionForLive(l *ent.Live) string {
+	if l == nil {
+		return ""
+	}
+	return ResolveClipResolution(l.ClipResolution, l.VodResolution, l.Resolution)
+}
+
+// ValidateClipResolution rejects audio-only clip quality. Twitch does not
+// publish audio-only clip renditions, so such jobs would always fail.
+func ValidateClipResolution(resolution string) error {
+	if utils.VodQuality(resolution) == utils.Audio {
+		return fmt.Errorf("clip_resolution must not be audio: Twitch clips have no audio-only renditions")
+	}
+	return nil
 }
 
 // ResetLiveStatus sets is_live=false for all watched channels.
@@ -121,6 +153,10 @@ func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent
 	if liveDto.VodResolution == "" {
 		liveDto.VodResolution = liveDto.Resolution
 	}
+	liveDto.ClipResolution = ResolveClipResolution(liveDto.ClipResolution, liveDto.VodResolution, liveDto.Resolution)
+	if err := ValidateClipResolution(liveDto.ClipResolution); err != nil {
+		return nil, err
+	}
 
 	l, err := s.Store.Client.Live.Create().
 		SetChannelID(liveDto.ID).
@@ -131,6 +167,7 @@ func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent
 		SetDownloadUploads(liveDto.DownloadUploads).
 		SetResolution(liveDto.Resolution).
 		SetVodResolution(liveDto.VodResolution).
+		SetClipResolution(liveDto.ClipResolution).
 		SetArchiveChat(liveDto.ArchiveChat).
 		SetRenderChat(liveDto.RenderChat).
 		SetDownloadSubOnly(liveDto.DownloadSubOnly).
@@ -176,6 +213,10 @@ func (s *Service) UpdateLiveWatchedChannel(ctx context.Context, liveDto Live) (*
 	if liveDto.VodResolution == "" {
 		liveDto.VodResolution = liveDto.Resolution
 	}
+	liveDto.ClipResolution = ResolveClipResolution(liveDto.ClipResolution, liveDto.VodResolution, liveDto.Resolution)
+	if err := ValidateClipResolution(liveDto.ClipResolution); err != nil {
+		return nil, err
+	}
 
 	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).
 		SetWatchLive(liveDto.WatchLive).
@@ -185,6 +226,7 @@ func (s *Service) UpdateLiveWatchedChannel(ctx context.Context, liveDto Live) (*
 		SetDownloadUploads(liveDto.DownloadUploads).
 		SetResolution(liveDto.Resolution).
 		SetVodResolution(liveDto.VodResolution).
+		SetClipResolution(liveDto.ClipResolution).
 		SetArchiveChat(liveDto.ArchiveChat).
 		SetRenderChat(liveDto.RenderChat).
 		SetDownloadSubOnly(liveDto.DownloadSubOnly).

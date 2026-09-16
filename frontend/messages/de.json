@@ -677,6 +677,8 @@
     "channelClipsMoreInformationButton": "Weitere Informationen",
     "channelClipsMoreInformationText": "Wenn du einen einmaligen Import der beliebtesten Clips eines Kanals durchführen möchtest, stelle das Intervall auf eine große Zahl (1000) und die Anzahl der Clips auf eine große Zahl (250) ein. Dadurch werden die Top 250 Clips der letzten 1000 Tage importiert. Es wird empfohlen, das Intervall und die Anzahl der Clips nach dem ersten Import auf eine niedrigere Zahl zu ändern.",
     "watchClipsLabel": "Clips überwachen",
+    "clipResolutionLabel": "Clipqualität",
+    "clipResolutionDescription": "Qualität für Clip-Archive. Twitch-Clips haben keine Audio-only-Varianten.",
     "numberOfClipsLabel": "Anzahl der Clips",
     "numberOfClipsDescription": "Anzahl der zu archivierenden Clips.",
     "intervalDaysLabel": "Intervall (Tage)",

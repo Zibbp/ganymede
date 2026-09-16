@@ -28,6 +28,7 @@ type AddWatchedChannelRequest struct {
 	ChannelID              string              `json:"channel_id" validate:"required"`
 	Resolution             string              `json:"resolution" validate:"required,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
 	VodResolution          string              `json:"vod_resolution" validate:"omitempty,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
+	ClipResolution         string              `json:"clip_resolution" validate:"omitempty,oneof=best 1440p 1080p 720p 480p 360p 160p"`
 	ArchiveChat            bool                `json:"archive_chat" validate:"boolean"`
 	RenderChat             bool                `json:"render_chat" validate:"boolean"`
 	DownloadSubOnly        bool                `json:"download_sub_only" validate:"boolean"`
@@ -58,6 +59,7 @@ type UpdateWatchedChannelRequest struct {
 	DownloadUploads        bool                `json:"download_uploads" validate:"boolean"`
 	Resolution             string              `json:"resolution" validate:"required,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
 	VodResolution          string              `json:"vod_resolution" validate:"omitempty,oneof=best 1440p 1080p 720p 480p 360p 160p audio"`
+	ClipResolution         string              `json:"clip_resolution" validate:"omitempty,oneof=best 1440p 1080p 720p 480p 360p 160p"`
 	ArchiveChat            bool                `json:"archive_chat" validate:"boolean"`
 	RenderChat             bool                `json:"render_chat" validate:"boolean"`
 	DownloadSubOnly        bool                `json:"download_sub_only" validate:"boolean"`
@@ -151,6 +153,13 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, "strict_categories_live and blacklist_categories cannot both be true")
 	}
 
+	// Reject effective audio-only clip quality with a 400. Explicit audio is
+	// already rejected by request validation; this covers the fallback chain
+	// (clip empty + VOD audio) before the service persists anything.
+	if err := live.ValidateClipResolution(live.ResolveClipResolution(ccr.ClipResolution, ccr.VodResolution, ccr.Resolution)); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+
 	liveDto := live.Live{
 		ID:                     cUUID,
 		WatchLive:              ccr.WatchLive,
@@ -162,6 +171,7 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 		ArchiveChat:            ccr.ArchiveChat,
 		Resolution:             ccr.Resolution,
 		VodResolution:          ccr.VodResolution,
+		ClipResolution:         ccr.ClipResolution,
 		RenderChat:             ccr.RenderChat,
 		DownloadSubOnly:        ccr.DownloadSubOnly,
 		Categories:             ccr.Categories,
@@ -233,6 +243,11 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, "strict_categories_live and blacklist_categories cannot both be true")
 	}
 
+	// Reject effective audio-only clip quality with a 400 (see create handler).
+	if err := live.ValidateClipResolution(live.ResolveClipResolution(ccr.ClipResolution, ccr.VodResolution, ccr.Resolution)); err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+
 	liveDto := live.Live{
 		ID:                     lID,
 		WatchLive:              ccr.WatchLive,
@@ -243,6 +258,7 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 		ArchiveChat:            ccr.ArchiveChat,
 		Resolution:             ccr.Resolution,
 		VodResolution:          ccr.VodResolution,
+		ClipResolution:         ccr.ClipResolution,
 		RenderChat:             ccr.RenderChat,
 		DownloadSubOnly:        ccr.DownloadSubOnly,
 		Categories:             ccr.Categories,
