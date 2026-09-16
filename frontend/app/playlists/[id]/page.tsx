@@ -27,7 +27,7 @@ const PlaylistPage = ({ params }: { params: Promise<Params> }) => {
     document.title = `${playlist?.name}`;
   }, [playlist?.name]);
 
-  const { page, videoTypes, setPage, setVideoTypes } = useVideoListParams();
+  const { page, videoTypes, sortBy, order, setPage, setVideoTypes, setSortBy, setOrder } = useVideoListParams();
 
   const videoLimit = useSettingsStore((state) => state.videoLimit);
   const setVideoLimit = useSettingsStore((state) => state.setVideoLimit);
@@ -40,7 +40,9 @@ const PlaylistPage = ({ params }: { params: Promise<Params> }) => {
     limit: videoLimit,
     offset: (page - 1) * videoLimit,
     types: videoTypes,
-    playlist_id: id
+    playlist_id: id,
+    sort_by: sortBy,
+    order: order,
   });
 
   if (playlistPending || videosPending) {
@@ -78,6 +80,10 @@ const PlaylistPage = ({ params }: { params: Promise<Params> }) => {
         onVideoLimitChange={setVideoLimit}
         videoTypes={videoTypes}
         onVideoTypeChange={setVideoTypes}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+        order={order}
+        onOrderChange={setOrder}
         showChannel={false}
       />
     </Container>

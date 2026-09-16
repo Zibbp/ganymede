@@ -16,12 +16,17 @@ const SearchPage = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const initialQ = searchParams.get("q") ?? "";
+  // The URL is the source of truth for the search term, so back/forward navigation works
+  const searchTerm = searchParams.get("q") ?? "";
 
   const t = useTranslations("SearchPage");
 
-  const [inputValue, setInputValue] = useState<string>(initialQ);
-  const [searchTerm, setSearchTerm] = useState<string>(initialQ);
+  const [inputValue, setInputValue] = useState<string>(searchTerm);
+
+  // Keep the input in sync when the term changes through history navigation
+  useEffect(() => {
+    setInputValue(searchTerm);
+  }, [searchTerm]);
 
   const [advancedSearchOpened, { toggle: toggleAdvancedSearch }] = useDisclosure(false);
 
@@ -64,13 +69,11 @@ const SearchPage = () => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       navigateToQuery(inputValue);
-      setSearchTerm(inputValue);
     }
   };
   const handleSubmit = (e: FormEvent<HTMLInputElement>) => {
     e.preventDefault();
     navigateToQuery(inputValue);
-    setSearchTerm(inputValue);
   }
 
   if (isPending) return <GanymedeLoadingText message={t('loading')} />;
@@ -94,7 +97,7 @@ const SearchPage = () => {
               <IconX
                 stroke={1.5}
                 style={{ width: rem(16), height: rem(16), cursor: 'pointer' }}
-                onClick={() => { setInputValue(""); setSearchTerm(""); navigateToQuery(""); }}
+                onClick={() => { setInputValue(""); navigateToQuery(""); }}
               />
             )
           }

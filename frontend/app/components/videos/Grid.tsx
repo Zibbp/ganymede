@@ -29,10 +29,10 @@ export type VideoGridProps<T extends Video> = {
   onVideoLimitChange: (limit: number) => void;
   videoTypes: VideoType[];
   onVideoTypeChange: (types: VideoType[]) => void;
-  sortBy?: VideoSortBy;
-  onSortByChange?: (sort: VideoSortBy) => void;
-  order?: VideoOrder;
-  onOrderChange?: (order: VideoOrder) => void;
+  sortBy: VideoSortBy;
+  onSortByChange: (sort: VideoSortBy) => void;
+  order: VideoOrder;
+  onOrderChange: (order: VideoOrder) => void;
   showChannel?: boolean;
   showMenu?: boolean;
   showProgress?: boolean;
@@ -50,10 +50,10 @@ const VideoGrid = <T extends Video>({
   onVideoLimitChange,
   videoTypes,
   onVideoTypeChange,
-  sortBy = VideoSortBy.Date,
-  onSortByChange = () => { },
-  order = VideoOrder.Desc,
-  onOrderChange = () => { },
+  sortBy,
+  onSortByChange,
+  order,
+  onOrderChange,
   showChannel = false,
   showMenu = true,
   showProgress = true,
