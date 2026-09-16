@@ -1,7 +1,6 @@
-import { Box, Button, Center, Checkbox, Group, Menu, Modal, Pagination, SimpleGrid, ActionIcon, NumberInput, MultiSelect, Text, Select, Flex } from "@mantine/core";
-import { IconHourglassEmpty, IconHourglassHigh, IconLock, IconLockOpen, IconMinus, IconMovie, IconPhoto, IconPlaylistAdd, IconPlus, IconTrash } from "@tabler/icons-react";
-import { useRef, useState, useEffect, useMemo } from "react";
-import type { NumberInputHandlers } from "@mantine/core";
+import { Box, Button, Center, Checkbox, Group, Menu, Modal, Pagination, SimpleGrid, MultiSelect, Text, Select, Flex } from "@mantine/core";
+import { IconHourglassEmpty, IconHourglassHigh, IconLock, IconLockOpen, IconMovie, IconPhoto, IconPlaylistAdd, IconTrash } from "@tabler/icons-react";
+import { useState, useMemo } from "react";
 import VideoCard from "./Card";
 import { useGenerateSpriteThumbnails, useGenerateStaticThumbnail, useLockVideo, Video, VideoOrder, VideoSortBy, VideoType } from "@/app/hooks/useVideos";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";
@@ -16,6 +15,9 @@ import useAuthStore from "@/app/store/useAuthStore";
 import { UserRole } from "@/app/hooks/useAuthentication";
 import { useQueryClient } from "@tanstack/react-query";
 
+// Selectable page sizes. Same values the previous +/- 24 stepper could reach.
+const VIDEO_LIMIT_OPTIONS = [24, 48, 72, 96, 120];
+
 export type VideoGridProps<T extends Video> = {
   videos: T[];
   totalCount: number;
@@ -25,8 +27,11 @@ export type VideoGridProps<T extends Video> = {
   isPending?: boolean;
   videoLimit: number;
   onVideoLimitChange: (limit: number) => void;
+  videoTypes: VideoType[];
   onVideoTypeChange: (types: VideoType[]) => void;
+  sortBy?: VideoSortBy;
   onSortByChange?: (sort: VideoSortBy) => void;
+  order?: VideoOrder;
   onOrderChange?: (order: VideoOrder) => void;
   showChannel?: boolean;
   showMenu?: boolean;
@@ -43,8 +48,11 @@ const VideoGrid = <T extends Video>({
   isPending = false,
   videoLimit,
   onVideoLimitChange,
+  videoTypes,
   onVideoTypeChange,
+  sortBy = VideoSortBy.Date,
   onSortByChange = () => { },
+  order = VideoOrder.Desc,
   onOrderChange = () => { },
   showChannel = false,
   showMenu = true,
@@ -58,12 +66,6 @@ const VideoGrid = <T extends Video>({
   const canBulkManage = hasPermission(UserRole.Archiver);
   const canBulkDelete = hasPermission(UserRole.Admin);
   const selectionEnabled = enableSelection && canBulkManage;
-  const handlersRef = useRef<NumberInputHandlers>(null);
-  // Local state to handle the input value while typing
-  const [localLimit, setLocalLimit] = useState(videoLimit);
-  const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
-  const [sortBy, setSortBy] = useState<VideoSortBy>(VideoSortBy.Date);
-  const [order, setOrder] = useState<VideoOrder>(VideoOrder.Desc);
   const [selectedVideos, setSelectedVideos] = useState<Record<string, T>>({});
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [bulkMenuOpened, setBulkMenuOpened] = useState(false);
@@ -81,19 +83,18 @@ const VideoGrid = <T extends Video>({
   const generateStaticThumbnailMutate = useGenerateStaticThumbnail();
   const generateSpriteThumbnailsMutate = useGenerateSpriteThumbnails();
 
-  useEffect(() => {
-    setLocalLimit(videoLimit);
-  }, [videoLimit]);
+  // Keep a stored page size that is not one of the options selectable, so the select is never empty
+  const selectorVideoLimit = (
+    VIDEO_LIMIT_OPTIONS.includes(videoLimit)
+      ? VIDEO_LIMIT_OPTIONS
+      : [...VIDEO_LIMIT_OPTIONS, videoLimit].sort((a, b) => a - b)
+  ).map((limit) => String(limit));
 
-  const handleSetVideoLimit = (value: string | number) => {
-    const numValue = Number(value);
-    // Update local state immediately
-    setLocalLimit(numValue);
-
-    // Only update parent state if it's a valid number within bounds
-    if (!isNaN(numValue)) {
-      onVideoLimitChange(numValue);
-    }
+  const handleSetVideoLimit = (value: string | null) => {
+    if (value === null) return;
+    onVideoLimitChange(Number(value));
+    // A different page size changes what is on each page, so start over at the first page
+    onPageChange(1);
   };
 
   // Convert the enum VideoType to an array for the multiselector
@@ -104,9 +105,7 @@ const VideoGrid = <T extends Video>({
 
   const handleSetSortBy = (value: VideoSortBy | null) => {
     const next = value ?? VideoSortBy.Date; // handle clearable
-    setSortBy(next);
     onSortByChange(next);
-    onPageChange(1);
   };
 
   const selectorSortBy = Object.values(VideoSortBy).map((sort) => ({
@@ -116,9 +115,7 @@ const VideoGrid = <T extends Video>({
 
   const handleSetOrder = (value: VideoOrder | null) => {
     const next = value ?? VideoOrder.Desc; // handle clearable
-    setOrder(next);
     onOrderChange(next);
-    onPageChange(1);
   }
 
   const selectorOrder = Object.values(VideoOrder).map((order) => ({
@@ -135,20 +132,6 @@ const VideoGrid = <T extends Video>({
   const handleSetVideoTypes = (selectedStrings: string[]) => {
     const videoTypesArray = convertToVideoTypes(selectedStrings);
     onVideoTypeChange(videoTypesArray)
-    setVideoTypes(videoTypesArray)
-    onPageChange(1);
-  };
-
-  const handleIncrement = () => {
-    const newValue = Math.min(localLimit + 24, 120);
-    setLocalLimit(newValue);
-    onVideoLimitChange(newValue);
-  };
-
-  const handleDecrement = () => {
-    const newValue = Math.max(localLimit - 24, 24);
-    setLocalLimit(newValue);
-    onVideoLimitChange(newValue);
   };
 
   const handleVideoSelectionChange = (video: T, selected: boolean) => {
@@ -503,36 +486,14 @@ const VideoGrid = <T extends Video>({
           />
         </Center>
         <Center mt={5}>
-          <Group>
-            <ActionIcon
-              size="lg"
-              variant="default"
-              onClick={handleDecrement}
-            >
-              <IconMinus style={{ width: '70%', height: '70%' }} stroke={1.5} />
-            </ActionIcon>
-
-            <NumberInput
-              hideControls
-              value={localLimit}
-              onChange={handleSetVideoLimit}
-              handlersRef={handlersRef}
-              max={120}
-              min={24}
-              step={24}
-              styles={{ input: { width: 54, textAlign: "center" } }}
-              clampBehavior="strict"
-              allowDecimal={false}
-            />
-
-            <ActionIcon
-              size="lg"
-              variant="default"
-              onClick={handleIncrement}
-            >
-              <IconPlus style={{ width: '70%', height: '70%' }} stroke={1.5} />
-            </ActionIcon>
-          </Group>
+          <Select
+            data={selectorVideoLimit}
+            value={String(videoLimit)}
+            onChange={handleSetVideoLimit}
+            allowDeselect={false}
+            checkIconPosition="right"
+            w={90}
+          />
         </Center>
       </div>
 

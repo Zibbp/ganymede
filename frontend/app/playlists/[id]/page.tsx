@@ -2,13 +2,14 @@
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import VideoGrid from "@/app/components/videos/Grid";
 import { useGetPlaylist } from "@/app/hooks/usePlaylist";
-import { useFetchVideosFilter, VideoType } from "@/app/hooks/useVideos";
+import { useFetchVideosFilter } from "@/app/hooks/useVideos";
+import { useVideoListParams } from "@/app/hooks/useVideoListParams";
 import useSettingsStore from "@/app/store/useSettingsStore";
 import { Center, Container, Title, Text, Button } from "@mantine/core";
 import { IconBorderAll } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 interface Params {
   id: string;
 }
@@ -26,8 +27,7 @@ const PlaylistPage = ({ params }: { params: Promise<Params> }) => {
     document.title = `${playlist?.name}`;
   }, [playlist?.name]);
 
-  const [activePage, setActivePage] = useState(1);
-  const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
+  const { page, videoTypes, setPage, setVideoTypes } = useVideoListParams();
 
   const videoLimit = useSettingsStore((state) => state.videoLimit);
   const setVideoLimit = useSettingsStore((state) => state.setVideoLimit);
@@ -38,7 +38,7 @@ const PlaylistPage = ({ params }: { params: Promise<Params> }) => {
     isError: videosError
   } = useFetchVideosFilter({
     limit: videoLimit,
-    offset: (activePage - 1) * videoLimit,
+    offset: (page - 1) * videoLimit,
     types: videoTypes,
     playlist_id: id
   });
@@ -71,11 +71,12 @@ const PlaylistPage = ({ params }: { params: Promise<Params> }) => {
         videos={videos.data}
         totalCount={videos.total_count}
         totalPages={videos.pages}
-        currentPage={activePage}
-        onPageChange={setActivePage}
+        currentPage={page}
+        onPageChange={setPage}
         isPending={videosPending}
         videoLimit={videoLimit}
         onVideoLimitChange={setVideoLimit}
+        videoTypes={videoTypes}
         onVideoTypeChange={setVideoTypes}
         showChannel={false}
       />

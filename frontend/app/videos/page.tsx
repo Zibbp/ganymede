@@ -1,8 +1,8 @@
 'use client';
 import { Center, Container, Title } from "@mantine/core";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
-import { useEffect, useState } from "react";
-import { useFetchVideosFilter, VideoOrder, VideoSortBy, VideoType } from "../hooks/useVideos";
+import { useFetchVideosFilter } from "../hooks/useVideos";
+import { useVideoListParams } from "../hooks/useVideoListParams";
 import useSettingsStore from "../store/useSettingsStore";
 import VideoGrid from "../components/videos/Grid";
 import { useTranslations } from "next-intl";
@@ -12,17 +12,14 @@ const VideosPage = () => {
   const t = useTranslations("VideosPage");
   usePageTitle(t('title'));
 
-  const [activePage, setActivePage] = useState(1);
-  const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
-  const [sortBy, setSortBy] = useState<VideoSortBy>(VideoSortBy.Date);
-  const [order, setOrder] = useState<VideoOrder>(VideoOrder.Desc);
+  const { page, videoTypes, sortBy, order, setPage, setVideoTypes, setSortBy, setOrder } = useVideoListParams();
 
   const videoLimit = useSettingsStore((state) => state.videoLimit);
   const setVideoLimit = useSettingsStore((state) => state.setVideoLimit);
 
   const { data: videos, isPending, isError } = useFetchVideosFilter({
     limit: videoLimit,
-    offset: (activePage - 1) * videoLimit,
+    offset: (page - 1) * videoLimit,
     types: videoTypes,
     playlist_id: "",
     sort_by: sortBy,
@@ -48,13 +45,16 @@ const VideosPage = () => {
           videos={videos.data}
           totalCount={videos.total_count}
           totalPages={videos.pages}
-          currentPage={activePage}
-          onPageChange={setActivePage}
+          currentPage={page}
+          onPageChange={setPage}
           isPending={isPending}
           videoLimit={videoLimit}
           onVideoLimitChange={setVideoLimit}
+          videoTypes={videoTypes}
           onVideoTypeChange={setVideoTypes}
+          sortBy={sortBy}
           onSortByChange={setSortBy}
+          order={order}
           onOrderChange={setOrder}
           showChannel={true}
         />
