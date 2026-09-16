@@ -39,10 +39,12 @@ func TestWatchedChannelClipResolutionValidation(t *testing.T) {
 		}
 	})
 
-	t.Run("effective audio via fallback rejected", func(t *testing.T) {
+	t.Run("effective audio via fallback rejected when clips watched", func(t *testing.T) {
 		t.Parallel()
 		// clip omitted + VOD audio resolves to audio through the
-		// clip -> VOD -> live fallback chain.
+		// clip -> VOD -> live fallback chain. Callers only enforce this
+		// when WatchClips is true; audio-only live/VOD archiving without
+		// clips remains legitimate.
 		effective := live.ResolveClipResolution("", "audio", "best")
 		assert.Error(t, live.ValidateClipResolution(effective))
 	})

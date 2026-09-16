@@ -154,8 +154,12 @@ func (s *Service) AddLiveWatchedChannel(ctx context.Context, liveDto Live) (*ent
 		liveDto.VodResolution = liveDto.Resolution
 	}
 	liveDto.ClipResolution = ResolveClipResolution(liveDto.ClipResolution, liveDto.VodResolution, liveDto.Resolution)
-	if err := ValidateClipResolution(liveDto.ClipResolution); err != nil {
-		return nil, err
+	// Audio-only archiving is legitimate for live/VODs, so the clip audio ban
+	// only applies when clips are actually watched.
+	if liveDto.WatchClips {
+		if err := ValidateClipResolution(liveDto.ClipResolution); err != nil {
+			return nil, err
+		}
 	}
 
 	l, err := s.Store.Client.Live.Create().
@@ -214,8 +218,12 @@ func (s *Service) UpdateLiveWatchedChannel(ctx context.Context, liveDto Live) (*
 		liveDto.VodResolution = liveDto.Resolution
 	}
 	liveDto.ClipResolution = ResolveClipResolution(liveDto.ClipResolution, liveDto.VodResolution, liveDto.Resolution)
-	if err := ValidateClipResolution(liveDto.ClipResolution); err != nil {
-		return nil, err
+	// Audio-only archiving is legitimate for live/VODs, so the clip audio ban
+	// only applies when clips are actually watched.
+	if liveDto.WatchClips {
+		if err := ValidateClipResolution(liveDto.ClipResolution); err != nil {
+			return nil, err
+		}
 	}
 
 	l, err := s.Store.Client.Live.UpdateOneID(liveDto.ID).
