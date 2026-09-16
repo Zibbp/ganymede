@@ -276,8 +276,27 @@ func moveFile(ctx context.Context, source, dest string, rename func(string, stri
 		log.Debug().Err(closeErr).Msg("error closing source file after copy")
 	}
 	srcFile = nil
+	// Rename fails across mounts, and temp and videos are separate volumes in the
+	// default setup, so this path runs for every archived recording. The source is
+	// the only copy once it is removed, and on a network filesystem a write error
+	// surfaces at close rather than during the copy, so both errors are returned
+	// here rather than logged. writeIfDifferent does the same for the same reason.
+	if syncErr := destFile.Sync(); syncErr != nil {
+		if closeErr := destFile.Close(); closeErr != nil {
+			log.Error().Err(closeErr).Msg("error closing destination file after failed sync")
+		}
+		destFile = nil
+		if removeErr := os.Remove(dest); removeErr != nil {
+			log.Error().Err(removeErr).Msg("error removing destination file after failed sync")
+		}
+		return fmt.Errorf("failed to flush destination file: %w", syncErr)
+	}
 	if closeErr := destFile.Close(); closeErr != nil {
-		log.Error().Err(closeErr).Msg("error closing destination file after copy")
+		destFile = nil
+		if removeErr := os.Remove(dest); removeErr != nil {
+			log.Error().Err(removeErr).Msg("error removing destination file after failed close")
+		}
+		return fmt.Errorf("failed to close destination file: %w", closeErr)
 	}
 	destFile = nil
 
