@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { getUserInfo, User, UserRole } from "../hooks/useAuthentication";
@@ -16,10 +17,16 @@ interface AuthState {
   user: User | null;
   isLoggedIn: boolean;
   isLoading: boolean;
+  // False until the persisted state has been restored from localStorage (or the first
+  // fetchUser call has settled). On the server and during React hydration this is always
+  // false, so components can render a neutral placeholder instead of the logged-out UI,
+  // which otherwise flashes briefly for logged-in users on every page load.
+  hasHydrated: boolean;
   error: string | null;
 
   // Actions
   fetchUser: () => Promise<void>;
+  setHasHydrated: (hasHydrated: boolean) => void;
   setUser: (user: User | null) => void;
   logout: () => void;
   clearError: () => void;
@@ -39,6 +46,7 @@ const useAuthStore = create<AuthState>()(
       user: null,
       isLoggedIn: false,
       isLoading: true,
+      hasHydrated: false,
       error: null,
 
       // Fetch user data from API
@@ -50,14 +58,27 @@ const useAuthStore = create<AuthState>()(
             user: data.data,
             isLoggedIn: true,
             isLoading: false,
+            hasHydrated: true,
           });
         } catch (err) {
+          // 401/403 means there is no valid session: the persisted "logged in" state is stale
+          const status =
+            err instanceof Error && err.cause instanceof AxiosError
+              ? err.cause.response?.status
+              : undefined;
+          if (status === 401 || status === 403) {
+            set({ user: null, isLoggedIn: false, isLoading: false, hasHydrated: true, error: null });
+            return;
+          }
           set({
             error: err instanceof Error ? err.message : "Failed to fetch user",
             isLoading: false,
+            hasHydrated: true,
           });
         }
       },
+
+      setHasHydrated: (hasHydrated) => set({ hasHydrated }),
 
       // Manually set user data
       setUser: (user) => {
@@ -112,6 +133,13 @@ const useAuthStore = create<AuthState>()(
         user: state.user,
         isLoggedIn: state.isLoggedIn,
       }),
+      // Runs once the persisted state has been restored on the client
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error("Failed to restore auth state", error);
+        }
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

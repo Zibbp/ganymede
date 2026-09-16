@@ -1,5 +1,5 @@
 "use client"
-import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse, Tooltip, Flex } from '@mantine/core';
+import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse, Tooltip, Flex, Skeleton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconChevronDown, IconChevronUp, IconLanguage, IconMoon, IconSearch, IconSun, IconUserCircle, IconX } from '@tabler/icons-react';
 import classes from './Navbar.module.css';
@@ -31,7 +31,7 @@ const languages = [
 
 export function Navbar() {
   const t = useTranslations("NavbarLayout")
-  const { isLoggedIn, user, logout, hasPermission } = useAuthStore();
+  const { isLoggedIn, user, logout, hasPermission, hasHydrated } = useAuthStore();
 
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
@@ -245,7 +245,10 @@ export function Navbar() {
               </Menu.Dropdown>
             </Menu>
           )}
-          {isLoggedIn ? (
+          {!hasHydrated ? (
+            // Auth state not known yet (server render / hydration): neutral placeholder in the size of the profile button
+            <Skeleton h={34} w={34} radius="sm" />
+          ) : isLoggedIn ? (
             <Menu shadow="md" width={200}>
               <Menu.Target>
                 <ActionIcon variant="default" aria-label="Profile" size="lg">
@@ -341,7 +344,9 @@ export function Navbar() {
 
           )}
           <Group justify="center" grow pb="xl" px="md">
-            {isLoggedIn ? (
+            {!hasHydrated ? (
+              <Skeleton h={36} radius="sm" />
+            ) : isLoggedIn ? (
               <>
                 <Button component={Link} href={`/profile`}>Profile</Button>
                 <Button onClick={handleLogout}>Logout</Button>
