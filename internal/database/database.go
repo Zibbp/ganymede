@@ -306,14 +306,16 @@ func backfillLiveVodResolution(ctx context.Context, conn sqlExecutor) {
 // backfillLiveClipResolution copies the previous VOD-and-clip quality into the
 // new dedicated clip_resolution column. Rows whose VOD quality is audio-only,
 // empty, or NULL fall back to best because Twitch does not publish
-// audio-only clip renditions. Only NULL/empty clip values are touched so an
-// explicit user choice is never overwritten.
+// audio-only clip renditions. This backfill runs only when the column did not
+// previously exist, so matching the schema default "best" is safe: no explicit
+// user choice can exist yet.
 func backfillLiveClipResolution(ctx context.Context, conn sqlExecutor) {
 	copyStmt := fmt.Sprintf(
-		`UPDATE %s SET %s = %s WHERE (%s IS NULL OR %s = '') AND %s IS NOT NULL AND %s <> '' AND %s <> 'audio'`,
+		`UPDATE %s SET %s = %s WHERE (%s IS NULL OR %s = '' OR %s = 'best') AND %s IS NOT NULL AND %s <> '' AND %s <> 'audio'`,
 		entLive.Table,
 		entLive.FieldClipResolution,
 		entLive.FieldVodResolution,
+		entLive.FieldClipResolution,
 		entLive.FieldClipResolution,
 		entLive.FieldClipResolution,
 		entLive.FieldVodResolution,
