@@ -485,6 +485,9 @@ definitions:
       blacklist_categories:
         description: Whether the selected categories are blacklisted.
         type: boolean
+      clip_resolution:
+        description: Clip archive quality.
+        type: string
       clips_ignore_last_checked:
         description: Ignore last checked time and check all clips.
         type: boolean
@@ -547,7 +550,7 @@ definitions:
         description: Restrict fetching videos to a certain age.
         type: integer
       vod_resolution:
-        description: Video and clip archive quality.
+        description: Video archive quality.
         type: string
       watch_clips:
         description: Whether to download clips on a schedule.
@@ -1187,6 +1190,16 @@ definitions:
           type: string
         type: array
       channel_id:
+        type: string
+      clip_resolution:
+        enum:
+        - best
+        - 1440p
+        - 1080p
+        - 720p
+        - 480p
+        - 360p
+        - 160p
         type: string
       clips_ignore_last_checked:
         type: boolean
@@ -1863,6 +1876,16 @@ definitions:
         items:
           type: string
         type: array
+      clip_resolution:
+        enum:
+        - best
+        - 1440p
+        - 1080p
+        - 720p
+        - 480p
+        - 360p
+        - 160p
+        type: string
       clips_ignore_last_checked:
         type: boolean
       clips_interval_days:
@@ -4734,7 +4757,7 @@ paths:
       - description: Delete files
         in: query
         name: delete_files
-        type: string
+        type: boolean
       produces:
       - application/json
       responses:
@@ -4771,19 +4794,19 @@ paths:
       - description: With channel
         in: query
         name: with_channel
-        type: string
+        type: boolean
       - description: With chapters
         in: query
         name: with_chapters
-        type: string
+        type: boolean
       - description: With muted segments
         in: query
         name: with_muted_segments
-        type: string
+        type: boolean
       - description: With queue
         in: query
         name: with_queue
-        type: string
+        type: boolean
       produces:
       - application/json
       responses:
@@ -5394,19 +5417,19 @@ paths:
       - description: With channel
         in: query
         name: with_channel
-        type: string
+        type: boolean
       - description: With chapters
         in: query
         name: with_chapters
-        type: string
+        type: boolean
       - description: With muted segments
         in: query
         name: with_muted_segments
-        type: string
+        type: boolean
       - description: With queue
         in: query
         name: with_queue
-        type: string
+        type: boolean
       produces:
       - application/json
       responses:
@@ -5460,7 +5483,7 @@ paths:
       - description: Processing. Set to false to exclude videos that are still processing.
         in: query
         name: processing
-        type: string
+        type: boolean
       produces:
       - application/json
       responses:

@@ -3978,25 +3978,25 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With channel",
                         "name": "with_channel",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With chapters",
                         "name": "with_chapters",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With muted segments",
                         "name": "with_muted_segments",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With queue",
                         "name": "with_queue",
                         "in": "query"
@@ -4077,7 +4077,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "Processing. Set to false to exclude videos that are still processing.",
                         "name": "processing",
                         "in": "query"
@@ -4188,25 +4188,25 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With channel",
                         "name": "with_channel",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With chapters",
                         "name": "with_chapters",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With muted segments",
                         "name": "with_muted_segments",
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "With queue",
                         "name": "with_queue",
                         "in": "query"
@@ -4333,7 +4333,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "Delete files",
                         "name": "delete_files",
                         "in": "query"
@@ -5898,6 +5898,10 @@ const docTemplate = `{
                     "description": "Whether the selected categories are blacklisted.",
                     "type": "boolean"
                 },
+                "clip_resolution": {
+                    "description": "Clip archive quality.",
+                    "type": "string"
+                },
                 "clips_ignore_last_checked": {
                     "description": "Ignore last checked time and check all clips.",
                     "type": "boolean"
@@ -5979,7 +5983,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "vod_resolution": {
-                    "description": "Video and clip archive quality.",
+                    "description": "Video archive quality.",
                     "type": "string"
                 },
                 "watch_clips": {
@@ -6923,6 +6927,18 @@ const docTemplate = `{
                 },
                 "channel_id": {
                     "type": "string"
+                },
+                "clip_resolution": {
+                    "type": "string",
+                    "enum": [
+                        "best",
+                        "1440p",
+                        "1080p",
+                        "720p",
+                        "480p",
+                        "360p",
+                        "160p"
+                    ]
                 },
                 "clips_ignore_last_checked": {
                     "type": "boolean"
@@ -7902,6 +7918,18 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "clip_resolution": {
+                    "type": "string",
+                    "enum": [
+                        "best",
+                        "1440p",
+                        "1080p",
+                        "720p",
+                        "480p",
+                        "360p",
+                        "160p"
+                    ]
                 },
                 "clips_ignore_last_checked": {
                     "type": "boolean"

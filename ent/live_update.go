@@ -184,6 +184,26 @@ func (_u *LiveUpdate) ClearVodResolution() *LiveUpdate {
 	return _u
 }
 
+// SetClipResolution sets the "clip_resolution" field.
+func (_u *LiveUpdate) SetClipResolution(v string) *LiveUpdate {
+	_u.mutation.SetClipResolution(v)
+	return _u
+}
+
+// SetNillableClipResolution sets the "clip_resolution" field if the given value is not nil.
+func (_u *LiveUpdate) SetNillableClipResolution(v *string) *LiveUpdate {
+	if v != nil {
+		_u.SetClipResolution(*v)
+	}
+	return _u
+}
+
+// ClearClipResolution clears the value of the "clip_resolution" field.
+func (_u *LiveUpdate) ClearClipResolution() *LiveUpdate {
+	_u.mutation.ClearClipResolution()
+	return _u
+}
+
 // SetLastLive sets the "last_live" field.
 func (_u *LiveUpdate) SetLastLive(v time.Time) *LiveUpdate {
 	_u.mutation.SetLastLive(v)
@@ -583,6 +603,12 @@ func (_u *LiveUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.VodResolutionCleared() {
 		_spec.ClearField(live.FieldVodResolution, field.TypeString)
 	}
+	if value, ok := _u.mutation.ClipResolution(); ok {
+		_spec.SetField(live.FieldClipResolution, field.TypeString, value)
+	}
+	if _u.mutation.ClipResolutionCleared() {
+		_spec.ClearField(live.FieldClipResolution, field.TypeString)
+	}
 	if value, ok := _u.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
 	}
@@ -925,6 +951,26 @@ func (_u *LiveUpdateOne) SetNillableVodResolution(v *string) *LiveUpdateOne {
 // ClearVodResolution clears the value of the "vod_resolution" field.
 func (_u *LiveUpdateOne) ClearVodResolution() *LiveUpdateOne {
 	_u.mutation.ClearVodResolution()
+	return _u
+}
+
+// SetClipResolution sets the "clip_resolution" field.
+func (_u *LiveUpdateOne) SetClipResolution(v string) *LiveUpdateOne {
+	_u.mutation.SetClipResolution(v)
+	return _u
+}
+
+// SetNillableClipResolution sets the "clip_resolution" field if the given value is not nil.
+func (_u *LiveUpdateOne) SetNillableClipResolution(v *string) *LiveUpdateOne {
+	if v != nil {
+		_u.SetClipResolution(*v)
+	}
+	return _u
+}
+
+// ClearClipResolution clears the value of the "clip_resolution" field.
+func (_u *LiveUpdateOne) ClearClipResolution() *LiveUpdateOne {
+	_u.mutation.ClearClipResolution()
 	return _u
 }
 
@@ -1356,6 +1402,12 @@ func (_u *LiveUpdateOne) sqlSave(ctx context.Context) (_node *Live, err error) {
 	}
 	if _u.mutation.VodResolutionCleared() {
 		_spec.ClearField(live.FieldVodResolution, field.TypeString)
+	}
+	if value, ok := _u.mutation.ClipResolution(); ok {
+		_spec.SetField(live.FieldClipResolution, field.TypeString, value)
+	}
+	if _u.mutation.ClipResolutionCleared() {
+		_spec.ClearField(live.FieldClipResolution, field.TypeString)
 	}
 	if value, ok := _u.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)

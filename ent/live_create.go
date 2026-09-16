@@ -167,6 +167,20 @@ func (_c *LiveCreate) SetNillableVodResolution(v *string) *LiveCreate {
 	return _c
 }
 
+// SetClipResolution sets the "clip_resolution" field.
+func (_c *LiveCreate) SetClipResolution(v string) *LiveCreate {
+	_c.mutation.SetClipResolution(v)
+	return _c
+}
+
+// SetNillableClipResolution sets the "clip_resolution" field if the given value is not nil.
+func (_c *LiveCreate) SetNillableClipResolution(v *string) *LiveCreate {
+	if v != nil {
+		_c.SetClipResolution(*v)
+	}
+	return _c
+}
+
 // SetLastLive sets the "last_live" field.
 func (_c *LiveCreate) SetLastLive(v time.Time) *LiveCreate {
 	_c.mutation.SetLastLive(v)
@@ -493,6 +507,10 @@ func (_c *LiveCreate) defaults() {
 		v := live.DefaultVodResolution
 		_c.mutation.SetVodResolution(v)
 	}
+	if _, ok := _c.mutation.ClipResolution(); !ok {
+		v := live.DefaultClipResolution
+		_c.mutation.SetClipResolution(v)
+	}
 	if _, ok := _c.mutation.LastLive(); !ok {
 		v := live.DefaultLastLive()
 		_c.mutation.SetLastLive(v)
@@ -699,6 +717,10 @@ func (_c *LiveCreate) createSpec() (*Live, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.VodResolution(); ok {
 		_spec.SetField(live.FieldVodResolution, field.TypeString, value)
 		_node.VodResolution = value
+	}
+	if value, ok := _c.mutation.ClipResolution(); ok {
+		_spec.SetField(live.FieldClipResolution, field.TypeString, value)
+		_node.ClipResolution = value
 	}
 	if value, ok := _c.mutation.LastLive(); ok {
 		_spec.SetField(live.FieldLastLive, field.TypeTime, value)
@@ -986,6 +1008,24 @@ func (u *LiveUpsert) UpdateVodResolution() *LiveUpsert {
 // ClearVodResolution clears the value of the "vod_resolution" field.
 func (u *LiveUpsert) ClearVodResolution() *LiveUpsert {
 	u.SetNull(live.FieldVodResolution)
+	return u
+}
+
+// SetClipResolution sets the "clip_resolution" field.
+func (u *LiveUpsert) SetClipResolution(v string) *LiveUpsert {
+	u.Set(live.FieldClipResolution, v)
+	return u
+}
+
+// UpdateClipResolution sets the "clip_resolution" field to the value that was provided on create.
+func (u *LiveUpsert) UpdateClipResolution() *LiveUpsert {
+	u.SetExcluded(live.FieldClipResolution)
+	return u
+}
+
+// ClearClipResolution clears the value of the "clip_resolution" field.
+func (u *LiveUpsert) ClearClipResolution() *LiveUpsert {
+	u.SetNull(live.FieldClipResolution)
 	return u
 }
 
@@ -1377,6 +1417,27 @@ func (u *LiveUpsertOne) UpdateVodResolution() *LiveUpsertOne {
 func (u *LiveUpsertOne) ClearVodResolution() *LiveUpsertOne {
 	return u.Update(func(s *LiveUpsert) {
 		s.ClearVodResolution()
+	})
+}
+
+// SetClipResolution sets the "clip_resolution" field.
+func (u *LiveUpsertOne) SetClipResolution(v string) *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetClipResolution(v)
+	})
+}
+
+// UpdateClipResolution sets the "clip_resolution" field to the value that was provided on create.
+func (u *LiveUpsertOne) UpdateClipResolution() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateClipResolution()
+	})
+}
+
+// ClearClipResolution clears the value of the "clip_resolution" field.
+func (u *LiveUpsertOne) ClearClipResolution() *LiveUpsertOne {
+	return u.Update(func(s *LiveUpsert) {
+		s.ClearClipResolution()
 	})
 }
 
@@ -1966,6 +2027,27 @@ func (u *LiveUpsertBulk) UpdateVodResolution() *LiveUpsertBulk {
 func (u *LiveUpsertBulk) ClearVodResolution() *LiveUpsertBulk {
 	return u.Update(func(s *LiveUpsert) {
 		s.ClearVodResolution()
+	})
+}
+
+// SetClipResolution sets the "clip_resolution" field.
+func (u *LiveUpsertBulk) SetClipResolution(v string) *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.SetClipResolution(v)
+	})
+}
+
+// UpdateClipResolution sets the "clip_resolution" field to the value that was provided on create.
+func (u *LiveUpsertBulk) UpdateClipResolution() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.UpdateClipResolution()
+	})
+}
+
+// ClearClipResolution clears the value of the "clip_resolution" field.
+func (u *LiveUpsertBulk) ClearClipResolution() *LiveUpsertBulk {
+	return u.Update(func(s *LiveUpsert) {
+		s.ClearClipResolution()
 	})
 }
 

@@ -35,6 +35,8 @@ const (
 	FieldResolution = "resolution"
 	// FieldVodResolution holds the string denoting the vod_resolution field in the database.
 	FieldVodResolution = "vod_resolution"
+	// FieldClipResolution holds the string denoting the clip_resolution field in the database.
+	FieldClipResolution = "clip_resolution"
 	// FieldLastLive holds the string denoting the last_live field in the database.
 	FieldLastLive = "last_live"
 	// FieldRenderChat holds the string denoting the render_chat field in the database.
@@ -107,6 +109,7 @@ var Columns = []string{
 	FieldArchiveChat,
 	FieldResolution,
 	FieldVodResolution,
+	FieldClipResolution,
 	FieldLastLive,
 	FieldRenderChat,
 	FieldVideoAge,
@@ -165,6 +168,8 @@ var (
 	DefaultResolution string
 	// DefaultVodResolution holds the default value on creation for the "vod_resolution" field.
 	DefaultVodResolution string
+	// DefaultClipResolution holds the default value on creation for the "clip_resolution" field.
+	DefaultClipResolution string
 	// DefaultLastLive holds the default value on creation for the "last_live" field.
 	DefaultLastLive func() time.Time
 	// DefaultRenderChat holds the default value on creation for the "render_chat" field.
@@ -255,6 +260,11 @@ func ByResolution(opts ...sql.OrderTermOption) OrderOption {
 // ByVodResolution orders the results by the vod_resolution field.
 func ByVodResolution(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVodResolution, opts...).ToFunc()
+}
+
+// ByClipResolution orders the results by the clip_resolution field.
+func ByClipResolution(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClipResolution, opts...).ToFunc()
 }
 
 // ByLastLive orders the results by the last_live field.

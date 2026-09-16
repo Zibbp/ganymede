@@ -101,10 +101,15 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 			logger.Debug().Str("clip_id", clip.ID).Msg("checking if clip should be archived")
 			// Video is not in DB
 			if !contains(dbVideos, clip.ID) {
+				clipQuality := ResolveClipResolutionForLive(watchedChannel)
+				if err := ValidateClipResolution(clipQuality); err != nil {
+					logger.Error().Err(err).Str("channel", watchedChannel.Edges.Channel.Name).Str("clip_id", clip.ID).Msg("skipping clip with audio-only quality")
+					continue
+				}
 				// Archive clip
 				input := archive.ArchiveClipInput{
 					ID:          clip.ID,
-					Quality:     utils.VodQuality(watchedChannel.VodResolution),
+					Quality:     utils.VodQuality(clipQuality),
 					ArchiveChat: watchedChannel.ArchiveChat,
 					RenderChat:  watchedChannel.RenderChat,
 				}
