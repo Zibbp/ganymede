@@ -137,6 +137,11 @@ const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state, error) => {
         if (error) {
           console.error("Failed to restore auth state", error);
+          // On a failed restore zustand passes no state here and, for synchronous localStorage,
+          // resets the store to its initial state right after this callback. Set the flag once
+          // store creation has finished so it is not lost and the UI does not wait for fetchUser.
+          queueMicrotask(() => useAuthStore.setState({ hasHydrated: true }));
+          return;
         }
         state?.setHasHydrated(true);
       },
