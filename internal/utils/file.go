@@ -249,56 +249,45 @@ func moveFile(ctx context.Context, source, dest string, rename func(string, stri
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
+	// The source is the only copy once it is removed, so the destination is kept
+	// only after it is known to be on disk.
+	moved := false
 	defer func() {
-		if destFile == nil {
+		if destFile != nil {
+			if err := destFile.Close(); err != nil {
+				log.Debug().Err(err).Msg("error closing destination file")
+			}
+		}
+		if moved {
 			return
 		}
-		if err := destFile.Close(); err != nil {
-			log.Debug().Err(err).Msg("error closing destination file")
+		if err := os.Remove(dest); err != nil && !os.IsNotExist(err) {
+			log.Error().Err(err).Msg("error removing incomplete destination file")
 		}
 	}()
 
 	// Use io.Copy with context to respect cancellation
-	_, copyErr := io.Copy(destFile, &contextReader{ctx: ctx, r: srcFile})
-	if copyErr != nil {
-		if closeErr := destFile.Close(); closeErr != nil {
-			log.Error().Err(closeErr).Msg("error closing destination file after copy")
-		}
-		destFile = nil
-		if removeErr := os.Remove(dest); removeErr != nil {
-			log.Error().Err(removeErr).Msg("error removing destination file after copy failure")
-		}
-		return fmt.Errorf("failed to copy file: %w", copyErr)
+	if _, err := io.Copy(destFile, &contextReader{ctx: ctx, r: srcFile}); err != nil {
+		return fmt.Errorf("failed to copy file: %w", err)
 	}
 
-	// Close files before attempting to remove the source
+	// Close the source before attempting to remove it
 	if closeErr := srcFile.Close(); closeErr != nil {
 		log.Debug().Err(closeErr).Msg("error closing source file after copy")
 	}
 	srcFile = nil
-	// Rename fails across mounts, and temp and videos are separate volumes in the
-	// default setup, so this path runs for every archived recording. The source is
-	// the only copy once it is removed, and on a network filesystem a write error
-	// surfaces at close rather than during the copy, so both errors are returned
-	// here rather than logged. writeIfDifferent does the same for the same reason.
-	if syncErr := destFile.Sync(); syncErr != nil {
-		if closeErr := destFile.Close(); closeErr != nil {
-			log.Error().Err(closeErr).Msg("error closing destination file after failed sync")
-		}
-		destFile = nil
-		if removeErr := os.Remove(dest); removeErr != nil {
-			log.Error().Err(removeErr).Msg("error removing destination file after failed sync")
-		}
-		return fmt.Errorf("failed to flush destination file: %w", syncErr)
+
+	// On a network filesystem a write error surfaces at sync or close rather than
+	// during the copy, so both are returned rather than logged.
+	if err := destFile.Sync(); err != nil {
+		return fmt.Errorf("failed to flush destination file: %w", err)
 	}
-	if closeErr := destFile.Close(); closeErr != nil {
-		destFile = nil
-		if removeErr := os.Remove(dest); removeErr != nil {
-			log.Error().Err(removeErr).Msg("error removing destination file after failed close")
-		}
+	closeErr := destFile.Close()
+	destFile = nil
+	if closeErr != nil {
 		return fmt.Errorf("failed to close destination file: %w", closeErr)
 	}
-	destFile = nil
+	moved = true
 
 	// Remove the source file
 	if err := os.Remove(source); err != nil {
