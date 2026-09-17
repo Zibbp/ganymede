@@ -169,8 +169,16 @@ func (s *Service) ArchiveGetQueueItem(qID uuid.UUID) (*ent.Queue, error) {
 
 // StopQueueItem stops a queue item's tasks by canceling each job's context
 func (s *Service) StopQueueItem(ctx context.Context, id uuid.UUID) error {
+	q, err := s.Store.Client.Queue.Get(ctx, id)
+	if err != nil {
+		return fmt.Errorf("get queue item to stop: %w", err)
+	}
+	// A delayed or repeated stop must not cancel newly enqueued finalization jobs.
+	if q.LiveArchive && (q.TaskVideoDownload == utils.Running || q.TaskVideoDownload == utils.Success) {
+		return s.RiverClient.StopLiveRecording(ctx, id)
+	}
 
-	err := s.RiverClient.CancelJobsForQueueId(ctx, id)
+	err = s.RiverClient.CancelJobsForQueueId(ctx, id)
 	if err != nil {
 		return err
 	}

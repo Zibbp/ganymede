@@ -58,6 +58,13 @@ func (rc *RiverClient) JobList(ctx context.Context, params *river.JobListParams)
 	return rc.Client.JobList(ctx, params)
 }
 
+// StopLiveRecording leaves chat shutdown and finalization to the capture worker.
+func (rc *RiverClient) StopLiveRecording(ctx context.Context, queueID uuid.UUID) error {
+	params := river.NewJobListParams().States(rivertype.JobStateRunning).
+		Kinds(string(utils.TaskDownloadLiveVideo)).First(500)
+	return rc.cancelPages(ctx, params, queueID, make(map[int64]struct{}), true)
+}
+
 // CancelJobsForQueueId cancels every active archive job for a queue. New jobs
 // are found through indexed River metadata; the paginated args scan preserves
 // compatibility with jobs inserted by older Ganymede releases.

@@ -826,6 +826,10 @@
     "videoMoveTitle": "Video verschieben"
   },
   "VideoComponents": {
+    "stopRecording": "Aufnahme stoppen",
+    "stopRecordingDescription": "Diese Aufnahme jetzt stoppen? Das aufgezeichnete Video und der Chat bleiben erhalten und werden verarbeitet.",
+    "stopRecordingNotification": "Stopp angefordert. Die Aufnahme wird jetzt abgeschlossen.",
+    "stopRecordingError": "Die Aufnahme konnte nicht gestoppt werden. Möglicherweise wurde sie bereits beendet. Lade die Seite neu und prüfe den Status.",
     "loadingInformation": "Videoinformationen werden geladen",
     "errorLoadingInformation": "Fehler beim Laden der Videoinformationen",
     "processingOverlayText": "Verarbeitung",

@@ -8,7 +8,7 @@ import {
   UseQueryOptions,
 } from "@tanstack/react-query";
 import { NullResponse } from "./usePlayback";
-import { Video } from "./useVideos";
+import { Video, VideoType } from "./useVideos";
 
 export interface Queue {
   id: string;
@@ -150,6 +150,29 @@ const useStopQueueItem = () => {
   });
 };
 
+const useStopRecording = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ axiosPrivate, videoId }: { axiosPrivate: AxiosInstance; videoId: string }) => {
+      const response = await axiosPrivate.get<ApiResponse<Video>>(`/api/v1/vod/${videoId}`, {
+        params: { with_queue: true },
+      });
+      const video = response.data.data;
+      const queue = video.edges.queue;
+      if (video.type !== VideoType.Live || video.status !== ArchiveStatus.Running ||
+          !queue?.live_archive || queue.task_video_download !== QueueTaskStatus.Running) {
+        throw new Error("This video is no longer recording.");
+      }
+      await stopQueueItem(axiosPrivate, queue.id);
+    },
+    onSuccess: () => {
+      for (const key of ["queue", "video", "videos", "channel_videos", "playlist_videos", "search"]) {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
+    },
+  });
+};
+
 const startQueueTask = async (
   axiosPrivate: AxiosInstance,
   queueId: string,
@@ -271,6 +294,7 @@ const useGetQueueLogs = (
 export {
   useGetQueueItems,
   useStopQueueItem,
+  useStopRecording,
   useGetQueueItem,
   useStartQueueTask,
   useEditQueue,

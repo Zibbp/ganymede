@@ -10,6 +10,7 @@ import { Channel } from "./useChannels";
 import { Playlist } from "./usePlaylist";
 import { AxiosInstance } from "axios";
 import { NullResponse } from "./usePlayback";
+import type { Queue } from "./useQueue";
 
 export interface PaginationResponse<T> {
   offset: number;
@@ -71,6 +72,7 @@ export interface VideoDetails extends Video {
 }
 
 export interface VideoEdges {
+  queue?: Queue;
   channel: Channel;
   muted_segments?: MutedSegment[];
   chapters?: Chapter[];

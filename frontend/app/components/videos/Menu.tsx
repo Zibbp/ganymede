@@ -1,4 +1,4 @@
-import { Menu, rem, ActionIcon, Modal, Drawer } from '@mantine/core';
+import { Menu, rem, ActionIcon, Modal, Drawer, Button, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconPhoto,
@@ -12,9 +12,10 @@ import {
   IconShare,
   IconLock,
   IconMovie,
+  IconPlayerStop,
 } from '@tabler/icons-react';
 import VideoInfoModalContent from './modals/InfoModalContent';
-import { useGenerateSpriteThumbnails, useGenerateStaticThumbnail, useLockVideo, Video } from '@/app/hooks/useVideos';
+import { useGenerateSpriteThumbnails, useGenerateStaticThumbnail, useLockVideo, Video, VideoType } from '@/app/hooks/useVideos';
 import PlaylistManageDrawerContent from '../playlist/ManageDrawerContent';
 import { useAxiosPrivate } from '@/app/hooks/useAxios';
 import { useDeletePlayback, useMarkVideoAsWatched } from '@/app/hooks/usePlayback';
@@ -25,6 +26,8 @@ import DeleteVideoModalContent from '../admin/video/DeleteModalContent';
 import useAuthStore from '@/app/store/useAuthStore';
 import { UserRole } from '@/app/hooks/useAuthentication';
 import { useTranslations } from 'next-intl';
+import { ArchiveStatus } from '@/app/util/archiveStatus';
+import { useStopRecording } from '@/app/hooks/useQueue';
 
 type Props = {
   video: Video
@@ -34,6 +37,8 @@ const VideoMenu = ({ video }: Props) => {
   const t = useTranslations('VideoComponents')
   const [infoModalOpened, { open: infoModalOpen, close: infoModalClose }] = useDisclosure(false);
   const [playlistsDrawerOpened, { open: openPlaylistDrawer, close: closePlaylistDrawer }] = useDisclosure(false);
+  const [stopModalOpened, { open: openStopModal, close: closeStopModal }] = useDisclosure(false);
+  const stopRecordingMutate = useStopRecording();
   const axiosPrivate = useAxiosPrivate()
   const isLocked = useRef(false);
   const { hasPermission } = useAuthStore()
@@ -50,6 +55,16 @@ const VideoMenu = ({ video }: Props) => {
   const generateStaticThumbnailMutate = useGenerateStaticThumbnail()
   const generateSpriteThumbnailsMutate = useGenerateSpriteThumbnails()
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
+
+  const handleStopRecording = async () => {
+    try {
+      await stopRecordingMutate.mutateAsync({ axiosPrivate, videoId: video.id });
+      showNotification({ message: t('stopRecordingNotification') });
+      closeStopModal();
+    } catch {
+      showNotification({ title: t('error'), message: t('stopRecordingError'), color: 'red' });
+    }
+  };
 
   const handleMarkAsWatched = async () => {
     try {
@@ -203,6 +218,15 @@ const VideoMenu = ({ video }: Props) => {
           {hasPermission(UserRole.Admin) && (
             <>
               <Menu.Divider />
+              {video.type === VideoType.Live && video.status === ArchiveStatus.Running && (
+                <Menu.Item
+                  leftSection={<IconPlayerStop style={{ width: rem(14), height: rem(14) }} />}
+                  onClick={openStopModal}
+                  disabled={stopRecordingMutate.isPending}
+                >
+                  {t('stopRecording')}
+                </Menu.Item>
+              )}
               <Menu.Item
                 color="red"
                 leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
@@ -228,6 +252,20 @@ const VideoMenu = ({ video }: Props) => {
       <Drawer opened={playlistsDrawerOpened} onClose={closePlaylistDrawer} position="right" title={t('managePlaylistsDrawerTitle')}>
         <PlaylistManageDrawerContent videoId={video.id} />
       </Drawer>
+
+      <Modal
+        opened={stopModalOpened}
+        onClose={closeStopModal}
+        title={t('stopRecording')}
+        closeOnClickOutside={!stopRecordingMutate.isPending}
+        closeOnEscape={!stopRecordingMutate.isPending}
+        withCloseButton={!stopRecordingMutate.isPending}
+      >
+        <Text>{t('stopRecordingDescription')}</Text>
+        <Button mt="md" fullWidth onClick={handleStopRecording} loading={stopRecordingMutate.isPending}>
+          {t('stopRecording')}
+        </Button>
+      </Modal>
 
       <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deleteVideoModalTitle')}>
         <DeleteVideoModalContent video={video} handleClose={closeDeleteModal} />
