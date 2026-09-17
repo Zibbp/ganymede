@@ -176,7 +176,7 @@ const AdminQueuePage = () => {
               {
                 accessor: "edges.vod.status",
                 title: statusText('label'),
-                render: ({ edges }) => <ArchiveStatusBadge status={edges.vod.status} />,
+                render: ({ edges }) => <ArchiveStatusBadge videoId={edges.vod.id} status={edges.vod.status} />,
               },
               {
                 accessor: "on_hold",

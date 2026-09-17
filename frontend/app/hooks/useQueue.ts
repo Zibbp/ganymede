@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { NullResponse } from "./usePlayback";
 import { Video, VideoType } from "./useVideos";
+import useRecordingStopStore from "@/app/store/useRecordingStopStore";
 
 export interface Queue {
   id: string;
@@ -153,6 +154,12 @@ const useStopQueueItem = () => {
 const useStopRecording = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    onMutate: ({ videoId }) => {
+      useRecordingStopStore.getState().requestStop(videoId);
+    },
+    onError: (_error, { videoId }) => {
+      useRecordingStopStore.getState().clearStop(videoId);
+    },
     mutationFn: async ({ axiosPrivate, videoId }: { axiosPrivate: AxiosInstance; videoId: string }) => {
       const response = await axiosPrivate.get<ApiResponse<Video>>(`/api/v1/vod/${videoId}`, {
         params: { with_queue: true },

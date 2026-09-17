@@ -1,5 +1,6 @@
 {
   "ArchiveStatus": {
+    "stopping": "Wird gestoppt…",
     "livePreviewUnavailable": "Die Live-Vorschau ist noch nicht verfügbar.",
     "label": "Status",
     "queued": "Wartend",

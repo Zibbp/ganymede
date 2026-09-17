@@ -1,5 +1,6 @@
 {
   "ArchiveStatus": {
+    "stopping": "Stopping…",
     "livePreviewUnavailable": "Live preview is not available yet.",
     "label": "Status",
     "queued": "Queued",

@@ -1,3 +1,4 @@
+import { useRecordingStopping } from "@/app/store/useRecordingStopStore";
 import { Menu, rem, ActionIcon, Modal, Drawer, Button, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -35,6 +36,8 @@ type Props = {
 
 const VideoMenu = ({ video }: Props) => {
   const t = useTranslations('VideoComponents')
+  const statusText = useTranslations('ArchiveStatus');
+  const stopping = useRecordingStopping(video.id, video.status);
   const [infoModalOpened, { open: infoModalOpen, close: infoModalClose }] = useDisclosure(false);
   const [playlistsDrawerOpened, { open: openPlaylistDrawer, close: closePlaylistDrawer }] = useDisclosure(false);
   const [stopModalOpened, { open: openStopModal, close: closeStopModal }] = useDisclosure(false);
@@ -57,6 +60,7 @@ const VideoMenu = ({ video }: Props) => {
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
 
   const handleStopRecording = async () => {
+    if (stopping || stopRecordingMutate.isPending) return;
     try {
       await stopRecordingMutate.mutateAsync({ axiosPrivate, videoId: video.id });
       showNotification({ message: t('stopRecordingNotification') });
@@ -222,9 +226,9 @@ const VideoMenu = ({ video }: Props) => {
                 <Menu.Item
                   leftSection={<IconPlayerStop style={{ width: rem(14), height: rem(14) }} />}
                   onClick={openStopModal}
-                  disabled={stopRecordingMutate.isPending}
+                  disabled={stopping || stopRecordingMutate.isPending}
                 >
-                  {t('stopRecording')}
+                  {stopping ? statusText('stopping') : t('stopRecording')}
                 </Menu.Item>
               )}
               <Menu.Item
@@ -262,8 +266,8 @@ const VideoMenu = ({ video }: Props) => {
         withCloseButton={!stopRecordingMutate.isPending}
       >
         <Text>{t('stopRecordingDescription')}</Text>
-        <Button mt="md" fullWidth onClick={handleStopRecording} loading={stopRecordingMutate.isPending}>
-          {t('stopRecording')}
+        <Button mt="md" fullWidth onClick={handleStopRecording} loading={stopRecordingMutate.isPending} disabled={stopping}>
+          {stopping ? statusText('stopping') : t('stopRecording')}
         </Button>
       </Modal>
 

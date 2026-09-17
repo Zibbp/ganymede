@@ -127,7 +127,7 @@ const VideoTitleBar = ({ video }: Params) => {
               <Tooltip label={t('videoTypeTooltip')} openDelay={250}>
                 <Badge variant="default">{video.type}</Badge>
               </Tooltip>
-              <ArchiveStatusBadge status={video.status} />
+              <ArchiveStatusBadge videoId={video.id} status={video.status} />
             </Group>
           </div>
 
