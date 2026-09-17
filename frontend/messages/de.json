@@ -1,4 +1,12 @@
 {
+  "ArchiveStatus": {
+    "label": "Status",
+    "queued": "Wartend",
+    "running": "Aufnahme / Download",
+    "finalizing": "Wird abgeschlossen",
+    "completed": "Abgeschlossen",
+    "failed": "Fehlgeschlagen"
+  },
   "HomePage": {
     "continueWatching": "Weiter ansehen",
     "recentlyArchived": "Kürzlich archiviert"

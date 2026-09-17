@@ -415,34 +415,22 @@ func init() {
 	queueDescOnHold := queueFields[2].Descriptor()
 	// queue.DefaultOnHold holds the default value on creation for the on_hold field.
 	queue.DefaultOnHold = queueDescOnHold.Default.(bool)
-	// queueDescVideoProcessing is the schema descriptor for video_processing field.
-	queueDescVideoProcessing := queueFields[3].Descriptor()
-	// queue.DefaultVideoProcessing holds the default value on creation for the video_processing field.
-	queue.DefaultVideoProcessing = queueDescVideoProcessing.Default.(bool)
-	// queueDescChatProcessing is the schema descriptor for chat_processing field.
-	queueDescChatProcessing := queueFields[4].Descriptor()
-	// queue.DefaultChatProcessing holds the default value on creation for the chat_processing field.
-	queue.DefaultChatProcessing = queueDescChatProcessing.Default.(bool)
-	// queueDescProcessing is the schema descriptor for processing field.
-	queueDescProcessing := queueFields[5].Descriptor()
-	// queue.DefaultProcessing holds the default value on creation for the processing field.
-	queue.DefaultProcessing = queueDescProcessing.Default.(bool)
 	// queueDescArchiveChat is the schema descriptor for archive_chat field.
-	queueDescArchiveChat := queueFields[17].Descriptor()
+	queueDescArchiveChat := queueFields[14].Descriptor()
 	// queue.DefaultArchiveChat holds the default value on creation for the archive_chat field.
 	queue.DefaultArchiveChat = queueDescArchiveChat.Default.(bool)
 	// queueDescRenderChat is the schema descriptor for render_chat field.
-	queueDescRenderChat := queueFields[18].Descriptor()
+	queueDescRenderChat := queueFields[15].Descriptor()
 	// queue.DefaultRenderChat holds the default value on creation for the render_chat field.
 	queue.DefaultRenderChat = queueDescRenderChat.Default.(bool)
 	// queueDescUpdatedAt is the schema descriptor for updated_at field.
-	queueDescUpdatedAt := queueFields[21].Descriptor()
+	queueDescUpdatedAt := queueFields[18].Descriptor()
 	// queue.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	queue.DefaultUpdatedAt = queueDescUpdatedAt.Default.(func() time.Time)
 	// queue.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	queue.UpdateDefaultUpdatedAt = queueDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// queueDescCreatedAt is the schema descriptor for created_at field.
-	queueDescCreatedAt := queueFields[22].Descriptor()
+	queueDescCreatedAt := queueFields[19].Descriptor()
 	// queue.DefaultCreatedAt holds the default value on creation for the created_at field.
 	queue.DefaultCreatedAt = queueDescCreatedAt.Default.(func() time.Time)
 	// queueDescID is the schema descriptor for id field.
@@ -501,10 +489,6 @@ func init() {
 	vodDescViews := vodFields[9].Descriptor()
 	// vod.DefaultViews holds the default value on creation for the views field.
 	vod.DefaultViews = vodDescViews.Default.(int)
-	// vodDescProcessing is the schema descriptor for processing field.
-	vodDescProcessing := vodFields[11].Descriptor()
-	// vod.DefaultProcessing holds the default value on creation for the processing field.
-	vod.DefaultProcessing = vodDescProcessing.Default.(bool)
 	// vodDescLocked is the schema descriptor for locked field.
 	vodDescLocked := vodFields[31].Descriptor()
 	// vod.DefaultLocked holds the default value on creation for the locked field.

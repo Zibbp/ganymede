@@ -36,7 +36,7 @@ type VodService interface {
 	UpdateVod(c echo.Context, vID uuid.UUID, vod vod.Vod, cID uuid.UUID) (*ent.Vod, error)
 	SearchVods(ctx context.Context, limit int, offset int, types []utils.VodType, predicates []predicate.Vod, sortBy utils.VideoSort, order utils.SortOrder) (vod.Pagination, error)
 	GetVodPlaylists(c echo.Context, vID uuid.UUID) ([]*ent.Playlist, error)
-	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID, processing bool, sortBy utils.VideoSort, sortOrder utils.SortOrder) (vod.Pagination, error)
+	GetVodsPagination(c echo.Context, limit int, offset int, channelId uuid.UUID, types []utils.VodType, playlistId uuid.UUID, statuses []utils.ArchiveStatus, sortBy utils.VideoSort, sortOrder utils.SortOrder) (vod.Pagination, error)
 	GetVodChatComments(c echo.Context, vodID uuid.UUID, start float64, end float64) (*[]chat.Comment, error)
 	GetVodChatCommentsFromChatter(c echo.Context, vodID uuid.UUID, chatterID string) (*[]chat.Comment, error)
 	GetUserIdFromChat(c echo.Context, vodID uuid.UUID) (*int64, error)
@@ -61,7 +61,7 @@ type CreateVodRequest struct {
 	Duration         int                 `json:"duration" validate:"required"`
 	Views            int                 `json:"views" validate:"required"`
 	Resolution       string              `json:"resolution"`
-	Processing       bool                `json:"processing"`
+	Status           utils.ArchiveStatus `json:"status" validate:"required,oneof=queued running finalizing completed failed"`
 	ThumbnailPath    string              `json:"thumbnail_path"`
 	WebThumbnailPath string              `json:"web_thumbnail_path" validate:"required,min=1"`
 	VideoPath        string              `json:"video_path" validate:"required,min=1"`
@@ -138,7 +138,7 @@ func (h *Handler) CreateVod(c echo.Context) error {
 		Duration:         req.Duration,
 		Views:            req.Views,
 		Resolution:       req.Resolution,
-		Processing:       req.Processing,
+		Status:           req.Status,
 		ThumbnailPath:    req.ThumbnailPath,
 		WebThumbnailPath: req.WebThumbnailPath,
 		VideoPath:        req.VideoPath,
@@ -373,7 +373,7 @@ func (h *Handler) UpdateVod(c echo.Context) error {
 		Duration:         req.Duration,
 		Views:            req.Views,
 		Resolution:       req.Resolution,
-		Processing:       req.Processing,
+		Status:           req.Status,
 		ThumbnailPath:    req.ThumbnailPath,
 		WebThumbnailPath: req.WebThumbnailPath,
 		VideoPath:        req.VideoPath,
@@ -539,7 +539,7 @@ func (h *Handler) GetVodPlaylists(c echo.Context) error {
 //		@Param			channel_id	query		string	false	"Channel ID"
 //	 @Param			types		query		string	false	"Types"
 //		@Param			playlist_id	query		string	false	"Playlist ID"
-//		@Param			processing	query		boolean	false	"Processing. Set to false to exclude videos that are still processing."
+//		@Param			status	query		string	false	"Comma-separated archive statuses: queued,running,finalizing,completed,failed"
 //		@Success		200			{object}	vod.Pagination
 //		@Failure		400			{object}	utils.ErrorResponse
 //		@Failure		500			{object}	utils.ErrorResponse
@@ -602,10 +602,12 @@ func (h *Handler) GetVodsPagination(c echo.Context) error {
 		sortOrder = utils.SortOrderDesc
 	}
 
-	// Default to true to include all videos. Only exclude processing videos is requested.
-	isProcessing := c.QueryParam("processing") != "false"
+	statuses, err := parseArchiveStatuses(c.QueryParam("status"))
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
 
-	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types, playlistUUID, isProcessing, sortBy, sortOrder)
+	v, err := h.Service.VodService.GetVodsPagination(c, limit, offset, cUUID, types, playlistUUID, statuses, sortBy, sortOrder)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

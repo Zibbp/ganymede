@@ -1,3 +1,4 @@
+import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import { Video } from "@/app/hooks/useVideos";
 import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box, Checkbox, Skeleton } from "@mantine/core";
 import Link from "next/link";
@@ -42,6 +43,7 @@ const VideoCard = ({
   onSelectionChange = () => { },
 }: Props) => {
   const t = useTranslations('VideoComponents')
+  const statusText = useTranslations('ArchiveStatus')
   const { isLoggedIn, hasPermission } = useAuthStore()
   const [thumbnailError, setThumbnailError] = useState(false);
   const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
@@ -73,12 +75,12 @@ const VideoCard = ({
       <Link href={`/videos/${video.id}`}>
         <Card.Section>
           <div className={classes.videoImageWrapper}>
-            {video.processing && (
+            {video.status !== ArchiveStatus.Completed && (
               <LoadingOverlay visible zIndex={5} overlayProps={{ radius: "sm", blur: 1 }} loaderProps={{
-                children: <div><Text size="xl">{t('processingOverlayText')}</Text>
+                children: <div><Text size="xl">{statusText(video.status)}</Text>
                   <Center>
                     <Box>
-                      <Loader color="red" />
+                      {isArchiveActive(video.status) && <Loader color="red" />}
                     </Box>
                   </Center></div>
               }} />

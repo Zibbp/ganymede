@@ -3116,8 +3116,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Get processing queue items",
-                        "name": "processing",
+                        "description": "Comma-separated archive statuses: queued,running,finalizing,completed,failed",
+                        "name": "status",
                         "in": "query"
                     }
                 ],
@@ -4077,9 +4077,9 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "boolean",
-                        "description": "Processing. Set to false to exclude videos that are still processing.",
-                        "name": "processing",
+                        "type": "string",
+                        "description": "Comma-separated archive statuses: queued,running,finalizing,completed,failed",
+                        "name": "status",
                         "in": "query"
                     }
                 ],
@@ -6401,10 +6401,6 @@ const docTemplate = `{
                     "description": "ArchiveChat holds the value of the \"archive_chat\" field.",
                     "type": "boolean"
                 },
-                "chat_processing": {
-                    "description": "ChatProcessing holds the value of the \"chat_processing\" field.",
-                    "type": "boolean"
-                },
                 "chat_start": {
                     "description": "ChatStart holds the value of the \"chat_start\" field.",
                     "type": "string"
@@ -6431,10 +6427,6 @@ const docTemplate = `{
                 },
                 "on_hold": {
                     "description": "OnHold holds the value of the \"on_hold\" field.",
-                    "type": "boolean"
-                },
-                "processing": {
-                    "description": "Processing holds the value of the \"processing\" field.",
                     "type": "boolean"
                 },
                 "render_chat": {
@@ -6524,10 +6516,6 @@ const docTemplate = `{
                 "updated_at": {
                     "description": "UpdatedAt holds the value of the \"updated_at\" field.",
                     "type": "string"
-                },
-                "video_processing": {
-                    "description": "VideoProcessing holds the value of the \"video_processing\" field.",
-                    "type": "boolean"
                 },
                 "workflow_id": {
                     "description": "WorkflowID holds the value of the \"workflow_id\" field.",
@@ -6713,10 +6701,6 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "processing": {
-                    "description": "Whether the VOD is currently processing.",
-                    "type": "boolean"
-                },
                 "resolution": {
                     "description": "Resolution holds the value of the \"resolution\" field.",
                     "type": "string"
@@ -6751,6 +6735,14 @@ const docTemplate = `{
                 "sprite_thumbnails_width": {
                     "description": "SpriteThumbnailsWidth holds the value of the \"sprite_thumbnails_width\" field.",
                     "type": "integer"
+                },
+                "status": {
+                    "description": "Archive processing lifecycle, independent of capture completeness.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.ArchiveStatus"
+                        }
+                    ]
                 },
                 "storage_size_bytes": {
                     "description": "The size of the VOD in bytes.",
@@ -7204,6 +7196,7 @@ const docTemplate = `{
                 "channel_id",
                 "duration",
                 "platform",
+                "status",
                 "streamed_at",
                 "title",
                 "type",
@@ -7255,11 +7248,22 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "processing": {
-                    "type": "boolean"
-                },
                 "resolution": {
                     "type": "string"
+                },
+                "status": {
+                    "enum": [
+                        "queued",
+                        "running",
+                        "finalizing",
+                        "completed",
+                        "failed"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.ArchiveStatus"
+                        }
+                    ]
                 },
                 "streamed_at": {
                     "type": "string"
@@ -7720,9 +7724,6 @@ const docTemplate = `{
                 "task_vod_save_info"
             ],
             "properties": {
-                "chat_processing": {
-                    "type": "boolean"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -7730,9 +7731,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "on_hold": {
-                    "type": "boolean"
-                },
-                "processing": {
                     "type": "boolean"
                 },
                 "task_chat_convert": {
@@ -7864,9 +7862,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/utils.TaskStatus"
                         }
                     ]
-                },
-                "video_processing": {
-                    "type": "boolean"
                 }
             }
         },
@@ -8257,6 +8252,23 @@ const docTemplate = `{
                 "DefaultOperator",
                 "OperatorAND",
                 "OperatorOR"
+            ]
+        },
+        "utils.ArchiveStatus": {
+            "type": "string",
+            "enum": [
+                "queued",
+                "running",
+                "finalizing",
+                "completed",
+                "failed"
+            ],
+            "x-enum-varnames": [
+                "ArchiveQueued",
+                "ArchiveRunning",
+                "ArchiveFinalizing",
+                "ArchiveCompleted",
+                "ArchiveFailed"
             ]
         },
         "utils.ErrorResponse": {

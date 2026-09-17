@@ -1,3 +1,4 @@
+import { ArchiveStatus } from "@/app/util/archiveStatus";
 import {
   keepPreviousData,
   useMutation,
@@ -53,7 +54,7 @@ export interface Video {
   tmp_live_chat_download_path: string;
   tmp_live_chat_convert_path: string;
   tmp_chat_render_path: string;
-  processing: boolean;
+  status: ArchiveStatus;
   streamed_at: Date;
   updated_at: Date;
   created_at: Date;
@@ -130,7 +131,7 @@ export interface CreateVodRequest {
   duration: number;
   views: number;
   resolution?: string;
-  processing: boolean;
+  status: ArchiveStatus;
   thumbnail_path?: string;
   web_thumbnail_path: string;
   video_path: string;
@@ -176,7 +177,7 @@ type FetchVideosFilterOptions = {
   types?: Array<VideoType>;
   channel_id?: string;
   playlist_id?: string;
-  is_processing?: boolean;
+  statuses?: ArchiveStatus[];
   sort_by?: VideoSortBy;
   order?: VideoOrder;
 };
@@ -187,7 +188,7 @@ const fetchVideosFilter = async (
   types?: Array<VideoType>,
   channel_id?: string,
   playlist_id?: string,
-  is_processing?: boolean,
+  statuses?: ArchiveStatus[],
   sort_by?: VideoSortBy,
   order?: VideoOrder
 ): Promise<PaginationResponse<Array<Video>>> => {
@@ -204,8 +205,8 @@ const fetchVideosFilter = async (
   if (types && types.length > 0) {
     queryParams.types = types.join(",");
   }
-  if (typeof is_processing !== "undefined") {
-    queryParams.processing = is_processing;
+  if (statuses?.length) {
+    queryParams.status = statuses.join(",");
   }
   if (sort_by) {
     queryParams.sort_by = sort_by;
@@ -234,14 +235,13 @@ const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
     types,
     channel_id,
     playlist_id,
-    is_processing,
+    statuses,
     sort_by,
     order,
   } = params;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let queryKey: any[];
-  const processing = is_processing ?? true;
   if (channel_id) {
     queryKey = [
       "channel_videos",
@@ -249,6 +249,7 @@ const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
       limit,
       offset,
       types,
+      statuses,
       sort_by,
       order,
     ];
@@ -259,11 +260,12 @@ const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
       limit,
       offset,
       types,
+      statuses,
       sort_by,
       order,
     ];
   } else {
-    queryKey = ["videos", limit, offset, types, processing, sort_by, order]; // Fetch videos without channel_id or playlist_id
+    queryKey = ["videos", limit, offset, types, statuses, sort_by, order]; // Fetch videos without channel_id or playlist_id
   }
 
   return useQuery<PaginationResponse<Array<Video>>, Error>({
@@ -275,7 +277,7 @@ const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
         types,
         channel_id,
         playlist_id,
-        processing,
+        statuses,
         sort_by,
         order
       ),

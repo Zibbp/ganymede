@@ -826,9 +826,6 @@ definitions:
       archive_chat:
         description: ArchiveChat holds the value of the "archive_chat" field.
         type: boolean
-      chat_processing:
-        description: ChatProcessing holds the value of the "chat_processing" field.
-        type: boolean
       chat_start:
         description: ChatStart holds the value of the "chat_start" field.
         type: string
@@ -849,9 +846,6 @@ definitions:
         type: boolean
       on_hold:
         description: OnHold holds the value of the "on_hold" field.
-        type: boolean
-      processing:
-        description: Processing holds the value of the "processing" field.
         type: boolean
       render_chat:
         description: RenderChat holds the value of the "render_chat" field.
@@ -904,9 +898,6 @@ definitions:
       updated_at:
         description: UpdatedAt holds the value of the "updated_at" field.
         type: string
-      video_processing:
-        description: VideoProcessing holds the value of the "video_processing" field.
-        type: boolean
       workflow_id:
         description: WorkflowID holds the value of the "workflow_id" field.
         type: string
@@ -1038,9 +1029,6 @@ definitions:
         allOf:
         - $ref: '#/definitions/utils.VideoPlatform'
         description: The platform the VOD is from, takes an enum.
-      processing:
-        description: Whether the VOD is currently processing.
-        type: boolean
       resolution:
         description: Resolution holds the value of the "resolution" field.
         type: string
@@ -1074,6 +1062,10 @@ definitions:
         description: SpriteThumbnailsWidth holds the value of the "sprite_thumbnails_width"
           field.
         type: integer
+      status:
+        allOf:
+        - $ref: '#/definitions/utils.ArchiveStatus'
+        description: Archive processing lifecycle, independent of capture completeness.
       storage_size_bytes:
         description: The size of the VOD in bytes.
         type: integer
@@ -1416,10 +1408,17 @@ definitions:
         enum:
         - twitch
         - youtube
-      processing:
-        type: boolean
       resolution:
         type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/utils.ArchiveStatus'
+        enum:
+        - queued
+        - running
+        - finalizing
+        - completed
+        - failed
       streamed_at:
         type: string
       thumbnail_path:
@@ -1448,6 +1447,7 @@ definitions:
     - channel_id
     - duration
     - platform
+    - status
     - streamed_at
     - title
     - type
@@ -1741,15 +1741,11 @@ definitions:
     type: object
   http.UpdateQueueRequest:
     properties:
-      chat_processing:
-        type: boolean
       id:
         type: string
       live_archive:
         type: boolean
       on_hold:
-        type: boolean
-      processing:
         type: boolean
       task_chat_convert:
         allOf:
@@ -1831,8 +1827,6 @@ definitions:
         - running
         - success
         - failed
-      video_processing:
-        type: boolean
     required:
     - task_chat_convert
     - task_chat_download
@@ -2123,6 +2117,20 @@ definitions:
     - DefaultOperator
     - OperatorAND
     - OperatorOR
+  utils.ArchiveStatus:
+    enum:
+    - queued
+    - running
+    - finalizing
+    - completed
+    - failed
+    type: string
+    x-enum-varnames:
+    - ArchiveQueued
+    - ArchiveRunning
+    - ArchiveFinalizing
+    - ArchiveCompleted
+    - ArchiveFailed
   utils.ErrorResponse:
     properties:
       message:
@@ -4210,9 +4218,9 @@ paths:
       - application/json
       description: Get queue items
       parameters:
-      - description: Get processing queue items
+      - description: 'Comma-separated archive statuses: queued,running,finalizing,completed,failed'
         in: query
-        name: processing
+        name: status
         type: string
       produces:
       - application/json
@@ -5480,10 +5488,10 @@ paths:
         in: query
         name: playlist_id
         type: string
-      - description: Processing. Set to false to exclude videos that are still processing.
+      - description: 'Comma-separated archive statuses: queued,running,finalizing,completed,failed'
         in: query
-        name: processing
-        type: boolean
+        name: status
+        type: string
       produces:
       - application/json
       responses:

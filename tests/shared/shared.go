@@ -81,7 +81,7 @@ func WaitForArchiveCompletion(t *testing.T, app *server.Application, videoId uui
 	t.Helper()
 	deadline := time.Now().Add(timeout)
 	for {
-		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(videoId))).Only(t.Context())
+		q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(vod.ID(videoId))).WithVod().Only(t.Context())
 		if err != nil {
 			t.Fatalf("query archive queue: %v", err)
 		}
@@ -96,7 +96,7 @@ func WaitForArchiveCompletion(t *testing.T, app *server.Application, videoId uui
 			return riverJobBlocksArchiveCompletion(job, videoId, q.ID)
 		})
 
-		if !q.Processing && activeJob == nil {
+		if q.Edges.Vod.Status == utils.ArchiveCompleted && activeJob == nil {
 			return
 		}
 		if time.Now().After(deadline) {
@@ -183,12 +183,12 @@ func WaitForArchiveCompletionAfterCrash(t *testing.T, app *server.Application, v
 	deadline := time.Now().Add(timeout)
 	for {
 		q, err := app.Database.Client.Queue.Query().
-			Where(queue.HasVodWith(vod.ID(videoID))).
+			Where(queue.HasVodWith(vod.ID(videoID))).WithVod().
 			Only(t.Context())
 		if err != nil {
 			t.Fatalf("query crashed archive queue: %v", err)
 		}
-		if !q.Processing {
+		if q.Edges.Vod.Status == utils.ArchiveCompleted {
 			return q
 		}
 		if time.Now().After(deadline) {

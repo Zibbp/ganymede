@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/queue"
+	entVod "github.com/zibbp/ganymede/ent/vod"
+	"github.com/zibbp/ganymede/internal/archivestatus"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
@@ -42,9 +45,6 @@ type Queue struct {
 	ID                       uuid.UUID        `json:"id"`
 	LiveArchive              bool             `json:"live_archive"`
 	OnHold                   bool             `json:"on_hold"`
-	VideoProcessing          bool             `json:"video_processing"`
-	ChatProcessing           bool             `json:"chat_processing"`
-	Processing               bool             `json:"processing"`
 	TaskVodCreateFolder      utils.TaskStatus `json:"task_vod_create_folder"`
 	TaskVodDownloadThumbnail utils.TaskStatus `json:"task_vod_download_thumbnail"`
 	TaskVodSaveInfo          utils.TaskStatus `json:"task_vod_save_info"`
@@ -90,8 +90,20 @@ func (s *Service) CreateQueueItemWithClient(ctx context.Context, client *ent.Cli
 
 }
 
-func (s *Service) UpdateQueueItem(queueDto Queue, qID uuid.UUID) (*ent.Queue, error) {
-	q, err := s.Store.Client.Queue.UpdateOneID(qID).SetLiveArchive(queueDto.LiveArchive).SetOnHold(queueDto.OnHold).SetVideoProcessing(queueDto.VideoProcessing).SetChatProcessing(queueDto.ChatProcessing).SetProcessing(queueDto.Processing).SetTaskVodCreateFolder(queueDto.TaskVodCreateFolder).SetTaskVodDownloadThumbnail(queueDto.TaskVodDownloadThumbnail).SetTaskVodSaveInfo(queueDto.TaskVodSaveInfo).SetTaskVideoDownload(queueDto.TaskVideoDownload).SetTaskVideoConvert(queueDto.TaskVideoConvert).SetTaskVideoMove(queueDto.TaskVideoMove).SetTaskChatDownload(queueDto.TaskChatDownload).SetTaskChatConvert(queueDto.TaskChatConvert).SetArchiveChat(queueDto.ArchiveChat).SetRenderChat(queueDto.RenderChat).SetTaskChatRender(queueDto.TaskChatRender).SetTaskChatMove(queueDto.TaskChatMove).Save(context.Background())
+func (s *Service) UpdateQueueItem(ctx context.Context, queueDto Queue, qID uuid.UUID) (*ent.Queue, error) {
+	var q *ent.Queue
+	err := s.Store.WithTx(ctx, func(client *ent.Client, _ *sql.Tx) error {
+		var err error
+		q, err = client.Queue.UpdateOneID(qID).SetLiveArchive(queueDto.LiveArchive).SetOnHold(queueDto.OnHold).SetTaskVodCreateFolder(queueDto.TaskVodCreateFolder).SetTaskVodDownloadThumbnail(queueDto.TaskVodDownloadThumbnail).SetTaskVodSaveInfo(queueDto.TaskVodSaveInfo).SetTaskVideoDownload(queueDto.TaskVideoDownload).SetTaskVideoConvert(queueDto.TaskVideoConvert).SetTaskVideoMove(queueDto.TaskVideoMove).SetTaskChatDownload(queueDto.TaskChatDownload).SetTaskChatConvert(queueDto.TaskChatConvert).SetTaskChatRender(queueDto.TaskChatRender).SetTaskChatMove(queueDto.TaskChatMove).Save(ctx)
+		if err != nil {
+			return err
+		}
+		v, err := q.QueryVod().Only(ctx)
+		if err != nil {
+			return err
+		}
+		return client.Vod.UpdateOneID(v.ID).SetStatus(archivestatus.FromQueue(q)).Exec(ctx)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("error updating queue: %v", err)
 	}
@@ -107,8 +119,8 @@ func (s *Service) GetQueueItems(c echo.Context) ([]*ent.Queue, error) {
 	}
 	return q, nil
 }
-func (s *Service) GetQueueItemsFilter(c echo.Context, processing bool) ([]*ent.Queue, error) {
-	q, err := s.Store.Client.Queue.Query().Where(queue.Processing(processing)).WithVod(func(q *ent.VodQuery) {
+func (s *Service) GetQueueItemsFilter(c echo.Context, statuses []utils.ArchiveStatus) ([]*ent.Queue, error) {
+	q, err := s.Store.Client.Queue.Query().Where(queue.HasVodWith(entVod.StatusIn(statuses...))).WithVod(func(q *ent.VodQuery) {
 		q.WithChannel()
 	}).Order(ent.Asc(queue.FieldCreatedAt)).All(c.Request().Context())
 	if err != nil {

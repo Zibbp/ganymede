@@ -1,3 +1,4 @@
+import { ArchiveStatus, activeArchiveStatuses } from "@/app/util/archiveStatus";
 import { AxiosInstance } from "axios";
 import { ApiResponse } from "./useAxios";
 import {
@@ -13,9 +14,6 @@ export interface Queue {
   id: string;
   live_archive: boolean;
   on_hold: boolean;
-  video_processing: boolean;
-  chat_processing: boolean;
-  processing: boolean;
   task_vod_create_folder: QueueTaskStatus;
   task_vod_download_thumbnail: QueueTaskStatus;
   task_vod_save_info: QueueTaskStatus;
@@ -70,13 +68,13 @@ export enum QueueLogType {
 
 const getQueueItems = async (
   axiosPrivate: AxiosInstance,
-  processingOnly: boolean
+  unfinishedOnly: boolean
 ): Promise<Array<Queue>> => {
   const response = await axiosPrivate.get<ApiResponse<Array<Queue>>>(
     `/api/v1/queue`,
     {
       params: {
-        processing: processingOnly,
+        status: unfinishedOnly ? [...activeArchiveStatuses, ArchiveStatus.Failed].join(",") : undefined,
       },
     }
   );
@@ -85,11 +83,11 @@ const getQueueItems = async (
 
 const useGetQueueItems = (
   axiosPrivate: AxiosInstance,
-  processingOnly: boolean
+  unfinishedOnly: boolean
 ) => {
   return useQuery({
-    queryKey: ["queue", processingOnly],
-    queryFn: () => getQueueItems(axiosPrivate, processingOnly),
+    queryKey: ["queue", unfinishedOnly],
+    queryFn: () => getQueueItems(axiosPrivate, unfinishedOnly),
   });
 };
 
@@ -145,7 +143,9 @@ const useStopQueueItem = () => {
   return useMutation<NullResponse, Error, StopQueueItemVariables>({
     mutationFn: ({ axiosPrivate, id }) => stopQueueItem(axiosPrivate, id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["queue"] });
+      for (const key of ["queue", "video", "videos", "channel_videos", "playlist_videos", "search"]) {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
     },
   });
 };
@@ -184,10 +184,7 @@ const editQueue = async (
 ): Promise<ApiResponse<NullResponse>> => {
   const response = await axiosPrivate.put(`/api/v1/queue/${queue.id}`, {
     id: queue.id,
-    processing: queue.processing,
     on_hold: queue.on_hold,
-    video_processing: queue.video_processing,
-    chat_processing: queue.chat_processing,
     live_archive: queue.live_archive,
     task_vod_create_folder: queue.task_vod_create_folder,
     task_vod_download_thumbnail: queue.task_vod_download_thumbnail,
@@ -213,7 +210,9 @@ const useEditQueue = () => {
   return useMutation<ApiResponse<NullResponse>, Error, EditQueueVariables>({
     mutationFn: ({ axiosPrivate, queue }) => editQueue(axiosPrivate, queue),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["queue"] });
+      for (const key of ["queue", "video", "videos", "channel_videos", "playlist_videos", "search"]) {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
     },
   });
 };
@@ -234,7 +233,9 @@ const useDeleteQueue = () => {
     mutationFn: ({ axiosPrivate, queueId }) =>
       deleteQueue(axiosPrivate, queueId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["queue"] });
+      for (const key of ["queue", "video", "videos", "channel_videos", "playlist_videos", "search"]) {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
     },
   });
 };

@@ -1,3 +1,4 @@
+import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/default/layouts/video.css';
 import { MediaPlayer, MediaPlayerInstance, MediaProvider, MediaSrc, Poster, Track, VideoMimeType, useMediaState } from '@vidstack/react';
@@ -89,7 +90,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
     }
 
     // Allow for processing videos to be played via HLS from the temp directory if enabled
-    if (video.processing) {
+    if (isArchiveActive(video.status)) {
       setVideoSource({
         src: `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.tmp_video_hls_path)}/${video.ext_id}-video.m3u8`,
         type: "application/x-mpegurl"
@@ -154,7 +155,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
       })
 
       // mark video as finished if over duration threshold
-      if (!video.processing && (playerTimeInt / video.duration >= 0.98)) {
+      if (video.status === ArchiveStatus.Completed && (playerTimeInt / video.duration >= 0.98)) {
         setPlaybackProgressMutation.mutate({
           axiosPrivate: axiosPrivate,
           videoId: video.id,
@@ -194,7 +195,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
   }, [player, video.clip_vod_offset, video.type]);
 
   // thumbnails URL only when not processing
-  const thumbnails = !video.processing
+  const thumbnails = video.status === ArchiveStatus.Completed
     ? `${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/vod/${video.id}/thumbnails/vtt`
     : undefined
   return (
@@ -217,7 +218,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
       {showAbsoluteTime && <AbsoluteTimeDisplay streamedAt={video.streamed_at} />}
       <MediaProvider>
         <Poster className={`${classes.mediaPlayerPoster} vds-poster`} src={videoPoster} alt={video.title} />
-        {!video.processing && (
+        {video.status === ArchiveStatus.Completed && (
           <Track
             src={`${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/chapter/video/${video.id}/webvtt`}
             kind="chapters"

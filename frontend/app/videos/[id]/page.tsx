@@ -1,4 +1,5 @@
 "use client"
+import { ArchiveStatus } from "@/app/util/archiveStatus";
 import { useFetchVideo, useGetVideoClips, VideoType } from "@/app/hooks/useVideos";
 import React, { useEffect, useRef } from "react";
 import classes from "./VideoPage.module.css"
@@ -94,7 +95,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
         </div>
 
         {/* Chat */}
-        {data.chat_path && !hideChat && !data.processing && (
+        {data.chat_path && !hideChat && data.status === ArchiveStatus.Completed && (
           <div
             className={isMobile ? classes.chatColumnMobile : classes.rightColumn}
             style={isMobile ? undefined : { height: "auto", maxHeight: "auto" }}
@@ -117,7 +118,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
       {!videoTheaterMode && <VideoTitleBar video={data} />}
 
       {/* Desktop-only sections render after the player/chat block so toggling them doesn't shift player position */}
-      {!isMobile && !data.processing && (
+      {!isMobile && data.status === ArchiveStatus.Completed && (
         <Container size="7xl" fluid={true} >
           {videoClipsError && (
             <div>Error loading clips</div>
@@ -128,7 +129,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
         </Container>
       )}
 
-      {(!isMobile && data.chat_path && (data.type != VideoType.Clip) && showChatHistogram && !data.processing) && (
+      {(!isMobile && data.chat_path && (data.type != VideoType.Clip) && showChatHistogram && data.status === ArchiveStatus.Completed) && (
         <Container size="7xl" fluid={true} >
           <VideoChatHistogram videoId={data.id} playerRef={player} />
         </Container>
