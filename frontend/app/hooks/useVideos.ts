@@ -1,4 +1,4 @@
-import { ArchiveStatus } from "@/app/util/archiveStatus";
+import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import {
   keepPreviousData,
   useMutation,
@@ -64,6 +64,10 @@ export interface Video {
   notes: string;
   caption_path: string;
   storage_size_bytes?: number;
+}
+
+export interface VideoDetails extends Video {
+  live_preview_available: boolean;
 }
 
 export interface VideoEdges {
@@ -160,8 +164,8 @@ const fetchVideo = async (
   withChannel: boolean,
   withChapters: boolean,
   withMutedSegments: boolean
-): Promise<Video> => {
-  const response = await useAxios.get<ApiResponse<Video>>(`/api/v1/vod/${id}`, {
+): Promise<VideoDetails> => {
+  const response = await useAxios.get<ApiResponse<VideoDetails>>(`/api/v1/vod/${id}`, {
     params: {
       with_channel: withChannel,
       with_chapters: withChapters,
@@ -291,7 +295,12 @@ const useFetchVideo = (params: FetchVideoOptions) => {
     queryKey: ["video", id, with_channel, with_chapters, with_muted_segments],
     queryFn: () =>
       fetchVideo(id, with_channel, with_chapters, with_muted_segments),
-    refetchInterval: false,
+    refetchInterval: (query) => {
+      const video = query.state.data;
+      return video && isArchiveActive(video.status) && !video.live_preview_available
+        ? 5000
+        : false;
+    },
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

@@ -1,8 +1,9 @@
 {
   "ArchiveStatus": {
+    "livePreviewUnavailable": "Live preview is not available yet.",
     "label": "Status",
     "queued": "Queued",
-    "running": "Recording / downloading",
+    "running": "Recording",
     "finalizing": "Finalizing",
     "completed": "Completed",
     "failed": "Failed"

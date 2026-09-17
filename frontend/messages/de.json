@@ -1,8 +1,9 @@
 {
   "ArchiveStatus": {
+    "livePreviewUnavailable": "Die Live-Vorschau ist noch nicht verfügbar.",
     "label": "Status",
     "queued": "Wartend",
-    "running": "Aufnahme / Download",
+    "running": "Aufnahme",
     "finalizing": "Wird abgeschlossen",
     "completed": "Abgeschlossen",
     "failed": "Fehlgeschlagen"

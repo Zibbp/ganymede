@@ -190,6 +190,12 @@ func (h *Handler) GetVods(c echo.Context) error {
 	return SuccessResponse(c, v, "videos")
 }
 
+// VideoDetails includes the current availability of the temporary live preview.
+type VideoDetails struct {
+	*ent.Vod
+	LivePreviewAvailable bool `json:"live_preview_available"`
+}
+
 // GetVod godoc
 //
 //	@Summary		Get a vod
@@ -202,7 +208,7 @@ func (h *Handler) GetVods(c echo.Context) error {
 //	@Param			with_chapters		query		boolean	false	"With chapters"
 //	@Param			with_muted_segments	query		boolean	false	"With muted segments"
 //	@Param			with_queue			query		boolean	false	"With queue"
-//	@Success		200					{object}	ent.Vod
+//	@Success		200					{object}	VideoDetails
 //	@Failure		400					{object}	utils.ErrorResponse
 //	@Failure		404					{object}	utils.ErrorResponse
 //	@Failure		500					{object}	utils.ErrorResponse
@@ -267,7 +273,7 @@ func (h *Handler) GetVod(c echo.Context) error {
 		}
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return SuccessResponse(c, v, "video")
+	return SuccessResponse(c, VideoDetails{Vod: v, LivePreviewAvailable: vod.LivePreviewAvailable(v)}, "video")
 }
 
 // GetVodByExternalId godoc
@@ -282,7 +288,7 @@ func (h *Handler) GetVod(c echo.Context) error {
 //	@Param			with_chapters		query		boolean	false	"With chapters"
 //	@Param			with_muted_segments	query		boolean	false	"With muted segments"
 //	@Param			with_queue			query		boolean	false	"With queue"
-//	@Success		200					{object}	ent.Vod
+//	@Success		200					{object}	VideoDetails
 //	@Failure		400					{object}	utils.ErrorResponse
 //	@Failure		404					{object}	utils.ErrorResponse
 //	@Failure		500					{object}	utils.ErrorResponse

@@ -1,9 +1,10 @@
 "use client"
-import { ArchiveStatus } from "@/app/util/archiveStatus";
+import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import { useFetchVideo, useGetVideoClips, VideoType } from "@/app/hooks/useVideos";
 import React, { useEffect, useRef } from "react";
 import classes from "./VideoPage.module.css"
 import { Box, Container, useMantineTheme } from "@mantine/core";
+import RecordingNotice from "@/app/components/videos/RecordingNotice";
 import VideoPlayer from "@/app/components/videos/Player";
 import VideoTitleBar from "@/app/components/videos/TitleBar";
 import ChatPlayer from "@/app/components/videos/ChatPlayer";
@@ -90,7 +91,11 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
               ? undefined
               : (videoTheaterMode || fullscreen ? classes.videoPlayerTheaterMode : classes.videoPlayer)
           }>
-            <VideoPlayer video={data} ref={player} />
+            {isArchiveActive(data.status) && !data.live_preview_available ? (
+              <RecordingNotice video={data} />
+            ) : (
+              <VideoPlayer video={data} ref={player} />
+            )}
           </div>
         </div>
 
