@@ -390,6 +390,20 @@ var (
 			},
 		},
 	}
+	// StorageFindingsColumns holds the columns for the "storage_findings" table.
+	StorageFindingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "kind", Type: field.TypeEnum, Enums: []string{"orphaned_directory"}},
+		{Name: "path", Type: field.TypeString, Unique: true},
+		{Name: "size_bytes", Type: field.TypeInt64, Default: 0},
+		{Name: "detected_at", Type: field.TypeTime},
+	}
+	// StorageFindingsTable holds the schema information for the "storage_findings" table.
+	StorageFindingsTable = &schema.Table{
+		Name:       "storage_findings",
+		Columns:    StorageFindingsColumns,
+		PrimaryKey: []*schema.Column{StorageFindingsColumns[0]},
+	}
 	// TwitchCategoriesColumns holds the columns for the "twitch_categories" table.
 	TwitchCategoriesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -529,6 +543,7 @@ var (
 		PlaylistRuleGroupsTable,
 		QueuesTable,
 		SessionsTable,
+		StorageFindingsTable,
 		TwitchCategoriesTable,
 		UsersTable,
 		VodsTable,
