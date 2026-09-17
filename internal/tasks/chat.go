@@ -155,7 +155,7 @@ func (w RenderChatWorker) Work(ctx context.Context, job *river.Job[RenderChatArg
 				return err
 			}
 			// set queue chat to completed
-			_, err = store.Client.Queue.UpdateOneID(job.Args.Input.QueueId).SetChatProcessing(false).SetTaskChatMove(utils.Success).Save(ctx)
+			_, err = store.Client.Queue.UpdateOneID(job.Args.Input.QueueId).SetTaskChatMove(utils.Success).Save(ctx)
 			if err != nil {
 				return err
 			}

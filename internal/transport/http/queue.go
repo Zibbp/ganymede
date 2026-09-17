@@ -16,9 +16,9 @@ import (
 type QueueService interface {
 	CreateQueueItem(queueDto queue.Queue, vID uuid.UUID) (*ent.Queue, error)
 	GetQueueItems(c echo.Context) ([]*ent.Queue, error)
-	GetQueueItemsFilter(c echo.Context, pro bool) ([]*ent.Queue, error)
+	GetQueueItemsFilter(c echo.Context, statuses []utils.ArchiveStatus) ([]*ent.Queue, error)
 	GetQueueItem(id uuid.UUID) (*ent.Queue, error)
-	UpdateQueueItem(queueDto queue.Queue, id uuid.UUID) (*ent.Queue, error)
+	UpdateQueueItem(ctx context.Context, queueDto queue.Queue, id uuid.UUID) (*ent.Queue, error)
 	DeleteQueueItem(c echo.Context, id uuid.UUID) error
 	ReadLogFile(c echo.Context, id uuid.UUID, logType string) ([]byte, error)
 	StopQueueItem(ctx context.Context, id uuid.UUID) error
@@ -39,9 +39,6 @@ type UpdateQueueRequest struct {
 	ID                       uuid.UUID        `json:"id"`
 	LiveArchive              bool             `json:"live_archive"`
 	OnHold                   bool             `json:"on_hold"`
-	VideoProcessing          bool             `json:"video_processing"`
-	ChatProcessing           bool             `json:"chat_processing"`
-	Processing               bool             `json:"processing"`
 	TaskVodCreateFolder      utils.TaskStatus `json:"task_vod_create_folder" validate:"required,oneof=pending running success failed"`
 	TaskVodDownloadThumbnail utils.TaskStatus `json:"task_vod_download_thumbnail" validate:"required,oneof=pending running success failed"`
 	TaskVodSaveInfo          utils.TaskStatus `json:"task_vod_save_info" validate:"required,oneof=pending running success failed"`
@@ -97,7 +94,7 @@ func (h *Handler) CreateQueueItem(c echo.Context) error {
 //	@Tags			queue
 //	@Accept			json
 //	@Produce		json
-//	@Param			processing	query		string	false	"Get processing queue items"
+//	@Param			status	query		string	false	"Comma-separated archive statuses: queued,running,finalizing,completed,failed"
 //	@Success		200			{object}	[]ent.Queue
 //	@Failure		400			{object}	utils.ErrorResponse
 //	@Failure		500			{object}	utils.ErrorResponse
@@ -105,18 +102,16 @@ func (h *Handler) CreateQueueItem(c echo.Context) error {
 //	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetQueueItems(c echo.Context) error {
-	processing := false
-	processingParam := c.QueryParam("processing")
-	if processingParam == "true" {
-		processing = true
+	statuses, err := parseArchiveStatuses(c.QueryParam("status"))
+	if err != nil {
+		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
-
-	if processing {
-		qFilter, err := h.Service.QueueService.GetQueueItemsFilter(c, processing)
+	if len(statuses) > 0 {
+		q, err := h.Service.QueueService.GetQueueItemsFilter(c, statuses)
 		if err != nil {
 			return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		}
-		return SuccessResponse(c, qFilter, "queue items")
+		return SuccessResponse(c, q, "queue items")
 	}
 
 	q, err := h.Service.QueueService.GetQueueItems(c)
@@ -183,9 +178,6 @@ func (h *Handler) UpdateQueueItem(c echo.Context) error {
 	queueDto := queue.Queue{
 		LiveArchive:              uqr.LiveArchive,
 		OnHold:                   uqr.OnHold,
-		VideoProcessing:          uqr.VideoProcessing,
-		ChatProcessing:           uqr.ChatProcessing,
-		Processing:               uqr.Processing,
 		TaskVodCreateFolder:      uqr.TaskVodCreateFolder,
 		TaskVodDownloadThumbnail: uqr.TaskVodDownloadThumbnail,
 		TaskVodSaveInfo:          uqr.TaskVodSaveInfo,
@@ -198,7 +190,7 @@ func (h *Handler) UpdateQueueItem(c echo.Context) error {
 		TaskChatMove:             uqr.TaskChatMove,
 	}
 
-	que, err := h.Service.QueueService.UpdateQueueItem(queueDto, id)
+	que, err := h.Service.QueueService.UpdateQueueItem(c.Request().Context(), queueDto, id)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}

@@ -1,13 +1,13 @@
 "use client"
+import ArchiveStatusBadge from "@/app/components/videos/ArchiveStatusBadge";
 import { useEffect, useState } from "react";
 import { useAxiosPrivate } from "../hooks/useAxios";
-import { Queue, QueueTaskStatus, useGetQueueItems, useStopQueueItem } from "../hooks/useQueue";
+import { Queue, useGetQueueItems, useStopQueueItem } from "../hooks/useQueue";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import { DataTable } from "mantine-datatable";
-import { Tooltip, Text, ThemeIcon, ActionIcon, Loader, Container, Modal, Switch, Button } from "@mantine/core";
-import { IconEye, IconPlayerPause, IconSquareX } from "@tabler/icons-react";
+import { Tooltip, Text, ActionIcon, Container, Modal, Switch, Button } from "@mantine/core";
+import { IconEye, IconSquareX } from "@tabler/icons-react";
 import Link from "next/link";
-import classes from "./QueuePage.module.css"
 import { useDisclosure } from "@mantine/hooks";
 import { useDeleteVideo } from "../hooks/useVideos";
 import { useBlockVideo } from "../hooks/useBlockedVideos";
@@ -19,6 +19,7 @@ import useSettingsStore from "../store/useSettingsStore";
 
 const QueuePage = () => {
   const t = useTranslations("QueuePage");
+  const statusText = useTranslations('ArchiveStatus');
   const miscT = useTranslations("MiscComponents");
   usePageTitle(t('pageTitle'))
 
@@ -61,23 +62,6 @@ const QueuePage = () => {
       setRecords(queueItems.slice(from, to));
     }
   }, [queueItems, page, perPage, initialRecords]);
-
-  const checkFailed = (record: Queue) => {
-    if (
-      record.task_vod_create_folder == QueueTaskStatus.Failed ||
-      record.task_vod_save_info == QueueTaskStatus.Failed ||
-      record.task_video_download == QueueTaskStatus.Failed ||
-      record.task_video_convert == QueueTaskStatus.Failed ||
-      record.task_video_move == QueueTaskStatus.Failed ||
-      record.task_chat_download == QueueTaskStatus.Failed ||
-      record.task_chat_convert == QueueTaskStatus.Failed ||
-      record.task_chat_render == QueueTaskStatus.Failed ||
-      record.task_chat_move == QueueTaskStatus.Failed
-    ) {
-      return true;
-    }
-    return false;
-  };
 
   const cancelQueueItem = async () => {
     try {
@@ -149,35 +133,9 @@ const QueuePage = () => {
             { accessor: "edges.vod.edges.channel.name", title: t('column.channel') },
             { accessor: "edges.vod.ext_id", title: t('column.ext_id') },
             {
-              accessor: "processing",
-              title: t('column.status.status'),
-              render: (value) => (
-                <div>
-                  {checkFailed(value) && (
-                    <div>
-                      <Tooltip label={t('column.status.failed')}>
-                        <Text className={classes.errBadge}>{t('column.status.error')}</Text>
-                      </Tooltip>
-                    </div>
-                  )}
-                  {value.processing && !checkFailed(value) && !value.on_hold && (
-                    <div>
-                      <Tooltip label={t('column.status.processing')}>
-                        <Loader mt={2} color="green" size="sm" />
-                      </Tooltip>
-                    </div>
-                  )}
-                  {value.processing && !checkFailed(value) && value.on_hold && (
-                    <div>
-                      <Tooltip label={t('column.status.hold')}>
-                        <ThemeIcon variant="outline" color="orange">
-                          <IconPlayerPause />
-                        </ThemeIcon>
-                      </Tooltip>
-                    </div>
-                  )}
-                </div>
-              ),
+              accessor: "edges.vod.status",
+              title: statusText('label'),
+              render: ({ edges }) => <ArchiveStatusBadge videoId={edges.vod.id} status={edges.vod.status} />,
             },
 
             {

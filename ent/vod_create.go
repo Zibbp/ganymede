@@ -155,16 +155,16 @@ func (_c *VodCreate) SetNillableResolution(v *string) *VodCreate {
 	return _c
 }
 
-// SetProcessing sets the "processing" field.
-func (_c *VodCreate) SetProcessing(v bool) *VodCreate {
-	_c.mutation.SetProcessing(v)
+// SetStatus sets the "status" field.
+func (_c *VodCreate) SetStatus(v utils.ArchiveStatus) *VodCreate {
+	_c.mutation.SetStatus(v)
 	return _c
 }
 
-// SetNillableProcessing sets the "processing" field if the given value is not nil.
-func (_c *VodCreate) SetNillableProcessing(v *bool) *VodCreate {
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_c *VodCreate) SetNillableStatus(v *utils.ArchiveStatus) *VodCreate {
 	if v != nil {
-		_c.SetProcessing(*v)
+		_c.SetStatus(*v)
 	}
 	return _c
 }
@@ -762,9 +762,9 @@ func (_c *VodCreate) defaults() {
 		v := vod.DefaultViews
 		_c.mutation.SetViews(v)
 	}
-	if _, ok := _c.mutation.Processing(); !ok {
-		v := vod.DefaultProcessing
-		_c.mutation.SetProcessing(v)
+	if _, ok := _c.mutation.Status(); !ok {
+		v := vod.DefaultStatus
+		_c.mutation.SetStatus(v)
 	}
 	if _, ok := _c.mutation.Locked(); !ok {
 		v := vod.DefaultLocked
@@ -830,8 +830,13 @@ func (_c *VodCreate) check() error {
 	if _, ok := _c.mutation.Views(); !ok {
 		return &ValidationError{Name: "views", err: errors.New(`ent: missing required field "Vod.views"`)}
 	}
-	if _, ok := _c.mutation.Processing(); !ok {
-		return &ValidationError{Name: "processing", err: errors.New(`ent: missing required field "Vod.processing"`)}
+	if _, ok := _c.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Vod.status"`)}
+	}
+	if v, ok := _c.mutation.Status(); ok {
+		if err := vod.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Vod.status": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.WebThumbnailPath(); !ok {
 		return &ValidationError{Name: "web_thumbnail_path", err: errors.New(`ent: missing required field "Vod.web_thumbnail_path"`)}
@@ -939,9 +944,9 @@ func (_c *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 		_spec.SetField(vod.FieldResolution, field.TypeString, value)
 		_node.Resolution = value
 	}
-	if value, ok := _c.mutation.Processing(); ok {
-		_spec.SetField(vod.FieldProcessing, field.TypeBool, value)
-		_node.Processing = value
+	if value, ok := _c.mutation.Status(); ok {
+		_spec.SetField(vod.FieldStatus, field.TypeEnum, value)
+		_node.Status = value
 	}
 	if value, ok := _c.mutation.ThumbnailPath(); ok {
 		_spec.SetField(vod.FieldThumbnailPath, field.TypeString, value)
@@ -1386,15 +1391,15 @@ func (u *VodUpsert) ClearResolution() *VodUpsert {
 	return u
 }
 
-// SetProcessing sets the "processing" field.
-func (u *VodUpsert) SetProcessing(v bool) *VodUpsert {
-	u.Set(vod.FieldProcessing, v)
+// SetStatus sets the "status" field.
+func (u *VodUpsert) SetStatus(v utils.ArchiveStatus) *VodUpsert {
+	u.Set(vod.FieldStatus, v)
 	return u
 }
 
-// UpdateProcessing sets the "processing" field to the value that was provided on create.
-func (u *VodUpsert) UpdateProcessing() *VodUpsert {
-	u.SetExcluded(vod.FieldProcessing)
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *VodUpsert) UpdateStatus() *VodUpsert {
+	u.SetExcluded(vod.FieldStatus)
 	return u
 }
 
@@ -2208,17 +2213,17 @@ func (u *VodUpsertOne) ClearResolution() *VodUpsertOne {
 	})
 }
 
-// SetProcessing sets the "processing" field.
-func (u *VodUpsertOne) SetProcessing(v bool) *VodUpsertOne {
+// SetStatus sets the "status" field.
+func (u *VodUpsertOne) SetStatus(v utils.ArchiveStatus) *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
-		s.SetProcessing(v)
+		s.SetStatus(v)
 	})
 }
 
-// UpdateProcessing sets the "processing" field to the value that was provided on create.
-func (u *VodUpsertOne) UpdateProcessing() *VodUpsertOne {
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateStatus() *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
-		s.UpdateProcessing()
+		s.UpdateStatus()
 	})
 }
 
@@ -3294,17 +3299,17 @@ func (u *VodUpsertBulk) ClearResolution() *VodUpsertBulk {
 	})
 }
 
-// SetProcessing sets the "processing" field.
-func (u *VodUpsertBulk) SetProcessing(v bool) *VodUpsertBulk {
+// SetStatus sets the "status" field.
+func (u *VodUpsertBulk) SetStatus(v utils.ArchiveStatus) *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
-		s.SetProcessing(v)
+		s.SetStatus(v)
 	})
 }
 
-// UpdateProcessing sets the "processing" field to the value that was provided on create.
-func (u *VodUpsertBulk) UpdateProcessing() *VodUpsertBulk {
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateStatus() *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
-		s.UpdateProcessing()
+		s.UpdateStatus()
 	})
 }
 

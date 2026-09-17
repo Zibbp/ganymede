@@ -37,8 +37,8 @@ const (
 	FieldViews = "views"
 	// FieldResolution holds the string denoting the resolution field in the database.
 	FieldResolution = "resolution"
-	// FieldProcessing holds the string denoting the processing field in the database.
-	FieldProcessing = "processing"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
 	// FieldThumbnailPath holds the string denoting the thumbnail_path field in the database.
 	FieldThumbnailPath = "thumbnail_path"
 	// FieldWebThumbnailPath holds the string denoting the web_thumbnail_path field in the database.
@@ -174,7 +174,7 @@ var Columns = []string{
 	FieldClipVodOffset,
 	FieldViews,
 	FieldResolution,
-	FieldProcessing,
+	FieldStatus,
 	FieldThumbnailPath,
 	FieldWebThumbnailPath,
 	FieldVideoPath,
@@ -242,8 +242,6 @@ var (
 	DefaultDuration int
 	// DefaultViews holds the default value on creation for the "views" field.
 	DefaultViews int
-	// DefaultProcessing holds the default value on creation for the "processing" field.
-	DefaultProcessing bool
 	// DefaultLocked holds the default value on creation for the "locked" field.
 	DefaultLocked bool
 	// DefaultLocalViews holds the default value on creation for the "local_views" field.
@@ -285,6 +283,18 @@ func TypeValidator(_type utils.VodType) error {
 		return nil
 	default:
 		return fmt.Errorf("vod: invalid enum value for type field: %q", _type)
+	}
+}
+
+const DefaultStatus utils.ArchiveStatus = "completed"
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s utils.ArchiveStatus) error {
+	switch s {
+	case "queued", "running", "finalizing", "completed", "failed":
+		return nil
+	default:
+		return fmt.Errorf("vod: invalid enum value for status field: %q", s)
 	}
 }
 
@@ -346,9 +356,9 @@ func ByResolution(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResolution, opts...).ToFunc()
 }
 
-// ByProcessing orders the results by the processing field.
-func ByProcessing(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldProcessing, opts...).ToFunc()
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
 // ByThumbnailPath orders the results by the thumbnail_path field.

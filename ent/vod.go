@@ -42,8 +42,8 @@ type Vod struct {
 	Views int `json:"views,omitempty"`
 	// Resolution holds the value of the "resolution" field.
 	Resolution string `json:"resolution,omitempty"`
-	// Whether the VOD is currently processing.
-	Processing bool `json:"processing,omitempty"`
+	// Archive processing lifecycle, independent of capture completeness.
+	Status utils.ArchiveStatus `json:"status,omitempty"`
 	// ThumbnailPath holds the value of the "thumbnail_path" field.
 	ThumbnailPath string `json:"thumbnail_path,omitempty"`
 	// WebThumbnailPath holds the value of the "web_thumbnail_path" field.
@@ -201,11 +201,11 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case vod.FieldSpriteThumbnailsImages:
 			values[i] = new([]byte)
-		case vod.FieldProcessing, vod.FieldLocked, vod.FieldSpriteThumbnailsEnabled:
+		case vod.FieldLocked, vod.FieldSpriteThumbnailsEnabled:
 			values[i] = new(sql.NullBool)
 		case vod.FieldDuration, vod.FieldClipVodOffset, vod.FieldViews, vod.FieldLocalViews, vod.FieldSpriteThumbnailsInterval, vod.FieldSpriteThumbnailsWidth, vod.FieldSpriteThumbnailsHeight, vod.FieldSpriteThumbnailsRows, vod.FieldSpriteThumbnailsColumns, vod.FieldStorageSizeBytes:
 			values[i] = new(sql.NullInt64)
-		case vod.FieldExtID, vod.FieldClipExtVodID, vod.FieldExtStreamID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath, vod.FieldNotes:
+		case vod.FieldExtID, vod.FieldClipExtVodID, vod.FieldExtStreamID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldStatus, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath, vod.FieldNotes:
 			values[i] = new(sql.NullString)
 		case vod.FieldStreamedAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -294,11 +294,11 @@ func (_m *Vod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Resolution = value.String
 			}
-		case vod.FieldProcessing:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field processing", values[i])
+		case vod.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				_m.Processing = value.Bool
+				_m.Status = utils.ArchiveStatus(value.String)
 			}
 		case vod.FieldThumbnailPath:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -603,8 +603,8 @@ func (_m *Vod) String() string {
 	builder.WriteString("resolution=")
 	builder.WriteString(_m.Resolution)
 	builder.WriteString(", ")
-	builder.WriteString("processing=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Processing))
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Status))
 	builder.WriteString(", ")
 	builder.WriteString("thumbnail_path=")
 	builder.WriteString(_m.ThumbnailPath)

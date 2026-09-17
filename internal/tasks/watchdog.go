@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	entQueue "github.com/zibbp/ganymede/ent/queue"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -250,14 +251,14 @@ func archiveQueueStageNeedsRecovery(ctx context.Context, store *database.Databas
 		}
 		return false, err
 	}
-	return archiveQueueStageStatusNeedsRecovery(queue, kind), nil
+	v, err := queue.QueryVod().Only(ctx)
+	if err != nil {
+		return false, err
+	}
+	return v.Status.Active() && archiveQueueStageStatusNeedsRecovery(queue, kind), nil
 }
 
 func archiveQueueStageStatusNeedsRecovery(queue *ent.Queue, kind string) bool {
-	if !queue.Processing {
-		return false
-	}
-
 	var status utils.TaskStatus
 	switch utils.GetTaskName(kind) {
 	case utils.TaskCreateFolder:
@@ -456,7 +457,7 @@ func recoverOrphanedLiveVideoArchives(ctx context.Context, store *database.Datab
 	stuckQueues, err := store.Client.Queue.Query().
 		Where(
 			entQueue.LiveArchive(true),
-			entQueue.Processing(true),
+			entQueue.HasVodWith(entVod.StatusIn(utils.ActiveArchiveStatuses()...)),
 			entQueue.TaskVideoDownloadEQ(utils.Running),
 		).
 		All(ctx)
@@ -489,7 +490,7 @@ func recoverOrphanedLiveChatArchives(ctx context.Context, store *database.Databa
 	stuckQueues, err := store.Client.Queue.Query().
 		Where(
 			entQueue.LiveArchive(true),
-			entQueue.Processing(true),
+			entQueue.HasVodWith(entVod.StatusIn(utils.ActiveArchiveStatuses()...)),
 			entQueue.ArchiveChat(true),
 			entQueue.TaskChatDownloadEQ(utils.Running),
 		).

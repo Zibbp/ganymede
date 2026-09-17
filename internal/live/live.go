@@ -460,7 +460,7 @@ OUTER:
 				}
 
 				// check if stream is already being archived
-				queueItems, err := database.DB().Client.Queue.Query().Where(entQueue.Processing(true)).WithVod().All(ctx)
+				queueItems, err := database.DB().Client.Queue.Query().Where(entQueue.HasVodWith(entVod.StatusIn(utils.ActiveArchiveStatuses()...))).WithVod().All(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error getting queue items")
 				}

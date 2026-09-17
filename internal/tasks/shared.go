@@ -21,6 +21,7 @@ import (
 	entLive "github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/queue"
 	entVod "github.com/zibbp/ganymede/ent/vod"
+	"github.com/zibbp/ganymede/internal/archivestatus"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/notification"
@@ -167,7 +168,13 @@ func getDatabaseItems(ctx context.Context, entClient *ent.Client, queueId uuid.U
 // setQueueStatus updates the status of a queue item in the database based on the provided queueStatusInput.
 func setQueueStatus(ctx context.Context, entClient *ent.Client, queueStatusInput QueueStatusInput) error {
 
-	q := entClient.Queue.UpdateOneID(queueStatusInput.QueueId)
+	tx, err := entClient.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	q := tx.Queue.UpdateOneID(queueStatusInput.QueueId)
 
 	switch queueStatusInput.Task {
 	case utils.TaskCreateFolder:
@@ -190,14 +197,30 @@ func setQueueStatus(ctx context.Context, entClient *ent.Client, queueStatusInput
 		q = q.SetTaskChatRender(queueStatusInput.Status)
 	case utils.TaskMoveChat:
 		q = q.SetTaskChatMove(queueStatusInput.Status)
+	default:
+		return nil
 	}
 
-	_, err := q.Save(ctx)
+	updated, err := q.Save(ctx)
 	if err != nil {
 		return err
 	}
-
-	return nil
+	v, err := updated.QueryVod().Only(ctx)
+	if err != nil {
+		return err
+	}
+	status := archivestatus.FromQueue(updated)
+	// Completion and its follow-up jobs are committed by checkIfTasksAreDone.
+	if status == utils.ArchiveCompleted {
+		if v.Status == utils.ArchiveCompleted {
+			return tx.Commit()
+		}
+		status = utils.ArchiveFinalizing
+	}
+	if err := tx.Vod.UpdateOneID(v.ID).SetStatus(status).Exec(ctx); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 // setQueueStatusAndEnqueue commits a stage transition and all of its successor
@@ -238,12 +261,7 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 		return err
 	}
 
-	videoDone := dbItems.Queue.TaskVideoDownload == utils.Success && dbItems.Queue.TaskVideoConvert == utils.Success && dbItems.Queue.TaskVideoMove == utils.Success
-	chatDone := dbItems.Queue.TaskChatDownload == utils.Success && dbItems.Queue.TaskChatRender == utils.Success && dbItems.Queue.TaskChatMove == utils.Success
-	if dbItems.Queue.LiveArchive {
-		chatDone = chatDone && dbItems.Queue.TaskChatConvert == utils.Success
-	}
-	if !videoDone || !chatDone || !dbItems.Queue.Processing {
+	if archivestatus.FromQueue(&dbItems.Queue) != utils.ArchiveCompleted || dbItems.Video.Status == utils.ArchiveCompleted {
 		return nil
 	}
 
@@ -257,21 +275,23 @@ func checkIfTasksAreDone(ctx context.Context, entClient *ent.Client, input Archi
 	}
 	finalized := false
 	if err := store.WithTx(ctx, func(txClient *ent.Client, tx *sql.Tx) error {
-		if _, err := txClient.Queue.UpdateOneID(dbItems.Queue.ID).
-			Where(queue.Processing(true)).
-			SetVideoProcessing(false).
-			SetChatProcessing(false).
-			SetProcessing(false).
-			Save(ctx); err != nil {
+		// Serialize completion with concurrent video/chat stage updates.
+		q, err := txClient.Queue.UpdateOneID(dbItems.Queue.ID).SetUpdatedAt(time.Now()).Save(ctx)
+		if err != nil {
+			return err
+		}
+		if archivestatus.FromQueue(q) != utils.ArchiveCompleted {
+			return nil
+		}
+		if _, err := txClient.Vod.UpdateOneID(dbItems.Video.ID).
+			Where(entVod.StatusNEQ(utils.ArchiveCompleted)).
+			SetStatus(utils.ArchiveCompleted).Save(ctx); err != nil {
 			if ent.IsNotFound(err) {
 				return nil
 			}
 			return err
 		}
 		finalized = true
-		if _, err := txClient.Vod.UpdateOneID(dbItems.Video.ID).SetProcessing(false).Save(ctx); err != nil {
-			return err
-		}
 		if _, err := enqueuer.InsertTx(ctx, tx, &UpdateVideoStorageUsage{VideoID: &dbItems.Video.ID}, nil); err != nil {
 			return err
 		}
@@ -430,8 +450,15 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 	// finalizes its partial media before returning, so don't overwrite that
 	// successful handoff. A client shutdown is likewise recovered on restart.
 	if !shouldFinalizeArchiveError(ctx, job, err) {
+		if ctx.Err() == nil && job.Attempt < job.MaxAttempts && !errors.Is(err, rivertype.ErrJobCancelledRemotely) {
+			markArchiveRetryPending(ctx, job)
+		}
 		return nil
 	}
+
+	// Persist terminal state even when the job context was cancelled remotely.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	defer cancel()
 
 	// if the job is an archive job, mark it as failed in the queue and send an error notification
 	if utils.Contains(job.Tags, archive_tag) && !utils.Contains(job.Tags, allow_fail_tag) {
@@ -452,6 +479,10 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 			Task:    utils.GetTaskName(job.Kind),
 		}); err != nil {
 			return nil
+		}
+
+		if err := checkIfTasksAreDone(ctx, store.Client, args.Input); err != nil {
+			log.Error().Err(err).Str("queue_id", args.Input.QueueId.String()).Msg("failed to finalize archive status")
 		}
 
 		dbItems, err := getDatabaseItems(ctx, store.Client, args.Input.QueueId)
@@ -478,8 +509,15 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 func (*CustomErrorHandler) HandlePanic(ctx context.Context, job *rivertype.JobRow, panicVal any, trace string) *river.ErrorHandlerResult {
 	log.Error().Str("job_id", fmt.Sprintf("%d", job.ID)).Str("attempt", fmt.Sprintf("%d", job.Attempt)).Str("attempted_by", attemptedBy(job)).Str("args", string(job.EncodedArgs)).Str("panic_val", fmt.Sprintf("%v", panicVal)).Str("trace", trace).Msg("task error")
 	if ctx.Err() != nil || job.Attempt < job.MaxAttempts {
+		if ctx.Err() == nil {
+			markArchiveRetryPending(ctx, job)
+		}
 		return nil
 	}
+
+	// Persist terminal state even when the job context was cancelled remotely.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	defer cancel()
 
 	// if the job is an archive job, mark it as failed in the queue and send an error notification
 	if utils.Contains(job.Tags, archive_tag) && !utils.Contains(job.Tags, allow_fail_tag) {
@@ -499,6 +537,10 @@ func (*CustomErrorHandler) HandlePanic(ctx context.Context, job *rivertype.JobRo
 			Task:    utils.GetTaskName(job.Kind),
 		}); err != nil {
 			return nil
+		}
+
+		if err := checkIfTasksAreDone(ctx, store.Client, args.Input); err != nil {
+			log.Error().Err(err).Str("queue_id", args.Input.QueueId.String()).Msg("failed to finalize archive status")
 		}
 
 		dbItems, err := getDatabaseItems(ctx, store.Client, args.Input.QueueId)
@@ -521,6 +563,25 @@ func (*CustomErrorHandler) HandlePanic(ctx context.Context, job *rivertype.JobRo
 	}
 
 	return nil
+}
+
+func markArchiveRetryPending(ctx context.Context, job *rivertype.JobRow) {
+	if !utils.Contains(job.Tags, archive_tag) || utils.Contains(job.Tags, allow_fail_tag) {
+		return
+	}
+	var args RiverJobArgs
+	if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
+		return
+	}
+	store, err := StoreFromContext(ctx)
+	if err != nil {
+		return
+	}
+	if err := setQueueStatus(ctx, store.Client, QueueStatusInput{
+		QueueId: args.Input.QueueId, Task: utils.GetTaskName(job.Kind), Status: utils.Pending,
+	}); err != nil {
+		log.Error().Err(err).Str("queue_id", args.Input.QueueId.String()).Msg("failed to mark archive retry pending")
+	}
 }
 
 func attemptedBy(job *rivertype.JobRow) string {

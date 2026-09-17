@@ -3116,8 +3116,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Get processing queue items",
-                        "name": "processing",
+                        "description": "Comma-separated archive statuses: queued,running,finalizing,completed,failed",
+                        "name": "status",
                         "in": "query"
                     }
                 ],
@@ -4006,7 +4006,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ent.Vod"
+                            "$ref": "#/definitions/http.VideoDetails"
                         }
                     },
                     "400": {
@@ -4077,9 +4077,9 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "boolean",
-                        "description": "Processing. Set to false to exclude videos that are still processing.",
-                        "name": "processing",
+                        "type": "string",
+                        "description": "Comma-separated archive statuses: queued,running,finalizing,completed,failed",
+                        "name": "status",
                         "in": "query"
                     }
                 ],
@@ -4216,7 +4216,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ent.Vod"
+                            "$ref": "#/definitions/http.VideoDetails"
                         }
                     },
                     "400": {
@@ -6401,10 +6401,6 @@ const docTemplate = `{
                     "description": "ArchiveChat holds the value of the \"archive_chat\" field.",
                     "type": "boolean"
                 },
-                "chat_processing": {
-                    "description": "ChatProcessing holds the value of the \"chat_processing\" field.",
-                    "type": "boolean"
-                },
                 "chat_start": {
                     "description": "ChatStart holds the value of the \"chat_start\" field.",
                     "type": "string"
@@ -6431,10 +6427,6 @@ const docTemplate = `{
                 },
                 "on_hold": {
                     "description": "OnHold holds the value of the \"on_hold\" field.",
-                    "type": "boolean"
-                },
-                "processing": {
-                    "description": "Processing holds the value of the \"processing\" field.",
                     "type": "boolean"
                 },
                 "render_chat": {
@@ -6524,10 +6516,6 @@ const docTemplate = `{
                 "updated_at": {
                     "description": "UpdatedAt holds the value of the \"updated_at\" field.",
                     "type": "string"
-                },
-                "video_processing": {
-                    "description": "VideoProcessing holds the value of the \"video_processing\" field.",
-                    "type": "boolean"
                 },
                 "workflow_id": {
                     "description": "WorkflowID holds the value of the \"workflow_id\" field.",
@@ -6713,10 +6701,6 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "processing": {
-                    "description": "Whether the VOD is currently processing.",
-                    "type": "boolean"
-                },
                 "resolution": {
                     "description": "Resolution holds the value of the \"resolution\" field.",
                     "type": "string"
@@ -6751,6 +6735,14 @@ const docTemplate = `{
                 "sprite_thumbnails_width": {
                     "description": "SpriteThumbnailsWidth holds the value of the \"sprite_thumbnails_width\" field.",
                     "type": "integer"
+                },
+                "status": {
+                    "description": "Archive processing lifecycle, independent of capture completeness.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.ArchiveStatus"
+                        }
+                    ]
                 },
                 "storage_size_bytes": {
                     "description": "The size of the VOD in bytes.",
@@ -7204,6 +7196,7 @@ const docTemplate = `{
                 "channel_id",
                 "duration",
                 "platform",
+                "status",
                 "streamed_at",
                 "title",
                 "type",
@@ -7255,11 +7248,22 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "processing": {
-                    "type": "boolean"
-                },
                 "resolution": {
                     "type": "string"
+                },
+                "status": {
+                    "enum": [
+                        "queued",
+                        "running",
+                        "finalizing",
+                        "completed",
+                        "failed"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.ArchiveStatus"
+                        }
+                    ]
                 },
                 "streamed_at": {
                     "type": "string"
@@ -7720,9 +7724,6 @@ const docTemplate = `{
                 "task_vod_save_info"
             ],
             "properties": {
-                "chat_processing": {
-                    "type": "boolean"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -7730,9 +7731,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "on_hold": {
-                    "type": "boolean"
-                },
-                "processing": {
                     "type": "boolean"
                 },
                 "task_chat_convert": {
@@ -7864,9 +7862,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/utils.TaskStatus"
                         }
                     ]
-                },
-                "video_processing": {
-                    "type": "boolean"
                 }
             }
         },
@@ -8009,6 +8004,217 @@ const docTemplate = `{
                 },
                 "watch_vod": {
                     "type": "boolean"
+                }
+            }
+        },
+        "http.VideoDetails": {
+            "type": "object",
+            "properties": {
+                "caption_path": {
+                    "description": "CaptionPath holds the value of the \"caption_path\" field.",
+                    "type": "string"
+                },
+                "chat_path": {
+                    "description": "ChatPath holds the value of the \"chat_path\" field.",
+                    "type": "string"
+                },
+                "chat_video_path": {
+                    "description": "ChatVideoPath holds the value of the \"chat_video_path\" field.",
+                    "type": "string"
+                },
+                "clip_ext_vod_id": {
+                    "description": "The external VOD ID of a clip. This is only populated if the clip is linked to a video.",
+                    "type": "string"
+                },
+                "clip_vod_offset": {
+                    "description": "The offset in seconds to where the clip starts in the VOD. This is only populdated if the video is a clip.",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "CreatedAt holds the value of the \"created_at\" field.",
+                    "type": "string"
+                },
+                "duration": {
+                    "description": "Duration holds the value of the \"duration\" field.",
+                    "type": "integer"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the VodQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.VodEdges"
+                        }
+                    ]
+                },
+                "ext_id": {
+                    "description": "The ID of the video on the external platform.",
+                    "type": "string"
+                },
+                "ext_stream_id": {
+                    "description": "The ID of the stream on the external platform, if applicable.",
+                    "type": "string"
+                },
+                "file_name": {
+                    "description": "FileName holds the value of the \"file_name\" field.",
+                    "type": "string"
+                },
+                "folder_name": {
+                    "description": "FolderName holds the value of the \"folder_name\" field.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "info_path": {
+                    "description": "InfoPath holds the value of the \"info_path\" field.",
+                    "type": "string"
+                },
+                "live_chat_convert_path": {
+                    "description": "Path to the converted live chat file",
+                    "type": "string"
+                },
+                "live_chat_path": {
+                    "description": "Path to the raw live chat file",
+                    "type": "string"
+                },
+                "live_preview_available": {
+                    "type": "boolean"
+                },
+                "local_views": {
+                    "description": "LocalViews holds the value of the \"local_views\" field.",
+                    "type": "integer"
+                },
+                "locked": {
+                    "description": "Locked holds the value of the \"locked\" field.",
+                    "type": "boolean"
+                },
+                "notes": {
+                    "description": "User notes about why the VOD was kept.",
+                    "type": "string"
+                },
+                "platform": {
+                    "description": "The platform the VOD is from, takes an enum.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.VideoPlatform"
+                        }
+                    ]
+                },
+                "resolution": {
+                    "description": "Resolution holds the value of the \"resolution\" field.",
+                    "type": "string"
+                },
+                "sprite_thumbnails_columns": {
+                    "description": "SpriteThumbnailsColumns holds the value of the \"sprite_thumbnails_columns\" field.",
+                    "type": "integer"
+                },
+                "sprite_thumbnails_enabled": {
+                    "description": "SpriteThumbnailsEnabled holds the value of the \"sprite_thumbnails_enabled\" field.",
+                    "type": "boolean"
+                },
+                "sprite_thumbnails_height": {
+                    "description": "SpriteThumbnailsHeight holds the value of the \"sprite_thumbnails_height\" field.",
+                    "type": "integer"
+                },
+                "sprite_thumbnails_images": {
+                    "description": "SpriteThumbnailsImages holds the value of the \"sprite_thumbnails_images\" field.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sprite_thumbnails_interval": {
+                    "description": "SpriteThumbnailsInterval holds the value of the \"sprite_thumbnails_interval\" field.",
+                    "type": "integer"
+                },
+                "sprite_thumbnails_rows": {
+                    "description": "SpriteThumbnailsRows holds the value of the \"sprite_thumbnails_rows\" field.",
+                    "type": "integer"
+                },
+                "sprite_thumbnails_width": {
+                    "description": "SpriteThumbnailsWidth holds the value of the \"sprite_thumbnails_width\" field.",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "Archive processing lifecycle, independent of capture completeness.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.ArchiveStatus"
+                        }
+                    ]
+                },
+                "storage_size_bytes": {
+                    "description": "The size of the VOD in bytes.",
+                    "type": "integer"
+                },
+                "streamed_at": {
+                    "description": "The time the VOD was streamed.",
+                    "type": "string"
+                },
+                "thumbnail_path": {
+                    "description": "ThumbnailPath holds the value of the \"thumbnail_path\" field.",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Title holds the value of the \"title\" field.",
+                    "type": "string"
+                },
+                "tmp_chat_download_path": {
+                    "description": "The path where the chat is downloaded to",
+                    "type": "string"
+                },
+                "tmp_chat_render_path": {
+                    "description": "The path where the rendered chat is",
+                    "type": "string"
+                },
+                "tmp_live_chat_convert_path": {
+                    "description": "The path where the converted chat is",
+                    "type": "string"
+                },
+                "tmp_live_chat_download_path": {
+                    "description": "The path where the converted chat is",
+                    "type": "string"
+                },
+                "tmp_video_convert_path": {
+                    "description": "The path where the converted video is",
+                    "type": "string"
+                },
+                "tmp_video_download_path": {
+                    "description": "The path where the video is downloaded to",
+                    "type": "string"
+                },
+                "tmp_video_hls_path": {
+                    "description": "The path where the temporary video hls files are",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "The type of VOD, takes an enum.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.VodType"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
+                    "type": "string"
+                },
+                "video_hls_path": {
+                    "description": "The path where the video hls files are",
+                    "type": "string"
+                },
+                "video_path": {
+                    "description": "VideoPath holds the value of the \"video_path\" field.",
+                    "type": "string"
+                },
+                "views": {
+                    "description": "Views holds the value of the \"views\" field.",
+                    "type": "integer"
+                },
+                "web_thumbnail_path": {
+                    "description": "WebThumbnailPath holds the value of the \"web_thumbnail_path\" field.",
+                    "type": "string"
                 }
             }
         },
@@ -8257,6 +8463,23 @@ const docTemplate = `{
                 "DefaultOperator",
                 "OperatorAND",
                 "OperatorOR"
+            ]
+        },
+        "utils.ArchiveStatus": {
+            "type": "string",
+            "enum": [
+                "queued",
+                "running",
+                "finalizing",
+                "completed",
+                "failed"
+            ],
+            "x-enum-varnames": [
+                "ArchiveQueued",
+                "ArchiveRunning",
+                "ArchiveFinalizing",
+                "ArchiveCompleted",
+                "ArchiveFailed"
             ]
         },
         "utils.ErrorResponse": {

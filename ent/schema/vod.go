@@ -29,7 +29,7 @@ func (Vod) Fields() []ent.Field {
 		field.Int("clip_vod_offset").Optional().Comment("The offset in seconds to where the clip starts in the VOD. This is only populdated if the video is a clip."),
 		field.Int("views").Default(1),
 		field.String("resolution").Optional(),
-		field.Bool("processing").Default(false).Comment("Whether the VOD is currently processing."),
+		field.Enum("status").GoType(utils.ArchiveStatus("")).Default(string(utils.ArchiveCompleted)).Comment("Archive processing lifecycle, independent of capture completeness."),
 		field.String("thumbnail_path").Optional(),
 		field.String("web_thumbnail_path"),
 		field.String("video_path"),

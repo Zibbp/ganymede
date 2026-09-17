@@ -64,7 +64,6 @@ func (s *Service) createArchiveRecordsAndEnqueue(ctx context.Context, vodDTO vod
 
 		if !queueDTO.ArchiveChat {
 			update := txClient.Queue.UpdateOneID(q.ID).
-				SetChatProcessing(false).
 				SetTaskChatDownload(utils.Success).
 				SetTaskChatRender(utils.Success).
 				SetTaskChatMove(utils.Success)
@@ -297,7 +296,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*A
 		Duration:            int(video.Duration.Seconds()),
 		Views:               int(video.ViewCount),
 		Resolution:          input.Quality.String(),
-		Processing:          true,
+		Status:              utils.ArchiveQueued,
 		ThumbnailPath:       fmt.Sprintf("%s/%s-thumbnail.jpg", rootVideoPath, fileName),
 		WebThumbnailPath:    fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVideoPath, fileName),
 		VideoPath:           fmt.Sprintf("%s/%s-video.%s", rootVideoPath, fileName, videoExtension),
@@ -458,7 +457,7 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*Arc
 		ClipVodOffset:       *clip.VodOffset,
 		Views:               int(clip.ViewCount),
 		Resolution:          input.Quality.String(),
-		Processing:          true,
+		Status:              utils.ArchiveQueued,
 		ThumbnailPath:       fmt.Sprintf("%s/%s-thumbnail.jpg", rootVideoPath, fileName),
 		WebThumbnailPath:    fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVideoPath, fileName),
 		VideoPath:           fmt.Sprintf("%s/%s-video.%s", rootVideoPath, fileName, videoExtension),
@@ -577,7 +576,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		Duration:            1,
 		Views:               1,
 		Resolution:          input.Quality.String(),
-		Processing:          true,
+		Status:              utils.ArchiveQueued,
 		ThumbnailPath:       fmt.Sprintf("%s/%s-thumbnail.jpg", rootVideoPath, fileName),
 		WebThumbnailPath:    fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVideoPath, fileName),
 		VideoPath:           fmt.Sprintf("%s/%s-video.%s", rootVideoPath, fileName, videoExtension),
