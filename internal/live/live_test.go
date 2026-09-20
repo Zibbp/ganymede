@@ -502,7 +502,7 @@ func TestTwitchLiveArchiveRecoversAfterWorkerCrash(t *testing.T) {
 		app,
 		q.ID,
 		v.TmpVideoDownloadPath,
-		1024,
+		1,
 		90*time.Second,
 	)
 	originalJob := tests_shared.FindArchiveJob(

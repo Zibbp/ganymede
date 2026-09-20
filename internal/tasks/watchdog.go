@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -645,20 +647,130 @@ func validateRecoverableLiveVideoInput(video *ent.Vod) error {
 		return validateNonEmptyFile(path, "live video recovery input")
 	}
 
-	// HLS needs media: a playlist with segments or segments on disk for rebuild.
-	if err := validateNonEmptyFile(path, "live video recovery input"); err == nil {
-		byts, err := os.ReadFile(path)
-		if err != nil {
-			return fmt.Errorf("read live HLS recovery playlist %s: %w", path, err)
-		}
-		if strings.Contains(string(byts), "#EXTINF") {
-			return nil
-		}
+	// HLS needs media: a playlist with resolvable segments or segments on
+	// disk for rebuild.
+	if err := validateLiveHlsPlaylistReferences(path); err == nil {
+		return nil
 	}
 	if hls.HasRecoverableSegments(video.TmpVideoHlsPath, video.ExtID) {
 		return nil
 	}
 	return fmt.Errorf("live HLS recovery playlist has no media segments: %s", path)
+}
+
+// validateLiveHlsPlaylistReferences accepts a media playlist only when every
+// referenced init and media file resolves next to the playlist and is
+// non-empty.
+func validateLiveHlsPlaylistReferences(path string) error {
+	if err := validateNonEmptyFile(path, "live video recovery input"); err != nil {
+		return err
+	}
+	byts, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("read live HLS recovery playlist %s: %w", path, err)
+	}
+	if !strings.Contains(string(byts), "#EXTINF") {
+		return fmt.Errorf("live HLS recovery playlist has no media segments: %s", path)
+	}
+
+	dir := filepath.Dir(path)
+	var initRefs []string
+	var segmentRefs []string
+	expectSegment := false
+	for _, raw := range strings.Split(string(byts), "\n") {
+		line := strings.TrimSpace(strings.TrimSuffix(raw, "\r"))
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "#EXT-X-MAP:") {
+			if uri := extractHlsURIAttribute(line); uri != "" {
+				initRefs = append(initRefs, uri)
+			}
+			continue
+		}
+		if strings.HasPrefix(line, "#EXTINF") {
+			expectSegment = true
+			continue
+		}
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		if expectSegment {
+			segmentRefs = append(segmentRefs, line)
+			expectSegment = false
+		}
+	}
+	if len(segmentRefs) == 0 {
+		return fmt.Errorf("live HLS recovery playlist has no media segments: %s", path)
+	}
+
+	for _, ref := range initRefs {
+		resolved, err := resolveHlsPlaylistReference(dir, ref)
+		if err != nil {
+			return err
+		}
+		if err := validateNonEmptyFile(resolved, "live video recovery init"); err != nil {
+			return err
+		}
+	}
+	for _, ref := range segmentRefs {
+		resolved, err := resolveHlsPlaylistReference(dir, ref)
+		if err != nil {
+			return err
+		}
+		if err := validateNonEmptyFile(resolved, "live video recovery segment"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func extractHlsURIAttribute(line string) string {
+	idx := strings.Index(line, "URI=")
+	if idx < 0 {
+		return ""
+	}
+	rest := strings.TrimSpace(line[idx+len("URI="):])
+	if rest == "" {
+		return ""
+	}
+	if rest[0] == '"' || rest[0] == '\'' {
+		end := strings.IndexByte(rest[1:], rest[0])
+		if end < 0 {
+			return ""
+		}
+		return rest[1 : 1+end]
+	}
+	if end := strings.IndexAny(rest, ", \r\n"); end >= 0 {
+		return rest[:end]
+	}
+	return rest
+}
+
+func resolveHlsPlaylistReference(dir, ref string) (string, error) {
+	ref = strings.TrimSpace(strings.Trim(ref, "\"'"))
+	if ref == "" {
+		return "", fmt.Errorf("empty HLS playlist reference")
+	}
+	if strings.Contains(ref, "://") {
+		if !strings.HasPrefix(strings.ToLower(ref), "file://") {
+			return "", fmt.Errorf("remote HLS playlist reference: %s", ref)
+		}
+		ref = strings.TrimPrefix(strings.TrimPrefix(ref, "file://"), "localhost")
+	}
+	if i := strings.Index(ref, "?"); i >= 0 {
+		ref = ref[:i]
+	}
+	if i := strings.Index(ref, "#"); i >= 0 {
+		ref = ref[:i]
+	}
+	if unescaped, err := url.PathUnescape(ref); err == nil {
+		ref = unescaped
+	}
+	if filepath.IsAbs(ref) {
+		return filepath.Clean(ref), nil
+	}
+	return filepath.Join(dir, ref), nil
 }
 
 func recoverableLiveVideoInputPath(video *ent.Vod) string {

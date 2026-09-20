@@ -36,7 +36,9 @@ forward_term() {
 	trap '' TERM
 	# SIGTERM the group so ffmpeg flushes; backstop KILLs a stuck capture.
 	# A kill mid-flush can truncate the playlist; post-process rebuilds it.
-	( sleep 60; kill -0 "$$" 2>/dev/null && kill -s KILL -- "-$$" 2>/dev/null ) &
+	# Poll child_pid so the helper exits when the capture ends instead of
+	# leaving a sleep process in the group; KILL only a still-running child.
+	( i=0; while kill -0 "$child_pid" 2>/dev/null && [ "$i" -lt 60 ]; do sleep 1; i=$((i+1)); done; kill -0 "$child_pid" 2>/dev/null && kill -s KILL -- "-$$" 2>/dev/null ) &
 	escalation_pid=$!
 	kill -s TERM -- "-$$"
 }
