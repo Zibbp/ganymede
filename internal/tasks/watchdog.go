@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,6 +17,7 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	entQueue "github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -638,12 +640,38 @@ func recoverInterruptedLiveVideoArchive(ctx context.Context, store *database.Dat
 }
 
 func validateRecoverableLiveVideoInput(video *ent.Vod) error {
-	return validateNonEmptyFile(recoverableLiveVideoInputPath(video), "live video recovery input")
+	path := recoverableLiveVideoInputPath(video)
+	if !strings.HasSuffix(path, ".m3u8") {
+		return validateNonEmptyFile(path, "live video recovery input")
+	}
+
+	// HLS needs media: a playlist with segments or segments on disk for rebuild.
+	if err := validateNonEmptyFile(path, "live video recovery input"); err == nil {
+		byts, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("read live HLS recovery playlist %s: %w", path, err)
+		}
+		if strings.Contains(string(byts), "#EXTINF") {
+			return nil
+		}
+	}
+	if hls.HasRecoverableSegments(video.TmpVideoHlsPath, video.ExtID) {
+		return nil
+	}
+	return fmt.Errorf("live HLS recovery playlist has no media segments: %s", path)
 }
 
 func recoverableLiveVideoInputPath(video *ent.Vod) string {
+	// Prefer the growing HLS playlist for HLS captures; legacy MP4 keeps
+	// using the TS file as the source of truth.
+	if isLiveHlsCapture(video) {
+		playlistPath := liveHlsPlaylistPath(video)
+		if utils.FileExists(playlistPath) {
+			return playlistPath
+		}
+	}
 	if video.VideoHlsPath != "" {
-		return fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)
+		return liveHlsPlaylistPath(video)
 	}
 	if video.TmpVideoConvertPath != "" && utils.FileExists(video.TmpVideoConvertPath) {
 		return video.TmpVideoConvertPath

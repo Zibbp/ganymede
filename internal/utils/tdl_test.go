@@ -71,7 +71,7 @@ func TestConvertTwitchLiveChatToTDLChatKeepsMessagesAndUserNotices(t *testing.T)
 		t.Fatalf("failed to write live comments: %v", err)
 	}
 
-	err = ConvertTwitchLiveChatToTDLChat(inputPath, outputPath, "clippyassistant", "video-id", "external-id", 408892348, chatStart, "previous-video-id")
+	err = ConvertTwitchLiveChatToTDLChat(inputPath, outputPath, "clippyassistant", "video-id", "external-id", 408892348, chatStart, "previous-video-id", 0)
 	if err != nil {
 		t.Fatalf("ConvertTwitchLiveChatToTDLChat returned error: %v", err)
 	}
@@ -255,7 +255,7 @@ func TestConvertTwitchLiveChatToTDLChatStreamsLargeInput(t *testing.T) {
 		t.Fatalf("failed to close input chat: %v", err)
 	}
 
-	if err := ConvertTwitchLiveChatToTDLChat(inputPath, outputPath, "channel", "video-id", "external-id", 123, chatStart, "previous-video-id"); err != nil {
+	if err := ConvertTwitchLiveChatToTDLChat(inputPath, outputPath, "channel", "video-id", "external-id", 123, chatStart, "previous-video-id", 0); err != nil {
 		t.Fatalf("ConvertTwitchLiveChatToTDLChat returned error: %v", err)
 	}
 
@@ -355,7 +355,7 @@ func TestConvertTwitchLiveChatToTDLChatDoesNotReplaceOutputOnInvalidInput(t *tes
 		t.Fatalf("failed to write existing output chat: %v", err)
 	}
 
-	err = ConvertTwitchLiveChatToTDLChat(inputPath, outputPath, "channel", "video-id", "external-id", 123, time.Now(), "previous-video-id")
+	err = ConvertTwitchLiveChatToTDLChat(inputPath, outputPath, "channel", "video-id", "external-id", 123, time.Now(), "previous-video-id", 0)
 	if err == nil {
 		t.Fatal("expected conversion error for truncated input")
 	}
@@ -545,5 +545,114 @@ func TestEnrichTwitchChatMetadataFromLiveChat(t *testing.T) {
 	}
 	if enriched.Comments[2].Message.UserNoticeParams.Params["msg-param-months"] != "1" {
 		t.Fatalf("expected user notice params, got %#v", enriched.Comments[2].Message.UserNoticeParams.Params)
+	}
+}
+
+func TestConvertTwitchLiveChatToTDLChatTruncatesToVideoDuration(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	inputPath := filepath.Join(tmpDir, "live-chat.json")
+	outputPath := filepath.Join(tmpDir, "tdl-chat.json")
+	chatStart := time.Unix(1_700_000_000, 0)
+
+	makeComment := func(id string, offsetSec int) LiveComment {
+		c := LiveComment{
+			Message:   "msg " + id,
+			MessageID: id,
+			Timestamp: chatStart.Add(time.Duration(offsetSec) * time.Second).UnixMicro(),
+		}
+		c.Author.DisplayName = "User"
+		c.Author.ID = "1"
+		c.Author.Name = "user"
+		return c
+	}
+
+	// Negative pre-start, in-range, edge-epsilon, and late messages.
+	input, err := json.Marshal([]LiveComment{
+		makeComment("pre-start", -10),
+		makeComment("early", 2),
+		makeComment("at-end", 10),
+		makeComment("within-epsilon", 11),
+		makeComment("late", 30),
+	})
+	if err != nil {
+		t.Fatalf("failed to marshal live comments: %v", err)
+	}
+	if err := os.WriteFile(inputPath, input, 0o644); err != nil {
+		t.Fatalf("failed to write live chat: %v", err)
+	}
+
+	if err := ConvertTwitchLiveChatToTDLChat(inputPath, outputPath, "channel", "video-id", "external-id", 123, chatStart, "previous-video-id", 10); err != nil {
+		t.Fatalf("ConvertTwitchLiveChatToTDLChat returned error: %v", err)
+	}
+
+	output, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("failed to read output chat: %v", err)
+	}
+	var chat TDLChat
+	if err := json.Unmarshal(output, &chat); err != nil {
+		t.Fatalf("failed to unmarshal output chat: %v", err)
+	}
+
+	ids := make(map[string]bool, len(chat.Comments))
+	var maxOffset float64
+	for _, c := range chat.Comments {
+		ids[c.ID] = true
+		if c.ContentOffsetSeconds > maxOffset {
+			maxOffset = c.ContentOffsetSeconds
+		}
+	}
+	if ids["pre-start"] || ids["late"] {
+		t.Fatalf("expected out-of-range messages to be dropped, got %v", ids)
+	}
+	if !ids["early"] || !ids["at-end"] || !ids["within-epsilon"] {
+		t.Fatalf("expected in-range messages to be kept, got %v", ids)
+	}
+	if maxOffset > 10+liveChatTruncateEpsilonSec+0.001 {
+		t.Fatalf("expected max offset within duration+epsilon, got %f", maxOffset)
+	}
+	if chat.Video.End > 10 {
+		t.Fatalf("expected video end capped to duration, got %d", chat.Video.End)
+	}
+}
+
+func TestConvertTwitchLiveChatToTDLChatKeepsShortTail(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	inputPath := filepath.Join(tmpDir, "live-chat.json")
+	outputPath := filepath.Join(tmpDir, "tdl-chat.json")
+	chatStart := time.Unix(1_700_000_000, 0)
+
+	comment := LiveComment{
+		Message:   "only early message",
+		MessageID: "early-only",
+		Timestamp: chatStart.Add(3 * time.Second).UnixMicro(),
+	}
+	comment.Author.DisplayName = "User"
+	comment.Author.ID = "1"
+	comment.Author.Name = "user"
+	input, err := json.Marshal([]LiveComment{comment})
+	if err != nil {
+		t.Fatalf("failed to marshal live comments: %v", err)
+	}
+	if err := os.WriteFile(inputPath, input, 0o644); err != nil {
+		t.Fatalf("failed to write live chat: %v", err)
+	}
+
+	if err := ConvertTwitchLiveChatToTDLChat(inputPath, outputPath, "channel", "video-id", "external-id", 123, chatStart, "previous-video-id", 100); err != nil {
+		t.Fatalf("ConvertTwitchLiveChatToTDLChat returned error: %v", err)
+	}
+
+	output, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("failed to read output chat: %v", err)
+	}
+	var chat TDLChat
+	if err := json.Unmarshal(output, &chat); err != nil {
+		t.Fatalf("failed to unmarshal output chat: %v", err)
+	}
+	if chat.Video.End != 3 {
+		t.Fatalf("expected quiet tail to keep last-message end, got %d", chat.Video.End)
 	}
 }

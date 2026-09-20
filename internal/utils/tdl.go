@@ -96,7 +96,12 @@ type LiveChat struct {
 	Comments []LiveComment `json:"comments"`
 }
 
-func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName string, videoID string, videoExternalID string, channelID int, chatStartTime time.Time, previousVideoID string) error {
+// liveChatTruncateEpsilonSec bounds clock skew between chat worker start,
+// ffmpeg start, IRC delivery delay, and ffprobe ceil/floor rounding when
+// clamping live chat to the finalized video duration.
+const liveChatTruncateEpsilonSec = 2.0
+
+func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName string, videoID string, videoExternalID string, channelID int, chatStartTime time.Time, previousVideoID string, videoDurationSec int) error {
 	log.Debug().Str("chat_file", path).Msg("Converting live Twitch chat to TDL chat for rendering")
 
 	liveChatJSONFile, err := os.Open(path)
@@ -175,6 +180,15 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 		if !include {
 			return nil
 		}
+		if videoDurationSec > 0 {
+			offset := tdlComment.ContentOffsetSeconds
+			if offset < -liveChatTruncateEpsilonSec {
+				return nil
+			}
+			if offset > float64(videoDurationSec)+liveChatTruncateEpsilonSec {
+				return nil
+			}
+		}
 
 		if err := writeTDLComment(outputWriter, tdlComment, &firstComment); err != nil {
 			return err
@@ -184,6 +198,13 @@ func ConvertTwitchLiveChatToTDLChat(path string, outPath string, channelName str
 	})
 	if err != nil {
 		return err
+	}
+
+	// Cap video end to the finalized video duration so chat never outruns
+	// video. A quiet tail (no messages near the end) keeps the shorter
+	// last-message offset instead of padding with empty time.
+	if videoDurationSec > 0 && videoEnd > int64(videoDurationSec) {
+		videoEnd = int64(videoDurationSec)
 	}
 
 	if _, err := io.WriteString(outputWriter, `]}`); err != nil {

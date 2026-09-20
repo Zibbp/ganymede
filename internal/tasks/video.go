@@ -8,9 +8,9 @@ import (
 
 	"github.com/riverqueue/river"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/exec"
-	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -132,6 +132,30 @@ func validateNonEmptyFile(path string, label string) error {
 	return nil
 }
 
+// setLiveVideoDurationAndFinalizeChapters records the finalized live video
+// duration and closes any open chapter at that duration.
+func setLiveVideoDurationAndFinalizeChapters(ctx context.Context, video *ent.Vod, duration int) error {
+	if _, err := video.Update().SetDuration(duration).Save(ctx); err != nil {
+		return err
+	}
+
+	chapters, err := video.QueryChapters().All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, chapter := range chapters {
+		if chapter.End != 0 {
+			continue
+		}
+		log.Debug().Str("video_id", video.ID.String()).Int("duration", duration).Msg("updating live chapter end time")
+		if _, err := chapter.Update().SetEnd(duration).Save(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostProcessVideoArgs]) error {
 	// get store from context
 	store, err := StoreFromContext(ctx)
@@ -159,38 +183,35 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		if err := validateNonEmptyFile(dbItems.Video.TmpVideoDownloadPath, "downloaded video input"); err != nil {
 			return err
 		}
-	} else {
-		if dbItems.Video.VideoHlsPath == "" {
-			// Live archive finalizing to MP4 can be retried after remux succeeded.
-			// Accept either the original live temp input or the remuxed MP4 intermediate.
-			if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
-				if err := validateNonEmptyFile(dbItems.Video.TmpVideoConvertPath, "live converted video input"); err != nil {
-					return err
-				}
-			} else {
-				if err := validateNonEmptyFile(dbItems.Video.TmpVideoDownloadPath, "live downloaded video input"); err != nil {
-					return err
-				}
-			}
-		} else {
-			playlistPath := fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
-			if err := validateNonEmptyFile(playlistPath, "live HLS playlist"); err != nil {
+	} else if isLiveHlsCapture(&dbItems.Video) {
+		// Live HLS temp capture; truncated playlists rebuild from segments.
+		if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID); err != nil {
+			return err
+		}
+	} else if dbItems.Video.VideoHlsPath == "" {
+		// Legacy live MP4 (.ts capture); accept original or remuxed input.
+		if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
+			if err := validateNonEmptyFile(dbItems.Video.TmpVideoConvertPath, "live converted video input"); err != nil {
 				return err
 			}
-			if err := hls.FinalizeMediaPlaylist(playlistPath); err != nil {
-				return fmt.Errorf("failed to finalize live HLS playlist: %w", err)
+		} else {
+			if err := validateNonEmptyFile(dbItems.Video.TmpVideoDownloadPath, "live downloaded video input"); err != nil {
+				return err
 			}
+		}
+	} else {
+		if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID); err != nil {
+			return err
 		}
 	}
 
-	// Post-process to a finalized MP4 when needed:
-	// - always for non-live archives
-	// - for live archives when final output is MP4
-	shouldPostProcessVideo := !dbItems.Queue.LiveArchive || dbItems.Video.VideoHlsPath == ""
+	// Post-process to MP4 for non-live and legacy live TS captures.
+	liveHasHlsTemp := isLiveHlsCapture(&dbItems.Video)
+	shouldPostProcessVideo := !dbItems.Queue.LiveArchive ||
+		(dbItems.Queue.LiveArchive && dbItems.Video.VideoHlsPath == "" && !liveHasHlsTemp)
 
-	// Live archive MP4 retries must be idempotent. If the remux output already exists and
-	// is valid, skip rerunning post-process so retries still succeed after TS source cleanup.
-	if dbItems.Queue.LiveArchive && dbItems.Video.VideoHlsPath == "" {
+	// Legacy live MP4 retries reuse a valid remux output after TS cleanup.
+	if dbItems.Queue.LiveArchive && dbItems.Video.VideoHlsPath == "" && !liveHasHlsTemp {
 		if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
 			if err := validateNonEmptyFile(dbItems.Video.TmpVideoConvertPath, "live finalized MP4 output"); err != nil {
 				return err
@@ -208,48 +229,52 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 
 	// update video duration for live archive
 	if dbItems.Queue.LiveArchive {
-		tmpVideoPath := dbItems.Video.TmpVideoConvertPath
-		if dbItems.Video.VideoHlsPath != "" {
-			tmpVideoPath = fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
-			if err := hls.FinalizeMediaPlaylist(tmpVideoPath); err != nil {
-				return fmt.Errorf("failed to finalize live HLS playlist: %w", err)
+		if liveHasHlsTemp {
+			// HLS temp capture: ensure finalized playlist, then probe duration.
+			playlistPath, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
+			if err != nil {
+				return err
 			}
-		} else if !utils.FileExists(tmpVideoPath) {
-			tmpVideoPath = dbItems.Video.TmpVideoDownloadPath
-		}
-		duration, err := exec.GetVideoDuration(ctx, tmpVideoPath)
-		if err != nil {
-			return err
-		}
-		_, err = dbItems.Video.Update().SetDuration(duration).Save(ctx)
-		if err != nil {
-			return err
-		}
+			duration, err := exec.GetVideoDuration(ctx, playlistPath)
+			if err != nil {
+				return err
+			}
+			if err := setLiveVideoDurationAndFinalizeChapters(ctx, &dbItems.Video, duration); err != nil {
+				return err
+			}
 
-		// Update last chapter end time for live stream archive
-		videoChapters, err := dbItems.Video.QueryChapters().All(ctx)
-		if err != nil {
-			return err
-		}
-
-		if len(videoChapters) > 0 {
-			for _, chapter := range videoChapters {
-				if chapter.End == 0 {
-					fmt.Println("updating chapter end time")
-					_, err = chapter.Update().SetEnd(duration).Save(ctx)
-					if err != nil {
+			// Final MP4 converts HLS here; final HLS needs no conversion.
+			// Reuse an existing export for idempotent retries.
+			if dbItems.Video.VideoHlsPath == "" {
+				if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
+					if err := validateNonEmptyFile(dbItems.Video.TmpVideoConvertPath, "live exported MP4 output"); err != nil {
+						return err
+					}
+				} else {
+					if err := exec.ExportHlsToMp4(ctx, dbItems.Video, dbItems.Video.TmpVideoConvertPath); err != nil {
 						return err
 					}
 				}
 			}
-		}
-
-		// For live archives finalized as MP4, remove the temporary transport-stream source
-		// after successful remux + metadata update to avoid large temp file accumulation.
-		if dbItems.Video.VideoHlsPath == "" && utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
-			err = utils.DeleteFile(dbItems.Video.TmpVideoDownloadPath)
+		} else {
+			tmpVideoPath := dbItems.Video.TmpVideoConvertPath
+			if !utils.FileExists(tmpVideoPath) {
+				tmpVideoPath = dbItems.Video.TmpVideoDownloadPath
+			}
+			duration, err := exec.GetVideoDuration(ctx, tmpVideoPath)
 			if err != nil {
-				log.Warn().Err(err).Str("path", dbItems.Video.TmpVideoDownloadPath).Msg("failed to delete temporary transport stream file; continuing")
+				return err
+			}
+			if err := setLiveVideoDurationAndFinalizeChapters(ctx, &dbItems.Video, duration); err != nil {
+				return err
+			}
+
+			// Remove legacy TS source after remux to avoid temp accumulation.
+			if utils.FileExists(dbItems.Video.TmpVideoDownloadPath) {
+				err = utils.DeleteFile(dbItems.Video.TmpVideoDownloadPath)
+				if err != nil {
+					log.Warn().Err(err).Str("path", dbItems.Video.TmpVideoDownloadPath).Msg("failed to delete temporary transport stream file; continuing")
+				}
 			}
 		}
 	}
@@ -356,17 +381,27 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		// Standard (non-HLS) video move source should be the finalized converted MP4.
 		// Fallback to download path for backwards compatibility if conversion output is missing.
 		tmpVideoPath := dbItems.Video.TmpVideoConvertPath
-		if !utils.FileExists(tmpVideoPath) {
+		if utils.FileExists(tmpVideoPath) {
+			if err := validateNonEmptyFile(tmpVideoPath, "video move source"); err != nil {
+				return err
+			}
+			if err := utils.MoveFile(ctx, tmpVideoPath, dbItems.Video.VideoPath); err != nil {
+				return err
+			}
+		} else if isLiveHlsCapture(&dbItems.Video) {
+			// HLS playlist must never move as the video; a missing export
+			// means an earlier attempt already published it.
+			if err := validateNonEmptyFile(dbItems.Video.VideoPath, "video move destination"); err != nil {
+				return err
+			}
+		} else {
 			tmpVideoPath = dbItems.Video.TmpVideoDownloadPath
-		}
-
-		if err := validateNonEmptyFile(tmpVideoPath, "video move source"); err != nil {
-			return err
-		}
-
-		err := utils.MoveFile(ctx, tmpVideoPath, dbItems.Video.VideoPath)
-		if err != nil {
-			return err
+			if err := validateNonEmptyFile(tmpVideoPath, "video move source"); err != nil {
+				return err
+			}
+			if err := utils.MoveFile(ctx, tmpVideoPath, dbItems.Video.VideoPath); err != nil {
+				return err
+			}
 		}
 
 		// delete temp hls directory if exists for watching while live
@@ -378,16 +413,13 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		}
 
 	} else {
-		playlistPath := fmt.Sprintf("%s/%s-video.m3u8", dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
-		if err := validateNonEmptyFile(playlistPath, "HLS move source playlist"); err != nil {
+		// Finalize the playlist before the whole directory is moved below.
+		if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID); err != nil {
 			return err
-		}
-		if err := hls.FinalizeMediaPlaylist(playlistPath); err != nil {
-			return fmt.Errorf("failed to finalize HLS move source playlist: %w", err)
 		}
 
 		// move hls video
-		err := utils.MoveDirectory(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.VideoHlsPath)
+		err = utils.MoveDirectory(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.VideoHlsPath)
 		if err != nil {
 			return err
 		}
@@ -396,7 +428,7 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		if err := utils.DeleteDirectory(dbItems.Video.TmpVideoHlsPath); err != nil {
 			return err
 		}
-		// delete temp converted video
+		// delete temp converted video when present (unused for HLS-final).
 		if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {
 			err = utils.DeleteFile(dbItems.Video.TmpVideoConvertPath)
 			if err != nil {

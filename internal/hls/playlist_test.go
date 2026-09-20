@@ -1,6 +1,8 @@
 package hls
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -161,5 +163,224 @@ segment0.ts
 	}
 	if strings.Count(output, "#EXT-X-PLAYLIST-TYPE:VOD") != 1 {
 		t.Fatalf("expected one VOD playlist type, got:\n%s", output)
+	}
+}
+
+func writeSegmentFile(t *testing.T, dir, name string, size int) {
+	t.Helper()
+	data := make([]byte, size)
+	for i := range data {
+		data[i] = byte(i % 251)
+	}
+	if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
+		t.Fatalf("failed to write segment %s: %v", name, err)
+	}
+}
+
+func fixedProbe(durations map[string]float64) SegmentProbe {
+	return func(ctx context.Context, path string) (float64, error) {
+		d, ok := durations[filepath.Base(path)]
+		if !ok {
+			return 10.0, nil
+		}
+		return d, nil
+	}
+}
+
+func TestRebuildMediaPlaylistFromTruncatedFmp4(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	const extID = "12345"
+	playlistPath := filepath.Join(dir, extID+"-video.m3u8")
+
+	writeSegmentFile(t, dir, extID+"_init.mp4", 100)
+	writeSegmentFile(t, dir, extID+"_segment000000.m4s", 100)
+	writeSegmentFile(t, dir, extID+"_segment000001.m4s", 100)
+	writeSegmentFile(t, dir, extID+"_segment000002.m4s", 100)
+	// Zero-byte partial from an interrupted rollover must be skipped.
+	writeSegmentFile(t, dir, extID+"_segment000003.m4s", 0)
+	// Truncated playlist left by a kill mid-rewrite.
+	if err := os.WriteFile(playlistPath, []byte{}, 0o644); err != nil {
+		t.Fatalf("failed to write truncated playlist: %v", err)
+	}
+
+	if !HasRecoverableSegments(dir, extID) {
+		t.Fatal("expected recoverable segments to be detected")
+	}
+
+	probe := fixedProbe(map[string]float64{
+		extID + "_segment000000.m4s": 10.0,
+		extID + "_segment000001.m4s": 10.0,
+		extID + "_segment000002.m4s": 6.5,
+	})
+	if err := RebuildMediaPlaylistFromSegments(context.Background(), dir, extID, playlistPath, probe); err != nil {
+		t.Fatalf("RebuildMediaPlaylistFromSegments returned error: %v", err)
+	}
+
+	outputBytes, err := os.ReadFile(playlistPath)
+	if err != nil {
+		t.Fatalf("failed to read rebuilt playlist: %v", err)
+	}
+	output := string(outputBytes)
+	for _, want := range []string{
+		"#EXT-X-VERSION:7",
+		"#EXT-X-PLAYLIST-TYPE:VOD",
+		`#EXT-X-MAP:URI="12345_init.mp4"`,
+		"12345_segment000000.m4s",
+		"12345_segment000001.m4s",
+		"12345_segment000002.m4s",
+		"#EXT-X-ENDLIST",
+	} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("rebuilt playlist missing %q:\n%s", want, output)
+		}
+	}
+	if strings.Contains(output, "segment000003") {
+		t.Fatalf("zero-byte partial segment must be skipped:\n%s", output)
+	}
+	first := strings.Index(output, "segment000000.m4s")
+	second := strings.Index(output, "segment000001.m4s")
+	third := strings.Index(output, "segment000002.m4s")
+	if first == -1 || second == -1 || third == -1 || first >= second || second >= third {
+		t.Fatalf("segments out of order:\n%s", output)
+	}
+}
+
+func TestRebuildMediaPlaylistFromMissingPlaylist(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	const extID = "abc"
+	playlistPath := filepath.Join(dir, extID+"-video.m3u8")
+
+	writeSegmentFile(t, dir, extID+"_init.mp4", 100)
+	writeSegmentFile(t, dir, extID+"_segment000000.m4s", 100)
+	// No playlist file at all: the atomic-create fallback must handle it.
+	if err := RebuildMediaPlaylistFromSegments(context.Background(), dir, extID, playlistPath, fixedProbe(nil)); err != nil {
+		t.Fatalf("RebuildMediaPlaylistFromSegments returned error: %v", err)
+	}
+	outputBytes, err := os.ReadFile(playlistPath)
+	if err != nil {
+		t.Fatalf("failed to read rebuilt playlist: %v", err)
+	}
+	if !strings.Contains(string(outputBytes), "#EXT-X-ENDLIST") {
+		t.Fatalf("expected finalized playlist, got:\n%s", outputBytes)
+	}
+}
+
+func TestRebuildMediaPlaylistSortsUnpaddedSegments(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	const extID = "live"
+	playlistPath := filepath.Join(dir, extID+"-video.m3u8")
+
+	for _, name := range []string{"live_segment1.ts", "live_segment10.ts", "live_segment2.ts"} {
+		writeSegmentFile(t, dir, name, 100)
+	}
+	if err := RebuildMediaPlaylistFromSegments(context.Background(), dir, extID, playlistPath, fixedProbe(nil)); err != nil {
+		t.Fatalf("RebuildMediaPlaylistFromSegments returned error: %v", err)
+	}
+	outputBytes, err := os.ReadFile(playlistPath)
+	if err != nil {
+		t.Fatalf("failed to read rebuilt playlist: %v", err)
+	}
+	output := string(outputBytes)
+	first := strings.Index(output, "segment1.ts")
+	tenth := strings.Index(output, "segment10.ts")
+	second := strings.Index(output, "segment2.ts")
+	if first == -1 || tenth == -1 || second == -1 || first >= second || second >= tenth {
+		t.Fatalf("expected numeric order 1,2,10, got:\n%s", output)
+	}
+	if strings.Contains(output, "#EXT-X-MAP") {
+		t.Fatalf("legacy TS playlist must not reference an init file:\n%s", output)
+	}
+}
+
+func TestRebuildMediaPlaylistSkipsUnprobeableSegments(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	const extID = "skip"
+	playlistPath := filepath.Join(dir, extID+"-video.m3u8")
+
+	writeSegmentFile(t, dir, extID+"_init.mp4", 100)
+	writeSegmentFile(t, dir, extID+"_segment000000.m4s", 100)
+	writeSegmentFile(t, dir, extID+"_segment000001.m4s", 100)
+	writeSegmentFile(t, dir, extID+"_segment000002.m4s", 100)
+
+	probe := func(ctx context.Context, path string) (float64, error) {
+		if filepath.Base(path) == extID+"_segment000001.m4s" {
+			return 0, fmt.Errorf("truncated segment")
+		}
+		return 10.0, nil
+	}
+	if err := RebuildMediaPlaylistFromSegments(context.Background(), dir, extID, playlistPath, probe); err != nil {
+		t.Fatalf("RebuildMediaPlaylistFromSegments returned error: %v", err)
+	}
+
+	outputBytes, err := os.ReadFile(playlistPath)
+	if err != nil {
+		t.Fatalf("failed to read rebuilt playlist: %v", err)
+	}
+	output := string(outputBytes)
+	if strings.Contains(output, "segment000001") {
+		t.Fatalf("unprobeable segment must be skipped:\n%s", output)
+	}
+	if !strings.Contains(output, "#EXT-X-DISCONTINUITY") {
+		t.Fatalf("expected a discontinuity marker for the skipped segment:\n%s", output)
+	}
+	first := strings.Index(output, "segment000000.m4s")
+	last := strings.Index(output, "segment000002.m4s")
+	if first == -1 || last == -1 || first >= last {
+		t.Fatalf("segments out of order:\n%s", output)
+	}
+}
+
+func TestRebuildMediaPlaylistFailsWhenNoSegmentProbes(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	const extID = "broken"
+	playlistPath := filepath.Join(dir, extID+"-video.m3u8")
+
+	writeSegmentFile(t, dir, extID+"_init.mp4", 100)
+	writeSegmentFile(t, dir, extID+"_segment000000.m4s", 100)
+
+	probe := func(ctx context.Context, path string) (float64, error) {
+		return 0, fmt.Errorf("corrupt")
+	}
+	if err := RebuildMediaPlaylistFromSegments(context.Background(), dir, extID, playlistPath, probe); err == nil {
+		t.Fatal("expected rebuild error when no segment can be probed")
+	}
+}
+
+func TestURIEncodesReservedCharacters(t *testing.T) {
+	t.Parallel()
+
+	if got := URI("12345_init.mp4"); got != "12345_init.mp4" {
+		t.Fatalf("URI() = %q, want plain filename", got)
+	}
+	if got := URI("/tmp/a b/seg#1.m4s"); got != "/tmp/a%20b/seg%231.m4s" {
+		t.Fatalf("URI() = %q, want percent-encoded path", got)
+	}
+}
+
+func TestRebuildMediaPlaylistWithoutSegmentsFails(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	const extID = "empty"
+	playlistPath := filepath.Join(dir, extID+"-video.m3u8")
+
+	if HasRecoverableSegments(dir, extID) {
+		t.Fatal("expected no recoverable segments in an empty directory")
+	}
+	if err := RebuildMediaPlaylistFromSegments(context.Background(), dir, extID, playlistPath, fixedProbe(nil)); err == nil {
+		t.Fatal("expected rebuild error with no segments")
+	}
+
+	// fmp4 segments without their init file are not recoverable.
+	writeSegmentFile(t, dir, extID+"_segment000000.m4s", 100)
+	if HasRecoverableSegments(dir, extID) {
+		t.Fatal("expected no recoverable segments without the init file")
+	}
+	if err := RebuildMediaPlaylistFromSegments(context.Background(), dir, extID, playlistPath, fixedProbe(nil)); err == nil {
+		t.Fatal("expected rebuild error without the init file")
 	}
 }

@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	stdErrors "errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	osExec "os/exec"
 	"path/filepath"
@@ -32,28 +34,35 @@ const (
 	archiveProcessForwarder = `
 forward_term() {
 	trap '' TERM
-	# Give the group a brief grace period, then escalate to SIGKILL. Some
-	# ffmpeg builds ignore the first SIGTERM while blocked on a network read
-	# (e.g. Twitch HLS), which would otherwise orphan the capture process after
-	# a worker crash. The subshell inherits the ignored TERM disposition, so it
-	# survives the group-wide SIGTERM below and force-kills any stubborn child.
-	( sleep 2; kill -s KILL -- "-$$" 2>/dev/null ) &
+	# SIGTERM the group so ffmpeg flushes; backstop KILLs a stuck capture.
+	# A kill mid-flush can truncate the playlist; post-process rebuilds it.
+	( sleep 60; kill -0 "$$" 2>/dev/null && kill -s KILL -- "-$$" 2>/dev/null ) &
 	escalation_pid=$!
 	kill -s TERM -- "-$$"
 }
 
+forward_usr1() {
+	# Parent died: no worker left to flush, so KILL immediately for watchdog recovery.
+	kill -s KILL -- "-$$" 2>/dev/null
+}
+
 trap 'forward_term' TERM
+trap 'forward_usr1' USR1
 
 "$@" &
 child_pid=$!
 wait "$child_pid"
 status=$?
 
-# Do not report completion while the escalation helper is still running. If the
-# child exited before the grace period elapsed we wait for the helper to finish
-# (and reap it); if it never exited the helper has already escalated and this
-# forwarder was killed with the rest of the group.
+# A trapped signal interrupts wait; keep waiting until the child is reaped.
+while kill -0 "$child_pid" 2>/dev/null; do
+	wait "$child_pid"
+	status=$?
+done
+
+# The helper survives the group SIGTERM by design, so KILL and reap it here.
 if [ -n "${escalation_pid:-}" ]; then
+	kill -s KILL "$escalation_pid" 2>/dev/null
 	wait "$escalation_pid" 2>/dev/null
 fi
 
@@ -72,6 +81,37 @@ func appendFFmpegLiveOutputStreamArgs(args []string, audioOnly bool) []string {
 		"-dn",
 		"-ignore_unknown",
 		"-c", "copy",
+	)
+}
+
+// buildLiveHlsCaptureFFmpegArgs returns ffmpeg args for live HLS (fmp4) capture.
+func buildLiveHlsCaptureFFmpegArgs(inputURI, playlistPath, segmentPattern, initFilename string, audioOnly bool, configFfmpegArgs string) []string {
+	ffmpegArgs := []string{
+		"-y",
+		"-hide_banner",
+		"-fflags", "+genpts+discardcorrupt",
+		"-rw_timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
+		"-timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
+		"-i", inputURI,
+	}
+	ffmpegArgs = appendFFmpegLiveOutputStreamArgs(ffmpegArgs, audioOnly)
+
+	// Append user-defined (global) params before outputs
+	ffmpegArgs = append(ffmpegArgs, strings.Fields(configFfmpegArgs)...)
+
+	return append(ffmpegArgs,
+		"-start_number", "0",
+		"-hls_time", "10",
+		"-hls_list_size", "0",
+		"-hls_playlist_type", "event",
+		"-hls_flags", "append_list+independent_segments+temp_file",
+		"-hls_segment_type", "fmp4",
+		"-hls_fmp4_init_filename", initFilename,
+		// Twitch ADTS AAC needs this for the fmp4 muxer; no-op otherwise.
+		"-bsf:a", "aac_adtstoasc",
+		"-hls_segment_filename", segmentPattern,
+		"-f", "hls",
+		playlistPath,
 	)
 }
 
@@ -315,79 +355,18 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 
 	audioOnly := closestQuality == "audio_only"
 
-	// Base ffmpeg args (shared between transport-stream and hls live archiving)
-	ffmpegArgs := []string{
-		"-y",
-		"-hide_banner",
-		"-fflags", "+genpts+discardcorrupt",
-		"-rw_timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
-		"-timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
-		"-i", qualitiesURI[closestQuality],
+	// Live temp capture is HLS (fmp4); MP4 is exported later if configured.
+	if err := utils.CreateDirectory(video.TmpVideoHlsPath); err != nil {
+		return fmt.Errorf("error creating hls directory: %w", err)
 	}
-	ffmpegArgs = appendFFmpegLiveOutputStreamArgs(ffmpegArgs, audioOnly)
-
-	// Decide archive format.
-	archivingAsMP4 := (video.VideoHlsPath == "")
-
-	// Append user-defined (global) params before outputs
-	videoConvertString := config.Get().Parameters.VideoConvert
-	videoConvertArgs := strings.Fields(videoConvertString)
-	ffmpegArgs = append(ffmpegArgs, videoConvertArgs...)
-
-	// Archive output
-	if archivingAsMP4 {
-		// Archive to crash-tolerant MPEG-TS while live; finalize to MP4 in post-process.
-		ffmpegArgs = append(ffmpegArgs,
-			"-f", "mpegts",
-			video.TmpVideoDownloadPath,
-		)
-
-		// Also archive HLS for watch-while-archiving
-		if config.Get().Livestream.WatchWhileArchiving && video.TmpVideoHlsPath != "" {
-			if err := utils.CreateDirectory(video.TmpVideoHlsPath); err != nil {
-				return fmt.Errorf("error creating hls directory: %w", err)
-			}
-
-			playlistPath := fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)
-			segmentPattern := fmt.Sprintf("%s/%s_segment%%06d.ts", video.TmpVideoHlsPath, video.ExtID)
-
-			ffmpegArgs = append(ffmpegArgs,
-				appendFFmpegLiveOutputStreamArgs(nil, audioOnly)...,
-			)
-			ffmpegArgs = append(ffmpegArgs,
-				"-start_number", "0",
-				"-hls_time", "2",
-				"-hls_list_size", "0",
-				"-hls_playlist_type", "event",
-				"-hls_flags", "append_list+independent_segments",
-				"-hls_segment_filename", segmentPattern,
-				"-f", "hls",
-				playlistPath,
-			)
-		}
-	} else {
-		// Archive as HLS
-		if err := utils.CreateDirectory(video.TmpVideoHlsPath); err != nil {
-			return fmt.Errorf("error creating hls directory: %w", err)
-		}
-
-		playlistPath := fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)
-		segmentPattern := fmt.Sprintf("%s/%s_segment%%06d.ts", video.TmpVideoHlsPath, video.ExtID)
-
-		ffmpegArgs = append(ffmpegArgs,
-			appendFFmpegLiveOutputStreamArgs(nil, audioOnly)...,
-		)
-		ffmpegArgs = append(ffmpegArgs,
-			"-start_number", "0",
-			"-hls_time", "10",
-			"-hls_list_size", "0",
-			"-hls_playlist_type", "event",
-			"-hls_flags", "append_list+independent_segments",
-			"-hls_segment_filename", segmentPattern,
-			"-f", "hls",
-			playlistPath,
-		)
-	}
+	ffmpegArgs := buildLiveHlsCaptureFFmpegArgs(
+		qualitiesURI[closestQuality],
+		filepath.Join(video.TmpVideoHlsPath, video.ExtID+"-video.m3u8"),
+		filepath.Join(video.TmpVideoHlsPath, video.ExtID+"_segment%06d.m4s"),
+		fmt.Sprintf("%s_init.mp4", video.ExtID),
+		audioOnly,
+		config.Get().Parameters.VideoConvert,
+	)
 
 	// Run ffmpeg
 	cmd := osExec.Command("ffmpeg", ffmpegArgs...)
@@ -446,11 +425,9 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 }
 
 // startArchiveCommand launches a forwarding shim as the worker's direct child.
-// If Pdeathsig is delivered to the shim, it forwards the signal to its process
-// group so descendants such as yt-dlp's ffmpeg process terminate as well.
-//
-// The goroutine that creates the shim remains locked to its OS thread until
-// Wait returns because Linux ties Pdeathsig to the creating thread.
+// Pdeathsig (SIGUSR1) KILLs the group on worker death; SIGTERM lets ffmpeg
+// flush with a KILL backstop. The creating goroutine stays on its OS thread
+// for Pdeathsig.
 func startArchiveCommand(cmd *osExec.Cmd) (<-chan error, error) {
 	targetPath := cmd.Path
 	targetArgs := append([]string(nil), cmd.Args[1:]...)
@@ -487,21 +464,26 @@ func startArchiveCommand(cmd *osExec.Cmd) (<-chan error, error) {
 
 func liveArchiveProcessAttributes() *syscall.SysProcAttr {
 	return &syscall.SysProcAttr{
-		Setpgid:   true,
-		Pdeathsig: syscall.SIGTERM,
+		Setpgid: true,
+		// USR1 KILLs on parent death; TERM allows ffmpeg to flush.
+		Pdeathsig: syscall.SIGUSR1,
 	}
 }
 
 func vodArchiveProcessAttributes() *syscall.SysProcAttr {
 	return &syscall.SysProcAttr{
-		Setpgid:   true,
-		Pdeathsig: syscall.SIGTERM,
+		Setpgid: true,
+		// Same parent-death KILL semantics as live captures.
+		Pdeathsig: syscall.SIGUSR1,
 	}
 }
 
 func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
-	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoConvertPath, "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", fmt.Sprintf("%s/%s_segment%s.ts", video.TmpVideoHlsPath, video.ExtID, "%d"), "-f", "hls", fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)}
+	playlistPath := filepath.Join(video.TmpVideoHlsPath, video.ExtID+"-video.m3u8")
+	segmentPattern := filepath.Join(video.TmpVideoHlsPath, video.ExtID+"_segment%06d.m4s")
+	initFilename := fmt.Sprintf("%s_init.mp4", video.ExtID)
+	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoConvertPath, "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_playlist_type", "event", "-hls_flags", "append_list+independent_segments", "-hls_segment_type", "fmp4", "-hls_fmp4_init_filename", initFilename, "-hls_segment_filename", segmentPattern, "-f", "hls", playlistPath}
 
 	// open log file
 	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
@@ -553,6 +535,255 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
+func buildHlsToMp4FFmpegArgs(video ent.Vod, playlistPath, exportPath, configFfmpegArgs string, normalizeTimestamps bool) []string {
+	args := []string{"-y", "-hide_banner", "-i", playlistPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-movflags", "+faststart", "-metadata", "title=" + video.Title}
+	args = append(args, strings.Fields(configFfmpegArgs)...)
+	if normalizeTimestamps {
+		// Repair start offsets without re-encoding.
+		args = append(args, "-bsf", "setts=ts=TS-STARTDTS")
+	}
+	return append(args, exportPath)
+}
+
+// ExportHlsToMp4 creates an MP4 from the finalized live HLS playlist.
+func ExportHlsToMp4(ctx context.Context, video ent.Vod, exportPath string) error {
+	env := config.GetEnvConfig()
+	playlistPath := filepath.Join(video.TmpVideoHlsPath, video.ExtID+"-video.m3u8")
+
+	// Append to the convert log to preserve ffmpeg output.
+	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
+	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to open log file: %w", err)
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Debug().Err(err).Msg("failed to close log file")
+		}
+	}()
+	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg MP4 export output to %s", logFilePath)
+
+	// Export atomically via a sibling temp file so crashes leave no partial.
+	tmpExportPath, commit, cleanup, err := tempExportTarget(exportPath)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	if err := runHlsToMp4FFmpeg(ctx, video, buildHlsToMp4FFmpegArgs(video, playlistPath, tmpExportPath, config.Get().Parameters.VideoConvert, false), tmpExportPath, file); err != nil {
+		return err
+	}
+
+	duration, err := ProbeMediaDuration(ctx, tmpExportPath)
+	if err != nil {
+		return fmt.Errorf("probe exported MP4 duration: %w", err)
+	}
+	if !duration.HasTimestampAnomaly() {
+		return commit()
+	}
+
+	log.Warn().
+		Str("video_id", video.ID.String()).
+		Float64("format_duration", duration.FormatDuration).
+		Float64("stream_duration", duration.LongestStreamDuration).
+		Msg("detected anomalous container timestamps in MP4 export; normalizing each stream")
+
+	if err := runHlsToMp4FFmpeg(ctx, video, buildHlsToMp4FFmpegArgs(video, playlistPath, tmpExportPath, config.Get().Parameters.VideoConvert, true), tmpExportPath, file); err != nil {
+		return fmt.Errorf("normalize exported MP4 timestamps: %w", err)
+	}
+
+	duration, err = ProbeMediaDuration(ctx, tmpExportPath)
+	if err != nil {
+		return fmt.Errorf("probe timestamp-normalized MP4 duration: %w", err)
+	}
+	if duration.HasTimestampAnomaly() {
+		return fmt.Errorf(
+			"timestamp normalization did not repair exported MP4 duration: format=%f stream=%f",
+			duration.FormatDuration,
+			duration.LongestStreamDuration,
+		)
+	}
+
+	return commit()
+}
+
+// tempExportTarget creates a sibling temp file with atomic commit/cleanup.
+func tempExportTarget(dest string) (tmpPath string, commit func() error, cleanup func(), err error) {
+	tmpFile, err := os.CreateTemp(filepath.Dir(dest), filepath.Base(dest)+".tmp-*")
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("create temporary export file: %w", err)
+	}
+	tmpPath = tmpFile.Name()
+	if err := tmpFile.Close(); err != nil {
+		_ = os.Remove(tmpPath)
+		return "", nil, nil, fmt.Errorf("close temporary export file: %w", err)
+	}
+
+	cleanup = func() {
+		_ = os.Remove(tmpPath)
+	}
+	commit = func() error {
+		if err := os.Chmod(tmpPath, 0o644); err != nil {
+			return fmt.Errorf("set exported media permissions: %w", err)
+		}
+		if err := os.Rename(tmpPath, dest); err != nil {
+			return fmt.Errorf("publish exported media %s: %w", dest, err)
+		}
+		return nil
+	}
+
+	return tmpPath, commit, cleanup, nil
+}
+
+// EnsureLiveHlsPlaylist finalizes the capture playlist, rebuilding it from
+// segments when a kill truncated it. Errors only with no recoverable media.
+func EnsureLiveHlsPlaylist(ctx context.Context, tmpHlsPath, extID string) (string, error) {
+	if tmpHlsPath == "" || extID == "" {
+		return "", fmt.Errorf("empty live HLS playlist path")
+	}
+	playlistPath := filepath.Join(tmpHlsPath, extID+"-video.m3u8")
+	if info, err := os.Stat(playlistPath); err == nil && info.Size() > 0 && info.Mode().IsRegular() {
+		if err := hls.FinalizeMediaPlaylist(playlistPath); err != nil {
+			return "", fmt.Errorf("failed to finalize live HLS playlist: %w", err)
+		}
+		return playlistPath, nil
+	}
+	if hls.HasRecoverableSegments(tmpHlsPath, extID) {
+		log.Warn().Str("playlist", playlistPath).Msg("live HLS playlist missing or truncated; rebuilding from segments on disk")
+		probeDir, err := os.MkdirTemp("", "ganymede-hls-probe-*")
+		if err != nil {
+			return "", fmt.Errorf("create segment probe directory: %w", err)
+		}
+		defer func() {
+			_ = os.RemoveAll(probeDir)
+		}()
+		initPath := filepath.Join(tmpHlsPath, extID+"_init.mp4")
+		probe := func(ctx context.Context, path string) (float64, error) {
+			probePath := path
+			// fmp4 segments need the init file, so probe via a mini playlist.
+			if strings.HasSuffix(strings.ToLower(path), ".m4s") {
+				mini := "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:60\n" +
+					"#EXT-X-MEDIA-SEQUENCE:0\n" +
+					fmt.Sprintf("#EXT-X-MAP:URI=%q\n", hls.URI(initPath)) +
+					"#EXTINF:60.0,\n" + hls.URI(path) + "\n#EXT-X-ENDLIST\n"
+				miniPath := filepath.Join(probeDir, strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))+".m3u8")
+				if err := os.WriteFile(miniPath, []byte(mini), 0o644); err != nil {
+					return 0, err
+				}
+				probePath = miniPath
+				return probeSegmentPacketDuration(ctx, probePath)
+			}
+			duration, err := ProbeMediaDuration(ctx, probePath)
+			if err != nil {
+				return 0, err
+			}
+			return duration.Duration, nil
+		}
+		if err := hls.RebuildMediaPlaylistFromSegments(ctx, tmpHlsPath, extID, playlistPath, probe); err != nil {
+			return "", err
+		}
+		return playlistPath, nil
+	}
+	return "", fmt.Errorf("empty live HLS playlist: %s", playlistPath)
+}
+
+type segmentPacketProbe struct {
+	Packets []struct {
+		PtsTime     string `json:"pts_time"`
+		StreamIndex int    `json:"stream_index"`
+	} `json:"packets"`
+}
+
+// probeSegmentPacketDuration measures duration from packet pts, not container
+// metadata which would echo the mini playlist placeholder values.
+func probeSegmentPacketDuration(ctx context.Context, miniPlaylistPath string) (float64, error) {
+	cmd := osExec.CommandContext(ctx, "ffprobe",
+		"-v", "error",
+		"-show_entries", "packet=pts_time,stream_index",
+		"-of", "json",
+		miniPlaylistPath,
+	)
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	out, err := cmd.Output()
+	if err != nil {
+		return 0, fmt.Errorf("error running ffprobe: %w: %s", err, strings.TrimSpace(stderr.String()))
+	}
+
+	var probe segmentPacketProbe
+	if err := json.Unmarshal(out, &probe); err != nil {
+		return 0, fmt.Errorf("error parsing ffprobe output: %w", err)
+	}
+
+	type bounds struct {
+		min, max float64
+		seen     bool
+	}
+	perStream := make(map[int]*bounds)
+	for _, packet := range probe.Packets {
+		pts, err := strconv.ParseFloat(packet.PtsTime, 64)
+		if err != nil || math.IsNaN(pts) || math.IsInf(pts, 0) {
+			continue
+		}
+		b, ok := perStream[packet.StreamIndex]
+		if !ok {
+			b = &bounds{min: pts, max: pts, seen: true}
+			perStream[packet.StreamIndex] = b
+			continue
+		}
+		b.min = math.Min(b.min, pts)
+		b.max = math.Max(b.max, pts)
+	}
+
+	duration := 0.0
+	for _, b := range perStream {
+		duration = math.Max(duration, b.max-b.min)
+	}
+	if duration <= 0 {
+		return 0, fmt.Errorf("no packet timestamps in %s", miniPlaylistPath)
+	}
+	return duration, nil
+}
+
+func runHlsToMp4FFmpeg(ctx context.Context, video ent.Vod, ffmpegArgs []string, exportPath string, output io.Writer) error {
+	log.Debug().Str("video_id", video.ID.String()).Str("cmd", strings.Join(ffmpegArgs, " ")).Msg("running ffmpeg")
+
+	cmd := osExec.CommandContext(ctx, "ffmpeg", ffmpegArgs...)
+	cmd.Stderr = output
+	cmd.Stdout = output
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("error starting ffmpeg: %w", err)
+	}
+
+	done := make(chan error)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	select {
+	case <-ctx.Done():
+		if err := cmd.Process.Kill(); err != nil {
+			log.Error().Err(err).Msg("failed to kill ffmpeg process")
+		}
+		<-done
+		// Remove partial output so retries do not accept a truncated file.
+		_ = os.Remove(exportPath)
+		return ctx.Err()
+	case err := <-done:
+		if err != nil {
+			// Remove partial output so retries do not accept a truncated file.
+			_ = os.Remove(exportPath)
+			log.Error().Err(err).Msg("error running ffmpeg")
+			return fmt.Errorf("error running ffmpeg: %w", err)
+		}
+	}
+
+	return nil
+}
+
 func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
 	configFfmpegArgs := config.Get().Parameters.VideoConvert
@@ -574,16 +805,26 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 }
 
 func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs string, output io.Writer) error {
-	if err := runPostProcessVideoFFmpeg(ctx, video, postProcessVideoFFmpegArgs(video, configFfmpegArgs), output); err != nil {
+	// Write atomically via a sibling temp file for crash-safe retries.
+	tmpExportPath, commit, cleanup, err := tempExportTarget(video.TmpVideoConvertPath)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	exportVideo := video
+	exportVideo.TmpVideoConvertPath = tmpExportPath
+
+	if err := runPostProcessVideoFFmpeg(ctx, exportVideo, postProcessVideoFFmpegArgs(exportVideo, configFfmpegArgs), output); err != nil {
 		return err
 	}
 
-	duration, err := ProbeMediaDuration(ctx, video.TmpVideoConvertPath)
+	duration, err := ProbeMediaDuration(ctx, tmpExportPath)
 	if err != nil {
 		return fmt.Errorf("probe finalized video duration: %w", err)
 	}
 	if !duration.HasTimestampAnomaly() {
-		return nil
+		return commit()
 	}
 
 	log.Warn().
@@ -592,11 +833,11 @@ func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs strin
 		Float64("stream_duration", duration.LongestStreamDuration).
 		Msg("detected anomalous container timestamps; normalizing each stream")
 
-	if err := runPostProcessVideoFFmpeg(ctx, video, normalizedPostProcessVideoFFmpegArgs(video, configFfmpegArgs), output); err != nil {
+	if err := runPostProcessVideoFFmpeg(ctx, exportVideo, normalizedPostProcessVideoFFmpegArgs(exportVideo, configFfmpegArgs), output); err != nil {
 		return fmt.Errorf("normalize finalized video timestamps: %w", err)
 	}
 
-	duration, err = ProbeMediaDuration(ctx, video.TmpVideoConvertPath)
+	duration, err = ProbeMediaDuration(ctx, tmpExportPath)
 	if err != nil {
 		return fmt.Errorf("probe timestamp-normalized video duration: %w", err)
 	}
@@ -608,7 +849,7 @@ func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs strin
 		)
 	}
 
-	return nil
+	return commit()
 }
 
 func runPostProcessVideoFFmpeg(ctx context.Context, video ent.Vod, ffmpegArgs []string, output io.Writer) error {

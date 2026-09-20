@@ -143,6 +143,20 @@ func EnqueuerFromContext(ctx context.Context) (tasks_shared.Enqueuer, error) {
 	return enqueuer, nil
 }
 
+// liveHlsPlaylistPath returns the temp HLS capture playlist path.
+func liveHlsPlaylistPath(video *ent.Vod) string {
+	return filepath.Join(video.TmpVideoHlsPath, video.ExtID+"-video.m3u8")
+}
+
+// isLiveHlsCapture reports whether TmpVideoDownloadPath is the HLS playlist.
+// Legacy live archives stored TS/MP4 there instead.
+func isLiveHlsCapture(video *ent.Vod) bool {
+	if video.TmpVideoHlsPath == "" || video.TmpVideoDownloadPath == "" {
+		return false
+	}
+	return video.TmpVideoDownloadPath == liveHlsPlaylistPath(video)
+}
+
 // getDatabaseItems retrieves the database items associated with the provided queueId. This is used instead of passing all the structs to each job so that they can be easily updated in the database.
 func getDatabaseItems(ctx context.Context, entClient *ent.Client, queueId uuid.UUID) (*GetDatabaseItemsResponse, error) {
 	queue, err := entClient.Queue.Query().Where(queue.ID(queueId)).WithVod().Only(ctx)

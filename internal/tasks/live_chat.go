@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog/log"
+	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -232,8 +234,12 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 		previousVideoID = "132195945"
 	}
 
-	// convert chat
-	err = utils.ConvertTwitchLiveChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Channel.Name, dbItems.Video.ID.String(), dbItems.Video.ExtID, channelIdInt, dbItems.Queue.ChatStart, string(previousVideoID))
+	// Convert chat truncated to the finalized video duration.
+	videoDurationSec, err := resolveLiveChatVideoDurationSec(ctx, store, dbItems)
+	if err != nil {
+		return err
+	}
+	err = utils.ConvertTwitchLiveChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Channel.Name, dbItems.Video.ID.String(), dbItems.Video.ExtID, channelIdInt, dbItems.Queue.ChatStart, string(previousVideoID), videoDurationSec)
 	if err != nil {
 		return err
 	}
@@ -270,4 +276,59 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 	}
 
 	return nil
+}
+
+// resolveLiveChatVideoDurationSec returns the finalized duration for chat
+// truncation. Zero means proceed without a cutoff; trimming never fails.
+func resolveLiveChatVideoDurationSec(ctx context.Context, store *database.Database, dbItems *GetDatabaseItemsResponse) (int, error) {
+	queueID := dbItems.Queue.ID.String()
+	if dbItems.Video.Duration > 1 {
+		return dbItems.Video.Duration, nil
+	}
+
+	if path := recoverableLiveVideoInputPath(&dbItems.Video); utils.FileExists(path) {
+		if probeDuration, err := exec.GetVideoDuration(ctx, path); err == nil {
+			return probeDuration, nil
+		} else if ctx.Err() != nil {
+			return 0, ctx.Err()
+		}
+	}
+
+	// Temp may already be moved; probe finalized media before waiting.
+	finalCandidates := []string{}
+	if dbItems.Video.VideoHlsPath != "" {
+		finalCandidates = append(finalCandidates,
+			filepath.Join(dbItems.Video.VideoHlsPath, dbItems.Video.ExtID+"-video.m3u8"))
+	} else if dbItems.Video.VideoPath != "" {
+		finalCandidates = append(finalCandidates, dbItems.Video.VideoPath)
+	}
+	for _, path := range finalCandidates {
+		if !utils.FileExists(path) {
+			continue
+		}
+		if probeDuration, err := exec.GetVideoDuration(ctx, path); err == nil {
+			return probeDuration, nil
+		} else if ctx.Err() != nil {
+			return 0, ctx.Err()
+		}
+	}
+
+	// Wait briefly for concurrent post-process to publish duration.
+	pollDeadline := time.Now().Add(5 * time.Minute)
+	for time.Now().Before(pollDeadline) {
+		select {
+		case <-ctx.Done():
+			return 0, ctx.Err()
+		case <-time.After(2 * time.Second):
+		}
+		v, err := store.Client.Vod.Get(ctx, dbItems.Video.ID)
+		if err == nil && v.Duration > 1 {
+			return v.Duration, nil
+		} else if err != nil && ctx.Err() != nil {
+			return 0, ctx.Err()
+		}
+	}
+
+	log.Warn().Str("queue_id", queueID).Msg("could not resolve video duration for chat truncation; proceeding without cutoff")
+	return 0, nil
 }
