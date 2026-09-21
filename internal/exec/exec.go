@@ -575,41 +575,14 @@ func ExportHlsToMp4(ctx context.Context, video ent.Vod, exportPath string) error
 	}
 	defer cleanup()
 
-	if err := runHlsToMp4FFmpeg(ctx, video, buildHlsToMp4FFmpegArgs(video, playlistPath, tmpExportPath, config.Get().Parameters.VideoConvert, false), tmpExportPath, file); err != nil {
-		return err
-	}
-
-	duration, err := ProbeMediaDuration(ctx, tmpExportPath)
-	if err != nil {
-		return fmt.Errorf("probe exported MP4 duration: %w", err)
-	}
-	if !duration.HasTimestampAnomaly() {
-		return commit()
-	}
-
-	log.Warn().
-		Str("video_id", video.ID.String()).
-		Float64("format_duration", duration.FormatDuration).
-		Float64("stream_duration", duration.LongestStreamDuration).
-		Msg("detected anomalous container timestamps in MP4 export; normalizing each stream")
-
-	if err := runHlsToMp4FFmpeg(ctx, video, buildHlsToMp4FFmpegArgs(video, playlistPath, tmpExportPath, config.Get().Parameters.VideoConvert, true), tmpExportPath, file); err != nil {
-		return fmt.Errorf("normalize exported MP4 timestamps: %w", err)
-	}
-
-	duration, err = ProbeMediaDuration(ctx, tmpExportPath)
-	if err != nil {
-		return fmt.Errorf("probe timestamp-normalized MP4 duration: %w", err)
-	}
-	if duration.HasTimestampAnomaly() {
-		return fmt.Errorf(
-			"timestamp normalization did not repair exported MP4 duration: format=%f stream=%f",
-			duration.FormatDuration,
-			duration.LongestStreamDuration,
-		)
-	}
-
-	return commit()
+	return exportWithTimestampRepair(ctx, video.ID.String(), tmpExportPath,
+		func(normalizeTimestamps bool) error {
+			args := buildHlsToMp4FFmpegArgs(video, playlistPath, tmpExportPath, config.Get().Parameters.VideoConvert, normalizeTimestamps)
+			return runHlsToMp4FFmpeg(ctx, video, args, tmpExportPath, file)
+		},
+		commit,
+		file,
+	)
 }
 
 // tempExportTarget creates a sibling temp file with atomic commit/cleanup.
@@ -672,25 +645,16 @@ func EnsureLiveHlsPlaylist(ctx context.Context, tmpHlsPath, extID string) (strin
 		}()
 		initPath := filepath.Join(tmpHlsPath, extID+"_init.mp4")
 		probe := func(ctx context.Context, path string) (float64, error) {
-			probePath := path
 			// fmp4 segments need the init file, so probe via a mini playlist.
-			if strings.HasSuffix(strings.ToLower(path), ".m4s") {
-				mini := "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:60\n" +
-					"#EXT-X-MEDIA-SEQUENCE:0\n" +
-					fmt.Sprintf("#EXT-X-MAP:URI=%q\n", hls.URI(initPath)) +
-					"#EXTINF:60.0,\n" + hls.URI(path) + "\n#EXT-X-ENDLIST\n"
-				miniPath := filepath.Join(probeDir, strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))+".m3u8")
-				if err := os.WriteFile(miniPath, []byte(mini), 0o644); err != nil {
-					return 0, err
-				}
-				probePath = miniPath
-				return probeSegmentPacketDuration(ctx, probePath)
-			}
-			duration, err := ProbeMediaDuration(ctx, probePath)
-			if err != nil {
+			mini := "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:60\n" +
+				"#EXT-X-MEDIA-SEQUENCE:0\n" +
+				fmt.Sprintf("#EXT-X-MAP:URI=%q\n", hls.URI(initPath)) +
+				"#EXTINF:60.0,\n" + hls.URI(path) + "\n#EXT-X-ENDLIST\n"
+			miniPath := filepath.Join(probeDir, strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))+".m3u8")
+			if err := os.WriteFile(miniPath, []byte(mini), 0o644); err != nil {
 				return 0, err
 			}
-			return duration.Duration, nil
+			return probeSegmentPacketDuration(ctx, miniPath)
 		}
 		if err := hls.RebuildMediaPlaylistFromSegments(ctx, tmpHlsPath, extID, playlistPath, probe); err != nil {
 			return "", err
@@ -817,40 +781,41 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	return postProcessVideo(ctx, video, configFfmpegArgs, file)
 }
 
-func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs string, output io.Writer) error {
-	// Write atomically via a sibling temp file for crash-safe retries.
-	tmpExportPath, commit, cleanup, err := tempExportTarget(video.TmpVideoConvertPath)
-	if err != nil {
+// exportWithTimestampRepair runs the mux, probes the result, and when the
+// container timeline is inflated re-runs the mux with per-stream timestamp
+// normalization before committing. Both mux passes write to the same atomic
+// temp target; commit publishes it.
+func exportWithTimestampRepair(
+	ctx context.Context,
+	videoID string,
+	exportPath string,
+	runMux func(normalizeTimestamps bool) error,
+	commit func() error,
+	output io.Writer,
+) error {
+	if err := runMux(false); err != nil {
 		return err
 	}
-	defer cleanup()
 
-	exportVideo := video
-	exportVideo.TmpVideoConvertPath = tmpExportPath
-
-	if err := runPostProcessVideoFFmpeg(ctx, exportVideo, postProcessVideoFFmpegArgs(exportVideo, configFfmpegArgs), output); err != nil {
-		return err
-	}
-
-	duration, err := ProbeMediaDuration(ctx, tmpExportPath)
+	duration, err := ProbeMediaDuration(ctx, exportPath)
 	if err != nil {
-		return fmt.Errorf("probe finalized video duration: %w", err)
+		return fmt.Errorf("probe exported video duration: %w", err)
 	}
 	if !duration.HasTimestampAnomaly() {
 		return commit()
 	}
 
 	log.Warn().
-		Str("video_id", video.ID.String()).
+		Str("video_id", videoID).
 		Float64("format_duration", duration.FormatDuration).
 		Float64("stream_duration", duration.LongestStreamDuration).
 		Msg("detected anomalous container timestamps; normalizing each stream")
 
-	if err := runPostProcessVideoFFmpeg(ctx, exportVideo, normalizedPostProcessVideoFFmpegArgs(exportVideo, configFfmpegArgs), output); err != nil {
-		return fmt.Errorf("normalize finalized video timestamps: %w", err)
+	if err := runMux(true); err != nil {
+		return fmt.Errorf("normalize exported video timestamps: %w", err)
 	}
 
-	duration, err = ProbeMediaDuration(ctx, tmpExportPath)
+	duration, err = ProbeMediaDuration(ctx, exportPath)
 	if err != nil {
 		return fmt.Errorf("probe timestamp-normalized video duration: %w", err)
 	}
@@ -863,6 +828,27 @@ func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs strin
 	}
 
 	return commit()
+}
+
+func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs string, output io.Writer) error {
+	// Write atomically via a sibling temp file for crash-safe retries.
+	tmpExportPath, commit, cleanup, err := tempExportTarget(video.TmpVideoConvertPath)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	exportVideo := video
+	exportVideo.TmpVideoConvertPath = tmpExportPath
+
+	return exportWithTimestampRepair(ctx, video.ID.String(), tmpExportPath,
+		func(normalizeTimestamps bool) error {
+			args := buildPostProcessVideoFFmpegArgs(exportVideo, configFfmpegArgs, normalizeTimestamps)
+			return runPostProcessVideoFFmpeg(ctx, exportVideo, args, output)
+		},
+		commit,
+		output,
+	)
 }
 
 func runPostProcessVideoFFmpeg(ctx context.Context, video ent.Vod, ffmpegArgs []string, output io.Writer) error {

@@ -12,29 +12,6 @@ import (
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
-func TestIsLiveHlsCapture(t *testing.T) {
-	t.Parallel()
-
-	video := ent.Vod{
-		ExtID:                "123",
-		TmpVideoHlsPath:      "/tmp/123_uuid-video_hls0",
-		TmpVideoDownloadPath: "/tmp/123_uuid-video_hls0/123-video.m3u8",
-	}
-	if !isLiveHlsCapture(&video) {
-		t.Fatal("expected new live layout to be detected as an HLS capture")
-	}
-
-	legacy := video
-	legacy.TmpVideoDownloadPath = "/tmp/123_uuid-video.ts"
-	if isLiveHlsCapture(&legacy) {
-		t.Fatal("legacy transport-stream capture must not be detected as an HLS capture")
-	}
-
-	if isLiveHlsCapture(&ent.Vod{}) {
-		t.Fatal("empty video must not be detected as an HLS capture")
-	}
-}
-
 func TestValidateRecoverableLiveVideoInput(t *testing.T) {
 	t.Parallel()
 
@@ -88,19 +65,6 @@ func TestValidateRecoverableLiveVideoInput(t *testing.T) {
 	}
 	if err := validateRecoverableLiveVideoInput(&video); err == nil {
 		t.Fatal("expected missing capture media to be rejected")
-	}
-
-	// Legacy transport streams still validate by file size.
-	legacy := ent.Vod{
-		ExtID:                extID,
-		TmpVideoHlsPath:      dir,
-		TmpVideoDownloadPath: filepath.Join(dir, "legacy-video.ts"),
-	}
-	if err := os.WriteFile(legacy.TmpVideoDownloadPath, []byte("ts"), 0o644); err != nil {
-		t.Fatalf("write legacy ts: %v", err)
-	}
-	if err := validateRecoverableLiveVideoInput(&legacy); err != nil {
-		t.Fatalf("expected legacy transport stream to be recoverable: %v", err)
 	}
 }
 

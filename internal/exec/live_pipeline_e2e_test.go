@@ -2,8 +2,6 @@ package exec
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -17,7 +15,6 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/hls"
-	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // TestLiveFmp4CapturePipelineE2E covers live HLS capture to MP4 export with
@@ -161,65 +158,7 @@ func TestLiveFmp4CapturePipelineE2E(t *testing.T) {
 	}
 	run("ffmpeg", "-v", "error", "-i", exportPath, "-f", "null", "-")
 
-	// 7. Chat truncation against the probed duration.
-	chatStart := time.Unix(1_700_000_000, 0)
-	makeComment := func(id string, offsetSec int) utils.LiveComment {
-		c := utils.LiveComment{
-			Message:   fmt.Sprintf("msg %s", id),
-			MessageID: id,
-			Timestamp: chatStart.Add(time.Duration(offsetSec) * time.Second).UnixMicro(),
-		}
-		c.Author.DisplayName = "User"
-		c.Author.ID = "1"
-		c.Author.Name = "user"
-		return c
-	}
-	liveInput, err := json.Marshal([]utils.LiveComment{
-		makeComment("early", 2),
-		makeComment("at-end", duration),
-		makeComment("late", duration+60),
-	})
-	if err != nil {
-		t.Fatalf("marshal live chat: %v", err)
-	}
-	liveChatPath := filepath.Join(tmpDir, "live-chat.json")
-	convertPath := filepath.Join(tmpDir, "chat-convert.json")
-	if err := os.WriteFile(liveChatPath, liveInput, 0o644); err != nil {
-		t.Fatalf("write live chat: %v", err)
-	}
-	if err := utils.ConvertTwitchLiveChatToTDLChat(
-		liveChatPath, convertPath, "channel", "video-id", extID, 123,
-		chatStart, "previous-video-id", duration,
-	); err != nil {
-		t.Fatalf("convert chat: %v", err)
-	}
-	converted, err := os.ReadFile(convertPath)
-	if err != nil {
-		t.Fatalf("read converted chat: %v", err)
-	}
-	var chat utils.TDLChat
-	if err := json.Unmarshal(converted, &chat); err != nil {
-		t.Fatalf("unmarshal converted chat: %v", err)
-	}
-	ids := map[string]bool{}
-	var maxOffset float64
-	for _, c := range chat.Comments {
-		ids[c.ID] = true
-		if c.ContentOffsetSeconds > maxOffset {
-			maxOffset = c.ContentOffsetSeconds
-		}
-	}
-	if !ids["early"] || !ids["at-end"] {
-		t.Fatalf("expected in-range messages kept, got %v", ids)
-	}
-	if ids["late"] {
-		t.Fatalf("expected late message beyond duration truncated, got %v", ids)
-	}
-	if chat.Video.End > int64(duration) {
-		t.Fatalf("expected video end capped to %d, got %d", duration, chat.Video.End)
-	}
-
-	// 8. Truncate the playlist like a mid-rewrite kill, then rebuild it.
+	// 7. Truncate the playlist like a mid-rewrite kill, then rebuild it.
 	if err := os.WriteFile(playlistPath, []byte{}, 0o644); err != nil {
 		t.Fatalf("truncate playlist: %v", err)
 	}

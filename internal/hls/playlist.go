@@ -103,16 +103,11 @@ func segmentIndex(name string) int {
 // LiveCaptureID returns the immutable HLS capture prefix for a live archive.
 // Capture files are named with the stream ID present when capture starts,
 // but Vod.ExtID is later replaced with the Twitch VOD ID by the stream video
-// ID update. Prefer ExtStreamID, then the persisted TmpVideoDownloadPath
-// basename, then ExtID for legacy rows.
+// ID update. ExtStreamID is always set for new archives; ExtID is a terminal
+// fallback for empty IDs.
 func LiveCaptureID(extID, extStreamID, tmpVideoDownloadPath string) string {
 	if extStreamID != "" {
 		return extStreamID
-	}
-	if base := filepath.Base(tmpVideoDownloadPath); strings.HasSuffix(base, "-video.m3u8") {
-		if id := strings.TrimSuffix(base, "-video.m3u8"); id != "" {
-			return id
-		}
 	}
 	return extID
 }
@@ -120,52 +115,39 @@ func LiveCaptureID(extID, extStreamID, tmpVideoDownloadPath string) string {
 // HasRecoverableSegments reports whether the dir holds segments for rebuild.
 // Zero-byte partials are ignored.
 func HasRecoverableSegments(dir, extID string) bool {
-	segments, _, _ := recoverableSegments(dir, extID)
+	segments, _ := recoverableSegments(dir, extID)
 	return len(segments) > 0
 }
 
-// recoverableSegments lists non-empty segments, fmp4 with init first, then TS.
-func recoverableSegments(dir, extID string) (segments []string, fmp4 bool, err error) {
+// recoverableSegments lists non-empty fmp4 segments; the init segment must
+// be present for the capture to be rebuildable.
+func recoverableSegments(dir, extID string) (segments []string, err error) {
 	if dir == "" || extID == "" {
-		return nil, false, nil
+		return nil, nil
 	}
-	collect := func(pattern string) ([]string, error) {
-		matches, err := filepath.Glob(filepath.Join(dir, pattern))
-		if err != nil {
-			return nil, err
-		}
-		var out []string
-		for _, match := range matches {
-			info, err := os.Stat(match)
-			if err != nil || info.Size() == 0 || !info.Mode().IsRegular() {
-				continue
-			}
-			out = append(out, match)
-		}
-		sort.Slice(out, func(i, j int) bool {
-			ii, jj := segmentIndex(filepath.Base(out[i])), segmentIndex(filepath.Base(out[j]))
-			if ii != jj {
-				return ii < jj
-			}
-			return out[i] < out[j]
-		})
-		return out, nil
+	if !fileExists(filepath.Join(dir, extID+"_init.mp4")) {
+		return nil, nil
 	}
-
-	if fmp4Init := filepath.Join(dir, extID+"_init.mp4"); fileExists(fmp4Init) {
-		segments, err := collect(extID + "_segment*.m4s")
-		if err != nil {
-			return nil, false, err
-		}
-		if len(segments) > 0 {
-			return segments, true, nil
-		}
-	}
-	segments, err = collect(extID + "_segment*.ts")
+	matches, err := filepath.Glob(filepath.Join(dir, extID+"_segment*.m4s"))
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
-	return segments, false, nil
+	var out []string
+	for _, match := range matches {
+		info, err := os.Stat(match)
+		if err != nil || info.Size() == 0 || !info.Mode().IsRegular() {
+			continue
+		}
+		out = append(out, match)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		ii, jj := segmentIndex(filepath.Base(out[i])), segmentIndex(filepath.Base(out[j]))
+		if ii != jj {
+			return ii < jj
+		}
+		return out[i] < out[j]
+	})
+	return out, nil
 }
 
 func fileExists(path string) bool {
@@ -176,7 +158,7 @@ func fileExists(path string) bool {
 // RebuildMediaPlaylistFromSegments regenerates a finalized VOD playlist from
 // segments on disk. Unprobeable segments are skipped with a discontinuity.
 func RebuildMediaPlaylistFromSegments(ctx context.Context, dir, extID, playlistPath string, probe SegmentProbe) error {
-	segments, fmp4, err := recoverableSegments(dir, extID)
+	segments, err := recoverableSegments(dir, extID)
 	if err != nil {
 		return err
 	}
@@ -217,18 +199,12 @@ func RebuildMediaPlaylistFromSegments(ctx context.Context, dir, extID, playlistP
 
 	var b strings.Builder
 	b.WriteString("#EXTM3U\n")
-	if fmp4 {
-		b.WriteString("#EXT-X-VERSION:7\n")
-	} else {
-		b.WriteString("#EXT-X-VERSION:3\n")
-	}
+	b.WriteString("#EXT-X-VERSION:7\n")
 	fmt.Fprintf(&b, "#EXT-X-TARGETDURATION:%d\n", targetDuration)
 	b.WriteString("#EXT-X-MEDIA-SEQUENCE:0\n")
 	b.WriteString("#EXT-X-PLAYLIST-TYPE:VOD\n")
 	b.WriteString("#EXT-X-INDEPENDENT-SEGMENTS\n")
-	if fmp4 {
-		fmt.Fprintf(&b, "#EXT-X-MAP:URI=%q\n", URI(extID+"_init.mp4"))
-	}
+	fmt.Fprintf(&b, "#EXT-X-MAP:URI=%q\n", URI(extID+"_init.mp4"))
 	previousIndex := -2
 	for _, e := range entries {
 		index := segmentIndex(e.name)

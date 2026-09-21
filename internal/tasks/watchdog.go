@@ -643,9 +643,6 @@ func recoverInterruptedLiveVideoArchive(ctx context.Context, store *database.Dat
 
 func validateRecoverableLiveVideoInput(video *ent.Vod) error {
 	path := recoverableLiveVideoInputPath(video)
-	if !strings.HasSuffix(path, ".m3u8") {
-		return validateNonEmptyFile(path, "live video recovery input")
-	}
 
 	// HLS needs media: a playlist with resolvable segments or segments on
 	// disk for rebuild.
@@ -774,19 +771,14 @@ func resolveHlsPlaylistReference(dir, ref string) (string, error) {
 }
 
 func recoverableLiveVideoInputPath(video *ent.Vod) string {
-	// Prefer the growing HLS playlist for HLS captures; legacy MP4 keeps
-	// using the TS file as the source of truth.
-	if isLiveHlsCapture(video) {
-		playlistPath := liveHlsPlaylistPath(video)
-		if utils.FileExists(playlistPath) {
-			return playlistPath
-		}
-	}
+	// Live captures always store HLS; the playlist is the source of truth and
+	// can be rebuilt from segments on disk when truncated.
 	if video.VideoHlsPath != "" {
 		return liveHlsPlaylistPath(video)
 	}
-	if video.TmpVideoConvertPath != "" && utils.FileExists(video.TmpVideoConvertPath) {
-		return video.TmpVideoConvertPath
+	playlistPath := liveHlsPlaylistPath(video)
+	if utils.FileExists(playlistPath) {
+		return playlistPath
 	}
 	return video.TmpVideoDownloadPath
 }

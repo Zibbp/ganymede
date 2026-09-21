@@ -62,26 +62,4 @@ func TestLiveHlsCaptureSurvivesStreamVideoIDUpdate(t *testing.T) {
 	if got := liveHlsPlaylistPath(&video); got != video.TmpVideoDownloadPath {
 		t.Fatalf("liveHlsPlaylistPath = %q, want %q", got, video.TmpVideoDownloadPath)
 	}
-	if !isLiveHlsCapture(&video) {
-		t.Fatal("mutated ExtID must still be detected as an HLS capture")
-	}
-}
-
-func TestLiveCaptureIDFallsBackToPersistedPath(t *testing.T) {
-	t.Parallel()
-
-	const streamID = "stream123"
-	tmpHlsPath := filepath.Join(t.TempDir(), streamID+"_uuid-video_hls0")
-	video := ent.Vod{
-		ExtID:                "vod999",
-		TmpVideoHlsPath:      tmpHlsPath,
-		TmpVideoDownloadPath: filepath.Join(tmpHlsPath, streamID+"-video.m3u8"),
-	}
-
-	if got := liveCaptureID(&video); got != streamID {
-		t.Fatalf("liveCaptureID fallback = %q, want %q", got, streamID)
-	}
-	if !isLiveHlsCapture(&video) {
-		t.Fatal("persisted-path fallback must still be detected as an HLS capture")
-	}
 }

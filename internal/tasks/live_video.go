@@ -186,12 +186,10 @@ func logLiveCaptureOutcome(dbItems *GetDatabaseItemsResponse, queueID uuid.UUID,
 		if info, err := os.Stat(liveHlsPlaylistPath(&dbItems.Video)); err == nil {
 			playlistBytes = info.Size()
 		}
-		for _, pattern := range []string{"*_segment*.m4s", "*_segment*.ts"} {
-			if matches, err := filepath.Glob(filepath.Join(dbItems.Video.TmpVideoHlsPath, pattern)); err == nil {
-				for _, match := range matches {
-					if info, err := os.Stat(match); err == nil && info.Size() > 0 {
-						segments++
-					}
+		if matches, err := filepath.Glob(filepath.Join(dbItems.Video.TmpVideoHlsPath, "*_segment*.m4s")); err == nil {
+			for _, match := range matches {
+				if info, err := os.Stat(match); err == nil && info.Size() > 0 {
+					segments++
 				}
 			}
 		}

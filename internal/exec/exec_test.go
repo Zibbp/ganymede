@@ -862,14 +862,6 @@ func TestLiveCaptureIDUsesImmutableStreamID(t *testing.T) {
 	if got := liveCaptureID(video); got != "stream123" {
 		t.Fatalf("liveCaptureID = %q, want stream123", got)
 	}
-
-	legacy := ent.Vod{
-		ExtID:                "vod999",
-		TmpVideoDownloadPath: "/tmp/stream123_uuid-video_hls0/stream123-video.m3u8",
-	}
-	if got := liveCaptureID(legacy); got != "stream123" {
-		t.Fatalf("liveCaptureID fallback = %q, want stream123", got)
-	}
 }
 
 func TestEnsureLiveHlsPlaylistAfterStreamVideoIDUpdate(t *testing.T) {

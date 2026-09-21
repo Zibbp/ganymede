@@ -273,7 +273,8 @@ func TestRebuildMediaPlaylistSortsUnpaddedSegments(t *testing.T) {
 	const extID = "live"
 	playlistPath := filepath.Join(dir, extID+"-video.m3u8")
 
-	for _, name := range []string{"live_segment1.ts", "live_segment10.ts", "live_segment2.ts"} {
+	writeSegmentFile(t, dir, extID+"_init.mp4", 100)
+	for _, name := range []string{"live_segment1.m4s", "live_segment10.m4s", "live_segment2.m4s"} {
 		writeSegmentFile(t, dir, name, 100)
 	}
 	if err := RebuildMediaPlaylistFromSegments(context.Background(), dir, extID, playlistPath, fixedProbe(nil)); err != nil {
@@ -284,14 +285,14 @@ func TestRebuildMediaPlaylistSortsUnpaddedSegments(t *testing.T) {
 		t.Fatalf("failed to read rebuilt playlist: %v", err)
 	}
 	output := string(outputBytes)
-	first := strings.Index(output, "segment1.ts")
-	tenth := strings.Index(output, "segment10.ts")
-	second := strings.Index(output, "segment2.ts")
+	first := strings.Index(output, "segment1.m4s")
+	tenth := strings.Index(output, "segment10.m4s")
+	second := strings.Index(output, "segment2.m4s")
 	if first == -1 || tenth == -1 || second == -1 || first >= second || second >= tenth {
 		t.Fatalf("expected numeric order 1,2,10, got:\n%s", output)
 	}
-	if strings.Contains(output, "#EXT-X-MAP") {
-		t.Fatalf("legacy TS playlist must not reference an init file:\n%s", output)
+	if !strings.Contains(output, "#EXT-X-MAP") {
+		t.Fatalf("fmp4 playlist must reference an init file:\n%s", output)
 	}
 }
 
@@ -391,10 +392,7 @@ func TestLiveCaptureIDPrefersImmutableStreamID(t *testing.T) {
 	if got := LiveCaptureID("vod999", "stream123", "/tmp/stream123_uuid-video_hls0/stream123-video.m3u8"); got != "stream123" {
 		t.Fatalf("LiveCaptureID with stream ID = %q, want stream123", got)
 	}
-	if got := LiveCaptureID("vod999", "", "/tmp/stream123_uuid-video_hls0/stream123-video.m3u8"); got != "stream123" {
-		t.Fatalf("LiveCaptureID from persisted path = %q, want stream123", got)
-	}
-	if got := LiveCaptureID("vod999", "", "/tmp/other-video.mp4"); got != "vod999" {
-		t.Fatalf("LiveCaptureID fallback = %q, want vod999", got)
+	if got := LiveCaptureID("vod999", "", ""); got != "vod999" {
+		t.Fatalf("LiveCaptureID without stream ID = %q, want vod999", got)
 	}
 }
