@@ -298,7 +298,7 @@ func resolveLiveChatVideoDurationSec(ctx context.Context, store *database.Databa
 	finalCandidates := []string{}
 	if dbItems.Video.VideoHlsPath != "" {
 		finalCandidates = append(finalCandidates,
-			filepath.Join(dbItems.Video.VideoHlsPath, dbItems.Video.ExtID+"-video.m3u8"))
+			filepath.Join(dbItems.Video.VideoHlsPath, liveCaptureID(&dbItems.Video)+"-video.m3u8"))
 	} else if dbItems.Video.VideoPath != "" {
 		finalCandidates = append(finalCandidates, dbItems.Video.VideoPath)
 	}

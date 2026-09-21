@@ -384,3 +384,17 @@ func TestRebuildMediaPlaylistWithoutSegmentsFails(t *testing.T) {
 		t.Fatal("expected rebuild error without the init file")
 	}
 }
+
+func TestLiveCaptureIDPrefersImmutableStreamID(t *testing.T) {
+	t.Parallel()
+
+	if got := LiveCaptureID("vod999", "stream123", "/tmp/stream123_uuid-video_hls0/stream123-video.m3u8"); got != "stream123" {
+		t.Fatalf("LiveCaptureID with stream ID = %q, want stream123", got)
+	}
+	if got := LiveCaptureID("vod999", "", "/tmp/stream123_uuid-video_hls0/stream123-video.m3u8"); got != "stream123" {
+		t.Fatalf("LiveCaptureID from persisted path = %q, want stream123", got)
+	}
+	if got := LiveCaptureID("vod999", "", "/tmp/other-video.mp4"); got != "vod999" {
+		t.Fatalf("LiveCaptureID fallback = %q, want vod999", got)
+	}
+}

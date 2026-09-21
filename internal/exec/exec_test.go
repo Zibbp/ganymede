@@ -850,3 +850,52 @@ func Test_appendFFmpegLiveOutputStreamArgs(t *testing.T) {
 		})
 	}
 }
+
+func TestLiveCaptureIDUsesImmutableStreamID(t *testing.T) {
+	t.Parallel()
+
+	video := ent.Vod{
+		ExtID:                "vod999",
+		ExtStreamID:          "stream123",
+		TmpVideoDownloadPath: "/tmp/stream123_uuid-video_hls0/stream123-video.m3u8",
+	}
+	if got := liveCaptureID(video); got != "stream123" {
+		t.Fatalf("liveCaptureID = %q, want stream123", got)
+	}
+
+	legacy := ent.Vod{
+		ExtID:                "vod999",
+		TmpVideoDownloadPath: "/tmp/stream123_uuid-video_hls0/stream123-video.m3u8",
+	}
+	if got := liveCaptureID(legacy); got != "stream123" {
+		t.Fatalf("liveCaptureID fallback = %q, want stream123", got)
+	}
+}
+
+func TestEnsureLiveHlsPlaylistAfterStreamVideoIDUpdate(t *testing.T) {
+	t.Parallel()
+
+	const streamID = "stream123"
+	dir := t.TempDir()
+	playlistPath := filepath.Join(dir, streamID+"-video.m3u8")
+	if err := os.WriteFile(playlistPath, []byte("#EXTM3U\n#EXT-X-PLAYLIST-TYPE:EVENT\n#EXTINF:10.0,\nseg.ts\n"), 0o644); err != nil {
+		t.Fatalf("write capture playlist: %v", err)
+	}
+	video := ent.Vod{
+		ExtID:                "vod999",
+		ExtStreamID:          streamID,
+		TmpVideoHlsPath:      dir,
+		TmpVideoDownloadPath: playlistPath,
+	}
+
+	rescued, err := EnsureLiveHlsPlaylist(t.Context(), video.TmpVideoHlsPath, liveCaptureID(video))
+	if err != nil {
+		t.Fatalf("EnsureLiveHlsPlaylist with immutable ID: %v", err)
+	}
+	if rescued != playlistPath {
+		t.Fatalf("rescued playlist = %q, want %q", rescued, playlistPath)
+	}
+	if _, err := EnsureLiveHlsPlaylist(t.Context(), dir, video.ExtID); err == nil {
+		t.Fatal("expected mutated VOD ID lookup to miss the stream-ID capture")
+	}
+}

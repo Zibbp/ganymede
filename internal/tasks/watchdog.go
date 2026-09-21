@@ -652,7 +652,7 @@ func validateRecoverableLiveVideoInput(video *ent.Vod) error {
 	if err := validateLiveHlsPlaylistReferences(path); err == nil {
 		return nil
 	}
-	if hls.HasRecoverableSegments(video.TmpVideoHlsPath, video.ExtID) {
+	if hls.HasRecoverableSegments(video.TmpVideoHlsPath, liveCaptureID(video)) {
 		return nil
 	}
 	return fmt.Errorf("live HLS recovery playlist has no media segments: %s", path)

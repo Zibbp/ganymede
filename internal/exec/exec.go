@@ -361,11 +361,13 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	if err := utils.CreateDirectory(video.TmpVideoHlsPath); err != nil {
 		return fmt.Errorf("error creating hls directory: %w", err)
 	}
+	// Capture files use the immutable stream ID; ExtID may later become the VOD ID.
+	captureID := liveCaptureID(video)
 	ffmpegArgs := buildLiveHlsCaptureFFmpegArgs(
 		qualitiesURI[closestQuality],
-		filepath.Join(video.TmpVideoHlsPath, video.ExtID+"-video.m3u8"),
-		filepath.Join(video.TmpVideoHlsPath, video.ExtID+"_segment%06d.m4s"),
-		fmt.Sprintf("%s_init.mp4", video.ExtID),
+		filepath.Join(video.TmpVideoHlsPath, captureID+"-video.m3u8"),
+		filepath.Join(video.TmpVideoHlsPath, captureID+"_segment%06d.m4s"),
+		fmt.Sprintf("%s_init.mp4", captureID),
 		audioOnly,
 		config.Get().Parameters.VideoConvert,
 	)
@@ -482,9 +484,10 @@ func vodArchiveProcessAttributes() *syscall.SysProcAttr {
 
 func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 	env := config.GetEnvConfig()
-	playlistPath := filepath.Join(video.TmpVideoHlsPath, video.ExtID+"-video.m3u8")
-	segmentPattern := filepath.Join(video.TmpVideoHlsPath, video.ExtID+"_segment%06d.m4s")
-	initFilename := fmt.Sprintf("%s_init.mp4", video.ExtID)
+	captureID := liveCaptureID(video)
+	playlistPath := filepath.Join(video.TmpVideoHlsPath, captureID+"-video.m3u8")
+	segmentPattern := filepath.Join(video.TmpVideoHlsPath, captureID+"_segment%06d.m4s")
+	initFilename := fmt.Sprintf("%s_init.mp4", captureID)
 	ffmpegArgs := []string{"-y", "-hide_banner", "-i", video.TmpVideoConvertPath, "-c", "copy", "-start_number", "0", "-hls_time", "10", "-hls_list_size", "0", "-hls_playlist_type", "event", "-hls_flags", "append_list+independent_segments", "-hls_segment_type", "fmp4", "-hls_fmp4_init_filename", initFilename, "-hls_segment_filename", segmentPattern, "-f", "hls", playlistPath}
 
 	// open log file
@@ -550,7 +553,7 @@ func buildHlsToMp4FFmpegArgs(video ent.Vod, playlistPath, exportPath, configFfmp
 // ExportHlsToMp4 creates an MP4 from the finalized live HLS playlist.
 func ExportHlsToMp4(ctx context.Context, video ent.Vod, exportPath string) error {
 	env := config.GetEnvConfig()
-	playlistPath := filepath.Join(video.TmpVideoHlsPath, video.ExtID+"-video.m3u8")
+	playlistPath := filepath.Join(video.TmpVideoHlsPath, liveCaptureID(video)+"-video.m3u8")
 
 	// Append to the convert log to preserve ffmpeg output.
 	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
@@ -637,8 +640,16 @@ func tempExportTarget(dest string) (tmpPath string, commit func() error, cleanup
 	return tmpPath, commit, cleanup, nil
 }
 
+// liveCaptureID returns the immutable HLS file prefix. Capture files keep the
+// stream-ID names while Vod.ExtID may later become the Twitch VOD ID.
+func liveCaptureID(video ent.Vod) string {
+	return hls.LiveCaptureID(video.ExtID, video.ExtStreamID, video.TmpVideoDownloadPath)
+}
+
 // EnsureLiveHlsPlaylist finalizes the capture playlist, rebuilding it from
 // segments when a kill truncated it. Errors only with no recoverable media.
+// extID must be the immutable capture ID (see liveCaptureID), not the mutable
+// Vod.ExtID which may have become the Twitch VOD ID.
 func EnsureLiveHlsPlaylist(ctx context.Context, tmpHlsPath, extID string) (string, error) {
 	if tmpHlsPath == "" || extID == "" {
 		return "", fmt.Errorf("empty live HLS playlist path")

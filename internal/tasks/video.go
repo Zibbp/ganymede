@@ -185,7 +185,7 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 		}
 	} else if isLiveHlsCapture(&dbItems.Video) {
 		// Live HLS temp capture; truncated playlists rebuild from segments.
-		if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID); err != nil {
+		if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, liveCaptureID(&dbItems.Video)); err != nil {
 			return err
 		}
 	} else if dbItems.Video.VideoHlsPath == "" {
@@ -200,7 +200,7 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 			}
 		}
 	} else {
-		if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID); err != nil {
+		if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, liveCaptureID(&dbItems.Video)); err != nil {
 			return err
 		}
 	}
@@ -231,7 +231,7 @@ func (w PostProcessVideoWorker) Work(ctx context.Context, job *river.Job[PostPro
 	if dbItems.Queue.LiveArchive {
 		if liveHasHlsTemp {
 			// HLS temp capture: ensure finalized playlist, then probe duration.
-			playlistPath, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID)
+			playlistPath, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, liveCaptureID(&dbItems.Video))
 			if err != nil {
 				return err
 			}
@@ -414,7 +414,7 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 
 	} else {
 		// Finalize the playlist before the whole directory is moved below.
-		if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.ExtID); err != nil {
+		if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, liveCaptureID(&dbItems.Video)); err != nil {
 			return err
 		}
 

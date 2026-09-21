@@ -100,6 +100,23 @@ func segmentIndex(name string) int {
 	return n
 }
 
+// LiveCaptureID returns the immutable HLS capture prefix for a live archive.
+// Capture files are named with the stream ID present when capture starts,
+// but Vod.ExtID is later replaced with the Twitch VOD ID by the stream video
+// ID update. Prefer ExtStreamID, then the persisted TmpVideoDownloadPath
+// basename, then ExtID for legacy rows.
+func LiveCaptureID(extID, extStreamID, tmpVideoDownloadPath string) string {
+	if extStreamID != "" {
+		return extStreamID
+	}
+	if base := filepath.Base(tmpVideoDownloadPath); strings.HasSuffix(base, "-video.m3u8") {
+		if id := strings.TrimSuffix(base, "-video.m3u8"); id != "" {
+			return id
+		}
+	}
+	return extID
+}
+
 // HasRecoverableSegments reports whether the dir holds segments for rebuild.
 // Zero-byte partials are ignored.
 func HasRecoverableSegments(dir, extID string) bool {
