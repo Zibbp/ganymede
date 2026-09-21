@@ -8,7 +8,7 @@ require (
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/bluenviron/gohlslib/v2 v2.4.4
 	github.com/canidam/echo-scs-session v1.0.0
-	github.com/coreos/go-oidc/v3 v3.20.0
+	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/gavv/httpexpect/v2 v2.17.0
 	github.com/go-jose/go-jose/v4 v4.1.5
 	github.com/go-playground/validator/v10 v10.30.4
