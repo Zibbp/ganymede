@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	osExec "os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -206,6 +207,19 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.NotEqual(t, 0, vod.StorageSizeBytes)
 	assert.True(t, tests_shared.IsPlayableVideo(vod.VideoPath), "Video file is not playable")
 	assert.True(t, tests_shared.IsPlayableVideo(vod.ChatVideoPath), "Video file is not playable")
+
+	// Live captures HLS temp but saves a single format in video_path:
+	// MP4 by default, HLS playlist when save_as_hls is set.
+	vod, err = app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).WithChannel().WithChapters().Only(t.Context())
+	assert.NoError(t, err)
+	if config.Get().Archive.SaveAsHls {
+		assert.NotEmpty(t, vod.VideoHlsPath, "Live HLS archive should have an HLS path")
+	} else {
+		assert.Empty(t, vod.VideoHlsPath, "Live MP4 archive should not have an HLS path")
+		assert.Equal(t, ".mp4", filepath.Ext(vod.VideoPath), "Live MP4 archive should save video_path as MP4")
+	}
+	assert.FileExists(t, vod.VideoPath)
+	assert.True(t, tests_shared.IsPlayableVideo(vod.VideoPath), "Saved live video is not playable")
 
 	// Assert at least one chapter exists
 	assert.NotEmpty(t, vod.Edges.Chapters, "Expected at least one chapter to be present")
@@ -440,8 +454,8 @@ func TestTwitchWatchedChannelLiveFFmpegKilledStillFinalizes(t *testing.T) {
 
 // TestTwitchLiveArchiveRecoversAfterWorkerCrash verifies the complete
 // watchdog path after SIGKILL: the live capture child exits with its worker,
-// the partial transport stream is finalized, and the resulting archive is
-// playable.
+// the partial HLS capture is finalized, an MP4 is exported, and the resulting
+// archive is playable.
 func TestTwitchLiveArchiveRecoversAfterWorkerCrash(t *testing.T) {
 	app, err := tests.SetupWithoutWorker(t)
 	require.NoError(t, err)
@@ -488,7 +502,7 @@ func TestTwitchLiveArchiveRecoversAfterWorkerCrash(t *testing.T) {
 		app,
 		q.ID,
 		v.TmpVideoDownloadPath,
-		256*1024,
+		1,
 		90*time.Second,
 	)
 	originalJob := tests_shared.FindArchiveJob(

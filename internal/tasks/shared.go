@@ -23,6 +23,7 @@ import (
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
 
@@ -141,6 +142,17 @@ func EnqueuerFromContext(ctx context.Context) (tasks_shared.Enqueuer, error) {
 		return nil, errors.New("transactional River enqueuer not found in context")
 	}
 	return enqueuer, nil
+}
+
+// liveCaptureID returns the immutable HLS file prefix. Capture files keep the
+// stream-ID names while Vod.ExtID may later become the Twitch VOD ID.
+func liveCaptureID(video *ent.Vod) string {
+	return hls.LiveCaptureID(video.ExtID, video.ExtStreamID, video.TmpVideoDownloadPath)
+}
+
+// liveHlsPlaylistPath returns the temp HLS capture playlist path.
+func liveHlsPlaylistPath(video *ent.Vod) string {
+	return filepath.Join(video.TmpVideoHlsPath, liveCaptureID(video)+"-video.m3u8")
 }
 
 // getDatabaseItems retrieves the database items associated with the provided queueId. This is used instead of passing all the structs to each job so that they can be easily updated in the database.

@@ -12,6 +12,62 @@ import (
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
+func TestValidateRecoverableLiveVideoInput(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	const extID = "123"
+	video := ent.Vod{
+		ExtID:                extID,
+		TmpVideoHlsPath:      dir,
+		TmpVideoDownloadPath: filepath.Join(dir, extID+"-video.m3u8"),
+	}
+	playlistPath := video.TmpVideoDownloadPath
+	initPath := filepath.Join(dir, extID+"_init.mp4")
+	segmentPath := filepath.Join(dir, extID+"_segment000000.m4s")
+
+	// A header-only playlist without recoverable segments is not media.
+	if err := os.WriteFile(playlistPath, []byte("#EXTM3U\n#EXT-X-VERSION:7\n"), 0o644); err != nil {
+		t.Fatalf("write playlist: %v", err)
+	}
+	if err := validateRecoverableLiveVideoInput(&video); err == nil {
+		t.Fatal("expected header-only playlist without segments to be rejected")
+	}
+
+	// Segments on disk make a truncated playlist recoverable.
+	if err := os.WriteFile(initPath, []byte("init"), 0o644); err != nil {
+		t.Fatalf("write init: %v", err)
+	}
+	if err := os.WriteFile(segmentPath, []byte("segment"), 0o644); err != nil {
+		t.Fatalf("write segment: %v", err)
+	}
+	if err := validateRecoverableLiveVideoInput(&video); err != nil {
+		t.Fatalf("expected segments to make the capture recoverable: %v", err)
+	}
+
+	// A playlist with media references is recoverable on its own.
+	if err := os.WriteFile(playlistPath, []byte("#EXTM3U\n#EXTINF:10.0,\n"+extID+"_segment000000.m4s\n"), 0o644); err != nil {
+		t.Fatalf("write playlist: %v", err)
+	}
+	if err := validateRecoverableLiveVideoInput(&video); err != nil {
+		t.Fatalf("expected playlist with EXTINF to be recoverable: %v", err)
+	}
+
+	// Nothing on disk fails validation.
+	if err := os.Remove(playlistPath); err != nil {
+		t.Fatalf("remove playlist: %v", err)
+	}
+	if err := os.Remove(initPath); err != nil {
+		t.Fatalf("remove init: %v", err)
+	}
+	if err := os.Remove(segmentPath); err != nil {
+		t.Fatalf("remove segment: %v", err)
+	}
+	if err := validateRecoverableLiveVideoInput(&video); err == nil {
+		t.Fatal("expected missing capture media to be rejected")
+	}
+}
+
 func TestStaleLiveArchiveRecoveryAction(t *testing.T) {
 	t.Parallel()
 

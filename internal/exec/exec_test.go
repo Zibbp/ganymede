@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -38,11 +39,11 @@ func TestStartArchiveCommand(t *testing.T) {
 	}
 }
 
-// TestStartArchiveCommandWaitsForEscalationCleanup mirrors the cancellation
-// path used by DownloadTwitchLiveVideo (SIGTERM to the process group) and
-// verifies that completion is not reported while the delayed SIGKILL helper is
-// still running, while a descendant that ignores SIGTERM is still cleaned up.
-func TestStartArchiveCommandWaitsForEscalationCleanup(t *testing.T) {
+// TestStartArchiveCommandGracefulTermExitsPromptly mirrors the user-stop path
+// used by DownloadTwitchLiveVideo (SIGTERM to the process group) and verifies
+// the shim reports completion as soon as ffmpeg exits instead of waiting out
+// the SIGKILL backstop, so post-processing sees a fully flushed playlist.
+func TestStartArchiveCommandGracefulTermExitsPromptly(t *testing.T) {
 	tempDir := t.TempDir()
 	ffmpegPIDPath := filepath.Join(tempDir, "ffmpeg.pid")
 	descendantPIDPath := filepath.Join(tempDir, "ffmpeg-descendant.pid")
@@ -56,7 +57,7 @@ wait
 `)
 	writeExecutable(t, descendantPath, `#!/bin/sh
 printf '%s' "$$" > "$1"
-trap '' TERM
+trap 'exit 0' TERM
 while :; do
 	sleep 1
 done
@@ -89,9 +90,69 @@ done
 		t.Fatal("timed out waiting for archive command to finish after cancellation")
 	}
 
-	// The helper sleeps longer than this grace period, so a surviving helper
-	// (the bug this guards against) is reliably detected here.
-	waitForProcessGroupExit(t, pgid, time.Second)
+	// Both fakes exit on SIGTERM, so everything must be gone quickly. If the
+	// shim waited out its SIGKILL backstop instead of reaping the helper,
+	// the deadlines below catch it.
+	waitForProcessGroupExit(t, pgid, 5*time.Second)
+	waitForProcessExit(t, "ffmpeg", ffmpegPID)
+	waitForProcessExit(t, "ffmpeg descendant", descendantPID)
+}
+
+// TestArchiveProcessForwarderKillsGroupOnParentDeathSignal covers the worker
+// crash path: the kernel delivers Pdeathsig (SIGUSR1) to the shim, which must
+// kill the whole group immediately even when ffmpeg ignores SIGTERM while
+// blocked on a network read.
+func TestArchiveProcessForwarderKillsGroupOnParentDeathSignal(t *testing.T) {
+	tempDir := t.TempDir()
+	ffmpegPIDPath := filepath.Join(tempDir, "ffmpeg.pid")
+	descendantPIDPath := filepath.Join(tempDir, "ffmpeg-descendant.pid")
+	descendantPath := filepath.Join(tempDir, "ffmpeg-descendant")
+
+	writeExecutable(t, filepath.Join(tempDir, "ffmpeg"), `#!/bin/sh
+printf '%s' "$$" > "$1"
+trap '' TERM
+"$2" "$3" &
+wait
+`)
+	writeExecutable(t, descendantPath, `#!/bin/sh
+printf '%s' "$$" > "$1"
+trap '' TERM
+while :; do
+	sleep 1
+done
+`)
+
+	cmd := osExec.Command(filepath.Join(tempDir, "ffmpeg"), ffmpegPIDPath, descendantPath, descendantPIDPath)
+	cmd.SysProcAttr = liveArchiveProcessAttributes()
+
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
+		t.Fatalf("start archive command: %v", err)
+	}
+
+	ffmpegPID := waitForPIDFile(t, ffmpegPIDPath)
+	descendantPID := waitForPIDFile(t, descendantPIDPath)
+	pgid := cmd.Process.Pid
+	shimPID := cmd.Process.Pid
+	t.Cleanup(func() {
+		killTestProcess(t, -pgid, "live archive process group")
+		killTestProcess(t, ffmpegPID, "ffmpeg")
+		killTestProcess(t, descendantPID, "ffmpeg descendant")
+	})
+
+	// SIGUSR1 targets only the shim (like Pdeathsig), which must SIGKILL
+	// the group without any grace period.
+	if err := syscall.Kill(shimPID, syscall.SIGUSR1); err != nil {
+		t.Fatalf("send SIGUSR1 to archive process forwarder: %v", err)
+	}
+
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		t.Fatal("timed out waiting for archive command to finish after parent-death signal")
+	}
+
+	waitForProcessGroupExit(t, pgid, 5*time.Second)
 	waitForProcessExit(t, "ffmpeg", ffmpegPID)
 	waitForProcessExit(t, "ffmpeg descendant", descendantPID)
 }
@@ -103,8 +164,8 @@ func TestLiveArchiveProcessAttributes(t *testing.T) {
 	if !attrs.Setpgid {
 		t.Fatal("live archive process must run in its own process group")
 	}
-	if attrs.Pdeathsig != syscall.SIGTERM {
-		t.Fatalf("parent death signal = %v, want SIGTERM", attrs.Pdeathsig)
+	if attrs.Pdeathsig != syscall.SIGUSR1 {
+		t.Fatalf("parent death signal = %v, want SIGUSR1", attrs.Pdeathsig)
 	}
 }
 
@@ -115,8 +176,8 @@ func TestVodArchiveProcessAttributes(t *testing.T) {
 	if !attrs.Setpgid {
 		t.Fatal("VOD archive process must run in its own process group")
 	}
-	if attrs.Pdeathsig != syscall.SIGTERM {
-		t.Fatalf("parent death signal = %v, want SIGTERM", attrs.Pdeathsig)
+	if attrs.Pdeathsig != syscall.SIGUSR1 {
+		t.Fatalf("parent death signal = %v, want SIGUSR1", attrs.Pdeathsig)
 	}
 }
 
@@ -366,11 +427,12 @@ done
 	waitForProcessExit(t, "ffmpeg descendant", descendantPID)
 }
 
-// TestLiveArchiveProcessGroupEscalatesForTermIgnoringFFmpeg covers the crash
-// recovery path where ffmpeg ignores the first SIGTERM while blocked on a
-// network read. The forwarding shim must escalate to SIGKILL so the capture
-// process group does not outlive a crashed worker.
-func TestLiveArchiveProcessGroupEscalatesForTermIgnoringFFmpeg(t *testing.T) {
+// TestLiveArchiveProcessGroupDiesOnParentDeathDespiteTermIgnoringFFmpeg covers
+// the crash recovery path where ffmpeg ignores SIGTERM while blocked on a
+// network read. The kernel delivers Pdeathsig (SIGUSR1) to the forwarding
+// shim, which must SIGKILL the capture process group immediately so it does
+// not outlive a crashed worker.
+func TestLiveArchiveProcessGroupDiesOnParentDeathDespiteTermIgnoringFFmpeg(t *testing.T) {
 	tempDir := t.TempDir()
 	ffmpegPIDPath := filepath.Join(tempDir, "ffmpeg.pid")
 	descendantPIDPath := filepath.Join(tempDir, "ffmpeg-descendant.pid")
@@ -659,6 +721,108 @@ func Test_extractSharedChatArgs(t *testing.T) {
 	}
 }
 
+func TestBuildHlsToMp4FFmpegArgsUsesPlaylistInput(t *testing.T) {
+	t.Parallel()
+
+	video := ent.Vod{
+		Title:           "live title",
+		TmpVideoHlsPath: "/tmp/hls",
+		ExtID:           "123",
+	}
+	playlist := "/tmp/hls/123-video.m3u8"
+	export := "/tmp/export.mp4"
+
+	args := buildHlsToMp4FFmpegArgs(video, playlist, export, "-c:v copy -c:a copy", false)
+
+	if args[0] != "-y" || args[len(args)-1] != export {
+		t.Fatalf("unexpected MP4 export args shape: %v", args)
+	}
+	foundInput := false
+	foundMovflags := false
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == "-i" && args[i+1] == playlist {
+			foundInput = true
+		}
+		if args[i] == "-movflags" && args[i+1] == "+faststart" {
+			foundMovflags = true
+		}
+	}
+	if !foundInput {
+		t.Fatalf("MP4 export args missing playlist input %q: %v", playlist, args)
+	}
+	if !foundMovflags {
+		t.Fatalf("MP4 export args missing +faststart: %v", args)
+	}
+}
+
+func TestTempExportTargetPublishesOnlyOnCommit(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	dest := filepath.Join(dir, "export.mp4")
+
+	tmpPath, commit, cleanup, err := tempExportTarget(dest)
+	if err != nil {
+		t.Fatalf("tempExportTarget: %v", err)
+	}
+	defer cleanup()
+
+	if _, err := os.Stat(dest); !os.IsNotExist(err) {
+		t.Fatalf("destination must not exist before commit, stat err = %v", err)
+	}
+	if err := os.WriteFile(tmpPath, []byte("media"), 0o600); err != nil {
+		t.Fatalf("write temporary export: %v", err)
+	}
+	if err := commit(); err != nil {
+		t.Fatalf("commit: %v", err)
+	}
+	data, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatalf("read committed export: %v", err)
+	}
+	if string(data) != "media" {
+		t.Fatalf("committed export = %q, want %q", data, "media")
+	}
+}
+
+func TestRunHlsToMp4FFmpegRemovesPartialOutputOnCancel(t *testing.T) {
+	tempDir := t.TempDir()
+	writeExecutable(t, filepath.Join(tempDir, "ffmpeg"), `#!/bin/sh
+for last; do :; done
+printf 'partial' > "$last"
+exec sleep 30
+`)
+	t.Setenv("PATH", tempDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	exportPath := filepath.Join(tempDir, "export.mp4")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		done <- runHlsToMp4FFmpeg(ctx, ent.Vod{}, []string{"-y", exportPath}, exportPath, io.Discard)
+	}()
+
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		if _, err := os.Stat(exportPath); err == nil {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("timed out waiting for partial output")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	cancel()
+	if err := <-done; !errors.Is(err, context.Canceled) {
+		t.Fatalf("runHlsToMp4FFmpeg error = %v, want context.Canceled", err)
+	}
+	if _, err := os.Stat(exportPath); !os.IsNotExist(err) {
+		t.Fatalf("partial output must be removed on cancellation, stat err = %v", err)
+	}
+}
+
 func Test_appendFFmpegLiveOutputStreamArgs(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -684,5 +848,46 @@ func Test_appendFFmpegLiveOutputStreamArgs(t *testing.T) {
 				t.Errorf("appendFFmpegLiveOutputStreamArgs(nil, %t) = %v, want %v", tt.audioOnly, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestLiveCaptureIDUsesImmutableStreamID(t *testing.T) {
+	t.Parallel()
+
+	video := ent.Vod{
+		ExtID:                "vod999",
+		ExtStreamID:          "stream123",
+		TmpVideoDownloadPath: "/tmp/stream123_uuid-video_hls0/stream123-video.m3u8",
+	}
+	if got := liveCaptureID(video); got != "stream123" {
+		t.Fatalf("liveCaptureID = %q, want stream123", got)
+	}
+}
+
+func TestEnsureLiveHlsPlaylistAfterStreamVideoIDUpdate(t *testing.T) {
+	t.Parallel()
+
+	const streamID = "stream123"
+	dir := t.TempDir()
+	playlistPath := filepath.Join(dir, streamID+"-video.m3u8")
+	if err := os.WriteFile(playlistPath, []byte("#EXTM3U\n#EXT-X-PLAYLIST-TYPE:EVENT\n#EXTINF:10.0,\nseg.ts\n"), 0o644); err != nil {
+		t.Fatalf("write capture playlist: %v", err)
+	}
+	video := ent.Vod{
+		ExtID:                "vod999",
+		ExtStreamID:          streamID,
+		TmpVideoHlsPath:      dir,
+		TmpVideoDownloadPath: playlistPath,
+	}
+
+	rescued, err := EnsureLiveHlsPlaylist(t.Context(), video.TmpVideoHlsPath, liveCaptureID(video))
+	if err != nil {
+		t.Fatalf("EnsureLiveHlsPlaylist with immutable ID: %v", err)
+	}
+	if rescued != playlistPath {
+		t.Fatalf("rescued playlist = %q, want %q", rescued, playlistPath)
+	}
+	if _, err := EnsureLiveHlsPlaylist(t.Context(), dir, video.ExtID); err == nil {
+		t.Fatal("expected mutated VOD ID lookup to miss the stream-ID capture")
 	}
 }

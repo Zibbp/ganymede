@@ -507,6 +507,13 @@ func (w UpdateStreamVideoIdWorker) Work(ctx context.Context, job *river.Job[Upda
 	if job.Args.Input.QueueId != uuid.Nil {
 		dbItems, err := getDatabaseItems(ctx, store.Client, job.Args.Input.QueueId)
 		if err != nil {
+			// The archive (and its queue row) may have been deleted while
+			// this delayed job was scheduled. There is nothing to update,
+			// so succeed instead of retrying and erroring.
+			if ent.IsNotFound(err) {
+				logger.Info().Str("queue_id", job.Args.Input.QueueId.String()).Msg("queue not found for stream video ID update; skipping")
+				return nil
+			}
 			return err
 		}
 		channels = []*ent.Channel{&dbItems.Channel}
