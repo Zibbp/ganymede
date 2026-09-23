@@ -1,5 +1,7 @@
 import '@videojs/react/video/skin.css';
-import { Video, VideoPlayer as VideoJsPlayer, VideoSkin, usePlayer } from '@videojs/react/video';
+import '@videojs/react/live-video/skin.css';
+import { Video, VideoPlayer as VideoJsPlayer, VideoSkin, usePlayer as useVodPlayer } from '@videojs/react/video';
+import { LiveVideoPlayer as LiveVideoJsPlayer, LiveVideoSkin, usePlayer as useLivePlayer } from '@videojs/react/live-video';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { I18nProvider } from '@videojs/react/i18n';
 import { Video as VideoType, VideoType as GanymedeVideoType } from '@/app/hooks/useVideos';
@@ -8,12 +10,12 @@ import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { env } from 'next-runtime-env';
 import dayjs from 'dayjs';
+import { useLocale } from 'next-intl';
 import { escapeURL } from '@/app/util/util';
 import { PlaybackStatus, useFetchPlaybackForVideo, useSetPlaybackProgressForVideo, useStartPlaybackForVideo, useUpdatePlaybackProgressForVideo } from '@/app/hooks/usePlayback';
 import { useAxiosPrivate } from '@/app/hooks/useAxios';
 import useAuthStore from '@/app/store/useAuthStore';
 import { useSearchParams } from 'next/navigation';
-import { useLocale } from 'next-intl';
 import VideoEventBus from '@/app/util/VideoEventBus';
 import VideoPlayerTheaterModeIcon from './PlayerTheaterModeIcon';
 import useSettingsStore from '@/app/store/useSettingsStore';
@@ -26,12 +28,8 @@ interface Params {
   ref: GanymedePlayerRef;
 }
 
-const AbsoluteTimeDisplay = ({ streamedAt }: { streamedAt: string | Date }) => {
-  // Preset `usePlayer` is typed, but TS resolves the selector state as
-  // `unknown` under the repo toolchain; narrow at the selection site.
-  const currentTime = usePlayer((s) => (s as unknown as { currentTime: number }).currentTime);
-  const safeCurrentTime = typeof currentTime === 'number' && Number.isFinite(currentTime) ? currentTime : 0;
-  const flooredCurrentTime = Math.floor(safeCurrentTime);
+const AbsoluteTimeOverlay = ({ streamedAt, currentTime }: { streamedAt: string | Date; currentTime: number }) => {
+  const flooredCurrentTime = Math.floor(currentTime);
   const absoluteTime = useMemo(
     () => dayjs(streamedAt).add(flooredCurrentTime, 'second'),
     [streamedAt, flooredCurrentTime],
@@ -40,6 +38,30 @@ const AbsoluteTimeDisplay = ({ streamedAt }: { streamedAt: string | Date }) => {
   return (
     <div className={classes.absoluteTimeOverlay}>
       <span className={classes.absoluteTimeText}>{absoluteTime.format('YYYY-MM-DD HH:mm:ss')}</span>
+    </div>
+  );
+};
+
+// Preset `usePlayer` hooks are typed, but TS resolves the selector state as
+// `unknown` under the repo toolchain; narrow at the selection site.
+const AbsoluteTimeDisplay = ({ streamedAt }: { streamedAt: string | Date }) => {
+  const currentTime = useVodPlayer((s) => (s as unknown as { currentTime: number }).currentTime);
+  const safeCurrentTime = typeof currentTime === 'number' && Number.isFinite(currentTime) ? currentTime : 0;
+  return <AbsoluteTimeOverlay streamedAt={streamedAt} currentTime={safeCurrentTime} />;
+};
+
+const LiveAbsoluteTimeDisplay = ({ streamedAt }: { streamedAt: string | Date }) => {
+  const currentTime = useLivePlayer((s) => (s as unknown as { currentTime: number }).currentTime);
+  const safeCurrentTime = typeof currentTime === 'number' && Number.isFinite(currentTime) ? currentTime : 0;
+  return <AbsoluteTimeOverlay streamedAt={streamedAt} currentTime={safeCurrentTime} />;
+};
+
+const PlayerOverlayButtons = () => {
+  return (
+    <div className={classes.overlayControls}>
+      <VideoPlayerTheaterModeIcon />
+      <VideoPlayerAbsoluteTimeIcon />
+      <VideoPlayerHideChatIcon />
     </div>
   );
 };
@@ -281,44 +303,59 @@ const VideoPlayer = ({ video, ref }: Params) => {
 
   return (
     <div className={classes.playerWrapper}>
-      <VideoJsPlayer title={video.title} poster={videoPoster}>
-        <I18nProvider locale={locale}>
-          <VideoSkin
-            className={
-              videoTheaterMode
-                ? classes.mediaPlayerTheaterMode
-                : classes.mediaPlayer
-            }
-            style={skinStyle}
-          >
-            {isHls ? (
-              <HlsJsVideo {...mediaProps}>
-                {chapterSrc && (
-                  <track kind="chapters" src={chapterSrc} default />
-                )}
-                {thumbnailsSrc && (
-                  <track kind="metadata" label="thumbnails" src={thumbnailsSrc} default />
-                )}
-              </HlsJsVideo>
-            ) : (
-              <Video {...mediaProps}>
-                {chapterSrc && (
-                  <track kind="chapters" src={chapterSrc} default />
-                )}
-                {thumbnailsSrc && (
-                  <track kind="metadata" label="thumbnails" src={thumbnailsSrc} default />
-                )}
-              </Video>
-            )}
-            {showAbsoluteTime && <AbsoluteTimeDisplay streamedAt={video.streamed_at} />}
-            <div className={classes.overlayControls}>
-              <VideoPlayerTheaterModeIcon />
-              <VideoPlayerAbsoluteTimeIcon />
-              <VideoPlayerHideChatIcon />
-            </div>
-          </VideoSkin>
-        </I18nProvider>
-      </VideoJsPlayer>
+      {video.processing ? (
+        <LiveVideoJsPlayer title={video.title} poster={videoPoster}>
+          <I18nProvider locale={locale}>
+            <LiveVideoSkin
+              className={
+                videoTheaterMode
+                  ? classes.mediaPlayerTheaterMode
+                  : classes.mediaPlayer
+              }
+              style={skinStyle}
+            >
+              <HlsJsVideo {...mediaProps} />
+              {showAbsoluteTime && <LiveAbsoluteTimeDisplay streamedAt={video.streamed_at} />}
+              <PlayerOverlayButtons />
+            </LiveVideoSkin>
+          </I18nProvider>
+        </LiveVideoJsPlayer>
+      ) : (
+        <VideoJsPlayer title={video.title} poster={videoPoster}>
+          <I18nProvider locale={locale}>
+            <VideoSkin
+              className={
+                videoTheaterMode
+                  ? classes.mediaPlayerTheaterMode
+                  : classes.mediaPlayer
+              }
+              style={skinStyle}
+            >
+              {isHls ? (
+                <HlsJsVideo {...mediaProps}>
+                  {chapterSrc && (
+                    <track kind="chapters" src={chapterSrc} default />
+                  )}
+                  {thumbnailsSrc && (
+                    <track kind="metadata" label="thumbnails" src={thumbnailsSrc} default />
+                  )}
+                </HlsJsVideo>
+              ) : (
+                <Video {...mediaProps}>
+                  {chapterSrc && (
+                    <track kind="chapters" src={chapterSrc} default />
+                  )}
+                  {thumbnailsSrc && (
+                    <track kind="metadata" label="thumbnails" src={thumbnailsSrc} default />
+                  )}
+                </Video>
+              )}
+              {showAbsoluteTime && <AbsoluteTimeDisplay streamedAt={video.streamed_at} />}
+              <PlayerOverlayButtons />
+            </VideoSkin>
+          </I18nProvider>
+        </VideoJsPlayer>
+      )}
     </div>
   );
 }
