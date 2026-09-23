@@ -1469,7 +1469,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "produces": [
-                    "text/plain"
+                    "text/vtt"
                 ],
                 "tags": [
                     "chapter"
@@ -5149,7 +5149,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "produces": [
-                    "text/plain"
+                    "text/vtt"
                 ],
                 "tags": [
                     "vods"

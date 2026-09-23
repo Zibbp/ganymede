@@ -3196,7 +3196,7 @@ paths:
         required: true
         type: string
       produces:
-      - text/plain
+      - text/vtt
       responses:
         "200":
           description: OK
@@ -5386,7 +5386,7 @@ paths:
         required: true
         type: string
       produces:
-      - text/plain
+      - text/vtt
       responses:
         "200":
           description: OK
