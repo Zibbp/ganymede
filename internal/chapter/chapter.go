@@ -69,7 +69,9 @@ func (s *Service) CreateWebVtt(chapters []*ent.Chapter) (string, error) {
 	webVtt := "WEBVTT\n\n"
 
 	for _, chapter := range chapters {
-		webVtt += fmt.Sprintf("%s --> %s\n%s\n\n", utils.SecondsToHHMMSS(chapter.Start), utils.SecondsToHHMMSS(chapter.End), chapter.Title)
+		// WebVTT requires millisecond precision (HH:MM:SS.mmm); browser
+		// cue parsers drop cues without it, which empties chapter displays.
+		webVtt += fmt.Sprintf("%s.000 --> %s.000\n%s\n\n", utils.SecondsToHHMMSS(chapter.Start), utils.SecondsToHHMMSS(chapter.End), chapter.Title)
 	}
 
 	return webVtt, nil
