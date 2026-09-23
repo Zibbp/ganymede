@@ -19,7 +19,8 @@
     "@tabler/icons-react": "^3.44.0",
     "@tanstack/react-query": "^5.100.10",
     "@tanstack/react-query-devtools": "^5.100.10",
-    "@vidstack/react": "^1.11.30",
+    "@videojs/hlsjs-video": "^10.0.0-rc.2",
+    "@videojs/react": "^10.0.0-rc.2",
     "axios": "^1.18.0",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.20",
@@ -36,7 +37,6 @@
     "recharts": "^3.8.1",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
-    "vidstack": "^1.12.13",
     "zod": "^4.4.3",
     "zustand": "^5.0.13"
   },

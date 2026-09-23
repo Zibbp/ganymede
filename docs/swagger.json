@@ -1466,7 +1466,7 @@
                     "application/json"
                 ],
                 "produces": [
-                    "text/plain"
+                    "text/vtt"
                 ],
                 "tags": [
                     "chapter"
@@ -5146,7 +5146,7 @@
                     "application/json"
                 ],
                 "produces": [
-                    "text/plain"
+                    "text/vtt"
                 ],
                 "tags": [
                     "vods"

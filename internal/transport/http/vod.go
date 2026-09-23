@@ -934,7 +934,7 @@ func (h *Handler) GetVodClips(c echo.Context) error {
 //	@Description	Get a WebVTT file describing sprite thumbnails for a vod
 //	@Tags			vods
 //	@Accept			json
-//	@Produce		text/plain
+//	@Produce		text/vtt
 //	@Param			id	path		string	true	"Vod ID"
 //	@Success		200	{object}	string
 //	@Failure		400	{object}	utils.ErrorResponse
@@ -974,7 +974,9 @@ func (h *Handler) GetVodSpriteThumbnails(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.String(http.StatusOK, webvtt)
+	// Native <track> elements require the WebVTT MIME type; text/plain
+	// risks browsers rejecting the cues.
+	return c.Blob(http.StatusOK, "text/vtt", []byte(webvtt))
 }
 
 // GetFFprobe godoc

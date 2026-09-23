@@ -1,8 +1,17 @@
+.playerWrapper {
+  position: relative;
+  width: 100%;
+}
+
 .mediaPlayer {
   height: calc(100vh - rem(56px) - 60px);
+  width: 100%;
+  border-radius: 0;
 
   video {
     height: calc(100vh - rem(56px) - 60px);
+    width: 100%;
+    border-radius: 0;
   }
 
   @media (max-width: em(1000px)) {
@@ -15,9 +24,11 @@
 
 .mediaPlayerTheaterMode {
   height: 100vh;
+  border-radius: 0;
 
   video {
     height: 100vh;
+    border-radius: 0;
   }
 
   width: 100%;
@@ -25,6 +36,28 @@
 
 .mediaPlayerPoster {
   object-fit: contain;
+}
+
+.overlayControls {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.15rem 0.35rem;
+  border-radius: 8px;
+  pointer-events: auto;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.mediaPlayer:not([data-controls-visible]) .overlayControls,
+.mediaPlayerTheaterMode:not([data-controls-visible]) .overlayControls {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .absoluteTimeOverlay {
@@ -37,6 +70,13 @@
   color: white;
   z-index: 10;
   pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.mediaPlayer:not([data-controls-visible]) .absoluteTimeOverlay,
+.mediaPlayerTheaterMode:not([data-controls-visible]) .absoluteTimeOverlay {
+  opacity: 0;
 }
 
 .absoluteTimeText {

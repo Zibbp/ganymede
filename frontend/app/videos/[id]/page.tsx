@@ -15,7 +15,6 @@ import useAuthStore from "@/app/store/useAuthStore";
 import VideoPageClips from "@/app/components/videos/VideoClips";
 import VideoChatHistogram from "@/app/components/videos/ChatHistogram";
 import VideoNotes from "@/app/components/videos/VideoNotes";
-import { MediaPlayerInstance } from "@vidstack/react";
 import { useTranslations } from "next-intl";
 
 interface Params {
@@ -26,7 +25,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const theme = useMantineTheme()
   const { id } = React.use(params);
   const { isLoggedIn } = useAuthStore()
-  const player = useRef<MediaPlayerInstance>(null);
+  const player = useRef<HTMLVideoElement>(null);
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
   const t = useTranslations("VideoPage");

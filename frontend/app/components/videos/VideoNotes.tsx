@@ -3,7 +3,6 @@ import { RefObject, useEffect, useRef, useState } from "react";
 import { Button, Group, Text, Textarea, Title, Typography } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { IconClock } from "@tabler/icons-react";
-import { MediaPlayerInstance } from "@vidstack/react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
@@ -19,7 +18,7 @@ const MAX_NOTES_LENGTH = 10000;
 
 type Props = {
   video: Video;
-  playerRef: RefObject<MediaPlayerInstance | null>;
+  playerRef: RefObject<HTMLVideoElement | null>;
 };
 
 // External images are not auto-loaded: stored notes are viewed by other users
