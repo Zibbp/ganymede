@@ -24,6 +24,7 @@ type Config struct {
 		SaveAsHls                bool `json:"save_as_hls"`                // Save as HLS rather than MP4.
 		GenerateSpriteThumbnails bool `json:"generate_sprite_thumbnails"` // Generate sprite thumbnails for scrubbing.
 		GenerateNFOFiles         bool `json:"generate_nfo_files"`         // Generate Kodi-compatible NFO sidecars for archived videos.
+		TagHevcAsHvc1            bool `json:"tag_hevc_as_hvc1"`           // Tag copied HEVC video as hvc1 so Apple devices can play it.
 	} `json:"archive"`
 	StorageTemplates StorageTemplate `json:"storage_templates"` // Storage folder/file templates.
 	Livestream       struct {
@@ -207,6 +208,7 @@ func (c *Config) SetDefaults() {
 	c.Archive.SaveAsHls = false
 	c.Archive.GenerateSpriteThumbnails = true
 	c.Archive.GenerateNFOFiles = true
+	c.Archive.TagHevcAsHvc1 = true
 
 	// storage templates
 	c.StorageTemplates.FolderTemplate = "{{date}}-{{id}}-{{type}}-{{uuid}}"

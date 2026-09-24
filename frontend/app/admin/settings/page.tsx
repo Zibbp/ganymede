@@ -50,7 +50,8 @@ const AdminSettingsPage = () => {
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
         generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true,
-        generate_nfo_files: data?.archive.generate_nfo_files ?? true
+        generate_nfo_files: data?.archive.generate_nfo_files ?? true,
+        tag_hevc_as_hvc1: data?.archive.tag_hevc_as_hvc1 ?? true
       },
       storage_templates: {
         folder_template: data?.storage_templates.folder_template || "",
@@ -189,6 +190,15 @@ const AdminSettingsPage = () => {
               description={t('archiveSettings.generateNFOFilesDescription')}
               key={form.key('archive.generate_nfo_files')}
               {...form.getInputProps('archive.generate_nfo_files', { type: "checkbox" })}
+              mr={15}
+            />
+
+            <Checkbox
+              mt={15}
+              label={t('archiveSettings.tagHevcAsHvc1Label')}
+              description={t('archiveSettings.tagHevcAsHvc1Description')}
+              key={form.key('archive.tag_hevc_as_hvc1')}
+              {...form.getInputProps('archive.tag_hevc_as_hvc1', { type: "checkbox" })}
               mr={15}
             />
 

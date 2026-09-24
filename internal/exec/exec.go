@@ -11,6 +11,7 @@ import (
 	osExec "os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
@@ -570,11 +571,27 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	}()
 	log.Debug().Str("video_id", video.ID.String()).Msgf("logging ffmpeg output to %s", logFilePath)
 
-	return postProcessVideo(ctx, video, configFfmpegArgs, file)
+	return postProcessVideo(ctx, video, configFfmpegArgs, config.Get().Archive.TagHevcAsHvc1, file)
 }
 
-func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs string, output io.Writer) error {
-	if err := runPostProcessVideoFFmpeg(ctx, video, postProcessVideoFFmpegArgs(video, configFfmpegArgs), output); err != nil {
+func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs string, tagHevcAsHvc1 bool, output io.Writer) error {
+	// An unknown codec keeps ffmpeg's default tagging, so a failed probe must
+	// not fail the archive.
+	sourceVideoCodec, err := ProbeVideoCodec(ctx, video.TmpVideoDownloadPath)
+	if err != nil {
+		log.Warn().Err(err).Str("video_id", video.ID.String()).Msg("could not probe source video codec")
+	}
+
+	retagHevc := tagHevcAsHvc1 && shouldTagHevcAsHvc1(sourceVideoCodec, configFfmpegArgs)
+	// ffmpeg reports a rejected tag in the conversion log only, so record what
+	// was decided next to the arguments it was decided from.
+	log.Debug().
+		Str("video_id", video.ID.String()).
+		Str("source_video_codec", sourceVideoCodec).
+		Bool("retag_hevc_as_hvc1", retagHevc).
+		Msg("post-processing video")
+
+	if err := runPostProcessVideoFFmpeg(ctx, video, postProcessVideoFFmpegArgs(video, configFfmpegArgs, retagHevc), output); err != nil {
 		return err
 	}
 
@@ -592,7 +609,7 @@ func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs strin
 		Float64("stream_duration", duration.LongestStreamDuration).
 		Msg("detected anomalous container timestamps; normalizing each stream")
 
-	if err := runPostProcessVideoFFmpeg(ctx, video, normalizedPostProcessVideoFFmpegArgs(video, configFfmpegArgs), output); err != nil {
+	if err := runPostProcessVideoFFmpeg(ctx, video, normalizedPostProcessVideoFFmpegArgs(video, configFfmpegArgs, retagHevc), output); err != nil {
 		return fmt.Errorf("normalize finalized video timestamps: %w", err)
 	}
 
@@ -627,21 +644,160 @@ func runPostProcessVideoFFmpeg(ctx context.Context, video ent.Vod, ffmpegArgs []
 	return nil
 }
 
-func postProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string) []string {
-	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, false)
+func postProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, retagHevcAsHvc1 bool) []string {
+	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, retagHevcAsHvc1, false)
 }
 
-func normalizedPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string) []string {
-	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, true)
+func normalizedPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, retagHevcAsHvc1 bool) []string {
+	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, retagHevcAsHvc1, true)
 }
 
-func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, normalizeTimestamps bool) []string {
+// shouldTagHevcAsHvc1 reports whether a source-derived hvc1 tag may be applied
+// to the conversion the configured arguments describe.
+//
+// hev1 is the mov/mp4 muxer's default tag for HEVC, and a copy inherits
+// whatever tag a downloaded MP4 already carried; for Twitch it is hev1 either
+// way. AVFoundation refuses such a file outright, so the recording never loads
+// in Safari or on iOS - the refusal is at the container level, not the
+// decoder's, which handles hev1 samples happily once something feeds them.
+//
+// Getting the answer wrong in one direction is far worse than the other: the
+// mp4 muxer refuses to write a file whose tag does not match its codec, which
+// fails the whole archive, while a missing tag only leaves the recording as
+// unplayable as it already was. Every case that cannot be decided from the
+// arguments alone therefore answers no, and the predicates below say no more
+// about that.
+//
+// One cost applies to live captures only. Their download is MPEG-TS, whose
+// samples carry the parameter sets in band; writing them under an hvc1 sample
+// entry drops them, and only the set already in hvcC - the first one - is left.
+// The remainder of a capture whose parameter sets change midway is then decoded
+// with the first segment's parameters, which ranges from the wrong geometry to
+// VideoToolbox refusing the picture outright. ffmpeg does not warn. A downloaded
+// MP4 is unaffected: its samples pass through byte for byte. Measured on the
+// FFmpeg 9.0 this project ships; 8.x strips as well, 7.1 and earlier did not.
+//
+// This muxer writes one sample entry, so it cannot express such a capture as
+// both conforming hvc1 and intact - hence archive.tag_hevc_as_hvc1, which lets
+// an installation choose the other side.
+func shouldTagHevcAsHvc1(sourceVideoCodec, configFfmpegArgs string) bool {
+	return sourceVideoCodec == "hevc" &&
+		videoStreamIsCopied(configFfmpegArgs) &&
+		!configSelectsStreams(configFfmpegArgs)
+}
+
+// codecOptionScope reports how an option relates to the first video stream,
+// which is the only one that matters here: it is the stream the source codec is
+// probed from, and the stream the tag addresses.
+type codecOptionScope int
+
+const (
+	// scopeOther: the option leaves the first video stream alone. Option values
+	// and every option that is not a codec option land here too, which is how
+	// the scan skips them.
+	scopeOther codecOptionScope = iota
+	// scopeVideo: the option applies to the first video stream.
+	scopeVideo
+	// scopeUnknown: which streams the option applies to cannot be told without
+	// resolving the output layout.
+	scopeUnknown
+)
+
+// scopeOfCodecOption classifies a single argument. A codec option is decided
+// when its specifier is absent, names a non-video type, or names video without
+// narrowing it further ("v", "V", "v:0"). It is undecidable when a selector
+// narrows video down, because "v:m:language:eng" may match no stream at all
+// while an earlier re-encode still stands, and for every other selector form -
+// a bare index, a program, a stream id, a stream group - which needs the
+// resolved output layout: -dn and -ignore_unknown already shift the numbering.
+//
+// "V" is treated as "v" although it means video excluding attached pictures.
+// The two differ only when the first video stream is itself an attached
+// picture, in which case the probe reported that picture's codec and no tag is
+// added anyway.
+func scopeOfCodecOption(option string) codecOptionScope {
+	name, spec, hasSpec := strings.Cut(option, ":")
+	switch name {
+	case "-vcodec":
+		// The legacy spelling takes no stream specifier.
+		return scopeVideo
+	case "-c", "-codec":
+	default:
+		return scopeOther
+	}
+	if !hasSpec || spec == "" {
+		return scopeVideo
+	}
+	switch spec[0] {
+	case 'v', 'V':
+		if rest := spec[1:]; rest != "" && rest != ":0" {
+			return scopeUnknown
+		}
+		return scopeVideo
+	case 'a', 's', 'd', 't':
+		return scopeOther
+	}
+	return scopeUnknown
+}
+
+// videoStreamIsCopied reports whether the configured arguments leave the first
+// video stream untouched. An encoder name says nothing about the codec it
+// produces, so a sample entry tag derived from the source may only be applied
+// to a copy. ffmpeg applies the last codec option that matches a stream, so
+// later arguments win here too, except that an option whose scope cannot be
+// resolved short-circuits the whole answer.
+func videoStreamIsCopied(configFfmpegArgs string) bool {
+	// The caller's own arguments start with "-c copy".
+	videoCodec := "copy"
+	arr := strings.Fields(configFfmpegArgs)
+	for i := 0; i < len(arr)-1; i++ {
+		switch scopeOfCodecOption(arr[i]) {
+		case scopeUnknown:
+			// Answering no is the safe direction, as above.
+			return false
+		case scopeVideo:
+			videoCodec = arr[i+1]
+		}
+	}
+	return videoCodec == "copy"
+}
+
+// configSelectsStreams reports whether the configured arguments contain a -map.
+// A filtergraph can introduce output streams too, but combined with the copy
+// this conversion performs ffmpeg refuses the command outright, so -map is the
+// only form that reaches the muxer. The tag addresses the first video stream of the output,
+// which is the stream the source codec was probed from as long as ffmpeg's own
+// -map 0 decides the layout. Extra -map options accumulate onto that one, so a
+// positive map cannot displace the probed stream, but a negative map can drop
+// it and promote another one, which then carries a tag its codec does not match
+// and ffmpeg refuses the output. Telling the two apart means resolving the
+// mapping, so the presence of any -map is taken as reason enough to leave the
+// tag off.
+func configSelectsStreams(configFfmpegArgs string) bool {
+	return slices.Contains(strings.Fields(configFfmpegArgs), "-map")
+}
+
+func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, retagHevcAsHvc1 bool, normalizeTimestamps bool) []string {
 	arr := strings.Fields(configFfmpegArgs)
 	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4"}
 	if !normalizeTimestamps {
 		ffmpegArgs = append(ffmpegArgs, "-bsf:a", "aac_adtstoasc")
 	}
 	ffmpegArgs = append(ffmpegArgs, "-movflags", "+faststart")
+
+	// See shouldTagHevcAsHvc1 for why a copied HEVC stream is retagged at all.
+	//
+	// The tag names the stream the codec was probed from. An unqualified -tag:v
+	// would also reach a second video stream, such as a thumbnail embedded by
+	// yt-dlp, and the mp4, mov and matroska muxers then refuse to write the
+	// header at all (mpegts ignores a mismatched tag instead). Setting it here
+	// rather than patching the sample entry of a finished file is what makes
+	// the result conforming: hvc1 promises the parameter sets are in hvcC, and
+	// only the muxer can keep that promise. Configured arguments follow and can
+	// therefore still override the tag.
+	if retagHevcAsHvc1 {
+		ffmpegArgs = append(ffmpegArgs, "-tag:v:0", "hvc1")
+	}
 
 	ffmpegArgs = append(ffmpegArgs, "-metadata", "title="+video.Title)
 	ffmpegArgs = append(ffmpegArgs, arr...)
