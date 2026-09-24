@@ -34,8 +34,8 @@ type QueueOverview struct {
 
 type GetSystemOverviewResponse struct {
 	VideosDirectoryFreeSpace  int64         `json:"videos_directory_free_space"`  // Free space in bytes
-	VideosDirectoryUsedSpace  int64         `json:"videos_directory_used_space"`  // Used space in bytes
-	VideosDirectoryTotalSpace int64         `json:"videos_directory_total_space"` // Total space in bytes (free + used)
+	VideosDirectoryUsedSpace  int64         `json:"videos_directory_used_space"`  // Tracked VOD storage in bytes
+	VideosDirectoryTotalSpace int64         `json:"videos_directory_total_space"` // Filesystem capacity in bytes
 	CPUCores                  int           `json:"cpu_cores"`                    // Number of CPU cores
 	MemoryTotal               int64         `json:"memory_total"`                 // Total memory in bytes
 	Queue                     QueueOverview `json:"queue"`
@@ -135,6 +135,15 @@ func (s *Service) GetSystemOverview(ctx context.Context) (GetSystemOverviewRespo
 	}
 	resp.VideosDirectoryFreeSpace = freeSpace
 
+	// Get data directory total capacity from the filesystem itself. Do not derive
+	// this from free space plus tracked VOD bytes: the volume may contain files
+	// outside of Ganymede's control (e.g. shared NFS/SMB mounts).
+	totalSpace, err := utils.GetTotalSpaceOfDirectory(env.VideosDir)
+	if err != nil {
+		return resp, fmt.Errorf("error getting data directory total space: %w", err)
+	}
+	resp.VideosDirectoryTotalSpace = totalSpace
+
 	// Get data directory used space by querying all vods and summing their storage sizes
 	// Could check the directory size directly, but this information is already stored in the database
 	type UsedSpaceResult struct {
@@ -158,7 +167,6 @@ func (s *Service) GetSystemOverview(ctx context.Context) (GetSystemOverviewRespo
 		storageSize = 0
 	}
 	resp.VideosDirectoryUsedSpace = storageSize
-	resp.VideosDirectoryTotalSpace = freeSpace + storageSize
 
 	// Get CPU cores
 	cpuCores := utils.GetCPUCores()
@@ -195,7 +203,15 @@ func (s *Service) getQueueOverview(ctx context.Context) (QueueOverview, error) {
 	if q.OnHold, err = s.Store.Client.Queue.Query().Where(entqueue.OnHold(true)).Count(ctx); err != nil {
 		return q, err
 	}
-	if q.LiveArchiving, err = s.Store.Client.Queue.Query().Where(entqueue.LiveArchive(true)).Count(ctx); err != nil {
+	// live_archive records how the item was created and stays true after it
+	// finishes, so restrict to actively processing items to report the
+	// number currently archiving rather than all historical live archives.
+	if q.LiveArchiving, err = s.Store.Client.Queue.Query().Where(
+		entqueue.And(
+			entqueue.LiveArchive(true),
+			entqueue.Processing(true),
+		),
+	).Count(ctx); err != nil {
 		return q, err
 	}
 	failedPredicate := entqueue.Or(
