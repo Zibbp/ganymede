@@ -1,4 +1,5 @@
 "use client"
+import ArchiveStatusBadge from "@/app/components/videos/ArchiveStatusBadge";
 import { ActionIcon, Container, Group, TextInput, Title, Box, Drawer, Modal, Tooltip, Text, Button } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
@@ -20,6 +21,7 @@ import useSettingsStore from "@/app/store/useSettingsStore";
 
 const AdminQueuePage = () => {
   const t = useTranslations('AdminQueuePage');
+  const statusText = useTranslations('ArchiveStatus');
   const miscT = useTranslations('MiscComponents');
   usePageTitle(t('title'))
 
@@ -172,12 +174,9 @@ const AdminQueuePage = () => {
                 ),
               },
               {
-                accessor: "processing",
-                title: t('columns.processing'),
-                sortable: true,
-                render: ({ processing }) => {
-                  return processing ? "✅" : "❌";
-                },
+                accessor: "edges.vod.status",
+                title: statusText('label'),
+                render: ({ edges }) => <ArchiveStatusBadge videoId={edges.vod.id} status={edges.vod.status} />,
               },
               {
                 accessor: "on_hold",

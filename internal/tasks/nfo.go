@@ -16,6 +16,7 @@ import (
 	entChapter "github.com/zibbp/ganymede/ent/chapter"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/nfo"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // GenerateNFOFilesArgs generates a sidecar for one video when VideoID is set,
@@ -52,7 +53,7 @@ func (w GenerateNFOFilesWorker) Work(ctx context.Context, job *river.Job[Generat
 
 	if job.Args.VideoID != nil {
 		video, err := store.Client.Vod.Query().
-			Where(entVod.ID(*job.Args.VideoID), entVod.Processing(false)).
+			Where(entVod.ID(*job.Args.VideoID), entVod.StatusEQ(utils.ArchiveCompleted)).
 			WithChannel().
 			WithChapters(func(query *ent.ChapterQuery) {
 				query.Order(entChapter.ByStart())
@@ -77,7 +78,7 @@ func (w GenerateNFOFilesWorker) Work(ctx context.Context, job *river.Job[Generat
 	var errs []error
 	for {
 		videos, err := store.Client.Vod.Query().
-			Where(entVod.Processing(false)).
+			Where(entVod.StatusEQ(utils.ArchiveCompleted)).
 			Order(entVod.ByID()).
 			Limit(batchSize).
 			Offset(offset).

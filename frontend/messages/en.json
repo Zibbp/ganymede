@@ -1,4 +1,14 @@
 {
+  "ArchiveStatus": {
+    "stopping": "Stopping…",
+    "livePreviewUnavailable": "Live preview is not available yet.",
+    "label": "Status",
+    "queued": "Queued",
+    "running": "Recording",
+    "finalizing": "Finalizing",
+    "completed": "Completed",
+    "failed": "Failed"
+  },
   "HomePage": {
     "continueWatching": "Continue Watching",
     "recentlyArchived": "Recently Archived"
@@ -817,6 +827,10 @@
     "videoMoveTitle": "Video Move"
   },
   "VideoComponents": {
+    "stopRecording": "Stop recording",
+    "stopRecordingDescription": "Stop this recording now? The captured video and chat will be kept and processed.",
+    "stopRecordingNotification": "Stop requested. The recording will now be finalized.",
+    "stopRecordingError": "Could not stop the recording. It may have already ended; refresh the page and check its status.",
     "loadingInformation": "Loading video information",
     "errorLoadingInformation": "Error loading video information",
     "processingOverlayText": "Processing",

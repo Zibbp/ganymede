@@ -97,11 +97,6 @@ func Resolution(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldResolution, v))
 }
 
-// Processing applies equality check predicate on the "processing" field. It's identical to ProcessingEQ.
-func Processing(v bool) predicate.Vod {
-	return predicate.Vod(sql.FieldEQ(FieldProcessing, v))
-}
-
 // ThumbnailPath applies equality check predicate on the "thumbnail_path" field. It's identical to ThumbnailPathEQ.
 func ThumbnailPath(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldThumbnailPath, v))
@@ -807,14 +802,34 @@ func ResolutionContainsFold(v string) predicate.Vod {
 	return predicate.Vod(sql.FieldContainsFold(FieldResolution, v))
 }
 
-// ProcessingEQ applies the EQ predicate on the "processing" field.
-func ProcessingEQ(v bool) predicate.Vod {
-	return predicate.Vod(sql.FieldEQ(FieldProcessing, v))
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v utils.ArchiveStatus) predicate.Vod {
+	vc := v
+	return predicate.Vod(sql.FieldEQ(FieldStatus, vc))
 }
 
-// ProcessingNEQ applies the NEQ predicate on the "processing" field.
-func ProcessingNEQ(v bool) predicate.Vod {
-	return predicate.Vod(sql.FieldNEQ(FieldProcessing, v))
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v utils.ArchiveStatus) predicate.Vod {
+	vc := v
+	return predicate.Vod(sql.FieldNEQ(FieldStatus, vc))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...utils.ArchiveStatus) predicate.Vod {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Vod(sql.FieldIn(FieldStatus, v...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...utils.ArchiveStatus) predicate.Vod {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Vod(sql.FieldNotIn(FieldStatus, v...))
 }
 
 // ThumbnailPathEQ applies the EQ predicate on the "thumbnail_path" field.

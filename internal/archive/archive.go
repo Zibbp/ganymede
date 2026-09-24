@@ -3,6 +3,7 @@ package archive
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
+	entChannel "github.com/zibbp/ganymede/ent/channel"
 	entQueue "github.com/zibbp/ganymede/ent/queue"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/blocked"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
@@ -22,6 +25,9 @@ import (
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
+
+// ErrActiveLiveArchive indicates that this stream already has an active archive.
+var ErrActiveLiveArchive = errors.New("stream already has an active archive")
 
 type Service struct {
 	Store              *database.Database
@@ -52,6 +58,25 @@ func NewService(store *database.Database, channelService *channel.Service, vodSe
 func (s *Service) createArchiveRecordsAndEnqueue(ctx context.Context, vodDTO vod.Vod, channelID uuid.UUID, queueDTO queue.Queue) (*ArchiveResponse, error) {
 	var queueID uuid.UUID
 	err := s.Store.WithTx(ctx, func(txClient *ent.Client, tx *sql.Tx) error {
+		if queueDTO.LiveArchive {
+			// Serialize the check and insert across API and worker processes.
+			var lockedChannelID uuid.UUID
+			if err := tx.QueryRowContext(ctx, "SELECT id FROM channels WHERE id = $1 FOR UPDATE", channelID).Scan(&lockedChannelID); err != nil {
+				return fmt.Errorf("lock live archive channel: %w", err)
+			}
+			exists, err := txClient.Vod.Query().Where(
+				entVod.HasChannelWith(entChannel.ID(channelID)),
+				entVod.PlatformEQ(vodDTO.Platform),
+				entVod.ExtStreamID(vodDTO.ExtStreamID),
+				entVod.StatusIn(utils.ActiveArchiveStatuses()...),
+			).Exist(ctx)
+			if err != nil {
+				return err
+			}
+			if exists {
+				return ErrActiveLiveArchive
+			}
+		}
 		v, err := s.VodService.CreateVodWithClient(ctx, txClient, vodDTO, channelID)
 		if err != nil {
 			return err
@@ -64,7 +89,6 @@ func (s *Service) createArchiveRecordsAndEnqueue(ctx context.Context, vodDTO vod
 
 		if !queueDTO.ArchiveChat {
 			update := txClient.Queue.UpdateOneID(q.ID).
-				SetChatProcessing(false).
 				SetTaskChatDownload(utils.Success).
 				SetTaskChatRender(utils.Success).
 				SetTaskChatMove(utils.Success)
@@ -297,7 +321,7 @@ func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*A
 		Duration:            int(video.Duration.Seconds()),
 		Views:               int(video.ViewCount),
 		Resolution:          input.Quality.String(),
-		Processing:          true,
+		Status:              utils.ArchiveQueued,
 		ThumbnailPath:       fmt.Sprintf("%s/%s-thumbnail.jpg", rootVideoPath, fileName),
 		WebThumbnailPath:    fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVideoPath, fileName),
 		VideoPath:           fmt.Sprintf("%s/%s-video.%s", rootVideoPath, fileName, videoExtension),
@@ -458,7 +482,7 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*Arc
 		ClipVodOffset:       *clip.VodOffset,
 		Views:               int(clip.ViewCount),
 		Resolution:          input.Quality.String(),
-		Processing:          true,
+		Status:              utils.ArchiveQueued,
 		ThumbnailPath:       fmt.Sprintf("%s/%s-thumbnail.jpg", rootVideoPath, fileName),
 		WebThumbnailPath:    fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVideoPath, fileName),
 		VideoPath:           fmt.Sprintf("%s/%s-video.%s", rootVideoPath, fileName, videoExtension),
@@ -577,7 +601,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		Duration:            1,
 		Views:               1,
 		Resolution:          input.Quality.String(),
-		Processing:          true,
+		Status:              utils.ArchiveQueued,
 		ThumbnailPath:       fmt.Sprintf("%s/%s-thumbnail.jpg", rootVideoPath, fileName),
 		WebThumbnailPath:    fmt.Sprintf("%s/%s-web_thumbnail.jpg", rootVideoPath, fileName),
 		VideoPath:           fmt.Sprintf("%s/%s-video.%s", rootVideoPath, fileName, videoExtension),

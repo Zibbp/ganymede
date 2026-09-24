@@ -1,3 +1,4 @@
+import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/default/layouts/video.css';
 import { MediaPlayer, MediaPlayerInstance, MediaProvider, MediaSrc, Poster, Track, VideoMimeType, useMediaState } from '@vidstack/react';
@@ -89,7 +90,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
     }
 
     // Allow for processing videos to be played via HLS from the temp directory if enabled
-    if (video.processing) {
+    if (isArchiveActive(video.status)) {
       setVideoSource({
         src: `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.tmp_video_hls_path)}/${video.ext_id}-video.m3u8`,
         type: "application/x-mpegurl"
@@ -136,39 +137,40 @@ const VideoPlayer = ({ video, ref }: Params) => {
   }, [player, video, playbackData, searchParams])
 
 
+  // Read the current video and mutation callbacks without restarting the timer on every render.
+  const reportPlaybackProgress = useRef<(() => boolean) | null>(null);
+  useEffect(() => {
+    reportPlaybackProgress.current = () => {
+      if (!player.current || player.current.paused) return false;
+      const playerTimeInt = Math.floor(player.current.currentTime);
+      if (playerTimeInt === 0) return false;
+
+      updatePlaybackProgressMutation.mutate({
+        axiosPrivate,
+        videoId: video.id,
+        time: playerTimeInt,
+      });
+
+      if (video.status === ArchiveStatus.Completed && playerTimeInt / video.duration >= 0.98) {
+        setPlaybackProgressMutation.mutate({
+          axiosPrivate,
+          videoId: video.id,
+          status: PlaybackStatus.Finished,
+        });
+        return true;
+      }
+      return false;
+    };
+  }, [player, video, axiosPrivate, updatePlaybackProgressMutation, setPlaybackProgressMutation]);
+
   // Playback progress reporting
   useEffect(() => {
     if (!isLoggedIn) return;
-    const playbackInerval = setInterval(async () => {
-      if (player.current == null) return;
-      if (player.current.paused) return;
-
-      const playerTimeInt = Math.floor(player.current.currentTime)
-      if (playerTimeInt == 0) return;
-
-
-      updatePlaybackProgressMutation.mutate({
-        axiosPrivate: axiosPrivate,
-        videoId: video.id,
-        time: playerTimeInt
-      })
-
-      // mark video as finished if over duration threshold
-      if (!video.processing && (playerTimeInt / video.duration >= 0.98)) {
-        setPlaybackProgressMutation.mutate({
-          axiosPrivate: axiosPrivate,
-          videoId: video.id,
-          status: PlaybackStatus.Finished
-        })
-
-        // remove interval
-        clearInterval(playbackInerval)
-      }
+    const playbackInterval = setInterval(() => {
+      if (reportPlaybackProgress.current?.()) clearInterval(playbackInterval);
     }, 10000);
-    return () => clearInterval(playbackInerval);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => clearInterval(playbackInterval);
+  }, [isLoggedIn, video.id, video.status]);
 
   // Fast tick for chat player - set player information in bus
   useEffect(() => {
@@ -194,7 +196,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
   }, [player, video.clip_vod_offset, video.type]);
 
   // thumbnails URL only when not processing
-  const thumbnails = !video.processing
+  const thumbnails = video.status === ArchiveStatus.Completed
     ? `${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/vod/${video.id}/thumbnails/vtt`
     : undefined
   return (
@@ -217,7 +219,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
       {showAbsoluteTime && <AbsoluteTimeDisplay streamedAt={video.streamed_at} />}
       <MediaProvider>
         <Poster className={`${classes.mediaPlayerPoster} vds-poster`} src={videoPoster} alt={video.title} />
-        {!video.processing && (
+        {video.status === ArchiveStatus.Completed && (
           <Track
             src={`${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/chapter/video/${video.id}/webvtt`}
             kind="chapters"

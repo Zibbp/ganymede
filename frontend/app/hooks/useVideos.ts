@@ -1,3 +1,4 @@
+import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import {
   keepPreviousData,
   useMutation,
@@ -9,6 +10,7 @@ import { Channel } from "./useChannels";
 import { Playlist } from "./usePlaylist";
 import { AxiosInstance } from "axios";
 import { NullResponse } from "./usePlayback";
+import type { Queue } from "./useQueue";
 
 export interface PaginationResponse<T> {
   offset: number;
@@ -53,7 +55,7 @@ export interface Video {
   tmp_live_chat_download_path: string;
   tmp_live_chat_convert_path: string;
   tmp_chat_render_path: string;
-  processing: boolean;
+  status: ArchiveStatus;
   streamed_at: Date;
   updated_at: Date;
   created_at: Date;
@@ -65,7 +67,12 @@ export interface Video {
   storage_size_bytes?: number;
 }
 
+export interface VideoDetails extends Video {
+  live_preview_available: boolean;
+}
+
 export interface VideoEdges {
+  queue?: Queue;
   channel: Channel;
   muted_segments?: MutedSegment[];
   chapters?: Chapter[];
@@ -130,7 +137,7 @@ export interface CreateVodRequest {
   duration: number;
   views: number;
   resolution?: string;
-  processing: boolean;
+  status: ArchiveStatus;
   thumbnail_path?: string;
   web_thumbnail_path: string;
   video_path: string;
@@ -159,8 +166,8 @@ const fetchVideo = async (
   withChannel: boolean,
   withChapters: boolean,
   withMutedSegments: boolean
-): Promise<Video> => {
-  const response = await useAxios.get<ApiResponse<Video>>(`/api/v1/vod/${id}`, {
+): Promise<VideoDetails> => {
+  const response = await useAxios.get<ApiResponse<VideoDetails>>(`/api/v1/vod/${id}`, {
     params: {
       with_channel: withChannel,
       with_chapters: withChapters,
@@ -176,7 +183,7 @@ type FetchVideosFilterOptions = {
   types?: Array<VideoType>;
   channel_id?: string;
   playlist_id?: string;
-  is_processing?: boolean;
+  statuses?: ArchiveStatus[];
   sort_by?: VideoSortBy;
   order?: VideoOrder;
 };
@@ -187,7 +194,7 @@ const fetchVideosFilter = async (
   types?: Array<VideoType>,
   channel_id?: string,
   playlist_id?: string,
-  is_processing?: boolean,
+  statuses?: ArchiveStatus[],
   sort_by?: VideoSortBy,
   order?: VideoOrder
 ): Promise<PaginationResponse<Array<Video>>> => {
@@ -204,8 +211,8 @@ const fetchVideosFilter = async (
   if (types && types.length > 0) {
     queryParams.types = types.join(",");
   }
-  if (typeof is_processing !== "undefined") {
-    queryParams.processing = is_processing;
+  if (statuses?.length) {
+    queryParams.status = statuses.join(",");
   }
   if (sort_by) {
     queryParams.sort_by = sort_by;
@@ -234,14 +241,13 @@ const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
     types,
     channel_id,
     playlist_id,
-    is_processing,
+    statuses,
     sort_by,
     order,
   } = params;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let queryKey: any[];
-  const processing = is_processing ?? true;
   if (channel_id) {
     queryKey = [
       "channel_videos",
@@ -249,6 +255,7 @@ const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
       limit,
       offset,
       types,
+      statuses,
       sort_by,
       order,
     ];
@@ -259,11 +266,12 @@ const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
       limit,
       offset,
       types,
+      statuses,
       sort_by,
       order,
     ];
   } else {
-    queryKey = ["videos", limit, offset, types, processing, sort_by, order]; // Fetch videos without channel_id or playlist_id
+    queryKey = ["videos", limit, offset, types, statuses, sort_by, order]; // Fetch videos without channel_id or playlist_id
   }
 
   return useQuery<PaginationResponse<Array<Video>>, Error>({
@@ -275,11 +283,12 @@ const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
         types,
         channel_id,
         playlist_id,
-        processing,
+        statuses,
         sort_by,
         order
       ),
     placeholderData: keepPreviousData, // previous data is kept until the new data is swapped in. This prevents flashing when changing pages, filtering, etc.
+    refetchInterval: (query) => query.state.data?.data.some(video => isArchiveActive(video.status)) ? 5000 : false,
   });
 };
 
@@ -289,7 +298,12 @@ const useFetchVideo = (params: FetchVideoOptions) => {
     queryKey: ["video", id, with_channel, with_chapters, with_muted_segments],
     queryFn: () =>
       fetchVideo(id, with_channel, with_chapters, with_muted_segments),
-    refetchInterval: false,
+    refetchInterval: (query) => {
+      const video = query.state.data;
+      return video && isArchiveActive(video.status)
+        ? 5000
+        : false;
+    },
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -353,6 +367,7 @@ const useSearchVideos = (
     queryFn: () =>
       searchVideos(limit, offset, query, types, fields, sort_by, order),
     placeholderData: keepPreviousData, // previous data is kept until the new data is swapped in. This prevents flashing when changing pages, filtering, etc.
+    refetchInterval: (query) => query.state.data?.data.some(video => isArchiveActive(video.status)) ? 5000 : false,
     enabled: enabled,
   });
 };

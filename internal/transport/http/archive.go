@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -99,6 +100,7 @@ func (h *Handler) ArchiveChannel(c echo.Context) error {
 //	@Param			vod	body		ArchiveVideoRequest	true	"Vod"
 //	@Success		200	{object}	archive.TwitchVodResponse
 //	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		409	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/archive/video [post]
 //	@Security		ApiKeyCookieAuth
@@ -136,6 +138,9 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 			ArchiveChat: body.ArchiveChat,
 			RenderChat:  body.RenderChat,
 		})
+		if errors.Is(err, archive.ErrActiveLiveArchive) {
+			return ErrorResponse(c, http.StatusConflict, archive.ErrActiveLiveArchive.Error())
+		}
 		if err != nil {
 			return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		}

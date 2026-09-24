@@ -20,10 +20,7 @@ const AdminQueueDrawerContent = ({ queue, handleClose }: Props) => {
 
   const schema = z.object({
     id: z.string().min(2, { message: t('validation.id') }),
-    processing: z.boolean(),
     on_hold: z.boolean(),
-    video_processing: z.boolean(),
-    chat_processing: z.boolean(),
     live_archive: z.boolean(),
 
     task_vod_create_folder: z.nativeEnum(QueueTaskStatus),
@@ -41,10 +38,7 @@ const AdminQueueDrawerContent = ({ queue, handleClose }: Props) => {
     mode: "controlled",
     initialValues: {
       id: queue.id,
-      processing: queue.processing ?? false,
       on_hold: queue.on_hold ?? false,
-      video_processing: queue.video_processing ?? false,
-      chat_processing: queue.chat_processing ?? false,
       live_archive: queue.live_archive ?? false,
 
       task_vod_create_folder: queue.task_vod_create_folder,
@@ -107,29 +101,12 @@ const AdminQueueDrawerContent = ({ queue, handleClose }: Props) => {
         />
 
         <Checkbox
-          label={t('isProcessingLabel')}
-          key={form.key('processing')}
-          {...form.getInputProps('processing', { type: "checkbox" })}
-          py={3}
-        />
-        <Checkbox
           label={t('onHoldLabel')}
           key={form.key('on_hold')}
           {...form.getInputProps('on_hold', { type: "checkbox" })}
           py={3}
         />
-        <Checkbox
-          label={t('videoProcessingLabel')}
-          key={form.key('video_processing')}
-          {...form.getInputProps('video_processing', { type: "checkbox" })}
-          py={3}
-        />
-        <Checkbox
-          label={t('chatProcessingLabel')}
-          key={form.key('chat_processing')}
-          {...form.getInputProps('chat_processing', { type: "checkbox" })}
-          py={3}
-        />
+
         <Checkbox
           label={t('liveArchiveLabel')}
           key={form.key('live_archive')}

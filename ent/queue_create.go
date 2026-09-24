@@ -54,48 +54,6 @@ func (_c *QueueCreate) SetNillableOnHold(v *bool) *QueueCreate {
 	return _c
 }
 
-// SetVideoProcessing sets the "video_processing" field.
-func (_c *QueueCreate) SetVideoProcessing(v bool) *QueueCreate {
-	_c.mutation.SetVideoProcessing(v)
-	return _c
-}
-
-// SetNillableVideoProcessing sets the "video_processing" field if the given value is not nil.
-func (_c *QueueCreate) SetNillableVideoProcessing(v *bool) *QueueCreate {
-	if v != nil {
-		_c.SetVideoProcessing(*v)
-	}
-	return _c
-}
-
-// SetChatProcessing sets the "chat_processing" field.
-func (_c *QueueCreate) SetChatProcessing(v bool) *QueueCreate {
-	_c.mutation.SetChatProcessing(v)
-	return _c
-}
-
-// SetNillableChatProcessing sets the "chat_processing" field if the given value is not nil.
-func (_c *QueueCreate) SetNillableChatProcessing(v *bool) *QueueCreate {
-	if v != nil {
-		_c.SetChatProcessing(*v)
-	}
-	return _c
-}
-
-// SetProcessing sets the "processing" field.
-func (_c *QueueCreate) SetProcessing(v bool) *QueueCreate {
-	_c.mutation.SetProcessing(v)
-	return _c
-}
-
-// SetNillableProcessing sets the "processing" field if the given value is not nil.
-func (_c *QueueCreate) SetNillableProcessing(v *bool) *QueueCreate {
-	if v != nil {
-		_c.SetProcessing(*v)
-	}
-	return _c
-}
-
 // SetTaskVodCreateFolder sets the "task_vod_create_folder" field.
 func (_c *QueueCreate) SetTaskVodCreateFolder(v utils.TaskStatus) *QueueCreate {
 	_c.mutation.SetTaskVodCreateFolder(v)
@@ -402,18 +360,6 @@ func (_c *QueueCreate) defaults() {
 		v := queue.DefaultOnHold
 		_c.mutation.SetOnHold(v)
 	}
-	if _, ok := _c.mutation.VideoProcessing(); !ok {
-		v := queue.DefaultVideoProcessing
-		_c.mutation.SetVideoProcessing(v)
-	}
-	if _, ok := _c.mutation.ChatProcessing(); !ok {
-		v := queue.DefaultChatProcessing
-		_c.mutation.SetChatProcessing(v)
-	}
-	if _, ok := _c.mutation.Processing(); !ok {
-		v := queue.DefaultProcessing
-		_c.mutation.SetProcessing(v)
-	}
 	if _, ok := _c.mutation.TaskVodCreateFolder(); !ok {
 		v := queue.DefaultTaskVodCreateFolder
 		_c.mutation.SetTaskVodCreateFolder(v)
@@ -483,15 +429,6 @@ func (_c *QueueCreate) check() error {
 	}
 	if _, ok := _c.mutation.OnHold(); !ok {
 		return &ValidationError{Name: "on_hold", err: errors.New(`ent: missing required field "Queue.on_hold"`)}
-	}
-	if _, ok := _c.mutation.VideoProcessing(); !ok {
-		return &ValidationError{Name: "video_processing", err: errors.New(`ent: missing required field "Queue.video_processing"`)}
-	}
-	if _, ok := _c.mutation.ChatProcessing(); !ok {
-		return &ValidationError{Name: "chat_processing", err: errors.New(`ent: missing required field "Queue.chat_processing"`)}
-	}
-	if _, ok := _c.mutation.Processing(); !ok {
-		return &ValidationError{Name: "processing", err: errors.New(`ent: missing required field "Queue.processing"`)}
 	}
 	if v, ok := _c.mutation.TaskVodCreateFolder(); ok {
 		if err := queue.TaskVodCreateFolderValidator(v); err != nil {
@@ -595,18 +532,6 @@ func (_c *QueueCreate) createSpec() (*Queue, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.OnHold(); ok {
 		_spec.SetField(queue.FieldOnHold, field.TypeBool, value)
 		_node.OnHold = value
-	}
-	if value, ok := _c.mutation.VideoProcessing(); ok {
-		_spec.SetField(queue.FieldVideoProcessing, field.TypeBool, value)
-		_node.VideoProcessing = value
-	}
-	if value, ok := _c.mutation.ChatProcessing(); ok {
-		_spec.SetField(queue.FieldChatProcessing, field.TypeBool, value)
-		_node.ChatProcessing = value
-	}
-	if value, ok := _c.mutation.Processing(); ok {
-		_spec.SetField(queue.FieldProcessing, field.TypeBool, value)
-		_node.Processing = value
 	}
 	if value, ok := _c.mutation.TaskVodCreateFolder(); ok {
 		_spec.SetField(queue.FieldTaskVodCreateFolder, field.TypeEnum, value)
@@ -766,42 +691,6 @@ func (u *QueueUpsert) SetOnHold(v bool) *QueueUpsert {
 // UpdateOnHold sets the "on_hold" field to the value that was provided on create.
 func (u *QueueUpsert) UpdateOnHold() *QueueUpsert {
 	u.SetExcluded(queue.FieldOnHold)
-	return u
-}
-
-// SetVideoProcessing sets the "video_processing" field.
-func (u *QueueUpsert) SetVideoProcessing(v bool) *QueueUpsert {
-	u.Set(queue.FieldVideoProcessing, v)
-	return u
-}
-
-// UpdateVideoProcessing sets the "video_processing" field to the value that was provided on create.
-func (u *QueueUpsert) UpdateVideoProcessing() *QueueUpsert {
-	u.SetExcluded(queue.FieldVideoProcessing)
-	return u
-}
-
-// SetChatProcessing sets the "chat_processing" field.
-func (u *QueueUpsert) SetChatProcessing(v bool) *QueueUpsert {
-	u.Set(queue.FieldChatProcessing, v)
-	return u
-}
-
-// UpdateChatProcessing sets the "chat_processing" field to the value that was provided on create.
-func (u *QueueUpsert) UpdateChatProcessing() *QueueUpsert {
-	u.SetExcluded(queue.FieldChatProcessing)
-	return u
-}
-
-// SetProcessing sets the "processing" field.
-func (u *QueueUpsert) SetProcessing(v bool) *QueueUpsert {
-	u.Set(queue.FieldProcessing, v)
-	return u
-}
-
-// UpdateProcessing sets the "processing" field to the value that was provided on create.
-func (u *QueueUpsert) UpdateProcessing() *QueueUpsert {
-	u.SetExcluded(queue.FieldProcessing)
 	return u
 }
 
@@ -1163,48 +1052,6 @@ func (u *QueueUpsertOne) SetOnHold(v bool) *QueueUpsertOne {
 func (u *QueueUpsertOne) UpdateOnHold() *QueueUpsertOne {
 	return u.Update(func(s *QueueUpsert) {
 		s.UpdateOnHold()
-	})
-}
-
-// SetVideoProcessing sets the "video_processing" field.
-func (u *QueueUpsertOne) SetVideoProcessing(v bool) *QueueUpsertOne {
-	return u.Update(func(s *QueueUpsert) {
-		s.SetVideoProcessing(v)
-	})
-}
-
-// UpdateVideoProcessing sets the "video_processing" field to the value that was provided on create.
-func (u *QueueUpsertOne) UpdateVideoProcessing() *QueueUpsertOne {
-	return u.Update(func(s *QueueUpsert) {
-		s.UpdateVideoProcessing()
-	})
-}
-
-// SetChatProcessing sets the "chat_processing" field.
-func (u *QueueUpsertOne) SetChatProcessing(v bool) *QueueUpsertOne {
-	return u.Update(func(s *QueueUpsert) {
-		s.SetChatProcessing(v)
-	})
-}
-
-// UpdateChatProcessing sets the "chat_processing" field to the value that was provided on create.
-func (u *QueueUpsertOne) UpdateChatProcessing() *QueueUpsertOne {
-	return u.Update(func(s *QueueUpsert) {
-		s.UpdateChatProcessing()
-	})
-}
-
-// SetProcessing sets the "processing" field.
-func (u *QueueUpsertOne) SetProcessing(v bool) *QueueUpsertOne {
-	return u.Update(func(s *QueueUpsert) {
-		s.SetProcessing(v)
-	})
-}
-
-// UpdateProcessing sets the "processing" field to the value that was provided on create.
-func (u *QueueUpsertOne) UpdateProcessing() *QueueUpsertOne {
-	return u.Update(func(s *QueueUpsert) {
-		s.UpdateProcessing()
 	})
 }
 
@@ -1780,48 +1627,6 @@ func (u *QueueUpsertBulk) SetOnHold(v bool) *QueueUpsertBulk {
 func (u *QueueUpsertBulk) UpdateOnHold() *QueueUpsertBulk {
 	return u.Update(func(s *QueueUpsert) {
 		s.UpdateOnHold()
-	})
-}
-
-// SetVideoProcessing sets the "video_processing" field.
-func (u *QueueUpsertBulk) SetVideoProcessing(v bool) *QueueUpsertBulk {
-	return u.Update(func(s *QueueUpsert) {
-		s.SetVideoProcessing(v)
-	})
-}
-
-// UpdateVideoProcessing sets the "video_processing" field to the value that was provided on create.
-func (u *QueueUpsertBulk) UpdateVideoProcessing() *QueueUpsertBulk {
-	return u.Update(func(s *QueueUpsert) {
-		s.UpdateVideoProcessing()
-	})
-}
-
-// SetChatProcessing sets the "chat_processing" field.
-func (u *QueueUpsertBulk) SetChatProcessing(v bool) *QueueUpsertBulk {
-	return u.Update(func(s *QueueUpsert) {
-		s.SetChatProcessing(v)
-	})
-}
-
-// UpdateChatProcessing sets the "chat_processing" field to the value that was provided on create.
-func (u *QueueUpsertBulk) UpdateChatProcessing() *QueueUpsertBulk {
-	return u.Update(func(s *QueueUpsert) {
-		s.UpdateChatProcessing()
-	})
-}
-
-// SetProcessing sets the "processing" field.
-func (u *QueueUpsertBulk) SetProcessing(v bool) *QueueUpsertBulk {
-	return u.Update(func(s *QueueUpsert) {
-		s.SetProcessing(v)
-	})
-}
-
-// UpdateProcessing sets the "processing" field to the value that was provided on create.
-func (u *QueueUpsertBulk) UpdateProcessing() *QueueUpsertBulk {
-	return u.Update(func(s *QueueUpsert) {
-		s.UpdateProcessing()
 	})
 }
 

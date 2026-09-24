@@ -1,10 +1,10 @@
 ARG TWITCHDOWNLOADER_VERSION="1.56.5"
 ARG YT_DLP_VERSION="2026.07.04"
 ARG FFMPEG_VERSION="9.0"
-ARG FFMPEG_RELEASE="autobuild-2026-09-10-15-31"
-ARG FFMPEG_BUILD="n9.0.1-27-g9b0578816c"
-ARG FFMPEG_SHA256_LINUX64="70b162b63517038ff18c8a50f4ea11f919a071f945c5881e87b0b2cd7173f8c7"
-ARG FFMPEG_SHA256_LINUXARM64="2de63f615df3a46ac26921ac0314f501c3536aaf9fd5197ffe03dd17cd01a404"
+ARG FFMPEG_RELEASE="autobuild-2026-08-31-13-27"
+ARG FFMPEG_BUILD="n9.0.1-11-ge47273f4d9"
+ARG FFMPEG_SHA256_LINUX64="182c1b509720e939bb47bfb47dc29cc0c298640401128e3dce8627d10707eb5a"
+ARG FFMPEG_SHA256_LINUXARM64="e2dd447c8a47849c5812d87e54a47b20ae0f3603d38989440f4a5fe1af8755b1"
 
 #
 # API Build
@@ -71,9 +71,8 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
 COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
 
 #
-# FFmpeg (static build, latest stable - Debian's ffmpeg is very old)
-# Uses BtbN static builds (linked from ffmpeg.org) to get the latest release.
-# Tracks the latest point release of the major version in FFMPEG_VERSION.
+# FFmpeg (static build from BtbN, linked from ffmpeg.org)
+# Pin a month-end build: BtbN retains these for two years, daily builds for 14 days.
 #
 FROM debian:bookworm-slim AS ffmpeg
 ARG FFMPEG_VERSION
