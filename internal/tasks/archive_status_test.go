@@ -137,3 +137,47 @@ func TestArchiveStatusTransactions(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, needsRecovery, "terminal archives are not restarted by the existing watchdog")
 }
+
+func TestExhaustedChatRecoveryCompletesArchive(t *testing.T) {
+	t.Setenv("CONFIG_DIR", t.TempDir())
+	t.Setenv("DEBUG", "false")
+	t.Setenv("TWITCH_CLIENT_ID", "test")
+	t.Setenv("TWITCH_CLIENT_SECRET", "test")
+	_, err := config.Init()
+	require.NoError(t, err)
+	require.True(t, config.Get().Archive.GenerateNFOFiles)
+	db := pgtest.Open(t)
+	client := ent.NewClient(ent.Driver(entsql.OpenDB(dialect.Postgres, db)))
+	store := &database.Database{SQLDB: db, Client: client}
+	ctx := context.WithValue(t.Context(), tasks_shared.StoreKey, store)
+	probe := &statusProbeEnqueuer{}
+	ctx = context.WithValue(ctx, tasks_shared.EnqueuerKey, probe)
+	require.NoError(t, client.Schema.Create(ctx))
+	_, err = db.ExecContext(ctx, `CREATE TABLE status_probe(kind text NOT NULL)`)
+	require.NoError(t, err)
+	ch := client.Channel.Create().SetName("test").SetDisplayName("Test").SetImagePath("").SaveX(ctx)
+	for _, task := range []utils.TaskName{utils.TaskDownloadChat, utils.TaskConvertChat, utils.TaskRenderChat, utils.TaskMoveChat} {
+		t.Run(string(task), func(t *testing.T) {
+			_, err := db.ExecContext(ctx, `TRUNCATE status_probe`)
+			require.NoError(t, err)
+			v := client.Vod.Create().SetChannel(ch).SetExtID(string(task)).SetTitle("Test").SetWebThumbnailPath("").SetVideoPath("").SetStatus(utils.ArchiveFinalizing).SaveX(ctx)
+			q := client.Queue.Create().SetVod(v).SetLiveArchive(true).SetArchiveChat(true).SetRenderChat(true).
+				SetTaskVideoDownload(utils.Success).SetTaskVideoConvert(utils.Success).SetTaskVideoMove(utils.Success).
+				SetTaskChatDownload(utils.Success).SetTaskChatConvert(utils.Success).SetTaskChatRender(utils.Success).SetTaskChatMove(utils.Success).SaveX(ctx)
+			require.NoError(t, setQueueStatus(ctx, client, QueueStatusInput{QueueId: q.ID, Task: task, Status: utils.Running}))
+			job := &rivertype.JobRow{Kind: string(task)}
+			probe.fail = true
+			require.Error(t, recoverExhaustedArchiveJob(ctx, store, nil, job, q.ID))
+			require.Equal(t, utils.ArchiveFinalizing, client.Vod.GetX(ctx, v.ID).Status)
+			probe.fail = false
+			require.NoError(t, recoverExhaustedArchiveJob(ctx, store, nil, job, q.ID))
+			require.Equal(t, utils.ArchiveCompleted, client.Vod.GetX(ctx, v.ID).Status)
+			require.NoError(t, recoverExhaustedArchiveJob(ctx, store, nil, job, q.ID))
+			for _, kind := range []string{(UpdateVideoStorageUsage{}).Kind(), (GenerateNFOFilesArgs{}).Kind()} {
+				var count int
+				require.NoError(t, db.QueryRowContext(ctx, `SELECT count(*) FROM status_probe WHERE kind=$1`, kind).Scan(&count))
+				require.Equal(t, 1, count, "completion follow-up must be inserted once")
+			}
+		})
+	}
+}

@@ -1,4 +1,4 @@
-import { ArchiveStatus, activeArchiveStatuses } from "@/app/util/archiveStatus";
+import { ArchiveStatus, activeArchiveStatuses, isArchiveActive } from "@/app/util/archiveStatus";
 import { AxiosInstance } from "axios";
 import { ApiResponse } from "./useAxios";
 import {
@@ -89,6 +89,7 @@ const useGetQueueItems = (
   return useQuery({
     queryKey: ["queue", unfinishedOnly],
     queryFn: () => getQueueItems(axiosPrivate, unfinishedOnly),
+    refetchInterval: (query) => query.state.data?.some(queue => isArchiveActive(queue.edges.vod.status)) ? 5000 : false,
   });
 };
 
@@ -135,6 +136,7 @@ const useGetQueueItem = (
   return useQuery({
     queryKey: ["queue", id],
     queryFn: () => getQueueItem(axiosPrivate, id),
+    refetchInterval: (query) => query.state.data && isArchiveActive(query.state.data.edges.vod.status) ? 5000 : false,
     ...options,
   });
 };

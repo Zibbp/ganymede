@@ -370,7 +370,10 @@ func recoverExhaustedArchiveJob(ctx context.Context, store *database.Database, r
 		if taskName == "" {
 			return nil
 		}
-		return setQueueStatus(ctx, store.Client, QueueStatusInput{Status: utils.Failed, QueueId: queueID, Task: taskName})
+		if err := setQueueStatus(ctx, store.Client, QueueStatusInput{Status: utils.Failed, QueueId: queueID, Task: taskName}); err != nil {
+			return err
+		}
+		return checkIfTasksAreDone(ctx, store.Client, ArchiveVideoInput{QueueId: queueID})
 	}
 }
 

@@ -288,6 +288,7 @@ const useFetchVideosFilter = (params: FetchVideosFilterOptions) => {
         order
       ),
     placeholderData: keepPreviousData, // previous data is kept until the new data is swapped in. This prevents flashing when changing pages, filtering, etc.
+    refetchInterval: (query) => query.state.data?.data.some(video => isArchiveActive(video.status)) ? 5000 : false,
   });
 };
 
@@ -299,7 +300,7 @@ const useFetchVideo = (params: FetchVideoOptions) => {
       fetchVideo(id, with_channel, with_chapters, with_muted_segments),
     refetchInterval: (query) => {
       const video = query.state.data;
-      return video && isArchiveActive(video.status) && !video.live_preview_available
+      return video && isArchiveActive(video.status)
         ? 5000
         : false;
     },
@@ -366,6 +367,7 @@ const useSearchVideos = (
     queryFn: () =>
       searchVideos(limit, offset, query, types, fields, sort_by, order),
     placeholderData: keepPreviousData, // previous data is kept until the new data is swapped in. This prevents flashing when changing pages, filtering, etc.
+    refetchInterval: (query) => query.state.data?.data.some(video => isArchiveActive(video.status)) ? 5000 : false,
     enabled: enabled,
   });
 };

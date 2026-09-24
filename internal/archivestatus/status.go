@@ -33,12 +33,6 @@ func ChatDone(q *ent.Queue) bool {
 
 // FromQueue summarizes the pipeline; task errors remain available on the queue.
 func FromQueue(q *ent.Queue) utils.ArchiveStatus {
-	if VideoDone(q) {
-		if ChatDone(q) {
-			return utils.ArchiveCompleted
-		}
-		return utils.ArchiveFinalizing
-	}
 	for _, status := range []utils.TaskStatus{
 		q.TaskVodCreateFolder, q.TaskVodSaveInfo, q.TaskVodDownloadThumbnail,
 		q.TaskVideoDownload, q.TaskVideoConvert, q.TaskVideoMove,
@@ -46,6 +40,12 @@ func FromQueue(q *ent.Queue) utils.ArchiveStatus {
 		if status == utils.Failed {
 			return utils.ArchiveFailed
 		}
+	}
+	if VideoDone(q) {
+		if ChatDone(q) {
+			return utils.ArchiveCompleted
+		}
+		return utils.ArchiveFinalizing
 	}
 	if q.TaskVideoDownload == utils.Running {
 		return utils.ArchiveRunning

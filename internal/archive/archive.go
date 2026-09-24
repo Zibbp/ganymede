@@ -3,6 +3,7 @@ package archive
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
+	entChannel "github.com/zibbp/ganymede/ent/channel"
 	entQueue "github.com/zibbp/ganymede/ent/queue"
+	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/blocked"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
@@ -22,6 +25,9 @@ import (
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
+
+// ErrActiveLiveArchive indicates that this stream already has an active archive.
+var ErrActiveLiveArchive = errors.New("stream already has an active archive")
 
 type Service struct {
 	Store              *database.Database
@@ -52,6 +58,25 @@ func NewService(store *database.Database, channelService *channel.Service, vodSe
 func (s *Service) createArchiveRecordsAndEnqueue(ctx context.Context, vodDTO vod.Vod, channelID uuid.UUID, queueDTO queue.Queue) (*ArchiveResponse, error) {
 	var queueID uuid.UUID
 	err := s.Store.WithTx(ctx, func(txClient *ent.Client, tx *sql.Tx) error {
+		if queueDTO.LiveArchive {
+			// Serialize the check and insert across API and worker processes.
+			var lockedChannelID uuid.UUID
+			if err := tx.QueryRowContext(ctx, "SELECT id FROM channels WHERE id = $1 FOR UPDATE", channelID).Scan(&lockedChannelID); err != nil {
+				return fmt.Errorf("lock live archive channel: %w", err)
+			}
+			exists, err := txClient.Vod.Query().Where(
+				entVod.HasChannelWith(entChannel.ID(channelID)),
+				entVod.PlatformEQ(vodDTO.Platform),
+				entVod.ExtStreamID(vodDTO.ExtStreamID),
+				entVod.StatusIn(utils.ActiveArchiveStatuses()...),
+			).Exist(ctx)
+			if err != nil {
+				return err
+			}
+			if exists {
+				return ErrActiveLiveArchive
+			}
+		}
 		v, err := s.VodService.CreateVodWithClient(ctx, txClient, vodDTO, channelID)
 		if err != nil {
 			return err

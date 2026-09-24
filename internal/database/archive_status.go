@@ -30,6 +30,8 @@ func migrateArchiveStatus(ctx context.Context, db *sql.DB) error {
 		`UPDATE vods v SET status = CASE
 			WHEN NOT v.processing THEN 'completed'
 			WHEN q.id IS NULL THEN 'failed'
+			WHEN 'failed' IN (q.task_vod_create_folder, q.task_vod_save_info, q.task_vod_download_thumbnail,
+				q.task_video_download, q.task_video_convert, q.task_video_move) THEN 'failed'
 			WHEN q.task_video_download = 'success' AND q.task_video_convert = 'success' AND q.task_video_move = 'success' THEN
 				CASE WHEN NOT q.archive_chat
 					OR 'failed' IN (q.task_chat_download, q.task_chat_move)
@@ -39,8 +41,6 @@ func migrateArchiveStatus(ctx context.Context, db *sql.DB) error {
 						AND (NOT q.live_archive OR q.task_chat_convert = 'success')
 						AND (NOT q.render_chat OR q.task_chat_render = 'success'))
 				THEN 'completed' ELSE 'finalizing' END
-			WHEN 'failed' IN (q.task_vod_create_folder, q.task_vod_save_info, q.task_vod_download_thumbnail,
-				q.task_video_download, q.task_video_convert, q.task_video_move) THEN 'failed'
 			WHEN q.task_video_download = 'running' THEN 'running'
 			WHEN q.task_video_download = 'success' THEN 'finalizing'
 			ELSE 'queued'

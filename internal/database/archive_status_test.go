@@ -45,6 +45,27 @@ func TestArchiveStatusMigration(t *testing.T) {
 				{"chat-waiting", func(q *ent.QueueCreate) {
 					q.SetTaskVideoDownload(utils.Success).SetTaskVideoConvert(utils.Success).SetTaskVideoMove(utils.Success)
 				}, utils.ArchiveFinalizing},
+				{"folder-failed-chat-false", func(q *ent.QueueCreate) {
+					q.SetArchiveChat(false).SetTaskVideoDownload(utils.Success).SetTaskVideoConvert(utils.Success).SetTaskVideoMove(utils.Success).SetTaskVodCreateFolder(utils.Failed)
+				}, utils.ArchiveFailed},
+				{"folder-failed-chat-true", func(q *ent.QueueCreate) {
+					q.SetArchiveChat(true).SetTaskVideoDownload(utils.Success).SetTaskVideoConvert(utils.Success).SetTaskVideoMove(utils.Success).SetTaskVodCreateFolder(utils.Failed)
+				}, utils.ArchiveFailed},
+				{"info-failed-chat-false", func(q *ent.QueueCreate) {
+					q.SetArchiveChat(false).SetTaskVideoDownload(utils.Success).SetTaskVideoConvert(utils.Success).SetTaskVideoMove(utils.Success).SetTaskVodSaveInfo(utils.Failed)
+				}, utils.ArchiveFailed},
+				{"info-failed-chat-true", func(q *ent.QueueCreate) {
+					q.SetArchiveChat(true).SetTaskVideoDownload(utils.Success).SetTaskVideoConvert(utils.Success).SetTaskVideoMove(utils.Success).SetTaskVodSaveInfo(utils.Failed)
+				}, utils.ArchiveFailed},
+				{"thumbnail-failed-chat-false", func(q *ent.QueueCreate) {
+					q.SetArchiveChat(false).SetTaskVideoDownload(utils.Success).SetTaskVideoConvert(utils.Success).SetTaskVideoMove(utils.Success).SetTaskVodDownloadThumbnail(utils.Failed)
+				}, utils.ArchiveFailed},
+				{"thumbnail-failed-chat-true", func(q *ent.QueueCreate) {
+					q.SetArchiveChat(true).SetTaskVideoDownload(utils.Success).SetTaskVideoConvert(utils.Success).SetTaskVideoMove(utils.Success).SetTaskVodDownloadThumbnail(utils.Failed)
+				}, utils.ArchiveFailed},
+				{"already-completed-failed-preparation", func(q *ent.QueueCreate) {
+					q.SetTaskVodSaveInfo(utils.Failed)
+				}, utils.ArchiveCompleted},
 				{"orphan", nil, utils.ArchiveFailed},
 				{"already-completed", nil, utils.ArchiveCompleted},
 			}
@@ -62,7 +83,7 @@ func TestArchiveStatusMigration(t *testing.T) {
     ALTER TABLE vods ADD COLUMN processing boolean NOT NULL DEFAULT true;
     ALTER TABLE queues ADD COLUMN processing boolean NOT NULL DEFAULT true,
       ADD COLUMN video_processing boolean NOT NULL DEFAULT true, ADD COLUMN chat_processing boolean NOT NULL DEFAULT true;
-    UPDATE vods SET processing = false WHERE ext_id = 'already-completed'`)
+    UPDATE vods SET processing = false WHERE ext_id LIKE 'already-completed%'`)
 			require.NoError(t, err)
 			for _, role := range []bool{workerFirst, !workerFirst} {
 				store := NewDatabase(ctx, DatabaseConnectionInput{DBString: dsn, IsWorker: role})

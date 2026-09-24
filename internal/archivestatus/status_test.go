@@ -1,6 +1,7 @@
 package archivestatus
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -46,4 +47,25 @@ func TestCompletionWithOptionalChat(t *testing.T) {
 	require.Equal(t, utils.ArchiveFinalizing, FromQueue(&base), "explicit chat retry reopens finalization")
 	base.TaskChatRender = utils.Success
 	require.Equal(t, utils.ArchiveCompleted, FromQueue(&base))
+}
+
+func TestPreparationFailurePreventsCompletion(t *testing.T) {
+	for _, task := range []string{"folder", "info", "thumbnail"} {
+		for _, archiveChat := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/chat=%t", task, archiveChat), func(t *testing.T) {
+				q := ent.Queue{ArchiveChat: archiveChat, TaskVideoDownload: utils.Success, TaskVideoConvert: utils.Success, TaskVideoMove: utils.Success}
+				switch task {
+				case "folder":
+					q.TaskVodCreateFolder = utils.Failed
+				case "info":
+					q.TaskVodSaveInfo = utils.Failed
+				case "thumbnail":
+					q.TaskVodDownloadThumbnail = utils.Failed
+				}
+				require.Equal(t, utils.ArchiveFailed, FromQueue(&q))
+				q.TaskChatDownload, q.TaskChatMove = utils.Success, utils.Success
+				require.Equal(t, utils.ArchiveFailed, FromQueue(&q))
+			})
+		}
+	}
 }

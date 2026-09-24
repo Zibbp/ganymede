@@ -137,39 +137,40 @@ const VideoPlayer = ({ video, ref }: Params) => {
   }, [player, video, playbackData, searchParams])
 
 
+  // Read the current video and mutation callbacks without restarting the timer on every render.
+  const reportPlaybackProgress = useRef<(() => boolean) | null>(null);
+  useEffect(() => {
+    reportPlaybackProgress.current = () => {
+      if (!player.current || player.current.paused) return false;
+      const playerTimeInt = Math.floor(player.current.currentTime);
+      if (playerTimeInt === 0) return false;
+
+      updatePlaybackProgressMutation.mutate({
+        axiosPrivate,
+        videoId: video.id,
+        time: playerTimeInt,
+      });
+
+      if (video.status === ArchiveStatus.Completed && playerTimeInt / video.duration >= 0.98) {
+        setPlaybackProgressMutation.mutate({
+          axiosPrivate,
+          videoId: video.id,
+          status: PlaybackStatus.Finished,
+        });
+        return true;
+      }
+      return false;
+    };
+  }, [player, video, axiosPrivate, updatePlaybackProgressMutation, setPlaybackProgressMutation]);
+
   // Playback progress reporting
   useEffect(() => {
     if (!isLoggedIn) return;
-    const playbackInerval = setInterval(async () => {
-      if (player.current == null) return;
-      if (player.current.paused) return;
-
-      const playerTimeInt = Math.floor(player.current.currentTime)
-      if (playerTimeInt == 0) return;
-
-
-      updatePlaybackProgressMutation.mutate({
-        axiosPrivate: axiosPrivate,
-        videoId: video.id,
-        time: playerTimeInt
-      })
-
-      // mark video as finished if over duration threshold
-      if (video.status === ArchiveStatus.Completed && (playerTimeInt / video.duration >= 0.98)) {
-        setPlaybackProgressMutation.mutate({
-          axiosPrivate: axiosPrivate,
-          videoId: video.id,
-          status: PlaybackStatus.Finished
-        })
-
-        // remove interval
-        clearInterval(playbackInerval)
-      }
+    const playbackInterval = setInterval(() => {
+      if (reportPlaybackProgress.current?.()) clearInterval(playbackInterval);
     }, 10000);
-    return () => clearInterval(playbackInerval);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => clearInterval(playbackInterval);
+  }, [isLoggedIn, video.id, video.status]);
 
   // Fast tick for chat player - set player information in bus
   useEffect(() => {
