@@ -43,6 +43,12 @@ func (s *AdminTest) GetVideoStatisticsTest(t *testing.T) {
 	assert.Equal(t, 1, stats.ChannelCount)
 	assert.Equal(t, 0, stats.ChannelVideos["test_channel"])
 	assert.Equal(t, 0, stats.VideoTypes["live"])
+	assert.Equal(t, int64(0), stats.TotalDurationSeconds)
+	assert.Equal(t, int64(0), stats.TotalViews)
+	assert.Equal(t, int64(0), stats.TotalLocalViews)
+	assert.Equal(t, int64(0), stats.TotalStorageBytes)
+	assert.NotNil(t, stats.ChannelVideos)
+	assert.NotNil(t, stats.VideoTypes)
 }
 
 // GetSystemOverviewTest tests the GetVideoStatistics function
@@ -61,6 +67,13 @@ func (s *AdminTest) GetSystemOverviewTest(t *testing.T) {
 	assert.LessOrEqual(t, int64(1), overview.MemoryTotal)
 	assert.LessOrEqual(t, int64(1), overview.VideosDirectoryFreeSpace)
 	assert.Equal(t, int64(0), overview.VideosDirectoryUsedSpace)
+	assert.Equal(t, overview.VideosDirectoryFreeSpace+overview.VideosDirectoryUsedSpace, overview.VideosDirectoryTotalSpace)
+	assert.GreaterOrEqual(t, overview.Queue.Total, 0)
+	assert.GreaterOrEqual(t, overview.Queue.Processing, 0)
+	assert.GreaterOrEqual(t, overview.Queue.OnHold, 0)
+	assert.GreaterOrEqual(t, overview.Queue.LiveArchiving, 0)
+	assert.GreaterOrEqual(t, overview.Queue.Failed, 0)
+	assert.GreaterOrEqual(t, overview.UserCount, 0)
 }
 
 // GetStorageDistributionTest tests the GetStorageDistribution function
@@ -76,4 +89,7 @@ func (s *AdminTest) GetStorageDistributionTest(t *testing.T) {
 	resp, err := s.App.AdminService.GetStorageDistribution(context.Background())
 	assert.NoError(t, err)
 	assert.Equal(t, int64(0), resp.StorageDistribution["test_channel2"])
+	assert.NotNil(t, resp.StorageDistribution)
+	assert.NotNil(t, resp.StorageByType)
+	assert.NotNil(t, resp.LargestVideos)
 }

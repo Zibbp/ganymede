@@ -1,7 +1,6 @@
 import { AxiosInstance } from "axios";
 import { ApiResponse } from "./useAxios";
 import { useQuery } from "@tanstack/react-query";
-import { Video } from "./useVideos";
 
 export interface GanymedeInformation {
   commit_hash: string;
@@ -22,18 +21,43 @@ export interface GanymedeVideoStatistics {
   channel_count: number;
   channel_videos: Record<string, number>;
   video_types: Record<string, number>;
+  total_duration_seconds: number;
+  total_views: number;
+  total_local_views: number;
+  total_storage_bytes: number;
+}
+
+export interface GanymedeQueueOverview {
+  total: number;
+  processing: number;
+  on_hold: number;
+  live_archiving: number;
+  failed: number;
 }
 
 export interface GanymedeSystemOverview {
   videos_directory_free_space: number; // Free space in bytes
   videos_directory_used_space: number; // Used space in bytes
+  videos_directory_total_space: number; // Total space in bytes (free + used)
   cpu_cores: number; // Number of CPU cores
   memory_total: number; // Total memory in bytes
+  queue: GanymedeQueueOverview;
+  user_count: number;
+}
+
+export interface GanymedeLargestVideo {
+  id: string;
+  title: string;
+  channel_name: string;
+  storage_size_bytes: number;
+  duration: number;
+  streamed_at: string;
 }
 
 export interface GanymedeStorageDistribution {
   storage_distribution: Record<string, number>; // Map of channel names to total storage used
-  largest_videos: Video[]; // List of top largest videos
+  storage_by_type: Record<string, number>; // Map of video types to total storage used in bytes
+  largest_videos: GanymedeLargestVideo[]; // List of top largest videos
 }
 
 const getGanymedeInformation = async (
@@ -81,6 +105,8 @@ const useGetGanymedeSystemOverview = (axiosPrivate: AxiosInstance) => {
   return useQuery({
     queryKey: ["ganymede-system-overview"],
     queryFn: () => getGanymedeSystemOverview(axiosPrivate),
+    refetchInterval: 30_000,
+    retry: 1,
   });
 };
 
