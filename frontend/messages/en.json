@@ -979,30 +979,49 @@
   },
   "AdminOverviewPage": {
     "title": "Admin - Overview",
-    "loading": "Loading overview",
+    "header": "Overview",
+    "refresh": "Refresh statistics",
+    "retry": "Retry",
     "error": "Error loading overview",
+    "library": {
+      "title": "Library",
+      "totalVideos": "Total Videos",
+      "totalChannels": "Total Channels",
+      "totalDuration": "Total Duration",
+      "totalViews": "Total Views",
+      "totalViewsDescription": "Source + local views",
+      "videosPerChannel": "Videos per channel",
+      "videoTypes": "Video types",
+      "channel": "Channel",
+      "videos": "Videos",
+      "otherChannels": "Other",
+      "noData": "No data yet",
+      "empty": "No videos archived yet."
+    },
+    "storage": {
+      "title": "Storage",
+      "usedOf": "{used} of {total} used",
+      "free": "{value} free",
+      "total": "{value} total",
+      "perChannel": "Storage per channel",
+      "byType": "Storage by video type",
+      "channel": "Channel",
+      "size": "Size",
+      "otherChannels": "Other",
+      "otherTypes": "Other",
+      "largestVideos": "Largest videos",
+      "noData": "No data yet",
+      "noLargeVideos": "No videos found"
+    },
     "system": {
-      "title": "System Overview",
-      "usedStorageText": "Used Storage",
-      "usedStorageDescription": "Total used storage",
-      "availableStorageText": "Available Storage",
-      "availableStorageDescription": "Total available storage",
-      "storageUsedText": "Storage Used",
-      "cpuCoresText": "CPU Cores",
-      "totalMemoryText": "Total Memory"
-    },
-    "videoStatistics": {
-      "title": "Video Statistics",
-      "totalVideosText": "Total Videos",
-      "totalChannelsText": "Total Channels",
-      "channelVideosMapTitle": "Channel Videos",
-      "videoTypeMapTitle": "Video Types"
-    },
-    "storageDistribution": {
-      "title": "Storage Distribution",
-      "channelStorageDistributionText": "Channel Storage Distribution",
-      "topLargeVideosText": "Top Largest Videos",
-      "noLargeVideosText": "No videos found"
+      "title": "System",
+      "viewInfo": "View system info",
+      "usedStorage": "Used Storage",
+      "freeStorage": "{value} free",
+      "cpuCores": "CPU Cores",
+      "totalMemory": "Total Memory",
+      "users": "Users",
+      "refreshNote": "System statistics refresh automatically every 30 seconds."
     }
   },
   "AdminNotificationsPage": {

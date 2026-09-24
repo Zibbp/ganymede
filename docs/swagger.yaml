@@ -2,6 +2,17 @@ basePath: /api/v1
 definitions:
   admin.GetStorageDistributionResponse:
     properties:
+      largest_videos:
+        description: Top largest videos by storage size
+        items:
+          $ref: '#/definitions/admin.LargestVideoItem'
+        type: array
+      storage_by_type:
+        additionalProperties:
+          format: int64
+          type: integer
+        description: Map of video types to total storage used in bytes
+        type: object
       storage_distribution:
         additionalProperties:
           format: int64
@@ -17,8 +28,15 @@ definitions:
       memory_total:
         description: Total memory in bytes
         type: integer
+      queue:
+        $ref: '#/definitions/admin.QueueOverview'
+      user_count:
+        type: integer
       videos_directory_free_space:
         description: Free space in bytes
+        type: integer
+      videos_directory_total_space:
+        description: Total space in bytes (free + used)
         type: integer
       videos_directory_used_space:
         description: Used space in bytes
@@ -32,6 +50,14 @@ definitions:
         additionalProperties:
           type: integer
         type: object
+      total_duration_seconds:
+        type: integer
+      total_local_views:
+        type: integer
+      total_storage_bytes:
+        type: integer
+      total_views:
+        type: integer
       video_count:
         type: integer
       video_types:
@@ -52,6 +78,21 @@ definitions:
       uptime:
         type: string
     type: object
+  admin.LargestVideoItem:
+    properties:
+      channel_name:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: string
+      storage_size_bytes:
+        type: integer
+      streamed_at:
+        type: string
+      title:
+        type: string
+    type: object
   admin.ProgramVersions:
     properties:
       ffmpeg:
@@ -60,6 +101,19 @@ definitions:
         type: string
       yt_dlp:
         type: string
+    type: object
+  admin.QueueOverview:
+    properties:
+      failed:
+        type: integer
+      live_archiving:
+        type: integer
+      on_hold:
+        type: integer
+      processing:
+        type: integer
+      total:
+        type: integer
     type: object
   archive.TwitchVodResponse:
     properties:

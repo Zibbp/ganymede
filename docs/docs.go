@@ -5191,6 +5191,21 @@ const docTemplate = `{
         "admin.GetStorageDistributionResponse": {
             "type": "object",
             "properties": {
+                "largest_videos": {
+                    "description": "Top largest videos by storage size",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/admin.LargestVideoItem"
+                    }
+                },
+                "storage_by_type": {
+                    "description": "Map of video types to total storage used in bytes",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
                 "storage_distribution": {
                     "description": "Map of channel names to total storage used",
                     "type": "object",
@@ -5212,8 +5227,18 @@ const docTemplate = `{
                     "description": "Total memory in bytes",
                     "type": "integer"
                 },
+                "queue": {
+                    "$ref": "#/definitions/admin.QueueOverview"
+                },
+                "user_count": {
+                    "type": "integer"
+                },
                 "videos_directory_free_space": {
                     "description": "Free space in bytes",
+                    "type": "integer"
+                },
+                "videos_directory_total_space": {
+                    "description": "Total space in bytes (free + used)",
                     "type": "integer"
                 },
                 "videos_directory_used_space": {
@@ -5233,6 +5258,18 @@ const docTemplate = `{
                     "additionalProperties": {
                         "type": "integer"
                     }
+                },
+                "total_duration_seconds": {
+                    "type": "integer"
+                },
+                "total_local_views": {
+                    "type": "integer"
+                },
+                "total_storage_bytes": {
+                    "type": "integer"
+                },
+                "total_views": {
+                    "type": "integer"
                 },
                 "video_count": {
                     "type": "integer"
@@ -5265,6 +5302,29 @@ const docTemplate = `{
                 }
             }
         },
+        "admin.LargestVideoItem": {
+            "type": "object",
+            "properties": {
+                "channel_name": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "storage_size_bytes": {
+                    "type": "integer"
+                },
+                "streamed_at": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "admin.ProgramVersions": {
             "type": "object",
             "properties": {
@@ -5276,6 +5336,26 @@ const docTemplate = `{
                 },
                 "yt_dlp": {
                     "type": "string"
+                }
+            }
+        },
+        "admin.QueueOverview": {
+            "type": "object",
+            "properties": {
+                "failed": {
+                    "type": "integer"
+                },
+                "live_archiving": {
+                    "type": "integer"
+                },
+                "on_hold": {
+                    "type": "integer"
+                },
+                "processing": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

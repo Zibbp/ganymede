@@ -979,30 +979,49 @@
   },
   "AdminOverviewPage": {
     "title": "Admin - Übersicht",
-    "loading": "Übersicht wird geladen",
+    "header": "Overview",
+    "refresh": "Refresh statistics",
+    "retry": "Retry",
     "error": "Fehler beim Laden der Übersicht",
+    "library": {
+      "title": "Library",
+      "totalVideos": "Total Videos",
+      "totalChannels": "Total Channels",
+      "totalDuration": "Total Duration",
+      "totalViews": "Total Views",
+      "totalViewsDescription": "Source + local views",
+      "videosPerChannel": "Videos per channel",
+      "videoTypes": "Video types",
+      "channel": "Channel",
+      "videos": "Videos",
+      "otherChannels": "Other",
+      "noData": "No data yet",
+      "empty": "No videos archived yet."
+    },
+    "storage": {
+      "title": "Storage",
+      "usedOf": "{used} of {total} used",
+      "free": "{value} free",
+      "total": "{value} total",
+      "perChannel": "Storage per channel",
+      "byType": "Storage by video type",
+      "channel": "Channel",
+      "size": "Size",
+      "otherChannels": "Other",
+      "otherTypes": "Other",
+      "largestVideos": "Largest videos",
+      "noData": "No data yet",
+      "noLargeVideos": "No videos found"
+    },
     "system": {
-      "title": "Systemübersicht",
-      "usedStorageText": "Genutzter Speicherplatz",
-      "usedStorageDescription": "Gesamter genutzter Speicherplatz",
-      "availableStorageText": "Verfügbarer Speicherplatz",
-      "availableStorageDescription": "Gesamter verfügbarer Speicherplatz",
-      "storageUsedText": "Speicherplatz genutzt",
-      "cpuCoresText": "CPU-Kerne",
-      "totalMemoryText": "Gesamter Arbeitsspeicher"
-    },
-    "videoStatistics": {
-      "title": "Videostatistiken",
-      "totalVideosText": "Anzahl Videos",
-      "totalChannelsText": "Anzahl Kanäle",
-      "channelVideosMapTitle": "Kanalvideos",
-      "videoTypeMapTitle": "Videotypen"
-    },
-    "storageDistribution": {
-      "title": "Speicherverteilung",
-      "channelStorageDistributionText": "Kanalspeicherverteilung",
-      "topLargeVideosText": "Größte Videos",
-      "noLargeVideosText": "Keine Videos gefunden"
+      "title": "System",
+      "viewInfo": "View system info",
+      "usedStorage": "Used Storage",
+      "freeStorage": "{value} free",
+      "cpuCores": "CPU Cores",
+      "totalMemory": "Total Memory",
+      "users": "Users",
+      "refreshNote": "System statistics refresh automatically every 30 seconds."
     }
   },
   "AdminNotificationsPage": {
