@@ -19,7 +19,7 @@ import (
 func TestConcurrentLiveArchiveCreation(t *testing.T) {
 	ctx := t.Context()
 	store := database.NewDatabase(ctx, database.DatabaseConnectionInput{DBString: pgtest.ConnectionString(t), IsWorker: true})
-	t.Cleanup(func() { store.Close() })
+	t.Cleanup(func() { require.NoError(t, store.Close()) })
 	rc, err := tasks_client.NewRiverClient(tasks_client.RiverClientInput{Database: store})
 	require.NoError(t, err)
 	services := []*Service{
@@ -36,7 +36,7 @@ func TestConcurrentLiveArchiveCreation(t *testing.T) {
 	// Hold the channel lock until both service instances have competing transactions.
 	lock, err := store.SQLDB.BeginTx(ctx, nil)
 	require.NoError(t, err)
-	defer lock.Rollback()
+	defer func() { _ = lock.Rollback() }()
 	_, err = lock.ExecContext(ctx, `SELECT id FROM channels WHERE id=$1 FOR UPDATE`, channel.ID)
 	require.NoError(t, err)
 	var wg sync.WaitGroup
