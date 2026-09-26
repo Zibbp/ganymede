@@ -1,10 +1,6 @@
 ARG TWITCHDOWNLOADER_VERSION="1.56.5"
 ARG YT_DLP_VERSION="2026.07.04"
 ARG FFMPEG_VERSION="9.0"
-ARG FFMPEG_RELEASE="autobuild-2026-09-10-15-31"
-ARG FFMPEG_BUILD="n9.0.1-27-g9b0578816c"
-ARG FFMPEG_SHA256_LINUX64="70b162b63517038ff18c8a50f4ea11f919a071f945c5881e87b0b2cd7173f8c7"
-ARG FFMPEG_SHA256_LINUXARM64="2de63f615df3a46ac26921ac0314f501c3536aaf9fd5197ffe03dd17cd01a404"
 
 #
 # API Build
@@ -72,15 +68,11 @@ COPY --from=build-yt-dlp /app/yt-dlp/yt-dlp /usr/local/bin/yt-dlp
 
 #
 # FFmpeg (static build, latest stable - Debian's ffmpeg is very old)
-# Uses BtbN static builds (linked from ffmpeg.org) to get the latest release.
-# Tracks the latest point release of the major version in FFMPEG_VERSION.
+# Uses BtbN's stable latest alias and verifies the selected artifact against
+# the SHA256 manifest published with that release.
 #
 FROM debian:bookworm-slim AS ffmpeg
 ARG FFMPEG_VERSION
-ARG FFMPEG_RELEASE
-ARG FFMPEG_BUILD
-ARG FFMPEG_SHA256_LINUX64
-ARG FFMPEG_SHA256_LINUXARM64
 
 WORKDIR /tmp
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -90,21 +82,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN set -eux; \
     ARCH="$(uname -m)"; \
     case "$ARCH" in \
-      x86_64) FFMPEG_ARCH="linux64"; EXPECTED_HASH="${FFMPEG_SHA256_LINUX64}" ;; \
-      aarch64) FFMPEG_ARCH="linuxarm64"; EXPECTED_HASH="${FFMPEG_SHA256_LINUXARM64}" ;; \
+      x86_64) FFMPEG_ARCH="linux64" ;; \
+      aarch64) FFMPEG_ARCH="linuxarm64" ;; \
       *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;; \
     esac; \
-    FFMPEG_TAR="ffmpeg-${FFMPEG_BUILD}-${FFMPEG_ARCH}-gpl-${FFMPEG_VERSION}.tar.xz"; \
-    echo "Downloading ${FFMPEG_TAR} (FFmpeg ${FFMPEG_VERSION}, ${ARCH}) from ${FFMPEG_RELEASE}"; \
-    curl -fSL "https://github.com/BtbN/FFmpeg-Builds/releases/download/${FFMPEG_RELEASE}/${FFMPEG_TAR}" -o ffmpeg.tar.xz; \
-    if [ -z "$EXPECTED_HASH" ]; then echo "checksum entry not found for ${FFMPEG_TAR}" >&2; exit 1; fi; \
-    echo "${EXPECTED_HASH}  ffmpeg.tar.xz" | sha256sum -c -; \
+    FFMPEG_TAR="ffmpeg-n${FFMPEG_VERSION}-latest-${FFMPEG_ARCH}-gpl-${FFMPEG_VERSION}.tar.xz"; \
+    FFMPEG_RELEASE_URL="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest"; \
+    echo "Downloading ${FFMPEG_TAR} (FFmpeg ${FFMPEG_VERSION}, ${ARCH}) from BtbN latest release"; \
+    curl -fSL "${FFMPEG_RELEASE_URL}/${FFMPEG_TAR}" -o "${FFMPEG_TAR}"; \
+    curl -fSL "${FFMPEG_RELEASE_URL}/checksums.sha256" -o ffmpeg-checksums.sha256; \
+    CHECKSUM_LINE="$(awk -v file="${FFMPEG_TAR}" '$2 == file { print }' ffmpeg-checksums.sha256)"; \
+    if [ -z "$CHECKSUM_LINE" ]; then echo "checksum entry not found for ${FFMPEG_TAR}" >&2; exit 1; fi; \
+    echo "$CHECKSUM_LINE" | sha256sum -c -; \
     mkdir -p /tmp/ffmpeg-extract; \
-    tar -xJf ffmpeg.tar.xz -C /tmp/ffmpeg-extract --strip-components=1; \
+    tar -xJf "${FFMPEG_TAR}" -C /tmp/ffmpeg-extract --strip-components=1; \
     cp /tmp/ffmpeg-extract/bin/ffmpeg /usr/local/bin/ffmpeg; \
     cp /tmp/ffmpeg-extract/bin/ffprobe /usr/local/bin/ffprobe; \
     chmod +x /usr/local/bin/ffmpeg /usr/local/bin/ffprobe; \
-    rm -rf /tmp/ffmpeg.tar.xz /tmp/ffmpeg-extract; \
+    rm -rf "/tmp/${FFMPEG_TAR}" /tmp/ffmpeg-checksums.sha256 /tmp/ffmpeg-extract; \
     ffmpeg -version; \
     ffprobe -version
 
