@@ -135,6 +135,8 @@ The `docker-compose.yml` file has comments for each environment variable. Below 
 | `MAX_VIDEO_DOWNLOAD_EXECUTIONS`         | Maximum number of video downloads that can be running at once. Live streams bypass this limit.                                  |
 | `MAX_VIDEO_CONVERT_EXECUTIONS`          | Maximum number of video conversions that can be running at once.                                                                |
 | `MAX_VIDEO_SPRITE_THUMBNAIL_EXECUTIONS` | Maximum number of video sprite thumbnail generation jobs that can be running at once. This is not very CPU intensive.           |
+| `DISABLE_LIVE_ARCHIVE_STALL_CHECK`       | Disable FFmpeg progress based stall detection for live archives. Default: `false`.                                              |
+| `LIVE_ARCHIVE_STALL_TIMEOUT_SECONDS`    | Seconds without FFmpeg media progress before a live capture is stopped. Default: `180`; values below `30` use the default.     |
 | `SHOW_SSO_LOGIN_BUTTON`                 | Frontend: `true/false` Show a "login via sso" button on the login page (defaults to false).                                     |
 | `FORCE_SSO_AUTH`                        | Frontend: `true/false` Force users to login via SSO by bypassing the login page (defaults to false).                            |
 | `REQUIRE_LOGIN`                         | Frontend: `true/false` Require users to be logged in to view videos (defaults to false).                                        |

@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -105,6 +106,37 @@ func TestLiveArchiveProcessAttributes(t *testing.T) {
 	}
 	if attrs.Pdeathsig != syscall.SIGTERM {
 		t.Fatalf("parent death signal = %v, want SIGTERM", attrs.Pdeathsig)
+	}
+}
+
+func TestStartArchiveCommandPreservesExtraFiles(t *testing.T) {
+	t.Parallel()
+
+	progressReader, progressWriter, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("create progress pipe: %v", err)
+	}
+	defer progressReader.Close()
+
+	cmd := osExec.Command("sh", "-c", "printf 'out_time_us=123\\n' >&3")
+	cmd.ExtraFiles = []*os.File{progressWriter}
+	cmd.SysProcAttr = liveArchiveProcessAttributes()
+	done, err := startArchiveCommand(cmd)
+	_ = progressWriter.Close()
+	if err != nil {
+		t.Fatalf("start archive command: %v", err)
+	}
+	if err := <-done; err != nil {
+		t.Fatalf("wait for archive command: %v", err)
+	}
+
+	got, err := io.ReadAll(progressReader)
+	if err != nil {
+		t.Fatalf("read progress pipe: %v", err)
+	}
+	want := "out_time_us=123\n"
+	if string(got) != want {
+		t.Fatalf("progress output = %q, want %q", got, want)
 	}
 }
 
@@ -684,5 +716,144 @@ func Test_appendFFmpegLiveOutputStreamArgs(t *testing.T) {
 				t.Errorf("appendFFmpegLiveOutputStreamArgs(nil, %t) = %v, want %v", tt.audioOnly, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestParseAdvancingFFmpegOutTime(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		line         string
+		previous     int64
+		havePrevious bool
+		wantTime     int64
+		wantAdvanced bool
+	}{
+		{name: "first value", line: "out_time_us=0", wantTime: 0, wantAdvanced: true},
+		{name: "changed value", line: "out_time_us=1000000", previous: 0, havePrevious: true, wantTime: 1000000, wantAdvanced: true},
+		{name: "regression is activity", line: "out_time_us=500000", previous: 1000000, havePrevious: true, wantTime: 500000, wantAdvanced: true},
+		{name: "unchanged value", line: "out_time_us=1000000", previous: 1000000, havePrevious: true, wantTime: 1000000},
+		{name: "not available", line: "out_time_us=N/A", previous: 5, havePrevious: true, wantTime: 5},
+		{name: "invalid value", line: "out_time_us=unknown", previous: 5, havePrevious: true, wantTime: 5},
+		{name: "other progress field", line: "frame=42", previous: 5, havePrevious: true, wantTime: 5},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotTime, gotAdvanced := parseAdvancingFFmpegOutTime(tt.line, tt.previous, tt.havePrevious)
+			if gotTime != tt.wantTime || gotAdvanced != tt.wantAdvanced {
+				t.Fatalf("parseAdvancingFFmpegOutTime(%q, %d, %t) = (%d, %t), want (%d, %t)", tt.line, tt.previous, tt.havePrevious, gotTime, gotAdvanced, tt.wantTime, tt.wantAdvanced)
+			}
+		})
+	}
+}
+
+func TestFFmpegProgressUpdatesDrainsPipeWithoutBlocking(t *testing.T) {
+	t.Parallel()
+
+	updates := ffmpegProgressUpdates(strings.NewReader("out_time_us=1\nprogress=continue\nout_time_us=2\nprogress=continue\nout_time_us=2\nprogress=continue\nout_time_us=3\nprogress=continue\n"))
+	var last int64
+	for outTime := range updates {
+		last = outTime
+	}
+	if last != 3 {
+		t.Fatalf("last progress time = %d, want 3", last)
+	}
+}
+
+func TestAppendLiveArchiveProgressArgs(t *testing.T) {
+	t.Parallel()
+
+	if got, want := appendLiveArchiveProgressArgs([]string{"-y"}, true), []string{"-y", "-stats_period", "5", "-progress", "pipe:3"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("enabled progress args = %v, want %v", got, want)
+	}
+	if got, want := appendLiveArchiveProgressArgs([]string{"-y"}, false), []string{"-y"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("disabled progress args = %v, want %v", got, want)
+	}
+}
+
+func TestNormalizeLiveArchiveStallTimeout(t *testing.T) {
+	t.Parallel()
+
+	for _, tt := range []struct {
+		seconds int
+		want    time.Duration
+		valid   bool
+	}{
+		{seconds: 0, want: 180 * time.Second},
+		{seconds: 29, want: 180 * time.Second},
+		{seconds: 30, want: 30 * time.Second, valid: true},
+		{seconds: 90, want: 90 * time.Second, valid: true},
+	} {
+		got, valid := normalizeLiveArchiveStallTimeout(tt.seconds)
+		if got != tt.want || valid != tt.valid {
+			t.Fatalf("normalizeLiveArchiveStallTimeout(%d) = (%s, %t), want (%s, %t)", tt.seconds, got, valid, tt.want, tt.valid)
+		}
+	}
+}
+
+func TestSuperviseLiveArchiveCommandStallsWithoutProgress(t *testing.T) {
+	t.Parallel()
+
+	cmd := osExec.Command("sh", "-c", "exec sleep 30")
+	cmd.SysProcAttr = liveArchiveProcessAttributes()
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
+		t.Fatalf("start live archive command: %v", err)
+	}
+	t.Cleanup(func() {
+		if cmd.Process != nil {
+			_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		}
+	})
+
+	progress := make(chan int64)
+	close(progress)
+	err = superviseLiveArchiveCommand(context.Background(), cmd, done, progress, 25*time.Millisecond)
+	if !errors.Is(err, ErrLiveArchiveStalled) {
+		t.Fatalf("superviseLiveArchiveCommand() error = %v, want ErrLiveArchiveStalled", err)
+	}
+}
+
+func TestSuperviseLiveArchiveCommandResetsTimeoutOnProgress(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+	defer cancel()
+
+	cmd := osExec.Command("sh", "-c", "exec sleep 30")
+	cmd.SysProcAttr = liveArchiveProcessAttributes()
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
+		t.Fatalf("start live archive command: %v", err)
+	}
+	t.Cleanup(func() {
+		if cmd.Process != nil {
+			_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		}
+	})
+
+	progress := make(chan int64, 1)
+	go func() {
+		ticker := time.NewTicker(10 * time.Millisecond)
+		defer ticker.Stop()
+		var outTime int64
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				select {
+				case progress <- outTime:
+					outTime++
+				default:
+				}
+			}
+		}
+	}()
+
+	err = superviseLiveArchiveCommand(ctx, cmd, done, progress, 40*time.Millisecond)
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("superviseLiveArchiveCommand() error = %v, want context deadline", err)
 	}
 }
