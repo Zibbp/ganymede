@@ -116,7 +116,11 @@ func TestStartArchiveCommandPreservesExtraFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create progress pipe: %v", err)
 	}
-	defer progressReader.Close()
+	defer func() {
+		if err := progressReader.Close(); err != nil {
+			t.Errorf("close progress reader: %v", err)
+		}
+	}()
 
 	cmd := osExec.Command("sh", "-c", "printf 'out_time_us=123\\n' >&3")
 	cmd.ExtraFiles = []*os.File{progressWriter}
