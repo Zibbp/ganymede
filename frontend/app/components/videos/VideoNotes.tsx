@@ -12,6 +12,7 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Video, useUpdateVideoNotes } from "@/app/hooks/useVideos";
 import useAuthStore from "@/app/store/useAuthStore";
 import { durationToTime } from "@/app/util/util";
+import { parseTimestampHref } from "@/app/util/videoNotes";
 import classes from "./VideoNotes.module.css";
 
 const MAX_NOTES_LENGTH = 10000;
@@ -33,18 +34,6 @@ const isExternalImageSrc = (src?: string): boolean => {
     trimmed.startsWith("https://") ||
     trimmed.startsWith("//")
   );
-};
-
-// Timestamps are stored as markdown links so they survive as plain text and
-// render as clickable seek buttons: [01:23:45](#t=5025)
-const parseTimestampHref = (href?: string): number | null => {
-  if (!href) return null;
-  const hashMatch = href.match(/#t=(\d+)/);
-  if (hashMatch) return parseInt(hashMatch[1], 10);
-  // Also handle pasted share links (/videos/<id>?t=123 or full URLs)
-  const queryMatch = href.match(/[?&]t=(\d+)/);
-  if (queryMatch) return parseInt(queryMatch[1], 10);
-  return null;
 };
 
 const VideoNotes = ({ video, playerRef }: Props) => {
@@ -112,7 +101,8 @@ const VideoNotes = ({ video, playerRef }: Props) => {
       });
       return;
     }
-    const snippet = `[${durationToTime(seconds)}](#t=${seconds})`;
+    const descriptionPlaceholder = t("notesTimestampDescriptionPlaceholder");
+    const snippet = `[${descriptionPlaceholder} — ${durationToTime(seconds)}](#t=${seconds})`;
     const el = textareaRef.current;
     const selectionStart = el?.selectionStart ?? draft.length;
     const selectionEnd = el?.selectionEnd ?? draft.length;
@@ -129,12 +119,13 @@ const VideoNotes = ({ video, playerRef }: Props) => {
       return;
     }
     setDraft(next);
-    // Restore focus and place the cursor after the inserted timestamp.
+    // Select the placeholder so the user can immediately type a description.
     requestAnimationFrame(() => {
       if (!textareaRef.current) return;
-      const pos = (before + spaceBefore + snippet + spaceAfter).length;
+      const descriptionStart = before.length + spaceBefore.length + 1;
+      const descriptionEnd = descriptionStart + descriptionPlaceholder.length;
       textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(pos, pos);
+      textareaRef.current.setSelectionRange(descriptionStart, descriptionEnd);
     });
   };
 

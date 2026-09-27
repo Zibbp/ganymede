@@ -1,0 +1,55 @@
+@layer components {
+  @scope (.media-skin[data-theme="default"]) {
+    .media-title {
+      pointer-events: none;
+      isolation: isolate;
+      z-index: 20;
+      min-height: calc(var(--media-control-size) + (calc(var(--media-spacing) * 2)));
+      transform-origin: top;
+      padding-inline: calc(var(--media-spacing) * 6);
+      padding-top: calc(var(--media-spacing) * 2.5);
+      font-size: calc(var(--media-spacing) * 3.25);
+      letter-spacing: -0.0125em;
+      overflow-wrap: anywhere;
+      color: var(--media-controls-foreground);
+      transition-property: filter, opacity, scale, translate;
+      transition-duration: 0.15s;
+      transition-duration: calc(var(--media-duration-controls) / 2);
+      text-shadow: 0 1px 0 var(--media-shadow-current-color);
+      inset-inline: 0;
+      align-items: center;
+      font-weight: 500;
+      transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      display: flex;
+      position: absolute;
+      top: 0;
+    }
+
+    .media-title:not([data-visible]) {
+      translate: 0 calc(var(--media-hidden-offset) * -1);
+      scale: var(--media-hidden-scale) var(--media-hidden-scale);
+      opacity: 0;
+      transition-duration: var(--media-duration-controls);
+    }
+
+    @media (pointer: fine) {
+      .media-title:not([data-visible]) {
+        filter: blur(var(--media-hidden-blur));
+      }
+    }
+
+    @container media-root (width >= 28rem) {
+      .media-title {
+        padding-inline: calc(var(--media-spacing) * 6);
+        padding-top: calc(var(--media-spacing) * 4);
+        font-size: calc(var(--media-spacing) * 4.25);
+      }
+    }
+
+    @container media-root (width < 32rem) {
+      .media-title {
+        padding-right: calc(var(--media-spacing) * 36);
+      }
+    }
+  }
+}

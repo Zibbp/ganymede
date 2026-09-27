@@ -38,28 +38,6 @@
   object-fit: contain;
 }
 
-.overlayControls {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  z-index: 20;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 0.15rem 0.35rem;
-  border-radius: 8px;
-  pointer-events: auto;
-  opacity: 1;
-  transition: opacity 0.2s ease;
-}
-
-.mediaPlayer:not([data-controls-visible]) .overlayControls,
-.mediaPlayerTheaterMode:not([data-controls-visible]) .overlayControls {
-  opacity: 0;
-  pointer-events: none;
-}
-
 .absoluteTimeOverlay {
   position: absolute;
   top: 0.75rem;

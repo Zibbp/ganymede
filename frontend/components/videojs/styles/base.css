@@ -1,0 +1,115 @@
+@layer base, components, utilities;
+/* Preset adaptations and preference overrides win over theme tokens regardless of import order. */
+@layer base.theme, base.preset, base.preferences;
+
+@import "./themes/theme.css";
+@import "./themes/preferences.css";
+
+/* Interpolate progress before chapter bounds are applied. */
+@property --media-slider-fill {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+@property --media-slider-buffer {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+@layer base {
+  @scope (.media-skin) {
+    :scope {
+      font-style: normal;
+      font-weight: 400;
+      text-align: start;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    :scope,
+    *,
+    ::before,
+    ::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      border: 0 solid;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      text-transform: none;
+      letter-spacing: inherit;
+      appearance: none;
+      background: none;
+    }
+
+    img,
+    svg,
+    media-icon {
+      display: block;
+      max-width: 100%;
+    }
+
+    svg[fill="currentColor"] {
+      fill: currentColor;
+    }
+
+    svg[fill="none"] {
+      fill: none;
+    }
+
+    svg[stroke="currentColor"] {
+      stroke: currentColor;
+    }
+
+    video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      border-radius: inherit;
+      object-fit: var(--media-object-fit, contain);
+      object-position: var(--media-object-position, center);
+    }
+
+    media-icon > svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    media-tooltip-group,
+    media-dialog,
+    media-alert-dialog,
+    media-error-dialog,
+    media-controls {
+      display: contents;
+    }
+
+    [hidden][hidden] {
+      /* Hidden must override component display styles. */
+      display: none !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .media-skin {
+      interpolate-size: allow-keywords;
+    }
+  }
+
+  /* Without the Popover API nothing hides a closed popup, so hide it until its component opens it or while it exits. */
+  @supports not selector(:popover-open) {
+    :where(.media-skin) [popover]:not([data-open], [data-ending-style]) {
+      display: none !important;
+    }
+
+    /* Popups stay inside the player without the top layer, so let them extend past the short audio bar. */
+    .media-skin:is([data-preset="audio"], [data-preset="live-audio"]) {
+      overflow: visible !important;
+    }
+  }
+}

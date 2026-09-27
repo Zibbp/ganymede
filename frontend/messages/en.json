@@ -844,6 +844,7 @@
     "notesCharCount": "{count} / {max} characters",
     "notesMarkdownHint": "Markdown supported",
     "notesInsertTimestampButton": "Insert timestamp",
+    "notesTimestampDescriptionPlaceholder": "Add description",
     "notesJumpToTimestamp": "Jump to timestamp in video",
     "notesPlayerNotReady": "Video player is not ready yet",
     "notesTooLongError": "Notes must be at most {max} characters",

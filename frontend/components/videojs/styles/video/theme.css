@@ -1,0 +1,38 @@
+@layer base.theme, base.preset, base.preferences;
+
+@layer base.preset {
+  .media-skin:is([data-preset="video"], [data-preset="live-video"]) {
+    --media-frame-border: var(--media-border-color, light-dark(rgb(0 0 0 / 0.1), rgb(255 255 255 / 0.15)));
+    --media-controls-gradient: linear-gradient(
+      to top in oklab,
+      oklch(from var(--media-backdrop) l c h / 0.4),
+      oklch(from var(--media-backdrop) l c h / 0.2),
+      oklch(from var(--media-backdrop) l c h / 0.5)
+    );
+    --media-caption-controls-y: calc(var(--media-spacing) * -14);
+    --media-slider-preview-offset: calc(var(--media-spacing) * 9);
+    --media-thumbnail-gradient: linear-gradient(
+      to top,
+      oklch(from var(--media-backdrop) l c h / 0.5),
+      oklch(from var(--media-backdrop) l c h / 0.1),
+      transparent
+    );
+  }
+
+  .media-skin:is([data-preset="video"], [data-preset="live-video"])[data-theme="minimal"] {
+    --media-frame-border: var(--media-border-color, light-dark(rgb(0 0 0 / 0.15), rgb(255 255 255 / 0.15)));
+    --media-controls-gradient: linear-gradient(
+      to top in oklab,
+      oklch(from var(--media-backdrop) l c h / 0.5),
+      oklch(from var(--media-backdrop) l c h / 0.2)
+    );
+    --media-indicator-gradient: linear-gradient(
+      to bottom,
+      oklch(from var(--media-backdrop) l c h / 0.35),
+      oklch(from var(--media-backdrop) l c h / 0.2) calc(var(--media-spacing) * 12),
+      transparent
+    );
+    --media-caption-controls-y: calc(var(--media-spacing) * -18);
+    --media-slider-preview-offset: calc(var(--media-spacing) * 11);
+  }
+}
