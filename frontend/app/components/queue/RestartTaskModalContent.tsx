@@ -14,7 +14,6 @@ interface Params {
 const QueueRestartTaskModalContent = ({ queue, task, closeModal }: Params) => {
   const t = useTranslations('QueueComponents')
   const [checked, setChecked] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
 
   const axiosPrivate = useAxiosPrivate()
 
@@ -25,8 +24,6 @@ const QueueRestartTaskModalContent = ({ queue, task, closeModal }: Params) => {
 
   const restartTask = async () => {
     try {
-      setIsLoading(true)
-
       await useStartQueueTaskMutate.mutateAsync({
         axiosPrivate: axiosPrivate, queueId: queue.id, taskName: task, continueWithSubsequent: checked
       })
@@ -39,8 +36,6 @@ const QueueRestartTaskModalContent = ({ queue, task, closeModal }: Params) => {
 
     } catch (error) {
       console.error(error)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -67,7 +62,8 @@ const QueueRestartTaskModalContent = ({ queue, task, closeModal }: Params) => {
           mt="sm"
           size="md"
           color="green"
-          loading={isLoading}
+          disabled={useStartQueueTaskMutate.isPending}
+          loading={useStartQueueTaskMutate.isPending}
         >
           {t('restartTaskButton')}
         </Button>

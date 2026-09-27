@@ -58,6 +58,55 @@ func (rc *RiverClient) JobList(ctx context.Context, params *river.JobListParams)
 	return rc.Client.JobList(ctx, params)
 }
 
+// JobsForQueueKindTx returns all retained generations for one archive stage.
+// Indexed metadata is preferred; the args scan keeps pre-metadata jobs visible.
+func (rc *RiverClient) JobsForQueueKindTx(ctx context.Context, tx *sql.Tx, queueID uuid.UUID, kind string) ([]*rivertype.JobRow, error) {
+	metadata, err := json.Marshal(map[string]any{"ganymede": map[string]string{"queue_id": queueID.String()}})
+	if err != nil {
+		return nil, err
+	}
+	states := rivertype.JobStates()
+	seen := make(map[int64]struct{})
+	jobs := make([]*rivertype.JobRow, 0)
+	collect := func(params *river.JobListParams, inspectArgs bool) error {
+		for {
+			result, err := rc.Client.JobListTx(ctx, tx, params)
+			if err != nil {
+				return err
+			}
+			for _, job := range result.Jobs {
+				if _, ok := seen[job.ID]; ok || !utils.Contains(job.Tags, "archive") {
+					continue
+				}
+				if inspectArgs {
+					var args tasks.RiverJobArgs
+					if err := json.Unmarshal(job.EncodedArgs, &args); err != nil || args.Input.QueueId != queueID {
+						continue
+					}
+				}
+				seen[job.ID] = struct{}{}
+				jobs = append(jobs, job)
+			}
+			if len(result.Jobs) < 500 || result.LastCursor == nil {
+				return nil
+			}
+			params = params.After(result.LastCursor)
+		}
+	}
+	if err := collect(river.NewJobListParams().States(states...).Kinds(kind).Metadata(string(metadata)).First(500), false); err != nil {
+		return nil, err
+	}
+	if err := collect(river.NewJobListParams().States(states...).Kinds(kind).First(500), true); err != nil {
+		return nil, err
+	}
+	return jobs, nil
+}
+
+func (rc *RiverClient) CancelTx(ctx context.Context, tx *sql.Tx, jobID int64) error {
+	_, err := rc.Client.JobCancelTx(ctx, tx, jobID)
+	return err
+}
+
 // CancelJobsForQueueId cancels every active archive job for a queue. New jobs
 // are found through indexed River metadata; the paginated args scan preserves
 // compatibility with jobs inserted by older Ganymede releases.

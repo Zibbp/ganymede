@@ -2177,6 +2177,17 @@ definitions:
     - DefaultOperator
     - OperatorAND
     - OperatorOR
+  queue.RestartResult:
+    properties:
+      generation:
+        type: integer
+      job_id:
+        type: integer
+      older_active_cancelled:
+        type: boolean
+      task_name:
+        type: string
+    type: object
   utils.ErrorResponse:
     properties:
       message:
@@ -4495,7 +4506,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Start a specific queue task
+      description: Atomically schedule a new generation of a queue task
       parameters:
       - description: Start queue task
         in: body
@@ -4509,9 +4520,17 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/queue.RestartResult'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
         "500":
@@ -4521,7 +4540,7 @@ paths:
       security:
       - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
-      summary: Start a queue task for a queue
+      summary: Restart a queue task
       tags:
       - queue
   /task/start:
