@@ -1,8 +1,8 @@
 "use client"
-import { RefObject, useEffect, useRef, useState } from "react";
-import { Button, Group, Text, Textarea, Title, Typography } from "@mantine/core";
+import { RefObject, useRef, useState } from "react";
+import { ActionIcon, Button, Group, Text, Textarea, Title, Tooltip, Typography } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
-import { IconClock } from "@tabler/icons-react";
+import { IconClock, IconX } from "@tabler/icons-react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
@@ -20,6 +20,9 @@ const MAX_NOTES_LENGTH = 10000;
 type Props = {
   video: Video;
   playerRef: RefObject<HTMLVideoElement | null>;
+  docked?: boolean;
+  onEdit?: () => void;
+  onClose?: () => void;
 };
 
 // External images are not auto-loaded: stored notes are viewed by other users
@@ -36,27 +39,34 @@ const isExternalImageSrc = (src?: string): boolean => {
   );
 };
 
-const VideoNotes = ({ video, playerRef }: Props) => {
+const VideoNotes = ({ video, playerRef, docked = false, onEdit, onClose }: Props) => {
   const t = useTranslations("VideoComponents");
   const axiosPrivate = useAxiosPrivate();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canEdit = hasPermission(UserRole.Editor);
 
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(docked);
   const [draft, setDraft] = useState(video.notes ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const updateNotesMutate = useUpdateVideoNotes();
 
-  useEffect(() => {
-    if (!editing) {
-      setDraft(video.notes ?? "");
+  const handleEdit = () => {
+    setDraft(video.notes ?? "");
+    if (onEdit) {
+      onEdit();
+    } else {
+      setEditing(true);
     }
-  }, [video.notes, editing]);
+  };
 
   const handleCancel = () => {
     setDraft(video.notes ?? "");
-    setEditing(false);
+    if (docked) {
+      onClose?.();
+    } else {
+      setEditing(false);
+    }
   };
 
   const handleSave = async () => {
@@ -69,7 +79,11 @@ const VideoNotes = ({ video, playerRef }: Props) => {
       showNotification({
         message: t("notesSavedNotification"),
       });
-      setEditing(false);
+      if (docked) {
+        onClose?.();
+      } else {
+        setEditing(false);
+      }
     } catch (error) {
       console.error(error);
       showNotification({
@@ -138,11 +152,18 @@ const VideoNotes = ({ video, playerRef }: Props) => {
   }
 
   return (
-    <div style={{ marginTop: 16, marginBottom: 16 }}>
+    <div className={docked ? classes.dockedPanel : classes.inlineNotes}>
       <Group justify="space-between" mb={5}>
-        <Title>{t("notesTitle")}</Title>
-        {canEdit && !editing && (
-          <Button variant="default" size="xs" onClick={() => setEditing(true)}>
+        <Title order={docked ? 3 : 1}>{t("notesTitle")}</Title>
+        {docked && (
+          <Tooltip label={t("notesCancelButton")}>
+            <ActionIcon variant="subtle" onClick={handleCancel} aria-label={t("notesCancelButton")}>
+              <IconX size={18} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+        {canEdit && !editing && !docked && (
+          <Button variant="default" size="xs" onClick={handleEdit}>
             {notes ? t("notesEditButton") : t("notesAddButton")}
           </Button>
         )}
@@ -160,6 +181,7 @@ const VideoNotes = ({ video, playerRef }: Props) => {
             maxRows={12}
             maxLength={MAX_NOTES_LENGTH}
             disabled={updateNotesMutate.isPending}
+            autoFocus={docked}
           />
           <Group justify="space-between" mt={8}>
             <Text size="xs" color="dimmed">
