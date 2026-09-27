@@ -1,0 +1,447 @@
+@layer components {
+  @scope (.media-skin[data-theme="default"]) {
+    .media-seek-indicator {
+      place-content: center;
+      gap: var(--media-spacing);
+      padding: calc(var(--media-spacing) * 4);
+      text-align: center;
+      grid-row-start: 1;
+      grid-column-start: 2;
+      display: grid;
+    }
+
+    .media-seek-indicator[data-direction="backward"] {
+      grid-column-start: 1;
+      justify-self: flex-start;
+    }
+
+    .media-seek-indicator[data-direction="forward"] {
+      grid-column-start: 3;
+      justify-self: flex-end;
+    }
+
+    @container media-root (width >= 42rem) {
+      .media-seek-indicator {
+        padding: calc(var(--media-spacing) * 6);
+      }
+    }
+
+    .media-seek-indicator-icon {
+      width: calc(var(--media-icon-size, calc(var(--media-spacing) * 4.5)) * 1.5);
+      height: calc(var(--media-icon-size, calc(var(--media-spacing) * 4.5)) * 1.5);
+      transition-property: translate, opacity;
+      transition-duration: 0.15s;
+      transition-duration: var(--media-duration-slow);
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      display: none;
+    }
+
+    @scope (.media-seek-indicator) {
+      &[data-direction] .media-seek-indicator-icon {
+        display: block;
+      }
+    }
+
+    @scope (.media-seek-indicator) {
+      &[data-direction="backward"] .media-seek-indicator-icon {
+        scale: -1 1;
+      }
+    }
+
+    @scope (.media-seek-indicator) {
+      &[data-direction="backward"][data-starting-style] .media-seek-indicator-icon {
+        translate: var(--media-hidden-seek-offset) 0;
+      }
+    }
+
+    @scope (.media-seek-indicator) {
+      &[data-direction="forward"][data-starting-style] .media-seek-indicator-icon {
+        translate: calc(var(--media-hidden-seek-offset) * -1) 0;
+      }
+    }
+
+    @scope (.media-seek-indicator) {
+      &:is([data-starting-style], [data-ending-style]) .media-seek-indicator-icon {
+        opacity: 0;
+      }
+    }
+
+    .media-seek-indicator-value {
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  @scope (.media-skin[data-theme="default"]) {
+    .media-buffering-indicator {
+      pointer-events: none;
+      color: var(--media-controls-foreground);
+      place-content: center;
+      display: none;
+      position: absolute;
+      inset: 0;
+    }
+
+    .media-buffering-indicator:not([data-visible]) {
+      --media-spinner-animation: none;
+    }
+
+    .media-buffering-indicator:before {
+      background-color: var(--media-backdrop);
+      content: "";
+      backdrop-filter: var(--media-backdrop-filter-indicator);
+      position: absolute;
+      inset: 0;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .media-buffering-indicator:before {
+        background-color: color-mix(in oklab, var(--media-backdrop) 35%, transparent);
+      }
+    }
+
+    .media-buffering-indicator[data-visible] {
+      display: grid;
+    }
+
+    .media-buffering-indicator-spinner-icon {
+      z-index: 30;
+      width: var(--media-icon-size, calc(var(--media-spacing) * 4.5));
+      height: var(--media-icon-size, calc(var(--media-spacing) * 4.5));
+      filter: drop-shadow(0 1px 0 var(--media-shadow-current-color));
+      position: relative;
+    }
+  }
+
+  @scope (.media-skin[data-theme="default"]) {
+    .media-status-announcer {
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border-width: 0;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      position: absolute;
+      overflow: hidden;
+    }
+  }
+
+  @scope (.media-skin[data-theme="default"]) {
+    .media-indicator {
+      pointer-events: none;
+      top: calc(var(--media-spacing) * 3);
+      transform-origin: top;
+      border-radius: var(--media-control-radius);
+      background-color: var(--media-backdrop);
+      color: var(--media-popover-foreground);
+      box-shadow:
+        0 0 0 1px var(--media-surface-border, var(--media-border)),
+        var(--media-shadow-surface);
+      backdrop-filter: var(--media-backdrop-filter-surface);
+      transition-duration: var(--media-duration-fast);
+      font-weight: 500;
+      transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      position: absolute;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .media-indicator {
+        background-color: color-mix(in oklab, var(--media-backdrop) 25%, transparent);
+      }
+    }
+
+    .media-indicator:after {
+      content: "";
+      z-index: 10;
+      pointer-events: none;
+      border-radius: inherit;
+      box-shadow: var(--media-shadow-surface-inset);
+      position: absolute;
+      inset: 0;
+    }
+
+    .media-indicator[data-ending-style] {
+      translate: 0 var(--media-hidden-indicator-offset);
+    }
+
+    @media (pointer: coarse) {
+      .media-indicator {
+        will-change: scale, translate, opacity;
+        transition-property: scale, translate, opacity;
+      }
+    }
+
+    @media (pointer: fine) {
+      .media-indicator {
+        will-change: scale, translate, filter, opacity;
+        transition-property: scale, translate, filter, opacity;
+      }
+    }
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+      .media-indicator {
+        background-color: var(--media-background);
+      }
+    }
+
+    .media-indicator:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      transition-duration: var(--media-duration-indicator);
+      transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+    }
+
+    @media (pointer: fine) {
+      .media-indicator:is([data-starting-style], [data-ending-style]) {
+        scale: var(--media-hidden-indicator-scale) var(--media-hidden-indicator-scale);
+        filter: blur(var(--media-hidden-blur));
+      }
+    }
+
+    .media-indicator-content {
+      justify-content: space-between;
+      align-items: center;
+      gap: calc(var(--media-spacing) * 2);
+      padding-inline: calc(var(--media-spacing) * 2.5);
+      padding-block: var(--media-spacing);
+    }
+
+    .media-volume-indicator {
+      width: min(80%, 12rem);
+      transform: translateX(0);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .media-volume-indicator:is([data-min], [data-max]):not([data-starting-style], [data-ending-style]) {
+        transition: transform 0.3s linear(0, -24 20%, 16 40%, -8 60%, 4 80%, 1);
+        transform: translateX(0.25px);
+      }
+    }
+
+    .media-volume-indicator-fill {
+      border-radius: inherit;
+      background-image: linear-gradient(currentColor, currentColor);
+      background-size: var(--media-volume-fill, 0%) 100%;
+      width: 100%;
+      transition-property: background-size;
+      transition-duration: 0.15s;
+      transition-duration: var(--media-duration-slow);
+      background-position: 0;
+      background-repeat: no-repeat;
+      transition-timing-function: linear;
+      display: flex;
+    }
+
+    .media-volume-indicator-high-icon {
+      mix-blend-mode: difference;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    @scope (.media-volume-indicator) {
+      &[data-level="high"] .media-volume-indicator-high-icon {
+        display: block;
+      }
+    }
+
+    .media-volume-indicator-low-icon {
+      mix-blend-mode: difference;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    @scope (.media-volume-indicator) {
+      &[data-level="low"] .media-volume-indicator-low-icon {
+        display: block;
+      }
+    }
+
+    .media-volume-indicator-off-icon {
+      mix-blend-mode: difference;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    @scope (.media-volume-indicator) {
+      &[data-level="off"] .media-volume-indicator-off-icon {
+        display: block;
+      }
+    }
+
+    .media-volume-indicator-value {
+      mix-blend-mode: difference;
+      margin-left: auto;
+    }
+  }
+
+  @scope (.media-skin[data-theme="default"]) {
+    @supports (color: color-mix(in lab, red, red)) {
+    }
+
+    @media (pointer: coarse) {
+    }
+
+    @media (pointer: fine) {
+    }
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    }
+
+    @media (pointer: fine) {
+    }
+
+    .media-playback-status-indicator {
+      background-color: var(--media-backdrop);
+      padding: calc(var(--media-spacing) * 4);
+      text-align: center;
+      backdrop-filter: var(--media-backdrop-filter-indicator);
+      transition-property: opacity, scale;
+      transition-duration: 0.15s;
+      transition-duration: var(--media-duration-slow);
+      border-radius: 9999px;
+      grid-row-start: 1;
+      grid-column-start: 2;
+      place-content: center;
+      transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      display: grid;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .media-playback-status-indicator {
+        background-color: color-mix(in oklab, var(--media-backdrop) 35%, transparent);
+      }
+    }
+
+    .media-playback-status-indicator[data-ending-style] {
+      transition-duration: var(--media-duration-fast);
+      transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+    }
+
+    .media-playback-status-indicator:is([data-starting-style], [data-ending-style]) {
+      scale: var(--media-hidden-playback-scale) var(--media-hidden-playback-scale);
+      opacity: 0;
+    }
+
+    .media-playback-status-indicator-pause-icon {
+      width: calc(var(--media-icon-size, calc(var(--media-spacing) * 4.5)) * 1.5);
+      height: calc(var(--media-icon-size, calc(var(--media-spacing) * 4.5)) * 1.5);
+      scale: var(--media-hidden-icon-scale) var(--media-hidden-icon-scale);
+      opacity: 0;
+      transition-property: opacity, scale;
+      transition-duration: 0.15s;
+      transition-duration: var(--media-duration);
+      grid-row-start: 1;
+      grid-column-start: 1;
+      transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+
+    @scope (.media-playback-status-indicator) {
+      &[data-status="pause"] .media-playback-status-indicator-pause-icon {
+        opacity: 1;
+        scale: 1;
+      }
+    }
+
+    .media-playback-status-indicator-play-icon {
+      width: calc(var(--media-icon-size, calc(var(--media-spacing) * 4.5)) * 1.5);
+      height: calc(var(--media-icon-size, calc(var(--media-spacing) * 4.5)) * 1.5);
+      scale: var(--media-hidden-icon-scale) var(--media-hidden-icon-scale);
+      opacity: 0;
+      transition-property: opacity, scale;
+      transition-duration: 0.15s;
+      transition-duration: var(--media-duration);
+      grid-row-start: 1;
+      grid-column-start: 1;
+      transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+
+    @scope (.media-playback-status-indicator) {
+      &[data-status="play"] .media-playback-status-indicator-play-icon {
+        opacity: 1;
+        translate: 1px;
+        scale: 1;
+      }
+    }
+
+    .media-status-indicator-captions-off-icon {
+      mix-blend-mode: difference;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    @scope (.media-status-indicator) {
+      &[data-status="captions-off"] .media-status-indicator-captions-off-icon {
+        display: block;
+      }
+    }
+
+    .media-status-indicator-captions-on-icon {
+      mix-blend-mode: difference;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    @scope (.media-status-indicator) {
+      &[data-status="captions-on"] .media-status-indicator-captions-on-icon {
+        display: block;
+      }
+    }
+
+    .media-status-indicator-content {
+      width: 100%;
+      display: flex;
+    }
+
+    .media-status-indicator-fullscreen-enter-icon {
+      mix-blend-mode: difference;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    @scope (.media-status-indicator) {
+      &[data-status="fullscreen"] .media-status-indicator-fullscreen-enter-icon {
+        display: block;
+      }
+    }
+
+    .media-status-indicator-fullscreen-exit-icon {
+      mix-blend-mode: difference;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    @scope (.media-status-indicator) {
+      &[data-status="exit-fullscreen"] .media-status-indicator-fullscreen-exit-icon {
+        display: block;
+      }
+    }
+
+    .media-status-indicator-pip-enter-icon {
+      mix-blend-mode: difference;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    @scope (.media-status-indicator) {
+      &[data-status="pip"] .media-status-indicator-pip-enter-icon {
+        display: block;
+      }
+    }
+
+    .media-status-indicator-pip-exit-icon {
+      mix-blend-mode: difference;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    @scope (.media-status-indicator) {
+      &[data-status="exit-pip"] .media-status-indicator-pip-exit-icon {
+        display: block;
+      }
+    }
+
+    .media-status-indicator-value {
+      mix-blend-mode: difference;
+      margin-left: auto;
+    }
+  }
+}

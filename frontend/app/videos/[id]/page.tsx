@@ -1,6 +1,6 @@
 "use client"
 import { useFetchVideo, useGetVideoClips, VideoType } from "@/app/hooks/useVideos";
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import classes from "./VideoPage.module.css"
 import { Box, Container, useMantineTheme } from "@mantine/core";
 import VideoPlayer from "@/app/components/videos/Player";
@@ -21,11 +21,18 @@ interface Params {
   id: string;
 }
 
+type NotesDraft = {
+  videoId: string;
+  value: string;
+};
+
 const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const theme = useMantineTheme()
   const { id } = React.use(params);
   const { isLoggedIn } = useAuthStore()
   const player = useRef<HTMLVideoElement>(null);
+  const [notesPanelOpen, setNotesPanelOpen] = useState(false);
+  const [notesDraft, setNotesDraft] = useState<NotesDraft | null>(null);
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
   const t = useTranslations("VideoPage");
@@ -40,6 +47,13 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
 
   // need to fetch clips here to dynamically render the clips section
   const { data: videoClips, isPending: videoClipsPending, isError: videoClipsError } = useGetVideoClips(id)
+
+  const openNotesPanel = useCallback(() => {
+    setNotesPanelOpen(true);
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, []);
 
   useEffect(() => {
     document.title = `${data?.title}`;
@@ -67,6 +81,13 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
     return <VideoLoginRequired video={data} />
   }
 
+  const currentNotesDraft = notesDraft?.videoId === data.id
+    ? notesDraft.value
+    : (data.notes ?? "");
+  const handleNotesDraftChange = (value: string) => {
+    setNotesDraft({ videoId: data.id, value });
+  };
+
   return (
     <div>
       {/* Player and chat section — single tree on both layouts so VideoPlayer/ChatPlayer instances persist across the breakpoint flip */}
@@ -81,7 +102,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
         <div className={
           isMobile
             ? undefined
-            : (!data.chat_path ? classes.leftColumnNoChat : classes.leftColumn)
+            : (!data.chat_path && !notesPanelOpen ? classes.leftColumnNoChat : classes.leftColumn)
         }>
           <div className={
             isMobile
@@ -93,7 +114,18 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
         </div>
 
         {/* Chat */}
-        {data.chat_path && !hideChat && !data.processing && (
+        {!isMobile && notesPanelOpen ? (
+          <div className={classes.rightColumn}>
+            <VideoNotes
+              video={data}
+              playerRef={player}
+              draft={currentNotesDraft}
+              onDraftChange={handleNotesDraftChange}
+              docked
+              onClose={() => setNotesPanelOpen(false)}
+            />
+          </div>
+        ) : data.chat_path && !hideChat && !data.processing && (
           <div
             className={isMobile ? classes.chatColumnMobile : classes.rightColumn}
             style={isMobile ? undefined : { height: "auto", maxHeight: "auto" }}
@@ -113,7 +145,12 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
       </Box>
 
       {/* Title bar */}
-      {!videoTheaterMode && <VideoTitleBar video={data} />}
+      {!videoTheaterMode && (
+        <VideoTitleBar
+          video={data}
+          onEditNotes={!isMobile ? openNotesPanel : undefined}
+        />
+      )}
 
       {/* Desktop-only sections render after the player/chat block so toggling them doesn't shift player position */}
       {!isMobile && !data.processing && (
@@ -135,7 +172,13 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
 
       {/* Notes live under the player (below chat histogram) and render on all layouts */}
       <Container size="7xl" fluid={true} >
-        <VideoNotes video={data} playerRef={player} />
+        <VideoNotes
+          video={data}
+          playerRef={player}
+          draft={currentNotesDraft}
+          onDraftChange={handleNotesDraftChange}
+          onEdit={!isMobile ? openNotesPanel : undefined}
+        />
       </Container>
 
       {!isMobile && (

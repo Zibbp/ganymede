@@ -1,0 +1,70 @@
+@layer base.theme, base.preset, base.preferences;
+
+@layer base.preferences {
+  @media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .media-skin:not([data-controls-visible]) {
+      --media-duration-controls: 300ms;
+    }
+  }
+
+  @media (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+    .media-skin:not([data-controls-visible]) {
+      --media-duration-controls: 150ms;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .media-skin {
+      --media-duration-fast: var(--media-duration-instant);
+      --media-duration: var(--media-duration-instant);
+      --media-duration-slow: var(--media-duration-instant);
+      --media-duration-slower: var(--media-duration-instant);
+      --media-duration-controls: var(--media-duration-instant);
+      --media-duration-dialog: var(--media-duration-instant);
+      --media-duration-indicator: var(--media-duration-instant);
+      --media-duration-menu: 0ms;
+      --media-duration-slider: 0ms;
+      --media-delay-dialog: 0ms;
+      --media-hidden-scale: 1;
+      --media-hidden-blur: 0px;
+      --media-hidden-offset: 0px;
+      --media-hidden-icon-scale: 1;
+      --media-hidden-indicator-scale: 1;
+      --media-hidden-indicator-offset: 0px;
+      --media-hidden-playback-scale: 1;
+      --media-hidden-popup-scale: 1;
+      --media-hidden-popup-blur: 0px;
+      --media-hidden-preview-scale: 1;
+      --media-hidden-preview-offset: 0px;
+      --media-hidden-seek-offset: 0px;
+      --media-popup-translate-distance: 0px;
+      --media-spinner-animation: none;
+      --media-icon-airplay-fill-animation: none;
+      --media-icon-airplay-triangle-animation: none;
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    .media-skin {
+      --media-popover: var(--media-background);
+      --media-scrollbar-thumb-color: oklch(from currentColor l c h / 0.8);
+      --media-backdrop-filter-surface: none;
+      --media-backdrop-filter-indicator: none;
+      --media-backdrop-filter-dialog: none;
+      --media-shadow-surface-inset: inset 0 1px 0 0 rgb(255 255 255 / 0.25), inset 0 0 0 1px rgb(255 255 255 / 0.125);
+
+      scrollbar-width: auto;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .media-skin {
+      --media-border: CanvasText;
+      --media-frame-border: CanvasText;
+      --media-popover: Canvas;
+      --media-popover-foreground: CanvasText;
+      --media-ring: CanvasText;
+      --media-shadow-surface-inset: inset 0 1px 0 0 CanvasText, inset 0 0 0 1px CanvasText;
+    }
+  }
+}

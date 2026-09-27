@@ -1,3 +1,15 @@
+.inlineNotes {
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+.dockedPanel {
+  border-left: 1px solid var(--mantine-color-default-border);
+  height: calc(100vh - rem(56px) - 60px);
+  overflow-y: auto;
+  padding: 1rem;
+}
+
 .markdownLink {
   color: var(--mantine-color-anchor);
   text-decoration: underline;

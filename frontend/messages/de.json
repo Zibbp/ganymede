@@ -844,6 +844,7 @@
     "notesCharCount": "{count} / {max} Zeichen",
     "notesMarkdownHint": "Markdown unterstützt",
     "notesInsertTimestampButton": "Zeitstempel einfügen",
+    "notesTimestampDescriptionPlaceholder": "Beschreibung hinzufügen",
     "notesJumpToTimestamp": "Im Video zum Zeitstempel springen",
     "notesPlayerNotReady": "Der Videoplayer ist noch nicht bereit",
     "notesTooLongError": "Notizen dürfen höchstens {max} Zeichen lang sein",

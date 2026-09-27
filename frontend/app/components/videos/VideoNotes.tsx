@@ -1,8 +1,8 @@
 "use client"
-import { RefObject, useEffect, useRef, useState } from "react";
-import { Button, Group, Text, Textarea, Title, Typography } from "@mantine/core";
+import { RefObject, useRef, useState } from "react";
+import { ActionIcon, Button, Group, Text, Textarea, Title, Tooltip, Typography } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
-import { IconClock } from "@tabler/icons-react";
+import { IconClock, IconX } from "@tabler/icons-react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
@@ -12,6 +12,7 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Video, useUpdateVideoNotes } from "@/app/hooks/useVideos";
 import useAuthStore from "@/app/store/useAuthStore";
 import { durationToTime } from "@/app/util/util";
+import { parseTimestampHref } from "@/app/util/videoNotes";
 import classes from "./VideoNotes.module.css";
 
 const MAX_NOTES_LENGTH = 10000;
@@ -19,6 +20,11 @@ const MAX_NOTES_LENGTH = 10000;
 type Props = {
   video: Video;
   playerRef: RefObject<HTMLVideoElement | null>;
+  draft: string;
+  onDraftChange: (draft: string) => void;
+  docked?: boolean;
+  onEdit?: () => void;
+  onClose?: () => void;
 };
 
 // External images are not auto-loaded: stored notes are viewed by other users
@@ -35,39 +41,32 @@ const isExternalImageSrc = (src?: string): boolean => {
   );
 };
 
-// Timestamps are stored as markdown links so they survive as plain text and
-// render as clickable seek buttons: [01:23:45](#t=5025)
-const parseTimestampHref = (href?: string): number | null => {
-  if (!href) return null;
-  const hashMatch = href.match(/#t=(\d+)/);
-  if (hashMatch) return parseInt(hashMatch[1], 10);
-  // Also handle pasted share links (/videos/<id>?t=123 or full URLs)
-  const queryMatch = href.match(/[?&]t=(\d+)/);
-  if (queryMatch) return parseInt(queryMatch[1], 10);
-  return null;
-};
-
-const VideoNotes = ({ video, playerRef }: Props) => {
+const VideoNotes = ({ video, playerRef, draft, onDraftChange, docked = false, onEdit, onClose }: Props) => {
   const t = useTranslations("VideoComponents");
   const axiosPrivate = useAxiosPrivate();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canEdit = hasPermission(UserRole.Editor);
 
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(video.notes ?? "");
+  const [editing, setEditing] = useState(docked);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const updateNotesMutate = useUpdateVideoNotes();
 
-  useEffect(() => {
-    if (!editing) {
-      setDraft(video.notes ?? "");
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit();
+    } else {
+      setEditing(true);
     }
-  }, [video.notes, editing]);
+  };
 
   const handleCancel = () => {
-    setDraft(video.notes ?? "");
-    setEditing(false);
+    onDraftChange(video.notes ?? "");
+    if (docked) {
+      onClose?.();
+    } else {
+      setEditing(false);
+    }
   };
 
   const handleSave = async () => {
@@ -80,7 +79,11 @@ const VideoNotes = ({ video, playerRef }: Props) => {
       showNotification({
         message: t("notesSavedNotification"),
       });
-      setEditing(false);
+      if (docked) {
+        onClose?.();
+      } else {
+        setEditing(false);
+      }
     } catch (error) {
       console.error(error);
       showNotification({
@@ -112,7 +115,8 @@ const VideoNotes = ({ video, playerRef }: Props) => {
       });
       return;
     }
-    const snippet = `[${durationToTime(seconds)}](#t=${seconds})`;
+    const descriptionPlaceholder = t("notesTimestampDescriptionPlaceholder");
+    const snippet = `[${descriptionPlaceholder} — ${durationToTime(seconds)}](#t=${seconds})`;
     const el = textareaRef.current;
     const selectionStart = el?.selectionStart ?? draft.length;
     const selectionEnd = el?.selectionEnd ?? draft.length;
@@ -128,13 +132,14 @@ const VideoNotes = ({ video, playerRef }: Props) => {
       });
       return;
     }
-    setDraft(next);
-    // Restore focus and place the cursor after the inserted timestamp.
+    onDraftChange(next);
+    // Select the placeholder so the user can immediately type a description.
     requestAnimationFrame(() => {
       if (!textareaRef.current) return;
-      const pos = (before + spaceBefore + snippet + spaceAfter).length;
+      const descriptionStart = before.length + spaceBefore.length + 1;
+      const descriptionEnd = descriptionStart + descriptionPlaceholder.length;
       textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(pos, pos);
+      textareaRef.current.setSelectionRange(descriptionStart, descriptionEnd);
     });
   };
 
@@ -147,11 +152,23 @@ const VideoNotes = ({ video, playerRef }: Props) => {
   }
 
   return (
-    <div style={{ marginTop: 16, marginBottom: 16 }}>
+    <div className={docked ? classes.dockedPanel : classes.inlineNotes}>
       <Group justify="space-between" mb={5}>
-        <Title>{t("notesTitle")}</Title>
-        {canEdit && !editing && (
-          <Button variant="default" size="xs" onClick={() => setEditing(true)}>
+        <Title order={docked ? 3 : 1}>{t("notesTitle")}</Title>
+        {docked && (
+          <Tooltip label={t("notesCancelButton")}>
+            <ActionIcon
+              variant="subtle"
+              onClick={handleCancel}
+              aria-label={t("notesCancelButton")}
+              disabled={updateNotesMutate.isPending}
+            >
+              <IconX size={18} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+        {canEdit && !editing && !docked && (
+          <Button variant="default" size="xs" onClick={handleEdit}>
             {notes ? t("notesEditButton") : t("notesAddButton")}
           </Button>
         )}
@@ -163,12 +180,13 @@ const VideoNotes = ({ video, playerRef }: Props) => {
             ref={textareaRef}
             placeholder={t("notesPlaceholder")}
             value={draft}
-            onChange={(event) => setDraft(event.currentTarget.value)}
+            onChange={(event) => onDraftChange(event.currentTarget.value)}
             autosize
             minRows={4}
             maxRows={12}
             maxLength={MAX_NOTES_LENGTH}
             disabled={updateNotesMutate.isPending}
+            autoFocus={docked}
           />
           <Group justify="space-between" mt={8}>
             <Text size="xs" color="dimmed">
@@ -207,7 +225,7 @@ const VideoNotes = ({ video, playerRef }: Props) => {
             remarkPlugins={[remarkGfm, remarkBreaks]}
             components={{
               a: ({ href, children }) => {
-                const seconds = parseTimestampHref(href);
+                const seconds = parseTimestampHref(href, video.id);
                 if (seconds !== null) {
                   return (
                     <button

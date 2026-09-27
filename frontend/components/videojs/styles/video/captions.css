@@ -1,0 +1,29 @@
+@layer components {
+  @scope (.media-skin) {
+    :scope {
+      --media-caption-track-duration: var(--media-duration-controls);
+      --media-caption-track-delay: 25ms;
+      --media-caption-track-y: calc(var(--media-spacing) * -2);
+    }
+
+    video::-webkit-media-text-track-container {
+      z-index: 20;
+      font-family: inherit;
+      scale: 0.98;
+      translate: 0 var(--media-caption-track-y);
+      transition: translate var(--media-caption-track-duration) ease-out;
+      transition-delay: var(--media-caption-track-delay);
+    }
+
+    :scope[data-controls-visible] {
+      --media-caption-track-y: var(--media-caption-controls-y);
+    }
+
+    /* Matches the `--container-media-2xl` layout breakpoint. */
+    @container media-root (width >= 42rem) {
+      :scope[data-theme="minimal"][data-controls-visible] video {
+        --media-caption-track-y: calc(var(--media-spacing) * -12);
+      }
+    }
+  }
+}

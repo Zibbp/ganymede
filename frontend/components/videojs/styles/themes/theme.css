@@ -1,0 +1,129 @@
+@layer base.theme, base.preset, base.preferences;
+
+@layer base.theme {
+  /* Default theme tokens. Minimal selectors, preset adaptations, and preferences override these. */
+  .media-skin {
+    /* Colors. */
+    --media-background: oklch(0 0 0);
+    --media-foreground: oklch(1 0 0);
+    --media-controls: oklch(0 0 0 / 0.35);
+    --media-controls-foreground: var(--media-foreground);
+    --media-popover: oklch(1 0 0 / 0.1);
+    --media-popover-foreground: var(--media-foreground);
+    --media-primary: var(--media-accent-color, var(--media-default-accent-color));
+    --media-primary-foreground: var(
+      --media-accent-text-color,
+      contrast-color(var(--media-accent-color, var(--media-default-accent-color)))
+    );
+    --media-accent: var(--media-accent-color, color-mix(in oklab, var(--media-default-accent-color) 10%, transparent));
+    --media-accent-foreground: var(
+      --media-accent-text-color,
+      contrast-color(var(--media-accent-color, var(--media-internal-accent-text-fallback, oklch(0 0 0))))
+    );
+    --media-muted: oklch(1 0 0 / 0.15);
+    --media-muted-foreground: oklch(1 0 0 / 0.65);
+    --media-border: oklch(0 0 0 / 0.1);
+    --media-ring: oklch(1 0 0);
+    --media-backdrop: oklch(0 0 0);
+    --media-live-color: oklch(0.65 0.22 27);
+
+    /* Shadows and surfaces. Preferences switch the backdrop filters off and strengthen the inset highlight. */
+    --media-shadow-surface: 0 1px 3px 0 oklch(0 0 0 / 0.15), 0 1px 2px -1px oklch(0 0 0 / 0.15);
+    --media-shadow-surface-inset: inset 0 1px 0 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px rgb(255 255 255 / 0.05);
+    --media-shadow-thumb: 0 0 0 1px rgb(0 0 0 / 0.1), 0 1px 3px 0 rgb(0 0 0 / 0.35), 0 1px 2px -1px rgb(0 0 0 / 0.35);
+    --media-shadow-tooltip: 0 0 0 1px var(--media-border), var(--media-shadow-surface);
+    --media-shadow-separator: 0 1px 0 0 oklch(1 0 0 / 0.075);
+    --media-shadow-current-color: oklch(from currentColor 0 0 0 / clamp(0, calc((l - 0.5) * 0.5), 0.15));
+    --media-shadow-subtle-current-color: oklch(from var(--media-shadow-current-color) l c h / calc(alpha * 0.4));
+    --media-text-shadow-dialog: 0 1px 0 rgb(0 0 0 / 0.25);
+    --media-backdrop-filter-surface: blur(16px) saturate(150%);
+    --media-backdrop-filter-indicator: blur(8px);
+    --media-backdrop-filter-dialog: blur(16px) saturate(150%);
+
+    /* Controls. */
+    --media-control-corner-shape: round;
+    --media-control-radius: 99px;
+    --media-control-size: calc(var(--media-spacing) * 9);
+    --media-controls-radius: var(--media-control-radius);
+    --media-default-accent-color: oklch(1 0 0);
+
+    /* Motion. Preferences collapse durations and neutralize hidden-state values under reduced motion. */
+    --media-duration-instant: 50ms;
+    --media-duration-fast: 100ms;
+    --media-duration: 150ms;
+    --media-duration-slow: 200ms;
+    --media-duration-slower: 250ms;
+    --media-duration-controls: 100ms;
+    --media-duration-dialog: 350ms;
+    --media-duration-indicator: var(--media-duration-slower);
+    --media-duration-menu: 250ms;
+    --media-duration-slider: var(--media-duration-fast);
+    --media-delay-dialog: 100ms;
+    --media-hidden-scale: 0.95;
+    --media-hidden-blur: 8px;
+    --media-hidden-offset: calc(var(--media-spacing) * 1);
+    --media-hidden-icon-scale: 0;
+    --media-hidden-indicator-scale: 0.9;
+    --media-hidden-indicator-offset: -25%;
+    --media-hidden-playback-scale: 0.85;
+    --media-hidden-popup-scale: 0.95;
+    --media-hidden-popup-blur: 4px;
+    --media-hidden-preview-scale: 0.8;
+    --media-hidden-preview-offset: calc(var(--media-spacing) * 2);
+    --media-hidden-seek-offset: 60%;
+
+    /* Popups and menus. */
+    --media-menu-item-radius: calc(var(--media-spacing) * 2);
+    --media-popover-boundary-offset: calc(var(--media-spacing) * 3);
+    --media-popover-side-offset: calc(var(--media-spacing) * 3);
+    --media-popup-radius: calc(var(--media-spacing) * 3);
+    --media-popup-translate-distance: calc(var(--media-spacing) * 2);
+    --media-tooltip-boundary-offset: var(--media-popover-boundary-offset);
+    --media-tooltip-side-offset: var(--media-popover-side-offset);
+
+    /* Dialogs. */
+    --media-dialog-radius: calc(var(--media-spacing) * 7);
+    --media-dialog-width: calc(100% - var(--media-spacing) * 6);
+    --media-dialog-max-width: calc(var(--media-spacing) * 72);
+
+    /* Sliders. */
+    --media-slider-preview-label-offset: calc(var(--media-spacing) * 10.5);
+
+    /* Player frame and scale. */
+    --media-video-border-radius: var(--media-border-radius, 28px);
+    --media-scale: 1;
+    --media-scrollbar-thumb-color: oklch(from currentColor l c h / 0.3);
+    --media-spacing: calc(var(--media-scale-unit, 16px) * var(--media-scale) / 4);
+
+    scrollbar-color: var(--media-scrollbar-thumb-color) transparent;
+    scrollbar-width: thin;
+  }
+
+  .media-skin::-webkit-scrollbar-thumb {
+    background: var(--media-scrollbar-thumb-color);
+    border-radius: 9999px;
+  }
+
+  .media-skin:fullscreen {
+    --media-object-fit: contain;
+    --media-video-border-radius: 0;
+  }
+
+  @media (min-width: 1280px) {
+    .media-skin:fullscreen {
+      --media-scale: 1.25;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .media-skin:fullscreen {
+      --media-scale: 1.5;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    .media-skin:fullscreen {
+      --media-scale: 1.75;
+    }
+  }
+}
