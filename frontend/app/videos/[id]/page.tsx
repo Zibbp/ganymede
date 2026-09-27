@@ -21,12 +21,18 @@ interface Params {
   id: string;
 }
 
+type NotesDraft = {
+  videoId: string;
+  value: string;
+};
+
 const VideoPage = ({ params }: { params: Promise<Params> }) => {
   const theme = useMantineTheme()
   const { id } = React.use(params);
   const { isLoggedIn } = useAuthStore()
   const player = useRef<HTMLVideoElement>(null);
   const [notesPanelOpen, setNotesPanelOpen] = useState(false);
+  const [notesDraft, setNotesDraft] = useState<NotesDraft | null>(null);
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
   const t = useTranslations("VideoPage");
@@ -75,6 +81,13 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
     return <VideoLoginRequired video={data} />
   }
 
+  const currentNotesDraft = notesDraft?.videoId === data.id
+    ? notesDraft.value
+    : (data.notes ?? "");
+  const handleNotesDraftChange = (value: string) => {
+    setNotesDraft({ videoId: data.id, value });
+  };
+
   return (
     <div>
       {/* Player and chat section — single tree on both layouts so VideoPlayer/ChatPlayer instances persist across the breakpoint flip */}
@@ -106,6 +119,8 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
             <VideoNotes
               video={data}
               playerRef={player}
+              draft={currentNotesDraft}
+              onDraftChange={handleNotesDraftChange}
               docked
               onClose={() => setNotesPanelOpen(false)}
             />
@@ -160,6 +175,8 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
         <VideoNotes
           video={data}
           playerRef={player}
+          draft={currentNotesDraft}
+          onDraftChange={handleNotesDraftChange}
           onEdit={!isMobile ? openNotesPanel : undefined}
         />
       </Container>

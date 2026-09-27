@@ -20,6 +20,8 @@ const MAX_NOTES_LENGTH = 10000;
 type Props = {
   video: Video;
   playerRef: RefObject<HTMLVideoElement | null>;
+  draft: string;
+  onDraftChange: (draft: string) => void;
   docked?: boolean;
   onEdit?: () => void;
   onClose?: () => void;
@@ -39,20 +41,18 @@ const isExternalImageSrc = (src?: string): boolean => {
   );
 };
 
-const VideoNotes = ({ video, playerRef, docked = false, onEdit, onClose }: Props) => {
+const VideoNotes = ({ video, playerRef, draft, onDraftChange, docked = false, onEdit, onClose }: Props) => {
   const t = useTranslations("VideoComponents");
   const axiosPrivate = useAxiosPrivate();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canEdit = hasPermission(UserRole.Editor);
 
   const [editing, setEditing] = useState(docked);
-  const [draft, setDraft] = useState(video.notes ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const updateNotesMutate = useUpdateVideoNotes();
 
   const handleEdit = () => {
-    setDraft(video.notes ?? "");
     if (onEdit) {
       onEdit();
     } else {
@@ -61,7 +61,7 @@ const VideoNotes = ({ video, playerRef, docked = false, onEdit, onClose }: Props
   };
 
   const handleCancel = () => {
-    setDraft(video.notes ?? "");
+    onDraftChange(video.notes ?? "");
     if (docked) {
       onClose?.();
     } else {
@@ -132,7 +132,7 @@ const VideoNotes = ({ video, playerRef, docked = false, onEdit, onClose }: Props
       });
       return;
     }
-    setDraft(next);
+    onDraftChange(next);
     // Select the placeholder so the user can immediately type a description.
     requestAnimationFrame(() => {
       if (!textareaRef.current) return;
@@ -157,7 +157,12 @@ const VideoNotes = ({ video, playerRef, docked = false, onEdit, onClose }: Props
         <Title order={docked ? 3 : 1}>{t("notesTitle")}</Title>
         {docked && (
           <Tooltip label={t("notesCancelButton")}>
-            <ActionIcon variant="subtle" onClick={handleCancel} aria-label={t("notesCancelButton")}>
+            <ActionIcon
+              variant="subtle"
+              onClick={handleCancel}
+              aria-label={t("notesCancelButton")}
+              disabled={updateNotesMutate.isPending}
+            >
               <IconX size={18} />
             </ActionIcon>
           </Tooltip>
@@ -175,7 +180,7 @@ const VideoNotes = ({ video, playerRef, docked = false, onEdit, onClose }: Props
             ref={textareaRef}
             placeholder={t("notesPlaceholder")}
             value={draft}
-            onChange={(event) => setDraft(event.currentTarget.value)}
+            onChange={(event) => onDraftChange(event.currentTarget.value)}
             autosize
             minRows={4}
             maxRows={12}
@@ -220,7 +225,7 @@ const VideoNotes = ({ video, playerRef, docked = false, onEdit, onClose }: Props
             remarkPlugins={[remarkGfm, remarkBreaks]}
             components={{
               a: ({ href, children }) => {
-                const seconds = parseTimestampHref(href);
+                const seconds = parseTimestampHref(href, video.id);
                 if (seconds !== null) {
                   return (
                     <button

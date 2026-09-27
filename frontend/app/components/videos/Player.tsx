@@ -139,8 +139,8 @@ const VideoPlayer = ({ video, ref }: Params) => {
   }, [video.processing, video.id]);
 
   const noteBookmarks = useMemo(
-    () => extractVideoNoteTimestamps(video.notes),
-    [video.notes],
+    () => extractVideoNoteTimestamps(video.notes, video.id),
+    [video.notes, video.id],
   );
 
   // Resolve the resume target once server playback or ?t= is known.
