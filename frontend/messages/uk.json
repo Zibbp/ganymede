@@ -844,6 +844,7 @@
     "notesCharCount": "{count} / {max} символів",
     "notesMarkdownHint": "Підтримується Markdown",
     "notesInsertTimestampButton": "Вставити часову мітку",
+    "notesTimestampDescriptionPlaceholder": "Додайте опис",
     "notesJumpToTimestamp": "Перейти до часової мітки у відео",
     "notesPlayerNotReady": "Відеоплеєр ще не готовий",
     "notesTooLongError": "Нотатки мають містити не більше {max} символів",

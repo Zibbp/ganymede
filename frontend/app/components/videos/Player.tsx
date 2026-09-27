@@ -1,9 +1,9 @@
-import '@videojs/react/video/skin.css';
-import '@videojs/react/live-video/skin.css';
-import { Video, VideoPlayer as VideoJsPlayer, VideoSkin, usePlayer as useVodPlayer } from '@videojs/react/video';
-import { LiveVideoPlayer as LiveVideoJsPlayer, LiveVideoSkin, usePlayer as useLivePlayer } from '@videojs/react/live-video';
+import { Video, VideoPlayer as VideoJsPlayer, usePlayer as useVodPlayer } from '@videojs/react/video';
+import { LiveVideoPlayer as LiveVideoJsPlayer, usePlayer as useLivePlayer } from '@videojs/react/live-video';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { I18nProvider } from '@videojs/react/i18n';
+import { VideoSkin } from '@/components/videojs/video/skin';
+import { LiveVideoSkin } from '@/components/videojs/live-video/skin';
 import { Video as VideoType, VideoType as GanymedeVideoType } from '@/app/hooks/useVideos';
 import classes from "./Player.module.css"
 import type { CSSProperties } from 'react';
@@ -12,6 +12,7 @@ import { env } from 'next-runtime-env';
 import dayjs from 'dayjs';
 import { useLocale } from 'next-intl';
 import { escapeURL } from '@/app/util/util';
+import { extractVideoNoteTimestamps } from '@/app/util/videoNotes';
 import { PlaybackStatus, useFetchPlaybackForVideo, useSetPlaybackProgressForVideo, useStartPlaybackForVideo, useUpdatePlaybackProgressForVideo } from '@/app/hooks/usePlayback';
 import { useAxiosPrivate } from '@/app/hooks/useAxios';
 import useAuthStore from '@/app/store/useAuthStore';
@@ -56,13 +57,13 @@ const LiveAbsoluteTimeDisplay = ({ streamedAt }: { streamedAt: string | Date }) 
   return <AbsoluteTimeOverlay streamedAt={streamedAt} currentTime={safeCurrentTime} />;
 };
 
-const PlayerOverlayButtons = () => {
+const PlayerCustomControls = () => {
   return (
-    <div className={classes.overlayControls}>
+    <>
       <VideoPlayerTheaterModeIcon />
       <VideoPlayerAbsoluteTimeIcon />
       <VideoPlayerHideChatIcon />
-    </div>
+    </>
   );
 };
 
@@ -136,6 +137,11 @@ const VideoPlayer = ({ video, ref }: Params) => {
     if (video.processing) return undefined;
     return `${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/vod/${video.id}/thumbnails/vtt`;
   }, [video.processing, video.id]);
+
+  const noteBookmarks = useMemo(
+    () => extractVideoNoteTimestamps(video.notes, video.id),
+    [video.notes, video.id],
+  );
 
   // Resolve the resume target once server playback or ?t= is known.
   useEffect(() => {
@@ -313,10 +319,10 @@ const VideoPlayer = ({ video, ref }: Params) => {
                   : classes.mediaPlayer
               }
               style={skinStyle}
+              customControls={<PlayerCustomControls />}
             >
               <HlsJsVideo {...mediaProps} />
               {showAbsoluteTime && <LiveAbsoluteTimeDisplay streamedAt={video.streamed_at} />}
-              <PlayerOverlayButtons />
             </LiveVideoSkin>
           </I18nProvider>
         </LiveVideoJsPlayer>
@@ -330,6 +336,8 @@ const VideoPlayer = ({ video, ref }: Params) => {
                   : classes.mediaPlayer
               }
               style={skinStyle}
+              bookmarks={noteBookmarks}
+              customControls={<PlayerCustomControls />}
             >
               {isHls ? (
                 <HlsJsVideo {...mediaProps}>
@@ -351,7 +359,6 @@ const VideoPlayer = ({ video, ref }: Params) => {
                 </Video>
               )}
               {showAbsoluteTime && <AbsoluteTimeDisplay streamedAt={video.streamed_at} />}
-              <PlayerOverlayButtons />
             </VideoSkin>
           </I18nProvider>
         </VideoJsPlayer>

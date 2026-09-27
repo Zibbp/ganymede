@@ -1,0 +1,138 @@
+@layer components {
+  @scope (.media-skin[data-theme="default"]) {
+    .media-dialog-actions {
+      gap: calc(var(--media-spacing) * 2);
+      flex-shrink: 0;
+      display: flex;
+    }
+
+    .media-dialog-backdrop {
+      z-index: 40;
+      border-radius: inherit;
+      background-color: var(--media-backdrop);
+      opacity: 1;
+      backdrop-filter: var(--media-backdrop-filter-dialog);
+      transition-property: opacity;
+      transition-duration: 0.15s;
+      transition-delay: var(--media-delay-dialog);
+      transition-duration: var(--media-duration-dialog);
+      transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      position: absolute;
+      inset: 0;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .media-dialog-backdrop {
+        background-color: color-mix(in oklab, var(--media-backdrop) 20%, transparent);
+      }
+    }
+
+    .media-dialog-backdrop:not([data-open]) {
+      display: none;
+    }
+
+    .media-dialog-backdrop[data-ending-style] {
+      transition-delay: 0s;
+      transition-duration: var(--media-duration-slower);
+    }
+
+    .media-dialog-backdrop:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+
+    .media-dialog-close {
+      height: var(--media-control-size);
+      width: 100%;
+      padding-inline: calc(var(--media-spacing) * 4);
+      padding-block: calc(var(--media-spacing) * 2);
+      flex: 1;
+      font-weight: 500;
+      background-color: var(--media-primary) !important;
+      color: var(--media-primary-foreground) !important;
+    }
+
+    .media-dialog-content {
+      gap: calc(var(--media-spacing) * 2);
+      min-height: 0;
+      padding-inline: calc(var(--media-spacing) * 2);
+      padding-top: calc(var(--media-spacing) * 2);
+      padding-bottom: calc(var(--media-spacing) * 1.5);
+      flex-direction: column;
+      display: flex;
+      overflow-y: auto;
+    }
+
+    .media-dialog-description {
+      overflow-wrap: anywhere;
+      opacity: 0.7;
+      margin: 0;
+    }
+
+    .media-dialog-popup {
+      z-index: 50;
+      max-height: calc(100% - 0.5rem);
+      width: var(--media-dialog-width);
+      max-width: var(--media-dialog-max-width);
+      gap: calc(var(--media-spacing) * 3);
+      border-radius: var(--media-dialog-radius);
+      background-color: var(--media-popover);
+      padding: calc(var(--media-spacing) * 3);
+      color: var(--media-popover-foreground);
+      box-shadow:
+        0 0 0 1px var(--media-surface-border, var(--media-border)),
+        var(--media-shadow-surface);
+      backdrop-filter: var(--media-backdrop-filter-surface);
+      transition-property: opacity, scale;
+      transition-duration: 0.15s;
+      transition-delay: var(--media-delay-dialog);
+      transition-duration: var(--media-duration-dialog);
+      text-shadow: var(--media-text-shadow-dialog);
+      outline-style: none;
+      flex-direction: column;
+      transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      display: flex;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      translate: -50% -50%;
+    }
+
+    @media (forced-colors: active) {
+      .media-dialog-popup {
+        outline-offset: 2px;
+        outline: 2px solid #0000;
+      }
+    }
+
+    .media-dialog-popup:not([data-open]) {
+      display: none;
+    }
+
+    .media-dialog-popup:after {
+      content: "";
+      z-index: 10;
+      pointer-events: none;
+      border-radius: inherit;
+      box-shadow: var(--media-shadow-surface-inset);
+      position: absolute;
+      inset: 0;
+    }
+
+    .media-dialog-popup[data-ending-style] {
+      transition-delay: 0s;
+      transition-duration: var(--media-duration-slower);
+    }
+
+    .media-dialog-popup:is([data-starting-style], [data-ending-style]) {
+      scale: var(--media-hidden-popup-scale) var(--media-hidden-popup-scale);
+      opacity: 0;
+    }
+
+    .media-dialog-title {
+      font-size: calc(var(--media-spacing) * 3.75);
+      margin: 0;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+  }
+}
