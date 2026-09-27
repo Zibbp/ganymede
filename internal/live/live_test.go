@@ -530,7 +530,7 @@ func TestTwitchLiveArchiveRecoversAfterWorkerCrash(t *testing.T) {
 			true
 		)
 		WHERE id = $2
-	`, time.Now().Add(-5*time.Minute).Format(time.RFC3339Nano), originalJob.ID)
+	`, time.Now().Add(-24*time.Hour).Format(time.RFC3339Nano), originalJob.ID)
 	require.NoError(t, err)
 	updated, err := result.RowsAffected()
 	require.NoError(t, err)
