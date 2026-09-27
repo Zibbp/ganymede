@@ -5238,11 +5238,11 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "videos_directory_total_space": {
-                    "description": "Total space in bytes (free + used)",
+                    "description": "Filesystem capacity in bytes",
                     "type": "integer"
                 },
                 "videos_directory_used_space": {
-                    "description": "Used space in bytes",
+                    "description": "Tracked VOD storage in bytes",
                     "type": "integer"
                 }
             }

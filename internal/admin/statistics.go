@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	entqueue "github.com/zibbp/ganymede/ent/queue"
 	entVod "github.com/zibbp/ganymede/ent/vod"
@@ -180,10 +181,16 @@ func (s *Service) GetSystemOverview(ctx context.Context) (GetSystemOverviewRespo
 	resp.MemoryTotal = totalMemory
 
 	// Queue health - cheap count queries, failure of these should not fail the whole overview
-	resp.Queue, _ = s.getQueueOverview(ctx)
+	if queue, err := s.getQueueOverview(ctx); err != nil {
+		log.Warn().Err(err).Msg("error getting queue overview")
+	} else {
+		resp.Queue = queue
+	}
 
 	// User count
-	if userCount, err := s.Store.Client.User.Query().Count(ctx); err == nil {
+	if userCount, err := s.Store.Client.User.Query().Count(ctx); err != nil {
+		log.Warn().Err(err).Msg("error getting user count")
+	} else {
 		resp.UserCount = userCount
 	}
 
