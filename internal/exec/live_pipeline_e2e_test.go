@@ -85,7 +85,7 @@ func TestLiveFmp4CapturePipelineE2E(t *testing.T) {
 	initFilename := extID + "_init.mp4"
 	args := buildLiveHlsCaptureFFmpegArgs(
 		server.URL+"/src.m3u8", playlistPath, segmentPattern, initFilename,
-		false, "-c:v copy -c:a copy",
+		false, "-c:v copy -c:a copy", false,
 	)
 	joined := strings.Join(args, " ")
 	for _, want := range []string{"-hls_segment_type", "fmp4", "-bsf:a", "aac_adtstoasc", "temp_file", ".m4s"} {
