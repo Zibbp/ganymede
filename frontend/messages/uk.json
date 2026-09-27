@@ -863,6 +863,9 @@
     "chatEventAnnouncement": "Оголошення",
     "loadingChat": "Завантаження відтворення чату",
     "chatError": "Помилка",
+    "loadingChatterMessages": "Loading user chat messages",
+    "chatterMessages": "{name}'s messages",
+    "noChat": "No messages found",
     "filterByLabel": "Фільтрувати за",
     "filterByPlaceholder": "Фільтрувати за типами відео",
     "orderByLabel": "Сортувати за",
@@ -977,30 +980,49 @@
   },
   "AdminOverviewPage": {
     "title": "Адмін - Огляд",
-    "loading": "Завантаження огляду",
+    "header": "Огляд",
+    "refresh": "Оновити статистику",
+    "retry": "Спробувати ще раз",
     "error": "Помилка завантаження огляду",
+    "library": {
+      "title": "Бібліотека",
+      "totalVideos": "Усього відео",
+      "totalChannels": "Усього каналів",
+      "totalDuration": "Загальна тривалість",
+      "totalViews": "Усього переглядів",
+      "totalViewsDescription": "Перегляди з джерела та локальні",
+      "videosPerChannel": "Відео за каналами",
+      "videoTypes": "Типи відео",
+      "channel": "Канал",
+      "videos": "Відео",
+      "otherChannels": "Інші",
+      "noData": "Даних ще немає",
+      "empty": "Заархівованих відео ще немає."
+    },
+    "storage": {
+      "title": "Сховище",
+      "usedOf": "Використано {used} з {total}",
+      "free": "Вільно {value}",
+      "total": "Усього {value}",
+      "perChannel": "Сховище за каналами",
+      "byType": "Сховище за типами відео",
+      "channel": "Канал",
+      "size": "Розмір",
+      "otherChannels": "Інші",
+      "otherTypes": "Інші",
+      "largestVideos": "Найбільші відео",
+      "noData": "Даних ще немає",
+      "noLargeVideos": "Відео не знайдено"
+    },
     "system": {
-      "title": "Огляд системи",
-      "usedStorageText": "Використане сховище",
-      "usedStorageDescription": "Загальний обсяг використаного сховища",
-      "availableStorageText": "Доступне сховище",
-      "availableStorageDescription": "Загальний обсяг доступного сховища",
-      "storageUsedText": "Використано сховища",
-      "cpuCoresText": "Ядер CPU",
-      "totalMemoryText": "Загальна пам'ять"
-    },
-    "videoStatistics": {
-      "title": "Статистика відео",
-      "totalVideosText": "Всього відео",
-      "totalChannelsText": "Всього каналів",
-      "channelVideosMapTitle": "Відео каналу",
-      "videoTypeMapTitle": "Типи відео"
-    },
-    "storageDistribution": {
-      "title": "Розподіл сховища",
-      "channelStorageDistributionText": "Розподіл сховища за каналами",
-      "topLargeVideosText": "Найбільші відео",
-      "noLargeVideosText": "Відео не знайдено"
+      "title": "Система",
+      "viewInfo": "Переглянути інформацію про систему",
+      "usedStorage": "Використане сховище",
+      "freeStorage": "Вільно {value}",
+      "cpuCores": "Ядра ЦП",
+      "totalMemory": "Загальна пам’ять",
+      "users": "Користувачі",
+      "refreshNote": "Системна статистика автоматично оновлюється кожні 30 секунд."
     }
   },
   "AdminNotificationsPage": {

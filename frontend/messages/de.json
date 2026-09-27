@@ -980,30 +980,49 @@
   },
   "AdminOverviewPage": {
     "title": "Admin - Übersicht",
-    "loading": "Übersicht wird geladen",
+    "header": "Übersicht",
+    "refresh": "Statistiken aktualisieren",
+    "retry": "Erneut versuchen",
     "error": "Fehler beim Laden der Übersicht",
+    "library": {
+      "title": "Bibliothek",
+      "totalVideos": "Videos insgesamt",
+      "totalChannels": "Kanäle insgesamt",
+      "totalDuration": "Gesamtdauer",
+      "totalViews": "Aufrufe insgesamt",
+      "totalViewsDescription": "Quell- und lokale Aufrufe",
+      "videosPerChannel": "Videos pro Kanal",
+      "videoTypes": "Videotypen",
+      "channel": "Kanal",
+      "videos": "Videos",
+      "otherChannels": "Andere",
+      "noData": "Noch keine Daten",
+      "empty": "Noch keine Videos archiviert."
+    },
+    "storage": {
+      "title": "Speicher",
+      "usedOf": "{used} von {total} verwendet",
+      "free": "{value} frei",
+      "total": "{value} insgesamt",
+      "perChannel": "Speicher pro Kanal",
+      "byType": "Speicher nach Videotyp",
+      "channel": "Kanal",
+      "size": "Größe",
+      "otherChannels": "Andere",
+      "otherTypes": "Andere",
+      "largestVideos": "Größte Videos",
+      "noData": "Noch keine Daten",
+      "noLargeVideos": "Keine Videos gefunden"
+    },
     "system": {
-      "title": "Systemübersicht",
-      "usedStorageText": "Genutzter Speicherplatz",
-      "usedStorageDescription": "Gesamter genutzter Speicherplatz",
-      "availableStorageText": "Verfügbarer Speicherplatz",
-      "availableStorageDescription": "Gesamter verfügbarer Speicherplatz",
-      "storageUsedText": "Speicherplatz genutzt",
-      "cpuCoresText": "CPU-Kerne",
-      "totalMemoryText": "Gesamter Arbeitsspeicher"
-    },
-    "videoStatistics": {
-      "title": "Videostatistiken",
-      "totalVideosText": "Anzahl Videos",
-      "totalChannelsText": "Anzahl Kanäle",
-      "channelVideosMapTitle": "Kanalvideos",
-      "videoTypeMapTitle": "Videotypen"
-    },
-    "storageDistribution": {
-      "title": "Speicherverteilung",
-      "channelStorageDistributionText": "Kanalspeicherverteilung",
-      "topLargeVideosText": "Größte Videos",
-      "noLargeVideosText": "Keine Videos gefunden"
+      "title": "System",
+      "viewInfo": "Systeminformationen anzeigen",
+      "usedStorage": "Verwendeter Speicher",
+      "freeStorage": "{value} frei",
+      "cpuCores": "CPU-Kerne",
+      "totalMemory": "Gesamtspeicher",
+      "users": "Benutzer",
+      "refreshNote": "Die Systemstatistiken werden alle 30 Sekunden automatisch aktualisiert."
     }
   },
   "AdminNotificationsPage": {
