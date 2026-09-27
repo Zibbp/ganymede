@@ -74,14 +74,8 @@
   transition: opacity 0.2s ease;
 }
 
-.mediaPlayer:not([data-controls-visible]) .absoluteTimeOverlay,
-.mediaPlayerTheaterMode:not([data-controls-visible]) .absoluteTimeOverlay {
-  opacity: 0;
-}
-
 .absoluteTimeText {
   font-family: var(--mantine-font-family-monospace);
   font-size: 0.9rem;
   font-weight: 600;
 }
-
