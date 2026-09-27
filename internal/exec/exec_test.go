@@ -519,20 +519,20 @@ func waitForPIDFile(t *testing.T, path string) int {
 	t.Helper()
 
 	deadline := time.Now().Add(5 * time.Second)
+	var lastContents string
 	for {
 		contents, err := os.ReadFile(path)
 		if err == nil {
-			pid, err := strconv.Atoi(strings.TrimSpace(string(contents)))
-			if err != nil {
-				t.Fatalf("parse PID from %s: %v", path, err)
+			lastContents = strings.TrimSpace(string(contents))
+			pid, parseErr := strconv.Atoi(lastContents)
+			if parseErr == nil && pid > 0 {
+				return pid
 			}
-			return pid
-		}
-		if !errors.Is(err, os.ErrNotExist) {
+		} else if !errors.Is(err, os.ErrNotExist) {
 			t.Fatalf("read PID file %s: %v", path, err)
 		}
 		if time.Now().After(deadline) {
-			t.Fatalf("timeout waiting for PID file %s", path)
+			t.Fatalf("timeout waiting for valid PID in %s (last contents %q)", path, lastContents)
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
