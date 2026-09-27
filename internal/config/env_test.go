@@ -19,12 +19,18 @@ func TestGetEnvConfig(t *testing.T) {
 	assert.NoError(t, os.Setenv("VIDEOS_DIR", "/custom/videos"))
 	assert.NoError(t, os.Setenv("TWITCH_CLIENT_ID", "client_id"))
 	assert.NoError(t, os.Setenv("TWITCH_CLIENT_SECRET", "client_secret"))
+	assert.NoError(t, os.Setenv("DISABLE_LIVE_ARCHIVE_STALL_CHECK", "true"))
+	assert.NoError(t, os.Setenv("LIVE_ARCHIVE_STALL_TIMEOUT_SECONDS", "75"))
 
 	env := GetEnvConfig()
 
 	assert.Equal(t, "/custom/videos", env.VideosDir)
+	assert.True(t, env.DisableLiveArchiveStallCheck)
+	assert.Equal(t, 75, env.LiveArchiveStallTimeoutSeconds)
 
 	assert.NoError(t, os.Unsetenv("VIDEOS_DIR"))
+	assert.NoError(t, os.Unsetenv("DISABLE_LIVE_ARCHIVE_STALL_CHECK"))
+	assert.NoError(t, os.Unsetenv("LIVE_ARCHIVE_STALL_TIMEOUT_SECONDS"))
 }
 
 func TestGetEnvRequiredConfig(t *testing.T) {

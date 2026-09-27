@@ -19,6 +19,7 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	entQueue "github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -29,13 +30,9 @@ import (
 type WatchdogArgs struct{}
 
 const (
-	archiveHeartbeatTimeout      = 90 * time.Second
-	liveArchiveCancellationGrace = liveArchiveFinalizationTimeout + 30*time.Second
-	liveArchiveMediaQuietPeriod  = 30 * time.Second
-	// FFmpeg is allowed to retry a temporarily unavailable live HLS input, but
-	// a capture that has not changed for several minutes should be cancelled so
-	// the existing live-archive finalization/recovery path can take over.
-	liveArchiveMediaStallTimeout = 3 * time.Minute
+	archiveHeartbeatTimeout           = 90 * time.Second
+	liveArchiveChatCancellationGrace  = liveArchiveFinalizationTimeout + 30*time.Second
+	liveArchiveVideoCancellationGrace = exec.LiveArchiveProcessShutdownTimeout + liveArchiveFinalizationTimeout + 30*time.Second
 )
 
 type staleLiveArchiveAction uint8
@@ -74,8 +71,8 @@ func (w WatchdogWorker) Work(ctx context.Context, job *river.Job[WatchdogArgs]) 
 	return nil
 }
 
-// runWatchdog finds archive jobs whose public progress output has stopped
-// advancing. It uses only River's public APIs: the stale execution is
+// runWatchdog finds archive jobs whose worker heartbeat has stopped advancing.
+// It uses only River's public APIs: the stale execution is
 // cancelled, and a replacement generation is inserted when retry budget
 // remains. Historical jobs are retained for River's normal lifecycle cleanup.
 func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
@@ -90,18 +87,11 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 		if !utils.Contains(job.Tags, archive_tag) {
 			return nil
 		}
-		heartbeat, args, err := archiveJobProgress(job)
+		heartbeat, _, err := archiveJobProgress(job)
 		if err != nil {
 			return err
 		}
-		mediaStalled := false
-		if job.Kind == string(utils.TaskDownloadLiveVideo) {
-			mediaStalled, err = liveArchiveVideoInputIsStalled(ctx, store, args.Input.QueueId, job.AttemptedAt, time.Now())
-			if err != nil {
-				return err
-			}
-		}
-		if !archiveJobNeedsWatchdog(job.Kind, heartbeat, mediaStalled, time.Now()) {
+		if !archiveJobNeedsWatchdog(job.Kind, heartbeat, time.Now()) {
 			return nil
 		}
 
@@ -118,21 +108,9 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 		if err != nil {
 			return err
 		}
-		freshMediaStalled := false
-		if fresh.Kind == string(utils.TaskDownloadLiveVideo) {
-			freshMediaStalled, err = liveArchiveVideoInputIsStalled(ctx, store, freshArgs.Input.QueueId, fresh.AttemptedAt, time.Now())
-			if err != nil {
-				return err
-			}
-		}
-		if fresh.State != rivertype.JobStateRunning || !archiveJobNeedsWatchdog(fresh.Kind, freshHeartbeat, freshMediaStalled, time.Now()) {
+		if fresh.State != rivertype.JobStateRunning || !archiveJobNeedsWatchdog(fresh.Kind, freshHeartbeat, time.Now()) {
 			return nil
 		}
-		staleReason := "heartbeat"
-		if freshMediaStalled {
-			staleReason = "media stalled"
-		}
-
 		needsRecovery, err := archiveQueueStageNeedsRecovery(ctx, store, freshArgs.Input.QueueId, fresh.Kind)
 		if err != nil {
 			return err
@@ -151,7 +129,7 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 				Int64("job_id", fresh.ID).
 				Str("kind", fresh.Kind).
 				Str("queue_id", freshArgs.Input.QueueId.String()).
-				Str("reason", staleReason).
+				Str("reason", "progress_timeout").
 				Msg("archive queue stage does not need recovery; canceled retained River job")
 			return nil
 		}
@@ -170,20 +148,6 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 					Msg("waiting for live archive worker to finish cancellation")
 				return nil
 			case staleLiveArchiveActionRecover:
-				if fresh.Kind == string(utils.TaskDownloadLiveVideo) {
-					quiet, err := liveArchiveVideoInputIsQuiet(ctx, store, freshArgs.Input.QueueId, time.Now())
-					if err != nil {
-						return err
-					}
-					if !quiet {
-						logger.Warn().
-							Int64("job_id", fresh.ID).
-							Str("kind", fresh.Kind).
-							Str("queue_id", freshArgs.Input.QueueId.String()).
-							Msg("live archive cancellation grace elapsed but capture output is still changing; deferring recovery")
-						return nil
-					}
-				}
 				logger.Warn().
 					Int64("job_id", fresh.ID).
 					Str("kind", fresh.Kind).
@@ -193,7 +157,7 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 			}
 		}
 
-		logger.Warn().Int64("job_id", fresh.ID).Str("kind", fresh.Kind).Str("reason", staleReason).Msg("archive job watchdog timeout")
+		logger.Warn().Int64("job_id", fresh.ID).Str("kind", fresh.Kind).Str("reason", "progress_timeout").Msg("archive job watchdog timeout")
 		if _, err := riverClient.JobCancel(ctx, fresh.ID); err != nil {
 			return err
 		}
@@ -239,10 +203,7 @@ func isLiveArchiveDownload(kind string) bool {
 	return kind == string(utils.TaskDownloadLiveVideo) || kind == string(utils.TaskDownloadLiveChat)
 }
 
-func archiveJobNeedsWatchdog(kind string, heartbeat time.Time, mediaStalled bool, now time.Time) bool {
-	if kind == string(utils.TaskDownloadLiveVideo) && mediaStalled {
-		return true
-	}
+func archiveJobNeedsWatchdog(kind string, heartbeat time.Time, now time.Time) bool {
 	return !heartbeat.IsZero() && now.Sub(heartbeat) > archiveHeartbeatTimeout
 }
 
@@ -310,56 +271,15 @@ func staleLiveArchiveRecoveryAction(job *rivertype.JobRow, now time.Time) (stale
 		return staleLiveArchiveActionCancel, 0, nil
 	}
 
-	graceRemaining := cancelAttemptedAt.Add(liveArchiveCancellationGrace).Sub(now)
+	grace := liveArchiveChatCancellationGrace
+	if job.Kind == string(utils.TaskDownloadLiveVideo) {
+		grace = liveArchiveVideoCancellationGrace
+	}
+	graceRemaining := cancelAttemptedAt.Add(grace).Sub(now)
 	if graceRemaining > 0 {
 		return staleLiveArchiveActionWait, graceRemaining, nil
 	}
 	return staleLiveArchiveActionRecover, 0, nil
-}
-
-func liveArchiveVideoInputIsQuiet(ctx context.Context, store *database.Database, queueID uuid.UUID, now time.Time) (bool, error) {
-	dbItems, err := getDatabaseItems(ctx, store.Client, queueID)
-	if err != nil {
-		return false, err
-	}
-
-	path := recoverableLiveVideoInputPath(&dbItems.Video)
-	return fileIsQuiet(path, now)
-}
-
-func liveArchiveVideoInputIsStalled(ctx context.Context, store *database.Database, queueID uuid.UUID, attemptedAt *time.Time, now time.Time) (bool, error) {
-	dbItems, err := getDatabaseItems(ctx, store.Client, queueID)
-	if err != nil {
-		return false, err
-	}
-
-	path := recoverableLiveVideoInputPath(&dbItems.Video)
-	return fileIsStalled(path, attemptedAt, now)
-}
-
-func fileIsQuiet(path string, now time.Time) (bool, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return true, nil
-		}
-		return false, fmt.Errorf("stat live archive recovery input %q: %w", path, err)
-	}
-	return now.Sub(info.ModTime()) >= liveArchiveMediaQuietPeriod, nil
-}
-
-func fileIsStalled(path string, attemptedAt *time.Time, now time.Time) (bool, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			// A live capture can legitimately take a little time to create its
-			// first output. Once the attempt itself has exceeded the stall window,
-			// however, no output is evidence that the input is unavailable.
-			return attemptedAt != nil && now.Sub(*attemptedAt) >= liveArchiveMediaStallTimeout, nil
-		}
-		return false, fmt.Errorf("stat live archive stall input %q: %w", path, err)
-	}
-	return now.Sub(info.ModTime()) >= liveArchiveMediaStallTimeout, nil
 }
 
 func recoverExhaustedArchiveJob(ctx context.Context, store *database.Database, riverClient *river.Client[pgx.Tx], job *rivertype.JobRow, queueID uuid.UUID) error {
@@ -389,7 +309,16 @@ func archiveJobProgress(job *rivertype.JobRow) (time.Time, RiverJobArgs, error) 
 	if err := json.Unmarshal(job.Metadata, &metadata); err == nil && !metadata.Output.HeartbeatAt.IsZero() {
 		return metadata.Output.HeartbeatAt, args, nil
 	}
-	return args.Input.HeartBeatTime, args, nil
+	if !args.Input.HeartBeatTime.IsZero() {
+		return args.Input.HeartBeatTime, args, nil
+	}
+	// Running jobs should have an attempt timestamp. Use it only when no
+	// heartbeat has ever been recorded, so newly started jobs retain the normal
+	// watchdog grace period while failed initial progress updates stay bounded.
+	if job.AttemptedAt != nil {
+		return *job.AttemptedAt, args, nil
+	}
+	return time.Time{}, args, nil
 }
 
 func forEachJobPage(ctx context.Context, client *river.Client[pgx.Tx], params *river.JobListParams, visit func(*rivertype.JobRow) error) error {
