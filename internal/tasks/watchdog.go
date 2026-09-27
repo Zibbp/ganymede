@@ -124,7 +124,7 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 				Int64("job_id", fresh.ID).
 				Str("kind", fresh.Kind).
 				Str("queue_id", freshArgs.Input.QueueId.String()).
-				Str("reason", "heartbeat").
+				Str("reason", "progress_timeout").
 				Msg("archive queue stage does not need recovery; canceled retained River job")
 			return nil
 		}
@@ -152,7 +152,7 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 			}
 		}
 
-		logger.Warn().Int64("job_id", fresh.ID).Str("kind", fresh.Kind).Str("reason", "heartbeat").Msg("archive job watchdog timeout")
+		logger.Warn().Int64("job_id", fresh.ID).Str("kind", fresh.Kind).Str("reason", "progress_timeout").Msg("archive job watchdog timeout")
 		if _, err := riverClient.JobCancel(ctx, fresh.ID); err != nil {
 			return err
 		}
@@ -304,7 +304,16 @@ func archiveJobProgress(job *rivertype.JobRow) (time.Time, RiverJobArgs, error) 
 	if err := json.Unmarshal(job.Metadata, &metadata); err == nil && !metadata.Output.HeartbeatAt.IsZero() {
 		return metadata.Output.HeartbeatAt, args, nil
 	}
-	return args.Input.HeartBeatTime, args, nil
+	if !args.Input.HeartBeatTime.IsZero() {
+		return args.Input.HeartBeatTime, args, nil
+	}
+	// Running jobs should have an attempt timestamp. Use it only when no
+	// heartbeat has ever been recorded, so newly started jobs retain the normal
+	// watchdog grace period while failed initial progress updates stay bounded.
+	if job.AttemptedAt != nil {
+		return *job.AttemptedAt, args, nil
+	}
+	return time.Time{}, args, nil
 }
 
 func forEachJobPage(ctx context.Context, client *river.Client[pgx.Tx], params *river.JobListParams, visit func(*rivertype.JobRow) error) error {
