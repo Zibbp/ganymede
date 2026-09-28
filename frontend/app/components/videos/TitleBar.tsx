@@ -1,5 +1,6 @@
 "use client"
 import ArchiveStatusBadge from "./ArchiveStatusBadge";
+import { ArchiveStatus } from "@/app/util/archiveStatus";
 import { useGetVideoByExternalId, Video } from "@/app/hooks/useVideos";
 import { escapeURL, formatBytes } from "@/app/util/util";
 import { Avatar, Box, Divider, Tooltip, Text, Group, Badge, Button, rem } from "@mantine/core";
@@ -127,7 +128,9 @@ const VideoTitleBar = ({ video }: Params) => {
               <Tooltip label={t('videoTypeTooltip')} openDelay={250}>
                 <Badge variant="default">{video.type}</Badge>
               </Tooltip>
-              <ArchiveStatusBadge videoId={video.id} status={video.status} />
+              {video.status !== ArchiveStatus.Completed && (
+                <ArchiveStatusBadge videoId={video.id} status={video.status} />
+              )}
             </Group>
           </div>
 
