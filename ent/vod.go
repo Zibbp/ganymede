@@ -84,6 +84,8 @@ type Vod struct {
 	TmpVideoHlsPath string `json:"tmp_video_hls_path,omitempty"`
 	// Locked holds the value of the "locked" field.
 	Locked bool `json:"locked,omitempty"`
+	// User notes about why the VOD was kept.
+	Notes string `json:"notes,omitempty"`
 	// LocalViews holds the value of the "local_views" field.
 	LocalViews int `json:"local_views,omitempty"`
 	// SpriteThumbnailsEnabled holds the value of the "sprite_thumbnails_enabled" field.
@@ -203,7 +205,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case vod.FieldDuration, vod.FieldClipVodOffset, vod.FieldViews, vod.FieldLocalViews, vod.FieldSpriteThumbnailsInterval, vod.FieldSpriteThumbnailsWidth, vod.FieldSpriteThumbnailsHeight, vod.FieldSpriteThumbnailsRows, vod.FieldSpriteThumbnailsColumns, vod.FieldStorageSizeBytes:
 			values[i] = new(sql.NullInt64)
-		case vod.FieldExtID, vod.FieldClipExtVodID, vod.FieldExtStreamID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath:
+		case vod.FieldExtID, vod.FieldClipExtVodID, vod.FieldExtStreamID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath, vod.FieldNotes:
 			values[i] = new(sql.NullString)
 		case vod.FieldStreamedAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -417,6 +419,12 @@ func (_m *Vod) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field locked", values[i])
 			} else if value.Valid {
 				_m.Locked = value.Bool
+			}
+		case vod.FieldNotes:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field notes", values[i])
+			} else if value.Valid {
+				_m.Notes = value.String
 			}
 		case vod.FieldLocalViews:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -657,6 +665,9 @@ func (_m *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("locked=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Locked))
+	builder.WriteString(", ")
+	builder.WriteString("notes=")
+	builder.WriteString(_m.Notes)
 	builder.WriteString(", ")
 	builder.WriteString("local_views=")
 	builder.WriteString(fmt.Sprintf("%v", _m.LocalViews))

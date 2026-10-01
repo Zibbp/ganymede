@@ -28,6 +28,13 @@ import (
 
 const (
 	archiveShutdownTimeout = 300 * time.Second
+	archiveKillWaitTimeout = 5 * time.Second
+	// LiveArchiveProcessShutdownTimeout bounds the shutdown path used by a
+	// remotely cancelled live capture before archive finalization can begin.
+	LiveArchiveProcessShutdownTimeout = archiveShutdownTimeout + archiveKillWaitTimeout
+
+	liveArchiveStallDefaultSeconds = 180
+	liveArchiveStallMinimumSeconds = 30
 
 	archiveProcessForwarder = `
 forward_term() {
@@ -60,6 +67,35 @@ fi
 exit $status
 `
 )
+
+// ErrLiveArchiveStalled indicates that a live FFmpeg capture stopped making media progress.
+var ErrLiveArchiveStalled = stdErrors.New("live archive stalled")
+
+func appendLiveArchiveProgressArgs(args []string, enabled bool) []string {
+	if !enabled {
+		return args
+	}
+	return append(args, "-stats_period", "5", "-progress", "pipe:3")
+}
+
+func normalizeLiveArchiveStallTimeout(seconds int) (time.Duration, bool) {
+	if seconds < liveArchiveStallMinimumSeconds {
+		return liveArchiveStallDefaultSeconds * time.Second, false
+	}
+	return time.Duration(seconds) * time.Second, true
+}
+
+func parseAdvancingFFmpegOutTime(line string, previous int64, havePrevious bool) (int64, bool) {
+	key, value, ok := strings.Cut(line, "=")
+	if !ok || key != "out_time_us" {
+		return previous, false
+	}
+	outTime, err := strconv.ParseInt(value, 10, 64)
+	if err != nil || outTime < 0 || (havePrevious && outTime == previous) {
+		return previous, false
+	}
+	return outTime, true
+}
 
 func appendFFmpegLiveOutputStreamArgs(args []string, audioOnly bool) []string {
 	streamMap := "0"
@@ -235,6 +271,15 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Channel, startChat chan bool) error {
 	video.Edges.Channel = &channel
 	env := config.GetEnvConfig()
+	monitorStalls := !env.DisableLiveArchiveStallCheck
+	var stallTimeout time.Duration
+	if monitorStalls {
+		var validStallTimeout bool
+		stallTimeout, validStallTimeout = normalizeLiveArchiveStallTimeout(env.LiveArchiveStallTimeoutSeconds)
+		if !validStallTimeout {
+			log.Warn().Int("configured_seconds", env.LiveArchiveStallTimeoutSeconds).Int("default_seconds", liveArchiveStallDefaultSeconds).Msg("live archive stall timeout must be at least 30 seconds; using default")
+		}
+	}
 
 	// open video log file
 	logFilePath := fmt.Sprintf("%s/%s-video.log", env.LogsDir, video.ID.String())
@@ -319,11 +364,14 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	ffmpegArgs := []string{
 		"-y",
 		"-hide_banner",
+	}
+	ffmpegArgs = appendLiveArchiveProgressArgs(ffmpegArgs, monitorStalls)
+	ffmpegArgs = append(ffmpegArgs,
 		"-fflags", "+genpts+discardcorrupt",
 		"-rw_timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
 		"-timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
 		"-i", qualitiesURI[closestQuality],
-	}
+	)
 	ffmpegArgs = appendFFmpegLiveOutputStreamArgs(ffmpegArgs, audioOnly)
 
 	// Decide archive format.
@@ -392,6 +440,18 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	// Run ffmpeg
 	cmd := osExec.Command("ffmpeg", ffmpegArgs...)
 	cmd.SysProcAttr = liveArchiveProcessAttributes()
+	var progressReader, progressWriter *os.File
+	if monitorStalls {
+		progressReader, progressWriter, err = os.Pipe()
+		if err != nil {
+			return fmt.Errorf("create ffmpeg progress pipe: %w", err)
+		}
+		defer func() {
+			_ = progressReader.Close()
+			_ = progressWriter.Close()
+		}()
+		cmd.ExtraFiles = []*os.File{progressWriter}
+	}
 
 	log.Debug().Str("channel", channel.Name).Str("cmd", strings.Join(cmd.Args, " ")).Msgf("running ffmpeg")
 
@@ -402,47 +462,136 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	cmd.Stdout = file
 
 	done, err := startArchiveCommand(cmd)
+	if progressWriter != nil {
+		_ = progressWriter.Close()
+	}
 	if err != nil {
 		return fmt.Errorf("error starting ffmpeg: %w", err)
 	}
+	var progressUpdates <-chan int64
+	if progressReader != nil {
+		progressUpdates = ffmpegProgressUpdates(progressReader)
+	}
+	err = superviseLiveArchiveCommand(ctx, cmd, done, progressUpdates, stallTimeout)
+	if stdErrors.Is(err, ErrLiveArchiveStalled) {
+		log.Warn().Str("channel", channel.Name).Str("video_id", video.ID.String()).Dur("timeout", stallTimeout).Msg("live archive capture stopped after ffmpeg made no media progress")
+	}
+	return err
+}
 
-	// Wait for the command to finish or for ctx cancellation.
-	// When ctx is cancelled, allow ffmpeg to handle a graceful shutdown first:
-	// send SIGTERM to the process group, wait up to archiveShutdownTimeout, then SIGKILL.
-	select {
-	case <-ctx.Done():
-		if cmd.Process != nil {
-			err = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
-			if err != nil {
-				log.Error().Err(err).Msg("failed to send SIGTERM to ffmpeg process")
+func ffmpegProgressUpdates(reader io.Reader) <-chan int64 {
+	updates := make(chan int64, 1)
+	go func() {
+		defer close(updates)
+		scanner := bufio.NewScanner(reader)
+		var previous int64
+		havePrevious := false
+		for scanner.Scan() {
+			outTime, advanced := parseAdvancingFFmpegOutTime(scanner.Text(), previous, havePrevious)
+			if !advanced {
+				continue
 			}
-		}
-		select {
-		case <-done:
-			// exited after SIGTERM
-		case <-time.After(archiveShutdownTimeout):
-			if cmd.Process != nil {
-				log.Warn().Msg("ffmpeg process did not exit after SIGTERM, sending SIGKILL")
-				err = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
-				if err != nil {
-					log.Error().Err(err).Msg("failed to send SIGKILL to ffmpeg process")
+			previous = outTime
+			havePrevious = true
+			select {
+			case updates <- outTime:
+			default:
+				select {
+				case <-updates:
+				default:
+				}
+				select {
+				case updates <- outTime:
+				default:
 				}
 			}
-			// wait for it to actually exit (best effort)
-			select {
-			case <-done:
-			case <-time.After(5 * time.Second):
-			}
 		}
-		return ctx.Err()
-	case err := <-done:
-		if err != nil {
-			log.Error().Err(err).Msg("error running ffmpeg")
-			return fmt.Errorf("error running ffmpeg: %w", err)
+		if err := scanner.Err(); err != nil {
+			log.Warn().Err(err).Msg("failed to read ffmpeg progress output")
 		}
+	}()
+	return updates
+}
+
+func superviseLiveArchiveCommand(ctx context.Context, cmd *osExec.Cmd, done <-chan error, progressUpdates <-chan int64, stallTimeout time.Duration) error {
+	var stallTimer *time.Timer
+	var stallTimerC <-chan time.Time
+	var lastOutTime int64
+	if stallTimeout > 0 {
+		stallTimer = time.NewTimer(stallTimeout)
+		stallTimerC = stallTimer.C
+		defer stallTimer.Stop()
 	}
 
-	return nil
+	for {
+		select {
+		case <-ctx.Done():
+			stopLiveArchiveCommand(cmd, done)
+			return ctx.Err()
+		case commandErr := <-done:
+			if commandErr != nil {
+				log.Error().Err(commandErr).Msg("error running ffmpeg")
+				return fmt.Errorf("error running ffmpeg: %w", commandErr)
+			}
+			return nil
+		case outTime, ok := <-progressUpdates:
+			if !ok {
+				progressUpdates = nil
+				continue
+			}
+			lastOutTime = outTime
+			if stallTimer != nil {
+				resetTimer(stallTimer, stallTimeout)
+			}
+		case <-stallTimerC:
+			if ctx.Err() != nil {
+				stopLiveArchiveCommand(cmd, done)
+				return ctx.Err()
+			}
+			select {
+			case commandErr := <-done:
+				if commandErr != nil {
+					return fmt.Errorf("error running ffmpeg: %w", commandErr)
+				}
+				return nil
+			default:
+			}
+			stopLiveArchiveCommand(cmd, done)
+			return fmt.Errorf("%w: no ffmpeg media progress for %s (last out_time_us=%d)", ErrLiveArchiveStalled, stallTimeout, lastOutTime)
+		}
+	}
+}
+
+func resetTimer(timer *time.Timer, duration time.Duration) {
+	if !timer.Stop() {
+		select {
+		case <-timer.C:
+		default:
+		}
+	}
+	timer.Reset(duration)
+}
+
+func stopLiveArchiveCommand(cmd *osExec.Cmd, done <-chan error) {
+	if cmd.Process == nil {
+		return
+	}
+	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM); err != nil {
+		log.Error().Err(err).Msg("failed to send SIGTERM to ffmpeg process")
+	}
+	select {
+	case <-done:
+		return
+	case <-time.After(archiveShutdownTimeout):
+	}
+	log.Warn().Msg("ffmpeg process did not exit after SIGTERM, sending SIGKILL")
+	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
+		log.Error().Err(err).Msg("failed to send SIGKILL to ffmpeg process")
+	}
+	select {
+	case <-done:
+	case <-time.After(archiveKillWaitTimeout):
+	}
 }
 
 // startArchiveCommand launches a forwarding shim as the worker's direct child.

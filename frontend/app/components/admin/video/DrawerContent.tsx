@@ -1,7 +1,7 @@
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Channel, useFetchChannels } from "@/app/hooks/useChannels";
 import { CreateVodRequest, Platform, useCreateVideo, useEditVideo, Video, VideoType } from "@/app/hooks/useVideos";
-import { Select, Button, NumberInput, TextInput, Checkbox, Flex } from "@mantine/core";
+import { Select, Button, NumberInput, TextInput, Checkbox, Flex, Textarea } from "@mantine/core";
 import { useForm, schemaResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
@@ -65,7 +65,8 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
       streamed_at: video?.streamed_at || "",
       channel_id: video?.edges.channel.id || "",
       caption_path: video?.caption_path || "",
-      locked: video?.locked ?? false
+      locked: video?.locked ?? false,
+      notes: video?.notes || ""
     },
 
     validate: schemaResolver(schema),
@@ -300,6 +301,16 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
           placeholder="/data/videos/channel/123_456/123-info.json"
           key={form.key('info_path')}
           {...form.getInputProps('info_path')}
+        />
+        <Textarea
+          label={t('notesLabel')}
+          placeholder={t('notesPlaceholder')}
+          key={form.key('notes')}
+          {...form.getInputProps('notes')}
+          autosize
+          minRows={3}
+          maxRows={8}
+          maxLength={10000}
         />
 
 

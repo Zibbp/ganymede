@@ -79,6 +79,8 @@ const (
 	FieldTmpVideoHlsPath = "tmp_video_hls_path"
 	// FieldLocked holds the string denoting the locked field in the database.
 	FieldLocked = "locked"
+	// FieldNotes holds the string denoting the notes field in the database.
+	FieldNotes = "notes"
 	// FieldLocalViews holds the string denoting the local_views field in the database.
 	FieldLocalViews = "local_views"
 	// FieldSpriteThumbnailsEnabled holds the string denoting the sprite_thumbnails_enabled field in the database.
@@ -193,6 +195,7 @@ var Columns = []string{
 	FieldTmpChatRenderPath,
 	FieldTmpVideoHlsPath,
 	FieldLocked,
+	FieldNotes,
 	FieldLocalViews,
 	FieldSpriteThumbnailsEnabled,
 	FieldSpriteThumbnailsImages,
@@ -446,6 +449,11 @@ func ByTmpVideoHlsPath(opts ...sql.OrderTermOption) OrderOption {
 // ByLocked orders the results by the locked field.
 func ByLocked(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLocked, opts...).ToFunc()
+}
+
+// ByNotes orders the results by the notes field.
+func ByNotes(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNotes, opts...).ToFunc()
 }
 
 // ByLocalViews orders the results by the local_views field.

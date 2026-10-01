@@ -1,26 +1,32 @@
 "use client";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { SearchField, useSearchVideos, VideoOrder, VideoSortBy, VideoType } from "../hooks/useVideos";
+import { SearchField, useSearchVideos } from "../hooks/useVideos";
+import { useVideoListParams } from "../hooks/useVideoListParams";
 import useSettingsStore from "../store/useSettingsStore";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import VideoGrid from "../components/videos/Grid";
 import { Box, Button, Center, Collapse, Container, Group, rem, TextInput, Title, Text, Flex, Code } from "@mantine/core";
 import { useTranslations } from "next-intl";
 import { IconChevronDown, IconChevronUp, IconSearch, IconX } from "@tabler/icons-react";
-import { useRouter } from 'next/navigation';
 import { useDisclosure } from "@mantine/hooks";
 
 
 const SearchPage = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const initialQ = searchParams.get("q") ?? "";
+  // The URL is the source of truth for the search term, so back/forward navigation works
+  const searchTerm = searchParams.get("q") ?? "";
 
   const t = useTranslations("SearchPage");
 
-  const [inputValue, setInputValue] = useState<string>(initialQ);
-  const [searchTerm, setSearchTerm] = useState<string>(initialQ);
+  const [inputValue, setInputValue] = useState<string>(searchTerm);
+
+  // Keep the input in sync when the term changes through history navigation
+  useEffect(() => {
+    setInputValue(searchTerm);
+  }, [searchTerm]);
 
   const [advancedSearchOpened, { toggle: toggleAdvancedSearch }] = useDisclosure(false);
 
@@ -28,10 +34,15 @@ const SearchPage = () => {
     document.title = `${t('title')} - ${searchTerm}`;
   }, [searchTerm, t]);
 
-  const [activePage, setActivePage] = useState(1);
-  const [videoTypes, setVideoTypes] = useState<VideoType[]>([]);
-  const [sortBy, setSortBy] = useState<VideoSortBy>(VideoSortBy.Date);
-  const [order, setOrder] = useState<VideoOrder>(VideoOrder.Desc);
+  const { page, videoTypes, sortBy, order, setPage, setVideoTypes, setSortBy, setOrder } = useVideoListParams();
+
+  // Writes the search term to the URL while keeping the filter parameters, starting over at page 1
+  const navigateToQuery = (q: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("q", q);
+    params.delete("page");
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   const videoLimit = useSettingsStore((s) => s.videoLimit);
   const setVideoLimit = useSettingsStore((s) => s.setVideoLimit);
@@ -47,7 +58,7 @@ const SearchPage = () => {
 
   const { data: videos, isPending, isError } = useSearchVideos({
     limit: videoLimit,
-    offset: (activePage - 1) * videoLimit,
+    offset: (page - 1) * videoLimit,
     query,
     types: videoTypes,
     fields: [field],
@@ -57,16 +68,12 @@ const SearchPage = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      router.push(`?q=${encodeURIComponent(inputValue)}`);
-      setSearchTerm(inputValue);
-      setActivePage(1);
+      navigateToQuery(inputValue);
     }
   };
   const handleSubmit = (e: FormEvent<HTMLInputElement>) => {
     e.preventDefault();
-    router.push(`?q=${encodeURIComponent(inputValue)}`);
-    setSearchTerm(inputValue);
-    setActivePage(1);
+    navigateToQuery(inputValue);
   }
 
   if (isPending) return <GanymedeLoadingText message={t('loading')} />;
@@ -90,7 +97,7 @@ const SearchPage = () => {
               <IconX
                 stroke={1.5}
                 style={{ width: rem(16), height: rem(16), cursor: 'pointer' }}
-                onClick={() => { setInputValue(""); setSearchTerm(""); router.push("?q="); }}
+                onClick={() => { setInputValue(""); navigateToQuery(""); }}
               />
             )
           }
@@ -152,13 +159,16 @@ const SearchPage = () => {
           videos={videos.data}
           totalCount={videos.total_count}
           totalPages={videos.pages}
-          currentPage={activePage}
-          onPageChange={setActivePage}
+          currentPage={page}
+          onPageChange={setPage}
           isPending={isPending}
           videoLimit={videoLimit}
           onVideoLimitChange={setVideoLimit}
+          videoTypes={videoTypes}
           onVideoTypeChange={setVideoTypes}
+          sortBy={sortBy}
           onSortByChange={setSortBy}
+          order={order}
           onOrderChange={setOrder}
           showChannel={true}
         />
