@@ -58,7 +58,6 @@ func (h *Handler) IsVideoBlocked(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/blocked-video/{id} [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) CreateBlockedVideo(c echo.Context) error {
 	id := c.Param("id")
@@ -87,7 +86,6 @@ func (h *Handler) CreateBlockedVideo(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/blocked-video/{id} [delete]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) DeleteBlockedVideo(c echo.Context) error {
 	id := c.Param("id")

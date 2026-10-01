@@ -2307,12 +2307,14 @@ definitions:
       total_count:
         type: integer
     type: object
-host: localhost:4000
 info:
   contact: {}
   description: |-
-    Authentication is handled using JWT tokens. The tokens are set as access-token and refresh-token cookies.
-    For information regarding which role is authorized for which endpoint, see the http handler https://github.com/Zibbp/ganymede/blob/main/internal/transport/http/handler.go.
+    Ganymede authenticates programmatic API clients with scoped API keys. Send the complete key in the Authorization header as a Bearer token when API-key authentication is enabled.
+    API keys are created by an administrator in the web UI and the complete key is shown only once. Keys use resource:tier scopes such as vod:read, vod:write, and *:admin.
+    For interactive browser use, sign in through the web UI or POST /auth/login. This establishes an HTTP-only session cookie that the browser sends automatically with same-origin requests, including requests from this Swagger UI.
+    Browser sessions use the admin > editor > archiver > user role hierarchy. They are not external API credentials and are therefore not entered in the Swagger Authorize dialog.
+    Operations marked ApiKeyAuth accept API keys. Browser-only operations, including API-key management and per-user playback state, require an interactive session and do not accept API keys.
   title: Ganymede API
   version: "1.0"
 paths:
@@ -2320,7 +2322,8 @@ paths:
     get:
       description: Returns API keys, newest first. By default only active (non-revoked)
         keys are returned; pass ?include_revoked=true for a full audit listing. Secrets
-        are never returned by this endpoint.
+        are never returned by this endpoint. Requires an interactive administrator
+        browser session; API keys are not accepted.
       parameters:
       - description: include revoked keys
         in: query
@@ -2339,8 +2342,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: List API keys
       tags:
       - admin
@@ -2348,7 +2349,8 @@ paths:
       consumes:
       - application/json
       description: Mints a new admin-managed API key. The full secret is returned
-        in the response and is the only time it is visible — store it securely.
+        in the response and is the only time it is visible — store it securely. Requires
+        an interactive administrator browser session; API keys are not accepted.
       parameters:
       - description: create api key payload
         in: body
@@ -2371,15 +2373,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Create an API key
       tags:
       - admin
   /admin/api-keys/{id}:
     delete:
       description: Soft-deletes an API key by setting revoked_at. The verification
-        cache is flushed so the key stops authenticating immediately.
+        cache is flushed so the key stops authenticating immediately. Requires an
+        interactive administrator browser session; API keys are not accepted.
       parameters:
       - description: api key id
         in: path
@@ -2401,8 +2402,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Revoke an API key
       tags:
       - admin
@@ -2411,7 +2410,8 @@ paths:
       - application/json
       description: Replaces an existing API key's editable fields (name, description,
         scopes). Prefix and secret are immutable — rotating a key still means revoke
-        + create.
+        + create. Requires an interactive administrator browser session; API keys
+        are not accepted.
       parameters:
       - description: api key id
         in: path
@@ -2443,8 +2443,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Update an API key
       tags:
       - admin
@@ -2465,7 +2463,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get ganymede info
       tags:
@@ -2487,7 +2484,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get storage distribution
       tags:
@@ -2509,7 +2505,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get system overview
       tags:
@@ -2531,7 +2526,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get Ganymede video statistics
       tags:
@@ -2565,7 +2559,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Archive a twitch channel
       tags:
@@ -2598,7 +2591,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Convert twitch live chat file
       tags:
@@ -2631,7 +2623,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Archive a twitch vod
       tags:
@@ -2640,7 +2631,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Change password
+      description: Change the password for the user associated with the current interactive
+        browser session. API keys are not accepted.
       parameters:
       - description: Change password
         in: body
@@ -2667,8 +2659,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Change password
       tags:
       - auth
@@ -2676,8 +2666,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Login a user (sets access-token and refresh-token cookies). Access
-        token lasts for 1 hour. Refresh token lasts for 1 month.
+      description: Login with a username and password and establish an HTTP-only session
+        cookie. The session has a 30-day maximum lifetime and expires after 7 days
+        of inactivity.
       parameters:
       - description: Login
         in: body
@@ -2711,7 +2702,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Logout a user (destroys session)
+      description: Destroy the current interactive browser session. API keys are not
+        accepted.
       produces:
       - application/json
       responses:
@@ -2723,8 +2715,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Logout a user
       tags:
       - auth
@@ -2732,7 +2722,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get current user
+      description: Get the user associated with the current interactive browser session.
+        API keys are not accepted.
       produces:
       - application/json
       responses:
@@ -2752,31 +2743,29 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Get current user
       tags:
       - auth
   /auth/oauth/callback:
     get:
-      consumes:
-      - application/json
-      description: OAuth callback for OAuth provider
-      produces:
-      - application/json
+      description: Complete the OAuth login flow, establish an HTTP-only session cookie,
+        and redirect to the frontend.
+      parameters:
+      - description: OAuth authorization code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: OAuth state
+        in: query
+        name: state
+        required: true
+        type: string
       responses:
-        "200":
-          description: OK
+        "302":
+          description: Found
           schema:
             type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -2786,22 +2775,15 @@ paths:
       - auth
   /auth/oauth/login:
     get:
-      consumes:
-      - application/json
-      description: Login a user with OAuth (sets access-token and refresh-token cookies)
-      produces:
-      - application/json
+      description: Start the OAuth login flow. A successful callback establishes an
+        HTTP-only session cookie.
       responses:
-        "200":
-          description: OK
+        "307":
+          description: Temporary Redirect
           schema:
-            $ref: '#/definitions/ent.User'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "401":
-          description: Unauthorized
+            type: string
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
         "500":
@@ -2893,7 +2875,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Unblock a video
       tags:
@@ -2952,7 +2933,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Block a video
       tags:
@@ -3030,7 +3010,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Create a channel
       tags:
@@ -3064,7 +3043,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Delete a channel
       tags:
@@ -3137,7 +3115,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update a channel
       tags:
@@ -3169,7 +3146,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update channel image
       tags:
@@ -3284,7 +3260,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get config
       tags:
@@ -3316,7 +3291,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update config
       tags:
@@ -3340,7 +3314,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get all watched channels
       tags:
@@ -3372,7 +3345,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Add watched channel
       tags:
@@ -3404,7 +3376,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Delete watched channel
       tags:
@@ -3441,7 +3412,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update watched channel
       tags:
@@ -3463,7 +3433,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Manually check for live streams
       tags:
@@ -3487,7 +3456,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get all notification configurations
       tags:
@@ -3519,7 +3487,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Create a notification configuration
       tags:
@@ -3553,7 +3520,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Delete a notification configuration
       tags:
@@ -3588,7 +3554,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get a single notification configuration
       tags:
@@ -3629,7 +3594,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update a notification configuration
       tags:
@@ -3669,7 +3633,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Test a notification configuration
       tags:
@@ -3678,7 +3641,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get all playback progress
+      description: Get all playback progress for the current user. Requires an interactive
+        browser session; API keys are not accepted.
       produces:
       - application/json
       responses:
@@ -3692,8 +3656,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Get all progress
       tags:
       - Playback
@@ -3701,7 +3663,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Delete playback progress
+      description: Delete playback progress for the current user. Requires an interactive
+        browser session; API keys are not accepted.
       parameters:
       - description: vod id
         in: path
@@ -3723,15 +3686,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Delete progress
       tags:
       - Playback
     get:
       consumes:
       - application/json
-      description: Get playback progress
+      description: Get playback progress for the current user. Requires an interactive
+        browser session; API keys are not accepted.
       parameters:
       - description: vod id
         in: path
@@ -3753,8 +3715,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Get progress
       tags:
       - Playback
@@ -3762,7 +3722,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get last playback entries for the current user
+      description: Get the latest playback entries for the current user. Requires
+        an interactive browser session; API keys are not accepted.
       parameters:
       - default: 10
         description: Limit
@@ -3784,8 +3745,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Get last playbacks
       tags:
       - Playback
@@ -3793,7 +3752,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update playback progress
+      description: Update playback progress for the current user. Requires an interactive
+        browser session; API keys are not accepted.
       parameters:
       - description: progress
         in: body
@@ -3816,8 +3776,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Update progress
       tags:
       - Playback
@@ -3854,7 +3812,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update playback status
+      description: Update playback status for the current user. Requires an interactive
+        browser session; API keys are not accepted.
       parameters:
       - description: status
         in: body
@@ -3877,8 +3836,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyCookieAuth: []
       summary: Update status
       tags:
       - Playback
@@ -3930,7 +3887,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Create playlist
       tags:
@@ -3962,7 +3918,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Delete playlist
       tags:
@@ -4031,7 +3986,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Add vod to playlist
       tags:
@@ -4068,7 +4022,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update playlist
       tags:
@@ -4106,7 +4059,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Set delay of vod in playlist for multistream
       tags:
@@ -4140,7 +4092,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get playlist rules
       tags:
@@ -4178,7 +4129,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Set playlist rules
       tags:
@@ -4215,7 +4165,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Test playlist rules
       tags:
@@ -4253,7 +4202,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Delete vod from playlist
       tags:
@@ -4286,7 +4234,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get queue items
       tags:
@@ -4318,7 +4265,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Create a queue item
       tags:
@@ -4348,7 +4294,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Delete queue item
       tags:
@@ -4379,7 +4324,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get queue item
       tags:
@@ -4416,7 +4360,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update queue item
       tags:
@@ -4449,7 +4392,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Stop a queue item
       tags:
@@ -4486,7 +4428,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Read queue log file
       tags:
@@ -4519,7 +4460,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Start a queue task for a queue
       tags:
@@ -4546,7 +4486,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Start a task
       tags:
@@ -4632,7 +4571,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get all users
       tags:
@@ -4662,7 +4600,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Delete user
       tags:
@@ -4693,7 +4630,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get user by id
       tags:
@@ -4730,7 +4666,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update user
       tags:
@@ -4792,7 +4727,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Create a vod
       tags:
@@ -4830,7 +4764,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Delete a vod
       tags:
@@ -4919,7 +4852,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update a vod
       tags:
@@ -5244,7 +5176,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Get ffprobe data for video
       tags:
@@ -5276,7 +5207,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Generate sprite thumbnails for a vod
       tags:
@@ -5308,7 +5238,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Generate static thumbnail for a vod
       tags:
@@ -5344,7 +5273,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Lock or unlock a vod
       tags:
@@ -5386,7 +5314,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyCookieAuth: []
       - ApiKeyAuth: []
       summary: Update vod notes
       tags:
@@ -5597,16 +5524,11 @@ paths:
       summary: Search vods
       tags:
       - vods
-schemes:
-- https
 securityDefinitions:
   ApiKeyAuth:
-    description: 'Authorization: Bearer <api_key>. Mint a key via the admin UI.'
+    description: Programmatic API authentication. Enter `Bearer gym_{prefix}_{secret}`.
+      Create keys in the admin UI; the complete key is shown only once.
     in: header
     name: Authorization
-    type: apiKey
-  ApiKeyCookieAuth:
-    in: cookie
-    name: access-token
     type: apiKey
 swagger: "2.0"

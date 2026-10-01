@@ -4,25 +4,20 @@ package docs
 import "github.com/swaggo/swag"
 
 const docTemplate = `{
-    "schemes": {{ marshal .Schemes }},
+    "schemes": [[ marshal .Schemes ]],
     "swagger": "2.0",
     "info": {
-        "description": "{{escape .Description}}",
-        "title": "{{.Title}}",
+        "description": "[[escape .Description]]",
+        "title": "[[.Title]]",
         "contact": {},
-        "version": "{{.Version}}"
+        "version": "[[.Version]]"
     },
-    "host": "{{.Host}}",
-    "basePath": "{{.BasePath}}",
+    "host": "[[.Host]]",
+    "basePath": "[[.BasePath]]",
     "paths": {
         "/admin/api-keys": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Returns API keys, newest first. By default only active (non-revoked) keys are returned; pass ?include_revoked=true for a full audit listing. Secrets are never returned by this endpoint.",
+                "description": "Returns API keys, newest first. By default only active (non-revoked) keys are returned; pass ?include_revoked=true for a full audit listing. Secrets are never returned by this endpoint. Requires an interactive administrator browser session; API keys are not accepted.",
                 "produces": [
                     "application/json"
                 ],
@@ -57,12 +52,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Mints a new admin-managed API key. The full secret is returned in the response and is the only time it is visible — store it securely.",
+                "description": "Mints a new admin-managed API key. The full secret is returned in the response and is the only time it is visible — store it securely. Requires an interactive administrator browser session; API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -108,12 +98,7 @@ const docTemplate = `{
         },
         "/admin/api-keys/{id}": {
             "put": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Replaces an existing API key's editable fields (name, description, scopes). Prefix and secret are immutable — rotating a key still means revoke + create.",
+                "description": "Replaces an existing API key's editable fields (name, description, scopes). Prefix and secret are immutable — rotating a key still means revoke + create. Requires an interactive administrator browser session; API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -170,12 +155,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Soft-deletes an API key by setting revoked_at. The verification cache is flushed so the key stops authenticating immediately.",
+                "description": "Soft-deletes an API key by setting revoked_at. The verification cache is flushed so the key stops authenticating immediately. Requires an interactive administrator browser session; API keys are not accepted.",
                 "tags": [
                     "admin"
                 ],
@@ -218,9 +198,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -254,9 +231,6 @@ const docTemplate = `{
         "/admin/storage-distribution": {
             "get": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -292,9 +266,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -329,9 +300,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -365,9 +333,6 @@ const docTemplate = `{
         "/archive/channel": {
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -420,9 +385,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -474,9 +436,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -526,12 +485,7 @@ const docTemplate = `{
         },
         "/auth/change-password": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Change password",
+                "description": "Change the password for the user associated with the current interactive browser session. API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -583,7 +537,7 @@ const docTemplate = `{
         },
         "/auth/login": {
             "post": {
-                "description": "Login a user (sets access-token and refresh-token cookies). Access token lasts for 1 hour. Refresh token lasts for 1 month.",
+                "description": "Login with a username and password and establish an HTTP-only session cookie. The session has a 30-day maximum lifetime and expires after 7 days of inactivity.",
                 "consumes": [
                     "application/json"
                 ],
@@ -635,12 +589,7 @@ const docTemplate = `{
         },
         "/auth/logout": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Logout a user (destroys session)",
+                "description": "Destroy the current interactive browser session. API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -669,12 +618,7 @@ const docTemplate = `{
         },
         "/auth/me": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Get current user",
+                "description": "Get the user associated with the current interactive browser session. API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -715,34 +659,32 @@ const docTemplate = `{
         },
         "/auth/oauth/callback": {
             "get": {
-                "description": "OAuth callback for OAuth provider",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
+                "description": "Complete the OAuth login flow, establish an HTTP-only session cookie, and redirect to the frontend.",
                 "tags": [
                     "auth"
                 ],
                 "summary": "OAuth callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth authorization code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "OAuth state",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "302": {
+                        "description": "Found",
                         "schema": {
                             "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
                         }
                     },
                     "500": {
@@ -756,32 +698,20 @@ const docTemplate = `{
         },
         "/auth/oauth/login": {
             "get": {
-                "description": "Login a user with OAuth (sets access-token and refresh-token cookies)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
+                "description": "Start the OAuth login flow. A successful callback establishes an HTTP-only session cookie.",
                 "tags": [
                     "auth"
                 ],
                 "summary": "Login a user with OAuth",
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "307": {
+                        "description": "Temporary Redirect",
                         "schema": {
-                            "$ref": "#/definitions/ent.User"
+                            "type": "string"
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -925,9 +855,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -974,9 +901,6 @@ const docTemplate = `{
             },
             "delete": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -1094,9 +1018,6 @@ const docTemplate = `{
             },
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -1247,9 +1168,6 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -1312,9 +1230,6 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -1366,9 +1281,6 @@ const docTemplate = `{
         "/channel/{id}/update-image": {
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -1510,9 +1422,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -1544,9 +1453,6 @@ const docTemplate = `{
             },
             "put": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -1599,9 +1505,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -1636,9 +1539,6 @@ const docTemplate = `{
             },
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -1691,9 +1591,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -1727,9 +1624,6 @@ const docTemplate = `{
         "/live/{id}": {
             "put": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -1787,9 +1681,6 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -1839,9 +1730,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -1876,9 +1764,6 @@ const docTemplate = `{
             },
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -1930,9 +1815,6 @@ const docTemplate = `{
         "/notification/{id}": {
             "get": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -1986,9 +1868,6 @@ const docTemplate = `{
             },
             "put": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -2052,9 +1931,6 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -2106,9 +1982,6 @@ const docTemplate = `{
         "/notification/{id}/test": {
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -2169,12 +2042,7 @@ const docTemplate = `{
         },
         "/playback": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Get all playback progress",
+                "description": "Get all playback progress for the current user. Requires an interactive browser session; API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2206,12 +2074,7 @@ const docTemplate = `{
         },
         "/playback/last": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Get last playback entries for the current user",
+                "description": "Get the latest playback entries for the current user. Requires an interactive browser session; API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2255,12 +2118,7 @@ const docTemplate = `{
         },
         "/playback/progress": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Update playback progress",
+                "description": "Update playback progress for the current user. Requires an interactive browser session; API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2350,12 +2208,7 @@ const docTemplate = `{
         },
         "/playback/status": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Update playback status",
+                "description": "Update playback status for the current user. Requires an interactive browser session; API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2401,12 +2254,7 @@ const docTemplate = `{
         },
         "/playback/{id}": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Get playback progress",
+                "description": "Get playback progress for the current user. Requires an interactive browser session; API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2448,12 +2296,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    }
-                ],
-                "description": "Delete playback progress",
+                "description": "Delete playback progress for the current user. Requires an interactive browser session; API keys are not accepted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2528,9 +2371,6 @@ const docTemplate = `{
             },
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -2631,9 +2471,6 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -2689,9 +2526,6 @@ const docTemplate = `{
             },
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -2749,9 +2583,6 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -2800,9 +2631,6 @@ const docTemplate = `{
         "/playlist/{id}/multistream/delay": {
             "put": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -2862,9 +2690,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -2914,9 +2739,6 @@ const docTemplate = `{
             },
             "put": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -2976,9 +2798,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -3034,9 +2853,6 @@ const docTemplate = `{
         "/playlist/{id}/vod": {
             "delete": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -3096,9 +2912,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -3147,9 +2960,6 @@ const docTemplate = `{
             },
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -3202,9 +3012,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -3256,9 +3063,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -3305,9 +3109,6 @@ const docTemplate = `{
             },
             "put": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -3365,9 +3166,6 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -3413,9 +3211,6 @@ const docTemplate = `{
         "/queue/{id}/stop": {
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -3465,9 +3260,6 @@ const docTemplate = `{
         "/queue/{id}/tail": {
             "get": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -3524,9 +3316,6 @@ const docTemplate = `{
         "/task/start": {
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -3658,9 +3447,6 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -3703,9 +3489,6 @@ const docTemplate = `{
         "/user/{id}": {
             "get": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -3753,9 +3536,6 @@ const docTemplate = `{
             },
             "put": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -3812,9 +3592,6 @@ const docTemplate = `{
             },
             "delete": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -3905,9 +3682,6 @@ const docTemplate = `{
             },
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -4242,9 +4016,6 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -4306,9 +4077,6 @@ const docTemplate = `{
             },
             "delete": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -4803,9 +4571,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -4861,9 +4626,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -4913,9 +4675,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyCookieAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
@@ -4964,9 +4723,6 @@ const docTemplate = `{
         "/vod/{id}/lock": {
             "post": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -5022,9 +4778,6 @@ const docTemplate = `{
         "/vod/{id}/notes": {
             "put": {
                 "security": [
-                    {
-                        "ApiKeyCookieAuth": []
-                    },
                     {
                         "ApiKeyAuth": []
                     }
@@ -8510,15 +8263,10 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "ApiKeyAuth": {
-            "description": "Authorization: Bearer \u003capi_key\u003e. Mint a key via the admin UI.",
+            "description": "Programmatic API authentication. Enter ` + "`" + `Bearer gym_{prefix}_{secret}` + "`" + `. Create keys in the admin UI; the complete key is shown only once.",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
-        },
-        "ApiKeyCookieAuth": {
-            "type": "apiKey",
-            "name": "access-token",
-            "in": "cookie"
         }
     }
 }`
@@ -8526,15 +8274,15 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:4000",
+	Host:             "",
 	BasePath:         "/api/v1",
-	Schemes:          []string{"https"},
+	Schemes:          []string{},
 	Title:            "Ganymede API",
-	Description:      "Authentication is handled using JWT tokens. The tokens are set as access-token and refresh-token cookies.\nFor information regarding which role is authorized for which endpoint, see the http handler https://github.com/Zibbp/ganymede/blob/main/internal/transport/http/handler.go.",
+	Description:      "Ganymede authenticates programmatic API clients with scoped API keys. Send the complete key in the Authorization header as a Bearer token when API-key authentication is enabled.\nAPI keys are created by an administrator in the web UI and the complete key is shown only once. Keys use resource:tier scopes such as vod:read, vod:write, and *:admin.\nFor interactive browser use, sign in through the web UI or POST /auth/login. This establishes an HTTP-only session cookie that the browser sends automatically with same-origin requests, including requests from this Swagger UI.\nBrowser sessions use the admin > editor > archiver > user role hierarchy. They are not external API credentials and are therefore not entered in the Swagger Authorize dialog.\nOperations marked ApiKeyAuth accept API keys. Browser-only operations, including API-key management and per-user playback state, require an interactive session and do not accept API keys.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
+	LeftDelim:        "[[",
+	RightDelim:       "]]",
 }
 
 func init() {

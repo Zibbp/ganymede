@@ -123,14 +123,13 @@ func toAPIKeyDTO(k *ent.ApiKey) apiKeyDTO {
 // ListApiKeys godoc
 //
 //	@Summary		List API keys
-//	@Description	Returns API keys, newest first. By default only active (non-revoked) keys are returned; pass ?include_revoked=true for a full audit listing. Secrets are never returned by this endpoint.
+//	@Description	Returns API keys, newest first. By default only active (non-revoked) keys are returned; pass ?include_revoked=true for a full audit listing. Secrets are never returned by this endpoint. Requires an interactive administrator browser session; API keys are not accepted.
 //	@Tags			admin
 //	@Produce		json
 //	@Param			include_revoked	query		bool	false	"include revoked keys"
 //	@Success		200				{object}	[]apiKeyDTO
 //	@Failure		500				{object}	utils.ErrorResponse
 //	@Router			/admin/api-keys [get]
-//	@Security		ApiKeyCookieAuth
 func (h *Handler) ListApiKeys(c echo.Context) error {
 	if h.Service.ApiKeyService == nil {
 		return ErrorResponse(c, http.StatusInternalServerError, "api key service not configured")
@@ -157,7 +156,7 @@ func (h *Handler) ListApiKeys(c echo.Context) error {
 // CreateApiKey godoc
 //
 //	@Summary		Create an API key
-//	@Description	Mints a new admin-managed API key. The full secret is returned in the response and is the only time it is visible — store it securely.
+//	@Description	Mints a new admin-managed API key. The full secret is returned in the response and is the only time it is visible — store it securely. Requires an interactive administrator browser session; API keys are not accepted.
 //	@Tags			admin
 //	@Accept			json
 //	@Produce		json
@@ -166,7 +165,6 @@ func (h *Handler) ListApiKeys(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/admin/api-keys [post]
-//	@Security		ApiKeyCookieAuth
 func (h *Handler) CreateApiKey(c echo.Context) error {
 	if h.Service.ApiKeyService == nil {
 		return ErrorResponse(c, http.StatusInternalServerError, "api key service not configured")
@@ -224,7 +222,7 @@ func (h *Handler) CreateApiKey(c echo.Context) error {
 // UpdateApiKey godoc
 //
 //	@Summary		Update an API key
-//	@Description	Replaces an existing API key's editable fields (name, description, scopes). Prefix and secret are immutable — rotating a key still means revoke + create.
+//	@Description	Replaces an existing API key's editable fields (name, description, scopes). Prefix and secret are immutable — rotating a key still means revoke + create. Requires an interactive administrator browser session; API keys are not accepted.
 //	@Tags			admin
 //	@Accept			json
 //	@Produce		json
@@ -235,7 +233,6 @@ func (h *Handler) CreateApiKey(c echo.Context) error {
 //	@Failure		404		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/admin/api-keys/{id} [put]
-//	@Security		ApiKeyCookieAuth
 func (h *Handler) UpdateApiKey(c echo.Context) error {
 	if h.Service.ApiKeyService == nil {
 		return ErrorResponse(c, http.StatusInternalServerError, "api key service not configured")
@@ -284,7 +281,7 @@ func (h *Handler) UpdateApiKey(c echo.Context) error {
 // DeleteApiKey godoc
 //
 //	@Summary		Revoke an API key
-//	@Description	Soft-deletes an API key by setting revoked_at. The verification cache is flushed so the key stops authenticating immediately.
+//	@Description	Soft-deletes an API key by setting revoked_at. The verification cache is flushed so the key stops authenticating immediately. Requires an interactive administrator browser session; API keys are not accepted.
 //	@Tags			admin
 //	@Param			id	path	string	true	"api key id"
 //	@Success		200
@@ -292,7 +289,6 @@ func (h *Handler) UpdateApiKey(c echo.Context) error {
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/admin/api-keys/{id} [delete]
-//	@Security		ApiKeyCookieAuth
 func (h *Handler) DeleteApiKey(c echo.Context) error {
 	if h.Service.ApiKeyService == nil {
 		return ErrorResponse(c, http.StatusInternalServerError, "api key service not configured")
