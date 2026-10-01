@@ -46,6 +46,7 @@ type Services struct {
 	BlockedVideoService BlockedVideoService
 	NotificationService NotificationService
 	ApiKeyService       ApiKeyService
+	StorageService      StorageService
 	PlatformTwitch      platform.Platform
 }
 
@@ -64,7 +65,7 @@ var sessionManager *scs.SessionManager
 // cleanly with Echo's middleware signature.
 var apiKeyService *api_key.Service
 
-func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, notificationService NotificationService, apiKeySvc *api_key.Service, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
+func NewHandler(database *database.Database, authService AuthService, channelService ChannelService, vodService VodService, queueService QueueService, archiveService ArchiveService, adminService AdminService, userService UserService, liveService LiveService, playbackService PlaybackService, metricsService MetricsService, playlistService PlaylistService, taskService TaskService, chapterService ChapterService, categoryService CategoryService, blockedVideoService BlockedVideoService, notificationService NotificationService, apiKeySvc *api_key.Service, storageService StorageService, platformTwitch platform.Platform, riverUIServer *riverui.Handler) *Handler {
 	log.Debug().Msg("creating route handler")
 	envConfig := config.GetEnvConfig()
 
@@ -100,6 +101,7 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 			BlockedVideoService: blockedVideoService,
 			NotificationService: notificationService,
 			ApiKeyService:       apiKeySvc,
+			StorageService:      storageService,
 			PlatformTwitch:      platformTwitch,
 		},
 		SessionManager: sessionManager,
@@ -315,6 +317,9 @@ func groupV1Routes(e *echo.Group, h *Handler) {
 	adminGroup.GET("/system-overview", h.GetSystemOverview, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
 	adminGroup.GET("/storage-distribution", h.GetStorageDistribution, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
 	adminGroup.GET("/info", h.GetInfo, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
+	adminGroup.GET("/storage-findings", h.ListStorageFindings, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemRead))
+	adminGroup.POST("/storage-findings/delete", h.DeleteStorageFindings, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemAdmin))
+	adminGroup.POST("/storage-findings/import", h.ImportStorageFindings, AuthAPIKeyOrSessionMiddleware, AuthGetUserMiddleware, RequireRoleOrScope(utils.AdminRole, utils.ApiKeyScopeSystemAdmin))
 
 	// Admin: API keys. Session-only — admins must use the web UI to mint
 	// or revoke keys. This avoids the chicken-and-egg of needing a key

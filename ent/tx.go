@@ -44,6 +44,8 @@ type Tx struct {
 	Queue *QueueClient
 	// Sessions is the client for interacting with the Sessions builders.
 	Sessions *SessionsClient
+	// StorageFinding is the client for interacting with the StorageFinding builders.
+	StorageFinding *StorageFindingClient
 	// TwitchCategory is the client for interacting with the TwitchCategory builders.
 	TwitchCategory *TwitchCategoryClient
 	// User is the client for interacting with the User builders.
@@ -197,6 +199,7 @@ func (tx *Tx) init() {
 	tx.PlaylistRuleGroup = NewPlaylistRuleGroupClient(tx.config)
 	tx.Queue = NewQueueClient(tx.config)
 	tx.Sessions = NewSessionsClient(tx.config)
+	tx.StorageFinding = NewStorageFindingClient(tx.config)
 	tx.TwitchCategory = NewTwitchCategoryClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.Vod = NewVodClient(tx.config)

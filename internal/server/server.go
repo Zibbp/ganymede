@@ -28,6 +28,7 @@ import (
 	"github.com/zibbp/ganymede/internal/playback"
 	"github.com/zibbp/ganymede/internal/playlist"
 	"github.com/zibbp/ganymede/internal/queue"
+	"github.com/zibbp/ganymede/internal/storage"
 	"github.com/zibbp/ganymede/internal/task"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
@@ -58,6 +59,7 @@ type Application struct {
 	BlockedVodService   *blocked.Service
 	NotificationService *notification.Service
 	ApiKeyService       *api_key.Service
+	StorageService      *storage.Service
 	RiverUIServer       *riverui.Handler
 	RiverClient         *tasks_client.RiverClient
 }
@@ -165,6 +167,7 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	taskService := task.NewService(db, liveService, riverClient)
 	categoryService := category.NewService(db)
 	apiKeyService := api_key.NewService(db)
+	storageService := storage.NewService(db, riverClient, platformTwitch)
 	if _, err := apiKeyService.EnsureSystemUser(ctx); err != nil {
 		return nil, fmt.Errorf("error ensuring api key system user: %v", err)
 	}
@@ -189,6 +192,7 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 		CategoryService:     categoryService,
 		NotificationService: notificationService,
 		ApiKeyService:       apiKeyService,
+		StorageService:      storageService,
 		PlatformTwitch:      platformTwitch,
 		RiverUIServer:       riverUIServer,
 		RiverClient:         riverClient,
@@ -207,7 +211,7 @@ func Run(ctx context.Context) error {
 		}
 	}()
 
-	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.NotificationService, app.ApiKeyService, app.PlatformTwitch, app.RiverUIServer)
+	httpHandler := transportHttp.NewHandler(app.Database, app.AuthService, app.ChannelService, app.VodService, app.QueueService, app.ArchiveService, app.AdminService, app.UserService, app.LiveService, app.PlaybackService, app.MetricsService, app.PlaylistService, app.TaskService, app.ChapterService, app.CategoryService, app.BlockedVodService, app.NotificationService, app.ApiKeyService, app.StorageService, app.PlatformTwitch, app.RiverUIServer)
 
 	if err := httpHandler.Serve(ctx); err != nil {
 		return err
