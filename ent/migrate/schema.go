@@ -102,6 +102,7 @@ var (
 		{Name: "archive_chat", Type: field.TypeBool, Default: true},
 		{Name: "resolution", Type: field.TypeString, Nullable: true, Default: "best"},
 		{Name: "vod_resolution", Type: field.TypeString, Nullable: true, Default: "best"},
+		{Name: "clip_resolution", Type: field.TypeString, Nullable: true, Default: "best"},
 		{Name: "last_live", Type: field.TypeTime},
 		{Name: "render_chat", Type: field.TypeBool, Default: true},
 		{Name: "video_age", Type: field.TypeInt64, Default: 0},
@@ -126,7 +127,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lives_channels_live",
-				Columns:    []*schema.Column{LivesColumns[25]},
+				Columns:    []*schema.Column{LivesColumns[26]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -456,6 +457,7 @@ var (
 		{Name: "tmp_chat_render_path", Type: field.TypeString, Nullable: true},
 		{Name: "tmp_video_hls_path", Type: field.TypeString, Nullable: true},
 		{Name: "locked", Type: field.TypeBool, Default: false},
+		{Name: "notes", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "local_views", Type: field.TypeInt, Default: 0},
 		{Name: "sprite_thumbnails_enabled", Type: field.TypeBool, Default: false},
 		{Name: "sprite_thumbnails_images", Type: field.TypeJSON, Nullable: true},
@@ -478,7 +480,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[44]},
+				Columns:    []*schema.Column{VodsColumns[45]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

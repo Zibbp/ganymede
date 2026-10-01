@@ -307,6 +307,7 @@ func (h *Handler) StopQueueItem(c echo.Context) error {
 //	@Tags			queue
 //	@Accept			json
 //	@Produce		json
+//	@Param			body	body		StartQueueTaskRequest	true	"Start queue task"
 //	@Success		200		{object}	string
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse

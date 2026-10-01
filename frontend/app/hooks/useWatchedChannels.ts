@@ -18,6 +18,7 @@ export interface WatchedChannel {
   archive_chat: boolean;
   resolution: string;
   vod_resolution: string;
+  clip_resolution: string;
   last_live: string;
   render_chat: boolean;
   video_age: number;
@@ -69,6 +70,7 @@ const editWatchedChannel = async (
   const response = await axiosPrivate.put(`/api/v1/live/${watchedChannel.id}`, {
     resolution: watchedChannel.resolution,
     vod_resolution: watchedChannel.vod_resolution,
+    clip_resolution: watchedChannel.clip_resolution,
     archive_chat: watchedChannel.archive_chat,
     watch_live: watchedChannel.watch_live,
     watch_vod: watchedChannel.watch_vod,
@@ -102,6 +104,7 @@ const createWatchedChannel = async (
     channel_id: channelId,
     resolution: watchedChannel.resolution,
     vod_resolution: watchedChannel.vod_resolution,
+    clip_resolution: watchedChannel.clip_resolution,
     archive_chat: watchedChannel.archive_chat,
     watch_live: watchedChannel.watch_live,
     watch_vod: watchedChannel.watch_vod,

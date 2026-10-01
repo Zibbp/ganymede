@@ -618,6 +618,26 @@ func (_u *VodUpdate) SetNillableLocked(v *bool) *VodUpdate {
 	return _u
 }
 
+// SetNotes sets the "notes" field.
+func (_u *VodUpdate) SetNotes(v string) *VodUpdate {
+	_u.mutation.SetNotes(v)
+	return _u
+}
+
+// SetNillableNotes sets the "notes" field if the given value is not nil.
+func (_u *VodUpdate) SetNillableNotes(v *string) *VodUpdate {
+	if v != nil {
+		_u.SetNotes(*v)
+	}
+	return _u
+}
+
+// ClearNotes clears the value of the "notes" field.
+func (_u *VodUpdate) ClearNotes() *VodUpdate {
+	_u.mutation.ClearNotes()
+	return _u
+}
+
 // SetLocalViews sets the "local_views" field.
 func (_u *VodUpdate) SetLocalViews(v int) *VodUpdate {
 	_u.mutation.ResetLocalViews()
@@ -1268,6 +1288,12 @@ func (_u *VodUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.Notes(); ok {
+		_spec.SetField(vod.FieldNotes, field.TypeString, value)
+	}
+	if _u.mutation.NotesCleared() {
+		_spec.ClearField(vod.FieldNotes, field.TypeString)
 	}
 	if value, ok := _u.mutation.LocalViews(); ok {
 		_spec.SetField(vod.FieldLocalViews, field.TypeInt, value)
@@ -2185,6 +2211,26 @@ func (_u *VodUpdateOne) SetNillableLocked(v *bool) *VodUpdateOne {
 	return _u
 }
 
+// SetNotes sets the "notes" field.
+func (_u *VodUpdateOne) SetNotes(v string) *VodUpdateOne {
+	_u.mutation.SetNotes(v)
+	return _u
+}
+
+// SetNillableNotes sets the "notes" field if the given value is not nil.
+func (_u *VodUpdateOne) SetNillableNotes(v *string) *VodUpdateOne {
+	if v != nil {
+		_u.SetNotes(*v)
+	}
+	return _u
+}
+
+// ClearNotes clears the value of the "notes" field.
+func (_u *VodUpdateOne) ClearNotes() *VodUpdateOne {
+	_u.mutation.ClearNotes()
+	return _u
+}
+
 // SetLocalViews sets the "local_views" field.
 func (_u *VodUpdateOne) SetLocalViews(v int) *VodUpdateOne {
 	_u.mutation.ResetLocalViews()
@@ -2865,6 +2911,12 @@ func (_u *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if value, ok := _u.mutation.Locked(); ok {
 		_spec.SetField(vod.FieldLocked, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.Notes(); ok {
+		_spec.SetField(vod.FieldNotes, field.TypeString, value)
+	}
+	if _u.mutation.NotesCleared() {
+		_spec.ClearField(vod.FieldNotes, field.TypeString)
 	}
 	if value, ok := _u.mutation.LocalViews(); ok {
 		_spec.SetField(vod.FieldLocalViews, field.TypeInt, value)

@@ -50,6 +50,7 @@ func (Vod) Fields() []ent.Field {
 		field.String("tmp_chat_render_path").Optional().Comment("The path where the rendered chat is"),
 		field.String("tmp_video_hls_path").Optional().Comment("The path where the temporary video hls files are"),
 		field.Bool("locked").Default(false),
+		field.Text("notes").Optional().Comment("User notes about why the VOD was kept."),
 		field.Int("local_views").Default(0),
 		field.Bool("sprite_thumbnails_enabled").Default(false),
 		field.Strings("sprite_thumbnails_images").Optional(),

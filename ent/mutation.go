@@ -3142,6 +3142,7 @@ type LiveMutation struct {
 	archive_chat               *bool
 	resolution                 *string
 	vod_resolution             *string
+	clip_resolution            *string
 	last_live                  *time.Time
 	render_chat                *bool
 	video_age                  *int64
@@ -3662,6 +3663,55 @@ func (m *LiveMutation) VodResolutionCleared() bool {
 func (m *LiveMutation) ResetVodResolution() {
 	m.vod_resolution = nil
 	delete(m.clearedFields, live.FieldVodResolution)
+}
+
+// SetClipResolution sets the "clip_resolution" field.
+func (m *LiveMutation) SetClipResolution(s string) {
+	m.clip_resolution = &s
+}
+
+// ClipResolution returns the value of the "clip_resolution" field in the mutation.
+func (m *LiveMutation) ClipResolution() (r string, exists bool) {
+	v := m.clip_resolution
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClipResolution returns the old "clip_resolution" field's value of the Live entity.
+// If the Live object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LiveMutation) OldClipResolution(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClipResolution is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClipResolution requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClipResolution: %w", err)
+	}
+	return oldValue.ClipResolution, nil
+}
+
+// ClearClipResolution clears the value of the "clip_resolution" field.
+func (m *LiveMutation) ClearClipResolution() {
+	m.clip_resolution = nil
+	m.clearedFields[live.FieldClipResolution] = struct{}{}
+}
+
+// ClipResolutionCleared returns if the "clip_resolution" field was cleared in this mutation.
+func (m *LiveMutation) ClipResolutionCleared() bool {
+	_, ok := m.clearedFields[live.FieldClipResolution]
+	return ok
+}
+
+// ResetClipResolution resets all changes to the "clip_resolution" field.
+func (m *LiveMutation) ResetClipResolution() {
+	m.clip_resolution = nil
+	delete(m.clearedFields, live.FieldClipResolution)
 }
 
 // SetLastLive sets the "last_live" field.
@@ -4442,7 +4492,7 @@ func (m *LiveMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LiveMutation) Fields() []string {
-	fields := make([]string, 0, 24)
+	fields := make([]string, 0, 25)
 	if m.watch_live != nil {
 		fields = append(fields, live.FieldWatchLive)
 	}
@@ -4472,6 +4522,9 @@ func (m *LiveMutation) Fields() []string {
 	}
 	if m.vod_resolution != nil {
 		fields = append(fields, live.FieldVodResolution)
+	}
+	if m.clip_resolution != nil {
+		fields = append(fields, live.FieldClipResolution)
 	}
 	if m.last_live != nil {
 		fields = append(fields, live.FieldLastLive)
@@ -4543,6 +4596,8 @@ func (m *LiveMutation) Field(name string) (ent.Value, bool) {
 		return m.Resolution()
 	case live.FieldVodResolution:
 		return m.VodResolution()
+	case live.FieldClipResolution:
+		return m.ClipResolution()
 	case live.FieldLastLive:
 		return m.LastLive()
 	case live.FieldRenderChat:
@@ -4600,6 +4655,8 @@ func (m *LiveMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldResolution(ctx)
 	case live.FieldVodResolution:
 		return m.OldVodResolution(ctx)
+	case live.FieldClipResolution:
+		return m.OldClipResolution(ctx)
 	case live.FieldLastLive:
 		return m.OldLastLive(ctx)
 	case live.FieldRenderChat:
@@ -4706,6 +4763,13 @@ func (m *LiveMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetVodResolution(v)
+		return nil
+	case live.FieldClipResolution:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClipResolution(v)
 		return nil
 	case live.FieldLastLive:
 		v, ok := value.(time.Time)
@@ -4892,6 +4956,9 @@ func (m *LiveMutation) ClearedFields() []string {
 	if m.FieldCleared(live.FieldVodResolution) {
 		fields = append(fields, live.FieldVodResolution)
 	}
+	if m.FieldCleared(live.FieldClipResolution) {
+		fields = append(fields, live.FieldClipResolution)
+	}
 	if m.FieldCleared(live.FieldClipsLastChecked) {
 		fields = append(fields, live.FieldClipsLastChecked)
 	}
@@ -4914,6 +4981,9 @@ func (m *LiveMutation) ClearField(name string) error {
 		return nil
 	case live.FieldVodResolution:
 		m.ClearVodResolution()
+		return nil
+	case live.FieldClipResolution:
+		m.ClearClipResolution()
 		return nil
 	case live.FieldClipsLastChecked:
 		m.ClearClipsLastChecked()
@@ -4955,6 +5025,9 @@ func (m *LiveMutation) ResetField(name string) error {
 		return nil
 	case live.FieldVodResolution:
 		m.ResetVodResolution()
+		return nil
+	case live.FieldClipResolution:
+		m.ResetClipResolution()
 		return nil
 	case live.FieldLastLive:
 		m.ResetLastLive()
@@ -14918,6 +14991,7 @@ type VodMutation struct {
 	tmp_chat_render_path           *string
 	tmp_video_hls_path             *string
 	locked                         *bool
+	notes                          *string
 	local_views                    *int
 	addlocal_views                 *int
 	sprite_thumbnails_enabled      *bool
@@ -16514,6 +16588,55 @@ func (m *VodMutation) ResetLocked() {
 	m.locked = nil
 }
 
+// SetNotes sets the "notes" field.
+func (m *VodMutation) SetNotes(s string) {
+	m.notes = &s
+}
+
+// Notes returns the value of the "notes" field in the mutation.
+func (m *VodMutation) Notes() (r string, exists bool) {
+	v := m.notes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotes returns the old "notes" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldNotes(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotes: %w", err)
+	}
+	return oldValue.Notes, nil
+}
+
+// ClearNotes clears the value of the "notes" field.
+func (m *VodMutation) ClearNotes() {
+	m.notes = nil
+	m.clearedFields[vod.FieldNotes] = struct{}{}
+}
+
+// NotesCleared returns if the "notes" field was cleared in this mutation.
+func (m *VodMutation) NotesCleared() bool {
+	_, ok := m.clearedFields[vod.FieldNotes]
+	return ok
+}
+
+// ResetNotes resets all changes to the "notes" field.
+func (m *VodMutation) ResetNotes() {
+	m.notes = nil
+	delete(m.clearedFields, vod.FieldNotes)
+}
+
 // SetLocalViews sets the "local_views" field.
 func (m *VodMutation) SetLocalViews(i int) {
 	m.local_views = &i
@@ -17513,7 +17636,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 43)
+	fields := make([]string, 0, 44)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -17606,6 +17729,9 @@ func (m *VodMutation) Fields() []string {
 	}
 	if m.locked != nil {
 		fields = append(fields, vod.FieldLocked)
+	}
+	if m.notes != nil {
+		fields = append(fields, vod.FieldNotes)
 	}
 	if m.local_views != nil {
 		fields = append(fields, vod.FieldLocalViews)
@@ -17713,6 +17839,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.TmpVideoHlsPath()
 	case vod.FieldLocked:
 		return m.Locked()
+	case vod.FieldNotes:
+		return m.Notes()
 	case vod.FieldLocalViews:
 		return m.LocalViews()
 	case vod.FieldSpriteThumbnailsEnabled:
@@ -17808,6 +17936,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldTmpVideoHlsPath(ctx)
 	case vod.FieldLocked:
 		return m.OldLocked(ctx)
+	case vod.FieldNotes:
+		return m.OldNotes(ctx)
 	case vod.FieldLocalViews:
 		return m.OldLocalViews(ctx)
 	case vod.FieldSpriteThumbnailsEnabled:
@@ -18057,6 +18187,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetLocked(v)
+		return nil
+	case vod.FieldNotes:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotes(v)
 		return nil
 	case vod.FieldLocalViews:
 		v, ok := value.(int)
@@ -18358,6 +18495,9 @@ func (m *VodMutation) ClearedFields() []string {
 	if m.FieldCleared(vod.FieldTmpVideoHlsPath) {
 		fields = append(fields, vod.FieldTmpVideoHlsPath)
 	}
+	if m.FieldCleared(vod.FieldNotes) {
+		fields = append(fields, vod.FieldNotes)
+	}
 	if m.FieldCleared(vod.FieldSpriteThumbnailsImages) {
 		fields = append(fields, vod.FieldSpriteThumbnailsImages)
 	}
@@ -18452,6 +18592,9 @@ func (m *VodMutation) ClearField(name string) error {
 		return nil
 	case vod.FieldTmpVideoHlsPath:
 		m.ClearTmpVideoHlsPath()
+		return nil
+	case vod.FieldNotes:
+		m.ClearNotes()
 		return nil
 	case vod.FieldSpriteThumbnailsImages:
 		m.ClearSpriteThumbnailsImages()
@@ -18571,6 +18714,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldLocked:
 		m.ResetLocked()
+		return nil
+	case vod.FieldNotes:
+		m.ResetNotes()
 		return nil
 	case vod.FieldLocalViews:
 		m.ResetLocalViews()

@@ -12,6 +12,16 @@ type CategoryService interface {
 	GetCategories(ctx context.Context) ([]*ent.TwitchCategory, error)
 }
 
+// GetCategories godoc
+//
+//	@Summary		Get twitch categories
+//	@Description	Get cached twitch categories
+//	@Tags			category
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{array}		ent.TwitchCategory
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/category [get]
 func (h *Handler) GetCategories(c echo.Context) error {
 	categories, err := h.Service.CategoryService.GetCategories(c.Request().Context())
 	if err != nil {
