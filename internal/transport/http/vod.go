@@ -95,7 +95,6 @@ type SearchQueryParams struct {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		409		{object}	utils.ErrorResponse
 //	@Router			/vod [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) CreateVod(c echo.Context) error {
 	var req CreateVodRequest
@@ -305,7 +304,6 @@ func (h *Handler) GetVodByExternalId(c echo.Context) error {
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id} [delete]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) DeleteVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
@@ -342,7 +340,6 @@ func (h *Handler) DeleteVod(c echo.Context) error {
 //	@Failure		404		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/vod/{id} [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) UpdateVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
@@ -815,7 +812,6 @@ func (h *Handler) GetNumberOfVodChatCommentsFromTime(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/lock [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) LockVod(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
@@ -852,7 +848,6 @@ type UpdateVodNotesRequest struct {
 //	@Failure		404		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/notes [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) UpdateVodNotes(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
@@ -888,7 +883,6 @@ func (h *Handler) UpdateVodNotes(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/generate-static-thumbnail [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GenerateStaticThumbnail(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
@@ -992,7 +986,6 @@ func (h *Handler) GetVodSpriteThumbnails(c echo.Context) error {
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/ffprobe [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetFFprobe(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))
@@ -1100,7 +1093,6 @@ func formatTimestamp(seconds int) string {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/vod/{id}/generate-sprite-thumbnails [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GenerateSpriteThumbnails(c echo.Context) error {
 	vID, err := uuid.Parse(c.Param("id"))

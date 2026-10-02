@@ -655,17 +655,18 @@ const useGetVideoChatHistogram = (id: string) => {
   });
 };
 
-const getVideoFFprobe = async (id: string): Promise<String> => {
-  const response = await useAxios.post<ApiResponse<String>>(
+const getVideoFFprobe = async (id: string): Promise<unknown> => {
+  const response = await useAxios.post<ApiResponse<unknown>>(
     `/api/v1/vod/${id}/ffprobe`
   );
   return response.data.data;
 };
 
-const useGetVideoFFprobe = (id: string) => {
+const useGetVideoFFprobe = (id: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ["video_ffprobe", id],
     queryFn: () => getVideoFFprobe(id),
+    enabled,
     refetchInterval: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,

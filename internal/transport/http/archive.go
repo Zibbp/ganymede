@@ -72,7 +72,6 @@ func CheckIDType(id string) string {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/archive/channel [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) ArchiveChannel(c echo.Context) error {
 	body := new(ArchiveChannelRequest)
@@ -101,7 +100,6 @@ func (h *Handler) ArchiveChannel(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/archive/video [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) ArchiveVideo(c echo.Context) error {
 	body := new(ArchiveVideoRequest)
@@ -186,7 +184,6 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/archive/convert-twitch-live-chat [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) ConvertTwitchChat(c echo.Context) error {
 	body := new(ConvertTwitchChatRequest)

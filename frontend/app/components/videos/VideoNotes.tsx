@@ -181,9 +181,11 @@ const VideoNotes = ({ video, playerRef, draft, onDraftChange, docked = false, on
             placeholder={t("notesPlaceholder")}
             value={draft}
             onChange={(event) => onDraftChange(event.currentTarget.value)}
-            autosize
+            autosize={!docked}
+            rows={docked ? 16 : undefined}
             minRows={4}
             maxRows={12}
+            resize={docked ? "vertical" : "none"}
             maxLength={MAX_NOTES_LENGTH}
             disabled={updateNotesMutate.isPending}
             autoFocus={docked}

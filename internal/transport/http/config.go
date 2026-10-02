@@ -17,7 +17,6 @@ import (
 //	@Success		200	{object}	config.Config
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/config [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetConfig(c echo.Context) error {
 	config := config.Get()
@@ -36,7 +35,6 @@ func (h *Handler) GetConfig(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/config [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) UpdateConfig(c echo.Context) error {
 	conf := new(config.Config)

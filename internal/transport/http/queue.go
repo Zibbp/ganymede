@@ -66,7 +66,6 @@ type UpdateQueueRequest struct {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) CreateQueueItem(c echo.Context) error {
 	cqt := new(CreateQueueRequest)
@@ -102,7 +101,6 @@ func (h *Handler) CreateQueueItem(c echo.Context) error {
 //	@Failure		400			{object}	utils.ErrorResponse
 //	@Failure		500			{object}	utils.ErrorResponse
 //	@Router			/queue [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetQueueItems(c echo.Context) error {
 	processing := false
@@ -138,7 +136,6 @@ func (h *Handler) GetQueueItems(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/queue/{id} [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -165,7 +162,6 @@ func (h *Handler) GetQueueItem(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/{id} [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) UpdateQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -217,7 +213,6 @@ func (h *Handler) UpdateQueueItem(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/queue/{id} [delete]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) DeleteQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -244,7 +239,6 @@ func (h *Handler) DeleteQueueItem(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/{id}/tail [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 	id := c.Param("id")
@@ -283,7 +277,6 @@ func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/{id}/stop [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) StopQueueItem(c echo.Context) error {
 	id := c.Param("id")
@@ -314,7 +307,6 @@ func (h *Handler) StopQueueItem(c echo.Context) error {
 //	@Failure		409		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/task/start [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) StartQueueTask(c echo.Context) error {
 	body := new(StartQueueTaskRequest)

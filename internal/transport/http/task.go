@@ -26,7 +26,6 @@ type StartTaskRequest struct {
 //	@Success		200
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/task/start [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) StartTask(c echo.Context) error {
 	str := new(StartTaskRequest)
