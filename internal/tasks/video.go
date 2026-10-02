@@ -11,6 +11,7 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/exec"
+	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -374,6 +375,9 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 			}
 		} else if !utils.DirectoryExists(dbItems.Video.VideoHlsPath) {
 			return fmt.Errorf("video move source and destination are missing")
+		}
+		if err := hls.ValidateMediaPlaylistFiles(dbItems.Video.VideoPath); err != nil {
+			return fmt.Errorf("validate video move destination: %w", err)
 		}
 		// delete temp converted video when present (unused for HLS-final).
 		if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {

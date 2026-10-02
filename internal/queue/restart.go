@@ -62,7 +62,12 @@ func (s *Service) RestartQueueTask(ctx context.Context, input StartQueueTaskInpu
 			return err
 		}
 
-		jobs, err := s.RiverClient.JobsForQueueKindTx(ctx, tx, input.QueueId, kind)
+		stages := affectedRestartStages(q, input.TaskName)
+		kinds := make([]string, 0, len(stages))
+		for _, stage := range stages {
+			kinds = append(kinds, stage.kind)
+		}
+		jobs, err := s.RiverClient.JobsForQueueKindsTx(ctx, tx, input.QueueId, kinds...)
 		if err != nil {
 			return fmt.Errorf("list existing task generations: %w", err)
 		}
@@ -74,8 +79,11 @@ func (s *Service) RestartQueueTask(ctx context.Context, input StartQueueTaskInpu
 			if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
 				return fmt.Errorf("decode existing job %d: %w", job.ID, err)
 			}
-			if args.Input.RecoveryGeneration >= generation {
+			if job.Kind == kind && args.Input.RecoveryGeneration >= generation {
 				generation = args.Input.RecoveryGeneration + 1
+			}
+			if job.Kind != kind && isActiveJobState(job.State) {
+				return fmt.Errorf("%w: downstream stage %s already has active River job %d", ErrRestartConflict, job.Kind, job.ID)
 			}
 			switch job.State {
 			case rivertype.JobStateRunning:
@@ -91,7 +99,11 @@ func (s *Service) RestartQueueTask(ctx context.Context, input StartQueueTaskInpu
 			}
 		}
 
-		if err := resetRestartState(ctx, txClient, q, statusTask); err != nil {
+		resetStages := stages
+		if !input.Continue {
+			resetStages = stages[:1]
+		}
+		if err := resetRestartState(ctx, txClient, q, resetStages); err != nil {
 			return err
 		}
 		args, err := restartArgs(input, generation)
@@ -112,6 +124,78 @@ func (s *Service) RestartQueueTask(ctx context.Context, input StartQueueTaskInpu
 		return nil, err
 	}
 	return restartResult, nil
+}
+
+type restartStage struct {
+	kind   string
+	status utils.TaskName
+}
+
+func affectedRestartStages(q *ent.Queue, task string) []restartStage {
+	kind, status, _ := restartTaskNames(task)
+	stages := []restartStage{{kind: kind, status: status}}
+
+	video := []restartStage{
+		{kind: string(utils.TaskDownloadVideo), status: utils.TaskDownloadVideo},
+		{kind: string(utils.TaskPostProcessVideo), status: utils.TaskPostProcessVideo},
+		{kind: string(utils.TaskMoveVideo), status: utils.TaskMoveVideo},
+	}
+	if q.LiveArchive {
+		video[0].kind = string(utils.TaskDownloadLiveVideo)
+	}
+	chat := []restartStage{{kind: string(utils.TaskDownloadChat), status: utils.TaskDownloadChat}}
+	if q.LiveArchive {
+		chat[0].kind = string(utils.TaskDownloadLiveChat)
+		chat = append(chat, restartStage{kind: string(utils.TaskConvertChat), status: utils.TaskConvertChat})
+	}
+	if q.RenderChat {
+		chat = append(chat, restartStage{kind: string(utils.TaskRenderChat), status: utils.TaskRenderChat})
+	}
+	chat = append(chat, restartStage{kind: string(utils.TaskMoveChat), status: utils.TaskMoveChat})
+
+	appendArchiveBranches := func() {
+		stages = append(stages, video...)
+		if q.ArchiveChat {
+			stages = append(stages, chat...)
+		}
+	}
+	switch task {
+	case string(utils.TaskCreateFolder):
+		stages = append(stages,
+			restartStage{kind: string(utils.TaskSaveInfo), status: utils.TaskSaveInfo},
+			restartStage{kind: string(utils.TaskDownloadThumbnail), status: utils.TaskDownloadThumbnail},
+		)
+		appendArchiveBranches()
+	case string(utils.TaskSaveInfo):
+		stages = append(stages, restartStage{kind: string(utils.TaskDownloadThumbnail), status: utils.TaskDownloadThumbnail})
+		appendArchiveBranches()
+	case string(utils.TaskDownloadThumbnail):
+		appendArchiveBranches()
+	case string(utils.TaskDownloadVideo), string(utils.TaskDownloadLiveVideo):
+		stages = append(stages, video[1:]...)
+	case string(utils.TaskPostProcessVideo):
+		stages = append(stages, video[2])
+	case string(utils.TaskDownloadChat), string(utils.TaskDownloadLiveChat):
+		stages = append(stages, chat[1:]...)
+	case string(utils.TaskConvertChat):
+		for _, stage := range chat {
+			if stage.status == utils.TaskRenderChat || stage.status == utils.TaskMoveChat {
+				stages = append(stages, stage)
+			}
+		}
+	case string(utils.TaskRenderChat):
+		stages = append(stages, restartStage{kind: string(utils.TaskMoveChat), status: utils.TaskMoveChat})
+	}
+	return stages
+}
+
+func isActiveJobState(state rivertype.JobState) bool {
+	switch state {
+	case rivertype.JobStateAvailable, rivertype.JobStatePending, rivertype.JobStateRetryable, rivertype.JobStateRunning, rivertype.JobStateScheduled:
+		return true
+	default:
+		return false
+	}
 }
 
 func restartStageStatus(q *ent.Queue, task utils.TaskName) utils.TaskStatus {
@@ -240,29 +324,31 @@ func validateRestartPrerequisite(q *ent.Queue, task string) error {
 	return nil
 }
 
-func resetRestartState(ctx context.Context, client *ent.Client, q *ent.Queue, task utils.TaskName) error {
+func resetRestartState(ctx context.Context, client *ent.Client, q *ent.Queue, stages []restartStage) error {
 	u := client.Queue.UpdateOneID(q.ID).SetProcessing(true).SetOnHold(false)
-	switch task {
-	case utils.TaskCreateFolder:
-		u.SetTaskVodCreateFolder(utils.Pending)
-	case utils.TaskDownloadThumbnail:
-		u.SetTaskVodDownloadThumbnail(utils.Pending)
-	case utils.TaskSaveInfo:
-		u.SetTaskVodSaveInfo(utils.Pending)
-	case utils.TaskDownloadVideo:
-		u.SetTaskVideoDownload(utils.Pending).SetVideoProcessing(true)
-	case utils.TaskPostProcessVideo:
-		u.SetTaskVideoConvert(utils.Pending).SetVideoProcessing(true)
-	case utils.TaskMoveVideo:
-		u.SetTaskVideoMove(utils.Pending).SetVideoProcessing(true)
-	case utils.TaskDownloadChat:
-		u.SetTaskChatDownload(utils.Pending).SetChatProcessing(true)
-	case utils.TaskConvertChat:
-		u.SetTaskChatConvert(utils.Pending).SetChatProcessing(true)
-	case utils.TaskRenderChat:
-		u.SetTaskChatRender(utils.Pending).SetChatProcessing(true)
-	case utils.TaskMoveChat:
-		u.SetTaskChatMove(utils.Pending).SetChatProcessing(true)
+	for _, stage := range stages {
+		switch stage.status {
+		case utils.TaskCreateFolder:
+			u.SetTaskVodCreateFolder(utils.Pending)
+		case utils.TaskDownloadThumbnail:
+			u.SetTaskVodDownloadThumbnail(utils.Pending)
+		case utils.TaskSaveInfo:
+			u.SetTaskVodSaveInfo(utils.Pending)
+		case utils.TaskDownloadVideo:
+			u.SetTaskVideoDownload(utils.Pending).SetVideoProcessing(true)
+		case utils.TaskPostProcessVideo:
+			u.SetTaskVideoConvert(utils.Pending).SetVideoProcessing(true)
+		case utils.TaskMoveVideo:
+			u.SetTaskVideoMove(utils.Pending).SetVideoProcessing(true)
+		case utils.TaskDownloadChat:
+			u.SetTaskChatDownload(utils.Pending).SetChatProcessing(true)
+		case utils.TaskConvertChat:
+			u.SetTaskChatConvert(utils.Pending).SetChatProcessing(true)
+		case utils.TaskRenderChat:
+			u.SetTaskChatRender(utils.Pending).SetChatProcessing(true)
+		case utils.TaskMoveChat:
+			u.SetTaskChatMove(utils.Pending).SetChatProcessing(true)
+		}
 	}
 	if _, err := u.Save(ctx); err != nil {
 		return fmt.Errorf("reset queue task: %w", err)

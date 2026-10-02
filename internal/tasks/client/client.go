@@ -61,6 +61,11 @@ func (rc *RiverClient) JobList(ctx context.Context, params *river.JobListParams)
 // JobsForQueueKindTx returns all retained generations for one archive stage.
 // Indexed metadata is preferred; the args scan keeps pre-metadata jobs visible.
 func (rc *RiverClient) JobsForQueueKindTx(ctx context.Context, tx *sql.Tx, queueID uuid.UUID, kind string) ([]*rivertype.JobRow, error) {
+	return rc.JobsForQueueKindsTx(ctx, tx, queueID, kind)
+}
+
+// JobsForQueueKindsTx returns all retained generations for the requested archive stages.
+func (rc *RiverClient) JobsForQueueKindsTx(ctx context.Context, tx *sql.Tx, queueID uuid.UUID, kinds ...string) ([]*rivertype.JobRow, error) {
 	metadata, err := json.Marshal(map[string]any{"ganymede": map[string]string{"queue_id": queueID.String()}})
 	if err != nil {
 		return nil, err
@@ -93,10 +98,11 @@ func (rc *RiverClient) JobsForQueueKindTx(ctx context.Context, tx *sql.Tx, queue
 			params = params.After(result.LastCursor)
 		}
 	}
-	if err := collect(river.NewJobListParams().States(states...).Kinds(kind).Metadata(string(metadata)).First(500), false); err != nil {
+	if err := collect(river.NewJobListParams().States(states...).Kinds(kinds...).Metadata(string(metadata)).First(500), false); err != nil {
 		return nil, err
 	}
-	if err := collect(river.NewJobListParams().States(states...).Kinds(kind).First(500), true); err != nil {
+	legacy := river.NewJobListParams().States(states...).Kinds(kinds...).Where("metadata->'ganymede' IS NULL").First(500)
+	if err := collect(legacy, true); err != nil {
 		return nil, err
 	}
 	return jobs, nil

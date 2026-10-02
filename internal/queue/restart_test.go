@@ -82,3 +82,27 @@ func TestRestartTaskNamesRejectsUnknownTask(t *testing.T) {
 	_, _, err := restartTaskNames("not_a_task")
 	require.ErrorIs(t, err, ErrRestartInvalid)
 }
+
+func TestAffectedRestartStages(t *testing.T) {
+	t.Run("video download resets downstream video stages", func(t *testing.T) {
+		stages := affectedRestartStages(&ent.Queue{}, string(utils.TaskDownloadVideo))
+		require.Equal(t, []restartStage{
+			{kind: string(utils.TaskDownloadVideo), status: utils.TaskDownloadVideo},
+			{kind: string(utils.TaskPostProcessVideo), status: utils.TaskPostProcessVideo},
+			{kind: string(utils.TaskMoveVideo), status: utils.TaskMoveVideo},
+		}, stages)
+	})
+
+	t.Run("live common stage includes enabled archive branches", func(t *testing.T) {
+		stages := affectedRestartStages(&ent.Queue{LiveArchive: true, ArchiveChat: true, RenderChat: false}, string(utils.TaskDownloadThumbnail))
+		require.Equal(t, []restartStage{
+			{kind: string(utils.TaskDownloadThumbnail), status: utils.TaskDownloadThumbnail},
+			{kind: string(utils.TaskDownloadLiveVideo), status: utils.TaskDownloadVideo},
+			{kind: string(utils.TaskPostProcessVideo), status: utils.TaskPostProcessVideo},
+			{kind: string(utils.TaskMoveVideo), status: utils.TaskMoveVideo},
+			{kind: string(utils.TaskDownloadLiveChat), status: utils.TaskDownloadChat},
+			{kind: string(utils.TaskConvertChat), status: utils.TaskConvertChat},
+			{kind: string(utils.TaskMoveChat), status: utils.TaskMoveChat},
+		}, stages)
+	})
+}
