@@ -22,6 +22,7 @@ type Config struct {
 	} `json:"parameters"`
 	Archive struct {
 		SaveAsHls                bool `json:"save_as_hls"`                // Save as HLS rather than MP4.
+		GenerateVideoPlaylist    bool `json:"generate_video_playlist"`    // Write a playlist beside each video so long recordings play on Apple devices. Drops subtitle streams, which the HLS muxer rejects.
 		GenerateSpriteThumbnails bool `json:"generate_sprite_thumbnails"` // Generate sprite thumbnails for scrubbing.
 		GenerateNFOFiles         bool `json:"generate_nfo_files"`         // Generate Kodi-compatible NFO sidecars for archived videos.
 	} `json:"archive"`
@@ -205,6 +206,7 @@ func (c *Config) SetDefaults() {
 	c.Parameters.YtDlpVideo = ""
 
 	c.Archive.SaveAsHls = false
+	c.Archive.GenerateVideoPlaylist = true
 	c.Archive.GenerateSpriteThumbnails = true
 	c.Archive.GenerateNFOFiles = true
 

@@ -291,7 +291,9 @@
       "storageTemplateSettingsDescription": "Passe die Benennung von Ordnern und Dateien an. Dies gilt nur für neue Dateien. Um dies auf bestehende Dateien anzuwenden, führe die Migrationsaufgabe auf der Aufgabenseite aus.",
       "folderTemplateText": "Ordner-Vorlage",
       "fileTemplateText": "Datei-Vorlage",
-      "examplesText": "Beispiele"
+      "examplesText": "Beispiele",
+      "generateVideoPlaylistLabel": "Wiedergabeliste erzeugen",
+      "generateVideoPlaylistDescription": "Legt neben jede archivierte Aufnahme eine Wiedergabeliste. Ohne sie starten lange Aufnahmen auf Apple-Geräten nicht. Kostet eine kleine Datei je Video. Untertitelspuren werden verworfen, das HLS-Format trägt sie hier nicht. Ohne Wirkung, solange als HLS gespeichert wird."
     },
     "videoSettings": {
       "header": "Videoeinstellungen",

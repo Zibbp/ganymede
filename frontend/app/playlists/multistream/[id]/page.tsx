@@ -13,6 +13,35 @@ import SyncedVideoPlayer from "@/app/components/videos/multistream/SyncedVideoPl
 import { env } from "next-runtime-env";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Video } from "@/app/hooks/useVideos";
+import { usePlaylistSource } from "@/app/hooks/usePlaylistSource";
+
+// MultistreamVideoSource plays the playlist that belongs to a video when there
+// is one, which is what lets long recordings start on Apple devices, and the
+// video file itself otherwise.
+const MultistreamVideoSource = ({ video, time, playing }: { video: Video; time: number; playing: boolean }) => {
+  const { playlistUrl, dismissPlaylist } = usePlaylistSource(video.video_path, video.processing);
+  const poster = `${env('NEXT_PUBLIC_CDN_URL') ?? ''}${escapeURL(video.web_thumbnail_path)}`;
+
+  // The player is mounted only once the source is known, so it does not load
+  // the video file and switch away from it a moment later. Until then the
+  // thumbnail stands in, rather than an empty tile.
+  if (playlistUrl === undefined) {
+    return <img src={poster} alt={video.title} className={classes.multistreamPoster} />;
+  }
+
+  return (
+    <SyncedVideoPlayer
+      src={playlistUrl ?? `${env('NEXT_PUBLIC_CDN_URL') ?? ''}${escapeURL(video.video_path)}`}
+      onError={playlistUrl ? dismissPlaylist : undefined}
+      vodId={video.id}
+      title={video.title}
+      poster={poster}
+      time={time}
+      playing={playing}
+      muted={true}
+    />
+  );
+};
 
 interface Params {
   id: string;
@@ -279,14 +308,10 @@ const PlaylistMultistream = ({ params }: { params: Promise<Params> }) => {
           })
         }}
       >
-        <SyncedVideoPlayer
-          src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(playingVod.video_path)}`}
-          vodId={playingVod.id}
-          title={playingVod.title}
-          poster={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(playingVod.web_thumbnail_path)}`}
+        <MultistreamVideoSource
+          video={playingVod}
           time={vodTime}
           playing={playing}
-          muted={true}
         />
       </ResizableTile>
     )

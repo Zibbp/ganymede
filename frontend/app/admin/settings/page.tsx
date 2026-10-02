@@ -49,6 +49,7 @@ const AdminSettingsPage = () => {
       },
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
+        generate_video_playlist: data?.archive.generate_video_playlist ?? true,
         generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true,
         generate_nfo_files: data?.archive.generate_nfo_files ?? true
       },
@@ -171,6 +172,15 @@ const AdminSettingsPage = () => {
               label={t('archiveSettings.mp4ToHLSConversionLabel')}
               key={form.key('archive.save_as_hls')}
               {...form.getInputProps('archive.save_as_hls', { type: "checkbox" })}
+              mr={15}
+            />
+
+            <Checkbox
+              mt={15}
+              label={t('archiveSettings.generateVideoPlaylistLabel')}
+              description={t('archiveSettings.generateVideoPlaylistDescription')}
+              key={form.key('archive.generate_video_playlist')}
+              {...form.getInputProps('archive.generate_video_playlist', { type: "checkbox" })}
               mr={15}
             />
 

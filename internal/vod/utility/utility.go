@@ -15,6 +15,7 @@ import (
 	entMutedSegment "github.com/zibbp/ganymede/ent/mutedsegment"
 	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -83,6 +84,8 @@ func DeleteVod(ctx context.Context, store *database.Database, vodID uuid.UUID, d
 		tempFiles := []string{
 			v.TmpVideoDownloadPath,
 			v.TmpVideoConvertPath,
+			exec.PlaylistPathForVideo(v.TmpVideoConvertPath),
+			exec.PendingPlaylistPath(v.TmpVideoConvertPath),
 			v.TmpChatDownloadPath,
 			v.TmpChatRenderPath,
 			v.TmpLiveChatConvertPath,

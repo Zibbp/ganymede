@@ -8,6 +8,7 @@ import { env } from "next-runtime-env";
 
 export type SyncedVideoPlayerProps = {
   src: string;
+  onError?: () => void;
   vodId: string;
   title: string;
   poster: string;
@@ -16,10 +17,17 @@ export type SyncedVideoPlayerProps = {
   muted: boolean;
 }
 
-const SyncedVideoPlayer = ({ src, vodId, title, poster, time, playing, muted }: SyncedVideoPlayerProps) => {
+const SyncedVideoPlayer = ({ src, onError, vodId, title, poster, time, playing, muted }: SyncedVideoPlayerProps) => {
   const player = useRef<MediaPlayerInstance>(null)
   const mediaProvider = useRef<MediaProviderInstance>(null)
   const [canPlay, setCanPlay] = useState(false)
+
+  // A new source starts out unable to play, and only saying so again makes the
+  // effect below start it. Without this a tile that falls back from its
+  // playlist to the video file stops at the first frame.
+  useEffect(() => {
+    setCanPlay(false)
+  }, [src])
 
   useEffect(() => {
     const currentPlayer = player.current
@@ -54,6 +62,7 @@ const SyncedVideoPlayer = ({ src, vodId, title, poster, time, playing, muted }: 
       aspect-ratio={16 / 9}
       crossOrigin
       onCanPlay={() => setCanPlay(true)}
+      onError={onError}
       playsInline
       muted={muted}
     >

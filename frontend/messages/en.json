@@ -291,7 +291,9 @@
       "storageTemplateSettingsDescription": "Customize how folders and files are named. This only applied to new files. To apply to existing files execute the migration task on the tasks page.",
       "folderTemplateText": "Folder Template",
       "fileTemplateText": "File Template",
-      "examplesText": "Examples"
+      "examplesText": "Examples",
+      "generateVideoPlaylistLabel": "Generate video playlist",
+      "generateVideoPlaylistDescription": "Write a playlist beside each archived video. Long recordings do not start playing on Apple devices without it. Adds one small file per video. Subtitle tracks are dropped, which the HLS format does not carry here. Has no effect while saving as HLS."
     },
     "videoSettings": {
       "header": "Video Settings",

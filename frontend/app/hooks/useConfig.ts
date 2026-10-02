@@ -15,6 +15,7 @@ export interface Config {
   };
   archive: {
     save_as_hls: boolean;
+    generate_video_playlist: boolean;
     generate_sprite_thumbnails: boolean;
     generate_nfo_files: boolean;
   };

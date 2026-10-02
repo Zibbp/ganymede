@@ -80,3 +80,18 @@ export function durationToTime(seconds: number) {
 
   return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 }
+// playlistPathForVideo returns the playlist that belongs to a video file: the
+// same directory and base name with an .m3u8 extension, as written by
+// PlaylistPathForVideo in internal/exec. A video that is itself a playlist, and
+// an empty path, have none.
+export function playlistPathForVideo(videoPath: string): string | null {
+  if (videoPath === '') return null;
+
+  const lastSlash = videoPath.lastIndexOf('/');
+  const lastDot = videoPath.lastIndexOf('.');
+  const extension = lastDot > lastSlash ? videoPath.slice(lastDot) : '';
+
+  if (extension.toLowerCase() === '.m3u8') return null;
+
+  return videoPath.slice(0, videoPath.length - extension.length) + '.m3u8';
+}
