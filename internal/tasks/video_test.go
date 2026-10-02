@@ -1,12 +1,25 @@
 package tasks
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/zibbp/ganymede/ent"
 )
+
+func TestMoveArchiveFileAcceptsAlreadyPublishedDestination(t *testing.T) {
+	dir := t.TempDir()
+	destination := filepath.Join(dir, "published.mp4")
+	if err := os.WriteFile(destination, []byte("media"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := moveArchiveFile(context.Background(), filepath.Join(dir, "missing.tmp"), destination, "video"); err != nil {
+		t.Fatalf("expected an already-published move to succeed: %v", err)
+	}
+}
 
 func TestValidateNonEmptyFile(t *testing.T) {
 	t.Run("missing file", func(t *testing.T) {

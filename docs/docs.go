@@ -3208,7 +3208,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Start a specific queue task",
+                "description": "Atomically schedule a new generation of a queue task",
                 "consumes": [
                     "application/json"
                 ],
@@ -3218,7 +3218,7 @@ const docTemplate = `{
                 "tags": [
                     "queue"
                 ],
-                "summary": "Start a queue task for a queue",
+                "summary": "Restart a queue task",
                 "parameters": [
                     {
                         "description": "Start queue task",
@@ -3234,11 +3234,23 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/queue.RestartResult"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -8338,6 +8350,23 @@ const docTemplate = `{
                 "OperatorAND",
                 "OperatorOR"
             ]
+        },
+        "queue.RestartResult": {
+            "type": "object",
+            "properties": {
+                "generation": {
+                    "type": "integer"
+                },
+                "job_id": {
+                    "type": "integer"
+                },
+                "older_active_cancelled": {
+                    "type": "boolean"
+                },
+                "task_name": {
+                    "type": "string"
+                }
+            }
         },
         "utils.ErrorResponse": {
             "type": "object",

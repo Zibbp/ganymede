@@ -11,6 +11,7 @@ import (
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/exec"
+	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -336,7 +337,7 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 			if err := utils.MoveFile(ctx, tmpVideoPath, dbItems.Video.VideoPath); err != nil {
 				return err
 			}
-		} else if dbItems.Queue.LiveArchive {
+		} else if dbItems.Queue.LiveArchive || utils.FileExists(dbItems.Video.VideoPath) {
 			if err := validateNonEmptyFile(dbItems.Video.VideoPath, "video move destination"); err != nil {
 				return err
 			}
@@ -360,20 +361,23 @@ func (w MoveVideoWorker) Work(ctx context.Context, job *river.Job[MoveVideoArgs]
 		}
 
 	} else {
-		// Finalize the playlist before the whole directory is moved below.
-		if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, liveCaptureID(&dbItems.Video)); err != nil {
-			return err
-		}
+		if utils.DirectoryExists(dbItems.Video.TmpVideoHlsPath) {
+			// Finalize the playlist before the whole directory is moved below.
+			if _, err := exec.EnsureLiveHlsPlaylist(ctx, dbItems.Video.TmpVideoHlsPath, liveCaptureID(&dbItems.Video)); err != nil {
+				return err
+			}
 
-		// move hls video
-		err = utils.MoveDirectory(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.VideoHlsPath)
-		if err != nil {
-			return err
+			if err := utils.MoveDirectory(ctx, dbItems.Video.TmpVideoHlsPath, dbItems.Video.VideoHlsPath); err != nil {
+				return err
+			}
+			if err := utils.DeleteDirectory(dbItems.Video.TmpVideoHlsPath); err != nil {
+				return err
+			}
+		} else if !utils.DirectoryExists(dbItems.Video.VideoHlsPath) {
+			return fmt.Errorf("video move source and destination are missing")
 		}
-
-		// clean up temp hls directory
-		if err := utils.DeleteDirectory(dbItems.Video.TmpVideoHlsPath); err != nil {
-			return err
+		if err := hls.ValidateMediaPlaylistFiles(dbItems.Video.VideoPath); err != nil {
+			return fmt.Errorf("validate video move destination: %w", err)
 		}
 		// delete temp converted video when present (unused for HLS-final).
 		if utils.FileExists(dbItems.Video.TmpVideoConvertPath) {

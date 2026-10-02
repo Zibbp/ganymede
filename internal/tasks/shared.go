@@ -376,6 +376,18 @@ func containsAllTags(jobTags, filterTags []string) bool {
 	return true
 }
 
+// moveArchiveFile makes move-stage retries safe after a prior attempt already
+// published the source. A nonempty destination is treated as completed work.
+func moveArchiveFile(ctx context.Context, source, destination, description string) error {
+	if utils.FileExists(source) {
+		if err := validateNonEmptyFile(source, description+" source"); err != nil {
+			return err
+		}
+		return utils.MoveFile(ctx, source, destination)
+	}
+	return validateNonEmptyFile(destination, description+" destination")
+}
+
 // CustomErrorHandler implements river.ErrorHandler to handle errors and panics in jobs.
 type CustomErrorHandler struct{}
 
