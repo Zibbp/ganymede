@@ -147,7 +147,7 @@ func (h *Handler) OAuthLogin(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "oAuth redirect")
+	return nil
 }
 
 // Me godoc
