@@ -287,6 +287,8 @@
       "generateSpriteThumbnailsDescription": "Generiere ein Sprite-Thumbnail für das Video. Dies sind Vorschaubilder, wenn du mit der Maus über die Video-Timeline fährst.",
       "generateNFOFilesLabel": "NFO-Metadatendateien generieren",
       "generateNFOFilesDescription": "Kodi-kompatible NFO-Begleitdateien für Plex und Jellyfin generieren. Führe die Aufgabe „NFO-Dateien generieren“ aus, um bestehende Archive zu ergänzen.",
+      "tagHevcAsHvc1Label": "HEVC-Video als hvc1 kennzeichnen",
+      "tagHevcAsHvc1Description": "Kopiertes HEVC-Video als hvc1 kennzeichnen, damit MP4-Archive auf Apple-Geräten laufen — diese lehnen Twitchs hev1-Kennzeichnung ab. Nur abschalten, wenn sich die Encoder-Einstellungen einer Live-Aufnahme mitten im Stream ändern.",
       "storageTemplateSettings": "Speichervorlagen-Einstellungen",
       "storageTemplateSettingsDescription": "Passe die Benennung von Ordnern und Dateien an. Dies gilt nur für neue Dateien. Um dies auf bestehende Dateien anzuwenden, führe die Migrationsaufgabe auf der Aufgabenseite aus.",
       "folderTemplateText": "Ordner-Vorlage",

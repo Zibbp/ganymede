@@ -17,6 +17,7 @@ export interface Config {
     save_as_hls: boolean;
     generate_sprite_thumbnails: boolean;
     generate_nfo_files: boolean;
+    tag_hevc_as_hvc1: boolean;
   };
   storage_templates: StorageTemplate;
   livestream: {

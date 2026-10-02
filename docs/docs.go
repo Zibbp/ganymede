@@ -5562,6 +5562,10 @@ const docTemplate = `{
                         "save_as_hls": {
                             "description": "Save as HLS rather than MP4.",
                             "type": "boolean"
+                        },
+                        "tag_hevc_as_hvc1": {
+                            "description": "Tag copied HEVC video as hvc1 so Apple devices can play it.",
+                            "type": "boolean"
                         }
                     }
                 },
