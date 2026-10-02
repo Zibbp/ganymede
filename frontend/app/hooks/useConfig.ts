@@ -23,7 +23,6 @@ export interface Config {
     proxies: ProxyListItem[];
     proxy_enabled: boolean;
     proxy_whitelist: string[];
-    watch_while_archiving: boolean;
   };
 }
 

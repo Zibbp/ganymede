@@ -5447,10 +5447,6 @@ const docTemplate = `{
                             "items": {
                                 "type": "string"
                             }
-                        },
-                        "watch_while_archiving": {
-                            "description": "Allow watching live streams while archiving them by downloading a temporary HLS stream.",
-                            "type": "boolean"
                         }
                     }
                 },

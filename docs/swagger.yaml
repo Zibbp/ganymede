@@ -330,10 +330,6 @@ definitions:
             items:
               type: string
             type: array
-          watch_while_archiving:
-            description: Allow watching live streams while archiving them by downloading
-              a temporary HLS stream.
-            type: boolean
         type: object
       log_retention_days:
         description: Number of days to retain log files.

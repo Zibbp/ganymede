@@ -175,11 +175,7 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	t.Logf("Waiting for live stream to archive")
 	time.Sleep(60 * time.Second)
 
-	// If watch while archiving is enabled, check that the hls playlist exists
-	if config.Get().Livestream.WatchWhileArchiving {
-		hlsPlaylistPath := fmt.Sprintf("%s/%s-video.m3u8", vod.TmpVideoHlsPath, vod.ExtID)
-		assert.FileExists(t, hlsPlaylistPath, "HLS playlist file should exist for watch while archiving")
-	}
+	assert.FileExists(t, vod.TmpVideoDownloadPath, "Live HLS playlist should exist while archiving")
 
 	if stopArchive {
 		assert.NoError(t, app.QueueService.StopQueueItem(t.Context(), q.ID), "Failed to stop live archive")
@@ -579,32 +575,6 @@ func TestTwitchLiveArchiveRecoversAfterWorkerCrash(t *testing.T) {
 // StartCrashableWorker. During an ordinary package test it returns immediately.
 func TestWorkerCrashHelper(t *testing.T) {
 	tests.RunWorkerCrashHelper(t)
-}
-
-// TestTwitchWatchedChannelLiveWithWatchLive tests the basic live archiving of a Twitch channel with the watch live feature
-func TestTwitchWatchedChannelLiveWithWatchLive(t *testing.T) {
-	app, liveChannel, channel := setupAppAndLiveChannel(t)
-
-	updatedConfig := config.Get()
-	updatedConfig.Livestream.WatchWhileArchiving = true
-	assert.NoError(t, config.UpdateConfig(updatedConfig))
-
-	liveInput := live.Live{
-		ID:                    channel.ID,
-		WatchLive:             true,
-		WatchVod:              false,
-		DownloadArchives:      false,
-		DownloadHighlights:    false,
-		DownloadUploads:       false,
-		ArchiveChat:           true,
-		Resolution:            "best",
-		RenderChat:            true,
-		DownloadSubOnly:       false,
-		UpdateMetadataMinutes: 1,
-	}
-	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
-	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
-	assertVodAndQueue(t, app, liveChannel, true)
 }
 
 // TestTwitchWatchedChannelLiveCategoryRestrictionFail tests live archiving with category restrictions that prevent archiving
