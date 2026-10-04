@@ -290,23 +290,17 @@
     .media-menu-hint {
       align-items: center;
       gap: var(--media-spacing);
-      color: currentColor;
       min-width: 0;
       margin-inline-start: auto;
       padding-inline-start: calc(var(--media-spacing) * 2);
       display: inline-flex;
     }
 
-    @supports (color: color-mix(in lab, red, red)) {
-      .media-menu-hint {
-        color: color-mix(in oklab, currentcolor 65%, transparent);
-      }
-    }
-
     .media-menu-hint-label {
       max-width: calc(var(--media-spacing) * 24);
       text-overflow: ellipsis;
       white-space: nowrap;
+      opacity: 0.65;
       overflow: hidden;
     }
 
@@ -374,18 +368,12 @@
     }
 
     .media-menu-tier {
-      color: currentColor;
+      opacity: 0.7;
       padding-inline-start: calc(var(--media-spacing) * 0.5);
       padding-top: 1px;
       font-size: 0.7em;
       font-weight: 600;
       line-height: 1;
-    }
-
-    @supports (color: color-mix(in lab, red, red)) {
-      .media-menu-tier {
-        color: color-mix(in oklab, currentcolor 70%, transparent);
-      }
     }
 
     .media-menu-trigger-item {
@@ -477,9 +465,6 @@
     }
 
     @supports (top: anchor(top)) {
-    }
-
-    @supports (color: color-mix(in lab, red, red)) {
     }
 
     @supports (top: anchor(top)) {
