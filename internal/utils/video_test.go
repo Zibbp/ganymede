@@ -13,17 +13,30 @@ func TestSelectClosestQuality(t *testing.T) {
 		expected string
 	}{
 		{"best", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "chunked"},
-		{"1440p", []string{"chunked", "360p30", "480p30", "720p60", "audio_only"}, "chunked"},
-		{"1080p", []string{"chunked", "360p30", "480p30", "720p60", "audio_only"}, "chunked"},
+		{"1440p", []string{"chunked", "360p30", "480p30", "720p60", "audio_only"}, "720p60"},
+		{"1080p", []string{"chunked", "360p30", "480p30", "720p60", "audio_only"}, "720p60"},
 		{"1080p", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "1080p60"},
 		{"1080p60", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "1080p60"},
 		{"1080p30", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "1080p60"},
 		{"720p", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "720p60"},
 		{"best", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "chunked"},
 		{"audio_only", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "audio_only"},
-		{"500p", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "chunked"},
+		{"500p", []string{"chunked", "1080p60", "360p30", "480p30", "720p60", "audio_only"}, "480p30"},
 		{"1080p", []string{"1080-0", "1080-1", "360-0", "720-0", "portrait-1134-0"}, "1080-0"},
 		{"720p", []string{"1080-0", "360-0", "720-0", "720-1", "portrait-1134-0"}, "720-0"},
+		{"160p", []string{"1080", "360", "480", "720", "portrait-1080", "portrait-360", "portrait-480", "portrait-720"}, "360"},
+		{"160p", []string{"1080-0", "360-0", "480-0", "720-0", "portrait-1134-0"}, "360-0"},
+		{"160p", []string{"audio_only", "chunked", "720p60", "360p30"}, "360p30"},
+		{"1080p", []string{"360", "720", "portrait-1080"}, "720"},
+		{"600p", []string{"720p60", "480p30"}, "480p30"},
+		{"700p", []string{"360p30", "480p30", "720p60"}, "720p60"},
+		{"600p30", []string{"720p60", "480p60", "480p30"}, "480p30"},
+		{"600p", []string{"480p30", "480p60", "720p60"}, "480p60"},
+		{"1080p", []string{"chunked", "audio_only"}, "chunked"},
+		{"best", []string{"360", "1080", "720", "portrait-1080"}, "1080"},
+		{"best", nil, "best"},
+		{"160p", nil, "160p"},
+		{"", []string{"360", "720"}, ""},
 	}
 
 	for _, test := range tests {
