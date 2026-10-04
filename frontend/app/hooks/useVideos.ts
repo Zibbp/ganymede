@@ -98,6 +98,7 @@ export enum VideoOrder {
 
 export enum SearchField {
   Title = "title",
+  Notes = "notes",
   Id = "id",
   ExtId = "ext_id",
   Chapter = "chapter",
@@ -542,6 +543,7 @@ const useUpdateVideoNotes = () => {
       updateVideoNotes(axiosPrivate, videoId, notes),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["video", variables.videoId] });
+      queryClient.invalidateQueries({ queryKey: ["search"] });
     },
   });
 };
