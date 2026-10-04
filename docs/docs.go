@@ -3913,6 +3913,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "Comma-separated search fields: title, notes, id, ext_id, chapter, channel_name, channel_id, channel_ext_id (defaults to title)",
+                        "name": "fields",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 10,
                         "description": "Limit",
