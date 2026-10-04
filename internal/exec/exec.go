@@ -131,8 +131,17 @@ func buildLiveHlsCaptureFFmpegArgs(inputURI, playlistPath, segmentPattern, initF
 	ffmpegArgs = appendLiveArchiveProgressArgs(ffmpegArgs, monitorStalls)
 	ffmpegArgs = append(ffmpegArgs,
 		"-fflags", "+genpts+discardcorrupt",
-		"-rw_timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
-		"-timeout", "30000000", // 30 second timeout for ffmpeg to connect/read before it gives up and retries
+		"-rw_timeout", "30000000",
+		"-timeout", "30000000",
+		// Resume interrupted HTTP reads without ending the live capture.
+		"-reconnect", "1",
+		"-reconnect_streamed", "1",
+		"-reconnect_on_network_error", "1",
+		"-reconnect_max_retries", "2",
+		"-reconnect_delay_max", "5",
+		"-reconnect_delay_total_max", "30",
+		// HLS segment requests do not inherit the HTTP reconnect options.
+		"-seg_max_retry", "2",
 		"-i", inputURI,
 	)
 	ffmpegArgs = appendFFmpegLiveOutputStreamArgs(ffmpegArgs, audioOnly)

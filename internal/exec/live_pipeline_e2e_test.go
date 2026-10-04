@@ -8,6 +8,7 @@ import (
 	osExec "os/exec"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -71,7 +72,22 @@ func TestLiveFmp4CapturePipelineE2E(t *testing.T) {
 		"-hls_segment_filename", filepath.Join(srcHLS, "seg%03d.ts"),
 		"-f", "hls", filepath.Join(srcHLS, "src.m3u8"),
 	)
-	server := httptest.NewServer(http.FileServer(http.Dir(srcHLS)))
+	// Drop one segment connection before its response, as can happen when
+	// a backup interruption breaks a request. HLS must retry that segment.
+	var interrupted atomic.Bool
+	fileServer := http.FileServer(http.Dir(srcHLS))
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, ".ts") && interrupted.CompareAndSwap(false, true) {
+			conn, _, err := w.(http.Hijacker).Hijack()
+			if err != nil {
+				t.Errorf("hijack segment response: %v", err)
+				return
+			}
+			_ = conn.Close()
+			return
+		}
+		fileServer.ServeHTTP(w, r)
+	}))
 	defer server.Close()
 
 	// 2. Production capture args; the bsf flag is the regression guard.
@@ -94,6 +110,9 @@ func TestLiveFmp4CapturePipelineE2E(t *testing.T) {
 		}
 	}
 	run("ffmpeg", args...)
+	if !interrupted.Load() {
+		t.Fatal("capture did not exercise the interrupted segment response")
+	}
 
 	// 3. Segments, init, and playlist with MAP + segment references.
 	for _, pattern := range []string{extID + "_segment*.m4s", extID + "_init.mp4"} {
@@ -131,8 +150,8 @@ func TestLiveFmp4CapturePipelineE2E(t *testing.T) {
 	if err != nil {
 		t.Fatalf("probe playlist duration: %v", err)
 	}
-	if duration <= 0 {
-		t.Fatalf("invalid playlist duration %d", duration)
+	if duration < 11 || duration > 13 {
+		t.Fatalf("capture lost media after interrupted read: duration %d, want approximately 12 seconds", duration)
 	}
 
 	// 6. MP4 export via the real convert-task function.

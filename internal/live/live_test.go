@@ -172,15 +172,15 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.Equal(t, vod.FolderName, expectedFolderName, "Folder name should match the expected storage template")
 	assert.Equal(t, vod.FileName, expectedFileName, "File name should match the expected storage template")
 
-	t.Logf("Waiting for live stream to archive")
-	time.Sleep(60 * time.Second)
-
-	assert.FileExists(t, vod.TmpVideoDownloadPath, "Live HLS playlist should exist while archiving")
-
 	if stopArchive {
+		t.Logf("Waiting for live stream to archive")
+		time.Sleep(60 * time.Second)
+
+		assert.FileExists(t, vod.TmpVideoDownloadPath, "Live HLS playlist should exist while archiving")
+
 		assert.NoError(t, app.QueueService.StopQueueItem(t.Context(), q.ID), "Failed to stop live archive")
-		tests_shared.WaitForArchiveCompletion(t, app, vod.ID, TestArchiveTimeout)
 	}
+	tests_shared.WaitForArchiveCompletion(t, app, vod.ID, TestArchiveTimeout)
 
 	q, err = app.Database.Client.Queue.Get(t.Context(), q.ID)
 	assert.NoError(t, err)
