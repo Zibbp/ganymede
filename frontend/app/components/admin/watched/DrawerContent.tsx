@@ -36,10 +36,9 @@ const qualityOptions: SelectOption[] = Object.entries(VideoQuality).map(([key, v
   value: value
 }));
 
-// Clip quality options exclude audio-only: Twitch does not publish
-// audio-only clip renditions, so such jobs would always fail.
+// Twitch clips do not publish audio-only or 160p renditions.
 const clipQualityOptions: SelectOption[] = qualityOptions.filter(
-  (option) => option.value !== VideoQuality.audio
+  (option) => option.value !== VideoQuality.audio && option.value !== VideoQuality.quality160p
 );
 
 const AdminWatchedChannelDrawerContent = ({ watchedChannel, mode, handleClose }: Props) => {

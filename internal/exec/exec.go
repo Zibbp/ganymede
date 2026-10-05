@@ -253,7 +253,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	}
 
 	closestQuality := utils.SelectClosestQuality(video.Resolution, qualities)
-	log.Info().Msgf("selected closest quality %s", closestQuality)
+	log.Info().Str("video_id", video.ID.String()).Str("requested_quality", video.Resolution).Msgf("selected closest quality %s", closestQuality)
 
 	// Create yt-dlp quality string
 	qualityString := ytdlpSvc.CreateQualityOption(closestQuality)
