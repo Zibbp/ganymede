@@ -21,7 +21,7 @@ import (
 
 const (
 	liveChatPendingFileSuffix = ".pending.ndjson"
-	liveChatSyncInterval      = 2 * time.Second
+	liveChatSyncInterval      = 6 * time.Second
 	liveChatMainFlushInterval = 5 * time.Second
 )
 
