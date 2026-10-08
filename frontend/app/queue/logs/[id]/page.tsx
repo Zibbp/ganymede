@@ -48,7 +48,7 @@ const QueueLogsPage = ({ params }: { params: Promise<Params> }) => {
 
   return (
     <Box className={classes.logPage}>
-      <div className={classes.logLine} dangerouslySetInnerHTML={{ __html: data }}></div>
+      <div className={classes.logLine}>{data}</div>
       <div ref={logEndRef}></div>
     </Box>
   );
