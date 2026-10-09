@@ -29,11 +29,11 @@ interface Params {
   ref: GanymedePlayerRef;
 }
 
-const AbsoluteTimeOverlay = ({ streamedAt, currentTime }: { streamedAt: string | Date; currentTime: number }) => {
+const AbsoluteTimeOverlay = ({ startedAt, currentTime }: { startedAt: string | Date; currentTime: number }) => {
   const flooredCurrentTime = Math.floor(currentTime);
   const absoluteTime = useMemo(
-    () => dayjs(streamedAt).add(flooredCurrentTime, 'second'),
-    [streamedAt, flooredCurrentTime],
+    () => dayjs(startedAt).add(flooredCurrentTime, 'second'),
+    [startedAt, flooredCurrentTime],
   );
 
   return (
@@ -45,16 +45,16 @@ const AbsoluteTimeOverlay = ({ streamedAt, currentTime }: { streamedAt: string |
 
 // Preset `usePlayer` hooks are typed, but TS resolves the selector state as
 // `unknown` under the repo toolchain; narrow at the selection site.
-const AbsoluteTimeDisplay = ({ streamedAt }: { streamedAt: string | Date }) => {
+const AbsoluteTimeDisplay = ({ startedAt }: { startedAt: string | Date }) => {
   const currentTime = useVodPlayer((s) => (s as unknown as { currentTime: number }).currentTime);
   const safeCurrentTime = typeof currentTime === 'number' && Number.isFinite(currentTime) ? currentTime : 0;
-  return <AbsoluteTimeOverlay streamedAt={streamedAt} currentTime={safeCurrentTime} />;
+  return <AbsoluteTimeOverlay startedAt={startedAt} currentTime={safeCurrentTime} />;
 };
 
-const LiveAbsoluteTimeDisplay = ({ streamedAt }: { streamedAt: string | Date }) => {
+const LiveAbsoluteTimeDisplay = ({ startedAt }: { startedAt: string | Date }) => {
   const currentTime = useLivePlayer((s) => (s as unknown as { currentTime: number }).currentTime);
   const safeCurrentTime = typeof currentTime === 'number' && Number.isFinite(currentTime) ? currentTime : 0;
-  return <AbsoluteTimeOverlay streamedAt={streamedAt} currentTime={safeCurrentTime} />;
+  return <AbsoluteTimeOverlay startedAt={startedAt} currentTime={safeCurrentTime} />;
 };
 
 const PlayerCustomControls = () => {
@@ -88,6 +88,8 @@ const VideoPlayer = ({ video, ref }: Params) => {
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
   const showAbsoluteTime = useSettingsStore((state) => state.showAbsoluteTime);
+  // Live captures begin when added to Ganymede, potentially after the stream started.
+  const startedAt = video.type === GanymedeVideoType.Live ? video.created_at : video.streamed_at;
   const autoplayVideo = useSettingsStore((state) => state.autoplayVideo);
 
   const axiosPrivate = useAxiosPrivate();
@@ -322,7 +324,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
               customControls={<PlayerCustomControls />}
             >
               <HlsJsVideo {...mediaProps} />
-              {showAbsoluteTime && <LiveAbsoluteTimeDisplay streamedAt={video.streamed_at} />}
+              {showAbsoluteTime && <LiveAbsoluteTimeDisplay startedAt={startedAt} />}
             </LiveVideoSkin>
           </I18nProvider>
         </LiveVideoJsPlayer>
@@ -358,7 +360,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
                   )}
                 </Video>
               )}
-              {showAbsoluteTime && <AbsoluteTimeDisplay streamedAt={video.streamed_at} />}
+              {showAbsoluteTime && <AbsoluteTimeDisplay startedAt={startedAt} />}
             </VideoSkin>
           </I18nProvider>
         </VideoJsPlayer>
