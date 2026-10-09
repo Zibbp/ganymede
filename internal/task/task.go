@@ -78,6 +78,13 @@ func (s *Service) StartTask(ctx context.Context, task string) error {
 		}
 		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
 
+	case "reconcile_storage":
+		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.ReconcileStorageArgs{}, nil)
+		if err != nil {
+			return fmt.Errorf("error inserting task: %v", err)
+		}
+		log.Info().Str("task_id", fmt.Sprintf("%d", task.Job.ID)).Msgf("task created")
+
 	case "save_chapters":
 		task, err := s.RiverClient.Client.Insert(ctx, tasks_periodic.SaveVideoChaptersArgs{}, nil)
 		if err != nil {
