@@ -21,6 +21,98 @@ func createDummyVideo(t *testing.T, dir string) string {
 	return videoPath
 }
 
+// createHevcMedia creates a small HEVC video with audio. ffmpeg tags HEVC in
+// MP4 as hev1 unless told otherwise, which is the state the conversion has to
+// correct.
+func createHevcMedia(t *testing.T, dir string, withCoverArt bool) string {
+	t.Helper()
+	requireEncoder(t, "libx265")
+
+	mediaPath := filepath.Join(dir, "hevc.mp4")
+	runFFmpeg(t, "create hevc media",
+		"-v", "error", "-y",
+		"-f", "lavfi", "-i", "testsrc=size=128x72:rate=10:duration=1",
+		"-f", "lavfi", "-i", "sine=frequency=1000:duration=1",
+		"-map", "0:v", "-map", "1:a",
+		"-c:v", "libx265", "-x265-params", "log-level=none", "-pix_fmt", "yuv420p",
+		"-c:a", "aac", "-t", "1", mediaPath,
+	)
+	if !withCoverArt {
+		return mediaPath
+	}
+
+	// A thumbnail embedded by yt-dlp arrives as a second video stream. Muxing
+	// it in afterwards keeps the stream order predictable: video, audio, cover.
+	coverPath := filepath.Join(dir, "cover.jpg")
+	withCoverPath := filepath.Join(dir, "hevc-with-cover.mp4")
+	runFFmpeg(t, "create cover art",
+		"-v", "error", "-y",
+		"-f", "lavfi", "-i", "color=c=red:size=32x32:duration=1", "-frames:v", "1", coverPath,
+	)
+	runFFmpeg(t, "embed cover art",
+		"-v", "error", "-y", "-i", mediaPath, "-i", coverPath,
+		"-map", "0", "-map", "1", "-c", "copy", "-disposition:v:1", "attached_pic", withCoverPath,
+	)
+	return withCoverPath
+}
+
+// createHevcTransportStream creates the shape a live archive is captured in:
+// HEVC in MPEG-TS, which has no sample entry tag of its own.
+func createHevcTransportStream(t *testing.T, dir string) string {
+	t.Helper()
+	requireEncoder(t, "libx265")
+
+	mediaPath := filepath.Join(dir, "hevc.ts")
+	runFFmpeg(t, "create hevc transport stream",
+		"-v", "error", "-y",
+		"-f", "lavfi", "-i", "testsrc=size=128x72:rate=10:duration=1",
+		"-f", "lavfi", "-i", "sine=frequency=1000:duration=1",
+		"-map", "0:v", "-map", "1:a",
+		"-c:v", "libx265", "-x265-params", "log-level=none", "-pix_fmt", "yuv420p",
+		"-c:a", "aac", "-t", "1", "-f", "mpegts", mediaPath,
+	)
+	return mediaPath
+}
+
+func runFFmpeg(t *testing.T, what string, args ...string) {
+	t.Helper()
+	if out, err := exec.Command("ffmpeg", args...).CombinedOutput(); err != nil {
+		t.Fatalf("%s: %v, output: %s", what, err, out)
+	}
+}
+
+// requireEncoder skips the test when the ffmpeg on PATH cannot encode what the
+// fixture needs. The project's own image is built with a full ffmpeg.
+func requireEncoder(t *testing.T, encoder string) {
+	t.Helper()
+	out, err := exec.Command("ffmpeg", "-hide_banner", "-loglevel", "error", "-encoders").Output()
+	if err != nil {
+		t.Fatalf("list ffmpeg encoders: %v", err)
+	}
+	if !strings.Contains(string(out), encoder) {
+		t.Skipf("ffmpeg on PATH has no %s encoder", encoder)
+	}
+}
+
+// probeStreamEntry returns one ffprobe stream entry, such as the
+// "codec_tag_string" of "v:0", or an empty string when the stream is absent.
+func probeStreamEntry(t *testing.T, path, stream, entry string) string {
+	t.Helper()
+	out, err := exec.Command("ffprobe",
+		"-v", "error",
+		"-select_streams", stream,
+		"-show_entries", "stream="+entry,
+		"-of", "default=noprint_wrappers=1:nokey=1",
+		path,
+	).CombinedOutput()
+	if err != nil {
+		t.Fatalf("probe %s of %s: %v, output: %s", entry, stream, err, out)
+	}
+	// A container that carries programs reports every stream twice.
+	first, _, _ := strings.Cut(strings.TrimSpace(string(out)), "\n")
+	return first
+}
+
 func TestGetVideoDuration(t *testing.T) {
 	tmpDir := t.TempDir()
 	videoPath := createDummyVideo(t, tmpDir)

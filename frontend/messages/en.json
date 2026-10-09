@@ -287,6 +287,8 @@
       "generateSpriteThumbnailsDescription": "Generate a sprite thumbnail for the video. These are preview thumbnails when hovering over the video timeline.",
       "generateNFOFilesLabel": "Generate NFO metadata files",
       "generateNFOFilesDescription": "Generate Kodi-compatible NFO sidecars for Plex and Jellyfin. Run the Generate NFO Files task to backfill existing archives.",
+      "tagHevcAsHvc1Label": "Tag HEVC video as hvc1",
+      "tagHevcAsHvc1Description": "Tag copied HEVC video as hvc1 so MP4 archives play on Apple devices, which reject Twitch's hev1 tag. Turn off only if a live capture's encoder settings change mid-stream.",
       "storageTemplateSettings": "Storage Template Settings",
       "storageTemplateSettingsDescription": "Customize how folders and files are named. This only applied to new files. To apply to existing files execute the migration task on the tasks page.",
       "folderTemplateText": "Folder Template",
