@@ -6663,6 +6663,10 @@ const docTemplate = `{
                     "description": "VideoPath holds the value of the \"video_path\" field.",
                     "type": "string"
                 },
+                "video_start_at": {
+                    "description": "The wall-clock time that video second 0 corresponds to; for live archives it accounts for capture latency and may equal the chat capture start when unresolvable.",
+                    "type": "string"
+                },
                 "views": {
                     "description": "Views holds the value of the \"views\" field.",
                     "type": "integer"

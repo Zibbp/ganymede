@@ -88,8 +88,11 @@ const VideoPlayer = ({ video, ref }: Params) => {
 
   const videoTheaterMode = useSettingsStore((state) => state.videoTheaterMode);
   const showAbsoluteTime = useSettingsStore((state) => state.showAbsoluteTime);
-  // Live captures begin when added to Ganymede, potentially after the stream started.
-  const startedAt = video.type === GanymedeVideoType.Live ? video.created_at : video.streamed_at;
+  // video_start_at is the wall-clock time of video second 0 for live
+  // archives, resolved to match the chat sync; falls back to created_at.
+  const startedAt = video.type === GanymedeVideoType.Live
+    ? (video.video_start_at || video.created_at)
+    : video.streamed_at;
   const autoplayVideo = useSettingsStore((state) => state.autoplayVideo);
 
   const axiosPrivate = useAxiosPrivate();

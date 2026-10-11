@@ -55,6 +55,7 @@ export interface Video {
   tmp_chat_render_path: string;
   processing: boolean;
   streamed_at: Date;
+  video_start_at?: string | null;
   updated_at: Date;
   created_at: Date;
   edges: VideoEdges;
