@@ -10,7 +10,6 @@ import (
 
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/exec"
@@ -242,7 +241,10 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 		return err
 	}
 
-	videoStartTime := resolveLiveChatVideoStartTime(ctx, store, platform, dbItems, videos, videoDurationSec)
+	videoStartTime, err := resolveLiveChatVideoStartTime(ctx, store, platform, dbItems, videos, videoDurationSec)
+	if err != nil {
+		return err
+	}
 
 	err = utils.ConvertTwitchLiveChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Channel.Name, dbItems.Video.ID.String(), dbItems.Video.ExtID, channelIdInt, videoStartTime, string(previousVideoID), videoDurationSec)
 	if err != nil {
@@ -353,8 +355,9 @@ func pickStreamVod(videos []platform.VideoInfo, extStreamID string) *platform.Vi
 // 0 of a live archive corresponds to: platform VOD stream end minus captured
 // duration (the capture drains buffered content until the stream ends), so
 // chat offsets align with the captured media. Fallbacks and sanity-bound
-// failures anchor to the capture start (queue chat_start).
-func resolveLiveChatVideoStartTime(ctx context.Context, store *database.Database, platformService platform.Platform, dbItems *GetDatabaseItemsResponse, platformVideos []platform.VideoInfo, videoDurationSec int) time.Time {
+// failures anchor to the capture start (queue chat_start); persistence
+// failures abort the conversion so River can retry.
+func resolveLiveChatVideoStartTime(ctx context.Context, store *database.Database, platformService platform.Platform, dbItems *GetDatabaseItemsResponse, platformVideos []platform.VideoInfo, videoDurationSec int) (time.Time, error) {
 	logger := log.With().
 		Str("queue_id", dbItems.Queue.ID.String()).
 		Str("video_id", dbItems.Video.ID.String()).
@@ -366,7 +369,7 @@ func resolveLiveChatVideoStartTime(ctx context.Context, store *database.Database
 		reference = dbItems.Video.CreatedAt
 	}
 	if reference.IsZero() || videoDurationSec <= 0 {
-		return persistLiveChatVideoStartTime(ctx, store, dbItems, reference, logger)
+		return persistLiveChatVideoStartTime(ctx, store, dbItems, reference)
 	}
 
 	platformVod := pickStreamVod(platformVideos, dbItems.Video.ExtStreamID)
@@ -384,7 +387,7 @@ func resolveLiveChatVideoStartTime(ctx context.Context, store *database.Database
 			select {
 			case <-ctx.Done():
 				logger.Debug().Msg("giving up resolving live archive video start time; context cancelled")
-				return reference
+				return reference, nil
 			case <-time.After(pollInterval):
 			}
 
@@ -392,7 +395,7 @@ func resolveLiveChatVideoStartTime(ctx context.Context, store *database.Database
 			if err != nil {
 				if ctx.Err() != nil {
 					logger.Debug().Msg("giving up resolving live archive video start time; context cancelled")
-					return reference
+					return reference, nil
 				}
 				// Transient API failures retry on the next poll tick.
 				if !warnedFetchError {
@@ -411,7 +414,7 @@ func resolveLiveChatVideoStartTime(ctx context.Context, store *database.Database
 
 	if platformVod == nil {
 		logger.Debug().Msg("platform VOD not found for live archive; anchoring chat to capture start time")
-		return persistLiveChatVideoStartTime(ctx, store, dbItems, reference, logger)
+		return persistLiveChatVideoStartTime(ctx, store, dbItems, reference)
 	}
 
 	// Twitch archive VOD created_at is the broadcast start time; the stream
@@ -428,25 +431,25 @@ func resolveLiveChatVideoStartTime(ctx context.Context, store *database.Database
 			Time("stream_end", streamEnd).
 			Int("video_duration_sec", videoDurationSec).
 			Msg("stream end does not bound the captured video; anchoring chat to capture start time")
-		return persistLiveChatVideoStartTime(ctx, store, dbItems, reference, logger)
+		return persistLiveChatVideoStartTime(ctx, store, dbItems, reference)
 	}
 
 	logger.Info().
 		Time("video_start_at", anchor).
 		Dur("capture_latency", reference.Sub(anchor)).
 		Msg("resolved live archive video start time from platform VOD")
-	return persistLiveChatVideoStartTime(ctx, store, dbItems, anchor, logger)
+	return persistLiveChatVideoStartTime(ctx, store, dbItems, anchor)
 }
 
 // persistLiveChatVideoStartTime records the chat/video anchor on the video so
 // the frontend absolute-time display matches the chat sync.
-func persistLiveChatVideoStartTime(ctx context.Context, store *database.Database, dbItems *GetDatabaseItemsResponse, videoStartTime time.Time, logger zerolog.Logger) time.Time {
+func persistLiveChatVideoStartTime(ctx context.Context, store *database.Database, dbItems *GetDatabaseItemsResponse, videoStartTime time.Time) (time.Time, error) {
 	if videoStartTime.IsZero() {
-		return videoStartTime
+		return videoStartTime, nil
 	}
 
 	if _, err := store.Client.Vod.UpdateOneID(dbItems.Video.ID).SetVideoStartAt(videoStartTime).Save(ctx); err != nil {
-		logger.Warn().Err(err).Msg("failed to persist live archive video start time")
+		return videoStartTime, fmt.Errorf("persist video start time for video %s: %w", dbItems.Video.ID, err)
 	}
-	return videoStartTime
+	return videoStartTime, nil
 }
