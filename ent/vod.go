@@ -106,6 +106,8 @@ type Vod struct {
 	StorageSizeBytes int64 `json:"storage_size_bytes,omitempty"`
 	// The time the VOD was streamed.
 	StreamedAt time.Time `json:"streamed_at,omitempty"`
+	// The wall-clock time that video second 0 corresponds to; for live archives it accounts for capture latency and may equal the chat capture start when unresolvable.
+	VideoStartAt *time.Time `json:"video_start_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -207,7 +209,7 @@ func (*Vod) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case vod.FieldExtID, vod.FieldClipExtVodID, vod.FieldExtStreamID, vod.FieldPlatform, vod.FieldType, vod.FieldTitle, vod.FieldResolution, vod.FieldThumbnailPath, vod.FieldWebThumbnailPath, vod.FieldVideoPath, vod.FieldVideoHlsPath, vod.FieldChatPath, vod.FieldLiveChatPath, vod.FieldLiveChatConvertPath, vod.FieldChatVideoPath, vod.FieldInfoPath, vod.FieldCaptionPath, vod.FieldFolderName, vod.FieldFileName, vod.FieldTmpVideoDownloadPath, vod.FieldTmpVideoConvertPath, vod.FieldTmpChatDownloadPath, vod.FieldTmpLiveChatDownloadPath, vod.FieldTmpLiveChatConvertPath, vod.FieldTmpChatRenderPath, vod.FieldTmpVideoHlsPath, vod.FieldNotes:
 			values[i] = new(sql.NullString)
-		case vod.FieldStreamedAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
+		case vod.FieldStreamedAt, vod.FieldVideoStartAt, vod.FieldUpdatedAt, vod.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case vod.FieldID:
 			values[i] = new(uuid.UUID)
@@ -488,6 +490,13 @@ func (_m *Vod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.StreamedAt = value.Time
 			}
+		case vod.FieldVideoStartAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field video_start_at", values[i])
+			} else if value.Valid {
+				_m.VideoStartAt = new(time.Time)
+				*_m.VideoStartAt = value.Time
+			}
 		case vod.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
@@ -698,6 +707,11 @@ func (_m *Vod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("streamed_at=")
 	builder.WriteString(_m.StreamedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	if v := _m.VideoStartAt; v != nil {
+		builder.WriteString("video_start_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
