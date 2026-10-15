@@ -7,8 +7,7 @@ import '../styles/video/theme.css';
 import '../styles/display.css';
 import { Title as TitlePrimitive } from '@videojs/react';
 
-import { resolveClassName } from '@/lib/resolve-class-name';
-import { cn } from '@/lib/utils';
+import { cn, resolveClassName } from '@/lib/resolve-class-name';
 
 export type TitleProps = Omit<TitlePrimitive.Props, 'children'>;
 

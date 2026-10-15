@@ -8,7 +8,7 @@
       transform-origin: top;
       padding-inline: calc(var(--media-spacing) * 6);
       padding-top: calc(var(--media-spacing) * 2.5);
-      font-size: calc(var(--media-spacing) * 3.25);
+      font-size: calc(var(--media-spacing) * 4);
       letter-spacing: -0.0125em;
       overflow-wrap: anywhere;
       color: var(--media-controls-foreground);
@@ -42,7 +42,6 @@
       .media-title {
         padding-inline: calc(var(--media-spacing) * 6);
         padding-top: calc(var(--media-spacing) * 4);
-        font-size: calc(var(--media-spacing) * 4.25);
       }
     }
 

@@ -1,9 +1,14 @@
+'use client';
+
 import '../styles/base.css';
+import '../styles/audio/theme.css';
+import '../styles/video/captions.css';
+import '../styles/video/theme.css';
 import '../styles/popups.css';
 import { Tooltip } from '@videojs/react';
 import type { ReactElement, ReactNode } from 'react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/resolve-class-name';
 
 export interface ButtonTooltipProps extends Omit<Tooltip.RootProps, 'children'> {
   children: ReactElement;

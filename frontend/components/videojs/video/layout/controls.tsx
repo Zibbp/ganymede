@@ -10,7 +10,7 @@ import { PiPButton } from '@/components/videojs/ui/pip-button';
 import { PlayButton } from '@/components/videojs/ui/play-button';
 import { TimeSlider } from '@/components/videojs/ui/time-slider';
 import { VolumePopover } from '@/components/videojs/ui/volume-popover';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/resolve-class-name';
 
 import { BookmarkMarkers, type TimelineBookmark } from '../bookmark-markers';
 import { VideoSettingsMenu } from '../menus/settings-menu';

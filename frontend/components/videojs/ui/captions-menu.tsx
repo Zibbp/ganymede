@@ -12,7 +12,7 @@ import { CaptionsRadioGroup } from '@videojs/react/ui/captions-radio-group';
 import { ButtonTooltip } from '@/components/videojs/ui/button-tooltip';
 import { CaptionsButton } from '@/components/videojs/ui/captions-button';
 import { RadioItem } from '@/components/videojs/ui/radio-item';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/resolve-class-name';
 
 export interface CaptionsMenuProps extends Omit<MenuPrimitive.RootProps, 'children'> {
   className?: MenuPrimitive.TriggerProps['className'];

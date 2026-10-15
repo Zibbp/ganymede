@@ -444,6 +444,12 @@
       }
     }
 
+    .media-time-slider[data-playing] {
+      transition-property: --media-slider-buffer;
+      transition-duration: 0.15s;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     .media-time-slider-chapter {
       --media-chapter-inset-end: 0.5;
       --media-chapter-inset-start: 0.5;

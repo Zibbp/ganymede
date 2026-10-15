@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react';
 import { StatusAnnouncer } from '@/components/videojs/ui/status-announcer';
 import { PlaybackStatusIndicator, StatusIndicator } from '@/components/videojs/ui/status-indicator';
 import { VolumeIndicator } from '@/components/videojs/ui/volume-indicator';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/resolve-class-name';
 
 export type LiveVideoStatusIndicatorsProps = Omit<ComponentProps<'div'>, 'children'>;
 

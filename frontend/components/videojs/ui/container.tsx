@@ -7,7 +7,7 @@ import '../styles/video/theme.css';
 import '../styles/container.css';
 import { Container as ContainerPrimitive } from '@videojs/react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/resolve-class-name';
 
 export interface ContainerProps extends Omit<ContainerPrimitive.Props, 'children'> {
   children?: ContainerPrimitive.Props['children'];

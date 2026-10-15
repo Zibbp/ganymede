@@ -12,7 +12,7 @@ import type { ClassValue } from 'cn';
 import { ButtonTooltip } from '@/components/videojs/ui/button-tooltip';
 import { MuteButton } from '@/components/videojs/ui/mute-button';
 import { VolumeSlider } from '@/components/videojs/ui/volume-slider';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/resolve-class-name';
 
 export interface VolumePopoverProps extends Omit<VolumePopoverPrimitive.RootProps, 'children'> {
   className?: ClassValue;

@@ -8,8 +8,7 @@ import '../styles/buttons.css';
 import { LiveButton as LiveButtonPrimitive } from '@videojs/react';
 
 import { Button } from '@/components/videojs/ui/button';
-import { resolveClassName } from '@/lib/resolve-class-name';
-import { cn } from '@/lib/utils';
+import { cn, resolveClassName } from '@/lib/resolve-class-name';
 
 export type LiveButtonProps = Omit<LiveButtonPrimitive.Props, 'children'>;
 

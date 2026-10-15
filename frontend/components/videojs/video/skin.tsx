@@ -9,7 +9,7 @@ import { Container } from '@/components/videojs/ui/container';
 import { ErrorDialog } from '@/components/videojs/ui/error-dialog';
 import { Poster } from '@/components/videojs/ui/poster';
 import { Title } from '@/components/videojs/ui/title';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/resolve-class-name';
 
 import { VideoGestures } from './behaviors/gestures';
 import { VideoHotkeys } from './behaviors/hotkeys';

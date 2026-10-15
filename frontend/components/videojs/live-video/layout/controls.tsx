@@ -10,7 +10,7 @@ import { LiveButton } from '@/components/videojs/ui/live-button';
 import { PiPButton } from '@/components/videojs/ui/pip-button';
 import { PlayButton } from '@/components/videojs/ui/play-button';
 import { VolumePopover } from '@/components/videojs/ui/volume-popover';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/resolve-class-name';
 
 export interface DefaultLiveVideoControlsProps {
   customControls?: ReactNode;
