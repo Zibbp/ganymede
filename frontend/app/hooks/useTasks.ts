@@ -15,6 +15,7 @@ export enum Task {
   ProcessPlaylistVideoRules = "process_playlist_video_rules",
   UpdatePlatformChannels = "update_platform_channels",
   GenerateNFOFiles = "generate_nfo_files",
+  ReconcileStorage = "reconcile_storage",
 }
 
 const startTask = async (

@@ -225,6 +225,24 @@ const AdminTasksPage = () => {
 
           <Group justify="space-between" py={5} wrap="nowrap">
             <Box>
+              <Text fw={"bold"}>{t('reconcileStorage')}</Text>
+              <Text size="xs">{t('reconcileStorageDescription')}</Text>
+            </Box>
+            <Tooltip label={t('startTaskButton')}>
+              <ActionIcon
+                onClick={() => startTask(Task.ReconcileStorage)}
+                loading={loading}
+                color="green"
+                variant="filled"
+                size="lg"
+              >
+                <IconPlayerPlay size={24} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+
+          <Group justify="space-between" py={5} wrap="nowrap">
+            <Box>
               <Text fw={"bold"}>{t('updateVideoStorageUsage')}</Text>
               <Text size="xs">{t('updateVideoStorageUsageDescription')}</Text>
             </Box>

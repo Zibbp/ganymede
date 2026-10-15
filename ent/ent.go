@@ -28,6 +28,7 @@ import (
 	"github.com/zibbp/ganymede/ent/playlistrulegroup"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/sessions"
+	"github.com/zibbp/ganymede/ent/storagefinding"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -107,6 +108,7 @@ func checkColumn(t, c string) error {
 			playlistrulegroup.Table: playlistrulegroup.ValidColumn,
 			queue.Table:             queue.ValidColumn,
 			sessions.Table:          sessions.ValidColumn,
+			storagefinding.Table:    storagefinding.ValidColumn,
 			twitchcategory.Table:    twitchcategory.ValidColumn,
 			user.Table:              user.ValidColumn,
 			vod.Table:               vod.ValidColumn,

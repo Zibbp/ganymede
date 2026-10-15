@@ -58,6 +58,7 @@ var (
 	TaskUpdateTwitchChannels        = "update_twitch_channels"
 	TaskPruneLogFiles               = "prune_log_files"
 	TaskGenerateNFOFiles            = "generate_nfo_files"
+	TaskReconcileStorage            = "reconcile_storage"
 )
 
 var (

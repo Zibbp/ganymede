@@ -32,6 +32,7 @@ import (
 	"github.com/zibbp/ganymede/ent/playlistrulegroup"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/ent/sessions"
+	"github.com/zibbp/ganymede/ent/storagefinding"
 	"github.com/zibbp/ganymede/ent/twitchcategory"
 	"github.com/zibbp/ganymede/ent/user"
 	"github.com/zibbp/ganymede/ent/vod"
@@ -74,6 +75,8 @@ type Client struct {
 	Queue *QueueClient
 	// Sessions is the client for interacting with the Sessions builders.
 	Sessions *SessionsClient
+	// StorageFinding is the client for interacting with the StorageFinding builders.
+	StorageFinding *StorageFindingClient
 	// TwitchCategory is the client for interacting with the TwitchCategory builders.
 	TwitchCategory *TwitchCategoryClient
 	// User is the client for interacting with the User builders.
@@ -107,6 +110,7 @@ func (c *Client) init() {
 	c.PlaylistRuleGroup = NewPlaylistRuleGroupClient(c.config)
 	c.Queue = NewQueueClient(c.config)
 	c.Sessions = NewSessionsClient(c.config)
+	c.StorageFinding = NewStorageFindingClient(c.config)
 	c.TwitchCategory = NewTwitchCategoryClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Vod = NewVodClient(c.config)
@@ -218,6 +222,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		PlaylistRuleGroup: NewPlaylistRuleGroupClient(cfg),
 		Queue:             NewQueueClient(cfg),
 		Sessions:          NewSessionsClient(cfg),
+		StorageFinding:    NewStorageFindingClient(cfg),
 		TwitchCategory:    NewTwitchCategoryClient(cfg),
 		User:              NewUserClient(cfg),
 		Vod:               NewVodClient(cfg),
@@ -256,6 +261,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		PlaylistRuleGroup: NewPlaylistRuleGroupClient(cfg),
 		Queue:             NewQueueClient(cfg),
 		Sessions:          NewSessionsClient(cfg),
+		StorageFinding:    NewStorageFindingClient(cfg),
 		TwitchCategory:    NewTwitchCategoryClient(cfg),
 		User:              NewUserClient(cfg),
 		Vod:               NewVodClient(cfg),
@@ -291,7 +297,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ApiKey, c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory,
 		c.LiveTitleRegex, c.MultistreamInfo, c.MutedSegment, c.Notification,
 		c.Playback, c.Playlist, c.PlaylistRule, c.PlaylistRuleGroup, c.Queue,
-		c.Sessions, c.TwitchCategory, c.User, c.Vod,
+		c.Sessions, c.StorageFinding, c.TwitchCategory, c.User, c.Vod,
 	} {
 		n.Use(hooks...)
 	}
@@ -304,7 +310,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ApiKey, c.BlockedVideos, c.Channel, c.Chapter, c.Live, c.LiveCategory,
 		c.LiveTitleRegex, c.MultistreamInfo, c.MutedSegment, c.Notification,
 		c.Playback, c.Playlist, c.PlaylistRule, c.PlaylistRuleGroup, c.Queue,
-		c.Sessions, c.TwitchCategory, c.User, c.Vod,
+		c.Sessions, c.StorageFinding, c.TwitchCategory, c.User, c.Vod,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -345,6 +351,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Queue.mutate(ctx, m)
 	case *SessionsMutation:
 		return c.Sessions.mutate(ctx, m)
+	case *StorageFindingMutation:
+		return c.StorageFinding.mutate(ctx, m)
 	case *TwitchCategoryMutation:
 		return c.TwitchCategory.mutate(ctx, m)
 	case *UserMutation:
@@ -2788,6 +2796,139 @@ func (c *SessionsClient) mutate(ctx context.Context, m *SessionsMutation) (Value
 	}
 }
 
+// StorageFindingClient is a client for the StorageFinding schema.
+type StorageFindingClient struct {
+	config
+}
+
+// NewStorageFindingClient returns a client for the StorageFinding from the given config.
+func NewStorageFindingClient(c config) *StorageFindingClient {
+	return &StorageFindingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `storagefinding.Hooks(f(g(h())))`.
+func (c *StorageFindingClient) Use(hooks ...Hook) {
+	c.hooks.StorageFinding = append(c.hooks.StorageFinding, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `storagefinding.Intercept(f(g(h())))`.
+func (c *StorageFindingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.StorageFinding = append(c.inters.StorageFinding, interceptors...)
+}
+
+// Create returns a builder for creating a StorageFinding entity.
+func (c *StorageFindingClient) Create() *StorageFindingCreate {
+	mutation := newStorageFindingMutation(c.config, OpCreate)
+	return &StorageFindingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of StorageFinding entities.
+func (c *StorageFindingClient) CreateBulk(builders ...*StorageFindingCreate) *StorageFindingCreateBulk {
+	return &StorageFindingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *StorageFindingClient) MapCreateBulk(slice any, setFunc func(*StorageFindingCreate, int)) *StorageFindingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &StorageFindingCreateBulk{err: fmt.Errorf("calling to StorageFindingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*StorageFindingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &StorageFindingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for StorageFinding.
+func (c *StorageFindingClient) Update() *StorageFindingUpdate {
+	mutation := newStorageFindingMutation(c.config, OpUpdate)
+	return &StorageFindingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *StorageFindingClient) UpdateOne(_m *StorageFinding) *StorageFindingUpdateOne {
+	mutation := newStorageFindingMutation(c.config, OpUpdateOne, withStorageFinding(_m))
+	return &StorageFindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *StorageFindingClient) UpdateOneID(id uuid.UUID) *StorageFindingUpdateOne {
+	mutation := newStorageFindingMutation(c.config, OpUpdateOne, withStorageFindingID(id))
+	return &StorageFindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for StorageFinding.
+func (c *StorageFindingClient) Delete() *StorageFindingDelete {
+	mutation := newStorageFindingMutation(c.config, OpDelete)
+	return &StorageFindingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *StorageFindingClient) DeleteOne(_m *StorageFinding) *StorageFindingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *StorageFindingClient) DeleteOneID(id uuid.UUID) *StorageFindingDeleteOne {
+	builder := c.Delete().Where(storagefinding.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &StorageFindingDeleteOne{builder}
+}
+
+// Query returns a query builder for StorageFinding.
+func (c *StorageFindingClient) Query() *StorageFindingQuery {
+	return &StorageFindingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeStorageFinding},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a StorageFinding entity by its id.
+func (c *StorageFindingClient) Get(ctx context.Context, id uuid.UUID) (*StorageFinding, error) {
+	return c.Query().Where(storagefinding.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *StorageFindingClient) GetX(ctx context.Context, id uuid.UUID) *StorageFinding {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *StorageFindingClient) Hooks() []Hook {
+	return c.hooks.StorageFinding
+}
+
+// Interceptors returns the client interceptors.
+func (c *StorageFindingClient) Interceptors() []Interceptor {
+	return c.inters.StorageFinding
+}
+
+func (c *StorageFindingClient) mutate(ctx context.Context, m *StorageFindingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&StorageFindingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&StorageFindingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&StorageFindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&StorageFindingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown StorageFinding mutation op: %q", m.Op())
+	}
+}
+
 // TwitchCategoryClient is a client for the TwitchCategory schema.
 type TwitchCategoryClient struct {
 	config
@@ -3288,11 +3429,13 @@ type (
 	hooks struct {
 		ApiKey, BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
 		MultistreamInfo, MutedSegment, Notification, Playback, Playlist, PlaylistRule,
-		PlaylistRuleGroup, Queue, Sessions, TwitchCategory, User, Vod []ent.Hook
+		PlaylistRuleGroup, Queue, Sessions, StorageFinding, TwitchCategory, User,
+		Vod []ent.Hook
 	}
 	inters struct {
 		ApiKey, BlockedVideos, Channel, Chapter, Live, LiveCategory, LiveTitleRegex,
 		MultistreamInfo, MutedSegment, Notification, Playback, Playlist, PlaylistRule,
-		PlaylistRuleGroup, Queue, Sessions, TwitchCategory, User, Vod []ent.Interceptor
+		PlaylistRuleGroup, Queue, Sessions, StorageFinding, TwitchCategory, User,
+		Vod []ent.Interceptor
 	}
 )

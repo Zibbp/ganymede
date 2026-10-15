@@ -201,6 +201,18 @@ func (f SessionsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SessionsMutation", m)
 }
 
+// The StorageFindingFunc type is an adapter to allow the use of ordinary
+// function as StorageFinding mutator.
+type StorageFindingFunc func(context.Context, *ent.StorageFindingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StorageFindingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StorageFindingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StorageFindingMutation", m)
+}
+
 // The TwitchCategoryFunc type is an adapter to allow the use of ordinary
 // function as TwitchCategory mutator.
 type TwitchCategoryFunc func(context.Context, *ent.TwitchCategoryMutation) (ent.Value, error)
