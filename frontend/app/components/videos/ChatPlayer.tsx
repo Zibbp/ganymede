@@ -17,7 +17,6 @@ import { uuidv4 } from "@/app/util/util";
 import VideoEventBus from "@/app/util/VideoEventBus";
 import useSettingsStore from "@/app/store/useSettingsStore";
 import { useTranslations } from "next-intl";
-import { MediaPlayerInstance } from "@vidstack/react";
 import { UseFloatingWindowOptions } from "@mantine/hooks"
 import ChatChatterMessages from "./ChatChatterMessages"
 import { IGNORED_BADGES, processComment } from "@/app/util/chat";
@@ -40,7 +39,7 @@ interface ChatMaps {
 
 interface Params {
   video: Video;
-  playerRef: RefObject<MediaPlayerInstance | null>;
+  playerRef: RefObject<HTMLVideoElement | null>;
 }
 
 interface ChatError {

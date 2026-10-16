@@ -68,7 +68,6 @@ type SetPlaylistRulesRequest struct {
 //	@Failure		400			{object}	utils.ErrorResponse
 //	@Failure		500			{object}	utils.ErrorResponse
 //	@Router			/playlist [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) CreatePlaylist(c echo.Context) error {
 	cpr := new(CreatePlaylistRequest)
@@ -103,7 +102,6 @@ func (h *Handler) CreatePlaylist(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/playlist/{id} [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) AddVodToPlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
@@ -184,7 +182,6 @@ func (h *Handler) GetPlaylist(c echo.Context) error {
 //	@Failure		400			{object}	utils.ErrorResponse
 //	@Failure		500			{object}	utils.ErrorResponse
 //	@Router			/playlist/{id} [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) UpdatePlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
@@ -222,7 +219,6 @@ func (h *Handler) UpdatePlaylist(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/playlist/{id}/multistream/delay [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) SetVodDelayOnPlaylistMultistream(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
@@ -259,7 +255,6 @@ func (h *Handler) SetVodDelayOnPlaylistMultistream(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/playlist/{id} [delete]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) DeletePlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
@@ -286,7 +281,6 @@ func (h *Handler) DeletePlaylist(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/playlist/{id}/vod [delete]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) DeleteVodFromPlaylist(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
@@ -324,7 +318,6 @@ func (h *Handler) DeleteVodFromPlaylist(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/playlist/{id}/rules [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) SetPlaylistRules(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
@@ -377,7 +370,6 @@ func (h *Handler) SetPlaylistRules(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/playlist/{id}/rules [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetPlaylistRules(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))
@@ -404,7 +396,6 @@ func (h *Handler) GetPlaylistRules(c echo.Context) error {
 //	@Failure		400			{object}	utils.ErrorResponse
 //	@Failure		500			{object}	utils.ErrorResponse
 //	@Router			/playlist/{id}/rules/test [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) TestPlaylistRules(c echo.Context) error {
 	pID, err := uuid.Parse(c.Param("id"))

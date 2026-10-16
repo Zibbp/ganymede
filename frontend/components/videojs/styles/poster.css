@@ -1,0 +1,65 @@
+@layer components {
+  @scope (.media-skin[data-theme="default"]) {
+    .media-poster {
+      pointer-events: none;
+      border-radius: inherit;
+      width: 100%;
+      height: 100%;
+      transition-property: opacity;
+      transition-duration: 0.15s;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: var(--media-duration-slower);
+      position: absolute;
+      inset: 0;
+    }
+
+    .media-poster:not([data-visible]) {
+      opacity: 0;
+    }
+
+    .media-poster-image {
+      border-radius: inherit;
+      object-fit: var(--media-object-fit, contain);
+      object-position: var(--media-object-position, center);
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+    }
+
+    .media-poster-image:not([src]):not([srcset]) {
+      visibility: hidden;
+    }
+  }
+
+  :where(.media-skin[data-theme="default"]) .media-poster {
+    pointer-events: none;
+    border-radius: inherit;
+    width: 100%;
+    height: 100%;
+    transition-property: opacity;
+    transition-duration: 0.15s;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: var(--media-duration-slower);
+    position: absolute;
+    inset: 0;
+  }
+
+  :where(.media-skin[data-theme="default"]) .media-poster:not([data-visible]) {
+    opacity: 0;
+  }
+
+  :where(.media-skin[data-theme="default"]) .media-poster-image {
+    border-radius: inherit;
+    object-fit: var(--media-object-fit, contain);
+    object-position: var(--media-object-position, center);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+  }
+
+  :where(.media-skin[data-theme="default"]) .media-poster-image:not([src]):not([srcset]) {
+    visibility: hidden;
+  }
+}

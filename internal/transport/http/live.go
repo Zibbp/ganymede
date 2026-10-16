@@ -106,7 +106,6 @@ type ArchiveLiveChannelRequest struct {
 //	@Success		200	{object}	[]ent.Live
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/live [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
 	channels, err := h.Service.LiveService.GetLiveWatchedChannels(c)
@@ -129,7 +128,6 @@ func (h *Handler) GetLiveWatchedChannels(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/live [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 	ccr := new(AddWatchedChannelRequest)
@@ -221,7 +219,6 @@ func (h *Handler) AddLiveWatchedChannel(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/live/{id} [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 	id := c.Param("id")
@@ -309,7 +306,6 @@ func (h *Handler) UpdateLiveWatchedChannel(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/live/{id} [delete]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) DeleteLiveWatchedChannel(c echo.Context) error {
 	id := c.Param("id")
@@ -336,7 +332,6 @@ func (h *Handler) DeleteLiveWatchedChannel(c echo.Context) error {
 //	@Success		200	{object}	string
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/live/check [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) Check(c echo.Context) error {
 	err := h.Service.LiveService.Check(c.Request().Context())

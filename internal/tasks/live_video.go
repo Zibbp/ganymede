@@ -3,7 +3,11 @@ package tasks
 import (
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
@@ -62,7 +66,9 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 		return err
 	}
 
-	startChatDownload := make(chan bool)
+	// Buffered so the ffmpeg-start signal in exec never blocks this worker if
+	// cancellation lands first and the receiver below has already exited.
+	startChatDownload := make(chan bool, 1)
 
 	go func(workCtx context.Context) {
 		for {
@@ -91,6 +97,7 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	// (cancel live chat, mark channel not live, enqueue post-process) so partial archive
 	// can still be completed/moved instead of being left in a stuck state.
 	downloadErr := exec.DownloadTwitchLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload)
+	logLiveCaptureOutcome(dbItems, job.Args.Input.QueueId, downloadErr)
 	remotelyCancelled := false
 	if downloadErr != nil {
 		if errors.Is(downloadErr, context.Canceled) {
@@ -169,4 +176,37 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	}
 
 	return nil
+}
+
+// logLiveCaptureOutcome logs playlist size and segment count at capture stop.
+func logLiveCaptureOutcome(dbItems *GetDatabaseItemsResponse, queueID uuid.UUID, downloadErr error) {
+	var playlistBytes int64 = -1
+	segments := 0
+	if dbItems.Video.TmpVideoHlsPath != "" {
+		if info, err := os.Stat(liveHlsPlaylistPath(&dbItems.Video)); err == nil {
+			playlistBytes = info.Size()
+		}
+		if matches, err := filepath.Glob(filepath.Join(dbItems.Video.TmpVideoHlsPath, "*_segment*.m4s")); err == nil {
+			for _, match := range matches {
+				if info, err := os.Stat(match); err == nil && info.Size() > 0 {
+					segments++
+				}
+			}
+		}
+	}
+
+	logger := log.With().
+		Str("queue_id", queueID.String()).
+		Str("video_id", dbItems.Video.ID.String()).
+		Int64("playlist_bytes", playlistBytes).
+		Int("segments", segments).
+		Logger()
+	switch {
+	case downloadErr == nil:
+		logger.Info().Msg("live video download ended; capture output on disk")
+	case errors.Is(downloadErr, context.Canceled):
+		logger.Info().Err(downloadErr).Msg("live video download stopped; capture output on disk")
+	default:
+		logger.Error().Err(downloadErr).Msg("live video download failed; capture output on disk")
+	}
 }

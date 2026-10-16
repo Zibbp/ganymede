@@ -43,7 +43,6 @@ type CreateChannelRequest struct {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/channel [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) CreateChannel(c echo.Context) error {
 	ccr := new(CreateChannelRequest)
@@ -136,7 +135,6 @@ func (h *Handler) GetChannel(c echo.Context) error {
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/channel/{id} [delete]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) DeleteChannel(c echo.Context) error {
 	id := c.Param("id")
@@ -168,7 +166,6 @@ func (h *Handler) DeleteChannel(c echo.Context) error {
 //	@Failure		404		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/channel/{id} [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) UpdateChannel(c echo.Context) error {
 	id := c.Param("id")
@@ -239,7 +236,6 @@ func (h *Handler) GetChannelByName(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/channel/{id}/update-image [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) UpdateChannelImage(c echo.Context) error {
 	id := c.Param("id")

@@ -155,12 +155,15 @@ const startQueueTask = async (
   queueId: string,
   taskName: QueueTask,
   continueWithSubsequent: boolean
-): Promise<NullResponse> => {
-  const response = await axiosPrivate.post(`/api/v1/queue/task/start`, {
-    queue_id: queueId,
-    task_name: taskName,
-    continue: continueWithSubsequent,
-  });
+): Promise<RestartQueueTaskResult> => {
+  const response = await axiosPrivate.post<ApiResponse<RestartQueueTaskResult>>(
+    `/api/v1/queue/task/start`,
+    {
+      queue_id: queueId,
+      task_name: taskName,
+      continue: continueWithSubsequent,
+    }
+  );
   return response.data.data;
 };
 
@@ -171,10 +174,25 @@ interface StartQueueTaskVariables {
   continueWithSubsequent: boolean;
 }
 
+export interface RestartQueueTaskResult {
+  job_id: number;
+  generation: number;
+  task_name: string;
+  older_active_cancelled: boolean;
+}
+
 const useStartQueueTask = () => {
-  return useMutation<NullResponse, Error, StartQueueTaskVariables>({
+  const queryClient = useQueryClient();
+  return useMutation<RestartQueueTaskResult, Error, StartQueueTaskVariables>({
     mutationFn: ({ axiosPrivate, queueId, taskName, continueWithSubsequent }) =>
       startQueueTask(axiosPrivate, queueId, taskName, continueWithSubsequent),
+    onSuccess: (result, variables) => {
+      console.debug("Queue task restart scheduled", result);
+      queryClient.invalidateQueries({ queryKey: ["queue"] });
+      queryClient.invalidateQueries({ queryKey: ["queue", variables.queueId] });
+      queryClient.invalidateQueries({ queryKey: ["video"] });
+      queryClient.invalidateQueries({ queryKey: ["videos"] });
+    },
   });
 };
 

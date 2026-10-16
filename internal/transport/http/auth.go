@@ -72,7 +72,7 @@ func (h *Handler) Register(c echo.Context) error {
 // Login godoc
 //
 //	@Summary		Login a user
-//	@Description	Login a user (sets access-token and refresh-token cookies). Access token lasts for 1 hour. Refresh token lasts for 1 month.
+//	@Description	Login with a username and password and establish an HTTP-only session cookie. The session has a 30-day maximum lifetime and expires after 7 days of inactivity.
 //	@Tags			auth
 //	@Accept			json
 //	@Produce		json
@@ -113,14 +113,13 @@ func (h *Handler) Login(c echo.Context) error {
 // Logout godoc
 //
 //	@Summary		Logout a user
-//	@Description	Logout a user (destroys session)
+//	@Description	Destroy the current interactive browser session. API keys are not accepted.
 //	@Tags			auth
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	string
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/logout [post]
-//	@Security		ApiKeyCookieAuth
 func (h *Handler) Logout(c echo.Context) error {
 	if err := h.SessionManager.Destroy(c.Request().Context()); err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, "error deleting session")
@@ -132,13 +131,10 @@ func (h *Handler) Logout(c echo.Context) error {
 // OAuthLogin godoc
 //
 //	@Summary		Login a user with OAuth
-//	@Description	Login a user with OAuth (sets access-token and refresh-token cookies)
+//	@Description	Start the OAuth login flow. A successful callback establishes an HTTP-only session cookie.
 //	@Tags			auth
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	ent.User
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		401	{object}	utils.ErrorResponse
+//	@Success		307	{string}	string	"Temporary Redirect"
+//	@Failure		403	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/login [get]
 func (h *Handler) OAuthLogin(c echo.Context) error {
@@ -151,13 +147,13 @@ func (h *Handler) OAuthLogin(c echo.Context) error {
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "oAuth redirect")
+	return nil
 }
 
 // Me godoc
 //
 //	@Summary		Get current user
-//	@Description	Get current user
+//	@Description	Get the user associated with the current interactive browser session. API keys are not accepted.
 //	@Tags			auth
 //	@Accept			json
 //	@Produce		json
@@ -166,7 +162,6 @@ func (h *Handler) OAuthLogin(c echo.Context) error {
 //	@Failure		401	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/me [get]
-//	@Security		ApiKeyCookieAuth
 func (h *Handler) Me(c echo.Context) error {
 	user := userFromContext(c)
 
@@ -176,7 +171,7 @@ func (h *Handler) Me(c echo.Context) error {
 // ChangePassword godoc
 //
 //	@Summary		Change password
-//	@Description	Change password
+//	@Description	Change the password for the user associated with the current interactive browser session. API keys are not accepted.
 //	@Tags			auth
 //	@Accept			json
 //	@Produce		json
@@ -186,7 +181,6 @@ func (h *Handler) Me(c echo.Context) error {
 //	@Failure		401				{object}	utils.ErrorResponse
 //	@Failure		500				{object}	utils.ErrorResponse
 //	@Router			/auth/change-password [post]
-//	@Security		ApiKeyCookieAuth
 func (h *Handler) ChangePassword(c echo.Context) error {
 	user := userFromContext(c)
 
@@ -209,13 +203,11 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 // OAuthCallback godoc
 //
 //	@Summary		OAuth callback
-//	@Description	OAuth callback for OAuth provider
+//	@Description	Complete the OAuth login flow, establish an HTTP-only session cookie, and redirect to the frontend.
 //	@Tags			auth
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	string
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		401	{object}	utils.ErrorResponse
+//	@Param			code	query		string	true	"OAuth authorization code"
+//	@Param			state	query		string	true	"OAuth state"
+//	@Success		302		{string}	string	"Found"
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/auth/oauth/callback [get]
 func (h *Handler) OAuthCallback(c echo.Context) error {

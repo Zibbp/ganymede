@@ -564,8 +564,8 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 	}
 
 	videoExtension := "mp4"
-	tmpLiveExtension := "ts"
 
+	// Live temp capture is HLS (fmp4); final is HLS or MP4 via save_as_hls.
 	// Create VOD in DB
 	vodDTO := vod.Vod{
 		ID:                  vUUID,
@@ -590,17 +590,16 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		FolderName:          folderName,
 		FileName:            fileName,
 		// create temporary paths
-		TmpVideoDownloadPath:    fmt.Sprintf("%s/%s_%s-video.%s", envConfig.TempDir, video.ID, vUUID, tmpLiveExtension),
+		TmpVideoDownloadPath:    filepath.Join(envConfig.TempDir, fmt.Sprintf("%s_%s-video_hls0", video.ID, vUUID), video.ID+"-video.m3u8"),
 		TmpVideoConvertPath:     fmt.Sprintf("%s/%s_%s-video-convert.%s", envConfig.TempDir, video.ID, vUUID, videoExtension),
 		TmpChatDownloadPath:     fmt.Sprintf("%s/%s_%s-chat.json", envConfig.TempDir, video.ID, vUUID),
 		TmpLiveChatDownloadPath: fmt.Sprintf("%s/%s_%s-live-chat.json", envConfig.TempDir, video.ID, vUUID),
 		TmpLiveChatConvertPath:  fmt.Sprintf("%s/%s_%s-chat-convert.json", envConfig.TempDir, video.ID, vUUID),
 		TmpChatRenderPath:       fmt.Sprintf("%s/%s_%s-chat.mp4", envConfig.TempDir, video.ID, vUUID),
+		TmpVideoHLSPath:         filepath.Join(envConfig.TempDir, fmt.Sprintf("%s_%s-video_hls0", video.ID, vUUID)),
 	}
 
-	vodDTO.TmpVideoHLSPath = fmt.Sprintf("%s/%s_%s-video_hls0", envConfig.TempDir, video.ID, vUUID)
 	if config.Get().Archive.SaveAsHls {
-		vodDTO.TmpVideoDownloadPath = fmt.Sprintf("%s/%s-video.m3u8", vodDTO.TmpVideoHLSPath, video.ID)
 		vodDTO.VideoHLSPath = fmt.Sprintf("%s/%s-video_hls", rootVideoPath, fileName)
 		vodDTO.VideoPath = fmt.Sprintf("%s/%s-video_hls/%s-video.m3u8", rootVideoPath, fileName, video.ID)
 	}

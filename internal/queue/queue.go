@@ -7,15 +7,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/riverqueue/river"
-	"github.com/riverqueue/river/rivertype"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/ent/queue"
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
-	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
@@ -26,12 +23,6 @@ type Service struct {
 	VodService     *vod.Service
 	ChannelService *channel.Service
 	RiverClient    *tasks_client.RiverClient
-}
-
-type StartQueueTaskInput struct {
-	QueueId  uuid.UUID
-	TaskName string
-	Continue bool
 }
 
 func NewService(store *database.Database, vodService *vod.Service, channelService *channel.Service, riverClient *tasks_client.RiverClient) *Service {
@@ -164,103 +155,4 @@ func (s *Service) StopQueueItem(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return nil
-}
-
-func (s *Service) StartQueueTask(ctx context.Context, input StartQueueTaskInput) (*rivertype.JobRow, error) {
-
-	// ensure queue exists
-	_, err := s.GetQueueItem(input.QueueId)
-	if err != nil {
-		return nil, err
-	}
-
-	var task river.JobArgs
-
-	taskInput := tasks.ArchiveVideoInput{
-		QueueId: input.QueueId,
-	}
-
-	switch input.TaskName {
-	case "task_vod_create_folder":
-		task = tasks.CreateDirectoryArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_vod_download_thumbnail":
-		task = tasks.DownloadThumbnailArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_vod_save_info":
-		task = tasks.SaveVideoInfoArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_video_download":
-		task = tasks.DownloadVideoArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_video_convert":
-		task = tasks.PostProcessVideoArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_video_move":
-		task = tasks.MoveVideoArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_chat_download":
-		task = tasks.DownloadChatArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_chat_convert":
-		task = tasks.ConvertLiveChatArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_chat_render":
-		task = tasks.RenderChatArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_chat_move":
-		task = tasks.MoveChatArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_live_chat_download":
-		task = tasks.DownloadLiveChatArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	case "task_live_video_download":
-		task = tasks.DownloadLiveVideoArgs{
-			Continue: input.Continue,
-			Input:    taskInput,
-		}
-
-	default:
-		return nil, fmt.Errorf("unknown task: %s", input.TaskName)
-	}
-
-	job, err := s.RiverClient.Client.Insert(ctx, task, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return job.Job, err
 }

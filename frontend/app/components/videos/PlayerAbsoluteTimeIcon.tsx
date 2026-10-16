@@ -1,8 +1,8 @@
-import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconClock } from "@tabler/icons-react";
-import classes from "./PlayerAbsoluteTimeIcon.module.css"
 import useSettingsStore from "@/app/store/useSettingsStore";
 import { useTranslations } from "next-intl";
+import { ButtonTooltip } from "@/components/videojs/ui/button-tooltip";
+import { Button } from "@/components/videojs/ui/button";
 
 const VideoPlayerAbsoluteTimeIcon = () => {
   const t = useTranslations("VideoComponents")
@@ -13,18 +13,16 @@ const VideoPlayerAbsoluteTimeIcon = () => {
     setShowAbsoluteTime(!showAbsoluteTime);
   };
   return (
-    <div className={classes.absoluteTimeIcon}>
-      <Tooltip label={t('absoluteTimeIconTooltip')} position="bottom">
-        <ActionIcon
-          size="xl"
-          variant="transparent"
-          onClick={toggleAbsoluteTime}
-          className={classes.absoluteTimeButton}
-        >
-          <IconClock size="1.7rem" />
-        </ActionIcon>
-      </Tooltip>
-    </div>
+    <ButtonTooltip label={t('absoluteTimeIconTooltip')} side="top">
+      <Button
+        type="button"
+        onClick={toggleAbsoluteTime}
+        aria-label={t('absoluteTimeIconTooltip')}
+        aria-pressed={showAbsoluteTime}
+      >
+        <IconClock className="media-button-icon" />
+      </Button>
+    </ButtonTooltip>
   );
 }
 

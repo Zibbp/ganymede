@@ -579,6 +579,20 @@ func (_c *VodCreate) SetNillableStreamedAt(v *time.Time) *VodCreate {
 	return _c
 }
 
+// SetVideoStartAt sets the "video_start_at" field.
+func (_c *VodCreate) SetVideoStartAt(v time.Time) *VodCreate {
+	_c.mutation.SetVideoStartAt(v)
+	return _c
+}
+
+// SetNillableVideoStartAt sets the "video_start_at" field if the given value is not nil.
+func (_c *VodCreate) SetNillableVideoStartAt(v *time.Time) *VodCreate {
+	if v != nil {
+		_c.SetVideoStartAt(*v)
+	}
+	return _c
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_c *VodCreate) SetUpdatedAt(v time.Time) *VodCreate {
 	_c.mutation.SetUpdatedAt(v)
@@ -1066,6 +1080,10 @@ func (_c *VodCreate) createSpec() (*Vod, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
 		_node.StreamedAt = value
+	}
+	if value, ok := _c.mutation.VideoStartAt(); ok {
+		_spec.SetField(vod.FieldVideoStartAt, field.TypeTime, value)
+		_node.VideoStartAt = &value
 	}
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(vod.FieldUpdatedAt, field.TypeTime, value)
@@ -1953,6 +1971,24 @@ func (u *VodUpsert) SetStreamedAt(v time.Time) *VodUpsert {
 // UpdateStreamedAt sets the "streamed_at" field to the value that was provided on create.
 func (u *VodUpsert) UpdateStreamedAt() *VodUpsert {
 	u.SetExcluded(vod.FieldStreamedAt)
+	return u
+}
+
+// SetVideoStartAt sets the "video_start_at" field.
+func (u *VodUpsert) SetVideoStartAt(v time.Time) *VodUpsert {
+	u.Set(vod.FieldVideoStartAt, v)
+	return u
+}
+
+// UpdateVideoStartAt sets the "video_start_at" field to the value that was provided on create.
+func (u *VodUpsert) UpdateVideoStartAt() *VodUpsert {
+	u.SetExcluded(vod.FieldVideoStartAt)
+	return u
+}
+
+// ClearVideoStartAt clears the value of the "video_start_at" field.
+func (u *VodUpsert) ClearVideoStartAt() *VodUpsert {
+	u.SetNull(vod.FieldVideoStartAt)
 	return u
 }
 
@@ -2870,6 +2906,27 @@ func (u *VodUpsertOne) SetStreamedAt(v time.Time) *VodUpsertOne {
 func (u *VodUpsertOne) UpdateStreamedAt() *VodUpsertOne {
 	return u.Update(func(s *VodUpsert) {
 		s.UpdateStreamedAt()
+	})
+}
+
+// SetVideoStartAt sets the "video_start_at" field.
+func (u *VodUpsertOne) SetVideoStartAt(v time.Time) *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.SetVideoStartAt(v)
+	})
+}
+
+// UpdateVideoStartAt sets the "video_start_at" field to the value that was provided on create.
+func (u *VodUpsertOne) UpdateVideoStartAt() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateVideoStartAt()
+	})
+}
+
+// ClearVideoStartAt clears the value of the "video_start_at" field.
+func (u *VodUpsertOne) ClearVideoStartAt() *VodUpsertOne {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearVideoStartAt()
 	})
 }
 
@@ -3956,6 +4013,27 @@ func (u *VodUpsertBulk) SetStreamedAt(v time.Time) *VodUpsertBulk {
 func (u *VodUpsertBulk) UpdateStreamedAt() *VodUpsertBulk {
 	return u.Update(func(s *VodUpsert) {
 		s.UpdateStreamedAt()
+	})
+}
+
+// SetVideoStartAt sets the "video_start_at" field.
+func (u *VodUpsertBulk) SetVideoStartAt(v time.Time) *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.SetVideoStartAt(v)
+	})
+}
+
+// UpdateVideoStartAt sets the "video_start_at" field to the value that was provided on create.
+func (u *VodUpsertBulk) UpdateVideoStartAt() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.UpdateVideoStartAt()
+	})
+}
+
+// ClearVideoStartAt clears the value of the "video_start_at" field.
+func (u *VodUpsertBulk) ClearVideoStartAt() *VodUpsertBulk {
+	return u.Update(func(s *VodUpsert) {
+		s.ClearVideoStartAt()
 	})
 }
 

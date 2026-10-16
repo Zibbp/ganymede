@@ -1,10 +1,12 @@
-import { MediaPlayer, MediaPlayerInstance, MediaProvider, MediaProviderInstance, Poster, Track } from "@vidstack/react";
-import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default';
+import '@videojs/react/video/skin.css';
+import { Video, VideoPlayer as VideoJsPlayer, VideoSkin } from '@videojs/react/video';
+import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
+import { I18nProvider } from '@videojs/react/i18n';
 import { useEffect, useRef, useState } from "react";
-import '@vidstack/react/player/styles/default/theme.css';
-import '@vidstack/react/player/styles/default/layouts/video.css';
+import type { CSSProperties } from "react";
 import classes from "./SyncedVideoPlayer.module.css"
 import { env } from "next-runtime-env";
+import { useLocale } from 'next-intl';
 
 export type SyncedVideoPlayerProps = {
   src: string;
@@ -17,57 +19,98 @@ export type SyncedVideoPlayerProps = {
 }
 
 const SyncedVideoPlayer = ({ src, vodId, title, poster, time, playing, muted }: SyncedVideoPlayerProps) => {
-  const player = useRef<MediaPlayerInstance>(null)
-  const mediaProvider = useRef<MediaProviderInstance>(null)
+  const locale = useLocale();
+  const videoEl = useRef<HTMLVideoElement>(null)
   const [canPlay, setCanPlay] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const currentPlayer = player.current
-    if (!currentPlayer || !canPlay) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const current = videoEl.current
+    if (!current || !canPlay) return;
     (async () => {
       if (playing) {
-        currentPlayer.currentTime = time;
+        try {
+          current.currentTime = time;
+        } catch {
+          // Element not ready yet; play will still start from current position.
+        }
         await (new Promise<void>(resolve => setTimeout(resolve, 1)));
-        await currentPlayer.play();
+        try {
+          await current.play();
+        } catch {
+          // Autoplay with sound is blocked; tiles are muted by default.
+        }
       } else {
         await (new Promise<void>(resolve => setTimeout(resolve, 1)));
-        await currentPlayer.pause();
+        try {
+          current.pause();
+        } catch {
+          // Ignore pause errors during teardown.
+        }
       }
     })();
   }, [playing, canPlay /* `time` should not be part of dependencies, it already has its own effect */])
 
   useEffect(() => {
-    if (!player.current) return;
-    player.current.muted = muted;
+    if (!videoEl.current) return;
+    try {
+      videoEl.current.muted = muted;
+    } catch {
+      // Ignore mute errors during teardown.
+    }
   }, [muted])
 
   useEffect(() => {
-    if (!player.current || Math.abs(player.current.currentTime - time) < 0.2) return;
-    player.current.currentTime = time;
+    if (!videoEl.current || Math.abs(videoEl.current.currentTime - time) < 0.2) return;
+    try {
+      videoEl.current.currentTime = time;
+    } catch {
+      // Element not ready yet; the playing effect will seek on play.
+    }
   }, [time])
 
-  return (
-    <MediaPlayer
-      className={classes.mediaPlayer}
-      src={src}
-      ref={player}
-      aspect-ratio={16 / 9}
-      crossOrigin
-      onCanPlay={() => setCanPlay(true)}
-      playsInline
-      muted={muted}
-    >
-      <MediaProvider ref={mediaProvider}>
-        <Poster className={`${classes.ganymedePoster} vds-poster`} src={poster} alt={title} />
-        <Track
-          src={`${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/chapter/video/${vodId}/webvtt`}
-          kind="chapters"
-          default={true}
-        />
-      </MediaProvider>
+  if (!mounted) {
+    return <div className={classes.mediaPlayer} />;
+  }
 
-      <DefaultVideoLayout icons={defaultLayoutIcons} />
-    </MediaPlayer>
+  const isHls = src.endsWith(".m3u8");
+  const chapterSrc = `${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/chapter/video/${vodId}/webvtt`;
+
+  const mediaProps = {
+    ref: videoEl,
+    src,
+    crossOrigin: "anonymous" as const,
+    onCanPlay: () => setCanPlay(true),
+    playsInline: true,
+    muted,
+    preload: "auto" as const,
+  };
+
+  const skinStyle = {
+    '--media-border-radius': '0',
+    '--media-video-border-radius': '0',
+  } as CSSProperties;
+
+  return (
+    <VideoJsPlayer title={title} poster={poster}>
+      <I18nProvider locale={locale}>
+        <VideoSkin className={classes.mediaPlayer} style={skinStyle}>
+          {isHls ? (
+            <HlsJsVideo {...mediaProps}>
+              <track kind="chapters" src={chapterSrc} default />
+            </HlsJsVideo>
+          ) : (
+            <Video {...mediaProps}>
+              <track kind="chapters" src={chapterSrc} default />
+            </Video>
+          )}
+        </VideoSkin>
+      </I18nProvider>
+    </VideoJsPlayer>
   )
 };
 
