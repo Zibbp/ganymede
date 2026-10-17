@@ -247,6 +247,11 @@ func StreamedAt(v time.Time) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldStreamedAt, v))
 }
 
+// VideoStartAt applies equality check predicate on the "video_start_at" field. It's identical to VideoStartAtEQ.
+func VideoStartAt(v time.Time) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldVideoStartAt, v))
+}
+
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.Vod {
 	return predicate.Vod(sql.FieldEQ(FieldUpdatedAt, v))
@@ -2710,6 +2715,56 @@ func StreamedAtLT(v time.Time) predicate.Vod {
 // StreamedAtLTE applies the LTE predicate on the "streamed_at" field.
 func StreamedAtLTE(v time.Time) predicate.Vod {
 	return predicate.Vod(sql.FieldLTE(FieldStreamedAt, v))
+}
+
+// VideoStartAtEQ applies the EQ predicate on the "video_start_at" field.
+func VideoStartAtEQ(v time.Time) predicate.Vod {
+	return predicate.Vod(sql.FieldEQ(FieldVideoStartAt, v))
+}
+
+// VideoStartAtNEQ applies the NEQ predicate on the "video_start_at" field.
+func VideoStartAtNEQ(v time.Time) predicate.Vod {
+	return predicate.Vod(sql.FieldNEQ(FieldVideoStartAt, v))
+}
+
+// VideoStartAtIn applies the In predicate on the "video_start_at" field.
+func VideoStartAtIn(vs ...time.Time) predicate.Vod {
+	return predicate.Vod(sql.FieldIn(FieldVideoStartAt, vs...))
+}
+
+// VideoStartAtNotIn applies the NotIn predicate on the "video_start_at" field.
+func VideoStartAtNotIn(vs ...time.Time) predicate.Vod {
+	return predicate.Vod(sql.FieldNotIn(FieldVideoStartAt, vs...))
+}
+
+// VideoStartAtGT applies the GT predicate on the "video_start_at" field.
+func VideoStartAtGT(v time.Time) predicate.Vod {
+	return predicate.Vod(sql.FieldGT(FieldVideoStartAt, v))
+}
+
+// VideoStartAtGTE applies the GTE predicate on the "video_start_at" field.
+func VideoStartAtGTE(v time.Time) predicate.Vod {
+	return predicate.Vod(sql.FieldGTE(FieldVideoStartAt, v))
+}
+
+// VideoStartAtLT applies the LT predicate on the "video_start_at" field.
+func VideoStartAtLT(v time.Time) predicate.Vod {
+	return predicate.Vod(sql.FieldLT(FieldVideoStartAt, v))
+}
+
+// VideoStartAtLTE applies the LTE predicate on the "video_start_at" field.
+func VideoStartAtLTE(v time.Time) predicate.Vod {
+	return predicate.Vod(sql.FieldLTE(FieldVideoStartAt, v))
+}
+
+// VideoStartAtIsNil applies the IsNil predicate on the "video_start_at" field.
+func VideoStartAtIsNil() predicate.Vod {
+	return predicate.Vod(sql.FieldIsNull(FieldVideoStartAt))
+}
+
+// VideoStartAtNotNil applies the NotNil predicate on the "video_start_at" field.
+func VideoStartAtNotNil() predicate.Vod {
+	return predicate.Vod(sql.FieldNotNull(FieldVideoStartAt))
 }
 
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.

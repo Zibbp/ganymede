@@ -23,6 +23,7 @@ export interface PaginationResponse<T> {
 export interface Video {
   id: string;
   ext_id: string;
+  ext_stream_id?: string;
   clip_ext_vod_id?: string;
   platform: Platform;
   type: VideoType;
@@ -57,6 +58,7 @@ export interface Video {
   tmp_chat_render_path: string;
   status: ArchiveStatus;
   streamed_at: Date;
+  video_start_at?: string | null;
   updated_at: Date;
   created_at: Date;
   edges: VideoEdges;
@@ -105,6 +107,7 @@ export enum VideoOrder {
 
 export enum SearchField {
   Title = "title",
+  Notes = "notes",
   Id = "id",
   ExtId = "ext_id",
   Chapter = "chapter",
@@ -557,6 +560,7 @@ const useUpdateVideoNotes = () => {
       updateVideoNotes(axiosPrivate, videoId, notes),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["video", variables.videoId] });
+      queryClient.invalidateQueries({ queryKey: ["search"] });
     },
   });
 };
@@ -670,17 +674,18 @@ const useGetVideoChatHistogram = (id: string) => {
   });
 };
 
-const getVideoFFprobe = async (id: string): Promise<String> => {
-  const response = await useAxios.post<ApiResponse<String>>(
+const getVideoFFprobe = async (id: string): Promise<unknown> => {
+  const response = await useAxios.post<ApiResponse<unknown>>(
     `/api/v1/vod/${id}/ffprobe`
   );
   return response.data.data;
 };
 
-const useGetVideoFFprobe = (id: string) => {
+const useGetVideoFFprobe = (id: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ["video_ffprobe", id],
     queryFn: () => getVideoFFprobe(id),
+    enabled,
     refetchInterval: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,

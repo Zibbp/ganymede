@@ -135,3 +135,28 @@ func TestGetFreeSpaceOfDirectory_NonExistent(t *testing.T) {
 		t.Error("expected error for non-existent directory, got nil")
 	}
 }
+
+func TestGetTotalSpaceOfDirectory(t *testing.T) {
+	dir := t.TempDir()
+	total, err := GetTotalSpaceOfDirectory(dir)
+	if err != nil {
+		t.Fatalf("GetTotalSpaceOfDirectory returned error: %v", err)
+	}
+	if total <= 0 {
+		t.Errorf("expected total space > 0, got %d", total)
+	}
+	free, err := GetFreeSpaceOfDirectory(dir)
+	if err != nil {
+		t.Fatalf("GetFreeSpaceOfDirectory returned error: %v", err)
+	}
+	if total < free {
+		t.Errorf("expected total space (%d) >= free space (%d)", total, free)
+	}
+}
+
+func TestGetTotalSpaceOfDirectory_NonExistent(t *testing.T) {
+	_, err := GetTotalSpaceOfDirectory("/nonexistent/path/shouldfail")
+	if err == nil {
+		t.Error("expected error for non-existent directory, got nil")
+	}
+}

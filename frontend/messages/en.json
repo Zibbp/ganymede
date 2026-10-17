@@ -320,9 +320,7 @@
       "proxyAddButton": "Add",
       "proxyTypeLabel": "Select Proxy Type",
       "whitelistChannelsLabel": "Whitelist Channels",
-      "whitelistChannelsDescription": "Select channels that are excluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to.",
-      "watchWhileArchivingLabel": "Enable Watching While Archiving",
-      "watchWhileArchivingDescription": "Download a separate HLS stream for watching while archiving live streams. This doubles the amount of storage used during live archiving. Only the video is watchable, chat is not included."
+      "whitelistChannelsDescription": "Select channels that are excluded from using the proxy if enabled. Instead your Twitch token will be used. Select channels that you are subscribed to."
     },
     "chatSettings": {
       "header": "Chat Settings",
@@ -858,6 +856,7 @@
     "notesCharCount": "{count} / {max} characters",
     "notesMarkdownHint": "Markdown supported",
     "notesInsertTimestampButton": "Insert timestamp",
+    "notesTimestampDescriptionPlaceholder": "Add description",
     "notesJumpToTimestamp": "Jump to timestamp in video",
     "notesPlayerNotReady": "Video player is not ready yet",
     "notesTooLongError": "Notes must be at most {max} characters",
@@ -993,30 +992,49 @@
   },
   "AdminOverviewPage": {
     "title": "Admin - Overview",
-    "loading": "Loading overview",
+    "header": "Overview",
+    "refresh": "Refresh statistics",
+    "retry": "Retry",
     "error": "Error loading overview",
+    "library": {
+      "title": "Library",
+      "totalVideos": "Total Videos",
+      "totalChannels": "Total Channels",
+      "totalDuration": "Total Duration",
+      "totalViews": "Total Views",
+      "totalViewsDescription": "Source + local views",
+      "videosPerChannel": "Videos per channel",
+      "videoTypes": "Video types",
+      "channel": "Channel",
+      "videos": "Videos",
+      "otherChannels": "Other",
+      "noData": "No data yet",
+      "empty": "No videos archived yet."
+    },
+    "storage": {
+      "title": "Storage",
+      "usedOf": "{used} of {total} used",
+      "free": "{value} free",
+      "total": "{value} total",
+      "perChannel": "Storage per channel",
+      "byType": "Storage by video type",
+      "channel": "Channel",
+      "size": "Size",
+      "otherChannels": "Other",
+      "otherTypes": "Other",
+      "largestVideos": "Largest videos",
+      "noData": "No data yet",
+      "noLargeVideos": "No videos found"
+    },
     "system": {
-      "title": "System Overview",
-      "usedStorageText": "Used Storage",
-      "usedStorageDescription": "Total used storage",
-      "availableStorageText": "Available Storage",
-      "availableStorageDescription": "Total available storage",
-      "storageUsedText": "Storage Used",
-      "cpuCoresText": "CPU Cores",
-      "totalMemoryText": "Total Memory"
-    },
-    "videoStatistics": {
-      "title": "Video Statistics",
-      "totalVideosText": "Total Videos",
-      "totalChannelsText": "Total Channels",
-      "channelVideosMapTitle": "Channel Videos",
-      "videoTypeMapTitle": "Video Types"
-    },
-    "storageDistribution": {
-      "title": "Storage Distribution",
-      "channelStorageDistributionText": "Channel Storage Distribution",
-      "topLargeVideosText": "Top Largest Videos",
-      "noLargeVideosText": "No videos found"
+      "title": "System",
+      "viewInfo": "View system info",
+      "usedStorage": "Used Storage",
+      "freeStorage": "{value} free",
+      "cpuCores": "CPU Cores",
+      "totalMemory": "Total Memory",
+      "users": "Users",
+      "refreshNote": "System statistics refresh automatically every 30 seconds."
     }
   },
   "AdminNotificationsPage": {

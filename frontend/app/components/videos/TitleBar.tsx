@@ -6,7 +6,7 @@ import { escapeURL, formatBytes } from "@/app/util/util";
 import { Avatar, Box, Divider, Tooltip, Text, Group, Badge, Button, rem } from "@mantine/core";
 import { env } from "next-runtime-env";
 import classes from "./TitleBar.module.css";
-import { IconCalendarEvent, IconDatabase, IconLock, IconUser, IconUsers } from "@tabler/icons-react";
+import { IconCalendarEvent, IconDatabase, IconLock, IconNotes, IconUser, IconUsers } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import VideoMenu from "./Menu";
 import useAuthStore from "@/app/store/useAuthStore";
@@ -16,9 +16,10 @@ import { useTranslations } from "next-intl";
 
 interface Params {
   video: Video;
+  onEditNotes?: () => void;
 }
 
-const VideoTitleBar = ({ video }: Params) => {
+const VideoTitleBar = ({ video, onEditNotes }: Params) => {
   const t = useTranslations("VideoComponents");
   const hasPermission = useAuthStore(state => state.hasPermission);
 
@@ -133,6 +134,19 @@ const VideoTitleBar = ({ video }: Params) => {
               )}
             </Group>
           </div>
+
+          {onEditNotes && hasPermission(UserRole.Editor) && (
+            <Box mt={5} mr={5}>
+              <Button
+                variant="default"
+                size="xs"
+                leftSection={<IconNotes size={14} />}
+                onClick={onEditNotes}
+              >
+                {t("notesTitle")}
+              </Button>
+            </Box>
+          )}
 
           {hasPermission(UserRole.Archiver) && (
             <Box mt={5}>

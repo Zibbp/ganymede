@@ -233,25 +233,21 @@ func (w MoveChatWorker) Work(ctx context.Context, job *river.Job[MoveChatArgs]) 
 		return err
 	}
 
-	err = utils.MoveFile(ctx, dbItems.Video.TmpChatDownloadPath, dbItems.Video.ChatPath)
-	if err != nil {
+	if err = moveArchiveFile(ctx, dbItems.Video.TmpChatDownloadPath, dbItems.Video.ChatPath, "chat move"); err != nil {
 		return err
 	}
 
 	if dbItems.Queue.LiveArchive {
-		err = utils.MoveFile(ctx, dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.LiveChatPath)
-		if err != nil {
+		if err = moveArchiveFile(ctx, dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.LiveChatPath, "raw live chat move"); err != nil {
 			return err
 		}
-		err = utils.MoveFile(ctx, dbItems.Video.TmpLiveChatConvertPath, dbItems.Video.LiveChatConvertPath)
-		if err != nil {
+		if err = moveArchiveFile(ctx, dbItems.Video.TmpLiveChatConvertPath, dbItems.Video.LiveChatConvertPath, "converted live chat move"); err != nil {
 			return err
 		}
 	}
 
 	if dbItems.Queue.RenderChat {
-		err = utils.MoveFile(ctx, dbItems.Video.TmpChatRenderPath, dbItems.Video.ChatVideoPath)
-		if err != nil {
+		if err = moveArchiveFile(ctx, dbItems.Video.TmpChatRenderPath, dbItems.Video.ChatVideoPath, "rendered chat move"); err != nil {
 			return err
 		}
 	}

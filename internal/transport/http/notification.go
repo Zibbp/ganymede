@@ -179,7 +179,6 @@ type TestNotificationRequest struct {
 //	@Success		200	{array}		NotificationResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/notification [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetNotifications(c echo.Context) error {
 	notifications, err := h.Service.NotificationService.GetNotifications(c.Request().Context())
@@ -203,7 +202,6 @@ func (h *Handler) GetNotifications(c echo.Context) error {
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/notification/{id} [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetNotification(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -234,7 +232,6 @@ func (h *Handler) GetNotification(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/notification [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) CreateNotification(c echo.Context) error {
 	var req CreateNotificationRequest
@@ -270,7 +267,6 @@ func (h *Handler) CreateNotification(c echo.Context) error {
 //	@Failure		404		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/notification/{id} [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) UpdateNotification(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -313,7 +309,6 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 //	@Failure		404	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/notification/{id} [delete]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) DeleteNotification(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -345,7 +340,6 @@ func (h *Handler) DeleteNotification(c echo.Context) error {
 //	@Failure		404		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/notification/{id}/test [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) TestNotification(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))

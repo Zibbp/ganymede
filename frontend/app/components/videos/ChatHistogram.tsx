@@ -3,12 +3,11 @@ import { BarChart } from '@mantine/charts';
 import { Title } from "@mantine/core";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";
 import { RefObject } from "react";
-import { MediaPlayerInstance } from "@vidstack/react";
 import { useTranslations } from "next-intl";
 
 type Props = {
   videoId: string;
-  playerRef: RefObject<MediaPlayerInstance | null>;
+  playerRef: RefObject<HTMLVideoElement | null>;
 }
 
 const VideoChatHistogram = ({ videoId, playerRef }: Props) => {

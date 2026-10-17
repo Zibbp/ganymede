@@ -522,3 +522,15 @@ func GetFreeSpaceOfDirectory(path string) (int64, error) {
 	}
 	return int64(stat.Bavail) * int64(stat.Bsize), nil
 }
+
+// GetTotalSpaceOfDirectory returns the total capacity in bytes of the filesystem
+// containing the given path. This must be used instead of deriving capacity from
+// free space plus application-tracked bytes: the volume may hold files outside of
+// Ganymede's control (especially on shared NFS/SMB mounts).
+func GetTotalSpaceOfDirectory(path string) (int64, error) {
+	var stat unix.Statfs_t
+	if err := unix.Statfs(path, &stat); err != nil {
+		return 0, fmt.Errorf("error getting total space of directory: %v", err)
+	}
+	return int64(stat.Blocks) * int64(stat.Bsize), nil
+}

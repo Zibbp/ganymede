@@ -465,6 +465,7 @@ var (
 		{Name: "sprite_thumbnails_columns", Type: field.TypeInt, Nullable: true},
 		{Name: "storage_size_bytes", Type: field.TypeInt64, Default: 0},
 		{Name: "streamed_at", Type: field.TypeTime},
+		{Name: "video_start_at", Type: field.TypeTime, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "channel_vods", Type: field.TypeUUID},
@@ -477,7 +478,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "vods_channels_vods",
-				Columns:    []*schema.Column{VodsColumns[45]},
+				Columns:    []*schema.Column{VodsColumns[46]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

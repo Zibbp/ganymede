@@ -51,12 +51,10 @@ func parseQuality(q string) Quality {
 }
 
 // SelectClosestQuality selects the best matching quality from available options.
-// Behavior changes:
-// - if target == "audio_only" -> return "audio_only" (if present in options).
-// - when no resolution matches, pick the highest quality available (highest resolution, then highest FPS).
-// - existing FPS-selection logic is preserved for matching resolutions.
+// Missing resolutions fall back to the nearest numeric resolution, preferring
+// the lower resolution on a tie. Unknown source resolutions are a last resort.
 func SelectClosestQuality(target string, options []string) string {
-	if len(target) == 0 {
+	if len(target) == 0 || len(options) == 0 {
 		return target
 	}
 
@@ -83,17 +81,31 @@ func SelectClosestQuality(target string, options []string) string {
 		parsedOptions = append(parsedOptions, parseQuality(opt))
 	}
 
-	// Match resolutions
-	var matchingRes []Quality
+	closestResolution := 0
+	closestDistance := math.MaxInt
 	for _, opt := range parsedOptions {
-		if opt.Resolution == targetQuality.Resolution {
-			matchingRes = append(matchingRes, opt)
+		// Audio, unrecognized formats, and chunked have no known video height.
+		if opt.Resolution <= 0 || opt.Resolution == math.MaxInt {
+			continue
+		}
+		distance := opt.Resolution - targetQuality.Resolution
+		if distance < 0 {
+			distance = -distance
+		}
+		if distance < closestDistance || (distance == closestDistance && opt.Resolution < closestResolution) {
+			closestResolution = opt.Resolution
+			closestDistance = distance
 		}
 	}
-
-	if len(matchingRes) == 0 {
-		// NEW: instead of returning "best", actually pick it
+	if closestResolution == 0 {
 		return pickHighestQuality(options)
+	}
+
+	var matchingRes []Quality
+	for _, opt := range parsedOptions {
+		if opt.Resolution == closestResolution {
+			matchingRes = append(matchingRes, opt)
+		}
 	}
 
 	// FPS logic
@@ -103,7 +115,7 @@ func SelectClosestQuality(target string, options []string) string {
 				return opt.Original
 			}
 		}
-		sort.Slice(matchingRes, func(i, j int) bool {
+		sort.SliceStable(matchingRes, func(i, j int) bool {
 			return matchingRes[i].FPS > matchingRes[j].FPS
 		})
 		for _, opt := range matchingRes {
@@ -113,7 +125,7 @@ func SelectClosestQuality(target string, options []string) string {
 		}
 		return matchingRes[len(matchingRes)-1].Original
 	} else {
-		sort.Slice(matchingRes, func(i, j int) bool {
+		sort.SliceStable(matchingRes, func(i, j int) bool {
 			return matchingRes[i].FPS > matchingRes[j].FPS
 		})
 		return matchingRes[0].Original

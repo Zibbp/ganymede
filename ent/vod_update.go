@@ -861,6 +861,26 @@ func (_u *VodUpdate) SetNillableStreamedAt(v *time.Time) *VodUpdate {
 	return _u
 }
 
+// SetVideoStartAt sets the "video_start_at" field.
+func (_u *VodUpdate) SetVideoStartAt(v time.Time) *VodUpdate {
+	_u.mutation.SetVideoStartAt(v)
+	return _u
+}
+
+// SetNillableVideoStartAt sets the "video_start_at" field if the given value is not nil.
+func (_u *VodUpdate) SetNillableVideoStartAt(v *time.Time) *VodUpdate {
+	if v != nil {
+		_u.SetVideoStartAt(*v)
+	}
+	return _u
+}
+
+// ClearVideoStartAt clears the value of the "video_start_at" field.
+func (_u *VodUpdate) ClearVideoStartAt() *VodUpdate {
+	_u.mutation.ClearVideoStartAt()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *VodUpdate) SetUpdatedAt(v time.Time) *VodUpdate {
 	_u.mutation.SetUpdatedAt(v)
@@ -1373,6 +1393,12 @@ func (_u *VodUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.VideoStartAt(); ok {
+		_spec.SetField(vod.FieldVideoStartAt, field.TypeTime, value)
+	}
+	if _u.mutation.VideoStartAtCleared() {
+		_spec.ClearField(vod.FieldVideoStartAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(vod.FieldUpdatedAt, field.TypeTime, value)
@@ -2459,6 +2485,26 @@ func (_u *VodUpdateOne) SetNillableStreamedAt(v *time.Time) *VodUpdateOne {
 	return _u
 }
 
+// SetVideoStartAt sets the "video_start_at" field.
+func (_u *VodUpdateOne) SetVideoStartAt(v time.Time) *VodUpdateOne {
+	_u.mutation.SetVideoStartAt(v)
+	return _u
+}
+
+// SetNillableVideoStartAt sets the "video_start_at" field if the given value is not nil.
+func (_u *VodUpdateOne) SetNillableVideoStartAt(v *time.Time) *VodUpdateOne {
+	if v != nil {
+		_u.SetVideoStartAt(*v)
+	}
+	return _u
+}
+
+// ClearVideoStartAt clears the value of the "video_start_at" field.
+func (_u *VodUpdateOne) ClearVideoStartAt() *VodUpdateOne {
+	_u.mutation.ClearVideoStartAt()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *VodUpdateOne) SetUpdatedAt(v time.Time) *VodUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
@@ -3001,6 +3047,12 @@ func (_u *VodUpdateOne) sqlSave(ctx context.Context) (_node *Vod, err error) {
 	}
 	if value, ok := _u.mutation.StreamedAt(); ok {
 		_spec.SetField(vod.FieldStreamedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.VideoStartAt(); ok {
+		_spec.SetField(vod.FieldVideoStartAt, field.TypeTime, value)
+	}
+	if _u.mutation.VideoStartAtCleared() {
+		_spec.ClearField(vod.FieldVideoStartAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(vod.FieldUpdatedAt, field.TypeTime, value)

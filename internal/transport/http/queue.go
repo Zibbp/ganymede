@@ -2,12 +2,12 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/riverqueue/river/rivertype"
 	"github.com/zibbp/ganymede/ent"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -22,7 +22,7 @@ type QueueService interface {
 	DeleteQueueItem(c echo.Context, id uuid.UUID) error
 	ReadLogFile(c echo.Context, id uuid.UUID, logType string) ([]byte, error)
 	StopQueueItem(ctx context.Context, id uuid.UUID) error
-	StartQueueTask(ctx context.Context, input queue.StartQueueTaskInput) (*rivertype.JobRow, error)
+	RestartQueueTask(ctx context.Context, input queue.StartQueueTaskInput) (*queue.RestartResult, error)
 }
 
 type CreateQueueRequest struct {
@@ -63,7 +63,6 @@ type UpdateQueueRequest struct {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) CreateQueueItem(c echo.Context) error {
 	cqt := new(CreateQueueRequest)
@@ -99,7 +98,6 @@ func (h *Handler) CreateQueueItem(c echo.Context) error {
 //	@Failure		400			{object}	utils.ErrorResponse
 //	@Failure		500			{object}	utils.ErrorResponse
 //	@Router			/queue [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetQueueItems(c echo.Context) error {
 	statuses, err := parseArchiveStatuses(c.QueryParam("status"))
@@ -133,7 +131,6 @@ func (h *Handler) GetQueueItems(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/queue/{id} [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) GetQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -160,7 +157,6 @@ func (h *Handler) GetQueueItem(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/{id} [put]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) UpdateQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -209,7 +205,6 @@ func (h *Handler) UpdateQueueItem(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
 //	@Router			/queue/{id} [delete]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) DeleteQueueItem(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -236,7 +231,6 @@ func (h *Handler) DeleteQueueItem(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/{id}/tail [get]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 	id := c.Param("id")
@@ -275,7 +269,6 @@ func (h *Handler) ReadQueueLogFile(c echo.Context) error {
 //	@Failure		400		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/{id}/stop [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) StopQueueItem(c echo.Context) error {
 	id := c.Param("id")
@@ -294,17 +287,18 @@ func (h *Handler) StopQueueItem(c echo.Context) error {
 
 // StartQueueTask godoc
 //
-//	@Summary		Start a queue task for a queue
-//	@Description	Start a specific queue task
+//	@Summary		Restart a queue task
+//	@Description	Atomically schedule a new generation of a queue task
 //	@Tags			queue
 //	@Accept			json
 //	@Produce		json
 //	@Param			body	body		StartQueueTaskRequest	true	"Start queue task"
-//	@Success		200		{object}	string
+//	@Success		200		{object}	queue.RestartResult
 //	@Failure		400		{object}	utils.ErrorResponse
+//	@Failure		404		{object}	utils.ErrorResponse
+//	@Failure		409		{object}	utils.ErrorResponse
 //	@Failure		500		{object}	utils.ErrorResponse
 //	@Router			/queue/task/start [post]
-//	@Security		ApiKeyCookieAuth
 //	@Security		ApiKeyAuth
 func (h *Handler) StartQueueTask(c echo.Context) error {
 	body := new(StartQueueTaskRequest)
@@ -315,15 +309,24 @@ func (h *Handler) StartQueueTask(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
-	_, err := h.Service.QueueService.StartQueueTask(c.Request().Context(), queue.StartQueueTaskInput{
+	result, err := h.Service.QueueService.RestartQueueTask(c.Request().Context(), queue.StartQueueTaskInput{
 		QueueId:  body.QueueId,
 		TaskName: body.TaskName,
 		Continue: body.Continue,
 	})
 
 	if err != nil {
+		if errors.Is(err, queue.ErrRestartInvalid) {
+			return ErrorResponse(c, http.StatusBadRequest, err.Error())
+		}
+		if errors.Is(err, queue.ErrRestartNotFound) {
+			return ErrorResponse(c, http.StatusNotFound, err.Error())
+		}
+		if errors.Is(err, queue.ErrRestartConflict) {
+			return ErrorResponse(c, http.StatusConflict, err.Error())
+		}
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return SuccessResponse(c, "", fmt.Sprintf("started %s for %s", body.TaskName, body.QueueId))
+	return SuccessResponse(c, result, fmt.Sprintf("restarted %s for %s", body.TaskName, body.QueueId))
 }

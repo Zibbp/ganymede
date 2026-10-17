@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,6 +20,8 @@ import (
 	entQueue "github.com/zibbp/ganymede/ent/queue"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/exec"
+	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -26,13 +31,9 @@ import (
 type WatchdogArgs struct{}
 
 const (
-	archiveHeartbeatTimeout      = 90 * time.Second
-	liveArchiveCancellationGrace = liveArchiveFinalizationTimeout + 30*time.Second
-	liveArchiveMediaQuietPeriod  = 30 * time.Second
-	// FFmpeg is allowed to retry a temporarily unavailable live HLS input, but
-	// a capture that has not changed for several minutes should be cancelled so
-	// the existing live-archive finalization/recovery path can take over.
-	liveArchiveMediaStallTimeout = 3 * time.Minute
+	archiveHeartbeatTimeout           = 90 * time.Second
+	liveArchiveChatCancellationGrace  = liveArchiveFinalizationTimeout + 30*time.Second
+	liveArchiveVideoCancellationGrace = exec.LiveArchiveProcessShutdownTimeout + liveArchiveFinalizationTimeout + 30*time.Second
 )
 
 type staleLiveArchiveAction uint8
@@ -71,8 +72,8 @@ func (w WatchdogWorker) Work(ctx context.Context, job *river.Job[WatchdogArgs]) 
 	return nil
 }
 
-// runWatchdog finds archive jobs whose public progress output has stopped
-// advancing. It uses only River's public APIs: the stale execution is
+// runWatchdog finds archive jobs whose worker heartbeat has stopped advancing.
+// It uses only River's public APIs: the stale execution is
 // cancelled, and a replacement generation is inserted when retry budget
 // remains. Historical jobs are retained for River's normal lifecycle cleanup.
 func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
@@ -87,18 +88,11 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 		if !utils.Contains(job.Tags, archive_tag) {
 			return nil
 		}
-		heartbeat, args, err := archiveJobProgress(job)
+		heartbeat, _, err := archiveJobProgress(job)
 		if err != nil {
 			return err
 		}
-		mediaStalled := false
-		if job.Kind == string(utils.TaskDownloadLiveVideo) {
-			mediaStalled, err = liveArchiveVideoInputIsStalled(ctx, store, args.Input.QueueId, job.AttemptedAt, time.Now())
-			if err != nil {
-				return err
-			}
-		}
-		if !archiveJobNeedsWatchdog(job.Kind, heartbeat, mediaStalled, time.Now()) {
+		if !archiveJobNeedsWatchdog(job.Kind, heartbeat, time.Now()) {
 			return nil
 		}
 
@@ -115,21 +109,9 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 		if err != nil {
 			return err
 		}
-		freshMediaStalled := false
-		if fresh.Kind == string(utils.TaskDownloadLiveVideo) {
-			freshMediaStalled, err = liveArchiveVideoInputIsStalled(ctx, store, freshArgs.Input.QueueId, fresh.AttemptedAt, time.Now())
-			if err != nil {
-				return err
-			}
-		}
-		if fresh.State != rivertype.JobStateRunning || !archiveJobNeedsWatchdog(fresh.Kind, freshHeartbeat, freshMediaStalled, time.Now()) {
+		if fresh.State != rivertype.JobStateRunning || !archiveJobNeedsWatchdog(fresh.Kind, freshHeartbeat, time.Now()) {
 			return nil
 		}
-		staleReason := "heartbeat"
-		if freshMediaStalled {
-			staleReason = "media stalled"
-		}
-
 		needsRecovery, err := archiveQueueStageNeedsRecovery(ctx, store, freshArgs.Input.QueueId, fresh.Kind)
 		if err != nil {
 			return err
@@ -148,7 +130,7 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 				Int64("job_id", fresh.ID).
 				Str("kind", fresh.Kind).
 				Str("queue_id", freshArgs.Input.QueueId.String()).
-				Str("reason", staleReason).
+				Str("reason", "progress_timeout").
 				Msg("archive queue stage does not need recovery; canceled retained River job")
 			return nil
 		}
@@ -167,20 +149,6 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 					Msg("waiting for live archive worker to finish cancellation")
 				return nil
 			case staleLiveArchiveActionRecover:
-				if fresh.Kind == string(utils.TaskDownloadLiveVideo) {
-					quiet, err := liveArchiveVideoInputIsQuiet(ctx, store, freshArgs.Input.QueueId, time.Now())
-					if err != nil {
-						return err
-					}
-					if !quiet {
-						logger.Warn().
-							Int64("job_id", fresh.ID).
-							Str("kind", fresh.Kind).
-							Str("queue_id", freshArgs.Input.QueueId.String()).
-							Msg("live archive cancellation grace elapsed but capture output is still changing; deferring recovery")
-						return nil
-					}
-				}
 				logger.Warn().
 					Int64("job_id", fresh.ID).
 					Str("kind", fresh.Kind).
@@ -190,7 +158,7 @@ func runWatchdog(ctx context.Context, riverClient *river.Client[pgx.Tx]) error {
 			}
 		}
 
-		logger.Warn().Int64("job_id", fresh.ID).Str("kind", fresh.Kind).Str("reason", staleReason).Msg("archive job watchdog timeout")
+		logger.Warn().Int64("job_id", fresh.ID).Str("kind", fresh.Kind).Str("reason", "progress_timeout").Msg("archive job watchdog timeout")
 		if _, err := riverClient.JobCancel(ctx, fresh.ID); err != nil {
 			return err
 		}
@@ -236,10 +204,7 @@ func isLiveArchiveDownload(kind string) bool {
 	return kind == string(utils.TaskDownloadLiveVideo) || kind == string(utils.TaskDownloadLiveChat)
 }
 
-func archiveJobNeedsWatchdog(kind string, heartbeat time.Time, mediaStalled bool, now time.Time) bool {
-	if kind == string(utils.TaskDownloadLiveVideo) && mediaStalled {
-		return true
-	}
+func archiveJobNeedsWatchdog(kind string, heartbeat time.Time, now time.Time) bool {
 	return !heartbeat.IsZero() && now.Sub(heartbeat) > archiveHeartbeatTimeout
 }
 
@@ -307,56 +272,15 @@ func staleLiveArchiveRecoveryAction(job *rivertype.JobRow, now time.Time) (stale
 		return staleLiveArchiveActionCancel, 0, nil
 	}
 
-	graceRemaining := cancelAttemptedAt.Add(liveArchiveCancellationGrace).Sub(now)
+	grace := liveArchiveChatCancellationGrace
+	if job.Kind == string(utils.TaskDownloadLiveVideo) {
+		grace = liveArchiveVideoCancellationGrace
+	}
+	graceRemaining := cancelAttemptedAt.Add(grace).Sub(now)
 	if graceRemaining > 0 {
 		return staleLiveArchiveActionWait, graceRemaining, nil
 	}
 	return staleLiveArchiveActionRecover, 0, nil
-}
-
-func liveArchiveVideoInputIsQuiet(ctx context.Context, store *database.Database, queueID uuid.UUID, now time.Time) (bool, error) {
-	dbItems, err := getDatabaseItems(ctx, store.Client, queueID)
-	if err != nil {
-		return false, err
-	}
-
-	path := recoverableLiveVideoInputPath(&dbItems.Video)
-	return fileIsQuiet(path, now)
-}
-
-func liveArchiveVideoInputIsStalled(ctx context.Context, store *database.Database, queueID uuid.UUID, attemptedAt *time.Time, now time.Time) (bool, error) {
-	dbItems, err := getDatabaseItems(ctx, store.Client, queueID)
-	if err != nil {
-		return false, err
-	}
-
-	path := recoverableLiveVideoInputPath(&dbItems.Video)
-	return fileIsStalled(path, attemptedAt, now)
-}
-
-func fileIsQuiet(path string, now time.Time) (bool, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return true, nil
-		}
-		return false, fmt.Errorf("stat live archive recovery input %q: %w", path, err)
-	}
-	return now.Sub(info.ModTime()) >= liveArchiveMediaQuietPeriod, nil
-}
-
-func fileIsStalled(path string, attemptedAt *time.Time, now time.Time) (bool, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			// A live capture can legitimately take a little time to create its
-			// first output. Once the attempt itself has exceeded the stall window,
-			// however, no output is evidence that the input is unavailable.
-			return attemptedAt != nil && now.Sub(*attemptedAt) >= liveArchiveMediaStallTimeout, nil
-		}
-		return false, fmt.Errorf("stat live archive stall input %q: %w", path, err)
-	}
-	return now.Sub(info.ModTime()) >= liveArchiveMediaStallTimeout, nil
 }
 
 func recoverExhaustedArchiveJob(ctx context.Context, store *database.Database, riverClient *river.Client[pgx.Tx], job *rivertype.JobRow, queueID uuid.UUID) error {
@@ -389,7 +313,16 @@ func archiveJobProgress(job *rivertype.JobRow) (time.Time, RiverJobArgs, error) 
 	if err := json.Unmarshal(job.Metadata, &metadata); err == nil && !metadata.Output.HeartbeatAt.IsZero() {
 		return metadata.Output.HeartbeatAt, args, nil
 	}
-	return args.Input.HeartBeatTime, args, nil
+	if !args.Input.HeartBeatTime.IsZero() {
+		return args.Input.HeartBeatTime, args, nil
+	}
+	// Running jobs should have an attempt timestamp. Use it only when no
+	// heartbeat has ever been recorded, so newly started jobs retain the normal
+	// watchdog grace period while failed initial progress updates stay bounded.
+	if job.AttemptedAt != nil {
+		return *job.AttemptedAt, args, nil
+	}
+	return time.Time{}, args, nil
 }
 
 func forEachJobPage(ctx context.Context, client *river.Client[pgx.Tx], params *river.JobListParams, visit func(*rivertype.JobRow) error) error {
@@ -642,15 +575,143 @@ func recoverInterruptedLiveVideoArchive(ctx context.Context, store *database.Dat
 }
 
 func validateRecoverableLiveVideoInput(video *ent.Vod) error {
-	return validateNonEmptyFile(recoverableLiveVideoInputPath(video), "live video recovery input")
+	path := recoverableLiveVideoInputPath(video)
+
+	// HLS needs media: a playlist with resolvable segments or segments on
+	// disk for rebuild.
+	if err := validateLiveHlsPlaylistReferences(path); err == nil {
+		return nil
+	}
+	if hls.HasRecoverableSegments(video.TmpVideoHlsPath, liveCaptureID(video)) {
+		return nil
+	}
+	return fmt.Errorf("live HLS recovery playlist has no media segments: %s", path)
+}
+
+// validateLiveHlsPlaylistReferences accepts a media playlist only when every
+// referenced init and media file resolves next to the playlist and is
+// non-empty.
+func validateLiveHlsPlaylistReferences(path string) error {
+	if err := validateNonEmptyFile(path, "live video recovery input"); err != nil {
+		return err
+	}
+	byts, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("read live HLS recovery playlist %s: %w", path, err)
+	}
+	if !strings.Contains(string(byts), "#EXTINF") {
+		return fmt.Errorf("live HLS recovery playlist has no media segments: %s", path)
+	}
+
+	dir := filepath.Dir(path)
+	var initRefs []string
+	var segmentRefs []string
+	expectSegment := false
+	for _, raw := range strings.Split(string(byts), "\n") {
+		line := strings.TrimSpace(strings.TrimSuffix(raw, "\r"))
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "#EXT-X-MAP:") {
+			if uri := extractHlsURIAttribute(line); uri != "" {
+				initRefs = append(initRefs, uri)
+			}
+			continue
+		}
+		if strings.HasPrefix(line, "#EXTINF") {
+			expectSegment = true
+			continue
+		}
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		if expectSegment {
+			segmentRefs = append(segmentRefs, line)
+			expectSegment = false
+		}
+	}
+	if len(segmentRefs) == 0 {
+		return fmt.Errorf("live HLS recovery playlist has no media segments: %s", path)
+	}
+
+	for _, ref := range initRefs {
+		resolved, err := resolveHlsPlaylistReference(dir, ref)
+		if err != nil {
+			return err
+		}
+		if err := validateNonEmptyFile(resolved, "live video recovery init"); err != nil {
+			return err
+		}
+	}
+	for _, ref := range segmentRefs {
+		resolved, err := resolveHlsPlaylistReference(dir, ref)
+		if err != nil {
+			return err
+		}
+		if err := validateNonEmptyFile(resolved, "live video recovery segment"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func extractHlsURIAttribute(line string) string {
+	idx := strings.Index(line, "URI=")
+	if idx < 0 {
+		return ""
+	}
+	rest := strings.TrimSpace(line[idx+len("URI="):])
+	if rest == "" {
+		return ""
+	}
+	if rest[0] == '"' || rest[0] == '\'' {
+		end := strings.IndexByte(rest[1:], rest[0])
+		if end < 0 {
+			return ""
+		}
+		return rest[1 : 1+end]
+	}
+	if end := strings.IndexAny(rest, ", \r\n"); end >= 0 {
+		return rest[:end]
+	}
+	return rest
+}
+
+func resolveHlsPlaylistReference(dir, ref string) (string, error) {
+	ref = strings.TrimSpace(strings.Trim(ref, "\"'"))
+	if ref == "" {
+		return "", fmt.Errorf("empty HLS playlist reference")
+	}
+	if strings.Contains(ref, "://") {
+		if !strings.HasPrefix(strings.ToLower(ref), "file://") {
+			return "", fmt.Errorf("remote HLS playlist reference: %s", ref)
+		}
+		ref = strings.TrimPrefix(strings.TrimPrefix(ref, "file://"), "localhost")
+	}
+	if i := strings.Index(ref, "?"); i >= 0 {
+		ref = ref[:i]
+	}
+	if i := strings.Index(ref, "#"); i >= 0 {
+		ref = ref[:i]
+	}
+	if unescaped, err := url.PathUnescape(ref); err == nil {
+		ref = unescaped
+	}
+	if filepath.IsAbs(ref) {
+		return filepath.Clean(ref), nil
+	}
+	return filepath.Join(dir, ref), nil
 }
 
 func recoverableLiveVideoInputPath(video *ent.Vod) string {
+	// Live captures always store HLS; the playlist is the source of truth and
+	// can be rebuilt from segments on disk when truncated.
 	if video.VideoHlsPath != "" {
-		return fmt.Sprintf("%s/%s-video.m3u8", video.TmpVideoHlsPath, video.ExtID)
+		return liveHlsPlaylistPath(video)
 	}
-	if video.TmpVideoConvertPath != "" && utils.FileExists(video.TmpVideoConvertPath) {
-		return video.TmpVideoConvertPath
+	playlistPath := liveHlsPlaylistPath(video)
+	if utils.FileExists(playlistPath) {
+		return playlistPath
 	}
 	return video.TmpVideoDownloadPath
 }

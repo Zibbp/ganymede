@@ -61,6 +61,7 @@ func (Vod) Fields() []ent.Field {
 		field.Int("sprite_thumbnails_columns").Optional(),
 		field.Int64("storage_size_bytes").Default(0).Comment("The size of the VOD in bytes."),
 		field.Time("streamed_at").Default(time.Now).Comment("The time the VOD was streamed."),
+		field.Time("video_start_at").Optional().Nillable().Comment("The wall-clock time that video second 0 corresponds to; for live archives it accounts for capture latency and may equal the chat capture start when unresolvable."),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}

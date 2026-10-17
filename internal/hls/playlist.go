@@ -1,18 +1,28 @@
 package hls
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"math"
+	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/bluenviron/gohlslib/v2/pkg/playlist"
 	"github.com/bluenviron/gohlslib/v2/pkg/playlist/primitives"
+	"github.com/rs/zerolog/log"
 )
+
+// URI returns a percent-encoded HLS URI for a filesystem path.
+func URI(path string) string {
+	return (&url.URL{Path: filepath.ToSlash(path)}).String()
+}
 
 const maxPlaylistSize = 1 * 1024 * 1024
 
@@ -71,6 +81,150 @@ func FinalizeMediaPlaylist(path string) error {
 	return writeFileAtomic(path, []byte(playlistText))
 }
 
+// SegmentProbe reports a media segment's duration in seconds.
+type SegmentProbe func(ctx context.Context, path string) (float64, error)
+
+var segmentIndexPattern = regexp.MustCompile(`(\d+)(?:\.[^.]+)?$`)
+
+// segmentIndex extracts the trailing numeric index from a segment filename so
+// zero-padded (%06d) and unpadded (%d) sequences both sort numerically.
+func segmentIndex(name string) int {
+	m := segmentIndexPattern.FindStringSubmatch(name)
+	if m == nil {
+		return -1
+	}
+	n, err := strconv.Atoi(m[1])
+	if err != nil {
+		return -1
+	}
+	return n
+}
+
+// LiveCaptureID returns the immutable HLS capture prefix for a live archive.
+// Capture files are named with the stream ID present when capture starts,
+// but Vod.ExtID is later replaced with the Twitch VOD ID by the stream video
+// ID update. ExtStreamID is always set for new archives; ExtID is a terminal
+// fallback for empty IDs.
+func LiveCaptureID(extID, extStreamID, tmpVideoDownloadPath string) string {
+	if extStreamID != "" {
+		return extStreamID
+	}
+	return extID
+}
+
+// HasRecoverableSegments reports whether the dir holds segments for rebuild.
+// Zero-byte partials are ignored.
+func HasRecoverableSegments(dir, extID string) bool {
+	segments, _ := recoverableSegments(dir, extID)
+	return len(segments) > 0
+}
+
+// recoverableSegments lists non-empty fmp4 segments; the init segment must
+// be present for the capture to be rebuildable.
+func recoverableSegments(dir, extID string) (segments []string, err error) {
+	if dir == "" || extID == "" {
+		return nil, nil
+	}
+	if !fileExists(filepath.Join(dir, extID+"_init.mp4")) {
+		return nil, nil
+	}
+	matches, err := filepath.Glob(filepath.Join(dir, extID+"_segment*.m4s"))
+	if err != nil {
+		return nil, err
+	}
+	var out []string
+	for _, match := range matches {
+		info, err := os.Stat(match)
+		if err != nil || info.Size() == 0 || !info.Mode().IsRegular() {
+			continue
+		}
+		out = append(out, match)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		ii, jj := segmentIndex(filepath.Base(out[i])), segmentIndex(filepath.Base(out[j]))
+		if ii != jj {
+			return ii < jj
+		}
+		return out[i] < out[j]
+	})
+	return out, nil
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.Mode().IsRegular()
+}
+
+// RebuildMediaPlaylistFromSegments regenerates a finalized VOD playlist from
+// segments on disk. Unprobeable segments are skipped with a discontinuity.
+func RebuildMediaPlaylistFromSegments(ctx context.Context, dir, extID, playlistPath string, probe SegmentProbe) error {
+	segments, err := recoverableSegments(dir, extID)
+	if err != nil {
+		return err
+	}
+	if len(segments) == 0 {
+		return fmt.Errorf("no recoverable segments in %s", dir)
+	}
+
+	type entry struct {
+		name     string
+		duration float64
+	}
+	entries := make([]entry, 0, len(segments))
+	maxDuration := 0.0
+	for _, segment := range segments {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		duration, err := probe(ctx, segment)
+		if err != nil {
+			// Skip truncated segments; the index gap emits a discontinuity.
+			log.Warn().Err(err).Str("segment", filepath.Base(segment)).Msg("skipping unprobeable HLS segment during playlist rebuild")
+			continue
+		}
+		if duration <= 0 {
+			log.Warn().Str("segment", filepath.Base(segment)).Msg("skipping HLS segment with no measurable duration during playlist rebuild")
+			continue
+		}
+		entries = append(entries, entry{name: filepath.Base(segment), duration: duration})
+		maxDuration = math.Max(maxDuration, duration)
+	}
+	if len(entries) == 0 {
+		return fmt.Errorf("no probeable segments in %s", dir)
+	}
+	targetDuration := int(math.Ceil(maxDuration))
+	if targetDuration < 1 {
+		targetDuration = 1
+	}
+
+	var b strings.Builder
+	b.WriteString("#EXTM3U\n")
+	b.WriteString("#EXT-X-VERSION:7\n")
+	fmt.Fprintf(&b, "#EXT-X-TARGETDURATION:%d\n", targetDuration)
+	b.WriteString("#EXT-X-MEDIA-SEQUENCE:0\n")
+	b.WriteString("#EXT-X-PLAYLIST-TYPE:VOD\n")
+	b.WriteString("#EXT-X-INDEPENDENT-SEGMENTS\n")
+	fmt.Fprintf(&b, "#EXT-X-MAP:URI=%q\n", URI(extID+"_init.mp4"))
+	previousIndex := -2
+	for _, e := range entries {
+		index := segmentIndex(e.name)
+		if previousIndex >= 0 && index > previousIndex+1 {
+			b.WriteString("#EXT-X-DISCONTINUITY\n")
+		}
+		previousIndex = index
+		fmt.Fprintf(&b, "#EXTINF:%.6f,\n%s\n", e.duration, URI(e.name))
+	}
+	b.WriteString("#EXT-X-ENDLIST\n")
+
+	if err := writeFileAtomic(playlistPath, []byte(b.String())); err != nil {
+		// Playlist may be missing after a mid-rewrite kill; create it.
+		if err := writeFileAtomicCreate(playlistPath, []byte(b.String())); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func writeFileAtomic(path string, data []byte) error {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -94,6 +248,45 @@ func writeFileAtomic(path string, data []byte) error {
 		return errors.Join(err, tmpFile.Close())
 	}
 	if err := tmpFile.Chmod(info.Mode()); err != nil {
+		return errors.Join(err, tmpFile.Close())
+	}
+	if err := tmpFile.Sync(); err != nil {
+		return errors.Join(err, tmpFile.Close())
+	}
+	if err := tmpFile.Close(); err != nil {
+		return err
+	}
+
+	if err := os.Rename(tmpPath, path); err != nil {
+		return err
+	}
+	renamed = true
+
+	return syncDir(dir)
+}
+
+// writeFileAtomicCreate is writeFileAtomic for paths that may not exist yet.
+func writeFileAtomicCreate(path string, data []byte) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	tmpFile, err := os.CreateTemp(dir, filepath.Base(path)+".tmp.*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmpFile.Name()
+	renamed := false
+	defer func() {
+		if !renamed {
+			_ = os.Remove(tmpPath)
+		}
+	}()
+
+	if _, err := tmpFile.Write(data); err != nil {
+		return errors.Join(err, tmpFile.Close())
+	}
+	if err := tmpFile.Chmod(0o644); err != nil {
 		return errors.Join(err, tmpFile.Close())
 	}
 	if err := tmpFile.Sync(); err != nil {

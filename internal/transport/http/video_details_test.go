@@ -71,6 +71,15 @@ func TestVideoDetailsDetectsNewLivePreview(t *testing.T) {
 	require.Equal(t, false, requestVideoDetails(t, video)["live_preview_available"])
 }
 
+func TestVideoDetailsPreviewSurvivesExternalVideoIDUpdate(t *testing.T) {
+	t.Parallel()
+	video := &ent.Vod{ID: uuid.New(), ExtID: "vod999", ExtStreamID: "stream123", Type: utils.Live,
+		Status: utils.ArchiveRunning, TmpVideoHlsPath: t.TempDir()}
+	path := filepath.Join(video.TmpVideoHlsPath, "stream123-video.m3u8")
+	require.NoError(t, os.WriteFile(path, []byte("#EXTM3U\n"), 0600))
+	require.Equal(t, true, requestVideoDetails(t, video)["live_preview_available"])
+}
+
 func requestVideoDetails(t *testing.T, video *ent.Vod) map[string]any {
 	t.Helper()
 	handler := &Handler{Service: Services{VodService: videoDetailsService{video: video}}}

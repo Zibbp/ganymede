@@ -320,9 +320,7 @@
       "proxyAddButton": "Hinzufügen",
       "proxyTypeLabel": "Wähle den Proxy-Typ",
       "whitelistChannelsLabel": "Whitelist-Kanäle",
-      "whitelistChannelsDescription": "Wähle Kanäle aus, die von der Verwendung des Proxys ausgeschlossen sind, falls aktiviert. Stattdessen wird dein Twitch-Token verwendet. Wähle Kanäle aus, die du abonniert hast.",
-      "watchWhileArchivingLabel": "Aktiviere Wiedergabe während des Archivierens",
-      "watchWhileArchivingDescription": "Lädt einen separaten HLS-Stream herunter, um Live-Streams während des Archivierens ansehen zu können. Dies verdoppelt den Speicherbedarf während der Live-Archivierung. Nur das Video ist abspielbar – der Chat wird nicht mit angezeigt."
+      "whitelistChannelsDescription": "Wähle Kanäle aus, die von der Verwendung des Proxys ausgeschlossen sind, falls aktiviert. Stattdessen wird dein Twitch-Token verwendet. Wähle Kanäle aus, die du abonniert hast."
     },
     "chatSettings": {
       "header": "Chat-Einstellungen",
@@ -858,6 +856,7 @@
     "notesCharCount": "{count} / {max} Zeichen",
     "notesMarkdownHint": "Markdown unterstützt",
     "notesInsertTimestampButton": "Zeitstempel einfügen",
+    "notesTimestampDescriptionPlaceholder": "Beschreibung hinzufügen",
     "notesJumpToTimestamp": "Im Video zum Zeitstempel springen",
     "notesPlayerNotReady": "Der Videoplayer ist noch nicht bereit",
     "notesTooLongError": "Notizen dürfen höchstens {max} Zeichen lang sein",
@@ -993,30 +992,49 @@
   },
   "AdminOverviewPage": {
     "title": "Admin - Übersicht",
-    "loading": "Übersicht wird geladen",
+    "header": "Übersicht",
+    "refresh": "Statistiken aktualisieren",
+    "retry": "Erneut versuchen",
     "error": "Fehler beim Laden der Übersicht",
+    "library": {
+      "title": "Bibliothek",
+      "totalVideos": "Videos insgesamt",
+      "totalChannels": "Kanäle insgesamt",
+      "totalDuration": "Gesamtdauer",
+      "totalViews": "Aufrufe insgesamt",
+      "totalViewsDescription": "Quell- und lokale Aufrufe",
+      "videosPerChannel": "Videos pro Kanal",
+      "videoTypes": "Videotypen",
+      "channel": "Kanal",
+      "videos": "Videos",
+      "otherChannels": "Andere",
+      "noData": "Noch keine Daten",
+      "empty": "Noch keine Videos archiviert."
+    },
+    "storage": {
+      "title": "Speicher",
+      "usedOf": "{used} von {total} verwendet",
+      "free": "{value} frei",
+      "total": "{value} insgesamt",
+      "perChannel": "Speicher pro Kanal",
+      "byType": "Speicher nach Videotyp",
+      "channel": "Kanal",
+      "size": "Größe",
+      "otherChannels": "Andere",
+      "otherTypes": "Andere",
+      "largestVideos": "Größte Videos",
+      "noData": "Noch keine Daten",
+      "noLargeVideos": "Keine Videos gefunden"
+    },
     "system": {
-      "title": "Systemübersicht",
-      "usedStorageText": "Genutzter Speicherplatz",
-      "usedStorageDescription": "Gesamter genutzter Speicherplatz",
-      "availableStorageText": "Verfügbarer Speicherplatz",
-      "availableStorageDescription": "Gesamter verfügbarer Speicherplatz",
-      "storageUsedText": "Speicherplatz genutzt",
-      "cpuCoresText": "CPU-Kerne",
-      "totalMemoryText": "Gesamter Arbeitsspeicher"
-    },
-    "videoStatistics": {
-      "title": "Videostatistiken",
-      "totalVideosText": "Anzahl Videos",
-      "totalChannelsText": "Anzahl Kanäle",
-      "channelVideosMapTitle": "Kanalvideos",
-      "videoTypeMapTitle": "Videotypen"
-    },
-    "storageDistribution": {
-      "title": "Speicherverteilung",
-      "channelStorageDistributionText": "Kanalspeicherverteilung",
-      "topLargeVideosText": "Größte Videos",
-      "noLargeVideosText": "Keine Videos gefunden"
+      "title": "System",
+      "viewInfo": "Systeminformationen anzeigen",
+      "usedStorage": "Verwendeter Speicher",
+      "freeStorage": "{value} frei",
+      "cpuCores": "CPU-Kerne",
+      "totalMemory": "Gesamtspeicher",
+      "users": "Benutzer",
+      "refreshNote": "Die Systemstatistiken werden alle 30 Sekunden automatisch aktualisiert."
     }
   },
   "AdminNotificationsPage": {

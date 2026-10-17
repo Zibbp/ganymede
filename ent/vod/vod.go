@@ -101,6 +101,8 @@ const (
 	FieldStorageSizeBytes = "storage_size_bytes"
 	// FieldStreamedAt holds the string denoting the streamed_at field in the database.
 	FieldStreamedAt = "streamed_at"
+	// FieldVideoStartAt holds the string denoting the video_start_at field in the database.
+	FieldVideoStartAt = "video_start_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -206,6 +208,7 @@ var Columns = []string{
 	FieldSpriteThumbnailsColumns,
 	FieldStorageSizeBytes,
 	FieldStreamedAt,
+	FieldVideoStartAt,
 	FieldUpdatedAt,
 	FieldCreatedAt,
 }
@@ -509,6 +512,11 @@ func ByStorageSizeBytes(opts ...sql.OrderTermOption) OrderOption {
 // ByStreamedAt orders the results by the streamed_at field.
 func ByStreamedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStreamedAt, opts...).ToFunc()
+}
+
+// ByVideoStartAt orders the results by the video_start_at field.
+func ByVideoStartAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVideoStartAt, opts...).ToFunc()
 }
 
 // ByUpdatedAt orders the results by the updated_at field.

@@ -14848,6 +14848,7 @@ type VodMutation struct {
 	storage_size_bytes             *int64
 	addstorage_size_bytes          *int64
 	streamed_at                    *time.Time
+	video_start_at                 *time.Time
 	updated_at                     *time.Time
 	created_at                     *time.Time
 	clearedFields                  map[string]struct{}
@@ -17074,6 +17075,55 @@ func (m *VodMutation) ResetStreamedAt() {
 	m.streamed_at = nil
 }
 
+// SetVideoStartAt sets the "video_start_at" field.
+func (m *VodMutation) SetVideoStartAt(t time.Time) {
+	m.video_start_at = &t
+}
+
+// VideoStartAt returns the value of the "video_start_at" field in the mutation.
+func (m *VodMutation) VideoStartAt() (r time.Time, exists bool) {
+	v := m.video_start_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVideoStartAt returns the old "video_start_at" field's value of the Vod entity.
+// If the Vod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VodMutation) OldVideoStartAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVideoStartAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVideoStartAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVideoStartAt: %w", err)
+	}
+	return oldValue.VideoStartAt, nil
+}
+
+// ClearVideoStartAt clears the value of the "video_start_at" field.
+func (m *VodMutation) ClearVideoStartAt() {
+	m.video_start_at = nil
+	m.clearedFields[vod.FieldVideoStartAt] = struct{}{}
+}
+
+// VideoStartAtCleared returns if the "video_start_at" field was cleared in this mutation.
+func (m *VodMutation) VideoStartAtCleared() bool {
+	_, ok := m.clearedFields[vod.FieldVideoStartAt]
+	return ok
+}
+
+// ResetVideoStartAt resets all changes to the "video_start_at" field.
+func (m *VodMutation) ResetVideoStartAt() {
+	m.video_start_at = nil
+	delete(m.clearedFields, vod.FieldVideoStartAt)
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (m *VodMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
@@ -17474,7 +17524,7 @@ func (m *VodMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VodMutation) Fields() []string {
-	fields := make([]string, 0, 44)
+	fields := make([]string, 0, 45)
 	if m.ext_id != nil {
 		fields = append(fields, vod.FieldExtID)
 	}
@@ -17601,6 +17651,9 @@ func (m *VodMutation) Fields() []string {
 	if m.streamed_at != nil {
 		fields = append(fields, vod.FieldStreamedAt)
 	}
+	if m.video_start_at != nil {
+		fields = append(fields, vod.FieldVideoStartAt)
+	}
 	if m.updated_at != nil {
 		fields = append(fields, vod.FieldUpdatedAt)
 	}
@@ -17699,6 +17752,8 @@ func (m *VodMutation) Field(name string) (ent.Value, bool) {
 		return m.StorageSizeBytes()
 	case vod.FieldStreamedAt:
 		return m.StreamedAt()
+	case vod.FieldVideoStartAt:
+		return m.VideoStartAt()
 	case vod.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case vod.FieldCreatedAt:
@@ -17796,6 +17851,8 @@ func (m *VodMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldStorageSizeBytes(ctx)
 	case vod.FieldStreamedAt:
 		return m.OldStreamedAt(ctx)
+	case vod.FieldVideoStartAt:
+		return m.OldVideoStartAt(ctx)
 	case vod.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case vod.FieldCreatedAt:
@@ -18103,6 +18160,13 @@ func (m *VodMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetStreamedAt(v)
 		return nil
+	case vod.FieldVideoStartAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVideoStartAt(v)
+		return nil
 	case vod.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -18354,6 +18418,9 @@ func (m *VodMutation) ClearedFields() []string {
 	if m.FieldCleared(vod.FieldSpriteThumbnailsColumns) {
 		fields = append(fields, vod.FieldSpriteThumbnailsColumns)
 	}
+	if m.FieldCleared(vod.FieldVideoStartAt) {
+		fields = append(fields, vod.FieldVideoStartAt)
+	}
 	return fields
 }
 
@@ -18451,6 +18518,9 @@ func (m *VodMutation) ClearField(name string) error {
 		return nil
 	case vod.FieldSpriteThumbnailsColumns:
 		m.ClearSpriteThumbnailsColumns()
+		return nil
+	case vod.FieldVideoStartAt:
+		m.ClearVideoStartAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Vod nullable field %s", name)
@@ -18585,6 +18655,9 @@ func (m *VodMutation) ResetField(name string) error {
 		return nil
 	case vod.FieldStreamedAt:
 		m.ResetStreamedAt()
+		return nil
+	case vod.FieldVideoStartAt:
+		m.ResetVideoStartAt()
 		return nil
 	case vod.FieldUpdatedAt:
 		m.ResetUpdatedAt()

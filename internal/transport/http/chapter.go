@@ -48,7 +48,7 @@ func (h *Handler) GetVideoChapters(c echo.Context) error {
 //	@Description	Get chapters for a video in WebVTT format
 //	@Tags			chapter
 //	@Accept			json
-//	@Produce		text/plain
+//	@Produce		text/vtt
 //	@Param			videoId	path		string	true	"Video ID"
 //	@Success		200		{object}	string
 //	@Failure		400		{object}	utils.ErrorResponse
@@ -73,5 +73,7 @@ func (h *Handler) GetWebVTTChapters(c echo.Context) error {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.String(http.StatusOK, webVtt)
+	// Native <track> elements require the WebVTT MIME type; text/plain
+	// risks browsers rejecting the cues.
+	return c.Blob(http.StatusOK, "text/vtt", []byte(webVtt))
 }

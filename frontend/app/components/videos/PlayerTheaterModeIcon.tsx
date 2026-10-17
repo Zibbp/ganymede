@@ -1,8 +1,8 @@
-import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconMaximize } from "@tabler/icons-react";
-import classes from "./PlayerTheaterModeIcon.module.css"
 import useSettingsStore from "@/app/store/useSettingsStore";
 import { useTranslations } from "next-intl";
+import { ButtonTooltip } from "@/components/videojs/ui/button-tooltip";
+import { Button } from "@/components/videojs/ui/button";
 
 const VideoPlayerTheaterModeIcon = () => {
   const t = useTranslations("VideoComponents")
@@ -13,19 +13,16 @@ const VideoPlayerTheaterModeIcon = () => {
     setVideoTheaterMode(!videoTheaterMode)
   };
   return (
-    <div className={classes.theaterIcon}>
-      <Tooltip label={t('theaterModeIconTooltip')} position="bottom">
-        <ActionIcon
-          size="xl"
-          variant="transparent"
-          onClick={toggleTheaterMode}
-          onTouchStart={toggleTheaterMode}
-          className={classes.customFullScreenButton}
-        >
-          <IconMaximize size="1.7rem" />
-        </ActionIcon>
-      </Tooltip>
-    </div>
+    <ButtonTooltip label={t('theaterModeIconTooltip')} side="top">
+      <Button
+        type="button"
+        onClick={toggleTheaterMode}
+        aria-label={t('theaterModeIconTooltip')}
+        aria-pressed={videoTheaterMode}
+      >
+        <IconMaximize className="media-button-icon" />
+      </Button>
+    </ButtonTooltip>
   );
 }
 
