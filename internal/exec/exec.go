@@ -306,7 +306,7 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil && !stdErrors.Is(err, syscall.ESRCH) {
 			return fmt.Errorf("failed to kill yt-dlp process group: %v", err)
 		}
-		<-done // Wait for copying to finish
+		log.Debug().Err(<-done).Msg("command exited after cancellation")
 		return ctx.Err()
 	case err := <-done:
 		// Command finished normally
@@ -573,7 +573,8 @@ func stopLiveArchiveCommand(cmd *osExec.Cmd, done <-chan error) {
 		log.Error().Err(err).Msg("failed to send SIGTERM to ffmpeg process")
 	}
 	select {
-	case <-done:
+	case err := <-done:
+		log.Debug().Err(err).Msg("live archive command stopped")
 		return
 	case <-time.After(archiveShutdownTimeout):
 	}
@@ -582,7 +583,8 @@ func stopLiveArchiveCommand(cmd *osExec.Cmd, done <-chan error) {
 		log.Error().Err(err).Msg("failed to send SIGKILL to ffmpeg process")
 	}
 	select {
-	case <-done:
+	case err := <-done:
+		log.Debug().Err(err).Msg("live archive command stopped")
 	case <-time.After(archiveKillWaitTimeout):
 	}
 }
@@ -686,7 +688,7 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 		if err := cmd.Process.Kill(); err != nil {
 			return fmt.Errorf("failed to kill ffmpeg process: %v", err)
 		}
-		<-done // Wait for copying to finish
+		log.Debug().Err(<-done).Msg("command exited after cancellation")
 		return ctx.Err()
 	case err := <-done:
 		// Command finished normally
@@ -904,7 +906,7 @@ func runHlsToMp4FFmpeg(ctx context.Context, video ent.Vod, ffmpegArgs []string, 
 		if err := cmd.Process.Kill(); err != nil {
 			log.Error().Err(err).Msg("failed to kill ffmpeg process")
 		}
-		<-done
+		log.Debug().Err(<-done).Msg("command exited after cancellation")
 		// Remove partial output so retries do not accept a truncated file.
 		_ = os.Remove(exportPath)
 		return ctx.Err()
@@ -1104,7 +1106,7 @@ func DownloadTwitchChat(ctx context.Context, video ent.Vod) error {
 		if err := cmd.Process.Kill(); err != nil {
 			return fmt.Errorf("failed to kill TwitchDownloaderCLI process: %v", err)
 		}
-		<-done // Wait for copying to finish
+		log.Debug().Err(<-done).Msg("command exited after cancellation")
 		return ctx.Err()
 	case err := <-done:
 		// Command finished normally
@@ -1169,7 +1171,7 @@ func RenderTwitchChat(ctx context.Context, video ent.Vod) error {
 		if err := cmd.Process.Kill(); err != nil {
 			return fmt.Errorf("failed to kill TwitchDownloaderCLI process: %v", err)
 		}
-		<-done // Wait for copying to finish
+		log.Debug().Err(<-done).Msg("command exited after cancellation")
 		return ctx.Err()
 	case err := <-done:
 		// Command finished normally
@@ -1299,7 +1301,7 @@ func UpdateTwitchChat(ctx context.Context, video ent.Vod) error {
 		if err := cmd.Process.Kill(); err != nil {
 			return fmt.Errorf("failed to kill TwitchDownloader process: %v", err)
 		}
-		<-done // Wait for copying to finish
+		log.Debug().Err(<-done).Msg("command exited after cancellation")
 		return ctx.Err()
 	case err := <-done:
 		// Command finished normally
@@ -1351,7 +1353,7 @@ func GenerateStaticThumbnail(ctx context.Context, videoPath string, position int
 		if err := cmd.Process.Kill(); err != nil {
 			return fmt.Errorf("failed to kill ffmpeg process: %v", err)
 		}
-		<-done // Wait for copying to finish
+		log.Debug().Err(<-done).Msg("command exited after cancellation")
 		return ctx.Err()
 	case err := <-done:
 		// Command finished normally
