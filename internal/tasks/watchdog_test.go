@@ -165,7 +165,6 @@ func TestArchiveQueueStageStatusNeedsRecovery(t *testing.T) {
 	t.Parallel()
 
 	queue := &ent.Queue{
-		Processing:               true,
 		TaskVodCreateFolder:      utils.Success,
 		TaskVodDownloadThumbnail: utils.Success,
 		TaskVodSaveInfo:          utils.Success,
@@ -186,7 +185,4 @@ func TestArchiveQueueStageStatusNeedsRecovery(t *testing.T) {
 	queue.TaskVideoDownload = utils.Success
 	require.False(t, archiveQueueStageStatusNeedsRecovery(queue, string(utils.TaskDownloadVideo)))
 
-	queue.TaskVideoDownload = utils.Running
-	queue.Processing = false
-	require.False(t, archiveQueueStageStatusNeedsRecovery(queue, string(utils.TaskDownloadVideo)))
 }

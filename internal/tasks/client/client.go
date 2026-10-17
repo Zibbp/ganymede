@@ -58,6 +58,13 @@ func (rc *RiverClient) JobList(ctx context.Context, params *river.JobListParams)
 	return rc.Client.JobList(ctx, params)
 }
 
+// StopLiveRecording leaves chat shutdown and finalization to the capture worker.
+func (rc *RiverClient) StopLiveRecording(ctx context.Context, queueID uuid.UUID) error {
+	params := river.NewJobListParams().States(rivertype.JobStateRunning).
+		Kinds(string(utils.TaskDownloadLiveVideo)).First(500)
+	return rc.cancelPages(ctx, params, queueID, make(map[int64]struct{}), true)
+}
+
 // JobsForQueueKindTx returns all retained generations for one archive stage.
 // Indexed metadata is preferred; the args scan keeps pre-metadata jobs visible.
 func (rc *RiverClient) JobsForQueueKindTx(ctx context.Context, tx *sql.Tx, queueID uuid.UUID, kind string) ([]*rivertype.JobRow, error) {

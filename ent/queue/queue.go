@@ -21,12 +21,6 @@ const (
 	FieldLiveArchive = "live_archive"
 	// FieldOnHold holds the string denoting the on_hold field in the database.
 	FieldOnHold = "on_hold"
-	// FieldVideoProcessing holds the string denoting the video_processing field in the database.
-	FieldVideoProcessing = "video_processing"
-	// FieldChatProcessing holds the string denoting the chat_processing field in the database.
-	FieldChatProcessing = "chat_processing"
-	// FieldProcessing holds the string denoting the processing field in the database.
-	FieldProcessing = "processing"
 	// FieldTaskVodCreateFolder holds the string denoting the task_vod_create_folder field in the database.
 	FieldTaskVodCreateFolder = "task_vod_create_folder"
 	// FieldTaskVodDownloadThumbnail holds the string denoting the task_vod_download_thumbnail field in the database.
@@ -79,9 +73,6 @@ var Columns = []string{
 	FieldID,
 	FieldLiveArchive,
 	FieldOnHold,
-	FieldVideoProcessing,
-	FieldChatProcessing,
-	FieldProcessing,
 	FieldTaskVodCreateFolder,
 	FieldTaskVodDownloadThumbnail,
 	FieldTaskVodSaveInfo,
@@ -127,12 +118,6 @@ var (
 	DefaultLiveArchive bool
 	// DefaultOnHold holds the default value on creation for the "on_hold" field.
 	DefaultOnHold bool
-	// DefaultVideoProcessing holds the default value on creation for the "video_processing" field.
-	DefaultVideoProcessing bool
-	// DefaultChatProcessing holds the default value on creation for the "chat_processing" field.
-	DefaultChatProcessing bool
-	// DefaultProcessing holds the default value on creation for the "processing" field.
-	DefaultProcessing bool
 	// DefaultArchiveChat holds the default value on creation for the "archive_chat" field.
 	DefaultArchiveChat bool
 	// DefaultRenderChat holds the default value on creation for the "render_chat" field.
@@ -283,21 +268,6 @@ func ByLiveArchive(opts ...sql.OrderTermOption) OrderOption {
 // ByOnHold orders the results by the on_hold field.
 func ByOnHold(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOnHold, opts...).ToFunc()
-}
-
-// ByVideoProcessing orders the results by the video_processing field.
-func ByVideoProcessing(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldVideoProcessing, opts...).ToFunc()
-}
-
-// ByChatProcessing orders the results by the chat_processing field.
-func ByChatProcessing(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldChatProcessing, opts...).ToFunc()
-}
-
-// ByProcessing orders the results by the processing field.
-func ByProcessing(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldProcessing, opts...).ToFunc()
 }
 
 // ByTaskVodCreateFolder orders the results by the task_vod_create_folder field.

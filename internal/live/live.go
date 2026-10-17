@@ -460,12 +460,16 @@ OUTER:
 				}
 
 				// check if stream is already being archived
-				queueItems, err := database.DB().Client.Queue.Query().Where(entQueue.Processing(true)).WithVod().All(ctx)
+				queueItems, err := s.Store.Client.Queue.Query().Where(entQueue.HasVodWith(
+					entVod.HasChannelWith(channel.ID(lwc.Edges.Channel.ID)),
+					entVod.PlatformEQ(utils.PlatformTwitch),
+					entVod.StatusIn(utils.ActiveArchiveStatuses()...),
+				)).WithVod().All(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error getting queue items")
 				}
 				for _, queueItem := range queueItems {
-					if queueItem.Edges.Vod.ExtID == stream.ID && queueItem.TaskVideoDownload == utils.Running {
+					if queueItem.Edges.Vod.ExtStreamID == stream.ID {
 						log.Debug().Msgf("%s is already being archived", lwc.Edges.Channel.Name)
 						continue OUTER
 					}
@@ -493,6 +497,10 @@ OUTER:
 					ArchiveChat: lwc.ArchiveChat,
 					RenderChat:  lwc.RenderChat,
 				})
+				if errors.Is(err, archive.ErrActiveLiveArchive) {
+					log.Debug().Str("stream_id", stream.ID).Msg("stream already has an active archive")
+					continue OUTER
+				}
 				if err != nil {
 					log.Error().Err(err).Msg("error archiving twitch livestream")
 					continue

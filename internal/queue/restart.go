@@ -14,6 +14,7 @@ import (
 	"github.com/riverqueue/river/rivertype"
 	"github.com/zibbp/ganymede/ent"
 	entqueue "github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/internal/archivestatus"
 	"github.com/zibbp/ganymede/internal/tasks"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -325,7 +326,7 @@ func validateRestartPrerequisite(q *ent.Queue, task string) error {
 }
 
 func resetRestartState(ctx context.Context, client *ent.Client, q *ent.Queue, stages []restartStage) error {
-	u := client.Queue.UpdateOneID(q.ID).SetProcessing(true).SetOnHold(false)
+	u := client.Queue.UpdateOneID(q.ID).SetOnHold(false)
 	for _, stage := range stages {
 		switch stage.status {
 		case utils.TaskCreateFolder:
@@ -335,25 +336,26 @@ func resetRestartState(ctx context.Context, client *ent.Client, q *ent.Queue, st
 		case utils.TaskSaveInfo:
 			u.SetTaskVodSaveInfo(utils.Pending)
 		case utils.TaskDownloadVideo:
-			u.SetTaskVideoDownload(utils.Pending).SetVideoProcessing(true)
+			u.SetTaskVideoDownload(utils.Pending)
 		case utils.TaskPostProcessVideo:
-			u.SetTaskVideoConvert(utils.Pending).SetVideoProcessing(true)
+			u.SetTaskVideoConvert(utils.Pending)
 		case utils.TaskMoveVideo:
-			u.SetTaskVideoMove(utils.Pending).SetVideoProcessing(true)
+			u.SetTaskVideoMove(utils.Pending)
 		case utils.TaskDownloadChat:
-			u.SetTaskChatDownload(utils.Pending).SetChatProcessing(true)
+			u.SetTaskChatDownload(utils.Pending)
 		case utils.TaskConvertChat:
-			u.SetTaskChatConvert(utils.Pending).SetChatProcessing(true)
+			u.SetTaskChatConvert(utils.Pending)
 		case utils.TaskRenderChat:
-			u.SetTaskChatRender(utils.Pending).SetChatProcessing(true)
+			u.SetTaskChatRender(utils.Pending)
 		case utils.TaskMoveChat:
-			u.SetTaskChatMove(utils.Pending).SetChatProcessing(true)
+			u.SetTaskChatMove(utils.Pending)
 		}
 	}
-	if _, err := u.Save(ctx); err != nil {
+	updated, err := u.Save(ctx)
+	if err != nil {
 		return fmt.Errorf("reset queue task: %w", err)
 	}
-	if _, err := client.Vod.UpdateOneID(q.Edges.Vod.ID).SetProcessing(true).Save(ctx); err != nil {
+	if _, err := client.Vod.UpdateOneID(q.Edges.Vod.ID).SetStatus(archivestatus.FromQueue(updated)).Save(ctx); err != nil {
 		return fmt.Errorf("reset archive lifecycle: %w", err)
 	}
 	return nil

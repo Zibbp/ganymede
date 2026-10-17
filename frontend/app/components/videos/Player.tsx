@@ -1,3 +1,4 @@
+import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import { Video, VideoPlayer as VideoJsPlayer, usePlayer as useVodPlayer } from '@videojs/react/video';
 import { LiveVideoPlayer as LiveVideoJsPlayer, usePlayer as useLivePlayer } from '@videojs/react/live-video';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
@@ -115,15 +116,15 @@ const VideoPlayer = ({ video, ref }: Params) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const isHls = video.processing || video.video_path.endsWith("m3u8");
+  const isHls = isArchiveActive(video.status) || video.video_path.endsWith("m3u8");
 
   const videoSrc = useMemo(() => {
     // Allow for processing videos to be played via HLS from the temp directory if enabled
-    if (video.processing) {
-      return `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.tmp_video_hls_path)}/${video.ext_id}-video.m3u8`;
+    if (isArchiveActive(video.status)) {
+      return `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.tmp_video_hls_path)}/${video.ext_stream_id || video.ext_id}-video.m3u8`;
     }
     return `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.video_path)}`;
-  }, [video.processing, video.tmp_video_hls_path, video.ext_id, video.video_path]);
+  }, [video.status, video.tmp_video_hls_path, video.ext_stream_id, video.ext_id, video.video_path]);
 
   const videoPoster = useMemo(() => {
     if (video.thumbnail_path) {
@@ -133,15 +134,15 @@ const VideoPlayer = ({ video, ref }: Params) => {
   }, [video.thumbnail_path]);
 
   const chapterSrc = useMemo(() => {
-    if (video.processing) return undefined;
+    if (video.status !== ArchiveStatus.Completed) return undefined;
     return `${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/chapter/video/${video.id}/webvtt`;
-  }, [video.processing, video.id]);
+  }, [video.status, video.id]);
 
   // thumbnails URL only when not processing
   const thumbnailsSrc = useMemo(() => {
-    if (video.processing) return undefined;
+    if (video.status !== ArchiveStatus.Completed) return undefined;
     return `${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/vod/${video.id}/thumbnails/vtt`;
-  }, [video.processing, video.id]);
+  }, [video.status, video.id]);
 
   const noteBookmarks = useMemo(
     () => extractVideoNoteTimestamps(video.notes, video.id),
@@ -223,39 +224,40 @@ const VideoPlayer = ({ video, ref }: Params) => {
   }, [mounted, playbackData, videoSrc, applyPendingResume]);
 
 
+  // Read the current video and mutation callbacks without restarting the timer on every render.
+  const reportPlaybackProgress = useRef<(() => boolean) | null>(null);
+  useEffect(() => {
+    reportPlaybackProgress.current = () => {
+      if (!player.current || player.current.paused) return false;
+      const playerTimeInt = Math.floor(player.current.currentTime);
+      if (playerTimeInt === 0) return false;
+
+      updatePlaybackProgressMutation.mutate({
+        axiosPrivate,
+        videoId: video.id,
+        time: playerTimeInt,
+      });
+
+      if (video.status === ArchiveStatus.Completed && playerTimeInt / video.duration >= 0.98) {
+        setPlaybackProgressMutation.mutate({
+          axiosPrivate,
+          videoId: video.id,
+          status: PlaybackStatus.Finished,
+        });
+        return true;
+      }
+      return false;
+    };
+  }, [player, video, axiosPrivate, updatePlaybackProgressMutation, setPlaybackProgressMutation]);
+
   // Playback progress reporting
   useEffect(() => {
     if (!isLoggedIn) return;
-    const playbackInerval = setInterval(async () => {
-      if (player.current == null) return;
-      if (player.current.paused) return;
-
-      const playerTimeInt = Math.floor(player.current.currentTime)
-      if (playerTimeInt == 0) return;
-
-
-      updatePlaybackProgressMutation.mutate({
-        axiosPrivate: axiosPrivate,
-        videoId: video.id,
-        time: playerTimeInt
-      })
-
-      // mark video as finished if over duration threshold
-      if (!video.processing && (playerTimeInt / video.duration >= 0.98)) {
-        setPlaybackProgressMutation.mutate({
-          axiosPrivate: axiosPrivate,
-          videoId: video.id,
-          status: PlaybackStatus.Finished
-        })
-
-        // remove interval
-        clearInterval(playbackInerval)
-      }
+    const playbackInterval = setInterval(() => {
+      if (reportPlaybackProgress.current?.()) clearInterval(playbackInterval);
     }, 10000);
-    return () => clearInterval(playbackInerval);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => clearInterval(playbackInterval);
+  }, [isLoggedIn, video.id, video.status]);
 
   // Fast tick for chat player - set player information in bus
   useEffect(() => {
@@ -314,7 +316,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
 
   return (
     <div className={classes.playerWrapper}>
-      {video.processing ? (
+      {isArchiveActive(video.status) ? (
         <LiveVideoJsPlayer title={video.title} poster={videoPoster}>
           <I18nProvider locale={locale}>
             <LiveVideoSkin

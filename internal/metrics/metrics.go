@@ -7,8 +7,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/ent/queue"
+	"github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/database"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 type Service struct {
@@ -227,7 +229,7 @@ func (s *Service) GatherMetrics(ctx context.Context) (*prometheus.Registry, erro
 	s.metrics.totalVodsDuration.Set(float64(totalDurationSeconds))
 	s.metrics.totalVodsBytes.Set(float64(totalBytes))
 	// Total VODs in queue
-	qCount, err := s.Store.Client.Queue.Query().Where(queue.Processing(true)).Count(ctx)
+	qCount, err := s.Store.Client.Queue.Query().Where(queue.HasVodWith(vod.StatusIn(utils.ActiveArchiveStatuses()...))).Count(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting total vods in queue")
 		s.metrics.totalVodsInQueue.Set(0)

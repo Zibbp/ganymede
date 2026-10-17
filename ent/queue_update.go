@@ -59,48 +59,6 @@ func (_u *QueueUpdate) SetNillableOnHold(v *bool) *QueueUpdate {
 	return _u
 }
 
-// SetVideoProcessing sets the "video_processing" field.
-func (_u *QueueUpdate) SetVideoProcessing(v bool) *QueueUpdate {
-	_u.mutation.SetVideoProcessing(v)
-	return _u
-}
-
-// SetNillableVideoProcessing sets the "video_processing" field if the given value is not nil.
-func (_u *QueueUpdate) SetNillableVideoProcessing(v *bool) *QueueUpdate {
-	if v != nil {
-		_u.SetVideoProcessing(*v)
-	}
-	return _u
-}
-
-// SetChatProcessing sets the "chat_processing" field.
-func (_u *QueueUpdate) SetChatProcessing(v bool) *QueueUpdate {
-	_u.mutation.SetChatProcessing(v)
-	return _u
-}
-
-// SetNillableChatProcessing sets the "chat_processing" field if the given value is not nil.
-func (_u *QueueUpdate) SetNillableChatProcessing(v *bool) *QueueUpdate {
-	if v != nil {
-		_u.SetChatProcessing(*v)
-	}
-	return _u
-}
-
-// SetProcessing sets the "processing" field.
-func (_u *QueueUpdate) SetProcessing(v bool) *QueueUpdate {
-	_u.mutation.SetProcessing(v)
-	return _u
-}
-
-// SetNillableProcessing sets the "processing" field if the given value is not nil.
-func (_u *QueueUpdate) SetNillableProcessing(v *bool) *QueueUpdate {
-	if v != nil {
-		_u.SetProcessing(*v)
-	}
-	return _u
-}
-
 // SetTaskVodCreateFolder sets the "task_vod_create_folder" field.
 func (_u *QueueUpdate) SetTaskVodCreateFolder(v utils.TaskStatus) *QueueUpdate {
 	_u.mutation.SetTaskVodCreateFolder(v)
@@ -541,15 +499,6 @@ func (_u *QueueUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.OnHold(); ok {
 		_spec.SetField(queue.FieldOnHold, field.TypeBool, value)
 	}
-	if value, ok := _u.mutation.VideoProcessing(); ok {
-		_spec.SetField(queue.FieldVideoProcessing, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.ChatProcessing(); ok {
-		_spec.SetField(queue.FieldChatProcessing, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.Processing(); ok {
-		_spec.SetField(queue.FieldProcessing, field.TypeBool, value)
-	}
 	if value, ok := _u.mutation.TaskVodCreateFolder(); ok {
 		_spec.SetField(queue.FieldTaskVodCreateFolder, field.TypeEnum, value)
 	}
@@ -716,48 +665,6 @@ func (_u *QueueUpdateOne) SetOnHold(v bool) *QueueUpdateOne {
 func (_u *QueueUpdateOne) SetNillableOnHold(v *bool) *QueueUpdateOne {
 	if v != nil {
 		_u.SetOnHold(*v)
-	}
-	return _u
-}
-
-// SetVideoProcessing sets the "video_processing" field.
-func (_u *QueueUpdateOne) SetVideoProcessing(v bool) *QueueUpdateOne {
-	_u.mutation.SetVideoProcessing(v)
-	return _u
-}
-
-// SetNillableVideoProcessing sets the "video_processing" field if the given value is not nil.
-func (_u *QueueUpdateOne) SetNillableVideoProcessing(v *bool) *QueueUpdateOne {
-	if v != nil {
-		_u.SetVideoProcessing(*v)
-	}
-	return _u
-}
-
-// SetChatProcessing sets the "chat_processing" field.
-func (_u *QueueUpdateOne) SetChatProcessing(v bool) *QueueUpdateOne {
-	_u.mutation.SetChatProcessing(v)
-	return _u
-}
-
-// SetNillableChatProcessing sets the "chat_processing" field if the given value is not nil.
-func (_u *QueueUpdateOne) SetNillableChatProcessing(v *bool) *QueueUpdateOne {
-	if v != nil {
-		_u.SetChatProcessing(*v)
-	}
-	return _u
-}
-
-// SetProcessing sets the "processing" field.
-func (_u *QueueUpdateOne) SetProcessing(v bool) *QueueUpdateOne {
-	_u.mutation.SetProcessing(v)
-	return _u
-}
-
-// SetNillableProcessing sets the "processing" field if the given value is not nil.
-func (_u *QueueUpdateOne) SetNillableProcessing(v *bool) *QueueUpdateOne {
-	if v != nil {
-		_u.SetProcessing(*v)
 	}
 	return _u
 }
@@ -1231,15 +1138,6 @@ func (_u *QueueUpdateOne) sqlSave(ctx context.Context) (_node *Queue, err error)
 	}
 	if value, ok := _u.mutation.OnHold(); ok {
 		_spec.SetField(queue.FieldOnHold, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.VideoProcessing(); ok {
-		_spec.SetField(queue.FieldVideoProcessing, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.ChatProcessing(); ok {
-		_spec.SetField(queue.FieldChatProcessing, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.Processing(); ok {
-		_spec.SetField(queue.FieldProcessing, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.TaskVodCreateFolder(); ok {
 		_spec.SetField(queue.FieldTaskVodCreateFolder, field.TypeEnum, value)

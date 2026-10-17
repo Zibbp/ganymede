@@ -24,12 +24,6 @@ type Queue struct {
 	LiveArchive bool `json:"live_archive,omitempty"`
 	// OnHold holds the value of the "on_hold" field.
 	OnHold bool `json:"on_hold,omitempty"`
-	// VideoProcessing holds the value of the "video_processing" field.
-	VideoProcessing bool `json:"video_processing,omitempty"`
-	// ChatProcessing holds the value of the "chat_processing" field.
-	ChatProcessing bool `json:"chat_processing,omitempty"`
-	// Processing holds the value of the "processing" field.
-	Processing bool `json:"processing,omitempty"`
 	// TaskVodCreateFolder holds the value of the "task_vod_create_folder" field.
 	TaskVodCreateFolder utils.TaskStatus `json:"task_vod_create_folder,omitempty"`
 	// TaskVodDownloadThumbnail holds the value of the "task_vod_download_thumbnail" field.
@@ -96,7 +90,7 @@ func (*Queue) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case queue.FieldLiveArchive, queue.FieldOnHold, queue.FieldVideoProcessing, queue.FieldChatProcessing, queue.FieldProcessing, queue.FieldArchiveChat, queue.FieldRenderChat:
+		case queue.FieldLiveArchive, queue.FieldOnHold, queue.FieldArchiveChat, queue.FieldRenderChat:
 			values[i] = new(sql.NullBool)
 		case queue.FieldTaskVodCreateFolder, queue.FieldTaskVodDownloadThumbnail, queue.FieldTaskVodSaveInfo, queue.FieldTaskVideoDownload, queue.FieldTaskVideoConvert, queue.FieldTaskVideoMove, queue.FieldTaskChatDownload, queue.FieldTaskChatConvert, queue.FieldTaskChatRender, queue.FieldTaskChatMove, queue.FieldWorkflowID, queue.FieldWorkflowRunID:
 			values[i] = new(sql.NullString)
@@ -138,24 +132,6 @@ func (_m *Queue) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field on_hold", values[i])
 			} else if value.Valid {
 				_m.OnHold = value.Bool
-			}
-		case queue.FieldVideoProcessing:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field video_processing", values[i])
-			} else if value.Valid {
-				_m.VideoProcessing = value.Bool
-			}
-		case queue.FieldChatProcessing:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field chat_processing", values[i])
-			} else if value.Valid {
-				_m.ChatProcessing = value.Bool
-			}
-		case queue.FieldProcessing:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field processing", values[i])
-			} else if value.Valid {
-				_m.Processing = value.Bool
 			}
 		case queue.FieldTaskVodCreateFolder:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -312,15 +288,6 @@ func (_m *Queue) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("on_hold=")
 	builder.WriteString(fmt.Sprintf("%v", _m.OnHold))
-	builder.WriteString(", ")
-	builder.WriteString("video_processing=")
-	builder.WriteString(fmt.Sprintf("%v", _m.VideoProcessing))
-	builder.WriteString(", ")
-	builder.WriteString("chat_processing=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ChatProcessing))
-	builder.WriteString(", ")
-	builder.WriteString("processing=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Processing))
 	builder.WriteString(", ")
 	builder.WriteString("task_vod_create_folder=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TaskVodCreateFolder))

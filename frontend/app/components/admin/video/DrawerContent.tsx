@@ -1,3 +1,4 @@
+import { ArchiveStatus } from "@/app/util/archiveStatus";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Channel, useFetchChannels } from "@/app/hooks/useChannels";
 import { CreateVodRequest, Platform, useCreateVideo, useEditVideo, Video, VideoType } from "@/app/hooks/useVideos";
@@ -27,10 +28,12 @@ interface SelectOption {
 
 const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
   const t = useTranslations('AdminVideoComponents')
+  const statusText = useTranslations('ArchiveStatus')
   const axiosPrivate = useAxiosPrivate()
   const [loading, setLoading] = useState(false)
 
   const schema = z.object({
+    status: z.nativeEnum(ArchiveStatus),
     title: z.string().min(1, { message: t('validation.title') }),
     ext_id: z.string().min(1, { message: t('validation.extId') }),
     channel_id: z.string().min(1, { message: t('validation.channelId') }),
@@ -61,7 +64,7 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
       chat_path: video?.chat_path || "",
       chat_video_path: video?.chat_video_path || "",
       info_path: video?.info_path || "",
-      processing: video?.processing ?? false,
+      status: video?.status ?? ArchiveStatus.Completed,
       streamed_at: video?.streamed_at || "",
       channel_id: video?.edges.channel.id || "",
       caption_path: video?.caption_path || "",
@@ -178,10 +181,12 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
           direction="row"
         >
 
-          <Checkbox
-            label={t('isProcessingLabel')}
-            key={form.key('processing')}
-            {...form.getInputProps('processing', { type: "checkbox" })}
+          <Select
+            label={statusText('label')}
+            data={Object.values(ArchiveStatus).map(value => ({ value, label: statusText(value) }))}
+            allowDeselect={false}
+            key={form.key('status')}
+            {...form.getInputProps('status')}
           />
           <Checkbox
             label={t('lockedLabel')}

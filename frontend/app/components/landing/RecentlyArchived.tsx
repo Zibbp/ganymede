@@ -1,3 +1,4 @@
+import { ArchiveStatus } from "@/app/util/archiveStatus";
 import { rem, SimpleGrid, useMantineTheme } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
 import VideoCard from "../videos/Card"
@@ -16,7 +17,7 @@ const RecentlyArchived = ({ count }: Props) => {
 
   const showProcessingVideosInRecentlyArchived = useSettingsStore((state) => state.showProcessingVideosInRecentlyArchived);
 
-  const { data, isPending, isError } = useFetchVideosFilter({ limit: count, offset: 0, is_processing: showProcessingVideosInRecentlyArchived })
+  const { data, isPending, isError } = useFetchVideosFilter({ limit: count, offset: 0, statuses: showProcessingVideosInRecentlyArchived ? undefined : [ArchiveStatus.Completed] })
 
   const t = useTranslations("LandingRecentlyArchivedComponent")
 

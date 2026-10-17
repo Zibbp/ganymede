@@ -67,21 +67,6 @@ func OnHold(v bool) predicate.Queue {
 	return predicate.Queue(sql.FieldEQ(FieldOnHold, v))
 }
 
-// VideoProcessing applies equality check predicate on the "video_processing" field. It's identical to VideoProcessingEQ.
-func VideoProcessing(v bool) predicate.Queue {
-	return predicate.Queue(sql.FieldEQ(FieldVideoProcessing, v))
-}
-
-// ChatProcessing applies equality check predicate on the "chat_processing" field. It's identical to ChatProcessingEQ.
-func ChatProcessing(v bool) predicate.Queue {
-	return predicate.Queue(sql.FieldEQ(FieldChatProcessing, v))
-}
-
-// Processing applies equality check predicate on the "processing" field. It's identical to ProcessingEQ.
-func Processing(v bool) predicate.Queue {
-	return predicate.Queue(sql.FieldEQ(FieldProcessing, v))
-}
-
 // ChatStart applies equality check predicate on the "chat_start" field. It's identical to ChatStartEQ.
 func ChatStart(v time.Time) predicate.Queue {
 	return predicate.Queue(sql.FieldEQ(FieldChatStart, v))
@@ -135,36 +120,6 @@ func OnHoldEQ(v bool) predicate.Queue {
 // OnHoldNEQ applies the NEQ predicate on the "on_hold" field.
 func OnHoldNEQ(v bool) predicate.Queue {
 	return predicate.Queue(sql.FieldNEQ(FieldOnHold, v))
-}
-
-// VideoProcessingEQ applies the EQ predicate on the "video_processing" field.
-func VideoProcessingEQ(v bool) predicate.Queue {
-	return predicate.Queue(sql.FieldEQ(FieldVideoProcessing, v))
-}
-
-// VideoProcessingNEQ applies the NEQ predicate on the "video_processing" field.
-func VideoProcessingNEQ(v bool) predicate.Queue {
-	return predicate.Queue(sql.FieldNEQ(FieldVideoProcessing, v))
-}
-
-// ChatProcessingEQ applies the EQ predicate on the "chat_processing" field.
-func ChatProcessingEQ(v bool) predicate.Queue {
-	return predicate.Queue(sql.FieldEQ(FieldChatProcessing, v))
-}
-
-// ChatProcessingNEQ applies the NEQ predicate on the "chat_processing" field.
-func ChatProcessingNEQ(v bool) predicate.Queue {
-	return predicate.Queue(sql.FieldNEQ(FieldChatProcessing, v))
-}
-
-// ProcessingEQ applies the EQ predicate on the "processing" field.
-func ProcessingEQ(v bool) predicate.Queue {
-	return predicate.Queue(sql.FieldEQ(FieldProcessing, v))
-}
-
-// ProcessingNEQ applies the NEQ predicate on the "processing" field.
-func ProcessingNEQ(v bool) predicate.Queue {
-	return predicate.Queue(sql.FieldNEQ(FieldProcessing, v))
 }
 
 // TaskVodCreateFolderEQ applies the EQ predicate on the "task_vod_create_folder" field.

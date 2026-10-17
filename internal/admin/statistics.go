@@ -204,7 +204,7 @@ func (s *Service) getQueueOverview(ctx context.Context) (QueueOverview, error) {
 	if q.Total, err = s.Store.Client.Queue.Query().Count(ctx); err != nil {
 		return q, err
 	}
-	if q.Processing, err = s.Store.Client.Queue.Query().Where(entqueue.Processing(true)).Count(ctx); err != nil {
+	if q.Processing, err = s.Store.Client.Queue.Query().Where(entqueue.HasVodWith(entVod.StatusIn(utils.ActiveArchiveStatuses()...))).Count(ctx); err != nil {
 		return q, err
 	}
 	if q.OnHold, err = s.Store.Client.Queue.Query().Where(entqueue.OnHold(true)).Count(ctx); err != nil {
@@ -216,7 +216,7 @@ func (s *Service) getQueueOverview(ctx context.Context) (QueueOverview, error) {
 	if q.LiveArchiving, err = s.Store.Client.Queue.Query().Where(
 		entqueue.And(
 			entqueue.LiveArchive(true),
-			entqueue.Processing(true),
+			entqueue.HasVodWith(entVod.StatusIn(utils.ActiveArchiveStatuses()...)),
 		),
 	).Count(ctx); err != nil {
 		return q, err

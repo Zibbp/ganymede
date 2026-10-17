@@ -85,7 +85,8 @@ done
 	}
 
 	select {
-	case <-done:
+	case err := <-done:
+		t.Logf("archive command exited: %v", err)
 	case <-time.After(10 * time.Second):
 		t.Fatal("timed out waiting for archive command to finish after cancellation")
 	}
@@ -147,7 +148,8 @@ done
 	}
 
 	select {
-	case <-done:
+	case err := <-done:
+		t.Logf("archive command exited: %v", err)
 	case <-time.After(10 * time.Second):
 		t.Fatal("timed out waiting for archive command to finish after parent-death signal")
 	}

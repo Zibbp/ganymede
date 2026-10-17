@@ -1,8 +1,10 @@
 "use client"
+import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import { useFetchVideo, useGetVideoClips, VideoType } from "@/app/hooks/useVideos";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import classes from "./VideoPage.module.css"
 import { Box, Container, useMantineTheme } from "@mantine/core";
+import RecordingNotice from "@/app/components/videos/RecordingNotice";
 import VideoPlayer from "@/app/components/videos/Player";
 import VideoTitleBar from "@/app/components/videos/TitleBar";
 import ChatPlayer from "@/app/components/videos/ChatPlayer";
@@ -109,7 +111,11 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
               ? undefined
               : (videoTheaterMode || fullscreen ? classes.videoPlayerTheaterMode : classes.videoPlayer)
           }>
-            <VideoPlayer video={data} ref={player} />
+            {isArchiveActive(data.status) && !data.live_preview_available ? (
+              <RecordingNotice video={data} />
+            ) : (
+              <VideoPlayer video={data} ref={player} />
+            )}
           </div>
         </div>
 
@@ -125,7 +131,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
               onClose={() => setNotesPanelOpen(false)}
             />
           </div>
-        ) : data.chat_path && !hideChat && !data.processing && (
+        ) : data.chat_path && !hideChat && data.status === ArchiveStatus.Completed && (
           <div
             className={isMobile ? classes.chatColumnMobile : classes.rightColumn}
             style={isMobile ? undefined : { height: "auto", maxHeight: "auto" }}
@@ -153,7 +159,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
       )}
 
       {/* Desktop-only sections render after the player/chat block so toggling them doesn't shift player position */}
-      {!isMobile && !data.processing && (
+      {!isMobile && data.status === ArchiveStatus.Completed && (
         <Container size="7xl" fluid={true} >
           {videoClipsError && (
             <div>Error loading clips</div>
@@ -164,7 +170,7 @@ const VideoPage = ({ params }: { params: Promise<Params> }) => {
         </Container>
       )}
 
-      {(!isMobile && data.chat_path && (data.type != VideoType.Clip) && showChatHistogram && !data.processing) && (
+      {(!isMobile && data.chat_path && (data.type != VideoType.Clip) && showChatHistogram && data.status === ArchiveStatus.Completed) && (
         <Container size="7xl" fluid={true} >
           <VideoChatHistogram videoId={data.id} playerRef={player} />
         </Container>

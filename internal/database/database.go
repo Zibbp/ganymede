@@ -145,6 +145,9 @@ func migrate(ctx context.Context, sqlDB *sql.DB, client *ent.Client) error {
 	if _, err := lockTx.ExecContext(ctx, "SELECT pg_advisory_xact_lock($1)", migrationLockKey); err != nil {
 		return fmt.Errorf("acquire migration lock: %w", err)
 	}
+	if err := migrateArchiveStatus(ctx, sqlDB); err != nil {
+		return err
+	}
 
 	hasLiveVodResolution := columnExists(ctx, sqlDB, entLive.Table, entLive.FieldVodResolution)
 	hasLiveClipResolution := columnExists(ctx, sqlDB, entLive.Table, entLive.FieldClipResolution)

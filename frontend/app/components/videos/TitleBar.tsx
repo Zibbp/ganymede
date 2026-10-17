@@ -1,4 +1,6 @@
 "use client"
+import ArchiveStatusBadge from "./ArchiveStatusBadge";
+import { ArchiveStatus } from "@/app/util/archiveStatus";
 import { useGetVideoByExternalId, Video } from "@/app/hooks/useVideos";
 import { escapeURL, formatBytes } from "@/app/util/util";
 import { Avatar, Box, Divider, Tooltip, Text, Group, Badge, Button, rem } from "@mantine/core";
@@ -125,21 +127,11 @@ const VideoTitleBar = ({ video, onEditNotes }: Params) => {
 
             <Group>
               <Tooltip label={t('videoTypeTooltip')} openDelay={250}>
-                {video.processing ? (
-                  <div className={classes.titleBarBadge}>
-                    <Badge color="red">
-                      {video.type} - {t('processingOverlayText')}
-                    </Badge>
-                  </div>
-                ) : (
-                  <div className={classes.titleBarBadge}>
-                    <Badge variant="default">
-                      {video.type}
-                    </Badge>
-                  </div>
-                )}
-
+                <Badge variant="default">{video.type}</Badge>
               </Tooltip>
+              {video.status !== ArchiveStatus.Completed && (
+                <ArchiveStatusBadge videoId={video.id} status={video.status} />
+              )}
             </Group>
           </div>
 
