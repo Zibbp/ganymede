@@ -20,7 +20,7 @@ RUN make build_server build_worker
 #
 # Build yt-dlp
 #
-FROM python:3.14-bookworm AS build-yt-dlp
+FROM python:3.15-bookworm AS build-yt-dlp
 ARG YT_DLP_VERSION
 
 WORKDIR /app
