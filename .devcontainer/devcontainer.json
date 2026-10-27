@@ -1,8 +1,6 @@
 {
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
   "features": {
     "ghcr.io/jungaretti/features/make:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
@@ -29,31 +27,6 @@
       ]
     }
   },
-  // "forwardPorts": [4000],
-  "appPort": ["0.0.0.0:4000:4000"],
-  "mounts": [
-    {
-      "source": "${localWorkspaceFolder}/dev/videos",
-      "target": "/data/videos",
-      "type": "bind"
-    },
-    {
-      "source": "${localWorkspaceFolder}/dev/temp",
-      "target": "/data/temp",
-      "type": "bind"
-    },
-    {
-      "source": "${localWorkspaceFolder}/dev/logs",
-      "target": "/data/logs",
-      "type": "bind"
-    },
-    {
-      "source": "${localWorkspaceFolder}/dev/config",
-      "target": "/data/config",
-      "type": "bind"
-    }
-  ],
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
   "workspaceFolder": "/workspace",
   "postAttachCommand": "sudo chown -R vscode:vscode /go && make dev_setup"
 }
