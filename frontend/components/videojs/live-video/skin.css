@@ -18,9 +18,12 @@
       z-index: 10;
       border-radius: inherit;
       background-image: var(--media-controls-gradient);
+      background-size: 100% var(--media-controls-gradient-height);
       transition-property: opacity;
       transition-duration: 0.15s;
       transition-duration: var(--media-duration-controls);
+      background-position: bottom;
+      background-repeat: no-repeat;
       transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
       position: absolute;
       inset: 0;
@@ -28,6 +31,17 @@
 
     .video-controls-backdrop:not([data-visible]) {
       opacity: 0;
+    }
+
+    @container media-root (width < 32rem) {
+      .video-controls-backdrop:before {
+        height: var(--media-controls-gradient-height);
+        content: "";
+        background-image: var(--media-controls-top-gradient);
+        inset-inline: 0;
+        position: absolute;
+        top: 0;
+      }
     }
 
     .video-controls-content {
