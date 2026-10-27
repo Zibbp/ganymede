@@ -1,0 +1,41 @@
+services:
+  devcontainer:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    command: sleep infinity
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ganymede
+      DB_PASS: ganymede
+      DB_NAME: ganymede
+      DB_SSL: disable
+    ports:
+      - "0.0.0.0:4000:4000"
+    volumes:
+      - ..:/workspace:cached
+      - ../dev/videos:/data/videos
+      - ../dev/temp:/data/temp
+      - ../dev/logs:/data/logs
+      - ../dev/config:/data/config
+
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ganymede
+      POSTGRES_PASSWORD: ganymede
+      POSTGRES_DB: ganymede
+    volumes:
+      - postgres-18-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-18-data:
