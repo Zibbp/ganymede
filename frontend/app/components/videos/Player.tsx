@@ -58,12 +58,12 @@ const LiveAbsoluteTimeDisplay = ({ startedAt }: { startedAt: string | Date }) =>
   return <AbsoluteTimeOverlay startedAt={startedAt} currentTime={safeCurrentTime} />;
 };
 
-const PlayerCustomControls = () => {
+const PlayerCustomControls = ({ showChatControl }: { showChatControl: boolean }) => {
   return (
     <>
       <VideoPlayerTheaterModeIcon />
       <VideoPlayerAbsoluteTimeIcon />
-      <VideoPlayerHideChatIcon />
+      {showChatControl && <VideoPlayerHideChatIcon />}
     </>
   );
 };
@@ -326,7 +326,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
                   : classes.mediaPlayer
               }
               style={skinStyle}
-              customControls={<PlayerCustomControls />}
+              customControls={<PlayerCustomControls showChatControl={false} />}
             >
               <HlsJsVideo {...mediaProps} />
               {showAbsoluteTime && <LiveAbsoluteTimeDisplay startedAt={startedAt} />}
@@ -344,7 +344,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
               }
               style={skinStyle}
               bookmarks={noteBookmarks}
-              customControls={<PlayerCustomControls />}
+              customControls={<PlayerCustomControls showChatControl={video.status === ArchiveStatus.Completed && !!video.chat_path} />}
             >
               {isHls ? (
                 <HlsJsVideo {...mediaProps}>
