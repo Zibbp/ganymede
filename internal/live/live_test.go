@@ -416,8 +416,7 @@ func TestTwitchWatchedChannelLiveFFmpegKilledStillFinalizes(t *testing.T) {
 	assert.NoError(t, err, "Failed to query queue item for VOD")
 	assert.NotNil(t, q, "Queue item should not be nil")
 
-	_, err = waitForQueueTaskStatus(t, app, q.ID, utils.Running, 60*time.Second)
-	assert.NoError(t, err, "Expected live video download task to reach running state")
+	tests_shared.WaitForRunningVideoDownload(t, app, q.ID, vod.TmpVideoDownloadPath, 1, 90*time.Second)
 
 	// Kill ffmpeg process by matching VOD UUID present in ffmpeg command args
 	killMatched := false
