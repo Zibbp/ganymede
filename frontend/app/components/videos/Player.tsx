@@ -11,7 +11,8 @@ import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { env } from 'next-runtime-env';
 import dayjs from 'dayjs';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { FloatingWindow } from '@mantine/core';
 import { escapeURL } from '@/app/util/util';
 import { extractVideoNoteTimestamps } from '@/app/util/videoNotes';
 import { PlaybackStatus, useFetchPlaybackForVideo, useSetPlaybackProgressForVideo, useStartPlaybackForVideo, useUpdatePlaybackProgressForVideo } from '@/app/hooks/usePlayback';
@@ -30,7 +31,19 @@ interface Params {
   ref: GanymedePlayerRef;
 }
 
-const AbsoluteTimeOverlay = ({ startedAt, currentTime }: { startedAt: string | Date; currentTime: number }) => {
+const AbsoluteTimePopup = ({ startedAt, currentTime }: { startedAt: string | Date; currentTime: number }) => {
+  const t = useTranslations('VideoComponents');
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | undefined>(undefined);
+
+  useEffect(() => {
+    const updatePortalTarget = () => {
+      setPortalTarget(document.fullscreenElement as HTMLElement | null ?? undefined);
+    };
+    updatePortalTarget();
+    document.addEventListener('fullscreenchange', updatePortalTarget);
+    return () => document.removeEventListener('fullscreenchange', updatePortalTarget);
+  }, []);
+
   const flooredCurrentTime = Math.floor(currentTime);
   const absoluteTime = useMemo(
     () => dayjs(startedAt).add(flooredCurrentTime, 'second'),
@@ -38,9 +51,20 @@ const AbsoluteTimeOverlay = ({ startedAt, currentTime }: { startedAt: string | D
   );
 
   return (
-    <div className={classes.absoluteTimeOverlay}>
+    <FloatingWindow
+      withBorder
+      shadow="md"
+      radius="md"
+      p="sm"
+      initialPosition={{ top: 80, left: 16 }}
+      constrainToViewport
+      className={classes.absoluteTimePopup}
+      portalProps={{ target: portalTarget }}
+      role="dialog"
+      aria-label={t('absoluteTime')}
+    >
       <span className={classes.absoluteTimeText}>{absoluteTime.format('YYYY-MM-DD HH:mm:ss')}</span>
-    </div>
+    </FloatingWindow>
   );
 };
 
@@ -49,13 +73,13 @@ const AbsoluteTimeOverlay = ({ startedAt, currentTime }: { startedAt: string | D
 const AbsoluteTimeDisplay = ({ startedAt }: { startedAt: string | Date }) => {
   const currentTime = useVodPlayer((s) => (s as unknown as { currentTime: number }).currentTime);
   const safeCurrentTime = typeof currentTime === 'number' && Number.isFinite(currentTime) ? currentTime : 0;
-  return <AbsoluteTimeOverlay startedAt={startedAt} currentTime={safeCurrentTime} />;
+  return <AbsoluteTimePopup startedAt={startedAt} currentTime={safeCurrentTime} />;
 };
 
 const LiveAbsoluteTimeDisplay = ({ startedAt }: { startedAt: string | Date }) => {
   const currentTime = useLivePlayer((s) => (s as unknown as { currentTime: number }).currentTime);
   const safeCurrentTime = typeof currentTime === 'number' && Number.isFinite(currentTime) ? currentTime : 0;
-  return <AbsoluteTimeOverlay startedAt={startedAt} currentTime={safeCurrentTime} />;
+  return <AbsoluteTimePopup startedAt={startedAt} currentTime={safeCurrentTime} />;
 };
 
 const PlayerCustomControls = ({ showChatControl }: { showChatControl: boolean }) => {
@@ -329,8 +353,8 @@ const VideoPlayer = ({ video, ref }: Params) => {
               customControls={<PlayerCustomControls showChatControl={false} />}
             >
               <HlsJsVideo {...mediaProps} />
-              {showAbsoluteTime && <LiveAbsoluteTimeDisplay startedAt={startedAt} />}
             </LiveVideoSkin>
+            {showAbsoluteTime && <LiveAbsoluteTimeDisplay startedAt={startedAt} />}
           </I18nProvider>
         </LiveVideoJsPlayer>
       ) : (
@@ -365,8 +389,8 @@ const VideoPlayer = ({ video, ref }: Params) => {
                   )}
                 </Video>
               )}
-              {showAbsoluteTime && <AbsoluteTimeDisplay startedAt={startedAt} />}
             </VideoSkin>
+            {showAbsoluteTime && <AbsoluteTimeDisplay startedAt={startedAt} />}
           </I18nProvider>
         </VideoJsPlayer>
       )}

@@ -943,6 +943,7 @@
     "theaterModeIconTooltip": "Theater Mode",
     "hideChatIconTooltip": "Hide Chat",
     "showChatIconTooltip": "Show Chat",
+    "absoluteTime": "Absolute time",
     "absoluteTimeIconTooltip": "Toggle Absolute Time",
     "sourceViewsTooltip": "source views",
     "localViewsTooltip": "local views",

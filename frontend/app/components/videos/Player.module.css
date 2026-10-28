@@ -38,24 +38,9 @@
   object-fit: contain;
 }
 
-.absoluteTimeOverlay {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  color: white;
-  /* Stay above the controls backdrop and title (layers 10 and 20). */
-  z-index: 21;
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 0.2s ease;
-}
-
-.mediaPlayer:has(.absoluteTimeOverlay) :global(.media-title),
-.mediaPlayerTheaterMode:has(.absoluteTimeOverlay) :global(.media-title) {
-  top: 2.5rem;
+.absoluteTimePopup {
+  cursor: move;
+  user-select: none;
 }
 
 .absoluteTimeText {
