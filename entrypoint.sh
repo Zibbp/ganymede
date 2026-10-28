@@ -41,4 +41,4 @@ export DOTNET_BUNDLE_EXTRACT_BASE_DIR=/tmp
 export FONTCONFIG_CACHE=/var/cache/fontconfig
 
 # start applications
-/usr/bin/supervisord -c /opt/app/supervisord.conf
+exec /usr/bin/supervisord -c /opt/app/supervisord.conf

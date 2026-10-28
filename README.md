@@ -77,6 +77,12 @@ Feel free to use an existing Postgres database container if you don't want to sp
 4. Visit the address and port you specified for the frontend and login with username: `admin` password: `ganymede`.
 5. Change the admin password _or_ create a new user, grant admin permissions on that user, and delete the admin user.
 
+#### Stop grace period
+
+A clean shutdown can take up to ~80s. The example compose file sets `stop_grace_period: 90s`; on Kubernetes set `terminationGracePeriodSeconds: 90`.
+
+A fatal process error stops the container with exit code `0`, so use the `unless-stopped`/`always` restart policy, not `on-failure`.
+
 ### Images
 
 Images are published to ghcr.io. There are four types of tags available.
