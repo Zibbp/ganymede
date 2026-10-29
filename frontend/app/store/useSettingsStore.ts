@@ -11,6 +11,7 @@ interface SettingsState {
   showChatHistogram: boolean;
   showProcessingVideosInRecentlyArchived: boolean;
   showAbsoluteTime: boolean;
+  absoluteTimePinnedPosition: { top: number; left: number } | null;
   showChatTimestamps: boolean;
   autoplayVideo: boolean;
   setVideoLimit: (limit: number) => void;
@@ -22,6 +23,7 @@ interface SettingsState {
   setShowChatHistogram: (show: boolean) => void;
   setShowProcessingVideosInRecentlyArchived: (show: boolean) => void;
   setShowAbsoluteTime: (show: boolean) => void;
+  setAbsoluteTimePinnedPosition: (position: { top: number; left: number } | null) => void;
   setShowChatTimestamps: (show: boolean) => void;
   setAutoplayVideo: (autoplayVideo: boolean) => void;
 }
@@ -40,6 +42,7 @@ const useSettingsStore = create<SettingsState>()(
       showChatHistogram: true,
       showProcessingVideosInRecentlyArchived: true,
       showAbsoluteTime: false,
+      absoluteTimePinnedPosition: null,
       showChatTimestamps: false,
       autoplayVideo: false,
 
@@ -65,6 +68,9 @@ const useSettingsStore = create<SettingsState>()(
 
       setShowAbsoluteTime: (show: boolean) => set({ showAbsoluteTime: show }),
 
+      setAbsoluteTimePinnedPosition: (position) =>
+        set({ absoluteTimePinnedPosition: position }),
+
       setShowChatTimestamps: (show: boolean) =>
         set({ showChatTimestamps: show }),
 
@@ -83,6 +89,7 @@ const useSettingsStore = create<SettingsState>()(
           state.showProcessingVideosInRecentlyArchived,
         hideChat: state.hideChat,
         showAbsoluteTime: state.showAbsoluteTime,
+        absoluteTimePinnedPosition: state.absoluteTimePinnedPosition,
         showChatTimestamps: state.showChatTimestamps,
         autoplayVideo: state.autoplayVideo,
       }),
