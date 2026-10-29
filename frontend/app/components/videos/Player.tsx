@@ -12,7 +12,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { env } from 'next-runtime-env';
 import dayjs from 'dayjs';
 import { useLocale, useTranslations } from 'next-intl';
-import { FloatingWindow } from '@mantine/core';
+import { ActionIcon, FloatingWindow } from '@mantine/core';
+import { IconPin, IconPinnedOff } from '@tabler/icons-react';
 import { escapeURL } from '@/app/util/util';
 import { extractVideoNoteTimestamps } from '@/app/util/videoNotes';
 import { PlaybackStatus, useFetchPlaybackForVideo, useSetPlaybackProgressForVideo, useStartPlaybackForVideo, useUpdatePlaybackProgressForVideo } from '@/app/hooks/usePlayback';
@@ -33,6 +34,21 @@ interface Params {
 
 const AbsoluteTimePopup = ({ startedAt, currentTime }: { startedAt: string | Date; currentTime: number }) => {
   const t = useTranslations('VideoComponents');
+  const pinnedPosition = useSettingsStore((state) => state.absoluteTimePinnedPosition);
+  const setPinnedPosition = useSettingsStore((state) => state.setAbsoluteTimePinnedPosition);
+  const pinned = pinnedPosition !== null;
+  // Keep the initial position stable so pinning/unpinning does not move the popup.
+  const [initialPosition] = useState(() => pinnedPosition ?? { top: 80, left: 16 });
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  const togglePinned = () => {
+    if (pinned) {
+      setPinnedPosition(null);
+    } else if (popupRef.current) {
+      const { top, left } = popupRef.current.getBoundingClientRect();
+      setPinnedPosition({ top, left });
+    }
+  };
   const [portalTarget, setPortalTarget] = useState<HTMLElement | undefined>(undefined);
 
   useEffect(() => {
@@ -52,18 +68,35 @@ const AbsoluteTimePopup = ({ startedAt, currentTime }: { startedAt: string | Dat
 
   return (
     <FloatingWindow
-      withBorder
-      shadow="md"
-      radius="md"
-      p="sm"
-      initialPosition={{ top: 80, left: 16 }}
+      ref={popupRef}
+      radius="sm"
+      py={4}
+      px={8}
+      bg={pinned ? 'transparent' : 'rgba(0, 0, 0, 0.7)'}
+      c="white"
+      enabled={!pinned}
+      excludeDragHandleSelector="button"
+      initialPosition={initialPosition}
       constrainToViewport
       className={classes.absoluteTimePopup}
+      data-pinned={pinned || undefined}
       portalProps={{ target: portalTarget }}
       role="dialog"
       aria-label={t('absoluteTime')}
     >
       <span className={classes.absoluteTimeText}>{absoluteTime.format('YYYY-MM-DD HH:mm:ss')}</span>
+      <ActionIcon
+        className={classes.absoluteTimePin}
+        variant="subtle"
+        color="gray"
+        size="sm"
+        aria-label={t(pinned ? 'unpinAbsoluteTime' : 'pinAbsoluteTime')}
+        title={t(pinned ? 'unpinAbsoluteTime' : 'pinAbsoluteTime')}
+        aria-pressed={pinned}
+        onClick={togglePinned}
+      >
+        {pinned ? <IconPinnedOff size={16} /> : <IconPin size={16} />}
+      </ActionIcon>
     </FloatingWindow>
   );
 };

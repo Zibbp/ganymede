@@ -39,8 +39,30 @@
 }
 
 .absoluteTimePopup {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
   cursor: move;
   user-select: none;
+
+  &[data-pinned] {
+    cursor: default;
+  }
+
+  &[data-pinned] .absoluteTimePin {
+    opacity: 0;
+  }
+
+  &:hover .absoluteTimePin,
+  &:focus-within .absoluteTimePin {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    &[data-pinned] .absoluteTimePin {
+      opacity: 1;
+    }
+  }
 }
 
 .absoluteTimeText {

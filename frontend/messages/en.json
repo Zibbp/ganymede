@@ -944,6 +944,8 @@
     "hideChatIconTooltip": "Hide Chat",
     "showChatIconTooltip": "Show Chat",
     "absoluteTime": "Absolute time",
+    "pinAbsoluteTime": "Pin absolute time and save position",
+    "unpinAbsoluteTime": "Unpin absolute time",
     "absoluteTimeIconTooltip": "Toggle Absolute Time",
     "sourceViewsTooltip": "source views",
     "localViewsTooltip": "local views",
