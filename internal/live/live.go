@@ -459,11 +459,11 @@ OUTER:
 					}
 				}
 
-				// check if stream is already being archived
+				// Only queued or running captures prevent a new recording; finalization may overlap.
 				queueItems, err := s.Store.Client.Queue.Query().Where(entQueue.HasVodWith(
 					entVod.HasChannelWith(channel.ID(lwc.Edges.Channel.ID)),
 					entVod.PlatformEQ(utils.PlatformTwitch),
-					entVod.StatusIn(utils.ActiveArchiveStatuses()...),
+					entVod.StatusIn(utils.ArchiveQueued, utils.ArchiveRunning),
 				)).WithVod().All(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error getting queue items")
