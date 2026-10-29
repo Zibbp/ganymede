@@ -77,15 +77,35 @@ func TestConcurrentLiveArchiveCreation(t *testing.T) {
 	video := store.Client.Vod.Query().OnlyX(ctx)
 	// ExtID can change to the published VOD ID; ExtStreamID remains the capture identity.
 	store.Client.Vod.UpdateOneID(video.ID).SetExtID("published-vod").ExecX(ctx)
-	for _, status := range utils.ActiveArchiveStatuses() {
+	for _, status := range []utils.ArchiveStatus{utils.ArchiveQueued, utils.ArchiveRunning} {
 		store.Client.Vod.UpdateOneID(video.ID).SetStatus(status).ExecX(ctx)
 		_, err := services[0].createArchiveRecordsAndEnqueue(ctx, dto(), channel.ID, options)
 		require.ErrorIs(t, err, ErrActiveLiveArchive, string(status))
 	}
-	for _, status := range []utils.ArchiveStatus{utils.ArchiveCompleted, utils.ArchiveFailed} {
-		store.Client.Vod.UpdateOneID(video.ID).SetStatus(status).ExecX(ctx)
+	for _, stage := range []struct {
+		name         string
+		status       utils.ArchiveStatus
+		videoConvert utils.TaskStatus
+		chatRender   utils.TaskStatus
+	}{
+		{"video conversion", utils.ArchiveFinalizing, utils.Running, utils.Pending},
+		{"chat rendering", utils.ArchiveFinalizing, utils.Success, utils.Running},
+		{"completed", utils.ArchiveCompleted, utils.Success, utils.Success},
+		{"failed", utils.ArchiveFailed, utils.Failed, utils.Success},
+	} {
+		previousQueue := video.QueryQueue().OnlyX(ctx)
+		store.Client.Queue.UpdateOneID(previousQueue.ID).
+			SetTaskVideoDownload(utils.Success).
+			SetTaskVideoConvert(stage.videoConvert).
+			SetTaskVideoMove(utils.Success).
+			SetArchiveChat(true).SetRenderChat(true).
+			SetTaskChatDownload(utils.Success).SetTaskChatConvert(utils.Success).
+			SetTaskChatRender(stage.chatRender).SetTaskChatMove(utils.Success).ExecX(ctx)
+		store.Client.Vod.UpdateOneID(video.ID).SetStatus(stage.status).ExecX(ctx)
 		result, err := services[0].createArchiveRecordsAndEnqueue(ctx, dto(), channel.ID, options)
-		require.NoError(t, err, string(status))
+		require.NoError(t, err, stage.name)
+		_, err = services[1].createArchiveRecordsAndEnqueue(ctx, dto(), channel.ID, options)
+		require.ErrorIs(t, err, ErrActiveLiveArchive, "the new queued capture must still prevent duplicates")
 		video = result.Video
 	}
 	otherStream := dto()

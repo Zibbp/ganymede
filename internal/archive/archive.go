@@ -68,7 +68,8 @@ func (s *Service) createArchiveRecordsAndEnqueue(ctx context.Context, vodDTO vod
 				entVod.HasChannelWith(entChannel.ID(channelID)),
 				entVod.PlatformEQ(vodDTO.Platform),
 				entVod.ExtStreamID(vodDTO.ExtStreamID),
-				entVod.StatusIn(utils.ActiveArchiveStatuses()...),
+				// Finalization can continue alongside a new capture of the same stream.
+				entVod.StatusIn(utils.ArchiveQueued, utils.ArchiveRunning),
 			).Exist(ctx)
 			if err != nil {
 				return err
