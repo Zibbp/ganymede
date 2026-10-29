@@ -3,6 +3,7 @@ services:
     container_name: ganymede
     image: ghcr.io/zibbp/ganymede:latest
     restart: unless-stopped
+    stop_grace_period: 90s
     depends_on:
       - ganymede-db
     environment:
