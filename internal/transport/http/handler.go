@@ -121,8 +121,11 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 		},
 	}))
 
-	// Use sessions
-	h.Server.Use(session.LoadAndSave(sessionManager))
+	// Use sessions only where they are read; each load is a Postgres query.
+	h.Server.Use(session.LoadAndSaveWithConfig(session.Config{
+		SessionManager: sessionManager,
+		Skipper:        sessionSkipper,
+	}))
 
 	// Middleware
 	h.Server.Validator = &utils.CustomValidator{Validator: validator.New()}
@@ -163,6 +166,13 @@ func NewHandler(database *database.Database, authService AuthService, channelSer
 	h.mapRoutes()
 
 	return h
+}
+
+// sessionSkipper skips the session store for routes that never read a session.
+// Session readers must live under /api/ or /riverui; scs panics on a skipped route.
+func sessionSkipper(c echo.Context) bool {
+	p := c.Request().URL.Path
+	return !strings.HasPrefix(p, "/api/") && p != "/riverui" && !strings.HasPrefix(p, "/riverui/")
 }
 
 func (h *Handler) mapRoutes() {
