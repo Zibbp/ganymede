@@ -372,6 +372,21 @@ func resolveLiveChatVideoStartTime(ctx context.Context, store *database.Database
 		return persistLiveChatVideoStartTime(ctx, store, dbItems, reference)
 	}
 
+	// A manually stopped or interrupted capture has no final broadcast end yet.
+	// Waiting for its VOD cannot establish an end-based anchor while it is live.
+	if dbItems.Video.ExtStreamID != "" {
+		stream, err := platformService.GetLiveStream(ctx, dbItems.Channel.Name)
+		if err != nil {
+			if ctx.Err() != nil {
+				return time.Time{}, ctx.Err()
+			}
+			logger.Debug().Err(err).Msg("could not verify whether archived broadcast is still live")
+		} else if stream != nil && stream.ID == dbItems.Video.ExtStreamID {
+			logger.Debug().Msg("archived broadcast is still live; anchoring chat to capture start time")
+			return persistLiveChatVideoStartTime(ctx, store, dbItems, reference)
+		}
+	}
+
 	platformVod := pickStreamVod(platformVideos, dbItems.Video.ExtStreamID)
 	// The archive VOD appears on the platform several minutes after the
 	// broadcast ends (UpdateStreamVideoId is scheduled 10 min later), hence
