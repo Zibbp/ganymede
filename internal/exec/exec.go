@@ -702,11 +702,12 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 }
 
 func buildHlsToMp4FFmpegArgs(video ent.Vod, playlistPath, exportPath, configFfmpegArgs string, normalizeTimestamps bool) []string {
-	args := []string{"-y", "-hide_banner", "-i", playlistPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-movflags", "+faststart", "-metadata", "title=" + video.Title}
+	// Keep FFmpeg's discontinuity correction from shifting streams separately.
+	args := []string{"-y", "-hide_banner", "-copyts", "-i", playlistPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative", "-movflags", "+faststart", "-metadata", "title=" + video.Title}
 	args = append(args, strings.Fields(configFfmpegArgs)...)
 	if normalizeTimestamps {
-		// Repair start offsets without re-encoding.
-		args = append(args, "-bsf", "setts=ts=TS-STARTDTS")
+		// Shift the shared timeline while preserving relative stream offsets.
+		args = append(args, "-avoid_negative_ts", "make_zero")
 	}
 	return append(args, exportPath)
 }
@@ -942,10 +943,9 @@ func PostProcessVideo(ctx context.Context, video ent.Vod) error {
 	return postProcessVideo(ctx, video, configFfmpegArgs, file)
 }
 
-// exportWithTimestampRepair runs the mux, probes the result, and when the
-// container timeline is inflated re-runs the mux with per-stream timestamp
-// normalization before committing. Both mux passes write to the same atomic
-// temp target; commit publishes it.
+// exportWithTimestampRepair probes the muxed result and normalizes the shared
+// timeline when needed. Both passes write to the same atomic temp target;
+// commit publishes it.
 func exportWithTimestampRepair(
 	ctx context.Context,
 	videoID string,
@@ -970,8 +970,9 @@ func exportWithTimestampRepair(
 		Str("video_id", videoID).
 		Float64("format_duration", duration.FormatDuration).
 		Float64("stream_duration", duration.LongestStreamDuration).
+		Float64("min_stream_start_time", duration.MinStreamStartTime).
 		Float64("max_stream_start_time", duration.MaxStreamStartTime).
-		Msg("detected anomalous media timestamps; normalizing each stream")
+		Msg("detected anomalous media timestamps; normalizing the shared timeline")
 
 	if err := runMux(true); err != nil {
 		return fmt.Errorf("normalize exported video timestamps: %w", err)
@@ -983,9 +984,10 @@ func exportWithTimestampRepair(
 	}
 	if duration.HasTimestampAnomaly() {
 		return fmt.Errorf(
-			"timestamp normalization did not repair media timeline: format=%f stream=%f max_start=%f",
+			"timestamp normalization did not repair media timeline: format=%f stream=%f min_start=%f max_start=%f",
 			duration.FormatDuration,
 			duration.LongestStreamDuration,
+			duration.MinStreamStartTime,
 			duration.MaxStreamStartTime,
 		)
 	}
@@ -1040,19 +1042,16 @@ func normalizedPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string
 
 func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, normalizeTimestamps bool) []string {
 	arr := strings.Fields(configFfmpegArgs)
-	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4"}
-	if !normalizeTimestamps {
-		ffmpegArgs = append(ffmpegArgs, "-bsf:a", "aac_adtstoasc")
-	}
+	// Keep FFmpeg's discontinuity correction from shifting streams separately.
+	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-copyts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative"}
+	ffmpegArgs = append(ffmpegArgs, "-bsf:a", "aac_adtstoasc")
 	ffmpegArgs = append(ffmpegArgs, "-movflags", "+faststart")
 
 	ffmpegArgs = append(ffmpegArgs, "-metadata", "title="+video.Title)
 	ffmpegArgs = append(ffmpegArgs, arr...)
 	if normalizeTimestamps {
-		// Apply one bitstream-filter instance per output stream. STARTDTS is
-		// therefore local to each stream, repairing large audio/video start
-		// offsets without decoding or re-encoding the media.
-		ffmpegArgs = append(ffmpegArgs, "-bsf", "setts=ts=TS-STARTDTS")
+		// Shift the shared timeline while preserving relative stream offsets.
+		ffmpegArgs = append(ffmpegArgs, "-avoid_negative_ts", "make_zero")
 	}
 	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
 

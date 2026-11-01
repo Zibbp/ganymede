@@ -14,9 +14,7 @@ import (
 
 const (
 	mediaDurationAnomalyTolerance = 10.0
-	// An empty edit list entry delays one stream relative to the other. Audio
-	// priming and video reordering stay far below this tolerance.
-	mediaStartOffsetTolerance = 0.5
+	mediaStartOffsetTolerance     = 0.5
 )
 
 // MediaDuration contains the useful duration values reported by ffprobe. A
@@ -27,23 +25,22 @@ type MediaDuration struct {
 	Duration              float64
 	FormatDuration        float64
 	LongestStreamDuration float64
+	MinStreamStartTime    float64
 	MaxStreamStartTime    float64
 }
 
-// HasTimestampAnomaly reports whether the container timeline is substantially
-// longer than its encoded streams or whether a stream starts late. Small
-// duration differences are normal because audio and video do not necessarily
-// end on the same timestamp. A delayed stream is usually an empty edit list
-// entry, which many players ignore and therefore play out of sync.
+// HasTimestampAnomaly reports a shared start offset or a container timeline
+// exceeding the streams' durations and start offsets. A single late stream
+// may represent a genuine gap and must not trigger normalization on its own.
 func (d MediaDuration) HasTimestampAnomaly() bool {
-	if d.MaxStreamStartTime > mediaStartOffsetTolerance {
+	if d.MinStreamStartTime > mediaStartOffsetTolerance {
 		return true
 	}
 	if d.LongestStreamDuration <= 0 || d.FormatDuration <= 0 {
 		return false
 	}
 	tolerance := math.Max(mediaDurationAnomalyTolerance, d.LongestStreamDuration*0.1)
-	return d.FormatDuration > d.LongestStreamDuration+tolerance
+	return d.FormatDuration > d.MaxStreamStartTime+d.LongestStreamDuration+tolerance
 }
 
 type mediaDurationProbe struct {
@@ -96,15 +93,18 @@ func ProbeMediaDuration(ctx context.Context, path string) (MediaDuration, error)
 	}
 
 	var videoDuration, audioDuration, maxStreamStartTime float64
+	minStreamStartTime := math.Inf(1)
 	for _, stream := range probe.Streams {
 		duration := parseDuration(stream.Duration)
 		startTime := parseStartTime(stream.StartTime)
 		switch stream.CodecType {
 		case "video":
 			videoDuration = math.Max(videoDuration, duration)
+			minStreamStartTime = math.Min(minStreamStartTime, startTime)
 			maxStreamStartTime = math.Max(maxStreamStartTime, startTime)
 		case "audio":
 			audioDuration = math.Max(audioDuration, duration)
+			minStreamStartTime = math.Min(minStreamStartTime, startTime)
 			maxStreamStartTime = math.Max(maxStreamStartTime, startTime)
 		}
 	}
@@ -120,11 +120,15 @@ func ProbeMediaDuration(ctx context.Context, path string) (MediaDuration, error)
 	if streamDuration == 0 {
 		return MediaDuration{}, fmt.Errorf("ffprobe returned no valid duration for %s", path)
 	}
+	if math.IsInf(minStreamStartTime, 1) {
+		minStreamStartTime = 0
+	}
 
 	return MediaDuration{
 		Duration:              streamDuration,
 		FormatDuration:        formatDuration,
 		LongestStreamDuration: math.Max(videoDuration, audioDuration),
+		MinStreamStartTime:    minStreamStartTime,
 		MaxStreamStartTime:    maxStreamStartTime,
 	}, nil
 }

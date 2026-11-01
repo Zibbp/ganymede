@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	osExec "os/exec"
 	"path/filepath"
@@ -305,29 +306,38 @@ func TestPostProcessVideoFFmpegArgsIncludesTitleMetadata(t *testing.T) {
 	}
 }
 
-func TestNormalizedPostProcessVideoFFmpegArgsResetEachStream(t *testing.T) {
+func TestNormalizedFFmpegArgsUseSharedTimeline(t *testing.T) {
 	t.Parallel()
 
 	video := ent.Vod{
 		TmpVideoDownloadPath: "/tmp/input.ts",
 		TmpVideoConvertPath:  "/tmp/output.mp4",
 	}
-	args := normalizedPostProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy")
-
-	for i := 0; i < len(args)-1; i++ {
-		if args[i] == "-bsf" && args[i+1] == "setts=ts=TS-STARTDTS" {
-			return
+	for _, args := range [][]string{
+		normalizedPostProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy"),
+		buildHlsToMp4FFmpegArgs(video, "/tmp/input.m3u8", video.TmpVideoConvertPath, "", true),
+	} {
+		if strings.Contains(strings.Join(args, " "), "STARTDTS") {
+			t.Fatalf("FFmpeg arguments reset timestamps independently: %v", args)
+		}
+		found := false
+		for i := 0; i < len(args)-1; i++ {
+			if args[i] == "-avoid_negative_ts" && args[i+1] == "make_zero" {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("FFmpeg arguments do not normalize the shared timeline: %v", args)
 		}
 	}
-	t.Fatalf("normalized FFmpeg arguments do not reset stream timestamps: %v", args)
 }
 
-func TestPostProcessVideoNormalizesAnomalousContainerTimeline(t *testing.T) {
+func TestPostProcessVideoPreservesLargeInitialGap(t *testing.T) {
 	tmpDir := t.TempDir()
 	inputPath := createTimestampOffsetMedia(t, tmpDir, "mp4")
-	outputPath := filepath.Join(tmpDir, "normalized.mp4")
+	outputPath := filepath.Join(tmpDir, "export.mp4")
 	video := ent.Vod{
-		Title:                "timestamp normalization regression",
+		Title:                "initial gap regression",
 		TmpVideoDownloadPath: inputPath,
 		TmpVideoConvertPath:  outputPath,
 	}
@@ -338,17 +348,71 @@ func TestPostProcessVideoNormalizesAnomalousContainerTimeline(t *testing.T) {
 
 	probe, err := ProbeMediaDuration(t.Context(), outputPath)
 	if err != nil {
-		t.Fatalf("probe normalized output: %v", err)
+		t.Fatalf("probe exported output: %v", err)
 	}
 	if probe.HasTimestampAnomaly() {
 		t.Fatalf("output still has a timestamp anomaly: format=%f stream=%f", probe.FormatDuration, probe.LongestStreamDuration)
 	}
-	if probe.FormatDuration < 2 || probe.FormatDuration > 4 {
-		t.Fatalf("normalized format duration = %f, want about 3 seconds", probe.FormatDuration)
+	if probe.FormatDuration < 20002 || probe.FormatDuration > 20004 {
+		t.Fatalf("format duration = %f, want about 20003 seconds including the initial gap", probe.FormatDuration)
+	}
+	if delta := mediaAVStartOffset(t, outputPath) - mediaAVStartOffset(t, inputPath); math.Abs(delta) > 0.05 {
+		t.Fatalf("post-processing changed the A/V start offset by %f seconds", delta)
 	}
 	decode := osExec.Command("ffmpeg", "-v", "error", "-i", outputPath, "-f", "null", "-")
 	if out, err := decode.CombinedOutput(); err != nil {
-		t.Fatalf("decode normalized output: %v, output: %s", err, out)
+		t.Fatalf("decode exported output: %v, output: %s", err, out)
+	}
+}
+
+func TestTimestampNormalizationPreservesStreamOffsets(t *testing.T) {
+	for _, offsets := range []struct {
+		name         string
+		video, audio int
+	}{
+		{name: "late video", video: 12},
+		{name: "late audio", audio: 12},
+		{name: "shared nonzero start", video: 17, audio: 5},
+	} {
+		t.Run(offsets.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			inputPath := createStreamOffsetMedia(t, tmpDir, "mp4", offsets.video, offsets.audio)
+			inputOffset := mediaAVStartOffset(t, inputPath)
+			if want := float64(offsets.video - offsets.audio); math.Abs(inputOffset-want) > 0.05 {
+				t.Fatalf("fixture A/V offset = %f, want %f", inputOffset, want)
+			}
+			exportPath := filepath.Join(tmpDir, "export.mp4")
+			if err := postProcessVideo(t.Context(), ent.Vod{
+				TmpVideoDownloadPath: inputPath,
+				TmpVideoConvertPath:  exportPath,
+			}, "", io.Discard); err != nil {
+				t.Fatalf("post-process media: %v", err)
+			}
+			if got := mediaAVStartOffset(t, exportPath); math.Abs(got-inputOffset) > 0.05 {
+				t.Fatalf("exported A/V offset = %f, want %f", got, inputOffset)
+			}
+			probe, err := ProbeMediaDuration(t.Context(), exportPath)
+			if err != nil {
+				t.Fatalf("probe exported media: %v", err)
+			}
+			if probe.MinStreamStartTime > mediaStartOffsetTolerance {
+				t.Fatalf("shared start offset was not normalized: %+v", probe)
+			}
+			for _, hls := range []bool{false, true} {
+				outputPath := filepath.Join(tmpDir, fmt.Sprintf("normalized-%v.mp4", hls))
+				video := ent.Vod{TmpVideoDownloadPath: inputPath, TmpVideoConvertPath: outputPath}
+				args := normalizedPostProcessVideoFFmpegArgs(video, "")
+				if hls {
+					args = buildHlsToMp4FFmpegArgs(video, inputPath, outputPath, "", true)
+				}
+				if out, err := osExec.Command("ffmpeg", args...).CombinedOutput(); err != nil {
+					t.Fatalf("normalize timestamps (HLS=%v): %v, output: %s", hls, err, out)
+				}
+				if got := mediaAVStartOffset(t, outputPath); math.Abs(got-inputOffset) > 0.05 {
+					t.Fatalf("normalized A/V offset (HLS=%v) = %f, want %f", hls, got, inputOffset)
+				}
+			}
+		})
 	}
 }
 

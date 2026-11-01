@@ -2,6 +2,7 @@ package exec
 
 import (
 	"context"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -18,11 +19,9 @@ import (
 	"github.com/zibbp/ganymede/internal/hls"
 )
 
-// TestExportHlsToMp4NormalizesLateStreamStart covers captures whose audio and
-// video timelines start several seconds apart. The MP4 muxer turns that gap
-// into an empty edit list entry; normalizing each stream removes it so players
-// that ignore edit lists stay in sync.
-func TestExportHlsToMp4NormalizesLateStreamStart(t *testing.T) {
+// TestExportHlsToMp4PreservesLateStreamStart covers captures whose audio and
+// video timelines start several seconds apart.
+func TestExportHlsToMp4PreservesLateStreamStart(t *testing.T) {
 	tmpDir := t.TempDir()
 	logsDir := filepath.Join(tmpDir, "logs")
 	configDir := filepath.Join(tmpDir, "config")
@@ -51,8 +50,7 @@ func TestExportHlsToMp4NormalizesLateStreamStart(t *testing.T) {
 		}
 	}
 
-	// Aligned 30s A/V content with video timestamps shifted 12s forward. This
-	// reproduces Twitch TS captures whose tracks have different start times.
+	// 30s A/V content with a 12s initial video gap.
 	srcMP4 := filepath.Join(tmpDir, "src.mp4")
 	run("ffmpeg",
 		"-y", "-hide_banner",
@@ -80,6 +78,10 @@ func TestExportHlsToMp4NormalizesLateStreamStart(t *testing.T) {
 		"-hls_segment_filename", filepath.Join(hlsDir, extID+"_segment%06d.m4s"),
 		"-f", "hls", filepath.Join(hlsDir, extID+"-video.m3u8"),
 	)
+	inputOffset := mediaAVStartOffset(t, filepath.Join(hlsDir, extID+"-video.m3u8"))
+	if math.Abs(inputOffset) < 0.5 {
+		t.Fatalf("HLS fixture must have separated A/V starts, got offset %f", inputOffset)
+	}
 
 	exportPath := filepath.Join(tmpDir, "export.mp4")
 	if err := ExportHlsToMp4(ctx, ent.Vod{
@@ -99,19 +101,11 @@ func TestExportHlsToMp4NormalizesLateStreamStart(t *testing.T) {
 		t.Fatalf("exported MP4 still has a timestamp anomaly: format=%f stream=%f max_start=%f",
 			probe.FormatDuration, probe.LongestStreamDuration, probe.MaxStreamStartTime)
 	}
-	if probe.MaxStreamStartTime > 0.1 {
-		t.Fatalf("exported MP4 stream start offset = %f, want both tracks at zero", probe.MaxStreamStartTime)
+	if delta := mediaAVStartOffset(t, exportPath) - inputOffset; math.Abs(delta) > 0.05 {
+		t.Fatalf("HLS export changed the A/V start offset by %f seconds", delta)
 	}
-	if probe.FormatDuration < 29 || probe.FormatDuration > 32 {
-		t.Fatalf("exported duration = %f, want about 30 seconds", probe.FormatDuration)
-	}
-
-	trace, err := osExec.CommandContext(ctx, "ffprobe", "-v", "trace", exportPath).CombinedOutput()
-	if err != nil {
-		t.Fatalf("trace exported MP4: %v\n%s", err, trace)
-	}
-	if strings.Contains(string(trace), "media time: -1") {
-		t.Fatalf("exported MP4 contains an empty edit list entry:\n%s", trace)
+	if want := probe.LongestStreamDuration + math.Abs(inputOffset); math.Abs(probe.FormatDuration-want) > 1 {
+		t.Fatalf("exported duration = %f, want about %f seconds including the initial gap", probe.FormatDuration, want)
 	}
 
 	run("ffmpeg", "-v", "error", "-i", exportPath, "-f", "null", "-")

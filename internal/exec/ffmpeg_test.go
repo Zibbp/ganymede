@@ -2,9 +2,12 @@ package exec
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -44,16 +47,16 @@ func TestGetVideoDuration_FileNotExist(t *testing.T) {
 	}
 }
 
-func TestGetVideoDurationPrefersStreamDurationWhenContainerTimelineIsAnomalous(t *testing.T) {
+func TestGetVideoDurationPrefersStreamDurationWithLargeInitialGap(t *testing.T) {
 	tmpDir := t.TempDir()
 	mediaPath := createTimestampOffsetMedia(t, tmpDir, "mpegts")
 
 	probe, err := ProbeMediaDuration(t.Context(), mediaPath)
 	if err != nil {
-		t.Fatalf("probe anomalous media: %v", err)
+		t.Fatalf("probe media with initial gap: %v", err)
 	}
-	if !probe.HasTimestampAnomaly() {
-		t.Fatalf("expected timestamp anomaly, got format=%f stream=%f", probe.FormatDuration, probe.LongestStreamDuration)
+	if probe.HasTimestampAnomaly() {
+		t.Fatalf("initial gap alone must not be treated as corrupt timestamps: %+v", probe)
 	}
 
 	duration, err := GetVideoDuration(t.Context(), mediaPath)
@@ -65,37 +68,37 @@ func TestGetVideoDurationPrefersStreamDurationWhenContainerTimelineIsAnomalous(t
 	}
 }
 
-func TestMediaDurationDetectsLateStreamStart(t *testing.T) {
+func TestMediaDurationHasTimestampAnomaly(t *testing.T) {
 	t.Parallel()
 
-	longAligned := MediaDuration{
-		FormatDuration:        3600,
-		LongestStreamDuration: 3600,
-	}
-	if longAligned.HasTimestampAnomaly() {
-		t.Fatal("aligned long media must not be reported as anomalous")
-	}
-
-	lateStream := MediaDuration{
-		FormatDuration:        3600,
-		LongestStreamDuration: 3600,
-		MaxStreamStartTime:    12.13,
-	}
-	if !lateStream.HasTimestampAnomaly() {
-		t.Fatal("stream starting 12 seconds late must be reported as anomalous")
-	}
-
-	primingOffset := MediaDuration{
-		FormatDuration:        3600,
-		LongestStreamDuration: 3600,
-		MaxStreamStartTime:    0.1,
-	}
-	if primingOffset.HasTimestampAnomaly() {
-		t.Fatal("audio priming and video reordering offsets must be tolerated")
+	for _, tc := range []struct {
+		name     string
+		duration MediaDuration
+		want     bool
+	}{
+		{name: "aligned", duration: MediaDuration{FormatDuration: 3600, LongestStreamDuration: 3600}},
+		{name: "late stream", duration: MediaDuration{FormatDuration: 3600, LongestStreamDuration: 3600, MaxStreamStartTime: 12.13}},
+		{name: "initial gap", duration: MediaDuration{FormatDuration: 15, LongestStreamDuration: 3, MaxStreamStartTime: 12}},
+		{name: "shared start offset", duration: MediaDuration{FormatDuration: 20, LongestStreamDuration: 3, MinStreamStartTime: 5, MaxStreamStartTime: 17}, want: true},
+		{name: "priming", duration: MediaDuration{FormatDuration: 3600, LongestStreamDuration: 3600, MaxStreamStartTime: 0.1}},
+		{name: "inflated container", duration: MediaDuration{FormatDuration: 20003, LongestStreamDuration: 3}, want: true},
+		{name: "inflated beyond gap", duration: MediaDuration{FormatDuration: 100, LongestStreamDuration: 3, MaxStreamStartTime: 12}, want: true},
+		{name: "unknown streams", duration: MediaDuration{FormatDuration: 100}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.duration.HasTimestampAnomaly(); got != tc.want {
+				t.Fatalf("HasTimestampAnomaly() = %v, want %v", got, tc.want)
+			}
+		})
 	}
 }
 
 func createTimestampOffsetMedia(t *testing.T, dir, format string) string {
+	t.Helper()
+	return createStreamOffsetMedia(t, dir, format, 20000, 0)
+}
+
+func createStreamOffsetMedia(t *testing.T, dir, format string, videoOffset, audioOffset int) string {
 	t.Helper()
 
 	extension := format
@@ -107,14 +110,11 @@ func createTimestampOffsetMedia(t *testing.T, dir, format string) string {
 		"ffmpeg", "-v", "error", "-y",
 		"-f", "lavfi", "-i", "testsrc=size=320x180:rate=30:duration=3",
 		"-f", "lavfi", "-i", "sine=frequency=1000:sample_rate=48000:duration=3",
-		"-filter_complex", "[0:v]setpts=PTS+20000/TB[v];[1:a]asetpts=PTS[a]",
+		"-filter_complex", fmt.Sprintf("[0:v]setpts=PTS+%d/TB[v];[1:a]asetpts=PTS+%d/TB[a]", videoOffset, audioOffset),
 		"-map", "[v]", "-map", "[a]",
 		"-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
 		"-c:a", "aac",
-		// Preserve the timestamp gap instead of filling it with hundreds of
-		// thousands of duplicate frames. The fixture must contain three seconds
-		// of media starting at an anomalous timestamp, not 20,003 seconds of
-		// encoded video.
+		// Preserve the initial gap instead of filling it with duplicate frames.
 		"-fps_mode", "passthrough",
 	}
 	if format == "mpegts" {
@@ -126,6 +126,42 @@ func createTimestampOffsetMedia(t *testing.T, dir, format string) string {
 		t.Fatalf("create timestamp-offset media: %v, output: %s", err, out)
 	}
 	return mediaPath
+}
+
+func mediaAVStartOffset(t *testing.T, path string) float64 {
+	t.Helper()
+	// HLS stream start metadata can differ from the actual packet timestamps.
+	out, err := exec.CommandContext(t.Context(), "ffprobe", "-v", "error",
+		"-show_entries", "packet=codec_type,pts_time", "-of", "json", path).Output()
+	if err != nil {
+		t.Fatalf("probe packet timestamps: %v", err)
+	}
+	var data struct {
+		Packets []struct {
+			CodecType string `json:"codec_type"`
+			PTSTime   string `json:"pts_time"`
+		} `json:"packets"`
+	}
+	if err := json.Unmarshal(out, &data); err != nil {
+		t.Fatalf("parse packet timestamps: %v", err)
+	}
+	starts := make(map[string]float64)
+	for _, packet := range data.Packets {
+		if packet.CodecType != "video" && packet.CodecType != "audio" {
+			continue
+		}
+		start, err := strconv.ParseFloat(packet.PTSTime, 64)
+		if err != nil {
+			t.Fatalf("parse %s packet timestamp %q: %v", packet.CodecType, packet.PTSTime, err)
+		}
+		if previous, ok := starts[packet.CodecType]; !ok || start < previous {
+			starts[packet.CodecType] = start
+		}
+	}
+	if len(starts) != 2 {
+		t.Fatalf("expected audio and video streams, got %v", starts)
+	}
+	return starts["video"] - starts["audio"]
 }
 
 func TestGetFfprobeData(t *testing.T) {
