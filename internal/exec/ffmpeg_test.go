@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -76,11 +77,14 @@ func TestMediaDurationHasTimestampAnomaly(t *testing.T) {
 		duration MediaDuration
 		want     bool
 	}{
-		{name: "aligned", duration: MediaDuration{FormatDuration: 3600, LongestStreamDuration: 3600}},
-		{name: "late stream", duration: MediaDuration{FormatDuration: 3600, LongestStreamDuration: 3600, MaxStreamStartTime: 12.13}},
-		{name: "initial gap", duration: MediaDuration{FormatDuration: 15, LongestStreamDuration: 3, MaxStreamStartTime: 12}},
+		{name: "aligned", duration: MediaDuration{FormatDuration: 3600, LongestStreamDuration: 3600, MaxStreamEndTime: 3600}},
+		{name: "late stream", duration: MediaDuration{FormatDuration: 3600, LongestStreamDuration: 3600, MaxStreamStartTime: 12.13, MaxStreamEndTime: 3600}},
+		{name: "initial gap", duration: MediaDuration{FormatDuration: 15, LongestStreamDuration: 3, MaxStreamStartTime: 12, MaxStreamEndTime: 15}},
 		{name: "shared start offset", duration: MediaDuration{FormatDuration: 20, LongestStreamDuration: 3, MinStreamStartTime: 5, MaxStreamStartTime: 17}, want: true},
-		{name: "priming", duration: MediaDuration{FormatDuration: 3600, LongestStreamDuration: 3600, MaxStreamStartTime: 0.1}},
+		{name: "priming", duration: MediaDuration{FormatDuration: 3600, LongestStreamDuration: 3600, MaxStreamStartTime: 0.1, MaxStreamEndTime: 3600.1}},
+		{name: "different latest and longest streams", duration: MediaDuration{FormatDuration: 150, LongestStreamDuration: 100, MaxStreamStartTime: 90, MaxStreamEndTime: 100}, want: true},
+		{name: "relative tolerance", duration: MediaDuration{FormatDuration: 1100, LongestStreamDuration: 1000, MaxStreamEndTime: 1000}},
+		{name: "beyond relative tolerance", duration: MediaDuration{FormatDuration: 1101, LongestStreamDuration: 1000, MaxStreamEndTime: 1000}, want: true},
 		{name: "inflated container", duration: MediaDuration{FormatDuration: 20003, LongestStreamDuration: 3}, want: true},
 		{name: "inflated beyond gap", duration: MediaDuration{FormatDuration: 100, LongestStreamDuration: 3, MaxStreamStartTime: 12}, want: true},
 		{name: "unknown streams", duration: MediaDuration{FormatDuration: 100}},
@@ -88,6 +92,45 @@ func TestMediaDurationHasTimestampAnomaly(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := tc.duration.HasTimestampAnomaly(); got != tc.want {
 				t.Fatalf("HasTimestampAnomaly() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestProbeMediaDurationUsesPerStreamEndTimes(t *testing.T) {
+	for _, formatDuration := range []int{100, 150} {
+		t.Run(strconv.Itoa(formatDuration), func(t *testing.T) {
+			dir := t.TempDir()
+			writeExecutable(t, filepath.Join(dir, "ffprobe"), fmt.Sprintf(`#!/bin/sh
+echo '{"streams":[{"codec_type":"video","duration":"100","start_time":"0"},{"codec_type":"audio","duration":"1","start_time":"90"},{"codec_type":"subtitle","duration":"500","start_time":"500"}],"format":{"duration":"%d"}}'
+`, formatDuration))
+			t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+			duration, err := ProbeMediaDuration(t.Context(), "input.mp4")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if duration.MaxStreamEndTime != 100 || duration.MaxStreamStartTime != 90 || duration.LongestStreamDuration != 100 {
+				t.Fatalf("unexpected stream bounds: %+v", duration)
+			}
+			wantAnomaly := formatDuration == 150
+			if duration.HasTimestampAnomaly() != wantAnomaly {
+				t.Fatalf("HasTimestampAnomaly() = %v, want %v", duration.HasTimestampAnomaly(), wantAnomaly)
+			}
+			var passes []bool
+			committed := false
+			err = exportWithTimestampRepair(t.Context(), "test", "output.mp4", func(normalize bool) error {
+				passes = append(passes, normalize)
+				return nil
+			}, func() error {
+				committed = true
+				return nil
+			}, io.Discard)
+			if wantAnomaly {
+				if err == nil || !strings.Contains(err.Error(), "did not repair") || committed || len(passes) != 2 || passes[0] || !passes[1] {
+					t.Fatalf("inflated timeline was not rejected: err=%v committed=%v passes=%v", err, committed, passes)
+				}
+			} else if err != nil || !committed || len(passes) != 1 || passes[0] {
+				t.Fatalf("valid timeline was not committed: err=%v committed=%v passes=%v", err, committed, passes)
 			}
 		})
 	}

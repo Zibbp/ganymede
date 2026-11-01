@@ -27,6 +27,7 @@ type MediaDuration struct {
 	LongestStreamDuration float64
 	MinStreamStartTime    float64
 	MaxStreamStartTime    float64
+	MaxStreamEndTime      float64
 }
 
 // HasTimestampAnomaly reports a shared start offset or a container timeline
@@ -40,7 +41,7 @@ func (d MediaDuration) HasTimestampAnomaly() bool {
 		return false
 	}
 	tolerance := math.Max(mediaDurationAnomalyTolerance, d.LongestStreamDuration*0.1)
-	return d.FormatDuration > d.MaxStreamStartTime+d.LongestStreamDuration+tolerance
+	return d.FormatDuration > d.MaxStreamEndTime+tolerance
 }
 
 type mediaDurationProbe struct {
@@ -86,26 +87,28 @@ func ProbeMediaDuration(ctx context.Context, path string) (MediaDuration, error)
 
 	parseStartTime := func(value string) float64 {
 		startTime, err := strconv.ParseFloat(value, 64)
-		if err != nil || math.IsNaN(startTime) || math.IsInf(startTime, 0) || startTime <= 0 {
+		if err != nil || math.IsNaN(startTime) || math.IsInf(startTime, 0) {
 			return 0
 		}
 		return startTime
 	}
 
-	var videoDuration, audioDuration, maxStreamStartTime float64
+	var videoDuration, audioDuration, maxStreamStartTime, maxStreamEndTime float64
 	minStreamStartTime := math.Inf(1)
 	for _, stream := range probe.Streams {
 		duration := parseDuration(stream.Duration)
 		startTime := parseStartTime(stream.StartTime)
+		if stream.CodecType != "video" && stream.CodecType != "audio" {
+			continue
+		}
+		minStreamStartTime = math.Min(minStreamStartTime, startTime)
+		maxStreamStartTime = math.Max(maxStreamStartTime, startTime)
+		maxStreamEndTime = math.Max(maxStreamEndTime, startTime+duration)
 		switch stream.CodecType {
 		case "video":
 			videoDuration = math.Max(videoDuration, duration)
-			minStreamStartTime = math.Min(minStreamStartTime, startTime)
-			maxStreamStartTime = math.Max(maxStreamStartTime, startTime)
 		case "audio":
 			audioDuration = math.Max(audioDuration, duration)
-			minStreamStartTime = math.Min(minStreamStartTime, startTime)
-			maxStreamStartTime = math.Max(maxStreamStartTime, startTime)
 		}
 	}
 
@@ -130,6 +133,7 @@ func ProbeMediaDuration(ctx context.Context, path string) (MediaDuration, error)
 		LongestStreamDuration: math.Max(videoDuration, audioDuration),
 		MinStreamStartTime:    minStreamStartTime,
 		MaxStreamStartTime:    maxStreamStartTime,
+		MaxStreamEndTime:      maxStreamEndTime,
 	}, nil
 }
 
@@ -141,6 +145,88 @@ func GetVideoDuration(ctx context.Context, path string) (int, error) {
 		return 0, err
 	}
 	return max(1, int(math.Ceil(duration.Duration))), nil
+}
+
+type mediaStreamStart struct {
+	Specifier string
+	Time      float64
+	Anchor    string
+}
+
+// Read one packet per stream because HLS metadata may report a segment's start
+// rather than the first packet's timestamp.
+func probeMediaStreamStarts(ctx context.Context, path string) ([]mediaStreamStart, error) {
+	data, err := GetFfprobeVideoData(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	var starts []mediaStreamStart
+	ordinals := make(map[string]int)
+	for _, stream := range data.Streams {
+		if stream.CodecType != "video" && stream.CodecType != "audio" {
+			continue
+		}
+		specifier := fmt.Sprintf("%s:%d", stream.CodecType[:1], ordinals[stream.CodecType])
+		ordinals[stream.CodecType]++
+		cmd := osExec.CommandContext(ctx, "ffprobe", "-v", "error",
+			"-select_streams", strconv.FormatInt(stream.Index, 10),
+			"-read_intervals", "%+#1", "-show_entries", "packet=pts_time,dts_time",
+			"-of", "json", path)
+		out, err := cmd.Output()
+		if err != nil {
+			return nil, fmt.Errorf("probe first packet for %s: %w", specifier, err)
+		}
+		var probe struct {
+			Packets []struct {
+				PTS string `json:"pts_time"`
+				DTS string `json:"dts_time"`
+			} `json:"packets"`
+		}
+		if err := json.Unmarshal(out, &probe); err != nil {
+			return nil, fmt.Errorf("parse first packet for %s: %w", specifier, err)
+		}
+		if len(probe.Packets) == 0 {
+			continue
+		}
+		anchor := "STARTPTS"
+		start, err := strconv.ParseFloat(probe.Packets[0].PTS, 64)
+		if err != nil || math.IsNaN(start) || math.IsInf(start, 0) {
+			anchor = "STARTDTS"
+			start, err = strconv.ParseFloat(probe.Packets[0].DTS, 64)
+		}
+		if err != nil || math.IsNaN(start) || math.IsInf(start, 0) {
+			return nil, fmt.Errorf("no valid first packet timestamp for %s in %s", specifier, path)
+		}
+		starts = append(starts, mediaStreamStart{Specifier: specifier, Time: start, Anchor: anchor})
+	}
+	return starts, nil
+}
+
+func appendMediaTimestampArgs(args []string, starts []mediaStreamStart, normalize bool) []string {
+	origin := 0.0
+	if normalize && len(starts) > 0 {
+		origin = starts[0].Time
+		for _, start := range starts[1:] {
+			origin = math.Min(origin, start.Time)
+		}
+	}
+	for _, start := range starts {
+		// Restore the source offset after FFmpeg corrects discontinuities. Only
+		// the shared origin is removed; late streams retain their original gap.
+		shift := "-" + start.Anchor + "+" + strconv.FormatFloat(start.Time-origin, 'f', 9, 64) + "/TB"
+		filter := "setts=pts=PTS" + shift + ":dts=DTS" + shift
+		var existingFilter string
+		for i := 0; i < len(args)-1; i++ {
+			if args[i] == "-bsf" || args[i] == "-bsf:"+start.Specifier[:1] || args[i] == "-bsf:"+start.Specifier {
+				existingFilter = args[i+1]
+			}
+		}
+		if existingFilter != "" {
+			filter = existingFilter + "," + filter
+		}
+		args = append(args, "-bsf:"+start.Specifier, filter)
+	}
+	return args
 }
 
 // GetFfprobeData runs ffprobe on the given path and returns parsed JSON output.

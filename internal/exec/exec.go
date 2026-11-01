@@ -701,14 +701,10 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
-func buildHlsToMp4FFmpegArgs(video ent.Vod, playlistPath, exportPath, configFfmpegArgs string, normalizeTimestamps bool) []string {
-	// Keep FFmpeg's discontinuity correction from shifting streams separately.
-	args := []string{"-y", "-hide_banner", "-copyts", "-i", playlistPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative", "-movflags", "+faststart", "-metadata", "title=" + video.Title}
+func buildHlsToMp4FFmpegArgs(video ent.Vod, playlistPath, exportPath, configFfmpegArgs string, normalizeTimestamps bool, starts []mediaStreamStart) []string {
+	args := []string{"-y", "-hide_banner", "-i", playlistPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative", "-movflags", "+faststart", "-metadata", "title=" + video.Title}
 	args = append(args, strings.Fields(configFfmpegArgs)...)
-	if normalizeTimestamps {
-		// Shift the shared timeline while preserving relative stream offsets.
-		args = append(args, "-avoid_negative_ts", "make_zero")
-	}
+	args = appendMediaTimestampArgs(args, starts, normalizeTimestamps)
 	return append(args, exportPath)
 }
 
@@ -716,6 +712,10 @@ func buildHlsToMp4FFmpegArgs(video ent.Vod, playlistPath, exportPath, configFfmp
 func ExportHlsToMp4(ctx context.Context, video ent.Vod, exportPath string) error {
 	env := config.GetEnvConfig()
 	playlistPath := filepath.Join(video.TmpVideoHlsPath, liveCaptureID(video)+"-video.m3u8")
+	starts, err := probeMediaStreamStarts(ctx, playlistPath)
+	if err != nil {
+		return fmt.Errorf("probe HLS stream starts: %w", err)
+	}
 
 	// Append to the convert log to preserve ffmpeg output.
 	logFilePath := fmt.Sprintf("%s/%s-video-convert.log", env.LogsDir, video.ID.String())
@@ -739,7 +739,7 @@ func ExportHlsToMp4(ctx context.Context, video ent.Vod, exportPath string) error
 
 	return exportWithTimestampRepair(ctx, video.ID.String(), tmpExportPath,
 		func(normalizeTimestamps bool) error {
-			args := buildHlsToMp4FFmpegArgs(video, playlistPath, tmpExportPath, config.Get().Parameters.VideoConvert, normalizeTimestamps)
+			args := buildHlsToMp4FFmpegArgs(video, playlistPath, tmpExportPath, config.Get().Parameters.VideoConvert, normalizeTimestamps, starts)
 			return runHlsToMp4FFmpeg(ctx, video, args, tmpExportPath, file)
 		},
 		commit,
@@ -972,6 +972,7 @@ func exportWithTimestampRepair(
 		Float64("stream_duration", duration.LongestStreamDuration).
 		Float64("min_stream_start_time", duration.MinStreamStartTime).
 		Float64("max_stream_start_time", duration.MaxStreamStartTime).
+		Float64("max_stream_end_time", duration.MaxStreamEndTime).
 		Msg("detected anomalous media timestamps; normalizing the shared timeline")
 
 	if err := runMux(true); err != nil {
@@ -996,6 +997,10 @@ func exportWithTimestampRepair(
 }
 
 func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs string, output io.Writer) error {
+	starts, err := probeMediaStreamStarts(ctx, video.TmpVideoDownloadPath)
+	if err != nil {
+		return fmt.Errorf("probe downloaded stream starts: %w", err)
+	}
 	// Write atomically via a sibling temp file for crash-safe retries.
 	tmpExportPath, commit, cleanup, err := tempExportTarget(video.TmpVideoConvertPath)
 	if err != nil {
@@ -1008,7 +1013,7 @@ func postProcessVideo(ctx context.Context, video ent.Vod, configFfmpegArgs strin
 
 	return exportWithTimestampRepair(ctx, video.ID.String(), tmpExportPath,
 		func(normalizeTimestamps bool) error {
-			args := buildPostProcessVideoFFmpegArgs(exportVideo, configFfmpegArgs, normalizeTimestamps)
+			args := buildPostProcessVideoFFmpegArgs(exportVideo, configFfmpegArgs, normalizeTimestamps, starts)
 			return runPostProcessVideoFFmpeg(ctx, exportVideo, args, output)
 		},
 		commit,
@@ -1032,27 +1037,23 @@ func runPostProcessVideoFFmpeg(ctx context.Context, video ent.Vod, ffmpegArgs []
 	return nil
 }
 
-func postProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string) []string {
-	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, false)
+func postProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, starts []mediaStreamStart) []string {
+	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, false, starts)
 }
 
-func normalizedPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string) []string {
-	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, true)
+func normalizedPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, starts []mediaStreamStart) []string {
+	return buildPostProcessVideoFFmpegArgs(video, configFfmpegArgs, true, starts)
 }
 
-func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, normalizeTimestamps bool) []string {
+func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, normalizeTimestamps bool, starts []mediaStreamStart) []string {
 	arr := strings.Fields(configFfmpegArgs)
-	// Keep FFmpeg's discontinuity correction from shifting streams separately.
-	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-copyts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative"}
+	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative"}
 	ffmpegArgs = append(ffmpegArgs, "-bsf:a", "aac_adtstoasc")
 	ffmpegArgs = append(ffmpegArgs, "-movflags", "+faststart")
 
 	ffmpegArgs = append(ffmpegArgs, "-metadata", "title="+video.Title)
 	ffmpegArgs = append(ffmpegArgs, arr...)
-	if normalizeTimestamps {
-		// Shift the shared timeline while preserving relative stream offsets.
-		ffmpegArgs = append(ffmpegArgs, "-avoid_negative_ts", "make_zero")
-	}
+	ffmpegArgs = appendMediaTimestampArgs(ffmpegArgs, starts, normalizeTimestamps)
 	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
 
 	return ffmpegArgs

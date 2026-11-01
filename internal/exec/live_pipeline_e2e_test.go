@@ -1,7 +1,9 @@
 package exec
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -109,6 +111,93 @@ func TestExportHlsToMp4PreservesLateStreamStart(t *testing.T) {
 	}
 
 	run("ffmpeg", "-v", "error", "-i", exportPath, "-f", "null", "-")
+}
+
+func TestHlsExportCorrectsTimestampDiscontinuities(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		firstStart  int
+		secondStart int
+	}{
+		{name: "forward jump", secondStart: 20030},
+		{name: "clock reset", secondStart: 0},
+		{name: "shared offset and jump", firstStart: 5, secondStart: 20035},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			for i, offset := range []int{tc.firstStart, tc.secondStart} {
+				cmd := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-y",
+					"-f", "lavfi", "-i", "testsrc=size=160x120:rate=10:duration=30",
+					"-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000:duration=30",
+					"-filter_complex", "[0:v]setpts=PTS+1/TB[v]",
+					"-map", "[v]", "-map", "1:a",
+					"-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-c:a", "aac",
+					"-fps_mode", "passthrough", "-output_ts_offset", fmt.Sprint(offset),
+					"-muxdelay", "0", "-f", "mpegts", filepath.Join(dir, fmt.Sprintf("%d.ts", i)))
+				if out, err := cmd.CombinedOutput(); err != nil {
+					t.Fatalf("create HLS segment: %v\n%s", err, out)
+				}
+			}
+			playlist := filepath.Join(dir, "input.m3u8")
+			if err := os.WriteFile(playlist, []byte("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:42\n"+
+				"#EXT-X-MEDIA-SEQUENCE:0\n#EXTINF:30,\n0.ts\n#EXT-X-DISCONTINUITY\n#EXTINF:30,\n1.ts\n#EXT-X-ENDLIST\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			first, err := ProbeMediaDuration(t.Context(), filepath.Join(dir, "0.ts"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			second, err := ProbeMediaDuration(t.Context(), filepath.Join(dir, "1.ts"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if math.Abs(second.MinStreamStartTime-first.MinStreamStartTime-30) < 1 {
+				t.Fatal("fixture does not contain a timestamp discontinuity")
+			}
+			starts, err := probeMediaStreamStarts(t.Context(), playlist)
+			if err != nil {
+				t.Fatal(err)
+			}
+			inputOffset := mediaAVStartOffset(t, playlist)
+			for _, normalized := range []bool{false, true} {
+				t.Run(fmt.Sprintf("normalized=%v", normalized), func(t *testing.T) {
+					exportPath := filepath.Join(dir, fmt.Sprintf("export-%v.mp4", normalized))
+					tmpPath, commit, cleanup, err := tempExportTarget(exportPath)
+					if err != nil {
+						t.Fatal(err)
+					}
+					defer cleanup()
+					var output bytes.Buffer
+					passes := 0
+					err = exportWithTimestampRepair(t.Context(), "test", tmpPath, func(repair bool) error {
+						passes++
+						args := buildHlsToMp4FFmpegArgs(ent.Vod{}, playlist, tmpPath, "", normalized || repair, starts)
+						return runHlsToMp4FFmpeg(t.Context(), ent.Vod{}, args, tmpPath, &output)
+					}, commit, &output)
+					if err != nil {
+						t.Fatalf("export HLS discontinuity: %v\n%s", err, output.String())
+					}
+					if tc.firstStart > 0 && !normalized && passes != 2 {
+						t.Fatalf("shared start offset should require a repair pass, got %d passes", passes)
+					}
+					probe, err := ProbeMediaDuration(t.Context(), exportPath)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if probe.HasTimestampAnomaly() || probe.FormatDuration < 60 || probe.FormatDuration > 62 {
+						t.Fatalf("expected about 61 seconds including the preserved initial gap: %+v", probe)
+					}
+					if delta := mediaAVStartOffset(t, exportPath) - inputOffset; math.Abs(delta) > 0.05 {
+						t.Fatalf("discontinuity correction changed the A/V offset by %f seconds", delta)
+					}
+					decode := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-i", exportPath, "-f", "null", "-")
+					if out, err := decode.CombinedOutput(); err != nil {
+						t.Fatalf("decode exported HLS: %v\n%s", err, out)
+					}
+				})
+			}
+		})
+	}
 }
 
 // TestLiveFmp4CapturePipelineE2E covers live HLS capture to MP4 export with

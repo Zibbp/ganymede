@@ -10,6 +10,7 @@ import (
 	osExec "os/exec"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
@@ -287,7 +288,7 @@ func TestPostProcessVideoFFmpegArgsIncludesTitleMetadata(t *testing.T) {
 		TmpVideoConvertPath:  "/tmp/output.mp4",
 	}
 
-	args := postProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy")
+	args := postProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy", nil)
 
 	titleMetadataIndex := -1
 	for i := 0; i < len(args)-1; i++ {
@@ -313,21 +314,28 @@ func TestNormalizedFFmpegArgsUseSharedTimeline(t *testing.T) {
 		TmpVideoDownloadPath: "/tmp/input.ts",
 		TmpVideoConvertPath:  "/tmp/output.mp4",
 	}
+	starts := []mediaStreamStart{
+		{Specifier: "v:0", Time: 17, Anchor: "STARTPTS"},
+		{Specifier: "a:0", Time: 5, Anchor: "STARTPTS"},
+	}
 	for _, args := range [][]string{
-		normalizedPostProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy"),
-		buildHlsToMp4FFmpegArgs(video, "/tmp/input.m3u8", video.TmpVideoConvertPath, "", true),
+		normalizedPostProcessVideoFFmpegArgs(video, "-c:v copy -c:a copy -bsf:v h264_metadata=aud=insert", starts),
+		buildHlsToMp4FFmpegArgs(video, "/tmp/input.m3u8", video.TmpVideoConvertPath, "-bsf:v h264_metadata=aud=insert", true, starts),
 	} {
-		if strings.Contains(strings.Join(args, " "), "STARTDTS") {
-			t.Fatalf("FFmpeg arguments reset timestamps independently: %v", args)
+		if slices.Contains(args, "-copyts") {
+			t.Fatalf("FFmpeg arguments disable discontinuity correction: %v", args)
 		}
-		found := false
+		foundVideo, foundAudio := false, false
 		for i := 0; i < len(args)-1; i++ {
-			if args[i] == "-avoid_negative_ts" && args[i+1] == "make_zero" {
-				found = true
+			if args[i] == "-bsf:v:0" && args[i+1] == "h264_metadata=aud=insert,setts=pts=PTS-STARTPTS+12.000000000/TB:dts=DTS-STARTPTS+12.000000000/TB" {
+				foundVideo = true
+			}
+			if args[i] == "-bsf:a:0" && strings.HasSuffix(args[i+1], "setts=pts=PTS-STARTPTS+0.000000000/TB:dts=DTS-STARTPTS+0.000000000/TB") {
+				foundAudio = true
 			}
 		}
-		if !found {
-			t.Fatalf("FFmpeg arguments do not normalize the shared timeline: %v", args)
+		if !foundVideo || !foundAudio {
+			t.Fatalf("FFmpeg arguments do not preserve source offsets from the shared origin: %v", args)
 		}
 	}
 }
@@ -378,6 +386,10 @@ func TestTimestampNormalizationPreservesStreamOffsets(t *testing.T) {
 			tmpDir := t.TempDir()
 			inputPath := createStreamOffsetMedia(t, tmpDir, "mp4", offsets.video, offsets.audio)
 			inputOffset := mediaAVStartOffset(t, inputPath)
+			starts, err := probeMediaStreamStarts(t.Context(), inputPath)
+			if err != nil {
+				t.Fatalf("probe source stream starts: %v", err)
+			}
 			if want := float64(offsets.video - offsets.audio); math.Abs(inputOffset-want) > 0.05 {
 				t.Fatalf("fixture A/V offset = %f, want %f", inputOffset, want)
 			}
@@ -401,9 +413,9 @@ func TestTimestampNormalizationPreservesStreamOffsets(t *testing.T) {
 			for _, hls := range []bool{false, true} {
 				outputPath := filepath.Join(tmpDir, fmt.Sprintf("normalized-%v.mp4", hls))
 				video := ent.Vod{TmpVideoDownloadPath: inputPath, TmpVideoConvertPath: outputPath}
-				args := normalizedPostProcessVideoFFmpegArgs(video, "")
+				args := normalizedPostProcessVideoFFmpegArgs(video, "", starts)
 				if hls {
-					args = buildHlsToMp4FFmpegArgs(video, inputPath, outputPath, "", true)
+					args = buildHlsToMp4FFmpegArgs(video, inputPath, outputPath, "", true, starts)
 				}
 				if out, err := osExec.Command("ffmpeg", args...).CombinedOutput(); err != nil {
 					t.Fatalf("normalize timestamps (HLS=%v): %v, output: %s", hls, err, out)
@@ -413,6 +425,52 @@ func TestTimestampNormalizationPreservesStreamOffsets(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestPostProcessVideoPreservesOffsetsWithMultipleAudioStreams(t *testing.T) {
+	dir := t.TempDir()
+	inputPath := filepath.Join(dir, "input.mp4")
+	cmd := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-y",
+		"-f", "lavfi", "-i", "testsrc=size=160x120:rate=15:duration=3",
+		"-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000:duration=3",
+		"-f", "lavfi", "-i", "sine=frequency=880:sample_rate=48000:duration=1",
+		"-filter_complex", "[2:a]asetpts=PTS+2/TB[a]", "-map", "0:v", "-map", "1:a", "-map", "[a]",
+		"-c:v", "libx264", "-bf", "3", "-pix_fmt", "yuv420p", "-c:a", "aac", inputPath)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("create reordered video and multiple audio streams: %v\n%s", err, out)
+	}
+	inputStarts, err := probeMediaStreamStarts(t.Context(), inputPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(inputStarts) != 3 {
+		t.Fatalf("expected three input streams, got %+v", inputStarts)
+	}
+	outputPath := filepath.Join(dir, "output.mp4")
+	if err := postProcessVideo(t.Context(), ent.Vod{
+		TmpVideoDownloadPath: inputPath,
+		TmpVideoConvertPath:  outputPath,
+	}, "-bsf:v h264_metadata=aud=insert", io.Discard); err != nil {
+		t.Fatal(err)
+	}
+	outputStarts, err := probeMediaStreamStarts(t.Context(), outputPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(outputStarts) != len(inputStarts) {
+		t.Fatalf("export lost streams: %+v", outputStarts)
+	}
+	for i, start := range inputStarts {
+		want := start.Time - inputStarts[0].Time
+		got := outputStarts[i].Time - outputStarts[0].Time
+		if start.Specifier != outputStarts[i].Specifier || math.Abs(got-want) > 0.05 {
+			t.Fatalf("stream %s offset = %f, want %f", start.Specifier, got, want)
+		}
+	}
+	decode := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-i", outputPath, "-f", "null", "-")
+	if out, err := decode.CombinedOutput(); err != nil {
+		t.Fatalf("decode exported streams: %v\n%s", err, out)
 	}
 }
 
@@ -833,7 +891,7 @@ func TestBuildHlsToMp4FFmpegArgsUsesPlaylistInput(t *testing.T) {
 	playlist := "/tmp/hls/123-video.m3u8"
 	export := "/tmp/export.mp4"
 
-	args := buildHlsToMp4FFmpegArgs(video, playlist, export, "-c:v copy -c:a copy", false)
+	args := buildHlsToMp4FFmpegArgs(video, playlist, export, "-c:v copy -c:a copy", false, nil)
 
 	if args[0] != "-y" || args[len(args)-1] != export {
 		t.Fatalf("unexpected MP4 export args shape: %v", args)
