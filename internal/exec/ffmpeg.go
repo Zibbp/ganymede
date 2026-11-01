@@ -12,7 +12,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const mediaDurationAnomalyTolerance = 10.0
+const (
+	mediaDurationAnomalyTolerance = 10.0
+	// An empty edit list entry delays one stream relative to the other. Audio
+	// priming and video reordering stay far below this tolerance.
+	mediaStartOffsetTolerance = 0.5
+)
 
 // MediaDuration contains the useful duration values reported by ffprobe. A
 // container can span hours when one stream has a bad starting timestamp even
@@ -22,12 +27,18 @@ type MediaDuration struct {
 	Duration              float64
 	FormatDuration        float64
 	LongestStreamDuration float64
+	MaxStreamStartTime    float64
 }
 
 // HasTimestampAnomaly reports whether the container timeline is substantially
-// longer than its encoded streams. Small differences are normal because audio
-// and video do not necessarily end on the same timestamp.
+// longer than its encoded streams or whether a stream starts late. Small
+// duration differences are normal because audio and video do not necessarily
+// end on the same timestamp. A delayed stream is usually an empty edit list
+// entry, which many players ignore and therefore play out of sync.
 func (d MediaDuration) HasTimestampAnomaly() bool {
+	if d.MaxStreamStartTime > mediaStartOffsetTolerance {
+		return true
+	}
 	if d.LongestStreamDuration <= 0 || d.FormatDuration <= 0 {
 		return false
 	}
@@ -39,6 +50,7 @@ type mediaDurationProbe struct {
 	Streams []struct {
 		CodecType string `json:"codec_type"`
 		Duration  string `json:"duration"`
+		StartTime string `json:"start_time"`
 	} `json:"streams"`
 	Format struct {
 		Duration string `json:"duration"`
@@ -50,7 +62,7 @@ type mediaDurationProbe struct {
 func ProbeMediaDuration(ctx context.Context, path string) (MediaDuration, error) {
 	cmd := osExec.CommandContext(ctx, "ffprobe",
 		"-v", "error",
-		"-show_entries", "stream=codec_type,duration:format=duration",
+		"-show_entries", "stream=codec_type,duration,start_time:format=duration",
 		"-of", "json",
 		path,
 	)
@@ -75,14 +87,25 @@ func ProbeMediaDuration(ctx context.Context, path string) (MediaDuration, error)
 		return duration
 	}
 
-	var videoDuration, audioDuration float64
+	parseStartTime := func(value string) float64 {
+		startTime, err := strconv.ParseFloat(value, 64)
+		if err != nil || math.IsNaN(startTime) || math.IsInf(startTime, 0) || startTime <= 0 {
+			return 0
+		}
+		return startTime
+	}
+
+	var videoDuration, audioDuration, maxStreamStartTime float64
 	for _, stream := range probe.Streams {
 		duration := parseDuration(stream.Duration)
+		startTime := parseStartTime(stream.StartTime)
 		switch stream.CodecType {
 		case "video":
 			videoDuration = math.Max(videoDuration, duration)
+			maxStreamStartTime = math.Max(maxStreamStartTime, startTime)
 		case "audio":
 			audioDuration = math.Max(audioDuration, duration)
+			maxStreamStartTime = math.Max(maxStreamStartTime, startTime)
 		}
 	}
 
@@ -102,6 +125,7 @@ func ProbeMediaDuration(ctx context.Context, path string) (MediaDuration, error)
 		Duration:              streamDuration,
 		FormatDuration:        formatDuration,
 		LongestStreamDuration: math.Max(videoDuration, audioDuration),
+		MaxStreamStartTime:    maxStreamStartTime,
 	}, nil
 }
 

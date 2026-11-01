@@ -970,7 +970,8 @@ func exportWithTimestampRepair(
 		Str("video_id", videoID).
 		Float64("format_duration", duration.FormatDuration).
 		Float64("stream_duration", duration.LongestStreamDuration).
-		Msg("detected anomalous container timestamps; normalizing each stream")
+		Float64("max_stream_start_time", duration.MaxStreamStartTime).
+		Msg("detected anomalous media timestamps; normalizing each stream")
 
 	if err := runMux(true); err != nil {
 		return fmt.Errorf("normalize exported video timestamps: %w", err)
@@ -982,9 +983,10 @@ func exportWithTimestampRepair(
 	}
 	if duration.HasTimestampAnomaly() {
 		return fmt.Errorf(
-			"timestamp normalization did not repair container duration: format=%f stream=%f",
+			"timestamp normalization did not repair media timeline: format=%f stream=%f max_start=%f",
 			duration.FormatDuration,
 			duration.LongestStreamDuration,
+			duration.MaxStreamStartTime,
 		)
 	}
 

@@ -18,6 +18,105 @@ import (
 	"github.com/zibbp/ganymede/internal/hls"
 )
 
+// TestExportHlsToMp4NormalizesLateStreamStart covers captures whose audio and
+// video timelines start several seconds apart. The MP4 muxer turns that gap
+// into an empty edit list entry; normalizing each stream removes it so players
+// that ignore edit lists stay in sync.
+func TestExportHlsToMp4NormalizesLateStreamStart(t *testing.T) {
+	tmpDir := t.TempDir()
+	logsDir := filepath.Join(tmpDir, "logs")
+	configDir := filepath.Join(tmpDir, "config")
+	if err := os.MkdirAll(logsDir, 0o755); err != nil {
+		t.Fatalf("create logs dir: %v", err)
+	}
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		t.Fatalf("create config dir: %v", err)
+	}
+	t.Setenv("TWITCH_CLIENT_ID", "e2e-test")
+	t.Setenv("TWITCH_CLIENT_SECRET", "e2e-test")
+	t.Setenv("LOGS_DIR", logsDir)
+	t.Setenv("CONFIG_DIR", configDir)
+	if _, err := config.Init(); err != nil {
+		t.Fatalf("init config: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
+	defer cancel()
+
+	run := func(name string, args ...string) {
+		t.Helper()
+		cmd := osExec.CommandContext(ctx, name, args...)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("run %s %v: %v\n%s", name, args, err, out)
+		}
+	}
+
+	// Aligned 30s A/V content with video timestamps shifted 12s forward. This
+	// reproduces Twitch TS captures whose tracks have different start times.
+	srcMP4 := filepath.Join(tmpDir, "src.mp4")
+	run("ffmpeg",
+		"-y", "-hide_banner",
+		"-f", "lavfi", "-i", "testsrc=size=160x120:rate=10:duration=30",
+		"-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000:duration=30",
+		"-filter_complex", "[0:v]setpts=PTS+12/TB[v]",
+		"-map", "[v]", "-map", "1:a",
+		"-c:v", "libx264", "-preset", "ultrafast", "-c:a", "aac",
+		"-fps_mode", "passthrough",
+		srcMP4,
+	)
+
+	const extID = "latestart123"
+	hlsDir := filepath.Join(tmpDir, "hls")
+	if err := os.MkdirAll(hlsDir, 0o755); err != nil {
+		t.Fatalf("create hls dir: %v", err)
+	}
+	run("ffmpeg",
+		"-y", "-hide_banner", "-i", srcMP4,
+		"-c", "copy",
+		"-start_number", "0", "-hls_time", "10", "-hls_list_size", "0",
+		"-hls_playlist_type", "vod",
+		"-hls_segment_type", "fmp4",
+		"-hls_fmp4_init_filename", extID+"_init.mp4",
+		"-hls_segment_filename", filepath.Join(hlsDir, extID+"_segment%06d.m4s"),
+		"-f", "hls", filepath.Join(hlsDir, extID+"-video.m3u8"),
+	)
+
+	exportPath := filepath.Join(tmpDir, "export.mp4")
+	if err := ExportHlsToMp4(ctx, ent.Vod{
+		ID:              uuid.New(),
+		ExtID:           extID,
+		Title:           "late stream start",
+		TmpVideoHlsPath: hlsDir,
+	}, exportPath); err != nil {
+		t.Fatalf("export HLS to MP4: %v", err)
+	}
+
+	probe, err := ProbeMediaDuration(ctx, exportPath)
+	if err != nil {
+		t.Fatalf("probe exported MP4: %v", err)
+	}
+	if probe.HasTimestampAnomaly() {
+		t.Fatalf("exported MP4 still has a timestamp anomaly: format=%f stream=%f max_start=%f",
+			probe.FormatDuration, probe.LongestStreamDuration, probe.MaxStreamStartTime)
+	}
+	if probe.MaxStreamStartTime > 0.1 {
+		t.Fatalf("exported MP4 stream start offset = %f, want both tracks at zero", probe.MaxStreamStartTime)
+	}
+	if probe.FormatDuration < 29 || probe.FormatDuration > 32 {
+		t.Fatalf("exported duration = %f, want about 30 seconds", probe.FormatDuration)
+	}
+
+	trace, err := osExec.CommandContext(ctx, "ffprobe", "-v", "trace", exportPath).CombinedOutput()
+	if err != nil {
+		t.Fatalf("trace exported MP4: %v\n%s", err, trace)
+	}
+	if strings.Contains(string(trace), "media time: -1") {
+		t.Fatalf("exported MP4 contains an empty edit list entry:\n%s", trace)
+	}
+
+	run("ffmpeg", "-v", "error", "-i", exportPath, "-f", "null", "-")
+}
+
 // TestLiveFmp4CapturePipelineE2E covers live HLS capture to MP4 export with
 // real ffmpeg/ffprobe using a synthetic Twitch-like HLS source.
 func TestLiveFmp4CapturePipelineE2E(t *testing.T) {

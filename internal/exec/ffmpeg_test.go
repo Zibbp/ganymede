@@ -65,6 +65,36 @@ func TestGetVideoDurationPrefersStreamDurationWhenContainerTimelineIsAnomalous(t
 	}
 }
 
+func TestMediaDurationDetectsLateStreamStart(t *testing.T) {
+	t.Parallel()
+
+	longAligned := MediaDuration{
+		FormatDuration:        3600,
+		LongestStreamDuration: 3600,
+	}
+	if longAligned.HasTimestampAnomaly() {
+		t.Fatal("aligned long media must not be reported as anomalous")
+	}
+
+	lateStream := MediaDuration{
+		FormatDuration:        3600,
+		LongestStreamDuration: 3600,
+		MaxStreamStartTime:    12.13,
+	}
+	if !lateStream.HasTimestampAnomaly() {
+		t.Fatal("stream starting 12 seconds late must be reported as anomalous")
+	}
+
+	primingOffset := MediaDuration{
+		FormatDuration:        3600,
+		LongestStreamDuration: 3600,
+		MaxStreamStartTime:    0.1,
+	}
+	if primingOffset.HasTimestampAnomaly() {
+		t.Fatal("audio priming and video reordering offsets must be tolerated")
+	}
+}
+
 func createTimestampOffsetMedia(t *testing.T, dir, format string) string {
 	t.Helper()
 
