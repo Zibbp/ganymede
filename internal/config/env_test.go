@@ -34,6 +34,9 @@ func TestGetEnvConfig(t *testing.T) {
 }
 
 func TestGetEnvRequiredConfig(t *testing.T) {
+	// Clear any inherited value; t.Setenv restores it after the test.
+	t.Setenv("DB_MAX_CONNS", "")
+	require.NoError(t, os.Unsetenv("DB_MAX_CONNS"))
 	assert.NoError(t, os.Setenv("DB_HOST", "localhost"))
 	assert.NoError(t, os.Setenv("DB_PORT", "5432"))
 	assert.NoError(t, os.Setenv("DB_USER", "postgres"))
@@ -52,9 +55,8 @@ func TestGetEnvRequiredConfig(t *testing.T) {
 	assert.Equal(t, "ganymede", env.DB_NAME)
 	assert.Equal(t, 0, env.DB_MAX_CONNS)
 
-	assert.NoError(t, os.Setenv("DB_MAX_CONNS", "5"))
+	t.Setenv("DB_MAX_CONNS", "5")
 	assert.Equal(t, 5, GetEnvApplicationConfig().DB_MAX_CONNS)
-	assert.NoError(t, os.Unsetenv("DB_MAX_CONNS"))
 
 	assert.NoError(t, os.Unsetenv("DB_HOST"))
 	assert.NoError(t, os.Unsetenv("DB_PORT"))
