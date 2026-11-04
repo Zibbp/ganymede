@@ -24,6 +24,8 @@ var db *Database
 type DatabaseConnectionInput struct {
 	DBString string
 	IsWorker bool
+	// MaxConns caps each pool this process opens; 0 keeps library defaults.
+	MaxConns int
 }
 
 type Database struct {
@@ -50,11 +52,16 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 	maxRetries := 5
 	retryDelay := time.Second * 3
 
+	if err := ValidateMaxConns(input.MaxConns); err != nil {
+		log.Panic().Err(err).Msg("invalid database pool configuration")
+	}
+
 	// Connect to the database with retries
 	func() {
 		for i := range maxRetries {
 			sqlDB, err = sql.Open("pgx", input.DBString)
 			if err == nil {
+				ApplySQLPoolLimits(sqlDB, input.MaxConns)
 				err = sqlDB.PingContext(ctx)
 			}
 			if err == nil {
@@ -93,7 +100,7 @@ func NewDatabase(ctx context.Context, input DatabaseConnectionInput) *Database {
 	// execution pool instead and do not need another duplicate pgx pool.
 	var connPool *pgxpool.Pool
 	if !input.IsWorker {
-		connPool, err = pgxpool.New(ctx, input.DBString)
+		connPool, err = NewPgxPool(ctx, input.DBString, input.MaxConns)
 		if err != nil {
 			_ = client.Close()
 			log.Panic().Err(err).Msg("error creating pgx connection pool")
@@ -180,7 +187,9 @@ func migrate(ctx context.Context, sqlDB *sql.DB, client *ent.Client) error {
 }
 
 // WithTx runs Ent operations against the same database/sql transaction that
-// can be passed to River's InsertTx method.
+// can be passed to River's InsertTx method. fn must use only the given client
+// and tx: a d.Client call inside fn needs a second connection and can deadlock
+// when DB_MAX_CONNS is small.
 func (d *Database) WithTx(ctx context.Context, fn func(*ent.Client, *sql.Tx) error) error {
 	tx, err := d.SQLDB.BeginTx(ctx, nil)
 	if err != nil {

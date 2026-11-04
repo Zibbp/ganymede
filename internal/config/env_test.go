@@ -50,6 +50,11 @@ func TestGetEnvRequiredConfig(t *testing.T) {
 	assert.Equal(t, "postgres", env.DB_USER)
 	assert.Equal(t, "password", env.DB_PASS)
 	assert.Equal(t, "ganymede", env.DB_NAME)
+	assert.Equal(t, 0, env.DB_MAX_CONNS)
+
+	assert.NoError(t, os.Setenv("DB_MAX_CONNS", "5"))
+	assert.Equal(t, 5, GetEnvApplicationConfig().DB_MAX_CONNS)
+	assert.NoError(t, os.Unsetenv("DB_MAX_CONNS"))
 
 	assert.NoError(t, os.Unsetenv("DB_HOST"))
 	assert.NoError(t, os.Unsetenv("DB_PORT"))

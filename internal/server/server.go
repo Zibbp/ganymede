@@ -88,6 +88,7 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	db := database.NewDatabase(ctx, database.DatabaseConnectionInput{
 		DBString: dbString,
 		IsWorker: false,
+		MaxConns: envAppConfig.DB_MAX_CONNS,
 	})
 
 	// application migrations
