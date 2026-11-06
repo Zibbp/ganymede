@@ -646,7 +646,7 @@ func getTestVariableMap() map[string]interface{} {
 	return map[string]interface{}{
 		"channel_id":           uuid.New(),
 		"channel_ext_id":       "123456789",
-		"channel_display_name": "Test Channel",
+		"channel_display_name": "Test_Channel",
 		"vod_id":               uuid.New(),
 		"vod_ext_id":           "987654321",
 		"vod_platform":         "twitch",
