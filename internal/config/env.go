@@ -18,6 +18,8 @@ type EnvApplicationConfig struct {
 	DB_NAME          string `env:"DB_NAME, required"`
 	DB_SSL           string `env:"DB_SSL, default=disable"`
 	DB_SSL_ROOT_CERT string `env:"DB_SSL_ROOT_CERT, default="`
+	// DB_MAX_CONNS caps each Postgres pool; 0 keeps library defaults.
+	DB_MAX_CONNS int `env:"DB_MAX_CONNS, default=0"`
 }
 
 // EnvConfig represents the 'application' environment variables for the application.

@@ -24,6 +24,7 @@ services:
       - DB_NAME=ganymede-prd
       - DB_SSL=disable
       # - DB_SSL_ROOT_CERT= # path to cert in the container if DB_SSL is not disabled
+      # - DB_MAX_CONNS=0 # optional cap per Postgres pool; 0/unset = library defaults, else min 2; total can reach 4 x value + 1
       - TWITCH_CLIENT_ID= # from your twitch application
       - TWITCH_CLIENT_SECRET= # from your twitch application
       # Worker settings. Max number of tasks to run in parallel per type.

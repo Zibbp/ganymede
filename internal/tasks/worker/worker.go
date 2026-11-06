@@ -27,6 +27,7 @@ import (
 type RiverWorkerInput struct {
 	Context                 context.Context
 	DB_URL                  string
+	DBMaxConns              int // caps the River pool; 0 keeps pgxpool defaults
 	DB                      *database.Database
 	LiveService             *live.Service
 	PlatformTwitch          platform.Platform
@@ -87,7 +88,7 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	}
 
 	// create postgres pool connection
-	pool, err := pgxpool.New(rc.Ctx, input.DB_URL)
+	pool, err := database.NewPgxPool(rc.Ctx, input.DB_URL, input.DBMaxConns)
 	if err != nil {
 		return rc, fmt.Errorf("error connecting to postgres: %v", err)
 	}
