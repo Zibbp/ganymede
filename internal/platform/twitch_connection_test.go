@@ -89,6 +89,45 @@ func TestTwitchConnectionAuthenticateStoresTokenAndExpiry(t *testing.T) {
 	}
 }
 
+func TestTwitchConnectionRecoversAfterFailedStartupAuthentication(t *testing.T) {
+	var authRequests atomic.Int32
+
+	withTwitchTestServers(t, func(w http.ResponseWriter, r *http.Request) {
+		if authRequests.Add(1) == 1 {
+			http.Error(w, "temporarily unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		writeAuthResponse(t, w, "recovered-token", 3600)
+	}, func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get("Authorization"); got != "Bearer recovered-token" {
+			t.Fatalf("expected recovered token authorization, got %q", got)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"data":[]}`))
+	})
+
+	conn := &TwitchConnection{
+		ClientId:     "client-id",
+		ClientSecret: "client-secret",
+	}
+
+	if _, err := conn.Authenticate(context.Background()); err == nil {
+		t.Fatal("expected startup authentication to fail")
+	}
+	if got := conn.currentAccessToken(); got != "" {
+		t.Fatalf("expected no access token after failed authentication, got %q", got)
+	}
+
+	// A later API call should retry authentication instead of leaving the
+	// connection permanently unusable after an offline startup.
+	if _, err := conn.twitchMakeHTTPRequest(context.Background(), http.MethodGet, "users", nil, nil); err != nil {
+		t.Fatalf("twitchMakeHTTPRequest returned error after recovery: %v", err)
+	}
+	if got := authRequests.Load(); got != 2 {
+		t.Fatalf("expected 2 auth requests, got %d", got)
+	}
+}
+
 func TestTwitchMakeHTTPRequestUsesCurrentToken(t *testing.T) {
 	withTwitchTestServers(t, func(w http.ResponseWriter, r *http.Request) {
 		t.Fatal("unexpected auth request")
