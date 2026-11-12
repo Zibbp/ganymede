@@ -67,9 +67,8 @@ func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 			ClientId:     envConfig.TwitchClientId,
 			ClientSecret: envConfig.TwitchClientSecret,
 		}
-		_, err = platformTwitch.Authenticate(ctx)
-		if err != nil {
-			return nil, err
+		if _, err := platformTwitch.Authenticate(ctx); err != nil {
+			log.Warn().Err(err).Msg("failed to authenticate with Twitch; continuing startup without Twitch connectivity")
 		}
 	}
 
