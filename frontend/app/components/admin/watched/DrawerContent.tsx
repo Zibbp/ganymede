@@ -5,7 +5,7 @@ import { ActionIcon, Button, NumberInput, TextInput, Tooltip, Text, Divider, Che
 import { useForm } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import classes from "./Watched.module.css"
 import { getTwitchCategories } from "@/app/hooks/useCategory";
 import { useDisclosure } from "@mantine/hooks";
@@ -94,8 +94,16 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel: singleWatchedChannel
     },
   })
 
+  // Bulk edit seeds categories once so a refreshed seed record can't discard unsaved edits.
+  const bulkCategoriesSeeded = useRef(false)
+
   useEffect(() => {
     if (!watchedChannel || !watchedChannel.edges.categories) return
+
+    if (isBulkEdit) {
+      if (bulkCategoriesSeeded.current) return
+      bulkCategoriesSeeded.current = true
+    }
 
     const categories = watchedChannel.edges.categories.map((category) => category.name);
     form.setFieldValue('categories', categories);
