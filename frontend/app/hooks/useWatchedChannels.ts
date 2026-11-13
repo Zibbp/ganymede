@@ -201,7 +201,95 @@ const useCreateWatchedChannel = () => {
   });
 };
 
+export interface BulkResult {
+  succeeded: number;
+  failed: number;
+}
+
+const summarize = (results: PromiseSettledResult<unknown>[]): BulkResult => ({
+  succeeded: results.filter((r) => r.status === "fulfilled").length,
+  failed: results.filter((r) => r.status === "rejected").length,
+});
+
+interface BulkCreateWatchedChannelVariables {
+  axiosPrivate: AxiosInstance;
+  channelIds: string[];
+  watchedChannel: WatchedChannel;
+  categories: string[];
+}
+
+// Creates one watched channel per channel ID using the same settings.
+const useBulkCreateWatchedChannels = () => {
+  const queryClient = useQueryClient();
+  return useMutation<BulkResult, Error, BulkCreateWatchedChannelVariables>({
+    mutationFn: async ({ axiosPrivate, channelIds, watchedChannel, categories }) =>
+      summarize(
+        await Promise.allSettled(
+          channelIds.map((channelId) =>
+            createWatchedChannel(axiosPrivate, channelId, watchedChannel, categories)
+          )
+        )
+      ),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["watched_channels"] });
+    },
+  });
+};
+
+interface BulkEditWatchedChannelVariables {
+  axiosPrivate: AxiosInstance;
+  watchedChannels: WatchedChannel[];
+  // Settings applied to every channel; overrides existing values.
+  settings: Omit<WatchedChannel, "id" | "edges" | "is_live" | "last_live" | "updated_at" | "created_at">;
+  titleRegexes: WatchedChannelTitleRegex[];
+  categories: string[];
+}
+
+const useBulkEditWatchedChannels = () => {
+  const queryClient = useQueryClient();
+  return useMutation<BulkResult, Error, BulkEditWatchedChannelVariables>({
+    mutationFn: async ({ axiosPrivate, watchedChannels, settings, titleRegexes, categories }) =>
+      summarize(
+        await Promise.allSettled(
+          watchedChannels.map((wc) =>
+            editWatchedChannel(
+              axiosPrivate,
+              { ...wc, ...settings, edges: { ...wc.edges, title_regex: titleRegexes } },
+              categories
+            )
+          )
+        )
+      ),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["watched_channels"] });
+    },
+  });
+};
+
+interface BulkDeleteWatchedChannelVariables {
+  axiosPrivate: AxiosInstance;
+  watchedChannelIds: string[];
+}
+
+const useBulkDeleteWatchedChannels = () => {
+  const queryClient = useQueryClient();
+  return useMutation<BulkResult, Error, BulkDeleteWatchedChannelVariables>({
+    mutationFn: async ({ axiosPrivate, watchedChannelIds }) =>
+      summarize(
+        await Promise.allSettled(
+          watchedChannelIds.map((id) => deleteWatchedChannel(axiosPrivate, id))
+        )
+      ),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["watched_channels"] });
+    },
+  });
+};
+
 export {
+  useBulkCreateWatchedChannels,
+  useBulkEditWatchedChannels,
+  useBulkDeleteWatchedChannels,
   useGetWatchedChannesl,
   useEditWatchedChannel,
   useCreateWatchedChannel,

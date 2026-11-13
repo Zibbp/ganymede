@@ -4,7 +4,7 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { useGetWatchedChannesl, WatchedChannel } from "@/app/hooks/useWatchedChannels";
 import { Container, Group, Title, Box, Button, TextInput, ActionIcon, Drawer, Modal } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
-import { IconSearch, IconPencil, IconTrash } from "@tabler/icons-react";
+import { IconSearch, IconPencil, IconTrash, IconPencilPlus, IconX } from "@tabler/icons-react";
 import { sortBy } from "lodash";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useState, useEffect } from "react";
@@ -34,6 +34,9 @@ const AdminWatchChannelsPage = () => {
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebouncedValue(query, 500);
   const [activeWatchedChannel, setActiveWatchedChannel] = useState<WatchedChannel | null>(null);
+  // Rows ticked in the table; persists across pages and searches.
+  const [selectedChannels, setSelectedChannels] = useState<WatchedChannel[]>([]);
+  const [bulkDeleteMode, setBulkDeleteMode] = useState(false);
   const [drawerEditMode, setDrawerEditMode] = useState<WatchedChannelEditMode>(WatchedChannelEditMode.Create)
 
   const [channelDrawerOpened, { open: openChannelDrawer, close: closeChannelDrawer }] = useDisclosure(false);
@@ -84,8 +87,44 @@ const AdminWatchChannelsPage = () => {
   };
 
   const handleDeleteModal = (watchedChannel: WatchedChannel) => {
+    setBulkDeleteMode(false)
     setActiveWatchedChannel(watchedChannel);
     openDeleteModal()
+  };
+
+  const handleBulkEdit = () => {
+    setActiveWatchedChannel(null)
+    setDrawerEditMode(WatchedChannelEditMode.BulkEdit)
+    openChannelDrawer()
+  };
+
+  const handleBulkDelete = () => {
+    setBulkDeleteMode(true)
+    openDeleteModal()
+  };
+
+  const handleDrawerClose = () => {
+    // Selection is cleared after a successful bulk edit.
+    if (drawerEditMode === WatchedChannelEditMode.BulkEdit) setSelectedChannels([])
+    closeChannelDrawer()
+  };
+
+  const handleDeleteModalClose = () => {
+    if (bulkDeleteMode) setSelectedChannels([])
+    closeDeleteModal()
+  };
+
+  const selectAllFiltered = () => {
+    if (!channels) return;
+    const q = debouncedQuery.toLowerCase();
+    setSelectedChannels(
+      channels.filter((c) =>
+        !debouncedQuery ||
+        c.id.toString().includes(debouncedQuery) ||
+        c.edges.channel.name.toLowerCase().includes(q) ||
+        c.edges.channel.display_name.toLowerCase().includes(q)
+      )
+    );
   };
 
   if (isPending) return (
@@ -100,6 +139,42 @@ const AdminWatchChannelsPage = () => {
         <Group justify="space-between" mt={2} >
           <Title>{t('header')}</Title>
           <Box>
+            {selectedChannels.length > 0 && (
+              <>
+                <Button
+                  onClick={handleBulkEdit}
+                  mr={5}
+                  variant="default"
+                  leftSection={<IconPencilPlus size={16} />}
+                >
+                  {t('bulkEditButton', { count: selectedChannels.length })}
+                </Button>
+                <Button
+                  onClick={handleBulkDelete}
+                  mr={5}
+                  variant="default"
+                  color="red"
+                  leftSection={<IconTrash size={16} />}
+                >
+                  {t('bulkDeleteButton', { count: selectedChannels.length })}
+                </Button>
+                <Button
+                  onClick={() => setSelectedChannels([])}
+                  mr={5}
+                  variant="subtle"
+                  leftSection={<IconX size={16} />}
+                >
+                  {t('clearSelectionButton')}
+                </Button>
+              </>
+            )}
+            <Button
+              onClick={selectAllFiltered}
+              mr={5}
+              variant="default"
+            >
+              {t('selectAllButton')}
+            </Button>
             <Button
               onClick={() => {
                 setDrawerEditMode(WatchedChannelEditMode.Create)
@@ -132,6 +207,8 @@ const AdminWatchChannelsPage = () => {
             striped
             highlightOnHover
             records={records}
+            selectedRecords={selectedChannels}
+            onSelectedRecordsChange={setSelectedChannels}
             columns={[
               { accessor: "id", title: t('columns.id') },
               {
@@ -213,11 +290,15 @@ const AdminWatchChannelsPage = () => {
       </Container>
 
       <Drawer opened={channelDrawerOpened} onClose={closeChannelDrawer} position="right" title={t('drawer')}>
-        <AdminWatchedChannelDrawerContent mode={drawerEditMode} watchedChannel={activeWatchedChannel} handleClose={closeChannelDrawer} />
+        <AdminWatchedChannelDrawerContent mode={drawerEditMode} watchedChannel={activeWatchedChannel} watchedChannels={selectedChannels} handleClose={handleDrawerClose} />
       </Drawer>
 
       <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title={t('deleteModal')}>
-        <DeleteWatchedChannelModalContent watchedChannel={activeWatchedChannel} handleClose={closeDeleteModal} />
+        <DeleteWatchedChannelModalContent
+          watchedChannel={activeWatchedChannel}
+          watchedChannels={bulkDeleteMode ? selectedChannels : undefined}
+          handleClose={handleDeleteModalClose}
+        />
       </Modal>
 
     </div>
