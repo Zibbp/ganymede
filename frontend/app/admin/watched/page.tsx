@@ -7,7 +7,7 @@ import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { IconSearch, IconPencil, IconTrash, IconPencilPlus, IconX } from "@tabler/icons-react";
 import { sortBy } from "lodash";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import classes from "./AdminWatchedChannelsPage.module.css"
 import AdminWatchedChannelDrawerContent, { WatchedChannelEditMode } from "@/app/components/admin/watched/DrawerContent";
 import DeleteWatchedChannelModalContent from "@/app/components/admin/watched/DeleteModalContent";
@@ -34,8 +34,9 @@ const AdminWatchChannelsPage = () => {
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebouncedValue(query, 500);
   const [activeWatchedChannel, setActiveWatchedChannel] = useState<WatchedChannel | null>(null);
-  // Rows ticked in the table; persists across pages and searches.
-  const [selectedChannels, setSelectedChannels] = useState<WatchedChannel[]>([]);
+  // Selected IDs persist across pages and searches. Objects are resolved from
+  // the current query data so edits never leave stale copies in the selection.
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteMode, setBulkDeleteMode] = useState(false);
   const [drawerEditMode, setDrawerEditMode] = useState<WatchedChannelEditMode>(WatchedChannelEditMode.Create)
 
@@ -45,6 +46,14 @@ const AdminWatchChannelsPage = () => {
   const axiosPrivate = useAxiosPrivate()
 
   const { data: channels, isPending, isError } = useGetWatchedChannesl(axiosPrivate)
+
+  // Drops IDs that no longer exist (e.g. deleted channels).
+  const selectedChannels = useMemo(() => {
+    const ids = new Set(selectedIds)
+    return (channels ?? []).filter((c) => ids.has(c.id))
+  }, [channels, selectedIds])
+
+  const setSelectedChannels = (selected: WatchedChannel[]) => setSelectedIds(selected.map((c) => c.id))
 
   useEffect(() => {
     setPerPage(settingsAdminItemsPerPage);
