@@ -48,6 +48,7 @@
     "loading": "Loading queue",
     "cancel": "Queue item has been canceled",
     "multiCancel": "Queue items have been canceled",
+    "multiCancelPartial": "{failed} of {total} queue items could not be fully processed. Click again to retry the remaining items.",
     "bulk": {
       "cancelOne": "Cancel 1 queue item",
       "cancelMany": "Cancel {number} queue items"

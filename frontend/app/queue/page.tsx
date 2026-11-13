@@ -1,7 +1,7 @@
 "use client"
 import ArchiveStatusBadge from "@/app/components/videos/ArchiveStatusBadge";
-import { useEffect, useState } from "react";
-import { useAxiosPrivate } from "../hooks/useAxios";
+import { useEffect, useRef, useState } from "react";
+import { ApiResponse, useAxiosPrivate } from "../hooks/useAxios";
 import { Queue, useGetQueueItems, useStopQueueItem } from "../hooks/useQueue";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import { DataTable } from "mantine-datatable";
@@ -9,13 +9,21 @@ import { Tooltip, Text, ActionIcon, Container, Modal, Switch, Button, Group, Box
 import { IconEye, IconSquareX } from "@tabler/icons-react";
 import Link from "next/link";
 import { useDisclosure } from "@mantine/hooks";
-import { useDeleteVideo } from "../hooks/useVideos";
+import { Video, useDeleteVideo } from "../hooks/useVideos";
+import { isArchiveActive } from "../util/archiveStatus";
 import { useBlockVideo } from "../hooks/useBlockedVideos";
 import { useQueryClient } from "@tanstack/react-query";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "../util/util";
 import useSettingsStore from "../store/useSettingsStore";
+
+// Per queue item record of the bulk cancel stages that already succeeded, so a retry does not repeat them.
+type BulkCancelProgress = { stopped: boolean; deleted: boolean; blocked: boolean };
+
+// Live archive finalization can take a while after the capture is stopped.
+const LIVE_SETTLE_POLL_MS = 3000;
+const LIVE_SETTLE_TIMEOUT_MS = 10 * 60 * 1000;
 
 const QueuePage = () => {
   const t = useTranslations("QueuePage");
@@ -44,6 +52,8 @@ const QueuePage = () => {
   const [multiCancelLoading, setMultiCancelLoading] = useState(false);
   const [multiDeleteVideoAndFiles, setMultiDeleteVideoAndFiles] = useState(false);
   const [multiBlockVideoId, setMultiBlockVideoId] = useState(false);
+  const bulkProgress = useRef<Map<string, BulkCancelProgress>>(new Map());
+  const isMounted = useRef(true);
 
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
@@ -53,6 +63,13 @@ const QueuePage = () => {
   const blockVideoMutate = useBlockVideo()
 
   const { data: queueItems, isPending: queueIsPending, isError: queueIsError } = useGetQueueItems(axiosPrivate, true)
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     setPerPage(settingsAdminItemsPerPage);
@@ -116,48 +133,99 @@ const QueuePage = () => {
 
   }
 
+  // Stopping a live archive only signals the capture worker; finalization and post-processing continue
+  // afterwards. Wait for the video to leave its active states before its files are deleted.
+  const waitForVideoToSettle = async (videoId: string) => {
+    const deadline = Date.now() + LIVE_SETTLE_TIMEOUT_MS;
+    while (isMounted.current && Date.now() < deadline) {
+      const response = await axiosPrivate.get<ApiResponse<Video>>(`/api/v1/vod/${videoId}`);
+      if (!isArchiveActive(response.data.data.status)) return;
+      await new Promise((resolve) => setTimeout(resolve, LIVE_SETTLE_POLL_MS));
+    }
+    throw new Error(`Timed out waiting for video ${videoId} to finish processing`);
+  };
+
+  const processQueueItem = async (queue: Queue) => {
+    let progress = bulkProgress.current.get(queue.id);
+    if (!progress) {
+      progress = { stopped: false, deleted: false, blocked: false };
+      bulkProgress.current.set(queue.id, progress);
+    }
+
+    // cancel queue item
+    if (!progress.stopped) {
+      await stopQueueItemMutate.mutateAsync({
+        axiosPrivate: axiosPrivate,
+        id: queue.id
+      })
+      progress.stopped = true
+    }
+
+    // delete video and files if requested
+    if (multiDeleteVideoAndFiles && !progress.deleted) {
+      if (queue.live_archive) {
+        await waitForVideoToSettle(queue.edges.vod.id)
+      }
+      await deleteVideoMutate.mutateAsync({
+        axiosPrivate: axiosPrivate,
+        id: queue.edges.vod.id,
+        deleteFiles: true
+      })
+      progress.deleted = true
+    }
+
+    // block video id if requested (not applicable to live archives)
+    if (multiBlockVideoId && !queue.live_archive && !progress.blocked) {
+      await blockVideoMutate.mutateAsync({
+        axiosPrivate: axiosPrivate,
+        id: queue.edges.vod.ext_id
+      })
+      progress.blocked = true
+    }
+  }
+
+  const handleSelectedQueueItemsChange = (items: Queue[]) => {
+    // drop progress of items that are no longer selected
+    const selectedIds = new Set(items.map((item) => item.id))
+    for (const id of Array.from(bulkProgress.current.keys())) {
+      if (!selectedIds.has(id)) bulkProgress.current.delete(id)
+    }
+    setSelectedQueueItems(items)
+  }
+
   const cancelSelectedQueueItems = async () => {
     if (selectedQueueItems.length === 0) return;
 
     setMultiCancelLoading(true)
     try {
-      await Promise.all(selectedQueueItems.map(async (queue) => {
-        // cancel queue item
-        await stopQueueItemMutate.mutateAsync({
-          axiosPrivate: axiosPrivate,
-          id: queue.id
-        })
+      // wait for every item to settle so loading is only cleared once nothing is still running
+      const results = await Promise.allSettled(selectedQueueItems.map(processQueueItem))
+      const failedItems = selectedQueueItems.filter((_, index) => results[index].status === "rejected")
 
-        // delete video and files if requested
-        if (multiDeleteVideoAndFiles) {
-          await deleteVideoMutate.mutateAsync({
-            axiosPrivate: axiosPrivate,
-            id: queue.edges.vod.id,
-            deleteFiles: true
-          })
-        }
-
-        // block video id if requested (not applicable to live archives)
-        if (multiBlockVideoId && !queue.live_archive) {
-          await blockVideoMutate.mutateAsync({
-            axiosPrivate: axiosPrivate,
-            id: queue.edges.vod.ext_id
-          })
-        }
-      }))
+      results.forEach((result) => {
+        if (result.status === "rejected") console.log(result.reason)
+      })
 
       queryClient.invalidateQueries({ queryKey: ["queue"] })
 
-      showNotification({
-        message: t('multiCancel')
-      })
+      if (failedItems.length === 0) {
+        showNotification({
+          message: t('multiCancel')
+        })
 
-      setSelectedQueueItems([])
-      setMultiDeleteVideoAndFiles(false)
-      setMultiBlockVideoId(false)
-      closeMultiDeleteModal()
-    } catch (error) {
-      console.log(error)
+        bulkProgress.current.clear()
+        setSelectedQueueItems([])
+        setMultiDeleteVideoAndFiles(false)
+        setMultiBlockVideoId(false)
+        closeMultiDeleteModal()
+      } else {
+        // keep only the failed items selected; retrying skips the stages that already completed
+        showNotification({
+          color: "red",
+          message: t('multiCancelPartial', { failed: failedItems.length, total: selectedQueueItems.length })
+        })
+        handleSelectedQueueItemsChange(failedItems)
+      }
     } finally {
       setMultiCancelLoading(false)
     }
@@ -266,7 +334,7 @@ const QueuePage = () => {
             setPage(1);
           }}
           selectedRecords={selectedQueueItems}
-          onSelectedRecordsChange={setSelectedQueueItems}
+          onSelectedRecordsChange={handleSelectedQueueItemsChange}
           recordsPerPageLabel={miscT('recordsPerPageLabel')}
         />
       </Container>
