@@ -138,7 +138,10 @@ const QueuePage = () => {
   const waitForVideoToSettle = async (videoId: string) => {
     const deadline = Date.now() + LIVE_SETTLE_TIMEOUT_MS;
     while (isMounted.current && Date.now() < deadline) {
-      const response = await axiosPrivate.get<ApiResponse<Video>>(`/api/v1/vod/${videoId}`);
+      // bound the request by the remaining time so a stalled response cannot outlive the deadline
+      const response = await axiosPrivate.get<ApiResponse<Video>>(`/api/v1/vod/${videoId}`, {
+        timeout: Math.max(1, deadline - Date.now()),
+      });
       if (!isArchiveActive(response.data.data.status)) return;
       await new Promise((resolve) => setTimeout(resolve, LIVE_SETTLE_POLL_MS));
     }
@@ -369,6 +372,7 @@ const QueuePage = () => {
             mt={5}
             color="red"
             label={t('modal.cancel.delete')}
+            disabled={multiCancelLoading}
             checked={multiDeleteVideoAndFiles}
             onChange={(event) => setMultiDeleteVideoAndFiles(event.currentTarget.checked)}
           />
@@ -376,6 +380,7 @@ const QueuePage = () => {
             mt={5}
             color="violet"
             label={t('modal.cancel.block')}
+            disabled={multiCancelLoading}
             checked={multiBlockVideoId}
             onChange={(event) => setMultiBlockVideoId(event.currentTarget.checked)}
           />)}
