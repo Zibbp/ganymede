@@ -512,7 +512,11 @@
       "actions": "Actions"
     },
     "drawer": "Watched Channel",
-    "deleteModal": "Delete Watched Channel"
+    "deleteModal": "Delete Watched Channel",
+    "selectAllButton": "Select All",
+    "bulkEditButton": "Edit {count} Selected",
+    "bulkDeleteButton": "Delete {count} Selected",
+    "clearSelectionButton": "Clear Selection"
   },
   "AdminBlockedVideosComponents": {
     "validation": {
@@ -653,7 +657,7 @@
     "deleteConfirmText": "Are you sure you want to delete this watched channel?",
     "deleteButton": "Delete Watched Channel",
     "editNotification": "Watched channel edited",
-    "createNotification": "Watched channel created",
+    "createNotification": "{count, plural, one {Watched channel created} other {# watched channels created}}",
     "failedCreateNotification": "Failed to create watched channel",
     "failedEditNotification": "Failed to edit watched channel",
     "headerText": "Read the watched channel <wiki>wiki page</wiki> for more information about each feature.",
@@ -714,10 +718,22 @@
     "blacklistCategoriesLiveDescription": "Do not archive live streams and videos that are in the selected categories",
     "categoriesLoadButton": "Load Categories",
     "categoriesSearchPlaceholder": "Search categories...",
-    "submitButton": "Create Watched Channel",
+    "submitButton": "Create Watched Channel(s)",
     "editButton": "Edit Watched Channel",
     "updateMetadataLabel": "Update Metadata",
-    "updateMetadataDescription": "Update live stream metadata after {minutes} minutes of the live stream archive starting. This includes thumbnails and title. Set to 0 to disable."
+    "updateMetadataDescription": "Update live stream metadata after {minutes} minutes of the live stream archive starting. This includes thumbnails and title. Set to 0 to disable.",
+    "channelsLabel": "Channel(s)",
+    "selectChannelsNotification": "Select at least one channel",
+    "bulkCreatePartialNotification": "Created {succeeded} watched channel(s), {failed} failed",
+    "bulkEditButton": "Edit {count} Watched Channels",
+    "bulkEditNotification": "{count, plural, one {Watched channel edited} other {# watched channels edited}}",
+    "bulkEditPartialNotification": "Edited {succeeded} watched channel(s), {failed} failed",
+    "bulkEditAlertTitle": "Editing {count} watched channels",
+    "bulkEditAlertText": "Every setting below, including title regexes and categories, will overwrite the existing values on all selected channels.",
+    "bulkDeleteConfirmText": "Are you sure you want to delete these {count} watched channels?",
+    "bulkDeleteButton": "Delete {count} Watched Channels",
+    "bulkDeleteNotification": "{count, plural, one {Watched channel deleted} other {# watched channels deleted}}",
+    "bulkDeletePartialNotification": "Deleted {succeeded} watched channel(s), {failed} failed"
   },
   "AuthComponents": {
     "validation": {
