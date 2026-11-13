@@ -5,7 +5,7 @@ import { useAxiosPrivate } from "../hooks/useAxios";
 import { Queue, useGetQueueItems, useStopQueueItem } from "../hooks/useQueue";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
 import { DataTable } from "mantine-datatable";
-import { Tooltip, Text, ActionIcon, Container, Modal, Switch, Button } from "@mantine/core";
+import { Tooltip, Text, ActionIcon, Container, Modal, Switch, Button, Group, Box } from "@mantine/core";
 import { IconEye, IconSquareX } from "@tabler/icons-react";
 import Link from "next/link";
 import { useDisclosure } from "@mantine/hooks";
@@ -37,6 +37,13 @@ const QueuePage = () => {
   const [cancelQueueLoading, setCancelQueueLoading] = useState(false);
   const [deleteVideoAndFiles, setDeleteVideoAndFiles] = useState(false);
   const [blockVideoId, setBlockVideoId] = useState(false);
+
+  // bulk cancel state
+  const [selectedQueueItems, setSelectedQueueItems] = useState<Queue[]>([]);
+  const [multiDeleteModalOpened, { open: openMultiDeleteModal, close: closeMultiDeleteModal }] = useDisclosure(false);
+  const [multiCancelLoading, setMultiCancelLoading] = useState(false);
+  const [multiDeleteVideoAndFiles, setMultiDeleteVideoAndFiles] = useState(false);
+  const [multiBlockVideoId, setMultiBlockVideoId] = useState(false);
 
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
@@ -109,6 +116,53 @@ const QueuePage = () => {
 
   }
 
+  const cancelSelectedQueueItems = async () => {
+    if (selectedQueueItems.length === 0) return;
+
+    setMultiCancelLoading(true)
+    try {
+      await Promise.all(selectedQueueItems.map(async (queue) => {
+        // cancel queue item
+        await stopQueueItemMutate.mutateAsync({
+          axiosPrivate: axiosPrivate,
+          id: queue.id
+        })
+
+        // delete video and files if requested
+        if (multiDeleteVideoAndFiles) {
+          await deleteVideoMutate.mutateAsync({
+            axiosPrivate: axiosPrivate,
+            id: queue.edges.vod.id,
+            deleteFiles: true
+          })
+        }
+
+        // block video id if requested (not applicable to live archives)
+        if (multiBlockVideoId && !queue.live_archive) {
+          await blockVideoMutate.mutateAsync({
+            axiosPrivate: axiosPrivate,
+            id: queue.edges.vod.ext_id
+          })
+        }
+      }))
+
+      queryClient.invalidateQueries({ queryKey: ["queue"] })
+
+      showNotification({
+        message: t('multiCancel')
+      })
+
+      setSelectedQueueItems([])
+      setMultiDeleteVideoAndFiles(false)
+      setMultiBlockVideoId(false)
+      closeMultiDeleteModal()
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setMultiCancelLoading(false)
+    }
+  }
+
   if (queueIsPending) return (
     <GanymedeLoadingText message="Loading Queue" />
   )
@@ -118,6 +172,21 @@ const QueuePage = () => {
 
     <div>
       <Container mt={10} size="7xl">
+        <Group justify="flex-end" mb={10} mih={36}>
+          <Box>
+            {selectedQueueItems.length >= 1 && (
+              <Button
+                leftSection={<IconSquareX size={16} />}
+                color="red"
+                onClick={openMultiDeleteModal}
+              >
+                {selectedQueueItems.length === 1
+                  ? t('bulk.cancelOne')
+                  : t('bulk.cancelMany', { number: selectedQueueItems.length })}
+              </Button>
+            )}
+          </Box>
+        </Group>
         <DataTable
           withTableBorder
           borderRadius="sm"
@@ -196,6 +265,8 @@ const QueuePage = () => {
             setSettingsAdminItemsPerPage(value);
             setPage(1);
           }}
+          selectedRecords={selectedQueueItems}
+          onSelectedRecordsChange={setSelectedQueueItems}
           recordsPerPageLabel={miscT('recordsPerPageLabel')}
         />
       </Container>
@@ -220,6 +291,27 @@ const QueuePage = () => {
             onChange={(event) => setBlockVideoId(event.currentTarget.checked)}
           />)}
           <Button variant="filled" color="orange" fullWidth loading={cancelQueueLoading} mt={10} onClick={cancelQueueItem}>{t('modal.cancel.title')}</Button>
+        </div>
+      </Modal>
+      <Modal opened={multiDeleteModalOpened} onClose={closeMultiDeleteModal} title={t('modal.cancel.title')}>
+        <div>
+          <Text>{t('modal.cancel.multiText', { number: selectedQueueItems.length })}</Text>
+          <Text size="sm" fs="italic">{t('modal.cancel.description')}</Text>
+          <Switch
+            mt={5}
+            color="red"
+            label={t('modal.cancel.delete')}
+            checked={multiDeleteVideoAndFiles}
+            onChange={(event) => setMultiDeleteVideoAndFiles(event.currentTarget.checked)}
+          />
+          {selectedQueueItems.some((queue) => !queue.live_archive) && (<Switch
+            mt={5}
+            color="violet"
+            label={t('modal.cancel.block')}
+            checked={multiBlockVideoId}
+            onChange={(event) => setMultiBlockVideoId(event.currentTarget.checked)}
+          />)}
+          <Button variant="filled" color="orange" fullWidth loading={multiCancelLoading} mt={10} onClick={cancelSelectedQueueItems}>{t('modal.cancel.title')}</Button>
         </div>
       </Modal>
     </div>

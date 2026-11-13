@@ -47,6 +47,11 @@
     "error": "Error loading queue",
     "loading": "Loading queue",
     "cancel": "Queue item has been canceled",
+    "multiCancel": "Queue items have been canceled",
+    "bulk": {
+      "cancelOne": "Cancel 1 queue item",
+      "cancelMany": "Cancel {number} queue items"
+    },
     "column": {
       "id": "ID",
       "channel": "Channel",
@@ -68,8 +73,9 @@
     },
     "modal": {
       "cancel": {
-        "title": "Cancel queue item",
+        "title": "Cancel Queue Item(s)",
         "text": "Are you sure you want to cancel this queue item?",
+        "multiText": "Are you sure you want to cancel {number} queue items?",
         "description": "For live archives this will stop the video and chat download then proceed with post-processing. For VOD archives this will stop all the tasks.",
         "delete": "Delete video and video files",
         "block": "Block video ID"
