@@ -14,10 +14,17 @@ import (
 	"github.com/zibbp/ganymede/internal/chapter"
 )
 
+const (
+	twitchHTTPTimeout = 30 * time.Second
+	twitchAuthTimeout = 10 * time.Second
+)
+
 var (
 	TwitchApiUrl             = "https://api.twitch.tv/helix"
 	TwitchAuthUrl            = "https://id.twitch.tv/oauth2/token"
 	twitchTokenRefreshBuffer = 5 * time.Minute
+	twitchHTTPClient         = &http.Client{Timeout: twitchHTTPTimeout}
+	twitchAuthHTTPClient     = &http.Client{Timeout: twitchAuthTimeout}
 )
 
 // authentication response
@@ -179,7 +186,7 @@ type TwitchSpriteManifest []struct {
 
 // authenticate sends a POST request to Twitch for authentication using client credentials. An AuthenTokenResponse is returned on success containing the access token.
 func twitchAuthenticate(ctx context.Context, clientId string, clientSecret string) (*AuthTokenResponse, error) {
-	client := &http.Client{}
+	client := twitchAuthHTTPClient
 
 	req, err := http.NewRequestWithContext(ctx, "POST", TwitchAuthUrl, nil)
 	if err != nil {
@@ -222,7 +229,7 @@ func twitchAuthenticate(ctx context.Context, clientId string, clientSecret strin
 }
 
 func (c *TwitchConnection) twitchMakeHTTPRequest(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string) ([]byte, error) {
-	client := &http.Client{}
+	client := twitchHTTPClient
 	tokenRefreshedAfterUnauthorized := false
 
 	for attempt := 0; attempt < maxRetryAttempts; attempt++ {
