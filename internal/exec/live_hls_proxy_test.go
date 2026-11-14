@@ -60,7 +60,7 @@ func TestLiveHLSProxyMediaIdleStartsRecovery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	<-started
 	if _, err := io.ReadAll(resp.Body); err == nil {
 		t.Fatal("stalled media transfer was reported as complete")
@@ -103,7 +103,7 @@ func TestLiveHLSProxyCancelledMediaDoesNotStartRecovery(t *testing.T) {
 	}
 	<-started
 	cancel()
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	select {
 	case <-finished:
 	case <-time.After(time.Second):
@@ -143,7 +143,7 @@ func TestLiveHLSProxyRecoveryDeadlineInterruptsMediaBody(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	<-started
 	select {
 	case <-p.expired:
@@ -184,7 +184,7 @@ func TestLiveHLSProxyNewRecoveryInterruptsExistingMediaBody(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	<-started
 	initURL, err := p.resourceURL(base, "/init", "init")
 	if err != nil {
@@ -194,7 +194,7 @@ func TestLiveHLSProxyNewRecoveryInterruptsExistingMediaBody(t *testing.T) {
 	go func() {
 		response, err := http.Get(initURL)
 		if response != nil {
-			response.Body.Close()
+			_ = response.Body.Close()
 		}
 		initDone <- err
 	}()
@@ -233,7 +233,7 @@ func TestLiveHLSProxySuccessfulMediaResetsRecoveryWindow(t *testing.T) {
 			t.Fatal(err)
 		}
 		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		if err != nil || string(body) != "media" {
 			t.Fatalf("recovered media = %q, error = %v", body, err)
 		}
@@ -270,7 +270,7 @@ func TestLiveHLSProxyActiveMediaCanExceedRecoveryWindow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil || string(body) != strings.Repeat("chunk", chunks) {
 		t.Fatalf("active media body = %q, error = %v", body, err)
@@ -304,7 +304,7 @@ func TestLiveHLSProxyUsesSafeContentTypes(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if _, err := io.Copy(io.Discard, resp.Body); err != nil {
 				t.Fatal(err)
 			}
@@ -350,7 +350,7 @@ func TestLiveHLSProxyRecoversStalledMediaDuringCapture(t *testing.T) {
 				t.Errorf("hijack segment response: %v", err)
 				return
 			}
-			defer conn.Close()
+			defer func() { _ = conn.Close() }()
 			_, _ = fmt.Fprintf(conn, "HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type: video/mp2t\r\n\r\n", len(segment))
 			_, _ = conn.Write(segment[:min(len(segment)/2, 32768)])
 			time.Sleep(500 * time.Millisecond)
@@ -413,7 +413,7 @@ func TestLiveHLSProxyRetriesInitializationWithRange(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
@@ -448,7 +448,7 @@ func TestLiveHLSProxyBoundsRetriesAcrossFFmpegRequests(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		if resp.StatusCode != http.StatusBadGateway {
 			t.Fatalf("status = %d", resp.StatusCode)
 		}
@@ -488,7 +488,7 @@ func TestLiveHLSProxyCancellationStopsRetry(t *testing.T) {
 	go func() {
 		resp, err := http.DefaultClient.Do(req)
 		if resp != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		done <- err
 	}()
@@ -521,7 +521,7 @@ func TestLiveHLSProxyDoesNotRetryPermanentError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode != http.StatusForbidden || attempts.Load() != 1 {
 		t.Fatalf("status=%d attempts=%d", resp.StatusCode, attempts.Load())
 	}
@@ -572,7 +572,7 @@ func TestLiveHLSProxyFetchesFullPlaylist(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
@@ -667,7 +667,7 @@ func TestLiveHLSProxyRecoversInitializationDuringCapture(t *testing.T) {
 	if out, err := decode.CombinedOutput(); err != nil {
 		t.Fatalf("decode capture: %v\n%s", err, out)
 	}
-	t.Log(fmt.Sprintf("captured %.2f seconds across initialization retries", probe.FormatDuration))
+	t.Logf("captured %.2f seconds across initialization retries", probe.FormatDuration)
 
 	permanentFailure.Store(true)
 	failedDir := filepath.Join(dir, "failed-capture")

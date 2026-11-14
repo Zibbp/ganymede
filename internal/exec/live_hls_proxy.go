@@ -60,7 +60,7 @@ func newLiveHLSProxy(ctx context.Context, videoID, channel string, retryWindow, 
 	}
 	var token [16]byte
 	if _, err := rand.Read(token[:]); err != nil {
-		listener.Close()
+		_ = listener.Close()
 		return nil, fmt.Errorf("create live HLS recovery token: %w", err)
 	}
 	transport := &http.Transport{Proxy: http.ProxyFromEnvironment}
@@ -272,7 +272,7 @@ func (p *liveHLSProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		deadline := p.currentDeadline()
 		attemptCtx := r.Context()
-		cancel := func() {}
+		var cancel context.CancelFunc
 		stopExpiry := func() bool { return true }
 		if parts[1] != "media" {
 			attemptDeadline := time.Now().Add(liveHLSRequestTimeout)
@@ -329,7 +329,6 @@ func (p *liveHLSProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					_, _ = w.Write(body)
 					return
 				}
-				err = readErr
 			} else {
 				copyLiveHLSHeaders(w.Header(), resp.Header)
 				w.Header().Set("Content-Type", "application/octet-stream")
@@ -358,7 +357,6 @@ func (p *liveHLSProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(resp.StatusCode)
 				return
 			}
-			err = fmt.Errorf("upstream HTTP status %d", resp.StatusCode)
 		} else {
 			stopExpiry()
 			cancel()
