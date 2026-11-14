@@ -424,7 +424,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 	// Capture files use the immutable stream ID; ExtID may later become the VOD ID.
 	captureID := liveCaptureID(video)
-	recoveryProxy, err := newLiveHLSProxy(video.ID.String(), channel.Name, liveHLSRetryWindow, liveHLSRetryInterval)
+	recoveryProxy, err := newLiveHLSProxy(ctx, video.ID.String(), channel.Name, liveHLSRetryWindow, liveHLSRetryInterval, liveHLSRequestTimeout)
 	if err != nil {
 		return err
 	}
