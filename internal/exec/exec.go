@@ -478,7 +478,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	if progressReader != nil {
 		progressUpdates = ffmpegProgressUpdates(progressReader)
 	}
-	err = superviseLiveArchiveCommand(ctx, cmd, done, progressUpdates, stallTimeout, recoveryProxy.expired)
+	err = superviseLiveArchiveCommand(ctx, cmd, done, progressUpdates, stallTimeout, recoveryProxy)
 	if stdErrors.Is(err, ErrLiveArchiveStalled) {
 		log.Warn().Str("channel", channel.Name).Str("video_id", video.ID.String()).Dur("timeout", stallTimeout).Msg("live archive capture stopped after ffmpeg made no media progress")
 	}
@@ -519,15 +519,33 @@ func ffmpegProgressUpdates(reader io.Reader) <-chan int64 {
 	return updates
 }
 
-func superviseLiveArchiveCommand(ctx context.Context, cmd *osExec.Cmd, done <-chan error, progressUpdates <-chan int64, stallTimeout time.Duration, recoveryExpired <-chan struct{}) error {
+func superviseLiveArchiveCommand(ctx context.Context, cmd *osExec.Cmd, done <-chan error, progressUpdates <-chan int64, stallTimeout time.Duration, recovery *liveHLSProxy) error {
 	var stallTimer *time.Timer
 	var stallTimerC <-chan time.Time
+	var recoveryExpired, recoveryChanged <-chan struct{}
+	if recovery != nil {
+		recoveryExpired, recoveryChanged = recovery.expired, recovery.changed
+	}
 	var lastOutTime int64
 	if stallTimeout > 0 {
 		stallTimer = time.NewTimer(stallTimeout)
 		stallTimerC = stallTimer.C
 		defer stallTimer.Stop()
 	}
+	updateStallTimer := func() {
+		if stallTimer == nil {
+			return
+		}
+		// Recovery has its own deadline. Resume the media watchdog afterwards.
+		if recovery != nil && recovery.recovering() {
+			stallTimer.Stop()
+			stallTimerC = nil
+			return
+		}
+		resetTimer(stallTimer, stallTimeout)
+		stallTimerC = stallTimer.C
+	}
+	updateStallTimer()
 
 	for {
 		select {
@@ -552,16 +570,22 @@ func superviseLiveArchiveCommand(ctx context.Context, cmd *osExec.Cmd, done <-ch
 			}
 			stopLiveArchiveCommand(cmd, done)
 			return ErrLiveHLSRecoveryExpired
+		case <-recoveryChanged:
+			updateStallTimer()
 		case outTime, ok := <-progressUpdates:
 			if !ok {
 				progressUpdates = nil
 				continue
 			}
 			lastOutTime = outTime
-			if stallTimer != nil {
+			if stallTimerC != nil {
 				resetTimer(stallTimer, stallTimeout)
 			}
 		case <-stallTimerC:
+			if recovery != nil && recovery.recovering() {
+				updateStallTimer()
+				continue
+			}
 			if ctx.Err() != nil {
 				stopLiveArchiveCommand(cmd, done)
 				return ctx.Err()

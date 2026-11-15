@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -12,6 +13,7 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -22,11 +24,13 @@ import (
 )
 
 const (
-	liveHLSRetryWindow    = 45 * time.Second
-	liveHLSRetryInterval  = time.Second
-	liveHLSRequestTimeout = 8 * time.Second
-	liveHLSMaxInitSize    = 64 << 20
+	liveHLSRetryWindow     = 45 * time.Second
+	liveHLSRetryInterval   = time.Second
+	liveHLSRequestTimeout  = 8 * time.Second
+	liveHLSMaxResourceSize = 64 << 20
 )
+
+var errLiveHLSResourceTooLarge = errors.New("live HLS resource too large")
 
 var liveHLSURIAttribute = regexp.MustCompile(`URI="([^"]*)"`)
 var liveHLSExtension = regexp.MustCompile(`^\.[a-zA-Z0-9]{1,9}$`)
@@ -46,6 +50,8 @@ type liveHLSProxy struct {
 	mu            sync.Mutex
 	closed        bool
 	failedSince   time.Time
+	failures      map[string]struct{}
+	changed       chan struct{}
 	failureTimer  *time.Timer
 	expired       chan struct{}
 	expireOnce    sync.Once
@@ -80,6 +86,8 @@ func newLiveHLSProxy(ctx context.Context, videoID, channel string, retryWindow, 
 		retryInterval: retryInterval,
 		readTimeout:   readTimeout,
 		expired:       make(chan struct{}),
+		failures:      make(map[string]struct{}),
+		changed:       make(chan struct{}, 1),
 		expiryContext: expiryContext,
 		cancelExpiry:  cancelExpiry,
 	}
@@ -180,14 +188,16 @@ func (p *liveHLSProxy) rewritePlaylist(body []byte, base *url.URL) ([]byte, erro
 	return []byte(strings.Join(lines, "\n")), nil
 }
 
-func (p *liveHLSProxy) failureDeadline() time.Time {
+func (p *liveHLSProxy) failureDeadline(resource string) time.Time {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if p.closed {
+	if p.closed || p.expiryContext.Err() != nil {
 		return time.Now()
 	}
+	p.failures[resource] = struct{}{}
 	if p.failedSince.IsZero() {
 		p.failedSince = time.Now()
+		p.notifyRecoveryChange()
 		start := p.failedSince
 		p.failureTimer = time.AfterFunc(p.retryWindow, func() {
 			p.mu.Lock()
@@ -218,32 +228,42 @@ func (p *liveHLSProxy) expireIfOverdue() bool {
 	return false
 }
 
-func (p *liveHLSProxy) currentDeadline() time.Time {
+func (p *liveHLSProxy) recovering() bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if p.failedSince.IsZero() {
-		return time.Time{}
-	}
-	return p.failedSince.Add(p.retryWindow)
+	return !p.failedSince.IsZero()
 }
 
-func (p *liveHLSProxy) clearFailure() {
+func (p *liveHLSProxy) notifyRecoveryChange() {
+	select {
+	case p.changed <- struct{}{}:
+	default:
+	}
+}
+
+// Only completion of the failed resources ends recovery; concurrent successful
+// requests must not extend the deadline of an outstanding failure.
+func (p *liveHLSProxy) clearFailure(resource string) bool {
 	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.closed || p.expiryContext.Err() != nil {
+		return false
+	}
 	start := p.failedSince
 	if !start.IsZero() && !time.Now().Before(start.Add(p.retryWindow)) {
 		p.expireLocked()
-		p.mu.Unlock()
-		return
+		return false
 	}
-	if p.failureTimer != nil {
-		p.failureTimer.Stop()
-		p.failureTimer = nil
+	delete(p.failures, resource)
+	if start.IsZero() || len(p.failures) != 0 {
+		return true
 	}
+	p.failureTimer.Stop()
+	p.failureTimer = nil
 	p.failedSince = time.Time{}
-	p.mu.Unlock()
-	if !start.IsZero() {
-		p.logger.Info().Dur("interruption", time.Since(start)).Msg("live HLS requests recovered")
-	}
+	p.notifyRecoveryChange()
+	p.logger.Info().Dur("interruption", time.Since(start)).Msg("live HLS requests recovered")
+	return true
 }
 
 func (p *liveHLSProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -264,123 +284,118 @@ func (p *liveHLSProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid resource", http.StatusBadRequest)
 		return
 	}
+	// Cancellation and recovery expiry apply to every attempt, including sleeps.
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+	stopExpiry := context.AfterFunc(p.expiryContext, cancel)
+	defer stopExpiry()
+	kind := parts[1]
+	resource := kind + ":" + u.String()
+	if kind != "playlist" {
+		resource += ":" + r.Header.Get("Range")
+	}
 	warned := false
 	for {
-		if p.expireIfOverdue() {
+		if p.expireIfOverdue() || p.expiryContext.Err() != nil {
 			http.Error(w, "live HLS recovery timed out", http.StatusBadGateway)
 			return
 		}
-		deadline := p.currentDeadline()
-		attemptCtx := r.Context()
-		var cancel context.CancelFunc
-		stopExpiry := func() bool { return true }
-		if parts[1] != "media" {
-			attemptDeadline := time.Now().Add(liveHLSRequestTimeout)
-			if !deadline.IsZero() && deadline.Before(attemptDeadline) {
-				attemptDeadline = deadline
-			}
-			attemptCtx, cancel = context.WithDeadline(attemptCtx, attemptDeadline)
-		} else {
-			attemptCtx, cancel = context.WithCancel(attemptCtx)
-			stopExpiry = context.AfterFunc(p.expiryContext, cancel)
-		}
-		req, err := http.NewRequestWithContext(attemptCtx, http.MethodGet, u.String(), nil)
-		if err != nil {
-			stopExpiry()
-			cancel()
-			http.Error(w, "invalid resource", http.StatusBadRequest)
+		if ctx.Err() != nil {
 			return
 		}
-		if rangeHeader := r.Header.Get("Range"); rangeHeader != "" && parts[1] != "playlist" {
-			req.Header.Set("Range", rangeHeader)
+		body, resp, err := p.fetchResource(ctx, r, u.String(), kind)
+		if errors.Is(err, errLiveHLSResourceTooLarge) {
+			http.Error(w, err.Error(), http.StatusBadGateway)
+			return
 		}
-		if userAgent := r.Header.Get("User-Agent"); userAgent != "" {
-			req.Header.Set("User-Agent", userAgent)
-		}
-		resp, err := p.client.Do(req)
-		if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			if parts[1] == "playlist" || parts[1] == "init" {
-				limit := int64(liveHLSMaxInitSize)
-				if parts[1] == "playlist" {
-					limit = hls.MaxPlaylistSize
-				}
-				body, readErr := io.ReadAll(io.LimitReader(resp.Body, limit+1))
-				_ = resp.Body.Close()
-				cancel()
-				if readErr == nil && int64(len(body)) > limit {
-					http.Error(w, "live HLS resource too large", http.StatusBadGateway)
+		if err == nil {
+			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+				if !p.clearFailure(resource) {
+					http.Error(w, "live HLS recovery timed out", http.StatusBadGateway)
 					return
 				}
-				if readErr == nil && parts[1] == "playlist" {
-					body, readErr = p.rewritePlaylist(body, resp.Request.URL)
-				}
-				if readErr == nil {
+				status := resp.StatusCode
+				if kind == "playlist" {
+					w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
+					status = http.StatusOK
+				} else {
 					copyLiveHLSHeaders(w.Header(), resp.Header)
-					status := resp.StatusCode
-					if parts[1] == "playlist" {
-						w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
-						w.Header().Del("Content-Range")
-						w.Header().Del("Accept-Ranges")
-						status = http.StatusOK
-					} else {
-						w.Header().Set("Content-Type", "application/octet-stream")
-					}
-					w.WriteHeader(status)
-					_, _ = w.Write(body)
-					return
+					w.Header().Set("Content-Type", "application/octet-stream")
 				}
-			} else {
-				copyLiveHLSHeaders(w.Header(), resp.Header)
-				w.Header().Set("Content-Type", "application/octet-stream")
-				w.WriteHeader(resp.StatusCode)
-				reader := &liveHLSIdleReader{reader: resp.Body, timeout: p.readTimeout, cancel: cancel}
-				_, copyErr := io.Copy(w, reader)
-				_ = resp.Body.Close()
-				stopExpiry()
-				cancel()
-				if copyErr != nil {
-					if reader.readErr != nil && r.Context().Err() == nil && p.expiryContext.Err() == nil {
-						p.failureDeadline()
-						p.logger.Warn().Str("resource_type", "media").Dur("retry_window", p.retryWindow).Msg("live HLS media transfer interrupted")
-					}
-					// Do not let a truncated chunked response look complete to FFmpeg.
-					panic(http.ErrAbortHandler)
-				}
-				p.clearFailure()
+				w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+				w.WriteHeader(status)
+				_, _ = w.Write(body)
 				return
 			}
-		} else if err == nil {
-			_ = resp.Body.Close()
-			stopExpiry()
-			cancel()
 			if resp.StatusCode != http.StatusNotFound && resp.StatusCode != http.StatusRequestTimeout && resp.StatusCode != http.StatusTooManyRequests && resp.StatusCode < 500 {
 				w.WriteHeader(resp.StatusCode)
 				return
 			}
-		} else {
-			stopExpiry()
-			cancel()
 		}
-		if r.Context().Err() != nil {
-			return
-		}
-		deadline = p.failureDeadline()
-		if !warned {
-			p.logger.Warn().Str("resource_type", parts[1]).Dur("retry_window", p.retryWindow).Msg("live HLS request failed; retrying")
-			warned = true
-		}
-		delay := min(p.retryInterval, time.Until(deadline))
-		if delay <= 0 {
+		if ctx.Err() != nil {
 			continue
 		}
-		timer := time.NewTimer(delay)
+		deadline := p.failureDeadline(resource)
+		if !warned {
+			p.logger.Warn().Str("resource_type", kind).Dur("retry_window", p.retryWindow).Msg("live HLS request failed; retrying")
+			warned = true
+		}
+		timer := time.NewTimer(max(0, min(p.retryInterval, time.Until(deadline))))
 		select {
-		case <-r.Context().Done():
+		case <-ctx.Done():
 			timer.Stop()
-			return
 		case <-timer.C:
 		}
 	}
+}
+
+// Buffer a complete, bounded resource before committing any bytes to FFmpeg.
+// Failed attempts are discarded so a retry cannot duplicate or omit media bytes.
+func (p *liveHLSProxy) fetchResource(ctx context.Context, downstream *http.Request, uri, kind string) ([]byte, *http.Response, error) {
+	var cancel context.CancelFunc
+	if kind == "media" {
+		ctx, cancel = context.WithCancel(ctx)
+	} else {
+		ctx, cancel = context.WithTimeout(ctx, p.readTimeout)
+	}
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	if value := downstream.Header.Get("Range"); value != "" && kind != "playlist" {
+		req.Header.Set("Range", value)
+	}
+	if value := downstream.Header.Get("User-Agent"); value != "" {
+		req.Header.Set("User-Agent", value)
+	}
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, resp, nil
+	}
+	limit := int64(liveHLSMaxResourceSize)
+	if kind == "playlist" {
+		limit = hls.MaxPlaylistSize
+	}
+	if resp.ContentLength > limit {
+		return nil, resp, errLiveHLSResourceTooLarge
+	}
+	reader := &liveHLSIdleReader{reader: resp.Body, timeout: p.readTimeout, cancel: cancel}
+	body, err := io.ReadAll(io.LimitReader(reader, limit+1))
+	if err != nil {
+		return nil, resp, err
+	}
+	if int64(len(body)) > limit {
+		return nil, resp, errLiveHLSResourceTooLarge
+	}
+	if kind == "playlist" {
+		body, err = p.rewritePlaylist(body, resp.Request.URL)
+	}
+	return body, resp, err
 }
 
 // liveHLSIdleReader cancels only while an upstream read makes no progress;
@@ -389,17 +404,12 @@ type liveHLSIdleReader struct {
 	reader  io.Reader
 	timeout time.Duration
 	cancel  context.CancelFunc
-	readErr error
 }
 
 func (r *liveHLSIdleReader) Read(buf []byte) (int, error) {
 	timer := time.AfterFunc(r.timeout, r.cancel)
 	defer timer.Stop()
-	n, err := r.reader.Read(buf)
-	if err != nil && err != io.EOF {
-		r.readErr = err
-	}
-	return n, err
+	return r.reader.Read(buf)
 }
 
 func copyLiveHLSHeaders(dst, src http.Header) {

@@ -16,6 +16,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/zibbp/ganymede/internal/hls"
 )
 
 func testLiveHLSProxy(t *testing.T) *liveHLSProxy {
@@ -38,72 +40,104 @@ func testLiveHLSProxyWithTimeout(t *testing.T, window, readTimeout time.Duration
 	return p
 }
 
+type liveHLSResponse struct {
+	status int
+	body   []byte
+	err    error
+}
+
+func getLiveHLSResource(ctx context.Context, uri string) <-chan liveHLSResponse {
+	done := make(chan liveHLSResponse, 1)
+	go func() {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
+		if err != nil {
+			done <- liveHLSResponse{err: err}
+			return
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			done <- liveHLSResponse{err: err}
+			return
+		}
+		defer func() { _ = resp.Body.Close() }()
+		body, err := io.ReadAll(resp.Body)
+		done <- liveHLSResponse{status: resp.StatusCode, body: body, err: err}
+	}()
+	return done
+}
+
+func awaitLiveHLSResponse(t *testing.T, done <-chan liveHLSResponse) liveHLSResponse {
+	t.Helper()
+	select {
+	case result := <-done:
+		return result
+	case <-time.After(3 * time.Second):
+		t.Fatal("timed out waiting for proxy response")
+		return liveHLSResponse{}
+	}
+}
+
+func proxyResourceURL(t *testing.T, p *liveHLSProxy, origin, ref, kind string) string {
+	t.Helper()
+	base, err := url.Parse(origin)
+	if err != nil {
+		t.Fatal(err)
+	}
+	uri, err := p.resourceURL(base, ref, kind)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return uri
+}
+
 func TestLiveHLSProxyMediaIdleStartsRecovery(t *testing.T) {
-	started := make(chan struct{}, 1)
+	var attempts atomic.Int32
 	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts.Add(1)
 		_, _ = w.Write(bytes.Repeat([]byte("x"), 8192))
 		w.(http.Flusher).Flush()
-		started <- struct{}{}
-		select {
-		case <-r.Context().Done():
-		case <-time.After(3 * time.Second):
-		}
+		<-r.Context().Done()
 	}))
 	defer source.Close()
 	p := testLiveHLSProxyWithTimeout(t, 150*time.Millisecond, 50*time.Millisecond)
-	base, _ := url.Parse(source.URL)
-	resource, err := p.resourceURL(base, "/segment.ts", "media")
-	if err != nil {
-		t.Fatal(err)
+	result := awaitLiveHLSResponse(t, getLiveHLSResource(t.Context(), proxyResourceURL(t, p, source.URL, "/segment.ts", "media")))
+	if result.err != nil || result.status != http.StatusBadGateway || bytes.Contains(result.body, []byte("xxxx")) {
+		t.Fatalf("incomplete media reached client: %+v", result)
 	}
-	resp, err := http.Get(resource)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-	<-started
-	if _, err := io.ReadAll(resp.Body); err == nil {
-		t.Fatal("stalled media transfer was reported as complete")
+	if attempts.Load() < 2 {
+		t.Fatal("stalled media was not retried")
 	}
 	select {
 	case <-p.expired:
-	case <-time.After(2 * time.Second):
+	default:
 		t.Fatal("stalled media did not expire the recovery window")
 	}
 }
 
 func TestLiveHLSProxyCancelledMediaDoesNotStartRecovery(t *testing.T) {
-	started := make(chan struct{}, 1)
-	finished := make(chan struct{}, 1)
+	started := make(chan struct{})
+	finished := make(chan struct{})
 	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(bytes.Repeat([]byte("x"), 8192))
 		w.(http.Flusher).Flush()
-		started <- struct{}{}
-		select {
-		case <-r.Context().Done():
-		case <-time.After(3 * time.Second):
-		}
-		finished <- struct{}{}
+		close(started)
+		<-r.Context().Done()
+		close(finished)
 	}))
 	defer source.Close()
 	p := testLiveHLSProxyWithTimeout(t, 150*time.Millisecond, 2*time.Second)
-	base, _ := url.Parse(source.URL)
-	resource, err := p.resourceURL(base, "/segment.ts", "media")
-	if err != nil {
-		t.Fatal(err)
-	}
 	ctx, cancel := context.WithCancel(t.Context())
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, resource, nil)
-	if err != nil {
-		t.Fatal(err)
+	defer cancel()
+	done := getLiveHLSResource(ctx, proxyResourceURL(t, p, source.URL, "/segment.ts", "media"))
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("upstream request did not start")
 	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	<-started
 	cancel()
-	_ = resp.Body.Close()
+	if result := awaitLiveHLSResponse(t, done); !errors.Is(result.err, context.Canceled) {
+		t.Fatalf("cancelled request: %+v", result)
+	}
 	select {
 	case <-finished:
 	case <-time.After(time.Second):
@@ -118,7 +152,6 @@ func TestLiveHLSProxyCancelledMediaDoesNotStartRecovery(t *testing.T) {
 
 func TestLiveHLSProxyRecoveryDeadlineInterruptsMediaBody(t *testing.T) {
 	var attempts atomic.Int32
-	started := make(chan struct{}, 1)
 	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if attempts.Add(1) == 1 {
 			http.Error(w, "temporary outage", http.StatusServiceUnavailable)
@@ -126,32 +159,13 @@ func TestLiveHLSProxyRecoveryDeadlineInterruptsMediaBody(t *testing.T) {
 		}
 		_, _ = w.Write(bytes.Repeat([]byte("x"), 8192))
 		w.(http.Flusher).Flush()
-		started <- struct{}{}
-		select {
-		case <-r.Context().Done():
-		case <-time.After(3 * time.Second):
-		}
+		<-r.Context().Done()
 	}))
 	defer source.Close()
 	p := testLiveHLSProxyWithTimeout(t, 200*time.Millisecond, 2*time.Second)
-	base, _ := url.Parse(source.URL)
-	resource, err := p.resourceURL(base, "/segment.ts", "media")
-	if err != nil {
-		t.Fatal(err)
-	}
-	resp, err := http.Get(resource)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-	<-started
-	select {
-	case <-p.expired:
-	case <-time.After(time.Second):
-		t.Fatal("recovery window did not expire while reading media")
-	}
-	if _, err := io.ReadAll(resp.Body); err == nil {
-		t.Fatal("expired media transfer was reported as complete")
+	result := awaitLiveHLSResponse(t, getLiveHLSResource(t.Context(), proxyResourceURL(t, p, source.URL, "/segment.ts", "media")))
+	if result.err != nil || result.status != http.StatusBadGateway || bytes.Contains(result.body, []byte("xxxx")) {
+		t.Fatalf("expired media reached client: %+v", result)
 	}
 	if attempts.Load() != 2 {
 		t.Fatalf("upstream attempts = %d, want 2", attempts.Load())
@@ -159,7 +173,7 @@ func TestLiveHLSProxyRecoveryDeadlineInterruptsMediaBody(t *testing.T) {
 }
 
 func TestLiveHLSProxyNewRecoveryInterruptsExistingMediaBody(t *testing.T) {
-	started := make(chan struct{}, 1)
+	started := make(chan struct{})
 	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/init" {
 			http.Error(w, "temporary outage", http.StatusServiceUnavailable)
@@ -167,84 +181,64 @@ func TestLiveHLSProxyNewRecoveryInterruptsExistingMediaBody(t *testing.T) {
 		}
 		_, _ = w.Write(bytes.Repeat([]byte("x"), 8192))
 		w.(http.Flusher).Flush()
-		started <- struct{}{}
-		select {
-		case <-r.Context().Done():
-		case <-time.After(3 * time.Second):
-		}
+		close(started)
+		<-r.Context().Done()
 	}))
 	defer source.Close()
 	p := testLiveHLSProxyWithTimeout(t, 200*time.Millisecond, 2*time.Second)
-	base, _ := url.Parse(source.URL)
-	media, err := p.resourceURL(base, "/segment.ts", "media")
-	if err != nil {
-		t.Fatal(err)
-	}
-	resp, err := http.Get(media)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-	<-started
-	initURL, err := p.resourceURL(base, "/init", "init")
-	if err != nil {
-		t.Fatal(err)
-	}
-	initDone := make(chan error, 1)
-	go func() {
-		response, err := http.Get(initURL)
-		if response != nil {
-			_ = response.Body.Close()
-		}
-		initDone <- err
-	}()
+	mediaDone := getLiveHLSResource(t.Context(), proxyResourceURL(t, p, source.URL, "/segment.ts", "media"))
 	select {
-	case <-p.expired:
+	case <-started:
 	case <-time.After(time.Second):
-		t.Fatal("new recovery window did not expire during an existing media read")
+		t.Fatal("media request did not start")
 	}
-	if _, err := io.ReadAll(resp.Body); err == nil {
-		t.Fatal("existing media transfer was not interrupted")
-	}
-	if err := <-initDone; err != nil {
-		t.Fatalf("init request: %v", err)
+	initDone := getLiveHLSResource(t.Context(), proxyResourceURL(t, p, source.URL, "/init", "init"))
+	for _, done := range []<-chan liveHLSResponse{mediaDone, initDone} {
+		result := awaitLiveHLSResponse(t, done)
+		if result.err != nil || result.status != http.StatusBadGateway || bytes.Contains(result.body, []byte("xxxx")) {
+			t.Fatalf("request survived recovery deadline: %+v", result)
+		}
 	}
 }
 
-func TestLiveHLSProxySuccessfulMediaResetsRecoveryWindow(t *testing.T) {
-	var attempts atomic.Int32
-	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if attempts.Add(1)%2 == 1 {
-			http.Error(w, "temporary outage", http.StatusServiceUnavailable)
-			return
-		}
-		_, _ = io.WriteString(w, "media")
-	}))
-	defer source.Close()
-	p := testLiveHLSProxyWithTimeout(t, 150*time.Millisecond, time.Second)
-	base, _ := url.Parse(source.URL)
-	resource, err := p.resourceURL(base, "/segment.ts", "media")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for i := 0; i < 2; i++ {
-		resp, err := http.Get(resource)
-		if err != nil {
-			t.Fatal(err)
-		}
-		body, err := io.ReadAll(resp.Body)
-		_ = resp.Body.Close()
-		if err != nil || string(body) != "media" {
-			t.Fatalf("recovered media = %q, error = %v", body, err)
-		}
-		select {
-		case <-p.expired:
-			t.Fatal("a recovered transfer left the recovery timer active")
-		case <-time.After(200 * time.Millisecond):
-		}
-	}
-	if attempts.Load() != 4 {
-		t.Fatalf("upstream attempts = %d, want 4", attempts.Load())
+func TestLiveHLSProxySuccessfulResourcesResetRecoveryWindow(t *testing.T) {
+	for _, kind := range []string{"media", "init", "playlist"} {
+		t.Run(kind, func(t *testing.T) {
+			var attempts atomic.Int32
+			source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if attempts.Add(1)%2 == 1 {
+					http.Error(w, "temporary outage", http.StatusServiceUnavailable)
+					return
+				}
+				_, _ = io.WriteString(w, "#EXTM3U\n")
+			}))
+			defer source.Close()
+			p := testLiveHLSProxyWithTimeout(t, 150*time.Millisecond, time.Second)
+			base, _ := url.Parse(source.URL)
+			resource, err := p.resourceURL(base, "/resource", kind)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for i := 0; i < 2; i++ {
+				resp, err := http.Get(resource)
+				if err != nil {
+					t.Fatal(err)
+				}
+				body, err := io.ReadAll(resp.Body)
+				_ = resp.Body.Close()
+				if err != nil || string(body) != "#EXTM3U\n" {
+					t.Fatalf("recovered media = %q, error = %v", body, err)
+				}
+				select {
+				case <-p.expired:
+					t.Fatal("a recovered transfer left the recovery timer active")
+				case <-time.After(200 * time.Millisecond):
+				}
+			}
+			if attempts.Load() != 4 {
+				t.Fatalf("upstream attempts = %d, want 4", attempts.Load())
+			}
+		})
 	}
 }
 
@@ -339,7 +333,7 @@ func TestLiveHLSProxyRecoversStalledMediaDuringCapture(t *testing.T) {
 	var interrupted atomic.Bool
 	fileServer := http.FileServer(http.Dir(sourceDir))
 	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, ".ts") && interrupted.CompareAndSwap(false, true) {
+		if r.URL.Path == "/seg003.ts" && interrupted.CompareAndSwap(false, true) {
 			segment, err := os.ReadFile(filepath.Join(sourceDir, filepath.Base(r.URL.Path)))
 			if err != nil {
 				t.Errorf("read segment: %v", err)
@@ -384,6 +378,22 @@ func TestLiveHLSProxyRecoversStalledMediaDuringCapture(t *testing.T) {
 	if out, err := decode.CombinedOutput(); err != nil {
 		t.Fatalf("decode capture: %v\n%s", err, out)
 	}
+	for _, media := range []string{filepath.Join(sourceDir, "source.m3u8"), output} {
+		frames, err := osExec.CommandContext(t.Context(), "ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames", "-of", "csv=p=0", media).CombinedOutput()
+		if err != nil {
+			t.Fatalf("count frames: %v\n%s", err, frames)
+		}
+		counts := strings.Fields(string(frames))
+		if len(counts) == 0 {
+			t.Fatal("no video frames counted")
+		}
+		for _, count := range counts {
+			if count != "120" {
+				t.Fatalf("%s: decoded %s video frames, want 120", media, count)
+			}
+		}
+	}
+
 }
 
 func TestLiveHLSProxyRetriesInitializationWithRange(t *testing.T) {
@@ -691,7 +701,7 @@ func TestLiveHLSProxyRecoversInitializationDuringCapture(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 	defer cancel()
-	err = superviseLiveArchiveCommand(ctx, cmd, done, nil, 0, failedProxy.expired)
+	err = superviseLiveArchiveCommand(ctx, cmd, done, nil, 0, failedProxy)
 	if !errors.Is(err, ErrLiveHLSRecoveryExpired) {
 		t.Fatalf("capture error = %v, want recovery timeout", err)
 	}
@@ -709,5 +719,121 @@ func TestLiveHLSProxyRecoversInitializationDuringCapture(t *testing.T) {
 	decode = osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-i", partialPlaylist, "-f", "null", "-")
 	if out, err := decode.CombinedOutput(); err != nil {
 		t.Fatalf("decode partial capture: %v\n%s", err, out)
+	}
+}
+
+func TestLiveHLSProxyRetriesCompleteMedia(t *testing.T) {
+	for _, interruption := range []string{"truncated", "chunked", "idle"} {
+		t.Run(interruption, func(t *testing.T) {
+			payload := bytes.Repeat([]byte("complete media"), 4096)
+			var attempts atomic.Int32
+			source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Header.Get("Range") != "bytes=100-" {
+					t.Errorf("range = %q, want bytes=100-", r.Header.Get("Range"))
+				}
+				attempt := attempts.Add(1)
+				w.Header().Set("Content-Range", fmt.Sprintf("bytes 100-%d/%d", len(payload)+99, len(payload)+100))
+				if interruption != "chunked" {
+					w.Header().Set("Content-Length", fmt.Sprint(len(payload)))
+				}
+				w.WriteHeader(http.StatusPartialContent)
+				if attempt == 1 {
+					_, _ = w.Write(payload[:8192])
+					w.(http.Flusher).Flush()
+					switch interruption {
+					case "idle":
+						<-r.Context().Done()
+					case "chunked":
+						panic(http.ErrAbortHandler)
+					}
+					return
+				}
+				_, _ = w.Write(payload)
+			}))
+			defer source.Close()
+			p := testLiveHLSProxyWithTimeout(t, time.Second, 50*time.Millisecond)
+			req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, proxyResourceURL(t, p, source.URL, "/segment.ts", "media"), nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set("Range", "bytes=100-")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = resp.Body.Close() }()
+			body, err := io.ReadAll(resp.Body)
+			if err != nil || !bytes.Equal(body, payload) {
+				t.Fatalf("media differs after retry: bytes=%d, error=%v", len(body), err)
+			}
+			if resp.StatusCode != http.StatusPartialContent || resp.Header.Get("Content-Range") != fmt.Sprintf("bytes 100-%d/%d", len(payload)+99, len(payload)+100) || resp.ContentLength != int64(len(payload)) {
+				t.Fatalf("range response changed: status=%d headers=%v", resp.StatusCode, resp.Header)
+			}
+			if attempts.Load() != 2 || p.recovering() {
+				t.Fatalf("attempts=%d, recovering=%v", attempts.Load(), p.recovering())
+			}
+		})
+	}
+}
+
+func TestLiveHLSProxyConcurrentSuccessDoesNotClearFailure(t *testing.T) {
+	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/missing.ts" {
+			http.Error(w, "unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		_, _ = io.WriteString(w, "complete")
+	}))
+	defer source.Close()
+	p := testLiveHLSProxyWithWindow(t, 250*time.Millisecond)
+	failed := getLiveHLSResource(t.Context(), proxyResourceURL(t, p, source.URL, "/missing.ts", "media"))
+	select {
+	case <-p.changed:
+	case <-time.After(time.Second):
+		t.Fatal("recovery did not start")
+	}
+	result := awaitLiveHLSResponse(t, getLiveHLSResource(t.Context(), proxyResourceURL(t, p, source.URL, "/healthy.ts", "media")))
+	if result.err != nil || result.status != http.StatusOK || string(result.body) != "complete" {
+		t.Fatalf("healthy resource: %+v", result)
+	}
+	if !p.recovering() {
+		t.Fatal("concurrent success cleared the outstanding failure")
+	}
+	result = awaitLiveHLSResponse(t, failed)
+	if result.err != nil || result.status != http.StatusBadGateway {
+		t.Fatalf("outstanding request did not expire: %+v", result)
+	}
+}
+
+func TestLiveHLSProxyRejectsOversizedResource(t *testing.T) {
+	var attempts atomic.Int32
+	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts.Add(1)
+		w.Header().Set("Content-Length", fmt.Sprint(liveHLSMaxResourceSize+1))
+		w.WriteHeader(http.StatusOK)
+		w.(http.Flusher).Flush()
+		<-r.Context().Done()
+	}))
+	defer source.Close()
+	p := testLiveHLSProxy(t)
+	result := awaitLiveHLSResponse(t, getLiveHLSResource(t.Context(), proxyResourceURL(t, p, source.URL, "/oversized.ts", "media")))
+	if result.err != nil || result.status != http.StatusBadGateway || attempts.Load() != 1 {
+		t.Fatalf("oversized resource: %+v, attempts=%d", result, attempts.Load())
+	}
+}
+
+func TestLiveHLSProxyBoundsChunkedPlaylist(t *testing.T) {
+	var attempts atomic.Int32
+	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts.Add(1)
+		w.WriteHeader(http.StatusOK)
+		w.(http.Flusher).Flush()
+		_, _ = w.Write(bytes.Repeat([]byte("x"), hls.MaxPlaylistSize+1))
+	}))
+	defer source.Close()
+	p := testLiveHLSProxy(t)
+	result := awaitLiveHLSResponse(t, getLiveHLSResource(t.Context(), proxyResourceURL(t, p, source.URL, "/oversized.m3u8", "playlist")))
+	if result.err != nil || result.status != http.StatusBadGateway || attempts.Load() != 1 {
+		t.Fatalf("oversized chunked playlist: %+v, attempts=%d", result, attempts.Load())
 	}
 }
