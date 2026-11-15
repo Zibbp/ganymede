@@ -1,4 +1,4 @@
-import { Controls, Tooltip } from '@videojs/react';
+import { Controls, BufferingIndicator, Tooltip } from '@videojs/react';
 import type { ReactNode } from 'react';
 
 import { AirPlayButton } from '@/components/videojs/ui/airplay-button';
@@ -19,6 +19,14 @@ export interface DefaultLiveVideoControlsProps {
 export function DefaultLiveVideoControls({ customControls }: DefaultLiveVideoControlsProps = {}) {
   return (
     <Controls.Root>
+      <BufferingIndicator className={'video-controls-center-buffering'}>
+        <Controls.Group className={'video-controls-center'}>
+          <PlayButton
+            className={cn('video-controls-center-button', 'video-controls-center-play')}
+            iconClassName={'video-controls-center-play-icon'}
+          />
+        </Controls.Group>
+      </BufferingIndicator>
       <Controls.Backdrop className={'video-controls-backdrop'} />
       <Controls.Content className={cn('video-controls', 'video-controls-content', 'video-controls-spaced')}>
         <Tooltip.Provider>
