@@ -281,8 +281,13 @@ func TestLiveFmp4CapturePipelineE2E(t *testing.T) {
 	playlistPath := filepath.Join(capDir, extID+"-video.m3u8")
 	segmentPattern := filepath.Join(capDir, extID+"_segment%06d.m4s")
 	initFilename := extID + "_init.mp4"
+	proxy := testLiveHLSProxy(t)
+	inputURI, err := proxy.playlistURL(server.URL + "/src.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
 	args := buildLiveHlsCaptureFFmpegArgs(
-		server.URL+"/src.m3u8", playlistPath, segmentPattern, initFilename,
+		inputURI, playlistPath, segmentPattern, initFilename,
 		false, "-c:v copy -c:a copy", false,
 	)
 	joined := strings.Join(args, " ")

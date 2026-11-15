@@ -1141,9 +1141,63 @@ func TestSuperviseLiveArchiveCommandStallsWithoutProgress(t *testing.T) {
 
 	progress := make(chan int64)
 	close(progress)
-	err = superviseLiveArchiveCommand(context.Background(), cmd, done, progress, 25*time.Millisecond)
+	err = superviseLiveArchiveCommand(context.Background(), cmd, done, progress, 25*time.Millisecond, nil)
 	if !errors.Is(err, ErrLiveArchiveStalled) {
 		t.Fatalf("superviseLiveArchiveCommand() error = %v, want ErrLiveArchiveStalled", err)
+	}
+}
+
+func TestSuperviseLiveArchiveCommandStopsAfterRecoveryWindow(t *testing.T) {
+	t.Parallel()
+	cmd := osExec.Command("sh", "-c", "exec sleep 30")
+	cmd.SysProcAttr = liveArchiveProcessAttributes()
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if cmd.Process != nil {
+			_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		}
+	})
+	recovery := testLiveHLSProxyWithWindow(t, 150*time.Millisecond)
+	recovery.failureDeadline("segment")
+	err = superviseLiveArchiveCommand(t.Context(), cmd, done, nil, 25*time.Millisecond, recovery)
+	if !errors.Is(err, ErrLiveHLSRecoveryExpired) {
+		t.Fatalf("superviseLiveArchiveCommand() error = %v, want ErrLiveHLSRecoveryExpired", err)
+	}
+}
+
+func TestSuperviseLiveArchiveCommandPausesStallCheckDuringRecovery(t *testing.T) {
+	t.Parallel()
+	cmd := osExec.Command("sh", "-c", "exec sleep 30")
+	cmd.SysProcAttr = liveArchiveProcessAttributes()
+	done, err := startArchiveCommand(cmd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) })
+	recovery := testLiveHLSProxy(t)
+	recovery.failureDeadline("segment")
+	result := make(chan error, 1)
+	go func() {
+		result <- superviseLiveArchiveCommand(t.Context(), cmd, done, nil, 40*time.Millisecond, recovery)
+	}()
+	select {
+	case err := <-result:
+		t.Fatalf("capture stopped before recovery: %v", err)
+	case <-time.After(120 * time.Millisecond):
+	}
+	if !recovery.clearFailure("segment") {
+		t.Fatal("recovery expired unexpectedly")
+	}
+	select {
+	case err := <-result:
+		if !errors.Is(err, ErrLiveArchiveStalled) {
+			t.Fatalf("capture error = %v, want resumed stall watchdog", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("stall watchdog did not resume after recovery")
 	}
 }
 
@@ -1184,7 +1238,7 @@ func TestSuperviseLiveArchiveCommandResetsTimeoutOnProgress(t *testing.T) {
 		}
 	}()
 
-	err = superviseLiveArchiveCommand(ctx, cmd, done, progress, 40*time.Millisecond)
+	err = superviseLiveArchiveCommand(ctx, cmd, done, progress, 40*time.Millisecond, nil)
 	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("superviseLiveArchiveCommand() error = %v, want context deadline", err)
 	}

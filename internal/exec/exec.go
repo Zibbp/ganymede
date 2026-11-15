@@ -82,6 +82,9 @@ exit $status
 // ErrLiveArchiveStalled indicates that a live FFmpeg capture stopped making media progress.
 var ErrLiveArchiveStalled = stdErrors.New("live archive stalled")
 
+// ErrLiveHLSRecoveryExpired indicates that the live source could not recover in time.
+var ErrLiveHLSRecoveryExpired = stdErrors.New("live HLS recovery timed out")
+
 func appendLiveArchiveProgressArgs(args []string, enabled bool) []string {
 	if !enabled {
 		return args
@@ -131,8 +134,9 @@ func buildLiveHlsCaptureFFmpegArgs(inputURI, playlistPath, segmentPattern, initF
 	ffmpegArgs = appendLiveArchiveProgressArgs(ffmpegArgs, monitorStalls)
 	ffmpegArgs = append(ffmpegArgs,
 		"-fflags", "+genpts+discardcorrupt",
-		"-rw_timeout", "30000000",
-		"-timeout", "30000000",
+		// Allow the local HLS recovery proxy to retry before FFmpeg times out.
+		"-rw_timeout", "65000000",
+		"-timeout", "65000000",
 		// Resume interrupted HTTP reads without ending the live capture.
 		"-reconnect", "1",
 		"-reconnect_streamed", "1",
@@ -420,8 +424,17 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	}
 	// Capture files use the immutable stream ID; ExtID may later become the VOD ID.
 	captureID := liveCaptureID(video)
+	recoveryProxy, err := newLiveHLSProxy(ctx, video.ID.String(), channel.Name, liveHLSRetryWindow, liveHLSRetryInterval, liveHLSRequestTimeout)
+	if err != nil {
+		return err
+	}
+	defer recoveryProxy.Close()
+	inputURI, err := recoveryProxy.playlistURL(qualitiesURI[closestQuality])
+	if err != nil {
+		return fmt.Errorf("prepare live HLS source: %w", err)
+	}
 	ffmpegArgs := buildLiveHlsCaptureFFmpegArgs(
-		qualitiesURI[closestQuality],
+		inputURI,
 		filepath.Join(video.TmpVideoHlsPath, captureID+"-video.m3u8"),
 		filepath.Join(video.TmpVideoHlsPath, captureID+"_segment%06d.m4s"),
 		fmt.Sprintf("%s_init.mp4", captureID),
@@ -465,7 +478,7 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	if progressReader != nil {
 		progressUpdates = ffmpegProgressUpdates(progressReader)
 	}
-	err = superviseLiveArchiveCommand(ctx, cmd, done, progressUpdates, stallTimeout)
+	err = superviseLiveArchiveCommand(ctx, cmd, done, progressUpdates, stallTimeout, recoveryProxy)
 	if stdErrors.Is(err, ErrLiveArchiveStalled) {
 		log.Warn().Str("channel", channel.Name).Str("video_id", video.ID.String()).Dur("timeout", stallTimeout).Msg("live archive capture stopped after ffmpeg made no media progress")
 	}
@@ -506,15 +519,33 @@ func ffmpegProgressUpdates(reader io.Reader) <-chan int64 {
 	return updates
 }
 
-func superviseLiveArchiveCommand(ctx context.Context, cmd *osExec.Cmd, done <-chan error, progressUpdates <-chan int64, stallTimeout time.Duration) error {
+func superviseLiveArchiveCommand(ctx context.Context, cmd *osExec.Cmd, done <-chan error, progressUpdates <-chan int64, stallTimeout time.Duration, recovery *liveHLSProxy) error {
 	var stallTimer *time.Timer
 	var stallTimerC <-chan time.Time
+	var recoveryExpired, recoveryChanged <-chan struct{}
+	if recovery != nil {
+		recoveryExpired, recoveryChanged = recovery.expired, recovery.changed
+	}
 	var lastOutTime int64
 	if stallTimeout > 0 {
 		stallTimer = time.NewTimer(stallTimeout)
 		stallTimerC = stallTimer.C
 		defer stallTimer.Stop()
 	}
+	updateStallTimer := func() {
+		if stallTimer == nil {
+			return
+		}
+		// Recovery has its own deadline. Resume the media watchdog afterwards.
+		if recovery != nil && recovery.recovering() {
+			stallTimer.Stop()
+			stallTimerC = nil
+			return
+		}
+		resetTimer(stallTimer, stallTimeout)
+		stallTimerC = stallTimer.C
+	}
+	updateStallTimer()
 
 	for {
 		select {
@@ -522,21 +553,39 @@ func superviseLiveArchiveCommand(ctx context.Context, cmd *osExec.Cmd, done <-ch
 			stopLiveArchiveCommand(cmd, done)
 			return ctx.Err()
 		case commandErr := <-done:
+			select {
+			case <-recoveryExpired:
+				return ErrLiveHLSRecoveryExpired
+			default:
+			}
 			if commandErr != nil {
 				log.Error().Err(commandErr).Msg("error running ffmpeg")
 				return fmt.Errorf("error running ffmpeg: %w", commandErr)
 			}
 			return nil
+		case <-recoveryExpired:
+			if ctx.Err() != nil {
+				stopLiveArchiveCommand(cmd, done)
+				return ctx.Err()
+			}
+			stopLiveArchiveCommand(cmd, done)
+			return ErrLiveHLSRecoveryExpired
+		case <-recoveryChanged:
+			updateStallTimer()
 		case outTime, ok := <-progressUpdates:
 			if !ok {
 				progressUpdates = nil
 				continue
 			}
 			lastOutTime = outTime
-			if stallTimer != nil {
+			if stallTimerC != nil {
 				resetTimer(stallTimer, stallTimeout)
 			}
 		case <-stallTimerC:
+			if recovery != nil && recovery.recovering() {
+				updateStallTimer()
+				continue
+			}
 			if ctx.Err() != nil {
 				stopLiveArchiveCommand(cmd, done)
 				return ctx.Err()
