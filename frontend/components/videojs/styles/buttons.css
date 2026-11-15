@@ -144,6 +144,7 @@
     }
 
     .media-play-button-play-icon {
+      translate: 1px;
       scale: var(--media-hidden-icon-scale) var(--media-hidden-icon-scale);
       opacity: 0;
     }
@@ -361,9 +362,19 @@
       font-variant-numeric: tabular-nums;
     }
 
+    @supports not (text-fit: shrink) {
+      .media-playback-rate-button {
+        font-size: min(1em, calc(4em / (var(--media-playback-rate-length, 3) + 1)));
+      }
+    }
+
     .media-playback-rate-button:after {
+      text-align: center;
+      white-space: nowrap;
       content: attr(data-rate) "×";
-      width: 4ch;
+      text-fit: shrink;
+      width: 80%;
+      min-width: 0;
     }
   }
 }

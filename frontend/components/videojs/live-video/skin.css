@@ -18,7 +18,7 @@
       z-index: 10;
       border-radius: inherit;
       background-image: var(--media-controls-gradient);
-      background-size: 100% var(--media-controls-gradient-height);
+      background-size: 100% var(--media-controls-bottom-gradient-height);
       transition-property: opacity;
       transition-duration: 0.15s;
       transition-duration: var(--media-duration-controls);
@@ -27,6 +27,10 @@
       transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
       position: absolute;
       inset: 0;
+    }
+
+    .video-controls-backdrop:not([data-started]) {
+      visibility: var(--media-controls-before-start, hidden);
     }
 
     .video-controls-backdrop:not([data-visible]) {
@@ -44,6 +48,126 @@
       }
     }
 
+    @container not style(--media-controls-before-start: visible) {
+      .video-controls-backdrop:not([data-started]) {
+        opacity: 0;
+      }
+    }
+
+    .video-controls-center {
+      pointer-events: none;
+      z-index: 30;
+      align-items: center;
+      gap: calc(var(--media-spacing) * 6);
+      transition-property: filter, opacity, scale;
+      transition-duration: 0.15s;
+      transition-duration: calc(var(--media-duration-controls) / 2);
+      transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      display: flex;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      translate: -50% -50%;
+    }
+
+    .video-controls-center:not([data-visible]) {
+      scale: var(--media-hidden-scale) var(--media-hidden-scale);
+      opacity: 0;
+      transition-duration: var(--media-duration-controls);
+    }
+
+    @scope (.video-controls-center-buffering) {
+      &[data-visible] .video-controls-center {
+        display: none;
+      }
+    }
+
+    .video-controls-center:where(:dir(rtl), [dir="rtl"], [dir="rtl"] *) {
+      flex-direction: row-reverse;
+    }
+
+    @media (pointer: fine) {
+      .video-controls-center:not([data-visible]) {
+        filter: blur(var(--media-hidden-blur));
+      }
+    }
+
+    .video-controls-center-buffering {
+      display: contents;
+    }
+
+    .video-controls-center-button {
+      pointer-events: auto;
+    }
+
+    @scope (.video-controls-center) {
+      &:not([data-visible]) .video-controls-center-button {
+        pointer-events: none;
+      }
+    }
+
+    .video-controls-center-play {
+      background-color: var(--media-primary) !important;
+      width: auto !important;
+      height: auto !important;
+      padding: calc(var(--media-spacing) * 4) !important;
+      color: var(--media-primary-foreground) !important;
+      border-radius: 9999px !important;
+    }
+
+    @media (hover: hover) {
+      .video-controls-center-play:hover {
+        background-color: var(--media-primary) !important;
+      }
+
+      @supports (color: color-mix(in lab, red, red)) {
+        .video-controls-center-play:hover {
+          background-color: color-mix(in oklab, var(--media-primary) 85%, var(--media-primary-foreground)) !important;
+        }
+      }
+    }
+
+    .video-controls-center-play:focus-visible {
+      background-color: var(--media-primary) !important;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .video-controls-center-play:focus-visible {
+        background-color: color-mix(in oklab, var(--media-primary) 85%, var(--media-primary-foreground)) !important;
+      }
+    }
+
+    @media (pointer: fine) {
+      .video-controls-center-play[data-started]:not(:focus-visible) {
+        pointer-events: none !important;
+        opacity: 0 !important;
+      }
+    }
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+      .video-controls-center-play {
+        background-color: var(--media-primary) !important;
+      }
+    }
+
+    @container media-root (width < 22.5rem) {
+      .video-controls-center-play {
+        padding: calc(var(--media-spacing) * 3) !important;
+      }
+    }
+
+    .video-controls-center-play-icon {
+      width: calc(var(--media-icon-size, calc(var(--media-spacing) * 4.5)) * 1.5) !important;
+      height: calc(var(--media-icon-size, calc(var(--media-spacing) * 4.5)) * 1.5) !important;
+    }
+
+    @container media-root (width < 22.5rem) {
+      .video-controls-center-play-icon {
+        width: var(--media-icon-size, calc(var(--media-spacing) * 4.5)) !important;
+        height: var(--media-icon-size, calc(var(--media-spacing) * 4.5)) !important;
+      }
+    }
+
     .video-controls-content {
       padding: var(--media-spacing);
       color: var(--media-controls-foreground);
@@ -53,6 +177,10 @@
       text-shadow: 0 1px 0 var(--media-shadow-current-color);
       transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
       display: contents;
+    }
+
+    .video-controls-content:not([data-started]) {
+      visibility: var(--media-controls-before-start, hidden);
     }
 
     @container media-root (width >= 32rem) {
@@ -105,6 +233,12 @@
       .video-controls-content {
         inset-inline: calc(var(--media-spacing) * 3);
         bottom: calc(var(--media-spacing) * 3);
+      }
+    }
+
+    @container not style(--media-controls-before-start: visible) {
+      .video-controls-content:not([data-started]) {
+        opacity: 0;
       }
     }
 

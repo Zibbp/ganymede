@@ -316,6 +316,12 @@
       transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
     }
 
+    @media (pointer: coarse) {
+      .media-playback-status-indicator {
+        display: none !important;
+      }
+    }
+
     .media-playback-status-indicator:is([data-starting-style], [data-ending-style]) {
       scale: var(--media-hidden-playback-scale) var(--media-hidden-playback-scale);
       opacity: 0;

@@ -39,6 +39,7 @@ export function CaptionsSubmenu({ ...props }: CaptionsSubmenuProps = {}) {
             renderItem={(props, item) => (
               <RadioItem {...props}>
                 <span>{item.label}</span>
+                {item.badge ? <span className={'media-menu-badge'}>{item.badge}</span> : null}
               </RadioItem>
             )}
           ></CaptionsRadioGroup.Options>

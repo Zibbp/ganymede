@@ -36,6 +36,11 @@
       transition-duration: var(--media-duration-slower);
     }
 
+    .media-dialog-backdrop[data-scope="document"] {
+      border-radius: 0;
+      position: fixed;
+    }
+
     .media-dialog-backdrop:is([data-starting-style], [data-ending-style]) {
       opacity: 0;
     }
@@ -121,6 +126,11 @@
     .media-dialog-popup[data-ending-style] {
       transition-delay: 0s;
       transition-duration: var(--media-duration-slower);
+    }
+
+    .media-dialog-popup[data-scope="document"] {
+      max-height: calc(100dvh - 1rem);
+      position: fixed;
     }
 
     .media-dialog-popup:is([data-starting-style], [data-ending-style]) {
