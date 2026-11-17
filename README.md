@@ -83,13 +83,15 @@ Copy your existing settings and host and container paths into `.env` before star
 
 Single-quote passwords containing `$` in `.env` to prevent Compose interpolation. For example, write `DB_PASS='pa$word'` to preserve the literal password `pa$word`.
 
-PostgreSQL is no longer published on host port 4801. If host access is needed, add a `compose.override.yaml` with a port mapping, preferably bound to localhost:
+PostgreSQL is no longer published on host port 4801. If host access is needed, add a `compose.override.yaml` with a port mapping, preferably bound to localhost, and attach PostgreSQL to the default network as well as its internal database network:
 
 ```yaml
 services:
   ganymede-db:
     ports:
       - "127.0.0.1:4801:5432"
+    networks:
+      - default
 ```
 
 #### Stop grace period
