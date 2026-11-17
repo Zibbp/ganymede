@@ -71,11 +71,24 @@ Ganymede consists of two docker containers:
 
 Feel free to use an existing Postgres database container if you don't want to spin new ones up.
 
-1. Download a copy of the `docker-compose.yml` file.
-2. Edit the `docker-compose.yml` file modifying the environment variables, see [environment variables](https://github.com/Zibbp/ganymede#environment-variables) for more information.
-3. Run `docker compose up -d`.
-4. Visit the address and port you specified for the frontend and login with username: `admin` password: `ganymede`.
+1. Download `compose.yaml` and `.env.example` into the same directory.
+2. Copy `.env.example` to `.env` and edit it: set the Twitch credentials, choose a database password, and set the host storage paths. See [environment variables](https://github.com/Zibbp/ganymede#environment-variables) for more information. Keep `.env` private: it contains credentials.
+3. Run `docker compose up -d` from that directory.
+4. Visit `http://<host>:4800` and log in with username: `admin` password: `ganymede`.
 5. Change the admin password _or_ create a new user, grant admin permissions on that user, and delete the admin user.
+
+#### Migrating an existing Compose installation
+
+Copy your existing settings and host and container paths into `.env` before starting the new Compose file. Keep the same Compose project directory, project name, and database storage path to use the existing data. If you used `-p` or `COMPOSE_PROJECT_NAME`, continue using the same project name. Remove or rename the old `docker-compose.yml` after adopting `compose.yaml`, and migrate any settings in an existing `docker-compose.override.yml` to `compose.override.yaml`. Changing `DB_USER`, `DB_PASS`, or `DB_NAME` in `.env` does not update an already initialized PostgreSQL database; keep its existing credentials or change them in PostgreSQL as well.
+
+PostgreSQL is no longer published on host port 4801. If host access is needed, add a `compose.override.yaml` with a port mapping, preferably bound to localhost:
+
+```yaml
+services:
+  ganymede-db:
+    ports:
+      - "127.0.0.1:4801:5432"
+```
 
 #### Stop grace period
 
@@ -98,7 +111,7 @@ Images are published to ghcr.io. There are four types of tags available.
 
 The API container can be run as a non root user. To do so add `PUID` and `PGID` environment variables, setting the value to your user. Read [linuxserver's docs](https://docs.linuxserver.io/general/understanding-puid-and-pgid) about this for more information.
 
-Note: On startup the container will `chown` the config, temp, and logs directory. It will not recursively `chown` the `/data/videos` directory. Ensure the mounted `/data/videos` directory is readable by the set user.
+Note: On startup the container will `chown` the config, temp, and logs directories. It will not recursively `chown` the videos directory (`/data/videos` by default). Ensure the mounted videos directory is readable by the set user.
 
 If your storage does not support `chown`, such as an NFS or SMB mount (e.g. TrueNAS with NFSv4 ACLs), set `SKIP_CHOWN=true` to skip this step. Ensure the directories are already writable by the set user.
 
@@ -108,7 +121,9 @@ A configuration file is generate on initial start of Ganymede. By default the co
 
 ### Environment Variables
 
-The `docker-compose.yml` file has comments for each environment variable. Below is a list of all environment variables and their descriptions. See the [env.go](https://github.com/Zibbp/ganymede/blob/main/internal/config/env.go) file for a full list of all environment variables and their default values.
+The `.env.example` file documents the Compose settings and common environment variables. Below is a list of environment variables and their descriptions. See the [env.go](https://github.com/Zibbp/ganymede/blob/main/internal/config/env.go) file for a full list of all environment variables and their default values.
+
+In the Compose example, `VIDEOS_HOST_DIR`, `TEMP_HOST_DIR`, `LOGS_HOST_DIR`, `CONFIG_HOST_DIR`, and `DB_HOST_DIR` select the host storage locations. Relative paths are resolved from the Compose project directory. The corresponding application `*_DIR` values select paths inside the container. Shell variables take precedence over `.env` for Compose interpolation; directory paths and shared database credentials are passed to both services or mounts using those interpolated values.
 
 ##### Server
 
