@@ -1,0 +1,56 @@
+services:
+  ganymede:
+    container_name: ganymede
+    image: ghcr.io/zibbp/ganymede:latest
+    restart: unless-stopped
+    stop_grace_period: 90s
+    depends_on:
+      - ganymede-db
+    env_file:
+      - .env
+    environment:
+      VIDEOS_DIR: ${VIDEOS_DIR}
+      TEMP_DIR: ${TEMP_DIR}
+      LOGS_DIR: ${LOGS_DIR}
+      CONFIG_DIR: ${CONFIG_DIR}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+    volumes:
+      - "${VIDEOS_HOST_DIR}:${VIDEOS_DIR}"
+      - "${TEMP_HOST_DIR}:${TEMP_DIR}"
+      - "${LOGS_HOST_DIR}:${LOGS_DIR}"
+      - "${CONFIG_HOST_DIR}:${CONFIG_DIR}"
+    ports:
+      - "${GANYMEDE_PORT:-4800}:4000"
+    networks:
+      - default
+      - database
+    healthcheck:
+      test: curl --fail http://localhost:4000/health || exit 1
+      interval: 60s
+      retries: 5
+      start_period: 60s
+      timeout: 10s
+  ganymede-db:
+    container_name: ganymede-db
+    image: postgres:14
+    volumes:
+      - "${DB_HOST_DIR}:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+    networks:
+      - database
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 60s
+
+networks:
+  database:
+    internal: true
