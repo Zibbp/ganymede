@@ -752,6 +752,8 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 
 func buildHlsToMp4FFmpegArgs(video ent.Vod, playlistPath, exportPath, configFfmpegArgs string, normalizeTimestamps bool, starts []mediaStreamStart) []string {
 	args := []string{"-y", "-hide_banner", "-i", playlistPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative", "-movflags", "+faststart", "-metadata", "title=" + video.Title}
+	// Bound empty-edit delays misread by Firefox (Mozilla bug 2082877).
+	args = append(args, "-movie_timescale", "1000")
 	args = append(args, strings.Fields(configFfmpegArgs)...)
 	args = appendMediaTimestampArgs(args, starts, normalizeTimestamps)
 	return append(args, exportPath)
@@ -1099,6 +1101,8 @@ func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, nor
 	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative"}
 	ffmpegArgs = append(ffmpegArgs, "-bsf:a", "aac_adtstoasc")
 	ffmpegArgs = append(ffmpegArgs, "-movflags", "+faststart")
+	// Bound empty-edit delays misread by Firefox (Mozilla bug 2082877).
+	ffmpegArgs = append(ffmpegArgs, "-movie_timescale", "1000")
 
 	ffmpegArgs = append(ffmpegArgs, "-metadata", "title="+video.Title)
 	ffmpegArgs = append(ffmpegArgs, arr...)
