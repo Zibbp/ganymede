@@ -99,6 +99,11 @@ func TestYTDLPVideoInfo_CreateQualityOption(t *testing.T) {
 		{"best", "best"},
 		{"audio", "bestaudio"},
 		{"audio_only", "bestaudio"},
+		{"Audio_Only", "bestaudio"},
+		{"AUDIO", "bestaudio"},
+		{"Source", "best"},
+		{"source", "best"},
+		{"Best", "best"},
 		{"1440p60__source_", "best[height=1440]/best"},
 		{"1080p60__source_", "best[height=1080]/best"},
 		{"720p60", "best[height=720]/best"},
@@ -108,10 +113,11 @@ func TestYTDLPVideoInfo_CreateQualityOption(t *testing.T) {
 		{"480", "best[height=480]/best"},
 		{"1080-0", "best[height=1080]/best"},
 		{"720-1", "best[height=720]/best"},
-		{"portrait-1134-0", "best[height<=?portrait-1134-0]/best"},
-		{"foo", "best[height<=?foo]/best"},
+		{"portrait-1134-0", "best[format_id=portrait-1134-0]/best"},
+		{"foo", "best[format_id=foo]/best"},
+		{"foo bar]", "best"},
 		{"360p", "best[height=360]/best"},
-		{"", "best[height<=?]/best"},
+		{"", "best"},
 	}
 
 	svc := NewYtDlpService(YtDlpOptions{})

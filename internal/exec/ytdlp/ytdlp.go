@@ -313,8 +313,8 @@ func (s *YtDlpService) CreateQualityOption(quality string) string {
 	reSuffix := regexp.MustCompile(`__source_+$`)
 	quality = reSuffix.ReplaceAllString(quality, "")
 
-	switch quality {
-	case "best":
+	switch strings.ToLower(quality) {
+	case "best", "source":
 		return "best"
 	case "audio", "audio_only":
 		return "bestaudio"
@@ -343,6 +343,11 @@ func (s *YtDlpService) CreateQualityOption(quality string) string {
 		return fmt.Sprintf("best[height=%s]/best", matches[1])
 	}
 
-	// Fallback: match up to resolution
-	return fmt.Sprintf("best[height<=?%s]/best", quality)
+	// Fallback: match other named formats by format ID. Names that are not
+	// valid unquoted filter values fall back to "best".
+	reFormatID := regexp.MustCompile(`^[\w.-]+$`)
+	if reFormatID.MatchString(quality) {
+		return fmt.Sprintf("best[format_id=%s]/best", quality)
+	}
+	return "best"
 }
