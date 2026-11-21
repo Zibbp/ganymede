@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"regexp"
 	"strings"
 	"time"
@@ -682,12 +683,18 @@ func (s *Service) checkKickLiveStreams(ctx context.Context, watched []*ent.Live)
 	failed := map[uuid.UUID]bool{}
 	var streams []platform.LiveStreamInfo
 	kick, kickErr := s.Platforms.Get(utils.PlatformKick)
-	first := true
+	var kickWatched []*ent.Live
 	for _, lwc := range watched {
-		ch := lwc.Edges.Channel
-		if ch == nil || ch.Platform != utils.PlatformKick {
-			continue
+		if ch := lwc.Edges.Channel; ch != nil && ch.Platform == utils.PlatformKick {
+			kickWatched = append(kickWatched, lwc)
 		}
+	}
+	// Vary the order between passes so channels behind persistently slow ones
+	// still get checked before the budget runs out.
+	rand.Shuffle(len(kickWatched), func(i, j int) { kickWatched[i], kickWatched[j] = kickWatched[j], kickWatched[i] })
+	first := true
+	for _, lwc := range kickWatched {
+		ch := lwc.Edges.Channel
 		if kickErr != nil {
 			failed[lwc.ID] = true
 			continue
