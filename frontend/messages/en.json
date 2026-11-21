@@ -223,7 +223,7 @@
     "header": "Manage Channels",
     "storageSizeDisclaimerText": "Storage size is not updated instantly. A background task runs every hour to recalculate it.",
     "createButton": "Create Channel",
-    "addTwitchChannel": "Add Twitch Channel",
+    "addChannel": "Add Channel",
     "searchPlaceholder": "Search channels...",
     "columns": {
       "id": "ID",

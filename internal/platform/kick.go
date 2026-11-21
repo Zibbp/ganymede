@@ -30,6 +30,8 @@ const (
 	kickExtIDPrefix    = "kick:"
 	kickRequestTimeout = 20 * time.Second
 	kickMaxAttempts    = 4
+	// Thumbnails are cosmetic; never let them hold up a live check.
+	kickThumbnailTimeout = 10 * time.Second
 
 	// KickDefaultPusherKey/Cluster are used when the realtime credential
 	// endpoint is unavailable. Kick rotates these; the endpoint is preferred.
@@ -438,6 +440,8 @@ func (k *KickConnection) GetLiveStream(ctx context.Context, channelName string) 
 // livestreamThumbnail returns the largest live thumbnail rendition, or "" if
 // unavailable. Thumbnails are cosmetic, so failures are only logged.
 func (k *KickConnection) livestreamThumbnail(ctx context.Context, slug string) string {
+	ctx, cancel := context.WithTimeout(ctx, kickThumbnailTimeout)
+	defer cancel()
 	var resp struct {
 		Data struct {
 			Thumbnail struct {

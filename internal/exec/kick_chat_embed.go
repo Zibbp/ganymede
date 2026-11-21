@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	_ "image/gif"
@@ -24,9 +25,10 @@ import (
 )
 
 const (
-	kickAssetFetchWorkers = 8
-	kickAssetMaxBytes     = 4 << 20
-	kickDefaultEmoteSize  = 28
+	kickAssetFetchWorkers  = 8
+	kickAssetFetchAttempts = 3
+	kickAssetMaxBytes      = 4 << 20
+	kickDefaultEmoteSize   = 28
 )
 
 type kickAsset struct {
@@ -101,9 +103,9 @@ func EmbedKickChatAssets(ctx context.Context, liveChatPath, tdlPath, outPath str
 	for _, b := range badgeURLs {
 		urls = append(urls, b.url)
 	}
-	assets := fetchKickAssets(ctx, urls)
-	if ctx.Err() != nil {
-		return ctx.Err()
+	assets, err := fetchKickAssets(ctx, urls)
+	if err != nil {
+		return err
 	}
 
 	embedded := chat.Emotes{FirstParty: []chat.Party{}, ThirdParty: []chat.Party{}}
@@ -188,9 +190,13 @@ func forEachLiveComment(path string, fn func(utils.LiveComment)) error {
 	return nil
 }
 
-func fetchKickAssets(ctx context.Context, urls []string) map[string]kickAsset {
+// fetchKickAssets downloads assets concurrently. Assets that are permanently
+// gone (4xx) are skipped; transient failures that survive retries fail the
+// whole call so the task retries instead of saving an incomplete archive.
+func fetchKickAssets(ctx context.Context, urls []string) (map[string]kickAsset, error) {
 	result := make(map[string]kickAsset, len(urls))
 	var mu sync.Mutex
+	var transientErr error
 	jobs := make(chan string)
 	var wg sync.WaitGroup
 	client := &http.Client{Timeout: 20 * time.Second}
@@ -199,13 +205,16 @@ func fetchKickAssets(ctx context.Context, urls []string) map[string]kickAsset {
 		go func() {
 			defer wg.Done()
 			for u := range jobs {
-				a, err := fetchKickAsset(ctx, client, u)
-				if err != nil {
-					log.Debug().Err(err).Str("url", u).Msg("failed to fetch kick chat asset")
-					continue
-				}
+				a, err := fetchKickAssetWithRetry(ctx, client, u)
 				mu.Lock()
-				result[u] = a
+				switch {
+				case err == nil:
+					result[u] = a
+				case errors.Is(err, errKickAssetGone):
+					log.Debug().Err(err).Str("url", u).Msg("kick chat asset unavailable; skipping")
+				case transientErr == nil:
+					transientErr = fmt.Errorf("fetch kick chat asset %s: %w", u, err)
+				}
 				mu.Unlock()
 			}
 		}()
@@ -221,7 +230,28 @@ func fetchKickAssets(ctx context.Context, urls []string) map[string]kickAsset {
 	}
 	close(jobs)
 	wg.Wait()
-	return result
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	return result, transientErr
+}
+
+var errKickAssetGone = errors.New("kick asset not available")
+
+func fetchKickAssetWithRetry(ctx context.Context, client *http.Client, u string) (kickAsset, error) {
+	backoff := time.Second
+	for attempt := 1; ; attempt++ {
+		a, err := fetchKickAsset(ctx, client, u)
+		if err == nil || errors.Is(err, errKickAssetGone) || attempt == kickAssetFetchAttempts {
+			return a, err
+		}
+		select {
+		case <-ctx.Done():
+			return kickAsset{}, ctx.Err()
+		case <-time.After(backoff):
+		}
+		backoff *= 2
+	}
 }
 
 func fetchKickAsset(ctx context.Context, client *http.Client, u string) (kickAsset, error) {
@@ -235,6 +265,9 @@ func fetchKickAsset(ctx context.Context, client *http.Client, u string) (kickAss
 		return kickAsset{}, err
 	}
 	defer resp.Body.Close() //nolint:errcheck
+	if resp.StatusCode >= 400 && resp.StatusCode < 500 && resp.StatusCode != http.StatusTooManyRequests {
+		return kickAsset{}, fmt.Errorf("status %d: %w", resp.StatusCode, errKickAssetGone)
+	}
 	if resp.StatusCode != http.StatusOK {
 		return kickAsset{}, fmt.Errorf("status %d", resp.StatusCode)
 	}

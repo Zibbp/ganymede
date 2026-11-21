@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -20,8 +21,10 @@ import (
 )
 
 const (
-	kickChatMessageEvent = `App\Events\ChatMessageEvent`
-	kickPusherVersion    = "8.4.0"
+	kickChatMessageEvent   = `App\Events\ChatMessageEvent`
+	kickPusherVersion      = "8.4.0"
+	kickChatHeartbeatCheck = 5 * time.Second
+	kickChatPongTimeout    = 30 * time.Second
 )
 
 var kickEmoteTokenRe = regexp.MustCompile(`\[emote:(\d+):([^\]]*)\]`)
@@ -281,47 +284,60 @@ func runKickChatSession(ctx context.Context, kc *platform.KickConnection, slug s
 	}
 	defer conn.Close() //nolint:errcheck
 
-	// Unblock reads when the job is cancelled.
-	sessionDone := make(chan struct{})
-	defer close(sessionDone)
-	go func() {
-		select {
-		case <-ctx.Done():
-			_ = conn.SetReadDeadline(time.Now())
-		case <-sessionDone:
-		}
-	}()
-
+	var writeMu sync.Mutex
 	writeFrame := func(event string, data any) error {
+		writeMu.Lock()
+		defer writeMu.Unlock()
 		_ = conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 		return conn.WriteJSON(map[string]any{"event": event, "data": data})
 	}
 
-	activityTimeout := 120 * time.Second
-	pingSent := false
+	var activityTimeout atomic.Int64
+	activityTimeout.Store(int64(120 * time.Second))
+	var lastRead atomic.Int64
+	lastRead.Store(time.Now().UnixNano())
+
+	// Closing the connection is the only reliable way to stop a blocked read
+	// on cancellation. While idle, ping before the read deadline expires,
+	// because a timed-out gorilla read cannot be resumed.
+	sessionDone := make(chan struct{})
+	defer close(sessionDone)
+	go func() {
+		ticker := time.NewTicker(kickChatHeartbeatCheck)
+		defer ticker.Stop()
+		var lastPing time.Time
+		for {
+			select {
+			case <-ctx.Done():
+				_ = conn.Close()
+				return
+			case <-sessionDone:
+				return
+			case <-ticker.C:
+				timeout := time.Duration(activityTimeout.Load())
+				idle := time.Since(time.Unix(0, lastRead.Load()))
+				if idle >= timeout && time.Since(lastPing) >= timeout {
+					if err := writeFrame("pusher:ping", map[string]any{}); err != nil {
+						logger.Debug().Err(err).Msg("failed to send pusher ping")
+					}
+					lastPing = time.Now()
+				}
+			}
+		}
+	}()
+
 	subscribed := false
 	for {
-		readTimeout := activityTimeout
-		if pingSent {
-			readTimeout = 30 * time.Second
-		}
-		_ = conn.SetReadDeadline(time.Now().Add(readTimeout))
+		// A pong or any other frame must arrive within the grace period after a ping.
+		_ = conn.SetReadDeadline(time.Now().Add(time.Duration(activityTimeout.Load()) + kickChatPongTimeout))
 		_, raw, err := conn.ReadMessage()
 		if err != nil {
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
-			if ne, ok := err.(interface{ Timeout() bool }); ok && ne.Timeout() && !pingSent {
-				// Pusher expects a client ping after activity_timeout of silence.
-				if err := writeFrame("pusher:ping", map[string]any{}); err != nil {
-					return fmt.Errorf("send pusher ping: %w", err)
-				}
-				pingSent = true
-				continue
-			}
 			return fmt.Errorf("read kick chat: %w", err)
 		}
-		pingSent = false
+		lastRead.Store(time.Now().UnixNano())
 
 		var frame kickPusherFrame
 		if err := json.Unmarshal(raw, &frame); err != nil {
@@ -333,7 +349,7 @@ func runKickChatSession(ctx context.Context, kc *platform.KickConnection, slug s
 				ActivityTimeout int `json:"activity_timeout"`
 			}
 			if json.Unmarshal([]byte(frame.Data), &est) == nil && est.ActivityTimeout > 0 {
-				activityTimeout = time.Duration(est.ActivityTimeout) * time.Second
+				activityTimeout.Store(int64(time.Duration(est.ActivityTimeout) * time.Second))
 			}
 			channel := fmt.Sprintf("chatrooms.%d.v2", ch.Chatroom.ID)
 			if err := writeFrame("pusher:subscribe", map[string]any{"auth": "", "channel": channel}); err != nil {

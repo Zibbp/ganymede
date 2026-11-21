@@ -157,8 +157,8 @@ func (s *Service) CheckChannelExists(cName string) bool {
 }
 
 // CheckChannelDisplayNameExists returns whether a channel uses displayName.
-func (s *Service) CheckChannelDisplayNameExists(displayName string) bool {
-	exists, err := s.Store.Client.Channel.Query().Where(channel.DisplayName(displayName)).Exist(context.Background())
+func (s *Service) CheckChannelDisplayNameExists(ctx context.Context, displayName string) bool {
+	exists, err := s.Store.Client.Channel.Query().Where(channel.DisplayName(displayName)).Exist(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("error checking channel display name exists")
 		return false

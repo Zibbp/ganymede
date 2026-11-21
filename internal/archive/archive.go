@@ -152,6 +152,11 @@ func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.
 	// Check if channel exists in DB
 	cCheck := s.ChannelService.CheckChannelExists(platformChannel.Login)
 	if cCheck {
+		// Kick channels only avoid name collisions when added after the
+		// Twitch channel, so explain the order instead of a generic error.
+		if existing, err := s.ChannelService.GetChannelByName(platformChannel.Login); err == nil && existing.Platform == utils.PlatformKick {
+			return nil, fmt.Errorf("channel name %q is used by a Kick channel; add the Twitch channel before the Kick channel with the same name", platformChannel.Login)
+		}
 		return nil, fmt.Errorf("channel already exists")
 	}
 
@@ -221,7 +226,7 @@ func (s *Service) ArchiveKickChannel(ctx context.Context, slug string) (*ent.Cha
 			return nil, fmt.Errorf("channel already exists")
 		}
 	}
-	if s.ChannelService.CheckChannelDisplayNameExists(displayName) {
+	if s.ChannelService.CheckChannelDisplayNameExists(ctx, displayName) {
 		displayName = platformChannel.DisplayName + " (Kick)"
 	}
 	extLogin := ""

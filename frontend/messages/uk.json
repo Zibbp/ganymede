@@ -206,7 +206,7 @@
     "header": "Керування каналами",
     "storageSizeDisclaimerText": "Розмір сховища не оновлюється миттєво. Фонова задача запускається кожну годину для перерахунку.",
     "createButton": "Створити канал",
-    "addTwitchChannel": "Додати Twitch канал",
+    "addChannel": "Додати канал",
     "searchPlaceholder": "Пошук каналів...",
     "columns": {
       "id": "ID",

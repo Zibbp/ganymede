@@ -661,14 +661,24 @@ func (s *Service) updateLiveStreamArchiveChapter(stream platform.LiveStreamInfo,
 	return nil
 }
 
-// kickLiveCheckDelay spaces per-channel Kick lookups to stay under Kick's
-// (unofficial API) rate limits.
-const kickLiveCheckDelay = 500 * time.Millisecond
+const (
+	// kickLiveCheckDelay spaces per-channel Kick lookups to stay under Kick's
+	// (unofficial API) rate limits.
+	kickLiveCheckDelay = 500 * time.Millisecond
+	// kickLiveCheckBudget caps the whole Kick pass; channels not checked in
+	// time keep their current live state until the next run.
+	kickLiveCheckBudget   = 3 * time.Minute
+	kickLiveLookupTimeout = 45 * time.Second
+)
 
 // checkKickLiveStreams looks up each watched Kick channel individually; Kick
 // has no bulk endpoint. Channels whose lookup failed are returned separately so
 // the caller neither archives nor marks them offline on a transient error.
 func (s *Service) checkKickLiveStreams(ctx context.Context, watched []*ent.Live) ([]platform.LiveStreamInfo, map[uuid.UUID]bool) {
+	// Bound the Kick pass so slow Kick lookups leave the periodic job enough
+	// time to archive the live streams it already found.
+	ctx, cancel := context.WithTimeout(ctx, kickLiveCheckBudget)
+	defer cancel()
 	failed := map[uuid.UUID]bool{}
 	var streams []platform.LiveStreamInfo
 	kick, kickErr := s.Platforms.Get(utils.PlatformKick)
@@ -691,7 +701,9 @@ func (s *Service) checkKickLiveStreams(ctx context.Context, watched []*ent.Live)
 			}
 		}
 		first = false
-		stream, err := kick.GetLiveStream(ctx, platform.ChannelLogin(ch.Name, ch.ExtLogin))
+		lookupCtx, lookupCancel := context.WithTimeout(ctx, kickLiveLookupTimeout)
+		stream, err := kick.GetLiveStream(lookupCtx, platform.ChannelLogin(ch.Name, ch.ExtLogin))
+		lookupCancel()
 		if err != nil {
 			var noStreams platform.ErrorNoStreamsFound
 			if errors.As(err, &noStreams) {

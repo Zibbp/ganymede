@@ -126,7 +126,7 @@ const AdminChannelsPage = () => {
               onClick={openPlatformChannelDrawer}
               color="violet"
             >
-              {t('addTwitchChannel')}
+              {t('addChannel')}
             </Button>
           </Box>
         </Group>

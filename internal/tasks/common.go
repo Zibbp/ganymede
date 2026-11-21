@@ -265,6 +265,10 @@ func (w *DownloadTumbnailsWorker) Timeout(job *river.Job[DownloadThumbnailArgs])
 	return 1 * time.Minute
 }
 
+// kickThumbnailTimeout bounds each optional Kick thumbnail download within the
+// one-minute job timeout.
+const kickThumbnailTimeout = 15 * time.Second
+
 type DownloadTumbnailsWorker struct {
 	river.WorkerDefaults[DownloadThumbnailArgs]
 }
@@ -339,13 +343,14 @@ func (w DownloadTumbnailsWorker) Work(ctx context.Context, job *river.Job[Downlo
 				log.Warn().Str("queue_id", job.Args.Input.QueueId.String()).Msg("kick stream has no thumbnail; skipping")
 				continue
 			}
-			if err := utils.DownloadAndSaveFile(ctx, t.url, t.path); err != nil {
+			// A short child deadline leaves the job time to enqueue the capture.
+			thumbCtx, cancel := context.WithTimeout(ctx, kickThumbnailTimeout)
+			if err := utils.DownloadAndSaveFile(thumbCtx, t.url, t.path); err != nil {
 				log.Warn().Err(err).Str("queue_id", job.Args.Input.QueueId.String()).Msg("failed to download kick thumbnail; continuing")
-				continue
-			}
-			if err := exec.EnsureImageMatchesExtension(ctx, t.path); err != nil {
+			} else if err := exec.EnsureImageMatchesExtension(thumbCtx, t.path); err != nil {
 				log.Warn().Err(err).Str("queue_id", job.Args.Input.QueueId.String()).Msg("failed to convert kick thumbnail")
 			}
+			cancel()
 		}
 	} else {
 		err = utils.DownloadAndSaveFile(ctx, fullResThumbnailUrl, dbItems.Video.ThumbnailPath)
@@ -550,7 +555,7 @@ func (w UpdateStreamVideoIdWorker) Work(ctx context.Context, job *river.Job[Upda
 		logger.Info().Str("channel", channel.Name).Msg("fetching channel videos")
 
 		// only get videos if no queue id is set
-		if len(videos) == 0 {
+		if job.Args.Input.QueueId == uuid.Nil {
 			videos, err = store.Client.Vod.Query().Where(vod.HasChannelWith(entChannel.ID(channel.ID))).All(ctx)
 			if err != nil {
 				return err

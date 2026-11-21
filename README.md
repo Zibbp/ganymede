@@ -49,7 +49,7 @@ Kick channels can be added from **Admin → Channels → Add** by choosing the K
 - Mature (18+) streams are recorded as well; Kick serves their playback and chat without a login.
 - Kick VODs and clips are not archived, and chat rendering to video (TwitchDownloader) is not available for Kick.
 - Kick exposes no public API for playback or chat, so Ganymede uses the same web endpoints as kick.com and Streamlink. Changes on Kick's side may require an update; failures only affect Kick channels.
-- A Kick channel whose name already exists as a Twitch channel is stored as `<slug>_kick` with its own folder.
+- A Kick channel whose name already exists as a Twitch channel is stored as `<slug>_kick` with its own folder. Add the Twitch channel first when both exist; the reverse order is rejected with an explanatory error.
 
 ## Documentation
 

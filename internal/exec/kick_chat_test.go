@@ -1,13 +1,18 @@
 package exec
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zibbp/ganymede/internal/utils"
 )
@@ -125,4 +130,36 @@ func TestKickChatThroughTDLConverter(t *testing.T) {
 
 func fmtSscanLoc(loc string, a, b *int) (int, error) {
 	return fmt.Sscanf(loc, "%d-%d", a, b)
+}
+
+func TestFetchKickAssets(t *testing.T) {
+	t.Parallel()
+	png := []byte("\x89PNG\r\n\x1a\n")
+	var flaky atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/ok":
+			_, _ = w.Write(png)
+		case "/gone":
+			w.WriteHeader(http.StatusNotFound)
+		case "/flaky":
+			if flaky.Add(1) == 1 {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+			_, _ = w.Write(png)
+		default:
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+	}))
+	defer srv.Close()
+
+	assets, err := fetchKickAssets(context.Background(), []string{srv.URL + "/ok", srv.URL + "/gone", srv.URL + "/flaky"})
+	require.NoError(t, err)
+	assert.Contains(t, assets, srv.URL+"/ok")
+	assert.Contains(t, assets, srv.URL+"/flaky", "transient failure should be retried")
+	assert.NotContains(t, assets, srv.URL+"/gone")
+
+	_, err = fetchKickAssets(context.Background(), []string{srv.URL + "/ok", srv.URL + "/down"})
+	assert.Error(t, err, "persistent transient failure must fail the embed")
 }
