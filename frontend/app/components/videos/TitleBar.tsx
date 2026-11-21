@@ -4,6 +4,7 @@ import { ArchiveStatus } from "@/app/util/archiveStatus";
 import { useGetVideoByExternalId, Video } from "@/app/hooks/useVideos";
 import { escapeURL, formatBytes } from "@/app/util/util";
 import { Avatar, Box, Divider, Tooltip, Text, Group, Badge, Button, rem } from "@mantine/core";
+import PlatformBadge from "@/app/components/platform/PlatformBadge";
 import { env } from "next-runtime-env";
 import classes from "./TitleBar.module.css";
 import { IconCalendarEvent, IconDatabase, IconLock, IconNotes, IconUser, IconUsers } from "@tabler/icons-react";
@@ -28,12 +29,13 @@ const VideoTitleBar = ({ video, onEditNotes }: Params) => {
   return (
     <div className={classes.titleBarContainer}>
       <div className={classes.titleBar}>
-        <Avatar
-          src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.edges.channel.image_path)}`}
-          radius="xl"
-          alt={video.edges.channel.display_name}
-          mr={10}
-        />
+        <PlatformBadge platform={video.edges.channel.platform} size={16} offset={-3} style={{ marginRight: 10 }}>
+          <Avatar
+            src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.edges.channel.image_path)}`}
+            radius="xl"
+            alt={video.edges.channel.display_name}
+          />
+        </PlatformBadge>
 
         <Divider size="sm" orientation="vertical" mr={10} />
 

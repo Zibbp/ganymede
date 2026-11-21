@@ -12,6 +12,7 @@ type contextKey string
 
 const StoreKey contextKey = "store"
 const PlatformTwitchKey contextKey = "platform_twitch"
+const PlatformsKey contextKey = "platforms"
 const LiveServiceKey contextKey = "live_service"
 const NotificationServiceKey contextKey = "notification_service"
 const EnqueuerKey contextKey = "enqueuer"

@@ -1374,6 +1374,8 @@ type ChannelMutation struct {
 	name                  *string
 	display_name          *string
 	image_path            *string
+	platform              *utils.VideoPlatform
+	ext_login             *string
 	retention             *bool
 	retention_days        *int64
 	addretention_days     *int64
@@ -1652,6 +1654,91 @@ func (m *ChannelMutation) OldImagePath(ctx context.Context) (v string, err error
 // ResetImagePath resets all changes to the "image_path" field.
 func (m *ChannelMutation) ResetImagePath() {
 	m.image_path = nil
+}
+
+// SetPlatform sets the "platform" field.
+func (m *ChannelMutation) SetPlatform(up utils.VideoPlatform) {
+	m.platform = &up
+}
+
+// Platform returns the value of the "platform" field in the mutation.
+func (m *ChannelMutation) Platform() (r utils.VideoPlatform, exists bool) {
+	v := m.platform
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlatform returns the old "platform" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldPlatform(ctx context.Context) (v utils.VideoPlatform, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlatform is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlatform requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlatform: %w", err)
+	}
+	return oldValue.Platform, nil
+}
+
+// ResetPlatform resets all changes to the "platform" field.
+func (m *ChannelMutation) ResetPlatform() {
+	m.platform = nil
+}
+
+// SetExtLogin sets the "ext_login" field.
+func (m *ChannelMutation) SetExtLogin(s string) {
+	m.ext_login = &s
+}
+
+// ExtLogin returns the value of the "ext_login" field in the mutation.
+func (m *ChannelMutation) ExtLogin() (r string, exists bool) {
+	v := m.ext_login
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExtLogin returns the old "ext_login" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldExtLogin(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExtLogin is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExtLogin requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExtLogin: %w", err)
+	}
+	return oldValue.ExtLogin, nil
+}
+
+// ClearExtLogin clears the value of the "ext_login" field.
+func (m *ChannelMutation) ClearExtLogin() {
+	m.ext_login = nil
+	m.clearedFields[channel.FieldExtLogin] = struct{}{}
+}
+
+// ExtLoginCleared returns if the "ext_login" field was cleared in this mutation.
+func (m *ChannelMutation) ExtLoginCleared() bool {
+	_, ok := m.clearedFields[channel.FieldExtLogin]
+	return ok
+}
+
+// ResetExtLogin resets all changes to the "ext_login" field.
+func (m *ChannelMutation) ResetExtLogin() {
+	m.ext_login = nil
+	delete(m.clearedFields, channel.FieldExtLogin)
 }
 
 // SetRetention sets the "retention" field.
@@ -2030,7 +2117,7 @@ func (m *ChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 11)
 	if m.ext_id != nil {
 		fields = append(fields, channel.FieldExtID)
 	}
@@ -2042,6 +2129,12 @@ func (m *ChannelMutation) Fields() []string {
 	}
 	if m.image_path != nil {
 		fields = append(fields, channel.FieldImagePath)
+	}
+	if m.platform != nil {
+		fields = append(fields, channel.FieldPlatform)
+	}
+	if m.ext_login != nil {
+		fields = append(fields, channel.FieldExtLogin)
 	}
 	if m.retention != nil {
 		fields = append(fields, channel.FieldRetention)
@@ -2074,6 +2167,10 @@ func (m *ChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.DisplayName()
 	case channel.FieldImagePath:
 		return m.ImagePath()
+	case channel.FieldPlatform:
+		return m.Platform()
+	case channel.FieldExtLogin:
+		return m.ExtLogin()
 	case channel.FieldRetention:
 		return m.Retention()
 	case channel.FieldRetentionDays:
@@ -2101,6 +2198,10 @@ func (m *ChannelMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldDisplayName(ctx)
 	case channel.FieldImagePath:
 		return m.OldImagePath(ctx)
+	case channel.FieldPlatform:
+		return m.OldPlatform(ctx)
+	case channel.FieldExtLogin:
+		return m.OldExtLogin(ctx)
 	case channel.FieldRetention:
 		return m.OldRetention(ctx)
 	case channel.FieldRetentionDays:
@@ -2147,6 +2248,20 @@ func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetImagePath(v)
+		return nil
+	case channel.FieldPlatform:
+		v, ok := value.(utils.VideoPlatform)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlatform(v)
+		return nil
+	case channel.FieldExtLogin:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExtLogin(v)
 		return nil
 	case channel.FieldRetention:
 		v, ok := value.(bool)
@@ -2243,6 +2358,9 @@ func (m *ChannelMutation) ClearedFields() []string {
 	if m.FieldCleared(channel.FieldExtID) {
 		fields = append(fields, channel.FieldExtID)
 	}
+	if m.FieldCleared(channel.FieldExtLogin) {
+		fields = append(fields, channel.FieldExtLogin)
+	}
 	if m.FieldCleared(channel.FieldRetentionDays) {
 		fields = append(fields, channel.FieldRetentionDays)
 	}
@@ -2262,6 +2380,9 @@ func (m *ChannelMutation) ClearField(name string) error {
 	switch name {
 	case channel.FieldExtID:
 		m.ClearExtID()
+		return nil
+	case channel.FieldExtLogin:
+		m.ClearExtLogin()
 		return nil
 	case channel.FieldRetentionDays:
 		m.ClearRetentionDays()
@@ -2285,6 +2406,12 @@ func (m *ChannelMutation) ResetField(name string) error {
 		return nil
 	case channel.FieldImagePath:
 		m.ResetImagePath()
+		return nil
+	case channel.FieldPlatform:
+		m.ResetPlatform()
+		return nil
+	case channel.FieldExtLogin:
+		m.ResetExtLogin()
 		return nil
 	case channel.FieldRetention:
 		m.ResetRetention()

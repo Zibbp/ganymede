@@ -66,17 +66,22 @@ const useArchiveVideo = () => {
   });
 };
 
+export type ChannelPlatform = "twitch" | "kick";
+
 export interface ArchiveChannelInput {
   axiosPrivate: AxiosInstance;
   channel_name: string;
+  platform?: ChannelPlatform;
 }
 
 const archiveChannel = async (
   axiosPrivate: AxiosInstance,
-  channel_name: string
+  channel_name: string,
+  platform: ChannelPlatform = "twitch"
 ): Promise<ApiResponse<NullResponse>> => {
   const response = await axiosPrivate.post(`/api/v1/archive/channel`, {
     channel_name,
+    platform,
   });
   return response.data.data;
 };
@@ -84,8 +89,8 @@ const archiveChannel = async (
 const useArchiveChannel = () => {
   const queryClient = useQueryClient();
   return useMutation<ApiResponse<NullResponse>, Error, ArchiveChannelInput>({
-    mutationFn: ({ axiosPrivate, channel_name }) =>
-      archiveChannel(axiosPrivate, channel_name),
+    mutationFn: ({ axiosPrivate, channel_name, platform }) =>
+      archiveChannel(axiosPrivate, channel_name, platform),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["channels"] });
     },

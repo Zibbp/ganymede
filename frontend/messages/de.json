@@ -216,13 +216,14 @@
     "header": "Kanäle verwalten",
     "storageSizeDisclaimerText": "Die Speichergröße wird nicht sofort aktualisiert. Ein Hintergrundtask führt jede Stunde eine Neuberechnung durch.",
     "createButton": "Kanal erstellen",
-    "addTwitchChannel": "Twitch-Kanal hinzufügen",
+    "addChannel": "Kanal hinzufügen",
     "searchPlaceholder": "Kanäle suchen...",
     "columns": {
       "id": "ID",
       "externalId": "Externe ID",
       "name": "Name",
       "displayName": "Anzeigename",
+      "platform": "Plattform",
       "videoRetention": "Videoaufbewahrung",
       "createdAt": "Erstellt am",
       "actions": "Aktionen",
@@ -556,6 +557,7 @@
     "imageUpdateButton": "Kanalbild von Plattform aktualisieren",
     "addedNotification": "Kanal hinzugefügt",
     "platformChannelNameLabel": "Plattform-Kanalname",
+    "platformLabel": "Plattform",
     "addButton": "Kanal hinzufügen"
   },
   "AdminQueueComponents": {

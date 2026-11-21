@@ -48,7 +48,7 @@ func (w SaveVideoChaptersWorker) Work(ctx context.Context, job *river.Job[SaveVi
 	}
 
 	// get all videos
-	videos, err := store.Client.Vod.Query().All(ctx)
+	videos, err := store.Client.Vod.Query().Where(vod.PlatformEQ(utils.PlatformTwitch)).All(ctx)
 	if err != nil {
 		return err
 	}

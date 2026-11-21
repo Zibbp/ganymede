@@ -359,7 +359,9 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	twitchURL := utils.CreateTwitchURL(video.ExtID, video.Type, channel.Name)
 
 	// Handle proxy setting
-	proxyEnabled := config.Get().Livestream.ProxyEnabled
+	// Twitch HLS proxies do not apply to other platforms.
+	isKick := channel.Platform == utils.PlatformKick
+	proxyEnabled := config.Get().Livestream.ProxyEnabled && !isKick
 	whitelistedChannels := config.Get().Livestream.ProxyWhitelist // list of channels that are whitelisted from using proxy
 	if proxyEnabled {
 		if utils.Contains(whitelistedChannels, channel.Name) {
@@ -390,7 +392,13 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		}
 	}
 
-	if !proxyFound {
+	if !proxyFound && isKick {
+		kc := platform.NewKickConnection()
+		masterPlaylist, err = kc.GetLiveMasterPlaylist(ctx, platform.ChannelLogin(channel.Name, channel.ExtLogin))
+		if err != nil {
+			return fmt.Errorf("failed to get kick stream: %w", err)
+		}
+	} else if !proxyFound {
 		tc := &platform.TwitchConnection{}
 		masterPlaylist, err = tc.GetStream(ctx, channel.Name)
 		if err != nil {

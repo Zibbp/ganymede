@@ -72,21 +72,21 @@ func init() {
 	channelFields := schema.Channel{}.Fields()
 	_ = channelFields
 	// channelDescRetention is the schema descriptor for retention field.
-	channelDescRetention := channelFields[5].Descriptor()
+	channelDescRetention := channelFields[7].Descriptor()
 	// channel.DefaultRetention holds the default value on creation for the retention field.
 	channel.DefaultRetention = channelDescRetention.Default.(bool)
 	// channelDescStorageSizeBytes is the schema descriptor for storage_size_bytes field.
-	channelDescStorageSizeBytes := channelFields[7].Descriptor()
+	channelDescStorageSizeBytes := channelFields[9].Descriptor()
 	// channel.DefaultStorageSizeBytes holds the default value on creation for the storage_size_bytes field.
 	channel.DefaultStorageSizeBytes = channelDescStorageSizeBytes.Default.(int64)
 	// channelDescUpdatedAt is the schema descriptor for updated_at field.
-	channelDescUpdatedAt := channelFields[8].Descriptor()
+	channelDescUpdatedAt := channelFields[10].Descriptor()
 	// channel.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	channel.DefaultUpdatedAt = channelDescUpdatedAt.Default.(func() time.Time)
 	// channel.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	channel.UpdateDefaultUpdatedAt = channelDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// channelDescCreatedAt is the schema descriptor for created_at field.
-	channelDescCreatedAt := channelFields[9].Descriptor()
+	channelDescCreatedAt := channelFields[11].Descriptor()
 	// channel.DefaultCreatedAt holds the default value on creation for the created_at field.
 	channel.DefaultCreatedAt = channelDescCreatedAt.Default.(func() time.Time)
 	// channelDescID is the schema descriptor for id field.

@@ -83,6 +83,7 @@ export interface VideoEdges {
 export enum Platform {
   Twitch = "twitch",
   Youtube = "youtube",
+  Kick = "kick",
 }
 
 export enum VideoType {
