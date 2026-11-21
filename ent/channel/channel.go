@@ -3,11 +3,13 @@
 package channel
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 const (
@@ -23,6 +25,10 @@ const (
 	FieldDisplayName = "display_name"
 	// FieldImagePath holds the string denoting the image_path field in the database.
 	FieldImagePath = "image_path"
+	// FieldPlatform holds the string denoting the platform field in the database.
+	FieldPlatform = "platform"
+	// FieldExtLogin holds the string denoting the ext_login field in the database.
+	FieldExtLogin = "ext_login"
 	// FieldRetention holds the string denoting the retention field in the database.
 	FieldRetention = "retention"
 	// FieldRetentionDays holds the string denoting the retention_days field in the database.
@@ -62,6 +68,8 @@ var Columns = []string{
 	FieldName,
 	FieldDisplayName,
 	FieldImagePath,
+	FieldPlatform,
+	FieldExtLogin,
 	FieldRetention,
 	FieldRetentionDays,
 	FieldStorageSizeBytes,
@@ -94,6 +102,18 @@ var (
 	DefaultID func() uuid.UUID
 )
 
+const DefaultPlatform utils.VideoPlatform = "twitch"
+
+// PlatformValidator is a validator for the "platform" field enum values. It is called by the builders before save.
+func PlatformValidator(pl utils.VideoPlatform) error {
+	switch pl {
+	case "twitch", "youtube", "kick":
+		return nil
+	default:
+		return fmt.Errorf("channel: invalid enum value for platform field: %q", pl)
+	}
+}
+
 // OrderOption defines the ordering options for the Channel queries.
 type OrderOption func(*sql.Selector)
 
@@ -120,6 +140,16 @@ func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
 // ByImagePath orders the results by the image_path field.
 func ByImagePath(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldImagePath, opts...).ToFunc()
+}
+
+// ByPlatform orders the results by the platform field.
+func ByPlatform(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPlatform, opts...).ToFunc()
+}
+
+// ByExtLogin orders the results by the ext_login field.
+func ByExtLogin(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExtLogin, opts...).ToFunc()
 }
 
 // ByRetention orders the results by the retention field.

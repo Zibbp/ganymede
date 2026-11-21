@@ -18,6 +18,7 @@ import (
 	"github.com/zibbp/ganymede/internal/channel"
 	"github.com/zibbp/ganymede/internal/config"
 	"github.com/zibbp/ganymede/internal/database"
+	"github.com/zibbp/ganymede/internal/exec"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/queue"
 	"github.com/zibbp/ganymede/internal/tasks"
@@ -37,6 +38,7 @@ type Service struct {
 	BlockedVodsService *blocked.Service
 	RiverClient        *tasks_client.RiverClient
 	PlatformTwitch     platform.Platform
+	Platforms          platform.Registry
 }
 
 type TwitchVodResponse struct {
@@ -191,6 +193,71 @@ func (s *Service) ArchiveChannel(ctx context.Context, channelName string) (*ent.
 
 	return dbC, nil
 
+}
+
+// ArchiveKickChannel creates a Kick channel entry along with its folder and
+// profile image. Names that collide with an existing (Twitch) channel get a
+// "_kick" suffix; the real slug is kept in ext_login for API calls.
+func (s *Service) ArchiveKickChannel(ctx context.Context, slug string) (*ent.Channel, error) {
+	kick, err := s.Platforms.Get(utils.PlatformKick)
+	if err != nil {
+		return nil, err
+	}
+	env := config.GetEnvConfig()
+	slug = strings.ToLower(strings.TrimSpace(slug))
+	platformChannel, err := kick.GetChannel(ctx, &slug, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching kick channel: %v", err)
+	}
+	if s.ChannelService.CheckChannelExistsByExtId(platformChannel.ID) {
+		return nil, fmt.Errorf("channel already exists")
+	}
+
+	name := platformChannel.Login
+	displayName := platformChannel.DisplayName
+	if s.ChannelService.CheckChannelExists(name) {
+		name = platformChannel.Login + "_kick"
+		if s.ChannelService.CheckChannelExists(name) {
+			return nil, fmt.Errorf("channel already exists")
+		}
+	}
+	if s.ChannelService.CheckChannelDisplayNameExists(displayName) {
+		displayName = platformChannel.DisplayName + " (Kick)"
+	}
+	extLogin := ""
+	if name != platformChannel.Login {
+		extLogin = platformChannel.Login
+	}
+
+	channelFolderName, err := GetChannelFolderName(ChannelTemplateInput{
+		ChannelName:        name,
+		ChannelID:          platformChannel.ID,
+		ChannelDisplayName: displayName,
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("error resolving channel folder template, falling back to channel name")
+		channelFolderName = name
+	}
+	if err := utils.CreateDirectory(fmt.Sprintf("%s/%s", env.VideosDir, channelFolderName)); err != nil {
+		return nil, fmt.Errorf("error creating channel folder: %v", err)
+	}
+	imagePath := filepath.Join(env.VideosDir, channelFolderName, "profile.png")
+	if platformChannel.ProfileImageURL != "" {
+		if err := utils.DownloadFile(ctx, platformChannel.ProfileImageURL, imagePath); err != nil {
+			log.Error().Err(err).Msg("error downloading kick channel profile image")
+		} else if err := exec.EnsureImageMatchesExtension(ctx, imagePath); err != nil {
+			log.Warn().Err(err).Msg("error converting kick channel profile image")
+		}
+	}
+
+	return s.ChannelService.CreateChannel(channel.Channel{
+		ExtID:       platformChannel.ID,
+		Name:        name,
+		DisplayName: displayName,
+		ImagePath:   imagePath,
+		Platform:    utils.PlatformKick,
+		ExtLogin:    extLogin,
+	})
 }
 
 type ArchiveVideoInput struct {
@@ -525,8 +592,19 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		return nil, fmt.Errorf("error fetching channel: %v", err)
 	}
 
+	livePlatform, err := s.Platforms.Get(channel.Platform)
+	if err != nil {
+		return nil, err
+	}
+	videoPlatform := utils.PlatformTwitch
+	if channel.Platform == utils.PlatformKick {
+		videoPlatform = utils.PlatformKick
+		// Chat rendering uses TwitchDownloader, which cannot render Kick chat.
+		input.RenderChat = false
+	}
+
 	// get video
-	video, err := s.PlatformTwitch.GetLiveStream(ctx, channel.Name)
+	video, err := livePlatform.GetLiveStream(ctx, platform.ChannelLogin(channel.Name, channel.ExtLogin))
 	if err != nil {
 		return nil, err
 	}
@@ -596,7 +674,7 @@ func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput
 		ID:                  vUUID,
 		ExtID:               video.ID,
 		ExtStreamID:         video.ID,
-		Platform:            "twitch",
+		Platform:            videoPlatform,
 		Type:                utils.VodType(video.Type),
 		Title:               video.Title,
 		Duration:            1,

@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/channel"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // Channel is the model entity for the Channel schema.
@@ -26,6 +27,10 @@ type Channel struct {
 	DisplayName string `json:"display_name,omitempty"`
 	// ImagePath holds the value of the "image_path" field.
 	ImagePath string `json:"image_path,omitempty"`
+	// The platform the channel belongs to.
+	Platform utils.VideoPlatform `json:"platform,omitempty"`
+	// The channel login/slug on the external platform when it differs from name.
+	ExtLogin string `json:"ext_login,omitempty"`
 	// Retention holds the value of the "retention" field.
 	Retention bool `json:"retention,omitempty"`
 	// RetentionDays holds the value of the "retention_days" field.
@@ -80,7 +85,7 @@ func (*Channel) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case channel.FieldRetentionDays, channel.FieldStorageSizeBytes:
 			values[i] = new(sql.NullInt64)
-		case channel.FieldExtID, channel.FieldName, channel.FieldDisplayName, channel.FieldImagePath:
+		case channel.FieldExtID, channel.FieldName, channel.FieldDisplayName, channel.FieldImagePath, channel.FieldPlatform, channel.FieldExtLogin:
 			values[i] = new(sql.NullString)
 		case channel.FieldUpdatedAt, channel.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -130,6 +135,18 @@ func (_m *Channel) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field image_path", values[i])
 			} else if value.Valid {
 				_m.ImagePath = value.String
+			}
+		case channel.FieldPlatform:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field platform", values[i])
+			} else if value.Valid {
+				_m.Platform = utils.VideoPlatform(value.String)
+			}
+		case channel.FieldExtLogin:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ext_login", values[i])
+			} else if value.Valid {
+				_m.ExtLogin = value.String
 			}
 		case channel.FieldRetention:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -218,6 +235,12 @@ func (_m *Channel) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("image_path=")
 	builder.WriteString(_m.ImagePath)
+	builder.WriteString(", ")
+	builder.WriteString("platform=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Platform))
+	builder.WriteString(", ")
+	builder.WriteString("ext_login=")
+	builder.WriteString(_m.ExtLogin)
 	builder.WriteString(", ")
 	builder.WriteString("retention=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Retention))

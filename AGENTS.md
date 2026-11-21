@@ -18,7 +18,7 @@ The long-term direction is platform-generic. New domain code should use platform
 - `internal/tasks/registry/registry.go`: authoritative list of executable River workers.
 - `internal/tasks/worker/worker.go`: queues, concurrency, periodic jobs, middleware, and worker runtime.
 - `internal/tasks/client/`: API-side insertion/administration client. It does not execute work.
-- `internal/platform/`: platform-neutral models/interface and the Twitch implementation.
+- `internal/platform/`: platform-neutral models/interface and the Twitch and Kick (live-only) implementations.
 - `internal/exec/`: external process integration for yt-dlp, FFmpeg/ffprobe, TwitchDownloaderCLI, and live chat.
 - `internal/database/`: PostgreSQL pools, Ent and River migrations, seeding, and shared transactions.
 - `internal/config/`: environment configuration and persisted `config.json` application settings.

@@ -1,6 +1,6 @@
-import { useArchiveChannel } from "@/app/hooks/useArchive";
+import { ChannelPlatform, useArchiveChannel } from "@/app/hooks/useArchive";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
-import { Button, TextInput } from "@mantine/core";
+import { Button, SegmentedControl, Text, TextInput } from "@mantine/core";
 import { useForm, schemaResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
@@ -16,6 +16,7 @@ const PlatformChannelDrawerContent = ({ handleClose }: Props) => {
   const useArchiveChannelMutate = useArchiveChannel()
   const axiosPrivate = useAxiosPrivate()
   const [loading, setLoading] = useState(false)
+  const [platform, setPlatform] = useState<ChannelPlatform>("twitch")
 
   const schema = z.object({
     channel_name: z.string().min(2, { message: t('validation.channelName') })
@@ -38,7 +39,8 @@ const PlatformChannelDrawerContent = ({ handleClose }: Props) => {
       setLoading(true)
       await useArchiveChannelMutate.mutateAsync({
         axiosPrivate: axiosPrivate,
-        channel_name: formValues.channel_name
+        channel_name: formValues.channel_name,
+        platform: platform
       })
 
       showNotification({
@@ -58,6 +60,17 @@ const PlatformChannelDrawerContent = ({ handleClose }: Props) => {
       <form onSubmit={form.onSubmit(() => {
         handleSubmitForm()
       })}>
+        <Text size="sm" fw={500} mb={4}>{t('platformLabel')}</Text>
+        <SegmentedControl
+          fullWidth
+          mb={10}
+          value={platform}
+          onChange={(value) => setPlatform(value as ChannelPlatform)}
+          data={[
+            { label: "Twitch", value: "twitch" },
+            { label: "Kick", value: "kick" },
+          ]}
+        />
         <TextInput
           label={t('platformChannelNameLabel')}
           placeholder="ganymede"

@@ -8,6 +8,8 @@ export interface Channel {
   name: string;
   display_name: string;
   image_path: string;
+  platform?: "twitch" | "kick" | "youtube";
+  ext_login?: string;
   retention: boolean;
   retention_days: number;
   storage_size_bytes: number;

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/riverqueue/river"
 	"github.com/rs/zerolog/log"
+	entChannel "github.com/zibbp/ganymede/ent/channel"
 	entPlaylist "github.com/zibbp/ganymede/ent/playlist"
 	entPlaylistGroup "github.com/zibbp/ganymede/ent/playlistrulegroup"
 	entTwitchCategory "github.com/zibbp/ganymede/ent/twitchcategory"
@@ -459,7 +460,8 @@ func (w UpdateTwitchChannelsWorker) Work(ctx context.Context, job *river.Job[Upd
 		return err
 	}
 
-	channels, err := store.Client.Channel.Query().All(ctx)
+	// Only Twitch channels: this refresh renames channels from Twitch data.
+	channels, err := store.Client.Channel.Query().Where(entChannel.PlatformEQ(utils.PlatformTwitch)).All(ctx)
 	if err != nil {
 		return err
 	}

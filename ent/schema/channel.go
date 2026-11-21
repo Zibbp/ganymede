@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // Channel holds the schema definition for the Channel entity.
@@ -22,6 +23,8 @@ func (Channel) Fields() []ent.Field {
 		field.String("name").Unique(),
 		field.String("display_name").Unique(),
 		field.String("image_path"),
+		field.Enum("platform").GoType(utils.VideoPlatform("")).Default(string(utils.PlatformTwitch)).Comment("The platform the channel belongs to."),
+		field.String("ext_login").Optional().Comment("The channel login/slug on the external platform when it differs from name."),
 		field.Bool("retention").Default(false),
 		field.Int64("retention_days").Optional(),
 		field.Int64("storage_size_bytes").Default(0).Comment("Total storage size in bytes for the channel's videos."),

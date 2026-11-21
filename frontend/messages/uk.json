@@ -213,6 +213,7 @@
       "externalId": "Зовнішній ID",
       "name": "Ім'я",
       "displayName": "Відображуване ім'я",
+      "platform": "Платформа",
       "videoRetention": "Термін зберігання відео",
       "createdAt": "Створено",
       "actions": "Дії",
@@ -546,6 +547,7 @@
     "imageUpdateButton": "Оновити зображення каналу з платформи",
     "addedNotification": "Канал додано",
     "platformChannelNameLabel": "Назва каналу на платформі",
+    "platformLabel": "Платформа",
     "addButton": "Додати канал"
   },
   "AdminQueueComponents": {

@@ -31,6 +31,7 @@ Ganymede allows archiving of past streams (VODs) and live streams with a real-ti
 - 'Watched channels'
   - Allows watching channels for archiving past broadcasts and live streams. Includes advanced filtering options.
 - Twitch VOD/Livestream support.
+- Kick livestream support (live video and chat; see [Kick](#kick)).
 - Full VOD, Channel, and User management.
 - Custom post-download video FFmpeg parameters.
 - Custom chat render parameters.
@@ -39,6 +40,15 @@ Ganymede allows archiving of past streams (VODs) and live streams with a real-ti
 - Recoverable queue system.
 - Playback / progress saving.
 - Playlists.
+
+## Kick
+
+Kick channels can be added from **Admin → Channels → Add** by choosing the Kick platform and entering the channel slug (`kick.com/<slug>`), then watched like any other channel. No credentials are required.
+
+- Live streams are captured with the same FFmpeg/HLS pipeline as Twitch; live chat (with emotes and badges embedded for offline playback) is recorded from Kick's chat websocket.
+- Kick VODs and clips are not archived, and chat rendering to video (TwitchDownloader) is not available for Kick.
+- Kick exposes no public API for playback or chat, so Ganymede uses the same web endpoints as kick.com and Streamlink. Changes on Kick's side may require an update; failures only affect Kick channels.
+- A Kick channel whose name already exists as a Twitch channel is stored as `<slug>_kick` with its own folder.
 
 ## Documentation
 

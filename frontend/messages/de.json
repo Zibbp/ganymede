@@ -223,6 +223,7 @@
       "externalId": "Externe ID",
       "name": "Name",
       "displayName": "Anzeigename",
+      "platform": "Plattform",
       "videoRetention": "Videoaufbewahrung",
       "createdAt": "Erstellt am",
       "actions": "Aktionen",
@@ -556,6 +557,7 @@
     "imageUpdateButton": "Kanalbild von Plattform aktualisieren",
     "addedNotification": "Kanal hinzugefügt",
     "platformChannelNameLabel": "Plattform-Kanalname",
+    "platformLabel": "Plattform",
     "addButton": "Kanal hinzufügen"
   },
   "AdminQueueComponents": {

@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 	"github.com/zibbp/ganymede/ent/predicate"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // ID filters vertices based on their ID field.
@@ -74,6 +75,11 @@ func DisplayName(v string) predicate.Channel {
 // ImagePath applies equality check predicate on the "image_path" field. It's identical to ImagePathEQ.
 func ImagePath(v string) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldImagePath, v))
+}
+
+// ExtLogin applies equality check predicate on the "ext_login" field. It's identical to ExtLoginEQ.
+func ExtLogin(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldExtLogin, v))
 }
 
 // Retention applies equality check predicate on the "retention" field. It's identical to RetentionEQ.
@@ -369,6 +375,111 @@ func ImagePathEqualFold(v string) predicate.Channel {
 // ImagePathContainsFold applies the ContainsFold predicate on the "image_path" field.
 func ImagePathContainsFold(v string) predicate.Channel {
 	return predicate.Channel(sql.FieldContainsFold(FieldImagePath, v))
+}
+
+// PlatformEQ applies the EQ predicate on the "platform" field.
+func PlatformEQ(v utils.VideoPlatform) predicate.Channel {
+	vc := v
+	return predicate.Channel(sql.FieldEQ(FieldPlatform, vc))
+}
+
+// PlatformNEQ applies the NEQ predicate on the "platform" field.
+func PlatformNEQ(v utils.VideoPlatform) predicate.Channel {
+	vc := v
+	return predicate.Channel(sql.FieldNEQ(FieldPlatform, vc))
+}
+
+// PlatformIn applies the In predicate on the "platform" field.
+func PlatformIn(vs ...utils.VideoPlatform) predicate.Channel {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Channel(sql.FieldIn(FieldPlatform, v...))
+}
+
+// PlatformNotIn applies the NotIn predicate on the "platform" field.
+func PlatformNotIn(vs ...utils.VideoPlatform) predicate.Channel {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Channel(sql.FieldNotIn(FieldPlatform, v...))
+}
+
+// ExtLoginEQ applies the EQ predicate on the "ext_login" field.
+func ExtLoginEQ(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldExtLogin, v))
+}
+
+// ExtLoginNEQ applies the NEQ predicate on the "ext_login" field.
+func ExtLoginNEQ(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldNEQ(FieldExtLogin, v))
+}
+
+// ExtLoginIn applies the In predicate on the "ext_login" field.
+func ExtLoginIn(vs ...string) predicate.Channel {
+	return predicate.Channel(sql.FieldIn(FieldExtLogin, vs...))
+}
+
+// ExtLoginNotIn applies the NotIn predicate on the "ext_login" field.
+func ExtLoginNotIn(vs ...string) predicate.Channel {
+	return predicate.Channel(sql.FieldNotIn(FieldExtLogin, vs...))
+}
+
+// ExtLoginGT applies the GT predicate on the "ext_login" field.
+func ExtLoginGT(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldGT(FieldExtLogin, v))
+}
+
+// ExtLoginGTE applies the GTE predicate on the "ext_login" field.
+func ExtLoginGTE(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldGTE(FieldExtLogin, v))
+}
+
+// ExtLoginLT applies the LT predicate on the "ext_login" field.
+func ExtLoginLT(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldLT(FieldExtLogin, v))
+}
+
+// ExtLoginLTE applies the LTE predicate on the "ext_login" field.
+func ExtLoginLTE(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldLTE(FieldExtLogin, v))
+}
+
+// ExtLoginContains applies the Contains predicate on the "ext_login" field.
+func ExtLoginContains(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldContains(FieldExtLogin, v))
+}
+
+// ExtLoginHasPrefix applies the HasPrefix predicate on the "ext_login" field.
+func ExtLoginHasPrefix(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldHasPrefix(FieldExtLogin, v))
+}
+
+// ExtLoginHasSuffix applies the HasSuffix predicate on the "ext_login" field.
+func ExtLoginHasSuffix(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldHasSuffix(FieldExtLogin, v))
+}
+
+// ExtLoginIsNil applies the IsNil predicate on the "ext_login" field.
+func ExtLoginIsNil() predicate.Channel {
+	return predicate.Channel(sql.FieldIsNull(FieldExtLogin))
+}
+
+// ExtLoginNotNil applies the NotNil predicate on the "ext_login" field.
+func ExtLoginNotNil() predicate.Channel {
+	return predicate.Channel(sql.FieldNotNull(FieldExtLogin))
+}
+
+// ExtLoginEqualFold applies the EqualFold predicate on the "ext_login" field.
+func ExtLoginEqualFold(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldEqualFold(FieldExtLogin, v))
+}
+
+// ExtLoginContainsFold applies the ContainsFold predicate on the "ext_login" field.
+func ExtLoginContainsFold(v string) predicate.Channel {
+	return predicate.Channel(sql.FieldContainsFold(FieldExtLogin, v))
 }
 
 // RetentionEQ applies the EQ predicate on the "retention" field.
