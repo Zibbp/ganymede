@@ -66,7 +66,7 @@ func (w *StorageWatchdogWorker) Work(ctx context.Context, job *river.Job[Storage
 
 	w.mu.Lock()
 	previous := w.lastSeen
-	w.lastSeen = status.State
+	w.lastSeen = lastSeenUpdate(previous, status.State)
 	w.mu.Unlock()
 
 	// Stop captures on every pass while space is critical so a failed
@@ -110,6 +110,15 @@ func storageWatchdogAction(previous, current storage.State) bool {
 		return previous == storage.StateWarning || previous == storage.StateCritical
 	}
 	return false
+}
+
+// lastSeenUpdate returns the state to remember. Unknown readings keep the
+// last known state so a later recovery still notifies.
+func lastSeenUpdate(previous, current storage.State) storage.State {
+	if current == storage.StateUnknown {
+		return previous
+	}
+	return current
 }
 
 // sendWarning dispatches through the generic system-warning trigger. It runs

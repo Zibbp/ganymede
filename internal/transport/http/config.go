@@ -46,6 +46,12 @@ func (h *Handler) UpdateConfig(c echo.Context) error {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
+	// A critical threshold above the warning threshold would stop live
+	// captures before archiving is paused.
+	if conf.Archive.TempDirCriticalThresholdGB > conf.Archive.TempDirWarningThresholdGB {
+		return ErrorResponse(c, http.StatusBadRequest, "temp_dir_critical_threshold_gb must not be greater than temp_dir_warning_threshold_gb")
+	}
+
 	err := config.UpdateConfig(conf)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, err.Error())

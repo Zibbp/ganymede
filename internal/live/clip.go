@@ -15,6 +15,20 @@ import (
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
+// clipsWindowStart returns the lower bound for the clips query. Clips since
+// the last successful check are fetched so a clip deferred by low storage
+// stays in the window on retry instead of aging out.
+func clipsWindowStart(now time.Time, intervalDays int, ignoreLastChecked bool, lastChecked time.Time) time.Time {
+	if intervalDays == 0 {
+		return time.Time{}
+	}
+	fixed := now.AddDate(0, 0, -intervalDays)
+	if ignoreLastChecked || lastChecked.IsZero() {
+		return fixed
+	}
+	return lastChecked
+}
+
 // CheckWatchedChannelClips checks watched channels for clips to arhive
 func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.Logger) error {
 	// Get channels from DB
@@ -68,12 +82,7 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 			}
 		}
 
-		var startedAt time.Time
-		if watchedChannel.ClipsIntervalDays == 0 {
-			startedAt = time.Time{}
-		} else {
-			startedAt = now.AddDate(0, 0, -watchedChannel.ClipsIntervalDays)
-		}
+		startedAt := clipsWindowStart(now, watchedChannel.ClipsIntervalDays, watchedChannel.ClipsIgnoreLastChecked, watchedChannel.ClipsLastChecked)
 
 		logger.Info().Str("limit", strconv.Itoa(watchedChannel.ClipsLimit)).Str("started_at", startedAt.String()).Msgf("getting clips for channel %s", watchedChannel.Edges.Channel.Name)
 

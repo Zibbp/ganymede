@@ -84,6 +84,8 @@ const AdminSettingsPage = () => {
         errors["archive.temp_dir_critical_threshold_gb"] = t('archiveSettings.tempDirThresholdWholeNumber');
       } else if (critical < 0) {
         errors["archive.temp_dir_critical_threshold_gb"] = t('archiveSettings.tempDirThresholdMin', { min: 0 });
+      } else if (warning !== "" && critical > warning) {
+        errors["archive.temp_dir_critical_threshold_gb"] = t('archiveSettings.tempDirCriticalBelowWarning');
       }
       return errors;
     }

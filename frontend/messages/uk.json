@@ -296,6 +296,7 @@
       "tempDirThresholdRequired": "Обов'язкове поле",
       "tempDirThresholdWholeNumber": "Повинно бути ціле число",
       "tempDirThresholdMin": "Повинно бути {min} або більше",
+      "tempDirCriticalBelowWarning": "Критична межа не повинна перевищувати межу попередження",
       "storageTemplateSettings": "Налаштування шаблонів зберігання",
       "storageTemplateSettingsDescription": "Налаштуйте, як називаються папки та файли. Це застосовується лише до нових файлів. Щоб застосувати до наявних файлів, запустіть задачу міграції на сторінці завдань.",
       "folderTemplateText": "Шаблон папки",

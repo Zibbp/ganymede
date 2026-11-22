@@ -59,3 +59,20 @@ func TestStorageWatchdogAction(t *testing.T) {
 		})
 	}
 }
+
+func TestWarningUnknownOKSequence(t *testing.T) {
+	t.Parallel()
+
+	// An unreadable reading between warning and OK must not swallow the
+	// recovery notification.
+	lastSeen := storage.StateOK
+	lastSeen = lastSeenUpdate(lastSeen, storage.StateWarning)
+	assert.True(t, storageWatchdogAction(lastSeen, storage.StateWarning))
+
+	lastSeen = lastSeenUpdate(lastSeen, storage.StateUnknown)
+	assert.True(t, storageWatchdogAction(lastSeen, storage.StateOK), "recovery after unknown should notify")
+
+	lastSeen = lastSeenUpdate(lastSeen, storage.StateOK)
+	// A second OK is silent again.
+	assert.False(t, storageWatchdogAction(lastSeen, storage.StateOK))
+}

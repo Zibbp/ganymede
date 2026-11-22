@@ -494,7 +494,9 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 		}
 		dbItems, err := getDatabaseItems(ctx, store.Client, args.Input.QueueId)
 		if err != nil {
-			return nil
+			// Still cancel; a failed lookup must not restore retries.
+			log.Error().Err(err).Str("queue_id", args.Input.QueueId.String()).Msg("failed to get archive items for full-disk notification")
+			return &river.ErrorHandlerResult{SetCancelled: true}
 		}
 		if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
 			go func() {

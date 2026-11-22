@@ -31,6 +31,8 @@ const (
 	notificationRetryDelay  = 2 * time.Second
 	// Time budget for delivering to a single destination.
 	notificationDispatchTimeout = 30 * time.Second
+	// Time budget for looking up which notifications to send.
+	notificationLookupTimeout = 10 * time.Second
 )
 
 // redactURL masks the path and query of a URL to avoid leaking secrets (e.g. webhook tokens).
@@ -378,11 +380,15 @@ type SystemWarning struct {
 // SendSystemWarning sends notifications to all enabled configs with
 // trigger_system_warning.
 func (s *Service) SendSystemWarning(ctx context.Context, warning SystemWarning) {
+	// The lookup gets its own budget so a slow query cannot eat the
+	// per-destination delivery budgets.
+	queryCtx, cancel := context.WithTimeout(ctx, notificationLookupTimeout)
 	notifications, err := s.Store.Client.Notification.Query().
 		Where(
 			entNotification.EnabledEQ(true),
 			entNotification.TriggerSystemWarningEQ(true),
-		).All(ctx)
+		).All(queryCtx)
+	cancel()
 	if err != nil {
 		log.Error().Err(err).Msg("error querying system warning notifications")
 		return

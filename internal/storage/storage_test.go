@@ -183,6 +183,51 @@ func TestCheckProbeTimeout(t *testing.T) {
 	close(blocked)
 }
 
+func TestCheckCallerCancel(t *testing.T) {
+	initTestConfig(t)
+	setThresholds(t, true, 50, 5)
+
+	release := make(chan struct{})
+	defer close(release)
+	svc := newService("/tmp", 0, func(string) (int64, int64, error) { <-release; return 0, 0, nil })
+	svc.probeTimeout = time.Minute
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	// A cancelled caller returns right away instead of waiting on the probe.
+	status, err := svc.Check(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, StateUnknown, status.State)
+}
+
+func TestCheckFallbackReadingsExpire(t *testing.T) {
+	initTestConfig(t)
+	setThresholds(t, true, 50, 5)
+
+	blocked := make(chan struct{})
+	defer close(blocked)
+	svc := newService("/tmp", time.Hour, fakeProbe(1*gb, 100*gb))
+	svc.probeTimeout = 10 * time.Millisecond
+
+	// Seed a critical reading.
+	status, err := svc.Check(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, StateCritical, status.State)
+
+	// While the probe is stuck, an expired reading turns unknown so a
+	// stale critical value cannot block archives forever.
+	svc.mu.Lock()
+	svc.probedAt = time.Now().Add(-2 * readingMaxAge)
+	svc.cacheTTL = 0
+	svc.probe = func(string) (int64, int64, error) { <-blocked; return 0, 0, nil }
+	svc.mu.Unlock()
+
+	status, err = svc.Check(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, StateUnknown, status.State)
+}
+
 func TestGate(t *testing.T) {
 	ctx := context.Background()
 

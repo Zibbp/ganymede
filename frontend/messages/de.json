@@ -306,6 +306,7 @@
       "tempDirThresholdRequired": "Pflichtfeld",
       "tempDirThresholdWholeNumber": "Muss eine ganze Zahl sein",
       "tempDirThresholdMin": "Muss {min} oder mehr sein",
+      "tempDirCriticalBelowWarning": "Kritische Schwelle darf nicht größer als die Warnschwelle sein",
       "storageTemplateSettings": "Speichervorlagen-Einstellungen",
       "storageTemplateSettingsDescription": "Passe die Benennung von Ordnern und Dateien an. Dies gilt nur für neue Dateien. Um dies auf bestehende Dateien anzuwenden, führe die Migrationsaufgabe auf der Aufgabenseite aus.",
       "folderTemplateText": "Ordner-Vorlage",

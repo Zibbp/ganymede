@@ -49,6 +49,9 @@ type Checker interface {
 const (
 	cacheTTL     = 30 * time.Second
 	probeTimeout = 5 * time.Second
+	// Oldest reading served while a probe is stuck. Older readings turn
+	// unknown so a stale critical value cannot block archives forever.
+	readingMaxAge = 5 * time.Minute
 )
 
 // probeFunc reads free and total bytes for a path. Swappable in tests.
@@ -98,7 +101,7 @@ func defaultProbe(path string) (int64, int64, error) {
 
 // Check returns the current status. Stats are still reported when the check
 // is disabled. If free space cannot be read, nothing is blocked.
-func (s *Service) Check(_ context.Context) (Status, error) {
+func (s *Service) Check(ctx context.Context) (Status, error) {
 	s.mu.Lock()
 	if s.probing {
 		// A probe is already running; use the last known readings.
@@ -137,19 +140,26 @@ func (s *Service) Check(_ context.Context) (Status, error) {
 	case <-time.After(s.probeTimeout):
 		// The probe is stuck (e.g. an NFS mount that never answers).
 		// Don't block callers on it; the goroutine caches when it finishes.
-		s.mu.Lock()
-		result, ok := s.lastReadingsLocked()
-		s.mu.Unlock()
-		if !ok {
-			return Status{State: StateUnknown}, nil
-		}
-		return statusFromReadings(result), nil
+		return s.fallback(), nil
+	case <-ctx.Done():
+		// Caller gave up; same fallback as a stuck probe.
+		return s.fallback(), nil
 	}
+}
+
+func (s *Service) fallback() Status {
+	s.mu.Lock()
+	result, ok := s.lastReadingsLocked()
+	s.mu.Unlock()
+	if !ok {
+		return Status{State: StateUnknown}
+	}
+	return statusFromReadings(result)
 }
 
 // lastReadingsLocked returns the last stored readings. Callers must hold mu.
 func (s *Service) lastReadingsLocked() (probeResult, bool) {
-	if s.probedAt.IsZero() {
+	if s.probedAt.IsZero() || time.Since(s.probedAt) > readingMaxAge {
 		return probeResult{}, false
 	}
 	return s.readings, true
