@@ -1,0 +1,67 @@
+# Dev-only services for host-native development. This file is not used for
+# deploys; see compose.yaml for the production stack.
+#
+#   mise run db       -> PostgreSQL 18 on 127.0.0.1:5432
+#   mise run worker   -> Go worker with air, inside the pinned media image
+#   mise run media -- <cmd> -> one-off command in the media image
+#
+# The worker is gated behind the "media" profile so `docker compose up -d`
+# only starts the database. Per-user overrides (LAN port publishing, other
+# images) belong in an untracked compose.local.yml merged with
+# `-f compose.dev.yml -f compose.local.yml` (Compose >= 2.24.4 for !override).
+name: ganymede-dev
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ganymede
+      POSTGRES_PASSWORD: ganymede
+      POSTGRES_DB: ganymede
+    ports:
+      # Loopback only. Never publish 0.0.0.0 in a committed file.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # PostgreSQL 18 image layout; do not "fix" this to /var/lib/postgresql/data.
+      - ganymede-dev-pg:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    profiles: ["media"]
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    working_dir: /workspace
+    command: air -c .worker.air.toml
+    environment:
+      # Container-side DB location; wins over .env because godotenv does not
+      # overwrite variables that are already set.
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ganymede
+      DB_PASS: ganymede
+      DB_NAME: ganymede
+      DB_SSL: disable
+    volumes:
+      - .:/workspace:cached
+      # Aliases so a devcontainer-style .env (*/data/* paths) keeps working;
+      # the default .env.dev.example uses repo-relative dev/* paths instead.
+      - ./dev/videos:/data/videos
+      - ./dev/temp:/data/temp
+      - ./dev/logs:/data/logs
+      - ./dev/config:/data/config
+      # Go caches as named volumes so repeated runs do not redownload modules.
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  ganymede-dev-pg:
+  go-mod-cache:
+  go-build-cache:
