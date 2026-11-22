@@ -101,6 +101,10 @@ func setupEnvironment(t *testing.T, postgresHost string, postgresPort string) {
 	assert.NoError(t, os.Setenv("CONFIG_DIR", configDir))
 	t.Log("CONFIG_DIR", configDir)
 
+	// Disable the storage check: test hosts may have little free space.
+	// Tests that need it opt back in.
+	assert.NoError(t, os.WriteFile(filepath.Join(configDir, "config.json"), []byte(`{"archive":{"storage_check_enabled":false}}`), 0o644))
+
 	logsDir, err := os.MkdirTemp(testsTmpDir, "ganymede-tests")
 	assert.NoError(t, err)
 	assert.NoError(t, os.Setenv("LOGS_DIR", logsDir))
@@ -167,6 +171,8 @@ func setup(t *testing.T, startWorker bool) (*server.Application, error) {
 	// Set config to defaults
 	cfg := config.Get()
 	cfg.SetDefaults()
+	// Low-space behavior is tested explicitly.
+	cfg.Archive.StorageCheckEnabled = false
 	assert.NoError(t, config.UpdateConfig(cfg))
 
 	var workerClient *tasks_worker.RiverWorkerClient

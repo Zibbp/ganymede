@@ -2,6 +2,7 @@ package live
 
 import (
 	"context"
+	"errors"
 	"regexp"
 	"strings"
 	"time"
@@ -243,6 +244,10 @@ func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Lo
 					RenderChat:  watch.RenderChat,
 				}
 				_, err = s.ArchiveService.ArchiveVideo(ctx, input)
+				if errors.Is(err, archive.ErrTempDirLowSpace) {
+					logger.Warn().Err(err).Str("video_id", video.ID).Msg("temp directory low on space; skipping new video archive")
+					continue
+				}
 				if err != nil {
 					log.Error().Err(err).Str("video_id", video.ID).Msgf("error archiving video")
 					continue

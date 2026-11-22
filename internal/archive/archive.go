@@ -20,6 +20,7 @@ import (
 	"github.com/zibbp/ganymede/internal/database"
 	"github.com/zibbp/ganymede/internal/platform"
 	"github.com/zibbp/ganymede/internal/queue"
+	"github.com/zibbp/ganymede/internal/storage"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -29,6 +30,10 @@ import (
 // ErrActiveLiveArchive indicates that this stream already has an active archive.
 var ErrActiveLiveArchive = errors.New("stream already has an active archive")
 
+// ErrTempDirLowSpace indicates new archives are paused because the temp
+// directory is below its configured free-space threshold.
+var ErrTempDirLowSpace = storage.ErrLowSpace
+
 type Service struct {
 	Store              *database.Database
 	ChannelService     *channel.Service
@@ -37,6 +42,7 @@ type Service struct {
 	BlockedVodsService *blocked.Service
 	RiverClient        *tasks_client.RiverClient
 	PlatformTwitch     platform.Platform
+	StorageChecker     storage.Checker
 }
 
 type TwitchVodResponse struct {
@@ -49,13 +55,17 @@ type ArchiveResponse struct {
 	Video *ent.Vod   `json:"video"`
 }
 
-func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, blockedVodService *blocked.Service, riverClient *tasks_client.RiverClient, platformTwitch platform.Platform) *Service {
-	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, BlockedVodsService: blockedVodService, RiverClient: riverClient, PlatformTwitch: platformTwitch}
+func NewService(store *database.Database, channelService *channel.Service, vodService *vod.Service, queueService *queue.Service, blockedVodService *blocked.Service, riverClient *tasks_client.RiverClient, platformTwitch platform.Platform, storageChecker storage.Checker) *Service {
+	return &Service{Store: store, ChannelService: channelService, VodService: vodService, QueueService: queueService, BlockedVodsService: blockedVodService, RiverClient: riverClient, PlatformTwitch: platformTwitch, StorageChecker: storageChecker}
 }
 
 // createArchiveRecordsAndEnqueue atomically creates the VOD and queue state,
 // applies disabled-chat options, and inserts the first River job.
 func (s *Service) createArchiveRecordsAndEnqueue(ctx context.Context, vodDTO vod.Vod, channelID uuid.UUID, queueDTO queue.Queue) (*ArchiveResponse, error) {
+	// Only new archives are blocked here; running archives keep processing.
+	if err := storage.Gate(ctx, s.StorageChecker); err != nil {
+		return nil, err
+	}
 	var queueID uuid.UUID
 	err := s.Store.WithTx(ctx, func(txClient *ent.Client, tx *sql.Tx) error {
 		if queueDTO.LiveArchive {
@@ -203,6 +213,10 @@ type ArchiveVideoInput struct {
 
 func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*ArchiveResponse, error) {
 	// log.Debug().Msgf("Archiving video %s quality: %s chat: %t render chat: %t", videoId, quality, chat, renderChat)
+
+	if err := storage.Gate(ctx, s.StorageChecker); err != nil {
+		return nil, err
+	}
 
 	envConfig := config.GetEnvConfig()
 
@@ -367,6 +381,10 @@ type ArchiveClipInput struct {
 // ArchiveClip archives a clip from a platform
 func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*ArchiveResponse, error) {
 
+	if err := storage.Gate(ctx, s.StorageChecker); err != nil {
+		return nil, err
+	}
+
 	envConfig := config.GetEnvConfig()
 
 	// check if video is blocked
@@ -518,6 +536,10 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*Arc
 }
 
 func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput) (*ArchiveResponse, error) {
+	if err := storage.Gate(ctx, s.StorageChecker); err != nil {
+		return nil, err
+	}
+
 	envConfig := config.GetEnvConfig()
 
 	channel, err := s.ChannelService.GetChannel(input.ChannelId)

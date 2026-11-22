@@ -27,23 +27,25 @@ type NotificationService interface {
 // NotificationRequest is the shared request body for creating and updating a notification.
 // Create and Update use the same fields; separate type aliases are kept for clarity.
 type NotificationRequest struct {
-	Name                 string `json:"name" validate:"required"`
-	Enabled              bool   `json:"enabled"`
-	Type                 string `json:"type" validate:"required,oneof=webhook apprise"`
-	URL                  string `json:"url" validate:"required,http_url"`
-	TriggerVideoSuccess  bool   `json:"trigger_video_success"`
-	TriggerLiveSuccess   bool   `json:"trigger_live_success"`
-	TriggerError         bool   `json:"trigger_error"`
-	TriggerIsLive        bool   `json:"trigger_is_live"`
-	VideoSuccessTemplate string `json:"video_success_template"`
-	LiveSuccessTemplate  string `json:"live_success_template"`
-	ErrorTemplate        string `json:"error_template"`
-	IsLiveTemplate       string `json:"is_live_template"`
-	AppriseUrls          string `json:"apprise_urls"`
-	AppriseTitle         string `json:"apprise_title"`
-	AppriseType          string `json:"apprise_type" validate:"omitempty,oneof=info success warning failure"`
-	AppriseTag           string `json:"apprise_tag"`
-	AppriseFormat        string `json:"apprise_format" validate:"omitempty,oneof=text html markdown"`
+	Name                  string `json:"name" validate:"required"`
+	Enabled               bool   `json:"enabled"`
+	Type                  string `json:"type" validate:"required,oneof=webhook apprise"`
+	URL                   string `json:"url" validate:"required,http_url"`
+	TriggerVideoSuccess   bool   `json:"trigger_video_success"`
+	TriggerLiveSuccess    bool   `json:"trigger_live_success"`
+	TriggerError          bool   `json:"trigger_error"`
+	TriggerIsLive         bool   `json:"trigger_is_live"`
+	TriggerSystemWarning  bool   `json:"trigger_system_warning"`
+	VideoSuccessTemplate  string `json:"video_success_template"`
+	LiveSuccessTemplate   string `json:"live_success_template"`
+	ErrorTemplate         string `json:"error_template"`
+	IsLiveTemplate        string `json:"is_live_template"`
+	SystemWarningTemplate string `json:"system_warning_template"`
+	AppriseUrls           string `json:"apprise_urls"`
+	AppriseTitle          string `json:"apprise_title"`
+	AppriseType           string `json:"apprise_type" validate:"omitempty,oneof=info success warning failure"`
+	AppriseTag            string `json:"apprise_tag"`
+	AppriseFormat         string `json:"apprise_format" validate:"omitempty,oneof=text html markdown"`
 }
 
 // CreateNotificationRequest is the request body for creating a notification.
@@ -55,51 +57,55 @@ type UpdateNotificationRequest = NotificationRequest
 // NotificationResponse is a DTO that avoids the ent-generated omitempty on bool fields,
 // ensuring false values are always included in JSON responses.
 type NotificationResponse struct {
-	ID                   uuid.UUID `json:"id"`
-	Name                 string    `json:"name"`
-	Enabled              bool      `json:"enabled"`
-	Type                 string    `json:"type"`
-	URL                  string    `json:"url"`
-	TriggerVideoSuccess  bool      `json:"trigger_video_success"`
-	TriggerLiveSuccess   bool      `json:"trigger_live_success"`
-	TriggerError         bool      `json:"trigger_error"`
-	TriggerIsLive        bool      `json:"trigger_is_live"`
-	VideoSuccessTemplate string    `json:"video_success_template"`
-	LiveSuccessTemplate  string    `json:"live_success_template"`
-	ErrorTemplate        string    `json:"error_template"`
-	IsLiveTemplate       string    `json:"is_live_template"`
-	AppriseUrls          string    `json:"apprise_urls"`
-	AppriseTitle         string    `json:"apprise_title"`
-	AppriseType          string    `json:"apprise_type"`
-	AppriseTag           string    `json:"apprise_tag"`
-	AppriseFormat        string    `json:"apprise_format"`
-	UpdatedAt            time.Time `json:"updated_at"`
-	CreatedAt            time.Time `json:"created_at"`
+	ID                    uuid.UUID `json:"id"`
+	Name                  string    `json:"name"`
+	Enabled               bool      `json:"enabled"`
+	Type                  string    `json:"type"`
+	URL                   string    `json:"url"`
+	TriggerVideoSuccess   bool      `json:"trigger_video_success"`
+	TriggerLiveSuccess    bool      `json:"trigger_live_success"`
+	TriggerError          bool      `json:"trigger_error"`
+	TriggerIsLive         bool      `json:"trigger_is_live"`
+	TriggerSystemWarning  bool      `json:"trigger_system_warning"`
+	VideoSuccessTemplate  string    `json:"video_success_template"`
+	LiveSuccessTemplate   string    `json:"live_success_template"`
+	ErrorTemplate         string    `json:"error_template"`
+	IsLiveTemplate        string    `json:"is_live_template"`
+	SystemWarningTemplate string    `json:"system_warning_template"`
+	AppriseUrls           string    `json:"apprise_urls"`
+	AppriseTitle          string    `json:"apprise_title"`
+	AppriseType           string    `json:"apprise_type"`
+	AppriseTag            string    `json:"apprise_tag"`
+	AppriseFormat         string    `json:"apprise_format"`
+	UpdatedAt             time.Time `json:"updated_at"`
+	CreatedAt             time.Time `json:"created_at"`
 }
 
 // toNotificationResponse converts an ent.Notification to a NotificationResponse DTO.
 func toNotificationResponse(n *ent.Notification) NotificationResponse {
 	return NotificationResponse{
-		ID:                   n.ID,
-		Name:                 n.Name,
-		Enabled:              n.Enabled,
-		Type:                 string(n.Type),
-		URL:                  n.URL,
-		TriggerVideoSuccess:  n.TriggerVideoSuccess,
-		TriggerLiveSuccess:   n.TriggerLiveSuccess,
-		TriggerError:         n.TriggerError,
-		TriggerIsLive:        n.TriggerIsLive,
-		VideoSuccessTemplate: n.VideoSuccessTemplate,
-		LiveSuccessTemplate:  n.LiveSuccessTemplate,
-		ErrorTemplate:        n.ErrorTemplate,
-		IsLiveTemplate:       n.IsLiveTemplate,
-		AppriseUrls:          n.AppriseUrls,
-		AppriseTitle:         n.AppriseTitle,
-		AppriseType:          string(n.AppriseType),
-		AppriseTag:           n.AppriseTag,
-		AppriseFormat:        string(n.AppriseFormat),
-		UpdatedAt:            n.UpdatedAt,
-		CreatedAt:            n.CreatedAt,
+		ID:                    n.ID,
+		Name:                  n.Name,
+		Enabled:               n.Enabled,
+		Type:                  string(n.Type),
+		URL:                   n.URL,
+		TriggerVideoSuccess:   n.TriggerVideoSuccess,
+		TriggerLiveSuccess:    n.TriggerLiveSuccess,
+		TriggerError:          n.TriggerError,
+		TriggerIsLive:         n.TriggerIsLive,
+		TriggerSystemWarning:  n.TriggerSystemWarning,
+		VideoSuccessTemplate:  n.VideoSuccessTemplate,
+		LiveSuccessTemplate:   n.LiveSuccessTemplate,
+		ErrorTemplate:         n.ErrorTemplate,
+		IsLiveTemplate:        n.IsLiveTemplate,
+		SystemWarningTemplate: n.SystemWarningTemplate,
+		AppriseUrls:           n.AppriseUrls,
+		AppriseTitle:          n.AppriseTitle,
+		AppriseType:           string(n.AppriseType),
+		AppriseTag:            n.AppriseTag,
+		AppriseFormat:         string(n.AppriseFormat),
+		UpdatedAt:             n.UpdatedAt,
+		CreatedAt:             n.CreatedAt,
 	}
 }
 
@@ -115,7 +121,7 @@ func toNotificationResponses(notifications []*ent.Notification) []NotificationRe
 // validateNotificationRequest performs custom validation beyond struct tags.
 func validateNotificationRequest(req NotificationRequest) error {
 	// At least one trigger must be enabled
-	if !req.TriggerVideoSuccess && !req.TriggerLiveSuccess && !req.TriggerError && !req.TriggerIsLive {
+	if !req.TriggerVideoSuccess && !req.TriggerLiveSuccess && !req.TriggerError && !req.TriggerIsLive && !req.TriggerSystemWarning {
 		return fmt.Errorf("at least one trigger must be enabled")
 	}
 
@@ -132,6 +138,9 @@ func validateNotificationRequest(req NotificationRequest) error {
 	if req.TriggerIsLive && strings.TrimSpace(req.IsLiveTemplate) == "" {
 		return fmt.Errorf("is live template is required when is live trigger is enabled")
 	}
+	if req.TriggerSystemWarning && strings.TrimSpace(req.SystemWarningTemplate) == "" {
+		return fmt.Errorf("system warning template is required when system warning trigger is enabled")
+	}
 
 	// Apprise requires at least one of urls or tag
 	if req.Type == "apprise" && strings.TrimSpace(req.AppriseUrls) == "" && strings.TrimSpace(req.AppriseTag) == "" {
@@ -144,29 +153,31 @@ func validateNotificationRequest(req NotificationRequest) error {
 // notificationFromRequest maps a NotificationRequest to an ent.Notification struct.
 func notificationFromRequest(req NotificationRequest) *ent.Notification {
 	return &ent.Notification{
-		Name:                 req.Name,
-		Enabled:              req.Enabled,
-		Type:                 entNotification.Type(req.Type),
-		URL:                  req.URL,
-		TriggerVideoSuccess:  req.TriggerVideoSuccess,
-		TriggerLiveSuccess:   req.TriggerLiveSuccess,
-		TriggerError:         req.TriggerError,
-		TriggerIsLive:        req.TriggerIsLive,
-		VideoSuccessTemplate: req.VideoSuccessTemplate,
-		LiveSuccessTemplate:  req.LiveSuccessTemplate,
-		ErrorTemplate:        req.ErrorTemplate,
-		IsLiveTemplate:       req.IsLiveTemplate,
-		AppriseUrls:          req.AppriseUrls,
-		AppriseTitle:         req.AppriseTitle,
-		AppriseType:          entNotification.AppriseType(req.AppriseType),
-		AppriseTag:           req.AppriseTag,
-		AppriseFormat:        entNotification.AppriseFormat(req.AppriseFormat),
+		Name:                  req.Name,
+		Enabled:               req.Enabled,
+		Type:                  entNotification.Type(req.Type),
+		URL:                   req.URL,
+		TriggerVideoSuccess:   req.TriggerVideoSuccess,
+		TriggerLiveSuccess:    req.TriggerLiveSuccess,
+		TriggerError:          req.TriggerError,
+		TriggerIsLive:         req.TriggerIsLive,
+		TriggerSystemWarning:  req.TriggerSystemWarning,
+		VideoSuccessTemplate:  req.VideoSuccessTemplate,
+		LiveSuccessTemplate:   req.LiveSuccessTemplate,
+		ErrorTemplate:         req.ErrorTemplate,
+		IsLiveTemplate:        req.IsLiveTemplate,
+		SystemWarningTemplate: req.SystemWarningTemplate,
+		AppriseUrls:           req.AppriseUrls,
+		AppriseTitle:          req.AppriseTitle,
+		AppriseType:           entNotification.AppriseType(req.AppriseType),
+		AppriseTag:            req.AppriseTag,
+		AppriseFormat:         entNotification.AppriseFormat(req.AppriseFormat),
 	}
 }
 
 // TestNotificationRequest is the request body for testing a notification.
 type TestNotificationRequest struct {
-	EventType string `json:"event_type" validate:"required,oneof=video_success live_success error is_live"`
+	EventType string `json:"event_type" validate:"required,oneof=video_success live_success error is_live system_warning"`
 }
 
 // GetNotifications godoc
